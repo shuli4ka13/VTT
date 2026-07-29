@@ -38,8 +38,14 @@ function renderSheetBody() {
   }
 
   const p = pass();
+
+  // Поле, на которое ссылается чей-то «prof», само по себе не рисуется:
+  // оно живёт точкой владения внутри строки навыка, как в черновике.
+  const insideSkill = new Set(state.system.fields.map(f => f.prof).filter(Boolean));
+
   const groups = new Map();
   for (const f of state.system.fields) {
+    if (insideSkill.has(f.tag)) continue;
     if (!groups.has(f.group)) groups.set(f.group, []);
     groups.get(f.group).push(f);
   }
@@ -50,16 +56,104 @@ function renderSheetBody() {
       <div class="blk-type" style="margin:0">${current.kind === 'pc' ? 'персонаж игрока' : 'НПС ведущего'}</div>
     </div>` +
     [...groups].map(([group, fields]) => {
-      // Блок из одних текстовых полей подаётся строками «ключ — значение»,
-      // как «Поля персонажа» в черновике. Правило по данным, а не по имени блока.
+      // Подача блока выводится из того, что в нём лежит, а не из его названия.
       const textual = fields.every(f => f.value.kind === 'stored' && f.value.type === 'text');
-      return `<div class="cs-block">
-        <div class="blk-type">${esc(group)}</div>
-        ${textual
-          ? fields.map(f => textRow(f, p)).join('')
-          : `<div class="stat-grid">${fields.map(f => cell(f, p)).join('')}</div>`}
+      const skills = fields.every(f => f.prof);
+
+      const body = textual ? fields.map(f => textRow(f, p)).join('')
+        : skills ? fields.map(f => skillRow(f, p)).join('')
+          : `<div class="stat-grid">${fields.map(f => cell(f, p)).join('')}</div>`;
+
+      return `<div class="cs-block"><div class="blk-type">${esc(group)}</div>${body}</div>`;
+    }).join('')
+    + belongingsBlocks(current, p);
+}
+
+// Строка навыка из черновика: точка владения, название, значение.
+// Точка трёхпозиционная — нет, владение, компетентность.
+const PROF_COLOR = ['var(--border2)', 'var(--yellow)', 'var(--green)'];
+const PROF_WORD = ['владения нет', 'владение', 'компетентность — бонус вдвое'];
+
+function skillRow(f, p) {
+  const result = valueOf(f.tag, p);
+  const prof = valueOf(f.prof, p);
+  const level = Math.max(0, Math.min(2, Number(prof.value) || 0));
+
+  return `<div class="skl-row" style="grid-template-columns:13px 1fr 46px">
+    <span class="pdot" style="background:${PROF_COLOR[level]}" title="${PROF_WORD[level]}"
+          onclick="uiCycleProf('${f.prof}')"></span>
+    <span style="font-size:12px">${esc(f.label)}</span>
+    <span class="skv" style="color:var(--blue)">${result.ok ? esc(show(result.value)) : '—'}</span>
+  </div>`;
+}
+
+// Снаряжение и эффекты видны НА ЛИСТЕ, а не только в панели сбоку.
+// В черновике активные эффекты были цветными бейджами на токене; здесь так же,
+// только на чарнике. Клик по бейджу снимает.
+function belongingsBlocks(current, p) {
+  const { items, effects } = state.compendium;
+  const worn = current.equipped.map(id => items.find(i => i.id === id)).filter(Boolean);
+  const hung = current.effects.map(e => effects.find(f => f.id === e.effectId)).filter(Boolean);
+
+  const gear = worn.length
+    ? worn.map(item => `<div class="lst-row" style="grid-template-columns:1fr auto 18px">
+        <span style="font-size:12px">${esc(item.label)}</span>
+        <span class="lst-badge">${modifierSummary(item, p)}</span>
+        <button class="row-del" onclick="uiEquip('${item.id}')" title="снять">✕</button>
+      </div>`).join('')
+    : '<div class="char-empty-hint">Ничего не надето.</div>';
+
+  const fx = hung.length
+    ? `<div class="tok-fx-active">${hung.map(effect => {
+      const tone = toneOf(effect);
+      return `<div class="tok-fx-badge" style="background:${tone.bg};border:1px solid ${tone.border};color:${tone.color}"
+                   onclick="uiHang('${effect.id}')" title="снять">
+        <span>${esc(effect.icon || '✦')}</span>
+        <span>${esc(effect.label)}</span>
+        <span style="opacity:.75;font-size:10px">${modifierSummary(effect, p)}</span>
+        <span class="tok-fx-x">✕</span>
       </div>`;
-    }).join('');
+    }).join('')}</div>`
+    : '<div class="char-empty-hint">Эффектов нет.</div>';
+
+  return `<div class="cs-block"><div class="blk-type">Снаряжение</div>${gear}</div>
+    <div class="cs-block"><div class="blk-type">Эффекты</div>${fx}</div>`;
+}
+
+// Что запись делает — одной строкой, лейблами. Тегов игрок не видит.
+function modifierSummary(record, p) {
+  const mods = record.modifiers || [];
+  if (!mods.length) return '—';
+
+  return mods.map(mod => {
+    const target = state.system.fields.find(f => f.tag === mod.target)
+      || (state.system.rolls || []).find(r => r.tag === mod.target)
+      || { label: mod.target };
+    const name = target.label || target.tag;
+
+    if (mod.effect) return `${mod.effect === 'advantage' ? 'преимущество' : 'помеха'}: ${esc(name)}`;
+
+    const raw = mod.value && typeof mod.value === 'object' ? mod.value.expr : mod.value;
+    // Ссылку показываем лейблом, логическое — словом. Ни тегов, ни «true» на экране.
+    const shown = typeof raw === 'boolean' ? show(raw)
+      : typeof raw === 'string' && raw.startsWith('#')
+        ? (state.system.fields.find(f => '#' + f.tag === raw) || {}).label || raw
+        : String(raw);
+    const sign = mod.op === 'set' ? '= ' : mod.op === 'mul' ? '×' : Number(raw) < 0 ? '' : '+';
+    return `${esc(name)} ${sign}${esc(shown)}`;
+  }).join(' · ');
+}
+
+// Красный, зелёный или нейтральный — выводится из того, что эффект делает,
+// а не из отдельного поля «тип». Помеха и минус — плохо, преимущество и плюс — хорошо.
+function toneOf(effect) {
+  const mods = effect.modifiers || [];
+  const bad = mods.some(m => m.effect === 'disadvantage' || Number(m.value) < 0);
+  const good = mods.some(m => m.effect === 'advantage' || Number(m.value) > 0);
+
+  if (bad && !good) return { bg: 'rgba(248,113,113,.1)', border: 'rgba(248,113,113,.35)', color: 'var(--red)' };
+  if (good && !bad) return { bg: 'rgba(74,222,128,.1)', border: 'rgba(74,222,128,.35)', color: 'var(--green)' };
+  return { bg: 'var(--s2)', border: 'var(--border2)', color: 'var(--text)' };
 }
 
 function cell(f, p) {
@@ -112,20 +206,7 @@ function renderBelongings() {
     ${picker(effects, current.effects.map(e => e.effectId), 'uiHang', 'эффектов нет')}
     <button class="add-row" onclick="uiCreate('effect')">+ создать эффект</button>
 
-    <div class="pal-sec" style="margin-top:10px">Броски сейчас</div>
-    ${targets(state.system).filter(t => t.kind === 'roll').map(r => {
-      const roll = rollOf(r.tag, p);
-      // Режим и прибавка — разные вещи и показываются раздельно.
-      // «+5 ко всем проверкам» это не преимущество, а число.
-      const plus = roll.bonus
-        ? `<span style="color:var(--green)">${roll.bonus > 0 ? '+' : ''}${roll.bonus}</span> `
-        : '';
-      const dim = roll.mode === 'normal' && !roll.bonus;
-      return `<div class="mcs-row" title="${esc(roll.sources.map(s => s.label).join(', '))}">
-        <span>${esc(r.label)}</span>
-        <span style="color:${dim ? 'var(--muted)' : 'var(--accent)'}">${plus}${modeWord(roll.mode)}</span>
-      </div>`;
-    }).join('')}
+    ${renderRolls(p)}
 
     <div class="pal-sec" style="margin-top:10px">Действия</div>
     ${picker(actions, current.actions, 'uiLearn', 'действий нет')}
@@ -144,6 +225,33 @@ function renderBelongings() {
           </div>
         </div>`;
       }).join('')}` : ''}`;
+}
+
+// Бросков в полной 5e под тридцать, и перечислять все — стена текста.
+// Показываем только те, на которых что-то висит; про остальные говорим числом.
+function renderRolls(p) {
+  const all = targets(state.system).filter(t => t.kind === 'roll')
+    .map(t => ({ target: t, roll: rollOf(t.tag, p) }));
+  const touched = all.filter(({ roll }) => roll.mode !== 'normal' || roll.bonus);
+
+  if (!touched.length) {
+    return `<div class="pal-sec" style="margin-top:10px">Броски</div>
+      <div class="sys-hint" style="padding:2px 4px">Все ${all.length} обычные — ничего не висит.</div>`;
+  }
+
+  return `<div class="pal-sec" style="margin-top:10px">Броски сейчас</div>
+    ${touched.map(({ target, roll }) => {
+      // Режим и прибавка — разные вещи и показываются раздельно.
+      // «+5 ко всем проверкам» это не преимущество, а число.
+      const plus = roll.bonus
+        ? `<span style="color:var(--green)">${roll.bonus > 0 ? '+' : ''}${roll.bonus}</span> `
+        : '';
+      return `<div class="mcs-row" title="${esc(roll.sources.map(s => s.label).join(', '))}">
+        <span>${esc(target.label)}</span>
+        <span style="color:var(--accent)">${plus}${modeWord(roll.mode)}</span>
+      </div>`;
+    }).join('')}
+    <div class="sys-hint" style="padding:4px">Остальные ${all.length - touched.length} обычные.</div>`;
 }
 
 // Один вид списка для всех трёх видов записей: галочка «у меня есть».
@@ -208,6 +316,13 @@ export function setValue(tag, raw) {
     type === 'boolean' ? Boolean(raw)
       : type === 'text' ? String(raw)
         : Number(raw);
+}
+
+// Точка владения идёт по кругу: нет → владение → компетентность → нет.
+// Как трёхпозиционная точка в черновике.
+export function cycleProf(tag) {
+  const current = Number(sheet().values[tag] || 0);
+  sheet().values[tag] = (current + 1) % 3;
 }
 
 export function toggle(tag) {
