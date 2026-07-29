@@ -123,6 +123,37 @@ if (inNode) {
   // files/ — исходные документы. Оба к нашему коду отношения не имеют.
   const SKIP_DIRS = new Set(['reference', 'files', 'node_modules', '.git', 'docs']);
 
+  group('граница режимов', () => {
+    // Граница проведена импортами, а не стилями: если экран игрока однажды
+    // потянет к себе правку состава полей, тест упадёт раньше, чем это заметят
+    // на демо.
+    const playerCode = readFileSync(join(repo, 'src/ui/mode-player.js'), 'utf8');
+
+    test('экран игрока не импортирует редактор полей', () => {
+      eq(/from\s+'\.\/field-editor\.js'/.test(playerCode), false,
+        'mode-player.js не должен знать модуль, который правит состав полей');
+    });
+
+    test('экран игрока не трогает system.fields', () => {
+      eq(/system\.fields\s*(=|\.push|\.splice|\.filter\s*\()/.test(playerCode), false,
+        'состав полей правит только режим автора');
+    });
+
+    test('в разметке игрока нет ни одной кнопки добавления или удаления поля', () => {
+      const html = readFileSync(join(repo, 'index.html'), 'utf8');
+      const player = html.slice(html.indexOf('id="pane-player"'), html.indexOf('id="pane-compendium"'));
+      for (const handler of ['uiAddField', 'uiAddGroup', 'uiDelField']) {
+        eq(player.includes(handler), false, `${handler} не должен встречаться в разметке игрока`);
+      }
+    });
+
+    test('редактор полей живёт только в разметке автора', () => {
+      const html = readFileSync(join(repo, 'index.html'), 'utf8');
+      const author = html.slice(html.indexOf('id="pane-author"'), html.indexOf('id="pane-player"'));
+      ok(author.includes('author-editor'), 'редактор поля — часть экрана автора');
+    });
+  });
+
   group('критерии приёмки', () => {
     test('6. поиск по репозиторию не находит eval и new Function', () => {
       const hits = [];

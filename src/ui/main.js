@@ -1,44 +1,34 @@
-// Точка входа. Собирает панели и подвешивает обработчики.
+// Точка входа. Собирает режимы и подвешивает обработчики.
 //
-// Черновик вызывает обработчики инлайновыми onclick — это его идиома, и мы её
+// Черновик зовёт обработчики инлайновыми onclick — это его идиома, и мы её
 // сохраняем, чтобы диф против reference/index.html читался. Модули так не умеют,
 // поэтому нужные функции кладутся в window. В продакшне вместо этого делегирование
 // событий на корне — записано в docs/production-differences.md.
+//
+// Граница режимов проведена не стилями, а импортами: mode-player.js не знает
+// ни одной функции, которая правит состав полей системы.
 
-import { state, sheet, esc, log } from './state.js';
-import * as canvas from './sheet-canvas.js';
-import * as formula from './formula-panel.js';
-import * as items from './items-tab.js';
-import * as effects from './effects-tab.js';
-import * as system from './system-tab.js';
+import { state, MODES, esc, log } from './state.js';
+import * as author from './mode-author.js';
+import * as editor from './field-editor.js';
+import * as player from './mode-player.js';
+import * as compendium from './mode-compendium.js';
 
 export function render() {
   state.brokenModifiers = null;
 
   document.querySelectorAll('.pane').forEach(p => p.classList.remove('on'));
-  document.getElementById('pane-' + state.tab).classList.add('on');
-  document.querySelectorAll('.tnav').forEach(b => b.classList.toggle('on', b.dataset.tab === state.tab));
+  document.getElementById('pane-' + state.mode).classList.add('on');
+  document.querySelectorAll('.tnav').forEach(b => b.classList.toggle('on', b.dataset.mode === state.mode));
+  document.getElementById('mode-badge').textContent = MODES[state.mode].badge;
+  document.body.dataset.mode = state.mode;
 
-  renderCharList();
-  if (state.tab === 'char') {
-    canvas.renderCanvas();
-    formula.renderFormulaList();
-    formula.renderFormulaBox();
-  }
-  if (state.tab === 'items') items.renderItems();
-  if (state.tab === 'fx') effects.renderEffects();
-  if (state.tab === 'system') system.renderSystem();
+  if (state.mode === 'author') author.renderAuthor();
+  if (state.mode === 'player') player.renderPlayer();
+  if (state.mode === 'compendium') compendium.renderCompendium();
 
   renderLog();
   renderBanner();
-}
-
-function renderCharList() {
-  document.getElementById('char-entries').innerHTML = state.sheets.map(s => `
-    <div class="char-entry${s.id === state.activeSheetId ? ' on' : ''}" onclick="uiPickSheet('${s.id}')">
-      <span class="char-type ${s.id === state.activeSheetId ? 'pc' : 'npc'}">${s.id === state.activeSheetId ? 'ИГ' : 'НПС'}</span>
-      <span class="char-name-inp">${esc(s.name)}</span>
-    </div>`).join('');
 }
 
 function renderLog() {
@@ -55,22 +45,20 @@ function renderBanner() {
   banner.textContent = state.brokenModifiers || '';
 }
 
-// ── обработчики, которые черновик зовёт из onclick ──────────────────────────
-
-// Полная перерисовка выбрасывает узел, в котором стоит каретка, — при вводе в поле
-// фокус терялся бы на каждой букве. Поэтому у каждого редактируемого поля
-// стабильный id, и после перерисовки фокус с кареткой возвращаются на место.
-// Это заплатка поверх заведомо наивного render(state); в продакшне перерисовки
-// затронутого узла нет вовсе. Записано в docs/production-differences.md.
+// Полная перерисовка выбрасывает узел, в котором стоит каретка. Поэтому у каждого
+// редактируемого поля стабильный id, и после перерисовки фокус с кареткой
+// возвращаются на место. Заплатка поверх заведомо наивного render(state).
 const redraw = fn => (...args) => {
   const active = document.activeElement;
   const memo = active && active.id ? { id: active.id, start: active.selectionStart } : null;
 
   fn(...args);
   render();
+  restoreCaret(memo);
+};
 
-  // Клик по зависимости сам говорит, куда встала каретка, — иначе после вставки
-  // она прыгала бы туда, где стояла до неё.
+function restoreCaret(memo) {
+  // Подсказка и чипсы сами говорят, куда встала каретка.
   if (state.caret != null) {
     const input = document.getElementById('fbox-inp');
     if (input) {
@@ -87,80 +75,65 @@ const redraw = fn => (...args) => {
   next.focus();
   if (memo.start == null || !next.setSelectionRange) return;
   try { next.setSelectionRange(memo.start, memo.start); } catch { /* input[type=number] так не умеет */ }
-};
+}
 
 Object.assign(window, {
-  uiTab: redraw(tab => { state.tab = tab; }),
-  uiPickSheet: redraw(id => { state.activeSheetId = id; }),
+  uiMode: redraw(mode => { state.mode = mode; }),
 
-  // чарник
-  uiPickField: redraw(formula.pickField),
-  uiRename: redraw(canvas.rename),
-  uiSetValue: redraw(canvas.setValue),
-  uiToggle: redraw(canvas.toggle),
-  uiDelField: redraw(canvas.removeField),
-  uiAddField: redraw(canvas.addFieldTo),
-  uiSend: redraw(canvas.dispatch),
-  uiAddBlock: redraw(type => {
-    const refusal = canvas.addBlock(type);
-    if (refusal) log(`<b>Не оживлено:</b> ${esc(refusal)}`);
-  }),
+  // ── режим автора: состав полей и правила комнаты ──
+  uiPickField: redraw(editor.pickField),
+  uiRename: redraw(editor.rename),
+  uiSetGroup: redraw(editor.setGroup),
+  uiAddField: redraw(editor.addField),
+  uiAddGroup: redraw(editor.addGroup),
+  uiDelField: redraw(editor.removeField),
+  uiEditFormula: redraw(editor.edit),
+  uiAcceptHint: redraw(editor.acceptSuggestion),
+  uiInsertDep: redraw(editor.insertDep),
+  uiDropPart: redraw(editor.dropPart),
+  uiToggleMethod: redraw(author.toggleMethod),
+  uiAddRule: redraw(author.addRule),
+  uiDelRule: redraw(author.deleteRule),
+  uiSetRule: redraw(author.setRule),
 
-  // панель формул
-  uiInsertDep: redraw(formula.insertDep),
-  uiDropPart: redraw(formula.dropPart),
-  uiEditFormula: redraw(formula.edit),
-  uiAcceptHint: redraw(formula.acceptSuggestion),
+  // ── режим игрока: значения и принадлежности ──
+  uiPickSheet: redraw(player.pickSheet),
+  uiNewSheet: redraw(player.newSheet),
+  uiSetValue: redraw(player.setValue),
+  uiToggle: redraw(player.toggle),
+  uiEquip: redraw(player.equip),
+  uiHang: redraw(player.hang),
+  uiLearn: redraw(player.learn),
+  uiCreate: redraw(player.create),
+  uiSend: redraw(player.dispatch),
 
-  // предметы
-  uiPickItem: redraw(id => { state.activeItemId = id; }),
-  uiNewItem: redraw(items.newItem),
-  uiDelItem: redraw(items.deleteItem),
-  uiEquip: redraw(items.equip),
-  uiSetItem: redraw(items.setItem),
-  uiAddMod: redraw(items.addMod),
-  uiDelMod: redraw(items.deleteMod),
-  uiSetMod: redraw(items.setMod),
-
-  // эффекты
-  uiPickEffect: redraw(id => { state.activeEffectId = id; }),
-  uiNewEffect: redraw(effects.newEffect),
-  uiDelEffect: redraw(effects.deleteEffect),
-  uiHang: redraw(effects.hang),
-  uiSetEffect: redraw(effects.setEffect),
-  uiSetFxMod: redraw(effects.setFxMod),
-  uiPreset: redraw(effects.addPreset),
-
-  // система
-  uiToggleMethod: redraw(system.toggleMethod),
-  uiAddRule: redraw(system.addRule),
-  uiDelRule: redraw(system.deleteRule),
-  uiSetRule: redraw(system.setRule),
+  // ── компендиум ──
+  uiPickRecord: redraw(compendium.pickRecord),
+  uiNewRecord: redraw(compendium.createRecord),
+  uiDelRecord: redraw(compendium.deleteRecord),
+  uiSetRecord: redraw(compendium.setRecord),
+  uiAddMod: redraw(compendium.addMod),
+  uiDelMod: redraw(compendium.deleteMod),
+  uiSetMod: redraw(compendium.setMod),
+  uiSetFxMod: redraw(compendium.setFxMod),
+  uiSetEnvelope: redraw(compendium.setEnvelope),
 });
 
 // Стрелки и Enter в поле формулы ведут по списку подсказок.
-// Вешается один раз, не внутри перерисовки.
 document.addEventListener('keydown', event => {
   if (event.target.id !== 'fbox-inp') return;
 
   const handled =
-    event.key === 'ArrowDown' ? formula.moveSuggestion(1)
-      : event.key === 'ArrowUp' ? formula.moveSuggestion(-1)
-        : event.key === 'Enter' || event.key === 'Tab' ? formula.acceptSuggestion()
-          : event.key === 'Escape' ? (formula.dismissSuggestions(), true)
+    event.key === 'ArrowDown' ? editor.moveSuggestion(1)
+      : event.key === 'ArrowUp' ? editor.moveSuggestion(-1)
+        : event.key === 'Enter' || event.key === 'Tab' ? editor.acceptSuggestion()
+          : event.key === 'Escape' ? (editor.dismissSuggestions(), true)
             : false;
 
   if (!handled) return;
   event.preventDefault();
-
   render();
-  if (state.caret == null) return;
-  const input = document.getElementById('fbox-inp');
-  if (input) {
-    input.focus();
-    input.setSelectionRange(state.caret, state.caret);
-  }
-  state.caret = null;
+  restoreCaret(null);
 });
 
 render();

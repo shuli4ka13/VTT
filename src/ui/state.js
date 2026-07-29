@@ -1,8 +1,17 @@
 // Состояние интерфейса. Всё в памяти — сохранение вне скоупа PoC.
 //
+// Три режима, и это не косметика:
+//
+//   author     правит СИСТЕМУ — состав полей, лейблы, формулы, правила комнаты.
+//              Персонаж не нужен и не выбран: значений на экране нет вовсе.
+//   player     правит ЧАРНИК — значения, снаряжение, эффекты, список действий.
+//              Состав полей не трогает: кнопок для этого нет в разметке.
+//   compendium правит ЗАПИСИ — предметы, эффекты, действия, заклинания.
+//
+// Граница проходит по тегам: вводит НОВЫЙ ТЕГ — режим автора; только
+// комбинирует существующие — можно и из режима игрока.
+//
 // Образцовые данные копируются, чтобы правки мышкой не портили модули модели.
-// Система здесь МУТИРУЕТСЯ: правка формулы и добавление поля — это правка данных
-// системы, и в том, что движок при этом не трогается, весь смысл (критерий №3).
 
 import { system as sampleSystem } from '../model/system.js';
 import { arven, mirra } from '../model/sheets.js';
@@ -10,56 +19,69 @@ import { compendium as sampleCompendium } from '../model/compendium.js';
 import { calc, newPass } from '../engine/calc.js';
 import { resolveRoll } from '../engine/modifiers.js';
 
+export const MODES = {
+  author: { label: 'Конструктор листа', badge: 'режим автора · правите систему, персонаж не нужен' },
+  player: { label: 'Персонаж', badge: 'режим игрока · состав полей не трогается' },
+  compendium: { label: 'Компендиум', badge: 'общая библиотека · персонажи ссылаются на записи' },
+};
+
 export const state = {
-  tab: 'char',
+  mode: 'player',
+
   system: structuredClone(sampleSystem),
   compendium: structuredClone(sampleCompendium),
   sheets: [structuredClone(arven), structuredClone(mirra)],
+
+  // В режиме автора персонаж не выбран вовсе — конструктор обязан работать без него.
   activeSheetId: arven.id,
-  activeTag: null,      // поле, открытое в панели формул
-  draft: null,          // черновик формулы (в тегах, не в лейблах)
-  activeItemId: null,
-  activeEffectId: null,
-  brokenModifiers: null,
+
+  activeTag: null,       // поле, открытое в конструкторе
+  draft: null,           // черновик формулы (в тегах, не в лейблах)
   caret: null,
   editCaret: null,
   suggestIndex: 0,
   suggestDismissed: false,
+
+  activeRecordId: null,  // запись компендиума
+  brokenModifiers: null,
   log: [],
 };
 
-export const sheet = () => state.sheets.find(s => s.id === state.activeSheetId);
-export const field = tag => state.system.fields.find(f => f.tag === tag);
+export const sheet = () => state.sheets.find(s => s.id === state.activeSheetId) || null;
+export const field = tag => state.system.fields.find(f => f.tag === tag) || null;
 
 // Один проход на одну перерисовку: мемоизация внутри, между перерисовками — нет.
-//
-// Интерфейс обязан пережить любое промежуточное состояние правки: недописанное
-// условие, мишень на только что удалённое поле. Поэтому и сборка модификаторов,
-// и каждое вычисление обёрнуты — ошибка показывается в ячейке, а не роняет экран.
+// Без выбранного персонажа прохода нет — и это нормально: в конструкторе
+// считать нечего и не по чему.
 export function pass() {
+  const current = sheet();
+  if (!current) return null;
   try {
-    return newPass(state.system, sheet(), { compendium: state.compendium });
+    return newPass(state.system, current, { compendium: state.compendium });
   } catch (err) {
     state.brokenModifiers = err.message;
-    return newPass(state.system, sheet());
-  }
-}
-
-export function rollOf(tag, p = pass()) {
-  try {
-    return resolveRoll(state.system, sheet(), tag, p);
-  } catch (err) {
-    return { tag, mode: 'normal', methods: [], sources: [], error: err.message };
+    return newPass(state.system, current);
   }
 }
 
 // Значение поля или причина, по которой его не удалось посчитать.
-// Интерфейс обязан переживать битую формулу: её как раз сейчас и правят.
+// Интерфейс обязан переживать любое промежуточное состояние правки:
+// недописанную формулу, условие на полуслове, мишень на удалённое поле.
 export function valueOf(tag, p = pass()) {
+  if (!p) return { ok: false, error: 'персонаж не выбран' };
   try {
-    return { ok: true, value: calc(state.system, sheet(), tag, p) };
+    return { ok: true, value: calc(state.system, p.sheet, tag, p) };
   } catch (err) {
     return { ok: false, error: err.message };
+  }
+}
+
+export function rollOf(tag, p = pass()) {
+  if (!p) return { tag, mode: 'normal', methods: [], sources: [] };
+  try {
+    return resolveRoll(state.system, p.sheet, tag, p);
+  } catch (err) {
+    return { tag, mode: 'normal', methods: [], sources: [], error: err.message };
   }
 }
 
@@ -75,6 +97,19 @@ export function newTag(prefix = 'fld') {
   let tag;
   do { tag = `${prefix}_${++counter}`; } while (field(tag));
   return tag;
+}
+
+// Идентификатор записи компендиума. Это НЕ тег: на него не ссылаются формулы,
+// он лишь адрес записи в библиотеке. Потому его и волен завести игрок.
+export function newRecordId(prefix) {
+  const taken = new Set([
+    ...state.compendium.items.map(r => r.id),
+    ...state.compendium.effects.map(r => r.id),
+    ...state.compendium.actions.map(r => r.id),
+  ]);
+  let n = 1;
+  while (taken.has(`${prefix}_${n}`)) n++;
+  return `${prefix}_${n}`;
 }
 
 export function log(html) {
