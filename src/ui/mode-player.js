@@ -114,8 +114,15 @@ function renderBelongings() {
     <div class="pal-sec" style="margin-top:10px">Броски сейчас</div>
     ${state.system.rolls.map(r => {
       const roll = rollOf(r.tag, p);
-      return `<div class="mcs-row"><span>${esc(r.label)}</span>
-        <span style="color:${roll.mode === 'normal' ? 'var(--muted)' : 'var(--accent)'}">${modeWord(roll.mode)}</span>
+      // Режим и прибавка — разные вещи и показываются раздельно.
+      // «+5 ко всем проверкам» это не преимущество, а число.
+      const plus = roll.bonus
+        ? `<span style="color:var(--green)">${roll.bonus > 0 ? '+' : ''}${roll.bonus}</span> `
+        : '';
+      const dim = roll.mode === 'normal' && !roll.bonus;
+      return `<div class="mcs-row" title="${esc(roll.sources.map(s => s.label).join(', '))}">
+        <span>${esc(r.label)}</span>
+        <span style="color:${dim ? 'var(--muted)' : 'var(--accent)'}">${plus}${modeWord(roll.mode)}</span>
       </div>`;
     }).join('')}
 

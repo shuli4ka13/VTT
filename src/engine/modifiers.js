@@ -119,9 +119,16 @@ export function resolveRoll(system, sheet, rollTag, pass) {
   if (hasAdvantage && !hasDisadvantage) mode = 'advantage';
   else if (hasDisadvantage && !hasAdvantage) mode = 'disadvantage';
 
+  // Числовая прибавка к броску — третье, отдельное от режима. «+5 ко всем
+  // проверкам» это не преимущество и не правка характеристики: складывается
+  // обычной арифметикой и на выбор кости не влияет.
+  const adds = mods.filter(m => m.op === 'add' || m.op === 'mul');
+  const bonus = adds.length ? totalOf(adds.filter(m => m.op === 'add'), pass, rollTag) : 0;
+
   return {
     tag: rollTag,
     mode,
+    bonus,
     // Механику отыгрыша задаёт система, а не движок: переброс с выбором лучшего,
     // добавление кости, сдвиг степени успеха — всё это разные способы.
     methods: [...new Set(mods.map(m => m.method).filter(Boolean))],

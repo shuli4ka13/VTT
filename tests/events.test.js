@@ -82,6 +82,21 @@ group('событийный конверт', () => {
       throws(() => send('нетакого', ctx(arven, queue())), 'нетакого');
     });
 
+    test('числовой бонус эффекта попадает в бросок атаки', () => {
+      const blessed = {
+        id: 'blessed', label: 'Благословение', duration: { kind: 'scene' },
+        modifiers: [{ kind: 'roll', target: 'attack_roll', op: 'add', value: 4, stacking: 'sum', condition: null }],
+      };
+      const book = { ...compendium, effects: [...compendium.effects, blessed] };
+      const sheet = { ...arven, effects: [{ effectId: 'blessed' }] };
+
+      const plain = send('longsword', ctx(arven, queue(10, 5)));
+      const boosted = send('longsword', { system, sheet, compendium: book, die: queue(10, 5) });
+
+      eq(plain.attack.total, 16, 'кость 10 плюс свой бонус атаки 6');
+      eq(boosted.attack.total, 20, 'та же кость, но плюс 4 от эффекта');
+    });
+
     test('действия лежат в компендиуме, а не в системе', () => {
       eq(system.actions, undefined, 'система больше не объявляет действий');
       deepEq(compendium.actions.map(a => a.id), ['longsword', 'poison-spray']);

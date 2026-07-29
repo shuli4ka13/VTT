@@ -195,6 +195,77 @@ group('модификаторы', () => {
     });
   });
 
+  group('числовой бонус к броску — третий род модификатора', () => {
+    // «+5 ко всем проверкам» — это не +5 к характеристике и не преимущество.
+    // Это прибавка к самому броску. В черновике бонус и штраф стояли отдельно
+    // от преимущества и помехи (reference/index.html:2709), и правильно.
+    const bonus = (value, condition = null) => ({
+      id: 'guidance', label: 'Наставление', duration: { kind: 'scene' },
+      modifiers: [{ kind: 'roll', target: 'skill_roll', op: 'add', value, stacking: 'sum', condition }],
+    });
+    const gear = fx => ({ items: compendium.items, effects: [...compendium.effects, fx] });
+    const hung = { ...arven, effects: [{ effectId: 'guidance' }] };
+    const roll = fx => resolveRoll(system, hung, 'skill_roll',
+      newPass(system, hung, { compendium: gear(fx) }));
+
+    test('прибавка к броску приходит числом', () => {
+      eq(roll(bonus(5)).bonus, 5);
+    });
+
+    test('без модификаторов прибавки нет', () => {
+      eq(resolveRoll(system, arven, 'skill_roll', newPass(system, arven, { compendium })).bonus, 0);
+    });
+
+    test('прибавка может быть формулой', () => {
+      eq(roll(bonus({ expr: '#prof_bonus' })).bonus, 3, 'бонус мастерства Арвен');
+    });
+
+    test('прибавка не отменяет и не заменяет преимущество', () => {
+      const both = {
+        id: 'guidance', label: 'Наставление', duration: { kind: 'scene' },
+        modifiers: [
+          { kind: 'roll', target: 'skill_roll', op: 'add', value: 2, stacking: 'sum', condition: null },
+          { kind: 'roll', target: 'skill_roll', effect: 'advantage', method: 'rerollBest', condition: null },
+        ],
+      };
+      // Без кольчуги: иначе правило комнаты «тяжёлый доспех мешает ловким
+      // проверкам» даёт помеху, и она гасит преимущество — как и должна.
+      const bare = { ...arven, equipped: [], effects: [{ effectId: 'guidance' }] };
+      const result = resolveRoll(system, bare, 'skill_roll',
+        newPass(system, bare, { compendium: gear(both) }));
+      eq(result.bonus, 2, 'число живёт отдельно от режима');
+      eq(result.mode, 'advantage');
+    });
+
+    test('прибавка остаётся, даже когда преимущество погашено помехой', () => {
+      const both = {
+        id: 'guidance', label: 'Наставление', duration: { kind: 'scene' },
+        modifiers: [
+          { kind: 'roll', target: 'skill_roll', op: 'add', value: 2, stacking: 'sum', condition: null },
+          { kind: 'roll', target: 'skill_roll', effect: 'advantage', method: 'rerollBest', condition: null },
+        ],
+      };
+      // У Арвен кольчуга → правило комнаты даёт помеху → преимущество гасится.
+      const result = roll(both);
+      eq(result.mode, 'normal', 'помеха от правила комнаты погасила преимущество');
+      eq(result.bonus, 2, 'а число уцелело: это другая порода');
+    });
+
+    test('прибавка с ложным условием не применяется', () => {
+      eq(roll(bonus(5, '#level >= 99')).bonus, 0);
+    });
+
+    test('эффект может править и значение поля, не только бросок', () => {
+      const wise = {
+        id: 'guidance', label: 'Мудрость свыше', duration: { kind: 'scene' },
+        modifiers: [{ kind: 'value', target: 'wis', op: 'add', value: 5, stacking: 'sum', condition: null }],
+      };
+      eq(calc(system, hung, 'wis', newPass(system, hung, { compendium: gear(wise) })), 17);
+      eq(calc(system, hung, 'wis_mod', newPass(system, hung, { compendium: gear(wise) })), 3,
+        'модификатор Мудрости пересчитался следом');
+    });
+  });
+
   group('словарь мишеней выводится из системы', () => {
     test('в него попадают все объявленные поля и все броски', () => {
       const all = targets(system);

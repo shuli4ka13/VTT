@@ -77,71 +77,85 @@ function renderRecord() {
     </div>`;
 
   const body =
-    record.kind === 'item' ? itemBody(record)
-      : record.kind === 'effect' ? effectBody(record)
-        : actionBody(record);
+    record.kind === 'action' || record.kind === 'spell' ? actionBody(record) : modifiersBody(record);
 
   host.innerHTML = head + body + `
     <textarea class="desc-ta" placeholder="Описание для игрока…"
       oninput="uiSetRecord('${record.id}','description',this.value)">${esc(record.description || '')}</textarea>`;
 }
 
-function itemBody(item) {
-  const all = targets(state.system).filter(t => t.kind === 'value');
+// Один редактор модификаторов для предметов и эффектов: разницы между ними
+// в этом месте нет. Разница между ПОРОДАМИ модификатора — есть, и она главная:
+//
+//   правит значение — обычная арифметика, складывается по правилу стакинга;
+//   правит бросок   — либо числовая прибавка (тоже складывается),
+//                     либо преимущество/помеха (не число, помеха гасит).
+//
+// Всё это движок различал с самого начала; раньше эффекту в редакторе было
+// доступно только преимущество с помехой, и «+5 к Мудрости» эффектом было не завести.
+function modifiersBody(record) {
+  const fields = targets(state.system).filter(t => t.kind === 'value');
+  const rolls = targets(state.system).filter(t => t.kind === 'roll');
+
   return `<div class="pb">
-    <div class="pb-lbl">Бонусы к полям</div>
-    ${item.modifiers.map((mod, i) => {
-      const literal = !(mod.value && typeof mod.value === 'object');
-      return `<div class="pb" style="margin-bottom:6px;background:var(--s2)">
-        <button class="pb-del" onclick="uiDelMod('${item.id}',${i})">✕</button>
-        <div class="bon-row" style="grid-template-columns:1fr 92px 54px">
-          <select class="meta-sel" onchange="uiSetMod('${item.id}',${i},'target',this.value)">
-            ${all.map(t => `<option value="${t.tag}"${mod.target === t.tag ? ' selected' : ''}>${esc(t.label)}</option>`).join('')}
-          </select>
-          <select class="meta-sel" onchange="uiSetMod('${item.id}',${i},'op',this.value)">
-            ${OPS.map(([v, l]) => `<option value="${v}"${mod.op === v ? ' selected' : ''}>${l}</option>`).join('')}
-          </select>
-          <input class="bon-v" id="mod-${i}-value" value="${esc(literal ? mod.value : mod.value.expr)}"
-                 oninput="uiSetMod('${item.id}',${i},'value',this.value)">
-        </div>
-        <div class="bon-row" style="grid-template-columns:1fr 1fr;border:none">
-          <select class="meta-sel" onchange="uiSetMod('${item.id}',${i},'stacking',this.value)">
-            ${STACKING.map(([v, l]) => `<option value="${v}"${(mod.stacking || 'sum') === v ? ' selected' : ''}>${l}</option>`).join('')}
-          </select>
-          <input class="ar-cond" id="mod-${i}-cond" style="border:1px solid var(--border2);border-radius:5px;padding:4px 6px;background:var(--bg)"
-                 value="${esc(mod.condition || '')}" placeholder="условие"
-                 oninput="uiSetMod('${item.id}',${i},'condition',this.value)">
-        </div>
-      </div>`;
-    }).join('')}
-    <button class="add-row" onclick="uiAddMod('${item.id}')">+ добавить бонус</button>
+    <div class="pb-lbl">Что делает</div>
+    ${(record.modifiers || []).map((mod, i) => modRow(record.id, mod, i, fields, rolls)).join('')}
+    <button class="add-row" onclick="uiAddMod('${record.id}')">+ добавить</button>
     <div class="sys-hint" style="margin-top:6px">
-      Значение: число, «да»/«нет», или формула вида <code>#prof_bonus</code>.
-      Мишень — только из объявленных полей.
+      Значение: число, «да»/«нет» или формула вида <code>#prof_bonus</code>.
+      Мишень — только из объявленных полей, свободного текста здесь нет.
     </div>
   </div>`;
 }
 
-function effectBody(fx) {
-  const rollTargets = targets(state.system).filter(t => t.kind === 'roll');
-  const mod = fx.modifiers[0] || {};
-  return `<div class="pb">
-    <div class="pb-lbl">Модификатор броска</div>
-    <div style="display:flex;gap:6px;margin-bottom:6px">
-      <select class="meta-sel" style="flex:1" onchange="uiSetFxMod('${fx.id}','target',this.value)">
-        ${rollTargets.map(t => `<option value="${t.tag}"${mod.target === t.tag ? ' selected' : ''}>${esc(t.label)}</option>`).join('')}
+function modRow(id, mod, i, fields, rolls) {
+  const isRoll = mod.kind === 'roll';
+  const behaviour = !isRoll ? mod.op : mod.effect ? mod.effect : 'bonus';
+  const literal = !(mod.value && typeof mod.value === 'object');
+  const list = isRoll ? rolls : fields;
+
+  const valueCell = isRoll && mod.effect
+    ? `<select class="meta-sel" onchange="uiSetMod('${id}',${i},'method',this.value)">
+        ${ADVANTAGE_METHODS.map(m => `<option value="${m.id}"${mod.method === m.id ? ' selected' : ''}>${esc(m.label)}${m.implemented ? '' : ' — не отыгран'}</option>`).join('')}
+      </select>`
+    : `<input class="bon-v" id="mod-${i}-value" value="${esc(literal ? mod.value : mod.value.expr)}"
+              oninput="uiSetMod('${id}',${i},'value',this.value)">`;
+
+  return `<div class="pb" style="margin-bottom:6px;background:var(--s2)">
+    <button class="pb-del" onclick="uiDelMod('${id}',${i})">✕</button>
+
+    <div class="bon-row" style="grid-template-columns:1fr 1fr;border:none">
+      <select class="meta-sel" onchange="uiSetMod('${id}',${i},'kind',this.value)">
+        <option value="value"${isRoll ? '' : ' selected'}>Правит значение поля</option>
+        <option value="roll"${isRoll ? ' selected' : ''}>Правит бросок</option>
       </select>
-      <select class="meta-sel" onchange="uiSetFxMod('${fx.id}','effect',this.value)">
-        <option value="advantage"${mod.effect === 'advantage' ? ' selected' : ''}>Преимущество</option>
-        <option value="disadvantage"${mod.effect === 'disadvantage' ? ' selected' : ''}>Помеха</option>
+      <select class="meta-sel" onchange="uiSetMod('${id}',${i},'behaviour',this.value)">
+        ${isRoll ? `
+          <option value="bonus"${behaviour === 'bonus' ? ' selected' : ''}>Прибавка к броску</option>
+          <option value="advantage"${behaviour === 'advantage' ? ' selected' : ''}>Преимущество</option>
+          <option value="disadvantage"${behaviour === 'disadvantage' ? ' selected' : ''}>Помеха</option>`
+        : `
+          <option value="add"${behaviour === 'add' ? ' selected' : ''}>+ прибавить</option>
+          <option value="set"${behaviour === 'set' ? ' selected' : ''}>= задать</option>
+          <option value="mul"${behaviour === 'mul' ? ' selected' : ''}>× умножить</option>`}
       </select>
     </div>
-    <select class="meta-sel" style="width:100%" onchange="uiSetFxMod('${fx.id}','method',this.value)">
-      ${ADVANTAGE_METHODS.map(m => `<option value="${m.id}"${mod.method === m.id ? ' selected' : ''}>
-        ${esc(m.label)}${m.implemented ? '' : ' — не отыгран'}</option>`).join('')}
-    </select>
-    <div class="sys-hint" style="margin-top:8px">
-      Это не число. Два преимущества дают одно преимущество, помеха гасит его целиком.
+
+    <div class="bon-row" style="grid-template-columns:1fr 96px;border:none">
+      <select class="meta-sel" onchange="uiSetMod('${id}',${i},'target',this.value)">
+        ${list.map(t => `<option value="${t.tag}"${mod.target === t.tag ? ' selected' : ''}>${esc(t.label)}</option>`).join('')}
+      </select>
+      ${valueCell}
+    </div>
+
+    <div class="bon-row" style="grid-template-columns:1fr 1fr;border:none">
+      ${isRoll && mod.effect ? '<span class="sys-hint">не число: помеха гасит</span>' : `
+      <select class="meta-sel" onchange="uiSetMod('${id}',${i},'stacking',this.value)">
+        ${STACKING.map(([v, l]) => `<option value="${v}"${(mod.stacking || 'sum') === v ? ' selected' : ''}>${l}</option>`).join('')}
+      </select>`}
+      <input class="ar-cond" id="mod-${i}-cond" style="border:1px solid var(--border2);border-radius:5px;padding:4px 6px;background:var(--bg)"
+             value="${esc(mod.condition || '')}" placeholder="условие"
+             oninput="uiSetMod('${id}',${i},'condition',this.value)">
     </div>
   </div>`;
 }
@@ -274,11 +288,16 @@ export function setRecord(id, key, value) {
   if (record) record[key] = value;
 }
 
+const firstField = () => state.system.fields[0].tag;
+const firstRoll = () => (state.system.rolls[0] || {}).tag;
+
 export function addMod(id) {
-  live(id).modifiers.push({
-    kind: 'value', target: state.system.fields[0].tag,
-    op: 'add', value: 1, stacking: 'sum', condition: null,
-  });
+  const record = live(id);
+  const asRoll = record.kind === 'effect' && !(record.modifiers || []).length;
+  record.modifiers = record.modifiers || [];
+  record.modifiers.push(asRoll
+    ? { kind: 'roll', target: firstRoll(), effect: 'disadvantage', method: 'rerollBest', condition: null }
+    : { kind: 'value', target: firstField(), op: 'add', value: 1, stacking: 'sum', condition: null });
 }
 
 export function deleteMod(id, index) {
@@ -286,7 +305,36 @@ export function deleteMod(id, index) {
 }
 
 export function setMod(id, index, key, raw) {
-  const mod = live(id).modifiers[index];
+  const record = live(id);
+  const mod = record.modifiers[index];
+
+  // Смена породы: у значения и у броска разные мишени и разные поля,
+  // поэтому модификатор пересобирается целиком, а не правится по кусочку.
+  if (key === 'kind') {
+    record.modifiers[index] = raw === 'roll'
+      ? { kind: 'roll', target: firstRoll(), op: 'add', value: 1, stacking: 'sum', condition: mod.condition ?? null }
+      : { kind: 'value', target: firstField(), op: 'add', value: 1, stacking: 'sum', condition: mod.condition ?? null };
+    return;
+  }
+
+  // Что именно делает: для значения это операция, для броска — прибавка
+  // либо преимущество с помехой. Прибавка складывается, преимущество нет.
+  if (key === 'behaviour') {
+    if (mod.kind !== 'roll') { mod.op = raw; return; }
+
+    if (raw === 'bonus') {
+      record.modifiers[index] = {
+        kind: 'roll', target: mod.target, op: 'add', value: 1,
+        stacking: 'sum', condition: mod.condition ?? null,
+      };
+    } else {
+      record.modifiers[index] = {
+        kind: 'roll', target: mod.target, effect: raw,
+        method: mod.method || 'rerollBest', condition: mod.condition ?? null,
+      };
+    }
+    return;
+  }
 
   if (key === 'value') {
     // Число — литерал, всё прочее — формула. Разделение явное: логическое
@@ -300,14 +348,6 @@ export function setMod(id, index, key, raw) {
   }
   if (key === 'condition') { mod.condition = raw.trim() || null; return; }
   mod[key] = raw;
-}
-
-export function setFxMod(id, key, value) {
-  const fx = live(id);
-  if (!fx.modifiers.length) {
-    fx.modifiers.push({ kind: 'roll', target: state.system.rolls[0].tag, effect: 'disadvantage', method: 'rerollBest', condition: null });
-  }
-  fx.modifiers[0][key] = value;
 }
 
 // Правка конверта по пути вида «onHit.damage.dice». Теги приходят из

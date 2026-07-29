@@ -27,10 +27,13 @@ export function send(actionId, { system, sheet, compendium, die }) {
   const spec = action.envelope;
 
   if (spec.kind === 'attack') {
+    // Бонус броска складывается из двух источников: поля, которое назвало
+    // действие, и числовых модификаторов, висящих на самом броске.
+    const rollMods = resolveRoll(system, sheet, spec.roll.target, pass);
     const roll = rollCheck({
       sides: spec.roll.die,
-      bonus: calc(system, sheet, ...refOf(spec.roll.bonus), pass),
-      mode: resolveRoll(system, sheet, spec.roll.target, pass).mode,
+      bonus: calc(system, sheet, ...refOf(spec.roll.bonus), pass) + rollMods.bonus,
+      mode: rollMods.mode,
     }, die);
 
     return {
@@ -90,11 +93,12 @@ export function receive(envelope, { system, sheet, compendium, die }) {
 
   if (envelope.kind === 'save') {
     // Спасбросок считает и бросает ПОЛУЧАТЕЛЬ, своими формулами
-    // и со своими модификаторами броска.
+    // и со своими модификаторами броска — включая числовые прибавки.
+    const rollMods = resolveRoll(system, sheet, 'save_roll', pass);
     const save = rollCheck({
       sides: 20,
-      bonus: calc(system, sheet, envelope.saveTag, pass),
-      mode: resolveRoll(system, sheet, 'save_roll', pass).mode,
+      bonus: calc(system, sheet, envelope.saveTag, pass) + rollMods.bonus,
+      mode: rollMods.mode,
     }, die);
 
     const success = save.total >= envelope.dc;

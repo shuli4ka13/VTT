@@ -118,7 +118,6 @@ Object.assign(window, {
   uiAddMod: redraw(compendium.addMod),
   uiDelMod: redraw(compendium.deleteMod),
   uiSetMod: redraw(compendium.setMod),
-  uiSetFxMod: redraw(compendium.setFxMod),
   uiSetEnvelope: redraw(compendium.setEnvelope),
 });
 
