@@ -1,0 +1,121 @@
+/* Добавления прототипа поверх стилей черновика.
+   Всё, что здесь, — следствие замены голого поля формулы на полосу кусков:
+   ссылки стали чипсами с лейблами, тег на экран не попадает. */
+
+/* В черновике колонки не переполнялись: список формул был почти пуст. У нас
+   в системе полтора десятка формул, и строка сетки, растущая по содержимому,
+   выталкивала панель формул за низ экрана. Строку фиксируем по высоте сетки. */
+.three { grid-template-rows: minmax(0, 1fr); }
+.col { min-height: 0; }
+
+.poc-badge {
+  font-size: 11px;
+  color: var(--muted);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 4px 10px;
+}
+
+.poc-banner {
+  padding: 7px 16px;
+  background: rgba(248, 113, 113, .1);
+  border-bottom: 1px solid rgba(248, 113, 113, .35);
+  color: var(--red);
+  font-size: 12px;
+}
+
+/* ── полоса формулы ── */
+.expr-strip {
+  min-height: 32px;
+  padding: 6px 7px;
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  background: var(--s2);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+}
+.expr-txt {
+  font-family: Consolas, monospace;
+  font-size: 11px;
+  color: var(--blue);
+  white-space: pre;
+}
+/* Одно поле правки: формула хранится тегами, ниже показана лейблами.
+   Красная рамка — формула не разбирается; в систему такая не уходит. */
+.expr-inp.invalid {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+/* Подсказка при наборе: человек печатает лейбл, в строку ложится тег. */
+.hints {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 3px;
+  max-height: 148px;
+  overflow-y: auto;
+}
+.hints:empty { display: none; }
+.hints::-webkit-scrollbar { width: 3px; }
+.hints::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.hint {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 7px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: var(--s2);
+  color: var(--text);
+  font: inherit;
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+}
+.hint:hover { border-color: var(--border2); }
+.hint.on { border-color: var(--accent); background: rgba(129, 140, 248, .12); }
+.hint-name { flex: 1; }
+.hint-kind { font-size: 9px; color: var(--muted); }
+
+/* Панель формул не должна съедать список формул целиком: зависимостей у системы
+   два десятка, и без ограничения она вытесняет всё остальное из колонки. */
+.fbox { max-height: 62%; overflow-y: auto; }
+#fbox-deps { max-height: 132px; overflow-y: auto; }
+.fbox::-webkit-scrollbar, #fbox-deps::-webkit-scrollbar { width: 3px; }
+.fbox::-webkit-scrollbar-thumb, #fbox-deps::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.poc-kind {
+  font-size: 9px;
+  color: var(--yellow);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+/* ── журнал событий ── */
+.poc-log {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.poc-log b { color: var(--text); }
+
+/* ── неоживлённые куски палитры ── */
+.poc-dim { opacity: .42; cursor: default; }
+.poc-dim:hover { border-color: var(--border); background: var(--s2); }
+
+/* Ячейка характеристики кликабельна целиком — по ней открывается панель формул. */
+.stat-cell { cursor: pointer; }
+.stat-cell .sv[title] { cursor: help; }
+
+/* Сетка черновика рассчитана на короткие имена вроде «Сила»: в ячейку 74px
+   «Модификатор Телосложения» не помещается, и шесть разных полей читаются
+   одинаково. Ячейку расширяем, лейбл переносим по словам. */
+.stat-grid { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); }
+.stat-cell .sl {
+  white-space: normal;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.stat-cell .sv { font-size: 19px; }

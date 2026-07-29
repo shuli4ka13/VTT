@@ -1,0 +1,188 @@
+<!doctype html>
+<!-- Черновик тимлида (reference/index.html), оживлённый.
+
+     Вёрстка, классы и палитра — его. Заменено ровно то, что и требовалось заменить:
+       · evalF с подстановкой по отображаемому имени и Function() — выброшен;
+       · csBlocks как источник правды — заменён на систему + чарник;
+       · чипсы зависимостей вставляют тег, а не лейбл;
+       · мишень бонуса выбирается из объявленных тегов, а не набирается текстом.
+
+     Вырезано как вне скоупа PoC: вкладка VTT (карта, токены, чат, инициатива),
+     календарь, часы прогресса, радиальное меню броска, ведущая кость, прогрессия,
+     сохранение и экспорт. -->
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Конструктор систем — прототип</title>
+<link rel="stylesheet" href="src/ui/draft.css">
+<link rel="stylesheet" href="src/ui/poc.css">
+</head>
+<body>
+
+<header class="app-hdr">
+  <div class="app-logo">⚙ <span>Конструктор</span> систем</div>
+  <nav class="tab-nav">
+    <button class="tnav on" data-tab="char" onclick="uiTab('char')">Чарники</button>
+    <button class="tnav" data-tab="items" onclick="uiTab('items')">Предметы</button>
+    <button class="tnav" data-tab="fx" onclick="uiTab('fx')">Эффекты</button>
+    <button class="tnav" data-tab="system" onclick="uiTab('system')">Система</button>
+  </nav>
+  <div class="hdr-right">
+    <span class="poc-badge">прототип · движок настоящий, сохранения нет</span>
+  </div>
+</header>
+
+<div id="banner" class="poc-banner" style="display:none"></div>
+
+<div class="main">
+
+<!-- ════ TAB: ЧАРНИКИ ════ -->
+<div class="pane on" id="pane-char">
+<div class="three char-layout">
+
+  <!-- LEFT: персонажи + формулы -->
+  <div class="col dark">
+    <div class="char-list-top">
+      <div class="char-list-hdr"><span>Персонажи</span></div>
+      <div class="char-entries" id="char-entries"></div>
+    </div>
+    <div class="col-hdr">⨍ Формулы</div>
+    <div class="col-scroll" id="fList"></div>
+    <div class="fbox" id="fbox" style="display:none">
+      <label id="fbox-lbl">Поле</label>
+      <input class="expr-inp" id="fbox-inp" type="text" spellcheck="false"
+             placeholder="наберите «Сила» или «floor» — подскажет"
+             oninput="uiEditFormula(this.value, this.selectionStart)">
+      <div class="hints" id="fbox-hints"></div>
+      <div class="expr-strip" id="fbox-strip" title="так формулу видит игрок"></div>
+      <div class="f-result" id="fbox-res"></div>
+      <div style="font-size:10px;color:var(--muted);margin:7px 0 3px">
+        Зависит от: <span id="fbox-kind" class="poc-kind"></span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:3px" id="fbox-deps"></div>
+    </div>
+  </div>
+
+  <!-- CENTER: канвас -->
+  <div class="col mid" style="flex-direction:column">
+    <div class="col-hdr" id="cs-hdr">◈ Чарник</div>
+    <div class="cs-canvas" id="cs-canvas"></div>
+  </div>
+
+  <!-- RIGHT: палитра + журнал -->
+  <div class="col dark">
+    <div class="col-hdr">⊞ Блоки</div>
+    <div class="col-scroll">
+      <div class="pal-sec">Ресурсы</div>
+      <div class="pal-item" onclick="uiAddBlock('resource')"><span class="pal-icon">♥</span><div><div class="pal-t">Ресурс-бар</div><div class="pal-s">нужен шаблон листа</div></div></div>
+      <div class="pal-item" onclick="uiAddBlock('stat')"><span class="pal-icon">#</span><div><div class="pal-t">Характеристики</div><div class="pal-s">хранимое значение</div></div></div>
+      <div class="pal-sec">Действия</div>
+      <div class="pal-item" onclick="uiAddBlock('check')"><span class="pal-icon">⚄</span><div><div class="pal-t">Проверка</div><div class="pal-s">поле с формулой</div></div></div>
+      <div class="pal-item" onclick="uiAddBlock('ability')"><span class="pal-icon">✦</span><div><div class="pal-t">Способность</div><div class="pal-s">нужен шаблон листа</div></div></div>
+      <div class="pal-sec">Прогрессия</div>
+      <div class="pal-item" onclick="uiAddBlock('skill')"><span class="pal-icon">★</span><div><div class="pal-t">Навыки</div><div class="pal-s">нужен шаблон листа</div></div></div>
+      <div class="pal-sec">Информация</div>
+      <div class="pal-item" onclick="uiAddBlock('text')"><span class="pal-icon">Ⅲ</span><div><div class="pal-t">Поля персонажа</div><div class="pal-s">нужен шаблон листа</div></div></div>
+      <div class="pal-item" onclick="uiAddBlock('list')"><span class="pal-icon">≡</span><div><div class="pal-t">Список</div><div class="pal-s">нужен шаблон листа</div></div></div>
+
+      <div class="col-hdr" style="margin:12px -8px 0;padding-left:4px">⚄ Журнал</div>
+      <div id="event-log" class="poc-log"></div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ════ TAB: ПРЕДМЕТЫ ════ -->
+<div class="pane" id="pane-items">
+<div class="three item-layout">
+
+  <div class="col dark" style="flex-direction:column">
+    <div class="col-hdr">⬡ Предметы</div>
+    <div class="col-scroll" id="item-list" style="flex:1"></div>
+    <button class="new-item-btn" onclick="uiNewItem()">+ Новый предмет</button>
+  </div>
+
+  <div class="col mid" style="flex-direction:column">
+    <div class="col-hdr" id="item-ed-hdr">◈ Редактор</div>
+    <div class="item-ed" id="item-ed"></div>
+    <div class="preview-strip" id="item-preview" style="display:none"></div>
+  </div>
+
+  <div class="col dark">
+    <div class="col-hdr">⊞ Свойства</div>
+    <div class="col-scroll">
+      <div class="pal-sec">Оживлено</div>
+      <div class="pal-item"><span class="pal-icon">↑</span><div><div class="pal-t">Бонусы к полям</div><div class="pal-s">мишень из словаря системы</div></div></div>
+      <div class="pal-sec">Не оживлено</div>
+      <div class="pal-item poc-dim"><span class="pal-icon">⚔</span><div><div class="pal-t">Урон</div><div class="pal-s">кубы живут в действии</div></div></div>
+      <div class="pal-item poc-dim"><span class="pal-icon">🛡</span><div><div class="pal-t">Защита</div><div class="pal-s">выражается бонусом</div></div></div>
+      <div class="pal-item poc-dim"><span class="pal-icon">↻</span><div><div class="pal-t">Использования</div><div class="pal-s">нужен учёт времени</div></div></div>
+      <div class="pal-item poc-dim"><span class="pal-icon">◫</span><div><div class="pal-t">Слот экипировки</div><div class="pal-s">нужен шаблон листа</div></div></div>
+      <div class="pal-item poc-dim"><span class="pal-icon">◇</span><div><div class="pal-t">Теги</div><div class="pal-s">следующий заход</div></div></div>
+      <div class="pal-item poc-dim"><span class="pal-icon">⚿</span><div><div class="pal-t">Требования</div><div class="pal-s">выражаются условием</div></div></div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ════ TAB: ЭФФЕКТЫ ════ -->
+<div class="pane" id="pane-fx">
+<div class="three item-layout">
+
+  <div class="col dark" style="flex-direction:column">
+    <div class="col-hdr">⚑ Статус-эффекты</div>
+    <div class="fx-list-wrap" id="fx-list"></div>
+    <button class="new-item-btn" onclick="uiNewEffect()">+ Новый эффект</button>
+  </div>
+
+  <div class="col mid" style="flex-direction:column">
+    <div class="col-hdr" id="fx-ed-hdr">Редактор</div>
+    <div class="fx-ed-wrap" id="fx-ed"></div>
+  </div>
+
+  <div class="col dark">
+    <div class="col-hdr">⊞ Шаблоны</div>
+    <div class="col-scroll" id="fx-presets">
+      <div class="pal-sec">Негативные</div>
+      <div class="fx-preset-item" onclick="uiPreset('☠','Отравлен','disadvantage','attack_roll')">
+        <span class="fx-preset-icon">☠</span><div><div style="font-size:12px;color:var(--red)">Отравлен</div>
+        <div style="font-size:10px;color:var(--muted)">помеха на атаку</div></div></div>
+      <div class="fx-preset-item" onclick="uiPreset('💫','Оглушён','disadvantage','save_roll')">
+        <span class="fx-preset-icon">💫</span><div><div style="font-size:12px;color:var(--red)">Оглушён</div>
+        <div style="font-size:10px;color:var(--muted)">помеха на спасброски</div></div></div>
+      <div class="fx-preset-item" onclick="uiPreset('😨','Испуган','disadvantage','skill_roll')">
+        <span class="fx-preset-icon">😨</span><div><div style="font-size:12px;color:var(--red)">Испуган</div>
+        <div style="font-size:10px;color:var(--muted)">помеха на проверки</div></div></div>
+      <div class="pal-sec">Позитивные</div>
+      <div class="fx-preset-item" onclick="uiPreset('✨','Благословлён','advantage','attack_roll')">
+        <span class="fx-preset-icon">✨</span><div><div style="font-size:12px;color:var(--green)">Благословлён</div>
+        <div style="font-size:10px;color:var(--muted)">преимущество на атаку</div></div></div>
+      <div class="fx-preset-item" onclick="uiPreset('⚡','Вдохновлён','advantage','skill_roll')">
+        <span class="fx-preset-icon">⚡</span><div><div style="font-size:12px;color:var(--green)">Вдохновлён</div>
+        <div style="font-size:10px;color:var(--muted)">преимущество на проверки</div></div></div>
+      <div class="sys-hint" style="padding:8px 4px">
+        Шаблоны черновика несли текст механики. Здесь каждый несёт настоящий модификатор
+        броска: повесьте на персонажа и посмотрите вкладку «Система».
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ════ TAB: СИСТЕМА ════ -->
+<div class="pane" id="pane-system">
+  <div class="sys-wrap">
+    <div class="sys-card" id="sys-adv"></div>
+    <div class="sys-card" id="sys-targets"></div>
+  </div>
+</div>
+
+</div><!-- .main -->
+
+<script type="module" src="src/ui/main.js"></script>
+</body>
+</html>
