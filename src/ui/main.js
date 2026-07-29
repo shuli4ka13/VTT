@@ -84,6 +84,7 @@ Object.assign(window, {
   uiPickField: redraw(editor.pickField),
   uiRename: redraw(editor.rename),
   uiSetGroup: redraw(editor.setGroup),
+  uiSetType: redraw(editor.setType),
   uiAddField: redraw(editor.addField),
   uiAddGroup: redraw(editor.addGroup),
   uiDelField: redraw(editor.removeField),
@@ -99,6 +100,8 @@ Object.assign(window, {
   // ── режим игрока: значения и принадлежности ──
   uiPickSheet: redraw(player.pickSheet),
   uiNewSheet: redraw(player.newSheet),
+  uiRenameSheet: redraw(player.renameSheet),
+  uiDelSheet: redraw(player.deleteSheet),
   uiSetValue: redraw(player.setValue),
   uiToggle: redraw(player.toggle),
   uiEquip: redraw(player.equip),

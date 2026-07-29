@@ -72,10 +72,13 @@
 
   <div class="col dark" style="flex-direction:column">
     <div class="char-list-top">
-      <div class="char-list-hdr"><span>Персонажи</span></div>
+      <div class="char-list-hdr">
+        <span>Персонажи</span>
+        <button class="ctype-btn pc" onclick="uiNewSheet('pc')" title="персонаж игрока">+ ИГ</button>
+        <button class="ctype-btn npc" onclick="uiNewSheet('npc')" title="НПС ведущего">+ НПС</button>
+      </div>
       <div class="char-entries" id="player-sheets" style="max-height:none"></div>
     </div>
-    <button class="new-item-btn" onclick="uiNewSheet()">+ Новый персонаж</button>
     <div class="col-hdr">⚄ Журнал</div>
     <div class="col-scroll poc-log" id="event-log" style="flex:1"></div>
   </div>

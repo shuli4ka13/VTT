@@ -20,8 +20,10 @@ export function renderPlayer() {
 function renderSheetList() {
   document.getElementById('player-sheets').innerHTML = state.sheets.map(s => `
     <div class="char-entry${s.id === state.activeSheetId ? ' on' : ''}" onclick="uiPickSheet('${s.id}')">
-      <span class="char-type ${s.id === state.activeSheetId ? 'pc' : 'npc'}">лист</span>
-      <span class="char-name-inp">${esc(s.name)}</span>
+      <span class="char-type ${s.kind}">${s.kind === 'pc' ? 'ИГ' : 'НПС'}</span>
+      <input class="char-name-inp" type="text" id="name-${s.id}" value="${esc(s.name)}"
+             onclick="event.stopPropagation()" oninput="uiRenameSheet('${s.id}', this.value)">
+      <button class="char-entry-del" onclick="event.stopPropagation();uiDelSheet('${s.id}')">✕</button>
     </div>`).join('');
 }
 
@@ -41,11 +43,22 @@ function renderSheetBody() {
     groups.get(f.group).push(f);
   }
 
-  host.innerHTML = [...groups].map(([group, fields]) => `
-    <div class="cs-block">
-      <div class="blk-type">${esc(group)}</div>
-      <div class="stat-grid">${fields.map(f => cell(f, p)).join('')}</div>
-    </div>`).join('');
+  host.innerHTML = `<div class="cs-block" style="background:var(--s2)">
+      <input class="blk-name" type="text" id="sheet-name" value="${esc(current.name)}"
+             oninput="uiRenameSheet('${current.id}', this.value)">
+      <div class="blk-type" style="margin:0">${current.kind === 'pc' ? 'персонаж игрока' : 'НПС ведущего'}</div>
+    </div>` +
+    [...groups].map(([group, fields]) => {
+      // Блок из одних текстовых полей подаётся строками «ключ — значение»,
+      // как «Поля персонажа» в черновике. Правило по данным, а не по имени блока.
+      const textual = fields.every(f => f.value.kind === 'stored' && f.value.type === 'text');
+      return `<div class="cs-block">
+        <div class="blk-type">${esc(group)}</div>
+        ${textual
+          ? fields.map(f => textRow(f, p)).join('')
+          : `<div class="stat-grid">${fields.map(f => cell(f, p)).join('')}</div>`}
+      </div>`;
+    }).join('');
 }
 
 function cell(f, p) {
@@ -68,6 +81,15 @@ function cell(f, p) {
   return `<div class="stat-cell">
     ${control}
     <span class="sl" style="display:block">${esc(f.label)}</span>
+  </div>`;
+}
+
+function textRow(f, p) {
+  const result = valueOf(f.tag, p);
+  return `<div class="txt-row" style="grid-template-columns:118px 1fr">
+    <span class="txt-k">${esc(f.label)}</span>
+    <input class="txt-v" type="text" id="val-${f.tag}" value="${esc(result.ok ? result.value : '')}"
+           placeholder="—" oninput="uiSetValue('${f.tag}', this.value)">
   </div>`;
 }
 
@@ -140,23 +162,44 @@ export function pickSheet(id) {
   state.activeSheetId = id;
 }
 
-export function newSheet() {
-  const n = state.sheets.length + 1;
+export function newSheet(kind = 'pc') {
+  let n = state.sheets.length + 1;
+  while (state.sheets.some(s => s.id === `sheet_${n}`)) n++;
+  const id = `sheet_${n}`;
+
   state.sheets.push({
-    id: `sheet_${n}`,
+    id,
     systemId: state.system.id,
-    name: `Персонаж ${n}`,
-    values: {},          // всё возьмётся из умолчаний системы
+    kind,
+    name: kind === 'pc' ? 'Новый персонаж' : 'Новый НПС',
+    values: {},   // всё возьмётся из умолчаний системы
     equipped: [],
     effects: [],
     actions: [],
   });
-  state.activeSheetId = `sheet_${n}`;
+  state.activeSheetId = id;
+}
+
+export function renameSheet(id, name) {
+  const target = state.sheets.find(s => s.id === id);
+  if (target) target.name = name;
+}
+
+export function deleteSheet(id) {
+  if (state.sheets.length === 1) {
+    log('<b>Последний лист не удаляю</b> — иначе экран станет пустым.');
+    return;
+  }
+  state.sheets = state.sheets.filter(s => s.id !== id);
+  if (state.activeSheetId === id) state.activeSheetId = state.sheets[0].id;
 }
 
 export function setValue(tag, raw) {
-  const f = field(tag);
-  sheet().values[tag] = f.value.type === 'boolean' ? Boolean(raw) : Number(raw);
+  const type = field(tag).value.type;
+  sheet().values[tag] =
+    type === 'boolean' ? Boolean(raw)
+      : type === 'text' ? String(raw)
+        : Number(raw);
 }
 
 export function toggle(tag) {

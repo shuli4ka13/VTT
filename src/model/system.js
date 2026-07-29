@@ -57,6 +57,12 @@ export const system = {
   ],
 
   fields: [
+    // Текстовые поля: значение вводит игрок, формулы на них не ссылаются.
+    // В черновике это был блок «Поля персонажа» — имя, раса, класс.
+    { tag: 'race', label: 'Раса', group: 'Личное дело', value: { kind: 'stored', type: 'text', default: '' } },
+    { tag: 'class_name', label: 'Класс', group: 'Личное дело', value: { kind: 'stored', type: 'text', default: '' } },
+    { tag: 'alignment', label: 'Мировоззрение', group: 'Личное дело', value: { kind: 'stored', type: 'text', default: '' } },
+
     { tag: 'str', label: 'Сила', group: 'Характеристики', value: { kind: 'stored', type: 'number', default: 10 } },
     { tag: 'dex', label: 'Ловкость', group: 'Характеристики', value: { kind: 'stored', type: 'number', default: 10 } },
     { tag: 'con', label: 'Телосложение', group: 'Характеристики', value: { kind: 'stored', type: 'number', default: 10 } },

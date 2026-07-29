@@ -17,7 +17,11 @@ export class SheetShapeError extends Error {
   }
 }
 
-const TOP_KEYS = ['id', 'systemId', 'name', 'values', 'equipped', 'effects', 'actions'];
+const TOP_KEYS = ['id', 'systemId', 'kind', 'name', 'values', 'equipped', 'effects', 'actions'];
+
+// Персонаж игрока или ведущего. Это не правило системы, а метка о том, кто листом
+// владеет, — того же рода, что имя. Системы, где различия нет, просто ставят 'pc'.
+const KINDS = ['pc', 'npc'];
 
 const isScalar = v => v === null || ['number', 'boolean', 'string'].includes(typeof v);
 
@@ -35,6 +39,10 @@ export function assertSheetShape(sheet) {
   }
   for (const key of TOP_KEYS) {
     if (!(key in sheet)) throw new SheetShapeError(`в чарнике нет обязательного поля «${key}»`);
+  }
+
+  if (!KINDS.includes(sheet.kind)) {
+    throw new SheetShapeError(`«kind» должен быть одним из: ${KINDS.join(', ')}`);
   }
 
   for (const key of ['id', 'systemId', 'name']) {
@@ -101,6 +109,7 @@ export function deserializeSheet(json) {
   return {
     id: parsed.id,
     systemId: parsed.systemId,
+    kind: parsed.kind,
     name: parsed.name,
     values: sortKeys(parsed.values),
     equipped: [...parsed.equipped],

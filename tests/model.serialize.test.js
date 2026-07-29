@@ -10,6 +10,7 @@ const sample = () => ({
   equipped: ['chain-mail'],
   effects: [],
   actions: ['longsword'],
+  kind: 'pc',
 });
 
 group('сериализация чарника', () => {
@@ -38,7 +39,7 @@ group('сериализация чарника', () => {
 
   test('в сериализованном виде нет ничего, кроме объявленных полей DTO', () => {
     const keys = Object.keys(JSON.parse(serializeSheet(sample())));
-    deepEq(keys.sort(), ['actions', 'effects', 'equipped', 'id', 'name', 'systemId', 'values']);
+    deepEq(keys.sort(), ['actions', 'effects', 'equipped', 'id', 'kind', 'name', 'systemId', 'values']);
   });
 
   group('защита от вычисленных значений в DTO', () => {
@@ -86,6 +87,24 @@ group('сериализация чарника', () => {
     test('без списка действий чарник неполон', () => {
       const { actions, ...rest } = sample();
       throws(() => serializeSheet(rest), SheetShapeError, 'actions');
+    });
+  });
+
+  group('кто владеет листом', () => {
+    test('лист знает, персонаж это игрока или ведущего', () => {
+      for (const sheet of sheets) {
+        ok(['pc', 'npc'].includes(sheet.kind), `у ${sheet.id} странный род: ${sheet.kind}`);
+      }
+    });
+
+    test('посторонний род отвергается', () => {
+      throws(() => serializeSheet({ ...sample(), kind: 'дракон' }), SheetShapeError, 'kind');
+    });
+
+    test('текстовое значение — законный скаляр', () => {
+      const withText = { ...sample(), values: { ...sample().values, race: 'Полурослик' } };
+      const back = deserializeSheet(serializeSheet(withText));
+      eq(back.values.race, 'Полурослик');
     });
   });
 

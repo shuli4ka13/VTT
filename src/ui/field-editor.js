@@ -49,6 +49,18 @@ export function renderEditor() {
       </select>
     </div>
 
+    ${f.value.kind === 'stored' ? `<div class="pb">
+      <div class="pb-lbl">Что вводит игрок</div>
+      <select class="meta-sel" style="width:100%" onchange="uiSetType('${f.tag}', this.value)">
+        <option value="number"${f.value.type === 'number' ? ' selected' : ''}>Число</option>
+        <option value="boolean"${f.value.type === 'boolean' ? ' selected' : ''}>Да / нет</option>
+        <option value="text"${f.value.type === 'text' ? ' selected' : ''}>Текст — имя, раса, класс</option>
+      </select>
+      <div class="sys-hint" style="margin-top:6px">
+        На текстовые поля формулы не ссылаются: складывать строки нечем.
+      </div>
+    </div>` : ''}
+
     <div class="pb">
       <div class="pb-lbl">Как считается · ${esc(KIND_LABEL[f.value.kind] || f.value.kind)}</div>
       <input class="expr-inp" id="fbox-inp" type="text" spellcheck="false"
@@ -139,6 +151,18 @@ export function rename(tag, label) {
 
 export function setGroup(tag, group) {
   field(tag).group = group;
+}
+
+export function setType(tag, type) {
+  const f = field(tag);
+  if (f.value.kind !== 'stored') return;
+  f.value = { kind: 'stored', type, default: type === 'text' ? '' : type === 'boolean' ? false : 0 };
+  // Прежние значения могли быть другого рода — приводим, чтобы лист не показал ошибку.
+  for (const s of state.sheets) {
+    if (!(tag in s.values)) continue;
+    const raw = s.values[tag];
+    s.values[tag] = type === 'text' ? String(raw) : type === 'boolean' ? Boolean(raw) : Number(raw) || 0;
+  }
 }
 
 export function addField(group) {
