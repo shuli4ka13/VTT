@@ -59,16 +59,8 @@ function renderRules() {
           <span class="info-dot" title="${esc(method.examples.map(e => `${e.system}: ${e.example}`).join('\n'))}">i</span>
         </div>
       </div>`).join('')}
-    <div class="sys-hint" style="padding:6px 4px">
-      Отыгран один способ — переброс с выбором лучшего или худшего. Остальные шесть
-      объявлены, чтобы стало видно: «преимущество» — семейство механик, числом
-      оно не выражается.
-    </div>
 
     <div class="pal-sec" style="margin-top:10px">Правила комнаты</div>
-    <div class="sys-hint" style="padding:0 4px 6px">
-      Действуют на всех персонажей системы, без предметов и эффектов.
-    </div>
     ${rules.map(rule => ruleRow(rule, enabled, rollTargets)).join('')}
     <button class="add-row" onclick="uiAddRule()">+ правило</button>`;
 }
@@ -94,9 +86,6 @@ function ruleRow(rule, enabled, rollTargets) {
       <select onchange="uiSetRule(${index},'target',this.value)">
         ${rollTargets.map(t => `<option value="${t.tag}"${rule.target === t.tag ? ' selected' : ''}>${esc(t.label)}</option>`).join('')}
       </select>
-    </div>
-    <div class="sys-hint" style="margin-top:5px;font-family:Consolas,monospace;color:var(--blue)">
-      ${esc(toDisplay(rule.condition || '', state.system)) || 'без условия — всегда'}
     </div>
     <select style="margin-top:5px" onchange="uiSetRule(${index},'method',this.value)">
       ${enabled.length

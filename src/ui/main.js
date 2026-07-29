@@ -117,7 +117,6 @@ Object.assign(window, {
   uiDelSheet: redraw(player.deleteSheet),
   uiSetValue: redraw(player.setValue),
   uiToggle: redraw(player.toggle),
-  uiCycleProf: redraw(player.cycleProf),
   uiEquip: redraw(player.equip),
   uiHang: redraw(player.hang),
   uiLearn: redraw(player.learn),

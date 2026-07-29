@@ -30,8 +30,8 @@ group('движок вычислений', () => {
     });
 
     test('формула от формулы разворачивается на всю глубину', () => {
-      // athletics → str_mod → str, и параллельно → prof_bonus → level
-      eq(calc(system, arven, 'athletics'), 6);
+      // athletics → str_mod → str
+      eq(calc(system, arven, 'athletics'), 3);
     });
 
     test('таблица по диапазонам ищет строку по значению аргумента', () => {
@@ -152,7 +152,7 @@ group('движок вычислений', () => {
       const all = calcAll(system, arven);
       eq(Object.keys(all).length, system.fields.length);
       eq(all.str, 16);
-      eq(all.athletics, 6);
+      eq(all.athletics, 3);
       eq(all.spell_dc, 10);
     });
 

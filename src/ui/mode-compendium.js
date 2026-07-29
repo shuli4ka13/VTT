@@ -103,11 +103,6 @@ function modifiersBody(record) {
     <div class="pb-lbl">Что делает</div>
     ${(record.modifiers || []).map((mod, i) => modRow(record.id, mod, i, fields, rolls)).join('')}
     <button class="add-row" onclick="uiAddMod('${record.id}')">+ добавить</button>
-    <div class="sys-hint" style="margin-top:6px">
-      Куда — выбирается из полей и бросков системы. Вписать что попало нельзя,
-      и это главное отличие от Foundry: там пришлось бы набрать путь вроде
-      <code>system.abilities.wis.bonuses.check</code> и помнить его наизусть.
-    </div>
   </div>`;
 }
 
@@ -153,7 +148,7 @@ function modRow(id, mod, i, fields, rolls) {
         </select>`}
     </div>
 
-    ${mod.effect ? '<div class="sys-hint" style="margin:4px 0">Не число: два преимущества дают одно, помеха гасит целиком.</div>' : `
+    ${mod.effect ? '' : `
       <div class="pb-lbl" style="margin:8px 0 3px">Насколько</div>
       ${logical
         ? `<select class="meta-sel" style="width:100%" onchange="uiSetMod('${id}',${i},'value',this.value)">
@@ -225,11 +220,6 @@ function actionBody(action) {
   return `<div class="pb">
     <div class="pb-lbl">Конверт намерения</div>
     ${shape}${body}
-    <div class="sys-hint" style="margin-top:8px">
-      Отправитель кладёт в конверт свои числа и <b>тег</b> того, что цель посчитает сама.
-      Все теги здесь выбираются из объявленных — нового ввести нельзя, поэтому
-      действие волен создать и игрок.
-    </div>
   </div>`;
 }
 

@@ -39,13 +39,9 @@ function renderSheetBody() {
 
   const p = pass();
 
-  // Поле, на которое ссылается чей-то «prof», само по себе не рисуется:
-  // оно живёт точкой владения внутри строки навыка, как в черновике.
-  const insideSkill = new Set(state.system.fields.map(f => f.prof).filter(Boolean));
 
   const groups = new Map();
   for (const f of state.system.fields) {
-    if (insideSkill.has(f.tag)) continue;
     if (!groups.has(f.group)) groups.set(f.group, []);
     groups.get(f.group).push(f);
   }
@@ -58,33 +54,14 @@ function renderSheetBody() {
     [...groups].map(([group, fields]) => {
       // Подача блока выводится из того, что в нём лежит, а не из его названия.
       const textual = fields.every(f => f.value.kind === 'stored' && f.value.type === 'text');
-      const skills = fields.every(f => f.prof);
 
-      const body = textual ? fields.map(f => textRow(f, p)).join('')
-        : skills ? fields.map(f => skillRow(f, p)).join('')
-          : `<div class="stat-grid">${fields.map(f => cell(f, p)).join('')}</div>`;
+      const body = textual
+        ? fields.map(f => textRow(f, p)).join('')
+        : `<div class="stat-grid">${fields.map(f => cell(f, p)).join('')}</div>`;
 
       return `<div class="cs-block"><div class="blk-type">${esc(group)}</div>${body}</div>`;
     }).join('')
     + belongingsBlocks(current, p);
-}
-
-// Строка навыка из черновика: точка владения, название, значение.
-// Точка трёхпозиционная — нет, владение, компетентность.
-const PROF_COLOR = ['var(--border2)', 'var(--yellow)', 'var(--green)'];
-const PROF_WORD = ['владения нет', 'владение', 'компетентность — бонус вдвое'];
-
-function skillRow(f, p) {
-  const result = valueOf(f.tag, p);
-  const prof = valueOf(f.prof, p);
-  const level = Math.max(0, Math.min(2, Number(prof.value) || 0));
-
-  return `<div class="skl-row" style="grid-template-columns:13px 1fr 46px">
-    <span class="pdot" style="background:${PROF_COLOR[level]}" title="${PROF_WORD[level]}"
-          onclick="uiCycleProf('${f.prof}')"></span>
-    <span style="font-size:12px">${esc(f.label)}</span>
-    <span class="skv" style="color:var(--blue)">${result.ok ? esc(show(result.value)) : '—'}</span>
-  </div>`;
 }
 
 // Снаряжение и эффекты видны НА ЛИСТЕ, а не только в панели сбоку.
@@ -235,8 +212,7 @@ function renderRolls(p) {
   const touched = all.filter(({ roll }) => roll.mode !== 'normal' || roll.bonus);
 
   if (!touched.length) {
-    return `<div class="pal-sec" style="margin-top:10px">Броски</div>
-      <div class="sys-hint" style="padding:2px 4px">Все ${all.length} обычные — ничего не висит.</div>`;
+    return `<div class="pal-sec" style="margin-top:10px">Броски</div>`;
   }
 
   return `<div class="pal-sec" style="margin-top:10px">Броски сейчас</div>
@@ -250,8 +226,7 @@ function renderRolls(p) {
         <span>${esc(target.label)}</span>
         <span style="color:var(--accent)">${plus}${modeWord(roll.mode)}</span>
       </div>`;
-    }).join('')}
-    <div class="sys-hint" style="padding:4px">Остальные ${all.length - touched.length} обычные.</div>`;
+    }).join('')}`;
 }
 
 // Один вид списка для всех трёх видов записей: галочка «у меня есть».
@@ -318,12 +293,6 @@ export function setValue(tag, raw) {
         : Number(raw);
 }
 
-// Точка владения идёт по кругу: нет → владение → компетентность → нет.
-// Как трёхпозиционная точка в черновике.
-export function cycleProf(tag) {
-  const current = Number(sheet().values[tag] || 0);
-  sheet().values[tag] = (current + 1) % 3;
-}
 
 export function toggle(tag) {
   const current = valueOf(tag);

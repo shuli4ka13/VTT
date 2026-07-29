@@ -20,9 +20,9 @@ import { calc, newPass } from '../engine/calc.js';
 import { resolveRoll } from '../engine/modifiers.js';
 
 export const MODES = {
-  author: { label: 'Конструктор листа', badge: 'режим автора · правите систему, персонаж не нужен' },
-  player: { label: 'Персонаж', badge: 'режим игрока · состав полей не трогается' },
-  compendium: { label: 'Компендиум', badge: 'общая библиотека · персонажи ссылаются на записи' },
+  author: { label: 'Конструктор листа', badge: 'режим автора' },
+  player: { label: 'Персонаж', badge: 'режим игрока' },
+  compendium: { label: 'Компендиум', badge: 'общая библиотека' },
 };
 
 export const state = {

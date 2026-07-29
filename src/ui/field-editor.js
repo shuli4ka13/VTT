@@ -35,10 +35,6 @@ export function renderEditor() {
       <div class="pb-lbl">Как называется</div>
       <input class="item-name-inp" id="fe-label" value="${esc(f.label)}"
              oninput="uiRename('${f.tag}', this.value)">
-      <div class="sys-hint" style="margin-top:6px">
-        Служебное имя <code>#${esc(f.tag)}</code> задано при создании и не меняется.
-        Формулы держатся за него — поэтому переименование выше ничего не ломает.
-      </div>
     </div>
 
     <div class="pb">
@@ -55,9 +51,6 @@ export function renderEditor() {
         <option value="boolean"${f.value.type === 'boolean' ? ' selected' : ''}>Да / нет</option>
         <option value="text"${f.value.type === 'text' ? ' selected' : ''}>Текст — имя, раса, класс</option>
       </select>
-      <div class="sys-hint" style="margin-top:6px">
-        На текстовые поля формулы не ссылаются: складывать строки нечем.
-      </div>
     </div>` : ''}
 
     <div class="pb">
@@ -68,11 +61,6 @@ export function renderEditor() {
       ${f.roll ? `<input class="expr-inp" style="margin-top:6px" type="text"
              value="${esc(f.roll.label || '')}" placeholder="как назвать бросок"
              oninput="uiSetRollLabel('${f.tag}', this.value)">` : ''}
-      <div class="sys-hint" style="margin-top:6px">
-        Отметьте — и появится отдельный бросок по этому полю. На него можно будет
-        повесить эффект, не задев остальные броски.
-        Кубик общий, к${state.system.defaultDie || 20}, если поле не скажет иначе.
-      </div>
     </div>
 
     <div class="pb">
