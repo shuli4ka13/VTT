@@ -16,6 +16,7 @@ import { calc, newPass } from '../engine/calc.js';
 import { resolveRoll } from '../engine/modifiers.js';
 import { rollNotation, rollCheck } from '../engine/dice.js';
 import { EngineError } from '../engine/errors.js';
+import { compile } from '../formula/index.js';
 
 export function send(actionId, { system, sheet, compendium, die }) {
   // Действие — запись компендиума, а не закон системы. Законом остаётся форма
@@ -32,7 +33,7 @@ export function send(actionId, { system, sheet, compendium, die }) {
     const rollMods = resolveRoll(system, sheet, spec.roll.target, pass);
     const roll = rollCheck({
       sides: spec.roll.die,
-      bonus: calc(system, sheet, ...refOf(spec.roll.bonus), pass) + rollMods.bonus,
+      bonus: evalExpr(spec.roll.bonus, pass) + rollMods.bonus,
       mode: rollMods.mode,
     }, die);
 
@@ -58,7 +59,7 @@ export function send(actionId, { system, sheet, compendium, die }) {
       action: action.id,
       label: action.label,
       saveTag: spec.saveTag,
-      dc: evalExpr(spec.dc, system, sheet, pass),
+      dc: evalExpr(spec.dc, pass),
       onFail: outcomeOf(spec.onFail, system, sheet, pass, die),
       onSuccess: outcomeOf(spec.onSuccess, system, sheet, pass, die),
     };
@@ -164,17 +165,15 @@ function outcomeOf(spec, system, sheet, pass, die) {
 
 function damageOf(spec, system, sheet, pass, die) {
   const rolled = rollNotation(spec.dice, die);
-  const bonus = spec.bonus ? evalExpr(spec.bonus, system, sheet, pass) : 0;
+  const bonus = spec.bonus ? evalExpr(spec.bonus, pass) : 0;
   return { notation: spec.dice, rolls: rolled.rolls, bonus, total: rolled.total + bonus };
 }
 
-function evalExpr(expr, system, sheet, pass) {
-  return calc(system, sheet, ...refOf(expr), pass);
+// Выражения действий считаются тем же языком формул, что и поля системы:
+// «Бонус атаки + 2», «8 + Бонус мастерства + Модификатор Харизмы».
+function evalExpr(expr, pass) {
+  return compile(String(expr)).evaluate(pass.resolve);
 }
-
-// Выражения действий в этом прототипе — прямые ссылки вида `#тег`.
-// Полноценные выражения появятся, когда действия начнут считать что-то сложнее;
-// записано в docs/production-differences.md.
 // Сторожа против бессмыслицы в конверте. Редактор их и так не предложит, но
 // данные могли прийти откуда угодно — из файла, из чужой комнаты, из будущего
 // импорта. Молчаливое «мимо» вместо ошибки скрыло бы поломку.
@@ -194,8 +193,3 @@ function assertWritable(system, tag) {
   }
 }
 
-function refOf(expr) {
-  const match = /^\s*#([\p{L}\p{N}_]+)\s*$/u.exec(String(expr));
-  if (!match) throw new EngineError(`в действии ожидается ссылка вида «#тег», получено «${expr}»`);
-  return [match[1]];
-}

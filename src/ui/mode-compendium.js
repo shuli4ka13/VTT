@@ -206,16 +206,28 @@ function actionBody(action) {
       </select>
     </div>`;
 
+  // Ссылка — дропдауном, вычисление — формулой. Мишень должна указывать
+  // на одну объявленную вещь, а бонус может быть любым выражением.
+  const expr = (label, path, value) => `
+    <div class="pb-lbl" style="margin:10px 0 3px">${label}</div>
+    ${renderFormulaInput(`env.${action.id}.${path.replace(/\./g, '_')}`, {
+      placeholder: 'число или формула',
+      read: () => String(value ?? ''),
+      write: text => setEnvelope(action.id, path, text),
+    })}`;
+
   const body = env.kind === 'attack'
-    ? pick('Бонус атаки', 'roll.bonus', ref(env.roll.bonus), fields)
-      + pick('Мишень броска', 'roll.target', env.roll.target, rolls)
-      + pick('Против чего', 'versus', env.versus, fields)
+    ? pick('Мишень броска', 'roll.target', env.roll.target, rolls)
+      + pick('Против чего у цели', 'versus', env.versus, fields)
       + pick('Куда урон', 'onHit.applyTo', env.onHit.applyTo, writableFields)
       + dice('Кубы урона', 'onHit.damage.dice', env.onHit.damage.dice, action.id)
+      + expr('Бонус к броску атаки', 'roll.bonus', env.roll.bonus)
+      + expr('Бонус к урону', 'onHit.damage.bonus', (env.onHit.damage || {}).bonus)
     : pick('Чем спасается', 'saveTag', env.saveTag, fields)
-      + pick('Сложность', 'dc', ref(env.dc), fields)
       + pick('Куда урон', 'onFail.applyTo', (env.onFail || {}).applyTo, writableFields)
-      + dice('Кубы урона', 'onFail.damage.dice', ((env.onFail || {}).damage || {}).dice, action.id);
+      + dice('Кубы урона', 'onFail.damage.dice', ((env.onFail || {}).damage || {}).dice, action.id)
+      + expr('Сложность', 'dc', env.dc)
+      + expr('Бонус к урону', 'onFail.damage.bonus', ((env.onFail || {}).damage || {}).bonus);
 
   return `<div class="pb">
     <div class="pb-lbl">Конверт намерения</div>
@@ -231,7 +243,6 @@ function dice(label, path, value, id) {
   </div>`;
 }
 
-const ref = expr => String(expr ?? '').replace(/^#/, '');
 
 // ── правки ──────────────────────────────────────────────────────────────────
 
@@ -394,8 +405,10 @@ export function setEnvelope(id, path, value) {
     if (!node[key]) node[key] = {};
     node = node[key];
   }
-  // Ссылки на поля хранятся с решёткой, кубы и мишени бросков — как есть.
-  node[last] = last === 'bonus' || last === 'dc' ? '#' + value : value;
+  // Пустое выражение убираем совсем: пустая строка ушла бы в разбор формулы
+  // и уронила бы отправку. Бонус — вещь необязательная.
+  if (!String(value).trim() && (last === 'bonus' || last === 'dc')) delete node[last];
+  else node[last] = value;
 }
 
 function reshape(action, kind) {

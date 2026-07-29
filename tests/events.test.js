@@ -249,3 +249,55 @@ group('конверт не даёт целиться в бессмыслицу',
     throws(() => receive(env, { system, sheet: mirra, compendium: book, die: die() }), 'ac');
   });
 });
+
+group('в действии можно писать выражения, а не только ссылку', () => {
+  const die = (...v) => { const q = [...v]; return () => q.shift(); };
+  const withAction = envelope => ({
+    ...compendium,
+    actions: [{ id: 'custom', kind: 'action', label: 'Своё', envelope }],
+  });
+
+  test('бонус атаки — выражение, а не один тег', () => {
+    const book = withAction({
+      kind: 'attack',
+      roll: { die: 20, bonus: '#attack_bonus + 2', target: 'attack_roll' },
+      versus: 'ac',
+      onHit: { damage: { dice: '1d8' }, applyTo: 'hp_current' },
+    });
+    const env = send('custom', { system, sheet: arven, compendium: book, die: die(10, 4) });
+    eq(env.attack.total, 18, 'кость 10 плюс бонус атаки 6 плюс двойка из выражения');
+  });
+
+  test('бонус урона задаётся выражением', () => {
+    const book = withAction({
+      kind: 'attack',
+      roll: { die: 20, bonus: '#attack_bonus', target: 'attack_roll' },
+      versus: 'ac',
+      onHit: { damage: { dice: '1d8', bonus: '#str_mod * 2' }, applyTo: 'hp_current' },
+    });
+    const env = send('custom', { system, sheet: arven, compendium: book, die: die(10, 4) });
+    eq(env.onHit.damage.total, 10, 'кость 4 плюс удвоенная Сила 6');
+  });
+
+  test('сложность спасброска — выражение', () => {
+    const book = withAction({
+      kind: 'save',
+      saveTag: 'dex_save',
+      dc: '8 + #prof_bonus + #cha_mod',
+      onFail: { damage: { dice: '2d6' }, applyTo: 'hp_current' },
+      onSuccess: null,
+    });
+    const env = send('custom', { system, sheet: mirra, compendium: book, die: die(3, 4) });
+    eq(env.dc, 13, '8 плюс бонус мастерства 2 плюс Харизма 3');
+  });
+
+  test('битое выражение в действии — внятная ошибка', () => {
+    const book = withAction({
+      kind: 'attack',
+      roll: { die: 20, bonus: '#attack_bonus +', target: 'attack_roll' },
+      versus: 'ac',
+      onHit: { damage: { dice: '1d8' }, applyTo: 'hp_current' },
+    });
+    throws(() => send('custom', { system, sheet: arven, compendium: book, die: die(10, 4) }));
+  });
+});
