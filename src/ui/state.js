@@ -36,11 +36,11 @@ export const state = {
   activeSheetId: arven.id,
 
   activeTag: null,       // поле, открытое в конструкторе
-  draft: null,           // черновик формулы (в тегах, не в лейблах)
-  caret: null,
-  editCaret: null,
-  suggestIndex: 0,
-  suggestDismissed: false,
+
+  // Слот формулы, который сейчас правят. Редактор формул один на всю программу,
+  // и активен всегда ровно один слот — тот, где стоит каретка.
+  formula: { key: null, draft: '', at: 0, index: 0, dismissed: true },
+  caret: null,           // { key, at } — куда вернуть каретку после перерисовки
 
   activeRecordId: null,  // запись компендиума
   brokenModifiers: null,

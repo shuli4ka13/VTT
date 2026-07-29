@@ -13,6 +13,7 @@ import * as author from './mode-author.js';
 import * as editor from './field-editor.js';
 import * as player from './mode-player.js';
 import * as compendium from './mode-compendium.js';
+import * as formula from './formula-input.js';
 
 export function render() {
   state.brokenModifiers = null;
@@ -52,20 +53,28 @@ const redraw = fn => (...args) => {
   const active = document.activeElement;
   const memo = active && active.id ? { id: active.id, start: active.selectionStart } : null;
 
-  fn(...args);
+  // Обработчик волен сказать «ничего не изменилось» — тогда и перерисовывать
+  // нечего. Это не оптимизация: без неё фокус в уже активном поле запускал бы
+  // перерисовку, а та — снова фокус.
+  if (fn(...args) === false) return;
+
   render();
   restoreCaret(memo);
 };
 
 function restoreCaret(memo) {
-  // Подсказка и чипсы сами говорят, куда встала каретка.
-  if (state.caret != null) {
-    const input = document.getElementById('fbox-inp');
+  // Подсказка и чипсы сами говорят, в каком слоте и куда встала каретка.
+  if (state.caret) {
+    // Забираем и обнуляем ДО фокуса: focus() синхронно дёргает onfocus,
+    // тот перерисовывает, и вложенный вызов затрёт state.caret под нами.
+    const { key, at } = state.caret;
+    state.caret = null;
+
+    const input = document.getElementById('fi-' + key);
     if (input) {
       input.focus();
-      input.setSelectionRange(state.caret, state.caret);
+      input.setSelectionRange(at, at);
     }
-    state.caret = null;
     return;
   }
 
@@ -88,10 +97,12 @@ Object.assign(window, {
   uiAddField: redraw(editor.addField),
   uiAddGroup: redraw(editor.addGroup),
   uiDelField: redraw(editor.removeField),
-  uiEditFormula: redraw(editor.edit),
-  uiAcceptHint: redraw(editor.acceptSuggestion),
-  uiInsertDep: redraw(editor.insertDep),
-  uiDropPart: redraw(editor.dropPart),
+  // ── общий редактор формул: поля системы, значения и условия модификаторов ──
+  uiFormulaFocus: redraw(formula.focusSlot),
+  uiFormulaEdit: redraw(formula.edit),
+  uiFormulaAccept: redraw(formula.accept),
+  uiFormulaDep: redraw(formula.insertDep),
+  uiFormulaDrop: redraw(formula.dropPart),
   uiToggleMethod: redraw(author.toggleMethod),
   uiAddRule: redraw(author.addRule),
   uiDelRule: redraw(author.deleteRule),
@@ -123,13 +134,14 @@ Object.assign(window, {
 
 // Стрелки и Enter в поле формулы ведут по списку подсказок.
 document.addEventListener('keydown', event => {
-  if (event.target.id !== 'fbox-inp') return;
+  if (!String(event.target.id).startsWith('fi-')) return;
+  const key = event.target.id.slice(3);
 
   const handled =
-    event.key === 'ArrowDown' ? editor.moveSuggestion(1)
-      : event.key === 'ArrowUp' ? editor.moveSuggestion(-1)
-        : event.key === 'Enter' || event.key === 'Tab' ? editor.acceptSuggestion()
-          : event.key === 'Escape' ? (editor.dismissSuggestions(), true)
+    event.key === 'ArrowDown' ? formula.move(key, 1)
+      : event.key === 'ArrowUp' ? formula.move(key, -1)
+        : event.key === 'Enter' || event.key === 'Tab' ? formula.accept(key)
+          : event.key === 'Escape' ? formula.dismiss(key)
             : false;
 
   if (!handled) return;

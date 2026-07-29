@@ -13,6 +13,8 @@ import { state, esc, newRecordId, log } from './state.js';
 import { targets } from '../engine/targets.js';
 import { ADVANTAGE_METHODS } from '../model/advantage-methods.js';
 import { allRecords } from '../model/compendium.js';
+import { renderFormulaInput } from './formula-input.js';
+import { field } from './state.js';
 
 const OPS = [['add', '+ прибавить'], ['set', '= задать'], ['mul', '× умножить']];
 const STACKING = [['sum', 'складывать'], ['max', 'брать наибольший'], ['override', 'последний побеждает']];
@@ -114,12 +116,8 @@ function modRow(id, mod, i, fields, rolls) {
   const literal = !(mod.value && typeof mod.value === 'object');
   const list = isRoll ? rolls : fields;
 
-  const valueCell = isRoll && mod.effect
-    ? `<select class="meta-sel" onchange="uiSetMod('${id}',${i},'method',this.value)">
-        ${ADVANTAGE_METHODS.map(m => `<option value="${m.id}"${mod.method === m.id ? ' selected' : ''}>${esc(m.label)}${m.implemented ? '' : ' — не отыгран'}</option>`).join('')}
-      </select>`
-    : `<input class="bon-v" id="mod-${i}-value" value="${esc(literal ? mod.value : mod.value.expr)}"
-              oninput="uiSetMod('${id}',${i},'value',this.value)">`;
+  const target = field(mod.target);
+  const logical = !isRoll && target && target.value.type === 'boolean';
 
   return `<div class="pb" style="margin-bottom:6px;background:var(--s2)">
     <button class="pb-del" onclick="uiDelMod('${id}',${i})">✕</button>
@@ -141,22 +139,40 @@ function modRow(id, mod, i, fields, rolls) {
       </select>
     </div>
 
-    <div class="bon-row" style="grid-template-columns:1fr 96px;border:none">
+    <div class="bon-row" style="grid-template-columns:1fr 1fr;border:none">
       <select class="meta-sel" onchange="uiSetMod('${id}',${i},'target',this.value)">
         ${list.map(t => `<option value="${t.tag}"${mod.target === t.tag ? ' selected' : ''}>${esc(t.label)}</option>`).join('')}
       </select>
-      ${valueCell}
+      ${mod.effect ? `
+        <select class="meta-sel" onchange="uiSetMod('${id}',${i},'method',this.value)">
+          ${ADVANTAGE_METHODS.map(m => `<option value="${m.id}"${mod.method === m.id ? ' selected' : ''}>${esc(m.label)}${m.implemented ? '' : ' — не отыгран'}</option>`).join('')}
+        </select>`
+      : `<select class="meta-sel" onchange="uiSetMod('${id}',${i},'stacking',this.value)">
+          ${STACKING.map(([v, l]) => `<option value="${v}"${(mod.stacking || 'sum') === v ? ' selected' : ''}>${l}</option>`).join('')}
+        </select>`}
     </div>
 
-    <div class="bon-row" style="grid-template-columns:1fr 1fr;border:none">
-      ${isRoll && mod.effect ? '<span class="sys-hint">не число: помеха гасит</span>' : `
-      <select class="meta-sel" onchange="uiSetMod('${id}',${i},'stacking',this.value)">
-        ${STACKING.map(([v, l]) => `<option value="${v}"${(mod.stacking || 'sum') === v ? ' selected' : ''}>${l}</option>`).join('')}
-      </select>`}
-      <input class="ar-cond" id="mod-${i}-cond" style="border:1px solid var(--border2);border-radius:5px;padding:4px 6px;background:var(--bg)"
-             value="${esc(mod.condition || '')}" placeholder="условие"
-             oninput="uiSetMod('${id}',${i},'condition',this.value)">
-    </div>
+    ${mod.effect ? '<div class="sys-hint" style="margin:4px 0">Не число: два преимущества дают одно, помеха гасит целиком.</div>' : `
+      <div class="pb-lbl" style="margin:8px 0 3px">Насколько</div>
+      ${logical
+        ? `<select class="meta-sel" style="width:100%" onchange="uiSetMod('${id}',${i},'value',this.value)">
+            <option value="да"${mod.value === true ? ' selected' : ''}>да</option>
+            <option value="нет"${mod.value !== true ? ' selected' : ''}>нет</option>
+          </select>`
+        // Тот же редактор формул, что у полей системы: подсказка по лейблам,
+        // чипсы, разбор. «+#prof_bonus к Классу брони» набирается по-человечески.
+        : renderFormulaInput(`mod.${id}.${i}.value`, {
+          placeholder: 'число или формула: наберите «Бонус»',
+          read: () => (literal ? String(mod.value ?? '') : mod.value.expr),
+          write: expr => writeModValue(id, i, expr),
+        })}`}
+
+    <div class="pb-lbl" style="margin:8px 0 3px">Когда действует</div>
+    ${renderFormulaInput(`mod.${id}.${i}.cond`, {
+      placeholder: 'всегда — оставьте пустым',
+      read: () => mod.condition || '',
+      write: expr => setMod(id, i, 'condition', expr),
+    })}
   </div>`;
 }
 
@@ -302,6 +318,15 @@ export function addMod(id) {
 
 export function deleteMod(id, index) {
   live(id).modifiers.splice(index, 1);
+}
+
+// Число остаётся литералом, всё прочее — формулой. Разделение явное: логических
+// литералов в грамматике нет, и «истину» формулой не выразить.
+export function writeModValue(id, index, expr) {
+  const mod = live(id).modifiers[index];
+  const trimmed = String(expr).trim();
+  const asNumber = Number(trimmed);
+  mod.value = !trimmed ? 0 : Number.isNaN(asNumber) ? { expr: trimmed } : asNumber;
 }
 
 export function setMod(id, index, key, raw) {
