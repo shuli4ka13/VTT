@@ -7,10 +7,31 @@
 
 import { UnknownTagError } from './errors.js';
 
+// Мишень броска, выведенная из поля. Двоеточие в теге не случайно: в теги поля
+// оно попасть не может (лексер его не пускает), поэтому столкновения имён нет.
+export const rollTagOf = tag => `check:${tag}`;
+
 export function targets(system) {
   return [
     ...system.fields.map(f => ({ tag: f.tag, label: f.label, group: f.group, kind: 'value' })),
+
+    // Броски, объявленные системой отдельно: атака, спасбросок и прочее общее.
     ...(system.rolls || []).map(r => ({ tag: r.tag, label: r.label, group: 'Броски', kind: 'roll' })),
+
+    // И броски, выведенные из полей, помеченных «по нему бросают».
+    //
+    // Объявлять их по одному пришлось бы десятками: в 5e бросают по шести
+    // характеристикам и восемнадцати навыкам. Черновик это предвидел —
+    // «чтобы не прописывать кубы для каждого навыка» (reference/index.html:1988).
+    // Правило то же, что для словаря мишеней: выводится, а не хранится.
+    ...system.fields.filter(f => f.roll).map(f => ({
+      tag: rollTagOf(f.tag),
+      label: f.roll.label || `Проверка: ${f.label}`,
+      group: f.group,
+      kind: 'roll',
+      from: f.tag,
+      die: f.roll.die || system.defaultDie || 20,
+    })),
   ];
 }
 

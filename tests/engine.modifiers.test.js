@@ -269,7 +269,9 @@ group('модификаторы', () => {
   group('словарь мишеней выводится из системы', () => {
     test('в него попадают все объявленные поля и все броски', () => {
       const all = targets(system);
-      eq(all.length, system.fields.length + system.rolls.length);
+      const derived = system.fields.filter(f => f.roll).length;
+      eq(all.length, system.fields.length + system.rolls.length + derived,
+        'поля, объявленные броски и броски, выведенные из полей');
       ok(all.some(t => t.tag === 'ac' && t.kind === 'value'));
       ok(all.some(t => t.tag === 'attack_roll' && t.kind === 'roll'));
     });
@@ -287,5 +289,65 @@ group('модификаторы', () => {
       const sheet = { ...arven, equipped: ['bogus'] };
       throws(() => calc(system, sheet, 'ac', newPass(system, sheet, { compendium: book([bogus]) })), UnknownTagError);
     });
+  });
+});
+
+// ── мишени броска выводятся из полей ────────────────────────────────────────
+//
+// «+5 к проверкам Мудрости» некуда было целить: мишень броска на всю систему
+// была одна — «Проверка навыка». Объявлять три десятка мишеней руками глупо,
+// и черновик это прямо говорил: «чтобы не прописывать кубы для каждого навыка»
+// (reference/index.html:1988). Поэтому мишень выводится из поля, помеченного
+// «по нему бросают», — так же как словарь мишеней для бонусов выводится из тегов.
+
+group('броски выводятся из полей', () => {
+  const rollable = (tag, label) => ({
+    ...system,
+    fields: system.fields.map(f => f.tag === tag ? { ...f, roll: { label } } : f),
+  });
+
+  // «Максимум ХП» в образцовой системе не бросается — на нём и проверяем.
+  test('помеченное поле даёт мишень броска', () => {
+    const sys = rollable('hp_max', 'Бросок хитов');
+    const found = targets(sys).find(t => t.tag === 'check:hp_max');
+    ok(found, `мишени нет; есть: ${targets(sys).filter(t => t.kind === 'roll').map(t => t.tag)}`);
+    eq(found.label, 'Бросок хитов');
+    eq(found.kind, 'roll');
+  });
+
+  test('непомеченное поле мишени не даёт', () => {
+    eq(targets(system).some(t => t.tag === 'check:hp_max'), false);
+  });
+
+  test('поле остаётся мишенью и для бонусов к значению', () => {
+    const sys = rollable('wis', 'Проверка Мудрости');
+    ok(targets(sys).some(t => t.tag === 'wis' && t.kind === 'value'), 'само поле никуда не делось');
+  });
+
+  test('эффект на проверку Мудрости не задевает другие броски', () => {
+    const sys = rollable('wis', 'Проверка Мудрости');
+    const owl = {
+      id: 'owl', label: 'Сова-помощница', duration: { kind: 'scene' },
+      modifiers: [{ kind: 'roll', target: 'check:wis', op: 'add', value: 5, stacking: 'sum', condition: null }],
+    };
+    const book = { ...compendium, effects: [...compendium.effects, owl] };
+    const sheet = { ...arven, effects: [{ effectId: 'owl' }] };
+    const p = () => newPass(sys, sheet, { compendium: book });
+
+    eq(resolveRoll(sys, sheet, 'check:wis', p()).bonus, 5);
+    eq(resolveRoll(sys, sheet, 'skill_roll', p()).bonus, 0, 'общая проверка навыка не тронута');
+    eq(resolveRoll(sys, sheet, 'attack_roll', p()).bonus, 0, 'атака не тронута');
+  });
+
+  test('характеристика при этом не меняется', () => {
+    const sys = rollable('wis', 'Проверка Мудрости');
+    const owl = {
+      id: 'owl', label: 'Сова', duration: { kind: 'scene' },
+      modifiers: [{ kind: 'roll', target: 'check:wis', op: 'add', value: 5, stacking: 'sum', condition: null }],
+    };
+    const book = { ...compendium, effects: [...compendium.effects, owl] };
+    const sheet = { ...arven, effects: [{ effectId: 'owl' }] };
+    eq(calc(sys, sheet, 'wis', newPass(sys, sheet, { compendium: book })), 12, 'Мудрость как была');
+    eq(calc(sys, sheet, 'wis_mod', newPass(sys, sheet, { compendium: book })), 1, 'и модификатор тоже');
   });
 });

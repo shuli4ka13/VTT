@@ -61,6 +61,21 @@ export function renderEditor() {
     </div>` : ''}
 
     <div class="pb">
+      <div class="chk-row${f.roll ? ' on' : ''}" onclick="uiToggleRoll('${f.tag}')">
+        <div class="chk-box">✓</div>
+        <div class="chk-lbl"><span>По этому полю бросают</span></div>
+      </div>
+      ${f.roll ? `<input class="expr-inp" style="margin-top:6px" type="text"
+             value="${esc(f.roll.label || '')}" placeholder="как назвать бросок"
+             oninput="uiSetRollLabel('${f.tag}', this.value)">` : ''}
+      <div class="sys-hint" style="margin-top:6px">
+        Отметьте — и в списке мишеней появится отдельный бросок по этому полю.
+        Тогда эффект вешается на проверку именно его, не задевая остальные.
+        Кость берётся общая (${state.system.defaultDie || 20}), если поле не скажет иначе.
+      </div>
+    </div>
+
+    <div class="pb">
       <div class="pb-lbl">Как считается · ${esc(KIND_LABEL[f.value.kind] || f.value.kind)}</div>
       ${renderFormulaInput('field.' + f.tag, {
         exclude: f.tag,
@@ -91,6 +106,20 @@ export function rename(tag, label) {
 
 export function setGroup(tag, group) {
   field(tag).group = group;
+}
+
+// «По этому полю бросают». Мишень броска не объявляется отдельно, а выводится
+// из поля — иначе в 5e их пришлось бы завести десятка три руками. Идея из
+// черновика: «чтобы не прописывать кубы для каждого навыка».
+export function toggleRoll(tag) {
+  const f = field(tag);
+  if (f.roll) delete f.roll;
+  else f.roll = { label: `Проверка: ${f.label}` };
+}
+
+export function setRollLabel(tag, label) {
+  const f = field(tag);
+  if (f.roll) f.roll.label = label;
 }
 
 export function setType(tag, type) {

@@ -63,12 +63,12 @@ export const system = {
     { tag: 'class_name', label: 'Класс', group: 'Личное дело', value: { kind: 'stored', type: 'text', default: '' } },
     { tag: 'alignment', label: 'Мировоззрение', group: 'Личное дело', value: { kind: 'stored', type: 'text', default: '' } },
 
-    { tag: 'str', label: 'Сила', group: 'Характеристики', value: { kind: 'stored', type: 'number', default: 10 } },
-    { tag: 'dex', label: 'Ловкость', group: 'Характеристики', value: { kind: 'stored', type: 'number', default: 10 } },
-    { tag: 'con', label: 'Телосложение', group: 'Характеристики', value: { kind: 'stored', type: 'number', default: 10 } },
-    { tag: 'int', label: 'Интеллект', group: 'Характеристики', value: { kind: 'stored', type: 'number', default: 10 } },
-    { tag: 'wis', label: 'Мудрость', group: 'Характеристики', value: { kind: 'stored', type: 'number', default: 10 } },
-    { tag: 'cha', label: 'Харизма', group: 'Характеристики', value: { kind: 'stored', type: 'number', default: 10 } },
+    { tag: 'str', label: 'Сила', group: 'Характеристики', roll: { label: 'Проверка Силы' }, value: { kind: 'stored', type: 'number', default: 10 } },
+    { tag: 'dex', label: 'Ловкость', group: 'Характеристики', roll: { label: 'Проверка Ловкости' }, value: { kind: 'stored', type: 'number', default: 10 } },
+    { tag: 'con', label: 'Телосложение', group: 'Характеристики', roll: { label: 'Проверка Телосложения' }, value: { kind: 'stored', type: 'number', default: 10 } },
+    { tag: 'int', label: 'Интеллект', group: 'Характеристики', roll: { label: 'Проверка Интеллекта' }, value: { kind: 'stored', type: 'number', default: 10 } },
+    { tag: 'wis', label: 'Мудрость', group: 'Характеристики', roll: { label: 'Проверка Мудрости' }, value: { kind: 'stored', type: 'number', default: 10 } },
+    { tag: 'cha', label: 'Харизма', group: 'Характеристики', roll: { label: 'Проверка Харизмы' }, value: { kind: 'stored', type: 'number', default: 10 } },
 
     { tag: 'str_mod', label: 'Модификатор Силы', group: 'Модификаторы', value: { kind: 'formula', expr: 'floor((#str - 10) / 2)' } },
     { tag: 'dex_mod', label: 'Модификатор Ловкости', group: 'Модификаторы', value: { kind: 'formula', expr: 'floor((#dex - 10) / 2)' } },
@@ -81,13 +81,13 @@ export const system = {
     { tag: 'prof_bonus', label: 'Бонус мастерства', group: 'Прогрессия', value: { kind: 'table', table: 'proficiency', arg: '#level' } },
 
     { tag: 'athletics_prof', label: 'Владение Атлетикой', group: 'Навыки', value: { kind: 'stored', type: 'boolean', default: false } },
-    { tag: 'athletics', label: 'Атлетика', group: 'Навыки', value: { kind: 'formula', expr: '#str_mod + (#athletics_prof ? #prof_bonus : 0)' } },
+    { tag: 'athletics', label: 'Атлетика', group: 'Навыки', roll: { label: 'Проверка Атлетики' }, value: { kind: 'formula', expr: '#str_mod + (#athletics_prof ? #prof_bonus : 0)' } },
 
     { tag: 'ac_base', label: 'База доспеха', group: 'Защита', value: { kind: 'stored', type: 'number', default: 10 } },
     { tag: 'armor_heavy', label: 'Доспех тяжёлый', group: 'Защита', value: { kind: 'stored', type: 'boolean', default: false } },
     // Условное правило: в тяжёлом доспехе Ловкость не прибавляется.
     { tag: 'ac', label: 'Класс брони', group: 'Защита', value: { kind: 'formula', expr: '#ac_base + (#armor_heavy ? 0 : #dex_mod)' } },
-    { tag: 'dex_save', label: 'Спасбросок Ловкости', group: 'Защита', value: { kind: 'formula', expr: '#dex_mod' } },
+    { tag: 'dex_save', label: 'Спасбросок Ловкости', group: 'Защита', roll: { label: 'Спасбросок Ловкости' }, value: { kind: 'formula', expr: '#dex_mod' } },
 
     { tag: 'hp_max', label: 'Максимум ХП', group: 'Здоровье', value: { kind: 'stored', type: 'number', default: 1 } },
     { tag: 'hp_current', label: 'Текущие ХП', group: 'Здоровье', value: { kind: 'stored', type: 'number', default: 1 } },

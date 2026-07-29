@@ -8,6 +8,7 @@
 // новый ТЕГ вводит только автор; комбинировать существующие можно отсюда.
 
 import { state, sheet, field, pass, rollOf, valueOf, show, newRecordId, esc, log } from './state.js';
+import { targets } from '../engine/targets.js';
 import { send, receive } from '../events/envelope.js';
 import { randomDie } from '../engine/dice.js';
 
@@ -112,7 +113,7 @@ function renderBelongings() {
     <button class="add-row" onclick="uiCreate('effect')">+ создать эффект</button>
 
     <div class="pal-sec" style="margin-top:10px">Броски сейчас</div>
-    ${state.system.rolls.map(r => {
+    ${targets(state.system).filter(t => t.kind === 'roll').map(r => {
       const roll = rollOf(r.tag, p);
       // Режим и прибавка — разные вещи и показываются раздельно.
       // «+5 ко всем проверкам» это не преимущество, а число.
