@@ -9,6 +9,7 @@ const sample = () => ({
   values: { str: 16, dex: 14, athletics_prof: true },
   equipped: ['chain-mail'],
   effects: [],
+  actions: ['longsword'],
 });
 
 group('сериализация чарника', () => {
@@ -37,7 +38,7 @@ group('сериализация чарника', () => {
 
   test('в сериализованном виде нет ничего, кроме объявленных полей DTO', () => {
     const keys = Object.keys(JSON.parse(serializeSheet(sample())));
-    deepEq(keys.sort(), ['effects', 'equipped', 'id', 'name', 'systemId', 'values']);
+    deepEq(keys.sort(), ['actions', 'effects', 'equipped', 'id', 'name', 'systemId', 'values']);
   });
 
   group('защита от вычисленных значений в DTO', () => {
@@ -66,6 +67,25 @@ group('сериализация чарника', () => {
 
     test('десериализация проверяет форму так же строго', () => {
       throws(() => deserializeSheet('{"id":"x","computed":{}}'), SheetShapeError);
+    });
+  });
+
+  group('ссылки на записи компендиума', () => {
+    test('чарник хранит ссылки на действия, а не копии', () => {
+      for (const sheet of sheets) {
+        ok(Array.isArray(sheet.actions), `у ${sheet.id} нет списка действий`);
+        for (const id of sheet.actions) eq(typeof id, 'string', 'действие — ссылка, а не объект');
+      }
+    });
+
+    test('объект вместо ссылки на действие отвергается', () => {
+      const dirty = { ...sample(), actions: [{ id: 'longsword', label: 'Копия' }] };
+      throws(() => serializeSheet(dirty), SheetShapeError, 'действ');
+    });
+
+    test('без списка действий чарник неполон', () => {
+      const { actions, ...rest } = sample();
+      throws(() => serializeSheet(rest), SheetShapeError, 'actions');
     });
   });
 

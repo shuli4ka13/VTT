@@ -34,7 +34,52 @@ export const effects = [
   },
 ];
 
-export const compendium = { items, effects };
+// Действия — тоже записи компендиума, а не правила системы.
+//
+// «Удар длинным мечом» — это конкретная запись, как кольчуга, а не закон мира.
+// Законом остаётся форма конверта (атака / спасбросок), которую разбирает движок.
+// Отсюда и граница режимов: действие ссылается только на УЖЕ объявленные теги,
+// нового тега не вводит — значит, создавать его волен игрок, а не только автор.
+//
+// Заклинание — не отдельный род записи, а действие с пометкой `kind`.
+// В 5e применение заклинания порождает ровно конверт: атаку или спасбросок.
+export const actions = [
+  {
+    id: 'longsword',
+    kind: 'action',
+    label: 'Удар длинным мечом',
+    description: 'Рукопашная атака оружием.',
+    envelope: {
+      kind: 'attack',
+      roll: { die: 20, bonus: '#attack_bonus', target: 'attack_roll' },
+      versus: 'ac', // тег, который получатель посчитает СВОИМИ формулами
+      onHit: { damage: { dice: '1d8', bonus: '#str_mod' }, applyTo: 'hp_current' },
+    },
+  },
+  {
+    id: 'poison-spray',
+    kind: 'spell',
+    label: 'Ядовитые брызги',
+    description: 'Заговор. Цель делает спасбросок Телосложения — здесь для примера Ловкости.',
+    envelope: {
+      kind: 'save',
+      saveTag: 'dex_save',
+      dc: '#spell_dc',
+      onFail: { damage: { dice: '2d6' }, applyTo: 'hp_current', effect: 'poisoned' },
+      onSuccess: null,
+    },
+  },
+];
+
+export const compendium = { items, effects, actions };
 
 export const findItem = id => items.find(i => i.id === id) || null;
 export const findEffect = id => effects.find(e => e.id === id) || null;
+export const findAction = id => actions.find(a => a.id === id) || null;
+
+// Единый список для экрана компендиума: разделов там нет намеренно.
+export const allRecords = book => [
+  ...(book.items || []).map(r => ({ ...r, kind: 'item' })),
+  ...(book.effects || []).map(r => ({ ...r, kind: 'effect' })),
+  ...(book.actions || []),
+];

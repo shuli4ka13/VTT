@@ -17,7 +17,7 @@ export class SheetShapeError extends Error {
   }
 }
 
-const TOP_KEYS = ['id', 'systemId', 'name', 'values', 'equipped', 'effects'];
+const TOP_KEYS = ['id', 'systemId', 'name', 'values', 'equipped', 'effects', 'actions'];
 
 const isScalar = v => v === null || ['number', 'boolean', 'string'].includes(typeof v);
 
@@ -55,6 +55,13 @@ export function assertSheetShape(sheet) {
   if (!Array.isArray(sheet.equipped)) throw new SheetShapeError('«equipped» должен быть массивом');
   for (const id of sheet.equipped) {
     if (typeof id !== 'string') throw new SheetShapeError('«equipped» содержит не ссылку на предмет, а значение');
+  }
+
+  if (!Array.isArray(sheet.actions)) throw new SheetShapeError('«actions» должен быть массивом');
+  for (const id of sheet.actions) {
+    if (typeof id !== 'string') {
+      throw new SheetShapeError('«actions» содержит не ссылку на действие, а объект — копий записей в чарнике не держим');
+    }
   }
 
   if (!Array.isArray(sheet.effects)) throw new SheetShapeError('«effects» должен быть массивом');
@@ -98,6 +105,7 @@ export function deserializeSheet(json) {
     values: sortKeys(parsed.values),
     equipped: [...parsed.equipped],
     effects: parsed.effects.map(e => ({ ...e })),
+    actions: [...parsed.actions],
   };
 }
 

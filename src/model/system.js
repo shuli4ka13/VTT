@@ -90,29 +90,4 @@ export const system = {
     { tag: 'spell_dc', label: 'Сложность заклинаний', group: 'Атака', value: { kind: 'formula', expr: '8 + #prof_bonus + #cha_mod' } },
   ],
 
-  // Действия собирают конверт намерения. Все выражения внутри считаются
-  // ОТПРАВИТЕЛЕМ по своей системе; получателю уходят только числа и теги.
-  actions: [
-    {
-      id: 'longsword',
-      label: 'Удар длинным мечом',
-      envelope: {
-        kind: 'attack',
-        roll: { die: 20, bonus: '#attack_bonus', target: 'attack_roll' },
-        versus: 'ac', // тег, который получатель посчитает СВОИМИ формулами
-        onHit: { damage: { dice: '1d8', bonus: '#str_mod' }, applyTo: 'hp_current' },
-      },
-    },
-    {
-      id: 'poison-spray',
-      label: 'Ядовитые брызги',
-      envelope: {
-        kind: 'save',
-        saveTag: 'dex_save',
-        dc: '#spell_dc',
-        onFail: { damage: { dice: '2d6' }, applyTo: 'hp_current', effect: 'poisoned' },
-        onSuccess: null,
-      },
-    },
-  ],
 };

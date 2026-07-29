@@ -18,8 +18,10 @@ import { rollNotation, rollCheck } from '../engine/dice.js';
 import { EngineError } from '../engine/errors.js';
 
 export function send(actionId, { system, sheet, compendium, die }) {
-  const action = (system.actions || []).find(a => a.id === actionId);
-  if (!action) throw new EngineError(`система не объявляет действия «${actionId}»`);
+  // Действие — запись компендиума, а не закон системы. Законом остаётся форма
+  // конверта: разбирать «атаку» и «спасбросок» умеет этот модуль, и только он.
+  const action = (compendium.actions || []).find(a => a.id === actionId);
+  if (!action) throw new EngineError(`в компендиуме нет действия «${actionId}»`);
 
   const pass = newPass(system, sheet, { compendium });
   const spec = action.envelope;

@@ -24,6 +24,7 @@ export const arven = {
   },
   equipped: ['chain-mail'],
   effects: [],
+  actions: ['longsword'],
 };
 
 export const mirra = {
@@ -46,6 +47,7 @@ export const mirra = {
   },
   equipped: [],
   effects: [],
+  actions: ['poison-spray'],
 };
 
 export const sheets = [arven, mirra];

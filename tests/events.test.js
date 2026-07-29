@@ -81,6 +81,11 @@ group('событийный конверт', () => {
     test('неизвестное действие — внятная ошибка', () => {
       throws(() => send('нетакого', ctx(arven, queue())), 'нетакого');
     });
+
+    test('действия лежат в компендиуме, а не в системе', () => {
+      eq(system.actions, undefined, 'система больше не объявляет действий');
+      deepEq(compendium.actions.map(a => a.id), ['longsword', 'poison-spray']);
+    });
   });
 
   group('получатель считает сам', () => {
