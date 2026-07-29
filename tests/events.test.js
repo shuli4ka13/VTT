@@ -211,3 +211,41 @@ group('событийный конверт', () => {
     });
   });
 });
+
+group('конверт не даёт целиться в бессмыслицу', () => {
+  const die = (...v) => { const q = [...v]; return () => q.shift(); };
+
+  test('сравнивать бросок с текстовым полем нельзя — внятная ошибка, а не тихое «мимо»', () => {
+    const book = {
+      ...compendium,
+      actions: [{
+        id: 'bogus', kind: 'action', label: 'Бессмыслица',
+        envelope: {
+          kind: 'attack',
+          roll: { die: 20, bonus: '#attack_bonus', target: 'attack_roll' },
+          versus: 'race',   // текстовое поле
+          onHit: { damage: { dice: '1d8' }, applyTo: 'hp_current' },
+        },
+      }],
+    };
+    const env = send('bogus', { system, sheet: arven, compendium: book, die: die(15) });
+    throws(() => receive(env, { system, sheet: mirra, compendium: book, die: die() }), 'race');
+  });
+
+  test('урон нельзя лить в вычисляемое поле — его считает движок, а не событие', () => {
+    const book = {
+      ...compendium,
+      actions: [{
+        id: 'bogus2', kind: 'action', label: 'Бессмыслица',
+        envelope: {
+          kind: 'attack',
+          roll: { die: 20, bonus: '#attack_bonus', target: 'attack_roll' },
+          versus: 'ac',
+          onHit: { damage: { dice: '1d8' }, applyTo: 'ac' },   // формульное поле
+        },
+      }],
+    };
+    const env = send('bogus2', { system, sheet: arven, compendium: book, die: die(20, 5) });
+    throws(() => receive(env, { system, sheet: mirra, compendium: book, die: die() }), 'ac');
+  });
+});

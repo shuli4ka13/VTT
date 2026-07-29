@@ -177,9 +177,22 @@ function modRow(id, mod, i, fields, rolls) {
   </div>`;
 }
 
+// Числовое поле: с ним есть смысл сравнивать бросок и из него есть смысл
+// вычитать урон. Текстовые и логические сюда не годятся — «против чего: Раса»
+// молча давало бы вечный промах.
+const isNumericField = f =>
+  f.value.kind !== 'stored' ? f.value.kind !== 'text' : f.value.type === 'number';
+
 function actionBody(action) {
   const env = action.envelope;
-  const fields = targets(state.system).filter(t => t.kind === 'value');
+  const numericFields = state.system.fields.filter(isNumericField)
+    .map(f => ({ tag: f.tag, label: f.label }));
+  // Урон льётся только в хранимое поле: вычисляемое считает движок, писать в него
+  // событию нечего, и раньше это молча ничего не делало.
+  const writableFields = state.system.fields
+    .filter(f => f.value.kind === 'stored' && f.value.type === 'number')
+    .map(f => ({ tag: f.tag, label: f.label }));
+  const fields = numericFields;
   const rolls = targets(state.system).filter(t => t.kind === 'roll');
   const pick = (label, path, value, list) => `
     <div class="bon-row" style="grid-template-columns:130px 1fr;border:none">
@@ -202,11 +215,11 @@ function actionBody(action) {
     ? pick('Бонус атаки', 'roll.bonus', ref(env.roll.bonus), fields)
       + pick('Мишень броска', 'roll.target', env.roll.target, rolls)
       + pick('Против чего', 'versus', env.versus, fields)
-      + pick('Куда урон', 'onHit.applyTo', env.onHit.applyTo, fields)
+      + pick('Куда урон', 'onHit.applyTo', env.onHit.applyTo, writableFields)
       + dice('Кубы урона', 'onHit.damage.dice', env.onHit.damage.dice, action.id)
     : pick('Чем спасается', 'saveTag', env.saveTag, fields)
       + pick('Сложность', 'dc', ref(env.dc), fields)
-      + pick('Куда урон', 'onFail.applyTo', (env.onFail || {}).applyTo, fields)
+      + pick('Куда урон', 'onFail.applyTo', (env.onFail || {}).applyTo, writableFields)
       + dice('Кубы урона', 'onFail.damage.dice', ((env.onFail || {}).damage || {}).dice, action.id);
 
   return `<div class="pb">

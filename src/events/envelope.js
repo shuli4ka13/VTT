@@ -72,9 +72,10 @@ export function receive(envelope, { system, sheet, compendium, die }) {
 
   if (envelope.kind === 'attack') {
     // Класс брони считает ПОЛУЧАТЕЛЬ. Отправитель прислал только тег.
-    const value = calc(system, sheet, envelope.versus, pass);
+    const value = numeric(calc(system, sheet, envelope.versus, pass), envelope.versus,
+      'с ним нечего сравнивать бросок');
     const hit = envelope.attack.total >= value;
-    const applied = hit ? apply(sheet, envelope.onHit) : { sheet, changes: [], effects: [] };
+    const applied = hit ? apply(sheet, envelope.onHit, system) : { sheet, changes: [], effects: [] };
 
     return {
       sheet: applied.sheet,
@@ -103,7 +104,7 @@ export function receive(envelope, { system, sheet, compendium, die }) {
 
     const success = save.total >= envelope.dc;
     const outcome = success ? envelope.onSuccess : envelope.onFail;
-    const applied = apply(sheet, outcome);
+    const applied = apply(sheet, outcome, system);
 
     return {
       sheet: applied.sheet,
@@ -127,14 +128,15 @@ export function receive(envelope, { system, sheet, compendium, die }) {
 
 // Применение исхода к чарнику получателя. Возвращает НОВЫЙ чарник:
 // чарник — данные, а не изменяемое состояние.
-function apply(sheet, outcome) {
+function apply(sheet, outcome, system) {
   if (!outcome) return { sheet, changes: [], effects: [] };
 
   const changes = [];
   const values = { ...sheet.values };
 
   if (outcome.damage && outcome.applyTo) {
-    const from = values[outcome.applyTo];
+    assertWritable(system, outcome.applyTo);
+    const from = numeric(values[outcome.applyTo], outcome.applyTo, 'из него нечего вычитать');
     const to = Math.max(0, from - outcome.damage.total);
     values[outcome.applyTo] = to;
     changes.push({ tag: outcome.applyTo, from, to });
@@ -173,6 +175,25 @@ function evalExpr(expr, system, sheet, pass) {
 // Выражения действий в этом прототипе — прямые ссылки вида `#тег`.
 // Полноценные выражения появятся, когда действия начнут считать что-то сложнее;
 // записано в docs/production-differences.md.
+// Сторожа против бессмыслицы в конверте. Редактор их и так не предложит, но
+// данные могли прийти откуда угодно — из файла, из чужой комнаты, из будущего
+// импорта. Молчаливое «мимо» вместо ошибки скрыло бы поломку.
+function numeric(value, tag, why) {
+  if (typeof value !== 'number') {
+    throw new EngineError(`поле «${tag}» даёт не число (${typeof value}) — ${why}`);
+  }
+  return value;
+}
+
+function assertWritable(system, tag) {
+  const target = (system.fields || []).find(f => f.tag === tag);
+  if (!target) throw new EngineError(`система не объявляет поля «${tag}»`);
+  if (target.value.kind !== 'stored') {
+    throw new EngineError(
+      `в поле «${tag}» нельзя писать: его считает движок по формуле, а не событие`);
+  }
+}
+
 function refOf(expr) {
   const match = /^\s*#([\p{L}\p{N}_]+)\s*$/u.exec(String(expr));
   if (!match) throw new EngineError(`в действии ожидается ссылка вида «#тег», получено «${expr}»`);
