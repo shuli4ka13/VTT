@@ -104,8 +104,9 @@ function modifiersBody(record) {
     ${(record.modifiers || []).map((mod, i) => modRow(record.id, mod, i, fields, rolls)).join('')}
     <button class="add-row" onclick="uiAddMod('${record.id}')">+ добавить</button>
     <div class="sys-hint" style="margin-top:6px">
-      Значение: число, «да»/«нет» или формула вида <code>#prof_bonus</code>.
-      Мишень — только из объявленных полей, свободного текста здесь нет.
+      Куда — выбирается из полей и бросков системы. Вписать что попало нельзя,
+      и это главное отличие от Foundry: там пришлось бы набрать путь вроде
+      <code>system.abilities.wis.bonuses.check</code> и помнить его наизусть.
     </div>
   </div>`;
 }
