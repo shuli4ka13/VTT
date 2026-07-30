@@ -56,7 +56,7 @@ group('событийный конверт', () => {
       eq(env.from, 'arven');
       eq(env.versus, 'ac', 'в конверте лежит ТЕГ, а не посчитанный класс брони цели');
       eq(env.attack.total, 21, 'отправитель бросил свой бросок по своей системе');
-      eq(env.onHit.damage.total, 8, 'урон 1d8=5 плюс своя Сила 3');
+      eq(env.onHit.damage.base, 8, 'своя часть урона: 1d8=5 плюс своя Сила 3');
     });
 
     test('конверт — чистые данные и переживает сериализацию', () => {
@@ -75,7 +75,7 @@ group('событийный конверт', () => {
       eq(env.kind, 'save');
       eq(env.saveTag, 'dex_save');
       eq(env.dc, 13, '8 + бонус мастерства 2 + Харизма 3');
-      eq(env.onFail.damage.total, 7);
+      eq(env.onFail.damage.base, 7);
     });
 
     test('неизвестное действие — внятная ошибка', () => {
@@ -106,15 +106,15 @@ group('событийный конверт', () => {
   group('получатель считает сам', () => {
     test('попадание определяется классом брони получателя, а не отправителя', () => {
       const env = send('longsword', ctx(arven, queue(9, 5))); // бросок атаки 9+6 = 15
-      eq(receive(env, ctx(mirra, queue())).report.hit, true, 'у Мирры класс брони 14');
-      eq(receive(env, ctx(arven, queue())).report.hit, false, 'у Арвен в кольчуге 16');
+      eq(receive(env, ctx(mirra, queue())).report.check.success, true, 'у Мирры класс брони 14');
+      eq(receive(env, ctx(arven, queue())).report.check.success, false, 'у Арвен в кольчуге 16');
     });
 
     test('один и тот же конверт по двум получателям даёт разный исход', () => {
       const env = send('longsword', ctx(arven, queue(9, 5)));
       const a = receive(env, ctx(mirra, queue()));
       const b = receive(env, ctx(arven, queue()));
-      ok(a.report.hit !== b.report.hit);
+      ok(a.report.check.success !== b.report.check.success);
       eq(a.report.versus.value, 14);
       eq(b.report.versus.value, 16);
     });
@@ -128,7 +128,7 @@ group('событийный конверт', () => {
     test('промах не меняет ничего', () => {
       const env = send('longsword', ctx(mirra, queue(2, 5))); // 2 + 1 = 3, мимо всех
       const { sheet, report } = receive(env, ctx(arven, queue()));
-      eq(report.hit, false);
+      eq(report.check.success, false);
       eq(sheet.values.hp_current, 44);
     });
 
@@ -154,7 +154,7 @@ group('событийный конверт', () => {
       const { report } = receive(poisonAt(), ctx(arven, queue(5)));
       eq(report.save.bonus, 1, 'спасбросок Ловкости Арвен');
       eq(report.save.total, 6);
-      eq(report.success, false);
+      eq(report.check.success, false);
     });
 
     test('провал снимает хиты и вешает эффект', () => {
@@ -165,7 +165,7 @@ group('событийный конверт', () => {
 
     test('успех не делает ничего', () => {
       const { sheet, report } = receive(poisonAt(), ctx(arven, queue(19)));
-      eq(report.success, true);
+      eq(report.check.success, true);
       eq(sheet.values.hp_current, 44);
       deepEq(sheet.effects, []);
     });
@@ -181,7 +181,7 @@ group('событийный конверт', () => {
       const { report } = receive(poisonAt(), { system, sheet, compendium: book, die: queue(19, 5) });
       deepEq(report.save.rolls, [19, 5]);
       eq(report.save.kept, 5, 'взята худшая кость');
-      eq(report.success, false);
+      eq(report.check.success, false);
     });
 
     test('хиты не уходят ниже нуля', () => {
@@ -276,7 +276,7 @@ group('в действии можно писать выражения, а не �
       onHit: { damage: { dice: '1d8', bonus: '#str_mod * 2' }, applyTo: 'hp_current' },
     });
     const env = send('custom', { system, sheet: arven, compendium: book, die: die(10, 4) });
-    eq(env.onHit.damage.total, 10, 'кость 4 плюс удвоенная Сила 6');
+    eq(env.onHit.damage.base, 10, 'кость 4 плюс удвоенная Сила 6');
   });
 
   test('сложность спасброска — выражение', () => {

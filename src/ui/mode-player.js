@@ -404,19 +404,31 @@ function describe(from, to, report) {
   const effects = report.effects.length ? ` · наложено: ${report.effects.map(esc).join(', ')}` : '';
 
   if (report.kind === 'attack') {
-    const verdict = report.hit
-      ? '<span class="roll-success">попадание</span>'
+    const verdict = report.check.success
+      ? `<span class="roll-success">попадание</span> (превышение ${report.check.margin})`
       : '<span class="roll-fail">мимо</span>';
     const versusLabel = field(report.versus.tag) ? field(report.versus.tag).label : report.versus.tag;
     return `${head} · ${esc(report.label)}<br>
       бросок [${report.attack.rolls.join(', ')}] + ${report.attack.bonus} = ${report.attack.total}
-      против ${esc(versusLabel)} ${report.versus.value} — ${verdict}${changes ? '<br>' + changes : ''}${effects}`;
+      против ${esc(versusLabel)} ${report.versus.value} — ${verdict}${damageLine(report.damage)}${changes ? '<br>' + changes : ''}${effects}`;
   }
 
-  const verdict = report.success
+  const verdict = report.check.success
     ? '<span class="roll-success">спасся</span>'
     : '<span class="roll-fail">провал</span>';
   return `${head} · ${esc(report.label)}<br>
     спасбросок [${report.save.rolls.join(', ')}] + ${report.save.bonus} = ${report.save.total}
     против ${report.dc} — ${verdict}${changes ? '<br>' + changes : ''}${effects}`;
+}
+
+// Разложение урона по слагаемым — та самая трассировка «откуда взялась цифра».
+// Превышение — отдельное слагаемое: видно, что урон пришёл из проверки.
+function damageLine(damage) {
+  if (!damage) return '';
+  const parts = [];
+  if (damage.rolls.length) parts.push(`[${damage.rolls.join(', ')}]`);
+  if (damage.bonus) parts.push(String(damage.bonus));
+  if (!parts.length) parts.push(String(damage.base));
+  if (damage.margin !== null && damage.margin !== undefined) parts.push(`превышение ${damage.margin}`);
+  return `<br>урон ${parts.join(' + ')} = ${damage.total}`;
 }

@@ -45,7 +45,9 @@ export function send(actionId, { system, sheet, compendium, die }) {
       attack: roll,
       versus: spec.versus,
       onHit: {
-        damage: damageOf(spec.onHit.damage, system, sheet, pass, die),
+        // Откуда берётся величина урона — слот СИСТЕМЫ отправителя, не свойство
+        // записи. Штампуется в конверт: слот — рецепт, а не значение получателя.
+        damage: damageOf(spec.onHit.damage, system, sheet, pass, die, damageSource(system)),
         applyTo: spec.onHit.applyTo,
         effect: spec.onHit.effect || null,
       },
@@ -75,8 +77,18 @@ export function receive(envelope, { system, sheet, compendium, die }) {
     // Класс брони считает ПОЛУЧАТЕЛЬ. Отправитель прислал только тег.
     const value = numeric(calc(system, sheet, envelope.versus, pass), envelope.versus,
       'с ним нечего сравнивать бросок');
-    const hit = envelope.attack.total >= value;
-    const applied = hit ? apply(sheet, envelope.onHit, system) : { sheet, changes: [], effects: [] };
+    // Результат проверки — структура, а не флаг: превышение и сами кости нужны
+    // следующим шагам (урон из превышения, крит по кубу, степени провала).
+    const check = {
+      success: envelope.attack.total >= value,
+      margin: envelope.attack.total - value,
+      dice: { rolls: envelope.attack.rolls, kept: envelope.attack.kept },
+    };
+    // Урон разбирается и при промахе: битый конверт должен падать, а не тихо «мимо».
+    const damage = resolveDamage(envelope.onHit.damage, check);
+    const applied = check.success
+      ? apply(sheet, { ...envelope.onHit, damage }, system)
+      : { sheet, changes: [], effects: [] };
 
     return {
       sheet: applied.sheet,
@@ -86,7 +98,8 @@ export function receive(envelope, { system, sheet, compendium, die }) {
         label: envelope.label,
         attack: envelope.attack,
         versus: { tag: envelope.versus, value },
-        hit,
+        check,
+        damage: check.success ? damage : null,
         changes: applied.changes,
         effects: applied.effects,
       },
@@ -103,9 +116,17 @@ export function receive(envelope, { system, sheet, compendium, die }) {
       mode: rollMods.mode,
     }, die);
 
-    const success = save.total >= envelope.dc;
-    const outcome = success ? envelope.onSuccess : envelope.onFail;
-    const applied = apply(sheet, outcome, system);
+    // Спасбросок — тоже проверка: тот же состав результата, что у атаки.
+    const check = {
+      success: save.total >= envelope.dc,
+      margin: save.total - envelope.dc,
+      dice: { rolls: save.rolls, kept: save.kept },
+    };
+    const outcome = check.success ? envelope.onSuccess : envelope.onFail;
+    const applied = apply(
+      sheet,
+      outcome && { ...outcome, damage: resolveDamage(outcome.damage, check) },
+      system);
 
     return {
       sheet: applied.sheet,
@@ -115,7 +136,7 @@ export function receive(envelope, { system, sheet, compendium, die }) {
         label: envelope.label,
         save,
         dc: envelope.dc,
-        success,
+        check,
         changes: applied.changes,
         effects: applied.effects,
       },
@@ -157,16 +178,47 @@ function apply(sheet, outcome, system) {
 function outcomeOf(spec, system, sheet, pass, die) {
   if (!spec) return null;
   return {
-    damage: spec.damage ? damageOf(spec.damage, system, sheet, pass, die) : null,
+    // Слот источника спасбросок не читает: что значило бы «превышение» чужого
+    // спасброска для урона, словарь намерений пока не определяет.
+    damage: spec.damage ? damageOf(spec.damage, system, sheet, pass, die, 'roll') : null,
     applyTo: spec.applyTo || null,
     effect: spec.effect || null,
   };
 }
 
-function damageOf(spec, system, sheet, pass, die) {
-  const rolled = rollNotation(spec.dice, die);
+// Своя часть урона — всё, что отправитель знает сам: кости и бонус.
+// Кости необязательны: урон оружия числом — законная запись (Shadowrun).
+// Финального итога здесь нет — он рождается у получателя (см. resolveDamage).
+function damageOf(spec, system, sheet, pass, die, source) {
+  const rolled = spec.dice ? rollNotation(spec.dice, die) : { notation: null, rolls: [], total: 0 };
   const bonus = spec.bonus ? evalExpr(spec.bonus, pass) : 0;
-  return { notation: spec.dice, rolls: rolled.rolls, bonus, total: rolled.total + bonus };
+  return { notation: rolled.notation, rolls: rolled.rolls, bonus, base: rolled.total + bonus, source };
+}
+
+// Слот «источник величины» урона. Правило системы, а не запись компендиума:
+// сколько систем, столько вариантов удара при одной и той же записи меча.
+// Отсутствие раздела — 'roll': данные, заведённые до появления слота, работают.
+function damageSource(system) {
+  const slots = ((system.rules || {}).attack || {}).damage || {};
+  return assertSource(slots.source === undefined ? 'roll' : slots.source);
+}
+
+function assertSource(source) {
+  if (source !== 'roll' && source !== 'margin') {
+    throw new EngineError(
+      `неизвестный источник величины урона «${source}» — умею «roll» (свой бросок) и «margin» (превышение проверки)`);
+  }
+  return source;
+}
+
+// Финальная величина урона рождается ЗДЕСЬ, на стороне получателя: раньше
+// превышение проверки попросту неизвестно. Это и есть слот в работе:
+// 'roll' — итог равен базе (5e), 'margin' — база плюс превышение (Shadowrun).
+function resolveDamage(spec, check) {
+  if (!spec) return null;
+  const source = assertSource(spec.source === undefined ? 'roll' : spec.source);
+  const margin = source === 'margin' ? check.margin : null;
+  return { ...spec, margin, total: spec.base + (margin || 0) };
 }
 
 // Выражения действий считаются тем же языком формул, что и поля системы:

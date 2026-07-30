@@ -10,6 +10,7 @@ import './model.serialize.test.js';
 import './engine.calc.test.js';
 import './engine.modifiers.test.js';
 import './events.test.js';
+import './rule.damage-source.test.js';
 import './ui.formula-text.test.js';
 import './ui.suggest.test.js';
 import './acceptance.test.js';
