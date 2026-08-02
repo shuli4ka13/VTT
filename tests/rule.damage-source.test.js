@@ -3,6 +3,7 @@ import { send, receive } from '../src/events/envelope.js';
 import { system } from '../src/model/system.js';
 import { arven, mirra } from '../src/model/sheets.js';
 import { compendium } from '../src/model/compendium.js';
+import { DAMAGE_SOURCES } from '../src/model/damage-sources.js';
 
 // Лакмус каркаса из разбора урона: одна запись «Удар длинным мечом», один движок;
 // две системы, отличающиеся ОДНОЙ строкой данных, дают урон по модели 5e
@@ -126,6 +127,30 @@ group('правило урона: источник величины', () => {
     test('конверт остаётся чистыми данными и переживает сериализацию', () => {
       const env = send('sr-blade', { system: margined, sheet: arven, compendium: book, die: queue(10) });
       deepEq(JSON.parse(JSON.stringify(env)), env);
+    });
+  });
+
+  group('словарь источников — для конструктора систем', () => {
+    // Автор выбирает не абстракцию, а узнаваемую вещь: как у механик
+    // преимущества, у каждого значения слота есть лейбл и примеры систем.
+    test('каждое значение словаря движок принимает без ошибки', () => {
+      for (const src of DAMAGE_SOURCES) {
+        const sys = { ...system, rules: { attack: { damage: { source: src.id } } } };
+        const env = send('longsword', { system: sys, sheet: arven, compendium, die: queue(10, 5) });
+        eq(env.onHit.damage.source, src.id, src.label);
+      }
+    });
+
+    test('умолчание движка есть в словаре', () => {
+      ok(DAMAGE_SOURCES.some(s => s.id === 'roll'),
+        'иначе конструктор не смог бы показать текущее значение');
+    });
+
+    test('у каждого значения есть лейбл и примеры систем', () => {
+      for (const src of DAMAGE_SOURCES) {
+        ok(src.label, `${src.id}: нужен человеческий лейбл`);
+        ok((src.examples || []).length, `${src.id}: нужны примеры из реальных систем`);
+      }
     });
   });
 

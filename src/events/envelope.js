@@ -28,6 +28,7 @@ export function send(actionId, { system, sheet, compendium, die }) {
   const spec = action.envelope;
 
   if (spec.kind === 'attack') {
+    const weapon = weaponPropsOf(action, system, compendium);
     // Бонус броска складывается из двух источников: поля, которое назвало
     // действие, и числовых модификаторов, висящих на самом броске.
     const rollMods = resolveRoll(system, sheet, spec.roll.target, pass);
@@ -47,7 +48,7 @@ export function send(actionId, { system, sheet, compendium, die }) {
       onHit: {
         // Откуда берётся величина урона — слот СИСТЕМЫ отправителя, не свойство
         // записи. Штампуется в конверт: слот — рецепт, а не значение получателя.
-        damage: damageOf(spec.onHit.damage, system, sheet, pass, die, damageSource(system)),
+        damage: damageOf(spec.onHit.damage, system, sheet, pass, die, damageSource(system), weapon),
         applyTo: spec.onHit.applyTo,
         effect: spec.onHit.effect || null,
       },
@@ -186,13 +187,37 @@ function outcomeOf(spec, system, sheet, pass, die) {
   };
 }
 
-// Своя часть урона — всё, что отправитель знает сам: кости и бонус.
-// Кости необязательны: урон оружия числом — законная запись (Shadowrun).
+// Своя часть урона — всё, что отправитель знает сам: кости, оружие, бонус.
+// Кость урона приходит из записи оружия («кость(оружие)»); кости в самом
+// действии — путь для безоружных приёмов. Урон оружия числом (`damage_flat`) —
+// законная запись без костей вовсе (Shadowrun).
 // Финального итога здесь нет — он рождается у получателя (см. resolveDamage).
-function damageOf(spec, system, sheet, pass, die, source) {
-  const rolled = spec.dice ? rollNotation(spec.dice, die) : { notation: null, rolls: [], total: 0 };
+function damageOf(spec, system, sheet, pass, die, source, weapon) {
+  const props = weapon || {};
+  const dice = props.damage_dice !== undefined ? props.damage_dice : spec.dice;
+  const rolled = dice ? rollNotation(dice, die) : { notation: null, rolls: [], total: 0 };
+  const flat = Number(props.damage_flat) || 0;
   const bonus = spec.bonus ? evalExpr(spec.bonus, pass) : 0;
-  return { notation: rolled.notation, rolls: rolled.rolls, bonus, base: rolled.total + bonus, source };
+  return { notation: rolled.notation, rolls: rolled.rolls, flat, bonus, base: rolled.total + flat + bonus, source };
+}
+
+// Оружие действия — запись компендиума, из которой движок читает ТОЛЬКО
+// свойства, объявленные системой (system.records.weapon.props). Компендиум
+// определяется изначальной механикой: не объявлено — свойства как будто нет.
+// Сами ключи (damage_dice, damage_flat) — словарь движка, как род конверта;
+// состав и человеческие лейблы объявляет система.
+function weaponPropsOf(action, system, compendium) {
+  if (!action.weapon) return null;
+  const item = (compendium.items || []).find(i => i.id === action.weapon);
+  if (!item) {
+    throw new EngineError(`в компендиуме нет оружия «${action.weapon}» — действию «${action.label}» нечем бить`);
+  }
+  const declared = ((system.records || {}).weapon || {}).props || [];
+  const props = {};
+  for (const p of declared) {
+    if (item.props && item.props[p.key] !== undefined) props[p.key] = item.props[p.key];
+  }
+  return props;
 }
 
 // Слот «источник величины» урона. Правило системы, а не запись компендиума:

@@ -18,6 +18,17 @@ export const items = [
       { kind: 'value', target: 'armor_heavy', op: 'set', value: true, stacking: 'override', condition: null },
     ],
   },
+  {
+    // Оружие — та же запись компендиума, что и доспех, но с типизированными
+    // свойствами. КАКИЕ свойства бывают — объявляет система (system.records),
+    // запись только заполняет их. Кость урона живёт здесь, а не в действии.
+    id: 'longsword-item',
+    label: 'Длинный меч',
+    slot: 'hand',
+    description: 'Клинок в четыре ладони.',
+    props: { damage_dice: '1d8' },
+    modifiers: [],
+  },
 ];
 
 export const effects = [
@@ -49,11 +60,14 @@ export const actions = [
     kind: 'action',
     label: 'Удар длинным мечом',
     description: 'Рукопашная атака оружием.',
+    // Удар знает, ЧЕМ бьёт: кость урона придёт из записи оружия,
+    // в самом действии остаются только бонусы атакующего.
+    weapon: 'longsword-item',
     envelope: {
       kind: 'attack',
       roll: { die: 20, bonus: '#attack_bonus', target: 'attack_roll' },
       versus: 'ac', // тег, который получатель посчитает СВОИМИ формулами
-      onHit: { damage: { dice: '1d8', bonus: '#str_mod' }, applyTo: 'hp_current' },
+      onHit: { damage: { bonus: '#str_mod' }, applyTo: 'hp_current' },
     },
   },
   {

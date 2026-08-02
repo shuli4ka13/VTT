@@ -79,7 +79,9 @@ function renderRecord() {
     </div>`;
 
   const body =
-    record.kind === 'action' || record.kind === 'spell' ? actionBody(record) : modifiersBody(record);
+    record.kind === 'action' || record.kind === 'spell' ? actionBody(record)
+      : record.kind === 'item' ? weaponPropsBody(record) + modifiersBody(record)
+        : modifiersBody(record);
 
   host.innerHTML = head + body + `
     <textarea class="desc-ta" placeholder="Описание для игрока…"
@@ -103,6 +105,25 @@ function modifiersBody(record) {
     <div class="pb-lbl">Что делает</div>
     ${(record.modifiers || []).map((mod, i) => modRow(record.id, mod, i, fields, rolls)).join('')}
     <button class="add-row" onclick="uiAddMod('${record.id}')">+ добавить</button>
+  </div>`;
+}
+
+// Свойства оружия: СОСТАВ объявлен системой (system.records.weapon), запись
+// только заполняет значения. Нет объявления — нет и раздела: компендиум
+// определяется изначальной механикой, а не наоборот.
+function weaponPropsBody(record) {
+  const schema = (state.system.records || {}).weapon;
+  if (!schema) return '';
+  const props = record.props || {};
+  return `<div class="pb">
+    <div class="pb-lbl">${esc(schema.label)} — свойства из системы</div>
+    ${(schema.props || []).map(p => `
+      <div class="bon-row" style="grid-template-columns:130px 1fr;border:none">
+        <span style="font-size:11px;color:var(--muted)">${esc(p.label)}</span>
+        <input class="bon-v" style="text-align:left" value="${esc(props[p.key] ?? '')}"
+               placeholder="${p.kind === 'dice' ? 'напр. 1d8' : 'число'}"
+               oninput="uiSetWeaponProp('${record.id}','${p.key}',this.value)">
+      </div>`).join('')}
   </div>`;
 }
 
@@ -220,7 +241,8 @@ function actionBody(action) {
     ? pick('Мишень броска', 'roll.target', env.roll.target, rolls)
       + pick('Против чего у цели', 'versus', env.versus, fields)
       + pick('Куда урон', 'onHit.applyTo', env.onHit.applyTo, writableFields)
-      + dice('Кубы урона', 'onHit.damage.dice', env.onHit.damage.dice, action.id)
+      + weaponRow(action)
+      + (action.weapon ? '' : dice('Кубы урона', 'onHit.damage.dice', env.onHit.damage.dice, action.id))
       + expr('Бонус к броску атаки', 'roll.bonus', env.roll.bonus)
       + expr('Бонус к урону', 'onHit.damage.bonus', (env.onHit.damage || {}).bonus)
     : pick('Чем спасается', 'saveTag', env.saveTag, fields)
@@ -232,6 +254,19 @@ function actionBody(action) {
   return `<div class="pb">
     <div class="pb-lbl">Конверт намерения</div>
     ${shape}${body}
+  </div>`;
+}
+
+// Оружие выбирается из записей компендиума. Выбрано — кость урона придёт
+// из записи, и поле «Кубы урона» исчезает; без оружия кости остаются в действии.
+function weaponRow(action) {
+  return `<div class="bon-row" style="grid-template-columns:130px 1fr;border:none">
+    <span style="font-size:11px;color:var(--muted)">Оружие</span>
+    <select class="meta-sel" onchange="uiSetWeapon('${action.id}',this.value)">
+      <option value=""${action.weapon ? '' : ' selected'}>— без оружия, кости в действии —</option>
+      ${state.compendium.items.map(w =>
+    `<option value="${w.id}"${action.weapon === w.id ? ' selected' : ''}>${esc(w.label)}</option>`).join('')}
+    </select>
   </div>`;
 }
 
@@ -317,6 +352,31 @@ export function deleteRecord(id) {
 export function setRecord(id, key, value) {
   const record = live(id);
   if (record) record[key] = value;
+}
+
+// Смена оружия чистит кости в самом действии: кость урона теперь придёт
+// из записи оружия. Снятие оружия возвращает действию собственную кость.
+export function setWeapon(id, value) {
+  const action = live(id);
+  const onHit = action.envelope.onHit = action.envelope.onHit || {};
+  const damage = onHit.damage = onHit.damage || {};
+  if (value) {
+    action.weapon = value;
+    delete damage.dice;
+  } else {
+    delete action.weapon;
+    if (!damage.dice) damage.dice = '1d6';
+  }
+}
+
+export function setWeaponProp(id, key, raw) {
+  const record = live(id);
+  const schema = ((state.system.records || {}).weapon || {}).props || [];
+  const kind = (schema.find(p => p.key === key) || {}).kind;
+  const value = String(raw).trim();
+  record.props = record.props || {};
+  if (!value) { delete record.props[key]; return; }
+  record.props[key] = kind === 'number' && !Number.isNaN(Number(value)) ? Number(value) : value;
 }
 
 const firstField = () => state.system.fields[0].tag;

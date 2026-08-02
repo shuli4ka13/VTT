@@ -109,6 +109,7 @@ Object.assign(window, {
   uiAddRule: redraw(author.addRule),
   uiDelRule: redraw(author.deleteRule),
   uiSetRule: redraw(author.setRule),
+  uiSetDamageSource: redraw(author.setDamageSource),
 
   // ── режим игрока: значения и принадлежности ──
   uiPickSheet: redraw(player.pickSheet),
@@ -132,6 +133,8 @@ Object.assign(window, {
   uiDelMod: redraw(compendium.deleteMod),
   uiSetMod: redraw(compendium.setMod),
   uiSetEnvelope: redraw(compendium.setEnvelope),
+  uiSetWeapon: redraw(compendium.setWeapon),
+  uiSetWeaponProp: redraw(compendium.setWeaponProp),
 });
 
 // Стрелки и Enter в поле формулы ведут по списку подсказок.

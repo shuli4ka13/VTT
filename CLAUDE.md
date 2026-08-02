@@ -101,7 +101,7 @@ node --input-type=module -e "import './tests/formula.parse.test.js'; import {rep
 
 | Модуль | Правит | Персонаж нужен |
 |---|---|---|
-| [src/ui/mode-author.js](src/ui/mode-author.js) + [field-editor.js](src/ui/field-editor.js) | систему: состав полей, лейблы, формулы, правила комнаты | нет |
+| [src/ui/mode-author.js](src/ui/mode-author.js) + [field-editor.js](src/ui/field-editor.js) | систему: состав полей, лейблы, формулы, правила комнаты и разрешения | нет |
 | [src/ui/mode-player.js](src/ui/mode-player.js) | чарник: значения и ссылки на записи | да |
 | [src/ui/mode-compendium.js](src/ui/mode-compendium.js) | компендиум: предметы, эффекты, действия | нет |
 

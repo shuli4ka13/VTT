@@ -152,6 +152,17 @@ if (inNode) {
       const author = html.slice(html.indexOf('id="pane-author"'), html.indexOf('id="pane-player"'));
       ok(author.includes('author-editor'), 'редактор поля — часть экрана автора');
     });
+
+    test('слот источника урона выбирается в конструкторе систем, и только там', () => {
+      // Смена слота меняет ФОРМУ разрешения — по границе режимов это автор.
+      const authorCode = readFileSync(join(repo, 'src/ui/mode-author.js'), 'utf8');
+      const compendiumCode = readFileSync(join(repo, 'src/ui/mode-compendium.js'), 'utf8');
+      ok(/from\s+'\.\.\/model\/damage-sources\.js'/.test(authorCode),
+        'словарь источников урона — часть конструктора систем');
+      ok(authorCode.includes('uiSetDamageSource'), 'выбор слота есть у автора');
+      eq(playerCode.includes('uiSetDamageSource'), false, 'у игрока его нет — негативный контроль');
+      eq(compendiumCode.includes('uiSetDamageSource'), false, 'и в компендиуме нет: запись не правит закон');
+    });
   });
 
   group('критерии приёмки', () => {
