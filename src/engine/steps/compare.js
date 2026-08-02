@@ -25,6 +25,18 @@ export const slots = [
   { key: 'breakIf', label: 'Обрыв когда', kind: 'choice', options: Object.keys(BREAKS) },
 ];
 
+export const outputs = [
+  { path: '.margin', label: 'разница' },
+];
+
+export const mayBreak = true;
+
+export function traceLine(t, h) {
+  const versusName = t.versus.tag ? `${h.labelOf(t.versus.tag)} ` : '';
+  return `сравнение: ${t.value} против ${versusName}${t.versus.value} — `
+    + (t.passed ? `прошло (разница ${t.margin})` : `не прошло (${t.margin})`);
+}
+
 export function pack(step, ctx) {
   const breakIf = step.breakIf || 'less';
   if (!BREAKS[breakIf]) {

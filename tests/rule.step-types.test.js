@@ -1,5 +1,8 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.js';
 import { packRule, resolveRule } from '../src/engine/rule.js';
+import * as amountStep from '../src/engine/steps/amount.js';
+import * as thresholdStep from '../src/engine/steps/threshold.js';
+import * as applyStep from '../src/engine/steps/apply.js';
 import { newPass } from '../src/engine/calc.js';
 import { targets, incomingTagOf } from '../src/engine/targets.js';
 import { system } from '../src/model/system.js';
@@ -270,6 +273,33 @@ group('шаг «состояние»', () => {
     ]);
     deepEq(out.sheet.effects, [{ effectId: 'poisoned' }]);
     deepEq(out.effects, ['poisoned']);
+  });
+});
+
+group('линт шага — для приговора в конструкторе', () => {
+  // Конструктор не может прогнать pack: параметров и листа у автора нет.
+  // Поэтому каждый модуль умеет проверить СВОЮ карточку статически: lint
+  // возвращает текст беды или null. Ядро и конструктор типов не знают.
+  test('величина: источник без своего слота — беда видна без броска', () => {
+    const { lint } = amountStep;
+    ok(lint({ type: 'amount', source: 'margin', dice: { const: '1d8' } }).includes('margin'));
+    ok(lint({ type: 'amount', source: 'roll' }).includes('кост'));
+    ok(lint({ type: 'amount', source: 'item' }).includes('fixed'));
+    eq(lint({ type: 'amount', source: 'roll', dice: { const: '1d8' } }), null);
+    eq(lint({ type: 'amount', source: { param: 'source' } }), null, 'источник из параметра статически не проверить — и это не беда');
+  });
+
+  test('порог: без кости-константы', () => {
+    const { lint } = thresholdStep;
+    ok(lint({ type: 'threshold' }).includes('кост'));
+    eq(lint({ type: 'threshold', roll: { die: { constant: 'lead_die' } } }), null);
+  });
+
+  test('применить: без мишени или величины', () => {
+    const { lint } = applyStep;
+    ok(lint({ type: 'apply', value: { const: 1 } }).includes('мишен'));
+    ok(lint({ type: 'apply', target: { tag: 'hp' } }).includes('величин'));
+    eq(lint({ type: 'apply', target: { tag: 'hp' }, value: { const: 1 } }), null);
   });
 });
 

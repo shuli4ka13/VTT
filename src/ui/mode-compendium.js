@@ -12,6 +12,7 @@
 import { state, esc, newRecordId, log } from './state.js';
 import { targets } from '../engine/targets.js';
 import { ADVANTAGE_METHODS } from '../model/advantage-methods.js';
+import { AMOUNT_SOURCES } from '../model/amount-sources.js';
 import { allRecords } from '../model/compendium.js';
 import { renderFormulaInput } from './formula-input.js';
 import { field } from './state.js';
@@ -37,10 +38,10 @@ function renderList() {
   document.getElementById('comp-list').innerHTML = records.length
     ? records.map(r => `
       <div class="item-entry${state.activeRecordId === r.id ? ' on' : ''}" onclick="uiPickRecord('${r.id}')">
-        <span class="ie-icon">${KIND[r.kind].icon}</span>
+        <span class="ie-icon">${r.rule ? '⚙' : KIND[r.kind].icon}</span>
         <div style="flex:1;min-width:0">
           <div class="ie-name">${esc(r.label)}</div>
-          <div class="ie-sub">${KIND[r.kind].word}${used[r.id] ? ` · у ${used[r.id]}` : ' · ни у кого'}</div>
+          <div class="ie-sub">${r.rule ? 'вызов правила' : KIND[r.kind].word}${used[r.id] ? ` · у ${used[r.id]}` : ' · ни у кого'}</div>
         </div>
         <button class="ie-del" onclick="event.stopPropagation();uiDelRecord('${r.id}')">✕</button>
       </div>`).join('')
@@ -81,7 +82,8 @@ function renderRecord() {
   const body =
     record.kind === 'action' || record.kind === 'spell' ? actionBody(record)
       : record.kind === 'item' ? weaponPropsBody(record) + modifiersBody(record)
-        : modifiersBody(record);
+        : record.rule ? ruleCallBody(record)
+          : modifiersBody(record);
 
   host.innerHTML = head + body + `
     <textarea class="desc-ta" placeholder="Описание для игрока…"
@@ -199,82 +201,101 @@ function modRow(id, mod, i, fields, rolls) {
 const isNumericField = f =>
   f.value.kind !== 'stored' ? f.value.kind !== 'text' : f.value.type === 'number';
 
+// Действие — ИСТОЧНИК: оружие плюс ссылка на эффект-вызов. Самого пайплайна
+// здесь нет и не было бы куда положить: шаги живут в правиле системы.
 function actionBody(action) {
-  const env = action.envelope;
-  const numericFields = state.system.fields.filter(isNumericField)
-    .map(f => ({ tag: f.tag, label: f.label }));
-  // Урон льётся только в хранимое поле: вычисляемое считает движок, писать в него
-  // событию нечего, и раньше это молча ничего не делало.
-  const writableFields = state.system.fields
-    .filter(f => f.value.kind === 'stored' && f.value.type === 'number')
-    .map(f => ({ tag: f.tag, label: f.label }));
-  const fields = numericFields;
-  const rolls = targets(state.system).filter(t => t.kind === 'roll');
-  const pick = (label, path, value, list) => `
-    <div class="bon-row" style="grid-template-columns:130px 1fr;border:none">
-      <span style="font-size:11px;color:var(--muted)">${label}</span>
-      <select class="meta-sel" onchange="uiSetEnvelope('${action.id}','${path}',this.value)">
-        ${list.map(t => `<option value="${t.tag}"${value === t.tag ? ' selected' : ''}>${esc(t.label)}</option>`).join('')}
-      </select>
-    </div>`;
-
-  const shape = `
-    <div class="bon-row" style="grid-template-columns:130px 1fr;border:none">
-      <span style="font-size:11px;color:var(--muted)">Что это</span>
-      <select class="meta-sel" onchange="uiSetEnvelope('${action.id}','kind',this.value)">
-        <option value="attack"${env.kind === 'attack' ? ' selected' : ''}>Атака по цели</option>
-        <option value="save"${env.kind === 'save' ? ' selected' : ''}>Спасбросок цели</option>
-      </select>
-    </div>`;
-
-  // Ссылка — дропдауном, вычисление — формулой. Мишень должна указывать
-  // на одну объявленную вещь, а бонус может быть любым выражением.
-  const expr = (label, path, value) => `
-    <div class="pb-lbl" style="margin:10px 0 3px">${label}</div>
-    ${renderFormulaInput(`env.${action.id}.${path.replace(/\./g, '_')}`, {
-      placeholder: 'число или формула',
-      read: () => String(value ?? ''),
-      write: text => setEnvelope(action.id, path, text),
-    })}`;
-
-  const body = env.kind === 'attack'
-    ? pick('Мишень броска', 'roll.target', env.roll.target, rolls)
-      + pick('Против чего у цели', 'versus', env.versus, fields)
-      + pick('Куда урон', 'onHit.applyTo', env.onHit.applyTo, writableFields)
-      + weaponRow(action)
-      + (action.weapon ? '' : dice('Кубы урона', 'onHit.damage.dice', env.onHit.damage.dice, action.id))
-      + expr('Бонус к броску атаки', 'roll.bonus', env.roll.bonus)
-      + expr('Бонус к урону', 'onHit.damage.bonus', (env.onHit.damage || {}).bonus)
-    : pick('Чем спасается', 'saveTag', env.saveTag, fields)
-      + pick('Куда урон', 'onFail.applyTo', (env.onFail || {}).applyTo, writableFields)
-      + dice('Кубы урона', 'onFail.damage.dice', ((env.onFail || {}).damage || {}).dice, action.id)
-      + expr('Сложность', 'dc', env.dc)
-      + expr('Бонус к урону', 'onFail.damage.bonus', ((env.onFail || {}).damage || {}).bonus);
-
+  const calls = state.compendium.effects.filter(e => e.rule);
   return `<div class="pb">
-    <div class="pb-lbl">Конверт намерения</div>
-    ${shape}${body}
+    <div class="pb-lbl">Что происходит при применении</div>
+    <div class="bon-row" style="grid-template-columns:130px 1fr;border:none">
+      <span style="font-size:11px;color:var(--muted)">Эффект</span>
+      <select class="meta-sel" onchange="uiSetRecord('${action.id}','effect',this.value)">
+        ${calls.length
+          ? calls.map(e => `<option value="${e.id}"${action.effect === e.id ? ' selected' : ''}>${esc(e.label)}</option>`).join('')
+          : '<option>— в компендиуме нет эффектов-вызовов —</option>'}
+      </select>
+    </div>
+    ${weaponRow(action)}
   </div>`;
 }
 
-// Оружие выбирается из записей компендиума. Выбрано — кость урона придёт
-// из записи, и поле «Кубы урона» исчезает; без оружия кости остаются в действии.
 function weaponRow(action) {
   return `<div class="bon-row" style="grid-template-columns:130px 1fr;border:none">
     <span style="font-size:11px;color:var(--muted)">Оружие</span>
     <select class="meta-sel" onchange="uiSetWeapon('${action.id}',this.value)">
-      <option value=""${action.weapon ? '' : ' selected'}>— без оружия, кости в действии —</option>
+      <option value=""${action.weapon ? '' : ' selected'}>— без оружия —</option>
       ${state.compendium.items.map(w =>
     `<option value="${w.id}"${action.weapon === w.id ? ' selected' : ''}>${esc(w.label)}</option>`).join('')}
     </select>
   </div>`;
 }
 
-function dice(label, path, value, id) {
+// Эффект-вызов: правило по имени плюс форма параметров, ВЫВЕДЕННАЯ из
+// объявления правила. Правило объявило три параметра — здесь три поля.
+// Шагов в этом редакторе нет: не скрыты, а не созданы — граница режимов.
+function ruleCallBody(record) {
+  const rules = Object.entries(state.system.rules || {});
+  const rule = (state.system.rules || {})[record.rule];
+
+  const head = `<div class="bon-row" style="grid-template-columns:130px 1fr;border:none">
+    <span style="font-size:11px;color:var(--muted)">Правило системы</span>
+    <select class="meta-sel" onchange="uiSetEffectRule('${record.id}',this.value)">
+      ${rules.map(([id, r]) => `<option value="${id}"${record.rule === id ? ' selected' : ''}>${esc(r.label || id)}</option>`).join('')}
+    </select>
+  </div>`;
+
+  if (!rule) {
+    return `<div class="pb"><div class="pb-lbl">Вызов правила</div>${head}
+      <div class="sys-hint" style="color:var(--red)">система не объявляет правила «${esc(record.rule)}»</div></div>`;
+  }
+
+  return `<div class="pb">
+    <div class="pb-lbl">Вызов правила — только параметры</div>
+    ${head}
+    ${(rule.params || []).map(p => paramRow(record, p)).join('')}
+  </div>`;
+}
+
+function paramRow(record, decl) {
+  const value = (record.params || {})[decl.key];
+  const label = `${decl.label || decl.key}${decl.of === 'target' ? ' (считает цель)' : ''}`;
+
+  if (decl.kind === 'expr') {
+    return `<div class="pb-lbl" style="margin:10px 0 3px">${esc(label)}</div>
+      ${renderFormulaInput(`fx.${record.id}.${decl.key}`, {
+        placeholder: 'число или формула: наберите лейбл поля',
+        read: () => String(value ?? ''),
+        write: text => setEffectParam(record.id, decl.key, text),
+      })}`;
+  }
+
+  let control;
+  if (decl.kind === 'tag') {
+    const fields = state.system.fields.filter(isNumericField);
+    control = `<select class="meta-sel" onchange="uiSetEffectParam('${record.id}','${decl.key}',this.value)">
+      ${fields.map(f => `<option value="${f.tag}"${value === f.tag ? ' selected' : ''}>${esc(f.label)}</option>`).join('')}
+    </select>`;
+  } else if (decl.kind === 'choice') {
+    const options = decl.options || AMOUNT_SOURCES.map(s => s.id);
+    control = `<select class="meta-sel" onchange="uiSetEffectParam('${record.id}','${decl.key}',this.value)">
+      ${options.map(o => {
+        const entry = AMOUNT_SOURCES.find(s => s.id === o);
+        return `<option value="${o}"${value === o ? ' selected' : ''}>${esc(entry ? entry.label : o)}</option>`;
+      }).join('')}
+    </select>`;
+  } else if (decl.kind === 'effect') {
+    const wearable = state.compendium.effects.filter(e => !e.rule);
+    control = `<select class="meta-sel" onchange="uiSetEffectParam('${record.id}','${decl.key}',this.value)">
+      ${wearable.map(e => `<option value="${e.id}"${value === e.id ? ' selected' : ''}>${esc(e.label)}</option>`).join('')}
+    </select>`;
+  } else {
+    control = `<input class="bon-v" style="text-align:left" value="${esc(value ?? '')}"
+      placeholder="${decl.kind === 'dice' ? 'напр. 2d6' : 'число'}"
+      oninput="uiSetEffectParam('${record.id}','${decl.key}',this.value)">`;
+  }
+
   return `<div class="bon-row" style="grid-template-columns:130px 1fr;border:none">
-    <span style="font-size:11px;color:var(--muted)">${label}</span>
-    <input class="bon-v" style="text-align:left" value="${esc(value || '1d6')}" placeholder="напр. 2d6"
-           oninput="uiSetEnvelope('${id}','${path}',this.value)">
+    <span style="font-size:11px;color:var(--muted)">${esc(label)}</span>${control}
   </div>`;
 }
 
@@ -295,10 +316,41 @@ export function pickRecord(id) {
   state.activeRecordId = id;
 }
 
+// Заготовка параметров под объявление правила: у автора эффекта форма
+// с первого мгновения заполнена чем-то законным, а не пустотой.
+export function defaultParams(rule) {
+  const params = {};
+  for (const decl of (rule || {}).params || []) {
+    if (decl.kind === 'expr') {
+      const f = state.system.fields.find(x => x.value.kind === 'formula') || state.system.fields[0];
+      params[decl.key] = '#' + f.tag;
+    } else if (decl.kind === 'tag') {
+      const f = state.system.fields.find(x => x.value.kind === 'stored' && x.value.type === 'number');
+      params[decl.key] = (f || state.system.fields[0]).tag;
+    } else if (decl.kind === 'dice') params[decl.key] = '1d6';
+    else if (decl.kind === 'number') params[decl.key] = 10;
+    else if (decl.kind === 'choice') params[decl.key] = (decl.options || ['roll'])[0];
+    else if (decl.kind === 'effect') {
+      const e = state.compendium.effects.find(x => !x.rule);
+      if (e) params[decl.key] = e.id;
+    }
+  }
+  return params;
+}
+
+function newRuleCall() {
+  const [ruleId, rule] = Object.entries(state.system.rules || {})[0] || [];
+  const id = newRecordId('call');
+  state.compendium.effects.push({
+    id, kind: 'rule', label: 'Новый вызов правила', description: '',
+    rule: ruleId || '', params: defaultParams(rule),
+  });
+  return id;
+}
+
 export function createRecord(kind) {
   const first = state.system.fields[0].tag;
   const roll = (state.system.rolls[0] || {}).tag;
-  const formulaTag = (state.system.fields.find(f => f.value.kind === 'formula') || state.system.fields[0]).tag;
 
   if (kind === 'item') {
     const id = newRecordId('item');
@@ -318,18 +370,20 @@ export function createRecord(kind) {
     state.activeRecordId = id;
     return;
   }
+  if (kind === 'rulecall') {
+    state.activeRecordId = newRuleCall();
+    return;
+  }
 
+  // Действие ссылается на эффект-вызов; если вызовов ещё нет — заводим
+  // заготовку тут же, чтобы действие родилось работоспособным.
   const spell = kind === 'spell';
   const id = newRecordId(spell ? 'spell' : 'act');
+  const call = state.compendium.effects.find(e => e.rule) || { id: newRuleCall() };
   state.compendium.actions.push({
     id, kind: spell ? 'spell' : 'action',
     label: spell ? 'Новое заклинание' : 'Новое действие', description: '',
-    envelope: {
-      kind: 'attack',
-      roll: { die: 20, bonus: '#' + formulaTag, target: roll },
-      versus: formulaTag,
-      onHit: { damage: { dice: '1d6' }, applyTo: first },
-    },
+    effect: call.id,
   });
   state.activeRecordId = id;
 }
@@ -354,19 +408,31 @@ export function setRecord(id, key, value) {
   if (record) record[key] = value;
 }
 
-// Смена оружия чистит кости в самом действии: кость урона теперь придёт
-// из записи оружия. Снятие оружия возвращает действию собственную кость.
 export function setWeapon(id, value) {
   const action = live(id);
-  const onHit = action.envelope.onHit = action.envelope.onHit || {};
-  const damage = onHit.damage = onHit.damage || {};
-  if (value) {
-    action.weapon = value;
-    delete damage.dice;
-  } else {
-    delete action.weapon;
-    if (!damage.dice) damage.dice = '1d6';
-  }
+  if (value) action.weapon = value;
+  else delete action.weapon;
+}
+
+// ── эффект-вызов: правило и параметры ───────────────────────────────────────
+
+// Смена правила пересобирает параметры под новое объявление: у другого
+// правила другие слоты, и старые значения к ним не приложить.
+export function setEffectRule(id, ruleId) {
+  const record = live(id);
+  record.rule = ruleId;
+  record.params = defaultParams((state.system.rules || {})[ruleId]);
+}
+
+export function setEffectParam(id, key, raw) {
+  const record = live(id);
+  const decl = (((state.system.rules || {})[record.rule] || {}).params || []).find(p => p.key === key);
+  record.params = record.params || {};
+  const value = typeof raw === 'string' ? raw.trim() : raw;
+  if (value === '' || value === undefined) { delete record.params[key]; return; }
+  record.params[key] = decl && decl.kind === 'number' && !Number.isNaN(Number(value))
+    ? Number(value)
+    : value;
 }
 
 export function setWeaponProp(id, key, raw) {
@@ -450,44 +516,3 @@ export function setMod(id, index, key, raw) {
   mod[key] = raw;
 }
 
-// Правка конверта по пути вида «onHit.damage.dice». Теги приходят из
-// выпадающих списков, поэтому проверять их на существование не нужно.
-export function setEnvelope(id, path, value) {
-  const action = live(id);
-  const env = action.envelope;
-
-  if (path === 'kind') return reshape(action, value);
-
-  const parts = path.split('.');
-  const last = parts.pop();
-  let node = env;
-  for (const key of parts) {
-    if (!node[key]) node[key] = {};
-    node = node[key];
-  }
-  // Пустое выражение убираем совсем: пустая строка ушла бы в разбор формулы
-  // и уронила бы отправку. Бонус — вещь необязательная.
-  if (!String(value).trim() && (last === 'bonus' || last === 'dc')) delete node[last];
-  else node[last] = value;
-}
-
-function reshape(action, kind) {
-  const first = state.system.fields[0].tag;
-  const roll = (state.system.rolls[0] || {}).tag;
-  const formulaTag = (state.system.fields.find(f => f.value.kind === 'formula') || state.system.fields[0]).tag;
-
-  action.envelope = kind === 'attack'
-    ? {
-      kind: 'attack',
-      roll: { die: 20, bonus: '#' + formulaTag, target: roll },
-      versus: formulaTag,
-      onHit: { damage: { dice: '1d6' }, applyTo: first },
-    }
-    : {
-      kind: 'save',
-      saveTag: formulaTag,
-      dc: '#' + formulaTag,
-      onFail: { damage: { dice: '1d6' }, applyTo: first, effect: null },
-      onSuccess: null,
-    };
-}

@@ -31,6 +31,35 @@ export const slots = [
   { key: 'continueOn', label: 'Дальше при', kind: 'choice', options: ['success', 'fail'] },
 ];
 
+// Чем шаг делится с последующими — конструктор строит из этого выпадашку
+// допустимых ссылок, не зная типа.
+export const outputs = [
+  { path: '.margin', label: 'превышение' },
+  { path: '.total', label: 'итог броска' },
+];
+
+// Может оборвать цепочку — приговор о разборе говорит об этом словами.
+export const mayBreak = true;
+
+export function lint(step) {
+  if (!step.roll || !step.roll.die || !step.roll.die.constant) {
+    return 'порогу нужна кость — слот roll.die ссылается на константу системы';
+  }
+  return null;
+}
+
+// Строка журнала. Живёт в модуле шага: новый тип приносит свою подачу сам,
+// интерфейс не ветвится по типам.
+export function traceLine(t, h) {
+  const versusName = t.versus.tag ? `${h.labelOf(t.versus.tag)} ` : '';
+  const dice = t.rolls.length > 1 ? `[${t.rolls.join(', ')}] → ${t.kept}` : `[${t.rolls[0]}]`;
+  const parts = t.parts && Object.keys(t.parts).length
+    ? ' · ' + Object.entries(t.parts).map(([k, v]) => `${k}: ${v}`).join(', ')
+    : '';
+  const verdict = t.success ? `взят (запас ${t.margin})` : `не взят (недобор ${-t.margin})`;
+  return `порог: ${dice} + ${t.bonus} = ${t.total} против ${versusName}${t.versus.value} — ${verdict}${parts}`;
+}
+
 export function pack(step, ctx) {
   const roll = step.roll || {};
   if (!roll.die || !roll.die.constant) {

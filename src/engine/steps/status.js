@@ -15,6 +15,14 @@ export const slots = [
   { key: 'effect', label: 'Эффект', kind: 'ref' },
 ];
 
+export const outputs = [];
+
+export const mayBreak = false;
+
+export function traceLine(t, h) {
+  return `состояние: наложено «${h.effectLabel(t.effect)}»`;
+}
+
 export function pack(step, ctx) {
   return { effect: packRef(step.effect, ctx) };
 }

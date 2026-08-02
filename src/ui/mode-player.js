@@ -8,7 +8,8 @@
 // новый ТЕГ вводит только автор; комбинировать существующие можно отсюда.
 
 import { state, sheet, field, pass, rollOf, valueOf, show, newRecordId, esc, log } from './state.js';
-import { targets } from '../engine/targets.js';
+import { targets, labelOf } from '../engine/targets.js';
+import { registry } from '../engine/steps/index.js';
 import { send, receive } from '../events/envelope.js';
 import { randomDie } from '../engine/dice.js';
 
@@ -180,7 +181,7 @@ function renderBelongings() {
     <button class="add-row" onclick="uiCreate('item')">+ создать предмет</button>
 
     <div class="pal-sec" style="margin-top:10px">Эффекты</div>
-    ${picker(effects, current.effects.map(e => e.effectId), 'uiHang', 'эффектов нет')}
+    ${picker(effects.filter(e => !e.rule), current.effects.map(e => e.effectId), 'uiHang', 'эффектов нет')}
     <button class="add-row" onclick="uiCreate('effect')">+ создать эффект</button>
 
     ${renderRolls(p)}
@@ -348,32 +349,21 @@ export function create(kind) {
     return handOff(id, 'эффект');
   }
 
+  // Действие ссылается на эффект-вызов и не вводит ни тега, ни шага —
+  // потому его и волен создать игрок. Если вызовов в библиотеке ещё нет,
+  // дальше игрока отправит редактор компендиума.
   const spell = kind === 'spell';
   const id = newRecordId(spell ? 'spell' : 'act');
+  const call = state.compendium.effects.find(e => e.rule);
   state.compendium.actions.push({
     id, kind: spell ? 'spell' : 'action',
     label: spell ? 'Новое заклинание' : 'Новое действие',
     description: '',
-    envelope: spell
-      ? { kind: 'save', saveTag: firstFormulaTag(), dc: '#' + firstFormulaTag(), onFail: null, onSuccess: null }
-      : {
-        kind: 'attack',
-        roll: { die: 20, bonus: '#' + firstFormulaTag(), target: roll },
-        versus: firstFormulaTag(),
-        onHit: { damage: { dice: '1d6' }, applyTo: firstStoredTag() },
-      },
+    effect: call ? call.id : '',
   });
   current.actions.push(id);
   return handOff(id, spell ? 'заклинание' : 'действие');
 }
-
-// Действие ссылается только на уже объявленные теги — нового не вводит.
-// Потому его и волен создать игрок.
-const firstFormulaTag = () =>
-  (state.system.fields.find(f => f.value.kind === 'formula') || state.system.fields[0]).tag;
-
-const firstStoredTag = () =>
-  (state.system.fields.find(f => f.value.kind === 'stored') || state.system.fields[0]).tag;
 
 function handOff(id, word) {
   state.mode = 'compendium';
@@ -397,38 +387,28 @@ export function dispatch(actionId, targetId) {
   }
 }
 
+// Журнал — это трасса правила, шаг за шагом с числами. Строку каждого шага
+// пишет ЕГО модуль (traceLine в src/engine/steps/*): новый тип шага приносит
+// свою подачу сам, интерфейс по типам не ветвится.
 function describe(from, to, report) {
-  const head = `<b>${esc(from.name)}</b> → <b>${esc(to.name)}</b>`;
-  const changes = report.changes
-    .map(c => `${esc(field(c.tag) ? field(c.tag).label : c.tag)}: ${c.from} → ${c.to}`).join(', ');
-  const effects = report.effects.length ? ` · наложено: ${report.effects.map(esc).join(', ')}` : '';
+  const head = `<b>${esc(from.name)}</b> → <b>${esc(to.name)}</b> · ${esc(report.label)}`;
 
-  if (report.kind === 'attack') {
-    const verdict = report.check.success
-      ? `<span class="roll-success">попадание</span> (превышение ${report.check.margin})`
-      : '<span class="roll-fail">мимо</span>';
-    const versusLabel = field(report.versus.tag) ? field(report.versus.tag).label : report.versus.tag;
-    return `${head} · ${esc(report.label)}<br>
-      бросок [${report.attack.rolls.join(', ')}] + ${report.attack.bonus} = ${report.attack.total}
-      против ${esc(versusLabel)} ${report.versus.value} — ${verdict}${damageLine(report.damage)}${changes ? '<br>' + changes : ''}${effects}`;
-  }
+  const helpers = {
+    labelOf: tag => labelOf(state.system, tag),
+    effectLabel: id => ((state.compendium.effects || []).find(e => e.id === id) || { label: id }).label,
+  };
 
-  const verdict = report.check.success
-    ? '<span class="roll-success">спасся</span>'
-    : '<span class="roll-fail">провал</span>';
-  return `${head} · ${esc(report.label)}<br>
-    спасбросок [${report.save.rolls.join(', ')}] + ${report.save.bonus} = ${report.save.total}
-    против ${report.dc} — ${verdict}${changes ? '<br>' + changes : ''}${effects}`;
-}
+  const lines = report.trace.map(entry => {
+    const mod = registry.get(entry.type);
+    const text = mod && mod.traceLine
+      ? mod.traceLine(entry, helpers)
+      : `${entry.type}: шаг отработал`;
+    return esc(text);
+  });
 
-// Разложение урона по слагаемым — та самая трассировка «откуда взялась цифра».
-// Превышение — отдельное слагаемое: видно, что урон пришёл из проверки.
-function damageLine(damage) {
-  if (!damage) return '';
-  const parts = [];
-  if (damage.rolls.length) parts.push(`[${damage.rolls.join(', ')}]`);
-  if (damage.bonus) parts.push(String(damage.bonus));
-  if (!parts.length) parts.push(String(damage.base));
-  if (damage.margin !== null && damage.margin !== undefined) parts.push(`превышение ${damage.margin}`);
-  return `<br>урон ${parts.join(' + ')} = ${damage.total}`;
+  const verdict = report.stopped
+    ? `<span class="roll-fail">цепочка оборвана на шаге «${esc(String(report.stopped.step))}»</span>`
+    : '<span class="roll-success">правило отработало до конца</span>';
+
+  return `${head}<br>${lines.join('<br>')}<br>${verdict}`;
 }

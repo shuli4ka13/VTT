@@ -23,7 +23,7 @@ Proof-of-concept конструктора ролевых систем и чар�
 - **Фаза 2 реализована.** ТЗ выводило парсер из-под Claude Code (он был учебным куском), но пользователь попросил написать его. Контракт модуля зафиксирован в [docs/parser-plan.md](docs/parser-plan.md) и остаётся спецификацией: замена реализации обязана пройти те же пять тест-файлов.
 - **Фазы пройдены без остановок на ревью** — по прямой просьбе.
 
-Репозиторий заведён. Работа по разделению режимов идёт в ветке `split-modes`. Remote не настроен — уточнить у пользователя перед пушем.
+Репозиторий заведён. Конструируемые правила (правило = данные, конвейер шагов) — в ветке `rules-constructor`. Remote не настроен — уточнить у пользователя перед пушем.
 
 ## Команды
 
@@ -122,9 +122,15 @@ node --input-type=module -e "import './tests/formula.parse.test.js'; import {rep
 | [src/formula/](src/formula/) | язык формул: `lex` → `parse` → AST → `evaluate`/`deps`. Публичный вход только через `index.js` |
 | [src/engine/calc.js](src/engine/calc.js) | `calc(system, sheet, tag, pass)`. Проход (`newPass`) несёт мемоизацию, стек для ловли циклов и собранные модификаторы |
 | [src/engine/modifiers.js](src/engine/modifiers.js) | три источника (правила системы, предметы, эффекты), стакинг, гашение преимущества помехой |
-| [src/engine/targets.js](src/engine/targets.js) | словарь мишеней — выводится из системы, нигде не хранится |
-| [src/events/envelope.js](src/events/envelope.js) | `send` кладёт свои числа и теги, `receive` считает на стороне получателя |
+| [src/engine/targets.js](src/engine/targets.js) | словарь мишеней — выводится из системы, нигде не хранится. Включая `incoming:тег` — мишени сопротивлений |
+| [src/engine/rule.js](src/engine/rule.js) | ядро правил: общий цикл по шагам, фазы `pack` (отправитель) / `resolve` (получатель), трасса каждого шага, журнал изменений |
+| [src/engine/steps/](src/engine/steps/) | типы шагов за реестром (`index.js`). Модуль шага: `pack`, `resolve`, `slots`, `outputs`, `lint`, `traceLine`. Новый тип = модуль + строка в реестре, ядро не правится |
+| [src/engine/refs.js](src/engine/refs.js) | структурные ссылки слотов (`param`/`ref`/`item`/`tag`/`expr`/`const`) со стороной разрешения `of` |
+| [src/engine/lead-die.js](src/engine/lead-die.js) | ведущая кость из `system.constants`; `total` есть всегда, именованные части сверх него |
+| [src/events/envelope.js](src/events/envelope.js) | `send` упаковывает правило системы по эффекту-вызову, `receive` исполняет у получателя. Границу действие → эффект → правило знает только он |
 | [src/model/serialize.js](src/model/serialize.js) | сторож границы хранимого и вычисленного |
+| [src/model/system-cyberpunk.js](src/model/system-cyberpunk.js) | система B приёмочного теста: другое правило, та же машина. Движок не импортирует |
+| [src/ui/rule-editor.js](src/ui/rule-editor.js) | конструктор правил: карточки шагов из `module.slots`, выпадашки ссылок из `module.outputs`, приговор из `module.lint`. Только режим автора |
 | [src/ui/formula-text.js](src/ui/formula-text.js) | тег → лейбл для показа. Обратного преобразования нет и быть не должно |
 | [src/ui/suggest.js](src/ui/suggest.js) | лейбл → тег при наборе. Ровно один раз, по выбору человека — не при каждом вычислении, как в черновике |
 

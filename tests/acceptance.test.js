@@ -153,15 +153,25 @@ if (inNode) {
       ok(author.includes('author-editor'), 'редактор поля — часть экрана автора');
     });
 
-    test('слот источника урона выбирается в конструкторе систем, и только там', () => {
-      // Смена слота меняет ФОРМУ разрешения — по границе режимов это автор.
+    test('шаги правила правятся в конструкторе систем, и только там', () => {
+      // Смена шага меняет ФОРМУ разрешения — по границе режимов это автор.
       const authorCode = readFileSync(join(repo, 'src/ui/mode-author.js'), 'utf8');
+      const ruleEditorCode = readFileSync(join(repo, 'src/ui/rule-editor.js'), 'utf8');
       const compendiumCode = readFileSync(join(repo, 'src/ui/mode-compendium.js'), 'utf8');
-      ok(/from\s+'\.\.\/model\/damage-sources\.js'/.test(authorCode),
-        'словарь источников урона — часть конструктора систем');
-      ok(authorCode.includes('uiSetDamageSource'), 'выбор слота есть у автора');
-      eq(playerCode.includes('uiSetDamageSource'), false, 'у игрока его нет — негативный контроль');
-      eq(compendiumCode.includes('uiSetDamageSource'), false, 'и в компендиуме нет: запись не правит закон');
+
+      ok(/from\s+'\.\/rule-editor\.js'/.test(authorCode),
+        'конструктор правил — часть режима автора');
+      ok(/from\s+'\.\.\/model\/amount-sources\.js'/.test(ruleEditorCode),
+        'словарь источников величины — часть конструктора правил');
+      ok(ruleEditorCode.includes('uiRuleSlot'), 'правка слота шага есть у автора');
+      for (const [file, code] of [['mode-player.js', playerCode], ['mode-compendium.js', compendiumCode]]) {
+        eq(code.includes('uiRuleSlot'), false, `${file}: правки шагов нет — негативный контроль`);
+        eq(code.includes('uiRuleAddStep'), false, `${file}: и добавления шагов нет`);
+      }
+      // Редактор эффекта рисует ТОЛЬКО параметры: реестр шагов ему не нужен,
+      // и первым признаком протечки станет вот этот импорт.
+      eq(/from\s+'\.\.\/engine\/steps\//.test(compendiumCode), false,
+        'mode-compendium.js не знает реестра шагов');
     });
   });
 

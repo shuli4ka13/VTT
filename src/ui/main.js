@@ -11,6 +11,7 @@
 import { state, MODES, esc, log } from './state.js';
 import * as author from './mode-author.js';
 import * as editor from './field-editor.js';
+import * as ruleEditor from './rule-editor.js';
 import * as player from './mode-player.js';
 import * as compendium from './mode-compendium.js';
 import * as formula from './formula-input.js';
@@ -109,7 +110,15 @@ Object.assign(window, {
   uiAddRule: redraw(author.addRule),
   uiDelRule: redraw(author.deleteRule),
   uiSetRule: redraw(author.setRule),
-  uiSetDamageSource: redraw(author.setDamageSource),
+  // ── конструктор правил разрешения: карточки шагов из реестра ──
+  uiRulePick: redraw(ruleEditor.pickRule),
+  uiRuleAddStep: redraw(ruleEditor.addStep),
+  uiRuleDelStep: redraw(ruleEditor.deleteStep),
+  uiRuleSlot: redraw(ruleEditor.setSlot),
+  uiRuleSlotRef: redraw(ruleEditor.setSlotRef),
+  uiRuleSlotConst: redraw(ruleEditor.setSlotConst),
+  uiRuleSlotExpr: redraw(ruleEditor.setSlotExpr),
+  uiLeadDie: redraw(ruleEditor.setLeadDie),
 
   // ── режим игрока: значения и принадлежности ──
   uiPickSheet: redraw(player.pickSheet),
@@ -132,7 +141,8 @@ Object.assign(window, {
   uiAddMod: redraw(compendium.addMod),
   uiDelMod: redraw(compendium.deleteMod),
   uiSetMod: redraw(compendium.setMod),
-  uiSetEnvelope: redraw(compendium.setEnvelope),
+  uiSetEffectRule: redraw(compendium.setEffectRule),
+  uiSetEffectParam: redraw(compendium.setEffectParam),
   uiSetWeapon: redraw(compendium.setWeapon),
   uiSetWeaponProp: redraw(compendium.setWeaponProp),
 });

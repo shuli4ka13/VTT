@@ -9,7 +9,7 @@ import { state, esc } from './state.js';
 import { renderEditor, exprOf } from './field-editor.js';
 import { toDisplay } from './formula-text.js';
 import { ADVANTAGE_METHODS } from '../model/advantage-methods.js';
-import { DAMAGE_SOURCES } from '../model/damage-sources.js';
+import { renderConstants, renderRuleSection } from './rule-editor.js';
 import { targets } from '../engine/targets.js';
 
 export function renderAuthor() {
@@ -51,9 +51,10 @@ function renderRules() {
   const rollTargets = targets(state.system).filter(t => t.kind === 'roll');
 
   document.getElementById('author-rules').innerHTML = `
-    ${attackRuleCard()}
+    ${renderConstants()}
+    ${renderRuleSection()}
 
-    <div class="pal-sec">Механики преимущества</div>
+    <div class="pal-sec" style="margin-top:10px">Механики преимущества</div>
     ${ADVANTAGE_METHODS.map(method => `
       <div class="chk-row${settings.methods[method.id] ? ' on' : ''}" onclick="uiToggleMethod('${method.id}')">
         <div class="chk-box">✓</div>
@@ -66,36 +67,6 @@ function renderRules() {
     <div class="pal-sec" style="margin-top:10px">Правила комнаты</div>
     ${rules.map(rule => ruleRow(rule, enabled, rollTargets)).join('')}
     <button class="add-row" onclick="uiAddRule()">+ правило</button>`;
-}
-
-// Правило «Атака» — конвейер шагов. Пока редактируется один слот: откуда
-// берётся величина урона. Выбор здесь и есть смена модели урона всей системы —
-// как и всё в режиме автора, без единого значения на экране.
-function attackRuleCard() {
-  const slots = ((state.system.rules || {}).attack || {}).damage || {};
-  const source = slots.source === undefined ? 'roll' : slots.source;
-  const chosen = DAMAGE_SOURCES.find(s => s.id === source);
-  const tip = chosen
-    ? `${chosen.hint}\n${chosen.examples.map(e => `${e.system}: ${e.example}`).join('\n')}`
-    : 'неизвестное значение — движок его отвергнет при броске';
-
-  return `
-    <div class="pal-sec">Разрешение атаки</div>
-    <div class="auto-rule" style="padding:8px 9px">
-      <div class="ar-row" style="font-size:11px;opacity:.7">шаг 1 · Проверка — бросок действия против защиты цели</div>
-      <div class="ar-row" style="font-size:11px">шаг 2 · Урон — откуда берётся величина
-        <span class="info-dot" title="${esc(tip)}">i</span>
-      </div>
-      <div class="ar-row">
-        <select onchange="uiSetDamageSource(this.value)">
-          ${DAMAGE_SOURCES.map(s => `
-            <option value="${s.id}"${s.id === source ? ' selected' : ''}>
-              ${esc(s.label)} — ${esc(s.examples.map(e => e.system).join(', '))}
-            </option>`).join('')}
-        </select>
-      </div>
-      <div class="ar-row" style="font-size:11px;opacity:.7">шаг 3 · Применение — цель считает и применяет к себе</div>
-    </div>`;
 }
 
 function ruleRow(rule, enabled, rollTargets) {
@@ -149,10 +120,4 @@ export function deleteRule(index) {
 
 export function setRule(index, key, value) {
   state.system.modifiers[index][key] = value;
-}
-
-export function setDamageSource(source) {
-  const rules = state.system.rules || (state.system.rules = {});
-  const attack = rules.attack || (rules.attack = {});
-  attack.damage = { ...(attack.damage || {}), source };
 }

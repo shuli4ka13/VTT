@@ -27,6 +27,35 @@ export const slots = [
   { key: 'margin', label: 'Превышение шага', kind: 'ref' },
 ];
 
+export const outputs = [
+  { path: '', label: 'величина' },
+];
+
+export const mayBreak = false;
+
+// Статическая проверка карточки для приговора в конструкторе: без броска,
+// без параметров, без листа. Источник из параметра проверить нельзя —
+// и это не беда: у получателя есть сторож в pack.
+export function lint(step) {
+  const source = step.source && typeof step.source === 'object' ? null : step.source;
+  if (source === null) return null;
+  if (!SOURCES.includes(source)) return `неизвестный источник «${source}» — умею: ${SOURCES.join(', ')}`;
+  if (source === 'roll' && !step.dice) return 'источнику «свой бросок» нужны кости — слот dice пуст';
+  if (source === 'item' && !step.fixed) return 'источнику «фикс предмета» нужен слот fixed';
+  if (source === 'margin' && !step.margin) return 'источнику «превышение» нужен слот margin — превышение какого шага брать?';
+  return null;
+}
+
+export function traceLine(t) {
+  const parts = [];
+  if (t.rolls.length) parts.push(`[${t.rolls.join(', ')}]`);
+  if (t.flat) parts.push(String(t.flat));
+  if (t.bonus) parts.push(String(t.bonus));
+  if (t.margin) parts.push(`превышение ${t.margin}`);
+  if (!parts.length) parts.push('0');
+  return `величина: ${parts.join(' + ')} = ${t.total}`;
+}
+
 export function pack(step, ctx) {
   const source = constant(packRef(step.source, ctx), ctx, 'источник величины');
   if (!SOURCES.includes(source)) {

@@ -38,6 +38,29 @@ export const slots = [
   { key: 'targetModifiers', label: 'Модификаторы цели', kind: 'flag' },
 ];
 
+export const outputs = [
+  { path: '.amount', label: 'применено' },
+];
+
+export const mayBreak = false;
+
+export function lint(step) {
+  if (!step.target) return 'применению нужна мишень — тег хранимого поля цели';
+  if (!step.value) return 'применению нужна величина — что именно менять';
+  if (step.direction && !DIRECTIONS[step.direction]) {
+    return `неизвестное направление «${step.direction}» — умею: ${Object.keys(DIRECTIONS).join(', ')}`;
+  }
+  return null;
+}
+
+export function traceLine(t, h) {
+  const sign = t.direction === 'add' ? '+' : t.direction === 'subtract' ? '−' : '=';
+  const mods = t.incoming !== t.amount
+    ? ` (входящее ${t.incoming}, после модификаторов цели ${t.amount})`
+    : '';
+  return `применено: ${h.labelOf(t.target)} ${t.from} → ${t.to} (${sign}${t.amount})${mods}`;
+}
+
 export function pack(step, ctx) {
   const direction = step.direction || 'subtract';
   if (!DIRECTIONS[direction]) {
