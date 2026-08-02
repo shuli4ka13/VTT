@@ -31,6 +31,13 @@ export const items = [
   },
 ];
 
+// Эффекты двух назначений, и оба — записи без единого шага внутри:
+//
+//   длящиеся  — висят на чарнике и несут модификаторы (отравление, каменная
+//               кожа); их читает движок при каждом пересчёте;
+//   вызовы    — зовут ПРАВИЛО системы по имени и приносят только параметры
+//               (kind: 'rule'). Шаги живут в system.rules, здесь их нет и
+//               быть не может: правка правила обязана менять все эффекты сразу.
 export const effects = [
   {
     id: 'poisoned',
@@ -42,6 +49,44 @@ export const effects = [
       // Помеха — не «−2 к броску». Это другая порода: два кубика, берём худший.
       { kind: 'roll', target: 'attack_roll', effect: 'disadvantage', method: 'rerollBest', condition: null },
     ],
+  },
+  {
+    id: 'stoneskin',
+    label: 'Каменная кожа',
+    icon: '🪨',
+    duration: { kind: 'scene' },
+    description: 'Сопротивление урону: входящее в хиты половинится.',
+    modifiers: [
+      // Мишень «входящее» — то, что летит В поле извне. Шаг «применить»
+      // прогоняет через неё величину, когда правило сказало «с учётом
+      // модификаторов цели»; лечение и износ идут мимо.
+      { kind: 'value', target: 'incoming:hp_current', op: 'mul', value: 0.5, stacking: 'sum', condition: null },
+    ],
+  },
+
+  {
+    id: 'sword-strike',
+    kind: 'rule',
+    label: 'Удар оружием',
+    description: 'Вызов правила «Удар»: проверка атаки против КД, урон костью оружия.',
+    rule: 'strike',
+    params: { bonus: '#attack_bonus', versus: 'ac', damage_bonus: '#str_mod', apply_to: 'hp_current' },
+  },
+  {
+    id: 'poison-touch',
+    kind: 'rule',
+    label: 'Ядовитое касание',
+    description: 'Вызов правила «Спасбросок»: цель спасается Ловкостью, при провале — урон и отравление.',
+    rule: 'save',
+    params: { save: '#dex_save', dc: '#spell_dc', dice: '2d6', apply_to: 'hp_current', status: 'poisoned' },
+  },
+  {
+    id: 'healing-touch',
+    kind: 'rule',
+    label: 'Лечащее касание',
+    description: 'Вызов правила «Лечение»: кость плюс Харизма, не выше максимума хитов.',
+    rule: 'heal',
+    params: { dice: '1d4', bonus: '#cha_mod', apply_to: 'hp_current', cap: 'hp_max' },
   },
 ];
 
@@ -60,28 +105,24 @@ export const actions = [
     kind: 'action',
     label: 'Удар длинным мечом',
     description: 'Рукопашная атака оружием.',
-    // Удар знает, ЧЕМ бьёт: кость урона придёт из записи оружия,
-    // в самом действии остаются только бонусы атакующего.
+    // Действие — ИСТОЧНИК: само не наносит ничего, а ссылается на эффект-вызов.
+    // Оно знает, ЧЕМ бьёт: кость урона правило возьмёт из записи оружия.
     weapon: 'longsword-item',
-    envelope: {
-      kind: 'attack',
-      roll: { die: 20, bonus: '#attack_bonus', target: 'attack_roll' },
-      versus: 'ac', // тег, который получатель посчитает СВОИМИ формулами
-      onHit: { damage: { bonus: '#str_mod' }, applyTo: 'hp_current' },
-    },
+    effect: 'sword-strike',
   },
   {
     id: 'poison-spray',
     kind: 'spell',
     label: 'Ядовитые брызги',
     description: 'Заговор. Цель делает спасбросок Телосложения — здесь для примера Ловкости.',
-    envelope: {
-      kind: 'save',
-      saveTag: 'dex_save',
-      dc: '#spell_dc',
-      onFail: { damage: { dice: '2d6' }, applyTo: 'hp_current', effect: 'poisoned' },
-      onSuccess: null,
-    },
+    effect: 'poison-touch',
+  },
+  {
+    id: 'healing-word',
+    kind: 'spell',
+    label: 'Слово лечения',
+    description: 'Заговор. Восполняет хиты, но не выше максимума.',
+    effect: 'healing-touch',
   },
 ];
 

@@ -52,11 +52,12 @@ group('событийный конверт', () => {
   group('отправитель', () => {
     test('собирает конверт, ничего не зная о получателе', () => {
       const env = send('longsword', ctx(arven, queue(15, 5)));
-      eq(env.kind, 'attack');
+      eq(env.kind, 'rule');
+      eq(env.rule, 'strike', 'конверт называет правило, а не пересказывает его');
       eq(env.from, 'arven');
-      eq(env.versus, 'ac', 'в конверте лежит ТЕГ, а не посчитанный класс брони цели');
-      eq(env.attack.total, 21, 'отправитель бросил свой бросок по своей системе');
-      eq(env.onHit.damage.base, 8, 'своя часть урона: 1d8=5 плюс своя Сила 3');
+      eq(env.steps[0].rolled.total, 15, 'свой бросок сделан своей ведущей костью');
+      deepEq(env.steps[0].versus, { tag: 'ac' }, 'в конверте лежит ТЕГ, а не посчитанный КД цели');
+      eq(env.steps[1].rolled.total, 5, 'своя кость урона брошена');
     });
 
     test('конверт — чистые данные и переживает сериализацию', () => {
@@ -72,10 +73,10 @@ group('событийный конверт', () => {
 
     test('сложность спасброска считается отправителем по СВОЕЙ системе', () => {
       const env = send('poison-spray', ctx(mirra, queue(3, 4)));
-      eq(env.kind, 'save');
-      eq(env.saveTag, 'dex_save');
-      eq(env.dc, 13, '8 + бонус мастерства 2 + Харизма 3');
-      eq(env.onFail.damage.base, 7);
+      deepEq(env.steps[0].versus, { const: 13 }, '8 + бонус мастерства 2 + Харизма 3');
+      deepEq(env.steps[0].roll.bonus, { expr: '#dex_save', of: 'target' },
+        'а чем спасаться — уехало выражением: его посчитает цель');
+      eq(env.steps[1].rolled.total, 7, 'кости урона брошены отправителем');
     });
 
     test('неизвестное действие — внятная ошибка', () => {
@@ -90,33 +91,34 @@ group('событийный конверт', () => {
       const book = { ...compendium, effects: [...compendium.effects, blessed] };
       const sheet = { ...arven, effects: [{ effectId: 'blessed' }] };
 
-      const plain = send('longsword', ctx(arven, queue(10, 5)));
-      const boosted = send('longsword', { system, sheet, compendium: book, die: queue(10, 5) });
+      const plain = receive(send('longsword', ctx(arven, queue(10, 5))), ctx(mirra, queue()));
+      const boosted = receive(send('longsword', { system, sheet, compendium: book, die: queue(10, 5) }),
+        ctx(mirra, queue()));
 
-      eq(plain.attack.total, 16, 'кость 10 плюс свой бонус атаки 6');
-      eq(boosted.attack.total, 20, 'та же кость, но плюс 4 от эффекта');
+      eq(plain.report.trace[0].total, 16, 'кость 10 плюс свой бонус атаки 6');
+      eq(boosted.report.trace[0].total, 20, 'та же кость, но плюс 4 от эффекта');
     });
 
     test('действия лежат в компендиуме, а не в системе', () => {
-      eq(system.actions, undefined, 'система больше не объявляет действий');
-      deepEq(compendium.actions.map(a => a.id), ['longsword', 'poison-spray']);
+      eq(system.actions, undefined, 'система не объявляет действий');
+      deepEq(compendium.actions.map(a => a.id), ['longsword', 'poison-spray', 'healing-word']);
     });
   });
 
   group('получатель считает сам', () => {
     test('попадание определяется классом брони получателя, а не отправителя', () => {
       const env = send('longsword', ctx(arven, queue(9, 5))); // бросок атаки 9+6 = 15
-      eq(receive(env, ctx(mirra, queue())).report.check.success, true, 'у Мирры класс брони 14');
-      eq(receive(env, ctx(arven, queue())).report.check.success, false, 'у Арвен в кольчуге 16');
+      eq(receive(env, ctx(mirra, queue())).report.trace[0].success, true, 'у Мирры класс брони 14');
+      eq(receive(env, ctx(arven, queue())).report.trace[0].success, false, 'у Арвен в кольчуге 16');
     });
 
     test('один и тот же конверт по двум получателям даёт разный исход', () => {
       const env = send('longsword', ctx(arven, queue(9, 5)));
       const a = receive(env, ctx(mirra, queue()));
       const b = receive(env, ctx(arven, queue()));
-      ok(a.report.check.success !== b.report.check.success);
-      eq(a.report.versus.value, 14);
-      eq(b.report.versus.value, 16);
+      ok(a.report.trace[0].success !== b.report.trace[0].success);
+      eq(a.report.trace[0].versus.value, 14);
+      eq(b.report.trace[0].versus.value, 16);
     });
 
     test('попадание снимает хиты у получателя', () => {
@@ -128,7 +130,7 @@ group('событийный конверт', () => {
     test('промах не меняет ничего', () => {
       const env = send('longsword', ctx(mirra, queue(2, 5))); // 2 + 1 = 3, мимо всех
       const { sheet, report } = receive(env, ctx(arven, queue()));
-      eq(report.check.success, false);
+      eq(report.stopped.reason, 'threshold-miss');
       eq(sheet.values.hp_current, 44);
     });
 
@@ -152,9 +154,9 @@ group('событийный конверт', () => {
 
     test('получатель бросает своим спасброском против присланной сложности', () => {
       const { report } = receive(poisonAt(), ctx(arven, queue(5)));
-      eq(report.save.bonus, 1, 'спасбросок Ловкости Арвен');
-      eq(report.save.total, 6);
-      eq(report.check.success, false);
+      eq(report.trace[0].bonus, 1, 'спасбросок Ловкости Арвен — посчитан ЕЮ');
+      eq(report.trace[0].total, 6);
+      eq(report.trace[0].success, false);
     });
 
     test('провал снимает хиты и вешает эффект', () => {
@@ -163,9 +165,9 @@ group('событийный конверт', () => {
       deepEq(sheet.effects, [{ effectId: 'poisoned' }]);
     });
 
-    test('успех не делает ничего', () => {
+    test('успех не делает ничего — и в журнале это обрыв порога, не промах', () => {
       const { sheet, report } = receive(poisonAt(), ctx(arven, queue(19)));
-      eq(report.check.success, true);
+      eq(report.stopped.reason, 'threshold-held');
       eq(sheet.values.hp_current, 44);
       deepEq(sheet.effects, []);
     });
@@ -176,12 +178,12 @@ group('событийный конверт', () => {
         id: 'shaken', label: 'Потрясён', duration: { kind: 'scene' },
         modifiers: [{ kind: 'roll', target: 'save_roll', effect: 'disadvantage', method: 'rerollBest', condition: null }],
       };
-      const book = { items: compendium.items, effects: [...compendium.effects, shaken] };
+      const book = { ...compendium, effects: [...compendium.effects, shaken] };
       const sheet = { ...arven, effects: [{ effectId: 'shaken' }] };
       const { report } = receive(poisonAt(), { system, sheet, compendium: book, die: queue(19, 5) });
-      deepEq(report.save.rolls, [19, 5]);
-      eq(report.save.kept, 5, 'взята худшая кость');
-      eq(report.check.success, false);
+      deepEq(report.trace[0].rolls, [19, 5]);
+      eq(report.trace[0].kept, 5, 'взята худшая кость');
+      eq(report.trace[0].success, false);
     });
 
     test('хиты не уходят ниже нуля', () => {
@@ -205,9 +207,7 @@ group('событийный конверт', () => {
       const after = calc(system, sheet, 'hp_current', newPass(system, sheet, { compendium }));
 
       ok(after < before, 'значение у получателя изменилось');
-      eq(report.versus.tag, 'ac');
-      eq(report.versus.value, 14, 'класс брони посчитан ПОЛУЧАТЕЛЕМ по его чарнику');
-      ok(!('versusValue' in env), 'отправитель этого значения не знал');
+      deepEq(report.trace[0].versus, { tag: 'ac', value: 14 }, 'класс брони посчитан ПОЛУЧАТЕЛЕМ');
     });
   });
 });
@@ -215,89 +215,55 @@ group('событийный конверт', () => {
 group('конверт не даёт целиться в бессмыслицу', () => {
   const die = (...v) => { const q = [...v]; return () => q.shift(); };
 
+  // Своя пара эффект-вызов + действие: параметры заполнены бессмыслицей,
+  // которую редактор бы не предложил, но данные могли прийти откуда угодно.
+  const withStrike = params => ({
+    ...compendium,
+    effects: [...compendium.effects,
+      { id: 'bogus-hit', kind: 'rule', label: 'Бессмыслица', rule: 'strike', params }],
+    actions: [...compendium.actions,
+      { id: 'bogus', kind: 'action', label: 'Бессмыслица', weapon: 'longsword-item', effect: 'bogus-hit' }],
+  });
+
   test('сравнивать бросок с текстовым полем нельзя — внятная ошибка, а не тихое «мимо»', () => {
-    const book = {
-      ...compendium,
-      actions: [{
-        id: 'bogus', kind: 'action', label: 'Бессмыслица',
-        envelope: {
-          kind: 'attack',
-          roll: { die: 20, bonus: '#attack_bonus', target: 'attack_roll' },
-          versus: 'race',   // текстовое поле
-          onHit: { damage: { dice: '1d8' }, applyTo: 'hp_current' },
-        },
-      }],
-    };
-    const env = send('bogus', { system, sheet: arven, compendium: book, die: die(15) });
+    const book = withStrike({ bonus: '#attack_bonus', versus: 'race', damage_bonus: '0', apply_to: 'hp_current' });
+    const env = send('bogus', { system, sheet: arven, compendium: book, die: die(15, 5) });
     throws(() => receive(env, { system, sheet: mirra, compendium: book, die: die() }), 'race');
   });
 
   test('урон нельзя лить в вычисляемое поле — его считает движок, а не событие', () => {
-    const book = {
-      ...compendium,
-      actions: [{
-        id: 'bogus2', kind: 'action', label: 'Бессмыслица',
-        envelope: {
-          kind: 'attack',
-          roll: { die: 20, bonus: '#attack_bonus', target: 'attack_roll' },
-          versus: 'ac',
-          onHit: { damage: { dice: '1d8' }, applyTo: 'ac' },   // формульное поле
-        },
-      }],
-    };
-    const env = send('bogus2', { system, sheet: arven, compendium: book, die: die(20, 5) });
+    const book = withStrike({ bonus: '#attack_bonus', versus: 'ac', damage_bonus: '0', apply_to: 'ac' });
+    const env = send('bogus', { system, sheet: arven, compendium: book, die: die(20, 5) });
     throws(() => receive(env, { system, sheet: mirra, compendium: book, die: die() }), 'ac');
   });
 });
 
-group('в действии можно писать выражения, а не только ссылку', () => {
+group('в параметрах эффекта живут выражения, а не только ссылки', () => {
   const die = (...v) => { const q = [...v]; return () => q.shift(); };
-  const withAction = envelope => ({
+  const withStrike = params => ({
     ...compendium,
-    actions: [{ id: 'custom', kind: 'action', label: 'Своё', envelope }],
+    effects: [...compendium.effects,
+      { id: 'custom-hit', kind: 'rule', label: 'Своё', rule: 'strike', params }],
+    actions: [...compendium.actions,
+      { id: 'custom', kind: 'action', label: 'Своё', weapon: 'longsword-item', effect: 'custom-hit' }],
   });
 
-  test('бонус атаки — выражение, а не один тег', () => {
-    const book = withAction({
-      kind: 'attack',
-      roll: { die: 20, bonus: '#attack_bonus + 2', target: 'attack_roll' },
-      versus: 'ac',
-      onHit: { damage: { dice: '1d8' }, applyTo: 'hp_current' },
-    });
+  test('бонус проверки — выражение, а не один тег', () => {
+    const book = withStrike({ bonus: '#attack_bonus + 2', versus: 'ac', damage_bonus: '#str_mod', apply_to: 'hp_current' });
     const env = send('custom', { system, sheet: arven, compendium: book, die: die(10, 4) });
-    eq(env.attack.total, 18, 'кость 10 плюс бонус атаки 6 плюс двойка из выражения');
+    const { report } = receive(env, { system, sheet: mirra, compendium: book, die: die() });
+    eq(report.trace[0].total, 18, 'кость 10 плюс бонус атаки 6 плюс двойка из выражения');
   });
 
   test('бонус урона задаётся выражением', () => {
-    const book = withAction({
-      kind: 'attack',
-      roll: { die: 20, bonus: '#attack_bonus', target: 'attack_roll' },
-      versus: 'ac',
-      onHit: { damage: { dice: '1d8', bonus: '#str_mod * 2' }, applyTo: 'hp_current' },
-    });
+    const book = withStrike({ bonus: '#attack_bonus', versus: 'ac', damage_bonus: '#str_mod * 2', apply_to: 'hp_current' });
     const env = send('custom', { system, sheet: arven, compendium: book, die: die(10, 4) });
-    eq(env.onHit.damage.base, 10, 'кость 4 плюс удвоенная Сила 6');
+    const { report } = receive(env, { system, sheet: mirra, compendium: book, die: die() });
+    eq(report.trace[1].total, 10, 'кость 4 плюс удвоенная Сила 6');
   });
 
-  test('сложность спасброска — выражение', () => {
-    const book = withAction({
-      kind: 'save',
-      saveTag: 'dex_save',
-      dc: '8 + #prof_bonus + #cha_mod',
-      onFail: { damage: { dice: '2d6' }, applyTo: 'hp_current' },
-      onSuccess: null,
-    });
-    const env = send('custom', { system, sheet: mirra, compendium: book, die: die(3, 4) });
-    eq(env.dc, 13, '8 плюс бонус мастерства 2 плюс Харизма 3');
-  });
-
-  test('битое выражение в действии — внятная ошибка', () => {
-    const book = withAction({
-      kind: 'attack',
-      roll: { die: 20, bonus: '#attack_bonus +', target: 'attack_roll' },
-      versus: 'ac',
-      onHit: { damage: { dice: '1d8' }, applyTo: 'hp_current' },
-    });
+  test('битое выражение в параметре — внятная ошибка при отправке', () => {
+    const book = withStrike({ bonus: '#attack_bonus +', versus: 'ac', damage_bonus: '0', apply_to: 'hp_current' });
     throws(() => send('custom', { system, sheet: arven, compendium: book, die: die(10, 4) }));
   });
 });

@@ -33,13 +33,80 @@ export const system = {
   // с примерами из разных систем — в src/model/advantage-methods.js.
   advantage: { methods: { rerollBest: true } },
 
-  // Правила разрешения — слоты, а не код. Пока слот один: откуда берётся
-  // величина урона атаки. 'roll' — свой бросок урона (D&D 5e),
-  // 'margin' — превышение проверки попадания (Shadowrun, Fate, WFRP).
-  // Смена значения переключает модель урона всей системы без строчки в движке.
+  // Константы системы — доступны правилам наравне с полями листа.
+  // Первая — ведущая кость: что бросается для действий в этом мире.
+  // Определение описывает и состав броска, и что возвращается; total есть
+  // всегда (см. src/engine/lead-die.js). Смена sides здесь меняет ВСЕ броски,
+  // не требуя правки ни одной формулы.
+  constants: {
+    lead_die: { label: 'Ведущая кость', kind: 'die', dice: [{ count: 1, sides: 20 }] },
+  },
+
+  // Правила разрешения — словарь именованных конвейеров шагов. Одно
+  // ОПРЕДЕЛЕНИЕ на систему: эффект компендиума зовёт правило по имени
+  // и приносит параметры, копий шагов в эффектах нет и быть не может.
+  // Правка шага здесь меняет поведение всех эффектов сразу.
+  //
+  // Правило не знает слова «урон»: удар, спасбросок, лечение — разные
+  // заполнения одних и тех же слотов. Типы шагов — src/engine/steps/.
   rules: {
-    attack: {
-      damage: { source: 'roll' },
+    strike: {
+      label: 'Удар',
+      params: [
+        { key: 'bonus', label: 'Бонус проверки', kind: 'expr' },
+        { key: 'versus', label: 'Против чего', kind: 'tag' },
+        { key: 'damage_bonus', label: 'Бонус урона', kind: 'expr' },
+        { key: 'apply_to', label: 'Куда наносится', kind: 'tag' },
+      ],
+      steps: [
+        { id: 'hit', type: 'threshold',
+          roll: { die: { constant: 'lead_die' }, bonus: { param: 'bonus' }, check: 'attack_roll' },
+          versus: { param: 'versus' } },
+        { id: 'dmg', type: 'amount', source: 'roll',
+          dice: { item: 'damage_dice' }, bonus: { param: 'damage_bonus' } },
+        { type: 'apply', target: { param: 'apply_to' }, direction: 'subtract',
+          value: { ref: 'dmg' }, floor: { const: 0 }, targetModifiers: true },
+      ],
+    },
+
+    save: {
+      label: 'Спасбросок',
+      params: [
+        { key: 'save', label: 'Чем спасается цель', kind: 'expr', of: 'target' },
+        { key: 'dc', label: 'Сложность', kind: 'expr' },
+        { key: 'dice', label: 'Кости урона', kind: 'dice' },
+        { key: 'apply_to', label: 'Куда наносится', kind: 'tag' },
+        { key: 'status', label: 'Состояние при провале', kind: 'effect' },
+      ],
+      steps: [
+        // Порог на стороне цели: бросает ПОЛУЧАТЕЛЬ своей ведущей костью
+        // и своими модификаторами. Дальше — только если НЕ спасся.
+        { id: 'save', type: 'threshold', side: 'target',
+          roll: { die: { constant: 'lead_die' }, bonus: { param: 'save' }, check: 'save_roll' },
+          versus: { param: 'dc' }, continueOn: 'fail' },
+        { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'dice' } },
+        { type: 'apply', target: { param: 'apply_to' }, direction: 'subtract',
+          value: { ref: 'dmg' }, floor: { const: 0 }, targetModifiers: true },
+        { type: 'status', effect: { param: 'status' } },
+      ],
+    },
+
+    // Лечение — НЕ урон с минусом: направление «плюс», потолок — максимум
+    // хитов, сопротивления не участвуют. Другое заполнение тех же слотов.
+    heal: {
+      label: 'Лечение',
+      params: [
+        { key: 'dice', label: 'Кости лечения', kind: 'dice' },
+        { key: 'bonus', label: 'Бонус', kind: 'expr' },
+        { key: 'apply_to', label: 'Что восполняется', kind: 'tag' },
+        { key: 'cap', label: 'Потолок', kind: 'tag' },
+      ],
+      steps: [
+        { id: 'amt', type: 'amount', source: 'roll',
+          dice: { param: 'dice' }, bonus: { param: 'bonus' } },
+        { type: 'apply', target: { param: 'apply_to' }, direction: 'add',
+          value: { ref: 'amt' }, ceiling: { param: 'cap' }, targetModifiers: false },
+      ],
     },
   },
 

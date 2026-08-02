@@ -267,13 +267,16 @@ group('модификаторы', () => {
   });
 
   group('словарь мишеней выводится из системы', () => {
-    test('в него попадают все объявленные поля и все броски', () => {
+    test('в него попадают все поля, все броски и входящее хранимых полей', () => {
       const all = targets(system);
       const derived = system.fields.filter(f => f.roll).length;
-      eq(all.length, system.fields.length + system.rolls.length + derived,
-        'поля, объявленные броски и броски, выведенные из полей');
+      const incoming = system.fields.filter(f => f.value.kind === 'stored').length;
+      eq(all.length, system.fields.length + system.rolls.length + derived + incoming,
+        'поля, объявленные броски, броски из полей и входящее хранимых');
       ok(all.some(t => t.tag === 'ac' && t.kind === 'value'));
       ok(all.some(t => t.tag === 'attack_roll' && t.kind === 'roll'));
+      ok(all.some(t => t.tag === 'incoming:hp_current' && t.kind === 'incoming'),
+        'на входящее вешаются сопротивления');
     });
 
     test('мишень отдаёт человеческий лейбл, а не тег', () => {
