@@ -112,6 +112,12 @@ Object.assign(window, {
   uiSetRule: redraw(author.setRule),
   // ── конструктор правил разрешения: карточки шагов из реестра ──
   uiRulePick: redraw(ruleEditor.pickRule),
+  uiRuleAdd: redraw(ruleEditor.addRule),
+  uiRuleDelete: redraw(ruleEditor.deleteRule),
+  uiRuleRename: redraw(ruleEditor.renameRule),
+  uiRuleParamAdd: redraw(ruleEditor.addParam),
+  uiRuleParamDel: redraw(ruleEditor.deleteParam),
+  uiRuleParamSet: redraw(ruleEditor.setParam),
   uiRuleAddStep: redraw(ruleEditor.addStep),
   uiRuleDelStep: redraw(ruleEditor.deleteStep),
   uiRuleSlot: redraw(ruleEditor.setSlot),

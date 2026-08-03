@@ -18,6 +18,7 @@ import './rule.weapon.test.js';
 import './rule.two-systems.test.js';
 import './ui.formula-text.test.js';
 import './ui.suggest.test.js';
+import './ui.rule-editor.test.js';
 import './acceptance.test.js';
 
 import { report } from './harness.js';

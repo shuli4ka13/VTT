@@ -28,7 +28,10 @@ const word = v => WORDS[v] || v;
 
 export function renderRuleSection() {
   const rules = Object.entries(state.system.rules || {});
-  if (!rules.length) return '<div class="pal-sec">Правила разрешения</div><div class="sys-hint">Система не объявляет правил.</div>';
+  if (!rules.length) {
+    return `<div class="pal-sec">Правила разрешения</div>
+      <button class="add-row" onclick="uiRuleAdd()">+ первая механика системы</button>`;
+  }
 
   if (!state.activeRuleId || !(state.system.rules || {})[state.activeRuleId]) {
     state.activeRuleId = rules[0][0];
@@ -41,6 +44,12 @@ export function renderRuleSection() {
       ${rules.map(([rid, r]) => `
         <button class="die-o${rid === id ? ' on' : ''}" style="${rid === id ? 'border-color:var(--accent);color:var(--accent);' : ''}"
                 onclick="uiRulePick('${rid}')">${esc(r.label || rid)}</button>`).join('')}
+      <button class="die-o" title="новая механика" onclick="uiRuleAdd()">+</button>
+    </div>
+    <div style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
+      <input class="ar-cond" id="rule-label-${id}" style="flex:1" value="${esc(rule.label || '')}"
+             placeholder="Название механики" oninput="uiRuleRename('${id}',this.value)">
+      <button class="ar-del" style="position:static" title="удалить механику" onclick="uiRuleDelete('${id}')">×</button>
     </div>
     ${verdictRow(rule)}
     ${(rule.steps || []).map((step, i) => stepCard(id, rule, step, i)).join(`
@@ -52,14 +61,14 @@ export function renderRuleSection() {
       </select>
     </div>
     <button class="add-row" onclick="uiRuleAddStep('${id}', document.getElementById('rule-add-type').value)">+ шаг в конец цепочки</button>
-    ${paramChips(rule)}`;
+    ${paramEditor(id, rule)}`;
 }
 
 // ── приговор о разборе ───────────────────────────────────────────────────────
 // Считать нечего и не по чему: персонажа в режиме автора нет. Зато можно
 // разобрать: типы известны, выражения парсятся, ссылки бьют по существующему.
 
-function verdictOf(rule) {
+export function verdictOf(rule) {
   const ids = new Set();
   const params = new Set((rule.params || []).map(p => p.key));
   const steps = rule.steps || [];
@@ -244,16 +253,32 @@ function row(label, control) {
   </div>`;
 }
 
-// Параметры правила — то, что заполнит эффект в компендиуме. Состав здесь
-// только показывается: его правка — следующий заход, записано в
-// docs/production-differences.md.
-function paramChips(rule) {
+// Параметры правила — то, что заполнит эффект в компендиуме. У параметра,
+// как у поля, машинный ключ и человеческий лейбл: ключ генерируется при
+// создании и дальше неизменен, шаги ссылаются только на него. Форма эффекта
+// в компендиуме перестроится сама — она выводится из этого объявления.
+const PARAM_KINDS = [
+  ['expr', 'формула'], ['tag', 'тег поля'], ['dice', 'кости'],
+  ['number', 'число'], ['choice', 'выбор источника'], ['effect', 'эффект-состояние'],
+];
+
+function paramEditor(ruleId, rule) {
   const params = rule.params || [];
-  if (!params.length) return '';
   return `<div class="pal-sec" style="margin-top:8px">Параметры — заполняет эффект</div>
-    <div style="display:flex;gap:4px;flex-wrap:wrap">
-      ${params.map(p => `<span class="lst-badge" title="${esc(p.kind)}${p.of === 'target' ? ' · считает цель' : ''}">${esc(p.label || p.key)}</span>`).join('')}
-    </div>`;
+    ${params.map(p => `
+      <div style="display:flex;gap:4px;align-items:center;padding:2px 0">
+        <input class="ar-cond" id="param-${ruleId}-${p.key}" style="flex:1;min-width:0" value="${esc(p.label || '')}"
+               placeholder="лейбл параметра" oninput="uiRuleParamSet('${ruleId}','${p.key}','label',this.value)">
+        <select class="meta-sel" onchange="uiRuleParamSet('${ruleId}','${p.key}','kind',this.value)">
+          ${PARAM_KINDS.map(([v, l]) => `<option value="${v}"${(p.kind || 'expr') === v ? ' selected' : ''}>${l}</option>`).join('')}
+        </select>
+        <span class="chk-row${p.of === 'target' ? ' on' : ''}" style="padding:0" title="выражение считает ЦЕЛЬ своим листом"
+              onclick="uiRuleParamSet('${ruleId}','${p.key}','of',${p.of === 'target' ? 'false' : 'true'})">
+          <span class="chk-box">✓</span><span style="font-size:10px;color:var(--muted)">цель</span>
+        </span>
+        <button class="ar-del" style="position:static" onclick="uiRuleParamDel('${ruleId}','${p.key}')">×</button>
+      </div>`).join('')}
+    <button class="add-row" onclick="uiRuleParamAdd('${ruleId}')">+ параметр</button>`;
 }
 
 // ── константы системы: ведущая кость ────────────────────────────────────────
@@ -292,6 +317,62 @@ const plain = v => (v && typeof v === 'object' ? ('const' in v ? v.const : null)
 
 export function pickRule(id) {
   state.activeRuleId = id;
+}
+
+// ── правила: завести, назвать, убрать ───────────────────────────────────────
+// Id правила — как тег поля: генерируется при создании, дальше неизменен.
+// Эффекты ссылаются на id, переименование лейбла не ломает ни одного.
+
+export function addRule() {
+  const rules = state.system.rules || (state.system.rules = {});
+  let n = Object.keys(rules).length + 1;
+  while (rules[`rule_${n}`]) n++;
+  const id = `rule_${n}`;
+  rules[id] = { label: 'Новая механика', params: [], steps: [] };
+  state.activeRuleId = id;
+  return id;
+}
+
+export function renameRule(id, label) {
+  const rule = state.system.rules[id];
+  if (rule) rule.label = label;
+}
+
+export function deleteRule(id) {
+  delete state.system.rules[id];
+  if (state.activeRuleId === id) {
+    state.activeRuleId = Object.keys(state.system.rules)[0] || null;
+  }
+}
+
+// ── параметры: стабильный ключ + человеческий лейбл ─────────────────────────
+
+export function addParam(ruleId) {
+  const rule = state.system.rules[ruleId];
+  const params = rule.params || (rule.params = []);
+  let n = params.length + 1;
+  while (params.some(p => p.key === `p_${n}`)) n++;
+  const key = `p_${n}`;
+  params.push({ key, label: '', kind: 'expr' });
+  return key;
+}
+
+export function deleteParam(ruleId, key) {
+  const rule = state.system.rules[ruleId];
+  rule.params = (rule.params || []).filter(p => p.key !== key);
+}
+
+export function setParam(ruleId, key, prop, value) {
+  const param = (state.system.rules[ruleId].params || []).find(p => p.key === key);
+  if (!param) return;
+  if (prop === 'of') {
+    // Сторона — только у выражений: «считает цель» значит, что формула
+    // уедет в конверт нетронутой и посчитается листом получателя.
+    if (value === true || value === 'true') param.of = 'target';
+    else delete param.of;
+    return;
+  }
+  param[prop] = value;
 }
 
 export function addStep(ruleId, type) {
