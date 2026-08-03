@@ -19,6 +19,8 @@ export const outputs = [];
 
 export const mayBreak = false;
 
+export const icon = '☄';
+
 export function traceLine(t, h) {
   return `состояние: наложено «${h.effectLabel(t.effect)}»`;
 }

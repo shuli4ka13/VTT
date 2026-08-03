@@ -44,6 +44,8 @@ export const outputs = [
 
 export const mayBreak = false;
 
+export const icon = '✎';
+
 export function lint(step) {
   if (!step.target) return 'применению нужна мишень — тег хранимого поля цели';
   if (!step.value) return 'применению нужна величина — что именно менять';

@@ -36,6 +36,7 @@ export const state = {
   activeSheetId: arven.id,
 
   activeTag: null,       // поле, открытое в конструкторе
+  authorView: 'sheet',   // сцена режима автора: 'sheet' (поля) | 'rules' (механики)
   activeRuleId: null,    // правило, открытое в конструкторе правил
 
   // Слот формулы, который сейчас правят. Редактор формул один на всю программу,

@@ -31,6 +31,8 @@ export const outputs = [
 
 export const mayBreak = true;
 
+export const icon = '⇄';
+
 export function traceLine(t, h) {
   const versusName = t.versus.tag ? `${h.labelOf(t.versus.tag)} ` : '';
   return `сравнение: ${t.value} против ${versusName}${t.versus.value} — `

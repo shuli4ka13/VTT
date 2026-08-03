@@ -1,15 +1,20 @@
 // Конструктор правил разрешения. Живёт ТОЛЬКО в режиме автора: правка шага —
 // это смена закона мира, как правка формулы поля.
 //
+// Раскладка — идиома черновика «список · редактор · палитра»:
+//   слева   список механик (+ константы системы),
+//   в центре КОНВЕЙЕР — карточки шагов на хребте с номерами и метками обрыва,
+//   справа  палитра типов шагов: клик кладёт шаг в конец цепочки.
+//
 // Интерфейс ВЫВОДИТСЯ из данных, а не дублирует их:
-//   · список типов шагов и форма каждой карточки — из реестра (module.slots);
+//   · палитра и форма каждой карточки — из реестра (module.slots, module.icon);
 //   · выпадашка допустимых ссылок — из параметров правила, результатов
 //     предыдущих шагов (module.outputs) и объявленных тегов;
-//   · словарь источников величины — из amount-sources.js, с примерами систем.
-// Добавили тип шага модулем — карточка нарисовалась сама, этот файл не правится.
+//   · приговор о разборе — из статических проверок (module.lint).
+// Добавили тип шага модулем — карточка, палитра и журнал нарисовались сами.
 //
 // Как и всюду в режиме автора, ни одного значения на экране: вместо результата —
-// приговор о разборе («правило верное · шагов: 4 · может оборваться на 1 и 3»).
+// приговор («правило верное · шагов: 4 · может оборваться на 1»).
 
 import { state, esc } from './state.js';
 import { registry } from '../engine/steps/index.js';
@@ -26,42 +31,85 @@ const WORDS = {
 };
 const word = v => WORDS[v] || v;
 
-export function renderRuleSection() {
+const activeRule = () => {
+  const rules = state.system.rules || {};
+  if (!state.activeRuleId || !rules[state.activeRuleId]) {
+    state.activeRuleId = Object.keys(rules)[0] || null;
+  }
+  return state.activeRuleId ? [state.activeRuleId, rules[state.activeRuleId]] : [null, null];
+};
+
+// ── левая колонка: список механик и константы ───────────────────────────────
+
+export function renderRuleList() {
   const rules = Object.entries(state.system.rules || {});
-  if (!rules.length) {
-    return `<div class="pal-sec">Правила разрешения</div>
-      <button class="add-row" onclick="uiRuleAdd()">+ первая механика системы</button>`;
+  const [activeId] = activeRule();
+
+  document.getElementById('rules-list').innerHTML = `
+    ${rules.map(([id, rule]) => {
+      const v = verdictOf(rule);
+      return `<div class="item-entry${id === activeId ? ' on' : ''}" onclick="uiRulePick('${id}')">
+        <span class="ie-icon" style="color:${v.ok ? 'var(--green)' : 'var(--red)'}">●</span>
+        <div style="flex:1;min-width:0">
+          <div class="ie-name">${esc(rule.label || id)}</div>
+          <div class="ie-sub">шагов: ${(rule.steps || []).length} · параметров: ${(rule.params || []).length}</div>
+        </div>
+      </div>`;
+    }).join('')}
+    <button class="add-row" onclick="uiRuleAdd()">+ механика</button>
+    ${renderConstants()}`;
+}
+
+// ── центр: конвейер активного правила ───────────────────────────────────────
+
+export function renderRuleCanvas() {
+  const host = document.getElementById('rules-canvas');
+  const [id, rule] = activeRule();
+
+  if (!rule) {
+    host.innerHTML = '<div class="empty-ed">Заведите первую механику<br>кнопкой слева</div>';
+    return;
   }
 
-  if (!state.activeRuleId || !(state.system.rules || {})[state.activeRuleId]) {
-    state.activeRuleId = rules[0][0];
-  }
-  const [id, rule] = rules.find(([rid]) => rid === state.activeRuleId);
-
-  return `
-    <div class="pal-sec">Правила разрешения</div>
-    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px">
-      ${rules.map(([rid, r]) => `
-        <button class="die-o${rid === id ? ' on' : ''}" style="${rid === id ? 'border-color:var(--accent);color:var(--accent);' : ''}"
-                onclick="uiRulePick('${rid}')">${esc(r.label || rid)}</button>`).join('')}
-      <button class="die-o" title="новая механика" onclick="uiRuleAdd()">+</button>
-    </div>
-    <div style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
-      <input class="ar-cond" id="rule-label-${id}" style="flex:1" value="${esc(rule.label || '')}"
+  const steps = rule.steps || [];
+  host.innerHTML = `
+    <div style="display:flex;gap:8px;align-items:center">
+      <input class="blk-name" id="rule-label-${id}" style="font-size:16px;margin:0" value="${esc(rule.label || '')}"
              placeholder="Название механики" oninput="uiRuleRename('${id}',this.value)">
-      <button class="ar-del" style="position:static" title="удалить механику" onclick="uiRuleDelete('${id}')">×</button>
+      <button class="row-del" style="opacity:.7" title="удалить механику" onclick="uiRuleDelete('${id}')">✕</button>
     </div>
     ${verdictRow(rule)}
-    ${(rule.steps || []).map((step, i) => stepCard(id, rule, step, i)).join(`
-      <div style="text-align:center;color:var(--muted);font-size:11px;line-height:1">↓</div>`)}
-    <div class="ar-row" style="margin-top:6px">
-      <select class="meta-sel" id="rule-add-type">
-        ${[...registry.values()].filter(m => !m.type.includes('заглушка')).map(m =>
-          `<option value="${m.type}">${esc(m.label)} — ${esc(m.hint || '')}</option>`).join('')}
-      </select>
-    </div>
-    <button class="add-row" onclick="uiRuleAddStep('${id}', document.getElementById('rule-add-type').value)">+ шаг в конец цепочки</button>
-    ${paramEditor(id, rule)}`;
+
+    <div class="pal-sec" style="margin-top:12px">Вход — параметры, их заполнит эффект в компендиуме</div>
+    ${paramEditor(id, rule)}
+
+    <div class="pal-sec" style="margin-top:14px">Цепочка шагов</div>
+    ${steps.length ? `<div class="rl-flow">
+        ${steps.map((step, i) => stepCard(id, rule, step, i)).join('')}
+      </div>`
+    : '<div class="sys-hint">Шагов пока нет — возьмите первый из палитры справа.</div>'}`;
+}
+
+function verdictRow(rule) {
+  const v = verdictOf(rule);
+  return `<div class="rl-verdict" style="color:${v.ok ? 'var(--green)' : 'var(--red)'}">
+    ${v.ok ? '✓' : '✗'} ${esc(v.text)}</div>`;
+}
+
+// ── правая колонка: палитра типов шагов ─────────────────────────────────────
+
+export function renderStepPalette() {
+  const [id] = activeRule();
+  const mods = [...registry.values()].filter(m => !m.type.includes('заглушка'));
+
+  document.getElementById('rules-palette').innerHTML = `
+    ${mods.map(m => `
+      <div class="pal-item" ${id ? `onclick="uiRuleAddStep('${id}','${m.type}')"` : ''}>
+        <span class="pal-icon">${m.icon || '□'}</span>
+        <div><div class="pal-t">${esc(m.label)}</div><div class="pal-s">${esc(m.hint || '')}</div></div>
+      </div>`).join('')}
+    <div class="sys-hint" style="margin-top:10px">Клик кладёт шаг в конец цепочки.
+      Шаг получает имя, и следующие шаги ссылаются на его результат по этому имени.</div>`;
 }
 
 // ── приговор о разборе ───────────────────────────────────────────────────────
@@ -109,82 +157,90 @@ function walkRefs(node, visit) {
   for (const value of Object.values(node)) walkRefs(value, visit);
 }
 
-function verdictRow(rule) {
-  const v = verdictOf(rule);
-  return `<div class="sys-hint" style="margin-bottom:6px;color:${v.ok ? 'var(--green)' : 'var(--red)'}">${esc(v.text)}</div>`;
-}
-
-// ── карточка шага ────────────────────────────────────────────────────────────
+// ── карточка шага на хребте ──────────────────────────────────────────────────
 
 function stepCard(ruleId, rule, step, index) {
   const mod = registry.get(step.type);
+  const node = `<div class="rl-node">${index + 1}</div>`;
+
   if (!mod) {
-    return `<div class="auto-rule" style="padding:8px 9px;border-color:var(--red)">
-      шаг ${index + 1} · неизвестный тип «${esc(step.type)}»
-      <button class="ar-del" onclick="uiRuleDelStep('${ruleId}',${index})">×</button></div>`;
+    return `<div class="rl-step">${node}
+      <div class="rl-card" style="border-color:var(--red)">
+        неизвестный тип «${esc(step.type)}»
+        <button class="rl-del" onclick="uiRuleDelStep('${ruleId}',${index})">✕</button>
+      </div></div>`;
   }
 
-  return `<div class="auto-rule" style="padding:8px 9px">
-    <button class="ar-del" onclick="uiRuleDelStep('${ruleId}',${index})">×</button>
-    <div class="ar-row" style="font-size:11px">
-      <b>${index + 1} · ${esc(mod.label)}</b>
-      ${step.id ? `<span style="color:var(--muted)">→ «${esc(step.id)}»</span>` : ''}
-      ${mod.hint ? `<span class="info-dot" title="${esc(mod.hint)}">i</span>` : ''}
+  // Метка обрыва — часть хребта: она про ПОТОК, а не про содержимое карточки.
+  const branch = mod.mayBreak
+    ? `<div class="rl-branch">⤫ может оборвать цепочку — дальше шаги не исполняются</div>`
+    : '';
+
+  return `<div class="rl-step">${node}
+    <div class="rl-card">
+      <div class="rl-head">
+        <span class="rl-type">${mod.icon || '□'} ${esc(mod.label)}</span>
+        ${step.id ? `<span class="rl-id" title="под этим именем результат шага виден следующим">«${esc(step.id)}»</span>` : ''}
+        ${mod.hint ? `<span class="info-dot" title="${esc(mod.hint)}">i</span>` : ''}
+        <button class="rl-del" onclick="uiRuleDelStep('${ruleId}',${index})">✕</button>
+      </div>
+      <div class="rl-slots">
+        ${mod.slots.map(slot => slotCell(ruleId, rule, step, index, slot)).join('')}
+      </div>
     </div>
-    ${mod.slots.map(slot => slotRow(ruleId, rule, step, index, slot)).join('')}
-  </div>`;
+  </div>${branch}`;
 }
 
-function slotRow(ruleId, rule, step, index, slot) {
-  const set = (key, extra = '') =>
-    `onchange="uiRuleSlot('${ruleId}',${index},'${key}',this.value${extra})"`;
-
+function slotCell(ruleId, rule, step, index, slot) {
   if (slot.kind === 'choice') {
     // Для источника величины — словарь с примерами систем, как у механик преимущества.
     const dict = slot.key === 'source' ? AMOUNT_SOURCES : null;
     const current = plain(step[slot.key]) ?? slot.options[0];
     const chosen = dict && dict.find(s => s.id === current);
-    return row(slot.label, `
-      <select class="meta-sel" style="flex:1;min-width:0" ${set(slot.key)}>
+    return cell(slot.label, `
+      <select onchange="uiRuleSlot('${ruleId}',${index},'${slot.key}',this.value)">
         ${slot.options.map(o => {
           const entry = dict && dict.find(s => s.id === o);
           const text = entry ? `${entry.label} — ${entry.examples.map(e => e.system).join(', ')}` : word(o);
           return `<option value="${o}"${o === current ? ' selected' : ''}>${esc(text)}</option>`;
         }).join('')}
-      </select>
-      ${chosen ? `<span class="info-dot" title="${esc(chosen.hint + '\n' + chosen.examples.map(e => `${e.system}: ${e.example}`).join('\n'))}">i</span>` : ''}`);
+      </select>`,
+      chosen && `${chosen.hint}\n${chosen.examples.map(e => `${e.system}: ${e.example}`).join('\n')}`);
   }
 
   if (slot.kind === 'flag') {
     const on = !!step[slot.key];
-    return row(slot.label, `
-      <div class="chk-row${on ? ' on' : ''}" style="padding:2px 0" onclick="uiRuleSlot('${ruleId}',${index},'${slot.key}',${!on})">
+    return cell(slot.label, `
+      <div class="chk-row${on ? ' on' : ''}" style="padding:3px 0"
+           onclick="uiRuleSlot('${ruleId}',${index},'${slot.key}',${!on})">
         <div class="chk-box">✓</div>
-        <div class="chk-lbl"><span style="font-size:11px">${on ? 'считаются (сопротивления цели)' : 'не считаются'}</span></div>
+        <div class="chk-lbl"><span style="font-size:11px">${on ? 'считаются — сопротивления цели' : 'не считаются'}</span></div>
       </div>`);
   }
 
   if (slot.kind === 'roll') {
-    // Составной слот броска: кость-константа, бонус, мишень модификаторов.
+    // Составной слот броска занимает всю ширину карточки: это три вещи об одном.
     const roll = step.roll || {};
     const dice = Object.entries(state.system.constants || {}).filter(([, c]) => c.kind === 'die');
     const rolls = (state.system.rolls || []);
-    return row('Кость', `
-        <select class="meta-sel" style="flex:1;min-width:0" onchange="uiRuleSlot('${ruleId}',${index},'roll.die',this.value)">
+    return `<div class="rl-cell rl-wide"><div class="rl-slots" style="margin:0">
+      ${cell('Кость', `
+        <select onchange="uiRuleSlot('${ruleId}',${index},'roll.die',this.value)">
           ${dice.length
             ? dice.map(([name, c]) => `<option value="${name}"${(roll.die || {}).constant === name ? ' selected' : ''}>${esc(c.label)} (${dieWord(c)})</option>`).join('')
             : '<option>— в системе нет констант-костей —</option>'}
-        </select>`)
-      + refRow(ruleId, rule, step, index, { key: 'roll.bonus', label: 'Бонус' }, roll.bonus)
-      + row('Модификаторы', `
-        <select class="meta-sel" style="flex:1;min-width:0" onchange="uiRuleSlot('${ruleId}',${index},'roll.check',this.value)">
-          <option value="">— без мишени броска —</option>
+        </select>`)}
+      ${refCell(ruleId, rule, step, index, { key: 'roll.bonus', label: 'Бонус броска' }, roll.bonus)}
+      ${cell('Мишень модификаторов', `
+        <select onchange="uiRuleSlot('${ruleId}',${index},'roll.check',this.value)">
+          <option value="">— без мишени —</option>
           ${rolls.map(r => `<option value="${r.tag}"${roll.check === r.tag ? ' selected' : ''}>${esc(r.label)}</option>`).join('')}
-        </select>`);
+        </select>`)}
+    </div></div>`;
   }
 
   // 'ref' и 'tag' — ссылка: выпадашка допустимых значений вместо свободного текста.
-  return refRow(ruleId, rule, step, index, slot, step[slot.key]);
+  return refCell(ruleId, rule, step, index, slot, step[slot.key]);
 }
 
 // ── ссылки: выпадашка допустимых значений ────────────────────────────────────
@@ -225,38 +281,37 @@ function refOptions(rule, index, slot) {
 const numericField = f =>
   f.value.kind !== 'stored' ? f.value.kind !== 'text' : f.value.type === 'number';
 
-function refRow(ruleId, rule, step, index, slot, ref) {
+function refCell(ruleId, rule, step, index, slot, ref) {
   const code = encodeRef(ref);
   const options = refOptions(rule, index, slot);
   const known = options.some(([v]) => v === code);
 
   const editor =
-    code === 'const' ? `<input class="bon-v" style="width:52px" value="${esc(ref && typeof ref === 'object' ? ref.const ?? '' : ref ?? '')}"
-        oninput="uiRuleSlotConst('${ruleId}',${index},'${slot.key}',this.value)">`
-      : code === 'expr' ? `<input class="ar-cond" style="flex:1" value="${esc((ref || {}).expr || '')}" placeholder="#тег + 2"
+    code === 'const' ? `<input value="${esc(ref && typeof ref === 'object' ? ref.const ?? '' : ref ?? '')}"
+        placeholder="число" oninput="uiRuleSlotConst('${ruleId}',${index},'${slot.key}',this.value)">`
+      : code === 'expr' ? `<input value="${esc((ref || {}).expr || '')}" placeholder="#тег + 2"
         oninput="uiRuleSlotExpr('${ruleId}',${index},'${slot.key}',this.value)">`
         : '';
 
-  return row(slot.label, `
-    <select class="meta-sel" style="flex:1;min-width:0" onchange="uiRuleSlotRef('${ruleId}',${index},'${slot.key}',this.value)">
+  return cell(slot.label, `
+    <select onchange="uiRuleSlotRef('${ruleId}',${index},'${slot.key}',this.value)">
       ${known ? '' : `<option selected value="${esc(code)}">${esc(code)}</option>`}
       ${options.map(([v, l]) => `<option value="${v}"${v === code ? ' selected' : ''}>${esc(l)}</option>`).join('')}
     </select>${editor}`);
 }
 
-// Лейбл над контролом, а не сбоку: правая колонка узкая, и выпадашка
-// допустимых значений должна читаться целиком.
-function row(label, control) {
-  return `<div style="padding:3px 0">
-    <div style="font-size:10px;color:var(--muted);margin-bottom:2px">${esc(label)}</div>
-    <div style="display:flex;gap:4px;align-items:center;min-width:0">${control}</div>
+function cell(label, control, tip) {
+  return `<div class="rl-cell">
+    <div class="rl-lbl">${esc(label)}${tip ? ` <span class="info-dot" title="${esc(tip)}">i</span>` : ''}</div>
+    ${control}
   </div>`;
 }
 
-// Параметры правила — то, что заполнит эффект в компендиуме. У параметра,
-// как у поля, машинный ключ и человеческий лейбл: ключ генерируется при
-// создании и дальше неизменен, шаги ссылаются только на него. Форма эффекта
-// в компендиуме перестроится сама — она выводится из этого объявления.
+// ── параметры: стабильный ключ + человеческий лейбл ─────────────────────────
+// У параметра, как у поля, машинный ключ и человеческий лейбл: ключ
+// генерируется при создании и дальше неизменен, шаги ссылаются только на него.
+// Форма эффекта в компендиуме перестроится сама — она выводится отсюда.
+
 const PARAM_KINDS = [
   ['expr', 'формула'], ['tag', 'тег поля'], ['dice', 'кости'],
   ['number', 'число'], ['choice', 'выбор источника'], ['effect', 'эффект-состояние'],
@@ -264,19 +319,18 @@ const PARAM_KINDS = [
 
 function paramEditor(ruleId, rule) {
   const params = rule.params || [];
-  return `<div class="pal-sec" style="margin-top:8px">Параметры — заполняет эффект</div>
-    ${params.map(p => `
-      <div style="display:flex;gap:4px;align-items:center;padding:2px 0">
-        <input class="ar-cond" id="param-${ruleId}-${p.key}" style="flex:1;min-width:0" value="${esc(p.label || '')}"
+  return `${params.map(p => `
+      <div class="rl-param">
+        <input id="param-${ruleId}-${p.key}" value="${esc(p.label || '')}"
                placeholder="лейбл параметра" oninput="uiRuleParamSet('${ruleId}','${p.key}','label',this.value)">
-        <select class="meta-sel" onchange="uiRuleParamSet('${ruleId}','${p.key}','kind',this.value)">
+        <select onchange="uiRuleParamSet('${ruleId}','${p.key}','kind',this.value)">
           ${PARAM_KINDS.map(([v, l]) => `<option value="${v}"${(p.kind || 'expr') === v ? ' selected' : ''}>${l}</option>`).join('')}
         </select>
         <span class="chk-row${p.of === 'target' ? ' on' : ''}" style="padding:0" title="выражение считает ЦЕЛЬ своим листом"
               onclick="uiRuleParamSet('${ruleId}','${p.key}','of',${p.of === 'target' ? 'false' : 'true'})">
           <span class="chk-box">✓</span><span style="font-size:10px;color:var(--muted)">цель</span>
         </span>
-        <button class="ar-del" style="position:static" onclick="uiRuleParamDel('${ruleId}','${p.key}')">×</button>
+        <button class="rl-del" onclick="uiRuleParamDel('${ruleId}','${p.key}')">✕</button>
       </div>`).join('')}
     <button class="add-row" onclick="uiRuleParamAdd('${ruleId}')">+ параметр</button>`;
 }
@@ -289,7 +343,7 @@ export function renderConstants() {
   const dice = Object.entries(state.system.constants || {}).filter(([, c]) => c.kind === 'die');
   if (!dice.length) return '';
 
-  return `<div class="pal-sec">Константы системы</div>
+  return `<div class="pal-sec" style="margin-top:12px">Константы системы</div>
     ${dice.map(([name, c]) => `
       <div class="auto-rule" style="padding:8px 9px">
         <div class="ar-row" style="font-size:11px"><b>${esc(c.label)}</b>
@@ -319,7 +373,6 @@ export function pickRule(id) {
   state.activeRuleId = id;
 }
 
-// ── правила: завести, назвать, убрать ───────────────────────────────────────
 // Id правила — как тег поля: генерируется при создании, дальше неизменен.
 // Эффекты ссылаются на id, переименование лейбла не ломает ни одного.
 
@@ -344,8 +397,6 @@ export function deleteRule(id) {
     state.activeRuleId = Object.keys(state.system.rules)[0] || null;
   }
 }
-
-// ── параметры: стабильный ключ + человеческий лейбл ─────────────────────────
 
 export function addParam(ruleId) {
   const rule = state.system.rules[ruleId];

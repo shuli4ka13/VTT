@@ -91,6 +91,7 @@ Object.assign(window, {
   uiMode: redraw(mode => { state.mode = mode; }),
 
   // ── режим автора: состав полей и правила комнаты ──
+  uiAuthorView: redraw(author.setAuthorView),
   uiPickField: redraw(editor.pickField),
   uiRename: redraw(editor.rename),
   uiSetGroup: redraw(editor.setGroup),

@@ -41,6 +41,8 @@ export const outputs = [
 // Может оборвать цепочку — приговор о разборе говорит об этом словами.
 export const mayBreak = true;
 
+export const icon = '⌖';
+
 export function lint(step) {
   if (!step.roll || !step.roll.die || !step.roll.die.constant) {
     return 'порогу нужна кость — слот roll.die ссылается на константу системы';

@@ -9,13 +9,32 @@ import { state, esc } from './state.js';
 import { renderEditor, exprOf } from './field-editor.js';
 import { toDisplay } from './formula-text.js';
 import { ADVANTAGE_METHODS } from '../model/advantage-methods.js';
-import { renderConstants, renderRuleSection } from './rule-editor.js';
+import { renderRuleList, renderRuleCanvas, renderStepPalette } from './rule-editor.js';
 import { targets } from '../engine/targets.js';
 
+// Две сцены одного режима: ЛИСТ правит состав полей, МЕХАНИКИ — конвейеры
+// правил. Разъезд по сценам — про место на экране, а не про границу режимов:
+// обе правят систему, и обе живут только у автора.
 export function renderAuthor() {
+  const rules = state.authorView === 'rules';
+  document.getElementById('author-view-sheet').style.display = rules ? 'none' : '';
+  document.getElementById('author-view-rules').style.display = rules ? '' : 'none';
+  document.querySelectorAll('#pane-author .author-subnav .tnav')
+    .forEach(b => b.classList.toggle('on', (b.dataset.view === 'rules') === rules));
+
+  if (rules) {
+    renderRuleList();
+    renderRuleCanvas();
+    renderStepPalette();
+    return;
+  }
   renderFieldList();
   renderEditor();
   renderRules();
+}
+
+export function setAuthorView(view) {
+  state.authorView = view;
 }
 
 function renderFieldList() {
@@ -51,10 +70,7 @@ function renderRules() {
   const rollTargets = targets(state.system).filter(t => t.kind === 'roll');
 
   document.getElementById('author-rules').innerHTML = `
-    ${renderConstants()}
-    ${renderRuleSection()}
-
-    <div class="pal-sec" style="margin-top:10px">Механики преимущества</div>
+    <div class="pal-sec">Механики преимущества</div>
     ${ADVANTAGE_METHODS.map(method => `
       <div class="chk-row${settings.methods[method.id] ? ' on' : ''}" onclick="uiToggleMethod('${method.id}')">
         <div class="chk-box">✓</div>

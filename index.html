@@ -41,10 +41,17 @@
 
 <div class="main">
 
-<!-- ════ РЕЖИМ АВТОРА: конструктор листа ════
-     Работает без персонажа. Ни одного значения на экране. -->
+<!-- ════ РЕЖИМ АВТОРА ════
+     Работает без персонажа. Ни одного значения на экране.
+     Две сцены: ЛИСТ (состав полей) и МЕХАНИКИ (конвейеры правил).
+     Обе — по идиоме черновика: список · редактор · палитра. -->
 <div class="pane" id="pane-author">
-<div class="three char-layout">
+<div class="author-subnav">
+  <button class="tnav" data-view="sheet" onclick="uiAuthorView('sheet')">⊞ Лист</button>
+  <button class="tnav" data-view="rules" onclick="uiAuthorView('rules')">⚙ Механики</button>
+</div>
+
+<div class="three char-layout" id="author-view-sheet">
 
   <div class="col dark" style="flex-direction:column">
     <div class="col-hdr">⊞ Блоки и поля</div>
@@ -60,6 +67,25 @@
   <div class="col dark">
     <div class="col-hdr">⚖ Правила комнаты</div>
     <div class="col-scroll" id="author-rules"></div>
+  </div>
+
+</div>
+
+<div class="three char-layout" id="author-view-rules" style="display:none">
+
+  <div class="col dark" style="flex-direction:column">
+    <div class="col-hdr">⚙ Механики</div>
+    <div class="col-scroll" id="rules-list" style="flex:1"></div>
+  </div>
+
+  <div class="col mid" style="flex-direction:column">
+    <div class="col-hdr">⛓ Конвейер</div>
+    <div class="col-scroll" id="rules-canvas" style="flex:1;padding:14px 18px"></div>
+  </div>
+
+  <div class="col dark">
+    <div class="col-hdr">⊞ Шаги</div>
+    <div class="col-scroll" id="rules-palette"></div>
   </div>
 
 </div>
