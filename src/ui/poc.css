@@ -163,3 +163,22 @@
 .author-subnav .tnav{font-size:12px;padding:4px 11px}
 .rl-param .chk-row{flex-shrink:0}
 .rl-param input{flex:1 1 auto;width:auto}
+
+/* ── стол: фишки на клетчатом поле ────────────────────────────────────────
+   Токен — фишка: позиция + ссылка на чарник. Выбранная — кольцо акцента;
+   при взведённом действии поле подсказывает прицел курсором. */
+.vtt-board{position:relative;border:1px solid var(--border2);border-radius:10px;background:var(--s1);
+  background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);
+  background-size:56px 56px}
+.vtt-board.targeting{cursor:crosshair}
+.vtt-board.targeting .vtt-token{cursor:crosshair}
+.vtt-token{position:absolute;width:56px;height:56px;display:flex;align-items:center;justify-content:center;
+  cursor:grab;user-select:none;touch-action:none}
+.vtt-token span{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:700;background:var(--s3);border:2px solid var(--blue);color:var(--text);
+  box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.vtt-token.npc span{border-color:var(--orange)}
+.vtt-token.sel span{border-color:var(--accent);box-shadow:0 0 0 3px rgba(129,140,248,.28)}
+.vtt-token em{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);font-style:normal;
+  font-size:9px;color:var(--muted);white-space:nowrap;pointer-events:none}
+.table-layout{grid-template-columns:minmax(0,1fr) 360px}

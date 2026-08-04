@@ -8,9 +8,9 @@
 // новый ТЕГ вводит только автор; комбинировать существующие можно отсюда.
 
 import { state, sheet, field, pass, rollOf, valueOf, show, newRecordId, esc, log } from './state.js';
-import { targets, labelOf } from '../engine/targets.js';
-import { registry } from '../engine/steps/index.js';
+import { targets } from '../engine/targets.js';
 import { send, receive, availableActions } from '../events/envelope.js';
+import { describeReport } from './journal.js';
 import { randomDie } from '../engine/dice.js';
 
 export function renderPlayer() {
@@ -381,34 +381,8 @@ export function dispatch(actionId, targetId) {
     const { sheet: updated, report } = receive(envelope, { ...ctx, sheet: target });
     // Получатель вернул НОВЫЙ чарник — подменяем целиком, не правя старый.
     state.sheets = state.sheets.map(s => (s.id === targetId ? updated : s));
-    log(describe(from, target, report));
+    log(describeReport(from, target, report));
   } catch (err) {
     log(`<b style="color:var(--red)">Ошибка:</b> ${esc(err.message)}`);
   }
-}
-
-// Журнал — это трасса правила, шаг за шагом с числами. Строку каждого шага
-// пишет ЕГО модуль (traceLine в src/engine/steps/*): новый тип шага приносит
-// свою подачу сам, интерфейс по типам не ветвится.
-function describe(from, to, report) {
-  const head = `<b>${esc(from.name)}</b> → <b>${esc(to.name)}</b> · ${esc(report.label)}`;
-
-  const helpers = {
-    labelOf: tag => labelOf(state.system, tag),
-    effectLabel: id => ((state.compendium.effects || []).find(e => e.id === id) || { label: id }).label,
-  };
-
-  const lines = report.trace.map(entry => {
-    const mod = registry.get(entry.type);
-    const text = mod && mod.traceLine
-      ? mod.traceLine(entry, helpers)
-      : `${entry.type}: шаг отработал`;
-    return esc(text);
-  });
-
-  const verdict = report.stopped
-    ? `<span class="roll-fail">цепочка оборвана на шаге «${esc(String(report.stopped.step))}»</span>`
-    : '<span class="roll-success">правило отработало до конца</span>';
-
-  return `${head}<br>${lines.join('<br>')}<br>${verdict}`;
 }

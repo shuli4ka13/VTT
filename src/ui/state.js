@@ -23,6 +23,7 @@ export const MODES = {
   author: { label: 'Конструктор листа', badge: 'режим автора' },
   player: { label: 'Персонаж', badge: 'режим игрока' },
   compendium: { label: 'Компендиум', badge: 'общая библиотека' },
+  table: { label: 'Стол', badge: 'VTT · фишки' },
 };
 
 export const state = {
@@ -47,6 +48,12 @@ export const state = {
   activeRecordId: null,  // запись компендиума
   brokenModifiers: null,
   log: [],
+
+  // Стол. ТОКЕН здесь — фишка: позиция + ссылка на чарник, НЕ персонаж
+  // (омоним «токен», см. CLAUDE.md). Один чарник → сколько угодно фишек.
+  // Чарник про фишки не знает: board живёт в состоянии интерфейса.
+  board: { tokens: [] },
+  table: { selected: null, action: null },  // выбранная фишка и взведённое действие
 };
 
 export const sheet = () => state.sheets.find(s => s.id === state.activeSheetId) || null;

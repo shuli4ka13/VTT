@@ -12,8 +12,9 @@
        Персонаж          — правит значения, кнопок для полей нет в разметке;
        Компендиум        — общая библиотека, персонажи на неё ссылаются.
 
-     Вырезано как вне скоупа PoC: вкладка VTT (карта, токены, чат, инициатива),
-     календарь, часы прогресса, радиальное меню броска, ведущая кость,
+     Из VTT-слоя добавлен минимальный стол: фишки, привязанные к чарникам,
+     и выбор цели кликом. Остальное вырезано как вне скоупа PoC: карта-картинка,
+     сцены, чат, инициатива, календарь, часы прогресса, радиальное меню броска,
      прогрессия, сохранение и экспорт. -->
 <html lang="ru">
 <head>
@@ -31,6 +32,7 @@
     <button class="tnav" data-mode="author" onclick="uiMode('author')">✎ Конструктор листа</button>
     <button class="tnav" data-mode="player" onclick="uiMode('player')">◈ Персонаж</button>
     <button class="tnav" data-mode="compendium" onclick="uiMode('compendium')">⬡ Компендиум</button>
+    <button class="tnav" data-mode="table" onclick="uiMode('table')">⛊ Стол</button>
   </nav>
   <div class="hdr-right">
     <span class="poc-badge" id="mode-badge"></span>
@@ -147,6 +149,30 @@
       <div class="pal-item" onclick="uiNewRecord('spell')"><span class="pal-icon">🔮</span><div><div class="pal-t">Заклинание</div><div class="pal-s">то же действие, другой ярлык</div></div></div>
 
     </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ════ СТОЛ ════
+     Минимальный VTT-слой: фишка = позиция + ссылка на чарник. Один чарник
+     волен стоять несколькими фишками. Стол ничего не считает — он выбирает,
+     чей лист с чьим общается; дальше тот же конверт, что и всюду. -->
+<div class="pane" id="pane-table">
+<div class="three table-layout">
+
+  <div class="col mid" style="flex-direction:column">
+    <div class="col-hdr">⛊ Стол</div>
+    <div class="col-scroll" style="flex:1;padding:16px">
+      <div class="vtt-board" id="table-board"></div>
+    </div>
+  </div>
+
+  <div class="col dark" style="flex-direction:column">
+    <div class="col-hdr">◈ Выбрано</div>
+    <div class="col-scroll" id="table-side"></div>
+    <div class="col-hdr">⚄ Журнал</div>
+    <div class="col-scroll poc-log" id="table-log" style="flex:1"></div>
   </div>
 
 </div>

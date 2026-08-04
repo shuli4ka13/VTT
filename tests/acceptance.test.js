@@ -153,6 +153,18 @@ if (inNode) {
       ok(author.includes('author-editor'), 'редактор поля — часть экрана автора');
     });
 
+    test('стол ничего не правит: ни полей, ни правил — только выбирает пару листов', () => {
+      const tableCode = readFileSync(join(repo, 'src/ui/mode-table.js'), 'utf8');
+      eq(/from\s+'\.\/field-editor\.js'/.test(tableCode), false, 'стол не знает редактора полей');
+      eq(/from\s+'\.\/rule-editor\.js'/.test(tableCode), false, 'и конструктора правил не знает');
+      eq(tableCode.includes('uiRuleSlot'), false, 'правка шагов со стола невозможна');
+      const html = readFileSync(join(repo, 'index.html'), 'utf8');
+      const tablePane = html.slice(html.indexOf('id="pane-table"'), html.indexOf('<script'));
+      for (const handler of ['uiAddField', 'uiAddGroup', 'uiDelField']) {
+        eq(tablePane.includes(handler), false, `${handler} не должен встречаться в разметке стола`);
+      }
+    });
+
     test('шаги правила правятся в конструкторе систем, и только там', () => {
       // Смена шага меняет ФОРМУ разрешения — по границе режимов это автор.
       const authorCode = readFileSync(join(repo, 'src/ui/mode-author.js'), 'utf8');

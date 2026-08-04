@@ -104,6 +104,7 @@ node --input-type=module -e "import './tests/formula.parse.test.js'; import {rep
 | [src/ui/mode-author.js](src/ui/mode-author.js) + [field-editor.js](src/ui/field-editor.js) | систему: состав полей, лейблы, формулы, правила комнаты и разрешения | нет |
 | [src/ui/mode-player.js](src/ui/mode-player.js) | чарник: значения и ссылки на записи | да |
 | [src/ui/mode-compendium.js](src/ui/mode-compendium.js) | компендиум: предметы, эффекты, действия | нет |
+| [src/ui/mode-table.js](src/ui/mode-table.js) | ничего: фишки выбирают пару листов, дальше тот же конверт | оба |
 
 **Граница держится импортами, а не стилями.** `mode-player.js` не знает
 `field-editor.js`, и кнопок правки полей нет в разметке экрана игрока — не скрыты,
@@ -131,6 +132,8 @@ node --input-type=module -e "import './tests/formula.parse.test.js'; import {rep
 | [src/model/serialize.js](src/model/serialize.js) | сторож границы хранимого и вычисленного |
 | [src/model/system-cyberpunk.js](src/model/system-cyberpunk.js) | система B приёмочного теста: другое правило, та же машина. Движок не импортирует |
 | [src/ui/rule-editor.js](src/ui/rule-editor.js) | конструктор правил: карточки шагов из `module.slots`, выпадашки ссылок из `module.outputs`, приговор из `module.lint`. Только режим автора |
+| [src/ui/mode-table.js](src/ui/mode-table.js) | стол: токен-фишка = позиция + ссылка на чарник, один чарник → N фишек. Стол не считает и не правит — закрыто тестом |
+| [src/ui/journal.js](src/ui/journal.js) | журнал события из трассы; строки шагов пишут их модули (`traceLine`) |
 | [src/ui/formula-text.js](src/ui/formula-text.js) | тег → лейбл для показа. Обратного преобразования нет и быть не должно |
 | [src/ui/suggest.js](src/ui/suggest.js) | лейбл → тег при наборе. Ровно один раз, по выбору человека — не при каждом вычислении, как в черновике |
 

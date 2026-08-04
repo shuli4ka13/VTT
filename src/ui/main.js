@@ -14,6 +14,7 @@ import * as editor from './field-editor.js';
 import * as ruleEditor from './rule-editor.js';
 import * as player from './mode-player.js';
 import * as compendium from './mode-compendium.js';
+import * as table from './mode-table.js';
 import * as formula from './formula-input.js';
 
 export function render() {
@@ -28,17 +29,21 @@ export function render() {
   if (state.mode === 'author') author.renderAuthor();
   if (state.mode === 'player') player.renderPlayer();
   if (state.mode === 'compendium') compendium.renderCompendium();
+  if (state.mode === 'table') table.renderTable();
 
   renderLog();
   renderBanner();
 }
 
+// Журнал один на программу; экранов у него два — игрок и стол.
 function renderLog() {
-  const box = document.getElementById('event-log');
-  if (!box) return;
-  box.innerHTML = state.log.length
+  const html = state.log.length
     ? state.log.map(line => `<div class="chat-msg" style="border-bottom:1px solid var(--border);padding:6px 0">${line}</div>`).join('')
     : '<div class="char-empty-hint">Броски и события появятся здесь.</div>';
+  for (const id of ['event-log', 'table-log']) {
+    const box = document.getElementById(id);
+    if (box) box.innerHTML = html;
+  }
 }
 
 function renderBanner() {
@@ -139,6 +144,14 @@ Object.assign(window, {
   uiLearn: redraw(player.learn),
   uiCreate: redraw(player.create),
   uiSend: redraw(player.dispatch),
+
+  // ── стол: фишки выбирают, ЧЕЙ лист с чьим общается ──
+  uiTokClick: redraw(table.clickToken),
+  uiTokMove: redraw(table.moveToken),
+  uiTokAdd: redraw(table.addToken),
+  uiTblAction: redraw(table.armAction),
+  uiTblCancel: redraw(table.cancelAction),
+  uiTblOpenSheet: redraw(table.openSheet),
 
   // ── компендиум ──
   uiPickRecord: redraw(compendium.pickRecord),
