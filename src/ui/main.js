@@ -152,6 +152,9 @@ Object.assign(window, {
   uiSetEffectParam: redraw(compendium.setEffectParam),
   uiSetWeapon: redraw(compendium.setWeapon),
   uiSetWeaponProp: redraw(compendium.setWeaponProp),
+  uiItemActAdd: redraw(compendium.addActivity),
+  uiItemActDel: redraw(compendium.deleteActivity),
+  uiItemActSet: redraw(compendium.setActivity),
 });
 
 // Стрелки и Enter в поле формулы ведут по списку подсказок.

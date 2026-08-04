@@ -51,7 +51,7 @@ group('кубики', () => {
 group('событийный конверт', () => {
   group('отправитель', () => {
     test('собирает конверт, ничего не зная о получателе', () => {
-      const env = send('longsword', ctx(arven, queue(15, 5)));
+      const env = send('longsword-item:0', ctx(arven, queue(15, 5)));
       eq(env.kind, 'rule');
       eq(env.rule, 'strike', 'конверт называет правило, а не пересказывает его');
       eq(env.from, 'arven');
@@ -61,12 +61,12 @@ group('событийный конверт', () => {
     });
 
     test('конверт — чистые данные и переживает сериализацию', () => {
-      const env = send('longsword', ctx(arven, queue(15, 5)));
+      const env = send('longsword-item:0', ctx(arven, queue(15, 5)));
       deepEq(JSON.parse(JSON.stringify(env)), env);
     });
 
     test('в конверте нет ни одного значения получателя', () => {
-      const env = send('longsword', ctx(arven, queue(15, 5)));
+      const env = send('longsword-item:0', ctx(arven, queue(15, 5)));
       const text = JSON.stringify(env);
       ok(!text.includes('mirra'), 'отправитель вообще не упоминает цель');
     });
@@ -91,8 +91,8 @@ group('событийный конверт', () => {
       const book = { ...compendium, effects: [...compendium.effects, blessed] };
       const sheet = { ...arven, effects: [{ effectId: 'blessed' }] };
 
-      const plain = receive(send('longsword', ctx(arven, queue(10, 5))), ctx(mirra, queue()));
-      const boosted = receive(send('longsword', { system, sheet, compendium: book, die: queue(10, 5) }),
+      const plain = receive(send('longsword-item:0', ctx(arven, queue(10, 5))), ctx(mirra, queue()));
+      const boosted = receive(send('longsword-item:0', { system, sheet, compendium: book, die: queue(10, 5) }),
         ctx(mirra, queue()));
 
       eq(plain.report.trace[0].total, 16, 'кость 10 плюс свой бонус атаки 6');
@@ -101,19 +101,22 @@ group('событийный конверт', () => {
 
     test('действия лежат в компендиуме, а не в системе', () => {
       eq(system.actions, undefined, 'система не объявляет действий');
-      deepEq(compendium.actions.map(a => a.id), ['longsword', 'poison-spray', 'healing-word']);
+      deepEq(compendium.actions.map(a => a.id), ['poison-spray', 'healing-word'],
+        'записи-действия — только заклинания и приёмы');
+      ok(compendium.items.some(i => (i.activities || []).length),
+        'атаки оружия — активности самих предметов');
     });
   });
 
   group('получатель считает сам', () => {
     test('попадание определяется классом брони получателя, а не отправителя', () => {
-      const env = send('longsword', ctx(arven, queue(9, 5))); // бросок атаки 9+6 = 15
+      const env = send('longsword-item:0', ctx(arven, queue(9, 5))); // бросок атаки 9+6 = 15
       eq(receive(env, ctx(mirra, queue())).report.trace[0].success, true, 'у Мирры класс брони 14');
       eq(receive(env, ctx(arven, queue())).report.trace[0].success, false, 'у Арвен в кольчуге 16');
     });
 
     test('один и тот же конверт по двум получателям даёт разный исход', () => {
-      const env = send('longsword', ctx(arven, queue(9, 5)));
+      const env = send('longsword-item:0', ctx(arven, queue(9, 5)));
       const a = receive(env, ctx(mirra, queue()));
       const b = receive(env, ctx(arven, queue()));
       ok(a.report.trace[0].success !== b.report.trace[0].success);
@@ -122,20 +125,20 @@ group('событийный конверт', () => {
     });
 
     test('попадание снимает хиты у получателя', () => {
-      const env = send('longsword', ctx(arven, queue(15, 5)));
+      const env = send('longsword-item:0', ctx(arven, queue(15, 5)));
       const { sheet } = receive(env, ctx(mirra, queue()));
       eq(sheet.values.hp_current, 13, '21 минус 8');
     });
 
     test('промах не меняет ничего', () => {
-      const env = send('longsword', ctx(mirra, queue(2, 5))); // 2 + 1 = 3, мимо всех
+      const env = send('longsword-item:0', ctx(mirra, queue(2, 5))); // 2 + 1 = 3, мимо всех
       const { sheet, report } = receive(env, ctx(arven, queue()));
       eq(report.stopped.reason, 'threshold-miss');
       eq(sheet.values.hp_current, 44);
     });
 
     test('чарник получателя не мутируется — возвращается новый', () => {
-      const env = send('longsword', ctx(arven, queue(15, 5)));
+      const env = send('longsword-item:0', ctx(arven, queue(15, 5)));
       const before = serializeSheet(mirra);
       const { sheet } = receive(env, ctx(mirra, queue()));
       eq(serializeSheet(mirra), before, 'исходный чарник остался прежним');
@@ -143,7 +146,7 @@ group('событийный конверт', () => {
     });
 
     test('новый чарник остаётся законным DTO', () => {
-      const env = send('longsword', ctx(arven, queue(15, 5)));
+      const env = send('longsword-item:0', ctx(arven, queue(15, 5)));
       const { sheet } = receive(env, ctx(mirra, queue()));
       serializeSheet(sheet);
     });
@@ -202,7 +205,7 @@ group('событийный конверт', () => {
   group('критерий приёмки №5', () => {
     test('событие от одного чарника меняет значение у второго, расчёт — у получателя', () => {
       const before = calc(system, mirra, 'hp_current', newPass(system, mirra, { compendium }));
-      const env = send('longsword', ctx(arven, queue(15, 5)));
+      const env = send('longsword-item:0', ctx(arven, queue(15, 5)));
       const { sheet, report } = receive(env, ctx(mirra, queue()));
       const after = calc(system, sheet, 'hp_current', newPass(system, sheet, { compendium }));
 

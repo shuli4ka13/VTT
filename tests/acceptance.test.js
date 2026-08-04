@@ -75,7 +75,7 @@ group('критерии приёмки', () => {
     const die = (...values) => { const q = [...values]; return () => q.shift(); };
     const ctx = (sheet, d) => ({ system, sheet, compendium, die: d });
 
-    const envelope = send('longsword', ctx(arven, die(18, 6)));
+    const envelope = send('longsword-item:0', ctx(arven, die(18, 6)));
     ok(!JSON.stringify(envelope).includes('mirra'), 'отправитель о цели не знает');
     deepEq(envelope.steps[0].versus, { tag: 'ac' }, 'класс брони цели отправителем не посчитан — уехал тег');
 

@@ -1,13 +1,13 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.js';
-import { send, receive } from '../src/events/envelope.js';
+import { send, receive, availableActions } from '../src/events/envelope.js';
 import { system } from '../src/model/system.js';
 import { arven, mirra } from '../src/model/sheets.js';
-import { compendium, findAction } from '../src/model/compendium.js';
+import { compendium, findItem } from '../src/model/compendium.js';
 
-// Удар знает, каким оружием бьёт. Кость урона — свойство ЗАПИСИ оружия,
-// правило берёт её ссылкой { item: 'damage_dice' }; какие свойства у оружия
-// вообще бывают — объявляет СИСТЕМА (system.records). Компендиум определяется
-// изначальной механикой: не объявлено — движок не читает.
+// Предмет — ИСТОЧНИК действий, как в Foundry: у меча есть АКТИВНОСТИ,
+// каждая зовёт эффект-вызов. Надел меч — получил его атаку; снял — потерял.
+// Отдельная запись-действие остаётся для того, что предметом не является:
+// заклинаний и приёмов.
 
 const queue = (...values) => {
   const rest = [...values];
@@ -17,50 +17,59 @@ const queue = (...values) => {
   };
 };
 
-group('удар знает своё оружие', () => {
-  test('кость урона приходит из записи оружия, а не из действия или эффекта', () => {
-    const action = findAction('longsword');
-    ok(action.weapon, 'действие ссылается на оружие');
-    ok(!('envelope' in action), 'пайплайна в действии больше нет вовсе');
-
-    const env = send('longsword', { system, sheet: arven, compendium, die: queue(10, 5) });
-    eq(env.steps[1].rolled.notation, '1d8', 'нотация пришла из записи «Длинный меч»');
-    deepEq(env.steps[1].rolled.rolls, [5]);
+group('предмет даёт действие', () => {
+  test('у записи меча есть активность, а записи-действия «удар мечом» нет вовсе', () => {
+    const sword = findItem('longsword-item');
+    ok((sword.activities || []).length, 'активности живут на предмете');
+    ok(sword.activities[0].effect, 'активность — ссылка на эффект-вызов, шагов в ней нет');
+    ok(!compendium.actions.some(a => a.id === 'longsword'), 'отдельной записи-действия больше нет');
   });
 
-  test('свойства оружия объявляет система: нет объявления — внятная ошибка, а не тихий ноль', () => {
-    // Правило требует кость из записи, система без схемы записей её «не видит».
-    // Раньше это был тихий пропуск; теперь пустота законна только там,
-    // где объявлена (optional) — здесь она не объявлена.
+  test('надетый меч появляется в списке действий владельца', () => {
+    const list = availableActions(arven, compendium);
+    const attack = list.find(a => a.id === 'longsword-item:0');
+    ok(attack, 'атака меча выведена из снаряжения, а не выучена');
+    ok(attack.label.includes('Длинный меч'), 'лейбл собран из предмета и активности');
+    eq(attack.weapon, 'longsword-item', 'кость урона придёт из самого меча');
+  });
+
+  test('снял меч — атака пропала из списка', () => {
+    const bare = { ...arven, equipped: arven.equipped.filter(id => id !== 'longsword-item') };
+    ok(!availableActions(bare, compendium).some(a => a.id === 'longsword-item:0'));
+  });
+
+  test('активность меча бьёт так же, как била запись-действие', () => {
+    const env = send('longsword-item:0', { system, sheet: arven, compendium, die: queue(10, 5) });
+    eq(env.steps[1].rolled.notation, '1d8', 'нотация пришла из записи «Длинный меч»');
+    const { sheet, report } = receive(env, { system, sheet: mirra, compendium, die: queue() });
+    eq(report.trace[0].total, 16, 'бросок 10 плюс бонус атаки 6');
+    eq(sheet.values.hp_current, 13, '21 минус кость 5 минус Сила 3');
+  });
+
+  test('заклинание — по-прежнему отдельная запись-действие: у него нет предмета', () => {
+    const list = availableActions(mirra, compendium);
+    ok(list.some(a => a.id === 'poison-spray'), 'выученное заклинание в списке');
+    ok(!('weapon' in (list.find(a => a.id === 'poison-spray') || {})) ||
+      !list.find(a => a.id === 'poison-spray').weapon, 'оружия у заклинания нет');
+  });
+
+  test('свойства оружия объявляет система: нет объявления — внятная ошибка', () => {
     const { records, ...noSchema } = system;
-    throws(() => send('longsword', { system: noSchema, sheet: arven, compendium, die: queue(10) }),
+    throws(() => send('longsword-item:0', { system: noSchema, sheet: arven, compendium, die: queue(10) }),
       'damage_dice');
   });
 
-  test('действие с пропавшим оружием — внятная ошибка', () => {
+  test('активность с пропавшим эффектом — внятная ошибка при отправке', () => {
     const book = {
       ...compendium,
-      actions: [...compendium.actions,
-        { id: 'broken', kind: 'action', label: 'Сломанное', weapon: 'экскалибур', effect: 'sword-strike' }],
+      items: compendium.items.map(i => i.id === 'longsword-item'
+        ? { ...i, activities: [{ label: 'Атака', effect: 'нетакого' }] }
+        : i),
     };
-    throws(() => send('broken', { system, sheet: arven, compendium: book, die: queue(10) }), 'экскалибур');
+    throws(() => send('longsword-item:0', { system, sheet: arven, compendium: book, die: queue(10) }), 'нетакого');
   });
 
-  test('действие без оружия живёт, пока правило оружия не требует', () => {
-    // «Слово лечения» — правило heal, ссылок { item } в нём нет.
-    const env = send('healing-word', { system, sheet: mirra, compendium, die: queue(2) });
-    const wounded = { ...arven, values: { ...arven.values, hp_current: 40 } };
-    const { sheet } = receive(env, { system, sheet: wounded, compendium, die: queue() });
-    eq(sheet.values.hp_current, 44);
-  });
-
-  test('а требует — падает при отправке с именем свойства', () => {
-    const book = {
-      ...compendium,
-      actions: [...compendium.actions,
-        { id: 'barehand', kind: 'action', label: 'Голый кулак', effect: 'sword-strike' }],
-    };
-    throws(() => send('barehand', { system, sheet: arven, compendium: book, die: queue(10) }),
-      'не предмет');
+  test('битый номер активности — внятная ошибка, а не тихий undefined', () => {
+    throws(() => send('longsword-item:9', { system, sheet: arven, compendium, die: queue(10) }), 'longsword-item:9');
   });
 });

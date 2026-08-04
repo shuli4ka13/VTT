@@ -10,7 +10,7 @@
 import { state, sheet, field, pass, rollOf, valueOf, show, newRecordId, esc, log } from './state.js';
 import { targets, labelOf } from '../engine/targets.js';
 import { registry } from '../engine/steps/index.js';
-import { send, receive } from '../events/envelope.js';
+import { send, receive, availableActions } from '../events/envelope.js';
 import { randomDie } from '../engine/dice.js';
 
 export function renderPlayer() {
@@ -174,6 +174,9 @@ function renderBelongings() {
   const { items, effects, actions } = state.compendium;
   const others = state.sheets.filter(s => s.id !== current.id);
   const p = pass();
+  // Что можно применить: активности НАДЕТЫХ предметов плюс выученные записи.
+  // Меч даёт свою атаку сам — как в Foundry; снял — атака пропала.
+  const usable = availableActions(current, state.compendium);
 
   host.innerHTML = `
     <div class="pal-sec">Снаряжение</div>
@@ -191,18 +194,15 @@ function renderBelongings() {
     <button class="add-row" onclick="uiCreate('action')">+ создать действие</button>
     <button class="add-row" onclick="uiCreate('spell')">+ создать заклинание</button>
 
-    ${current.actions.length && others.length ? `
+    ${usable.length && others.length ? `
       <div class="pal-sec" style="margin-top:10px">Применить</div>
-      ${current.actions.map(id => {
-        const action = actions.find(a => a.id === id);
-        if (!action) return '';
-        return `<div class="auto-rule" style="padding:7px 8px">
-          <div style="font-size:12px;margin-bottom:5px">${esc(action.label)}</div>
+      ${usable.map(action => `<div class="auto-rule" style="padding:7px 8px">
+          <div style="font-size:12px;margin-bottom:5px">${esc(action.label)}
+            ${action.kind === 'item' ? '<span class="hint-kind">от предмета</span>' : ''}</div>
           <div style="display:flex;gap:4px;flex-wrap:wrap">
             ${others.map(t => `<button class="die-o" onclick="uiSend('${action.id}','${t.id}')">⚄ по ${esc(t.name)}</button>`).join('')}
           </div>
-        </div>`;
-      }).join('')}` : ''}`;
+        </div>`).join('')}` : ''}`;
 }
 
 // Бросков в полной 5e под тридцать, и перечислять все — стена текста.

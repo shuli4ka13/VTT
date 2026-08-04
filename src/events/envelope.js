@@ -21,9 +21,47 @@ import { newPass } from '../engine/calc.js';
 import { packRule, resolveRule } from '../engine/rule.js';
 import { EngineError } from '../engine/errors.js';
 
+// Что персонаж может применить: выученные записи-действия (заклинания, приёмы)
+// ПЛЮС активности надетых предметов. Как в Foundry: у меча есть своя атака,
+// надел — получил, снял — потерял. Активность не отдельная запись, а строка
+// в предмете: { label, effect } — ссылка на эффект-вызов, шагов в ней нет.
+export function availableActions(sheet, compendium) {
+  const fromItems = (sheet.equipped || []).flatMap(itemId => {
+    const item = (compendium.items || []).find(i => i.id === itemId);
+    return ((item && item.activities) || []).map((_, index) => actionOf(`${itemId}:${index}`, compendium));
+  });
+  const learned = (sheet.actions || [])
+    .map(id => (compendium.actions || []).find(a => a.id === id))
+    .filter(Boolean);
+  return [...fromItems, ...learned];
+}
+
+// Действие по id: запись компендиума ИЛИ виртуальное действие активности
+// предмета («itemId:номер»). Виртуальное собирается на лету и нигде
+// не хранится — источник правды один, сам предмет.
+function actionOf(actionId, compendium) {
+  const record = (compendium.actions || []).find(a => a.id === actionId);
+  if (record) return record;
+
+  const at = String(actionId).indexOf(':');
+  if (at > 0) {
+    const item = (compendium.items || []).find(i => i.id === actionId.slice(0, at));
+    const activity = ((item && item.activities) || [])[Number(actionId.slice(at + 1))];
+    if (activity) {
+      return {
+        id: actionId,
+        kind: 'item',
+        label: `${item.label} · ${activity.label || 'Применение'}`,
+        weapon: item.id,
+        effect: activity.effect,
+      };
+    }
+  }
+  throw new EngineError(`в компендиуме нет действия «${actionId}»`);
+}
+
 export function send(actionId, { system, sheet, compendium, die }) {
-  const action = (compendium.actions || []).find(a => a.id === actionId);
-  if (!action) throw new EngineError(`в компендиуме нет действия «${actionId}»`);
+  const action = actionOf(actionId, compendium);
 
   const effect = (compendium.effects || []).find(e => e.id === action.effect);
   if (!effect) {

@@ -81,7 +81,7 @@ function renderRecord() {
 
   const body =
     record.kind === 'action' || record.kind === 'spell' ? actionBody(record)
-      : record.kind === 'item' ? weaponPropsBody(record) + modifiersBody(record)
+      : record.kind === 'item' ? weaponPropsBody(record) + activitiesBody(record) + modifiersBody(record)
         : record.rule ? ruleCallBody(record)
           : modifiersBody(record);
 
@@ -107,6 +107,28 @@ function modifiersBody(record) {
     <div class="pb-lbl">Что делает</div>
     ${(record.modifiers || []).map((mod, i) => modRow(record.id, mod, i, fields, rolls)).join('')}
     <button class="add-row" onclick="uiAddMod('${record.id}')">+ добавить</button>
+  </div>`;
+}
+
+// Активности — действия, которые предмет даёт владельцу, пока надет
+// (как в Foundry: у меча своя атака). Активность — только ссылка на
+// эффект-вызов; конвейер живёт в правиле системы.
+function activitiesBody(record) {
+  const calls = state.compendium.effects.filter(e => e.rule);
+  return `<div class="pb">
+    <div class="pb-lbl">Активности — даёт, пока надет</div>
+    ${(record.activities || []).map((act, i) => `
+      <div class="bon-row" style="grid-template-columns:110px 1fr 20px;border:none">
+        <input class="bon-v" style="text-align:left" value="${esc(act.label || '')}" placeholder="Атака"
+               oninput="uiItemActSet('${record.id}',${i},'label',this.value)">
+        <select class="meta-sel" onchange="uiItemActSet('${record.id}',${i},'effect',this.value)">
+          ${calls.map(e => `<option value="${e.id}"${act.effect === e.id ? ' selected' : ''}>${esc(e.label)}</option>`).join('')}
+        </select>
+        <button class="row-del" style="opacity:.7" onclick="uiItemActDel('${record.id}',${i})">✕</button>
+      </div>`).join('')}
+    ${calls.length
+      ? `<button class="add-row" onclick="uiItemActAdd('${record.id}')">+ активность</button>`
+      : '<div class="sys-hint">Сначала заведите эффект-вызов правила.</div>'}
   </div>`;
 }
 
@@ -412,6 +434,23 @@ export function setWeapon(id, value) {
   const action = live(id);
   if (value) action.weapon = value;
   else delete action.weapon;
+}
+
+// ── активности предмета ─────────────────────────────────────────────────────
+
+export function addActivity(id) {
+  const item = live(id);
+  const firstCall = state.compendium.effects.find(e => e.rule);
+  item.activities = item.activities || [];
+  item.activities.push({ label: 'Атака', effect: firstCall ? firstCall.id : '' });
+}
+
+export function deleteActivity(id, index) {
+  live(id).activities.splice(index, 1);
+}
+
+export function setActivity(id, index, key, value) {
+  live(id).activities[index][key] = value;
 }
 
 // ── эффект-вызов: правило и параметры ───────────────────────────────────────

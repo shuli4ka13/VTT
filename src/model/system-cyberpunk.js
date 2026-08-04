@@ -77,6 +77,7 @@ export const cpCompendium = {
       slot: 'hand',
       description: 'Урон — константа записи, костей нет.',
       props: { damage_flat: 8 },
+      activities: [{ label: 'Удар', effect: 'blade-hit' }],
       modifiers: [],
     },
   ],
@@ -98,8 +99,9 @@ export const cpCompendium = {
       params: { bonus: '#combat', difficulty: 12, source: 'roll', dice: '2d8', hp: 'hp', armor: 'armor' },
     },
   ],
+  // Запись-действие осталась только у выстрела: пистолета-предмета в срезе нет.
+  // Удар ножом — активность самого ножа.
   actions: [
-    { id: 'blade', kind: 'action', label: 'Клинок', weapon: 'mono-knife', effect: 'blade-hit' },
     { id: 'gun', kind: 'action', label: 'Пистолет', effect: 'gun-hit' },
   ],
 };
@@ -110,9 +112,9 @@ export const silver = {
   kind: 'pc',
   name: 'Сильвер',
   values: { handle: 'Сильвер', combat: 6, hp: 20, armor: 2 },
-  equipped: [],
+  equipped: ['mono-knife'],
   effects: [],
-  actions: ['blade', 'gun'],
+  actions: ['gun'],
 };
 
 export const raze = {
@@ -121,7 +123,7 @@ export const raze = {
   kind: 'npc',
   name: 'Рейз',
   values: { handle: 'Рейз', combat: 4, hp: 18, armor: 4 },
-  equipped: [],
+  equipped: ['mono-knife'],
   effects: [],
-  actions: ['blade'],
+  actions: [],
 };

@@ -33,7 +33,7 @@ const ctxB = (sheet, die, book = cpCompendium) => ({ system: cyberpunk, sheet, c
 group('две системы одними слотами', () => {
   group('A: срез 5e', () => {
     test('полный ход: порог → величина → применить, трасса несёт все числа', () => {
-      const env = send('longsword', ctx5(arven, queue(10, 5)));
+      const env = send('longsword-item:0', ctx5(arven, queue(10, 5)));
       const { sheet, report } = receive(env, ctx5(mirra, queue()));
 
       eq(report.stopped, null);
@@ -49,7 +49,7 @@ group('две системы одними слотами', () => {
     });
 
     test('промах: обрыв на пороге, в журнале threshold-miss, цель не тронута', () => {
-      const env = send('longsword', ctx5(arven, queue(2, 5)));
+      const env = send('longsword-item:0', ctx5(arven, queue(2, 5)));
       const { sheet, report } = receive(env, ctx5(mirra, queue()));
       eq(report.stopped.reason, 'threshold-miss');
       eq(report.trace.length, 1, 'после обрыва шаги не исполнялись');
@@ -59,7 +59,7 @@ group('две системы одними слотами', () => {
 
     test('сопротивление цели половинит урон — модификаторы цели включены в правиле', () => {
       const stony = { ...mirra, effects: [{ effectId: 'stoneskin' }] };
-      const env = send('longsword', ctx5(arven, queue(10, 5)));
+      const env = send('longsword-item:0', ctx5(arven, queue(10, 5)));
       const { sheet, report } = receive(env, ctx5(stony, queue()));
       eq(report.trace[2].incoming, 8, 'пришло восемь…');
       eq(report.trace[2].amount, 4, '…каменная кожа оставила четыре');
@@ -102,7 +102,7 @@ group('две системы одними слотами', () => {
 
   group('B: срез киберпанка', () => {
     test('клинок: фикс предмета, пробитие брони, ДВА применить в два поля', () => {
-      const env = send('blade', ctxB(silver, queue(7)));
+      const env = send('mono-knife:0', ctxB(silver, queue(7)));
       const { sheet, report } = receive(env, ctxB(raze, queue()));
 
       eq(report.stopped, null);
@@ -139,7 +139,7 @@ group('две системы одними слотами', () => {
     });
 
     test('чарник получателя после удара — по-прежнему законный DTO', () => {
-      const env = send('blade', ctxB(silver, queue(7)));
+      const env = send('mono-knife:0', ctxB(silver, queue(7)));
       const { sheet } = receive(env, ctxB(raze, queue()));
       serializeSheet(sheet);
       deepEq(JSON.parse(JSON.stringify(env)), env, 'и конверт — чистые данные');
@@ -186,10 +186,10 @@ group('две системы одними слотами', () => {
         },
       };
 
-      const swordWas = receive(send('longsword', ctx5(arven, queue(10, 5))), ctx5(mirra, queue())).report;
+      const swordWas = receive(send('longsword-item:0', ctx5(arven, queue(10, 5))), ctx5(mirra, queue())).report;
       const axeWas = receive(send('axe', { system, sheet: arven, compendium: book, die: queue(10, 7) }),
         { system, sheet: mirra, compendium: book, die: queue() }).report;
-      const swordNow = receive(send('longsword', { system: margined, sheet: arven, compendium, die: queue(10, 5) }),
+      const swordNow = receive(send('longsword-item:0', { system: margined, sheet: arven, compendium, die: queue(10, 5) }),
         { system: margined, sheet: mirra, compendium, die: queue() }).report;
       const axeNow = receive(send('axe', { system: margined, sheet: arven, compendium: book, die: queue(10, 7) }),
         { system: margined, sheet: mirra, compendium: book, die: queue() }).report;
@@ -213,7 +213,7 @@ group('две системы одними слотами', () => {
           lead_die: { ...system.constants.lead_die, dice: [{ count: 1, sides: 12 }] },
         },
       };
-      send('longsword', { system: d12world, sheet: arven, compendium, die: spy });
+      send('longsword-item:0', { system: d12world, sheet: arven, compendium, die: spy });
       eq(asked[0], 12, 'проверка пошла новой костью');
       eq(asked[1], 8, 'а кость урона осталась костью оружия');
     });

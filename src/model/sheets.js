@@ -25,9 +25,10 @@ export const arven = {
     hp_max: 44,
     hp_current: 44,
   },
-  equipped: ['chain-mail'],
+  // Меч надет — его атака появляется в действиях сама, по активности предмета.
+  equipped: ['chain-mail', 'longsword-item'],
   effects: [],
-  actions: ['longsword'],
+  actions: [],
 };
 
 export const mirra = {
