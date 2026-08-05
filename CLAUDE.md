@@ -28,7 +28,8 @@ Proof-of-concept конструктора ролевых систем и чар�
 ## Команды
 
 ```bash
-python3 -m http.server   # :8000 — выбор приложения; file:// не работает из-за CORS на ES-модулях
+python3 -m http.server   # :8000 — оффлайн-режим, всё в памяти вкладки
+node server/server.js    # :8000 — СТЕНДОВЫЙ СЕРВЕР: комнаты, права, sqlite, SSE
 node tests/run.js        # все тесты в терминале, без браузера
 ```
 

@@ -12,6 +12,7 @@
 import { state, esc, log } from './state.js';
 import { send, receive, availableActions } from '../events/envelope.js';
 import { describeReport } from './journal.js';
+import { online, act as netAct, renderSession } from './net.js';
 import { randomDie } from '../engine/dice.js';
 
 export const BOARD = { cols: 12, rows: 8, cell: 56 };
@@ -103,7 +104,7 @@ function renderSide() {
   const token = tokenById(state.table.selected);
 
   if (!token) {
-    host.innerHTML = `<div class="sys-hint" style="padding:8px">
+    host.innerHTML = renderSession() + `<div class="sys-hint" style="padding:8px">
       Кликните фишку — её лист станет отправителем.<br><br>
       Стол ничего не считает: он лишь решает, чей чарник с чьим общается.
       Правила общения задал автор системы.</div>`;
@@ -113,7 +114,7 @@ function renderSide() {
   const sheet = sheetOf(token);
   const usable = availableActions(sheet, state.compendium);
 
-  host.innerHTML = `
+  host.innerHTML = renderSession() + `
     <div class="cs-block" style="background:var(--s2);padding:8px 10px">
       <div style="font-size:13px;font-weight:600">${esc(sheet.name)}</div>
       <div class="blk-type" style="margin:0">${sheet.kind === 'pc' ? 'персонаж игрока' : 'НПС ведущего'}</div>
@@ -212,6 +213,15 @@ export function openSheet(sheetId) {
 function strike(fromTokenId, actionId, targetTokenId) {
   const from = sheetOf(tokenById(fromTokenId));
   const target = sheetOf(tokenById(targetTokenId));
+
+  // Онлайн ход — только НАМЕРЕНИЕ: правило исполнит сервер своими костями,
+  // свежий срез приедет всем по SSE. Клиент за цель не считает ничего.
+  if (online()) {
+    netAct(actionId, from.id, target.id);
+    state.table.action = null;
+    return;
+  }
+
   const ctx = { system: state.system, compendium: state.compendium, die: randomDie };
 
   try {

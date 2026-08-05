@@ -18,6 +18,7 @@ import * as table from './mode-table.js';
 import * as recordsEditor from './records-editor.js';
 import * as formula from './formula-input.js';
 import { packWorld, unpackWorld } from './world.js';
+import * as net from './net.js';
 
 // Один main.js на оба приложения: страница объявляет свой стартовый режим
 // атрибутом (constructor.html — автор, vtt.html — стол), а какие режимы
@@ -141,10 +142,23 @@ async function worldImport(file) {
   render();
 }
 
+// Асинхронные сетевые обработчики сами дорисовывают экран по завершении.
+const rerender = () => { render(); restoreCaret(null); };
+const netcall = fn => async (...args) => { await fn(...args); rerender(); };
+
 Object.assign(window, {
   uiMode: redraw(mode => { state.mode = mode; }),
   uiWorldExport: redraw(worldExport),
   uiWorldImport: worldImport, // асинхронный: сам зовёт render, redraw не годится
+  uiRerender: rerender,       // для SSE: пришёл срез комнаты — перерисоваться
+
+  // ── сеанс со стендовым сервером ──
+  uiNetLogin: netcall(() => net.loginAs(
+    document.getElementById('net-name').value,
+    document.getElementById('net-role').value)),
+  uiNetPublish: netcall(net.publish),
+  uiNetCreateRoom: netcall(net.createRoom),
+  uiNetJoin: netcall(net.enterRoom),
 
   // ── режим автора: состав полей и правила комнаты ──
   uiAuthorView: redraw(author.setAuthorView),

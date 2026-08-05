@@ -11,6 +11,7 @@ import { state, sheet, field, pass, rollOf, valueOf, show, newRecordId, esc, log
 import { targets } from '../engine/targets.js';
 import { send, receive, availableActions } from '../events/envelope.js';
 import { describeReport } from './journal.js';
+import { online, patchSheet } from './net.js';
 import { randomDie } from '../engine/dice.js';
 
 export function renderPlayer() {
@@ -298,10 +299,12 @@ export function deleteSheet(id) {
 
 export function setValue(tag, raw) {
   const type = field(tag).value.type;
-  sheet().values[tag] =
+  const value =
     type === 'boolean' ? Boolean(raw)
       : type === 'text' ? String(raw)
         : Number(raw);
+  sheet().values[tag] = value; // оптимистично; онлайн истину подтвердит сервер
+  if (online()) patchSheet(sheet().id, { [tag]: value });
 }
 
 

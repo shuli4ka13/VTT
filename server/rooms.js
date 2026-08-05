@@ -1,0 +1,154 @@
+// Комнаты стенда. Здесь — то самое «общение чарников по правилам системы»,
+// но АВТОРИТЕТНО: сервер исполняет тот же движок (src/events, src/engine),
+// что и браузер, бросает свои кости и не верит клиенту ни в одном числе.
+// Клиент присылает только намерение: каким действием, от какого листа,
+// по какому листу.
+
+import { randomUUID } from 'node:crypto';
+import { send, receive } from '../src/events/envelope.js';
+import { randomDie } from '../src/engine/dice.js';
+import { me } from './auth.js';
+import { can } from './permissions.js';
+import { ROLES } from './permissions.js';
+
+// ── миры ─────────────────────────────────────────────────────────────────────
+
+export function publishWorld(db, name, world) {
+  const id = randomUUID();
+  db.prepare('INSERT INTO worlds (id, name, data) VALUES (?, ?, ?)')
+    .run(id, name, JSON.stringify(world));
+  return id;
+}
+
+export function listWorlds(db) {
+  return db.prepare('SELECT id, name FROM worlds').all();
+}
+
+// ── комнаты ──────────────────────────────────────────────────────────────────
+
+// Комната — КОПИЯ мира: партия играет в свой экземпляр, публикация не мутирует.
+export function createRoom(db, worldId, name, byUser, byRole = 'gm') {
+  const row = db.prepare('SELECT data FROM worlds WHERE id = ?').get(worldId);
+  if (!row) throw new Error(`мира «${worldId}» на сервере нет`);
+  const world = JSON.parse(row.data);
+
+  const id = randomUUID();
+  db.prepare('INSERT INTO rooms (id, name, world_id, system, compendium) VALUES (?, ?, ?, ?, ?)')
+    .run(id, name, worldId, JSON.stringify(world.system), JSON.stringify(world.compendium));
+  for (const sheet of world.sheets) {
+    db.prepare('INSERT INTO room_sheets (room_id, id, data) VALUES (?, ?, ?)')
+      .run(id, sheet.id, JSON.stringify(sheet));
+  }
+  db.prepare('INSERT INTO members (room_id, user, role, sheet_id) VALUES (?, ?, ?, NULL)')
+    .run(id, byUser, byRole);
+  return { id, name };
+}
+
+export function listRooms(db) {
+  return db.prepare('SELECT id, name FROM rooms').all();
+}
+
+export function joinRoom(db, roomId, user, role, sheetId = null) {
+  assertRoom(db, roomId);
+  if (sheetId) {
+    const taken = db.prepare('SELECT user FROM members WHERE room_id = ? AND sheet_id = ?')
+      .get(roomId, sheetId);
+    if (taken && taken.user !== user) {
+      throw new Error(`лист «${sheetId}» занят: за ним сидит ${taken.user}`);
+    }
+  }
+  db.prepare(`INSERT INTO members (room_id, user, role, sheet_id) VALUES (?, ?, ?, ?)
+    ON CONFLICT (room_id, user) DO UPDATE SET role = excluded.role, sheet_id = excluded.sheet_id`)
+    .run(roomId, user, role, sheetId);
+}
+
+export function roomState(db, roomId) {
+  const room = assertRoom(db, roomId);
+  return {
+    id: room.id,
+    name: room.name,
+    system: JSON.parse(room.system),
+    compendium: JSON.parse(room.compendium),
+    sheets: db.prepare('SELECT data FROM room_sheets WHERE room_id = ?').all(roomId)
+      .map(r => JSON.parse(r.data)),
+    members: db.prepare('SELECT user, role, sheet_id FROM members WHERE room_id = ?').all(roomId),
+    journal: db.prepare('SELECT seq, data FROM envelopes WHERE room_id = ? ORDER BY seq DESC LIMIT 30')
+      .all(roomId).map(r => ({ seq: r.seq, ...JSON.parse(r.data) })),
+  };
+}
+
+// ── авторитетный ход ─────────────────────────────────────────────────────────
+
+export function act(db, roomId, user, { actionId, fromSheetId, targetSheetId }, die = randomDie) {
+  const room = assertRoom(db, roomId);
+  const member = memberOf(db, roomId, user);
+  assertOwn(member, fromSheetId, 'envelope.send', 'ходить');
+
+  const system = JSON.parse(room.system);
+  const compendium = JSON.parse(room.compendium);
+  const from = sheetOf(db, roomId, fromSheetId);
+  const target = sheetOf(db, roomId, targetSheetId);
+
+  // Обе половины правила исполняет СЕРВЕР — своим экземпляром того же движка.
+  // Кости здесь серверные: класс читов «подправил бросок в консоли» умирает.
+  const envelope = send(actionId, { system, sheet: from, compendium, die });
+  const { sheet: updated, report } = receive(envelope, { system, sheet: target, compendium, die });
+
+  db.prepare('UPDATE room_sheets SET data = ? WHERE room_id = ? AND id = ?')
+    .run(JSON.stringify(updated), roomId, targetSheetId);
+
+  const seq = nextSeq(db, roomId);
+  db.prepare('INSERT INTO envelopes (room_id, seq, data) VALUES (?, ?, ?)')
+    .run(roomId, seq, JSON.stringify({ by: user, target: targetSheetId, envelope, report }));
+
+  return { seq, report, from, target: updated };
+}
+
+export function patchSheet(db, roomId, user, sheetId, values) {
+  assertRoom(db, roomId);
+  const member = memberOf(db, roomId, user);
+  assertOwn(member, sheetId, 'sheet.edit', 'править лист');
+
+  const sheet = sheetOf(db, roomId, sheetId);
+  const next = { ...sheet, values: { ...sheet.values, ...values } };
+  db.prepare('UPDATE room_sheets SET data = ? WHERE room_id = ? AND id = ?')
+    .run(JSON.stringify(next), roomId, sheetId);
+  return next;
+}
+
+// ── сторожа ──────────────────────────────────────────────────────────────────
+
+function assertRoom(db, roomId) {
+  const room = db.prepare('SELECT * FROM rooms WHERE id = ?').get(roomId);
+  if (!room) throw new Error(`комнаты «${roomId}» нет`);
+  return room;
+}
+
+function memberOf(db, roomId, user) {
+  const member = db.prepare('SELECT * FROM members WHERE room_id = ? AND user = ?')
+    .get(roomId, user);
+  if (!member) throw new Error(`«${user}» не в этой комнате — сначала вступите`);
+  return member;
+}
+
+function sheetOf(db, roomId, sheetId) {
+  const row = db.prepare('SELECT data FROM room_sheets WHERE room_id = ? AND id = ?')
+    .get(roomId, sheetId);
+  if (!row) throw new Error(`в комнате нет листа «${sheetId}»`);
+  return JSON.parse(row.data);
+}
+
+// Право со scope: «any» — можно чужое, «own» — только лист, за которым сидишь.
+function assertOwn(member, sheetId, permission, verb) {
+  const permissions = ROLES[member.role] || [];
+  if (can(permissions, `${permission}:any`)) return;
+  if (can(permissions, `${permission}:own`) && member.sheet_id === sheetId) return;
+  throw new Error(`это не ваш лист: ${verb} от «${sheetId}» нельзя`);
+}
+
+function nextSeq(db, roomId) {
+  const row = db.prepare('SELECT MAX(seq) AS top FROM envelopes WHERE room_id = ?').get(roomId);
+  return (row.top || 0) + 1;
+}
+
+export { me };

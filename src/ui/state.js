@@ -55,6 +55,9 @@ export const state = {
   // Чарник про фишки не знает: board живёт в состоянии интерфейса.
   board: { tokens: [] },
   table: { selected: null, action: null },  // выбранная фишка и взведённое действие
+
+  // Сеанс со стендовым сервером. Пусто — оффлайн, всё как раньше в памяти.
+  net: { token: null, me: null, roomId: null, mySheetId: null, worlds: [], rooms: [], members: [], stream: null },
 };
 
 export const sheet = () => state.sheets.find(s => s.id === state.activeSheetId) || null;

@@ -22,6 +22,14 @@
     <button class="tnav" data-mode="compendium" onclick="uiMode('compendium')">⬡ Компендиум</button>
   </nav>
   <div class="hdr-right">
+    <span id="net-status" style="display:flex;gap:4px;align-items:center">
+      <input id="net-name" class="ar-cond" style="width:86px" placeholder="имя">
+      <select id="net-role" class="meta-sel">
+        <option value="player" selected>игрок</option>
+        <option value="gm">ведущий</option>
+      </select>
+      <button class="tnav" onclick="uiNetLogin()" title="стендовый вход: имя и роль, без пароля">войти</button>
+    </span>
     <button class="tnav" onclick="document.getElementById('world-file').click()" title="загрузить мир из JSON-файла конструктора">⇣ мир</button>
     <button class="tnav" onclick="uiWorldExport()" title="выгрузить мир в JSON-файл">⇡ мир</button>
     <input type="file" id="world-file" accept=".json,application/json" hidden onchange="uiWorldImport(this.files[0]); this.value=''">
