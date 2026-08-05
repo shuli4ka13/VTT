@@ -12,10 +12,47 @@
 // своим шаблоном на сцене «Записи» — приговор правила скажет, чего не хватает.
 
 import { state, esc } from './state.js';
-import { SAMPLE_SYSTEMS } from '../model/systems.js';
+import { SAMPLE_SYSTEMS, SAMPLE_WORLDS } from '../model/systems.js';
 import { compile } from '../formula/index.js';
 
 // ── копирование ─────────────────────────────────────────────────────────────
+// Два режима переноса, и разница принципиальна:
+//   copy…    — явная копия по клику: конфликт имён решается новым ключом;
+//   ensure…  — зависимость приезжает ВСЛЕД за копией: уже есть — переиспользуем,
+//              ничего не затираем и не дублируем.
+
+export function ensureRollFrom(donor, tag) {
+  if ((state.system.rolls || []).some(r => r.tag === tag)) return;
+  const src = (donor.rolls || []).find(r => r.tag === tag);
+  if (src) (state.system.rolls || (state.system.rolls = [])).push(structuredClone(src));
+}
+
+export function ensureConstantFrom(donor, name) {
+  if ((state.system.constants || {})[name]) return;
+  const src = (donor.constants || {})[name];
+  if (src) (state.system.constants || (state.system.constants = {}))[name] = structuredClone(src);
+}
+
+function ensureMethod(id) {
+  if (!id) return;
+  const advantage = state.system.advantage || (state.system.advantage = { methods: {} });
+  (advantage.methods || (advantage.methods = {}))[id] = true;
+}
+
+function ensureKindFrom(donor, rk) {
+  if (!rk || (state.system.records || {})[rk]) return;
+  const src = (donor.records || {})[rk];
+  if (src) (state.system.records || (state.system.records = {}))[rk] = structuredClone(src);
+}
+
+function pullRuleDeps(donor, rule) {
+  for (const step of rule.steps || []) {
+    const constant = step.roll && step.roll.die && step.roll.die.constant;
+    if (constant) ensureConstantFrom(donor, constant);
+    const check = step.roll && step.roll.check;
+    if (check) ensureRollFrom(donor, check);
+  }
+}
 
 export function copyRuleFrom(donor, ruleId) {
   const rules = state.system.rules || (state.system.rules = {});
@@ -24,22 +61,58 @@ export function copyRuleFrom(donor, ruleId) {
   while (rules[id]) id = `${ruleId}_${++n}`;
   const rule = structuredClone(donor.rules[ruleId]);
   rules[id] = rule;
-
-  for (const step of rule.steps || []) {
-    const constant = step.roll && step.roll.die && step.roll.die.constant;
-    if (constant && !(state.system.constants || {})[constant] && (donor.constants || {})[constant]) {
-      (state.system.constants || (state.system.constants = {}))[constant] =
-        structuredClone(donor.constants[constant]);
-    }
-    const check = step.roll && step.roll.check;
-    if (check && !(state.system.rolls || []).some(r => r.tag === check)) {
-      const src = (donor.rolls || []).find(r => r.tag === check);
-      if (src) (state.system.rolls || (state.system.rolls = [])).push(structuredClone(src));
-    }
-  }
-
+  pullRuleDeps(donor, rule);
   state.activeRuleId = id;
   return id;
+}
+
+// Правило-зависимость сохраняет родной id: на него ссылаются эффекты-вызовы.
+function ensureRuleFrom(donor, ruleId) {
+  if ((state.system.rules || {})[ruleId]) return;
+  const rule = structuredClone(donor.rules[ruleId]);
+  (state.system.rules || (state.system.rules = {}))[ruleId] = rule;
+  pullRuleDeps(donor, rule);
+}
+
+// Правило комнаты: модификатор на всех. Приезжает работоспособным —
+// с мишенью броска и с объявлением механики, которой пользуется.
+export function copyRoomRuleFrom(donor, modifierId) {
+  const modifiers = state.system.modifiers || (state.system.modifiers = []);
+  if (modifiers.some(m => m.id === modifierId)) return;
+  const src = (donor.modifiers || []).find(m => m.id === modifierId);
+  if (!src) return;
+  const clone = structuredClone(src);
+  modifiers.push(clone);
+  if (clone.kind === 'roll') {
+    ensureRollFrom(donor, clone.target);
+    ensureMethod(clone.method);
+  }
+}
+
+// Готовая запись компендиума. Приезжает РАБОЧЕЙ ЦЕПОЧКОЙ: предмет тянет
+// вызовы своих активностей, вызов — правило (под родным id), правило — кость
+// и мишень; roll-модификаторы объявляют механику. Поля листа НЕ тянутся:
+// записи комбинируют объявленное, недостающее поле — повод скопировать блок.
+export function copyRecordFrom(world, recordId) {
+  const { system: donor, compendium: book } = world;
+  const mine = state.compendium;
+  if ([...mine.items, ...mine.effects, ...mine.actions].some(r => r.id === recordId)) return recordId;
+
+  const shelf = ['items', 'effects', 'actions'].find(k => (book[k] || []).some(r => r.id === recordId));
+  if (!shelf) return null;
+  const clone = structuredClone(book[shelf].find(r => r.id === recordId));
+  mine[shelf].push(clone);
+
+  ensureKindFrom(donor, clone.rk);
+  if (clone.rule) ensureRuleFrom(donor, clone.rule);
+  if (shelf === 'actions' && clone.effect) copyRecordFrom(world, clone.effect);
+  for (const act of clone.activities || []) copyRecordFrom(world, act.effect);
+  for (const mod of clone.modifiers || []) {
+    if (mod.kind !== 'roll') continue;
+    ensureRollFrom(donor, mod.target);
+    if (mod.effect) ensureMethod(mod.method);
+  }
+  return recordId;
 }
 
 // Блок — группа полей. Вместе с полем едут его зависимости по формуле
@@ -84,6 +157,7 @@ export function copyTableFrom(donor, tableName) {
 }
 
 export const donorById = id => SAMPLE_SYSTEMS.find(s => s.id === id) || null;
+export const worldById = id => SAMPLE_WORLDS.find(w => w.system.id === id) || null;
 
 // ── палитры шаблонов ────────────────────────────────────────────────────────
 
@@ -113,28 +187,66 @@ export function blockTemplatesHtml() {
     вместе с зависимостями формул. Донор не изменится.</div>`;
 }
 
-// Сцена «Механики», низ палитры: правила-конвейеры и таблицы образцов.
+// Сцена «Механики», низ палитры: готовое из образцов, СГРУППИРОВАНО по
+// системам-донорам и покрывает все словари: правила, таблицы, мишени
+// бросков, константы-кости, правила комнаты.
+const palItem = (icon, title, sub, onclick, have) =>
+  `<div class="pal-item"${have ? ' style="opacity:.45"' : ''} onclick="${onclick}">
+    <span class="pal-icon">${icon}</span>
+    <div><div class="pal-t">${esc(title)}</div><div class="pal-s">${sub}</div></div>
+  </div>`;
+
 export function ruleTemplatesHtml() {
-  const list = donors();
-  if (!list.length) return '';
-  return `<div class="pal-sec" style="margin-top:14px">Готовые механики из образцов</div>
-    ${list.map(sys => `
+  return `<div class="pal-sec" style="margin-top:14px">Готовое из образцов</div>
+    ${donors().map(sys => `
+      <div class="pal-sec" style="opacity:.65;margin-top:8px">${esc(sys.name)}</div>
       ${Object.entries(sys.rules || {}).map(([id, rule]) => {
         const have = id in (state.system.rules || {});
-        return `<div class="pal-item"${have ? ' style="opacity:.45"' : ''} onclick="uiCopyRule('${sys.id}','${id}')">
-          <span class="pal-icon">⚙</span>
-          <div><div class="pal-t">${esc(rule.label || id)}</div>
-          <div class="pal-s">${esc(sys.name)} · ${have ? 'уже в системе — клик даст копию' : `шагов: ${(rule.steps || []).length}`}</div></div>
-        </div>`;
+        return palItem('⚙', rule.label || id,
+          have ? 'механика · уже в системе — клик даст копию' : `механика · шагов: ${(rule.steps || []).length}`,
+          `uiCopyRule('${sys.id}','${id}')`, have);
       }).join('')}
       ${Object.entries(sys.tables || {}).map(([name, t]) => {
         const have = name in (state.system.tables || {});
-        return `<div class="pal-item"${have ? ' style="opacity:.45"' : ''} onclick="uiCopyTable('${sys.id}','${name}')">
-          <span class="pal-icon">▤</span>
-          <div><div class="pal-t">${esc(t.label || name)}</div>
-          <div class="pal-s">${esc(sys.name)} · ${have ? 'уже в системе — клик даст копию' : `таблица, диапазонов: ${(t.ranges || []).length}`}</div></div>
-        </div>`;
+        return palItem('▤', t.label || name,
+          have ? 'таблица · уже в системе — клик даст копию' : `таблица · диапазонов: ${(t.ranges || []).length}`,
+          `uiCopyTable('${sys.id}','${name}')`, have);
+      }).join('')}
+      ${(sys.rolls || []).map(r => {
+        const have = (state.system.rolls || []).some(x => x.tag === r.tag);
+        return palItem('⌖', r.label, have ? 'мишень броска · уже в системе' : 'мишень броска',
+          `uiCopyRoll('${sys.id}','${r.tag}')`, have);
+      }).join('')}
+      ${Object.entries(sys.constants || {}).map(([name, c]) => {
+        const have = name in (state.system.constants || {});
+        return palItem('⬡', c.label,
+          `константа · ${(c.dice || []).map(d => `${d.count || 1}к${d.sides}`).join(' + ')}${have ? ' · уже в системе' : ''}`,
+          `uiCopyConst('${sys.id}','${name}')`, have);
+      }).join('')}
+      ${(sys.modifiers || []).map(m => {
+        const have = (state.system.modifiers || []).some(x => x.id === m.id);
+        return palItem('⚖', m.label || m.id, have ? 'правило комнаты · уже в системе' : 'правило комнаты',
+          `uiCopyRoomRule('${sys.id}','${m.id}')`, have);
       }).join('')}`).join('')}
-    <div class="sys-hint">Правило приедет со своей костью и мишенью броска;
-      чего не хватит (свойства предметов) — скажет приговор.</div>`;
+    <div class="sys-hint">Копия приезжает работоспособной: правило тянет кость
+      и мишень, правило комнаты — механику. Чего не хватит — скажет приговор.</div>`;
+}
+
+// Режим компендиума, низ палитры: готовые записи образцов. Клик — запись
+// приезжает цепочкой (активности, вызовы, правила) и открывается в редакторе.
+export function recordTemplatesHtml() {
+  return `<div class="pal-sec" style="margin-top:14px">Готовые записи из образцов</div>
+    ${SAMPLE_WORLDS.map(({ system: sys, compendium: book }) => `
+      <div class="pal-sec" style="opacity:.65;margin-top:8px">${esc(sys.name)}</div>
+      ${['items', 'effects', 'actions'].flatMap(shelf => (book[shelf] || []).map(r => {
+        const decl = (sys.records || {})[r.rk] || {};
+        const have = [...state.compendium.items, ...state.compendium.effects, ...state.compendium.actions]
+          .some(x => x.id === r.id);
+        return palItem(decl.icon || '□', r.label,
+          `${esc(decl.label || shelf)}${have ? ' · уже в библиотеке' : ''}`,
+          `uiCopyRecord('${sys.id}','${r.id}')`, have);
+      })).join('')}`).join('')}
+    <div class="sys-hint">Запись приедет рабочей цепочкой: меч притянет свой
+      вызов, вызов — правило, правило — кость. Поля листа не тянутся —
+      их даёт блок на сцене «Лист».</div>`;
 }

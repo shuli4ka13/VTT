@@ -15,6 +15,7 @@ import { ADVANTAGE_METHODS, enabledMethods } from '../model/advantage-methods.js
 import { AMOUNT_SOURCES } from '../model/amount-sources.js';
 import { allRecords } from '../model/compendium.js';
 import { renderFormulaInput } from './formula-input.js';
+import { recordTemplatesHtml } from './templates.js';
 import { field } from './state.js';
 
 const OPS = [['add', '+ прибавить'], ['set', '= задать'], ['mul', '× умножить']];
@@ -53,13 +54,14 @@ export function renderCompendium() {
 function renderPalette() {
   const host = document.getElementById('comp-palette');
   const kinds = Object.entries(state.system.records || {});
-  host.innerHTML = kinds.length
+  host.innerHTML = (kinds.length
     ? kinds.map(([rk, decl]) => `
       <div class="pal-item" onclick="uiNewRecord('${rk}')">
         <span class="pal-icon">${decl.icon || '□'}</span>
         <div><div class="pal-t">${esc(decl.label)}</div><div class="pal-s">${esc(decl.hint || '')}</div></div>
       </div>`).join('')
-    : '<div class="sys-hint">Система не объявляет родов записей — объявить их можно в конструкторе.</div>';
+    : '<div class="sys-hint">Система не объявляет родов записей — объявить их можно в конструкторе.</div>')
+    + recordTemplatesHtml();
 }
 
 function renderList() {

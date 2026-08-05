@@ -1,8 +1,17 @@
 // Реестр образцовых систем — доноры шаблонов для конструктора.
 // «Подтянуть рода из любой системы и отредактировать у себя» начинается здесь:
 // это просто список данных, ни одна система не знает о другой.
+//
+// Мир донора — система ВМЕСТЕ с её компендиумом: готовые записи (меч, кольчуга,
+// заклинания) — такие же шаблоны, как блоки полей и правила.
 
 import { system as dnd5e } from './system.js';
-import { cyberpunk } from './system-cyberpunk.js';
+import { compendium as dndCompendium } from './compendium.js';
+import { cyberpunk, cpCompendium } from './system-cyberpunk.js';
 
-export const SAMPLE_SYSTEMS = [dnd5e, cyberpunk];
+export const SAMPLE_WORLDS = [
+  { system: dnd5e, compendium: dndCompendium },
+  { system: cyberpunk, compendium: cpCompendium },
+];
+
+export const SAMPLE_SYSTEMS = SAMPLE_WORLDS.map(w => w.system);
