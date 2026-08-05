@@ -166,7 +166,7 @@ group('две системы одними слотами', () => {
       const book = {
         ...compendium,
         items: [...compendium.items,
-          { id: 'axe-item', label: 'Топор', slot: 'hand', props: { damage_dice: '1d12' }, modifiers: [] }],
+          { id: 'axe-item', rk: 'weapon', label: 'Топор', slot: 'hand', props: { damage_dice: '1d12' }, modifiers: [] }],
         effects: [...compendium.effects,
           { id: 'axe-strike', label: 'Удар топором', kind: 'rule', rule: 'strike',
             params: { bonus: '#attack_bonus', versus: 'ac', damage_bonus: '2', apply_to: 'hp_current' } }],

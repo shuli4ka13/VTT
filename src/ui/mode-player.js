@@ -178,21 +178,28 @@ function renderBelongings() {
   // Меч даёт свою атаку сам — как в Foundry; снял — атака пропала.
   const usable = availableActions(current, state.compendium);
 
+  // Кнопки создания выводятся из родов, объявленных системой: у 5e будет
+  // «+ Заклинание», у киберпанка — нет. Игрок записи заводить волен: запись
+  // не вводит ни тега, ни шага, только комбинирует объявленное.
+  const creatable = base => Object.entries(state.system.records || {})
+    .filter(([, d]) => d.kind === base)
+    .map(([rk, d]) => `<button class="add-row" onclick="uiCreate('${rk}')">+ ${esc(d.label)}</button>`)
+    .join('');
+
   host.innerHTML = `
     <div class="pal-sec">Снаряжение</div>
     ${picker(items, current.equipped, 'uiEquip', 'предметов в компендиуме нет')}
-    <button class="add-row" onclick="uiCreate('item')">+ создать предмет</button>
+    ${creatable('item')}
 
     <div class="pal-sec" style="margin-top:10px">Эффекты</div>
     ${picker(effects.filter(e => !e.rule), current.effects.map(e => e.effectId), 'uiHang', 'эффектов нет')}
-    <button class="add-row" onclick="uiCreate('effect')">+ создать эффект</button>
+    ${creatable('effect')}
 
     ${renderRolls(p)}
 
     <div class="pal-sec" style="margin-top:10px">Действия</div>
     ${picker(actions, current.actions, 'uiLearn', 'действий нет')}
-    <button class="add-row" onclick="uiCreate('action')">+ создать действие</button>
-    <button class="add-row" onclick="uiCreate('spell')">+ создать заклинание</button>
+    ${creatable('action')}
 
     ${usable.length && others.length ? `
       <div class="pal-sec" style="margin-top:10px">Применить</div>
@@ -242,8 +249,11 @@ function picker(records, taken, handler, emptyText) {
     </div>`).join('');
 }
 
-const kindWord = r =>
-  r.kind === 'spell' ? 'заклинание' : r.kind === 'action' ? 'действие' : r.modifiers ? '' : '';
+// Слово рода — из объявления системы; запись без рода честно молчит.
+const kindWord = r => {
+  const decl = (state.system.records || {})[r.rk];
+  return decl && decl.kind === 'action' ? decl.label.toLowerCase() : '';
+};
 
 const modeWord = mode =>
   mode === 'advantage' ? 'преимущество' : mode === 'disadvantage' ? 'помеха' : 'обычный';
@@ -323,46 +333,45 @@ export function learn(id) {
 
 // Созданная запись ложится в ОБЩИЙ компендиум, персонаж получает ссылку.
 // Копий внутри персонажа не делаем — потому и уходим сразу в компендиум,
-// чтобы было видно: правится общая библиотека.
-export function create(kind) {
+// чтобы было видно: правится общая библиотека. Что именно рождается,
+// решает род из объявления системы (system.records) — как в компендиуме.
+export function create(rk) {
+  const decl = (state.system.records || {})[rk];
+  if (!decl) return;
   const current = sheet();
   const first = state.system.fields[0].tag;
   const roll = (state.system.rolls[0] || {}).tag;
+  const name = `${decl.label} — новая запись`;
+  const id = newRecordId(rk);
 
-  if (kind === 'item') {
-    const id = newRecordId('item');
+  if (decl.kind === 'item') {
     state.compendium.items.push({
-      id, label: 'Новый предмет', slot: 'misc', description: '',
-      modifiers: [{ kind: 'value', target: first, op: 'add', value: 1, stacking: 'sum', condition: null }],
+      id, rk, label: name, slot: 'misc', description: '',
+      modifiers: decl.props ? [] : [{ kind: 'value', target: first, op: 'add', value: 1, stacking: 'sum', condition: null }],
     });
     current.equipped.push(id);
-    return handOff(id, 'предмет');
+    return handOff(id, decl.label);
   }
 
-  if (kind === 'effect') {
-    const id = newRecordId('fx');
+  if (decl.kind === 'effect') {
     state.compendium.effects.push({
-      id, label: 'Новый эффект', icon: '✦', duration: { kind: 'scene' }, description: '',
+      id, rk, label: name, icon: decl.icon || '✦', duration: { kind: 'scene' }, description: '',
       modifiers: [{ kind: 'roll', target: roll, effect: 'disadvantage', method: 'rerollBest', condition: null }],
     });
     current.effects.push({ effectId: id });
-    return handOff(id, 'эффект');
+    return handOff(id, decl.label);
   }
 
-  // Действие ссылается на эффект-вызов и не вводит ни тега, ни шага —
+  // Базис «действие»: ссылается на эффект-вызов и не вводит ни тега, ни шага —
   // потому его и волен создать игрок. Если вызовов в библиотеке ещё нет,
   // дальше игрока отправит редактор компендиума.
-  const spell = kind === 'spell';
-  const id = newRecordId(spell ? 'spell' : 'act');
   const call = state.compendium.effects.find(e => e.rule);
   state.compendium.actions.push({
-    id, kind: spell ? 'spell' : 'action',
-    label: spell ? 'Новое заклинание' : 'Новое действие',
-    description: '',
+    id, rk, kind: rk, label: name, description: '',
     effect: call ? call.id : '',
   });
   current.actions.push(id);
-  return handOff(id, spell ? 'заклинание' : 'действие');
+  return handOff(id, decl.label);
 }
 
 function handOff(id, word) {

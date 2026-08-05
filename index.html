@@ -139,16 +139,11 @@
     <div class="item-ed" id="comp-editor"></div>
   </div>
 
+  <!-- Палитра родов НЕ зашита в разметку: рода записей объявляет система
+       (system.records), и у другой системы палитра другая. -->
   <div class="col dark">
     <div class="col-hdr">⊞ Добавить</div>
-    <div class="col-scroll">
-      <div class="pal-item" onclick="uiNewRecord('item')"><span class="pal-icon">⬡</span><div><div class="pal-t">Предмет</div><div class="pal-s">бонусы к полям</div></div></div>
-      <div class="pal-item" onclick="uiNewRecord('effect')"><span class="pal-icon">✦</span><div><div class="pal-t">Эффект</div><div class="pal-s">преимущество или помеха</div></div></div>
-      <div class="pal-item" onclick="uiNewRecord('rulecall')"><span class="pal-icon">⚙</span><div><div class="pal-t">Вызов правила</div><div class="pal-s">правило системы + параметры</div></div></div>
-      <div class="pal-item" onclick="uiNewRecord('action')"><span class="pal-icon">⚔</span><div><div class="pal-t">Действие</div><div class="pal-s">источник: оружие + вызов</div></div></div>
-      <div class="pal-item" onclick="uiNewRecord('spell')"><span class="pal-icon">🔮</span><div><div class="pal-t">Заклинание</div><div class="pal-s">то же действие, другой ярлык</div></div></div>
-
-    </div>
+    <div class="col-scroll" id="comp-palette"></div>
   </div>
 
 </div>

@@ -21,13 +21,28 @@ export const cyberpunk = {
     { tag: 'attack_roll', label: 'Бросок атаки' },
   ],
 
+  // Рода записей ЭТОЙ системы: заклинаний в мире хрома нет — и в палитре
+  // компендиума их не будет. Рода выводятся из системы, а не из движка.
   records: {
     weapon: {
-      label: 'Оружие',
+      kind: 'item', label: 'Оружие', icon: '⚔',
+      hint: 'Хромированная сталь: урон числом или костью.',
       props: [
         { key: 'damage_dice', label: 'Кость урона', kind: 'dice' },
         { key: 'damage_flat', label: 'Урон (число)', kind: 'number' },
       ],
+    },
+    effect: {
+      kind: 'effect', label: 'Эффект', icon: '✦',
+      hint: 'Состояние: модификаторы, пока висит.',
+    },
+    call: {
+      kind: 'call', label: 'Вызов правила', icon: '⚙',
+      hint: 'Механика системы с заполненными параметрами.',
+    },
+    action: {
+      kind: 'action', label: 'Действие', icon: '✊',
+      hint: 'Приём без предмета.',
     },
   },
 
@@ -73,6 +88,7 @@ export const cpCompendium = {
   items: [
     {
       id: 'mono-knife',
+      rk: 'weapon',
       label: 'Мономолекулярный нож',
       slot: 'hand',
       description: 'Урон — константа записи, костей нет.',
@@ -84,6 +100,7 @@ export const cpCompendium = {
   effects: [
     {
       id: 'blade-hit',
+      rk: 'call',
       kind: 'rule',
       label: 'Удар клинком',
       description: 'Вызов правила «Удар»: величина — фикс предмета.',
@@ -92,6 +109,7 @@ export const cpCompendium = {
     },
     {
       id: 'gun-hit',
+      rk: 'call',
       kind: 'rule',
       label: 'Выстрел',
       description: 'Вызов того же правила: величина — свой бросок 2d8.',
@@ -102,7 +120,7 @@ export const cpCompendium = {
   // Запись-действие осталась только у выстрела: пистолета-предмета в срезе нет.
   // Удар ножом — активность самого ножа.
   actions: [
-    { id: 'gun', kind: 'action', label: 'Пистолет', effect: 'gun-hit' },
+    { id: 'gun', rk: 'action', kind: 'action', label: 'Пистолет', effect: 'gun-hit' },
   ],
 };
 

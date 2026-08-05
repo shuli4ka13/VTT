@@ -19,16 +19,47 @@ import { field } from './state.js';
 
 const OPS = [['add', '+ прибавить'], ['set', '= задать'], ['mul', '× умножить']];
 const STACKING = [['sum', 'складывать'], ['max', 'брать наибольший'], ['override', 'последний побеждает']];
-const KIND = {
-  item: { word: 'предмет', icon: '⬡' },
-  effect: { word: 'эффект', icon: '✦' },
-  action: { word: 'действие', icon: '⚔' },
-  spell: { word: 'заклинание', icon: '🔮' },
+
+// Род записи объявляет СИСТЕМА (system.records): слова, значки и подсказки
+// приходят из конструктора, а не из этого файла. Движковый базис (item/effect/
+// call/action) — только запасной словарь на случай записи без рода: честное
+// «запись», а не выдуманный лейбл.
+const BASE_FALLBACK = {
+  item: { label: 'запись-предмет', icon: '⬡' },
+  effect: { label: 'запись-эффект', icon: '✦' },
+  call: { label: 'запись-вызов', icon: '⚙' },
+  action: { label: 'запись-действие', icon: '✊' },
 };
+
+// Базис хранения записи: по какому массиву компендиума она живёт.
+function baseOf(record) {
+  if (state.compendium.items.some(r => r.id === record.id)) return 'item';
+  if (state.compendium.effects.some(r => r.id === record.id)) return record.rule ? 'call' : 'effect';
+  return 'action';
+}
+
+export function declOf(record) {
+  return (state.system.records || {})[record.rk] || BASE_FALLBACK[baseOf(record)];
+}
 
 export function renderCompendium() {
   renderList();
   renderRecord();
+  renderPalette();
+}
+
+// Палитра «что можно добавить» выводится из словаря родов системы.
+// У 5e здесь есть «Заклинание», у киберпанка — нет: не движок решает.
+function renderPalette() {
+  const host = document.getElementById('comp-palette');
+  const kinds = Object.entries(state.system.records || {});
+  host.innerHTML = kinds.length
+    ? kinds.map(([rk, decl]) => `
+      <div class="pal-item" onclick="uiNewRecord('${rk}')">
+        <span class="pal-icon">${decl.icon || '□'}</span>
+        <div><div class="pal-t">${esc(decl.label)}</div><div class="pal-s">${esc(decl.hint || '')}</div></div>
+      </div>`).join('')
+    : '<div class="sys-hint">Система не объявляет родов записей — объявить их можно в конструкторе.</div>';
 }
 
 function renderList() {
@@ -38,10 +69,10 @@ function renderList() {
   document.getElementById('comp-list').innerHTML = records.length
     ? records.map(r => `
       <div class="item-entry${state.activeRecordId === r.id ? ' on' : ''}" onclick="uiPickRecord('${r.id}')">
-        <span class="ie-icon">${r.rule ? '⚙' : KIND[r.kind].icon}</span>
+        <span class="ie-icon">${declOf(r).icon || '□'}</span>
         <div style="flex:1;min-width:0">
           <div class="ie-name">${esc(r.label)}</div>
-          <div class="ie-sub">${r.rule ? 'вызов правила' : KIND[r.kind].word}${used[r.id] ? ` · у ${used[r.id]}` : ' · ни у кого'}</div>
+          <div class="ie-sub">${esc(declOf(r).label)}${used[r.id] ? ` · у ${used[r.id]}` : ' · ни у кого'}</div>
         </div>
         <button class="ie-del" onclick="event.stopPropagation();uiDelRecord('${r.id}')">✕</button>
       </div>`).join('')
@@ -68,21 +99,23 @@ function renderRecord() {
     return;
   }
 
+  const decl = declOf(record);
+  const base = baseOf(record);
   const head = `
     <div class="item-hdr">
-      <div class="icon-pick">${KIND[record.kind].icon}</div>
+      <div class="icon-pick">${decl.icon || '□'}</div>
       <div style="flex:1">
         <input class="item-name-inp" id="rec-name" value="${esc(record.label)}"
                oninput="uiSetRecord('${record.id}','label',this.value)">
         <div class="meta-row"><span class="rarity-badge" style="background:var(--s2);color:var(--muted)">
-          ${KIND[record.kind].word}</span></div>
+          ${esc(decl.label)}</span></div>
       </div>
     </div>`;
 
   const body =
-    record.kind === 'action' || record.kind === 'spell' ? actionBody(record)
-      : record.kind === 'item' ? weaponPropsBody(record) + activitiesBody(record) + modifiersBody(record)
-        : record.rule ? ruleCallBody(record)
+    base === 'action' ? actionBody(record)
+      : base === 'item' ? weaponPropsBody(record, decl) + activitiesBody(record) + modifiersBody(record)
+        : base === 'call' ? ruleCallBody(record)
           : modifiersBody(record);
 
   host.innerHTML = head + body + `
@@ -132,15 +165,15 @@ function activitiesBody(record) {
   </div>`;
 }
 
-// Свойства оружия: СОСТАВ объявлен системой (system.records.weapon), запись
+// Свойства записи: СОСТАВ объявлен системой для РОДА этой записи, запись
 // только заполняет значения. Нет объявления — нет и раздела: компендиум
 // определяется изначальной механикой, а не наоборот.
-function weaponPropsBody(record) {
-  const schema = (state.system.records || {}).weapon;
+function weaponPropsBody(record, decl) {
+  const schema = decl && decl.props ? decl : null;
   if (!schema) return '';
   const props = record.props || {};
   return `<div class="pb">
-    <div class="pb-lbl">${esc(schema.label)} — свойства из системы</div>
+    <div class="pb-lbl">${esc(decl.label)} — свойства из системы</div>
     ${(schema.props || []).map(p => `
       <div class="bon-row" style="grid-template-columns:130px 1fr;border:none">
         <span style="font-size:11px;color:var(--muted)">${esc(p.label)}</span>
@@ -360,51 +393,54 @@ export function defaultParams(rule) {
   return params;
 }
 
-function newRuleCall() {
+function newRuleCall(rk = 'call') {
   const [ruleId, rule] = Object.entries(state.system.rules || {})[0] || [];
-  const id = newRecordId('call');
+  const id = newRecordId(rk);
   state.compendium.effects.push({
-    id, kind: 'rule', label: 'Новый вызов правила', description: '',
+    id, rk, kind: 'rule', label: `Новая запись`, description: '',
     rule: ruleId || '', params: defaultParams(rule),
   });
   return id;
 }
 
-export function createRecord(kind) {
+// Создание записи РОДА, объявленного системой: что именно рождается,
+// решает базис рода (item / effect / call / action), слова — объявление.
+export function createRecord(rk) {
+  const decl = (state.system.records || {})[rk];
+  if (!decl) return;
   const first = state.system.fields[0].tag;
   const roll = (state.system.rolls[0] || {}).tag;
+  const name = `${decl.label} — новая запись`;
 
-  if (kind === 'item') {
-    const id = newRecordId('item');
+  if (decl.kind === 'item') {
+    const id = newRecordId(rk);
     state.compendium.items.push({
-      id, label: 'Новый предмет', slot: 'misc', description: '',
-      modifiers: [{ kind: 'value', target: first, op: 'add', value: 1, stacking: 'sum', condition: null }],
+      id, rk, label: name, slot: 'misc', description: '',
+      modifiers: decl.props ? [] : [{ kind: 'value', target: first, op: 'add', value: 1, stacking: 'sum', condition: null }],
     });
     state.activeRecordId = id;
     return;
   }
-  if (kind === 'effect') {
-    const id = newRecordId('fx');
+  if (decl.kind === 'effect') {
+    const id = newRecordId(rk);
     state.compendium.effects.push({
-      id, label: 'Новый эффект', icon: '✦', duration: { kind: 'scene' }, description: '',
+      id, rk, label: name, icon: decl.icon || '✦', duration: { kind: 'scene' }, description: '',
       modifiers: [{ kind: 'roll', target: roll, effect: 'disadvantage', method: 'rerollBest', condition: null }],
     });
     state.activeRecordId = id;
     return;
   }
-  if (kind === 'rulecall') {
-    state.activeRecordId = newRuleCall();
+  if (decl.kind === 'call') {
+    state.activeRecordId = newRuleCall(rk);
     return;
   }
 
-  // Действие ссылается на эффект-вызов; если вызовов ещё нет — заводим
-  // заготовку тут же, чтобы действие родилось работоспособным.
-  const spell = kind === 'spell';
-  const id = newRecordId(spell ? 'spell' : 'act');
+  // Базис «действие»: ссылается на эффект-вызов; если вызовов ещё нет —
+  // заводим заготовку тут же, чтобы запись родилась работоспособной.
+  const id = newRecordId(rk);
   const call = state.compendium.effects.find(e => e.rule) || { id: newRuleCall() };
   state.compendium.actions.push({
-    id, kind: spell ? 'spell' : 'action',
-    label: spell ? 'Новое заклинание' : 'Новое действие', description: '',
+    id, rk, kind: rk, label: name, description: '',
     effect: call.id,
   });
   state.activeRecordId = id;
@@ -476,7 +512,7 @@ export function setEffectParam(id, key, raw) {
 
 export function setWeaponProp(id, key, raw) {
   const record = live(id);
-  const schema = ((state.system.records || {}).weapon || {}).props || [];
+  const schema = (((state.system.records || {})[record.rk]) || {}).props || [];
   const kind = (schema.find(p => p.key === key) || {}).kind;
   const value = String(raw).trim();
   record.props = record.props || {};

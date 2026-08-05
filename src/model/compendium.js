@@ -10,6 +10,7 @@
 export const items = [
   {
     id: 'chain-mail',
+    rk: 'gear',
     label: 'Кольчуга',
     slot: 'body',
     description: 'Тяжёлый доспех. Ловкость к классу брони не прибавляется.',
@@ -27,6 +28,7 @@ export const items = [
     // (как в Foundry: у меча есть своя атака). Активность — только ссылка
     // на эффект-вызов; шагов в ней нет и положить их некуда.
     id: 'longsword-item',
+    rk: 'weapon',
     label: 'Длинный меч',
     slot: 'hand',
     description: 'Клинок в четыре ладони.',
@@ -46,6 +48,7 @@ export const items = [
 export const effects = [
   {
     id: 'poisoned',
+    rk: 'effect',
     label: 'Отравлен',
     icon: '☠',
     duration: { kind: 'scene' },
@@ -57,6 +60,7 @@ export const effects = [
   },
   {
     id: 'stoneskin',
+    rk: 'effect',
     label: 'Каменная кожа',
     icon: '🪨',
     duration: { kind: 'scene' },
@@ -71,6 +75,7 @@ export const effects = [
 
   {
     id: 'sword-strike',
+    rk: 'call',
     kind: 'rule',
     label: 'Удар оружием',
     description: 'Вызов правила «Удар»: проверка атаки против КД, урон костью оружия.',
@@ -79,6 +84,7 @@ export const effects = [
   },
   {
     id: 'poison-touch',
+    rk: 'call',
     kind: 'rule',
     label: 'Ядовитое касание',
     description: 'Вызов правила «Спасбросок»: цель спасается Ловкостью, при провале — урон и отравление.',
@@ -87,6 +93,7 @@ export const effects = [
   },
   {
     id: 'healing-touch',
+    rk: 'call',
     kind: 'rule',
     label: 'Лечащее касание',
     description: 'Вызов правила «Лечение»: кость плюс Харизма, не выше максимума хитов.',
@@ -109,6 +116,7 @@ export const effects = [
 export const actions = [
   {
     id: 'poison-spray',
+    rk: 'spell',
     kind: 'spell',
     label: 'Ядовитые брызги',
     description: 'Заговор. Цель делает спасбросок Телосложения — здесь для примера Ловкости.',
@@ -116,6 +124,7 @@ export const actions = [
   },
   {
     id: 'healing-word',
+    rk: 'spell',
     kind: 'spell',
     label: 'Слово лечения',
     description: 'Заговор. Восполняет хиты, но не выше максимума.',

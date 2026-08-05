@@ -118,19 +118,19 @@ export function receive(envelope, { system, sheet, compendium, die }) {
 }
 
 // Оружие действия — запись компендиума, из которой правило читает ТОЛЬКО
-// свойства, объявленные системой (system.records.weapon.props). Компендиум
-// определяется изначальной механикой: не объявлено — свойства как будто нет.
-// Сами ключи (damage_dice, damage_flat) — словарь движка, как формы ссылок;
-// состав и человеческие лейблы объявляет система.
+// свойства, объявленные системой для РОДА этой записи (system.records[rk].props).
+// Компендиум определяется изначальной механикой: не объявлено — свойства как
+// будто нет. Сами ключи (damage_dice, damage_flat) — словарь движка, как формы
+// ссылок; состав, рода и человеческие лейблы объявляет система.
 function weaponPropsOf(action, system, compendium) {
   if (!action.weapon) return null;
   const item = (compendium.items || []).find(i => i.id === action.weapon);
   if (!item) {
     throw new EngineError(`в компендиуме нет оружия «${action.weapon}» — действию «${action.label}» нечем бить`);
   }
-  const declared = ((system.records || {}).weapon || {}).props || [];
+  const decl = (system.records || {})[item.rk] || {};
   const props = {};
-  for (const p of declared) {
+  for (const p of decl.props || []) {
     if (item.props && item.props[p.key] !== undefined) props[p.key] = item.props[p.key];
   }
   return props;
