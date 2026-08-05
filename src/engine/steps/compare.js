@@ -31,6 +31,16 @@ export const outputs = [
 
 export const mayBreak = true;
 
+// Подпись развилки; «never» — сравнение стоит только ради разницы,
+// линия остаётся прямой и конструктор развилку не рисует вовсе.
+export function breakLine(step) {
+  const words = {
+    less: 'если величина меньше порога — не пробило',
+    atMost: 'если величина не выше порога — не пробило',
+  };
+  return words[step.breakIf || 'less'] || null;
+}
+
 export const icon = '⇄';
 
 export function traceLine(t, h) {

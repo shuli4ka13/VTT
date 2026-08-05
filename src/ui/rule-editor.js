@@ -148,7 +148,11 @@ export function verdictOf(rule) {
     if (step.id) ids.add(step.id);
   }
 
-  const breakers = steps.map((s, i) => (registry.get(s.type).mayBreak ? i + 1 : null)).filter(Boolean);
+  const breakers = steps.map((s, i) => {
+    const mod = registry.get(s.type);
+    const breaks = mod.breakLine ? mod.breakLine(s) !== null : mod.mayBreak;
+    return breaks ? i + 1 : null;
+  }).filter(Boolean);
   return {
     ok: true,
     text: `правило верное · шагов: ${steps.length}`
@@ -176,9 +180,12 @@ function stepCard(ruleId, rule, step, index) {
       </div></div>`;
   }
 
-  // Метка обрыва — часть хребта: она про ПОТОК, а не про содержимое карточки.
-  const branch = mod.mayBreak
-    ? `<div class="rl-branch">⤫ может оборвать цепочку — дальше шаги не исполняются</div>`
+  // Развилка — часть хребта: она про ПОТОК, а не про содержимое карточки.
+  // Слова пишет сам шаг (module.breakLine): «промах» и «не пробило» — разные
+  // выходы. null — шаг в этой конфигурации не обрывает, линия прямая.
+  const exit = mod.breakLine ? mod.breakLine(step) : null;
+  const branch = exit
+    ? `<div class="rl-branch">⤫ ${esc(exit)} — правило кончается здесь</div>`
     : '';
 
   return `<div class="rl-step">${node}

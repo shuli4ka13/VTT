@@ -140,7 +140,14 @@
 .rl-id{font-size:10px;color:var(--accent);background:var(--s2);border-radius:99px;padding:1px 8px;white-space:nowrap}
 .rl-del{margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;opacity:.5;flex-shrink:0}
 .rl-del:hover{opacity:1;color:var(--red)}
-.rl-branch{margin:-2px 0 10px 38px;font-size:10px;color:var(--red);opacity:.75}
+/* Развилка досрочного выхода: локоть, отходящий от хребта вбок. Подпись
+   пишет модуль шага (breakLine) — «промах» и «не пробило» видны различимо. */
+.rl-branch{position:relative;margin:-4px 0 12px 30px;padding:3px 9px 3px 20px;font-size:10px;
+  color:var(--red);opacity:.85;border:1px dashed rgba(248,113,113,.35);border-radius:0 8px 8px 8px;
+  background:rgba(248,113,113,.05);width:fit-content;max-width:90%}
+.rl-branch::before{content:'';position:absolute;left:-18px;top:-8px;width:16px;height:16px;
+  border-left:2px solid rgba(248,113,113,.5);border-bottom:2px solid rgba(248,113,113,.5);
+  border-bottom-left-radius:10px}
 
 .rl-slots{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:7px 14px}
 .rl-cell{min-width:0}
