@@ -15,6 +15,7 @@ import * as ruleEditor from './rule-editor.js';
 import * as player from './mode-player.js';
 import * as compendium from './mode-compendium.js';
 import * as table from './mode-table.js';
+import * as recordsEditor from './records-editor.js';
 import * as formula from './formula-input.js';
 
 export function render() {
@@ -131,6 +132,16 @@ Object.assign(window, {
   uiRuleSlotConst: redraw(ruleEditor.setSlotConst),
   uiRuleSlotExpr: redraw(ruleEditor.setSlotExpr),
   uiLeadDie: redraw(ruleEditor.setLeadDie),
+  // ── редактор родов записей: что вообще бывает в компендиуме ──
+  uiKindPick: redraw(recordsEditor.pickKind),
+  uiKindAdd: redraw(recordsEditor.addKind),
+  uiKindDel: redraw(recordsEditor.deleteKind),
+  uiKindSet: redraw(recordsEditor.setKind),
+  uiKindRename: redraw((rk, v) => recordsEditor.setKind(rk, 'label', v)),
+  uiKindPropAdd: redraw(recordsEditor.addProp),
+  uiKindPropDel: redraw(recordsEditor.deleteProp),
+  uiKindPropSet: redraw(recordsEditor.setProp),
+  uiKindCopy: redraw(recordsEditor.copyKindFrom),
 
   // ── режим игрока: значения и принадлежности ──
   uiPickSheet: redraw(player.pickSheet),

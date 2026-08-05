@@ -267,8 +267,12 @@ function refOptions(rule, index, slot) {
       options.push([`ref:${prior.id}${out.path}`, `шаг «${prior.id}» · ${out.label}`]);
     }
   }
-  for (const p of ((state.system.records || {}).weapon || {}).props || []) {
-    options.push([`item:${p.key}`, `оружие · ${p.label}`]);
+  for (const decl of Object.values(state.system.records || {})) {
+    if (decl.kind !== 'item') continue;
+    for (const p of decl.props || []) {
+      const code = `item:${p.key}`;
+      if (!options.some(([v]) => v === code)) options.push([code, `${decl.label} · ${p.label}`]);
+    }
   }
   for (const f of state.system.fields.filter(numericField)) {
     options.push([`tag:${f.tag}`, `поле цели · ${f.label}`]);

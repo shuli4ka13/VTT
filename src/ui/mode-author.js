@@ -10,22 +10,30 @@ import { renderEditor, exprOf } from './field-editor.js';
 import { toDisplay } from './formula-text.js';
 import { ADVANTAGE_METHODS } from '../model/advantage-methods.js';
 import { renderRuleList, renderRuleCanvas, renderStepPalette } from './rule-editor.js';
+import { renderKindList, renderKindEditor, renderKindTemplates } from './records-editor.js';
 import { targets } from '../engine/targets.js';
 
 // Две сцены одного режима: ЛИСТ правит состав полей, МЕХАНИКИ — конвейеры
 // правил. Разъезд по сценам — про место на экране, а не про границу режимов:
 // обе правят систему, и обе живут только у автора.
 export function renderAuthor() {
-  const rules = state.authorView === 'rules';
-  document.getElementById('author-view-sheet').style.display = rules ? 'none' : '';
-  document.getElementById('author-view-rules').style.display = rules ? '' : 'none';
+  const view = state.authorView;
+  for (const name of ['sheet', 'rules', 'records']) {
+    document.getElementById('author-view-' + name).style.display = name === view ? '' : 'none';
+  }
   document.querySelectorAll('#pane-author .author-subnav .tnav')
-    .forEach(b => b.classList.toggle('on', (b.dataset.view === 'rules') === rules));
+    .forEach(b => b.classList.toggle('on', b.dataset.view === view));
 
-  if (rules) {
+  if (view === 'rules') {
     renderRuleList();
     renderRuleCanvas();
     renderStepPalette();
+    return;
+  }
+  if (view === 'records') {
+    renderKindList();
+    renderKindEditor();
+    renderKindTemplates();
     return;
   }
   renderFieldList();

@@ -51,6 +51,7 @@
 <div class="author-subnav">
   <button class="tnav" data-view="sheet" onclick="uiAuthorView('sheet')">⊞ Лист</button>
   <button class="tnav" data-view="rules" onclick="uiAuthorView('rules')">⚙ Механики</button>
+  <button class="tnav" data-view="records" onclick="uiAuthorView('records')">⬡ Записи</button>
 </div>
 
 <div class="three char-layout" id="author-view-sheet">
@@ -88,6 +89,25 @@
   <div class="col dark">
     <div class="col-hdr">⊞ Шаги</div>
     <div class="col-scroll" id="rules-palette"></div>
+  </div>
+
+</div>
+
+<div class="three char-layout" id="author-view-records" style="display:none">
+
+  <div class="col dark" style="flex-direction:column">
+    <div class="col-hdr">⬡ Рода записей</div>
+    <div class="col-scroll" id="records-list" style="flex:1"></div>
+  </div>
+
+  <div class="col mid" style="flex-direction:column">
+    <div class="col-hdr">✎ Род</div>
+    <div class="col-scroll" id="records-editor" style="flex:1;padding:14px 18px"></div>
+  </div>
+
+  <div class="col dark">
+    <div class="col-hdr">⊞ Шаблоны других систем</div>
+    <div class="col-scroll" id="records-templates"></div>
   </div>
 
 </div>
