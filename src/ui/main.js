@@ -164,6 +164,7 @@ Object.assign(window, {
   uiRename: redraw(editor.rename),
   uiSetGroup: redraw(editor.setGroup),
   uiSetType: redraw(editor.setType),
+  uiSetDefault: redraw(editor.setDefault),
   uiToggleRoll: redraw(editor.toggleRoll),
   uiSetRollLabel: redraw(editor.setRollLabel),
   uiAddField: redraw(editor.addField),

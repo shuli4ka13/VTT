@@ -51,6 +51,16 @@ export function renderEditor() {
         <option value="boolean"${f.value.type === 'boolean' ? ' selected' : ''}>Да / нет</option>
         <option value="text"${f.value.type === 'text' ? ' selected' : ''}>Текст — имя, раса, класс</option>
       </select>
+    </div>
+    <div class="pb">
+      <div class="pb-lbl">Значение по умолчанию</div>
+      ${f.value.type === 'boolean' ? `
+        <select class="meta-sel" style="width:100%" onchange="uiSetDefault('${f.tag}', this.value === 'true')">
+          <option value="false"${f.value.default ? '' : ' selected'}>нет</option>
+          <option value="true"${f.value.default ? ' selected' : ''}>да</option>
+        </select>`
+      : `<input class="expr-inp" type="text" value="${esc(f.value.default ?? '')}"
+           oninput="uiSetDefault('${f.tag}', this.value)">`}
     </div>` : ''}
 
     <div class="pb">
@@ -108,6 +118,18 @@ export function toggleRoll(tag) {
 export function setRollLabel(tag, label) {
   const f = field(tag);
   if (f.roll) f.roll.label = label;
+}
+
+// Движок читает value.default, когда в чарнике значения ещё нет (calc.js,
+// rule.js). Приведение к типу — как в setType: чтобы образец «10» не осел
+// строкой на числовом поле.
+export function setDefault(tag, raw) {
+  const f = field(tag);
+  if (f.value.kind !== 'stored') return;
+  const type = f.value.type;
+  f.value.default = type === 'boolean' ? raw === true || raw === 'true'
+    : type === 'text' ? String(raw)
+      : Number(raw) || 0;
 }
 
 export function setType(tag, type) {
