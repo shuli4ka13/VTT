@@ -206,7 +206,10 @@ export function defaultModifier(system) {
   if (method && rollTarget) {
     return { kind: 'roll', target: rollTarget.tag, effect: 'disadvantage', method: method.id, condition: null };
   }
-  return { kind: 'value', target: system.fields[0].tag, op: 'add', value: 1, stacking: 'sum', condition: null };
+  // Система с чистого листа может не иметь ещё ни одного поля: мишень —
+  // честный null, выпадашка мишеней просто пуста, движок ничего не считает.
+  const first = system.fields[0];
+  return { kind: 'value', target: first ? first.tag : null, op: 'add', value: 1, stacking: 'sum', condition: null };
 }
 
 function modRow(id, mod, i, fields, rolls) {
@@ -403,10 +406,11 @@ export function defaultParams(rule) {
   for (const decl of (rule || {}).params || []) {
     if (decl.kind === 'expr') {
       const f = state.system.fields.find(x => x.value.kind === 'formula') || state.system.fields[0];
-      params[decl.key] = '#' + f.tag;
+      if (f) params[decl.key] = '#' + f.tag;
     } else if (decl.kind === 'tag') {
-      const f = state.system.fields.find(x => x.value.kind === 'stored' && x.value.type === 'number');
-      params[decl.key] = (f || state.system.fields[0]).tag;
+      const f = state.system.fields.find(x => x.value.kind === 'stored' && x.value.type === 'number')
+        || state.system.fields[0];
+      if (f) params[decl.key] = f.tag;
     } else if (decl.kind === 'dice') params[decl.key] = '1d6';
     else if (decl.kind === 'number') params[decl.key] = 10;
     else if (decl.kind === 'choice') params[decl.key] = (decl.options || ['roll'])[0];
@@ -543,7 +547,7 @@ export function setWeaponProp(id, key, raw) {
   record.props[key] = kind === 'number' && !Number.isNaN(Number(value)) ? Number(value) : value;
 }
 
-const firstField = () => state.system.fields[0].tag;
+const firstField = () => ((state.system.fields[0]) || {}).tag ?? null;
 const firstRoll = () => ((state.system.rolls || [])[0] || {}).tag;
 
 export function addMod(id) {

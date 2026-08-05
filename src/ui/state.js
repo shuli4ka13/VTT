@@ -26,15 +26,48 @@ export const MODES = {
   table: { label: 'Стол', badge: 'VTT · фишки' },
 };
 
+// Чистый лист: система без единого объявления. Конструктор стартует отсюда —
+// образцы (5e, киберпанк) остаются ДОНОРАМИ в палитрах шаблонов, а не навязанным
+// началом. Приложение партии (vtt.html) наоборот стартует с образца: туда мир
+// приходит файлом или комнатой, а без него нужно что-то показывать.
+export function blankWorld() {
+  return {
+    system: {
+      id: 'custom',
+      name: 'Новая система',
+      constants: {},
+      tables: {},
+      rules: {},
+      records: {},
+      rolls: [],
+      modifiers: [],
+      advantage: { methods: {} },
+      fields: [],
+    },
+    compendium: { items: [], effects: [], actions: [] },
+    sheets: [],
+  };
+}
+
+// Страница объявляет свой старт атрибутом: constructor.html — с чистого листа,
+// vtt.html — с образцом. В node (тесты) документа нет — там всегда образец.
+const start = typeof document !== 'undefined' && document.body.dataset.world === 'blank'
+  ? blankWorld()
+  : {
+    system: structuredClone(sampleSystem),
+    compendium: structuredClone(sampleCompendium),
+    sheets: [structuredClone(arven), structuredClone(mirra)],
+  };
+
 export const state = {
   mode: 'player',
 
-  system: structuredClone(sampleSystem),
-  compendium: structuredClone(sampleCompendium),
-  sheets: [structuredClone(arven), structuredClone(mirra)],
+  system: start.system,
+  compendium: start.compendium,
+  sheets: start.sheets,
 
   // В режиме автора персонаж не выбран вовсе — конструктор обязан работать без него.
-  activeSheetId: arven.id,
+  activeSheetId: start.sheets.length ? start.sheets[0].id : null,
 
   activeTag: null,       // поле, открытое в конструкторе
   authorView: 'sheet',   // сцена режима автора: 'sheet' (поля) | 'rules' (механики)
