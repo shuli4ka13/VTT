@@ -1,0 +1,17 @@
+# Стенд одним сервисом: docker compose up -d → http://localhost:8000
+#
+# Имена и том свои (vtt-*), чтобы не пересекаться с соседями по OrbStack
+# (cdm-*, melgis_*). Порт хоста меняется здесь же, если 8000 кем-то занят.
+
+services:
+  vtt:
+    build: .
+    container_name: vtt-stand
+    ports:
+      - "8000:8000"
+    volumes:
+      - vtt_data:/data
+    restart: unless-stopped
+
+volumes:
+  vtt_data:

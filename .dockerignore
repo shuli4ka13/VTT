@@ -1,0 +1,9 @@
+# В образ едет только рантайм: движок, сервер, три страницы.
+*
+!src/
+!server/
+!index.html
+!constructor.html
+!vtt.html
+# локальная база в образ не попадает никогда
+server/stand.db

@@ -30,6 +30,7 @@ Proof-of-concept конструктора ролевых систем и чар�
 ```bash
 python3 -m http.server   # :8000 — оффлайн-режим, всё в памяти вкладки
 node server/server.js    # :8000 — СТЕНДОВЫЙ СЕРВЕР: комнаты, права, sqlite, SSE
+docker compose up -d     # тот же стенд в контейнере (OrbStack); БД — в томе vtt_data
 node tests/run.js        # все тесты в терминале, без браузера
 ```
 

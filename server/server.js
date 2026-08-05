@@ -24,9 +24,11 @@ import {
   publishWorld, listWorlds, createRoom, listRooms, joinRoom, roomState, act, patchSheet,
 } from './rooms.js';
 
-const PORT = Number(process.argv[2]) || 8000;
+// Порт и путь к базе задаются и аргументом, и переменными окружения —
+// второе нужно контейнеру: БД уезжает в примонтированный том.
+const PORT = Number(process.argv[2]) || Number(process.env.PORT) || 8000;
 const ROOT = new URL('..', import.meta.url).pathname;
-const db = openStore();
+const db = openStore(process.env.STAND_DB || undefined);
 
 // ── SSE: подписчики по комнатам ──────────────────────────────────────────────
 
