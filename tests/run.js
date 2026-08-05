@@ -35,6 +35,7 @@ import './ui.system-templates.test.js';
 import './ui.blank-world.test.js';
 import './ui.world.test.js';
 import './server.test.js';
+import './server.seed.test.js';
 import './acceptance.test.js';
 
 import { report } from './harness.js';

@@ -6,7 +6,7 @@
 VTT_PORT ?= 8100
 export VTT_PORT
 
-.PHONY: help up down reset rebuild logs status test dev offline url
+.PHONY: help up down reset rebuild seed logs status test dev offline url
 
 help:
 	@echo "Стенд в контейнере (OrbStack):"
@@ -14,6 +14,7 @@ help:
 	@echo "  make down     — остановить (данные живы в томе vtt_data)"
 	@echo "  make reset    — остановить и СТЕРЕТЬ базу (полный сброс стенда)"
 	@echo "  make rebuild  — пересобрать после правок кода и перезапустить"
+	@echo "  make seed     — положить в стенд готовые миры-образцы (5e и киберпанк)"
 	@echo "  make logs     — журнал сервера вживую"
 	@echo "  make status   — состояние контейнера и занятые соседями порты"
 	@echo ""
@@ -34,6 +35,9 @@ reset:
 	@echo "том vtt_data стёрт: миры, комнаты и журналы — с чистого листа"
 
 rebuild: up
+
+seed:
+	VTT_URL=http://localhost:$(VTT_PORT) node server/seed.js
 
 logs:
 	docker logs -f vtt-stand
