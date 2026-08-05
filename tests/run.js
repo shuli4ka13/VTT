@@ -26,6 +26,7 @@ import './model.advantage.test.js';
 import './ui.records-editor.test.js';
 import './ui.compendium-defaults.test.js';
 import './ui.rolls-editor.test.js';
+import './ui.constants-editor.test.js';
 import './ui.world.test.js';
 import './server.test.js';
 import './acceptance.test.js';

@@ -16,7 +16,7 @@
 // Как и всюду в режиме автора, ни одного значения на экране: вместо результата —
 // приговор («правило верное · шагов: 4 · может оборваться на 1»).
 
-import { state, esc } from './state.js';
+import { state, esc, log } from './state.js';
 import { registry } from '../engine/steps/index.js';
 import { AMOUNT_SOURCES } from '../model/amount-sources.js';
 import { compile } from '../formula/index.js';
@@ -349,12 +349,14 @@ const dieWord = c => (c.dice || []).map(d => `${d.count || 1}к${d.sides}${d.nam
 
 export function renderConstants() {
   const dice = Object.entries(state.system.constants || {}).filter(([, c]) => c.kind === 'die');
-  if (!dice.length) return '';
 
   return `<div class="pal-sec" style="margin-top:12px">Константы системы</div>
     ${dice.map(([name, c]) => `
       <div class="auto-rule" style="padding:8px 9px">
-        <div class="ar-row" style="font-size:11px"><b>${esc(c.label)}</b>
+        <button class="ar-del" onclick="uiConstDelete('${name}')" title="удалить константу">×</button>
+        <div class="ar-row">
+          <input value="${esc(c.label)}" placeholder="Название константы" style="flex:1;font-weight:600"
+                 oninput="uiConstRename('${name}',this.value)">
           <span class="info-dot" title="Броски правил ссылаются на константу, а не пишут «1d20». Смена кости здесь меняет все броски системы разом.">i</span>
         </div>
         ${(c.dice || []).map((d, i) => `
@@ -370,7 +372,42 @@ export function renderConstants() {
             ${(c.dice.length > 1) ? `<button class="ar-del" style="position:static" onclick="uiLeadDie('${name}',${i},'remove','')">×</button>` : ''}
           </div>`).join('')}
         <button class="add-row" onclick="uiLeadDie('${name}',-1,'add','')">+ кость в бросок</button>
-      </div>`).join('')}`;
+      </div>`).join('')}
+    <button class="add-row" onclick="uiConstAdd()">+ константа-кость</button>`;
+}
+
+let constCounter = 0;
+function newConstName() {
+  let name;
+  do { name = `const_${++constCounter}`; } while (state.system.constants && name in state.system.constants);
+  return name;
+}
+
+export function addConstant() {
+  const constants = state.system.constants || (state.system.constants = {});
+  const name = newConstName();
+  constants[name] = { label: 'Новая кость', kind: 'die', dice: [{ count: 1, sides: 6 }] };
+  return name;
+}
+
+export function renameConstant(name, label) {
+  const c = state.system.constants[name];
+  if (c) c.label = label;
+}
+
+// Ссылку держит только слот «Кость» шага «порог» (roll.die.constant) —
+// тот же принцип защиты, что у поля и у мишени броска.
+function constantUsage(name) {
+  return Object.values(state.system.rules || {}).some(rule =>
+    (rule.steps || []).some(step => step.roll && step.roll.die && step.roll.die.constant === name));
+}
+
+export function deleteConstant(name) {
+  if (constantUsage(name)) {
+    log(`<b>Нельзя удалить «${esc(state.system.constants[name].label)}»:</b> на неё ссылается шаг правила`);
+    return;
+  }
+  delete state.system.constants[name];
 }
 
 // ── правки ───────────────────────────────────────────────────────────────────

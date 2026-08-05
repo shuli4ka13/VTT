@@ -197,6 +197,9 @@ Object.assign(window, {
   uiRuleSlotConst: redraw(ruleEditor.setSlotConst),
   uiRuleSlotExpr: redraw(ruleEditor.setSlotExpr),
   uiLeadDie: redraw(ruleEditor.setLeadDie),
+  uiConstAdd: redraw(ruleEditor.addConstant),
+  uiConstRename: redraw(ruleEditor.renameConstant),
+  uiConstDelete: redraw(ruleEditor.deleteConstant),
   // ── редактор родов записей: что вообще бывает в компендиуме ──
   uiKindPick: redraw(recordsEditor.pickKind),
   uiKindAdd: redraw(recordsEditor.addKind),
