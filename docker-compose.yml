@@ -1,14 +1,16 @@
-# Стенд одним сервисом: docker compose up -d → http://localhost:8000
+# Стенд одним сервисом: make up → http://localhost:8100
 #
-# Имена и том свои (vtt-*), чтобы не пересекаться с соседями по OrbStack
-# (cdm-*, melgis_*). Порт хоста меняется здесь же, если 8000 кем-то занят.
+# Порт хоста 8100 выбран по карте соседей OrbStack: cdm держит 80,
+# melgis — 8080/8081/5435, а 8000 оставлен оффлайн-режиму (python http.server).
+# Переопределяется окружением: VTT_PORT=9000 make up.
+# Имена и том свои (vtt-*) — с соседями не пересекаются.
 
 services:
   vtt:
     build: .
     container_name: vtt-stand
     ports:
-      - "8000:8000"
+      - "${VTT_PORT:-8100}:8000"
     volumes:
       - vtt_data:/data
     restart: unless-stopped
