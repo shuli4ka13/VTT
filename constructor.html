@@ -1,0 +1,133 @@
+<!doctype html>
+<!-- ПРИЛОЖЕНИЕ АВТОРА: конструктор систем + компендиум.
+     Экрана игрока и стола здесь нет — не спрятаны, а не подключены:
+     граница приложений теперь проходит по страницам и закрыта тестами.
+     Мир выгружается JSON-файлом (кнопки в шапке) и загружается в игровой
+     стол (vtt.html). -->
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Конструктор систем</title>
+<link rel="stylesheet" href="src/ui/draft.css">
+<link rel="stylesheet" href="src/ui/poc.css">
+</head>
+<body data-start="author">
+
+<header class="app-hdr">
+  <div class="app-logo"><a href="index.html" style="text-decoration:none;color:inherit">⚙</a> <span>Конструктор</span> систем</div>
+  <nav class="tab-nav">
+    <button class="tnav" data-mode="author" onclick="uiMode('author')">✎ Конструктор</button>
+    <button class="tnav" data-mode="compendium" onclick="uiMode('compendium')">⬡ Компендиум</button>
+  </nav>
+  <div class="hdr-right">
+    <button class="tnav" onclick="document.getElementById('world-file').click()" title="загрузить мир из JSON-файла">⇣ мир</button>
+    <button class="tnav" onclick="uiWorldExport()" title="выгрузить мир в JSON-файл — его откроет игровой стол">⇡ мир</button>
+    <input type="file" id="world-file" accept=".json,application/json" hidden onchange="uiWorldImport(this.files[0]); this.value=''">
+    <span class="poc-badge" id="mode-badge"></span>
+  </div>
+</header>
+
+<div id="banner" class="poc-banner" style="display:none"></div>
+
+<div class="main">
+
+<!-- ════ РЕЖИМ АВТОРА ════
+     Работает без персонажа. Ни одного значения на экране.
+     Три сцены: ЛИСТ (состав полей), МЕХАНИКИ (конвейеры правил),
+     ЗАПИСИ (рода компендиума). Все — по идиоме черновика:
+     список · редактор · палитра. -->
+<div class="pane" id="pane-author">
+<div class="author-subnav">
+  <button class="tnav" data-view="sheet" onclick="uiAuthorView('sheet')">⊞ Лист</button>
+  <button class="tnav" data-view="rules" onclick="uiAuthorView('rules')">⚙ Механики</button>
+  <button class="tnav" data-view="records" onclick="uiAuthorView('records')">⬡ Записи</button>
+</div>
+
+<div class="three char-layout" id="author-view-sheet">
+
+  <div class="col dark" style="flex-direction:column">
+    <div class="col-hdr">⊞ Блоки и поля</div>
+    <div class="col-scroll" id="author-fields" style="flex:1"></div>
+    <button class="new-item-btn" onclick="uiAddGroup()">+ Новый блок</button>
+  </div>
+
+  <div class="col mid" style="flex-direction:column">
+    <div class="col-hdr">✎ Поле</div>
+    <div class="item-ed" id="author-editor"></div>
+  </div>
+
+  <div class="col dark">
+    <div class="col-hdr">⚖ Правила комнаты</div>
+    <div class="col-scroll" id="author-rules"></div>
+  </div>
+
+</div>
+
+<div class="three char-layout" id="author-view-rules" style="display:none">
+
+  <div class="col dark" style="flex-direction:column">
+    <div class="col-hdr">⚙ Механики</div>
+    <div class="col-scroll" id="rules-list" style="flex:1"></div>
+  </div>
+
+  <div class="col mid" style="flex-direction:column">
+    <div class="col-hdr">⛓ Конвейер</div>
+    <div class="col-scroll" id="rules-canvas" style="flex:1;padding:14px 18px"></div>
+  </div>
+
+  <div class="col dark">
+    <div class="col-hdr">⊞ Шаги</div>
+    <div class="col-scroll" id="rules-palette"></div>
+  </div>
+
+</div>
+
+<div class="three char-layout" id="author-view-records" style="display:none">
+
+  <div class="col dark" style="flex-direction:column">
+    <div class="col-hdr">⬡ Рода записей</div>
+    <div class="col-scroll" id="records-list" style="flex:1"></div>
+  </div>
+
+  <div class="col mid" style="flex-direction:column">
+    <div class="col-hdr">✎ Род</div>
+    <div class="col-scroll" id="records-editor" style="flex:1;padding:14px 18px"></div>
+  </div>
+
+  <div class="col dark">
+    <div class="col-hdr">⊞ Шаблоны других систем</div>
+    <div class="col-scroll" id="records-templates"></div>
+  </div>
+
+</div>
+</div>
+
+<!-- ════ КОМПЕНДИУМ ════
+     Один список: рода объявлены системой, палитра рендерится из них. -->
+<div class="pane" id="pane-compendium">
+<div class="three item-layout">
+
+  <div class="col dark" style="flex-direction:column">
+    <div class="col-hdr">⬡ Записи</div>
+    <div class="col-scroll" id="comp-list" style="flex:1"></div>
+  </div>
+
+  <div class="col mid" style="flex-direction:column">
+    <div class="col-hdr">◈ Редактор</div>
+    <div class="item-ed" id="comp-editor"></div>
+  </div>
+
+  <div class="col dark">
+    <div class="col-hdr">⊞ Добавить</div>
+    <div class="col-scroll" id="comp-palette"></div>
+  </div>
+
+</div>
+</div>
+
+</div><!-- .main -->
+
+<script type="module" src="src/ui/main.js"></script>
+</body>
+</html>

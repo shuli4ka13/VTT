@@ -139,18 +139,20 @@ if (inNode) {
         'состав полей правит только режим автора');
     });
 
-    test('в разметке игрока нет ни одной кнопки добавления или удаления поля', () => {
-      const html = readFileSync(join(repo, 'index.html'), 'utf8');
-      const player = html.slice(html.indexOf('id="pane-player"'), html.indexOf('id="pane-compendium"'));
-      for (const handler of ['uiAddField', 'uiAddGroup', 'uiDelField']) {
-        eq(player.includes(handler), false, `${handler} не должен встречаться в разметке игрока`);
+    test('в приложении партии нет НИЧЕГО от конструктора — граница по страницам', () => {
+      // Раньше граница шла по вкладкам одного файла, теперь — по приложениям:
+      // vtt.html вообще не содержит конструктора, не спрятанного, а не подключённого.
+      const html = readFileSync(join(repo, 'vtt.html'), 'utf8');
+      for (const trace of ['pane-author', 'author-editor', 'uiAddField', 'uiAddGroup', 'uiDelField', 'uiRuleSlot', 'uiKindAdd']) {
+        eq(html.includes(trace), false, `${trace} не должен встречаться в приложении партии`);
       }
     });
 
-    test('редактор полей живёт только в разметке автора', () => {
-      const html = readFileSync(join(repo, 'index.html'), 'utf8');
-      const author = html.slice(html.indexOf('id="pane-author"'), html.indexOf('id="pane-player"'));
-      ok(author.includes('author-editor'), 'редактор поля — часть экрана автора');
+    test('редактор полей живёт только в приложении автора', () => {
+      const html = readFileSync(join(repo, 'constructor.html'), 'utf8');
+      ok(html.includes('author-editor'), 'редактор поля — часть конструктора');
+      eq(html.includes('pane-player'), false, 'а экрана игрока в конструкторе нет');
+      eq(html.includes('pane-table'), false, 'и стола нет');
     });
 
     test('стол ничего не правит: ни полей, ни правил — только выбирает пару листов', () => {
@@ -158,7 +160,7 @@ if (inNode) {
       eq(/from\s+'\.\/field-editor\.js'/.test(tableCode), false, 'стол не знает редактора полей');
       eq(/from\s+'\.\/rule-editor\.js'/.test(tableCode), false, 'и конструктора правил не знает');
       eq(tableCode.includes('uiRuleSlot'), false, 'правка шагов со стола невозможна');
-      const html = readFileSync(join(repo, 'index.html'), 'utf8');
+      const html = readFileSync(join(repo, 'vtt.html'), 'utf8');
       const tablePane = html.slice(html.indexOf('id="pane-table"'), html.indexOf('<script'));
       for (const handler of ['uiAddField', 'uiAddGroup', 'uiDelField']) {
         eq(tablePane.includes(handler), false, `${handler} не должен встречаться в разметке стола`);

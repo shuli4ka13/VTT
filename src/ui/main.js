@@ -17,6 +17,12 @@ import * as compendium from './mode-compendium.js';
 import * as table from './mode-table.js';
 import * as recordsEditor from './records-editor.js';
 import * as formula from './formula-input.js';
+import { packWorld, unpackWorld } from './world.js';
+
+// Один main.js на оба приложения: страница объявляет свой стартовый режим
+// атрибутом (constructor.html — автор, vtt.html — стол), а какие режимы
+// вообще доступны, решает её разметка — кнопок чужих режимов там просто нет.
+state.mode = document.body.dataset.start || state.mode;
 
 export function render() {
   state.brokenModifiers = null;
@@ -93,8 +99,52 @@ function restoreCaret(memo) {
   try { next.setSelectionRange(memo.start, memo.start); } catch { /* input[type=number] так не умеет */ }
 }
 
+// ── мир одним файлом: мост между конструктором и игровым столом ─────────────
+// Выгрузка/загрузка {system, compendium, sheets} как JSON. Это критерий №1,
+// возведённый в интерфейс; в полноценной версии здесь встанет сервис с БД,
+// формат файла останется публичным контрактом.
+
+function worldExport() {
+  const blob = new Blob([packWorld(state)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'мир.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  log('Мир выгружен файлом <b>мир.json</b> — его откроет второе приложение.');
+  return false; // состояние не менялось — перерисовка не нужна
+}
+
+async function worldImport(file) {
+  if (!file) return;
+  let world;
+  try {
+    world = unpackWorld(await file.text());
+  } catch (err) {
+    log(`<b style="color:var(--red)">Мир не загружен:</b> ${esc(err.message)}`);
+    render();
+    return;
+  }
+  state.system = world.system;
+  state.compendium = world.compendium;
+  state.sheets = world.sheets;
+  // Всё выбранное принадлежало прошлому миру.
+  state.activeSheetId = (state.sheets[0] || {}).id || null;
+  state.activeTag = null;
+  state.activeRuleId = null;
+  state.activeKindId = null;
+  state.activeRecordId = null;
+  state.board.tokens = [];
+  state.table.selected = null;
+  state.table.action = null;
+  log(`Загружен мир: <b>${esc(world.system.name || world.system.id || 'без имени')}</b> · чарников: ${state.sheets.length}.`);
+  render();
+}
+
 Object.assign(window, {
   uiMode: redraw(mode => { state.mode = mode; }),
+  uiWorldExport: redraw(worldExport),
+  uiWorldImport: worldImport, // асинхронный: сам зовёт render, redraw не годится
 
   // ── режим автора: состав полей и правила комнаты ──
   uiAuthorView: redraw(author.setAuthorView),

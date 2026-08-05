@@ -1,200 +1,52 @@
 <!doctype html>
-<!-- Черновик тимлида (reference/index.html), оживлённый и разведённый по режимам.
-
-     Вёрстка, классы и палитра — его. Заменено то, что и требовалось:
-       · evalF с подстановкой по отображаемому имени и Function() — выброшен;
-       · csBlocks как источник правды — заменён на систему + чарник;
-       · чипсы и подсказка вставляют тег, а не лейбл;
-       · мишени выбираются из объявленных тегов, а не набираются текстом.
-
-     Три режима вместо смешанных вкладок:
-       Конструктор листа — правит систему, персонаж не нужен;
-       Персонаж          — правит значения, кнопок для полей нет в разметке;
-       Компендиум        — общая библиотека, персонажи на неё ссылаются.
-
-     Из VTT-слоя добавлен минимальный стол: фишки, привязанные к чарникам,
-     и выбор цели кликом. Остальное вырезано как вне скоупа PoC: карта-картинка,
-     сцены, чат, инициатива, календарь, часы прогресса, радиальное меню броска,
-     прогрессия, сохранение и экспорт. -->
+<!-- Вход: выбор роли. Дальше — два ПРИЛОЖЕНИЯ над одним движком и одними
+     данными: конструктор систем (для автора) и игровой стол (для партии).
+     Мост между ними — мир одним JSON-файлом: выгрузил у автора, загрузил
+     за столом. В полноценной версии на месте файла встанет сервис с БД
+     (docs/production-split-plan.md); формат файла останется контрактом. -->
 <html lang="ru">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Конструктор систем — прототип</title>
+<title>Конструктор систем — выбор приложения</title>
 <link rel="stylesheet" href="src/ui/draft.css">
-<link rel="stylesheet" href="src/ui/poc.css">
+<style>
+  .land { min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 34px; background: var(--bg); padding: 24px; }
+  .land h1 { font-size: 26px; margin: 0; color: var(--text); }
+  .land h1 span { color: var(--accent); }
+  .land .sub { color: var(--muted); font-size: 14px; margin: -22px 0 0; }
+  .land .cards { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; }
+  .land a.card { display: block; width: 300px; padding: 26px 24px; border-radius: 14px;
+    background: var(--s1); border: 1px solid var(--border2); text-decoration: none;
+    color: var(--text); transition: .15s; }
+  .land a.card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .land .card .ic { font-size: 30px; }
+  .land .card h2 { margin: 10px 0 6px; font-size: 17px; }
+  .land .card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+  .land .foot { color: var(--muted); font-size: 12px; }
+</style>
 </head>
 <body>
-
-<header class="app-hdr">
-  <div class="app-logo">⚙ <span>Конструктор</span> систем</div>
-  <nav class="tab-nav">
-    <button class="tnav" data-mode="author" onclick="uiMode('author')">✎ Конструктор листа</button>
-    <button class="tnav" data-mode="player" onclick="uiMode('player')">◈ Персонаж</button>
-    <button class="tnav" data-mode="compendium" onclick="uiMode('compendium')">⬡ Компендиум</button>
-    <button class="tnav" data-mode="table" onclick="uiMode('table')">⛊ Стол</button>
-  </nav>
-  <div class="hdr-right">
-    <span class="poc-badge" id="mode-badge"></span>
+<div class="land">
+  <h1>⚙ <span>Конструктор</span> систем</h1>
+  <p class="sub">один движок · одни данные · две роли</p>
+  <div class="cards">
+    <a class="card" href="constructor.html">
+      <div class="ic">✎</div>
+      <h2>Конструктор систем</h2>
+      <p>Для автора мира: поля листа, механики-конвейеры, рода записей,
+        компендиум. Персонаж не нужен — на экране ни одного значения.</p>
+    </a>
+    <a class="card" href="vtt.html">
+      <div class="ic">⛊</div>
+      <h2>Игровой стол</h2>
+      <p>Для партии: стол с фишками, чарники, библиотека записей.
+        Играет по правилам, которые собрал автор, — и только по ним.</p>
+    </a>
   </div>
-</header>
-
-<div id="banner" class="poc-banner" style="display:none"></div>
-
-<div class="main">
-
-<!-- ════ РЕЖИМ АВТОРА ════
-     Работает без персонажа. Ни одного значения на экране.
-     Две сцены: ЛИСТ (состав полей) и МЕХАНИКИ (конвейеры правил).
-     Обе — по идиоме черновика: список · редактор · палитра. -->
-<div class="pane" id="pane-author">
-<div class="author-subnav">
-  <button class="tnav" data-view="sheet" onclick="uiAuthorView('sheet')">⊞ Лист</button>
-  <button class="tnav" data-view="rules" onclick="uiAuthorView('rules')">⚙ Механики</button>
-  <button class="tnav" data-view="records" onclick="uiAuthorView('records')">⬡ Записи</button>
+  <p class="foot">мир переносится между приложениями одним JSON-файлом —
+    кнопки «мир» в шапке</p>
 </div>
-
-<div class="three char-layout" id="author-view-sheet">
-
-  <div class="col dark" style="flex-direction:column">
-    <div class="col-hdr">⊞ Блоки и поля</div>
-    <div class="col-scroll" id="author-fields" style="flex:1"></div>
-    <button class="new-item-btn" onclick="uiAddGroup()">+ Новый блок</button>
-  </div>
-
-  <div class="col mid" style="flex-direction:column">
-    <div class="col-hdr">✎ Поле</div>
-    <div class="item-ed" id="author-editor"></div>
-  </div>
-
-  <div class="col dark">
-    <div class="col-hdr">⚖ Правила комнаты</div>
-    <div class="col-scroll" id="author-rules"></div>
-  </div>
-
-</div>
-
-<div class="three char-layout" id="author-view-rules" style="display:none">
-
-  <div class="col dark" style="flex-direction:column">
-    <div class="col-hdr">⚙ Механики</div>
-    <div class="col-scroll" id="rules-list" style="flex:1"></div>
-  </div>
-
-  <div class="col mid" style="flex-direction:column">
-    <div class="col-hdr">⛓ Конвейер</div>
-    <div class="col-scroll" id="rules-canvas" style="flex:1;padding:14px 18px"></div>
-  </div>
-
-  <div class="col dark">
-    <div class="col-hdr">⊞ Шаги</div>
-    <div class="col-scroll" id="rules-palette"></div>
-  </div>
-
-</div>
-
-<div class="three char-layout" id="author-view-records" style="display:none">
-
-  <div class="col dark" style="flex-direction:column">
-    <div class="col-hdr">⬡ Рода записей</div>
-    <div class="col-scroll" id="records-list" style="flex:1"></div>
-  </div>
-
-  <div class="col mid" style="flex-direction:column">
-    <div class="col-hdr">✎ Род</div>
-    <div class="col-scroll" id="records-editor" style="flex:1;padding:14px 18px"></div>
-  </div>
-
-  <div class="col dark">
-    <div class="col-hdr">⊞ Шаблоны других систем</div>
-    <div class="col-scroll" id="records-templates"></div>
-  </div>
-
-</div>
-</div>
-
-<!-- ════ РЕЖИМ ИГРОКА: персонаж ════
-     Кнопок добавления и удаления полей здесь нет — ни одной, намеренно. -->
-<div class="pane" id="pane-player">
-<div class="three char-layout">
-
-  <div class="col dark" style="flex-direction:column">
-    <div class="char-list-top">
-      <div class="char-list-hdr">
-        <span>Персонажи</span>
-        <button class="ctype-btn pc" onclick="uiNewSheet('pc')" title="персонаж игрока">+ ИГ</button>
-        <button class="ctype-btn npc" onclick="uiNewSheet('npc')" title="НПС ведущего">+ НПС</button>
-      </div>
-      <div class="char-entries" id="player-sheets" style="max-height:none"></div>
-    </div>
-    <div class="col-hdr">⚄ Журнал</div>
-    <div class="col-scroll poc-log" id="event-log" style="flex:1"></div>
-  </div>
-
-  <div class="col mid" style="flex-direction:column">
-    <div class="col-hdr">◈ Лист</div>
-    <div class="cs-canvas" id="player-sheet"></div>
-  </div>
-
-  <div class="col dark">
-    <div class="col-hdr">🎒 Снаряжение и действия</div>
-    <div class="col-scroll" id="player-belongings"></div>
-  </div>
-
-</div>
-</div>
-
-<!-- ════ КОМПЕНДИУМ ════
-     Один список: предметы, эффекты, действия, заклинания. На разделы не дроблю. -->
-<div class="pane" id="pane-compendium">
-<div class="three item-layout">
-
-  <div class="col dark" style="flex-direction:column">
-    <div class="col-hdr">⬡ Записи</div>
-    <div class="col-scroll" id="comp-list" style="flex:1"></div>
-  </div>
-
-  <div class="col mid" style="flex-direction:column">
-    <div class="col-hdr">◈ Редактор</div>
-    <div class="item-ed" id="comp-editor"></div>
-  </div>
-
-  <!-- Палитра родов НЕ зашита в разметку: рода записей объявляет система
-       (system.records), и у другой системы палитра другая. -->
-  <div class="col dark">
-    <div class="col-hdr">⊞ Добавить</div>
-    <div class="col-scroll" id="comp-palette"></div>
-  </div>
-
-</div>
-</div>
-
-<!-- ════ СТОЛ ════
-     Минимальный VTT-слой: фишка = позиция + ссылка на чарник. Один чарник
-     волен стоять несколькими фишками. Стол ничего не считает — он выбирает,
-     чей лист с чьим общается; дальше тот же конверт, что и всюду. -->
-<div class="pane" id="pane-table">
-<div class="three table-layout">
-
-  <div class="col mid" style="flex-direction:column">
-    <div class="col-hdr">⛊ Стол</div>
-    <div class="col-scroll" style="flex:1;padding:16px">
-      <div class="vtt-board" id="table-board"></div>
-    </div>
-  </div>
-
-  <div class="col dark" style="flex-direction:column">
-    <div class="col-hdr">◈ Выбрано</div>
-    <div class="col-scroll" id="table-side"></div>
-    <div class="col-hdr">⚄ Журнал</div>
-    <div class="col-scroll poc-log" id="table-log" style="flex:1"></div>
-  </div>
-
-</div>
-</div>
-
-</div><!-- .main -->
-
-<script type="module" src="src/ui/main.js"></script>
 </body>
 </html>

@@ -1,0 +1,117 @@
+<!doctype html>
+<!-- ПРИЛОЖЕНИЕ ПАРТИИ: игровой стол + чарники + библиотека записей.
+     Конструктора здесь нет — не спрятан, а не подключён: граница приложений
+     проходит по страницам и закрыта тестами. Партия играет по правилам,
+     которые собрал автор, — мир загружается JSON-файлом из конструктора
+     (кнопки в шапке). -->
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Игровой стол</title>
+<link rel="stylesheet" href="src/ui/draft.css">
+<link rel="stylesheet" href="src/ui/poc.css">
+</head>
+<body data-start="table">
+
+<header class="app-hdr">
+  <div class="app-logo"><a href="index.html" style="text-decoration:none;color:inherit">⛊</a> <span>Игровой</span> стол</div>
+  <nav class="tab-nav">
+    <button class="tnav" data-mode="table" onclick="uiMode('table')">⛊ Стол</button>
+    <button class="tnav" data-mode="player" onclick="uiMode('player')">◈ Персонаж</button>
+    <button class="tnav" data-mode="compendium" onclick="uiMode('compendium')">⬡ Компендиум</button>
+  </nav>
+  <div class="hdr-right">
+    <button class="tnav" onclick="document.getElementById('world-file').click()" title="загрузить мир из JSON-файла конструктора">⇣ мир</button>
+    <button class="tnav" onclick="uiWorldExport()" title="выгрузить мир в JSON-файл">⇡ мир</button>
+    <input type="file" id="world-file" accept=".json,application/json" hidden onchange="uiWorldImport(this.files[0]); this.value=''">
+    <span class="poc-badge" id="mode-badge"></span>
+  </div>
+</header>
+
+<div id="banner" class="poc-banner" style="display:none"></div>
+
+<div class="main">
+
+<!-- ════ РЕЖИМ ИГРОКА: персонаж ════
+     Кнопок добавления и удаления полей здесь нет — ни одной, намеренно. -->
+<div class="pane" id="pane-player">
+<div class="three char-layout">
+
+  <div class="col dark" style="flex-direction:column">
+    <div class="char-list-top">
+      <div class="char-list-hdr">
+        <span>Персонажи</span>
+        <button class="ctype-btn pc" onclick="uiNewSheet('pc')" title="персонаж игрока">+ ИГ</button>
+        <button class="ctype-btn npc" onclick="uiNewSheet('npc')" title="НПС ведущего">+ НПС</button>
+      </div>
+      <div class="char-entries" id="player-sheets" style="max-height:none"></div>
+    </div>
+    <div class="col-hdr">⚄ Журнал</div>
+    <div class="col-scroll poc-log" id="event-log" style="flex:1"></div>
+  </div>
+
+  <div class="col mid" style="flex-direction:column">
+    <div class="col-hdr">◈ Лист</div>
+    <div class="cs-canvas" id="player-sheet"></div>
+  </div>
+
+  <div class="col dark">
+    <div class="col-hdr">🎒 Снаряжение и действия</div>
+    <div class="col-scroll" id="player-belongings"></div>
+  </div>
+
+</div>
+</div>
+
+<!-- ════ КОМПЕНДИУМ ════
+     Рода объявлены системой автора; здесь партия только комбинирует их. -->
+<div class="pane" id="pane-compendium">
+<div class="three item-layout">
+
+  <div class="col dark" style="flex-direction:column">
+    <div class="col-hdr">⬡ Записи</div>
+    <div class="col-scroll" id="comp-list" style="flex:1"></div>
+  </div>
+
+  <div class="col mid" style="flex-direction:column">
+    <div class="col-hdr">◈ Редактор</div>
+    <div class="item-ed" id="comp-editor"></div>
+  </div>
+
+  <div class="col dark">
+    <div class="col-hdr">⊞ Добавить</div>
+    <div class="col-scroll" id="comp-palette"></div>
+  </div>
+
+</div>
+</div>
+
+<!-- ════ СТОЛ ════
+     Фишка = позиция + ссылка на чарник; один чарник — сколько угодно фишек.
+     Стол ничего не считает: он выбирает, чей лист с чьим общается. -->
+<div class="pane" id="pane-table">
+<div class="three table-layout">
+
+  <div class="col mid" style="flex-direction:column">
+    <div class="col-hdr">⛊ Стол</div>
+    <div class="col-scroll" style="flex:1;padding:16px">
+      <div class="vtt-board" id="table-board"></div>
+    </div>
+  </div>
+
+  <div class="col dark" style="flex-direction:column">
+    <div class="col-hdr">◈ Выбрано</div>
+    <div class="col-scroll" id="table-side"></div>
+    <div class="col-hdr">⚄ Журнал</div>
+    <div class="col-scroll poc-log" id="table-log" style="flex:1"></div>
+  </div>
+
+</div>
+</div>
+
+</div><!-- .main -->
+
+<script type="module" src="src/ui/main.js"></script>
+</body>
+</html>
