@@ -11,7 +11,7 @@
 
 export const cyberpunk = {
   id: 'cp-slice',
-  name: 'Киберпанк — срез',
+  name: 'Киберпанк',
 
   constants: {
     lead_die: { label: 'Ведущая кость', kind: 'die', dice: [{ count: 1, sides: 10 }] },
