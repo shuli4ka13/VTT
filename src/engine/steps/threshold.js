@@ -28,8 +28,23 @@ export const slots = [
   { key: 'side', label: 'Кто бросает', kind: 'choice', options: ['sender', 'target'] },
   { key: 'roll', label: 'Бросок', kind: 'roll' },
   { key: 'versus', label: 'Против', kind: 'ref' },
+  {
+    key: 'successWhen', label: 'Успех, если бросок',
+    kind: 'choice', options: ['atLeast', 'notOver', 'over', 'under'],
+  },
   { key: 'continueOn', label: 'Дальше при', kind: 'choice', options: ['success', 'fail'] },
 ];
+
+// Направление сравнения — свойство системы, не движка: 5e бросает d20 «вверх»
+// (не меньше порога, равенство — успех), CoC/GURPS — «вниз» (d100/3d6 не выше
+// навыка), а где-то равенство — провал. margin — всегда «запас бросающего»,
+// положителен при успехе, независимо от направления.
+const OUTCOMES = {
+  atLeast: (total, versus) => ({ success: total >= versus, margin: total - versus }),
+  notOver: (total, versus) => ({ success: total <= versus, margin: versus - total }),
+  over: (total, versus) => ({ success: total > versus, margin: total - versus }),
+  under: (total, versus) => ({ success: total < versus, margin: versus - total }),
+};
 
 // Чем шаг делится с последующими — конструктор строит из этого выпадашку
 // допустимых ссылок, не зная типа.
@@ -71,6 +86,7 @@ export function pack(step, ctx) {
   const base = {
     side: step.side || 'sender',
     continueOn: step.continueOn || 'success',
+    successWhen: step.successWhen || 'atLeast',
     versus: packRef(step.versus, ctx),
   };
 
@@ -104,8 +120,8 @@ export function resolve(step, ctx) {
   const total = rolled.total + bonus;
 
   const versus = resolveNumber(step.versus, ctx, 'порогу не с чем сравнить бросок');
-  const margin = total - versus;
-  const success = total >= versus;
+  const outcome = OUTCOMES[step.successWhen] || OUTCOMES.atLeast;
+  const { success, margin } = outcome(total, versus);
 
   const value = {
     success, margin, total,

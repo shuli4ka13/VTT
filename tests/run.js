@@ -16,6 +16,7 @@ import './rule.lead-die.test.js';
 import './rule.step-types.test.js';
 import './rule.weapon.test.js';
 import './rule.two-systems.test.js';
+import './rule.threshold-direction.test.js';
 import './ui.formula-text.test.js';
 import './ui.suggest.test.js';
 import './ui.rule-editor.test.js';
