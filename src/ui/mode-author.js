@@ -5,7 +5,7 @@
 // персонажей этой системы: промежуточного слоя «шаблон листа» в прототипе нет,
 // и это записано в docs/production-differences.md.
 
-import { state, esc } from './state.js';
+import { state, esc, log } from './state.js';
 import { renderEditor, exprOf } from './field-editor.js';
 import { toDisplay } from './formula-text.js';
 import { ADVANTAGE_METHODS, enabledMethods } from '../model/advantage-methods.js';
@@ -82,7 +82,10 @@ function renderRules() {
   const rollTargets = targets(state.system).filter(t => t.kind === 'roll');
 
   document.getElementById('author-rules').innerHTML = `
-    <div class="pal-sec">Механики преимущества — объявлены системой</div>
+    <div class="pal-sec">Мишени бросков — объявлены системой</div>
+    ${rollsSection()}
+
+    <div class="pal-sec" style="margin-top:10px">Механики преимущества — объявлены системой</div>
     ${enabled.length
       ? enabled.map(method => `
         <div class="auto-rule" style="padding:6px 9px">
@@ -106,6 +109,20 @@ function renderRules() {
     ${rules.map(rule => ruleRow(rule, enabled, rollTargets)).join('')}
     ${rollTargets.length ? '<button class="add-row" onclick="uiAddRule()">+ правило</button>'
       : '<div class="sys-hint">В системе нет мишеней бросков — правилам комнаты не на что вешаться.</div>'}`;
+}
+
+// Мишени бросков (attack_roll, save_roll…) — общие, не выведенные из полей.
+// Тег стабилен, как у поля: генерируется при создании, шаги правил и модификаторы
+// ссылаются только на него, переименование лейбла ничего не ломает.
+function rollsSection() {
+  const rolls = state.system.rolls || [];
+  return `${rolls.map(r => `
+      <div class="ar-row" style="margin-top:4px">
+        <input value="${esc(r.label)}" placeholder="Лейбл" style="flex:1"
+               oninput="uiRenameRoll('${r.tag}',this.value)">
+        <button class="ar-del" style="position:static" onclick="uiDeleteRoll('${r.tag}')">✕</button>
+      </div>`).join('')}
+    <button class="add-row" onclick="uiAddRoll()">+ мишень броска</button>`;
 }
 
 function ruleRow(rule, enabled, rollTargets) {
@@ -139,6 +156,48 @@ function ruleRow(rule, enabled, rollTargets) {
 }
 
 // ── правки правил комнаты ───────────────────────────────────────────────────
+
+let rollCounter = 0;
+function newRollTag() {
+  let tag;
+  do { tag = `roll_${++rollCounter}`; } while ((state.system.rolls || []).some(r => r.tag === tag));
+  return tag;
+}
+
+export function addRoll() {
+  const rolls = state.system.rolls || (state.system.rolls = []);
+  const tag = newRollTag();
+  rolls.push({ tag, label: 'Новый бросок' });
+  return tag;
+}
+
+export function renameRoll(tag, label) {
+  const roll = (state.system.rolls || []).find(r => r.tag === tag);
+  if (roll) roll.label = label;
+}
+
+// Мишень используют модификаторы (правила комнаты и записи компендиума) и
+// слот «Мишень модификаторов» шагов правил — тот же принцип защиты, что у
+// удаления поля: сослались — не даём унести конвейер в пустоту.
+function rollUsage(tag) {
+  const mods = [
+    ...(state.system.modifiers || []),
+    ...state.compendium.items.flatMap(r => r.modifiers || []),
+    ...state.compendium.effects.flatMap(r => r.modifiers || []),
+  ];
+  if (mods.some(m => m.kind === 'roll' && m.target === tag)) return true;
+  return Object.values(state.system.rules || {}).some(rule =>
+    (rule.steps || []).some(step => step.roll && step.roll.check === tag));
+}
+
+export function deleteRoll(tag) {
+  if (rollUsage(tag)) {
+    const label = (state.system.rolls.find(r => r.tag === tag) || {}).label;
+    log(`<b>Нельзя удалить «${esc(label)}»:</b> на неё ссылаются правила или записи компендиума`);
+    return;
+  }
+  state.system.rolls = state.system.rolls.filter(r => r.tag !== tag);
+}
 
 export function toggleMethod(id) {
   const advantage = state.system.advantage || (state.system.advantage = { methods: {} });

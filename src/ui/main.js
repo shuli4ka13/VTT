@@ -179,6 +179,9 @@ Object.assign(window, {
   uiAddRule: redraw(author.addRule),
   uiDelRule: redraw(author.deleteRule),
   uiSetRule: redraw(author.setRule),
+  uiAddRoll: redraw(author.addRoll),
+  uiRenameRoll: redraw(author.renameRoll),
+  uiDeleteRoll: redraw(author.deleteRoll),
   // ── конструктор правил разрешения: карточки шагов из реестра ──
   uiRulePick: redraw(ruleEditor.pickRule),
   uiRuleAdd: redraw(ruleEditor.addRule),
