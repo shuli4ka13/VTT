@@ -21,6 +21,7 @@ import './ui.suggest.test.js';
 import './ui.rule-editor.test.js';
 import './ui.table.test.js';
 import './model.records.test.js';
+import './model.advantage.test.js';
 import './ui.records-editor.test.js';
 import './ui.world.test.js';
 import './server.test.js';

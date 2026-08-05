@@ -71,26 +71,42 @@ function describe(f) {
   return toDisplay(exprOf(f), state.system);
 }
 
+// Механики преимущества: СЛОВАРЬ — межсистемный справочник, а какие механики
+// СУЩЕСТВУЮТ в этом мире — объявляет система (system.advantage.methods).
+// Рисуем объявленное; справочник — только как источник для добавления.
+// У киберпанка здесь честно пусто: днд-преимущество ему не навязано.
 function renderRules() {
-  const settings = state.system.advantage;
-  const enabled = ADVANTAGE_METHODS.filter(m => settings.methods[m.id]);
-  const rules = state.system.modifiers.filter(m => m.kind === 'roll');
+  const methods = (state.system.advantage || {}).methods || {};
+  const enabled = ADVANTAGE_METHODS.filter(m => methods[m.id]);
+  const available = ADVANTAGE_METHODS.filter(m => !methods[m.id]);
+  const rules = (state.system.modifiers || []).filter(m => m.kind === 'roll');
   const rollTargets = targets(state.system).filter(t => t.kind === 'roll');
 
   document.getElementById('author-rules').innerHTML = `
-    <div class="pal-sec">Механики преимущества</div>
-    ${ADVANTAGE_METHODS.map(method => `
-      <div class="chk-row${settings.methods[method.id] ? ' on' : ''}" onclick="uiToggleMethod('${method.id}')">
-        <div class="chk-box">✓</div>
-        <div class="chk-lbl">
-          <span style="font-size:11px">${esc(method.label)}</span>
-          <span class="info-dot" title="${esc(method.examples.map(e => `${e.system}: ${e.example}`).join('\n'))}">i</span>
-        </div>
-      </div>`).join('')}
+    <div class="pal-sec">Механики преимущества — объявлены системой</div>
+    ${enabled.length
+      ? enabled.map(method => `
+        <div class="auto-rule" style="padding:6px 9px">
+          <button class="ar-del" onclick="uiToggleMethod('${method.id}')" title="убрать из системы">×</button>
+          <div style="font-size:11px">${esc(method.label)}${method.implemented ? '' : ' <span style="color:var(--muted)">· не отыгран</span>'}
+            <span class="info-dot" title="${esc(method.examples.map(e => `${e.system}: ${e.example}`).join('\n'))}">i</span>
+          </div>
+        </div>`).join('')
+      : '<div class="sys-hint">Система не объявляет механик преимущества — и это законно: не во всяком мире они есть.</div>'}
+    ${available.length ? `
+      <div class="ar-row" style="margin-top:6px">
+        <select class="meta-sel" id="adv-add" style="flex:1">
+          ${available.map(m => `<option value="${m.id}">${esc(m.label)} — ${esc(m.examples.map(e => e.system).join(', '))}</option>`).join('')}
+        </select>
+      </div>
+      <button class="add-row" onclick="uiToggleMethod(document.getElementById('adv-add').value)">+ механика из справочника</button>
+      <div class="sys-hint">Справочник межсистемный; что из него существует в вашем мире — решаете вы.</div>`
+    : ''}
 
-    <div class="pal-sec" style="margin-top:10px">Правила комнаты</div>
+    <div class="pal-sec" style="margin-top:10px">Правила комнаты — условные модификаторы на всех</div>
     ${rules.map(rule => ruleRow(rule, enabled, rollTargets)).join('')}
-    <button class="add-row" onclick="uiAddRule()">+ правило</button>`;
+    ${rollTargets.length ? '<button class="add-row" onclick="uiAddRule()">+ правило</button>'
+      : '<div class="sys-hint">В системе нет мишеней бросков — правилам комнаты не на что вешаться.</div>'}`;
 }
 
 function ruleRow(rule, enabled, rollTargets) {
@@ -126,11 +142,13 @@ function ruleRow(rule, enabled, rollTargets) {
 // ── правки правил комнаты ───────────────────────────────────────────────────
 
 export function toggleMethod(id) {
-  const methods = state.system.advantage.methods;
+  const advantage = state.system.advantage || (state.system.advantage = { methods: {} });
+  const methods = advantage.methods || (advantage.methods = {});
   if (methods[id]) delete methods[id]; else methods[id] = true;
 }
 
 export function addRule() {
+  if (!state.system.modifiers) state.system.modifiers = [];
   state.system.modifiers.push({
     id: 'rule_' + (state.system.modifiers.length + 1),
     label: '', kind: 'roll', target: (state.system.rolls[0] || {}).tag,
