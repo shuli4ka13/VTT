@@ -20,7 +20,6 @@ import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { openStore } from './store.js';
 import { login, me } from './auth.js';
-import { can } from './permissions.js';
 import {
   publishWorld, listWorlds, createRoom, listRooms, joinRoom, roomState, act, patchSheet,
 } from './rooms.js';
@@ -73,9 +72,10 @@ async function api(req, res, url) {
     res.end(JSON.stringify(data));
   };
 
-  // Вход — единственная ручка без токена.
+  // Вход — единственная ручка без токена. Только имя: роль не выбирается,
+  // она выводится из владения (создал комнату — ведущий, вступил — игрок).
   if (req.method === 'POST' && url.pathname === '/api/login') {
-    const token = login(body.name, body.role);
+    const token = login(body.name);
     return json({ token, me: me(token) });
   }
 
@@ -87,22 +87,19 @@ async function api(req, res, url) {
 
   if (url.pathname === '/api/worlds') {
     if (req.method === 'GET') return json(listWorlds(db));
-    requirePermission(who, 'world.publish');
-    return json({ id: publishWorld(db, body.name || 'Без имени', body.world) });
+    return json({ id: publishWorld(db, body.name || 'Без имени', body.world, who.name) });
   }
 
   if (url.pathname === '/api/rooms') {
     if (req.method === 'GET') return json(listRooms(db));
-    requirePermission(who, 'room.create');
-    return json(createRoom(db, body.worldId, body.name || `Стол ${who.name}`, who.name, who.role));
+    return json(createRoom(db, body.worldId, body.name || `Стол ${who.name}`, who.name));
   }
 
   const roomId = parts[2];
   const tail = parts.slice(3);
 
   if (tail[0] === 'join' && req.method === 'POST') {
-    requirePermission(who, 'room.join');
-    joinRoom(db, roomId, who.name, who.role, body.sheetId || null);
+    joinRoom(db, roomId, who.name, body.sheetId || null);
     pushState(roomId);
     return json({ ok: true });
   }
@@ -132,14 +129,6 @@ async function api(req, res, url) {
   }
 
   json({ error: `нет такой ручки: ${req.method} ${url.pathname}` }, 404);
-}
-
-function requirePermission(who, permission) {
-  if (!can(who.permissions, permission)) {
-    const err = new Error(`роли «${who.role}» нельзя: ${permission}`);
-    err.status = 403;
-    throw err;
-  }
 }
 
 function readBody(req) {

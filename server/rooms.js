@@ -8,26 +8,27 @@ import { randomUUID } from 'node:crypto';
 import { send, receive } from '../src/events/envelope.js';
 import { randomDie } from '../src/engine/dice.js';
 import { me } from './auth.js';
-import { can } from './permissions.js';
-import { ROLES } from './permissions.js';
+import { can, ROOM_ROLES } from './permissions.js';
 
 // ── миры ─────────────────────────────────────────────────────────────────────
 
-export function publishWorld(db, name, world) {
+// Автор — не роль из выпадашки, а владение: кто опубликовал, тот и автор.
+export function publishWorld(db, name, world, owner) {
   const id = randomUUID();
-  db.prepare('INSERT INTO worlds (id, name, data) VALUES (?, ?, ?)')
-    .run(id, name, JSON.stringify(world));
+  db.prepare('INSERT INTO worlds (id, name, owner, data) VALUES (?, ?, ?, ?)')
+    .run(id, name, owner, JSON.stringify(world));
   return id;
 }
 
 export function listWorlds(db) {
-  return db.prepare('SELECT id, name FROM worlds').all();
+  return db.prepare('SELECT id, name, owner FROM worlds').all();
 }
 
 // ── комнаты ──────────────────────────────────────────────────────────────────
 
 // Комната — КОПИЯ мира: партия играет в свой экземпляр, публикация не мутирует.
-export function createRoom(db, worldId, name, byUser, byRole = 'gm') {
+// Создатель комнаты становится её ВЕДУЩИМ — роль из владения, как у Owlbear.
+export function createRoom(db, worldId, name, byUser) {
   const row = db.prepare('SELECT data FROM worlds WHERE id = ?').get(worldId);
   if (!row) throw new Error(`мира «${worldId}» на сервере нет`);
   const world = JSON.parse(row.data);
@@ -39,8 +40,8 @@ export function createRoom(db, worldId, name, byUser, byRole = 'gm') {
     db.prepare('INSERT INTO room_sheets (room_id, id, data) VALUES (?, ?, ?)')
       .run(id, sheet.id, JSON.stringify(sheet));
   }
-  db.prepare('INSERT INTO members (room_id, user, role, sheet_id) VALUES (?, ?, ?, NULL)')
-    .run(id, byUser, byRole);
+  db.prepare("INSERT INTO members (room_id, user, role, sheet_id) VALUES (?, ?, 'gm', NULL)")
+    .run(id, byUser);
   return { id, name };
 }
 
@@ -48,7 +49,9 @@ export function listRooms(db) {
   return db.prepare('SELECT id, name FROM rooms').all();
 }
 
-export function joinRoom(db, roomId, user, role, sheetId = null) {
+// Вступивший — игрок; уже состоящий сохраняет свою роль (ведущий, севший
+// за лист, остаётся ведущим). Роль при вступлении не выбирается.
+export function joinRoom(db, roomId, user, sheetId = null) {
   assertRoom(db, roomId);
   if (sheetId) {
     const taken = db.prepare('SELECT user FROM members WHERE room_id = ? AND sheet_id = ?')
@@ -57,9 +60,9 @@ export function joinRoom(db, roomId, user, role, sheetId = null) {
       throw new Error(`лист «${sheetId}» занят: за ним сидит ${taken.user}`);
     }
   }
-  db.prepare(`INSERT INTO members (room_id, user, role, sheet_id) VALUES (?, ?, ?, ?)
-    ON CONFLICT (room_id, user) DO UPDATE SET role = excluded.role, sheet_id = excluded.sheet_id`)
-    .run(roomId, user, role, sheetId);
+  db.prepare(`INSERT INTO members (room_id, user, role, sheet_id) VALUES (?, ?, 'player', ?)
+    ON CONFLICT (room_id, user) DO UPDATE SET sheet_id = excluded.sheet_id`)
+    .run(roomId, user, sheetId);
 }
 
 export function roomState(db, roomId) {
@@ -140,7 +143,7 @@ function sheetOf(db, roomId, sheetId) {
 
 // Право со scope: «any» — можно чужое, «own» — только лист, за которым сидишь.
 function assertOwn(member, sheetId, permission, verb) {
-  const permissions = ROLES[member.role] || [];
+  const permissions = ROOM_ROLES[member.role] || [];
   if (can(permissions, `${permission}:any`)) return;
   if (can(permissions, `${permission}:own`) && member.sheet_id === sheetId) return;
   throw new Error(`это не ваш лист: ${verb} от «${sheetId}» нельзя`);

@@ -28,13 +28,17 @@ export const online = () => !!state.net.roomId;
 
 // ── вход ─────────────────────────────────────────────────────────────────────
 
-export async function loginAs(name, role) {
+export async function loginAs(name) {
   try {
-    const { token, me } = await call('POST', '/api/login', { name, role });
+    const { token, me } = await call('POST', '/api/login', { name });
     state.net.token = token;
     state.net.me = me;
-    log(`Вошли: <b>${esc(me.name)}</b> · роль «${esc(me.role)}» · прав: ${me.permissions.length}`);
+    log(`Вошли: <b>${esc(me.name)}</b>. Кто вы за столом — решит то, что вы создадите.`);
     await refreshLists();
+
+    // Пришли по ссылке-приглашению? Сразу в комнату, как у Foundry и Owlbear.
+    const invited = (location.hash.match(/room=([\w-]+)/) || [])[1];
+    if (invited) await enterRoom(invited);
   } catch (err) {
     log(`<b style="color:var(--red)">Вход не удался:</b> ${esc(err.message)}`);
   }
@@ -78,6 +82,7 @@ export async function enterRoom(roomId, sheetId = null) {
     await call('POST', `/api/rooms/${roomId}/join`, { sheetId });
     state.net.roomId = roomId;
     state.net.mySheetId = sheetId;
+    location.hash = 'room=' + roomId; // адрес комнаты = приглашение
     applyRoomState(await call('GET', `/api/rooms/${roomId}/state`));
     subscribe(roomId);
     log(`Вы в комнате${sheetId ? ` · ваш лист: <b>${esc(sheetId)}</b>` : ''}. Истина теперь на сервере.`);
@@ -150,29 +155,31 @@ export function renderSession() {
   if (!net.roomId) {
     const worlds = net.worlds || [];
     const rooms = net.rooms || [];
-    const canCreate = (net.me.permissions || []).includes('room.create');
-    return `<div class="pal-sec">Сеанс · ${esc(net.me.name)} (${esc(net.me.role)})</div>
+    return `<div class="pal-sec">Сеанс · ${esc(net.me.name)}</div>
       ${rooms.length
         ? rooms.map(r => `<button class="add-row" onclick="uiNetJoin('${r.id}')">→ ${esc(r.name)}</button>`).join('')
-        : '<div class="sys-hint">Комнат пока нет.</div>'}
-      ${canCreate ? `
-        <div class="ar-row" style="margin-top:6px">
-          <select class="meta-sel" id="net-world" style="flex:1">
-            ${worlds.length
-              ? worlds.map(w => `<option value="${w.id}">${esc(w.name)}</option>`).join('')
-              : '<option value="">— миров на сервере нет —</option>'}
-          </select>
-        </div>
-        <button class="add-row" onclick="uiNetCreateRoom(document.getElementById('net-world').value)">+ комната из мира</button>`
-      : ''}`;
+        : '<div class="sys-hint">Комнат пока нет — создайте свою: кто создал, тот и ведущий.</div>'}
+      <div class="ar-row" style="margin-top:6px">
+        <select class="meta-sel" id="net-world" style="flex:1">
+          ${worlds.length
+            ? worlds.map(w => `<option value="${w.id}">${esc(w.name)} · автор: ${esc(w.owner)}</option>`).join('')
+            : '<option value="">— миров на сервере нет —</option>'}
+        </select>
+      </div>
+      <button class="add-row" onclick="uiNetCreateRoom(document.getElementById('net-world').value)">+ комната из мира</button>`;
   }
 
   const members = net.members || [];
   const takenSheets = new Set(members.map(m => m.sheet_id).filter(Boolean));
-  const canPickSheet = net.me.role === 'player' && !net.mySheetId;
+  const myRole = (members.find(m => m.user === net.me.name) || {}).role || 'player';
+  const canPickSheet = myRole === 'player' && !net.mySheetId;
+  const invite = `${location.origin}${location.pathname}#room=${net.roomId}`;
   return `<div class="pal-sec">Сеанс · комната</div>
     ${members.map(m => `<div class="mcs-row"><span>${esc(m.user)}</span>
-      <span style="color:var(--muted)">${esc(m.role)}${m.sheet_id ? ` · ${esc(m.sheet_id)}` : ''}</span></div>`).join('')}
+      <span style="color:var(--muted)">${m.role === 'gm' ? 'ведущий' : 'игрок'}${m.sheet_id ? ` · ${esc(m.sheet_id)}` : ''}</span></div>`).join('')}
+    <div class="pal-sec" style="margin-top:8px">Приглашение</div>
+    <input class="ar-cond" style="width:100%" readonly value="${esc(invite)}"
+           onclick="this.select()" title="отправьте эту ссылку игрокам">
     ${canPickSheet ? `
       <div class="pal-sec" style="margin-top:8px">Сесть за лист</div>
       ${state.sheets.filter(s => !takenSheets.has(s.id)).map(s =>

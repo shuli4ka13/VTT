@@ -9,7 +9,7 @@ const inNode = typeof process !== 'undefined' && !!(process.versions && process.
 if (inNode) {
   const { openStore } = await import('../server/store.js');
   const { login, me } = await import('../server/auth.js');
-  const { can, ROLES } = await import('../server/permissions.js');
+  const { can, ROOM_ROLES } = await import('../server/permissions.js');
   const { publishWorld, listWorlds, createRoom, joinRoom, roomState, act, patchSheet } =
     await import('../server/rooms.js');
   const { packWorld } = await import('../src/ui/world.js');
@@ -30,40 +30,32 @@ if (inNode) {
 
   group('стендовый сервер', () => {
     group('вход и права', () => {
-      test('логин выдаёт токен, /me возвращает СПОСОБНОСТИ, а не роль-слово', () => {
-        const token = login('Влад', 'author');
-        const who = me(token);
+      test('логин — только имя; роль никто не выбирает', () => {
+        const who = me(login('Влад'));
         eq(who.name, 'Влад');
-        ok(Array.isArray(who.permissions), 'права — список');
-        ok(who.permissions.includes('world.publish'), 'автор публикует миры');
+        ok(!('role' in who), 'роль не в личности — она выводится из владения');
       });
 
-      test('роль — пресет прав: игрок не публикует и шлёт только от своего листа', () => {
-        const who = me(login('Оля', 'player'));
-        ok(!who.permissions.includes('world.publish'));
-        ok(who.permissions.includes('envelope.send:own'));
-        ok(!who.permissions.includes('envelope.send:any'));
-      });
-
-      test('неизвестная роль и битый токен — внятные ошибки', () => {
-        throws(() => login('Кто-то', 'котик'), 'котик');
+      test('пустое имя и битый токен — внятные ошибки', () => {
+        throws(() => login('   '), 'имя');
         throws(() => me('нет-такого-токена'), 'вход');
       });
 
-      test('can() понимает :own против :any', () => {
-        ok(can(ROLES.gm, 'envelope.send:own'), 'any покрывает own');
-        ok(!can(ROLES.player, 'sheet.edit:any'));
+      test('роль комнаты — пресет способностей; can() понимает :own против :any', () => {
+        ok(can(ROOM_ROLES.gm, 'envelope.send:own'), 'any покрывает own');
+        ok(!can(ROOM_ROLES.player, 'sheet.edit:any'));
       });
     });
 
     group('миры и комнаты', () => {
       const db = openStore(':memory:');
 
-      test('автор публикует мир, список отдаёт его без содержимого', () => {
-        const id = publishWorld(db, 'Пятёрочка', world());
+      test('мир принадлежит опубликовавшему — «автор» это владение, не роль', () => {
+        const id = publishWorld(db, 'Пятёрочка', world(), 'влад');
         const list = listWorlds(db);
         eq(list.length, 1);
         eq(list[0].name, 'Пятёрочка');
+        eq(list[0].owner, 'влад');
         ok(!('data' in list[0]), 'список лёгкий — сам мир по запросу');
       });
 
@@ -75,21 +67,23 @@ if (inNode) {
         ok(state.system.fields.length > 0);
       });
 
-      test('игрок вступает и садится за свободный лист; чужой занятый — отказ', () => {
+      test('создатель комнаты — ведущий; вступившие — игроки; занятый лист — отказ', () => {
         const room = createRoom(db, listWorlds(db)[0].id, 'Второй стол', 'вика');
-        joinRoom(db, room.id, 'оля', 'player', 'arven');
-        throws(() => joinRoom(db, room.id, 'петя', 'player', 'arven'), 'занят');
-        joinRoom(db, room.id, 'петя', 'player', 'mirra');
+        joinRoom(db, room.id, 'оля', 'arven');
+        throws(() => joinRoom(db, room.id, 'петя', 'arven'), 'занят');
+        joinRoom(db, room.id, 'петя', 'mirra');
         const state = roomState(db, room.id);
-        eq(state.members.length, 3, 'ГМ и два игрока');
+        eq(state.members.find(m => m.user === 'вика').role, 'gm', 'кто создал, тот и ведущий');
+        eq(state.members.find(m => m.user === 'оля').role, 'player', 'кто вступил — игрок');
+        eq(state.members.length, 3);
       });
     });
 
     group('авторитетный ход', () => {
       const db = openStore(':memory:');
-      const worldId = publishWorld(db, 'Мир', world());
+      const worldId = publishWorld(db, 'Мир', world(), 'влад');
       const room = createRoom(db, worldId, 'Стол', 'гм-вика');
-      joinRoom(db, room.id, 'оля', 'player', 'arven');
+      joinRoom(db, room.id, 'оля', 'arven');
 
       test('сервер сам исполняет правило и пишет журнал', () => {
         const out = act(db, room.id, 'оля', {

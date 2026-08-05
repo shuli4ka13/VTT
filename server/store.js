@@ -17,7 +17,7 @@ export function openStore(path = 'server/stand.db') {
   const db = new DatabaseSync(path);
   db.exec(`
     CREATE TABLE IF NOT EXISTS worlds (
-      id TEXT PRIMARY KEY, name TEXT NOT NULL, data TEXT NOT NULL);
+      id TEXT PRIMARY KEY, name TEXT NOT NULL, owner TEXT NOT NULL, data TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS rooms (
       id TEXT PRIMARY KEY, name TEXT NOT NULL, world_id TEXT NOT NULL,
       system TEXT NOT NULL, compendium TEXT NOT NULL);

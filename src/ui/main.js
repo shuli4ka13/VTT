@@ -153,9 +153,7 @@ Object.assign(window, {
   uiRerender: rerender,       // для SSE: пришёл срез комнаты — перерисоваться
 
   // ── сеанс со стендовым сервером ──
-  uiNetLogin: netcall(() => net.loginAs(
-    document.getElementById('net-name').value,
-    document.getElementById('net-role').value)),
+  uiNetLogin: netcall(() => net.loginAs(document.getElementById('net-name').value)),
   uiNetPublish: netcall(net.publish),
   uiNetCreateRoom: netcall(net.createRoom),
   uiNetJoin: netcall(net.enterRoom),
