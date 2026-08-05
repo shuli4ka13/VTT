@@ -13,6 +13,7 @@ import { send, receive, availableActions } from '../events/envelope.js';
 import { describeReport } from './journal.js';
 import { online, patchSheet } from './net.js';
 import { randomDie } from '../engine/dice.js';
+import { defaultModifier } from './mode-compendium.js';
 
 export function renderPlayer() {
   renderSheetList();
@@ -342,15 +343,13 @@ export function create(rk) {
   const decl = (state.system.records || {})[rk];
   if (!decl) return;
   const current = sheet();
-  const first = state.system.fields[0].tag;
-  const roll = (state.system.rolls[0] || {}).tag;
   const name = `${decl.label} — новая запись`;
   const id = newRecordId(rk);
 
   if (decl.kind === 'item') {
     state.compendium.items.push({
-      id, rk, label: name, slot: 'misc', description: '',
-      modifiers: decl.props ? [] : [{ kind: 'value', target: first, op: 'add', value: 1, stacking: 'sum', condition: null }],
+      id, rk, label: name, description: '',
+      modifiers: decl.props ? [] : [defaultModifier(state.system)],
     });
     current.equipped.push(id);
     return handOff(id, decl.label);
@@ -358,8 +357,8 @@ export function create(rk) {
 
   if (decl.kind === 'effect') {
     state.compendium.effects.push({
-      id, rk, label: name, icon: decl.icon || '✦', duration: { kind: 'scene' }, description: '',
-      modifiers: [{ kind: 'roll', target: roll, effect: 'disadvantage', method: 'rerollBest', condition: null }],
+      id, rk, label: name, icon: decl.icon || '✦', description: '',
+      modifiers: [defaultModifier(state.system)],
     });
     current.effects.push({ effectId: id });
     return handOff(id, decl.label);
@@ -370,7 +369,7 @@ export function create(rk) {
   // дальше игрока отправит редактор компендиума.
   const call = state.compendium.effects.find(e => e.rule);
   state.compendium.actions.push({
-    id, rk, kind: rk, label: name, description: '',
+    id, rk, label: name, description: '',
     effect: call ? call.id : '',
   });
   current.actions.push(id);

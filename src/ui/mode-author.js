@@ -8,7 +8,7 @@
 import { state, esc } from './state.js';
 import { renderEditor, exprOf } from './field-editor.js';
 import { toDisplay } from './formula-text.js';
-import { ADVANTAGE_METHODS } from '../model/advantage-methods.js';
+import { ADVANTAGE_METHODS, enabledMethods } from '../model/advantage-methods.js';
 import { renderRuleList, renderRuleCanvas, renderStepPalette } from './rule-editor.js';
 import { renderKindList, renderKindEditor, renderKindTemplates } from './records-editor.js';
 import { targets } from '../engine/targets.js';
@@ -76,9 +76,8 @@ function describe(f) {
 // Рисуем объявленное; справочник — только как источник для добавления.
 // У киберпанка здесь честно пусто: днд-преимущество ему не навязано.
 function renderRules() {
-  const methods = (state.system.advantage || {}).methods || {};
-  const enabled = ADVANTAGE_METHODS.filter(m => methods[m.id]);
-  const available = ADVANTAGE_METHODS.filter(m => !methods[m.id]);
+  const enabled = enabledMethods(state.system);
+  const available = ADVANTAGE_METHODS.filter(m => !enabled.includes(m));
   const rules = (state.system.modifiers || []).filter(m => m.kind === 'roll');
   const rollTargets = targets(state.system).filter(t => t.kind === 'roll');
 
@@ -149,10 +148,11 @@ export function toggleMethod(id) {
 
 export function addRule() {
   if (!state.system.modifiers) state.system.modifiers = [];
+  const method = enabledMethods(state.system)[0];
   state.system.modifiers.push({
     id: 'rule_' + (state.system.modifiers.length + 1),
-    label: '', kind: 'roll', target: (state.system.rolls[0] || {}).tag,
-    effect: 'advantage', method: 'rerollBest', condition: '',
+    label: '', kind: 'roll', target: ((state.system.rolls || [])[0] || {}).tag,
+    effect: 'advantage', method: method ? method.id : '', condition: '',
   });
 }
 

@@ -90,7 +90,6 @@ export const cpCompendium = {
       id: 'mono-knife',
       rk: 'weapon',
       label: 'Мономолекулярный нож',
-      slot: 'hand',
       description: 'Урон — константа записи, костей нет.',
       props: { damage_flat: 8 },
       activities: [{ label: 'Удар', effect: 'blade-hit' }],
@@ -101,7 +100,6 @@ export const cpCompendium = {
     {
       id: 'blade-hit',
       rk: 'call',
-      kind: 'rule',
       label: 'Удар клинком',
       description: 'Вызов правила «Удар»: величина — фикс предмета.',
       rule: 'strike',
@@ -110,7 +108,6 @@ export const cpCompendium = {
     {
       id: 'gun-hit',
       rk: 'call',
-      kind: 'rule',
       label: 'Выстрел',
       description: 'Вызов того же правила: величина — свой бросок 2d8.',
       rule: 'strike',
@@ -120,7 +117,7 @@ export const cpCompendium = {
   // Запись-действие осталась только у выстрела: пистолета-предмета в срезе нет.
   // Удар ножом — активность самого ножа.
   actions: [
-    { id: 'gun', rk: 'action', kind: 'action', label: 'Пистолет', effect: 'gun-hit' },
+    { id: 'gun', rk: 'action', label: 'Пистолет', effect: 'gun-hit' },
   ],
 };
 

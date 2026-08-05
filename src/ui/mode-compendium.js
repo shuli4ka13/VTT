@@ -11,7 +11,7 @@
 
 import { state, esc, newRecordId, log } from './state.js';
 import { targets } from '../engine/targets.js';
-import { ADVANTAGE_METHODS } from '../model/advantage-methods.js';
+import { ADVANTAGE_METHODS, enabledMethods } from '../model/advantage-methods.js';
 import { AMOUNT_SOURCES } from '../model/amount-sources.js';
 import { allRecords } from '../model/compendium.js';
 import { renderFormulaInput } from './formula-input.js';
@@ -184,6 +184,31 @@ function weaponPropsBody(record, decl) {
   </div>`;
 }
 
+// Выпадашка механик — только то, что ОБЪЯВЛЕНО системой (тот же паттерн,
+// что режим автора). Значение, уже стоящее в записи, но выключенное автором
+// позже, остаётся видимым с пометкой — иначе правка молча меняла бы поведение.
+function methodOptions(current) {
+  const enabled = enabledMethods(state.system);
+  const stale = current && !enabled.some(m => m.id === current) ? ADVANTAGE_METHODS.find(m => m.id === current) : null;
+  if (!enabled.length && !stale) return ['<option value="">— система не объявляет механик преимущества —</option>'];
+  return [
+    ...enabled.map(m => `<option value="${m.id}"${current === m.id ? ' selected' : ''}>${esc(m.label)}${m.implemented ? '' : ' — не отыгран'}</option>`),
+    ...(stale ? [`<option value="${stale.id}" selected>${esc(stale.label)} — выключена в системе</option>`] : []),
+  ];
+}
+
+// Заготовка нового модификатора: правит бросок объявленной механикой на
+// объявленную мишень, если системе есть что объявить, иначе честное значение —
+// roll-заготовка без механики или без мишени была бы нерабочей тишком.
+export function defaultModifier(system) {
+  const method = enabledMethods(system)[0];
+  const rollTarget = (system.rolls || [])[0];
+  if (method && rollTarget) {
+    return { kind: 'roll', target: rollTarget.tag, effect: 'disadvantage', method: method.id, condition: null };
+  }
+  return { kind: 'value', target: system.fields[0].tag, op: 'add', value: 1, stacking: 'sum', condition: null };
+}
+
 function modRow(id, mod, i, fields, rolls) {
   const isRoll = mod.kind === 'roll';
   const behaviour = !isRoll ? mod.op : mod.effect ? mod.effect : 'bonus';
@@ -219,7 +244,7 @@ function modRow(id, mod, i, fields, rolls) {
       </select>
       ${mod.effect ? `
         <select class="meta-sel" onchange="uiSetMod('${id}',${i},'method',this.value)">
-          ${ADVANTAGE_METHODS.map(m => `<option value="${m.id}"${mod.method === m.id ? ' selected' : ''}>${esc(m.label)}${m.implemented ? '' : ' — не отыгран'}</option>`).join('')}
+          ${methodOptions(mod.method).join('')}
         </select>`
       : `<select class="meta-sel" onchange="uiSetMod('${id}',${i},'stacking',this.value)">
           ${STACKING.map(([v, l]) => `<option value="${v}"${(mod.stacking || 'sum') === v ? ' selected' : ''}>${l}</option>`).join('')}
@@ -397,7 +422,7 @@ function newRuleCall(rk = 'call') {
   const [ruleId, rule] = Object.entries(state.system.rules || {})[0] || [];
   const id = newRecordId(rk);
   state.compendium.effects.push({
-    id, rk, kind: 'rule', label: `Новая запись`, description: '',
+    id, rk, label: `Новая запись`, description: '',
     rule: ruleId || '', params: defaultParams(rule),
   });
   return id;
@@ -408,15 +433,13 @@ function newRuleCall(rk = 'call') {
 export function createRecord(rk) {
   const decl = (state.system.records || {})[rk];
   if (!decl) return;
-  const first = state.system.fields[0].tag;
-  const roll = (state.system.rolls[0] || {}).tag;
   const name = `${decl.label} — новая запись`;
 
   if (decl.kind === 'item') {
     const id = newRecordId(rk);
     state.compendium.items.push({
-      id, rk, label: name, slot: 'misc', description: '',
-      modifiers: decl.props ? [] : [{ kind: 'value', target: first, op: 'add', value: 1, stacking: 'sum', condition: null }],
+      id, rk, label: name, description: '',
+      modifiers: decl.props ? [] : [defaultModifier(state.system)],
     });
     state.activeRecordId = id;
     return;
@@ -424,8 +447,8 @@ export function createRecord(rk) {
   if (decl.kind === 'effect') {
     const id = newRecordId(rk);
     state.compendium.effects.push({
-      id, rk, label: name, icon: decl.icon || '✦', duration: { kind: 'scene' }, description: '',
-      modifiers: [{ kind: 'roll', target: roll, effect: 'disadvantage', method: 'rerollBest', condition: null }],
+      id, rk, label: name, icon: decl.icon || '✦', description: '',
+      modifiers: [defaultModifier(state.system)],
     });
     state.activeRecordId = id;
     return;
@@ -440,7 +463,7 @@ export function createRecord(rk) {
   const id = newRecordId(rk);
   const call = state.compendium.effects.find(e => e.rule) || { id: newRuleCall() };
   state.compendium.actions.push({
-    id, rk, kind: rk, label: name, description: '',
+    id, rk, label: name, description: '',
     effect: call.id,
   });
   state.activeRecordId = id;
@@ -521,14 +544,13 @@ export function setWeaponProp(id, key, raw) {
 }
 
 const firstField = () => state.system.fields[0].tag;
-const firstRoll = () => (state.system.rolls[0] || {}).tag;
+const firstRoll = () => ((state.system.rolls || [])[0] || {}).tag;
 
 export function addMod(id) {
   const record = live(id);
-  const asRoll = record.kind === 'effect' && !(record.modifiers || []).length;
+  const asRoll = baseOf(record) === 'effect' && !(record.modifiers || []).length;
   record.modifiers = record.modifiers || [];
-  record.modifiers.push(asRoll
-    ? { kind: 'roll', target: firstRoll(), effect: 'disadvantage', method: 'rerollBest', condition: null }
+  record.modifiers.push(asRoll ? defaultModifier(state.system)
     : { kind: 'value', target: firstField(), op: 'add', value: 1, stacking: 'sum', condition: null });
 }
 

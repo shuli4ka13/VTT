@@ -67,3 +67,9 @@ export const ADVANTAGE_METHODS = [
 ];
 
 export const findMethod = id => ADVANTAGE_METHODS.find(m => m.id === id) || null;
+
+// Какие механики СУЩЕСТВУЮТ в мире этой системы — а не весь межсистемный
+// словарь. Единый фильтр: раньше режим автора применял его инлайном,
+// а компендиум рисовал справочник целиком, игнорируя объявление системы.
+export const enabledMethods = system =>
+  ADVANTAGE_METHODS.filter(m => ((system.advantage || {}).methods || {})[m.id]);
