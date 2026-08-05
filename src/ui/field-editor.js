@@ -74,13 +74,21 @@ export function renderEditor() {
     </div>
 
     <div class="pb">
-      <div class="pb-lbl">Как считается · ${esc(KIND_LABEL[f.value.kind] || f.value.kind)}</div>
-      ${renderFormulaInput('field.' + f.tag, {
+      <div class="pb-lbl">Как считается</div>
+      <select class="meta-sel" style="width:100%" onchange="uiSetValueKind('${f.tag}', this.value)">
+        <option value="stored"${f.value.kind === 'stored' ? ' selected' : ''}>${esc(KIND_LABEL.stored)}</option>
+        <option value="formula"${f.value.kind === 'formula' ? ' selected' : ''}>${esc(KIND_LABEL.formula)}</option>
+        <option value="table"${f.value.kind === 'table' ? ' selected' : ''}>${esc(KIND_LABEL.table)}</option>
+      </select>
+
+      ${f.value.kind === 'table' ? tablePicker(f) : ''}
+
+      ${f.value.kind !== 'stored' ? renderFormulaInput('field.' + f.tag, {
         exclude: f.tag,
-        placeholder: 'пусто — значение вводит игрок',
+        placeholder: f.value.kind === 'table' ? 'аргумент — обычно #уровень' : 'формула',
         read: () => exprOf(f),
         write: expr => writeFormula(f, expr),
-      })}
+      }) : ''}
     </div>
 
     <button class="new-item-btn" style="width:100%;margin:0" onclick="uiDelField('${f.tag}')">
@@ -90,6 +98,20 @@ export function renderEditor() {
 
 export const exprOf = f =>
   f.value.kind === 'formula' ? f.value.expr : f.value.kind === 'table' ? f.value.arg : '';
+
+function tablePicker(f) {
+  const tables = Object.entries(state.system.tables || {});
+  if (!tables.length) {
+    return '<div class="sys-hint">Система не объявляет таблиц — заведите в сцене «Механики».</div>';
+  }
+  return `<select class="meta-sel" style="width:100%;margin-bottom:6px" onchange="uiSetFieldTable('${f.tag}', this.value)">
+    ${tables.map(([name, t]) => `<option value="${name}"${f.value.table === name ? ' selected' : ''}>${esc(t.label)}</option>`).join('')}
+  </select>`;
+}
+
+export function setFieldTable(tag, name) {
+  field(tag).value.table = name;
+}
 
 // ── состав полей: только режим автора ───────────────────────────────────────
 
@@ -130,6 +152,23 @@ export function setDefault(tag, raw) {
   f.value.default = type === 'boolean' ? raw === true || raw === 'true'
     : type === 'text' ? String(raw)
       : Number(raw) || 0;
+}
+
+// Переключатель между тремя способами вычислить поле: движок их различает
+// с самого начала (value.kind), конструктору не хватало явной ручки —
+// формула включалась неявно набором текста, а таблица не включалась никак.
+export function setValueKind(tag, kind) {
+  const f = field(tag);
+  if (kind === f.value.kind) return;
+  if (kind === 'stored') {
+    const type = f.value.type || 'number';
+    f.value = { kind: 'stored', type, default: type === 'text' ? '' : type === 'boolean' ? false : 0 };
+  } else if (kind === 'formula') {
+    f.value = { kind: 'formula', expr: '' };
+  } else if (kind === 'table') {
+    const table = Object.keys(state.system.tables || {})[0] || '';
+    f.value = { kind: 'table', table, arg: '' };
+  }
 }
 
 export function setType(tag, type) {

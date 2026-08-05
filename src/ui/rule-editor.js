@@ -61,7 +61,8 @@ export function renderRuleList() {
       </div>`;
     }).join('')}
     <button class="add-row" onclick="uiRuleAdd()">+ механика</button>
-    ${renderConstants()}`;
+    ${renderConstants()}
+    ${renderTables()}`;
 }
 
 // ── центр: конвейер активного правила ───────────────────────────────────────
@@ -408,6 +409,85 @@ export function deleteConstant(name) {
     return;
   }
   delete state.system.constants[name];
+}
+
+// ── таблицы по диапазонам: третий способ вычислить поле ─────────────────────
+// Ступенчатая прогрессия (бонус мастерства 5e) — не арифметика, а поиск по
+// диапазону; движок это умел с самого начала (src/engine/tables.js), заводить
+// таблицу и править диапазоны из конструктора было негде.
+
+export function renderTables() {
+  const tables = Object.entries(state.system.tables || {});
+  return `<div class="pal-sec" style="margin-top:12px">Таблицы по диапазонам</div>
+    ${tables.map(([name, t]) => `
+      <div class="auto-rule" style="padding:8px 9px">
+        <button class="ar-del" onclick="uiTableDelete('${name}')" title="удалить таблицу">×</button>
+        <div class="ar-row">
+          <input value="${esc(t.label || '')}" placeholder="Название таблицы" style="flex:1;font-weight:600"
+                 oninput="uiTableRename('${name}',this.value)">
+        </div>
+        ${(t.ranges || []).map((r, i) => `
+          <div class="ar-row">
+            <input class="bon-v" style="width:44px" value="${r.from}" title="от"
+                   oninput="uiTableRange('${name}',${i},'from',this.value)">
+            <span style="font-size:11px;color:var(--muted)">–</span>
+            <input class="bon-v" style="width:44px" value="${r.to}" title="до"
+                   oninput="uiTableRange('${name}',${i},'to',this.value)">
+            <span style="font-size:11px;color:var(--muted)">→</span>
+            <input class="bon-v" style="width:44px" value="${r.value}" title="значение"
+                   oninput="uiTableRange('${name}',${i},'value',this.value)">
+            ${(t.ranges.length > 1) ? `<button class="ar-del" style="position:static" onclick="uiTableRangeDel('${name}',${i})">×</button>` : ''}
+          </div>`).join('')}
+        <button class="add-row" onclick="uiTableRangeAdd('${name}')">+ диапазон</button>
+      </div>`).join('')}
+    <button class="add-row" onclick="uiTableAdd()">+ таблица</button>`;
+}
+
+let tableCounter = 0;
+function newTableName() {
+  let name;
+  do { name = `table_${++tableCounter}`; } while (state.system.tables && name in state.system.tables);
+  return name;
+}
+
+export function addTable() {
+  const tables = state.system.tables || (state.system.tables = {});
+  const name = newTableName();
+  tables[name] = { label: 'Новая таблица', ranges: [{ from: 1, to: 1, value: 0 }] };
+  return name;
+}
+
+export function renameTable(name, label) {
+  const t = state.system.tables[name];
+  if (t) t.label = label;
+}
+
+export function addRange(name) {
+  const ranges = state.system.tables[name].ranges;
+  const last = ranges[ranges.length - 1];
+  const from = last ? last.to + 1 : 1;
+  ranges.push({ from, to: from, value: 0 });
+}
+
+export function setRange(name, index, key, raw) {
+  const n = Number(raw);
+  state.system.tables[name].ranges[index][key] = Number.isNaN(n) ? 0 : n;
+}
+
+export function deleteRange(name, index) {
+  state.system.tables[name].ranges.splice(index, 1);
+}
+
+function tableUsage(name) {
+  return state.system.fields.some(f => f.value.kind === 'table' && f.value.table === name);
+}
+
+export function deleteTable(name) {
+  if (tableUsage(name)) {
+    log(`<b>Нельзя удалить «${esc(state.system.tables[name].label)}»:</b> на неё ссылается поле листа`);
+    return;
+  }
+  delete state.system.tables[name];
 }
 
 // ── правки ───────────────────────────────────────────────────────────────────

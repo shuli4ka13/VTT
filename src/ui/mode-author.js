@@ -76,7 +76,10 @@ function renderFieldList() {
 // Ни одного значения: только чем поле является и от чего зависит.
 function describe(f) {
   if (f.value.kind === 'stored') return 'вводит игрок';
-  if (f.value.kind === 'table') return `таблица «${f.value.table}» от ${toDisplay(f.value.arg, state.system)}`;
+  if (f.value.kind === 'table') {
+    const label = ((state.system.tables || {})[f.value.table] || {}).label || f.value.table || '—';
+    return `таблица «${label}» от ${toDisplay(f.value.arg, state.system)}`;
+  }
   return toDisplay(exprOf(f), state.system);
 }
 
