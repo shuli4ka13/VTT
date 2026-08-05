@@ -51,7 +51,7 @@ export const system = {
   // заполнения одних и тех же слотов. Типы шагов — src/engine/steps/.
   rules: {
     strike: {
-      label: 'Удар',
+      label: 'Атака',
       params: [
         { key: 'bonus', label: 'Бонус проверки', kind: 'expr' },
         { key: 'versus', label: 'Против чего', kind: 'tag' },

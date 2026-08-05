@@ -60,9 +60,7 @@ export function renderRuleList() {
         </div>
       </div>`;
     }).join('')}
-    <button class="add-row" onclick="uiRuleAdd()">+ механика</button>
-    ${renderConstants()}
-    ${renderTables()}`;
+    <button class="add-row" onclick="uiRuleAdd()">+ механика</button>`;
 }
 
 // ── центр: конвейер активного правила ───────────────────────────────────────
@@ -355,11 +353,12 @@ function paramEditor(ruleId, rule) {
 
 const dieWord = c => (c.dice || []).map(d => `${d.count || 1}к${d.sides}${d.name ? ` «${d.name}»` : ''}`).join(' + ');
 
+// Содержимое секции без заголовка: свёртку и подпись даёт колонка словарей
+// (mode-author.js, dictSection) — секция сама не знает, раскрыта ли она.
 export function renderConstants() {
   const dice = Object.entries(state.system.constants || {}).filter(([, c]) => c.kind === 'die');
 
-  return `<div class="pal-sec" style="margin-top:12px">Константы системы</div>
-    ${dice.map(([name, c]) => `
+  return `${dice.map(([name, c]) => `
       <div class="auto-rule" style="padding:8px 9px">
         <button class="ar-del" onclick="uiConstDelete('${name}')" title="удалить константу">×</button>
         <div class="ar-row">
@@ -425,8 +424,7 @@ export function deleteConstant(name) {
 
 export function renderTables() {
   const tables = Object.entries(state.system.tables || {});
-  return `<div class="pal-sec" style="margin-top:12px">Таблицы по диапазонам</div>
-    ${tables.map(([name, t]) => `
+  return `${tables.map(([name, t]) => `
       <div class="auto-rule" style="padding:8px 9px">
         <button class="ar-del" onclick="uiTableDelete('${name}')" title="удалить таблицу">×</button>
         <div class="ar-row">

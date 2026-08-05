@@ -9,7 +9,7 @@ import { state, esc, log } from './state.js';
 import { renderEditor, exprOf } from './field-editor.js';
 import { toDisplay } from './formula-text.js';
 import { ADVANTAGE_METHODS, enabledMethods } from '../model/advantage-methods.js';
-import { renderRuleList, renderRuleCanvas, renderStepPalette } from './rule-editor.js';
+import { renderRuleList, renderRuleCanvas, renderStepPalette, renderConstants, renderTables } from './rule-editor.js';
 import { renderKindList, renderKindEditor, renderKindTemplates } from './records-editor.js';
 import { blockTemplatesHtml, ruleTemplatesHtml } from './templates.js';
 import { targets } from '../engine/targets.js';
@@ -88,41 +88,66 @@ function describe(f) {
   return toDisplay(exprOf(f), state.system);
 }
 
+// Словари системы — свёртываемые секции под списком механик. Свёрнутые
+// читаются как оглавление: заголовок + счётчик, раскрытие — по клику
+// и переживает перерисовку (state.openDicts).
+export function toggleDict(key) {
+  state.openDicts[key] = !state.openDicts[key];
+}
+
+function dictSection(key, title, count, body) {
+  const open = !!state.openDicts[key];
+  return `<div class="dict-sec">
+    <div class="dict-hdr" onclick="uiToggleDict('${key}')">
+      <span class="dict-arrow">${open ? '▾' : '▸'}</span>
+      <span style="flex:1">${title}</span>
+      <span class="dict-count">${count}</span>
+    </div>
+    ${open ? `<div class="dict-body">${body}</div>` : ''}
+  </div>`;
+}
+
 // Механики преимущества: СЛОВАРЬ — межсистемный справочник, а какие механики
 // СУЩЕСТВУЮТ в этом мире — объявляет система (system.advantage.methods).
 // Рисуем объявленное; справочник — только как источник для добавления.
 // У киберпанка здесь честно пусто: днд-преимущество ему не навязано.
 function dictionariesHtml() {
   const enabled = enabledMethods(state.system);
-  const available = ADVANTAGE_METHODS.filter(m => !enabled.includes(m));
   const rules = (state.system.modifiers || []).filter(m => m.kind === 'roll');
+
+  return `<div class="pal-sec" style="margin-top:14px">Словари системы</div>` + [
+    dictSection('rolls', 'Мишени бросков', (state.system.rolls || []).length, rollsSection()),
+    dictSection('advantage', 'Механики преимущества', enabled.length, advantageBody(enabled)),
+    dictSection('constants', 'Константы-кости', Object.keys(state.system.constants || {}).length, renderConstants()),
+    dictSection('tables', 'Таблицы по диапазонам', Object.keys(state.system.tables || {}).length, renderTables()),
+    dictSection('room', 'Правила комнаты', rules.length, roomRulesBody(rules, enabled)),
+  ].join('');
+}
+
+function advantageBody(enabled) {
+  const available = ADVANTAGE_METHODS.filter(m => !enabled.includes(m));
+  return `${enabled.length
+    ? enabled.map(method => `
+      <div class="auto-rule" style="padding:6px 9px">
+        <button class="ar-del" onclick="uiToggleMethod('${method.id}')" title="убрать из системы">×</button>
+        <div style="font-size:11px">${esc(method.label)}${method.implemented ? '' : ' <span style="color:var(--muted)">· не отыгран</span>'}
+          <span class="info-dot" title="${esc(method.examples.map(e => `${e.system}: ${e.example}`).join('\n'))}">i</span>
+        </div>
+      </div>`).join('')
+    : '<div class="sys-hint">Система не объявляет механик преимущества — и это законно: не во всяком мире они есть.</div>'}
+  ${available.length ? `
+    <div class="ar-row" style="margin-top:6px">
+      <select class="meta-sel" id="adv-add" style="flex:1">
+        ${available.map(m => `<option value="${m.id}">${esc(m.label)} — ${esc(m.examples.map(e => e.system).join(', '))}</option>`).join('')}
+      </select>
+    </div>
+    <button class="add-row" onclick="uiToggleMethod(document.getElementById('adv-add').value)">+ механика из справочника</button>`
+  : ''}`;
+}
+
+function roomRulesBody(rules, enabled) {
   const rollTargets = targets(state.system).filter(t => t.kind === 'roll');
-
-  return `
-    <div class="pal-sec" style="margin-top:12px">Мишени бросков — объявлены системой</div>
-    ${rollsSection()}
-
-    <div class="pal-sec" style="margin-top:10px">Механики преимущества — объявлены системой</div>
-    ${enabled.length
-      ? enabled.map(method => `
-        <div class="auto-rule" style="padding:6px 9px">
-          <button class="ar-del" onclick="uiToggleMethod('${method.id}')" title="убрать из системы">×</button>
-          <div style="font-size:11px">${esc(method.label)}${method.implemented ? '' : ' <span style="color:var(--muted)">· не отыгран</span>'}
-            <span class="info-dot" title="${esc(method.examples.map(e => `${e.system}: ${e.example}`).join('\n'))}">i</span>
-          </div>
-        </div>`).join('')
-      : '<div class="sys-hint">Система не объявляет механик преимущества — и это законно: не во всяком мире они есть.</div>'}
-    ${available.length ? `
-      <div class="ar-row" style="margin-top:6px">
-        <select class="meta-sel" id="adv-add" style="flex:1">
-          ${available.map(m => `<option value="${m.id}">${esc(m.label)} — ${esc(m.examples.map(e => e.system).join(', '))}</option>`).join('')}
-        </select>
-      </div>
-      <button class="add-row" onclick="uiToggleMethod(document.getElementById('adv-add').value)">+ механика из справочника</button>
-      <div class="sys-hint">Справочник межсистемный; что из него существует в вашем мире — решаете вы.</div>`
-    : ''}
-
-    <div class="pal-sec" style="margin-top:10px">Правила комнаты — условные модификаторы на всех</div>
+  return `<div class="sys-hint" style="margin:2px 0 6px">Условные модификаторы, действующие на всех в комнате.</div>
     ${rules.map(rule => ruleRow(rule, enabled, rollTargets)).join('')}
     ${rollTargets.length ? '<button class="add-row" onclick="uiAddRule()">+ правило</button>'
       : '<div class="sys-hint">В системе нет мишеней бросков — правилам комнаты не на что вешаться.</div>'}`;

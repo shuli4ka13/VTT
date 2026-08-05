@@ -87,7 +87,10 @@ export const donorById = id => SAMPLE_SYSTEMS.find(s => s.id === id) || null;
 
 // ── палитры шаблонов ────────────────────────────────────────────────────────
 
-const donors = () => SAMPLE_SYSTEMS.filter(s => s.id !== state.system.id);
+// Доноры — ВСЕ образцы, включая тот, с которого система начата: удалил
+// блок или правило — сможешь вернуть из образца. Уже существующее не
+// прячется, а помечается «уже в системе» (и всё равно копируемо).
+const donors = () => SAMPLE_SYSTEMS;
 
 // Сцена «Лист», правая колонка: блоки полей образцовых систем.
 export function blockTemplatesHtml() {
@@ -116,18 +119,22 @@ export function ruleTemplatesHtml() {
   if (!list.length) return '';
   return `<div class="pal-sec" style="margin-top:14px">Готовые механики из образцов</div>
     ${list.map(sys => `
-      ${Object.entries(sys.rules || {}).map(([id, rule]) => `
-        <div class="pal-item" onclick="uiCopyRule('${sys.id}','${id}')">
+      ${Object.entries(sys.rules || {}).map(([id, rule]) => {
+        const have = id in (state.system.rules || {});
+        return `<div class="pal-item"${have ? ' style="opacity:.45"' : ''} onclick="uiCopyRule('${sys.id}','${id}')">
           <span class="pal-icon">⚙</span>
           <div><div class="pal-t">${esc(rule.label || id)}</div>
-          <div class="pal-s">${esc(sys.name)} · шагов: ${(rule.steps || []).length}</div></div>
-        </div>`).join('')}
-      ${Object.entries(sys.tables || {}).map(([name, t]) => `
-        <div class="pal-item" onclick="uiCopyTable('${sys.id}','${name}')">
+          <div class="pal-s">${esc(sys.name)} · ${have ? 'уже в системе — клик даст копию' : `шагов: ${(rule.steps || []).length}`}</div></div>
+        </div>`;
+      }).join('')}
+      ${Object.entries(sys.tables || {}).map(([name, t]) => {
+        const have = name in (state.system.tables || {});
+        return `<div class="pal-item"${have ? ' style="opacity:.45"' : ''} onclick="uiCopyTable('${sys.id}','${name}')">
           <span class="pal-icon">▤</span>
           <div><div class="pal-t">${esc(t.label || name)}</div>
-          <div class="pal-s">${esc(sys.name)} · таблица, диапазонов: ${(t.ranges || []).length}</div></div>
-        </div>`).join('')}`).join('')}
+          <div class="pal-s">${esc(sys.name)} · ${have ? 'уже в системе — клик даст копию' : `таблица, диапазонов: ${(t.ranges || []).length}`}</div></div>
+        </div>`;
+      }).join('')}`).join('')}
     <div class="sys-hint">Правило приедет со своей костью и мишенью броска;
       чего не хватит (свойства предметов) — скажет приговор.</div>`;
 }

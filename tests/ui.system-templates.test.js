@@ -1,6 +1,7 @@
 import { group, test, eq, ok } from './harness.js';
 import { state } from '../src/ui/state.js';
-import { copyBlockFrom, copyRuleFrom, copyTableFrom } from '../src/ui/templates.js';
+import { copyBlockFrom, copyRuleFrom, copyTableFrom, ruleTemplatesHtml } from '../src/ui/templates.js';
+import { toggleDict } from '../src/ui/mode-author.js';
 import { SAMPLE_SYSTEMS } from '../src/model/systems.js';
 
 // «Подтянуть из любой образцовой системы и править как своё» до сих пор умели
@@ -91,5 +92,27 @@ group('шаблоны из образцовых систем', () => {
     ok(name !== 'proficiency', 'своя proficiency уже есть');
     ok(name in state.system.tables);
     delete state.system.tables[name];
+  });
+
+  test('палитра механик показывает ВСЕ образцы — и 5e, и киберпанк', () => {
+    const html = ruleTemplatesHtml();
+    ok(html.includes('5e — срез'), '5e-донор не скрыт, даже если система начата с него');
+    ok(html.includes('Киберпанк'));
+    ok(html.includes('уже в системе'), 'нетронутые правила образца помечены, а не спрятаны');
+  });
+
+  test('в 5e механика зовётся «Атака», а не «Удар» — удар остаётся киберпанку', () => {
+    eq(dnd5e.rules.strike.label, 'Атака');
+    eq(cp.rules.strike.label, 'Удар');
+  });
+});
+
+group('словари системы сворачиваются в колонке механик', () => {
+  test('toggleDict переключает раскрытие секции и помнит его', () => {
+    ok(!state.openDicts.constants, 'по умолчанию секция свёрнута — колонка читается как оглавление');
+    toggleDict('constants');
+    ok(state.openDicts.constants);
+    toggleDict('constants');
+    ok(!state.openDicts.constants);
   });
 });

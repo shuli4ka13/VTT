@@ -74,7 +74,7 @@ export const effects = [
     id: 'sword-strike',
     rk: 'call',
     label: 'Удар оружием',
-    description: 'Вызов правила «Удар»: проверка атаки против КД, урон костью оружия.',
+    description: 'Вызов правила «Атака»: проверка атаки против КД, урон костью оружия.',
     rule: 'strike',
     params: { bonus: '#attack_bonus', versus: 'ac', damage_bonus: '#str_mod', apply_to: 'hp_current' },
   },

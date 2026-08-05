@@ -184,6 +184,7 @@ Object.assign(window, {
   uiDelRule: redraw(author.deleteRule),
   uiSetRule: redraw(author.setRule),
   uiRenameSystem: redraw(author.renameSystem),
+  uiToggleDict: redraw(author.toggleDict),
   uiCopyBlock: redraw((donorId, group) => templates.copyBlockFrom(templates.donorById(donorId), group)),
   uiCopyRule: redraw((donorId, ruleId) => templates.copyRuleFrom(templates.donorById(donorId), ruleId)),
   uiCopyTable: redraw((donorId, name) => templates.copyTableFrom(templates.donorById(donorId), name)),
