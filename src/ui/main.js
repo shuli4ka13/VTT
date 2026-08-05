@@ -18,6 +18,7 @@ import * as table from './mode-table.js';
 import * as recordsEditor from './records-editor.js';
 import * as formula from './formula-input.js';
 import { packWorld, unpackWorld } from './world.js';
+import * as templates from './templates.js';
 import * as net from './net.js';
 
 // Один main.js на оба приложения: страница объявляет свой стартовый режим
@@ -183,6 +184,9 @@ Object.assign(window, {
   uiDelRule: redraw(author.deleteRule),
   uiSetRule: redraw(author.setRule),
   uiRenameSystem: redraw(author.renameSystem),
+  uiCopyBlock: redraw((donorId, group) => templates.copyBlockFrom(templates.donorById(donorId), group)),
+  uiCopyRule: redraw((donorId, ruleId) => templates.copyRuleFrom(templates.donorById(donorId), ruleId)),
+  uiCopyTable: redraw((donorId, name) => templates.copyTableFrom(templates.donorById(donorId), name)),
   uiAddRoll: redraw(author.addRoll),
   uiRenameRoll: redraw(author.renameRoll),
   uiDeleteRoll: redraw(author.deleteRoll),

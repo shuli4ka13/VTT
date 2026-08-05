@@ -11,6 +11,7 @@ import { toDisplay } from './formula-text.js';
 import { ADVANTAGE_METHODS, enabledMethods } from '../model/advantage-methods.js';
 import { renderRuleList, renderRuleCanvas, renderStepPalette } from './rule-editor.js';
 import { renderKindList, renderKindEditor, renderKindTemplates } from './records-editor.js';
+import { blockTemplatesHtml, ruleTemplatesHtml } from './templates.js';
 import { targets } from '../engine/targets.js';
 
 // Две сцены одного режима: ЛИСТ правит состав полей, МЕХАНИКИ — конвейеры
@@ -29,8 +30,12 @@ export function renderAuthor() {
 
   if (view === 'rules') {
     renderRuleList();
+    // Мишени бросков, механики преимущества и правила комнаты — тоже законы
+    // мира: живут в сцене «Механики», в общей колонке словарей системы.
+    document.getElementById('rules-list').insertAdjacentHTML('beforeend', dictionariesHtml());
     renderRuleCanvas();
     renderStepPalette();
+    document.getElementById('rules-palette').insertAdjacentHTML('beforeend', ruleTemplatesHtml());
     return;
   }
   if (view === 'records') {
@@ -41,7 +46,7 @@ export function renderAuthor() {
   }
   renderFieldList();
   renderEditor();
-  renderRules();
+  document.getElementById('author-templates').innerHTML = blockTemplatesHtml();
 }
 
 export function setAuthorView(view) {
@@ -87,14 +92,14 @@ function describe(f) {
 // СУЩЕСТВУЮТ в этом мире — объявляет система (system.advantage.methods).
 // Рисуем объявленное; справочник — только как источник для добавления.
 // У киберпанка здесь честно пусто: днд-преимущество ему не навязано.
-function renderRules() {
+function dictionariesHtml() {
   const enabled = enabledMethods(state.system);
   const available = ADVANTAGE_METHODS.filter(m => !enabled.includes(m));
   const rules = (state.system.modifiers || []).filter(m => m.kind === 'roll');
   const rollTargets = targets(state.system).filter(t => t.kind === 'roll');
 
-  document.getElementById('author-rules').innerHTML = `
-    <div class="pal-sec">Мишени бросков — объявлены системой</div>
+  return `
+    <div class="pal-sec" style="margin-top:12px">Мишени бросков — объявлены системой</div>
     ${rollsSection()}
 
     <div class="pal-sec" style="margin-top:10px">Механики преимущества — объявлены системой</div>

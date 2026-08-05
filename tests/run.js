@@ -30,6 +30,7 @@ import './ui.constants-editor.test.js';
 import './ui.system-name.test.js';
 import './ui.field-default.test.js';
 import './ui.tables-editor.test.js';
+import './ui.system-templates.test.js';
 import './ui.world.test.js';
 import './server.test.js';
 import './acceptance.test.js';
