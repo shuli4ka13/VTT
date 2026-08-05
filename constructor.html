@@ -47,6 +47,8 @@
   <button class="tnav" data-view="sheet" onclick="uiAuthorView('sheet')">⊞ Лист</button>
   <button class="tnav" data-view="rules" onclick="uiAuthorView('rules')">⚙ Механики</button>
   <button class="tnav" data-view="records" onclick="uiAuthorView('records')">⬡ Записи</button>
+  <input id="sys-name" class="blk-name" style="margin-left:auto;max-width:220px" placeholder="Название системы"
+         oninput="uiRenameSystem(this.value)">
 </div>
 
 <div class="three char-layout" id="author-view-sheet">

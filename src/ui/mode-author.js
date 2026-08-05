@@ -17,6 +17,9 @@ import { targets } from '../engine/targets.js';
 // правил. Разъезд по сценам — про место на экране, а не про границу режимов:
 // обе правят систему, и обе живут только у автора.
 export function renderAuthor() {
+  const nameInput = document.getElementById('sys-name');
+  if (nameInput && nameInput.value !== state.system.name) nameInput.value = state.system.name || '';
+
   const view = state.authorView;
   for (const name of ['sheet', 'rules', 'records']) {
     document.getElementById('author-view-' + name).style.display = name === view ? '' : 'none';
@@ -43,6 +46,12 @@ export function renderAuthor() {
 
 export function setAuthorView(view) {
   state.authorView = view;
+}
+
+// Имя системы уезжает в публикацию мира (see src/ui/net.js) — автор должен
+// выбирать его сам, а не наследовать имя образца, с которого начал.
+export function renameSystem(name) {
+  state.system.name = name;
 }
 
 function renderFieldList() {

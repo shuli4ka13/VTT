@@ -179,6 +179,7 @@ Object.assign(window, {
   uiAddRule: redraw(author.addRule),
   uiDelRule: redraw(author.deleteRule),
   uiSetRule: redraw(author.setRule),
+  uiRenameSystem: redraw(author.renameSystem),
   uiAddRoll: redraw(author.addRoll),
   uiRenameRoll: redraw(author.renameRoll),
   uiDeleteRoll: redraw(author.deleteRoll),
