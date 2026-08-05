@@ -35,7 +35,6 @@ export function targets(system) {
       group: f.group,
       kind: 'roll',
       from: f.tag,
-      die: f.roll.die || system.defaultDie || 20,
     })),
 
     // «Входящее» выводится только для хранимых полей: в вычисляемое поле
