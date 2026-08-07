@@ -310,6 +310,13 @@ export function verdictOf(effect) {
         if ('ref' in ref && !ids.has(String(ref.ref).split('.')[0])) {
           throw new Error(`ссылка на шаг «${String(ref.ref).split('.')[0]}», которого выше нет`);
         }
+        // Свойство записи объявляет РОД, а не эффект. Приехал шаг из чужой
+        // системы, а рода за ним не приехало — ссылка бьёт в пустоту, и молчать
+        // об этом нельзя: упадёт только при отправке, у игрока за столом.
+        const prop = 'prop' in ref ? ref.prop : ref.item;
+        if (prop !== undefined && !ref.optional && !declaredProps().has(prop)) {
+          throw new Error(`свойство «${prop}» не объявлено ни одним родом записей`);
+        }
       });
     } catch (err) {
       return { ok: false, text: `шаг ${i + 1}: ${err.message}` };
@@ -361,6 +368,16 @@ function passiveVerdict(effect) {
     }
   }
   return { ok: true, text: `эффект верный · модификаторов: ${mods.length}` };
+}
+
+// Какие свойства вообще существуют в этой системе. Объявляют их рода записей
+// (system.records[rk].props) — компендиум ничего нового не вводит.
+function declaredProps() {
+  const keys = new Set();
+  for (const decl of Object.values(state.system.records || {})) {
+    for (const p of decl.props || []) keys.add(p.key);
+  }
+  return keys;
 }
 
 function walkRefs(node, visit) {
@@ -519,9 +536,27 @@ function refCell(effectId, effect, step, index, slot, ref) {
 
   return cell(slot.label, `
     <select onchange="uiEffSlotRef('${effectId}',${index},'${slot.key}',this.value)">
-      ${known ? '' : `<option selected value="${esc(code)}">${esc(code)}</option>`}
+      ${known ? '' : `<option selected value="${esc(code)}">${esc(describeStale(code))}</option>`}
       ${options.map(([v, l]) => `<option value="${v}"${v === code ? ' selected' : ''}>${esc(l)}</option>`).join('')}
     </select>${editor}`);
+}
+
+// Ссылка, которой в списке допустимых больше нет: шаг приехал из чужой системы,
+// поле удалили, род не объявили. Показать её машинным кодом («prop:damage_dice»)
+// — значит заставить человека расшифровывать; поэтому пишем словами, ЧТО именно
+// пропало. Значение при этом не затирается: приговор скажет, а решает человек.
+function describeStale(code) {
+  const at = code.indexOf(':');
+  const form = at > 0 ? code.slice(0, at) : code;
+  const name = at > 0 ? code.slice(at + 1) : '';
+  const words = {
+    prop: `свойство записи «${name}» — не объявлено ни одним родом`,
+    item: `свойство записи «${name}» — не объявлено ни одним родом`,
+    param: `параметр «${name}» — эффект его не объявляет`,
+    ref: `результат шага «${name}» — такого шага выше нет`,
+    tag: `поле цели «${name}» — система его не объявляет`,
+  };
+  return words[form] || code;
 }
 
 function cell(label, control, tip) {

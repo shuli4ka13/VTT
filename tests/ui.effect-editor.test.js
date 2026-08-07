@@ -154,6 +154,28 @@ group('конструктор эффектов: новая механика с �
       deleteEffect(id);
     });
 
+    test('свойство записи без объявившего его рода — ошибка, а не тихая ссылка в пустоту', () => {
+      // Свойство объявляет РОД записи. Шаг, приехавший из чужой системы без
+      // своего рода, ссылается в пустоту — и раньше приговор этого не видел:
+      // падало только при отправке, у игрока за столом.
+      const saved = state.system.records;
+      const id = addEffect('manual');
+      addStep(id, 'amount');
+      eff(id).steps[0].dice = { prop: 'damage_dice' };
+
+      state.system.records = {};
+      const bad = verdictOf(eff(id));
+      eq(bad.ok, false);
+      ok(bad.text.includes('damage_dice'), bad.text);
+      ok(bad.text.includes('род'), 'приговор называет виновника — род, а не эффект');
+
+      state.system.records = { w: { kind: 'item', label: 'Оружие', props: [{ key: 'damage_dice', label: 'Кость', kind: 'dice' }] } };
+      eq(verdictOf(eff(id)).ok, true, 'объявили род — эффект ожил, правок в нём не понадобилось');
+
+      state.system.records = saved;
+      deleteEffect(id);
+    });
+
     test('заготовка нового шага проходит линт своего модуля', () => {
       const id = addEffect('manual');
       for (const type of ['threshold', 'amount', 'compare', 'apply', 'status']) {
