@@ -1,18 +1,24 @@
 // Шаблоны из образцовых систем — «намешать в свою систему море всего».
 //
-// Принцип один на все палитры: образец — ДОНОР, копия — своя, донор не
-// меняется. Копия приезжает РАБОТОСПОСОБНОЙ: эффект тянет свою кость, мишень
-// броска и механику преимущества, блок полей — зависимости формул и таблицы.
-// Приехать должно работающее, а не огрызок со ссылками в пустоту.
+// Принцип один на все палитры: образец — ДОНОР, копия — своя, донор не меняется.
+//
+// Что копия тянет за собой, а что нет — граница проведена по СЛОВАРЯМ СИСТЕМЫ.
+// Кость, мишень броска, механика преимущества, тип действия — законы мира,
+// они едут вслед за эффектом. Поля листа и рода записей НЕ едут: это то, что
+// автор сочинил сам, и создавать их за него — значит подсунуть ему в лист
+// чужие характеристики, а в компендиум кнопку, которую он не заказывал.
+//
+// Отсюда честное следствие: эффект со ссылкой на поле («бьём против класса
+// брони») приезжает в пустую систему КРАСНЫМ, и это правильно — приговор
+// называет недостающее поимённо, а решает автор.
+//
+// Блок полей — исключение внутри своей палитры: он тянет блоки-основания
+// целиком, потому что блок и есть единица, которой палитра торгует.
 //
 // Раскладка палитры эффектов — по МЕХАНИКАМ, а не по системам: собирая свою
 // атаку, человек хочет видеть рядом «как это делает 5e» и «как киберпанк».
 // Система-донор при этом не исчезает — она подпись на карточке и фильтр.
 // Две оси одной карточки: категория говорит ЧТО это, подпись — ОТКУДА взято.
-//
-// Ссылки на свойства записей ({ prop: 'damage_dice' }) не резолвятся при
-// копировании намеренно: свойство объявляет РОД записи, рода подтягиваются
-// своим шаблоном на сцене «Записи» — приговор эффекта скажет, чего не хватает.
 
 import { state, esc } from './state.js';
 import { SAMPLE_SYSTEMS, SAMPLE_WORLDS } from '../model/systems.js';
@@ -153,36 +159,77 @@ export function copyRecordFrom(world, recordId) {
   return recordId;
 }
 
-// Блок — группа полей. Вместе с полем едут его зависимости по формуле
-// (даже из других блоков: «Навыки» притянут «Модификаторы», те — «Характеристики»)
-// и таблицы табличных полей. Уже существующий тег переиспользуется: смешение,
-// а не затирание.
+// Блок — группа полей, и приезжает он ЦЕЛИКОМ вместе с блоками, от которых
+// зависит: «Навыки» притянут «Модификаторы», те — «Характеристики».
+//
+// Целиком — потому что блок это единица, которую автор донора собрал руками:
+// шесть характеристик стоят одной таблицей на листе. Раньше ехали только
+// те поля, на которые ссылались формулы, и в систему приезжало пять
+// характеристик из шести (Телосложение не приезжало: ни один навык на него
+// не ссылается). Получался блок-обманка — выглядит как «Характеристики»,
+// а на деле огрызок.
+//
+// Порядок тоже не случайный: сначала то, от чего зависят, потом зависимое.
+// Иначе на листе «Навыки» оказывались выше «Характеристик» — задом наперёд
+// относительно того, как лист читают.
 export function copyBlockFrom(donor, group) {
-  const queue = donor.fields.filter(f => f.group === group).map(f => f.tag);
-  const seen = new Set(queue);
+  for (const g of orderedBlocks(donor, neededBlocks(donor, group))) {
+    for (const src of donor.fields.filter(f => f.group === g)) {
+      if (state.system.fields.some(f => f.tag === src.tag)) continue;
+      state.system.fields.push(structuredClone(src));
 
-  while (queue.length) {
-    const tag = queue.shift();
-    const src = donor.fields.find(f => f.tag === tag);
-    if (!src) continue; // зависимость вне донора — приговор формулы покажет
-    if (state.system.fields.some(f => f.tag === tag)) continue;
-
-    state.system.fields.push(structuredClone(src));
-
-    if (src.value.kind === 'table' && !(state.system.tables || {})[src.value.table]) {
-      const table = (donor.tables || {})[src.value.table];
-      if (table) (state.system.tables || (state.system.tables = {}))[src.value.table] = structuredClone(table);
-    }
-
-    const expr = src.value.kind === 'formula' ? src.value.expr
-      : src.value.kind === 'table' ? src.value.arg : '';
-    if (!expr) continue;
-    try {
-      for (const dep of compile(expr).deps) {
-        if (!seen.has(dep)) { seen.add(dep); queue.push(dep); }
+      if (src.value.kind === 'table' && !(state.system.tables || {})[src.value.table]) {
+        const table = (donor.tables || {})[src.value.table];
+        if (table) (state.system.tables || (state.system.tables = {}))[src.value.table] = structuredClone(table);
       }
-    } catch { /* формула донора не разобралась — поле уже скопировано, приговор скажет */ }
+    }
   }
+}
+
+// Замыкание по зависимостям, но считаем его в БЛОКАХ, а не в полях: попало
+// одно поле блока — нужен весь блок, а он тянет свои зависимости дальше.
+function neededBlocks(donor, group) {
+  const blocks = new Set([group]);
+  for (let grew = true; grew;) {
+    grew = false;
+    for (const g of [...blocks]) {
+      for (const dep of blockDeps(donor, g)) {
+        const owner = (donor.fields.find(f => f.tag === dep) || {}).group;
+        if (owner && !blocks.has(owner)) { blocks.add(owner); grew = true; }
+      }
+    }
+  }
+  return blocks;
+}
+
+// Теги, на которые ссылаются формулы блока. Зависимость вне донора молча
+// пропускается — её покажет приговор формулы у скопированного поля.
+function blockDeps(donor, group) {
+  const deps = new Set();
+  for (const f of donor.fields.filter(x => x.group === group)) {
+    const expr = f.value.kind === 'formula' ? f.value.expr
+      : f.value.kind === 'table' ? f.value.arg : '';
+    if (!expr) continue;
+    try { for (const d of compile(expr).deps) deps.add(d); } catch { /* приговор скажет */ }
+  }
+  return deps;
+}
+
+// Топологический порядок: блок едет после всех, от которых зависит.
+// Цикл между блоками невозможен по построению формул, но если данные
+// битые — оставшиеся блоки просто уезжают как есть, без зависания.
+function orderedBlocks(donor, blocks) {
+  const rest = new Set(blocks);
+  const out = [];
+  while (rest.size) {
+    const free = [...rest].filter(g => ![...blockDeps(donor, g)].some(dep => {
+      const owner = (donor.fields.find(f => f.tag === dep) || {}).group;
+      return owner && owner !== g && rest.has(owner);
+    }));
+    if (!free.length) { out.push(...rest); break; }
+    for (const g of free) { out.push(g); rest.delete(g); }
+  }
+  return out;
 }
 
 export function copyTableFrom(donor, tableName) {

@@ -1,4 +1,4 @@
-import { group, test, eq, ok } from './harness.js';
+import { group, test, eq, ok, deepEq } from './harness.js';
 import { state } from '../src/ui/state.js';
 import { copyBlockFrom, copyEffectFrom, copyTableFrom, effectTemplatesHtml } from '../src/ui/templates.js';
 import { toggleDict } from '../src/ui/mode-author.js';
@@ -63,6 +63,31 @@ group('шаблоны из образцовых систем', () => {
     const id = copyEffectFrom(donor, 'hit');
     eq(state.system.constants.lead_die.dice[0].sides, 20, 'моя ведущая кость осталась d20');
     delete state.system.effects[id];
+  });
+
+  test('зависимый блок тянет блоки-основания ЦЕЛИКОМ и ставит их выше себя', () => {
+    const saved = state.system;
+    state.system = { id: 'моя', name: 'Моя', fields: [], tables: {}, rolls: [], effects: {}, room_rules: [], constants: {}, records: {} };
+
+    copyBlockFrom(dnd5e, 'Навыки');
+
+    // Порядок: сначала то, от чего зависят. Иначе на листе «Навыки»
+    // оказывались бы выше «Характеристик» — задом наперёд.
+    const order = [];
+    for (const f of state.system.fields) if (!order.includes(f.group)) order.push(f.group);
+    deepEq(order, ['Характеристики', 'Модификаторы', 'Навыки']);
+
+    // Целиком: раньше ехали только поля, на которые ссылались формулы, и
+    // Телосложение не приезжало вовсе — ни один навык на него не смотрит.
+    // Получался блок-обманка: выглядит как «Характеристики», а внутри пять из шести.
+    for (const group of order) {
+      const mine = state.system.fields.filter(f => f.group === group).length;
+      const inDonor = dnd5e.fields.filter(f => f.group === group).length;
+      eq(mine, inDonor, `блок «${group}» приехал целиком`);
+    }
+    ok(state.system.fields.some(f => f.tag === 'con'), 'Телосложение приехало, хоть навыки его и не просили');
+
+    state.system = saved;
   });
 
   test('блок полей приезжает с транзитивными зависимостями формул и таблицами', () => {
