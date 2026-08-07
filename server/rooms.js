@@ -6,6 +6,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { exchange } from '../src/events/exchange.js';
+import { migrateWorld } from '../src/model/migrate.js';
 import { randomDie } from '../src/engine/dice.js';
 import { me } from './auth.js';
 import { can, ROOM_ROLES } from './permissions.js';
@@ -31,7 +32,10 @@ export function listWorlds(db) {
 export function createRoom(db, worldId, name, byUser) {
   const row = db.prepare('SELECT data FROM worlds WHERE id = ?').get(worldId);
   if (!row) throw new Error(`мира «${worldId}» на сервере нет`);
-  const world = JSON.parse(row.data);
+  // Мир мог быть опубликован до перекройки на эффекты. Комната — копия,
+  // и копируется она уже в новом формате: иначе партия по старому миру
+  // упала бы на первом же ходе.
+  const world = migrateWorld(JSON.parse(row.data));
 
   const id = randomUUID();
   db.prepare('INSERT INTO rooms (id, name, world_id, system, compendium) VALUES (?, ?, ?, ?, ?)')
