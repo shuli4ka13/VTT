@@ -113,11 +113,13 @@ function applyRoomState(room) {
   }
 
   // Журнал сеанса строится из серверного журнала — у всех одинаковый.
+  // Ход — это не одна запись, а цепочка: конверт плюс ответки триггеров.
+  const named = id => state.sheets.find(s => s.id === id) || { name: id || '?' };
   state.log = room.journal.map(entry => {
-    const from = state.sheets.find(s => s.id === entry.report.from) || { name: entry.report.from };
-    const target = state.sheets.find(s => s.id === entry.target) || { name: entry.target || '?' };
-    return `<span style="color:var(--muted)">#${entry.seq} · ${esc(entry.by)}</span><br>`
-      + describeReport(from, target, entry.report);
+    const head = `<span style="color:var(--muted)">#${entry.seq} · ${esc(entry.by)}</span>`;
+    const lines = (entry.reports || []).map(({ fromId, toId, report }) =>
+      describeReport(named(fromId), named(toId), report));
+    return [head, ...lines].join('<br>');
   });
 }
 

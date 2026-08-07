@@ -18,8 +18,8 @@ import { cyberpunk, cpCompendium, silver, raze } from '../src/model/system-cyber
 // Копия глубокая: сид не смеет мутировать модули-образцы.
 export function sampleWorlds() {
   return structuredClone([
-    { name: dnd5e.name, world: { version: 1, system: dnd5e, compendium: dndCompendium, sheets: [arven, mirra] } },
-    { name: cyberpunk.name, world: { version: 1, system: cyberpunk, compendium: cpCompendium, sheets: [silver, raze] } },
+    { name: dnd5e.name, world: { version: 2, system: dnd5e, compendium: dndCompendium, sheets: [arven, mirra] } },
+    { name: cyberpunk.name, world: { version: 2, system: cyberpunk, compendium: cpCompendium, sheets: [silver, raze] } },
   ]);
 }
 

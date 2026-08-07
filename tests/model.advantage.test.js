@@ -16,9 +16,17 @@ group('механики преимущества объявляет систем
     eq(enabled[0], 'rerollBest');
   });
 
-  test('киберпанк не объявляет НИ ОДНОЙ — днд-механика не навязывается миру хрома', () => {
-    const methods = (cyberpunk.advantage || {}).methods || {};
-    eq(Object.keys(methods).filter(id => methods[id]).length, 0);
+  test('система объявляет ровно те механики, какими пользуются её эффекты', () => {
+    // Раньше киберпанк не объявлял ни одной — и это было честно, пока в нём
+    // не было ни одного эффекта, правящего бросок. Теперь есть «Вживлённые
+    // рефлексы», и механика обязана быть объявлена: иначе модификатор
+    // ссылался бы в пустоту.
+    const used = new Set(Object.values(cyberpunk.effects)
+      .flatMap(e => e.modifiers || [])
+      .filter(m => m.effect)
+      .map(m => m.method));
+    const declared = (cyberpunk.advantage || {}).methods || {};
+    for (const id of used) ok(declared[id], `механика «${id}» используется, но не объявлена`);
   });
 
   test('всё объявленное системой есть в справочнике', () => {

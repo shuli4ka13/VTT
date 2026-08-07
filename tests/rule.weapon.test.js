@@ -1,13 +1,16 @@
-import { group, test, eq, ok, deepEq, throws } from './harness.js';
+import { group, test, eq, ok, throws } from './harness.js';
 import { send, receive, availableActions } from '../src/events/envelope.js';
 import { system } from '../src/model/system.js';
 import { arven, mirra } from '../src/model/sheets.js';
 import { compendium, findItem } from '../src/model/compendium.js';
 
-// Предмет — ИСТОЧНИК действий, как в Foundry: у меча есть АКТИВНОСТИ,
-// каждая зовёт эффект-вызов. Надел меч — получил его атаку; снял — потерял.
-// Отдельная запись-действие остаётся для того, что предметом не является:
-// заклинаний и приёмов.
+// Предмет — ИСТОЧНИК действий, как в Foundry: надел меч — получил его атаку,
+// снял — потерял. Но объявлять эту атаку мечу не нужно: её даёт ПРИВЯЗКА
+// РОДА «Оружие», а запись заполняет только кость урона. Это и есть
+// протягивание: кинжал вызывает атаку сам, ничего про неё не зная.
+//
+// Своя активность на записи остаётся как надстройка для штучных вещей —
+// она перебивает привязку рода.
 
 const queue = (...values) => {
   const rest = [...values];
@@ -17,28 +20,32 @@ const queue = (...values) => {
   };
 };
 
+const world = { system, compendium };
+
 group('предмет даёт действие', () => {
-  test('у записи меча есть активность, а записи-действия «удар мечом» нет вовсе', () => {
+  test('меч не объявляет своей атаки — её даёт привязка его рода', () => {
     const sword = findItem('longsword-item');
-    ok((sword.activities || []).length, 'активности живут на предмете');
-    ok(sword.activities[0].effect, 'активность — ссылка на эффект-вызов, шагов в ней нет');
-    ok(!compendium.actions.some(a => a.id === 'longsword'), 'отдельной записи-действия больше нет');
+    ok(!sword.activities, 'у записи нет ни активностей, ни шагов');
+    ok(!('rule' in sword), 'и промежуточной записи-вызова тоже нет');
+    ok(system.records[sword.rk].bindings.some(b => b.effect === 'strike'),
+      'привязку объявил род «Оружие» в системе');
+    ok(sword.props.damage_dice, 'запись заполнила ровно одну циферку — кость урона');
   });
 
   test('надетый меч появляется в списке действий владельца', () => {
-    const list = availableActions(arven, compendium);
+    const list = availableActions(arven, world);
     const attack = list.find(a => a.id === 'longsword-item:0');
     ok(attack, 'атака меча выведена из снаряжения, а не выучена');
-    ok(attack.label.includes('Длинный меч'), 'лейбл собран из предмета и активности');
-    eq(attack.weapon, 'longsword-item', 'кость урона придёт из самого меча');
+    ok(attack.label.includes('Длинный меч'), 'лейбл собран из записи и привязки');
+    eq(attack.effect, 'strike', 'привязка называет эффект системы');
   });
 
   test('снял меч — атака пропала из списка', () => {
     const bare = { ...arven, equipped: arven.equipped.filter(id => id !== 'longsword-item') };
-    ok(!availableActions(bare, compendium).some(a => a.id === 'longsword-item:0'));
+    ok(!availableActions(bare, world).some(a => a.id === 'longsword-item:0'));
   });
 
-  test('активность меча бьёт так же, как била запись-действие', () => {
+  test('меч бьёт костью из своей записи', () => {
     const env = send('longsword-item:0', { system, sheet: arven, compendium, die: queue(10, 5) });
     eq(env.steps[1].rolled.notation, '1d8', 'нотация пришла из записи «Длинный меч»');
     const { sheet, report } = receive(env, { system, sheet: mirra, compendium, die: queue() });
@@ -46,30 +53,55 @@ group('предмет даёт действие', () => {
     eq(sheet.values.hp_current, 13, '21 минус кость 5 минус Сила 3');
   });
 
-  test('заклинание — по-прежнему отдельная запись-действие: у него нет предмета', () => {
-    const list = availableActions(mirra, compendium);
-    ok(list.some(a => a.id === 'poison-spray'), 'выученное заклинание в списке');
-    ok(!('weapon' in (list.find(a => a.id === 'poison-spray') || {})) ||
-      !list.find(a => a.id === 'poison-spray').weapon, 'оружия у заклинания нет');
+  test('заклинание — тоже запись с циферками: род привязал, запись заполнила', () => {
+    const list = availableActions(mirra, world);
+    const spell = list.find(a => a.id === 'poison-spray:0');
+    ok(spell, 'выученное заклинание в списке');
+    eq(spell.effect, 'save', 'род «Атакующее заклинание» привязан к спасброску');
+    eq(spell.record.props.damage_dice, '2d6', 'а кость урона ввёл человек');
+  });
+
+  test('своя активность перебивает привязку рода — так живут штучные вещи', () => {
+    const book = {
+      ...compendium,
+      items: compendium.items.map(i => i.id === 'longsword-item'
+        ? { ...i, activities: [{ label: 'Особый удар', effect: 'strike',
+          args: { bonus: '#attack_bonus', versus: 'ac', damage_bonus: '0', apply_to: 'hp_current' } }] }
+        : i),
+    };
+    const list = availableActions(arven, { system, compendium: book });
+    const mine = list.filter(a => a.id.startsWith('longsword-item'));
+    eq(mine.length, 1, 'привязка рода не добавляется сверху — своя её заменяет');
+    ok(mine[0].label.includes('Особый удар'));
   });
 
   test('свойства оружия объявляет система: нет объявления — внятная ошибка', () => {
     const { records, ...noSchema } = system;
     throws(() => send('longsword-item:0', { system: noSchema, sheet: arven, compendium, die: queue(10) }),
-      'damage_dice');
+      'longsword-item');
   });
 
-  test('активность с пропавшим эффектом — внятная ошибка при отправке', () => {
+  test('привязка на пропавший эффект — внятная ошибка при отправке', () => {
     const book = {
       ...compendium,
       items: compendium.items.map(i => i.id === 'longsword-item'
-        ? { ...i, activities: [{ label: 'Атака', effect: 'нетакого' }] }
+        ? { ...i, activities: [{ label: 'Атака', effect: 'нетакого', args: {} }] }
         : i),
     };
     throws(() => send('longsword-item:0', { system, sheet: arven, compendium: book, die: queue(10) }), 'нетакого');
   });
 
-  test('битый номер активности — внятная ошибка, а не тихий undefined', () => {
-    throws(() => send('longsword-item:9', { system, sheet: arven, compendium, die: queue(10) }), 'longsword-item:9');
+  test('битый номер привязки — внятная ошибка, а не тихий undefined', () => {
+    throws(() => send('longsword-item:9', { system, sheet: arven, compendium, die: queue(10) }), 'longsword-item');
+  });
+
+  test('пассивный эффект применить нельзя — его вешают, а не бьют им', () => {
+    const book = {
+      ...compendium,
+      items: compendium.items.map(i => i.id === 'longsword-item'
+        ? { ...i, activities: [{ label: 'Атака', effect: 'poisoned', args: {} }] }
+        : i),
+    };
+    throws(() => send('longsword-item:0', { system, sheet: arven, compendium: book, die: queue(10) }), 'пассивн');
   });
 });

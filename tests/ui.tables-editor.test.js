@@ -1,6 +1,6 @@
 import { group, test, eq, ok } from './harness.js';
 import { state, field } from '../src/ui/state.js';
-import { addTable, renameTable, addRange, setRange, deleteRange, deleteTable, renderTables } from '../src/ui/rule-editor.js';
+import { addTable, renameTable, addRange, setRange, deleteRange, deleteTable, renderTables } from '../src/ui/dictionaries-editor.js';
 import { addField, setValueKind } from '../src/ui/field-editor.js';
 
 // Таблица по диапазонам — третий способ вычислить поле (наравне с «хранимое»

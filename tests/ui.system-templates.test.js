@@ -1,6 +1,6 @@
 import { group, test, eq, ok } from './harness.js';
 import { state } from '../src/ui/state.js';
-import { copyBlockFrom, copyRuleFrom, copyTableFrom, ruleTemplatesHtml } from '../src/ui/templates.js';
+import { copyBlockFrom, copyEffectFrom, copyTableFrom, effectTemplatesHtml } from '../src/ui/templates.js';
 import { toggleDict } from '../src/ui/mode-author.js';
 import { SAMPLE_SYSTEMS } from '../src/model/systems.js';
 
@@ -13,27 +13,27 @@ const dnd5e = SAMPLE_SYSTEMS.find(s => s.id === 'dnd5e-slice');
 const cp = SAMPLE_SYSTEMS.find(s => s.id === 'cp-slice');
 
 group('шаблоны из образцовых систем', () => {
-  test('правило из киберпанка приезжает в 5e-систему под свободным id', () => {
-    const id = copyRuleFrom(cp, 'strike');
+  test('эффект из киберпанка приезжает в 5e-систему под свободным id', () => {
+    const id = copyEffectFrom(cp, 'strike');
     ok(id !== 'strike', 'strike в системе уже есть — копия не затирает его');
-    const rule = state.system.rules[id];
-    eq(rule.steps.length, cp.rules.strike.steps.length, 'шаги приехали целиком');
-    eq(rule.params.length, cp.rules.strike.params.length, 'и параметры');
+    const effect = state.system.effects[id];
+    eq(effect.steps.length, cp.effects.strike.steps.length, 'шаги приехали целиком');
+    eq(effect.params.length, cp.effects.strike.params.length, 'и параметры');
 
     // Копия своя: правка не трогает донора.
-    rule.label = 'Хромированный удар';
-    eq(cp.rules.strike.label, 'Удар', 'донор не изменился');
-    delete state.system.rules[id];
+    effect.label = 'Хромированный удар';
+    eq(cp.effects.strike.label, 'Удар', 'донор не изменился');
+    delete state.system.effects[id];
   });
 
-  test('правило тянет за собой недостающие константы и мишени бросков — и не дублирует существующие', () => {
+  test('эффект тянет за собой недостающие константы и мишени бросков — и не дублирует существующие', () => {
     const donor = {
       id: 'донор', name: 'Донор',
       constants: { volt_die: { label: 'Вольт-кость', kind: 'die', dice: [{ count: 1, sides: 8 }] } },
       rolls: [{ tag: 'zap_roll', label: 'Разряд' }],
-      rules: {
+      effects: {
         zap: {
-          label: 'Разряд', params: [],
+          label: 'Разряд', activation: 'manual', params: [],
           steps: [{ id: 'hit', type: 'threshold',
             roll: { die: { constant: 'volt_die' }, bonus: { const: 0 }, check: 'zap_roll' },
             versus: { const: 10 } }],
@@ -41,33 +41,33 @@ group('шаблоны из образцовых систем', () => {
       },
     };
     const rollsBefore = state.system.rolls.length;
-    const id = copyRuleFrom(donor, 'zap');
+    const id = copyEffectFrom(donor, 'zap');
 
-    ok('volt_die' in state.system.constants, 'константа приехала вслед за правилом');
+    ok('volt_die' in state.system.constants, 'константа приехала вслед за эффектом');
     ok(state.system.rolls.some(r => r.tag === 'zap_roll'), 'мишень броска приехала');
     eq(state.system.rolls.length, rollsBefore + 1, 'ровно одна новая — существующие не тронуты');
 
-    delete state.system.rules[id];
+    delete state.system.effects[id];
     delete state.system.constants.volt_die;
     state.system.rolls = state.system.rolls.filter(r => r.tag !== 'zap_roll');
   });
 
-  test('правило с существующей костью переиспользует её, а не затирает', () => {
+  test('эффект с существующей костью переиспользует её, а не затирает', () => {
     const donor = {
       id: 'донор2', name: 'Донор',
       constants: { lead_die: { label: 'Чужая кость', kind: 'die', dice: [{ count: 1, sides: 10 }] } },
       rolls: [],
-      rules: { hit: { label: 'Хит', params: [], steps: [{ id: 's', type: 'threshold',
+      effects: { hit: { label: 'Хит', activation: 'manual', params: [], steps: [{ id: 's', type: 'threshold',
         roll: { die: { constant: 'lead_die' }, bonus: { const: 0 }, check: null }, versus: { const: 5 } }] } },
     };
-    const id = copyRuleFrom(donor, 'hit');
+    const id = copyEffectFrom(donor, 'hit');
     eq(state.system.constants.lead_die.dice[0].sides, 20, 'моя ведущая кость осталась d20');
-    delete state.system.rules[id];
+    delete state.system.effects[id];
   });
 
   test('блок полей приезжает с транзитивными зависимостями формул и таблицами', () => {
     const saved = state.system;
-    state.system = { id: 'моя', name: 'Моя', fields: [], tables: {}, rolls: [], rules: {}, constants: {}, records: {}, modifiers: [] };
+    state.system = { id: 'моя', name: 'Моя', fields: [], tables: {}, rolls: [], effects: {}, room_rules: [], constants: {}, records: {} };
 
     copyBlockFrom(dnd5e, 'Навыки');
     ok(state.system.fields.some(f => f.tag === 'athletics'), 'навык приехал');
@@ -95,15 +95,15 @@ group('шаблоны из образцовых систем', () => {
   });
 
   test('палитра механик показывает ВСЕ образцы — и 5e, и киберпанк', () => {
-    const html = ruleTemplatesHtml();
+    const html = effectTemplatesHtml();
     ok(html.includes('D&amp;D 5e'), '5e-донор не скрыт, даже если система начата с него');
     ok(html.includes('Киберпанк'));
     ok(html.includes('уже в системе'), 'нетронутые правила образца помечены, а не спрятаны');
   });
 
   test('в 5e механика зовётся «Атака», а не «Удар» — удар остаётся киберпанку', () => {
-    eq(dnd5e.rules.strike.label, 'Атака');
-    eq(cp.rules.strike.label, 'Удар');
+    eq(dnd5e.effects.strike.label, 'Атака');
+    eq(cp.effects.strike.label, 'Удар');
   });
 });
 

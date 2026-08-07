@@ -9,9 +9,11 @@
 //   литерал (число/строка/null) — уже чистые данные, проходит как есть
 //   { const: v }                — фиксированное значение
 //   { expr: '#a + 1', of? }     — формула; of: 'sender' (умолчание) | 'target'
-//   { param: 'key' }            — параметр правила, заполняет эффект;
-//                                 как его читать, говорит объявление в rule.params
-//   { item: 'prop' }            — свойство записи-источника (оружия), сторона отправителя
+//   { param: 'key' }            — параметр эффекта, заполняет запись компендиума;
+//                                 как его читать, говорит объявление в effect.params
+//   { prop: 'damage_dice' }     — свойство ЗАПИСИ-ИСТОЧНИКА, сторона отправителя.
+//                                 Читаются только свойства, объявленные родом
+//                                 записи; `item` — прежнее имя той же формы
 //   { tag: 'hp_max' }           — поле ЦЕЛИ, посчитает получатель своими формулами
 //   { ref: 'шаг.путь' }         — именованный результат предыдущего шага
 //
@@ -22,7 +24,11 @@
 import { compile } from '../formula/index.js';
 import { EngineError } from './errors.js';
 
-const FORMS = ['const', 'expr', 'param', 'item', 'tag', 'ref'];
+const FORMS = ['const', 'expr', 'param', 'prop', 'item', 'tag', 'ref'];
+
+// `item` — прежнее имя формы `prop`. Старые системы читали так свойства
+// оружия; форма обобщена на любую запись-источник, имя оставлено рабочим.
+const propKey = ref => ('prop' in ref ? ref.prop : ref.item);
 
 // ── сторона отправителя ──────────────────────────────────────────────────────
 // Возвращает структурную ссылку для конверта: своё — числом ({ const }),
@@ -43,18 +49,19 @@ export function packRef(ref, ctx) {
   // второй честно даёт null, а не роняет упаковку.
   if ('param' in ref) return packParam(ref.param, ref.optional, ctx);
 
-  if ('item' in ref) {
-    if (!ctx.item) {
+  if ('prop' in ref || 'item' in ref) {
+    const key = propKey(ref);
+    if (!ctx.props) {
       if (ref.optional) return { const: null };
       throw new EngineError(
-        `${who(ctx)}: неоткуда взять свойство «${ref.item}» — источник не предмет`);
+        `${who(ctx)}: неоткуда взять свойство «${key}» — у источника нет записи со свойствами`);
     }
-    if (ctx.item[ref.item] === undefined) {
+    if (ctx.props[key] === undefined) {
       if (ref.optional) return { const: null };
       throw new EngineError(
-        `${who(ctx)}: запись-источник не заполнила свойство «${ref.item}»`);
+        `${who(ctx)}: запись-источник не заполнила свойство «${key}»`);
     }
-    return { const: ctx.item[ref.item] };
+    return { const: ctx.props[key] };
   }
 
   if ('tag' in ref) return { tag: ref.tag };
@@ -64,14 +71,19 @@ export function packRef(ref, ctx) {
 }
 
 // Параметр подставляется ровно один раз, при упаковке: в конверте { param }
-// не встречается. Как читать значение, говорит объявление правила.
+// не встречается. Как читать значение, говорит объявление эффекта.
+//
+// Аргумент из записи компендиума бывает двух видов: готовое значение
+// (строка, число) либо { prop: 'ключ' } — «возьми из свойств самой записи».
+// Второй вид и делает род ФОРМОЙ заполнения: привязка рода написана один раз,
+// а каждая запись подставляет в неё свои циферки.
 function packParam(key, optional, ctx) {
   const decl = (ctx.paramDefs || []).find(p => p.key === key);
   if (!decl) {
-    throw new EngineError(`${who(ctx)}: правило не объявляет параметра «${key}»`);
+    throw new EngineError(`${who(ctx)}: эффект не объявляет параметра «${key}»`);
   }
-  const value = (ctx.params || {})[key];
-  if (value === undefined || value === '') {
+  const value = fromArgs(key, ctx);
+  if (value === undefined || value === '' || value === null) {
     if (optional) return { const: null };
     throw new EngineError(`${who(ctx)}: параметр «${key}» не заполнен`);
   }
@@ -79,6 +91,14 @@ function packParam(key, optional, ctx) {
   if (decl.kind === 'expr') return packRef({ expr: value, of: decl.of }, ctx);
   if (decl.kind === 'tag') return { tag: value };
   return { const: value };
+}
+
+function fromArgs(key, ctx) {
+  const arg = (ctx.params || {})[key];
+  if (arg === null || typeof arg !== 'object') return arg;
+  if ('prop' in arg) return (ctx.props || {})[arg.prop];
+  throw new EngineError(
+    `${who(ctx)}: аргумент «${key}» неизвестной формы ${JSON.stringify(arg)} — умею значение или { prop }`);
 }
 
 // ── сторона получателя ──────────────────────────────────────────────────────
@@ -103,9 +123,9 @@ export function resolveRef(ref, ctx) {
       `${who(ctx)}: параметр «${ref.param}» не был упакован отправителем — конверт бит`);
   }
 
-  if ('item' in ref) {
+  if ('prop' in ref || 'item' in ref) {
     throw new EngineError(
-      `${who(ctx)}: свойство предмета «${ref.item}» пришло неразрешённым — конверт бит`);
+      `${who(ctx)}: свойство записи «${propKey(ref)}» пришло неразрешённым — конверт бит`);
   }
 
   if ('tag' in ref) return ctx.pass.resolve(ref.tag);

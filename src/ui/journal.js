@@ -8,13 +8,17 @@
 import { state, esc } from './state.js';
 import { labelOf } from '../engine/targets.js';
 import { registry } from '../engine/steps/index.js';
+import { effectLabelOf } from '../events/envelope.js';
 
 export function describeReport(from, to, report) {
-  const head = `<b>${esc(from.name)}</b> → <b>${esc(to.name)}</b> · ${esc(report.label)}`;
+  // Ответка подписывается иначе: это не ход игрока, а сработавший триггер.
+  // Читатель журнала должен видеть, что второй строкой мир ответил сам.
+  const arrow = report.reply ? '⚡ →' : '→';
+  const head = `<b>${esc(from.name)}</b> ${arrow} <b>${esc(to.name)}</b> · ${esc(report.label)}`;
 
   const helpers = {
     labelOf: tag => labelOf(state.system, tag),
-    effectLabel: id => ((state.compendium.effects || []).find(e => e.id === id) || { label: id }).label,
+    effectLabel: id => effectLabelOf(state.system, id),
   };
 
   const lines = report.trace.map(entry => {
@@ -27,7 +31,12 @@ export function describeReport(from, to, report) {
 
   const verdict = report.stopped
     ? `<span class="roll-fail">цепочка оборвана на шаге «${esc(String(report.stopped.step))}»</span>`
-    : '<span class="roll-success">правило отработало до конца</span>';
+    : '<span class="roll-success">эффект отработал до конца</span>';
 
-  return `${head}<br>${lines.join('<br>')}<br>${verdict}`;
+  // Израсходованное срабатывание — часть события, а не отдельная новость:
+  // человек должен видеть, сколько ответок у него осталось.
+  const spent = (report.spent || []).map(id =>
+    `<span class="roll-note">${esc(effectLabelOf(state.system, id))}: срабатывание израсходовано</span>`);
+
+  return [head, ...lines, verdict, ...spent].join('<br>');
 }

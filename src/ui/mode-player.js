@@ -9,10 +9,12 @@
 
 import { state, sheet, field, pass, rollOf, valueOf, show, newRecordId, esc, log } from './state.js';
 import { targets } from '../engine/targets.js';
-import { send, receive, availableActions } from '../events/envelope.js';
+import { availableActions } from '../events/envelope.js';
+import { exchange } from '../events/exchange.js';
 import { describeReport } from './journal.js';
 import { online, patchSheet } from './net.js';
 import { randomDie } from '../engine/dice.js';
+import { activationOf } from '../engine/effects.js';
 import { defaultModifier } from './mode-compendium.js';
 
 export function renderPlayer() {
@@ -173,12 +175,19 @@ function renderBelongings() {
   const current = sheet();
   if (!current) { host.innerHTML = ''; return; }
 
-  const { items, effects, actions } = state.compendium;
+  const { items, actions } = state.compendium;
   const others = state.sheets.filter(s => s.id !== current.id);
   const p = pass();
-  // Что можно применить: активности НАДЕТЫХ предметов плюс выученные записи.
+  // Что можно применить: привязки НАДЕТЫХ предметов плюс выученные записи.
   // Меч даёт свою атаку сам — как в Foundry; снял — атака пропала.
-  const usable = availableActions(current, state.compendium);
+  const usable = availableActions(current, { system: state.system, compendium: state.compendium });
+
+  // Вешаемые эффекты — из БИБЛИОТЕКИ СИСТЕМЫ, а не из компендиума: эффект
+  // это закон мира, компендиум только на него ссылается. Активируемые
+  // не вешаются — их применяют, поэтому в списке их нет.
+  const hangable = Object.entries(state.system.effects || {})
+    .filter(([, e]) => activationOf(e) !== 'manual')
+    .map(([id, e]) => ({ id, label: e.label || id }));
 
   // Кнопки создания выводятся из родов, объявленных системой: у 5e будет
   // «+ Заклинание», у киберпанка — нет. Игрок записи заводить волен: запись
@@ -194,8 +203,8 @@ function renderBelongings() {
     ${creatable('item')}
 
     <div class="pal-sec" style="margin-top:10px">Эффекты</div>
-    ${picker(effects.filter(e => !e.rule), current.effects.map(e => e.effectId), 'uiHang', 'эффектов нет')}
-    ${creatable('effect')}
+    ${picker(hangable, current.effects.map(e => e.effectId), 'uiHang', 'система не объявила ни одного')}
+    <div class="sys-hint">Эффекты живут в системе: их правит автор, игрок только вешает и снимает.</div>
 
     ${renderRolls(p)}
 
@@ -355,23 +364,10 @@ export function create(rk) {
     return handOff(id, decl.label);
   }
 
-  if (decl.kind === 'effect') {
-    state.compendium.effects.push({
-      id, rk, label: name, icon: decl.icon || '✦', description: '',
-      modifiers: [defaultModifier(state.system)],
-    });
-    current.effects.push({ effectId: id });
-    return handOff(id, decl.label);
-  }
-
-  // Базис «действие»: ссылается на эффект-вызов и не вводит ни тега, ни шага —
-  // потому его и волен создать игрок. Если вызовов в библиотеке ещё нет,
-  // дальше игрока отправит редактор компендиума.
-  const call = state.compendium.effects.find(e => e.rule);
-  state.compendium.actions.push({
-    id, rk, label: name, description: '',
-    effect: call ? call.id : '',
-  });
+  // Базис «действие»: заполняет объявленные родом свойства и не вводит ни
+  // тега, ни шага — потому его и волен создать игрок. К какому эффекту оно
+  // привязано, решил автор в объявлении рода.
+  state.compendium.actions.push({ id, rk, label: name, description: '', props: {} });
   current.actions.push(id);
   return handOff(id, decl.label);
 }
@@ -383,17 +379,21 @@ function handOff(id, word) {
 }
 
 export function dispatch(actionId, targetId) {
-  const target = state.sheets.find(s => s.id === targetId);
-  const from = sheet();
-  const ctx = { system: state.system, compendium: state.compendium, die: randomDie };
-
+  const before = state.sheets;
   try {
-    const envelope = send(actionId, { ...ctx, sheet: from });
-    const { sheet: updated, report } = receive(envelope, { ...ctx, sheet: target });
-    // Получатель вернул НОВЫЙ чарник — подменяем целиком, не правя старый.
-    state.sheets = state.sheets.map(s => (s.id === targetId ? updated : s));
-    log(describeReport(from, target, report));
+    // Ход целиком: конверт, разрешение у цели и ответки её триггеров.
+    // Собирать цепочку здесь нельзя — иначе на столе она была бы другая.
+    const { sheets, reports } = exchange({
+      system: state.system, compendium: state.compendium, die: randomDie,
+      sheets: before, actionId, fromId: state.activeSheetId, toId: targetId,
+    });
+    state.sheets = sheets;
+    for (const { fromId, toId, report } of reports) {
+      log(describeReport(byId(before, fromId), byId(before, toId), report));
+    }
   } catch (err) {
     log(`<b style="color:var(--red)">Ошибка:</b> ${esc(err.message)}`);
   }
 }
+
+const byId = (sheets, id) => sheets.find(s => s.id === id) || { name: id };

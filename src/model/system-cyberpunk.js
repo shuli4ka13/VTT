@@ -1,13 +1,16 @@
 // Система B приёмочного теста: срез киберпанка. Доказательство модели:
 // от 5e она отличается ТОЛЬКО данными — другая ведущая кость, другие поля,
-// другое правило удара. Движок один, и этот файл не импортирует из него ничего.
+// другой удар. Движок один, и этот файл не импортирует из него ничего.
 //
 // Модель боя:
-//   порог:     1d10 + навык  против  сложности (число из эффекта)
-//   величина:  2d8  ИЛИ  фиксированный урон предмета — выбирает эффект
+//   порог:     1d10 + навык  против  сложности (число из записи)
+//   величина:  2d8  ИЛИ  фиксированный урон предмета — выбирает запись
 //   сравнение: величина против брони цели; меньше — цепочка обрывается
 //   применить: минус из хитов на разницу (величина − броня)
 //   применить: минус 1 из прочности брони — удар изнашивает снаряжение
+//
+// Здесь же второй способ подключить эффект: у ножа СВОЯ активность
+// с готовыми аргументами (штучная вещь), а не привязка рода, как у меча в 5e.
 
 export const cyberpunk = {
   id: 'cp-slice',
@@ -15,6 +18,11 @@ export const cyberpunk = {
 
   constants: {
     lead_die: { label: 'Ведущая кость', kind: 'die', dice: [{ count: 1, sides: 10 }] },
+  },
+
+  action_types: {
+    action: { label: 'Действие', icon: '◆' },
+    reaction: { label: 'Реакция', icon: '↩' },
   },
 
   rolls: [
@@ -25,30 +33,26 @@ export const cyberpunk = {
   // компендиума их не будет. Рода выводятся из системы, а не из движка.
   records: {
     weapon: {
-      kind: 'item', label: 'Оружие', icon: '⚔',
+      kind: 'item', label: 'Оружие', icon: '⚔', group: 'Хром',
       hint: 'Хромированная сталь: урон числом или костью.',
       props: [
         { key: 'damage_dice', label: 'Кость урона', kind: 'dice' },
         { key: 'damage_flat', label: 'Урон (число)', kind: 'number' },
       ],
     },
-    effect: {
-      kind: 'effect', label: 'Эффект', icon: '✦',
-      hint: 'Состояние: модификаторы, пока висит.',
-    },
-    call: {
-      kind: 'call', label: 'Вызов правила', icon: '⚙',
-      hint: 'Механика системы с заполненными параметрами.',
-    },
     action: {
-      kind: 'action', label: 'Действие', icon: '✊',
+      kind: 'action', label: 'Действие', icon: '✊', group: 'Приёмы',
       hint: 'Приём без предмета.',
     },
   },
 
-  rules: {
+  effects: {
     strike: {
       label: 'Удар',
+      icon: '⚔',
+      category: 'Атака',
+      activation: 'manual',
+      cost: 'action',
       params: [
         { key: 'bonus', label: 'Модификатор проверки', kind: 'expr' },
         { key: 'difficulty', label: 'Сложность', kind: 'number' },
@@ -61,11 +65,11 @@ export const cyberpunk = {
         { id: 'hit', type: 'threshold',
           roll: { die: { constant: 'lead_die' }, bonus: { param: 'bonus' }, check: 'attack_roll' },
           versus: { param: 'difficulty' } },
-        // Кости и фикс — взаимоисключающие слоты (optional): эффект заполняет
-        // тот, который выбрал его источник величины.
+        // Кости и фикс — взаимоисключающие слоты (optional): запись заполняет
+        // тот, который выбрал её источник величины.
         { id: 'dmg', type: 'amount', source: { param: 'source' },
           dice: { param: 'dice', optional: true },
-          fixed: { item: 'damage_flat', optional: true } },
+          fixed: { prop: 'damage_flat', optional: true } },
         { id: 'pen', type: 'compare',
           value: { ref: 'dmg' }, versus: { param: 'armor' }, breakIf: 'less' },
         { type: 'apply', target: { param: 'hp' }, direction: 'subtract',
@@ -74,7 +78,26 @@ export const cyberpunk = {
           value: { const: 1 }, floor: { const: 0 }, targetModifiers: false },
       ],
     },
+
+    // Пассивный эффект второй системы: та же порода «правящий бросок»,
+    // другая система, тот же движок.
+    wired: {
+      label: 'Вживлённые рефлексы',
+      icon: '⚡',
+      category: 'Состояния',
+      activation: 'passive',
+      duration: { kind: 'temporary' },
+      description: 'Ускоритель нервов: преимущество на атаку, пока не сгорел.',
+      modifiers: [
+        { kind: 'roll', target: 'attack_roll', effect: 'advantage', method: 'rerollBest', condition: null },
+      ],
+    },
   },
+
+  // Правил комнаты в этом мире нет — секция необязательна.
+  room_rules: [],
+
+  advantage: { methods: { rerollBest: true } },
 
   fields: [
     { tag: 'handle', label: 'Псевдоним', group: 'Личное дело', value: { kind: 'stored', type: 'text', default: '' } },
@@ -92,32 +115,26 @@ export const cpCompendium = {
       label: 'Мономолекулярный нож',
       description: 'Урон — константа записи, костей нет.',
       props: { damage_flat: 8 },
-      activities: [{ label: 'Удар', effect: 'blade-hit' }],
+      // Своя активность: аргументы прописаны у самой записи, а не взяты
+      // из привязки рода. Так живут штучные вещи.
+      activities: [{
+        label: 'Удар',
+        effect: 'strike',
+        args: { bonus: '#combat', difficulty: 12, source: 'item', hp: 'hp', armor: 'armor' },
+      }],
       modifiers: [],
     },
   ],
-  effects: [
-    {
-      id: 'blade-hit',
-      rk: 'call',
-      label: 'Удар клинком',
-      description: 'Вызов правила «Удар»: величина — фикс предмета.',
-      rule: 'strike',
-      params: { bonus: '#combat', difficulty: 12, source: 'item', hp: 'hp', armor: 'armor' },
-    },
-    {
-      id: 'gun-hit',
-      rk: 'call',
-      label: 'Выстрел',
-      description: 'Вызов того же правила: величина — свой бросок 2d8.',
-      rule: 'strike',
-      params: { bonus: '#combat', difficulty: 12, source: 'roll', dice: '2d8', hp: 'hp', armor: 'armor' },
-    },
-  ],
-  // Запись-действие осталась только у выстрела: пистолета-предмета в срезе нет.
-  // Удар ножом — активность самого ножа.
+  // Запись-действие: пистолета-предмета в срезе нет, а стрелять надо.
+  // Ссылается на тот же эффект с другими аргументами — величина своим броском.
   actions: [
-    { id: 'gun', rk: 'action', label: 'Пистолет', effect: 'gun-hit' },
+    {
+      id: 'gun',
+      rk: 'action',
+      label: 'Пистолет',
+      effect: 'strike',
+      args: { bonus: '#combat', difficulty: 12, source: 'roll', dice: '2d8', hp: 'hp', armor: 'armor' },
+    },
   ],
 };
 

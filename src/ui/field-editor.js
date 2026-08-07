@@ -12,6 +12,7 @@ import { state, field, newTag, esc, log } from './state.js';
 import { toDisplay } from './formula-text.js';
 import { renderFormulaInput } from './formula-input.js';
 import { compile } from '../formula/index.js';
+import { allModifiers as worldModifiers } from '../engine/effects.js';
 
 const KIND_LABEL = {
   stored: 'хранимое — значение вводит игрок',
@@ -228,12 +229,7 @@ function depsOf(f) {
 }
 
 function allModifiers() {
-  const { items, effects } = state.compendium;
-  return [
-    ...state.system.modifiers,
-    ...items.flatMap(r => r.modifiers || []),
-    ...effects.flatMap(r => r.modifiers || []),
-  ];
+  return worldModifiers(state.system, state.compendium);
 }
 
 // Пустая формула = поле снова хранимое. Так у автора есть путь назад.

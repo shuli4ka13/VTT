@@ -37,14 +37,15 @@ export function blankWorld() {
       name: 'Новая система',
       constants: {},
       tables: {},
-      rules: {},
+      action_types: {},
+      effects: {},
+      room_rules: [],
       records: {},
       rolls: [],
-      modifiers: [],
       advantage: { methods: {} },
       fields: [],
     },
-    compendium: { items: [], effects: [], actions: [] },
+    compendium: { items: [], actions: [] },
     sheets: [],
   };
 }
@@ -71,9 +72,10 @@ export const state = {
 
   activeTag: null,       // поле, открытое в конструкторе
   authorView: 'sheet',   // сцена режима автора: 'sheet' (поля) | 'rules' (механики)
-  activeRuleId: null,    // правило, открытое в конструкторе правил
+  activeRuleId: null,    // эффект, открытый в конструкторе эффектов
   activeKindId: null,    // род записей, открытый в редакторе родов
   openDicts: {},         // раскрытые секции словарей в колонке механик; свёрнуто = оглавление
+  donorFilter: '',       // фильтр палитры по системе-донору; пусто = все
 
   // Слот формулы, который сейчас правят. Редактор формул один на всю программу,
   // и активен всегда ровно один слот — тот, где стоит каретка.
@@ -151,11 +153,19 @@ export function newTag(prefix = 'fld') {
 export function newRecordId(prefix) {
   const taken = new Set([
     ...state.compendium.items.map(r => r.id),
-    ...state.compendium.effects.map(r => r.id),
     ...state.compendium.actions.map(r => r.id),
   ]);
   let n = 1;
   while (taken.has(`${prefix}_${n}`)) n++;
+  return `${prefix}_${n}`;
+}
+
+// Идентификатор эффекта в библиотеке системы. Это тоже не тег: формулы
+// на эффекты не ссылаются, ссылаются записи компендиума и правила комнаты.
+export function newEffectId(prefix = 'eff') {
+  const taken = state.system.effects || (state.system.effects = {});
+  let n = 1;
+  while (taken[`${prefix}_${n}`]) n++;
   return `${prefix}_${n}`;
 }
 

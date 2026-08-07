@@ -1,6 +1,9 @@
 // Система — это ДАННЫЕ. Ни одной функции в этом файле нет и быть не должно.
 // Срез D&D 5e: шесть характеристик → модификаторы → бонус мастерства таблицей →
-// один навык → класс брони с условием → одна атака и одно действие по спасброску.
+// один навык → класс брони с условием → атака, спасбросок, лечение и ответка.
+//
+// Система = поля + БИБЛИОТЕКА ЭФФЕКТОВ + список включённых на всех.
+// Эффект — единица автоматизации; всё, что мир делает сам, лежит в `effects`.
 //
 // Три способа получить значение поля (`value.kind`):
 //   stored  — лежит в чарнике; здесь только тип и значение по умолчанию
@@ -45,16 +48,29 @@ export const system = {
     lead_die: { label: 'Ведущая кость', kind: 'die', dice: [{ count: 1, sides: 20 }] },
   },
 
-  // Правила разрешения — словарь именованных конвейеров шагов. Одно
-  // ОПРЕДЕЛЕНИЕ на систему: эффект компендиума зовёт правило по имени
-  // и приносит параметры, копий шагов в эффектах нет и быть не может.
-  // Правка шага здесь меняет поведение всех эффектов сразу.
+  // Экономика действий: словарь системы, как мишени бросков. Раундов в PoC
+  // нет, поэтому это РАЗМЕТКА (бейджи и группировка кнопок), не запрет.
+  // Лимиты повесятся на готовый словарь, когда появятся ходы.
+  action_types: {
+    action: { label: 'Действие', icon: '◆' },
+    reaction: { label: 'Реакция', icon: '↩' },
+    movement: { label: 'Передвижение', icon: '→' },
+  },
+
+  // ── БИБЛИОТЕКА ЭФФЕКТОВ ───────────────────────────────────────────────────
+  // Одно определение на систему. Запись компендиума ссылается на эффект
+  // по имени и приносит только аргументы — копий шагов в записях нет
+  // и быть не может: правка эффекта обязана менять все записи сразу.
   //
-  // Правило не знает слова «урон»: удар, спасбросок, лечение — разные
+  // Эффект не знает слова «урон»: удар, спасбросок, лечение — разные
   // заполнения одних и тех же слотов. Типы шагов — src/engine/steps/.
-  rules: {
+  effects: {
     strike: {
       label: 'Атака',
+      icon: '⚔',
+      category: 'Атака',
+      activation: 'manual',
+      cost: 'action',
       params: [
         { key: 'bonus', label: 'Бонус проверки', kind: 'expr' },
         { key: 'versus', label: 'Против чего', kind: 'tag' },
@@ -66,7 +82,7 @@ export const system = {
           roll: { die: { constant: 'lead_die' }, bonus: { param: 'bonus' }, check: 'attack_roll' },
           versus: { param: 'versus' } },
         { id: 'dmg', type: 'amount', source: 'roll',
-          dice: { item: 'damage_dice' }, bonus: { param: 'damage_bonus' } },
+          dice: { prop: 'damage_dice' }, bonus: { param: 'damage_bonus' } },
         { type: 'apply', target: { param: 'apply_to' }, direction: 'subtract',
           value: { ref: 'dmg' }, floor: { const: 0 }, targetModifiers: true },
       ],
@@ -74,6 +90,10 @@ export const system = {
 
     save: {
       label: 'Спасбросок',
+      icon: '☄',
+      category: 'Атака',
+      activation: 'manual',
+      cost: 'action',
       params: [
         { key: 'save', label: 'Чем спасается цель', kind: 'expr', of: 'target' },
         { key: 'dc', label: 'Сложность', kind: 'expr' },
@@ -90,7 +110,7 @@ export const system = {
         { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'dice' } },
         { type: 'apply', target: { param: 'apply_to' }, direction: 'subtract',
           value: { ref: 'dmg' }, floor: { const: 0 }, targetModifiers: true },
-        { type: 'status', effect: { param: 'status' } },
+        { type: 'status', mode: 'apply', effect: { param: 'status', optional: true } },
       ],
     },
 
@@ -98,75 +118,178 @@ export const system = {
     // хитов, сопротивления не участвуют. Другое заполнение тех же слотов.
     heal: {
       label: 'Лечение',
+      icon: '✚',
+      category: 'Лечение',
+      activation: 'manual',
+      cost: 'action',
       params: [
         { key: 'dice', label: 'Кости лечения', kind: 'dice' },
         { key: 'bonus', label: 'Бонус', kind: 'expr' },
         { key: 'apply_to', label: 'Что восполняется', kind: 'tag' },
         { key: 'cap', label: 'Потолок', kind: 'tag' },
+        { key: 'cure', label: 'Что снимает', kind: 'effect' },
       ],
       steps: [
         { id: 'amt', type: 'amount', source: 'roll',
           dice: { param: 'dice' }, bonus: { param: 'bonus' } },
         { type: 'apply', target: { param: 'apply_to' }, direction: 'add',
           value: { ref: 'amt' }, ceiling: { param: 'cap' }, targetModifiers: false },
+        // Тот же шаг «состояние», другое направление: лечащее заклинание
+        // снимает яд. Отдельного типа шага для этого не нужно.
+        { type: 'status', mode: 'remove', effect: { param: 'cure', optional: true } },
+      ],
+    },
+
+    // ── пассивные: висят и правят цифры ────────────────────────────────────
+
+    poisoned: {
+      label: 'Отравлен',
+      icon: '☠',
+      category: 'Состояния',
+      activation: 'passive',
+      duration: { kind: 'temporary' },
+      stacking: 'refresh',
+      description: 'Помеха на броски атаки.',
+      modifiers: [
+        // Помеха — не «−2 к броску». Это другая порода: два кубика, берём худший.
+        { kind: 'roll', target: 'attack_roll', effect: 'disadvantage', method: 'rerollBest', condition: null },
+      ],
+    },
+
+    stoneskin: {
+      label: 'Каменная кожа',
+      icon: '🪨',
+      category: 'Состояния',
+      activation: 'passive',
+      duration: { kind: 'temporary' },
+      description: 'Сопротивление урону: входящее в хиты половинится.',
+      modifiers: [
+        // Мишень «входящее» — то, что летит В поле извне. Шаг «применить»
+        // прогоняет через неё величину, когда правило сказало «с учётом
+        // модификаторов цели»; лечение и износ идут мимо.
+        { kind: 'value', target: 'incoming:hp_current', op: 'mul', value: 0.5, stacking: 'sum', condition: null },
+      ],
+    },
+
+    // Правила комнаты — те же пассивные эффекты, просто включённые на всех
+    // (см. room_rules ниже). На карточке эффекта про охват ни слова:
+    // эффект не знает, где он подключён.
+    heavy_armor_rule: {
+      label: 'Тяжёлый доспех мешает ловким проверкам',
+      icon: '⚖',
+      category: 'Правила комнаты',
+      activation: 'passive',
+      duration: { kind: 'permanent' },
+      modifiers: [
+        { kind: 'roll', target: 'skill_roll', effect: 'disadvantage', method: 'rerollBest', condition: '#armor_heavy' },
+      ],
+    },
+
+    mastery_rule: {
+      label: 'Мастерство даёт фору',
+      icon: '⚖',
+      category: 'Правила комнаты',
+      activation: 'passive',
+      duration: { kind: 'permanent' },
+      modifiers: [
+        { kind: 'roll', target: 'skill_roll', effect: 'advantage', method: 'rerollBest', condition: '#prof_bonus >= 4' },
+      ],
+    },
+
+    // ── триггерный: срабатывает сам на чужое событие ────────────────────────
+
+    thorns: {
+      label: 'Шипы',
+      icon: '⚡',
+      category: 'Состояния',
+      activation: 'triggered',
+      duration: { kind: 'uses', max: 3 },
+      description: 'Когда по владельцу попали атакой — бьёт нападавшего в ответ.',
+      // Слушаем эффект «Атака», момент — после разрешения на владельце,
+      // условие — по трассе события: попали ли. Условие структурное,
+      // как слоты шагов: { ref } смотрит в результат шага события.
+      trigger: { on: 'strike', when: 'resolved', condition: { ref: 'hit.success' } },
+      params: [
+        { key: 'dice', label: 'Кости ответного урона', kind: 'dice' },
+        { key: 'apply_to', label: 'Куда наносится', kind: 'tag' },
+      ],
+      steps: [
+        { id: 'back', type: 'amount', source: 'roll', dice: { param: 'dice' } },
+        { type: 'apply', target: { param: 'apply_to' }, direction: 'subtract',
+          value: { ref: 'back' }, floor: { const: 0 }, targetModifiers: true },
       ],
     },
   },
 
-  // Словарь РОДОВ записей компендиума. Палитра «что можно добавить», слова
-  // и подсказки на экранах компендиума и игрока выводятся ОТСЮДА — как словарь
-  // мишеней выводится из тегов. У киберпанка рода другие: там нет «Заклинания».
+  // Правила комнаты: пассивные эффекты, включённые на ВСЕХ чарников мира.
+  // Ссылки, а не копии — тот же эффект можно и повесить на одного.
+  room_rules: ['heavy_armor_rule', 'mastery_rule'],
+
+  // Словарь РОДОВ записей компендиума. Род — это ФОРМА ЗАПОЛНЕНИЯ: он
+  // объявляет, какие циферки спросить у человека (`props`) и к каким
+  // эффектам их привязать (`bindings`). Тогда наполнение сводится к вводу
+  // заранее известных чисел, а действия у записи появляются сами.
   //
-  // `kind` — базис хранения, короткий словарь движка (item / effect / call /
-  // action), как род конверта. Всё человеческое — лейбл, подсказка, значок —
-  // дело системы. `props` — типизированные свойства записей этого рода;
-  // необъявленное свойство движок не прочитает вовсе.
+  // `kind` — базис хранения, короткий словарь движка (item / action).
+  // Всё человеческое — лейбл, подсказка, значок, группа — дело системы.
   records: {
     weapon: {
-      kind: 'item', label: 'Оружие', icon: '⚔',
-      hint: 'Кость урона и активности: действия, которые предмет даёт, пока надет.',
+      kind: 'item', label: 'Оружие', icon: '⚔', group: 'Снаряжение',
+      hint: 'Кость урона — и атака появляется у владельца сама.',
       props: [
         { key: 'damage_dice', label: 'Кость урона', kind: 'dice' },
         { key: 'damage_flat', label: 'Урон оружия (число)', kind: 'number' },
       ],
+      // Протягивание: род привязан к эффекту, запись только заполняет циферки.
+      // Надел меч — получил «Атаку», снял — потерял.
+      bindings: [
+        { label: 'Атака', effect: 'strike',
+          args: { bonus: '#attack_bonus', versus: 'ac', damage_bonus: '#str_mod', apply_to: 'hp_current' } },
+      ],
     },
     gear: {
-      kind: 'item', label: 'Снаряжение', icon: '⬡',
-      hint: 'Носимая вещь с бонусами к полям листа.',
-    },
-    effect: {
-      kind: 'effect', label: 'Эффект', icon: '✦',
-      hint: 'Длящееся состояние: модификаторы действуют, пока висит.',
-    },
-    call: {
-      kind: 'call', label: 'Вызов правила', icon: '⚙',
-      hint: 'Механика системы с заполненными параметрами.',
+      kind: 'item', label: 'Снаряжение', icon: '⬡', group: 'Снаряжение',
+      hint: 'Носимая вещь с бонусами к полям листа. Действий не даёт.',
     },
     action: {
-      kind: 'action', label: 'Действие', icon: '✊',
-      hint: 'Приём без предмета: сам выбирает вызов правила.',
+      kind: 'action', label: 'Действие', icon: '✊', group: 'Приёмы',
+      hint: 'Приём без предмета: сам выбирает эффект.',
     },
-    spell: {
-      kind: 'action', label: 'Заклинание', icon: '🔮',
-      hint: 'Волшебство: действие, ярлык мира 5e.',
+    'attack-spell': {
+      kind: 'action', label: 'Атакующее заклинание', icon: '🔥', group: 'Заклинания',
+      hint: 'Цель спасается; при провале — урон и, если задано, состояние.',
+      props: [
+        { key: 'damage_dice', label: 'Кость урона', kind: 'dice' },
+        { key: 'status', label: 'Состояние при провале', kind: 'effect' },
+      ],
+      bindings: [
+        { label: 'Сотворить', effect: 'save',
+          args: {
+            save: '#dex_save', dc: '#spell_dc', apply_to: 'hp_current',
+            dice: { prop: 'damage_dice' }, status: { prop: 'status' },
+          } },
+      ],
+    },
+    'healing-spell': {
+      kind: 'action', label: 'Лечащее заклинание', icon: '💚', group: 'Заклинания',
+      hint: 'Восполняет хиты и, если задано, снимает состояние.',
+      props: [
+        { key: 'heal_dice', label: 'Кость лечения', kind: 'dice' },
+        { key: 'cure', label: 'Что снимает', kind: 'effect' },
+      ],
+      bindings: [
+        { label: 'Сотворить', effect: 'heal',
+          args: {
+            bonus: '#cha_mod', apply_to: 'hp_current', cap: 'hp_max',
+            dice: { prop: 'heal_dice' }, cure: { prop: 'cure' },
+          } },
+      ],
+    },
+    lore: {
+      kind: 'action', label: 'Заметка', icon: '📜', group: 'Заклинания',
+      hint: 'Чистые данные: род без привязок ничего не автоматизирует.',
     },
   },
-
-  // Правила самой системы: действуют на всех её чарников, без предметов и эффектов.
-  // Это авто-правила из черновика — «ярлык + условие + эффект + метод». Разница
-  // в том, что условие здесь действительно вычисляется.
-  modifiers: [
-    {
-      id: 'rule_heavy_armor', label: 'Тяжёлый доспех мешает ловким проверкам',
-      kind: 'roll', target: 'skill_roll',
-      effect: 'disadvantage', method: 'rerollBest', condition: '#armor_heavy',
-    },
-    {
-      id: 'rule_mastery', label: 'Мастерство даёт фору',
-      kind: 'roll', target: 'skill_roll',
-      effect: 'advantage', method: 'rerollBest', condition: '#prof_bonus >= 4',
-    },
-  ],
 
   // Мишени бросков — то, на что вешаются модификаторы породы «правящие бросок».
   rolls: [

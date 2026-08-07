@@ -45,7 +45,7 @@
 <div class="pane" id="pane-author">
 <div class="author-subnav">
   <button class="tnav" data-view="sheet" onclick="uiAuthorView('sheet')">⊞ Лист</button>
-  <button class="tnav" data-view="rules" onclick="uiAuthorView('rules')">⚙ Механики</button>
+  <button class="tnav" data-view="rules" onclick="uiAuthorView('rules')">✦ Эффекты</button>
   <button class="tnav" data-view="records" onclick="uiAuthorView('records')">⬡ Записи</button>
   <input id="sys-name" class="blk-name" style="margin-left:auto;max-width:220px" placeholder="Название системы"
          oninput="uiRenameSystem(this.value)">
@@ -74,12 +74,12 @@
 <div class="three char-layout" id="author-view-rules" style="display:none">
 
   <div class="col dark" style="flex-direction:column">
-    <div class="col-hdr">⚙ Механики</div>
+    <div class="col-hdr">✦ Библиотека эффектов</div>
     <div class="col-scroll" id="rules-list" style="flex:1"></div>
   </div>
 
   <div class="col mid" style="flex-direction:column">
-    <div class="col-hdr">⛓ Конвейер</div>
+    <div class="col-hdr">⛓ Эффект</div>
     <div class="col-scroll" id="rules-canvas" style="flex:1;padding:14px 18px"></div>
   </div>
 

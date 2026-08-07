@@ -34,12 +34,12 @@ const run = (steps, opts = {}) => {
   const {
     sys = SYS, sender = arven, die = queue(),
     targetSys = sys, targetSheet = mirra, targetDie = queue(),
-    params = {}, paramDefs = [], item = null,
+    params = {}, paramDefs = [], props = null,
     book = compendium, targetBook = compendium,
   } = opts;
   const packed = packRule({ params: paramDefs, steps }, {
     system: sys, sheet: sender, pass: newPass(sys, sender, { compendium: book }),
-    die, params, item, owner: 'тест',
+    die, params, props, owner: 'тест',
   });
   deepEq(JSON.parse(JSON.stringify(packed)), packed, 'упакованная цепочка — чистые данные');
   return resolveRule(packed, {
@@ -132,7 +132,7 @@ group('шаг «порог»', () => {
 group('шаг «величина»', () => {
   test('свой бросок: кость из записи оружия плюс бонус-выражение', () => {
     const out = run([{ id: 'dmg', type: 'amount', source: 'roll', dice: { item: 'damage_dice' }, bonus: { expr: '#str_mod' } }],
-      { die: queue(5), item: { damage_dice: '1d8' } });
+      { die: queue(5), props: { damage_dice: '1d8' } });
     eq(out.results.dmg, 8, 'кость 5 плюс Сила 3');
     eq(out.trace[0].total, 8);
     deepEq(out.trace[0].rolls, [5]);
@@ -149,7 +149,7 @@ group('шаг «величина»', () => {
 
   test('фикс предмета: костей не бросали вовсе', () => {
     const out = run([{ id: 'dmg', type: 'amount', source: 'item', fixed: { item: 'damage_flat' } }],
-      { die: queue(), item: { damage_flat: 3 } });
+      { die: queue(), props: { damage_flat: 3 } });
     eq(out.results.dmg, 3);
     deepEq(out.trace[0].rolls, [], 'очередь костей пуста — и не понадобилась');
   });
@@ -171,34 +171,34 @@ group('шаг «сравнение»', () => {
 
   test('выше порога: разница доступна дальше по имени', () => {
     const out = run([dmg, { id: 'pen', type: 'compare', value: { ref: 'dmg' }, versus: { const: 5 } }],
-      { item: { damage_flat: 8 } });
+      { props: { damage_flat: 8 } });
     eq(out.stopped, null);
     eq(out.results.pen.margin, 3);
   });
 
   test('ниже порога: обрыв, и запись в журнале ДРУГАЯ, чем у порога', () => {
     const out = run([dmg, { id: 'pen', type: 'compare', value: { ref: 'dmg' }, versus: { const: 5 } }],
-      { item: { damage_flat: 3 } });
+      { props: { damage_flat: 3 } });
     eq(out.stopped.reason, 'compare-short');
     eq(out.trace[1].margin, -2, 'трасса есть и у оборвавшего шага');
   });
 
   test('равенство при «less» проходит', () => {
     const out = run([dmg, { id: 'pen', type: 'compare', value: { ref: 'dmg' }, versus: { const: 5 } }],
-      { item: { damage_flat: 5 } });
+      { props: { damage_flat: 5 } });
     eq(out.stopped, null);
     eq(out.results.pen.margin, 0);
   });
 
   test('равенство при «atMost» обрывает', () => {
     const out = run([dmg, { id: 'pen', type: 'compare', value: { ref: 'dmg' }, versus: { const: 5 }, breakIf: 'atMost' }],
-      { item: { damage_flat: 5 } });
+      { props: { damage_flat: 5 } });
     eq(out.stopped.reason, 'compare-short');
   });
 
   test('неизвестное условие обрыва — ошибка', () => {
     throws(() => run([dmg, { id: 'pen', type: 'compare', value: { ref: 'dmg' }, versus: { const: 5 }, breakIf: 'котик' }],
-      { item: { damage_flat: 5 } }), 'котик');
+      { props: { damage_flat: 5 } }), 'котик');
   });
 });
 
@@ -231,28 +231,18 @@ group('шаг «применить»', () => {
   });
 
   test('модификаторы цели: сопротивление половинит входящее, округляя вниз', () => {
-    const stoneskin = {
-      id: 'stoneskin', label: 'Каменная кожа', duration: { kind: 'scene' },
-      modifiers: [{ kind: 'value', target: incomingTagOf('hp_current'), op: 'mul', value: 0.5, stacking: 'sum', condition: null }],
-    };
-    const book = { ...compendium, effects: [...compendium.effects, stoneskin] };
     const stony = { ...mirra, effects: [{ effectId: 'stoneskin' }] };
     const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { const: 9 }, floor: { const: 0 }, targetModifiers: true }],
-      { targetSheet: stony, targetBook: book });
+      { targetSheet: stony });
     eq(out.sheet.values.hp_current, 17, '21 минус floor(9/2)');
     eq(out.trace[0].incoming, 9, 'в трассе видно, что пришло…');
     eq(out.trace[0].amount, 4, '…и что осталось после сопротивлений');
   });
 
   test('без targetModifiers сопротивление не участвует — лечение и износ идут мимо него', () => {
-    const stoneskin = {
-      id: 'stoneskin', label: 'Каменная кожа', duration: { kind: 'scene' },
-      modifiers: [{ kind: 'value', target: incomingTagOf('hp_current'), op: 'mul', value: 0.5, stacking: 'sum', condition: null }],
-    };
-    const book = { ...compendium, effects: [...compendium.effects, stoneskin] };
     const stony = { ...mirra, effects: [{ effectId: 'stoneskin' }] };
     const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { const: 9 }, targetModifiers: false }],
-      { targetSheet: stony, targetBook: book });
+      { targetSheet: stony });
     eq(out.sheet.values.hp_current, 12, '21 минус все 9');
   });
 
@@ -266,13 +256,55 @@ group('шаг «применить»', () => {
 });
 
 group('шаг «состояние»', () => {
-  test('вешает эффект на цель, повторно — не дублирует', () => {
-    const out = run([
-      { type: 'status', effect: { const: 'poisoned' } },
-      { type: 'status', effect: { const: 'poisoned' } },
-    ]);
+  // Что делать при повторном наложении, решает САМ ЭФФЕКТ (ось «стакинг»),
+  // а не шаг: «Отравлен» обновляется, «Шипы» копятся, «Каменная кожа»
+  // второй раз ничего не делает. Шагу это знать не нужно.
+  const withStacking = stacking => ({
+    ...SYS,
+    effects: { ...SYS.effects, poisoned: { ...SYS.effects.poisoned, stacking } },
+  });
+  const twice = sys => run([
+    { type: 'status', effect: { const: 'poisoned' } },
+    { type: 'status', effect: { const: 'poisoned' } },
+  ], { sys });
+
+  test('вешает эффект на цель', () => {
+    const out = run([{ type: 'status', effect: { const: 'poisoned' } }]);
     deepEq(out.sheet.effects, [{ effectId: 'poisoned' }]);
     deepEq(out.effects, ['poisoned']);
+  });
+
+  test('«не накладывается повторно» — одна запись, второй раз молчание', () => {
+    const out = twice(withStacking('ignore'));
+    deepEq(out.sheet.effects, [{ effectId: 'poisoned' }]);
+  });
+
+  test('«обновляется» — тоже одна запись: наложили заново, а не рядом', () => {
+    const out = twice(withStacking('refresh'));
+    deepEq(out.sheet.effects, [{ effectId: 'poisoned' }]);
+    deepEq(out.effects, ['poisoned'], 'журналу нужен факт, а не счёт наложений');
+  });
+
+  test('«копится» — каждое наложение отдельной записью', () => {
+    const out = twice(withStacking('stack'));
+    eq(out.sheet.effects.length, 2);
+  });
+
+  test('режим «снять» убирает висящий эффект', () => {
+    const out = run([{ type: 'status', mode: 'remove', effect: { const: 'poisoned' } }],
+      { targetSheet: { ...mirra, effects: [{ effectId: 'poisoned' }] } });
+    deepEq(out.sheet.effects, []);
+    deepEq(out.removed, ['poisoned']);
+  });
+
+  test('пустой слот — законная пустота: шаг молчит, а не падает', () => {
+    const out = run([{ type: 'status', effect: { const: null } }]);
+    deepEq(out.sheet.effects, [], 'ничего не наложено');
+    eq(out.trace[0].effect, null, 'и в журнале это видно');
+  });
+
+  test('эффект, которого система не объявляет, — внятная ошибка', () => {
+    throws(() => run([{ type: 'status', effect: { const: 'нетакого' } }]), 'нетакого');
   });
 });
 

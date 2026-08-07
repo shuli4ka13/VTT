@@ -19,6 +19,11 @@ const sys = {
     { tag: 'x', label: 'Икс', value: { kind: 'stored', type: 'number', default: 7 } },
     { tag: 'y', label: 'Игрек', value: { kind: 'stored', type: 'number', default: 0 } },
   ],
+  // Ядро вешает только ОБЪЯВЛЕННЫЕ эффекты: id из ниоткуда — ошибка,
+  // а не тихая ссылка в пустоту. Заглушке тоже нужна библиотека.
+  effects: {
+    poisoned: { label: 'Отравлен', activation: 'passive', modifiers: [] },
+  },
 };
 const sheet = { id: 'болванчик', systemId: 'stub-sys', values: { x: 5 }, effects: [] };
 

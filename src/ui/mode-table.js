@@ -10,7 +10,8 @@
 // не считает сам — он только выбирает, ЧЕЙ лист с чьим общается.
 
 import { state, esc, log } from './state.js';
-import { send, receive, availableActions } from '../events/envelope.js';
+import { availableActions } from '../events/envelope.js';
+import { exchange } from '../events/exchange.js';
 import { describeReport } from './journal.js';
 import { online, act as netAct, renderSession } from './net.js';
 import { randomDie } from '../engine/dice.js';
@@ -112,7 +113,7 @@ function renderSide() {
   }
 
   const sheet = sheetOf(token);
-  const usable = availableActions(sheet, state.compendium);
+  const usable = availableActions(sheet, { system: state.system, compendium: state.compendium });
 
   host.innerHTML = renderSession() + `
     <div class="cs-block" style="background:var(--s2);padding:8px 10px">
@@ -222,15 +223,20 @@ function strike(fromTokenId, actionId, targetTokenId) {
     return;
   }
 
-  const ctx = { system: state.system, compendium: state.compendium, die: randomDie };
-
+  const before = state.sheets;
   try {
-    const envelope = send(actionId, { ...ctx, sheet: from });
-    const { sheet: updated, report } = receive(envelope, { ...ctx, sheet: target });
-    state.sheets = state.sheets.map(s => (s.id === target.id ? updated : s));
-    log(describeReport(from, target, report));
+    const { sheets, reports } = exchange({
+      system: state.system, compendium: state.compendium, die: randomDie,
+      sheets: before, actionId, fromId: from.id, toId: target.id,
+    });
+    state.sheets = sheets;
+    for (const { fromId, toId, report } of reports) {
+      log(describeReport(byId(before, fromId), byId(before, toId), report));
+    }
   } catch (err) {
     log(`<b style="color:var(--red)">Ошибка:</b> ${esc(err.message)}`);
   }
   state.table.action = null;
 }
+
+const byId = (sheets, id) => sheets.find(s => s.id === id) || { name: id };

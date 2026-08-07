@@ -5,7 +5,7 @@
 // по какому листу.
 
 import { randomUUID } from 'node:crypto';
-import { send, receive } from '../src/events/envelope.js';
+import { exchange } from '../src/events/exchange.js';
 import { randomDie } from '../src/engine/dice.js';
 import { me } from './auth.js';
 import { can, ROOM_ROLES } from './permissions.js';
@@ -89,22 +89,34 @@ export function act(db, roomId, user, { actionId, fromSheetId, targetSheetId }, 
 
   const system = JSON.parse(room.system);
   const compendium = JSON.parse(room.compendium);
-  const from = sheetOf(db, roomId, fromSheetId);
-  const target = sheetOf(db, roomId, targetSheetId);
+  const sheets = db.prepare('SELECT data FROM room_sheets WHERE room_id = ?')
+    .all(roomId).map(row => JSON.parse(row.data));
 
-  // Обе половины правила исполняет СЕРВЕР — своим экземпляром того же движка.
-  // Кости здесь серверные: класс читов «подправил бросок в консоли» умирает.
-  const envelope = send(actionId, { system, sheet: from, compendium, die });
-  const { sheet: updated, report } = receive(envelope, { system, sheet: target, compendium, die });
+  // ВЕСЬ ход исполняет СЕРВЕР — своим экземпляром того же движка, включая
+  // ответки триггеров. Собирать цепочку здесь нельзя: тогда в комнате
+  // работало бы одно, а в оффлайне другое. Кости серверные: класс читов
+  // «подправил бросок в консоли» умирает.
+  const { sheets: after, reports } = exchange({
+    system, compendium, die, sheets, actionId, fromId: fromSheetId, toId: targetSheetId,
+  });
 
-  db.prepare('UPDATE room_sheets SET data = ? WHERE room_id = ? AND id = ?')
-    .run(JSON.stringify(updated), roomId, targetSheetId);
+  const write = db.prepare('UPDATE room_sheets SET data = ? WHERE room_id = ? AND id = ?');
+  const touched = new Set(reports.map(r => r.toId));
+  for (const sheet of after) {
+    if (touched.has(sheet.id)) write.run(JSON.stringify(sheet), roomId, sheet.id);
+  }
 
   const seq = nextSeq(db, roomId);
   db.prepare('INSERT INTO envelopes (room_id, seq, data) VALUES (?, ?, ?)')
-    .run(roomId, seq, JSON.stringify({ by: user, target: targetSheetId, envelope, report }));
+    .run(roomId, seq, JSON.stringify({ by: user, target: targetSheetId, reports }));
 
-  return { seq, report, from, target: updated };
+  const find = id => after.find(s => s.id === id) || null;
+  return {
+    seq, reports,
+    report: reports[0].report,
+    from: find(fromSheetId),
+    target: find(targetSheetId),
+  };
 }
 
 export function patchSheet(db, roomId, user, sheetId, values) {

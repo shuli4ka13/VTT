@@ -2,7 +2,7 @@ import { group, test, eq, ok } from './harness.js';
 import * as threshold from '../src/engine/steps/threshold.js';
 import * as compare from '../src/engine/steps/compare.js';
 import { registry } from '../src/engine/steps/index.js';
-import { verdictOf } from '../src/ui/rule-editor.js';
+import { verdictOf } from '../src/ui/effect-editor.js';
 
 // Конвейер — прямая линия с РАЗВИЛКАМИ досрочного выхода, и каждая развилка
 // должна быть подписана словами своего шага: «промах» и «броня не пробита» —

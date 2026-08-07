@@ -1,45 +1,39 @@
 // Режим компендиума: общая библиотека записей.
 //
-// Один список, на разделы не дроблю. Предмет, эффект, действие и заклинание
-// живут вперемешку с пометкой рода — так и просили.
+// Компендиум — ДАННЫЕ для системы и чарника. Ни одного шага автоматизации
+// здесь нет и быть не может: шаги живут в эффектах системы.
 //
-// Все три рода ссылаются только на УЖЕ объявленные теги: мишень бонуса, мишень
-// броска, тег спасброска, тег урона выбираются из выпадающих списков. Свободного
+// Что у записи спрашивают, объявляет её РОД (system.records[rk]):
+//   props    — какие циферки ввести человеку;
+//   bindings — к каким эффектам эти циферки привязать.
+// Поэтому наполнение сводится к вводу заранее известных чисел: у меча
+// спрашивают кость урона, а «Атака» появляется у владельца сама.
+//
+// Записи ссылаются только на УЖЕ объявленные теги и эффекты: мишень бонуса,
+// мишень броска, эффект привязки выбираются из выпадающих списков. Свободного
 // текста нет нигде — именно из-за него в черновике бонусы никуда не резолвились
 // (reference/index.html:1518). Нового тега запись ввести не может, поэтому
 // создавать её волен и игрок.
 
 import { state, esc, newRecordId, log } from './state.js';
-import { targets } from '../engine/targets.js';
-import { ADVANTAGE_METHODS, enabledMethods } from '../model/advantage-methods.js';
-import { AMOUNT_SOURCES } from '../model/amount-sources.js';
 import { allRecords } from '../model/compendium.js';
-import { renderFormulaInput } from './formula-input.js';
+import { isPipeline } from '../engine/effects.js';
+import { modifiersBody, defaultModifier, ownerKey } from './modifiers-editor.js';
 import { recordTemplatesHtml } from './templates.js';
-import { field } from './state.js';
 
-const OPS = [['add', '+ прибавить'], ['set', '= задать'], ['mul', '× умножить']];
-const STACKING = [['sum', 'складывать'], ['max', 'брать наибольший'], ['override', 'последний побеждает']];
-
-// Род записи объявляет СИСТЕМА (system.records): слова, значки и подсказки
-// приходят из конструктора, а не из этого файла. Движковый базис (item/effect/
-// call/action) — только запасной словарь на случай записи без рода: честное
-// «запись», а не выдуманный лейбл.
+// Движковый базис (item / action) — запасной словарь на случай записи
+// без рода: честное «запись», а не выдуманный лейбл.
 const BASE_FALLBACK = {
   item: { label: 'запись-предмет', icon: '⬡' },
-  effect: { label: 'запись-эффект', icon: '✦' },
-  call: { label: 'запись-вызов', icon: '⚙' },
   action: { label: 'запись-действие', icon: '✊' },
 };
 
 // Базис хранения записи: по какому массиву компендиума она живёт.
 function baseOf(record) {
-  if (state.compendium.items.some(r => r.id === record.id)) return 'item';
-  if (state.compendium.effects.some(r => r.id === record.id)) return record.rule ? 'call' : 'effect';
-  return 'action';
+  return state.compendium.items.some(r => r.id === record.id) ? 'item' : 'action';
 }
 
-export function declOf(record) {
+function declOf(record) {
   return (state.system.records || {})[record.rk] || BASE_FALLBACK[baseOf(record)];
 }
 
@@ -49,17 +43,27 @@ export function renderCompendium() {
   renderPalette();
 }
 
-// Палитра «что можно добавить» выводится из словаря родов системы.
-// У 5e здесь есть «Заклинание», у киберпанка — нет: не движок решает.
+// Палитра «что можно добавить» выводится из словаря родов системы,
+// разложенного по ГРУППАМ рода: заклинания к заклинаниям, снаряжение
+// к снаряжению. У 5e здесь есть «Атакующее заклинание», у киберпанка — нет.
 function renderPalette() {
   const host = document.getElementById('comp-palette');
   const kinds = Object.entries(state.system.records || {});
+  const groups = new Map();
+  for (const [rk, decl] of kinds) {
+    const group = decl.group || 'Записи';
+    if (!groups.has(group)) groups.set(group, []);
+    groups.get(group).push([rk, decl]);
+  }
+
   host.innerHTML = (kinds.length
-    ? kinds.map(([rk, decl]) => `
-      <div class="pal-item" onclick="uiNewRecord('${rk}')">
-        <span class="pal-icon">${decl.icon || '□'}</span>
-        <div><div class="pal-t">${esc(decl.label)}</div><div class="pal-s">${esc(decl.hint || '')}</div></div>
-      </div>`).join('')
+    ? [...groups].map(([group, items]) => `
+      <div class="pal-sec">${esc(group)}</div>
+      ${items.map(([rk, decl]) => `
+        <div class="pal-item" onclick="uiNewRecord('${rk}')">
+          <span class="pal-icon">${decl.icon || '□'}</span>
+          <div><div class="pal-t">${esc(decl.label)}</div><div class="pal-s">${esc(decl.hint || '')}</div></div>
+        </div>`).join('')}`).join('')
     : '<div class="sys-hint">Система не объявляет родов записей — объявить их можно в конструкторе.</div>')
     + recordTemplatesHtml();
 }
@@ -85,7 +89,7 @@ function renderList() {
 function usage() {
   const map = {};
   for (const s of state.sheets) {
-    for (const id of [...s.equipped, ...s.actions, ...s.effects.map(e => e.effectId)]) {
+    for (const id of [...s.equipped, ...s.actions]) {
       map[id] = map[id] ? `${map[id]}, ${s.name}` : s.name;
     }
   }
@@ -102,7 +106,6 @@ function renderRecord() {
   }
 
   const decl = declOf(record);
-  const base = baseOf(record);
   const head = `
     <div class="item-hdr">
       <div class="icon-pick">${decl.icon || '□'}</div>
@@ -114,276 +117,127 @@ function renderRecord() {
       </div>
     </div>`;
 
-  const body =
-    base === 'action' ? actionBody(record)
-      : base === 'item' ? weaponPropsBody(record, decl) + activitiesBody(record) + modifiersBody(record)
-        : base === 'call' ? ruleCallBody(record)
-          : modifiersBody(record);
+  const body = propsBody(record, decl)
+    + bindingsBody(record, decl)
+    + activitiesBody(record)
+    + (baseOf(record) === 'item' ? modifiersBody(ownerKey('item', record.id), record, 'Бонусы — пока надет') : '');
 
   host.innerHTML = head + body + `
     <textarea class="desc-ta" placeholder="Описание для игрока…"
       oninput="uiSetRecord('${record.id}','description',this.value)">${esc(record.description || '')}</textarea>`;
 }
 
-// Один редактор модификаторов для предметов и эффектов: разницы между ними
-// в этом месте нет. Разница между ПОРОДАМИ модификатора — есть, и она главная:
-//
-//   правит значение — обычная арифметика, складывается по правилу стакинга;
-//   правит бросок   — либо числовая прибавка (тоже складывается),
-//                     либо преимущество/помеха (не число, помеха гасит).
-//
-// Всё это движок различал с самого начала; раньше эффекту в редакторе было
-// доступно только преимущество с помехой, и «+5 к Мудрости» эффектом было не завести.
-function modifiersBody(record) {
-  const fields = targets(state.system).filter(t => t.kind === 'value');
-  const rolls = targets(state.system).filter(t => t.kind === 'roll');
-
-  return `<div class="pb">
-    <div class="pb-lbl">Что делает</div>
-    ${(record.modifiers || []).map((mod, i) => modRow(record.id, mod, i, fields, rolls)).join('')}
-    <button class="add-row" onclick="uiAddMod('${record.id}')">+ добавить</button>
-  </div>`;
-}
-
-// Активности — действия, которые предмет даёт владельцу, пока надет
-// (как в Foundry: у меча своя атака). Активность — только ссылка на
-// эффект-вызов; конвейер живёт в правиле системы.
-function activitiesBody(record) {
-  const calls = state.compendium.effects.filter(e => e.rule);
-  return `<div class="pb">
-    <div class="pb-lbl">Активности — даёт, пока надет</div>
-    ${(record.activities || []).map((act, i) => `
-      <div class="bon-row" style="grid-template-columns:110px 1fr 20px;border:none">
-        <input class="bon-v" style="text-align:left" value="${esc(act.label || '')}" placeholder="Атака"
-               oninput="uiItemActSet('${record.id}',${i},'label',this.value)">
-        <select class="meta-sel" onchange="uiItemActSet('${record.id}',${i},'effect',this.value)">
-          ${calls.map(e => `<option value="${e.id}"${act.effect === e.id ? ' selected' : ''}>${esc(e.label)}</option>`).join('')}
-        </select>
-        <button class="row-del" style="opacity:.7" onclick="uiItemActDel('${record.id}',${i})">✕</button>
-      </div>`).join('')}
-    ${calls.length
-      ? `<button class="add-row" onclick="uiItemActAdd('${record.id}')">+ активность</button>`
-      : '<div class="sys-hint">Сначала заведите эффект-вызов правила.</div>'}
-  </div>`;
-}
-
 // Свойства записи: СОСТАВ объявлен системой для РОДА этой записи, запись
 // только заполняет значения. Нет объявления — нет и раздела: компендиум
 // определяется изначальной механикой, а не наоборот.
-function weaponPropsBody(record, decl) {
-  const schema = decl && decl.props ? decl : null;
-  if (!schema) return '';
+function propsBody(record, decl) {
+  if (!decl || !decl.props || !decl.props.length) return '';
   const props = record.props || {};
   return `<div class="pb">
     <div class="pb-lbl">${esc(decl.label)} — свойства из системы</div>
-    ${(schema.props || []).map(p => `
+    ${decl.props.map(p => `
       <div class="bon-row" style="grid-template-columns:130px 1fr;border:none">
         <span style="font-size:11px;color:var(--muted)">${esc(p.label)}</span>
-        <input class="bon-v" style="text-align:left" value="${esc(props[p.key] ?? '')}"
-               placeholder="${p.kind === 'dice' ? 'напр. 1d8' : 'число'}"
-               oninput="uiSetWeaponProp('${record.id}','${p.key}',this.value)">
+        ${propControl(record, p, props[p.key])}
       </div>`).join('')}
   </div>`;
 }
 
-// Выпадашка механик — только то, что ОБЪЯВЛЕНО системой (тот же паттерн,
-// что режим автора). Значение, уже стоящее в записи, но выключенное автором
-// позже, остаётся видимым с пометкой — иначе правка молча меняла бы поведение.
-function methodOptions(current) {
-  const enabled = enabledMethods(state.system);
-  const stale = current && !enabled.some(m => m.id === current) ? ADVANTAGE_METHODS.find(m => m.id === current) : null;
-  if (!enabled.length && !stale) return ['<option value="">— система не объявляет механик преимущества —</option>'];
-  return [
-    ...enabled.map(m => `<option value="${m.id}"${current === m.id ? ' selected' : ''}>${esc(m.label)}${m.implemented ? '' : ' — не отыгран'}</option>`),
-    ...(stale ? [`<option value="${stale.id}" selected>${esc(stale.label)} — выключена в системе</option>`] : []),
-  ];
-}
-
-// Заготовка нового модификатора: правит бросок объявленной механикой на
-// объявленную мишень, если системе есть что объявить, иначе честное значение —
-// roll-заготовка без механики или без мишени была бы нерабочей тишком.
-export function defaultModifier(system) {
-  const method = enabledMethods(system)[0];
-  const rollTarget = (system.rolls || [])[0];
-  if (method && rollTarget) {
-    return { kind: 'roll', target: rollTarget.tag, effect: 'disadvantage', method: method.id, condition: null };
+// Свойство с родом «эффект» выбирается из библиотеки, а не набирается
+// руками: иначе в записи оказался бы id несуществующего состояния.
+function propControl(record, p, value) {
+  if (p.kind === 'effect') {
+    const hangable = Object.entries(state.system.effects || {}).filter(([, e]) => !isPipeline(e));
+    return `<select class="meta-sel" onchange="uiSetProp('${record.id}','${p.key}',this.value)">
+      <option value="">— не задано —</option>
+      ${hangable.map(([id, e]) => `<option value="${id}"${value === id ? ' selected' : ''}>${esc(e.label || id)}</option>`).join('')}
+    </select>`;
   }
-  // Система с чистого листа может не иметь ещё ни одного поля: мишень —
-  // честный null, выпадашка мишеней просто пуста, движок ничего не считает.
-  const first = system.fields[0];
-  return { kind: 'value', target: first ? first.tag : null, op: 'add', value: 1, stacking: 'sum', condition: null };
+  return `<input class="bon-v" style="text-align:left" value="${esc(value ?? '')}"
+    placeholder="${p.kind === 'dice' ? 'напр. 1d8' : p.kind === 'number' ? 'число' : 'значение'}"
+    oninput="uiSetProp('${record.id}','${p.key}',this.value)">`;
 }
 
-function modRow(id, mod, i, fields, rolls) {
-  const isRoll = mod.kind === 'roll';
-  const behaviour = !isRoll ? mod.op : mod.effect ? mod.effect : 'bonus';
-  const literal = !(mod.value && typeof mod.value === 'object');
-  const list = isRoll ? rolls : fields;
+// Что запись даёт владельцу. Раздел ЧИТАЕМЫЙ, а не редактируемый: привязку
+// объявил род в конструкторе систем, и правится она там же. Здесь она
+// показана, чтобы человек видел, куда уходят введённые им циферки.
+function bindingsBody(record, decl) {
+  const own = record.activities && record.activities.length;
+  const fromKind = (decl && decl.bindings) || [];
+  if (own || !fromKind.length) return '';
 
-  const target = field(mod.target);
-  const logical = !isRoll && target && target.value.type === 'boolean';
-
-  return `<div class="pb" style="margin-bottom:6px;background:var(--s2)">
-    <button class="pb-del" onclick="uiDelMod('${id}',${i})">✕</button>
-
-    <div class="bon-row" style="grid-template-columns:1fr 1fr;border:none">
-      <select class="meta-sel" onchange="uiSetMod('${id}',${i},'kind',this.value)">
-        <option value="value"${isRoll ? '' : ' selected'}>Правит значение поля</option>
-        <option value="roll"${isRoll ? ' selected' : ''}>Правит бросок</option>
-      </select>
-      <select class="meta-sel" onchange="uiSetMod('${id}',${i},'behaviour',this.value)">
-        ${isRoll ? `
-          <option value="bonus"${behaviour === 'bonus' ? ' selected' : ''}>Прибавка к броску</option>
-          <option value="advantage"${behaviour === 'advantage' ? ' selected' : ''}>Преимущество</option>
-          <option value="disadvantage"${behaviour === 'disadvantage' ? ' selected' : ''}>Помеха</option>`
-        : `
-          <option value="add"${behaviour === 'add' ? ' selected' : ''}>+ прибавить</option>
-          <option value="set"${behaviour === 'set' ? ' selected' : ''}>= задать</option>
-          <option value="mul"${behaviour === 'mul' ? ' selected' : ''}>× умножить</option>`}
-      </select>
-    </div>
-
-    <div class="bon-row" style="grid-template-columns:1fr 1fr;border:none">
-      <select class="meta-sel" onchange="uiSetMod('${id}',${i},'target',this.value)">
-        ${list.map(t => `<option value="${t.tag}"${mod.target === t.tag ? ' selected' : ''}>${esc(t.label)}</option>`).join('')}
-      </select>
-      ${mod.effect ? `
-        <select class="meta-sel" onchange="uiSetMod('${id}',${i},'method',this.value)">
-          ${methodOptions(mod.method).join('')}
-        </select>`
-      : `<select class="meta-sel" onchange="uiSetMod('${id}',${i},'stacking',this.value)">
-          ${STACKING.map(([v, l]) => `<option value="${v}"${(mod.stacking || 'sum') === v ? ' selected' : ''}>${l}</option>`).join('')}
-        </select>`}
-    </div>
-
-    ${mod.effect ? '' : `
-      <div class="pb-lbl" style="margin:8px 0 3px">Насколько</div>
-      ${logical
-        ? `<select class="meta-sel" style="width:100%" onchange="uiSetMod('${id}',${i},'value',this.value)">
-            <option value="да"${mod.value === true ? ' selected' : ''}>да</option>
-            <option value="нет"${mod.value !== true ? ' selected' : ''}>нет</option>
-          </select>`
-        // Тот же редактор формул, что у полей системы: подсказка по лейблам,
-        // чипсы, разбор. «+#prof_bonus к Классу брони» набирается по-человечески.
-        : renderFormulaInput(`mod.${id}.${i}.value`, {
-          placeholder: 'число или формула: наберите «Бонус»',
-          read: () => (literal ? String(mod.value ?? '') : mod.value.expr),
-          write: expr => writeModValue(id, i, expr),
-        })}`}
-
-    <div class="pb-lbl" style="margin:8px 0 3px">Когда действует</div>
-    ${renderFormulaInput(`mod.${id}.${i}.cond`, {
-      placeholder: 'всегда — оставьте пустым',
-      read: () => mod.condition || '',
-      write: expr => setMod(id, i, 'condition', expr),
-    })}
-  </div>`;
-}
-
-// Числовое поле: с ним есть смысл сравнивать бросок и из него есть смысл
-// вычитать урон. Текстовые и логические сюда не годятся — «против чего: Раса»
-// молча давало бы вечный промах.
-const isNumericField = f =>
-  f.value.kind !== 'stored' ? f.value.kind !== 'text' : f.value.type === 'number';
-
-// Действие — ИСТОЧНИК: оружие плюс ссылка на эффект-вызов. Самого пайплайна
-// здесь нет и не было бы куда положить: шаги живут в правиле системы.
-function actionBody(action) {
-  const calls = state.compendium.effects.filter(e => e.rule);
   return `<div class="pb">
-    <div class="pb-lbl">Что происходит при применении</div>
-    <div class="bon-row" style="grid-template-columns:130px 1fr;border:none">
-      <span style="font-size:11px;color:var(--muted)">Эффект</span>
-      <select class="meta-sel" onchange="uiSetRecord('${action.id}','effect',this.value)">
-        ${calls.length
-          ? calls.map(e => `<option value="${e.id}"${action.effect === e.id ? ' selected' : ''}>${esc(e.label)}</option>`).join('')
-          : '<option>— в компендиуме нет эффектов-вызовов —</option>'}
-      </select>
-    </div>
-    ${weaponRow(action)}
+    <div class="pb-lbl">Что даёт — привязка рода «${esc(decl.label)}»</div>
+    ${fromKind.map(binding => {
+      const effect = (state.system.effects || {})[binding.effect];
+      return `<div class="bon-row" style="grid-template-columns:110px 1fr;border:none">
+        <span style="font-size:11px;color:var(--muted)">${esc(binding.label || 'Применение')}</span>
+        <span style="font-size:11px">${effect
+          ? `${esc(effect.icon || '⚙')} ${esc(effect.label || binding.effect)}`
+          : `<span style="color:var(--red)">нет эффекта «${esc(binding.effect)}»</span>`}</span>
+      </div>`;
+    }).join('')}
+    <div class="sys-hint">Привязку объявил род в конструкторе систем — там же она и правится.</div>
   </div>`;
 }
 
-function weaponRow(action) {
-  return `<div class="bon-row" style="grid-template-columns:130px 1fr;border:none">
-    <span style="font-size:11px;color:var(--muted)">Оружие</span>
-    <select class="meta-sel" onchange="uiSetWeapon('${action.id}',this.value)">
-      <option value=""${action.weapon ? '' : ' selected'}>— без оружия —</option>
-      ${state.compendium.items.map(w =>
-    `<option value="${w.id}"${action.weapon === w.id ? ' selected' : ''}>${esc(w.label)}</option>`).join('')}
-    </select>
-  </div>`;
-}
-
-// Эффект-вызов: правило по имени плюс форма параметров, ВЫВЕДЕННАЯ из
-// объявления правила. Правило объявило три параметра — здесь три поля.
-// Шагов в этом редакторе нет: не скрыты, а не созданы — граница режимов.
-function ruleCallBody(record) {
-  const rules = Object.entries(state.system.rules || {});
-  const rule = (state.system.rules || {})[record.rule];
-
-  const head = `<div class="bon-row" style="grid-template-columns:130px 1fr;border:none">
-    <span style="font-size:11px;color:var(--muted)">Правило системы</span>
-    <select class="meta-sel" onchange="uiSetEffectRule('${record.id}',this.value)">
-      ${rules.map(([id, r]) => `<option value="${id}"${record.rule === id ? ' selected' : ''}>${esc(r.label || id)}</option>`).join('')}
-    </select>
-  </div>`;
-
-  if (!rule) {
-    return `<div class="pb"><div class="pb-lbl">Вызов правила</div>${head}
-      <div class="sys-hint" style="color:var(--red)">система не объявляет правила «${esc(record.rule)}»</div></div>`;
+// Своя активность перебивает привязку рода: так штучная вещь получает
+// поведение поверх общей формы. Аргументы при этом заполняются здесь —
+// форма выводится из объявления параметров эффекта.
+function activitiesBody(record) {
+  const pipeline = Object.entries(state.system.effects || {}).filter(([, e]) => isPipeline(e));
+  const activities = record.activities || [];
+  if (!activities.length) {
+    return `<div class="pb">
+      <div class="pb-lbl">Своя активность — вместо привязки рода</div>
+      ${pipeline.length
+        ? `<button class="add-row" onclick="uiItemActAdd('${record.id}')">+ своя активность</button>
+           <div class="sys-hint">Нужна штучной вещи: перебьёт то, что даёт род.</div>`
+        : '<div class="sys-hint">В системе нет применимых эффектов — привязывать нечего.</div>'}
+    </div>`;
   }
 
   return `<div class="pb">
-    <div class="pb-lbl">Вызов правила — только параметры</div>
-    ${head}
-    ${(rule.params || []).map(p => paramRow(record, p)).join('')}
+    <div class="pb-lbl">Свои активности — перебивают привязку рода</div>
+    ${activities.map((act, i) => {
+      const effect = (state.system.effects || {})[act.effect];
+      return `<div class="pb" style="margin-bottom:6px;background:var(--s2)">
+        <button class="pb-del" onclick="uiItemActDel('${record.id}',${i})">✕</button>
+        <div class="bon-row" style="grid-template-columns:110px 1fr;border:none">
+          <input class="bon-v" style="text-align:left" value="${esc(act.label || '')}" placeholder="Атака"
+                 oninput="uiItemActSet('${record.id}',${i},'label',this.value)">
+          <select class="meta-sel" onchange="uiItemActSet('${record.id}',${i},'effect',this.value)">
+            ${pipeline.map(([id, e]) => `<option value="${id}"${act.effect === id ? ' selected' : ''}>${esc(e.label || id)}</option>`).join('')}
+          </select>
+        </div>
+        ${effect ? argRows(record, i, act, effect) : '<div class="sys-hint" style="color:var(--red)">эффект не найден</div>'}
+      </div>`;
+    }).join('')}
+    <button class="add-row" onclick="uiItemActAdd('${record.id}')">+ ещё активность</button>
   </div>`;
 }
 
-function paramRow(record, decl) {
-  const value = (record.params || {})[decl.key];
-  const label = `${decl.label || decl.key}${decl.of === 'target' ? ' (считает цель)' : ''}`;
-
-  if (decl.kind === 'expr') {
-    return `<div class="pb-lbl" style="margin:10px 0 3px">${esc(label)}</div>
-      ${renderFormulaInput(`fx.${record.id}.${decl.key}`, {
-        placeholder: 'число или формула: наберите лейбл поля',
-        read: () => String(value ?? ''),
-        write: text => setEffectParam(record.id, decl.key, text),
-      })}`;
-  }
-
-  let control;
-  if (decl.kind === 'tag') {
-    const fields = state.system.fields.filter(isNumericField);
-    control = `<select class="meta-sel" onchange="uiSetEffectParam('${record.id}','${decl.key}',this.value)">
-      ${fields.map(f => `<option value="${f.tag}"${value === f.tag ? ' selected' : ''}>${esc(f.label)}</option>`).join('')}
-    </select>`;
-  } else if (decl.kind === 'choice') {
-    const options = decl.options || AMOUNT_SOURCES.map(s => s.id);
-    control = `<select class="meta-sel" onchange="uiSetEffectParam('${record.id}','${decl.key}',this.value)">
-      ${options.map(o => {
-        const entry = AMOUNT_SOURCES.find(s => s.id === o);
-        return `<option value="${o}"${value === o ? ' selected' : ''}>${esc(entry ? entry.label : o)}</option>`;
-      }).join('')}
-    </select>`;
-  } else if (decl.kind === 'effect') {
-    const wearable = state.compendium.effects.filter(e => !e.rule);
-    control = `<select class="meta-sel" onchange="uiSetEffectParam('${record.id}','${decl.key}',this.value)">
-      ${wearable.map(e => `<option value="${e.id}"${value === e.id ? ' selected' : ''}>${esc(e.label)}</option>`).join('')}
-    </select>`;
-  } else {
-    control = `<input class="bon-v" style="text-align:left" value="${esc(value ?? '')}"
-      placeholder="${decl.kind === 'dice' ? 'напр. 2d6' : 'число'}"
-      oninput="uiSetEffectParam('${record.id}','${decl.key}',this.value)">`;
-  }
-
-  return `<div class="bon-row" style="grid-template-columns:130px 1fr;border:none">
-    <span style="font-size:11px;color:var(--muted)">${esc(label)}</span>${control}
-  </div>`;
+// Форма аргументов ВЫВЕДЕНА из объявления параметров эффекта: эффект
+// объявил четыре параметра — здесь четыре поля. Шагов в этом редакторе
+// нет: не скрыты, а не созданы — граница режимов.
+function argRows(record, index, act, effect) {
+  const args = act.args || {};
+  return (effect.params || []).map(p => {
+    const value = args[p.key];
+    const label = `${p.label || p.key}${p.of === 'target' ? ' (считает цель)' : ''}`;
+    return `<div class="bon-row" style="grid-template-columns:130px 1fr;border:none">
+      <span style="font-size:11px;color:var(--muted)">${esc(label)}</span>
+      <input class="bon-v" style="text-align:left" value="${esc(typeof value === 'object' ? '' : value ?? '')}"
+             placeholder="${esc(argHint(p))}"
+             oninput="uiItemArgSet('${record.id}',${index},'${p.key}',this.value)">
+    </div>`;
+  }).join('');
 }
 
+const argHint = p => ({
+  expr: '#тег + 2', tag: 'тег поля', dice: '2d6',
+  number: 'число', effect: 'id эффекта', choice: 'roll / item / margin',
+}[p.kind] || 'значение');
 
 // ── правки ──────────────────────────────────────────────────────────────────
 
@@ -393,98 +247,42 @@ export function find(id) {
 
 // Возвращает живой объект из компендиума, а не копию из allRecords.
 function live(id) {
-  const { items, effects, actions } = state.compendium;
-  return items.find(r => r.id === id) || effects.find(r => r.id === id) || actions.find(r => r.id === id) || null;
+  const { items, actions } = state.compendium;
+  return items.find(r => r.id === id) || actions.find(r => r.id === id) || null;
 }
 
 export function pickRecord(id) {
   state.activeRecordId = id;
 }
 
-// Заготовка параметров под объявление правила: у автора эффекта форма
-// с первого мгновения заполнена чем-то законным, а не пустотой.
-export function defaultParams(rule) {
-  const params = {};
-  for (const decl of (rule || {}).params || []) {
-    if (decl.kind === 'expr') {
-      const f = state.system.fields.find(x => x.value.kind === 'formula') || state.system.fields[0];
-      if (f) params[decl.key] = '#' + f.tag;
-    } else if (decl.kind === 'tag') {
-      const f = state.system.fields.find(x => x.value.kind === 'stored' && x.value.type === 'number')
-        || state.system.fields[0];
-      if (f) params[decl.key] = f.tag;
-    } else if (decl.kind === 'dice') params[decl.key] = '1d6';
-    else if (decl.kind === 'number') params[decl.key] = 10;
-    else if (decl.kind === 'choice') params[decl.key] = (decl.options || ['roll'])[0];
-    else if (decl.kind === 'effect') {
-      const e = state.compendium.effects.find(x => !x.rule);
-      if (e) params[decl.key] = e.id;
-    }
-  }
-  return params;
-}
-
-function newRuleCall(rk = 'call') {
-  const [ruleId, rule] = Object.entries(state.system.rules || {})[0] || [];
-  const id = newRecordId(rk);
-  state.compendium.effects.push({
-    id, rk, label: `Новая запись`, description: '',
-    rule: ruleId || '', params: defaultParams(rule),
-  });
-  return id;
-}
-
 // Создание записи РОДА, объявленного системой: что именно рождается,
-// решает базис рода (item / effect / call / action), слова — объявление.
+// решает базис рода (item / action), слова и форму — объявление.
 export function createRecord(rk) {
   const decl = (state.system.records || {})[rk];
   if (!decl) return;
-  const name = `${decl.label} — новая запись`;
+  const id = newRecordId(rk);
+  const record = { id, rk, label: `${decl.label} — новая запись`, description: '' };
+  if (decl.props && decl.props.length) record.props = {};
 
   if (decl.kind === 'item') {
-    const id = newRecordId(rk);
-    state.compendium.items.push({
-      id, rk, label: name, description: '',
-      modifiers: decl.props ? [] : [defaultModifier(state.system)],
-    });
-    state.activeRecordId = id;
-    return;
+    // Предмет без объявленных свойств заводится ради бонусов — даём заготовку.
+    record.modifiers = decl.props ? [] : [defaultModifier(state.system)];
+    state.compendium.items.push(record);
+  } else {
+    state.compendium.actions.push(record);
   }
-  if (decl.kind === 'effect') {
-    const id = newRecordId(rk);
-    state.compendium.effects.push({
-      id, rk, label: name, icon: decl.icon || '✦', description: '',
-      modifiers: [defaultModifier(state.system)],
-    });
-    state.activeRecordId = id;
-    return;
-  }
-  if (decl.kind === 'call') {
-    state.activeRecordId = newRuleCall(rk);
-    return;
-  }
-
-  // Базис «действие»: ссылается на эффект-вызов; если вызовов ещё нет —
-  // заводим заготовку тут же, чтобы запись родилась работоспособной.
-  const id = newRecordId(rk);
-  const call = state.compendium.effects.find(e => e.rule) || { id: newRuleCall() };
-  state.compendium.actions.push({
-    id, rk, label: name, description: '',
-    effect: call.id,
-  });
   state.activeRecordId = id;
+  return id;
 }
 
 export function deleteRecord(id) {
   const { compendium } = state;
   compendium.items = compendium.items.filter(r => r.id !== id);
-  compendium.effects = compendium.effects.filter(r => r.id !== id);
   compendium.actions = compendium.actions.filter(r => r.id !== id);
 
   for (const s of state.sheets) {
     s.equipped = s.equipped.filter(e => e !== id);
     s.actions = s.actions.filter(a => a !== id);
-    s.effects = s.effects.filter(e => e.effectId !== id);
   }
   if (state.activeRecordId === id) state.activeRecordId = null;
   log(`Запись убрана из компендиума и со всех персонажей.`);
@@ -495,51 +293,7 @@ export function setRecord(id, key, value) {
   if (record) record[key] = value;
 }
 
-export function setWeapon(id, value) {
-  const action = live(id);
-  if (value) action.weapon = value;
-  else delete action.weapon;
-}
-
-// ── активности предмета ─────────────────────────────────────────────────────
-
-export function addActivity(id) {
-  const item = live(id);
-  const firstCall = state.compendium.effects.find(e => e.rule);
-  item.activities = item.activities || [];
-  item.activities.push({ label: 'Атака', effect: firstCall ? firstCall.id : '' });
-}
-
-export function deleteActivity(id, index) {
-  live(id).activities.splice(index, 1);
-}
-
-export function setActivity(id, index, key, value) {
-  live(id).activities[index][key] = value;
-}
-
-// ── эффект-вызов: правило и параметры ───────────────────────────────────────
-
-// Смена правила пересобирает параметры под новое объявление: у другого
-// правила другие слоты, и старые значения к ним не приложить.
-export function setEffectRule(id, ruleId) {
-  const record = live(id);
-  record.rule = ruleId;
-  record.params = defaultParams((state.system.rules || {})[ruleId]);
-}
-
-export function setEffectParam(id, key, raw) {
-  const record = live(id);
-  const decl = (((state.system.rules || {})[record.rule] || {}).params || []).find(p => p.key === key);
-  record.params = record.params || {};
-  const value = typeof raw === 'string' ? raw.trim() : raw;
-  if (value === '' || value === undefined) { delete record.params[key]; return; }
-  record.params[key] = decl && decl.kind === 'number' && !Number.isNaN(Number(value))
-    ? Number(value)
-    : value;
-}
-
-export function setWeaponProp(id, key, raw) {
+export function setProp(id, key, raw) {
   const record = live(id);
   const schema = (((state.system.records || {})[record.rk]) || {}).props || [];
   const kind = (schema.find(p => p.key === key) || {}).kind;
@@ -549,73 +303,37 @@ export function setWeaponProp(id, key, raw) {
   record.props[key] = kind === 'number' && !Number.isNaN(Number(value)) ? Number(value) : value;
 }
 
-const firstField = () => ((state.system.fields[0]) || {}).tag ?? null;
-const firstRoll = () => ((state.system.rolls || [])[0] || {}).tag;
+// ── свои активности ─────────────────────────────────────────────────────────
 
-export function addMod(id) {
+export function addActivity(id) {
   const record = live(id);
-  const asRoll = baseOf(record) === 'effect' && !(record.modifiers || []).length;
-  record.modifiers = record.modifiers || [];
-  record.modifiers.push(asRoll ? defaultModifier(state.system)
-    : { kind: 'value', target: firstField(), op: 'add', value: 1, stacking: 'sum', condition: null });
+  const first = Object.entries(state.system.effects || {}).find(([, e]) => isPipeline(e));
+  record.activities = record.activities || [];
+  record.activities.push({ label: 'Применение', effect: first ? first[0] : '', args: {} });
 }
 
-export function deleteMod(id, index) {
-  live(id).modifiers.splice(index, 1);
+export function deleteActivity(id, index) {
+  live(id).activities.splice(index, 1);
 }
 
-// Число остаётся литералом, всё прочее — формулой. Разделение явное: логических
-// литералов в грамматике нет, и «истину» формулой не выразить.
-export function writeModValue(id, index, expr) {
-  const mod = live(id).modifiers[index];
-  const trimmed = String(expr).trim();
-  const asNumber = Number(trimmed);
-  mod.value = !trimmed ? 0 : Number.isNaN(asNumber) ? { expr: trimmed } : asNumber;
+// Смена эффекта пересобирает аргументы: у другого эффекта другие параметры,
+// и старые значения к ним не приложить.
+export function setActivity(id, index, key, value) {
+  const activity = live(id).activities[index];
+  activity[key] = value;
+  if (key === 'effect') activity.args = {};
 }
 
-export function setMod(id, index, key, raw) {
+export function setActivityArg(id, index, key, raw) {
   const record = live(id);
-  const mod = record.modifiers[index];
-
-  // Смена породы: у значения и у броска разные мишени и разные поля,
-  // поэтому модификатор пересобирается целиком, а не правится по кусочку.
-  if (key === 'kind') {
-    record.modifiers[index] = raw === 'roll'
-      ? { kind: 'roll', target: firstRoll(), op: 'add', value: 1, stacking: 'sum', condition: mod.condition ?? null }
-      : { kind: 'value', target: firstField(), op: 'add', value: 1, stacking: 'sum', condition: mod.condition ?? null };
-    return;
-  }
-
-  // Что именно делает: для значения это операция, для броска — прибавка
-  // либо преимущество с помехой. Прибавка складывается, преимущество нет.
-  if (key === 'behaviour') {
-    if (mod.kind !== 'roll') { mod.op = raw; return; }
-
-    if (raw === 'bonus') {
-      record.modifiers[index] = {
-        kind: 'roll', target: mod.target, op: 'add', value: 1,
-        stacking: 'sum', condition: mod.condition ?? null,
-      };
-    } else {
-      record.modifiers[index] = {
-        kind: 'roll', target: mod.target, effect: raw,
-        method: mod.method || 'rerollBest', condition: mod.condition ?? null,
-      };
-    }
-    return;
-  }
-
-  if (key === 'value') {
-    // Число — литерал, всё прочее — формула. Разделение явное: логическое
-    // «истина» в грамматике формул не выражается, литералов там нет.
-    const asNumber = Number(raw);
-    mod.value = raw.trim() === '' ? 0
-      : raw.trim() === 'да' ? true
-        : raw.trim() === 'нет' ? false
-          : Number.isNaN(asNumber) ? { expr: raw } : asNumber;
-    return;
-  }
-  if (key === 'condition') { mod.condition = raw.trim() || null; return; }
-  mod[key] = raw;
+  const activity = record.activities[index];
+  const effect = (state.system.effects || {})[activity.effect] || {};
+  const decl = (effect.params || []).find(p => p.key === key);
+  const args = activity.args || (activity.args = {});
+  const value = typeof raw === 'string' ? raw.trim() : raw;
+  if (value === '' || value === undefined) { delete args[key]; return; }
+  args[key] = decl && decl.kind === 'number' && !Number.isNaN(Number(value)) ? Number(value) : value;
 }
 
+// Наружу — для экрана игрока: он тоже волен завести запись.
+export { defaultModifier };

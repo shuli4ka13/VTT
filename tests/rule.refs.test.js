@@ -24,7 +24,7 @@ const sender = () => ({
     { key: 'versus', label: 'Против чего', kind: 'tag' },
     { key: 'flat', label: 'Число', kind: 'number' },
   ],
-  item: { damage_dice: '1d8', damage_flat: 3 },
+  props: { damage_dice: '1d8', damage_flat: 3 },
   owner: 'эффект «Тестовый»',
 });
 
@@ -87,7 +87,7 @@ group('структурные ссылки', () => {
     });
 
     test('ссылка на предмет без предмета-источника — внятная ошибка при упаковке', () => {
-      const ctx = { ...sender(), item: null };
+      const ctx = { ...sender(), props: null };
       const err = throws(() => packRef({ item: 'damage_flat' }, ctx), 'damage_flat');
       eq(err.message.includes('эффект «Тестовый»'), true);
     });
@@ -120,7 +120,7 @@ group('структурные ссылки', () => {
     });
 
     test('необязательное свойство предмета без предмета — пустота, не ошибка', () => {
-      const ctx = { ...sender(), item: null };
+      const ctx = { ...sender(), props: null };
       deepEq(packRef({ item: 'damage_flat', optional: true }, ctx), { const: null });
     });
 
@@ -130,7 +130,7 @@ group('структурные ссылки', () => {
 
     test('но БЕЗ пометки те же пустоты остаются ошибками', () => {
       throws(() => packRef({ param: 'flat' }, { ...sender(), params: {} }), 'flat');
-      throws(() => packRef({ item: 'damage_flat' }, { ...sender(), item: null }), 'damage_flat');
+      throws(() => packRef({ item: 'damage_flat' }, { ...sender(), props: null }), 'damage_flat');
     });
   });
 

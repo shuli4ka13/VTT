@@ -7,7 +7,10 @@
 // человека. В полноценном приложении на этом месте встанет сервис с БД,
 // формат файла останется публичным контрактом.
 
-const VERSION = 1;
+import { migrateWorld } from '../model/migrate.js';
+
+const VERSION = 2;
+const READABLE = [1, 2];
 
 export function packWorld({ system, compendium, sheets }) {
   return JSON.stringify({ version: VERSION, system, compendium, sheets }, null, 2);
@@ -21,8 +24,10 @@ export function unpackWorld(text) {
     throw new Error('это не мир: файл не удалось разобрать как JSON');
   }
 
-  if (raw.version !== VERSION) {
-    throw new Error(`файл мира версии «${raw.version}», эта сборка понимает ${VERSION}`);
+  // Первая версия читается и переводится на новый формат один раз, при
+  // загрузке: иначе командные миры, выгруженные до перекройки, умерли бы.
+  if (!READABLE.includes(raw.version)) {
+    throw new Error(`файл мира версии «${raw.version}», эта сборка понимает ${READABLE.join(' и ')}`);
   }
   if (!raw.system || !Array.isArray(raw.system.fields)) {
     throw new Error('в файле нет системы с составом полей');
@@ -34,5 +39,5 @@ export function unpackWorld(text) {
     throw new Error('в файле нет чарников (пустой список — тоже список)');
   }
 
-  return { system: raw.system, compendium: raw.compendium, sheets: raw.sheets };
+  return migrateWorld({ system: raw.system, compendium: raw.compendium, sheets: raw.sheets });
 }

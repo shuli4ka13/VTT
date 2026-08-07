@@ -1,6 +1,6 @@
 import { group, test, eq, ok } from './harness.js';
 import { state } from '../src/ui/state.js';
-import { addConstant, renameConstant, deleteConstant, renderConstants } from '../src/ui/rule-editor.js';
+import { addConstant, renameConstant, deleteConstant, renderConstants } from '../src/ui/dictionaries-editor.js';
 
 // Константы системы (ведущая кость и любая другая) — правились только по
 // составу костей УЖЕ существующей записи: завести новую, переименовать
@@ -30,10 +30,10 @@ group('редактор констант системы', () => {
     deleteConstant(name);
   });
 
-  test('удаление константы, на которую ссылается шаг правила (roll.die.constant), отказано', () => {
+  test('удаление константы, на которую ссылается шаг эффекта (roll.die.constant), отказано', () => {
     const name = addConstant();
-    const ruleId = Object.keys(state.system.rules)[0];
-    const step = state.system.rules[ruleId].steps.find(s => s.type === 'threshold');
+    const withSteps = Object.values(state.system.effects).find(e => (e.steps || []).some(x => x.type === 'threshold'));
+    const step = withSteps.steps.find(s => s.type === 'threshold');
     const saved = step.roll.die.constant;
     step.roll.die.constant = name;
 

@@ -15,6 +15,7 @@
 
 import { compile } from '../formula/index.js';
 import { assertTarget } from './targets.js';
+import { roomEffects, wornEffects, activationOf } from './effects.js';
 import { EngineError } from './errors.js';
 
 const STACKING = {
@@ -42,31 +43,32 @@ export function collectModifiers(system, sheet, compendium) {
   return buckets;
 }
 
+// Три способа подключить пассивный эффект — три источника. Способ подключения
+// внутри эффекта не записан: он один и тот же эффект в правилах комнаты
+// и на одном чарнике, разница только здесь.
 function sourcesOf(system, sheet, compendium) {
   const sources = [];
 
-  // Правила самой системы — третий источник наравне с предметами и эффектами.
-  // Действуют на всех её чарников, надевать и навешивать ничего не нужно.
-  // Сюда попадают авто-правила преимущества и домашние правила комнаты.
-  for (const [index, mod] of (system.modifiers || []).entries()) {
-    sources.push({
-      type: 'rule',
-      id: mod.id || `rule_${index}`,
-      label: mod.label || 'Правило системы',
-      modifiers: [mod],
-    });
+  // Правила комнаты: пассивные эффекты, включённые на ВСЕХ чарников мира.
+  // Надевать и навешивать ничего не нужно.
+  for (const { id, effect } of roomEffects(system)) {
+    if (activationOf(effect) !== 'passive') continue;
+    sources.push({ type: 'room', id, label: effect.label || id, modifiers: effect.modifiers || [] });
   }
 
+  // Предмет носит свои бонусы сам: кольчуга задаёт базу доспеха, и это
+  // свойство вещи, а не отдельный именованный эффект.
   for (const id of sheet.equipped || []) {
     const item = (compendium.items || []).find(i => i.id === id);
     if (!item) throw new EngineError(`чарник «${sheet.id}» носит предмет «${id}», которого нет в компендиуме`);
     sources.push({ type: 'item', id: item.id, label: item.label, modifiers: item.modifiers || [] });
   }
 
-  for (const entry of sheet.effects || []) {
-    const effect = (compendium.effects || []).find(e => e.id === entry.effectId);
-    if (!effect) throw new EngineError(`на чарнике «${sheet.id}» висит эффект «${entry.effectId}», которого нет в компендиуме`);
-    sources.push({ type: 'effect', id: effect.id, label: effect.label, modifiers: effect.modifiers || [] });
+  // Висящие на листе. Триггерные тоже висят, но модификаторов не несут:
+  // их нагрузка — конвейер шагов, и он срабатывает по событию, а не сейчас.
+  for (const { id, effect } of wornEffects(system, sheet)) {
+    if (activationOf(effect) !== 'passive') continue;
+    sources.push({ type: 'effect', id, label: effect.label || id, modifiers: effect.modifiers || [] });
   }
 
   return sources;

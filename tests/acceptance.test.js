@@ -9,6 +9,7 @@ import { send, receive } from '../src/events/envelope.js';
 import { system } from '../src/model/system.js';
 import { arven, mirra, sheets } from '../src/model/sheets.js';
 import { compendium } from '../src/model/compendium.js';
+import { SAMPLE_SYSTEMS, SAMPLE_WORLDS } from '../src/model/systems.js';
 
 const all = (sys, sheet, book = compendium) =>
   calcAll(sys, sheet, newPass(sys, sheet, { compendium: book }));
@@ -158,8 +159,8 @@ if (inNode) {
     test('стол ничего не правит: ни полей, ни правил — только выбирает пару листов', () => {
       const tableCode = readFileSync(join(repo, 'src/ui/mode-table.js'), 'utf8');
       eq(/from\s+'\.\/field-editor\.js'/.test(tableCode), false, 'стол не знает редактора полей');
-      eq(/from\s+'\.\/rule-editor\.js'/.test(tableCode), false, 'и конструктора правил не знает');
-      eq(tableCode.includes('uiRuleSlot'), false, 'правка шагов со стола невозможна');
+      eq(/from\s+'\.\/effect-editor\.js'/.test(tableCode), false, 'и конструктора эффектов не знает');
+      eq(tableCode.includes('uiEffSlot'), false, 'правка шагов со стола невозможна');
       const html = readFileSync(join(repo, 'vtt.html'), 'utf8');
       const tablePane = html.slice(html.indexOf('id="pane-table"'), html.indexOf('<script'));
       for (const handler of ['uiAddField', 'uiAddGroup', 'uiDelField']) {
@@ -167,25 +168,81 @@ if (inNode) {
       }
     });
 
-    test('шаги правила правятся в конструкторе систем, и только там', () => {
+    test('шаги эффекта правятся в конструкторе систем, и только там', () => {
       // Смена шага меняет ФОРМУ разрешения — по границе режимов это автор.
       const authorCode = readFileSync(join(repo, 'src/ui/mode-author.js'), 'utf8');
-      const ruleEditorCode = readFileSync(join(repo, 'src/ui/rule-editor.js'), 'utf8');
+      const effectEditorCode = readFileSync(join(repo, 'src/ui/effect-editor.js'), 'utf8');
       const compendiumCode = readFileSync(join(repo, 'src/ui/mode-compendium.js'), 'utf8');
 
-      ok(/from\s+'\.\/rule-editor\.js'/.test(authorCode),
-        'конструктор правил — часть режима автора');
-      ok(/from\s+'\.\.\/model\/amount-sources\.js'/.test(ruleEditorCode),
-        'словарь источников величины — часть конструктора правил');
-      ok(ruleEditorCode.includes('uiRuleSlot'), 'правка слота шага есть у автора');
+      ok(/from\s+'\.\/effect-editor\.js'/.test(authorCode),
+        'конструктор эффектов — часть режима автора');
+      ok(/from\s+'\.\.\/model\/amount-sources\.js'/.test(effectEditorCode),
+        'словарь источников величины — часть конструктора эффектов');
+      ok(effectEditorCode.includes('uiEffSlot'), 'правка слота шага есть у автора');
       for (const [file, code] of [['mode-player.js', playerCode], ['mode-compendium.js', compendiumCode]]) {
-        eq(code.includes('uiRuleSlot'), false, `${file}: правки шагов нет — негативный контроль`);
-        eq(code.includes('uiRuleAddStep'), false, `${file}: и добавления шагов нет`);
+        eq(code.includes('uiEffSlot'), false, `${file}: правки шагов нет — негативный контроль`);
+        eq(code.includes('uiEffAddStep'), false, `${file}: и добавления шагов нет`);
       }
       // Редактор эффекта рисует ТОЛЬКО параметры: реестр шагов ему не нужен,
       // и первым признаком протечки станет вот этот импорт.
       eq(/from\s+'\.\.\/engine\/steps\//.test(compendiumCode), false,
         'mode-compendium.js не знает реестра шагов');
+    });
+  });
+
+  group('одна модель, а не две', () => {
+    // Перекройка на эффекты закончена только тогда, когда СТАРЫХ секций нет
+    // ни в одном образце. Пока они лежат рядом, легко незаметно начать жить
+    // на двух форматах: одно место читает `rules`, другое `effects`.
+    test('в образцовых системах нет ни rules, ни modifiers', () => {
+      for (const sys of SAMPLE_SYSTEMS) {
+        eq(sys.rules, undefined, `${sys.name}: конвейеры живут в effects`);
+        eq(sys.modifiers, undefined, `${sys.name}: правила комнаты — это room_rules`);
+        ok(sys.effects, `${sys.name}: библиотека эффектов обязательна`);
+      }
+    });
+
+    test('в образцовых компендиумах нет полки эффектов', () => {
+      for (const { system: sys, compendium: book } of SAMPLE_WORLDS) {
+        eq(book.effects, undefined, `${sys.name}: эффект — закон системы, не запись`);
+      }
+    });
+
+    test('каждая ссылка образцов бьёт по объявленному эффекту', () => {
+      for (const { system: sys, compendium: book } of SAMPLE_WORLDS) {
+        for (const id of sys.room_rules || []) {
+          ok(sys.effects[id], `${sys.name}: правило комнаты «${id}» ссылается в пустоту`);
+        }
+        for (const decl of Object.values(sys.records || {})) {
+          for (const binding of decl.bindings || []) {
+            ok(sys.effects[binding.effect],
+              `${sys.name}: привязка рода зовёт эффект «${binding.effect}», которого нет`);
+          }
+        }
+        for (const record of [...book.items, ...book.actions]) {
+          for (const act of record.activities || []) {
+            ok(sys.effects[act.effect],
+              `${sys.name}: активность «${record.id}» зовёт эффект «${act.effect}», которого нет`);
+          }
+        }
+      }
+    });
+
+    test('движок не читает старых секций: их нет ни в одном модуле', () => {
+      const stale = [
+        { name: 'system.rules', re: /\bsystem\.rules\b/ },
+        { name: 'system.modifiers', re: /\bsystem\.modifiers\b/ },
+        { name: 'compendium.effects', re: /\bcompendium\.effects\b/ },
+      ];
+      const hits = [];
+      for (const file of walk(join(repo, 'src'))) {
+        if (file.endsWith('migrate.js')) continue; // единственный, кому положено
+        const text = readFileSync(file, 'utf8');
+        for (const { name, re } of stale) {
+          if (re.test(text)) hits.push(`${file.slice(repo.length + 1)}: ${name}`);
+        }
+      }
+      deepEq(hits, [], 'старый формат читает только миграция');
     });
   });
 

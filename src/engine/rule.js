@@ -18,6 +18,7 @@
 
 import { stepModule } from './steps/index.js';
 import { findField } from './calc.js';
+import { requireEffect, stackingOf, usesMax } from './effects.js';
 import { EngineError } from './errors.js';
 
 export function packRule(rule, ctx) {
@@ -35,6 +36,7 @@ export function resolveRule(steps, ctx) {
   const worn = [...(ctx.sheet.effects || [])];
   const changes = [];
   const effects = [];
+  const removed = [];
   const results = {};
   const trace = [];
   let stopped = null;
@@ -51,13 +53,35 @@ export function resolveRule(steps, ctx) {
     values[tag] = to;
   };
 
+  // Что делать при повторном наложении ТОГО ЖЕ эффекта, решает сам эффект
+  // (ось «стакинг»), а не шаг: «Отравлен» обновляется, «Шипы» копятся,
+  // «Каменная кожа» второй раз ничего не делает.
   const attach = effectId => {
-    if (worn.some(e => e.effectId === effectId)) return;
-    worn.push({ effectId });
-    effects.push(effectId);
+    const effect = requireEffect(ctx.system, effectId, who(ctx));
+    const at = worn.findIndex(e => e.effectId === effectId);
+    const fresh = { effectId };
+    const max = usesMax(effect);
+    if (max !== null) fresh.usesLeft = max;
+
+    if (at < 0) worn.push(fresh);
+    else if (stackingOf(effect) === 'refresh') worn[at] = fresh;
+    else if (stackingOf(effect) === 'stack') worn.push(fresh);
+    else return; // ignore — уже висит, второй раз ничего не делает
+    // Журналу нужен факт «эффект наложен», а не счёт наложений: две одинаковые
+    // строки подряд читаются как ошибка, хотя это одно и то же состояние.
+    if (!effects.includes(effectId)) effects.push(effectId);
   };
 
-  const stepCtx = { ...ctx, results, read, write, attach };
+  const detach = effectId => {
+    requireEffect(ctx.system, effectId, who(ctx));
+    const before = worn.length;
+    for (let i = worn.length - 1; i >= 0; i--) {
+      if (worn[i].effectId === effectId) worn.splice(i, 1);
+    }
+    if (worn.length !== before) removed.push(effectId);
+  };
+
+  const stepCtx = { ...ctx, results, read, write, attach, detach };
 
   for (const [index, step] of steps.entries()) {
     const mod = stepModule(step.type);
@@ -71,7 +95,9 @@ export function resolveRule(steps, ctx) {
     }
   }
 
-  const touched = changes.length || effects.length;
+  const touched = changes.length || effects.length || removed.length;
   const sheet = touched ? { ...ctx.sheet, values, effects: worn } : ctx.sheet;
-  return { sheet, changes, effects, results, trace, stopped };
+  return { sheet, changes, effects, removed, results, trace, stopped };
 }
+
+const who = ctx => ctx.owner || 'правило';

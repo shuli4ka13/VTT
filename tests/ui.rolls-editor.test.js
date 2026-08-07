@@ -36,42 +36,44 @@ group('редактор мишеней бросков (system.rolls)', () => {
 
   test('удаление мишени, на которую нацелено правило комнаты, отказано', () => {
     const tag = addRoll();
-    state.system.modifiers.push({
-      id: 'rule_test_roll_guard', label: '', kind: 'roll',
-      target: tag, effect: 'advantage', method: 'rerollBest', condition: '',
-    });
+    // Правило комнаты — обычный пассивный эффект, включённый на всех.
+    state.system.effects.roll_guard_test = {
+      label: 'Тест', activation: 'passive', duration: { kind: 'permanent' },
+      modifiers: [{ kind: 'roll', target: tag, effect: 'advantage', method: 'rerollBest', condition: null }],
+    };
+    state.system.room_rules = [...(state.system.room_rules || []), 'roll_guard_test'];
     deleteRoll(tag);
-    ok(state.system.rolls.some(r => r.tag === tag), 'запись жива — правило комнаты ссылается на неё');
+    ok(state.system.rolls.some(r => r.tag === tag), 'мишень жива — правило комнаты ссылается на неё');
 
-    state.system.modifiers = state.system.modifiers.filter(m => m.id !== 'rule_test_roll_guard');
+    delete state.system.effects.roll_guard_test;
+    state.system.room_rules = state.system.room_rules.filter(id => id !== 'roll_guard_test');
     deleteRoll(tag);
     ok(!state.system.rolls.some(r => r.tag === tag), 'ссылок не осталось — удаление прошло');
   });
 
   test('удаление мишени, на которую нацелен модификатор записи компендиума, отказано', () => {
     const tag = addRoll();
-    state.compendium.effects.push({
-      id: 'roll-guard-test-effect', rk: 'effect', label: 'Тест', description: '',
+    state.compendium.items.push({
+      id: 'roll-guard-test-item', rk: 'gear', label: 'Тест', description: '',
       modifiers: [{ kind: 'roll', target: tag, effect: 'disadvantage', method: 'rerollBest', condition: null }],
     });
     deleteRoll(tag);
     ok(state.system.rolls.some(r => r.tag === tag), 'запись компендиума держит ссылку');
 
-    state.compendium.effects = state.compendium.effects.filter(e => e.id !== 'roll-guard-test-effect');
+    state.compendium.items = state.compendium.items.filter(e => e.id !== 'roll-guard-test-item');
     deleteRoll(tag);
     ok(!state.system.rolls.some(r => r.tag === tag));
   });
 
-  test('удаление мишени, на которую ссылается слот «Мишень модификаторов» шага правила, отказано', () => {
+  test('удаление мишени, на которую ссылается слот «Мишень модификаторов» шага эффекта, отказано', () => {
     const tag = addRoll();
-    const ruleId = Object.keys(state.system.rules)[0];
-    const rule = state.system.rules[ruleId];
-    const step = rule.steps.find(s => s.type === 'threshold');
+    const withSteps = Object.values(state.system.effects).find(e => (e.steps || []).some(x => x.type === 'threshold'));
+    const step = withSteps.steps.find(s => s.type === 'threshold');
     const savedCheck = step.roll.check;
     step.roll.check = tag;
 
     deleteRoll(tag);
-    ok(state.system.rolls.some(r => r.tag === tag), 'шаг правила ссылается на мишень');
+    ok(state.system.rolls.some(r => r.tag === tag), 'шаг эффекта ссылается на мишень');
 
     step.roll.check = savedCheck;
     deleteRoll(tag);

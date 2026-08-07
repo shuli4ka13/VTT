@@ -2,8 +2,8 @@ import { group, test, eq, ok } from './harness.js';
 import { state, blankWorld } from '../src/ui/state.js';
 import { addGroup } from '../src/ui/field-editor.js';
 import { addRoll } from '../src/ui/mode-author.js';
-import { addConstant, addTable } from '../src/ui/rule-editor.js';
-import { copyBlockFrom, copyRuleFrom } from '../src/ui/templates.js';
+import { addConstant, addTable } from '../src/ui/dictionaries-editor.js';
+import { copyBlockFrom, copyEffectFrom } from '../src/ui/templates.js';
 import { defaultModifier } from '../src/ui/mode-compendium.js';
 import { SAMPLE_SYSTEMS } from '../src/model/systems.js';
 
@@ -22,13 +22,14 @@ const swap = () => {
 };
 
 group('конструктор с чистого листа', () => {
-  test('пустой мир: ни полей, ни правил, ни родов — только то, что объявит автор', () => {
+  test('пустой мир: ни полей, ни эффектов, ни родов — только то, что объявит автор', () => {
     const world = blankWorld();
     eq(world.system.fields.length, 0);
-    eq(Object.keys(world.system.rules).length, 0);
+    eq(Object.keys(world.system.effects).length, 0);
     eq(Object.keys(world.system.records).length, 0);
     eq(world.system.rolls.length, 0);
-    eq(world.compendium.items.length + world.compendium.effects.length + world.compendium.actions.length, 0);
+    eq(world.compendium.items.length + world.compendium.actions.length, 0);
+    eq(world.system.room_rules.length, 0, 'и ни одного правила комнаты');
     eq(world.sheets.length, 0);
     ok(world.system.name, 'имя есть сразу — его правит шапка автора');
   });
@@ -54,8 +55,8 @@ group('конструктор с чистого листа', () => {
     copyBlockFrom(dnd5e, 'Характеристики');
     eq(state.system.fields.length, 6, 'шесть характеристик 5e');
 
-    const id = copyRuleFrom(cp, 'strike');
-    ok(state.system.rules[id]);
+    const id = copyEffectFrom(cp, 'strike');
+    ok(state.system.effects[id]);
     ok('lead_die' in state.system.constants, 'кость киберпанка приехала за правилом');
     eq(state.system.constants.lead_die.dice[0].sides, 10, 'именно киберпанковская d10');
     ok(state.system.rolls.some(r => r.tag === 'attack_roll'), 'и его мишень броска');

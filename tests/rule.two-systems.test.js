@@ -1,5 +1,5 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.js';
-import { send, receive } from '../src/events/envelope.js';
+import { send, receive, bindingsOf } from '../src/events/envelope.js';
 import { serializeSheet } from '../src/model/serialize.js';
 import { system } from '../src/model/system.js';
 import { arven, mirra } from '../src/model/sheets.js';
@@ -67,7 +67,7 @@ group('две системы одними слотами', () => {
     });
 
     test('спасбросок — то же правило порога, бросает и считает получатель', () => {
-      const env = send('poison-spray', ctx5(mirra, queue(3, 4)));
+      const env = send('poison-spray:0', ctx5(mirra, queue(3, 4)));
       const failed = receive(env, ctx5(arven, queue(5)));
       eq(failed.report.stopped, null, 'спас провален — цепочка дошла до конца');
       eq(failed.sheet.values.hp_current, 37, '44 минус 2d6=7');
@@ -147,16 +147,28 @@ group('две системы одними слотами', () => {
   });
 
   group('правило живёт в системе, эффект — только параметры', () => {
-    test('ни в одном эффекте-вызове нет шагов, параметры — скаляры', () => {
-      const ruleEffects = [...compendium.effects, ...cpCompendium.effects].filter(e => e.rule);
-      ok(ruleEffects.length >= 3, 'есть что проверять');
-      for (const effect of ruleEffects) {
-        ok(!('steps' in effect), `${effect.id}: шаги живут в системе, не в эффекте`);
-        for (const [key, value] of Object.entries(effect.params)) {
-          ok(['string', 'number', 'boolean'].includes(typeof value),
-            `${effect.id}.${key}: параметр — скаляр, а не структура`);
+    test('ни в одной записи компендиума нет шагов, аргументы — скаляры', () => {
+      const books = [
+        { system, compendium },
+        { system: cyberpunk, compendium: cpCompendium },
+      ];
+      let checked = 0;
+      for (const { system: sys, compendium: book } of books) {
+        for (const record of [...book.items, ...book.actions]) {
+          ok(!('steps' in record), `${record.id}: шаги живут в системе, не в записи`);
+          for (const binding of bindingsOf(record, sys)) {
+            checked++;
+            for (const [key, value] of Object.entries(binding.args || {})) {
+              // Единственная законная структура — { prop }: «возьми из свойств
+              // самой записи». Шагов и формул-объектов здесь быть не может.
+              const scalar = ['string', 'number', 'boolean'].includes(typeof value);
+              ok(scalar || (value && typeof value === 'object' && 'prop' in value),
+                `${record.id}.${key}: аргумент — скаляр или { prop }, а не структура`);
+            }
+          }
         }
       }
+      ok(checked >= 3, 'есть что проверять');
     });
 
     test('правка правила в системе меняет поведение ВСЕХ эффектов сразу', () => {
@@ -166,20 +178,17 @@ group('две системы одними слотами', () => {
       const book = {
         ...compendium,
         items: [...compendium.items,
-          { id: 'axe-item', rk: 'weapon', label: 'Топор', slot: 'hand', props: { damage_dice: '1d12' }, modifiers: [] }],
-        effects: [...compendium.effects,
-          { id: 'axe-strike', label: 'Удар топором', kind: 'rule', rule: 'strike',
-            params: { bonus: '#attack_bonus', versus: 'ac', damage_bonus: '2', apply_to: 'hp_current' } }],
-        actions: [...compendium.actions,
-          { id: 'axe', kind: 'action', label: 'Топор', weapon: 'axe-item', effect: 'axe-strike' }],
+          { id: 'axe-item', rk: 'weapon', label: 'Топор', props: { damage_dice: '1d12' }, modifiers: [],
+            activities: [{ label: 'Удар', effect: 'strike',
+              args: { bonus: '#attack_bonus', versus: 'ac', damage_bonus: '2', apply_to: 'hp_current' } }] }],
       };
       const margined = {
         ...system,
-        rules: {
-          ...system.rules,
+        effects: {
+          ...system.effects,
           strike: {
-            ...system.rules.strike,
-            steps: system.rules.strike.steps.map(s => s.id === 'dmg'
+            ...system.effects.strike,
+            steps: system.effects.strike.steps.map(s => s.id === 'dmg'
               ? { ...s, source: 'margin', margin: { ref: 'hit.margin' } }
               : s),
           },
@@ -187,11 +196,11 @@ group('две системы одними слотами', () => {
       };
 
       const swordWas = receive(send('longsword-item:0', ctx5(arven, queue(10, 5))), ctx5(mirra, queue())).report;
-      const axeWas = receive(send('axe', { system, sheet: arven, compendium: book, die: queue(10, 7) }),
+      const axeWas = receive(send('axe-item:0', { system, sheet: arven, compendium: book, die: queue(10, 7) }),
         { system, sheet: mirra, compendium: book, die: queue() }).report;
       const swordNow = receive(send('longsword-item:0', { system: margined, sheet: arven, compendium, die: queue(10, 5) }),
         { system: margined, sheet: mirra, compendium, die: queue() }).report;
-      const axeNow = receive(send('axe', { system: margined, sheet: arven, compendium: book, die: queue(10, 7) }),
+      const axeNow = receive(send('axe-item:0', { system: margined, sheet: arven, compendium: book, die: queue(10, 7) }),
         { system: margined, sheet: mirra, compendium: book, die: queue() }).report;
 
       eq(swordWas.trace[1].total, 8, 'было: кость 5 плюс Сила 3');
@@ -244,13 +253,12 @@ group('две системы одними слотами', () => {
       throws(() => send('пустое', { system, sheet: arven, compendium: book, die: queue() }), 'нетакого');
     });
 
-    test('эффект зовёт правило, которого система не объявляет', () => {
+    test('запись зовёт эффект, которого система не объявляет', () => {
       const book = {
         ...compendium,
-        effects: [...compendium.effects, { id: 'e', label: 'Э', kind: 'rule', rule: 'котик', params: {} }],
-        actions: [...compendium.actions, { id: 'a', label: 'А', effect: 'e' }],
+        actions: [...compendium.actions, { id: 'a', rk: 'action', label: 'А', effect: 'котик', args: {} }],
       };
-      throws(() => send('a', { system, sheet: arven, compendium: book, die: queue() }), 'котик');
+      throws(() => send('a:0', { system, sheet: arven, compendium: book, die: queue() }), 'котик');
     });
   });
 });

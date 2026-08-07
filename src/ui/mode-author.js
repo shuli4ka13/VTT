@@ -9,10 +9,11 @@ import { state, esc, log } from './state.js';
 import { renderEditor, exprOf } from './field-editor.js';
 import { toDisplay } from './formula-text.js';
 import { ADVANTAGE_METHODS, enabledMethods } from '../model/advantage-methods.js';
-import { renderRuleList, renderRuleCanvas, renderStepPalette, renderConstants, renderTables } from './rule-editor.js';
+import { renderRuleList, renderRuleCanvas, renderStepPalette } from './effect-editor.js';
+import { renderConstants, renderTables } from './dictionaries-editor.js';
 import { renderKindList, renderKindEditor, renderKindTemplates } from './records-editor.js';
-import { blockTemplatesHtml, ruleTemplatesHtml } from './templates.js';
-import { targets } from '../engine/targets.js';
+import { blockTemplatesHtml, effectTemplatesHtml } from './templates.js';
+import { activationOf, allModifiers, allSteps } from '../engine/effects.js';
 
 // Две сцены одного режима: ЛИСТ правит состав полей, МЕХАНИКИ — конвейеры
 // правил. Разъезд по сценам — про место на экране, а не про границу режимов:
@@ -35,7 +36,7 @@ export function renderAuthor() {
     document.getElementById('rules-list').insertAdjacentHTML('beforeend', dictionariesHtml());
     renderRuleCanvas();
     renderStepPalette();
-    document.getElementById('rules-palette').insertAdjacentHTML('beforeend', ruleTemplatesHtml());
+    document.getElementById('rules-palette').insertAdjacentHTML('beforeend', effectTemplatesHtml());
     return;
   }
   if (view === 'records') {
@@ -113,15 +114,32 @@ function dictSection(key, title, count, body) {
 // У киберпанка здесь честно пусто: днд-преимущество ему не навязано.
 function dictionariesHtml() {
   const enabled = enabledMethods(state.system);
-  const rules = (state.system.modifiers || []).filter(m => m.kind === 'roll');
+  const room = state.system.room_rules || [];
 
   return `<div class="pal-sec" style="margin-top:14px">Словари системы</div>` + [
     dictSection('rolls', 'Мишени бросков', (state.system.rolls || []).length, rollsSection()),
     dictSection('advantage', 'Механики преимущества', enabled.length, advantageBody(enabled)),
     dictSection('constants', 'Константы-кости', Object.keys(state.system.constants || {}).length, renderConstants()),
     dictSection('tables', 'Таблицы по диапазонам', Object.keys(state.system.tables || {}).length, renderTables()),
-    dictSection('room', 'Правила комнаты', rules.length, roomRulesBody(rules, enabled)),
+    dictSection('costs', 'Типы действий', Object.keys(state.system.action_types || {}).length, actionTypesBody()),
+    dictSection('room', 'Правила комнаты', room.length, roomRulesBody(room)),
   ].join('');
+}
+
+// Экономика действий: словарь системы, как мишени бросков. Раундов в PoC нет,
+// поэтому это разметка кнопок, а не запрет; лимиты повесятся сюда, когда
+// появятся ходы (docs/production-differences.md).
+function actionTypesBody() {
+  const types = Object.entries(state.system.action_types || {});
+  return `<div class="sys-hint" style="margin:2px 0 6px">Чего стоит применить эффект.
+      Пока разметка: бейдж на кнопке, не запрет.</div>
+    ${types.map(([id, t]) => `
+      <div class="ar-row" style="margin-top:4px">
+        <input value="${esc(t.label || '')}" placeholder="Название"
+               oninput="uiRenameCost('${id}',this.value)" style="flex:1">
+        <button class="ar-del" style="position:static" onclick="uiDeleteCost('${id}')">✕</button>
+      </div>`).join('')}
+    <button class="add-row" onclick="uiAddCost()">+ тип действия</button>`;
 }
 
 function advantageBody(enabled) {
@@ -145,12 +163,36 @@ function advantageBody(enabled) {
   : ''}`;
 }
 
-function roomRulesBody(rules, enabled) {
-  const rollTargets = targets(state.system).filter(t => t.kind === 'roll');
-  return `<div class="sys-hint" style="margin:2px 0 6px">Условные модификаторы, действующие на всех в комнате.</div>
-    ${rules.map(rule => ruleRow(rule, enabled, rollTargets)).join('')}
-    ${rollTargets.length ? '<button class="add-row" onclick="uiAddRule()">+ правило</button>'
-      : '<div class="sys-hint">В системе нет мишеней бросков — правилам комнаты не на что вешаться.</div>'}`;
+// Правила комнаты — СПИСОК ВКЛЮЧЁННЫХ ЭФФЕКТОВ, а не отдельная порода правил.
+// На карточке самого эффекта про охват ни слова: он описывает только что
+// делает, а включён ли он на всех — вопрос этого списка. Один и тот же эффект
+// можно включить здесь и повесить на одного варвара.
+function roomRulesBody(room) {
+  const passive = Object.entries(state.system.effects || {})
+    .filter(([, e]) => activationOf(e) === 'passive');
+  const free = passive.filter(([id]) => !room.includes(id));
+
+  return `<div class="sys-hint" style="margin:2px 0 6px">Пассивные эффекты,
+      включённые на ВСЕХ чарников мира. Вешать никому не нужно.</div>
+    ${room.map(id => {
+      const effect = (state.system.effects || {})[id];
+      return `<div class="ar-row" style="margin-top:4px">
+        <span style="flex:1;font-size:12px">${effect
+          ? `${esc(effect.icon || '⚖')} ${esc(effect.label || id)}`
+          : `<span style="color:var(--red)">нет такого эффекта: ${esc(id)}</span>`}</span>
+        <button class="ar-del" style="position:static" onclick="uiRoomOff('${esc(id)}')">✕</button>
+      </div>`;
+    }).join('')}
+    ${free.length ? `
+      <div class="ar-row" style="margin-top:6px">
+        <select class="meta-sel" id="room-add" style="flex:1">
+          ${free.map(([id, e]) => `<option value="${esc(id)}">${esc(e.label || id)}</option>`).join('')}
+        </select>
+      </div>
+      <button class="add-row" onclick="uiRoomOn(document.getElementById('room-add').value)">+ включить эффект</button>`
+      : `<div class="sys-hint">${passive.length
+        ? 'Все пассивные эффекты уже включены.'
+        : 'Пассивных эффектов в библиотеке нет — включать нечего.'}</div>`}`;
 }
 
 // Мишени бросков (attack_roll, save_roll…) — общие, не выведенные из полей.
@@ -167,37 +209,7 @@ function rollsSection() {
     <button class="add-row" onclick="uiAddRoll()">+ мишень броска</button>`;
 }
 
-function ruleRow(rule, enabled, rollTargets) {
-  const index = state.system.modifiers.indexOf(rule);
-  return `<div class="auto-rule" style="padding:8px 9px">
-    <button class="ar-del" onclick="uiDelRule(${index})">×</button>
-    <div class="ar-row">
-      <input id="rule-${index}-label" value="${esc(rule.label || '')}" placeholder="Ярлык"
-             oninput="uiSetRule(${index},'label',this.value)">
-    </div>
-    <div class="ar-row">
-      <input class="ar-cond" id="rule-${index}-cond" value="${esc(rule.condition || '')}"
-             placeholder="условие, напр. #armor_heavy"
-             oninput="uiSetRule(${index},'condition',this.value)">
-    </div>
-    <div class="ar-row">
-      <select class="ar-tag" onchange="uiSetRule(${index},'effect',this.value)">
-        <option value="advantage"${rule.effect === 'advantage' ? ' selected' : ''}>Преимущество</option>
-        <option value="disadvantage"${rule.effect === 'disadvantage' ? ' selected' : ''}>Помеха</option>
-      </select>
-      <select onchange="uiSetRule(${index},'target',this.value)">
-        ${rollTargets.map(t => `<option value="${t.tag}"${rule.target === t.tag ? ' selected' : ''}>${esc(t.label)}</option>`).join('')}
-      </select>
-    </div>
-    <select style="margin-top:5px" onchange="uiSetRule(${index},'method',this.value)">
-      ${enabled.length
-        ? enabled.map(m => `<option value="${m.id}"${rule.method === m.id ? ' selected' : ''}>${esc(m.label)}</option>`).join('')
-        : '<option>— включите механику выше —</option>'}
-    </select>
-  </div>`;
-}
-
-// ── правки правил комнаты ───────────────────────────────────────────────────
+// ── правки словарей системы ─────────────────────────────────────────────────
 
 let rollCounter = 0;
 function newRollTag() {
@@ -222,14 +234,9 @@ export function renameRoll(tag, label) {
 // слот «Мишень модификаторов» шагов правил — тот же принцип защиты, что у
 // удаления поля: сослались — не даём унести конвейер в пустоту.
 function rollUsage(tag) {
-  const mods = [
-    ...(state.system.modifiers || []),
-    ...state.compendium.items.flatMap(r => r.modifiers || []),
-    ...state.compendium.effects.flatMap(r => r.modifiers || []),
-  ];
+  const mods = allModifiers(state.system, state.compendium);
   if (mods.some(m => m.kind === 'roll' && m.target === tag)) return true;
-  return Object.values(state.system.rules || {}).some(rule =>
-    (rule.steps || []).some(step => step.roll && step.roll.check === tag));
+  return allSteps(state.system).some(step => step.roll && step.roll.check === tag);
 }
 
 export function deleteRoll(tag) {
@@ -247,20 +254,38 @@ export function toggleMethod(id) {
   if (methods[id]) delete methods[id]; else methods[id] = true;
 }
 
-export function addRule() {
-  if (!state.system.modifiers) state.system.modifiers = [];
-  const method = enabledMethods(state.system)[0];
-  state.system.modifiers.push({
-    id: 'rule_' + (state.system.modifiers.length + 1),
-    label: '', kind: 'roll', target: ((state.system.rolls || [])[0] || {}).tag,
-    effect: 'advantage', method: method ? method.id : '', condition: '',
-  });
+// Включить и выключить — единственные действия над правилом комнаты.
+// Что оно делает, правится там же, где любой другой эффект: в конструкторе.
+export function roomOn(effectId) {
+  if (!effectId || !(state.system.effects || {})[effectId]) return;
+  const room = state.system.room_rules || (state.system.room_rules = []);
+  if (!room.includes(effectId)) room.push(effectId);
 }
 
-export function deleteRule(index) {
-  state.system.modifiers.splice(index, 1);
+export function roomOff(effectId) {
+  state.system.room_rules = (state.system.room_rules || []).filter(id => id !== effectId);
 }
 
-export function setRule(index, key, value) {
-  state.system.modifiers[index][key] = value;
+// Типы действий. Удаление разрешено только пока на тип никто не ссылается:
+// иначе кнопка получила бы бейдж в пустоту.
+export function addCost() {
+  const types = state.system.action_types || (state.system.action_types = {});
+  let n = 1;
+  while (types[`cost_${n}`]) n++;
+  types[`cost_${n}`] = { label: 'Новый тип', icon: '◆' };
+  return `cost_${n}`;
+}
+
+export function renameCost(id, label) {
+  const type = (state.system.action_types || {})[id];
+  if (type) type.label = label;
+}
+
+export function deleteCost(id) {
+  const used = Object.values(state.system.effects || {}).some(e => e.cost === id);
+  if (used) {
+    log(`<b>Нельзя удалить тип действия:</b> на него ссылаются эффекты`);
+    return;
+  }
+  delete (state.system.action_types || {})[id];
 }

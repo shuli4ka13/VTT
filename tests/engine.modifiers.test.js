@@ -8,6 +8,18 @@ import { arven, mirra } from '../src/model/sheets.js';
 import { compendium } from '../src/model/compendium.js';
 
 const withGear = (sheet, book = compendium) => newPass(system, sheet, { compendium: book });
+
+// Пассивные эффекты живут в БИБЛИОТЕКЕ СИСТЕМЫ: чарник держит только ссылку.
+// Тестовый эффект поэтому подмешивается в систему, а не в компендиум.
+const withEffects = extra => ({ ...system, effects: { ...system.effects, ...extra } });
+const passive = (label, modifiers) => ({ label, activation: 'passive', duration: { kind: 'temporary' }, modifiers });
+
+// Правило комнаты — тот же пассивный эффект, включённый на всех.
+const withRoomRule = (id, label, modifier) => ({
+  ...system,
+  effects: { ...system.effects, [id]: passive(label, [modifier]) },
+  room_rules: [id],
+});
 const ac = (sheet, book) => calc(system, sheet, 'ac', withGear(sheet, book));
 
 // Новые предметы и эффекты добавляются ТОЛЬКО правкой данных.
@@ -19,7 +31,6 @@ const plus = (id, label, target, value, stacking = 'sum') => ({
 
 const book = extraItems => ({
   items: [...compendium.items, ...extraItems],
-  effects: compendium.effects,
 });
 
 group('модификаторы', () => {
@@ -115,23 +126,20 @@ group('модификаторы', () => {
     });
 
     test('преимущество и помеха гасят друг друга', () => {
-      const blessed = {
-        id: 'blessed', label: 'Благословение', duration: { kind: 'scene' },
-        modifiers: [{ kind: 'roll', target: 'attack_roll', effect: 'advantage', method: 'rerollBest', condition: null }],
-      };
-      const gear = { items: compendium.items, effects: [...compendium.effects, blessed] };
+      const sys = withEffects({
+        blessed: passive('Благословение',
+          [{ kind: 'roll', target: 'attack_roll', effect: 'advantage', method: 'rerollBest', condition: null }]),
+      });
       const sheet = { ...arven, effects: [{ effectId: 'poisoned' }, { effectId: 'blessed' }] };
-      eq(resolveRoll(system, sheet, 'attack_roll', newPass(system, sheet, { compendium: gear })).mode, 'normal');
+      eq(resolveRoll(sys, sheet, 'attack_roll', newPass(sys, sheet, { compendium })).mode, 'normal');
     });
 
     test('два преимущества не складываются — это по-прежнему одно преимущество', () => {
-      const adv = n => ({
-        id: 'adv' + n, label: 'Пре' + n, duration: { kind: 'scene' },
-        modifiers: [{ kind: 'roll', target: 'attack_roll', effect: 'advantage', method: 'rerollBest', condition: null }],
-      });
-      const gear = { items: compendium.items, effects: [adv(1), adv(2)] };
+      const adv = n => passive('Пре' + n,
+        [{ kind: 'roll', target: 'attack_roll', effect: 'advantage', method: 'rerollBest', condition: null }]);
+      const sys = withEffects({ adv1: adv(1), adv2: adv(2) });
       const sheet = { ...arven, effects: [{ effectId: 'adv1' }, { effectId: 'adv2' }] };
-      const roll = resolveRoll(system, sheet, 'attack_roll', newPass(system, sheet, { compendium: gear }));
+      const roll = resolveRoll(sys, sheet, 'attack_roll', newPass(sys, sheet, { compendium }));
       eq(roll.mode, 'advantage');
       eq(roll.sources.length, 2, 'оба источника видны в разборе броска');
     });
@@ -143,9 +151,11 @@ group('модификаторы', () => {
   });
 
   group('правила самой системы', () => {
-    // Третий источник наравне с предметами и эффектами: модификатор, объявленный
-    // в системе, действует на всех её чарников без надевания и навешивания.
-    const withRule = mod => ({ ...system, modifiers: [mod] });
+    // Третий источник наравне с предметами и висящими эффектами: пассивный
+    // эффект, ВКЛЮЧЁННЫЙ в правила комнаты, действует на всех её чарников
+    // без надевания и навешивания. На карточке самого эффекта про охват
+    // ни слова — он не знает, где подключён.
+    const withRule = ({ label, ...mod }) => withRoomRule('room_test', label, mod);
 
     test('правило системы применяется без предметов и эффектов', () => {
       const sys = withRule({
@@ -191,7 +201,7 @@ group('модификаторы', () => {
       });
       const roll = resolveRoll(sys, arven, 'skill_roll', newPass(sys, arven, { compendium }));
       eq(roll.sources[0].label, 'Тяжёлый доспех мешает');
-      eq(roll.sources[0].type, 'rule');
+      eq(roll.sources[0].type, 'room', 'источник — правило комнаты, а не предмет и не висящий эффект');
     });
   });
 
@@ -199,14 +209,12 @@ group('модификаторы', () => {
     // «+5 ко всем проверкам» — это не +5 к характеристике и не преимущество.
     // Это прибавка к самому броску. В черновике бонус и штраф стояли отдельно
     // от преимущества и помехи (reference/index.html:2709), и правильно.
-    const bonus = (value, condition = null) => ({
-      id: 'guidance', label: 'Наставление', duration: { kind: 'scene' },
-      modifiers: [{ kind: 'roll', target: 'skill_roll', op: 'add', value, stacking: 'sum', condition }],
+    const bonus = (value, condition = null) => withEffects({
+      guidance: passive('Наставление',
+        [{ kind: 'roll', target: 'skill_roll', op: 'add', value, stacking: 'sum', condition }]),
     });
-    const gear = fx => ({ items: compendium.items, effects: [...compendium.effects, fx] });
     const hung = { ...arven, effects: [{ effectId: 'guidance' }] };
-    const roll = fx => resolveRoll(system, hung, 'skill_roll',
-      newPass(system, hung, { compendium: gear(fx) }));
+    const roll = sys => resolveRoll(sys, hung, 'skill_roll', newPass(sys, hung, { compendium }));
 
     test('прибавка к броску приходит числом', () => {
       eq(roll(bonus(5)).bonus, 5);
@@ -221,30 +229,27 @@ group('модификаторы', () => {
     });
 
     test('прибавка не отменяет и не заменяет преимущество', () => {
-      const both = {
-        id: 'guidance', label: 'Наставление', duration: { kind: 'scene' },
-        modifiers: [
+      const both = withEffects({
+        guidance: passive('Наставление', [
           { kind: 'roll', target: 'skill_roll', op: 'add', value: 2, stacking: 'sum', condition: null },
           { kind: 'roll', target: 'skill_roll', effect: 'advantage', method: 'rerollBest', condition: null },
-        ],
-      };
+        ]),
+      });
       // Без кольчуги: иначе правило комнаты «тяжёлый доспех мешает ловким
       // проверкам» даёт помеху, и она гасит преимущество — как и должна.
       const bare = { ...arven, equipped: [], effects: [{ effectId: 'guidance' }] };
-      const result = resolveRoll(system, bare, 'skill_roll',
-        newPass(system, bare, { compendium: gear(both) }));
+      const result = resolveRoll(both, bare, 'skill_roll', newPass(both, bare, { compendium }));
       eq(result.bonus, 2, 'число живёт отдельно от режима');
       eq(result.mode, 'advantage');
     });
 
     test('прибавка остаётся, даже когда преимущество погашено помехой', () => {
-      const both = {
-        id: 'guidance', label: 'Наставление', duration: { kind: 'scene' },
-        modifiers: [
+      const both = withEffects({
+        guidance: passive('Наставление', [
           { kind: 'roll', target: 'skill_roll', op: 'add', value: 2, stacking: 'sum', condition: null },
           { kind: 'roll', target: 'skill_roll', effect: 'advantage', method: 'rerollBest', condition: null },
-        ],
-      };
+        ]),
+      });
       // У Арвен кольчуга → правило комнаты даёт помеху → преимущество гасится.
       const result = roll(both);
       eq(result.mode, 'normal', 'помеха от правила комнаты погасила преимущество');
@@ -256,12 +261,12 @@ group('модификаторы', () => {
     });
 
     test('эффект может править и значение поля, не только бросок', () => {
-      const wise = {
-        id: 'guidance', label: 'Мудрость свыше', duration: { kind: 'scene' },
-        modifiers: [{ kind: 'value', target: 'wis', op: 'add', value: 5, stacking: 'sum', condition: null }],
-      };
-      eq(calc(system, hung, 'wis', newPass(system, hung, { compendium: gear(wise) })), 17);
-      eq(calc(system, hung, 'wis_mod', newPass(system, hung, { compendium: gear(wise) })), 3,
+      const wise = withEffects({
+        guidance: passive('Мудрость свыше',
+          [{ kind: 'value', target: 'wis', op: 'add', value: 5, stacking: 'sum', condition: null }]),
+      });
+      eq(calc(wise, hung, 'wis', newPass(wise, hung, { compendium })), 17);
+      eq(calc(wise, hung, 'wis_mod', newPass(wise, hung, { compendium })), 3,
         'модификатор Мудрости пересчитался следом');
     });
   });
@@ -329,28 +334,24 @@ group('броски выводятся из полей', () => {
 
   test('эффект на проверку Мудрости не задевает другие броски', () => {
     const sys = rollable('wis', 'Проверка Мудрости');
-    const owl = {
-      id: 'owl', label: 'Сова-помощница', duration: { kind: 'scene' },
-      modifiers: [{ kind: 'roll', target: 'check:wis', op: 'add', value: 5, stacking: 'sum', condition: null }],
-    };
-    const book = { ...compendium, effects: [...compendium.effects, owl] };
+    const owled = { ...sys, effects: { ...sys.effects,
+      owl: passive('Сова-помощница',
+        [{ kind: 'roll', target: 'check:wis', op: 'add', value: 5, stacking: 'sum', condition: null }]) } };
     const sheet = { ...arven, effects: [{ effectId: 'owl' }] };
-    const p = () => newPass(sys, sheet, { compendium: book });
+    const p = () => newPass(owled, sheet, { compendium });
 
-    eq(resolveRoll(sys, sheet, 'check:wis', p()).bonus, 5);
-    eq(resolveRoll(sys, sheet, 'skill_roll', p()).bonus, 0, 'общая проверка навыка не тронута');
-    eq(resolveRoll(sys, sheet, 'attack_roll', p()).bonus, 0, 'атака не тронута');
+    eq(resolveRoll(owled, sheet, 'check:wis', p()).bonus, 5);
+    eq(resolveRoll(owled, sheet, 'skill_roll', p()).bonus, 0, 'общая проверка навыка не тронута');
+    eq(resolveRoll(owled, sheet, 'attack_roll', p()).bonus, 0, 'атака не тронута');
   });
 
   test('характеристика при этом не меняется', () => {
     const sys = rollable('wis', 'Проверка Мудрости');
-    const owl = {
-      id: 'owl', label: 'Сова', duration: { kind: 'scene' },
-      modifiers: [{ kind: 'roll', target: 'check:wis', op: 'add', value: 5, stacking: 'sum', condition: null }],
-    };
-    const book = { ...compendium, effects: [...compendium.effects, owl] };
+    const owled = { ...sys, effects: { ...sys.effects,
+      owl: passive('Сова',
+        [{ kind: 'roll', target: 'check:wis', op: 'add', value: 5, stacking: 'sum', condition: null }]) } };
     const sheet = { ...arven, effects: [{ effectId: 'owl' }] };
-    eq(calc(sys, sheet, 'wis', newPass(sys, sheet, { compendium: book })), 12, 'Мудрость как была');
-    eq(calc(sys, sheet, 'wis_mod', newPass(sys, sheet, { compendium: book })), 1, 'и модификатор тоже');
+    eq(calc(owled, sheet, 'wis', newPass(owled, sheet, { compendium })), 12, 'Мудрость как была');
+    eq(calc(owled, sheet, 'wis_mod', newPass(owled, sheet, { compendium })), 1, 'и модификатор тоже');
   });
 });
