@@ -176,6 +176,28 @@ group('конструктор эффектов: новая механика с �
       deleteEffect(id);
     });
 
+    test('поле листа, которого в системе нет, — тоже ошибка приговора', () => {
+      const id = addEffect('manual');
+      addStep(id, 'apply');
+      Object.assign(eff(id).steps[0], {
+        target: { tag: 'hp_current' }, direction: 'subtract', value: { const: 1 },
+      });
+
+      // Приговор снимаем ДО утверждений и сразу возвращаем поля на место:
+      // упавшее утверждение не должно оставить систему без полей и отравить
+      // соседние тесты — они делят один state.
+      const saved = state.system.fields;
+      state.system.fields = [];
+      const bare = verdictOf(eff(id));
+      state.system.fields = saved;
+      const full = verdictOf(eff(id));
+      deleteEffect(id);
+
+      eq(bare.ok, false);
+      ok(bare.text.includes('hp_current'), bare.text);
+      eq(full.ok, true, 'поле на месте — эффект верный: ' + full.text);
+    });
+
     test('заготовка нового шага проходит линт своего модуля', () => {
       const id = addEffect('manual');
       for (const type of ['threshold', 'amount', 'compare', 'apply', 'status']) {

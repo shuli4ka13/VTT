@@ -219,58 +219,75 @@ group('событийный конверт', () => {
   });
 });
 
+// Свой эффект С ПАРАМЕТРАМИ — образец «Атака» их больше не объявляет:
+// у меча спрашивают только кость урона, остальное закон мира. А механизм
+// параметров проверять всё равно надо, и тест не должен зависеть от того,
+// как автор образца решил разложить свои слоты.
+const PARAMETRIC = {
+  label: 'Параметрический удар', activation: 'manual',
+  params: [
+    { key: 'bonus', label: 'Бонус проверки', kind: 'expr' },
+    { key: 'versus', label: 'Против чего', kind: 'tag' },
+    { key: 'damage_bonus', label: 'Бонус урона', kind: 'expr' },
+    { key: 'apply_to', label: 'Куда наносится', kind: 'tag' },
+  ],
+  steps: [
+    { id: 'hit', type: 'threshold',
+      roll: { die: { constant: 'lead_die' }, bonus: { param: 'bonus' }, check: 'attack_roll' },
+      versus: { param: 'versus' } },
+    { id: 'dmg', type: 'amount', source: 'roll',
+      dice: { prop: 'damage_dice' }, bonus: { param: 'damage_bonus' } },
+    { type: 'apply', target: { param: 'apply_to' }, direction: 'subtract',
+      value: { ref: 'dmg' }, floor: { const: 0 }, targetModifiers: true },
+  ],
+};
+const paramSys = { ...system, effects: { ...system.effects, parametric: PARAMETRIC } };
+const paramBook = (id, args) => ({
+  ...compendium,
+  items: [...compendium.items,
+    { id, rk: 'weapon', label: 'Своё', props: { damage_dice: '1d6' },
+      activities: [{ label: 'Удар', effect: 'parametric', args }] }],
+});
+
 group('конверт не даёт целиться в бессмыслицу', () => {
   const die = (...v) => { const q = [...v]; return () => q.shift(); };
-
-  // Своя пара эффект-вызов + действие: параметры заполнены бессмыслицей,
-  // которую редактор бы не предложил, но данные могли прийти откуда угодно.
-  // Промежуточной записи-вызова больше нет: запись ссылается на эффект
-  // напрямую и несёт аргументы сама.
-  const withStrike = args => ({
-    ...compendium,
-    items: [...compendium.items,
-      { id: 'bogus', rk: 'weapon', label: 'Бессмыслица', props: { damage_dice: '1d6' },
-        activities: [{ label: 'Удар', effect: 'strike', args }] }],
-  });
+  // Аргументы заполнены бессмыслицей, которую редактор бы не предложил,
+  // но данные могли прийти откуда угодно.
+  const withStrike = args => paramBook('bogus', args);
 
   test('сравнивать бросок с текстовым полем нельзя — внятная ошибка, а не тихое «мимо»', () => {
     const book = withStrike({ bonus: '#attack_bonus', versus: 'race', damage_bonus: '0', apply_to: 'hp_current' });
-    const env = send('bogus:0', { system, sheet: arven, compendium: book, die: die(15, 5) });
-    throws(() => receive(env, { system, sheet: mirra, compendium: book, die: die() }), 'race');
+    const env = send('bogus:0', { system: paramSys, sheet: arven, compendium: book, die: die(15, 5) });
+    throws(() => receive(env, { system: paramSys, sheet: mirra, compendium: book, die: die() }), 'race');
   });
 
   test('урон нельзя лить в вычисляемое поле — его считает движок, а не событие', () => {
     const book = withStrike({ bonus: '#attack_bonus', versus: 'ac', damage_bonus: '0', apply_to: 'ac' });
-    const env = send('bogus:0', { system, sheet: arven, compendium: book, die: die(20, 5) });
-    throws(() => receive(env, { system, sheet: mirra, compendium: book, die: die() }), 'ac');
+    const env = send('bogus:0', { system: paramSys, sheet: arven, compendium: book, die: die(20, 5) });
+    throws(() => receive(env, { system: paramSys, sheet: mirra, compendium: book, die: die() }), 'ac');
   });
 });
 
 group('в параметрах эффекта живут выражения, а не только ссылки', () => {
   const die = (...v) => { const q = [...v]; return () => q.shift(); };
-  const withStrike = args => ({
-    ...compendium,
-    items: [...compendium.items,
-      { id: 'custom', rk: 'weapon', label: 'Своё', props: { damage_dice: '1d6' },
-        activities: [{ label: 'Удар', effect: 'strike', args }] }],
-  });
+  const withStrike = args => paramBook('custom', args);
 
   test('бонус проверки — выражение, а не один тег', () => {
     const book = withStrike({ bonus: '#attack_bonus + 2', versus: 'ac', damage_bonus: '#str_mod', apply_to: 'hp_current' });
-    const env = send('custom:0', { system, sheet: arven, compendium: book, die: die(10, 4) });
-    const { report } = receive(env, { system, sheet: mirra, compendium: book, die: die() });
+    const env = send('custom:0', { system: paramSys, sheet: arven, compendium: book, die: die(10, 4) });
+    const { report } = receive(env, { system: paramSys, sheet: mirra, compendium: book, die: die() });
     eq(report.trace[0].total, 18, 'кость 10 плюс бонус атаки 6 плюс двойка из выражения');
   });
 
   test('бонус урона задаётся выражением', () => {
     const book = withStrike({ bonus: '#attack_bonus', versus: 'ac', damage_bonus: '#str_mod * 2', apply_to: 'hp_current' });
-    const env = send('custom:0', { system, sheet: arven, compendium: book, die: die(10, 4) });
-    const { report } = receive(env, { system, sheet: mirra, compendium: book, die: die() });
+    const env = send('custom:0', { system: paramSys, sheet: arven, compendium: book, die: die(10, 4) });
+    const { report } = receive(env, { system: paramSys, sheet: mirra, compendium: book, die: die() });
     eq(report.trace[1].total, 10, 'кость 4 плюс удвоенная Сила 6');
   });
 
   test('битое выражение в параметре — внятная ошибка при отправке', () => {
     const book = withStrike({ bonus: '#attack_bonus +', versus: 'ac', damage_bonus: '0', apply_to: 'hp_current' });
-    throws(() => send('custom:0', { system, sheet: arven, compendium: book, die: die(10, 4) }));
+    throws(() => send('custom:0', { system: paramSys, sheet: arven, compendium: book, die: die(10, 4) }));
   });
 });

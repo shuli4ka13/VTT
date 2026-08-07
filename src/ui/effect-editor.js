@@ -228,8 +228,8 @@ function pipelineBody(id, effect) {
   const steps = effect.steps || [];
   return `
     <div class="pal-sec" style="margin-top:12px">${activationOf(effect) === 'triggered'
-      ? 'Вход — параметры, их заполняет сам эффект ниже'
-      : 'Вход — параметры, их заполнит запись компендиума'}</div>
+      ? 'Дырки для записи — но у триггера записи нет, заполняет он их сам, ниже'
+      : 'Дырки, которые заполнит запись компендиума — необязательны'}</div>
     ${paramEditor(id, effect)}
     ${activationOf(effect) === 'triggered' ? argsEditor(id, effect) : ''}
 
@@ -316,6 +316,11 @@ export function verdictOf(effect) {
         const prop = 'prop' in ref ? ref.prop : ref.item;
         if (prop !== undefined && !ref.optional && !declaredProps().has(prop)) {
           throw new Error(`свойство «${prop}» не объявлено ни одним родом записей`);
+        }
+        // То же и с полем листа: шаг, приехавший из чужой системы, целится
+        // в тег, которого здесь нет. Падало бы только при отправке.
+        if ('tag' in ref && ref.tag && !state.system.fields.some(f => f.tag === ref.tag)) {
+          throw new Error(`поля «${ref.tag}» в системе нет — объявите его на вкладке «Лист»`);
         }
       });
     } catch (err) {
@@ -494,7 +499,10 @@ const encodeRef = ref => {
 function refOptions(effect, index, slot) {
   const options = [];
   for (const p of effect.params || []) {
-    options.push([`param:${p.key}`, `параметр · ${p.label || p.key}`]);
+    // «⬚ заполнит запись» вместо «параметр ·»: слот с параметром — это ДЫРКА,
+    // а не заполненное значение. Прежняя подпись читалась как «тут уже стоит
+    // бонус проверки», и человек не понимал, что заполнять.
+    options.push([`param:${p.key}`, `⬚ заполнит запись · ${p.label || p.key}`]);
   }
   for (const prior of (effect.steps || []).slice(0, index)) {
     const mod = registry.get(prior.type);
@@ -578,12 +586,24 @@ const PARAM_KINDS = [
 
 function paramEditor(effectId, effect) {
   const params = effect.params || [];
-  return `${params.map(p => `
+  // Параметр — необязательная вещь: слоты можно заполнить и напрямую. Пока
+  // параметров нет, объяснять их незачем; появился первый — говорим, ЧТО это.
+  const explain = params.length
+    ? `<div class="sys-hint" style="margin:2px 0 6px">Параметр — дырка, которую
+        заполнит запись компендиума: один эффект «Атака» обслужит и меч с 1к8,
+        и топор с 1к12. Не нужно разное оружие — заполняйте слоты шагов
+        напрямую, без параметров.</div>`
+    : `<div class="sys-hint" style="margin:2px 0 6px">Параметров нет — и они
+        не обязательны: слоты шагов можно заполнить напрямую. Заведите параметр,
+        когда один эффект должен обслужить разные записи.</div>`;
+
+  return `${explain}${params.map(p => `
       <div class="rl-param">
         <input id="param-${effectId}-${p.key}" value="${esc(p.label || '')}"
-               placeholder="лейбл параметра" oninput="uiEffParamSet('${effectId}','${p.key}','label',this.value)">
-        <select onchange="uiEffParamSet('${effectId}','${p.key}','kind',this.value)">
-          ${PARAM_KINDS.map(([v, l]) => `<option value="${v}"${(p.kind || 'expr') === v ? ' selected' : ''}>${l}</option>`).join('')}
+               placeholder="как назвать дырку" oninput="uiEffParamSet('${effectId}','${p.key}','label',this.value)">
+        <select title="чем запись компендиума будет её заполнять"
+                onchange="uiEffParamSet('${effectId}','${p.key}','kind',this.value)">
+          ${PARAM_KINDS.map(([v, l]) => `<option value="${v}"${(p.kind || 'expr') === v ? ' selected' : ''}>заполнят: ${l}</option>`).join('')}
         </select>
         <span class="chk-row${p.of === 'target' ? ' on' : ''}" style="padding:0" title="выражение считает ЦЕЛЬ своим листом"
               onclick="uiEffParamSet('${effectId}','${p.key}','of',${p.of === 'target' ? 'false' : 'true'})">

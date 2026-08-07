@@ -54,7 +54,7 @@ export const actions = [
     rk: 'attack-spell',
     label: 'Ядовитые брызги',
     description: 'Заговор. Цель делает спасбросок Ловкости; при провале — урон и отравление.',
-    props: { damage_dice: '2d6', status: 'poisoned' },
+    props: { damage_dice: '2d6', save_by: '#dex_save', status: 'poisoned' },
   },
   {
     id: 'healing-word',

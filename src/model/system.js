@@ -65,25 +65,30 @@ export const system = {
   // Эффект не знает слова «урон»: удар, спасбросок, лечение — разные
   // заполнения одних и тех же слотов. Типы шагов — src/engine/steps/.
   effects: {
+    // ЗАКОН МИРА пишется прямо в шагах, а не спрашивается у записи. «Бьём
+    // против класса брони» и «урон идёт в хиты» — это правила 5e, и меч
+    // о них ничего не знает: у меча спрашивают ровно то, что от меча к
+    // кинжалу разное, — кость урона.
+    //
+    // Отсюда три способа заполнить слот, и каждый на своём месте:
+    //   { expr } / { tag } / { const } — закон мира, один на всю систему
+    //   { prop }                       — то, что разное У КАЖДОЙ ЗАПИСИ
+    //   { param }                      — то, что разное У КАЖДОГО РОДА
+    //                                    (или что обязана посчитать цель)
     strike: {
       label: 'Атака',
       icon: '⚔',
       category: 'Атака',
       activation: 'manual',
       cost: 'action',
-      params: [
-        { key: 'bonus', label: 'Бонус проверки', kind: 'expr' },
-        { key: 'versus', label: 'Против чего', kind: 'tag' },
-        { key: 'damage_bonus', label: 'Бонус урона', kind: 'expr' },
-        { key: 'apply_to', label: 'Куда наносится', kind: 'tag' },
-      ],
+      params: [],
       steps: [
         { id: 'hit', type: 'threshold',
-          roll: { die: { constant: 'lead_die' }, bonus: { param: 'bonus' }, check: 'attack_roll' },
-          versus: { param: 'versus' } },
+          roll: { die: { constant: 'lead_die' }, bonus: { expr: '#attack_bonus' }, check: 'attack_roll' },
+          versus: { tag: 'ac' } },
         { id: 'dmg', type: 'amount', source: 'roll',
-          dice: { prop: 'damage_dice' }, bonus: { param: 'damage_bonus' } },
-        { type: 'apply', target: { param: 'apply_to' }, direction: 'subtract',
+          dice: { prop: 'damage_dice' }, bonus: { expr: '#str_mod' } },
+        { type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract',
           value: { ref: 'dmg' }, floor: { const: 0 }, targetModifiers: true },
       ],
     },
@@ -94,23 +99,23 @@ export const system = {
       category: 'Атака',
       activation: 'manual',
       cost: 'action',
+      // Единственный законный параметр во всей системе — и вот почему он
+      // законный: чем спасается цель, знает ТОЛЬКО цель, своим листом.
+      // Выражение обязано уехать в конверт неразрешённым (`of: 'target'`),
+      // а такое умеет лишь параметр: { prop } подставил бы строку как есть.
       params: [
         { key: 'save', label: 'Чем спасается цель', kind: 'expr', of: 'target' },
-        { key: 'dc', label: 'Сложность', kind: 'expr' },
-        { key: 'dice', label: 'Кости урона', kind: 'dice' },
-        { key: 'apply_to', label: 'Куда наносится', kind: 'tag' },
-        { key: 'status', label: 'Состояние при провале', kind: 'effect' },
       ],
       steps: [
         // Порог на стороне цели: бросает ПОЛУЧАТЕЛЬ своей ведущей костью
         // и своими модификаторами. Дальше — только если НЕ спасся.
         { id: 'save', type: 'threshold', side: 'target',
           roll: { die: { constant: 'lead_die' }, bonus: { param: 'save' }, check: 'save_roll' },
-          versus: { param: 'dc' }, continueOn: 'fail' },
-        { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'dice' } },
-        { type: 'apply', target: { param: 'apply_to' }, direction: 'subtract',
+          versus: { expr: '#spell_dc' }, continueOn: 'fail' },
+        { id: 'dmg', type: 'amount', source: 'roll', dice: { prop: 'damage_dice' } },
+        { type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract',
           value: { ref: 'dmg' }, floor: { const: 0 }, targetModifiers: true },
-        { type: 'status', mode: 'apply', effect: { param: 'status', optional: true } },
+        { type: 'status', mode: 'apply', effect: { prop: 'status', optional: true } },
       ],
     },
 
@@ -122,21 +127,15 @@ export const system = {
       category: 'Лечение',
       activation: 'manual',
       cost: 'action',
-      params: [
-        { key: 'dice', label: 'Кости лечения', kind: 'dice' },
-        { key: 'bonus', label: 'Бонус', kind: 'expr' },
-        { key: 'apply_to', label: 'Что восполняется', kind: 'tag' },
-        { key: 'cap', label: 'Потолок', kind: 'tag' },
-        { key: 'cure', label: 'Что снимает', kind: 'effect' },
-      ],
+      params: [],
       steps: [
         { id: 'amt', type: 'amount', source: 'roll',
-          dice: { param: 'dice' }, bonus: { param: 'bonus' } },
-        { type: 'apply', target: { param: 'apply_to' }, direction: 'add',
-          value: { ref: 'amt' }, ceiling: { param: 'cap' }, targetModifiers: false },
+          dice: { prop: 'heal_dice' }, bonus: { expr: '#cha_mod' } },
+        { type: 'apply', target: { tag: 'hp_current' }, direction: 'add',
+          value: { ref: 'amt' }, ceiling: { tag: 'hp_max' }, targetModifiers: false },
         // Тот же шаг «состояние», другое направление: лечащее заклинание
         // снимает яд. Отдельного типа шага для этого не нужно.
-        { type: 'status', mode: 'remove', effect: { param: 'cure', optional: true } },
+        { type: 'status', mode: 'remove', effect: { prop: 'cure', optional: true } },
       ],
     },
 
@@ -209,13 +208,12 @@ export const system = {
       // условие — по трассе события: попали ли. Условие структурное,
       // как слоты шагов: { ref } смотрит в результат шага события.
       trigger: { on: 'strike', when: 'resolved', condition: { ref: 'hit.success' } },
-      params: [
-        { key: 'dice', label: 'Кости ответного урона', kind: 'dice' },
-        { key: 'apply_to', label: 'Куда наносится', kind: 'tag' },
-      ],
+      // У триггера нет записи компендиума, которая заполнила бы дырки, —
+      // он сам себе источник. Значит и дырок быть не должно: всё вписано.
+      params: [],
       steps: [
-        { id: 'back', type: 'amount', source: 'roll', dice: { param: 'dice' } },
-        { type: 'apply', target: { param: 'apply_to' }, direction: 'subtract',
+        { id: 'back', type: 'amount', source: 'roll', dice: { const: '1d4' } },
+        { type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract',
           value: { ref: 'back' }, floor: { const: 0 }, targetModifiers: true },
       ],
     },
@@ -238,13 +236,13 @@ export const system = {
       hint: 'Кость урона — и атака появляется у владельца сама.',
       props: [
         { key: 'damage_dice', label: 'Кость урона', kind: 'dice' },
-        { key: 'damage_flat', label: 'Урон оружия (число)', kind: 'number' },
       ],
       // Протягивание: род привязан к эффекту, запись только заполняет циферки.
-      // Надел меч — получил «Атаку», снял — потерял.
+      // Надел меч — получил «Атаку», снял — потерял. Аргументов НЕТ:
+      // ни против чего бьём, ни куда наносим, меч не знает — это законы мира,
+      // и они вписаны в сам эффект.
       bindings: [
-        { label: 'Атака', effect: 'strike',
-          args: { bonus: '#attack_bonus', versus: 'ac', damage_bonus: '#str_mod', apply_to: 'hp_current' } },
+        { label: 'Атака', effect: 'strike', args: {} },
       ],
     },
     gear: {
@@ -260,14 +258,14 @@ export const system = {
       hint: 'Цель спасается; при провале — урон и, если задано, состояние.',
       props: [
         { key: 'damage_dice', label: 'Кость урона', kind: 'dice' },
+        { key: 'save_by', label: 'Чем спасаются', kind: 'expr' },
         { key: 'status', label: 'Состояние при провале', kind: 'effect' },
       ],
+      // Единственный аргумент — и он прокидывает СВОЙСТВО ЗАПИСИ в параметр
+      // эффекта. Так «огненный шар спасают Ловкостью, а страх — Мудростью»
+      // становится делом заклинания, а не рода.
       bindings: [
-        { label: 'Сотворить', effect: 'save',
-          args: {
-            save: '#dex_save', dc: '#spell_dc', apply_to: 'hp_current',
-            dice: { prop: 'damage_dice' }, status: { prop: 'status' },
-          } },
+        { label: 'Сотворить', effect: 'save', args: { save: { prop: 'save_by' } } },
       ],
     },
     'healing-spell': {
@@ -278,11 +276,7 @@ export const system = {
         { key: 'cure', label: 'Что снимает', kind: 'effect' },
       ],
       bindings: [
-        { label: 'Сотворить', effect: 'heal',
-          args: {
-            bonus: '#cha_mod', apply_to: 'hp_current', cap: 'hp_max',
-            dice: { prop: 'heal_dice' }, cure: { prop: 'cure' },
-          } },
+        { label: 'Сотворить', effect: 'heal', args: {} },
       ],
     },
     lore: {
