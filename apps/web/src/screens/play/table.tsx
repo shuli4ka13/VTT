@@ -22,6 +22,7 @@ export function TableScreen() {
   const log = useRoom(s => s.log);
   const error = useRoom(s => s.error);
   const setError = useRoom(s => s.setError);
+  const leave = useRoom(s => s.leave);
 
   const [from, setFrom] = useState<string | null>(null);
   const [to, setTo] = useState<string | null>(null);
@@ -38,6 +39,7 @@ export function TableScreen() {
     <Columns
       left={{
         head: room.title,
+        tools: <Button size="sm" variant="ghost" onClick={leave}>выйти</Button>,
         body: (
           <>
             <div className="stack stack--tight">

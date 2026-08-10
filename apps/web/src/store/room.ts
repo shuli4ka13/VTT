@@ -25,18 +25,23 @@ export interface RoomStore {
   setError: (message: string | null) => void;
 }
 
-export const useRoom = create<RoomStore>((set, get) => ({
+/** Последний стол помнится: обновил вкладку — вернулся туда же, а не в список. */
+const LAST_ROOM = 'vtt.room';
+
+export const useRoom = create<RoomStore>(set => ({
   room: null,
   log: [],
   error: null,
   mySheetId: null,
 
   join: roomId => {
+    localStorage.setItem(LAST_ROOM, roomId);
     tableSocket.connect();
     tableSocket.join(roomId, currentToken() ?? '');
   },
 
   leave: () => {
+    localStorage.removeItem(LAST_ROOM);
     tableSocket.close();
     set({ room: null, log: [], mySheetId: null });
   },
@@ -87,6 +92,16 @@ export function listenToRoom(): void {
       }));
     }
 
-    if (message.type === 'error') useRoom.setState({ error: message.message });
+    if (message.type === 'error') {
+      // Не смогли вернуться в запомненный стол — забываем его, иначе
+      // ошибка повторялась бы при каждом открытии страницы.
+      if (!useRoom.getState().room) localStorage.removeItem(LAST_ROOM);
+      useRoom.setState({ error: message.message });
+    }
   });
+
+  // Возврат за стол после перезагрузки. Без этого обновление вкладки
+  // выбрасывало игрока в список комнат посреди боя.
+  const last = localStorage.getItem(LAST_ROOM);
+  if (last && currentToken()) useRoom.getState().join(last);
 }
