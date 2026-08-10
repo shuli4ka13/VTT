@@ -21,9 +21,9 @@ import { DonorPalette } from './donors.tsx';
 import type { System, Effect, Step, Activation } from '@vtt/schema';
 
 const ACTIVATIONS = [
-  { key: 'manual' as const, label: 'Активируемый', icon: '✋', title: 'Жмёшь сам: атака, заклинание' },
-  { key: 'triggered' as const, label: 'Триггерный', icon: '⚡', title: 'Отвечает на чужое событие' },
-  { key: 'passive' as const, label: 'Пассивный', icon: '✦', title: 'Просто висит и правит цифры' },
+  { key: 'manual' as const, label: 'Активируемый', title: 'Жмёшь сам: атака, заклинание' },
+  { key: 'triggered' as const, label: 'Триггерный', title: 'Отвечает на чужое событие' },
+  { key: 'passive' as const, label: 'Пассивный', title: 'Просто висит и правит цифры' },
 ];
 
 const DURATIONS = [
@@ -73,7 +73,6 @@ export function EffectsTab() {
                       {effects.map(([id, effect]) => (
                         <ListItem
                           key={id}
-                          icon={effect.icon ?? '✦'}
                           name={effect.label ?? id}
                           meta={metaOf(effect)}
                           active={id === activeId}
@@ -153,7 +152,7 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
           }
         />
 
-        <Field label="Когда срабатывает" hint="От этого зависит, что эффект вообще может нести.">
+        <Field label="Когда срабатывает">
           <Segmented
             value={activation}
             options={ACTIVATIONS}
@@ -169,14 +168,11 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
         </Field>
 
         <div className="row">
-          <Field label="Категория" hint="Полка в палитре. Только для глаз.">
+          <Field label="Категория">
             <Input value={effect.category ?? ''} onChange={next => edit(draft => { draft.category = next; })} />
           </Field>
-          <Field label="Значок">
-            <Input value={effect.icon ?? ''} onChange={next => edit(draft => { draft.icon = next; })} />
-          </Field>
           {pipeline ? (
-            <Field label="Чего стоит" hint="Экономика действий: разметка, не запрет.">
+            <Field label="Чего стоит">
               <Select
                 value={effect.cost ?? ''}
                 options={[['', '— не задано —'],
@@ -237,9 +233,10 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
                 onChange={next => edit(draft => { draft.trigger = { ...draft.trigger, on: next }; })}
               />
             </Field>
-            <Field label="Условие" hint="Например, «hit.success» — только если попали. Пусто — всегда.">
+            <Field label="Условие">
               <Input
                 mono
+                placeholder="hit.success — пусто: всегда"
                 value={String((effect.trigger?.condition as { ref?: string })?.ref ?? '')}
                 onChange={next => edit(draft => {
                   draft.trigger = { ...draft.trigger!, condition: next ? { ref: next } : null };
@@ -247,10 +244,6 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
               />
             </Field>
           </div>
-          <p className="faint" style={{ fontSize: 'var(--fs-2)' }}>
-            Ответка не будит ответку: конверт, рождённый триггером, помечен,
-            и на помеченные триггеры молчат.
-          </p>
         </Card>
       ) : null}
 
@@ -280,6 +273,19 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
             />
           ))}
 
+          <div className="inline inline--tight">
+            {STEP_SPECS.map(spec => (
+              <Button
+                key={spec.type}
+                size="sm"
+                title={spec.hint}
+                onClick={() => edit(draft => { (draft.steps ??= []).push({ type: spec.type }); })}
+              >
+                + {spec.label.toLowerCase()}
+              </Button>
+            ))}
+          </div>
+
           <ParamsEditor effect={effect} onEdit={edit} />
         </>
       ) : (
@@ -303,16 +309,10 @@ function ParamsEditor({ effect, onEdit }: { effect: Effect; onEdit: (change: (dr
       count={params.length}
       summary={params.length ? undefined : 'нет — все слоты заполнены прямо здесь'}
     >
-      <p className="faint" style={{ fontSize: 'var(--fs-2)' }}>
-        Параметр нужен, когда ОДИН эффект обслуживает разные рода записей и
-        каждый подставляет своё. Если значение одинаково у всех — это закон
-        мира, и его пишут прямо в слот шага, а не спрашивают у записи.
-      </p>
-
       {params.map(param => (
         <Card key={param.key} tone="flat">
           <div className="row">
-            <Field label="Ключ" hint="Машинный, неизменный.">
+            <Field label="Ключ">
               <Input mono value={param.key} onChange={() => { /* ключ неизменен по построению */ }} />
             </Field>
             <Field label="Как называть человеку">
@@ -324,7 +324,7 @@ function ParamsEditor({ effect, onEdit }: { effect: Effect; onEdit: (change: (dr
                 })}
               />
             </Field>
-            <Field label="Кто считает" hint="«Цель» — когда посчитать может только она: чем спасается.">
+            <Field label="Кто считает">
               <Select
                 value={param.of ?? 'source'}
                 options={[['source', 'отправитель'], ['target', 'цель']] as const}
@@ -362,10 +362,6 @@ function RoomRules({ system }: { system: System }) {
 
   return (
     <Fold title="Действуют на всех" count={enabled.size}>
-      <p className="faint" style={{ fontSize: 'var(--fs-2)' }}>
-        Это не свойство эффекта, а список включённых в комнате. Один и тот же
-        эффект можно и включить на всех, и повесить на одного.
-      </p>
       {passives.length === 0
         ? <span className="faint">Пассивных эффектов пока нет.</span>
         : (

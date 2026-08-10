@@ -254,7 +254,6 @@ export function SlotEditor({ value, onChange, context, allow }: {
         }}
       />
       {current.editor(value, onChange, context)}
-      <span className="field__hint">{current.hint}</span>
     </div>
   );
 }

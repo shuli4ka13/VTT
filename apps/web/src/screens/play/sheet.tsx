@@ -51,7 +51,6 @@ export function SheetScreen() {
                   {room.sheets.map(item => (
                     <ListItem
                       key={item.id}
-                      icon={item.kind === 'npc' ? '◇' : '◆'}
                       name={item.name ?? item.id}
                       meta={item.kind === 'npc' ? 'НПС' : 'персонаж игрока'}
                       active={item.id === mySheetId}
@@ -153,7 +152,7 @@ function FieldCell({ field, sheet, reader, onChange }: {
 
   const computed = show(reader.valueOf(field.tag));
   return (
-    <Field label={field.label} hint={field.value.kind === 'formula' ? 'считает движок' : 'из таблицы'}>
+    <Field label={field.label}>
       <div
         className={`input num ${computed.bad ? 'input--bad' : ''}`}
         title={computed.title}
@@ -196,8 +195,7 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
           ? <span className="faint">Нечего: наденьте предмет или выучите действие ниже.</span>
           : available.map(action => (
             <Card key={action.id} tone="flat">
-              <span className="nowrap">{action.label}</span>
-              <span className="faint" style={{ fontSize: 'var(--fs-2)' }}>применяется за столом</span>
+              <span className="nowrap" title="применяется за столом">{action.label}</span>
             </Card>
           ))}
       </Fold>
@@ -218,9 +216,6 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
               ))}
             </div>
           )}
-        <span className="faint" style={{ fontSize: 'var(--fs-2)' }}>
-          Надел — получил действия предмета, снял — потерял.
-        </span>
       </Fold>
 
       <Fold title="Известные действия" count={known.size}>
@@ -255,7 +250,6 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
                     title={entry?.usesLeft ? `осталось: ${entry.usesLeft}` : undefined}
                     onClick={() => toggle('effects', id, !entry)}
                   >
-                    {(effect.activation ?? 'manual') === 'triggered' ? '⚡ ' : ''}
                     {effect.label ?? id}
                     {entry?.usesLeft ? ` · ${entry.usesLeft}` : ''}
                   </Chip>
@@ -263,10 +257,6 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
               })}
             </div>
           )}
-        <span className="faint" style={{ fontSize: 'var(--fs-2)' }}>
-          Обычно их вешают события — отравление при провале спасброска; руками
-          тоже можно, это и есть «наложить состояние».
-        </span>
       </Fold>
 
       {room.system.room_rules?.length ? (

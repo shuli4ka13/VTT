@@ -12,7 +12,7 @@
 
 import { useMemo, useState } from 'react';
 import { useWorld } from '../../store/world.ts';
-import { Button, Card, Select, Empty } from '../../ui/primitives.tsx';
+import { Select, Empty } from '../../ui/primitives.tsx';
 import type { System, Field, Effect } from '@vtt/schema';
 import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
 import { compile } from '@vtt/engine/formula';
@@ -36,11 +36,6 @@ export function DonorPalette({ kind }: { kind: 'blocks' | 'effects' }) {
           {kind === 'blocks' ? <Blocks donor={donor} /> : <Effects donor={donor} />}
         </div>
       ))}
-      <p className="faint" style={{ fontSize: 'var(--fs-2)' }}>
-        {kind === 'blocks'
-          ? 'Блок приедет вместе с блоками, от которых зависят его формулы. Донор не изменится.'
-          : 'Эффект приедет вместе с костями, мишенями бросков и типами действий, которые ему нужны.'}
-      </p>
     </div>
   );
 }
@@ -211,9 +206,7 @@ function Effects({ donor }: { donor: System }) {
             onClick={() => copy(id, effect)}
             style={already ? { opacity: 0.5, cursor: 'default' } : undefined}
           >
-            <span className="card__title" style={{ fontSize: 'var(--fs-4)' }}>
-              <span aria-hidden>{effect.icon ?? '✦'}</span> {effect.label ?? id}
-            </span>
+            <span className="card__title" style={{ fontSize: 'var(--fs-4)' }}>{effect.label ?? id}</span>
             <span className="card__sub">
               {already ? 'уже в системе' : `${effect.category ?? 'Механики'} · ${activationWord(effect)}`}
             </span>
@@ -228,7 +221,3 @@ const activationWord = (effect: Effect) =>
   effect.activation === 'passive' ? 'пассивный'
     : effect.activation === 'triggered' ? 'триггерный' : 'активируемый';
 
-/** Заготовка карточки-подсказки для пустой палитры — общий вид на всех вкладках. */
-export function DonorHint({ children }: { children: React.ReactNode }) {
-  return <Card tone="flat"><span className="faint">{children}</span></Card>;
-}

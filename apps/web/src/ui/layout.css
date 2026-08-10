@@ -245,7 +245,6 @@
   color: var(--text);
 }
 .role:hover { border-color: var(--accent); background: var(--surface-2); }
-.role__icon { font-size: 28px; }
 .role__name { font-size: var(--fs-5); font-weight: 650; }
 .role__hint { font-size: var(--fs-3); color: var(--text-muted); }
 

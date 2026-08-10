@@ -69,7 +69,6 @@ export function SheetTab() {
                   {fields.map(field => (
                     <ListItem
                       key={field.tag}
-                      icon={iconOf(field.value)}
                       name={field.label}
                       meta={metaOf(field.value)}
                       active={field.tag === activeTag}
@@ -136,10 +135,10 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
         />
 
         <div className="row">
-          <Field label="Название" hint="Видят люди. Переименование не ломает формул.">
+          <Field label="Название">
             <Input value={field.label} onChange={next => edit(draft => { draft.label = next; })} />
           </Field>
-          <Field label="Блок" hint="Как поля сгруппированы на листе.">
+          <Field label="Блок">
             <Input value={field.group ?? ''} onChange={next => edit(draft => { draft.group = next; })} />
           </Field>
           <Field label="Откуда значение">
@@ -163,7 +162,7 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
                 })}
               />
             </Field>
-            <Field label="По умолчанию" hint="Что стоит у нового персонажа.">
+            <Field label="По умолчанию">
               <Input
                 value={String(field.value.default)}
                 onChange={next => edit(draft => {
@@ -180,7 +179,7 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
       {field.value.kind === 'formula' ? (
         <Card>
           <CardHead title="Значение считает движок" />
-          <Field label="Правило" hint="Ссылки на другие поля вставляются кнопками ниже.">
+          <Field label="Правило">
             <FormulaInput
               system={system}
               value={field.value.expr}
@@ -194,11 +193,7 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
         <Card>
           <CardHead title="Значение берётся из таблицы" />
           <div className="row">
-            <Field
-              label="Таблица"
-              needed={!field.value.table}
-              hint="Ступенька по диапазонам — как бонус мастерства по уровню."
-            >
+            <Field label="Таблица" needed={!field.value.table}>
               <Select
                 value={field.value.table}
                 options={[['', '— выберите —'], ...Object.entries(system.tables ?? {})
@@ -207,7 +202,7 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
               />
             </Field>
           </div>
-          <Field label="Аргумент" needed={!field.value.arg} hint="Что подставить в таблицу.">
+          <Field label="Аргумент" needed={!field.value.arg}>
             <FormulaInput
               system={system}
               value={field.value.arg}
@@ -230,9 +225,6 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
           >
             {field.roll ? 'Броски включены' : 'Включить броски'}
           </Button>
-          <span className="faint">
-            Тогда на поле можно вешать преимущество и помеху — как на «Проверку Ловкости».
-          </span>
         </div>
       </Card>
 
@@ -255,9 +247,6 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
 }
 
 // ── вспомогательное ─────────────────────────────────────────────────────
-
-const iconOf = (value: FieldValue) =>
-  value.kind === 'stored' ? '✎' : value.kind === 'formula' ? 'ƒ' : '▤';
 
 const metaOf = (value: FieldValue) =>
   value.kind === 'stored' ? `вводит игрок · ${value.type}`

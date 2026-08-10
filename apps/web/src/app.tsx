@@ -70,27 +70,18 @@ function RolePicker() {
     <div className="roles">
       <h1 className="roles__title"><em>VTT</em> — конструктор систем и стол</h1>
       <p className="roles__lead">
-        Выберите, чем занимаетесь сейчас. Мир переезжает между приложениями
-        публикацией: автор публикует, партия открывает.
+        Автор публикует мир — партия открывает его за столом.
       </p>
 
       <div className="roles__grid">
         <NavLink className="role" to="/author/system">
-          <span className="role__icon" aria-hidden>✎</span>
           <span className="role__name">Я автор</span>
-          <span className="role__hint">
-            Собрать систему: поля и правила их расчёта, эффекты, рода записей.
-            Заполнить компендиум и опубликовать мир.
-          </span>
+          <span className="role__hint">Собрать систему и компендиум, опубликовать мир.</span>
         </NavLink>
 
         <NavLink className="role" to="/play/table">
-          <span className="role__icon" aria-hidden>⚔</span>
           <span className="role__name">Мы играем</span>
-          <span className="role__hint">
-            Открыть опубликованный мир, вести персонажа и ходить за столом.
-            Правила менять нельзя — их задал автор.
-          </span>
+          <span className="role__hint">Открыть опубликованный мир, вести персонажа, ходить за столом.</span>
         </NavLink>
       </div>
     </div>

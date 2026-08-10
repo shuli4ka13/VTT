@@ -17,9 +17,9 @@ import { WorldBar } from './world-bar.tsx';
 type Tab = 'sheet' | 'effects' | 'records';
 
 const TABS = [
-  { key: 'sheet' as const, label: 'Лист', icon: '▦' },
-  { key: 'effects' as const, label: 'Эффекты', icon: '✦' },
-  { key: 'records' as const, label: 'Записи', icon: '⬡' },
+  { key: 'sheet' as const, label: 'Лист' },
+  { key: 'effects' as const, label: 'Эффекты' },
+  { key: 'records' as const, label: 'Записи' },
 ];
 
 export function ConstructorScreen() {

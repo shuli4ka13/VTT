@@ -85,7 +85,6 @@ export function TableScreen() {
                   </>
                 }
               />
-              <p className="card__sub">Кликните: сначала кто действует, потом по кому.</p>
               <div className="tokens">
                 {room.sheets.map(sheet => (
                   <button

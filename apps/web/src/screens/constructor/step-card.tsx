@@ -38,7 +38,7 @@ interface SlotSpec {
 interface StepSpec {
   type: string;
   label: string;
-  icon: string;
+  /** Одной строкой — уезжает в тултип кнопки добавления, на карточке не рисуется. */
   hint: string;
   slots: SlotSpec[];
 }
@@ -52,16 +52,12 @@ export const STEP_SPECS: StepSpec[] = [
   {
     type: 'threshold',
     label: 'Порог',
-    icon: '⌖',
     hint: 'Бросок против величины. Не вышло — цепочка обрывается.',
     slots: [
       { key: 'roll.die', label: 'Кость', main: true, required: true, allow: ['constant'] },
-      { key: 'roll.bonus', label: 'Прибавка к броску', main: true, allow: ['expr', 'const', 'param', 'prop', 'empty'],
-        hint: 'Что прибавляется к кости: обычно бонус атаки бросающего.' },
-      { key: 'versus', label: 'Против чего', main: true, required: true, allow: ['tag', 'expr', 'const'],
-        hint: 'Величина, которую надо превзойти. Обычно поле ЦЕЛИ — класс брони.' },
-      { key: 'roll.check', label: 'Мишень модификаторов броска', allow: [],
-        hint: 'На эту мишень вешаются преимущество и помеха. Пусто — броском никто не управляет.' },
+      { key: 'roll.bonus', label: 'Прибавка к броску', main: true, allow: ['expr', 'const', 'param', 'prop', 'empty'] },
+      { key: 'versus', label: 'Против чего', main: true, required: true, allow: ['tag', 'expr', 'const'] },
+      { key: 'roll.check', label: 'Мишень модификаторов броска', allow: [] },
       { key: 'side', label: 'Кто бросает', fallback: 'sender',
         choice: [['sender', 'отправитель — это атака'], ['target', 'цель — это спасбросок']] },
       { key: 'successWhen', label: 'Успех, если бросок', fallback: 'atLeast',
@@ -74,15 +70,12 @@ export const STEP_SPECS: StepSpec[] = [
   {
     type: 'amount',
     label: 'Величина',
-    icon: 'Σ',
     hint: 'Вычислить число: бросок костей, превышение или фикс записи.',
     slots: [
       { key: 'source', label: 'Откуда число', main: true, fallback: 'roll',
         choice: [['roll', 'свой бросок костей'], ['margin', 'превышение шага'], ['item', 'фикс записи']] },
-      { key: 'dice', label: 'Кости', main: true, allow: ['prop', 'const', 'param', 'empty'],
-        hint: 'Запись «2d6». Обычно спрашивается у записи: у меча одна кость, у кинжала другая.' },
-      { key: 'bonus', label: 'Прибавка', main: true, allow: ['expr', 'const', 'param', 'empty'],
-        hint: 'Что прибавить к броску: обычно модификатор характеристики.' },
+      { key: 'dice', label: 'Кости', main: true, allow: ['prop', 'const', 'param', 'empty'] },
+      { key: 'bonus', label: 'Прибавка', main: true, allow: ['expr', 'const', 'param', 'empty'] },
       { key: 'fixed', label: 'Фикс записи', allow: ['prop', 'const', 'empty'] },
       { key: 'margin', label: 'Превышение шага', allow: ['ref', 'empty'] },
     ],
@@ -90,7 +83,6 @@ export const STEP_SPECS: StepSpec[] = [
   {
     type: 'compare',
     label: 'Сравнение',
-    icon: '⇄',
     hint: 'Величина против поля цели. Не дотянула — цепочка обрывается.',
     slots: [
       { key: 'value', label: 'Что сравниваем', main: true, required: true, allow: ['ref', 'expr', 'const'] },
@@ -102,7 +94,6 @@ export const STEP_SPECS: StepSpec[] = [
   {
     type: 'apply',
     label: 'Применить',
-    icon: '✎',
     hint: 'Изменить поле цели. Единственный шаг, который что-то меняет.',
     slots: [
       { key: 'target', label: 'Какое поле меняем', main: true, required: true, allow: ['tag'] },
@@ -118,7 +109,6 @@ export const STEP_SPECS: StepSpec[] = [
   {
     type: 'status',
     label: 'Состояние',
-    icon: '☄',
     hint: 'Повесить эффект на цель или снять его.',
     slots: [
       { key: 'mode', label: 'Что делаем', main: true, fallback: 'apply',
@@ -177,12 +167,10 @@ export function StepCard({ step, index, system, effect, earlier, problem, onEdit
   return (
     <Card tone={problem ? 'bad' : undefined}>
       <CardHead
-        title={<><span aria-hidden>{spec.icon}</span> {index + 1}. {spec.label}</>}
+        title={<>{index + 1}. {spec.label}</>}
         badge={step.id ? <span className="chip mono" title="имя шага — на него ссылаются следующие">«{step.id}»</span> : null}
         actions={<Button size="sm" variant="danger" onClick={onDelete}>×</Button>}
       />
-      <p className="card__sub">{spec.hint}</p>
-
       {problem ? <Verdict tone="bad">{problem}</Verdict> : null}
 
       <div className="row">
@@ -207,10 +195,7 @@ export function StepCard({ step, index, system, effect, earlier, problem, onEdit
         </Fold>
       ) : null}
 
-      <Field
-        label="Имя шага"
-        hint="Нужно, только если следующие шаги ссылаются на его результат."
-      >
+      <Field label="Имя шага" hint="нужно, только если на результат ссылаются следующие шаги">
         <input
           className="input input--mono"
           value={step.id ?? ''}

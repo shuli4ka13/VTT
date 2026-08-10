@@ -39,7 +39,6 @@ export function Lobby() {
           {signed ? null : (
             <Card>
               <CardHead title="Кто вы" />
-              <p className="card__sub">Пароля нет: это стенд, имя и есть личность.</p>
               <div className="inline">
                 <div style={{ width: 220 }}>
                   <Input value={name} onChange={setName} placeholder="ваше имя" />

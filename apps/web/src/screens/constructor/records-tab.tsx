@@ -74,7 +74,6 @@ export function RecordsTab() {
                   {list.map(([key, kind]) => (
                     <ListItem
                       key={key}
-                      icon={kind.icon ?? '⬡'}
                       name={kind.label ?? key}
                       meta={`свойств: ${kind.props?.length ?? 0} · действий: ${kind.bindings?.length ?? 0}`}
                       active={key === activeKind}
@@ -127,17 +126,14 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
           }
         />
         <div className="row">
-          <Field label="Чем является" hint="Короткий словарь движка: вещь надевают, действие учат.">
+          <Field label="Чем является">
             <Select value={kind.kind} options={BASIS} onChange={next => edit(draft => { draft.kind = next; })} />
           </Field>
-          <Field label="Раздел" hint="Как рода сгруппированы в компендиуме.">
+          <Field label="Раздел">
             <Input value={kind.group ?? ''} onChange={next => edit(draft => { draft.group = next; })} />
           </Field>
-          <Field label="Значок">
-            <Input value={kind.icon ?? ''} onChange={next => edit(draft => { draft.icon = next; })} />
-          </Field>
         </div>
-        <Field label="Подсказка заполняющему" hint="Одной строкой: что от человека вообще требуется.">
+        <Field label="Подсказка заполняющему">
           <Input value={kind.hint ?? ''} onChange={next => edit(draft => { draft.hint = next; })} />
         </Field>
       </Card>
@@ -156,16 +152,11 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
             })}>+ свойство</Button>
           }
         />
-        <p className="card__sub">
-          Только циферки, которые от записи к записи РАЗНЫЕ. Всё, что одинаково
-          у всех, — закон мира, и его место в эффекте, а не здесь.
-        </p>
-
         {props.length === 0
           ? <span className="faint">Свойств нет: записи этого рода — чистые данные без автоматизации.</span>
           : props.map(prop => (
             <div key={prop.key} className="row">
-              <Field label="Ключ" hint="Машинный. На него ссылаются шаги эффектов.">
+              <Field label="Ключ">
                 <Input mono value={prop.key} onChange={() => { /* ключ неизменен */ }} />
               </Field>
               <Field label="Как спросить">
@@ -210,11 +201,6 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
             >+ привязка</Button>
           }
         />
-        <p className="card__sub">
-          Это и есть протягивание: надел меч — получил «Атаку», снял — потерял.
-          Привязка написана один раз у рода, а каждая запись подставляет свои циферки.
-        </p>
-
         {Object.keys(system.effects).length === 0 ? (
           <Verdict tone="warn">
             В системе ещё нет эффектов — привязывать нечего. Заведите их на вкладке «Эффекты».
@@ -269,11 +255,6 @@ function BindingEditor({ binding, system, onEdit, onDelete }: {
 
       {params.length ? (
         <Fold title="Чем заполнить дырки эффекта" count={params.length} open>
-          <p className="faint" style={{ fontSize: 'var(--fs-2)' }}>
-            Эффект объявил параметры — здесь решается, откуда их брать.
-            «Свойство записи» и делает род формой: у огненного шара спасают
-            Ловкостью, у страха Мудростью, а привязка одна.
-          </p>
           {params.map(param => (
             <Field key={param.key} label={param.label ?? param.key}>
               <SlotEditor
@@ -290,10 +271,7 @@ function BindingEditor({ binding, system, onEdit, onDelete }: {
           ))}
         </Fold>
       ) : effect ? (
-        <div className="inline inline--tight">
-          <Chip>дырок нет</Chip>
-          <span className="faint">эффект заполнен целиком — записи остаётся только её циферки</span>
-        </div>
+        <Chip>дырок нет — эффект заполнен целиком</Chip>
       ) : null}
     </Card>
   );

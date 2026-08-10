@@ -60,7 +60,6 @@ export function CompendiumScreen() {
                   {list.map(({ record }) => (
                     <ListItem
                       key={record.id}
-                      icon={system.records?.[String(record.rk)]?.icon ?? '⬡'}
                       name={record.label ?? record.id}
                       meta={system.records?.[String(record.rk)]?.label ?? 'род неизвестен'}
                       active={record.id === activeId}
@@ -89,9 +88,7 @@ export function CompendiumScreen() {
             <div className="stack stack--tight">
               {kinds.map(([rk, kind]) => (
                 <button key={rk} type="button" className="card card--pick" onClick={() => add(rk, kind)}>
-                  <span className="card__title" style={{ fontSize: 'var(--fs-4)' }}>
-                    <span aria-hidden>{kind.icon ?? '⬡'}</span> {kind.label ?? rk}
-                  </span>
+                  <span className="card__title" style={{ fontSize: 'var(--fs-4)' }}>{kind.label ?? rk}</span>
                   <span className="card__sub">{kind.hint ?? `спросят: ${kind.props?.length ?? 0}`}</span>
                 </button>
               ))}
@@ -151,16 +148,11 @@ function RecordEditor({ record, system }: { record: CompendiumRecord; system: Sy
       {kind?.props?.length ? (
         <Card>
           <CardHead title="Циферки" />
-          <p className="card__sub">
-            Это спрашивает род «{kind.label}». Больше ничего вводить не нужно —
-            остальное знает система.
-          </p>
           <div className="row">
             {kind.props.map(prop => (
               <Field
                 key={prop.key}
                 label={prop.label ?? prop.key}
-                hint={hintOf(String(prop.kind))}
                 needed={record.props?.[prop.key] === undefined || record.props[prop.key] === ''}
               >
                 {String(prop.kind) === 'effect' ? (
@@ -175,6 +167,7 @@ function RecordEditor({ record, system }: { record: CompendiumRecord; system: Sy
                 ) : (
                   <Input
                     mono={String(prop.kind) === 'dice' || String(prop.kind) === 'expr'}
+                    placeholder={String(prop.kind) === 'dice' ? '2d6' : String(prop.kind) === 'expr' ? '#тег' : undefined}
                     value={String(record.props?.[prop.key] ?? '')}
                     onChange={next => edit(draft => {
                       (draft.props ??= {})[prop.key] =
@@ -198,9 +191,6 @@ function RecordEditor({ record, system }: { record: CompendiumRecord; system: Sy
               </Chip>
             ))}
           </div>
-          <p className="card__sub">
-            Приходит от рода «{kind?.label}». Надел — получил, снял — потерял.
-          </p>
         </Card>
       ) : null}
 
@@ -215,8 +205,3 @@ function RecordEditor({ record, system }: { record: CompendiumRecord; system: Sy
   );
 }
 
-const hintOf = (kind: string) =>
-  kind === 'dice' ? 'запись вида «2d6»'
-    : kind === 'expr' ? 'формула, например #dex_save'
-      : kind === 'effect' ? 'пассивный эффект системы'
-        : undefined;

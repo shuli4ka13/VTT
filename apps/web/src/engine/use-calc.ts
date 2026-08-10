@@ -69,7 +69,7 @@ export function useReader(system: System, sheet: Sheet | null, compendium: Compe
 /** Показать посчитанное. Ошибка — короткой пометкой, подробность в подсказке. */
 export function show(value: Computed): { text: string; title?: string; bad: boolean } {
   if (!value.ok) return { text: '—', title: value.error, bad: true };
-  if (typeof value.value === 'boolean') return { text: value.value ? '✔' : '✕', bad: false };
+  if (typeof value.value === 'boolean') return { text: value.value ? 'да' : 'нет', bad: false };
   if (value.value === null || value.value === undefined) return { text: '—', bad: false };
   return { text: String(value.value), bad: false };
 }
