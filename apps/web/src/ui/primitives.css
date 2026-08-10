@@ -304,3 +304,18 @@
 }
 .slot__option:hover { background: rgba(122, 132, 255, .12); }
 .slot__group { font-size: 10px; text-transform: uppercase; letter-spacing: .4px; opacity: .5; min-width: 92px; }
+
+/* ── пересказ на карточке шага ── */
+.readback {
+  border-left: 3px solid var(--ok, #4caf7d); background: rgba(76, 175, 125, .07);
+  border-radius: 6px; padding: 8px 11px; margin: 6px 0 10px;
+  font-size: 13.5px; line-height: 1.5;
+}
+.readback__hole {
+  background: rgba(255, 152, 0, .16); border: 1px dashed #ff9800;
+  border-radius: 4px; padding: 0 5px; margin-right: 4px; white-space: nowrap;
+}
+.card-break {
+  margin: -4px 0 10px 14px; padding-left: 10px; font-size: 12px; opacity: .65;
+  border-left: 2px dotted var(--bad, #e05555);
+}
