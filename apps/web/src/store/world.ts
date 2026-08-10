@@ -6,6 +6,8 @@
 // значений: считать в конструкторе не по чему, персонажа там нет.
 
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { world as W } from '@vtt/schema';
 import type { System, Compendium, Sheet, Effect, Field } from '@vtt/schema';
 
 export interface WorldState {
@@ -45,7 +47,11 @@ export const emptySystem = (): System => ({
   action_types: {},
 });
 
-export const useWorld = create<WorldState>(set => ({
+// Мир переживает перезагрузку страницы. Без этого автор терял работу
+// на первом же случайном F5 — а конструктор systems это часы работы.
+// Сохраняется ТОЛЬКО мир; что выбрано на экранах — состояние интерфейса,
+// и восстанавливать его через сутки бессмысленно.
+export const useWorld = create<WorldState>()(persist(set => ({
   system: emptySystem(),
   compendium: { items: [], actions: [] },
   sheets: [],
@@ -86,7 +92,42 @@ export const useWorld = create<WorldState>(set => ({
     activeRecordId: null,
     activeSheetId: world.sheets[0]?.id ?? null,
   }),
+}), {
+  name: 'vtt.world',
+  storage: createJSONStorage(() => localStorage),
+  partialize: state => ({
+    system: state.system,
+    compendium: state.compendium,
+    sheets: state.sheets,
+  }),
+  // Сохранённый мир мог быть записан прежней версией — и не пройти нынешнюю
+  // схему. Молча подсунуть его значило бы получить отказ при публикации,
+  // причём непонятно когда и почему. Поэтому проверяем на входе: не прошёл —
+  // начинаем с чистого листа и говорим об этом вслух.
+  merge: (saved, current) => {
+    const parsed = W.world.safeParse(saved);
+    if (parsed.success) return { ...current, ...parsed.data };
+
+    const first = parsed.error.issues[0];
+    restoreProblem = first
+      ? `${first.path.join('.')}: ${first.message}`
+      : 'формат не распознан';
+    return current;
+  },
 }));
+
+/**
+ * Почему сохранённый мир не восстановился. Забирается один раз при старте:
+ * человеку надо сказать, что его работа не открылась, а не делать вид,
+ * будто он всегда начинал с нуля.
+ */
+let restoreProblem: string | null = null;
+
+export const takeRestoreProblem = (): string | null => {
+  const problem = restoreProblem;
+  restoreProblem = null;
+  return problem;
+};
 
 // ── производные выборки ─────────────────────────────────────────────────
 // Читаются на месте, а не хранятся: хранимое и вычисляемое разделены

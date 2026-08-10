@@ -132,3 +132,51 @@ describe('контракты клиент ↔ сервер', () => {
     expect(api.clientMessage.safeParse({ type: 'room:unknown' }).success).toBe(false);
   });
 });
+
+describe('ссылки слотов не теряются при разборе', () => {
+  it('каждая форма ссылки переживает round-trip нетронутой', () => {
+    // Регрессия: `{ const: z.unknown() }` первым вариантом принимал ЛЮБОЙ
+    // объект и вырезал всё остальное. Условие триггера `{ ref: 'hit.success' }`
+    // превращалось в `{}` при публикации мира, и ответка молча переставала
+    // срабатывать. Ошибка без сообщения — самая дорогая.
+    const forms = [
+      { const: 0 },
+      { const: '1d6' },
+      { const: null },
+      { expr: '#str_mod' },
+      { expr: '#dex_save', of: 'target' as const },
+      { tag: 'hp_current' },
+      { param: 'save' },
+      { prop: 'damage_dice' },
+      { item: 'damage_dice' },
+      { ref: 'hit.success' },
+      { constant: 'lead_die' },
+      { prop: 'status', optional: true },
+    ];
+
+    for (const form of forms) {
+      const parsed = W.slotRef.parse(form);
+      expect(parsed, JSON.stringify(form)).toEqual(form);
+    }
+  });
+
+  it('образцовые эффекты переживают round-trip без потерь', () => {
+    // Структурное равенство, а не побайтное: порядок ключей задаёт схема,
+    // и он отличается от порядка в исходнике. Побайтность требуется от
+    // ЧАРНИКА — там её обеспечивает сериализатор фиксированным порядком.
+    for (const sys of SAMPLE_SYSTEMS) {
+      const parsed = W.system.parse(sys);
+      expect(parsed.effects, sys.name).toEqual(sys.effects);
+    }
+  });
+
+  it('условие триггера доезжает целиком — регрессия «ответка молчит»', () => {
+    const thorns = SAMPLE_SYSTEMS
+      .flatMap((s: { effects: Record<string, unknown> }) => Object.values(s.effects))
+      .find((e: any) => e?.trigger?.condition);
+    expect(thorns, 'в образцах есть эффект с условием триггера').toBeTruthy();
+
+    const parsed = W.effect.parse(thorns);
+    expect((parsed as any).trigger.condition).toEqual((thorns as any).trigger.condition);
+  });
+});

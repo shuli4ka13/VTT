@@ -17,8 +17,18 @@ import { z } from 'zod';
 
 export const refSide = z.enum(['source', 'target']);
 
+/**
+ * Порядок вариантов ЗНАЧИМ, и вариант `const` обязан быть последним.
+ *
+ * `z.unknown()` не требует наличия ключа, поэтому `{ const: z.unknown() }`
+ * принимает ЛЮБОЙ объект — и, стоя первым, съедал бы `{ ref: 'hit.success' }`,
+ * возвращая пустышку. Условие триггера молча пропадало при публикации мира,
+ * и ответка переставала срабатывать: ошибка без сообщения, самая дорогая.
+ *
+ * Поэтому две страховки сразу: `const` идёт последним И требует своего ключа
+ * явной проверкой — на случай, если порядок кто-то переставит.
+ */
 export const slotRef = z.union([
-  z.object({ const: z.unknown(), optional: z.boolean().optional() }),
   z.object({ expr: z.string(), of: refSide.optional(), optional: z.boolean().optional() }),
   z.object({ tag: z.string(), of: refSide.optional(), optional: z.boolean().optional() }),
   z.object({ param: z.string(), optional: z.boolean().optional() }),
@@ -27,6 +37,8 @@ export const slotRef = z.union([
   z.object({ item: z.string(), optional: z.boolean().optional() }),
   z.object({ ref: z.string(), optional: z.boolean().optional() }),
   z.object({ constant: z.string(), optional: z.boolean().optional() }),
+  z.object({ const: z.unknown(), optional: z.boolean().optional() })
+    .refine(value => 'const' in value, { message: 'ссылка неизвестной формы' }),
 ]);
 
 // ── поля листа ──────────────────────────────────────────────────────────

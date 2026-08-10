@@ -99,7 +99,9 @@ describe('вид отделён от логики', () => {
   it('экраны не знают ни одного имени стата', () => {
     // Движок не знает имён статов — и интерфейс тоже не должен: иначе новый
     // стат перестанет добавляться правкой данных (критерий приёмки №3).
-    const stats = /\b(str_mod|dex_mod|hp_max|ac_base|prof_bonus|attack_bonus)\b/;
+    // Ловим и точные теги, и ПОДСТРОЧНОЕ угадывание: `/hp|health/` в коде
+    // экрана — та же ошибка, только незаметнее.
+    const stats = /\b(str_mod|dex_mod|hp_max|hp_current|ac_base|prof_bonus|attack_bonus)\b|['"\/](hp|health|хит|мана|stamina)[|'"\/]/i;
     for (const file of walk(join(src, 'screens'))) {
       if (file.endsWith('.test.ts') || file.endsWith('.test.tsx')) continue;
       const code = readFileSync(file, 'utf8');

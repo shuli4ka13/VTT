@@ -24,6 +24,11 @@ export function TableScreen() {
   const [note, setNote] = useState<string | null>(null);
   const [from, setFrom] = useState<string | null>(null);
   const [to, setTo] = useState<string | null>(null);
+  // Что показывать на фишке — ВЫБОР ведущего, а не догадка стола.
+  // Угадывать поле по имени («hp», «health») значило бы, что интерфейс знает
+  // имена статов, — а он не должен: система, где хиты зовутся иначе, сломала
+  // бы фишку молча.
+  const [pinned, setPinned] = useState<string>('');
 
   // Один сокет на приложение; экран подписывается и отписывается.
   useEffect(() => {
@@ -86,7 +91,22 @@ export function TableScreen() {
             <Card>
               <CardHead
                 title="Фишки"
-                actions={<span className="faint">кликните: сначала кто, потом по кому</span>}
+                actions={
+                  <>
+                    <span className="faint">на фишке:</span>
+                    <select
+                      className="select"
+                      style={{ width: 200 }}
+                      value={pinned}
+                      onChange={e => setPinned(e.target.value)}
+                    >
+                      <option value="">— ничего —</option>
+                      {room.system.fields
+                        .filter(f => f.value.kind === 'stored' && f.value.type === 'number')
+                        .map(f => <option key={f.tag} value={f.tag}>{f.label}</option>)}
+                    </select>
+                  </>
+                }
               />
               <div className="tokens">
                 {room.sheets.map(sheet => (
@@ -100,7 +120,9 @@ export function TableScreen() {
                     }}
                   >
                     <span className="token__name">{sheet.name ?? sheet.id}</span>
-                    <span className="token__hp num">{hpOf(sheet)}</span>
+                    {pinned ? (
+                      <span className="token__hp num">{String(sheet.values[pinned] ?? '—')}</span>
+                    ) : null}
                   </button>
                 ))}
               </div>
@@ -243,11 +265,3 @@ function Lobby({ note, onNote }: { note: string | null; onNote: (text: string | 
 }
 
 // ── вспомогательное ─────────────────────────────────────────────────────
-
-/** Первое хранимое числовое поле «здоровья» — только для подписи фишки. */
-function hpOf(sheet: Sheet): string {
-  for (const [tag, value] of Object.entries(sheet.values)) {
-    if (typeof value === 'number' && /hp|health|хит/i.test(tag)) return String(value);
-  }
-  return '';
-}

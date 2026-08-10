@@ -17,7 +17,7 @@ import {
 } from '../../ui/primitives.tsx';
 import type { Sheet, System, Field as FieldModel, StoredValue } from '@vtt/schema';
 import { availableActions } from '@vtt/engine/events/envelope';
-import { wornEffects } from '@vtt/engine/engine/effects';
+import { wornEffects, usesMax } from '@vtt/engine/engine/effects';
 
 export function PlayerScreen() {
   const system = useWorld(s => s.system);
@@ -218,8 +218,10 @@ function SidePanel({ sheet, system }: { sheet: Sheet; system: System }) {
   let worn: { id: string; effect: { label?: string } }[] = [];
   try { worn = wornEffects(system, sheet, { strict: false }); } catch { worn = []; }
 
-  const passives = Object.entries(system.effects)
-    .filter(([, effect]) => (effect.activation ?? 'manual') === 'passive');
+  // Вешают и пассивные, и ТРИГГЕРНЫЕ: «Шипы» висят на владельце и отвечают
+  // на чужое событие. Не вешают только активируемые — их применяют.
+  const hangable = Object.entries(system.effects)
+    .filter(([, effect]) => (effect.activation ?? 'manual') !== 'manual');
 
   return (
     <>
@@ -277,12 +279,12 @@ function SidePanel({ sheet, system }: { sheet: Sheet; system: System }) {
       </Fold>
 
       <Fold title="Висящие эффекты" count={worn.length}>
-        {passives.length === 0
-          ? <span className="faint">Пассивных эффектов в системе нет.</span>
+        {hangable.length === 0
+          ? <span className="faint">Эффектов, которые можно повесить, в системе нет.</span>
           : (
             <>
               <div className="inline inline--tight">
-                {passives.map(([id, effect]) => {
+                {hangable.map(([id, effect]) => {
                   const on = (sheet.effects ?? []).some(e => e.effectId === id);
                   return (
                     <Chip
@@ -291,10 +293,15 @@ function SidePanel({ sheet, system }: { sheet: Sheet; system: System }) {
                       onClick={() => edit(draft => {
                         const list = draft.effects ??= [];
                         const at = list.findIndex(e => e.effectId === id);
-                        if (at < 0) list.push({ effectId: id }); else list.splice(at, 1);
+                        if (at >= 0) { list.splice(at, 1); return; }
+                        // Счётчик срабатываний берём у ДВИЖКА, а не считаем
+                        // здесь: иначе «Шипы на три раза» срабатывали бы один,
+                        // и никто бы не понял почему.
+                        const max = usesMax(effect);
+                        list.push(max === null ? { effectId: id } : { effectId: id, usesLeft: max });
                       })}
                     >
-                      {effect.label ?? id}
+                      {(effect.activation ?? 'manual') === 'triggered' ? '⚡ ' : ''}{effect.label ?? id}
                     </Chip>
                   );
                 })}
