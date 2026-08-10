@@ -42,7 +42,9 @@ export function groupSteps(list: Step[]): CardGroup[] {
   for (let i = 0; i < list.length; i++) {
     const step = list[i]!;
     const next = list[i + 1];
+    const source = (step as any).source;
     const glue = step.type === 'amount' && step.id && next?.type === 'apply'
+      && (source === 'roll' || source === undefined)
       && takesWhole((next as any).value, step.id)
       && list.every((other, j) => j === i || j === i + 1 || !mentions(other, step.id!));
     if (glue) {

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
 import { render, fireEvent, screen } from '@testing-library/react';
-import { parseTyped, displayOf, optionsFor, SlotInput } from './slot-input.tsx';
+import { parseTyped, displayOf, optionsFor, SlotInput, normalizeDice } from './slot-input.tsx';
 import type { SlotContext } from './slots.tsx';
 import type { System, Effect } from '@vtt/schema';
 
@@ -20,6 +20,18 @@ describe('parseTyped', () => {
     expect(parseTyped('')).toBeNull();
     expect(parseTyped('3')).toEqual({ const: 3 });
     expect(parseTyped('#armor + 2')).toEqual({ expr: '#armor + 2' });
+  });
+});
+
+describe('normalizeDice', () => {
+  it('разбирает кириллическую и латинскую нотацию, число опущено → 1', () => {
+    expect(normalizeDice('1к8')).toBe('1d8');
+    expect(normalizeDice('к8')).toBe('1d8');
+    expect(normalizeDice('2d6')).toBe('2d6');
+    expect(normalizeDice('2 к 6')).toBe('2d6');
+  });
+  it('не кости → null', () => {
+    expect(normalizeDice('#str')).toBeNull();
   });
 });
 
@@ -58,5 +70,24 @@ describe('SlotInput', () => {
     fireEvent.change(input, { target: { value: '7' } });
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(got).toEqual({ const: 7 });
+  });
+
+  it('dice: набранная нотация «1к8» уходит как const NdM по Enter', () => {
+    let got: unknown = 'untouched';
+    render(<SlotInput value={undefined} onChange={next => { got = next; }} context={ctx} dice />);
+    const input = screen.getByRole('textbox');
+    fireEvent.change(input, { target: { value: '1к8' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(got).toEqual({ const: '1d8' });
+  });
+
+  it('allow сужает набранный текст: чужой вид отменяется, поле возвращается', () => {
+    let called = false;
+    render(<SlotInput value={{ tag: 'armor' }} onChange={() => { called = true; }} context={ctx} allow={['constant']} />);
+    const input = screen.getByRole('textbox') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'abc' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(called).toBe(false);
+    expect(input.value).toBe(displayOf({ tag: 'armor' }, ctx));
   });
 });

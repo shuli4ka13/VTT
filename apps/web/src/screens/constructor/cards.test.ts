@@ -33,6 +33,14 @@ describe('groupSteps', () => {
     ]));
     expect(groups.map(g => g.kind)).toEqual(['number', 'change']);
   });
+
+  it('не склеивается, если источник числа — превышение проверки или запись', () => {
+    const groups = groupSteps(steps([
+      { id: 'm', type: 'amount', source: 'margin' },
+      { type: 'apply', value: { ref: 'm' } },
+    ]));
+    expect(groups.map(g => g.kind)).toEqual(['number', 'change']);
+  });
 });
 
 describe('STEP_TEMPLATES', () => {

@@ -17,6 +17,18 @@ export function parseTyped(text: string): SlotRef | null {
   return { expr: t };
 }
 
+// Движок понимает нотацию кубиков только как «NdM» (латинское d, счёт
+// обязателен) — см. packages/engine/src/engine/dice.ts, /^(\d+)d(\d+)$/.
+// Автор пишет по-русски и не обязан помнить это; здесь ручной ввод
+// «1к8», «к8», «2 к 6» приводится к канонической записи движка.
+export function normalizeDice(text: string): string | null {
+  const m = /^(\d+)?\s*[dдк]\s*(\d+)$/i.exec(text.trim());
+  if (!m) return null;
+  const count = m[1] ? Number(m[1]) : 1;
+  const sides = Number(m[2]);
+  return `${count}d${sides}`;
+}
+
 export function displayOf(ref: unknown, ctx: SlotContext): string {
   if (ref === null || ref === undefined) return '';
   if (typeof ref !== 'object') return String(ref);
@@ -50,7 +62,7 @@ export function optionsFor(ctx: SlotContext, allow?: SlotKind[]): SlotOption[] {
   return out;
 }
 
-export function SlotInput({ value, onChange, context, allow, placeholder, extraOptions }: {
+export function SlotInput({ value, onChange, context, allow, placeholder, extraOptions, dice }: {
   value: unknown;
   onChange: (next: SlotRef | null) => void;
   context: SlotContext;
@@ -58,6 +70,8 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
   placeholder?: string;
   /** Дополнительные строки подсказки (например, состояния для карточки «изменение»). */
   extraOptions?: SlotOption[];
+  /** Слот костей: набранная нотация («1к8») приводится к каноническому виду движка. */
+  dice?: boolean;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -70,7 +84,16 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
   const filtered = needle ? options.filter(o => o.label.toLowerCase().includes(needle)) : options;
 
   const commitTyped = () => {
-    if (draft !== null) { onChange(parseTyped(draft)); setDraft(null); }
+    if (draft !== null) {
+      const diced = dice ? normalizeDice(draft) : null;
+      const candidate: SlotRef | null = diced !== null ? { const: diced } : parseTyped(draft);
+      if (candidate !== null && allow) {
+        const kind: SlotKind = 'const' in candidate ? 'const' : 'expr';
+        if (!allow.includes(kind)) { setDraft(null); setOpen(false); return; }
+      }
+      onChange(candidate);
+      setDraft(null);
+    }
     setOpen(false);
   };
 

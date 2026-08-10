@@ -265,7 +265,7 @@ function ChangeBody({ group, context, edit, system }: {
             <>
               <Field label="Сколько — кости">
                 <SlotInput
-                  value={(group.amount as any).dice} context={context}
+                  value={(group.amount as any).dice} context={context} dice
                   placeholder="какие кости: 1к8, 2к6…"
                   onChange={next => edit(0, draft => { (draft as any).dice = next ?? undefined; })}
                 />
@@ -354,7 +354,7 @@ function NumberBody({ step, context, edit }: {
         <>
           <Field label="кости">
             <SlotInput
-              value={step.dice} context={context} placeholder="какие кости: 1к8, 2к6…"
+              value={step.dice} context={context} dice placeholder="какие кости: 1к8, 2к6…"
               onChange={next => edit(0, draft => { (draft as any).dice = next ?? undefined; })}
             />
           </Field>
