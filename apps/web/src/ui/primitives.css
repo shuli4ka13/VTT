@@ -1,0 +1,290 @@
+/* Кирпичи. Их немного намеренно: в PoC не было ни одного, поэтому каждая
+   карточка собиралась заново вручную — отсюда и 176 инлайновых стилей,
+   и разнобой. Здесь описан весь словарь форм, и экраны только складывают
+   из него, ничего не досочиняя. */
+
+/* ── карточка ─────────────────────────────────────────────────────────── */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-3);
+  padding: var(--s-4) var(--s-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.card--flat { background: transparent; }
+.card--bad { border-color: var(--danger); }
+.card--pick { cursor: pointer; text-align: left; width: 100%; }
+.card--pick:hover { border-color: var(--border-strong); background: var(--surface-2); }
+.card--on { border-color: var(--accent); background: var(--accent-soft); }
+
+.card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  justify-content: space-between;
+}
+.card__title {
+  font-size: var(--fs-5);
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+}
+.card__sub {
+  font-size: var(--fs-2);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* ── строка формы ─────────────────────────────────────────────────────── */
+/* Подпись над полем, а не слева: слева она либо режется, либо съедает
+   ширину, а на узкой колонке делает и то и другое. */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+}
+.field__label {
+  font-size: var(--fs-1);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.field__hint {
+  font-size: var(--fs-2);
+  color: var(--text-faint);
+}
+.field__error {
+  font-size: var(--fs-2);
+  color: var(--danger);
+}
+/* Слот ждёт заполнения: не «пусто», а «сюда надо вписать». */
+.field--needed .input,
+.field--needed .select { border-color: var(--warn); }
+.field--needed .field__label { color: var(--warn); }
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--s-4);
+}
+.row--2 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+
+/* ── поля ввода ───────────────────────────────────────────────────────── */
+
+.input, .select, .textarea {
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--r-2);
+  padding: var(--s-2) var(--s-3);
+  min-height: 32px;
+  width: 100%;
+  min-width: 0;
+}
+.input:hover, .select:hover, .textarea:hover { border-color: var(--border-strong); }
+.input::placeholder { color: var(--text-faint); }
+.textarea { resize: vertical; min-height: 64px; }
+.input--mono { font-family: var(--font-mono); font-size: var(--fs-3); }
+.input--bad { border-color: var(--danger); }
+
+/* ── кнопки ───────────────────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-2);
+  padding: var(--s-2) var(--s-4);
+  min-height: 32px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn:hover { background: var(--surface-3); border-color: var(--border-strong); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+.btn--primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn--ghost { background: transparent; border-color: transparent; color: var(--text-muted); }
+.btn--ghost:hover { background: var(--surface-2); color: var(--text); }
+.btn--danger { color: var(--danger); }
+.btn--danger:hover { background: var(--danger-soft); border-color: var(--danger); }
+.btn--sm { min-height: 26px; padding: var(--s-1) var(--s-3); font-size: var(--fs-2); }
+.btn--wide { width: 100%; }
+
+/* ── сегментный переключатель ─────────────────────────────────────────── */
+/* Пришёл на замену трём баннерам во всю ширину: выбор делается один раз,
+   а места занимал как отдельный экран. */
+
+.segmented {
+  display: inline-flex;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--r-2);
+  padding: var(--s-1);
+  gap: var(--s-1);
+}
+.segmented__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  background: transparent;
+  border: 0;
+  border-radius: var(--r-1);
+  padding: var(--s-2) var(--s-4);
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.segmented__item:hover { color: var(--text); background: var(--surface-2); }
+.segmented__item[aria-pressed='true'] {
+  background: var(--accent-soft);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+/* ── чипс ─────────────────────────────────────────────────────────────── */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  padding: var(--s-1) var(--s-3);
+  font-size: var(--fs-2);
+  color: var(--text-muted);
+  cursor: default;
+  max-width: 100%;
+}
+.chip--action { cursor: pointer; }
+.chip--action:hover { border-color: var(--accent); color: var(--text); }
+.chip--on { background: var(--accent-soft); border-color: var(--accent); color: var(--text); }
+.chip__x {
+  background: transparent; border: 0; cursor: pointer;
+  color: var(--text-faint); padding: 0 0 0 var(--s-1);
+}
+.chip__x:hover { color: var(--danger); }
+
+/* ── бейдж вердикта ───────────────────────────────────────────────────── */
+
+.verdict {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  border-radius: var(--r-2);
+  padding: var(--s-3) var(--s-4);
+  font-size: var(--fs-3);
+  border: 1px solid;
+}
+.verdict--ok { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
+.verdict--warn { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); }
+.verdict--bad { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+.verdict__mark { flex: none; }
+.verdict__text { color: var(--text); }
+
+/* ── сворачиваемая секция ─────────────────────────────────────────────── */
+/* Нативный <details>: ноль JS, работает без нашего состояния, и клавиатура
+   получает его поведение даром. */
+
+.fold {
+  border: 1px solid var(--border);
+  border-radius: var(--r-2);
+  background: var(--surface);
+}
+.fold + .fold { margin-top: var(--s-3); }
+.fold__head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  cursor: pointer;
+  list-style: none;
+  font-size: var(--fs-3);
+  color: var(--text-muted);
+  user-select: none;
+}
+.fold__head::-webkit-details-marker { display: none; }
+.fold__head:hover { color: var(--text); }
+.fold__head::before {
+  content: '▸';
+  font-size: 10px;
+  transition: transform 0.12s;
+  color: var(--text-faint);
+}
+.fold[open] > .fold__head::before { transform: rotate(90deg); }
+.fold__title { font-weight: 600; color: var(--text); }
+.fold__count {
+  margin-left: auto;
+  font-size: var(--fs-1);
+  color: var(--text-faint);
+  background: var(--bg-sunken);
+  border-radius: var(--r-full);
+  padding: 0 var(--s-3);
+  min-width: 22px;
+  text-align: center;
+}
+.fold__body {
+  padding: 0 var(--s-4) var(--s-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+/* Сводка свёрнутого: то, что раньше занимало десять контролов, здесь
+   читается одной строкой словами. */
+.summary {
+  font-size: var(--fs-2);
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+}
+.summary b { color: var(--text-muted); font-weight: 500; }
+
+/* ── пустое состояние ─────────────────────────────────────────────────── */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  padding: var(--s-8) var(--s-5);
+  border: 1px dashed var(--border);
+  border-radius: var(--r-3);
+  color: var(--text-muted);
+  text-align: center;
+  min-height: 160px;
+}
+.empty__title { font-size: var(--fs-5); color: var(--text); }
+.empty__hint { font-size: var(--fs-3); max-width: 46ch; }
+
+/* ── вспомогательное ──────────────────────────────────────────────────── */
+
+.stack { display: flex; flex-direction: column; gap: var(--s-3); }
+.stack--tight { gap: var(--s-2); }
+.stack--loose { gap: var(--s-5); }
+.inline { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
+.inline--tight { gap: var(--s-2); }
+.spacer { flex: 1; }
+.muted { color: var(--text-muted); }
+.faint { color: var(--text-faint); }
+.mono { font-family: var(--font-mono); }
+.nowrap { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.num { font-variant-numeric: tabular-nums; }

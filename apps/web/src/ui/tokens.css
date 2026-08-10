@@ -1,0 +1,107 @@
+/* Дизайн-токены. ЕДИНСТВЕННОЕ место, где заданы цвета, отступы и размеры.
+   Всё остальное ссылается сюда — поэтому вид экрана меняется правкой этого
+   файла, а не походом по семи модулям с инлайновыми стилями.
+
+   Шкала отступов и размеров шрифта — геометрическая, а не «сколько попросили»:
+   разнобой в 6/7/8/9 пикселей глаз читает как неряшливость, даже не различая
+   сами числа. */
+
+:root {
+  /* ── пространство ── */
+  --s-1: 2px;
+  --s-2: 4px;
+  --s-3: 8px;
+  --s-4: 12px;
+  --s-5: 16px;
+  --s-6: 24px;
+  --s-7: 32px;
+  --s-8: 48px;
+
+  /* ── типографика ── */
+  --font: ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --fs-1: 11px;   /* подписи и бейджи */
+  --fs-2: 12px;   /* вспомогательное */
+  --fs-3: 13px;   /* основной мелкий */
+  --fs-4: 14px;   /* основной */
+  --fs-5: 16px;   /* заголовок карточки */
+  --fs-6: 20px;   /* заголовок экрана */
+  --fs-7: 28px;   /* крупное число на листе */
+  --lh: 1.5;
+
+  /* ── скругления и границы ── */
+  --r-1: 4px;
+  --r-2: 6px;
+  --r-3: 10px;
+  --r-full: 999px;
+
+  /* ── тёмная тема ── */
+  /* Нейтральные с уклоном в синий: чистый серый рядом с индиговым акцентом
+     читается как грязь. Уклон небольшой, но именно он делает палитру
+     выбранной, а не взятой по умолчанию. */
+  --bg: #12141c;
+  --bg-sunken: #0d0f16;
+  --surface: #191c26;
+  --surface-2: #1f2331;
+  --surface-3: #262b3b;
+  --border: #2a2f40;
+  --border-strong: #3a4157;
+
+  --text: #e6e8f0;
+  --text-muted: #9aa1b9;
+  --text-faint: #6c7490;
+
+  --accent: #7c7fe8;
+  --accent-hover: #9093ef;
+  --accent-soft: #22243c;
+  --on-accent: #0d0f16;
+
+  /* Смысловые цвета отдельно от акцента: «получилось» не обязано быть
+     фирменным цветом, а «сломалось» тем более. */
+  --ok: #57b98a;
+  --ok-soft: #16291f;
+  --warn: #d9a93f;
+  --warn-soft: #2a2210;
+  --danger: #ef6d6d;
+  --danger-soft: #2c1618;
+
+  --focus: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-2: 0 6px 20px rgb(0 0 0 / 0.35);
+
+  --header-h: 44px;
+  --tabs-h: 38px;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: var(--fs-4)/var(--lh) var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Фокус виден всегда — но только с клавиатуры: мышь его не заслужила. */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+  border-radius: var(--r-1);
+}
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

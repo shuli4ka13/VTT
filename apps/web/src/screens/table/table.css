@@ -1,0 +1,38 @@
+/* Стол. Фишка — позиция плюс ссылка на чарник; один чарник → сколько угодно
+   фишек. Стол ничего не считает: он выбирает пару листов, дальше летит конверт.
+
+   Карта пока сетка. Место под канвас (PixiJS) уже отделено от панелей —
+   когда он въедет, чужая печать в журнале не будет его перерисовывать. */
+
+.tokens {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--s-3);
+}
+
+.token {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-4);
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  border-radius: var(--r-3);
+  cursor: pointer;
+  min-height: 84px;
+  justify-content: center;
+}
+.token:hover { border-color: var(--border-strong); }
+.token--from { border-color: var(--accent); background: var(--accent-soft); }
+.token--to { border-color: var(--danger); background: var(--danger-soft); }
+
+.token__name { font-size: var(--fs-3); }
+.token__hp { font-size: var(--fs-6); font-weight: 650; }
+
+.log-line {
+  font-size: var(--fs-2);
+  color: var(--text-muted);
+  padding: var(--s-2) 0;
+  border-bottom: 1px solid var(--border);
+}
