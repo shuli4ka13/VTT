@@ -1,0 +1,15 @@
+{
+  // Как в @vtt/engine: типы стерегут `src`, тесты стережёт исполнение.
+  // Здесь причина та же — проверки нарочно шлют неполные и заведомо битые
+  // запросы, и это их работа, а не небрежность.
+  "extends": "../../tsconfig.base.json",
+  "include": ["src", "test"],
+  "compilerOptions": {
+    "module": "ESNext",
+    "types": ["node", "vitest/globals"],
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+    "strict": false,
+    "noImplicitAny": false
+  }
+}

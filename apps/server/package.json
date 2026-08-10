@@ -26,6 +26,7 @@
   "devDependencies": {
     "@nestjs/testing": "^11.1.28",
     "@types/node": "^22.10.7",
+    "@types/supertest": "^7.2.1",
     "@types/ws": "^8.5.14",
     "supertest": "^7.0.0",
     "typescript": "^5.7.2",

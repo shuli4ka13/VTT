@@ -1,13 +1,13 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src", "test"],
+  "include": ["src"],
   "compilerOptions": {
     "module": "ESNext",
     "types": ["node"],
     // NestJS строит внедрение зависимостей на декораторах. Метаданные типов
-    // (emitDecoratorMetadata) esbuild не умеет, поэтому все зависимости
-    // объявляются явными токенами через @Inject — заодно и тесты подменяют
-    // их без магии.
+    // (emitDecoratorMetadata) esbuild не умеет, поэтому ВСЕ зависимости —
+    // включая классовые — объявляются явными токенами через @Inject.
+    // Заодно тесты подменяют их без магии.
     "experimentalDecorators": true,
     "useDefineForClassFields": false
   }
