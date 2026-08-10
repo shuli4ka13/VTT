@@ -49,4 +49,12 @@ describe('GroupCard', () => {
     fireEvent.keyDown(dice, { key: 'Enter' });
     expect(edited).toEqual({ at: 0 });
   });
+
+  it('пересказ не отрывает точку от слова', () => {
+    const group = groupSteps(attackSteps())[0]!;
+    const { container } = render(<GroupCard group={group} position={1} system={system} effect={effect}
+      earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
+    const text = container.querySelector('.readback')!.textContent!;
+    expect(text).not.toMatch(/\s[.,]/);
+  });
 });

@@ -20,9 +20,13 @@ const firstDie = (system: System): string | undefined => Object.keys(system.cons
 export function Readback({ segments }: { segments: Segment[] }) {
   return (
     <p className="readback">
-      {segments.map((part, i) => 'text' in part
-        ? <span key={i}>{part.text} </span>
-        : <span key={i} className="readback__hole">{part.hole}</span>)}
+      {segments.map((part, i) => {
+        const glue = 'text' in part && /^[.,]/.test(part.text);
+        const lead = i === 0 || glue ? '' : ' ';
+        return 'text' in part
+          ? <span key={i}>{lead}{part.text}</span>
+          : <span key={i}>{lead}<span className="readback__hole">{part.hole}</span></span>;
+      })}
     </p>
   );
 }
