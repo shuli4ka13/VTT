@@ -7,7 +7,7 @@ VTT_PORT ?= 8100
 export VTT_PORT
 
 .PHONY: help up down reset rebuild seed logs status test dev offline url \
-        install ts ts-server ts-web ts-test ts-check
+        install ts ts-server ts-web ts-test ts-check ts-seed
 
 help:
 	@echo "Стенд в контейнере (OrbStack):"
@@ -29,6 +29,7 @@ help:
 	@echo "  make ts        — сервер :8200 и веб :8300 разом"
 	@echo "  make ts-server — только сервер (NestJS + вебсокет)"
 	@echo "  make ts-web    — только веб (React + Vite)"
+	@echo "  make ts-seed   — положить на сервер миры-образцы (5e и киберпанк)"
 	@echo "  make ts-test   — тесты всех пакетов"
 	@echo "  make ts-check  — проверка типов"
 
@@ -80,6 +81,10 @@ ts-web:
 ts:
 	@echo "сервер :8200 · веб :8300"
 	@(cd apps/server && pnpm dev &) ; cd apps/web && pnpm dev
+
+# Образцы публикуются готовыми мирами — конструктор при этом стартует пустым.
+ts-seed:
+	cd apps/server && pnpm seed
 
 ts-test:
 	pnpm -r --if-present test

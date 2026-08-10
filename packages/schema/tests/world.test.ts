@@ -180,3 +180,19 @@ describe('ссылки слотов не теряются при разборе'
     expect((parsed as any).trigger.condition).toEqual((thorns as any).trigger.condition);
   });
 });
+
+describe('аргументы привязок — как их читает движок', () => {
+  it('готовое значение и { prop } проходят одинаково', () => {
+    // Киберпанк передаёт аргументы голыми скалярами: { bonus: '#combat',
+    // difficulty: 12 }. Движок так умеет — значит, и схема обязана.
+    const forms = [
+      { save: { prop: 'save_by' } },
+      { bonus: '#combat', difficulty: 12, source: 'item' },
+      { flag: true, nothing: null },
+    ];
+    for (const args of forms) {
+      const parsed = W.binding.parse({ effect: 'strike', args });
+      expect(parsed.args).toEqual(args);
+    }
+  });
+});

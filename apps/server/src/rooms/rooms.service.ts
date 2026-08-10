@@ -12,11 +12,13 @@ import { DB, CLOCK, IDS, DIE } from '../common/tokens.ts';
 import type { Db } from '../db/db.ts';
 import { rooms, roomSheets, members, logEntries, users } from '../db/schema.ts';
 import { WorldsService } from '../worlds/worlds.service.ts';
+import { world as W } from '@vtt/schema';
 import type {
   RoomState, RoomSummary, RoomDelta, ActIntent, Sheet, System, Compendium, StoredValue,
 } from '@vtt/schema';
 import { exchange } from '@vtt/engine/events/exchange';
 import { effectLabelOf } from '@vtt/engine/events/envelope';
+import { findEffect, usesMax } from '@vtt/engine/engine/effects';
 
 /** Роль из владения, а не из настройки: кто создал комнату, тот и ведущий. */
 export type Role = 'gm' | 'player';
@@ -156,6 +158,96 @@ export class RoomsService {
     await this.db.update(roomSheets).set({ data: JSON.stringify(next) })
       .where(and(eq(roomSheets.roomId, roomId), eq(roomSheets.sheetId, sheetId)));
 
+    return { roomId, sheets: [next], log: [] };
+  }
+
+  /**
+   * Новый лист в комнате. Мир волен приезжать пустым: конструктор отдаёт
+   * систему, а персонажей заводит партия — как в PoC, где чарники жили
+   * в приложении партии, а не у автора.
+   */
+  async createSheet(
+    userId: string, roomId: string, name: string, kind: 'pc' | 'npc' = 'pc',
+  ): Promise<RoomDelta> {
+    const room = await this.requireRoom(roomId);
+    if (!await this.memberOf(roomId, userId)) throw new ForbiddenException('вы не в этой комнате');
+
+    const system = JSON.parse(room.system) as System;
+    // Через схему, а не голым объектом: лист обязан быть валидным DTO
+    // с рождения — иначе он падал бы позже, на первом же ходе.
+    const sheet = W.sheet.parse({
+      id: this.newId(),
+      systemId: system.id ?? '',
+      kind,
+      name,
+      values: {},
+      equipped: [],
+      effects: [],
+      actions: [],
+    });
+
+    await this.db.insert(roomSheets).values({
+      roomId, sheetId: sheet.id, data: JSON.stringify(sheet),
+    });
+    const log = await this.appendLog(roomId, [`Лист «${name}» заведён`]);
+    return { roomId, sheets: [sheet], log };
+  }
+
+  /**
+   * Принадлежности листа: надеть/снять, выучить/забыть, повесить/снять.
+   * Лист ссылается ТОЛЬКО на объявленное — сервер проверяет, что предмет,
+   * действие или эффект существуют в мире комнаты, и отвергает чужое.
+   */
+  async setBelonging(
+    userId: string, roomId: string, sheetId: string,
+    list: 'equipped' | 'actions' | 'effects', id: string, on: boolean,
+  ): Promise<RoomDelta> {
+    const room = await this.requireRoom(roomId);
+    if (!await this.memberOf(roomId, userId)) throw new ForbiddenException('вы не в этой комнате');
+
+    const system = JSON.parse(room.system) as System;
+    const compendium = JSON.parse(room.compendium) as Compendium;
+
+    // Ссылка обязана вести в объявленное — иначе на листе повиснет пустота,
+    // которая упадёт при первом же ходе, у игрока за столом.
+    if (list === 'equipped' && !(compendium.items ?? []).some(i => i.id === id)) {
+      throw new BadRequestException(`в компендиуме нет предмета «${id}»`);
+    }
+    if (list === 'actions' && !(compendium.actions ?? []).some(a => a.id === id)) {
+      throw new BadRequestException(`в компендиуме нет действия «${id}»`);
+    }
+    const effect = list === 'effects' ? findEffect(system, id) : null;
+    if (list === 'effects') {
+      if (!effect) throw new BadRequestException(`система не объявляет эффекта «${id}»`);
+      if ((effect.activation ?? 'manual') === 'manual') {
+        throw new BadRequestException('активируемый эффект не вешают — его применяют действием');
+      }
+    }
+
+    const rows = await this.db.select().from(roomSheets)
+      .where(and(eq(roomSheets.roomId, roomId), eq(roomSheets.sheetId, sheetId)));
+    const row = rows[0];
+    if (!row) throw new NotFoundException(`в комнате нет чарника «${sheetId}»`);
+    const sheet = JSON.parse(row.data) as Sheet;
+
+    const next: Sheet = { ...sheet };
+    if (list === 'effects') {
+      const worn = [...(sheet.effects ?? [])].filter(e => e.effectId !== id);
+      if (on) {
+        // Счётчик срабатываний ставит ДВИЖОК: «Шипы на три раза» — знание
+        // эффекта, а не сервера.
+        const max = usesMax(effect!);
+        worn.push(max === null ? { effectId: id } : { effectId: id, usesLeft: max });
+      }
+      next.effects = worn;
+    } else {
+      const refs = new Set(sheet[list] ?? []);
+      if (on) refs.add(id); else refs.delete(id);
+      next[list] = [...refs];
+    }
+
+    await this.db.update(roomSheets).set({ data: JSON.stringify(next) })
+      .where(and(eq(roomSheets.roomId, roomId), eq(roomSheets.sheetId, sheetId)));
     return { roomId, sheets: [next], log: [] };
   }
 

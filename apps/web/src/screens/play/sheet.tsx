@@ -6,6 +6,7 @@
 // файл не знает ни одного модуля конструктора, и граница держится сборкой:
 // код автора лежит в другом чанке.
 
+import { useState } from 'react';
 import { useRoom } from '../../store/room.ts';
 import { tableSocket } from '../../api/socket.ts';
 import { useReader, show } from '../../engine/use-calc.ts';
@@ -19,28 +20,51 @@ export function SheetScreen() {
   const room = useRoom(s => s.room);
   const mySheetId = useRoom(s => s.mySheetId);
   const pickSheet = useRoom(s => s.pickSheet);
+  const [newName, setNewName] = useState('');
 
   if (!room) return <Lobby />;
 
   const sheet = room.sheets.find(s => s.id === mySheetId) ?? null;
+
+  // Лист заводится В КОМНАТЕ: мир волен приезжать вообще без персонажей —
+  // конструктор отдаёт систему, а героев партия делает себе сама.
+  const create = () => {
+    const name = newName.trim();
+    if (!name) return;
+    tableSocket.createSheet(room.id, name);
+    setNewName('');
+  };
 
   return (
     <Columns
       left={{
         head: 'Листы стола',
         body: (
-          <List>
-            {room.sheets.map(item => (
-              <ListItem
-                key={item.id}
-                icon={item.kind === 'npc' ? '◇' : '◆'}
-                name={item.name ?? item.id}
-                meta={item.kind === 'npc' ? 'НПС' : 'персонаж игрока'}
-                active={item.id === mySheetId}
-                onClick={() => pickSheet(item.id)}
-              />
-            ))}
-          </List>
+          <>
+            {room.sheets.length === 0
+              ? <Empty
+                  title="Листов ещё нет"
+                  hint="Мир приехал без персонажей — заведите первого ниже."
+                />
+              : (
+                <List>
+                  {room.sheets.map(item => (
+                    <ListItem
+                      key={item.id}
+                      icon={item.kind === 'npc' ? '◇' : '◆'}
+                      name={item.name ?? item.id}
+                      meta={item.kind === 'npc' ? 'НПС' : 'персонаж игрока'}
+                      active={item.id === mySheetId}
+                      onClick={() => pickSheet(item.id)}
+                    />
+                  ))}
+                </List>
+              )}
+            <div className="stack stack--tight">
+              <Input value={newName} onChange={setNewName} placeholder="имя нового персонажа" />
+              <Button size="sm" wide onClick={create} disabled={!newName.trim()}>+ лист</Button>
+            </div>
+          </>
         ),
       }}
       main={{
@@ -141,7 +165,11 @@ function FieldCell({ field, sheet, reader, onChange }: {
   );
 }
 
-/** Правая колонка: секции со счётчиками, а не сплошная лента, как было в PoC. */
+/**
+ * Правая колонка: принадлежности листа. Всё — ссылки на объявленное миром:
+ * надел/снял, выучил/забыл, повесил/снял. Правка уходит НА СЕРВЕР и приходит
+ * дельтой всем: за столом лист общий.
+ */
 function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   let available: { id: string; label: string }[] = [];
   try {
@@ -150,13 +178,22 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
 
   const equipped = new Set(sheet.equipped ?? []);
   const known = new Set(sheet.actions ?? []);
-  const worn = new Set((sheet.effects ?? []).map(e => e.effectId));
+  const wornOf = (id: string) => (sheet.effects ?? []).find(e => e.effectId === id);
+
+  const toggle = (list: 'equipped' | 'actions' | 'effects', id: string, on: boolean) =>
+    tableSocket.setBelonging(room.id, sheet.id, list, id, on);
+
+  const items = room.compendium.items ?? [];
+  const actions = room.compendium.actions ?? [];
+  // Вешают пассивные и триггерные; активируемые — применяют, их тут нет.
+  const hangable = Object.entries(room.system.effects)
+    .filter(([, effect]) => (effect.activation ?? 'manual') !== 'manual');
 
   return (
     <>
       <Fold title="Что применить" count={available.length} open>
         {available.length === 0
-          ? <span className="faint">Нечего: наденьте предмет или выучите действие.</span>
+          ? <span className="faint">Нечего: наденьте предмет или выучите действие ниже.</span>
           : available.map(action => (
             <Card key={action.id} tone="flat">
               <span className="nowrap">{action.label}</span>
@@ -166,51 +203,69 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
       </Fold>
 
       <Fold title="Снаряжение" count={equipped.size}>
-        {equipped.size === 0
-          ? <span className="faint">Ничего не надето.</span>
+        {items.length === 0
+          ? <span className="faint">В компендиуме мира нет предметов.</span>
           : (
             <div className="inline inline--tight">
-              {[...equipped].map(id => (
-                <Chip key={id}>
-                  {room.compendium.items?.find(i => i.id === id)?.label ?? id}
+              {items.map(item => (
+                <Chip
+                  key={item.id}
+                  active={equipped.has(item.id)}
+                  onClick={() => toggle('equipped', item.id, !equipped.has(item.id))}
+                >
+                  {item.label ?? item.id}
                 </Chip>
               ))}
             </div>
           )}
         <span className="faint" style={{ fontSize: 'var(--fs-2)' }}>
-          Состав снаряжения задаётся в мире автором; за столом он не меняется.
+          Надел — получил действия предмета, снял — потерял.
         </span>
       </Fold>
 
       <Fold title="Известные действия" count={known.size}>
-        {known.size === 0
-          ? <span className="faint">Ничего не выучено.</span>
+        {actions.length === 0
+          ? <span className="faint">В компендиуме мира нет действий.</span>
           : (
             <div className="inline inline--tight">
-              {[...known].map(id => (
-                <Chip key={id}>
-                  {room.compendium.actions?.find(a => a.id === id)?.label ?? id}
+              {actions.map(action => (
+                <Chip
+                  key={action.id}
+                  active={known.has(action.id)}
+                  onClick={() => toggle('actions', action.id, !known.has(action.id))}
+                >
+                  {action.label ?? action.id}
                 </Chip>
               ))}
             </div>
           )}
       </Fold>
 
-      <Fold title="Висящие эффекты" count={worn.size}>
-        {worn.size === 0
-          ? <span className="faint">Ничего не висит.</span>
+      <Fold title="Висящие эффекты" count={(sheet.effects ?? []).length}>
+        {hangable.length === 0
+          ? <span className="faint">В системе нет эффектов, которые можно повесить.</span>
           : (
             <div className="inline inline--tight">
-              {(sheet.effects ?? []).map(entry => (
-                <Chip key={entry.effectId} title={entry.usesLeft ? `осталось: ${entry.usesLeft}` : undefined}>
-                  {room.system.effects[entry.effectId]?.label ?? entry.effectId}
-                  {entry.usesLeft ? ` · ${entry.usesLeft}` : ''}
-                </Chip>
-              ))}
+              {hangable.map(([id, effect]) => {
+                const entry = wornOf(id);
+                return (
+                  <Chip
+                    key={id}
+                    active={Boolean(entry)}
+                    title={entry?.usesLeft ? `осталось: ${entry.usesLeft}` : undefined}
+                    onClick={() => toggle('effects', id, !entry)}
+                  >
+                    {(effect.activation ?? 'manual') === 'triggered' ? '⚡ ' : ''}
+                    {effect.label ?? id}
+                    {entry?.usesLeft ? ` · ${entry.usesLeft}` : ''}
+                  </Chip>
+                );
+              })}
             </div>
           )}
         <span className="faint" style={{ fontSize: 'var(--fs-2)' }}>
-          Вешают и снимают их события — например, отравление при провале спасброска.
+          Обычно их вешают события — отравление при провале спасброска; руками
+          тоже можно, это и есть «наложить состояние».
         </span>
       </Fold>
 

@@ -179,11 +179,21 @@ export const effect = z.object({
 
 // ── рода записей компендиума ────────────────────────────────────────────
 
+/**
+ * Аргумент привязки. Двух видов, как его читает движок (engine/refs.ts):
+ * ГОТОВОЕ ЗНАЧЕНИЕ (строка, число, логическое) либо структурная ссылка —
+ * прежде всего { prop }: «возьми из свойств самой записи».
+ */
+export const bindingArg = z.union([
+  slotRef,
+  z.string(), z.number(), z.boolean(), z.null(),
+]);
+
 /** Привязка рода к эффекту — то самое «протягивание». */
 export const binding = z.object({
   label: z.string().optional(),
   effect: z.string().min(1),
-  args: z.record(slotRef).optional(),
+  args: z.record(bindingArg).optional(),
 }).passthrough();
 
 export const recordKind = z.object({
@@ -292,6 +302,7 @@ export type Step = z.infer<typeof step>;
 export type Trigger = z.infer<typeof trigger>;
 export type Effect = z.infer<typeof effect>;
 export type Binding = z.infer<typeof binding>;
+export type BindingArg = z.infer<typeof bindingArg>;
 export type RecordKind = z.infer<typeof recordKind>;
 export type System = z.infer<typeof system>;
 export type WornEffect = z.infer<typeof wornEffect>;

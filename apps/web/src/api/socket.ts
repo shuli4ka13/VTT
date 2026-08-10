@@ -58,6 +58,17 @@ export class TableSocket {
     this.send('sheet:set', { roomId, sheetId, tag, value });
   }
 
+  createSheet(roomId: string, name: string, kind: 'pc' | 'npc' = 'pc'): void {
+    this.send('sheet:create', { roomId, name, kind });
+  }
+
+  setBelonging(
+    roomId: string, sheetId: string,
+    list: 'equipped' | 'actions' | 'effects', id: string, on: boolean,
+  ): void {
+    this.send('sheet:belong', { roomId, sheetId, list, id, on });
+  }
+
   close(): void {
     this.socket?.close();
     this.socket = null;

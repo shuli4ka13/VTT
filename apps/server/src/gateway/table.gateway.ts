@@ -95,6 +95,44 @@ export class TableGateway {
     }
   }
 
+  @SubscribeMessage('sheet:create')
+  async createSheet(@MessageBody() raw: unknown, @ConnectedSocket() socket: WebSocket) {
+    const guest = this.guestOf(socket);
+    if (!guest) return this.fail(socket, 'сначала войдите в комнату');
+
+    const parsed = api.clientMessage.safeParse({ type: 'sheet:create', ...(raw as object) });
+    if (!parsed.success || parsed.data.type !== 'sheet:create') {
+      return this.fail(socket, 'создание листа не проходит схему');
+    }
+
+    try {
+      const delta = await this.roomsService.createSheet(
+        guest.userId, parsed.data.roomId, parsed.data.name, parsed.data.kind ?? 'pc');
+      this.broadcast(parsed.data.roomId, { type: 'room:delta', delta });
+    } catch (err) {
+      this.fail(socket, (err as Error).message);
+    }
+  }
+
+  @SubscribeMessage('sheet:belong')
+  async setBelonging(@MessageBody() raw: unknown, @ConnectedSocket() socket: WebSocket) {
+    const guest = this.guestOf(socket);
+    if (!guest) return this.fail(socket, 'сначала войдите в комнату');
+
+    const parsed = api.clientMessage.safeParse({ type: 'sheet:belong', ...(raw as object) });
+    if (!parsed.success || parsed.data.type !== 'sheet:belong') {
+      return this.fail(socket, 'правка принадлежностей не проходит схему');
+    }
+
+    const { roomId, sheetId, list, id, on } = parsed.data;
+    try {
+      const delta = await this.roomsService.setBelonging(guest.userId, roomId, sheetId, list, id, on);
+      this.broadcast(roomId, { type: 'room:delta', delta });
+    } catch (err) {
+      this.fail(socket, (err as Error).message);
+    }
+  }
+
   // ── рассылка ──────────────────────────────────────────────────────────
 
   broadcast(roomId: string, message: ServerMessage): void {

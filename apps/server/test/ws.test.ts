@@ -145,3 +145,52 @@ describe('канал стола', () => {
     socket.close();
   });
 });
+
+describe('партия строит себя сама', () => {
+  it('лист заводится в комнате, снаряжение надевается — и мир, приехавший пустым, играбелен', async () => {
+    const gm = await post('/auth/login', { name: 'Мастерица' });
+
+    // Мир БЕЗ листов: конструктор отдаёт систему, героев делает партия.
+    const world = { system: dnd, compendium, sheets: [] };
+    const published = await post('/worlds', { title: 'Пустой мир', world }, gm.token);
+    const room = await post('/rooms', { worldId: published.id, title: 'Стол с нуля' }, gm.token);
+
+    const socket = await open();
+    const state = waitFor(socket, 'room:state');
+    say(socket, 'room:join', { roomId: room.id, token: gm.token });
+    expect((await state).state.sheets).toHaveLength(0);
+
+    // Завели лист — дельта с новым листом и строкой журнала.
+    const created = waitFor(socket, 'room:delta');
+    say(socket, 'sheet:create', { roomId: room.id, name: 'Арвен Собственноручная' });
+    const delta = await created;
+    expect(delta.delta.sheets).toHaveLength(1);
+    const sheet = delta.delta.sheets[0];
+    expect(sheet.name).toBe('Арвен Собственноручная');
+    expect(sheet.values).toEqual({});
+    expect(delta.delta.log[0].text).toContain('заведён');
+
+    // Надели меч — по ссылке, не копией.
+    const equipped = waitFor(socket, 'room:delta');
+    say(socket, 'sheet:belong', {
+      roomId: room.id, sheetId: sheet.id, list: 'equipped', id: 'longsword-item', on: true,
+    });
+    expect((await equipped).delta.sheets[0].equipped).toEqual(['longsword-item']);
+
+    // Чужой предмет отвергается: лист ссылается только на объявленное.
+    const refused = waitFor(socket, 'error');
+    say(socket, 'sheet:belong', {
+      roomId: room.id, sheetId: sheet.id, list: 'equipped', id: 'нет-такого', on: true,
+    });
+    expect((await refused).message).toContain('нет предмета');
+
+    // Активируемый эффект не вешается — его применяют.
+    const refusedEffect = waitFor(socket, 'error');
+    say(socket, 'sheet:belong', {
+      roomId: room.id, sheetId: sheet.id, list: 'effects', id: 'strike', on: true,
+    });
+    expect((await refusedEffect).message).toContain('не вешают');
+
+    socket.close();
+  });
+});

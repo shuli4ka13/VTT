@@ -106,6 +106,18 @@ export const clientMessage = z.discriminatedUnion('type', [
   z.object({ type: z.literal('room:join'), roomId: z.string(), token: z.string() }),
   z.object({ type: z.literal('room:act'), intent: actIntent }),
   z.object({ type: z.literal('sheet:set'), roomId: z.string(), sheetId: z.string(), tag: z.string(), value: z.union([z.number(), z.string(), z.boolean(), z.null()]) }),
+  // Лист заводит ПАРТИЯ в комнате: мир волен приезжать вообще без листов.
+  z.object({ type: z.literal('sheet:create'), roomId: z.string(), name: z.string().min(1).max(64), kind: z.enum(['pc', 'npc']).optional() }),
+  // Принадлежности: надеть/снять предмет, выучить/забыть действие, повесить/снять
+  // эффект. Всегда ССЫЛКА на объявленное — нового лист не вводит.
+  z.object({
+    type: z.literal('sheet:belong'),
+    roomId: z.string(),
+    sheetId: z.string(),
+    list: z.enum(['equipped', 'actions', 'effects']),
+    id: z.string().min(1),
+    on: z.boolean(),
+  }),
 ]);
 
 export type LoginRequest = z.infer<typeof loginRequest>;

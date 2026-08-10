@@ -75,15 +75,21 @@ export function listenToRoom(): void {
     }
 
     if (message.type === 'room:delta') {
-      useRoom.setState(current => ({
-        room: current.room && {
-          ...current.room,
-          // Подменяются ТОЛЬКО пришедшие листы: дельта на то и дельта.
-          sheets: current.room.sheets.map(sheet =>
-            message.delta.sheets.find((next: Sheet) => next.id === sheet.id) ?? sheet),
-        },
-        log: [...current.log, ...message.delta.log],
-      }));
+      useRoom.setState(current => {
+        if (!current.room) return current;
+        // Пришедшие листы ПОДМЕНЯЮТ одноимённые, а НОВЫЕ — добавляются:
+        // «+ лист» приезжает той же дельтой, и терять его нельзя.
+        const known = new Set(current.room.sheets.map(sheet => sheet.id));
+        const sheets = current.room.sheets.map(sheet =>
+          message.delta.sheets.find((next: Sheet) => next.id === sheet.id) ?? sheet);
+        for (const fresh of message.delta.sheets) {
+          if (!known.has(fresh.id)) sheets.push(fresh);
+        }
+        return {
+          room: { ...current.room, sheets },
+          log: [...current.log, ...message.delta.log],
+        };
+      });
     }
 
     if (message.type === 'room:members') {
