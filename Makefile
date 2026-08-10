@@ -6,7 +6,8 @@
 VTT_PORT ?= 8100
 export VTT_PORT
 
-.PHONY: help up down reset rebuild seed logs status test dev offline url
+.PHONY: help up down reset rebuild seed logs status test dev offline url \
+        install ts ts-server ts-web ts-test ts-check
 
 help:
 	@echo "Стенд в контейнере (OrbStack):"
@@ -21,7 +22,15 @@ help:
 	@echo "Без докера:"
 	@echo "  make dev      — стендовый сервер локальной нодой на :8000"
 	@echo "  make offline  — оффлайн-режим без сервера (python) на :8000"
-	@echo "  make test     — все 392+ теста в терминале"
+	@echo "  make test     — все 505 тестов PoC в терминале"
+	@echo ""
+	@echo "Новый стек (TypeScript, монорепо):"
+	@echo "  make install   — поставить зависимости (pnpm)"
+	@echo "  make ts        — сервер :8200 и веб :8300 разом"
+	@echo "  make ts-server — только сервер (NestJS + вебсокет)"
+	@echo "  make ts-web    — только веб (React + Vite)"
+	@echo "  make ts-test   — тесты всех пакетов"
+	@echo "  make ts-check  — проверка типов"
 
 up:
 	docker compose up -d --build
@@ -53,3 +62,27 @@ dev:
 
 offline:
 	python3 -m http.server
+
+
+# ── новый стек: монорепо на TypeScript ──────────────────────────────────────
+# PoC выше остаётся нетронутым эталоном; здесь живёт продуктовый каркас.
+
+install:
+	pnpm install
+
+ts-server:
+	cd apps/server && pnpm dev
+
+ts-web:
+	cd apps/web && pnpm dev
+
+# Сервер в фоне, веб на переднем плане: Ctrl-C гасит оба.
+ts:
+	@echo "сервер :8200 · веб :8300"
+	@(cd apps/server && pnpm dev &) ; cd apps/web && pnpm dev
+
+ts-test:
+	pnpm -r --if-present test
+
+ts-check:
+	pnpm -r --if-present typecheck
