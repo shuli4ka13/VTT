@@ -15,10 +15,12 @@ import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
   Card, CardHead, Field, Input, Select, Button, Empty, Segmented, Verdict, Fold, Chip,
 } from '../../ui/primitives.tsx';
-import { StepCard, STEP_SPECS, problemOf } from './step-card.tsx';
+import { problemOf } from './step-card.tsx';
+import { groupSteps, STEP_TEMPLATES, BRICKS } from './cards.ts';
+import { GroupCard } from './card.tsx';
 import { ModifiersEditor } from './modifiers.tsx';
 import { DonorPalette } from './donors.tsx';
-import type { System, Effect, Step, Activation } from '@vtt/schema';
+import type { System, Effect, Activation } from '@vtt/schema';
 
 const ACTIVATIONS = [
   { key: 'manual' as const, label: 'Активируемый', title: 'Жмёшь сам: атака, заклинание' },
@@ -259,29 +261,44 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
                 : <Verdict tone="warn">шагов ещё нет — эффект ничего не делает</Verdict>}
           </div>
 
-          {steps.map((step, index) => (
-            <StepCard
-              key={index}
-              step={step}
-              index={index}
+          {groupSteps(steps).map((group, at) => (
+            <GroupCard
+              key={group.indices[0]}
+              group={group}
+              position={at + 1}
               system={system}
               effect={effect}
-              earlier={earlierOf(index)}
-              problem={problems[index] ?? null}
-              onEdit={change => edit(draft => { change(draft.steps![index]!); })}
-              onDelete={() => edit(draft => { draft.steps!.splice(index, 1); })}
+              earlier={earlierOf(group.indices[0]!)}
+              problem={group.indices.map(i => problems[i]).find(Boolean) ?? null}
+              edit={(k, change) => edit(draft => {
+                const index = group.indices[k] ?? group.indices[0]!;
+                change(draft.steps![index]!);
+              })}
+              onDelete={() => edit(draft => {
+                [...group.indices].sort((a, b) => b - a).forEach(i => draft.steps!.splice(i, 1));
+              })}
             />
           ))}
 
           <div className="inline inline--tight">
-            {STEP_SPECS.map(spec => (
-              <Button
-                key={spec.type}
-                size="sm"
-                title={spec.hint}
-                onClick={() => edit(draft => { (draft.steps ??= []).push({ type: spec.type }); })}
-              >
-                + {spec.label.toLowerCase()}
+            {STEP_TEMPLATES.map(t => (
+              <Button key={t.key} size="sm" variant="primary" title={t.hint}
+                onClick={() => edit(draft => {
+                  const taken = (draft.steps ?? []).map(s => s.id).filter(Boolean) as string[];
+                  (draft.steps ??= []).push(...t.make(system, taken));
+                })}>
+                {t.label}
+              </Button>
+            ))}
+          </div>
+          <div className="inline inline--tight">
+            {BRICKS.map(b => (
+              <Button key={b.key} size="sm" title={b.hint}
+                onClick={() => edit(draft => {
+                  const taken = (draft.steps ?? []).map(s => s.id).filter(Boolean) as string[];
+                  (draft.steps ??= []).push(...b.make(system, taken));
+                })}>
+                {b.label}
               </Button>
             ))}
           </div>
@@ -305,9 +322,9 @@ function ParamsEditor({ effect, onEdit }: { effect: Effect; onEdit: (change: (dr
 
   return (
     <Fold
-      title="Дырки для записей компендиума"
+      title="Что эффект берёт из записи"
       count={params.length}
-      summary={params.length ? undefined : 'нет — все слоты заполнены прямо здесь'}
+      summary={params.length ? undefined : 'ничего — все значения заданы в шагах'}
     >
       {params.map(param => (
         <Card key={param.key} tone="flat">
@@ -347,7 +364,7 @@ function ParamsEditor({ effect, onEdit }: { effect: Effect; onEdit: (change: (dr
         draft.params ??= [];
         draft.params.push({ key: freeId(draft.params.map(p => p.key), 'param'), label: 'Новый параметр', kind: 'expr' });
       })}>
-        + параметр
+        + брать из записи
       </Button>
     </Fold>
   );
@@ -400,5 +417,3 @@ const durationSummary = (effect: Effect) => {
   const stack = STACKING.find(([key]) => key === (effect.stacking ?? 'ignore'))?.[1];
   return `${word}${uses} · ${stack}`;
 };
-
-export { STEP_SPECS };

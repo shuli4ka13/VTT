@@ -14,11 +14,9 @@
 // Второе: приговор живёт НА КАРТОЧКЕ виноватого шага. Красная строка в шапке
 // экрана не помогает найти, какой из трёх шагов сломан.
 
-import type { ReactNode } from 'react';
-import type { System, Effect, Step, SlotRef } from '@vtt/schema';
-import { Card, CardHead, Field, Button, Select, Verdict, Fold } from '../../ui/primitives.tsx';
-import { SlotEditor, kindOf, declaredProps } from './slots.tsx';
-import type { SlotContext, SlotKind } from './slots.tsx';
+import type { System, Effect, Step } from '@vtt/schema';
+import { kindOf, declaredProps } from './slots.tsx';
+import type { SlotKind } from './slots.tsx';
 
 interface SlotSpec {
   key: string;
@@ -136,152 +134,6 @@ const write = (step: Step, path: string, value: unknown): void => {
   if (value === null || value === undefined) delete node[last];
   else node[last] = value;
 };
-
-// ── карточка ────────────────────────────────────────────────────────────
-
-export function StepCard({ step, index, system, effect, earlier, problem, onEdit, onDelete }: {
-  step: Step;
-  index: number;
-  system: System;
-  effect: Effect;
-  earlier: string[];
-  problem: string | null;
-  onEdit: (change: (draft: Step) => void) => void;
-  onDelete: () => void;
-}) {
-  const spec = specOf(step.type);
-  const context: SlotContext = { system, effect, earlier };
-
-  if (!spec) {
-    return (
-      <Card tone="bad">
-        <CardHead title={`Шаг ${index + 1}: неизвестный тип «${step.type}»`} />
-        <Verdict tone="bad">Этот тип шага движку неизвестен — эффект не отработает.</Verdict>
-      </Card>
-    );
-  }
-
-  const main = spec.slots.filter(slot => slot.main);
-  const fine = spec.slots.filter(slot => !slot.main);
-
-  return (
-    <Card tone={problem ? 'bad' : undefined}>
-      <CardHead
-        title={<>{index + 1}. {spec.label}</>}
-        badge={step.id ? <span className="chip mono" title="имя шага — на него ссылаются следующие">«{step.id}»</span> : null}
-        actions={<Button size="sm" variant="danger" onClick={onDelete}>×</Button>}
-      />
-      {problem ? <Verdict tone="bad">{problem}</Verdict> : null}
-
-      <div className="row">
-        {main.map(slot => (
-          <SlotField
-            key={slot.key} slot={slot} step={step} context={context}
-            onEdit={onEdit}
-          />
-        ))}
-      </div>
-
-      {fine.length ? (
-        <Fold title="Тонкости" summary={summaryOf(fine, step, context)}>
-          <div className="row">
-            {fine.map(slot => (
-              <SlotField
-                key={slot.key} slot={slot} step={step} context={context}
-                onEdit={onEdit}
-              />
-            ))}
-          </div>
-        </Fold>
-      ) : null}
-
-      <Field label="Имя шага" hint="нужно, только если на результат ссылаются следующие шаги">
-        <input
-          className="input input--mono"
-          value={step.id ?? ''}
-          placeholder="например: hit"
-          onChange={e => onEdit(draft => {
-            const next = e.target.value.trim();
-            if (next) draft.id = next; else delete draft.id;
-          })}
-        />
-      </Field>
-    </Card>
-  );
-}
-
-function SlotField({ slot, step, context, onEdit }: {
-  slot: SlotSpec;
-  step: Step;
-  context: SlotContext;
-  onEdit: (change: (draft: Step) => void) => void;
-}) {
-  const value = read(step, slot.key);
-
-  if (slot.choice) {
-    return (
-      <Field label={slot.label} hint={slot.hint}>
-        <Select
-          value={String(value ?? slot.fallback ?? slot.choice[0]![0])}
-          options={slot.choice as never}
-          onChange={next => onEdit(draft => write(draft, slot.key, coerce(next)))}
-        />
-      </Field>
-    );
-  }
-
-  // Слот без списка допустимых видов — служебный: он либо ссылается на
-  // мишень бросков, либо не редактируется структурно.
-  if (slot.allow && slot.allow.length === 0) {
-    return (
-      <Field label={slot.label} hint={slot.hint}>
-        <Select
-          value={String(value ?? '')}
-          options={[
-            ['', '— нет —'],
-            ...(context.system.rolls ?? []).map(r => [r.tag, r.label] as const),
-          ] as never}
-          onChange={next => onEdit(draft => write(draft, slot.key, next || null))}
-        />
-      </Field>
-    );
-  }
-
-  const empty = value === null || value === undefined;
-
-  return (
-    <Field label={slot.label} hint={slot.hint} needed={Boolean(slot.required) && empty}>
-      <SlotEditor
-        value={value}
-        onChange={next => onEdit(draft => write(draft, slot.key, next as SlotRef))}
-        context={context}
-        allow={slot.allow}
-      />
-    </Field>
-  );
-}
-
-/** Свёрнутые тонкости читаются строкой: «отправитель · не меньше порога · при успехе». */
-function summaryOf(slots: SlotSpec[], step: Step, context: SlotContext): ReactNode {
-  const parts = slots.map(slot => {
-    const value = read(step, slot.key);
-    if (slot.allow && slot.allow.length === 0) {
-      const roll = context.system.rolls?.find(r => r.tag === value);
-      return roll ? roll.label : null;
-    }
-    if (slot.choice) {
-      const key = String(value ?? slot.fallback ?? slot.choice[0]![0]);
-      return slot.choice.find(([k]) => k === key)?.[1] ?? key;
-    }
-    if (value === null || value === undefined || value === '') return null;
-    return kindOf(value).summary(value, context);
-  }).filter(Boolean);
-
-  return parts.length ? parts.join(' · ') : null;
-}
-
-const coerce = (value: string): unknown =>
-  value === 'true' ? true : value === 'false' ? false : value;
 
 /**
  * Приговор о шаге. Проверяется то, что можно проверить БЕЗ листа и без броска:
