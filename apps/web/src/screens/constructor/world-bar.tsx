@@ -75,9 +75,9 @@ export function WorldBar() {
   };
 
   return (
-    <div className="tabs" style={{ background: 'var(--surface)' }}>
+    <div className="worldbar">
       <span className="field__label">Система</span>
-      <div style={{ width: 220 }}>
+      <div className="worldbar__name">
         <Input value={system.name ?? ''} onChange={next => editSystem(draft => { draft.name = next; })} />
       </div>
 
@@ -91,14 +91,14 @@ export function WorldBar() {
       <span className="spacer" />
 
       {note ? (
-        <span className={note.bad ? 'field__error' : 'muted'} style={{ fontSize: 'var(--fs-2)' }}>
+        <span className={`worldbar__note ${note.bad ? 'field__error' : 'muted'}`}>
           {note.text}
         </span>
       ) : null}
 
       {signed ? null : (
         <>
-          <div style={{ width: 130 }}>
+          <div className="worldbar__name">
             <Input value={name} onChange={setName} placeholder="ваше имя" />
           </div>
           <Button size="sm" onClick={enter}>Войти</Button>

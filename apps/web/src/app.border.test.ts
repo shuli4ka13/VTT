@@ -10,7 +10,7 @@
 // Здесь же негативный контроль: проверки обязаны ловить нарушение, а не быть
 // зелёными потому, что искали не то.
 
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
@@ -34,28 +34,42 @@ const AUTHOR_ONLY = [
   'constructor/slots.tsx',
 ];
 
+const PLAY_SCREENS = ['screens/play/sheet.tsx', 'screens/play/table.tsx', 'screens/play/lobby.tsx'];
+
 describe('граница режимов', () => {
-  it('экран игрока не импортирует ни одного модуля конструктора', () => {
-    const player = read('screens/player/player.tsx');
-    for (const module of AUTHOR_ONLY) {
-      const name = module.split('/').pop()!.replace(/\.tsx$/, '');
-      expect(player.includes(`/${name}.tsx`), `player не должен знать ${name}`).toBe(false);
+  it('ни один экран партии не импортирует модулей конструктора', () => {
+    for (const screen of PLAY_SCREENS) {
+      const code = read(screen);
+      for (const module of AUTHOR_ONLY) {
+        const name = module.split('/').pop()!.replace(/\.tsx$/, '');
+        expect(code.includes(`/${name}.tsx`), `${screen} не должен знать ${name}`).toBe(false);
+      }
     }
   });
 
-  it('экран игрока не правит состав полей системы', () => {
-    const player = read('screens/player/player.tsx');
-    expect(/system\.fields\s*(=|\.push|\.splice)/.test(player), 'состав полей правит только автор').toBe(false);
-    expect(player.includes('editSystem'), 'игрок не редактирует систему вообще').toBe(false);
+  it('экраны партии не правят ни систему, ни компендиум', () => {
+    for (const screen of PLAY_SCREENS) {
+      const code = read(screen);
+      expect(code.includes('editSystem'), `${screen}: систему правит только автор`).toBe(false);
+      expect(code.includes('editCompendium'), `${screen}: компендиум правит только автор`).toBe(false);
+      expect(/system\.fields\s*(=|\.push|\.splice)/.test(code), `${screen}: состав полей неприкосновенен`)
+        .toBe(false);
+    }
   });
 
-  it('стол ничего не правит: ни полей, ни эффектов — только выбирает пару листов', () => {
-    const table = read('screens/table/table.tsx');
-    expect(table.includes('editSystem')).toBe(false);
-    expect(table.includes('editCompendium')).toBe(false);
-    for (const module of AUTHOR_ONLY) {
-      const name = module.split('/').pop()!.replace(/\.tsx$/, '');
-      expect(table.includes(`/${name}.tsx`), `стол не должен знать ${name}`).toBe(false);
+  it('приложения разведены: автор не знает экранов партии и наоборот', () => {
+    const author = read('apps/author.tsx');
+    const play = read('apps/play.tsx');
+    expect(author.includes('screens/play/'), 'приложение автора не знает экранов партии').toBe(false);
+    expect(play.includes('screens/constructor/'), 'приложение партии не знает конструктора').toBe(false);
+    expect(play.includes('screens/compendium/'), 'и компендиума не знает').toBe(false);
+  });
+
+  it('партия не держит мира автора: играют в мир КОМНАТЫ', () => {
+    // Если экран партии читает локальный store автора, персонаж живёт в одном
+    // мире, а стол в другом — и расхождение всплывёт только за игрой.
+    for (const screen of PLAY_SCREENS) {
+      expect(read(screen).includes("store/world.ts"), `${screen} обязан читать комнату`).toBe(false);
     }
   });
 
@@ -108,6 +122,66 @@ describe('вид отделён от логики', () => {
       // Плейсхолдеры в подсказках — текст для человека, а не логика.
       const withoutHints = code.replace(/placeholder="[^"]*"/g, '');
       expect(stats.test(withoutHints), `${file} называет конкретный стат`).toBe(false);
+    }
+  });
+});
+
+describe('граница держится СБОРКОЙ, а не только импортами', () => {
+  // Самая надёжная проверка: не на исходники, а на то, что РЕАЛЬНО уедет
+  // игроку. В PoC граница шла по страницам (constructor.html / vtt.html),
+  // и конструктора в приложении партии не было физически. Здесь то же самое
+  // делают ленивые чанки — и проверяется это по графу сборки, а не по одному
+  // файлу: общий код Vite выносит в третий чанк, и наивная проверка его
+  // пропустила бы.
+  const dist = join(src, '..', 'dist');
+
+  /** Весь код, который загрузится вместе с точкой входа, — она сама и её импорты. */
+  function bundleOf(entryHint: string): string | null {
+    const manifestPath = join(dist, '.vite', 'manifest.json');
+    if (!existsSync(manifestPath)) return null;
+
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as
+      Record<string, { file: string; imports?: string[] }>;
+
+    const start = Object.keys(manifest).find(key => key.includes(entryHint));
+    if (!start) return null;
+
+    const seen = new Set<string>();
+    const queue = [start];
+    let code = '';
+
+    while (queue.length) {
+      const key = queue.shift()!;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      const entry = manifest[key];
+      if (!entry) continue;
+      const file = join(dist, entry.file);
+      if (existsSync(file)) code += readFileSync(file, 'utf8');
+      queue.push(...(entry.imports ?? []));
+    }
+    return code;
+  }
+
+  it('игроку не уезжает ни строчки конструктора', () => {
+    const play = bundleOf('apps/play.tsx');
+    if (!play) {
+      expect(existsSync(dist), 'соберите фронт (pnpm build), иначе границу по сборке не проверить').toBe(true);
+      return;
+    }
+
+    // Приметы конструктора — тексты, которые есть ТОЛЬКО у автора.
+    for (const trace of ['Цепочка шагов', 'Библиотека эффектов', 'Рода записей', 'Дырки для записей']) {
+      expect(play.includes(trace), `в сборку партии просочилось «${trace}»`).toBe(false);
+    }
+  });
+
+  it('автору не уезжает стол — граница двусторонняя', () => {
+    const author = bundleOf('apps/author.tsx');
+    if (!author) return;
+    for (const trace of ['Кто действует?', 'За столом', 'Создать стол']) {
+      expect(author.includes(trace), `в сборку автора просочилось «${trace}»`).toBe(false);
     }
   });
 });

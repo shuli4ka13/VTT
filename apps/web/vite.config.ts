@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  // Манифест нужен тесту границы: по нему видно, какие чанки реально уедут
+  // игроку, — а значит, попал ли к нему код конструктора.
+  build: { manifest: true },
   server: {
     port: 8300,
     // Сервер стенда живёт на 8200; прокси избавляет от CORS и от того,

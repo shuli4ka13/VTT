@@ -45,6 +45,24 @@
 .topbar__link:hover { background: var(--surface-2); color: var(--text); }
 .topbar__link[aria-current='page'] { background: var(--accent-soft); color: var(--text); }
 
+/* ── полоса мира ──────────────────────────────────────────────────────── */
+/* Отдельно от навигации: наверху «куда идти», здесь — «что за мир». В PoC
+   всё это стояло одной строкой из восьми разнородных элементов. */
+
+.worldbar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  padding: var(--s-2) var(--s-5);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+.worldbar .spacer { flex: 1; min-width: var(--s-3); }
+.worldbar__name { width: clamp(140px, 18vw, 240px); }
+.worldbar__note { font-size: var(--fs-2); max-width: 40ch; }
+
 /* ── вкладки раздела ──────────────────────────────────────────────────── */
 
 .tabs {
@@ -126,6 +144,15 @@
 }
 .column__head .spacer { flex: 1; }
 
+/* Палитра готовых кусков. Сетка с одной колонкой на широком экране и
+   с несколькими на узком — правило одно, меняется только число колонок. */
+.palette {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-2);
+  align-items: start;
+}
+
 /* ── список слева ─────────────────────────────────────────────────────── */
 
 .list { display: flex; flex-direction: column; gap: var(--s-1); }
@@ -178,7 +205,55 @@
   flex: none;
 }
 
-/* Узкий экран: колонки складываются в одну ленту, а не режутся. */
+/* ── выбор роли ───────────────────────────────────────────────────────── */
+/* Не заставка: это и есть граница между приложениями. Автор собирает мир,
+   партия в него играет — и смешивать эти два занятия на одном экране значит
+   предлагать игроку переписать правила посреди боя. */
+
+.roles {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-5);
+  padding: var(--s-8) var(--s-5);
+  overflow-y: auto;
+}
+.roles__title { font-size: var(--fs-7); font-weight: 700; margin: 0; letter-spacing: -0.02em; }
+.roles__title em { color: var(--accent); font-style: normal; }
+.roles__lead { margin: 0; color: var(--text-muted); max-width: 54ch; text-align: center; }
+.roles__grid {
+  display: grid;
+  /* Ширину задаём явно: в колонке с align-items:center сетка ужалась бы
+     по содержимому и встала бы в один столбец, сколько бы места ни было. */
+  width: 100%;
+  max-width: 720px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--s-5);
+  margin-top: var(--s-4);
+}
+.role {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-6);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-3);
+  text-decoration: none;
+  color: var(--text);
+}
+.role:hover { border-color: var(--accent); background: var(--surface-2); }
+.role__icon { font-size: 28px; }
+.role__name { font-size: var(--fs-5); font-weight: 650; }
+.role__hint { font-size: var(--fs-3); color: var(--text-muted); }
+
+/* ── узкий экран ──────────────────────────────────────────────────────── */
+/* Колонки складываются в ленту. Главное отличие от наивной укладки: боковые
+   колонки раскладывают содержимое СЕТКОЙ. Иначе карточка палитры растянулась
+   бы на всю ширину экрана — и выглядела бы съехавшей, чем она и выглядела. */
+
 @media (max-width: 1100px) {
   .columns, .columns--two {
     grid-template-columns: minmax(0, 1fr);
@@ -187,4 +262,14 @@
   }
   .column { overflow: visible; }
   .column--side, .column--right { border: 0; border-bottom: 1px solid var(--border); }
+  .column--main { padding: var(--s-5); }
+
+  /* Список и палитра раскладываются в несколько столбцов: иначе карточка
+     растянулась бы на всю ширину экрана — и выглядела бы съехавшей. */
+  .column--side .list,
+  .palette {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+  .column--side .list > div { min-width: 0; }
+  .card--pick { height: 100%; }
 }

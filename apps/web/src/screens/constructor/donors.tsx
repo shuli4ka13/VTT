@@ -83,7 +83,7 @@ function Blocks({ donor }: { donor: System }) {
   };
 
   return (
-    <div className="stack stack--tight">
+    <div className="palette">
       {blocks.map(([group, count]) => {
         const fields = donor.fields.filter(f => (f.group ?? 'Без блока') === group);
         const already = fields.every(f => have.has(f.tag));
@@ -199,7 +199,7 @@ function Effects({ donor }: { donor: System }) {
   };
 
   return (
-    <div className="stack stack--tight">
+    <div className="palette">
       {list.map(([id, effect]) => {
         const already = Boolean(system.effects[id]);
         return (
