@@ -173,7 +173,7 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
           <Field label="Категория">
             <Input value={effect.category ?? ''} onChange={next => edit(draft => { draft.category = next; })} />
           </Field>
-          {pipeline ? (
+          {activation === 'manual' ? (
             <Field label="Чего стоит">
               <Select
                 value={effect.cost ?? ''}
@@ -185,40 +185,44 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
           ) : null}
         </div>
 
-        <Fold
-          title="Сколько держится"
-          summary={durationSummary(effect)}
-        >
-          <div className="row">
-            <Field label="Длительность">
-              <Select
-                value={effect.duration?.kind ?? 'permanent'}
-                options={DURATIONS}
-                onChange={kind => edit(draft => {
-                  draft.duration = kind === 'uses' ? { kind, max: draft.duration?.max ?? 1 } : { kind };
-                })}
-              />
-            </Field>
-            {effect.duration?.kind === 'uses' ? (
-              <Field label="Срабатываний">
-                <Input
-                  type="number"
-                  value={effect.duration.max ?? 1}
-                  onChange={next => edit(draft => {
-                    if (draft.duration?.kind === 'uses') draft.duration.max = Math.max(1, Number(next) || 1);
+        {/* Оси висения — только у тех, кого вешают. Активируемый не висит:
+            он вспыхнул и кончился, а его доступность — это владение записью. */}
+        {activation !== 'manual' ? (
+          <Fold
+            title="Сколько держится"
+            summary={durationSummary(effect)}
+          >
+            <div className="row">
+              <Field label="Длительность">
+                <Select
+                  value={effect.duration?.kind ?? 'permanent'}
+                  options={DURATIONS}
+                  onChange={kind => edit(draft => {
+                    draft.duration = kind === 'uses' ? { kind, max: draft.duration?.max ?? 1 } : { kind };
                   })}
                 />
               </Field>
-            ) : null}
-            <Field label="Если наложить второй раз">
-              <Select
-                value={effect.stacking ?? 'ignore'}
-                options={STACKING}
-                onChange={next => edit(draft => { draft.stacking = next; })}
-              />
-            </Field>
-          </div>
-        </Fold>
+              {effect.duration?.kind === 'uses' ? (
+                <Field label="Срабатываний">
+                  <Input
+                    type="number"
+                    value={effect.duration.max ?? 1}
+                    onChange={next => edit(draft => {
+                      if (draft.duration?.kind === 'uses') draft.duration.max = Math.max(1, Number(next) || 1);
+                    })}
+                  />
+                </Field>
+              ) : null}
+              <Field label="Если наложить второй раз">
+                <Select
+                  value={effect.stacking ?? 'ignore'}
+                  options={STACKING}
+                  onChange={next => edit(draft => { draft.stacking = next; })}
+                />
+              </Field>
+            </div>
+          </Fold>
+        ) : null}
       </Card>
 
       {activation === 'triggered' ? (

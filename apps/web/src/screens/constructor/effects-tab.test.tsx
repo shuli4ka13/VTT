@@ -17,6 +17,28 @@ describe('EffectsTab: палитра трёх понятий', () => {
     }));
   });
 
+  // Оси висения показываются только тем, кого вешают: активируемый эффект
+  // не висит, его «постоянность» — это владение записью, а не длительность.
+  it('у активируемого нет «Сколько держится» и есть «Чего стоит»', () => {
+    render(<EffectsTab />);
+    expect(screen.queryByText('Сколько держится')).toBeNull();
+    expect(screen.getByText('Чего стоит')).toBeTruthy();
+  });
+
+  it('у пассивного — наоборот: длительность есть, стоимости нет', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...state.system,
+        effects: { poison: { label: 'Хворь', activation: 'passive', modifiers: [] } },
+      },
+      activeEffectId: 'poison',
+    }));
+    render(<EffectsTab />);
+    expect(screen.getByText('Сколько держится')).toBeTruthy();
+    expect(screen.queryByText('Чего стоит')).toBeNull();
+  });
+
   it('палитра — только три кирпича, клик кладёт карточку', () => {
     render(<EffectsTab />);
     const palette = screen.getAllByRole('button')
