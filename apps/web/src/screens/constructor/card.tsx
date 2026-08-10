@@ -165,7 +165,7 @@ function CheckBody({ step, context, edit, system }: {
             <Field label="кто бросает">
               <Select
                 value={String(step.side ?? 'sender')}
-                options={[['sender', 'отправитель — это атака'], ['target', 'цель — это спасбросок']] as const}
+                options={[['sender', 'отправитель'], ['target', 'цель']] as const}
                 onChange={next => edit(0, draft => { (draft as any).side = next; })}
               />
             </Field>
