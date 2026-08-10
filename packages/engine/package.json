@@ -1,0 +1,21 @@
+{
+  "name": "@vtt/engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./formula": "./src/formula/index.ts",
+    "./model/*": "./src/model/*.ts",
+    "./engine/*": "./src/engine/*.ts",
+    "./events/*": "./src/events/*.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.5"
+  }
+}

@@ -1,2 +1,10 @@
 .DS_Store
 server/stand.db
+
+# монорепо
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+apps/server/*.db
+apps/server/*.db-*

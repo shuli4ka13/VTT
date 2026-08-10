@@ -1,0 +1,10 @@
+{
+  "name": "vtt-monorepo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "pnpm -r --if-present test",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test:poc": "node tests/run.js"
+  }
+}
