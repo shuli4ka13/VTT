@@ -17,12 +17,24 @@ describe('EffectsTab: палитра трёх понятий', () => {
     }));
   });
 
-  it('заготовка «атака с броском» кладёт две карточки', () => {
+  it('заготовка «проверка → вычесть» кладёт две карточки', () => {
     render(<EffectsTab />);
-    fireEvent.click(screen.getByText('+ атака с броском'));
+    fireEvent.click(screen.getByText('+ проверка → вычесть'));
     expect(screen.getByText('1 · Проверка')).toBeTruthy();
     expect(screen.getByText('2 · Изменение')).toBeTruthy();
     expect(screen.queryByText(/порог/i)).toBeNull();
+  });
+
+  // Домен («атака», «урон») — слова автора: им место в лейблах эффектов и в
+  // образцах-донорах. Кнопки же палитры — механика, и говорят только на ней.
+  it('кнопки палитры не знают доменных слов', () => {
+    render(<EffectsTab />);
+    const palette = screen.getAllByRole('button')
+      .filter(b => (b.textContent ?? '').trimStart().startsWith('+ '));
+    expect(palette.length).toBeGreaterThan(0);
+    for (const button of palette) {
+      expect(button.textContent).not.toMatch(/атак|спасброс|урон|лечени|заклинан/i);
+    }
   });
 
   it('на экране нет слова «дырка»', () => {

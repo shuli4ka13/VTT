@@ -23,7 +23,7 @@ import { DonorPalette } from './donors.tsx';
 import type { System, Effect, Activation } from '@vtt/schema';
 
 const ACTIVATIONS = [
-  { key: 'manual' as const, label: 'Активируемый', title: 'Жмёшь сам: атака, заклинание' },
+  { key: 'manual' as const, label: 'Активируемый', title: 'Жмёшь сам — кнопкой на листе' },
   { key: 'triggered' as const, label: 'Триггерный', title: 'Отвечает на чужое событие' },
   { key: 'passive' as const, label: 'Пассивный', title: 'Просто висит и правит цифры' },
 ];
@@ -105,7 +105,7 @@ export function EffectsTab() {
           ? <EffectEditor id={activeId} effect={active} system={system} />
           : <Empty
               title="Выберите эффект слева"
-              hint="Эффект — единица автоматизации: всё, что мир делает сам. Атака, спасбросок, отравление, ответный удар."
+              hint="Эффект — единица автоматизации: всё, что мир делает сам. Проверки, изменения полей, состояния — а как их назвать, решаете вы."
             />,
       }}
       right={{ head: 'Готовое из образцов', body: <DonorPalette kind="effects" /> }}

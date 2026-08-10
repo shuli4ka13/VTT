@@ -88,22 +88,22 @@ const numberPlusChange = (taken: string[], direction: 'subtract' | 'add'): Step[
 
 export const STEP_TEMPLATES: StepTemplate[] = [
   {
-    key: 'attack', label: '+ атака с броском',
-    hint: 'Бросок против поля цели; попал — цель теряет посчитанное.',
+    key: 'attack', label: '+ проверка → вычесть',
+    hint: 'Бросок против поля цели; не вышло — обрыв, вышло — вычесть посчитанное.',
     make: (system, taken) => [blankCheck(system), ...numberPlusChange(taken, 'subtract')],
   },
   {
-    key: 'damage', label: '+ просто урон',
+    key: 'damage', label: '+ вычесть из поля',
     hint: 'Без проверки: посчитать и вычесть из поля цели.',
     make: (_system, taken) => numberPlusChange(taken, 'subtract'),
   },
   {
-    key: 'heal', label: '+ лечение',
+    key: 'heal', label: '+ прибавить к полю',
     hint: 'Посчитать и прибавить к полю цели.',
     make: (_system, taken) => numberPlusChange(taken, 'add'),
   },
   {
-    key: 'status', label: '+ наложить состояние',
+    key: 'status', label: '+ повесить состояние',
     hint: 'Повесить на цель эффект-состояние.',
     make: () => [{ type: 'status', mode: 'apply' } as unknown as Step],
   },
