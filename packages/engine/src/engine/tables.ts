@@ -5,13 +5,17 @@
 // данные того же рода, что и формула: система её объявляет, движок применяет.
 
 import { TableError } from './errors.ts';
+import type { System } from '../model/types.ts';
 
-export function lookupTable(system, tableName, input, forTag) {
+export function lookupTable(
+  system: System, tableName: string, input: unknown, forTag?: string,
+): unknown {
   const table = system.tables && system.tables[tableName];
   if (!table) {
     throw new TableError(`система не объявляет таблицу «${tableName}» (нужна полю «${forTag}»)`);
   }
-  const row = (table.ranges || []).find(r => input >= r.from && input <= r.to);
+  const n = Number(input);
+  const row = (table.ranges || []).find(r => n >= r.from && n <= r.to);
   if (!row) {
     throw new TableError(
       `значение ${input} не попадает ни в один диапазон таблицы «${tableName}» (поле «${forTag}»)`);

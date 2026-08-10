@@ -19,6 +19,8 @@ import { resolveRoll } from '../modifiers.ts';
 import { dieConstant, rollLead } from '../lead-die.ts';
 import { packRef, resolveNumber, resolveOptionalNumber } from '../refs.ts';
 import { EngineError } from '../errors.ts';
+import type { StepData, StepContext } from './index.ts';
+import type { RollMode } from '../dice.ts';
 
 export const type = 'threshold';
 export const label = 'Порог';
@@ -39,7 +41,7 @@ export const slots = [
 // (не меньше порога, равенство — успех), CoC/GURPS — «вниз» (d100/3d6 не выше
 // навыка), а где-то равенство — провал. margin — всегда «запас бросающего»,
 // положителен при успехе, независимо от направления.
-const OUTCOMES = {
+const OUTCOMES: Record<string, (total: number, versus: number) => { success: boolean; margin: number }> = {
   atLeast: (total, versus) => ({ success: total >= versus, margin: total - versus }),
   notOver: (total, versus) => ({ success: total <= versus, margin: versus - total }),
   over: (total, versus) => ({ success: total > versus, margin: total - versus }),
@@ -59,7 +61,7 @@ export const mayBreak = true;
 // Подпись развилки на хребте конвейера: КОГДА правило кончается на этом шаге.
 // «Промах» и «цель устояла» — разные истории, конструктор рисует слова шага,
 // а не общее «может оборвать».
-export function breakLine(step) {
+export function breakLine(step: StepData) {
   return (step.continueOn || 'success') === 'fail'
     ? 'если порог взят — цель устояла'
     : 'если порог не взят — промах';
@@ -67,7 +69,7 @@ export function breakLine(step) {
 
 export const icon = '⌖';
 
-export function lint(step) {
+export function lint(step: StepData) {
   if (!step.roll || !step.roll.die || !step.roll.die.constant) {
     return 'порогу нужна кость — слот roll.die ссылается на константу системы';
   }
@@ -76,7 +78,7 @@ export function lint(step) {
 
 // Строка журнала. Живёт в модуле шага: новый тип приносит свою подачу сам,
 // интерфейс не ветвится по типам.
-export function traceLine(t, h) {
+export function traceLine(t: any, h: any) {
   const versusName = t.versus.tag ? `${h.labelOf(t.versus.tag)} ` : '';
   const dice = t.rolls.length > 1 ? `[${t.rolls.join(', ')}] → ${t.kept}` : `[${t.rolls[0]}]`;
   const parts = t.parts && Object.keys(t.parts).length
@@ -86,7 +88,7 @@ export function traceLine(t, h) {
   return `порог: ${dice} + ${t.bonus} = ${t.total} против ${versusName}${t.versus.value} — ${verdict}${parts}`;
 }
 
-export function pack(step, ctx) {
+export function pack(step: StepData, ctx: StepContext) {
   const roll = step.roll || {};
   if (!roll.die || !roll.die.constant) {
     throw new EngineError(
@@ -106,12 +108,12 @@ export function pack(step, ctx) {
 
   const mods = roll.check
     ? resolveRoll(ctx.system, ctx.sheet, roll.check, ctx.pass)
-    : { mode: 'normal', bonus: 0 };
+    : { mode: 'normal' as RollMode, bonus: 0 };
   const rolled = rollLead(dieConstant(ctx.system, roll.die.constant), ctx.die, mods.mode);
   return { ...base, rolled, bonus: packRef(roll.bonus, ctx), modBonus: mods.bonus };
 }
 
-export function resolve(step, ctx) {
+export function resolve(step: StepData, ctx: StepContext) {
   let rolled = step.rolled;
   let modBonus = step.modBonus || 0;
 
@@ -119,7 +121,7 @@ export function resolve(step, ctx) {
     // Порог на стороне цели: бросаем здесь и сейчас, её костью и модификаторами.
     const mods = step.roll.check
       ? resolveRoll(ctx.system, ctx.sheet, step.roll.check, ctx.pass)
-      : { mode: 'normal', bonus: 0 };
+      : { mode: 'normal' as RollMode, bonus: 0 };
     rolled = rollLead(dieConstant(ctx.system, step.roll.die.constant), ctx.die, mods.mode);
     modBonus = mods.bonus;
   }
@@ -129,7 +131,7 @@ export function resolve(step, ctx) {
   const total = rolled.total + bonus;
 
   const versus = resolveNumber(step.versus, ctx, 'порогу не с чем сравнить бросок');
-  const outcome = OUTCOMES[step.successWhen] || OUTCOMES.atLeast;
+  const outcome = OUTCOMES[String(step.successWhen)] || OUTCOMES.atLeast!;
   const { success, margin } = outcome(total, versus);
 
   const value = {

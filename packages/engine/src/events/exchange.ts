@@ -12,9 +12,28 @@
 // см. src/events/envelope.js). Здесь про глубину нет ни строчки.
 
 import { send, receive } from './envelope.ts';
+import type { Report } from './envelope.ts';
+import type { System, Sheet, Compendium, Die } from '../model/types.ts';
 
-export function exchange({ system, compendium, die, sheets, actionId, fromId, toId }) {
-  const find = id => sheets.find(s => s.id === id) || null;
+export interface ExchangeArgs {
+  system: System;
+  compendium: Compendium;
+  die: Die;
+  sheets: Sheet[];
+  actionId: string;
+  fromId: string;
+  toId: string;
+}
+
+/** Кто кому что сделал: по строке на основной конверт и на каждую ответку. */
+export interface ExchangeEntry { fromId: string; toId: string; report: Report }
+
+export interface ExchangeResult { sheets: Sheet[]; reports: ExchangeEntry[] }
+
+export function exchange({
+  system, compendium, die, sheets, actionId, fromId, toId,
+}: ExchangeArgs): ExchangeResult {
+  const find = (id: string): Sheet | null => sheets.find(s => s.id === id) || null;
 
   const from = find(fromId);
   const to = find(toId);
@@ -25,22 +44,22 @@ export function exchange({ system, compendium, die, sheets, actionId, fromId, to
   const envelope = send(actionId, { ...ctx, sheet: from });
 
   let updated = [...sheets];
-  const put = sheet => { updated = updated.map(s => (s.id === sheet.id ? sheet : s)); };
-  const live = id => updated.find(s => s.id === id) || null;
+  const put = (sheet: Sheet): void => { updated = updated.map(s => (s.id === sheet.id ? sheet : s)); };
+  const live = (id: string): Sheet | null => updated.find(s => s.id === id) || null;
 
   const main = receive(envelope, { ...ctx, sheet: to });
   put(main.sheet);
-  const reports = [{ fromId, toId, report: main.report }];
+  const reports: ExchangeEntry[] = [{ fromId, toId, report: main.report }];
 
   // Ответки. Их получатель — исходный отправитель, и лист берётся ЖИВОЙ:
   // если бы цель и отправитель совпали (лечение по себе), правки основного
   // конверта иначе потерялись бы.
   for (const reply of main.replies) {
-    const target = live(reply.to);
+    const target = live(String(reply.to));
     if (!target) continue;
     const back = receive(reply, { ...ctx, sheet: target });
     put(back.sheet);
-    reports.push({ fromId: reply.from, toId: reply.to, report: back.report });
+    reports.push({ fromId: reply.from, toId: String(reply.to), report: back.report });
   }
 
   return { sheets: updated, reports };

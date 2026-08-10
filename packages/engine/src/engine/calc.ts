@@ -16,20 +16,45 @@ import { compile } from '../formula/index.ts';
 import { UnknownTagError, CycleError, EngineError } from './errors.ts';
 import { lookupTable } from './tables.ts';
 import { collectModifiers, applyValueModifiers } from './modifiers.ts';
+import type { CollectedModifiers } from './modifiers.ts';
+import type { System, Sheet, Field, Compendium, Resolve } from '../model/types.ts';
 
-export function findField(system, tag) {
+/**
+ * Проход — контекст одного пересчёта: мемоизация, стек для ловли циклов,
+ * журнал вычисленного и собранные модификаторы.
+ */
+export interface Pass {
+  system: System;
+  sheet: Sheet;
+  memo: Map<string, unknown>;
+  visiting: Set<string>;
+  path: string[];
+  computed: string[];
+  modifiers: CollectedModifiers | null;
+  resolve: Resolve;
+}
+
+export interface PassOptions {
+  compendium?: Compendium;
+  modifiers?: CollectedModifiers;
+}
+
+export function findField(system: System, tag: string): Field | null {
   return system.fields.find(f => f.tag === tag) || null;
 }
 
-export function newPass(system, sheet, options = {}) {
-  const pass = {
+export function newPass(system: System, sheet: Sheet, options: PassOptions = {}): Pass {
+  const pass: Pass = {
     system,
     sheet,
-    memo: new Map(),
-    visiting: new Set(),
+    memo: new Map<string, unknown>(),
+    visiting: new Set<string>(),
     path: [],
     computed: [],
     modifiers: null,
+    // Заглушка живёт один оператор: настоящий resolve замыкается на сам pass,
+    // а сослаться на него в литерале нельзя.
+    resolve: () => undefined,
   };
 
   // Единая точка входа для всего, что должно спросить значение тега:
@@ -44,7 +69,7 @@ export function newPass(system, sheet, options = {}) {
   return pass;
 }
 
-export function calc(system, sheet, tag, pass = newPass(system, sheet)) {
+export function calc(system: System, sheet: Sheet, tag: string, pass: Pass = newPass(system, sheet)): unknown {
   const field = findField(system, tag);
   if (!field) throw new UnknownTagError(tag, pass.path[pass.path.length - 1]);
 
@@ -64,15 +89,15 @@ export function calc(system, sheet, tag, pass = newPass(system, sheet)) {
   }
 }
 
-export function calcAll(system, sheet, pass = newPass(system, sheet)) {
-  const out = {};
+export function calcAll(system: System, sheet: Sheet, pass: Pass = newPass(system, sheet)): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
   for (const field of system.fields) out[field.tag] = calc(system, sheet, field.tag, pass);
   return out;
 }
 
 // Список тегов, от которых поле зависит напрямую. Нужен интерфейсу для чипсов
 // и — в продакшне — инкрементальному пересчёту по графу.
-export function dependenciesOf(system, tag) {
+export function dependenciesOf(system: System, tag: string): string[] {
   const field = findField(system, tag);
   if (!field) throw new UnknownTagError(tag);
   const source = field.value;
@@ -81,9 +106,9 @@ export function dependenciesOf(system, tag) {
   return [];
 }
 
-function computeBase(field, pass) {
+function computeBase(field: Field, pass: Pass): unknown {
   const source = field.value;
-  const resolve = tag => calc(pass.system, pass.sheet, tag, pass);
+  const resolve: Resolve = tag => calc(pass.system, pass.sheet, tag, pass);
 
   switch (source.kind) {
     case 'stored':
@@ -96,12 +121,13 @@ function computeBase(field, pass) {
       return lookupTable(pass.system, source.table, compile(source.arg).evaluate(resolve), field.tag);
 
     default:
-      throw new EngineError(`поле «${field.tag}»: неизвестный способ получить значение «${source.kind}»`);
+      throw new EngineError(
+        `поле «${field.tag}»: неизвестный способ получить значение «${(source as { kind: string }).kind}»`);
   }
 }
 
-function readStored(sheet, field) {
+function readStored(sheet: Sheet, field: Field): unknown {
   const values = sheet.values || {};
   if (Object.prototype.hasOwnProperty.call(values, field.tag)) return values[field.tag];
-  return field.value.default;
+  return field.value.kind === 'stored' ? field.value.default : undefined;
 }

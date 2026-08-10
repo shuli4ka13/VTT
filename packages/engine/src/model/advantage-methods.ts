@@ -1,3 +1,4 @@
+import type { System } from './types.ts';
 // Механики преимущества/помехи с примерами из реальных систем.
 //
 // Взято из reference/index.html:1872-1907 практически дословно — это самая
@@ -66,10 +67,10 @@ export const ADVANTAGE_METHODS = [
   },
 ];
 
-export const findMethod = id => ADVANTAGE_METHODS.find(m => m.id === id) || null;
+export const findMethod = (id: string) => ADVANTAGE_METHODS.find(m => m.id === id) || null;
 
 // Какие механики СУЩЕСТВУЮТ в мире этой системы — а не весь межсистемный
 // словарь. Единый фильтр: раньше режим автора применял его инлайном,
 // а компендиум рисовал справочник целиком, игнорируя объявление системы.
-export const enabledMethods = system =>
+export const enabledMethods = (system: System) =>
   ADVANTAGE_METHODS.filter(m => ((system.advantage || {}).methods || {})[m.id]);

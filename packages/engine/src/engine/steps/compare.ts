@@ -8,12 +8,13 @@
 
 import { packRef, resolveNumber } from '../refs.ts';
 import { EngineError } from '../errors.ts';
+import type { StepData, StepContext } from './index.ts';
 
 export const type = 'compare';
 export const label = 'Сравнение';
 export const hint = 'Величина против поля цели. Не дотянула — цепочка обрывается.';
 
-const BREAKS = {
+const BREAKS: Record<string, (margin: number) => boolean> = {
   less: margin => margin < 0,      // строго меньше порога — обрыв (равенство проходит)
   atMost: margin => margin <= 0,   // не выше порога — обрыв (равенство тоже рвёт)
   never: () => false,              // сравнение только ради разницы, без обрыва
@@ -33,25 +34,25 @@ export const mayBreak = true;
 
 // Подпись развилки; «never» — сравнение стоит только ради разницы,
 // линия остаётся прямой и конструктор развилку не рисует вовсе.
-export function breakLine(step) {
-  const words = {
+export function breakLine(step: StepData) {
+  const words: Record<string, string> = {
     less: 'если величина меньше порога — не пробило',
     atMost: 'если величина не выше порога — не пробило',
   };
-  return words[step.breakIf || 'less'] || null;
+  return words[String(step.breakIf || 'less')] || null;
 }
 
 export const icon = '⇄';
 
-export function traceLine(t, h) {
+export function traceLine(t: any, h: any) {
   const versusName = t.versus.tag ? `${h.labelOf(t.versus.tag)} ` : '';
   return `сравнение: ${t.value} против ${versusName}${t.versus.value} — `
     + (t.passed ? `прошло (разница ${t.margin})` : `не прошло (${t.margin})`);
 }
 
-export function pack(step, ctx) {
+export function pack(step: StepData, ctx: StepContext) {
   const breakIf = step.breakIf || 'less';
-  if (!BREAKS[breakIf]) {
+  if (!BREAKS[String(breakIf)]) {
     throw new EngineError(
       `${ctx.owner || 'правило'}: неизвестное условие обрыва «${breakIf}» — умею: ${Object.keys(BREAKS).join(', ')}`);
   }
@@ -62,11 +63,11 @@ export function pack(step, ctx) {
   };
 }
 
-export function resolve(step, ctx) {
+export function resolve(step: StepData, ctx: StepContext) {
   const value = resolveNumber(step.value, ctx, 'сравниваемая величина');
   const versus = resolveNumber(step.versus, ctx, 'сравнению не с чем сопоставить величину');
   const margin = value - versus;
-  const broke = BREAKS[step.breakIf](margin);
+  const broke = BREAKS[String(step.breakIf)]!(margin);
 
   return {
     value: { margin, value, versus },

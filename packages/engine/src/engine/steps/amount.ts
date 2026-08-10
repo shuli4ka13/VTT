@@ -12,6 +12,7 @@
 import { rollNotation } from '../dice.ts';
 import { packRef, resolveOptionalNumber } from '../refs.ts';
 import { EngineError } from '../errors.ts';
+import type { StepData, StepContext } from './index.ts';
 
 export const type = 'amount';
 export const label = 'Величина';
@@ -38,7 +39,7 @@ export const icon = 'Σ';
 // Статическая проверка карточки для приговора в конструкторе: без броска,
 // без параметров, без листа. Источник из параметра проверить нельзя —
 // и это не беда: у получателя есть сторож в pack.
-export function lint(step) {
+export function lint(step: StepData) {
   const source = step.source && typeof step.source === 'object' ? null : step.source;
   if (source === null) return null;
   if (!SOURCES.includes(source)) return `неизвестный источник «${source}» — умею: ${SOURCES.join(', ')}`;
@@ -48,7 +49,7 @@ export function lint(step) {
   return null;
 }
 
-export function traceLine(t) {
+export function traceLine(t: any) {
   const parts = [];
   if (t.rolls.length) parts.push(`[${t.rolls.join(', ')}]`);
   if (t.flat) parts.push(String(t.flat));
@@ -58,7 +59,7 @@ export function traceLine(t) {
   return `величина: ${parts.join(' + ')} = ${t.total}`;
 }
 
-export function pack(step, ctx) {
+export function pack(step: StepData, ctx: StepContext) {
   const source = constant(packRef(step.source, ctx), ctx, 'источник величины');
   if (!SOURCES.includes(source)) {
     throw new EngineError(
@@ -75,7 +76,7 @@ export function pack(step, ctx) {
   if (source === 'roll' && !notation) {
     throw new EngineError(`${who(ctx)}: источнику «свой бросок» нужны кости — слот dice пуст`);
   }
-  if (source === 'item' && (fixed === null || (typeof fixed === 'object' && fixed.const == null))) {
+  if (source === 'item' && (fixed === null || (typeof fixed === 'object' && (fixed as any).const == null))) {
     throw new EngineError(`${who(ctx)}: источнику «фикс предмета» нужен заполненный слот fixed`);
   }
   if (source === 'margin' && !margin) {
@@ -90,7 +91,7 @@ export function pack(step, ctx) {
   };
 }
 
-export function resolve(step, ctx) {
+export function resolve(step: StepData, ctx: StepContext) {
   const flat = resolveOptionalNumber(step.fixed, ctx, 'фикс величины') ?? 0;
   const bonus = resolveOptionalNumber(step.bonus, ctx, 'бонус величины') ?? 0;
   const margin = resolveOptionalNumber(step.margin, ctx, 'превышение для величины') ?? 0;
@@ -109,13 +110,13 @@ export function resolve(step, ctx) {
 
 // Слоты, которые обязаны быть известны отправителю уже при упаковке:
 // источник и нотация костей. Ссылка на результат шага здесь бессмысленна.
-function constant(packed, ctx, what) {
+function constant(packed: unknown, ctx: StepContext, what: string): any {
   if (packed === null || typeof packed !== 'object') return packed;
   if ('const' in packed) return packed.const;
   throw new EngineError(
     `${who(ctx)}: ${what} должен быть известен отправителю, а пришло ${JSON.stringify(packed)}`);
 }
 
-function who(ctx) {
+function who(ctx: StepContext): string {
   return ctx.owner || 'правило';
 }

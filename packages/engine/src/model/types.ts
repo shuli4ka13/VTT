@@ -46,7 +46,13 @@ export interface Field {
 
 // ── словари системы ─────────────────────────────────────────────────────
 
-export interface DiceTerm { count: number; sides: number }
+export interface DiceTerm {
+  count?: number;
+  sides: number;
+  /** Имя части составного броска — Надежда/Страх в Daggerheart. */
+  name?: string;
+  label?: string;
+}
 
 export interface DieConstant {
   label?: string;
@@ -187,25 +193,31 @@ export interface System {
 // Чистый DTO: только сохранённые значения и ссылки. Ни методов,
 // ни вычисленных величин — это критерий приёмки №1.
 
+/** Запись на листе — ССЫЛКА плюс скаляры, поэтому round-trip чарника не меняется. */
 export interface WornEffect {
-  id: string;
+  effectId: string;
   /** Сколько срабатываний осталось у эффекта с `duration.kind === 'uses'`. */
-  uses?: number;
+  usesLeft?: number;
   [k: string]: unknown;
 }
 
+/**
+ * Чарник. Порядок ключей верхнего уровня фиксирован сериализатором —
+ * от него зависит побайтность round-trip (критерий №1).
+ */
 export interface Sheet {
   id: string;
+  systemId?: string;
+  /** Персонаж игрока или ведущего: метка владения, а не правило системы. */
+  kind?: 'pc' | 'npc';
   name?: string;
-  kind?: string;
-  system?: string;
   values: Record<string, unknown>;
-  /** Надетые предметы компендиума — ссылки по id. */
+  /** Надетые предметы компендиума — ссылки по id, не копии. */
   equipped?: string[];
-  /** Известные действия компендиума — ссылки по id. */
-  known?: string[];
   /** Висящие эффекты системы. */
   effects?: WornEffect[];
+  /** Выученные действия компендиума — ссылки по id. */
+  actions?: string[];
   [k: string]: unknown;
 }
 

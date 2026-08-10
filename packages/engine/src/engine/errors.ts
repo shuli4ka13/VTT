@@ -2,7 +2,7 @@
 // здесь «система и чарник не сходятся».
 
 export class EngineError extends Error {
-  constructor(message) {
+  constructor(message: string) {
     super(message);
     this.name = new.target.name;
   }
@@ -10,7 +10,10 @@ export class EngineError extends Error {
 
 // Запрошен тег, которого система не объявляет.
 export class UnknownTagError extends EngineError {
-  constructor(tag, fromTag) {
+  readonly tag: string;
+  readonly fromTag: string | null;
+
+  constructor(tag: string, fromTag?: string | null) {
     super(fromTag
       ? `система не объявляет тег «${tag}» — на него ссылается поле «${fromTag}»`
       : `система не объявляет тег «${tag}»`);
@@ -21,7 +24,9 @@ export class UnknownTagError extends EngineError {
 
 // Формулы замкнулись в кольцо. Внятная ошибка вместо зависания — критерий приёмки №7.
 export class CycleError extends EngineError {
-  constructor(path) {
+  readonly path: string[];
+
+  constructor(path: string[]) {
     super(`циклическая зависимость формул: ${path.join(' → ')}`);
     this.path = path;
   }

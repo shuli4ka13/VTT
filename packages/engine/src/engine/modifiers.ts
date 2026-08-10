@@ -17,17 +17,50 @@ import { compile } from '../formula/index.ts';
 import { assertTarget } from './targets.ts';
 import { roomEffects, wornEffects, activationOf } from './effects.ts';
 import { EngineError } from './errors.ts';
+import type { System, Sheet, Compendium, Modifier } from '../model/types.ts';
+import type { Pass } from './calc.ts';
+import type { RollMode } from './dice.ts';
 
-const STACKING = {
-  sum: values => values.reduce((a, b) => a + b, 0),
-  max: values => values.reduce((a, b) => (b > a ? b : a)),
+/** Откуда приехал модификатор — предмет, эффект на листе или правило комнаты. */
+export interface ModifierSource {
+  type: 'room' | 'item' | 'effect';
+  id: string;
+  label?: string;
+  modifiers: Modifier[];
+}
+
+/** Модификатор вместе с источником: источник нужен и для ошибок, и для журнала. */
+export type SourcedModifier = Modifier & { source: ModifierSource };
+
+/** Разложенные по мишеням модификаторы: движок не перебирает компендиум на каждое поле. */
+export interface CollectedModifiers {
+  value: Map<string, SourcedModifier[]>;
+  roll: Map<string, SourcedModifier[]>;
+}
+
+export interface RollResolution {
+  tag: string;
+  mode: RollMode;
+  bonus: number;
+  methods: string[];
+  sources: unknown[];
+}
+
+// Значения проходят КАК ЕСТЬ: `override` обязан вернуть логическое логическим
+// (кольчуга ставит armor_heavy = true), и приводить его к числу нельзя.
+// Приведения ниже — только типовые, на рантайм они не влияют.
+const STACKING: Record<string, (values: unknown[]) => unknown> = {
+  sum: values => values.reduce((a, b) => (a as number) + (b as number), 0),
+  max: values => values.reduce((a, b) => ((b as number) > (a as number) ? b : a)),
   override: values => values[values.length - 1],
 };
 
 // Собирает модификаторы всех источников: надетых предметов и активных эффектов.
 // Раскладывает по мишеням, чтобы движок не перебирал весь компендиум на каждое поле.
-export function collectModifiers(system, sheet, compendium) {
-  const buckets = { value: new Map(), roll: new Map() };
+export function collectModifiers(
+  system: System, sheet: Sheet, compendium: Compendium,
+): CollectedModifiers {
+  const buckets: CollectedModifiers = { value: new Map(), roll: new Map() };
   if (!compendium) return buckets;
 
   for (const source of sourcesOf(system, sheet, compendium)) {
@@ -36,8 +69,9 @@ export function collectModifiers(system, sheet, compendium) {
       // именно из-за него в черновике бонусы никуда не резолвились.
       assertTarget(system, mod.target, source.label);
       const bucket = mod.kind === 'roll' ? buckets.roll : buckets.value;
-      if (!bucket.has(mod.target)) bucket.set(mod.target, []);
-      bucket.get(mod.target).push({ ...mod, source });
+      let list = bucket.get(mod.target);
+      if (!list) { list = []; bucket.set(mod.target, list); }
+      list.push({ ...mod, source });
     }
   }
   return buckets;
@@ -46,8 +80,8 @@ export function collectModifiers(system, sheet, compendium) {
 // Три способа подключить пассивный эффект — три источника. Способ подключения
 // внутри эффекта не записан: он один и тот же эффект в правилах комнаты
 // и на одном чарнике, разница только здесь.
-function sourcesOf(system, sheet, compendium) {
-  const sources = [];
+function sourcesOf(system: System, sheet: Sheet, compendium: Compendium): ModifierSource[] {
+  const sources: ModifierSource[] = [];
 
   // Правила комнаты: пассивные эффекты, включённые на ВСЕХ чарников мира.
   // Надевать и навешивать ничего не нужно.
@@ -76,7 +110,7 @@ function sourcesOf(system, sheet, compendium) {
 
 // Применяется движком сразу после того, как посчитано базовое значение поля.
 // Порядок: сначала `set` (задают значение заново), потом `add`, потом `mul`.
-export function applyValueModifiers(base, tag, pass) {
+export function applyValueModifiers(base: unknown, tag: string, pass: Pass): unknown {
   if (!pass.modifiers) return base;
   const mods = pass.modifiers.value.get(tag);
   if (!mods || mods.length === 0) return base;
@@ -88,17 +122,17 @@ export function applyValueModifiers(base, tag, pass) {
 
   const sets = active.filter(m => m.op === 'set');
   if (sets.length) {
-    const rule = sets[sets.length - 1].stacking || 'override';
+    const rule = String(sets[sets.length - 1]!.stacking || 'override');
     value = reduce(rule, sets.map(m => valueOf(m, pass)), tag);
   }
 
   const adds = active.filter(m => m.op === 'add');
-  if (adds.length) value = value + totalOf(adds, pass, tag);
+  if (adds.length) value = (value as number) + totalOf(adds, pass, tag);
 
   const muls = active.filter(m => m.op === 'mul');
-  if (muls.length) value = value * totalOf(muls, pass, tag, 1);
+  if (muls.length) value = (value as number) * totalOf(muls, pass, tag, 1);
 
-  const unknown = active.find(m => !['set', 'add', 'mul'].includes(m.op));
+  const unknown = active.find(m => !['set', 'add', 'mul'].includes(String(m.op)));
   if (unknown) throw new EngineError(`неизвестная операция модификатора «${unknown.op}» на мишени «${tag}»`);
 
   return value;
@@ -106,7 +140,9 @@ export function applyValueModifiers(base, tag, pass) {
 
 // Разбор броска: какая порода модификаторов на нём висит и что из этого следует.
 // Возвращает не число, а режим — движок броска сам решит, как его отыграть.
-export function resolveRoll(system, sheet, rollTag, pass) {
+export function resolveRoll(
+  system: System, sheet: Sheet, rollTag: string, pass: Pass,
+): RollResolution {
   assertTarget(system, rollTag);
 
   const mods = (pass.modifiers ? pass.modifiers.roll.get(rollTag) || [] : [])
@@ -117,7 +153,7 @@ export function resolveRoll(system, sheet, rollTag, pass) {
 
   // Не сумма и не счёт. Помеха гасит преимущество целиком, сколько бы
   // источников ни было с каждой стороны.
-  let mode = 'normal';
+  let mode: RollMode = 'normal';
   if (hasAdvantage && !hasDisadvantage) mode = 'advantage';
   else if (hasDisadvantage && !hasAdvantage) mode = 'disadvantage';
 
@@ -133,12 +169,12 @@ export function resolveRoll(system, sheet, rollTag, pass) {
     bonus,
     // Механику отыгрыша задаёт система, а не движок: переброс с выбором лучшего,
     // добавление кости, сдвиг степени успеха — всё это разные способы.
-    methods: [...new Set(mods.map(m => m.method).filter(Boolean))],
+    methods: [...new Set(mods.map(m => m.method).filter(Boolean))] as string[],
     sources: mods.map(m => ({ ...m.source, effect: m.effect, method: m.method })),
   };
 }
 
-function conditionHolds(mod, pass) {
+function conditionHolds(mod: SourcedModifier, pass: Pass): boolean {
   if (!mod.condition) return true;
   const result = compile(mod.condition).evaluate(pass.resolve);
   if (typeof result !== 'boolean') {
@@ -148,28 +184,31 @@ function conditionHolds(mod, pass) {
   return result;
 }
 
-function valueOf(mod, pass) {
-  if (mod.value && typeof mod.value === 'object' && 'expr' in mod.value) {
-    return compile(mod.value.expr).evaluate(pass.resolve);
+function valueOf(mod: SourcedModifier, pass: Pass): unknown {
+  const raw = (mod as { value?: unknown }).value;
+  if (raw && typeof raw === 'object' && 'expr' in raw) {
+    return compile((raw as { expr: string }).expr).evaluate(pass.resolve);
   }
-  return mod.value;
+  return raw;
 }
 
-function totalOf(mods, pass, tag, seed = 0) {
-  const byRule = new Map();
+function totalOf(mods: SourcedModifier[], pass: Pass, tag: string, seed = 0): number {
+  const byRule = new Map<string, unknown[]>();
   for (const mod of mods) {
-    const rule = mod.stacking || 'sum';
-    if (!byRule.has(rule)) byRule.set(rule, []);
-    byRule.get(rule).push(valueOf(mod, pass));
+    const rule = String(mod.stacking || 'sum');
+    let list = byRule.get(rule);
+    if (!list) { list = []; byRule.set(rule, list); }
+    list.push(valueOf(mod, pass));
   }
   let total = seed;
   for (const [rule, values] of byRule) {
-    total = seed === 0 ? total + reduce(rule, values, tag) : total * reduce(rule, values, tag);
+    const part = reduce(rule, values, tag) as number;
+    total = seed === 0 ? total + part : total * part;
   }
   return total;
 }
 
-function reduce(rule, values, tag) {
+function reduce(rule: string, values: unknown[], tag: string): unknown {
   const fn = STACKING[rule];
   if (!fn) {
     throw new EngineError(

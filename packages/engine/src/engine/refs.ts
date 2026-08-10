@@ -23,51 +23,76 @@
 
 import { compile } from '../formula/index.ts';
 import { EngineError } from './errors.ts';
+import type { Param } from '../model/types.ts';
+import type { Pass } from './calc.ts';
+
+/**
+ * Контекст разрешения ссылки. Сторона решается тем, ЧТО в нём лежит:
+ * у отправителя нет ни результатов шагов, ни листа цели — поэтому посчитать
+ * за цель он не может по построению, а не по договорённости.
+ */
+export interface RefContext {
+  pass: Pass;
+  /** Кто разрешает — попадает в текст ошибки. */
+  owner?: string;
+  /** Свойства записи-источника (циферки, заполненные по форме её рода). */
+  props?: Record<string, unknown> | null;
+  /** Объявленные эффектом параметры. */
+  paramDefs?: Param[];
+  /** Аргументы привязки: готовое значение либо { prop } — «возьми из записи». */
+  params?: Record<string, unknown>;
+  /** Результаты уже отработавших шагов — сторона получателя. */
+  results?: Record<string, unknown>;
+}
 
 const FORMS = ['const', 'expr', 'param', 'prop', 'item', 'tag', 'ref'];
 
+type AnyRef = Record<string, unknown>;
+
 // `item` — прежнее имя формы `prop`. Старые системы читали так свойства
 // оружия; форма обобщена на любую запись-источник, имя оставлено рабочим.
-const propKey = ref => ('prop' in ref ? ref.prop : ref.item);
+const propKey = (ref: AnyRef): string => String('prop' in ref ? ref.prop : ref.item);
 
 // ── сторона отправителя ──────────────────────────────────────────────────────
 // Возвращает структурную ссылку для конверта: своё — числом ({ const }),
 // целевое — нетронутым.
 
-export function packRef(ref, ctx) {
+export function packRef(ref: unknown, ctx: RefContext): unknown {
   if (ref === null || ref === undefined || typeof ref !== 'object') return ref ?? null;
 
-  if ('const' in ref) return { const: ref.const };
+  const r = ref as AnyRef;
 
-  if ('expr' in ref) {
-    if ((ref.of || 'sender') === 'target') return { expr: ref.expr, of: 'target' };
-    return { const: evaluate(ref.expr, ctx) };
+  if ('const' in r) return { const: r.const };
+
+  if ('expr' in r) {
+    if ((r.of || 'sender') === 'target') return { expr: r.expr, of: 'target' };
+    return { const: evaluate(r.expr, ctx) };
   }
 
   // optional: true — пустота объявлена в данных и потому законна. Так живут
   // взаимоисключающие слоты (кости ИЛИ фикс предмета): эффект заполняет один,
   // второй честно даёт null, а не роняет упаковку.
-  if ('param' in ref) return packParam(ref.param, ref.optional, ctx);
+  if ('param' in r) return packParam(String(r.param), Boolean(r.optional), ctx);
 
-  if ('prop' in ref || 'item' in ref) {
-    const key = propKey(ref);
+  if ('prop' in r || 'item' in r) {
+    const key = propKey(r);
     if (!ctx.props) {
-      if (ref.optional) return { const: null };
+      if (r.optional) return { const: null };
       throw new EngineError(
         `${who(ctx)}: неоткуда взять свойство «${key}» — у источника нет записи со свойствами`);
     }
     if (ctx.props[key] === undefined) {
-      if (ref.optional) return { const: null };
+      if (r.optional) return { const: null };
       throw new EngineError(
         `${who(ctx)}: запись-источник не заполнила свойство «${key}»`);
     }
     return { const: ctx.props[key] };
   }
 
-  if ('tag' in ref) return { tag: ref.tag };
-  if ('ref' in ref) return { ref: ref.ref };
+  if ('tag' in r) return { tag: r.tag };
+  if ('ref' in r) return { ref: r.ref };
 
-  return unknownForm(ref, ctx);
+  return unknownForm(r, ctx);
 }
 
 // Параметр подставляется ровно один раз, при упаковке: в конверте { param }
@@ -77,7 +102,7 @@ export function packRef(ref, ctx) {
 // (строка, число) либо { prop: 'ключ' } — «возьми из свойств самой записи».
 // Второй вид и делает род ФОРМОЙ заполнения: привязка рода написана один раз,
 // а каждая запись подставляет в неё свои циферки.
-function packParam(key, optional, ctx) {
+function packParam(key: string, optional: boolean, ctx: RefContext): unknown {
   const decl = (ctx.paramDefs || []).find(p => p.key === key);
   if (!decl) {
     throw new EngineError(`${who(ctx)}: эффект не объявляет параметра «${key}»`);
@@ -93,10 +118,10 @@ function packParam(key, optional, ctx) {
   return { const: value };
 }
 
-function fromArgs(key, ctx) {
+function fromArgs(key: string, ctx: RefContext): unknown {
   const arg = (ctx.params || {})[key];
   if (arg === null || typeof arg !== 'object') return arg;
-  if ('prop' in arg) return (ctx.props || {})[arg.prop];
+  if ('prop' in arg) return (ctx.props || {})[String((arg as AnyRef).prop)];
   throw new EngineError(
     `${who(ctx)}: аргумент «${key}» неизвестной формы ${JSON.stringify(arg)} — умею значение или { prop }`);
 }
@@ -105,51 +130,54 @@ function fromArgs(key, ctx) {
 // Здесь всё обязано разрешиться до значения. { param } и неразрешённое
 // выражение отправителя законно прийти не могли — это подделка конверта.
 
-export function resolveRef(ref, ctx) {
+export function resolveRef(ref: unknown, ctx: RefContext): unknown {
   if (ref === null || ref === undefined || typeof ref !== 'object') return ref ?? null;
 
-  if ('const' in ref) return ref.const;
+  const r = ref as AnyRef;
 
-  if ('expr' in ref) {
-    if ((ref.of || 'sender') !== 'target') {
+  if ('const' in r) return r.const;
+
+  if ('expr' in r) {
+    if ((r.of || 'sender') !== 'target') {
       throw new EngineError(
-        `${who(ctx)}: выражение «${ref.expr}» стороны отправителя пришло неразрешённым — конверт бит`);
+        `${who(ctx)}: выражение «${r.expr}» стороны отправителя пришло неразрешённым — конверт бит`);
     }
-    return evaluate(ref.expr, ctx);
+    return evaluate(r.expr, ctx);
   }
 
-  if ('param' in ref) {
+  if ('param' in r) {
     throw new EngineError(
-      `${who(ctx)}: параметр «${ref.param}» не был упакован отправителем — конверт бит`);
+      `${who(ctx)}: параметр «${r.param}» не был упакован отправителем — конверт бит`);
   }
 
-  if ('prop' in ref || 'item' in ref) {
+  if ('prop' in r || 'item' in r) {
     throw new EngineError(
-      `${who(ctx)}: свойство записи «${propKey(ref)}» пришло неразрешённым — конверт бит`);
+      `${who(ctx)}: свойство записи «${propKey(r)}» пришло неразрешённым — конверт бит`);
   }
 
-  if ('tag' in ref) return ctx.pass.resolve(ref.tag);
+  if ('tag' in r) return ctx.pass.resolve(String(r.tag));
 
-  if ('ref' in ref) {
-    const [head, ...path] = String(ref.ref).split('.');
+  if ('ref' in r) {
+    const [head, ...path] = String(r.ref).split('.');
+    if (head === undefined) throw new EngineError(`${who(ctx)}: пустая ссылка на шаг`);
     if (!(head in (ctx.results || {}))) {
       throw new EngineError(
         `${who(ctx)}: шаг «${head}» результата не оставил — он вообще был раньше по цепочке?`);
     }
-    let value = ctx.results[head];
+    let value: unknown = (ctx.results || {})[head];
     for (const key of path) {
       if (value === null || typeof value !== 'object' || !(key in value)) {
         throw new EngineError(`${who(ctx)}: у результата шага «${head}» нет «${path.join('.')}»`);
       }
-      value = value[key];
+      value = (value as AnyRef)[key];
     }
     return value;
   }
 
-  return unknownForm(ref, ctx);
+  return unknownForm(r, ctx);
 }
 
-export function resolveNumber(ref, ctx, what) {
+export function resolveNumber(ref: unknown, ctx: RefContext, what: string): number {
   const value = resolveRef(ref, ctx);
   if (typeof value !== 'number') {
     throw new EngineError(
@@ -160,7 +188,7 @@ export function resolveNumber(ref, ctx, what) {
 
 // Для слотов, где пустота законна (объявлена через optional): null — это null,
 // а вот НЕ-число, которое числом притворялось, — по-прежнему ошибка.
-export function resolveOptionalNumber(ref, ctx, what) {
+export function resolveOptionalNumber(ref: unknown, ctx: RefContext, what: string): number | null {
   if (ref === null || ref === undefined) return null;
   const value = resolveRef(ref, ctx);
   if (value === null) return null;
@@ -173,21 +201,21 @@ export function resolveOptionalNumber(ref, ctx, what) {
 
 // ── внутреннее ───────────────────────────────────────────────────────────────
 
-function evaluate(expr, ctx) {
+function evaluate(expr: unknown, ctx: RefContext): unknown {
   return compile(String(expr)).evaluate(ctx.pass.resolve);
 }
 
-function who(ctx) {
+function who(ctx: RefContext): string {
   return ctx.owner || 'правило';
 }
 
-function describe(ref) {
+function describe(ref: unknown): string {
   if (ref === null || typeof ref !== 'object') return JSON.stringify(ref);
-  const form = FORMS.find(f => f in ref);
-  return form ? `«${form}: ${ref[form]}»` : JSON.stringify(ref);
+  const form = FORMS.find(f => f in (ref as AnyRef));
+  return form ? `«${form}: ${(ref as AnyRef)[form]}»` : JSON.stringify(ref);
 }
 
-function unknownForm(ref, ctx) {
+function unknownForm(ref: unknown, ctx: RefContext): never {
   throw new EngineError(
     `${who(ctx)}: ссылка неизвестной формы ${JSON.stringify(ref)} — умею ${FORMS.join(', ')}`);
 }

@@ -1,6 +1,6 @@
 import { group, test, eq, ok, deepEq } from './harness.ts';
 import { migrateWorld, needsMigration } from '../src/model/migrate.ts';
-import { unpackWorld } from '../src/ui/world.ts';
+
 import { send, receive, availableActions } from '../src/events/envelope.ts';
 
 // Командные миры, выгруженные до перекройки, обязаны открываться. Миграция —
@@ -153,8 +153,11 @@ group('миграция мира со старого формата', () => {
   });
 
   test('файл мира версии 1 читается и мигрируется при загрузке', () => {
+    // Распаковку файла делает транспорт (раньше — src/ui/world.js, дальше —
+    // packages/schema). Движку принадлежит сама миграция, её и проверяем:
+    // разбор JSON здесь такой же, каким его сделает любой транспорт.
     const text = JSON.stringify({ version: 1, ...oldWorld() });
-    const world = unpackWorld(text);
+    const world = migrateWorld(JSON.parse(text));
     ok(world.system.effects.strike, 'после загрузки формат уже новый');
     eq(world.system.rules, undefined);
   });

@@ -1,3 +1,4 @@
+import type { Compendium, CompendiumRecord } from './types.ts';
 // Компендиум — данные для системы и чарника. Чистые данные плюс ссылки;
 // ни одного шага автоматизации здесь нет и быть не может.
 //
@@ -14,7 +15,7 @@
 //   kind: 'value' — правит ЗНАЧЕНИЕ, обычная арифметика, складывается по правилу стакинга
 //   kind: 'roll'  — правит БРОСОК, не число, не складывается, помеха гасит преимущество
 
-export const items = [
+export const items: CompendiumRecord[] = [
   {
     id: 'chain-mail',
     rk: 'gear',
@@ -48,7 +49,7 @@ export const items = [
 // Заклинание — не отдельный род хранения, а род записи с группой
 // «Заклинания»: подвиды (атакующие, лечащие, нейтральные) — это рода
 // в одной группе, как поля листа раскладываются по блокам.
-export const actions = [
+export const actions: CompendiumRecord[] = [
   {
     id: 'poison-spray',
     rk: 'attack-spell',
@@ -73,12 +74,12 @@ export const actions = [
 
 export const compendium = { items, actions };
 
-export const findItem = id => items.find(i => i.id === id) || null;
-export const findAction = id => actions.find(a => a.id === id) || null;
+export const findItem = (id: string) => items.find(i => i.id === id) || null;
+export const findAction = (id: string) => actions.find(a => a.id === id) || null;
 
 // Единый список для экрана компендиума: разделов там нет намеренно,
 // раскладку даёт группа рода.
-export const allRecords = book => [
-  ...(book.items || []).map(r => ({ ...r, kind: 'item' })),
-  ...(book.actions || []).map(r => ({ ...r, kind: 'action' })),
+export const allRecords = (book: Compendium) => [
+  ...(book.items || []).map(r => ({ ...r, kind: 'item' as const })),
+  ...(book.actions || []).map(r => ({ ...r, kind: 'action' as const })),
 ];

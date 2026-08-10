@@ -124,71 +124,10 @@ if (inNode) {
   // files/ — исходные документы. Оба к нашему коду отношения не имеют.
   const SKIP_DIRS = new Set(['reference', 'files', 'node_modules', '.git', 'docs']);
 
-  group('граница режимов', () => {
-    // Граница проведена импортами, а не стилями: если экран игрока однажды
-    // потянет к себе правку состава полей, тест упадёт раньше, чем это заметят
-    // на демо.
-    const playerCode = readFileSync(join(repo, 'src/ui/mode-player.ts'), 'utf8');
-
-    test('экран игрока не импортирует редактор полей', () => {
-      eq(/from\s+'\.\/field-editor\.ts'/.test(playerCode), false,
-        'mode-player.js не должен знать модуль, который правит состав полей');
-    });
-
-    test('экран игрока не трогает system.fields', () => {
-      eq(/system\.fields\s*(=|\.push|\.splice|\.filter\s*\()/.test(playerCode), false,
-        'состав полей правит только режим автора');
-    });
-
-    test('в приложении партии нет НИЧЕГО от конструктора — граница по страницам', () => {
-      // Раньше граница шла по вкладкам одного файла, теперь — по приложениям:
-      // vtt.html вообще не содержит конструктора, не спрятанного, а не подключённого.
-      const html = readFileSync(join(repo, 'vtt.html'), 'utf8');
-      for (const trace of ['pane-author', 'author-editor', 'uiAddField', 'uiAddGroup', 'uiDelField', 'uiRuleSlot', 'uiKindAdd']) {
-        eq(html.includes(trace), false, `${trace} не должен встречаться в приложении партии`);
-      }
-    });
-
-    test('редактор полей живёт только в приложении автора', () => {
-      const html = readFileSync(join(repo, 'constructor.html'), 'utf8');
-      ok(html.includes('author-editor'), 'редактор поля — часть конструктора');
-      eq(html.includes('pane-player'), false, 'а экрана игрока в конструкторе нет');
-      eq(html.includes('pane-table'), false, 'и стола нет');
-    });
-
-    test('стол ничего не правит: ни полей, ни правил — только выбирает пару листов', () => {
-      const tableCode = readFileSync(join(repo, 'src/ui/mode-table.ts'), 'utf8');
-      eq(/from\s+'\.\/field-editor\.ts'/.test(tableCode), false, 'стол не знает редактора полей');
-      eq(/from\s+'\.\/effect-editor\.ts'/.test(tableCode), false, 'и конструктора эффектов не знает');
-      eq(tableCode.includes('uiEffSlot'), false, 'правка шагов со стола невозможна');
-      const html = readFileSync(join(repo, 'vtt.html'), 'utf8');
-      const tablePane = html.slice(html.indexOf('id="pane-table"'), html.indexOf('<script'));
-      for (const handler of ['uiAddField', 'uiAddGroup', 'uiDelField']) {
-        eq(tablePane.includes(handler), false, `${handler} не должен встречаться в разметке стола`);
-      }
-    });
-
-    test('шаги эффекта правятся в конструкторе систем, и только там', () => {
-      // Смена шага меняет ФОРМУ разрешения — по границе режимов это автор.
-      const authorCode = readFileSync(join(repo, 'src/ui/mode-author.ts'), 'utf8');
-      const effectEditorCode = readFileSync(join(repo, 'src/ui/effect-editor.ts'), 'utf8');
-      const compendiumCode = readFileSync(join(repo, 'src/ui/mode-compendium.ts'), 'utf8');
-
-      ok(/from\s+'\.\/effect-editor\.ts'/.test(authorCode),
-        'конструктор эффектов — часть режима автора');
-      ok(/from\s+'\.\.\/model\/amount-sources\.ts'/.test(effectEditorCode),
-        'словарь источников величины — часть конструктора эффектов');
-      ok(effectEditorCode.includes('uiEffSlot'), 'правка слота шага есть у автора');
-      for (const [file, code] of [['mode-player.ts', playerCode], ['mode-compendium.ts', compendiumCode]]) {
-        eq(code.includes('uiEffSlot'), false, `${file}: правки шагов нет — негативный контроль`);
-        eq(code.includes('uiEffAddStep'), false, `${file}: и добавления шагов нет`);
-      }
-      // Редактор эффекта рисует ТОЛЬКО параметры: реестр шагов ему не нужен,
-      // и первым признаком протечки станет вот этот импорт.
-      eq(/from\s+'\.\.\/engine\/steps\//.test(compendiumCode), false,
-        'mode-compendium.js не знает реестра шагов');
-    });
-  });
+  // Группа «граница режимов» ждёт своего этапа: она сканирует модули экранов
+  // (src/ui/*) и разметку страниц, а их в пакете движка нет и не будет —
+  // фронт переезжает этапами 4–10, и группа вернётся вместе с ним.
+  // Отложенный текст — tests/_deferred/acceptance.border.txt.
 
   group('одна модель, а не две', () => {
     // Перекройка на эффекты закончена только тогда, когда СТАРЫХ секций нет

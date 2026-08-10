@@ -29,32 +29,88 @@ import {
   requireEffect, findEffect, isPipeline, activationOf, durationOf, wornEffects,
 } from '../engine/effects.ts';
 import { EngineError } from '../engine/errors.ts';
+import type {
+  System, Sheet, Compendium, CompendiumRecord, Binding, Die,
+} from '../model/types.ts';
+import type { StepData } from '../engine/steps/index.ts';
+import type { RefContext } from '../engine/refs.ts';
+
+/** Что персонаж может применить: пара «запись · привязка», собранная на лету. */
+export interface Action {
+  id: string;
+  label: string;
+  record: CompendiumRecord;
+  binding: Binding;
+  effect: string;
+}
+
+/** Контекст мира: чем считать и по каким данным. */
+export interface WorldContext {
+  system: System;
+  compendium: Compendium;
+  die: Die;
+}
+
+/** Конверт намерения. Отправитель НЕ считает за получателя — это критерий №5. */
+export interface Envelope {
+  kind: string;
+  effect: string;
+  from: string;
+  to?: string;
+  action: string;
+  label: string;
+  steps: StepData[];
+  /** Конверт рождён триггером: на помеченные триггеры молчат (каскад глубины 1). */
+  reply?: boolean;
+}
+
+export interface Report {
+  kind: string;
+  effect: string;
+  from: string;
+  label: string;
+  reply: boolean;
+  trace: Record<string, unknown>[];
+  stopped: unknown;
+  changes: unknown[];
+  effects: string[];
+  removed: string[];
+  spent: string[];
+}
+
+export interface ReceiveResult {
+  sheet: Sheet;
+  replies: Envelope[];
+  report: Report;
+}
 
 // ── что персонаж может применить ────────────────────────────────────────────
 
 // Привязки записи — что она даёт владельцу. Три источника, и порядок важен:
 // СВОЯ активность записи перебивает привязку рода. Так штучная вещь получает
 // поведение поверх общей формы, не ломая форму.
-export function bindingsOf(record, system) {
+export function bindingsOf(record: CompendiumRecord, system: System): Binding[] {
   if (record.activities && record.activities.length) return record.activities;
-  if (record.effect) return [{ label: record.label, effect: record.effect, args: record.args || {} }];
-  const decl = (system.records || {})[record.rk] || {};
-  return decl.bindings || [];
+  if (record.effect) return [{ label: record.label, effect: String(record.effect), args: (record.args || {}) as Binding['args'] }];
+  const decl = (system.records || {})[String(record.rk)];
+  return decl?.bindings || [];
 }
 
 // Выученные записи-действия ПЛЮС привязки надетых предметов. Как в Foundry:
 // у меча есть своя атака, надел — получил, снял — потерял. Причём мечу
 // не нужно её объявлять: привязка живёт у РОДА «Оружие», а запись заполняет
 // только кость урона.
-export function availableActions(sheet, { system, compendium }) {
-  const out = [];
+export function availableActions(
+  sheet: Sheet, { system, compendium }: { system: System; compendium: Compendium },
+): Action[] {
+  const out: Action[] = [];
 
   for (const itemId of sheet.equipped || []) {
     const item = (compendium.items || []).find(i => i.id === itemId);
     if (item) out.push(...actionsOfRecord(item, system, true));
   }
 
-  for (const actionId of sheet.actions || []) {
+  for (const actionId of (sheet.actions as string[] | undefined) || []) {
     const record = (compendium.actions || []).find(a => a.id === actionId);
     if (record) out.push(...actionsOfRecord(record, system, false));
   }
@@ -64,10 +120,12 @@ export function availableActions(sheet, { system, compendium }) {
 
 // Действие по id — «запись:номер привязки». Виртуальное, нигде не хранится:
 // источник правды один, сама запись.
-export function actionOf(actionId, { system, compendium }) {
+export function actionOf(
+  actionId: string, { system, compendium }: { system: System; compendium: Compendium },
+): Action {
   const at = String(actionId).lastIndexOf(':');
-  const recordId = at > 0 ? actionId.slice(0, at) : actionId;
-  const index = at > 0 ? Number(actionId.slice(at + 1)) : 0;
+  const recordId = at > 0 ? String(actionId).slice(0, at) : String(actionId);
+  const index = at > 0 ? Number(String(actionId).slice(at + 1)) : 0;
 
   const item = (compendium.items || []).find(r => r.id === recordId);
   const record = item || (compendium.actions || []).find(r => r.id === recordId);
@@ -85,13 +143,13 @@ export function actionOf(actionId, { system, compendium }) {
 // Предмет всегда называется парой «вещь · применение»: у одного меча может
 // быть и удар, и парирование. Запись-действие сама себе имя, пока привязка
 // одна, — «Ядовитые брызги», а не «Ядовитые брызги · Сотворить».
-function actionsOfRecord(record, system, fromItem) {
+function actionsOfRecord(record: CompendiumRecord, system: System, fromItem: boolean): Action[] {
   const bindings = bindingsOf(record, system);
-  return bindings.map((binding, index) => ({
+  return bindings.map((binding, index): Action => ({
     id: `${record.id}:${index}`,
     label: fromItem || bindings.length > 1
       ? `${record.label} · ${binding.label || 'Применение'}`
-      : record.label,
+      : String(record.label),
     record,
     binding,
     effect: binding.effect,
@@ -100,7 +158,10 @@ function actionsOfRecord(record, system, fromItem) {
 
 // ── отправка ────────────────────────────────────────────────────────────────
 
-export function send(actionId, { system, sheet, compendium, die }) {
+export function send(
+  actionId: string,
+  { system, sheet, compendium, die }: WorldContext & { sheet: Sheet },
+): Envelope {
   const action = actionOf(actionId, { system, compendium });
 
   // Эффект достаётся из СИСТЕМЫ отправителя в момент отправки: правка эффекта
@@ -132,7 +193,10 @@ export function send(actionId, { system, sheet, compendium, die }) {
 
 // ── получение ───────────────────────────────────────────────────────────────
 
-export function receive(envelope, { system, sheet, compendium, die }) {
+export function receive(
+  envelope: Envelope,
+  { system, sheet, compendium, die }: WorldContext & { sheet: Sheet },
+): ReceiveResult {
   const pass = newPass(system, sheet, { compendium });
   const out = resolveRule(envelope.steps || [], {
     system, sheet, pass, die,
@@ -168,9 +232,11 @@ export function receive(envelope, { system, sheet, compendium, die }) {
 // Триггеры получателя: событие уже разрешено и посчитано, теперь эффекты,
 // висящие на нём, отвечают. Каждый ответ — обычный конверт в обратную
 // сторону; считать его будет исходный отправитель, у себя и своей системой.
-function fireTriggers(envelope, out, { system, compendium, die }) {
-  const replies = [];
-  const spent = [];
+function fireTriggers(
+  envelope: Envelope, out: { sheet: Sheet; results: Record<string, unknown> }, { system, compendium, die }: WorldContext,
+): { sheet: Sheet; replies: Envelope[]; spent: string[] } {
+  const replies: Envelope[] = [];
+  const spent: string[] = [];
   let sheet = out.sheet;
 
   // Список снимается ДО правок: срабатывание может убрать запись с листа
@@ -179,7 +245,8 @@ function fireTriggers(envelope, out, { system, compendium, die }) {
     .filter(({ effect }) => activationOf(effect) === 'triggered');
 
   for (const { id, effect } of candidates) {
-    const trigger = effect.trigger || {};
+    const trigger = effect.trigger;
+    if (!trigger) continue;
     if (trigger.on !== envelope.effect) continue;
     if ((trigger.when || 'resolved') !== 'resolved') continue;
 
@@ -197,7 +264,7 @@ function fireTriggers(envelope, out, { system, compendium, die }) {
       label: effect.label || id,
       steps: packRule(effect, {
         system, sheet, pass, die,
-        params: effect.args || {},
+        params: (effect.args || {}) as Record<string, unknown>,
         props: null,
         owner,
       }),
@@ -215,7 +282,7 @@ function fireTriggers(envelope, out, { system, compendium, die }) {
 // Условие триггера — структурная ссылка, как слоты шагов: { ref: 'hit.success' }
 // смотрит в результат шага СОБЫТИЯ, { expr } — в поля самого владельца.
 // Пусто — срабатывает всегда.
-function conditionHolds(condition, ctx) {
+function conditionHolds(condition: unknown, ctx: RefContext): boolean {
   if (condition === null || condition === undefined) return true;
   const value = resolveRef(condition, ctx);
   if (typeof value !== 'boolean') {
@@ -227,8 +294,8 @@ function conditionHolds(condition, ctx) {
 
 // Счётчик срабатываний — личное число персонажа: у варвара осталось два,
 // у жреца три. Потому и живёт в записи на листе, а не в эффекте.
-function spendUse(sheet, effectId) {
-  const effects = [];
+export function spendUse(sheet: Sheet, effectId: string): Sheet {
+  const effects: Sheet['effects'] = [];
   for (const entry of sheet.effects || []) {
     if (entry.effectId !== effectId) { effects.push(entry); continue; }
     const left = Number(entry.usesLeft ?? 1) - 1;
@@ -242,10 +309,10 @@ function spendUse(sheet, effectId) {
 // Из записи читаются ТОЛЬКО свойства, объявленные системой для её РОДА
 // (system.records[rk].props). Необъявленного свойства для движка не существует:
 // компендиум ничего нового не вводит, он заполняет объявленное.
-export function propsOf(record, system) {
-  const decl = (system.records || {})[record.rk] || {};
-  if (!decl.props || !decl.props.length) return null;
-  const props = {};
+export function propsOf(record: CompendiumRecord, system: System): Record<string, unknown> | null {
+  const decl = (system.records || {})[String(record.rk)];
+  if (!decl?.props || !decl.props.length) return null;
+  const props: Record<string, unknown> = {};
   for (const p of decl.props) {
     if (record.props && record.props[p.key] !== undefined) props[p.key] = record.props[p.key];
   }
@@ -254,7 +321,7 @@ export function propsOf(record, system) {
 
 // Лейбл эффекта для журнала: журнал показывает человеческое имя, а хранится
 // всюду машинный id.
-export const effectLabelOf = (system, id) => {
+export const effectLabelOf = (system: System, id: string): string => {
   const effect = findEffect(system, id);
   return (effect && effect.label) || id;
 };
