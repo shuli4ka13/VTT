@@ -28,6 +28,14 @@ const ACTIVATIONS = [
   { key: 'passive' as const, label: 'Пассивный', title: 'Просто висит и правит цифры' },
 ];
 
+// Ответ на вопрос заголовка «когда срабатывает» — живой строкой под
+// переключателем, а не прилагательным, которое надо расшифровывать.
+const ACTIVATION_ANSWERS: Record<Activation, string> = {
+  manual: 'Когда игрок нажал кнопку на листе. Кнопку даёт запись компендиума или сам эффект.',
+  triggered: 'Сам, когда на владельце разрешился чужой эффект. Что слушать — выберете ниже.',
+  passive: 'Никогда: не срабатывает, а висит и правит цифры, пока не снят.',
+};
+
 const DURATIONS = [
   ['permanent', 'постоянно'],
   ['temporary', 'временно'],
@@ -154,7 +162,7 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
           }
         />
 
-        <Field label="Когда срабатывает">
+        <Field label="Когда срабатывает" hint={ACTIVATION_ANSWERS[activation]}>
           <Segmented
             value={activation}
             options={ACTIVATIONS}
