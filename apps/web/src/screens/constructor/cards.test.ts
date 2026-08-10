@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { groupSteps, STEP_TEMPLATES } from './cards.ts';
+import { groupSteps, BRICKS } from './cards.ts';
 import type { System, Step } from '@vtt/schema';
 
 const steps = (list: object[]) => list as unknown as Step[];
@@ -43,17 +43,19 @@ describe('groupSteps', () => {
   });
 });
 
-describe('STEP_TEMPLATES', () => {
-  it('атака: две карточки, ни одного тега поля внутри', () => {
-    const attack = STEP_TEMPLATES.find(t => t.key === 'attack')!;
-    const made = attack.make(system, []);
-    expect(groupSteps(made).map(g => g.kind)).toEqual(['check', 'change']);
-    expect(JSON.stringify(made)).not.toMatch(/"tag"/);
+describe('BRICKS', () => {
+  it('кирпичи пишут только типы движка и ни одного тега поля', () => {
+    for (const brick of BRICKS) {
+      const made = brick.make(system, []);
+      for (const step of made) {
+        expect(['threshold', 'amount', 'compare', 'apply', 'status']).toContain(step.type);
+      }
+      expect(JSON.stringify(made)).not.toMatch(/"tag"/);
+    }
   });
 
-  it('имя внутреннего числа не сталкивается с занятыми', () => {
-    const attack = STEP_TEMPLATES.find(t => t.key === 'attack')!;
-    const made = attack.make(system, ['n']);
-    expect(made[1]!.id).toBe('n_2');
+  it('имя нового числа не сталкивается с занятыми', () => {
+    const number = BRICKS.find(b => b.key === 'number')!;
+    expect(number.make(system, ['n'])[0]!.id).toBe('n_2');
   });
 });

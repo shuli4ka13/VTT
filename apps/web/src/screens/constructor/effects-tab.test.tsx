@@ -17,11 +17,16 @@ describe('EffectsTab: палитра трёх понятий', () => {
     }));
   });
 
-  it('заготовка «проверка → вычесть» кладёт две карточки', () => {
+  it('палитра — только три кирпича, клик кладёт карточку', () => {
     render(<EffectsTab />);
-    fireEvent.click(screen.getByText('+ проверка → вычесть'));
+    const palette = screen.getAllByRole('button')
+      .filter(b => (b.textContent ?? '').trimStart().startsWith('+ '))
+      .map(b => b.textContent!.trim())
+      .filter(t => !t.startsWith('+ актив') && !t.startsWith('+ триггер')
+        && !t.startsWith('+ пассив') && !t.startsWith('+ брать'));
+    expect(palette).toEqual(['+ проверка', '+ изменение', '+ число']);
+    fireEvent.click(screen.getByText('+ проверка'));
     expect(screen.getByText('1 · Проверка')).toBeTruthy();
-    expect(screen.getByText('2 · Изменение')).toBeTruthy();
     expect(screen.queryByText(/порог/i)).toBeNull();
   });
 

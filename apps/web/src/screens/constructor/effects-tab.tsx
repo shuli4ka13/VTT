@@ -16,7 +16,7 @@ import {
   Card, CardHead, Field, Input, Select, Button, Empty, Segmented, Verdict, Fold, Chip,
 } from '../../ui/primitives.tsx';
 import { problemOf } from './step-card.tsx';
-import { groupSteps, STEP_TEMPLATES, BRICKS } from './cards.ts';
+import { groupSteps, BRICKS } from './cards.ts';
 import { GroupCard } from './card.tsx';
 import { ModifiersEditor } from './modifiers.tsx';
 import { DonorPalette } from './donors.tsx';
@@ -280,17 +280,6 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
             />
           ))}
 
-          <div className="inline inline--tight">
-            {STEP_TEMPLATES.map(t => (
-              <Button key={t.key} size="sm" variant="primary" title={t.hint}
-                onClick={() => edit(draft => {
-                  const taken = (draft.steps ?? []).map(s => s.id).filter(Boolean) as string[];
-                  (draft.steps ??= []).push(...t.make(system, taken));
-                })}>
-                {t.label}
-              </Button>
-            ))}
-          </div>
           <div className="inline inline--tight">
             {BRICKS.map(b => (
               <Button key={b.key} size="sm" title={b.hint}

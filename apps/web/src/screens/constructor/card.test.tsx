@@ -3,7 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { GroupCard } from './card.tsx';
-import { groupSteps, STEP_TEMPLATES } from './cards.ts';
+import { groupSteps } from './cards.ts';
 import type { System, Effect, Step } from '@vtt/schema';
 
 const system = {
@@ -13,7 +13,15 @@ const system = {
 } as unknown as System;
 const effect = { params: [] } as unknown as Effect;
 
-const attackSteps = () => STEP_TEMPLATES.find(t => t.key === 'attack')!.make(system, []);
+// Те же шаги, что автор собрал бы кирпичами: проверка + число + изменение.
+const attackSteps = () => [
+  {
+    type: 'threshold', side: 'sender', successWhen: 'atLeast', continueOn: 'success',
+    roll: { die: { constant: 'lead' }, check: null },
+  },
+  { id: 'n', type: 'amount', source: 'roll' },
+  { type: 'apply', direction: 'subtract', targetModifiers: true, value: { ref: 'n' } },
+] as unknown as Step[];
 
 describe('GroupCard', () => {
   it('проверка показывает пересказ с пропуском мишени', () => {
