@@ -288,3 +288,19 @@
 .mono { font-family: var(--font-mono); }
 .nowrap { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .num { font-variant-numeric: tabular-nums; }
+
+/* ── слот с подсказкой (конструктор эффектов) ── */
+.slot { position: relative; display: grid; gap: 4px; }
+.slot__menu {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 30;
+  max-height: 220px; overflow-y: auto; margin-top: 2px;
+  background: var(--panel, #17171c); border: 1px solid var(--border, #333);
+  border-radius: 8px; box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
+}
+.slot__option {
+  display: flex; gap: 8px; align-items: baseline; width: 100%;
+  padding: 6px 10px; border: none; background: none; text-align: left;
+  font: inherit; font-size: 13px; color: inherit; cursor: pointer;
+}
+.slot__option:hover { background: rgba(122, 132, 255, .12); }
+.slot__group { font-size: 10px; text-transform: uppercase; letter-spacing: .4px; opacity: .5; min-width: 92px; }
