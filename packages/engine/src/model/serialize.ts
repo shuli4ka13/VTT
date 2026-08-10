@@ -115,7 +115,7 @@ export function deserializeSheet(json: string): Sheet {
     systemId: parsed.systemId,
     kind: parsed.kind,
     name: parsed.name,
-    values: sortKeys(parsed.values),
+    values: sortKeys(parsed.values) as Sheet['values'],
     equipped: [...parsed.equipped],
     effects: parsed.effects.map((e: object) => ({ ...e })),
     actions: [...parsed.actions],

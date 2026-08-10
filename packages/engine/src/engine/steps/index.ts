@@ -20,7 +20,7 @@ import * as amount from './amount.ts';
 import * as compare from './compare.ts';
 import * as apply from './apply.ts';
 import * as status from './status.ts';
-import type { Step, System, Sheet, Die } from '../../model/types.ts';
+import type { Step, System, Sheet, Die, StoredValue } from '../../model/types.ts';
 import type { RefContext } from '../refs.ts';
 
 /**
@@ -38,7 +38,8 @@ export interface StepContext extends RefContext {
   die: Die;
   /** Доступ к листу ПОЛУЧАТЕЛЯ: единственный шаг, который пишет, — «применить». */
   read?: (tag: string) => unknown;
-  write?: (tag: string, value: unknown) => void;
+  /** Пишется только СКАЛЯР: вычисленное в DTO не попадает даже случайно. */
+  write?: (tag: string, value: StoredValue) => void;
   /** Навесить и снять эффект — шаг «состояние»; стакинг решает ядро. */
   attach?: (id: string) => void;
   detach?: (id: string) => void;

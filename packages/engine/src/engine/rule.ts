@@ -21,7 +21,7 @@ import { findField } from './calc.ts';
 import { requireEffect, stackingOf, usesMax } from './effects.ts';
 import { EngineError } from './errors.ts';
 import type { StepContext, StepData } from './steps/index.ts';
-import type { Effect, Sheet, WornEffect } from '../model/types.ts';
+import type { Effect, Sheet, WornEffect, StoredValue } from '../model/types.ts';
 
 /** Одно изменение поля: журнал полон по построению — шаги пишут только через ctx.write. */
 export interface Change { tag: string; from: unknown; to: unknown }
@@ -50,7 +50,9 @@ export function packRule(rule: Effect, ctx: StepContext): StepData[] {
 }
 
 export function resolveRule(steps: StepData[], ctx: StepContext): RuleReport {
-  const values: Record<string, unknown> = { ...ctx.sheet.values };
+  // Тип скаляра здесь не украшение: им критерий №1 держится компилятором,
+  // а не только сторожем сериализатора.
+  const values: Record<string, StoredValue> = { ...ctx.sheet.values };
   const worn: WornEffect[] = [...(ctx.sheet.effects || [])];
   const changes: Change[] = [];
   const effects: string[] = [];
@@ -66,7 +68,7 @@ export function resolveRule(steps: StepData[], ctx: StepContext): RuleReport {
     return field.value.kind === 'stored' ? field.value.default : undefined;
   };
 
-  const write = (tag: string, to: unknown): void => {
+  const write = (tag: string, to: StoredValue): void => {
     changes.push({ tag, from: read(tag), to });
     values[tag] = to;
   };
