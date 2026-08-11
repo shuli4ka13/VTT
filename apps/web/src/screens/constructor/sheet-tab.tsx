@@ -31,7 +31,7 @@ const TYPES = [
 
 // Зеркало slug-правила freeId: по нему проверяется, выведен ли тег из названия.
 const slugOf = (label: string) =>
-  label.toLowerCase().replace(/[^a-zа-я0-9]+/gi, '_').replace(/^_+|_+$/g, '');
+  label.toLowerCase().replace(/[^a-zа-яё0-9]+/gi, '_').replace(/^_+|_+$/g, '');
 
 export function SheetTab() {
   const system = useWorld(s => s.system);

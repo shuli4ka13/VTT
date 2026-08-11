@@ -160,7 +160,7 @@ export function freeId(taken: Iterable<string>, base: string): string {
   const used = new Set(taken);
   const slug = base
     .toLowerCase()
-    .replace(/[^a-zа-я0-9]+/gi, '_')
+    .replace(/[^a-zа-яё0-9]+/gi, '_')
     .replace(/^_+|_+$/g, '') || 'item';
   if (!used.has(slug)) return slug;
   for (let n = 2; ; n++) {
