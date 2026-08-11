@@ -86,10 +86,22 @@ export function GroupCard({ group, position, system, effect, earlier, problem, e
   );
 }
 
+// Развилка выводится из оператора: у каждого сравнения есть отрицание
+// (≥ ↔ <, ≤ ↔ >), и текст обрыва — это оператор успеха, отражённый
+// в противоположную сторону. Отдельной настройки «когда обрыв» нет.
+const OP_SIGN: Record<string, string> = { atLeast: '≥', notOver: '≤', over: '>', under: '<' };
+const OP_NOT: Record<string, string> = { atLeast: '<', notOver: '>', over: '≤', under: '≥' };
+
 function breakLine(group: CardGroup) {
   if (group.kind !== 'check') return null;
-  if (group.step.type === 'compare' && (group.step as any).breakIf === 'never') return null;
-  return <p className="card-break">здесь эффект может оборваться</p>;
+  const s = group.step as any;
+  if (group.step.type === 'compare') {
+    if (s.breakIf === 'never') return null;
+    return <p className="card-break">обрыв: левая часть {s.breakIf === 'atMost' ? '≤' : '<'} правой — эффект кончается здесь</p>;
+  }
+  const op = String(s.successWhen ?? 'atLeast');
+  const broken = (s.continueOn ?? 'success') === 'success' ? OP_NOT[op] : OP_SIGN[op];
+  return <p className="card-break">обрыв: бросок {broken ?? '<'} правой части — эффект кончается здесь</p>;
 }
 
 // ── проверка ──────────────────────────────────────────────────────────────
@@ -121,18 +133,29 @@ function CheckBody({ step, context, edit, system }: {
         })}
       />
 
+      {/* Проверка — уравнение, и карточка выглядит как уравнение:
+          левая часть · оператор · правая часть. Слева кость именована
+          отдельно от прибавки — преимущество должно знать, что удваивать. */}
       {mode === 'roll' ? (
-        <>
+        <div className="row">
           <Field label="кость">
             <SlotInput
               value={step.roll?.die} context={context} allow={['constant']}
               onChange={next => edit(0, draft => { ((draft as any).roll ??= {}).die = next ?? undefined; })}
             />
           </Field>
-          <Field label="прибавка">
+          <Field label="+ прибавка">
             <SlotInput
               value={step.roll?.bonus} context={context}
               onChange={next => edit(0, draft => { ((draft as any).roll ??= {}).bonus = next ?? undefined; })}
+            />
+          </Field>
+          <Field label="успех, если">
+            <Select
+              value={String(step.successWhen ?? 'atLeast')}
+              options={[['atLeast', '≥ не меньше'], ['notOver', '≤ не больше'],
+                ['over', '> строго больше'], ['under', '< строго меньше']] as const}
+              onChange={next => edit(0, draft => { (draft as any).successWhen = next; })}
             />
           </Field>
           <Field label="против">
@@ -141,73 +164,61 @@ function CheckBody({ step, context, edit, system }: {
               onChange={next => edit(0, draft => { (draft as any).versus = next ?? undefined; })}
             />
           </Field>
-        </>
+        </div>
       ) : (
-        <>
+        <div className="row">
           <Field label="что сравниваем">
             <SlotInput
               value={step.value} context={context} allow={['ref']}
               onChange={next => edit(0, draft => { (draft as any).value = next ?? undefined; })}
             />
           </Field>
+          <Field label="обрыв, если">
+            <Select
+              value={String(step.breakIf ?? 'less')}
+              options={[['less', '< меньше правого'], ['atMost', '≤ не больше правого'],
+                ['never', 'обрыва нет — разница идёт дальше']] as const}
+              onChange={next => edit(0, draft => { (draft as any).breakIf = next; })}
+            />
+          </Field>
           <Field label="против">
             <SlotInput
               value={step.versus} context={context} allow={['tag', 'param', 'ref']}
               onChange={next => edit(0, draft => { (draft as any).versus = next ?? undefined; })}
             />
           </Field>
-        </>
+        </div>
       )}
 
-      <Fold title="Тонкости">
-        {mode === 'roll' ? (
-          <>
-            <Field label="кто бросает">
-              <Select
-                value={String(step.side ?? 'sender')}
-                options={[['sender', 'отправитель'], ['target', 'цель']] as const}
-                onChange={next => edit(0, draft => { (draft as any).side = next; })}
-              />
-            </Field>
-            <Field label="направление успеха">
-              <Select
-                value={String(step.successWhen ?? 'atLeast')}
-                options={[
-                  ['atLeast', 'не меньше нужного'], ['notOver', 'не больше нужного'],
-                  ['over', 'строго больше'], ['under', 'строго меньше'],
-                ] as const}
-                onChange={next => edit(0, draft => { (draft as any).successWhen = next; })}
-              />
-            </Field>
-            <Field label="дальше при">
-              <Select
-                value={String(step.continueOn ?? 'success')}
-                options={[['success', 'успехе'], ['fail', 'провале']] as const}
-                onChange={next => edit(0, draft => { (draft as any).continueOn = next; })}
-              />
-            </Field>
-            {/* Мишень — крючок для преимуществ и бонусов (словарь «Мишени
-                бросков»): всё, что повешено на мишень, ловит любой бросок
-                по ней. Бросок без мишени не ловит ничего — сказать прямо. */}
-            <Field label="какой это бросок" hint="Из словаря «Мишени бросков»: преимущества и бонусы вешаются на мишень, и этот бросок поймает всё, что на неё повешено.">
-              <Select
-                value={String(step.roll?.check ?? '')}
-                options={[['', '— ничей: преимущества и бонусы не сработают —'],
-                  ...(context.system.rolls ?? []).map(r => [r.tag, r.label] as const)] as never}
-                onChange={next => edit(0, draft => { ((draft as any).roll ??= {}).check = next || null; })}
-              />
-            </Field>
-          </>
-        ) : (
-          <Field label="обрыв когда">
+      {mode === 'roll' ? (
+        <Fold title="Тонкости">
+          <Field label="кто бросает">
             <Select
-              value={String(step.breakIf ?? 'less')}
-              options={[['less', 'меньше'], ['atMost', 'не больше'], ['never', 'никогда']] as const}
-              onChange={next => edit(0, draft => { (draft as any).breakIf = next; })}
+              value={String(step.side ?? 'sender')}
+              options={[['sender', 'отправитель'], ['target', 'цель']] as const}
+              onChange={next => edit(0, draft => { (draft as any).side = next; })}
             />
           </Field>
-        )}
-      </Fold>
+          <Field label="дальше при">
+            <Select
+              value={String(step.continueOn ?? 'success')}
+              options={[['success', 'успехе'], ['fail', 'провале']] as const}
+              onChange={next => edit(0, draft => { (draft as any).continueOn = next; })}
+            />
+          </Field>
+          {/* Мишень — крючок для преимуществ и бонусов (словарь «Мишени
+              бросков»): всё, что повешено на мишень, ловит любой бросок
+              по ней. Бросок без мишени не ловит ничего — сказать прямо. */}
+          <Field label="какой это бросок" hint="Из словаря «Мишени бросков»: преимущества и бонусы вешаются на мишень, и этот бросок поймает всё, что на неё повешено.">
+            <Select
+              value={String(step.roll?.check ?? '')}
+              options={[['', '— ничей: преимущества и бонусы не сработают —'],
+                ...(context.system.rolls ?? []).map(r => [r.tag, r.label] as const)] as never}
+              onChange={next => edit(0, draft => { ((draft as any).roll ??= {}).check = next || null; })}
+            />
+          </Field>
+        </Fold>
+      ) : null}
     </>
   );
 }
