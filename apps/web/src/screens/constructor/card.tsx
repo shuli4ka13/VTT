@@ -10,7 +10,7 @@ import { Card, CardHead, Field, Fold, Segmented, Verdict, Button, Select, Input 
 import type { CardGroup } from './cards.ts';
 import { checkReadback, changeReadback, numberReadback, type Segment } from './readback.ts';
 import { parseRollExpr, formatRollExpr } from './roll-expr.ts';
-import { TagInput } from '../../ui/tag-suggest.tsx';
+import { FormulaChips } from '../../ui/formula-chips.tsx';
 import { SlotInput, type SlotOption } from './slot-input.tsx';
 import type { SlotContext } from './slots.tsx';
 
@@ -152,10 +152,10 @@ function RollExprInput({ step, context, edit }: {
 
   return (
     <Field label="бросок" error={trouble}>
-      <TagInput
+      <FormulaChips
         value={shown}
         system={context.system}
-        placeholder="1d20 + #бонус_атаки"
+        placeholder="1d20 + @Бонус атаки"
         onChange={next => { setDraft(next); setTrouble(null); }}
         onBlur={commit}
         onKeyDown={e => {

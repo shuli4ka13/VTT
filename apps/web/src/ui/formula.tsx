@@ -13,12 +13,11 @@
 //     ошибка с позицией. В режиме автора значений нет и быть не может —
 //     персонажа там нет, считать не по чему.
 
-import { useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import type { System } from '@vtt/schema';
 import { compile } from '@vtt/engine/formula';
-import { targets } from '@vtt/engine/engine/targets';
 import { Verdict } from './primitives.tsx';
-import { TagInput } from './tag-suggest.tsx';
+import { FormulaChips } from './formula-chips.tsx';
 
 export interface Parsed {
   ok: boolean;
@@ -61,34 +60,16 @@ export function FormulaInput({ system, value, onChange, placeholder }: {
   onChange: (next: string) => void;
   placeholder?: string;
 }) {
-  const input = useRef<HTMLInputElement>(null);
   const parsed = useMemo(() => parseFormula(value), [value]);
-  const available = useMemo(() => targets(system) as { tag: string; label: string; kind: string }[], [system]);
 
-  // Вставка в позицию курсора, а не в конец: это то самое решение черновика,
-  // ради которого панель и берётся целиком.
-  const insert = (tag: string) => {
-    const element = input.current;
-    const at = element?.selectionStart ?? value.length;
-    const next = `${value.slice(0, at)}#${tag}${value.slice(at)}`;
-    onChange(next);
-    queueMicrotask(() => {
-      element?.focus();
-      const to = at + tag.length + 1;
-      element?.setSelectionRange(to, to);
-    });
-  };
-
-  const used = new Set(parsed.deps);
-  const fields = available.filter(t => t.kind === 'value');
-
+  // Поля вставляются автокомплитом прямо в строке (@название) — отдельная
+  // панель «Вставить поле» больше не нужна: фишки и есть та панель.
   return (
     <div className="stack stack--tight">
-      <TagInput
-        inputRef={input}
+      <FormulaChips
         value={value}
         system={system}
-        placeholder={placeholder ?? 'например: floor((#сила - 10) / 2)'}
+        placeholder={placeholder ?? 'например: floor((@Сила - 10) / 2)'}
         onChange={onChange}
       />
 
@@ -100,41 +81,6 @@ export function FormulaInput({ system, value, onChange, placeholder }: {
               {parsed.pos === undefined ? null : <span className="faint"> · позиция {parsed.pos}</span>}
             </Verdict>
       ) : null}
-
-      {parsed.ok && parsed.deps.length ? (
-        <div className="inline inline--tight">
-          <span className="field__label">зависит от:</span>
-          {parsed.deps.map(tag => (
-            <span key={tag} className="chip chip--on" title={`#${tag}`}>{labelOfTag(system, tag)}</span>
-          ))}
-        </div>
-      ) : null}
-
-      <details className="fold">
-        <summary className="fold__head">
-          <span className="fold__title">Вставить поле</span>
-          <span className="fold__count num">{fields.length}</span>
-        </summary>
-        <div className="fold__body">
-          {fields.length === 0
-            ? <span className="faint">В системе ещё нет полей — заведите их на вкладке «Лист».</span>
-            : (
-              <div className="inline inline--tight">
-                {fields.map(target => (
-                  <button
-                    key={target.tag}
-                    type="button"
-                    className={`chip chip--action ${used.has(target.tag) ? 'chip--on' : ''}`}
-                    onClick={() => insert(target.tag)}
-                    title={`#${target.tag}`}
-                  >
-                    {target.label}
-                  </button>
-                ))}
-              </div>
-            )}
-        </div>
-      </details>
     </div>
   );
 }

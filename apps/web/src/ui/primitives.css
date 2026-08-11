@@ -321,3 +321,27 @@
   border-left: 2px dotted var(--bad, #e05555);
 }
 .card-break--on { border-left-color: var(--ok, #4caf7d); }
+
+/* ── формула фишками: тег хранится, лейбл показывается ── */
+.chips { position: relative; }
+.chips__row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-1);
+  min-height: 32px; padding: var(--s-1) var(--s-3); cursor: text;
+  background: var(--bg-sunken); border: 1px solid var(--border); border-radius: var(--r-2);
+}
+.chips__row:focus-within { border-color: var(--accent); }
+.chips__text {
+  flex: 0 1 auto; min-width: 8px; border: none; background: none; outline: none;
+  font-family: var(--font-mono); font-size: var(--fs-3); color: var(--text); padding: var(--s-1) 0;
+}
+.chips__chip {
+  display: inline-flex; align-items: center; gap: var(--s-1);
+  padding: 0 var(--s-1) 0 var(--s-3); border-radius: var(--r-1);
+  font-size: var(--fs-2); white-space: nowrap;
+  background: var(--accent-soft); border: 1px solid var(--accent);
+}
+.chips__x {
+  border: none; background: none; color: var(--text-faint); cursor: pointer;
+  font-size: var(--fs-2); padding: 0 var(--s-1);
+}
+.chips__x:hover { color: var(--danger); }
