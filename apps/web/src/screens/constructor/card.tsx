@@ -86,22 +86,37 @@ export function GroupCard({ group, position, system, effect, earlier, problem, e
   );
 }
 
-// Развилка выводится из оператора: у каждого сравнения есть отрицание
-// (≥ ↔ <, ≤ ↔ >), и текст обрыва — это оператор успеха, отражённый
-// в противоположную сторону. Отдельной настройки «когда обрыв» нет.
-const OP_SIGN: Record<string, string> = { atLeast: '≥', notOver: '≤', over: '>', under: '<' };
-const OP_NOT: Record<string, string> = { atLeast: '<', notOver: '>', over: '≤', under: '≥' };
+// Исходы выводятся из оператора: у каждого сравнения есть отрицание
+// (≥ ↔ <, = ↔ ≠), и проверка порождает ровно столько веток, сколько
+// у неё исходов. Сегодня их два; настройки «когда обрыв» нет — есть
+// выбор, какая ветка продолжает («дальше при» в тонкостях).
+const OP_SIGN: Record<string, string> = { atLeast: '≥', notOver: '≤', over: '>', under: '<', equals: '=' };
+const OP_NOT: Record<string, string> = { atLeast: '<', notOver: '>', over: '≤', under: '≥', equals: '≠' };
 
 function breakLine(group: CardGroup) {
   if (group.kind !== 'check') return null;
   const s = group.step as any;
   if (group.step.type === 'compare') {
     if (s.breakIf === 'never') return null;
-    return <p className="card-break">обрыв: левая часть {s.breakIf === 'atMost' ? '≤' : '<'} правой — эффект кончается здесь</p>;
+    const broken = s.breakIf === 'atMost' ? '≤' : '<';
+    const pass = s.breakIf === 'atMost' ? '>' : '≥';
+    return (
+      <div className="card-forks">
+        <p className="card-break card-break--on">{pass} — цепочка продолжается</p>
+        <p className="card-break">{broken} — эффект кончается здесь</p>
+      </div>
+    );
   }
   const op = String(s.successWhen ?? 'atLeast');
-  const broken = (s.continueOn ?? 'success') === 'success' ? OP_NOT[op] : OP_SIGN[op];
-  return <p className="card-break">обрыв: бросок {broken ?? '<'} правой части — эффект кончается здесь</p>;
+  const onSuccess = (s.continueOn ?? 'success') === 'success';
+  const sign = OP_SIGN[op] ?? '≥';
+  const not = OP_NOT[op] ?? '<';
+  return (
+    <div className="card-forks">
+      <p className="card-break card-break--on">{onSuccess ? sign : not} — цепочка продолжается</p>
+      <p className="card-break">{onSuccess ? not : sign} — эффект кончается здесь</p>
+    </div>
+  );
 }
 
 // ── проверка ──────────────────────────────────────────────────────────────
@@ -144,17 +159,17 @@ function CheckBody({ step, context, edit, system }: {
               onChange={next => edit(0, draft => { ((draft as any).roll ??= {}).die = next ?? undefined; })}
             />
           </Field>
-          <Field label="+ прибавка">
+          <Field label="+ формула">
             <SlotInput
               value={step.roll?.bonus} context={context}
               onChange={next => edit(0, draft => { ((draft as any).roll ??= {}).bonus = next ?? undefined; })}
             />
           </Field>
-          <Field label="успех, если">
+          <Field label="успех">
             <Select
               value={String(step.successWhen ?? 'atLeast')}
-              options={[['atLeast', '≥ не меньше'], ['notOver', '≤ не больше'],
-                ['over', '> строго больше'], ['under', '< строго меньше']] as const}
+              options={[['atLeast', '≥'], ['notOver', '≤'],
+                ['over', '>'], ['under', '<'], ['equals', '=']] as const}
               onChange={next => edit(0, draft => { (draft as any).successWhen = next; })}
             />
           </Field>

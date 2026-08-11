@@ -48,6 +48,7 @@ const SUCCESS_WORDS: Record<string, [string, string]> = {
   over: ['Не перебросил', 'Перебросил'],
   notOver: ['Перебросил', 'Уложился'],
   under: ['Не уложился', 'Уложился'],
+  equals: ['Не попал точно', 'Попал точно'],
 };
 
 export function checkReadback(step: Step, system: System, effect: Effect): Segment[] {

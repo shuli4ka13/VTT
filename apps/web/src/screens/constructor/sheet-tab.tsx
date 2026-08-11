@@ -29,6 +29,10 @@ const TYPES = [
   ['boolean', 'да / нет'],
 ] as const;
 
+// Зеркало slug-правила freeId: по нему проверяется, выведен ли тег из названия.
+const slugOf = (label: string) =>
+  label.toLowerCase().replace(/[^a-zа-я0-9]+/gi, '_').replace(/^_+|_+$/g, '');
+
 export function SheetTab() {
   const system = useWorld(s => s.system);
   const activeTag = useWorld(s => s.activeFieldTag);
@@ -136,7 +140,31 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
 
         <div className="row">
           <Field label="Название">
-            <Input value={field.label} onChange={next => edit(draft => { draft.label = next; })} />
+            <Input
+              value={field.label}
+              onChange={next => {
+                // Пока поле девственно (авто-тег или тег, выведенный из
+                // прежнего названия, и ни одной ссылки в мире) — тег следует
+                // за названием: назвали «Урон» → формулы говорят #урон.
+                // Появилась первая ссылка — тег замерзает навсегда (критерий №2).
+                const state = useWorld.getState();
+                const world = JSON.stringify({ s: state.system, c: state.compendium, sh: state.sheets });
+                const virgin = (/^field(_\d+)?$/.test(field.tag) || field.tag === slugOf(field.label))
+                  && world.split(`"${field.tag}"`).length - 1 <= 1
+                  && !new RegExp(`#${field.tag}(?![\\p{L}\\p{N}_])`, 'u').test(world);
+                if (virgin && slugOf(next)) {
+                  const fresh = freeId(
+                    state.system.fields.filter(f => f.tag !== field.tag).map(f => f.tag), next);
+                  editSystem(draft => {
+                    const target = draft.fields.find(f => f.tag === field.tag);
+                    if (target) { target.label = next; target.tag = fresh; }
+                  });
+                  pick({ activeFieldTag: fresh });
+                } else {
+                  edit(draft => { draft.label = next; });
+                }
+              }}
+            />
           </Field>
           <Field label="Блок">
             <Input value={field.group ?? ''} onChange={next => edit(draft => { draft.group = next; })} />

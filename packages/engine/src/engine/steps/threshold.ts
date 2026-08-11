@@ -32,7 +32,7 @@ export const slots = [
   { key: 'versus', label: 'Против', kind: 'ref' },
   {
     key: 'successWhen', label: 'Успех, если бросок',
-    kind: 'choice', options: ['atLeast', 'notOver', 'over', 'under'],
+    kind: 'choice', options: ['atLeast', 'notOver', 'over', 'under', 'equals'],
   },
   { key: 'continueOn', label: 'Дальше при', kind: 'choice', options: ['success', 'fail'] },
 ];
@@ -46,6 +46,8 @@ const OUTCOMES: Record<string, (total: number, versus: number) => { success: boo
   notOver: (total, versus) => ({ success: total <= versus, margin: versus - total }),
   over: (total, versus) => ({ success: total > versus, margin: total - versus }),
   under: (total, versus) => ({ success: total < versus, margin: versus - total }),
+  // Точное попадание: успех — ровно в цель; запас — недолёт/перелёт, всегда ≤ 0.
+  equals: (total, versus) => ({ success: total === versus, margin: -Math.abs(total - versus) }),
 };
 
 // Чем шаг делится с последующими — конструктор строит из этого выпадашку
