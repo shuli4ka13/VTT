@@ -4,10 +4,12 @@
 // слоты выбранного источника); переключатели меняют step.type, ничего
 // не стирая — вернул переключатель, вернулась и работа.
 
+import { useState } from 'react';
 import type { System, Effect, Step } from '@vtt/schema';
 import { Card, CardHead, Field, Fold, Segmented, Verdict, Button, Select, Input } from '../../ui/primitives.tsx';
 import type { CardGroup } from './cards.ts';
 import { checkReadback, changeReadback, numberReadback, type Segment } from './readback.ts';
+import { parseRollExpr, formatRollExpr } from './roll-expr.ts';
 import { SlotInput, type SlotOption } from './slot-input.tsx';
 import type { SlotContext } from './slots.tsx';
 
@@ -121,6 +123,50 @@ function breakLine(group: CardGroup) {
 
 // ── проверка ──────────────────────────────────────────────────────────────
 
+// Одно поле на весь бросок: «1к20 + #бонус_атаки». Черновик держится
+// локально и уходит в структуру по Enter/уходу с поля; ошибка разбора
+// не затирает данные — остаётся в поле, пока автор не поправит.
+function RollExprInput({ step, context, edit }: {
+  step: any;
+  context: SlotContext;
+  edit: EditFn;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const [trouble, setTrouble] = useState<string | null>(null);
+  const shown = draft ?? formatRollExpr(step.roll, context.system);
+
+  const commit = () => {
+    if (draft === null) return;
+    const parsed = parseRollExpr(draft, context.system);
+    if (parsed.error) { setTrouble(parsed.error); return; }
+    edit(0, target => {
+      const roll = ((target as any).roll ??= {});
+      roll.die = parsed.die;
+      if (parsed.bonus === null) delete roll.bonus;
+      else roll.bonus = parsed.bonus;
+    });
+    setDraft(null);
+    setTrouble(null);
+  };
+
+  return (
+    <Field label="бросок" error={trouble}>
+      <input
+        className="input input--mono"
+        value={shown}
+        placeholder="1к20 + #бонус_атаки"
+        spellCheck={false}
+        onChange={e => { setDraft(e.target.value); setTrouble(null); }}
+        onBlur={commit}
+        onKeyDown={e => {
+          if (e.key === 'Enter') commit();
+          if (e.key === 'Escape') { setDraft(null); setTrouble(null); }
+        }}
+      />
+    </Field>
+  );
+}
+
 function CheckBody({ step, context, edit, system }: {
   step: any;
   context: SlotContext;
@@ -148,23 +194,12 @@ function CheckBody({ step, context, edit, system }: {
         })}
       />
 
-      {/* Проверка — уравнение, и карточка выглядит как уравнение:
-          левая часть · оператор · правая часть. Слева кость именована
-          отдельно от прибавки — преимущество должно знать, что удваивать. */}
+      {/* Проверка — уравнение: слева строка броска, оператор, справа порог.
+          Строку разбирает парсер: голова — кость (преимуществу есть что
+          удваивать), хвост после «+» — число или формула. */}
       {mode === 'roll' ? (
         <div className="row">
-          <Field label="кость">
-            <SlotInput
-              value={step.roll?.die} context={context} allow={['constant']}
-              onChange={next => edit(0, draft => { ((draft as any).roll ??= {}).die = next ?? undefined; })}
-            />
-          </Field>
-          <Field label="+ формула">
-            <SlotInput
-              value={step.roll?.bonus} context={context}
-              onChange={next => edit(0, draft => { ((draft as any).roll ??= {}).bonus = next ?? undefined; })}
-            />
-          </Field>
+          <RollExprInput step={step} context={context} edit={edit} />
           <Field label="успех">
             <Select
               value={String(step.successWhen ?? 'atLeast')}

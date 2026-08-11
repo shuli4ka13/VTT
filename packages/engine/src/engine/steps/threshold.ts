@@ -41,6 +41,23 @@ export const slots = [
 // (не меньше порога, равенство — успех), CoC/GURPS — «вниз» (d100/3d6 не выше
 // навыка), а где-то равенство — провал. margin — всегда «запас бросающего»,
 // положителен при успехе, независимо от направления.
+// Кость шага: ссылка на константу системы ({ constant }) — обычный путь,
+// смена ведущей кости меняет все броски разом; либо литерал ({ const: '2d6' })
+// — для проверок, которым системной кости мало. Литерал разбирается на месте.
+const LITERAL = /^(\d+)?\s*[dдк]\s*(\d+)$/iu;
+
+function dieOf(system: Parameters<typeof dieConstant>[0], die: unknown) {
+  if (die && typeof die === 'object' && 'const' in (die as object)) {
+    const text = String((die as { const: unknown }).const ?? '');
+    const m = text.trim().match(LITERAL);
+    if (!m) {
+      throw new EngineError(`«${text}» — не запись кости; жду вроде «1d20» или «2к6»`);
+    }
+    return { label: text, kind: 'die' as const, dice: [{ count: Number(m[1] ?? 1), sides: Number(m[2]) }] };
+  }
+  return dieConstant(system, (die as { constant: string }).constant);
+}
+
 const OUTCOMES: Record<string, (total: number, versus: number) => { success: boolean; margin: number }> = {
   atLeast: (total, versus) => ({ success: total >= versus, margin: total - versus }),
   notOver: (total, versus) => ({ success: total <= versus, margin: versus - total }),
@@ -111,7 +128,7 @@ export function pack(step: StepData, ctx: StepContext) {
   const mods = roll.check
     ? resolveRoll(ctx.system, ctx.sheet, roll.check, ctx.pass)
     : { mode: 'normal' as RollMode, bonus: 0 };
-  const rolled = rollLead(dieConstant(ctx.system, roll.die.constant), ctx.die, mods.mode);
+  const rolled = rollLead(dieOf(ctx.system, roll.die), ctx.die, mods.mode);
   return { ...base, rolled, bonus: packRef(roll.bonus, ctx), modBonus: mods.bonus };
 }
 
@@ -124,7 +141,7 @@ export function resolve(step: StepData, ctx: StepContext) {
     const mods = step.roll.check
       ? resolveRoll(ctx.system, ctx.sheet, step.roll.check, ctx.pass)
       : { mode: 'normal' as RollMode, bonus: 0 };
-    rolled = rollLead(dieConstant(ctx.system, step.roll.die.constant), ctx.die, mods.mode);
+    rolled = rollLead(dieOf(ctx.system, step.roll.die), ctx.die, mods.mode);
     modBonus = mods.bonus;
   }
 
