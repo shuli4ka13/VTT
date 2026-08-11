@@ -52,7 +52,7 @@ describe('GroupCard', () => {
       earlier={[]} problem={null}
       edit={(at, change) => { edited = { at }; change(structuredClone(group.amount!)); }}
       onDelete={() => {}} />);
-    const dice = screen.getByPlaceholderText('какие кости: 1к8, 2к6…');
+    const dice = screen.getByPlaceholderText('какие кости: 1d8, 2d6…');
     fireEvent.change(dice, { target: { value: '1d8' } });
     fireEvent.keyDown(dice, { key: 'Enter' });
     expect(edited).toEqual({ at: 0 });

@@ -22,13 +22,13 @@ describe('checkReadback', () => {
       versus: { tag: 'armor' },
     } as unknown as Step;
     expect(joinReadback(checkReadback(step, system, effect)))
-      .toBe('Отправитель бросает 1к20 + Мод Силы против «Класс брони». Не добросил — эффект кончается.');
+      .toBe('Отправитель бросает 1d20 + Мод Силы против «Класс брони». Не добросил — эффект кончается.');
   });
 
   it('пустая мишень — оранжевый пропуск', () => {
     const step = { type: 'threshold', roll: { die: { constant: 'lead' } } } as unknown as Step;
     expect(joinReadback(checkReadback(step, system, effect)))
-      .toBe('Отправитель бросает 1к20 против ⟨какого поля цели?⟩. Не добросил — эффект кончается.');
+      .toBe('Отправитель бросает 1d20 против ⟨какого поля цели?⟩. Не добросил — эффект кончается.');
   });
 
   it('сравнение без броска', () => {

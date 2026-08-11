@@ -44,7 +44,7 @@ export function formatRollExpr(roll: unknown, system: System): string {
   let head = '';
   if (r.die && typeof r.die === 'object') {
     if ('constant' in r.die) head = dieWord(system, String((r.die as { constant: unknown }).constant));
-    else if ('const' in r.die) head = String((r.die as { const: unknown }).const).replace(/d/i, 'к');
+    else if ('const' in r.die) head = String((r.die as { const: unknown }).const);
   }
   let tail = '';
   if (r.bonus && typeof r.bonus === 'object') {

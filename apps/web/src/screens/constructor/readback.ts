@@ -16,7 +16,8 @@ const hole = (label: string): Segment => ({ hole: label });
 export function dieWord(system: System, name: string): string {
   const constant = system.constants?.[name];
   if (!constant) return name;
-  const dice = (constant.dice ?? []).map(d => `${d.count ?? 1}к${d.sides}`).join(' + ');
+  // Запись кости — латиницей, как её ест движок: d20, а не к20.
+  const dice = (constant.dice ?? []).map(d => `${d.count ?? 1}d${d.sides}`).join(' + ');
   return dice || (constant.label ?? name);
 }
 

@@ -18,6 +18,7 @@ import type { System } from '@vtt/schema';
 import { compile } from '@vtt/engine/formula';
 import { targets } from '@vtt/engine/engine/targets';
 import { Verdict } from './primitives.tsx';
+import { TagInput } from './tag-suggest.tsx';
 
 export interface Parsed {
   ok: boolean;
@@ -83,13 +84,12 @@ export function FormulaInput({ system, value, onChange, placeholder }: {
 
   return (
     <div className="stack stack--tight">
-      <input
-        ref={input}
-        className="input input--mono"
+      <TagInput
+        inputRef={input}
         value={value}
-        placeholder={placeholder ?? 'например: floor((#str - 10) / 2)'}
-        onChange={e => onChange(e.target.value)}
-        spellCheck={false}
+        system={system}
+        placeholder={placeholder ?? 'например: floor((#сила - 10) / 2)'}
+        onChange={onChange}
       />
 
       {value.trim() ? (

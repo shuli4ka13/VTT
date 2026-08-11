@@ -35,10 +35,10 @@ describe('parseRollExpr', () => {
 describe('formatRollExpr', () => {
   it('константа и формула собираются обратно в строку', () => {
     expect(formatRollExpr({ die: { constant: 'lead' }, bonus: { expr: '#бонус_атаки' } }, system))
-      .toBe('1к20 + #бонус_атаки');
+      .toBe('1d20 + #бонус_атаки');
   });
 
-  it('литерал русифицируется', () => {
-    expect(formatRollExpr({ die: { const: '2d6' } }, system)).toBe('2к6');
+  it('литерал остаётся латиницей', () => {
+    expect(formatRollExpr({ die: { const: '2d6' } }, system)).toBe('2d6');
   });
 });

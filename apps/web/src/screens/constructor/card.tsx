@@ -10,6 +10,7 @@ import { Card, CardHead, Field, Fold, Segmented, Verdict, Button, Select, Input 
 import type { CardGroup } from './cards.ts';
 import { checkReadback, changeReadback, numberReadback, type Segment } from './readback.ts';
 import { parseRollExpr, formatRollExpr } from './roll-expr.ts';
+import { TagInput } from '../../ui/tag-suggest.tsx';
 import { SlotInput, type SlotOption } from './slot-input.tsx';
 import type { SlotContext } from './slots.tsx';
 
@@ -123,7 +124,7 @@ function breakLine(group: CardGroup) {
 
 // ── проверка ──────────────────────────────────────────────────────────────
 
-// Одно поле на весь бросок: «1к20 + #бонус_атаки». Черновик держится
+// Одно поле на весь бросок: «1d20 + #бонус_атаки». Черновик держится
 // локально и уходит в структуру по Enter/уходу с поля; ошибка разбора
 // не затирает данные — остаётся в поле, пока автор не поправит.
 function RollExprInput({ step, context, edit }: {
@@ -151,12 +152,11 @@ function RollExprInput({ step, context, edit }: {
 
   return (
     <Field label="бросок" error={trouble}>
-      <input
-        className="input input--mono"
+      <TagInput
         value={shown}
-        placeholder="1к20 + #бонус_атаки"
-        spellCheck={false}
-        onChange={e => { setDraft(e.target.value); setTrouble(null); }}
+        system={context.system}
+        placeholder="1d20 + #бонус_атаки"
+        onChange={next => { setDraft(next); setTrouble(null); }}
         onBlur={commit}
         onKeyDown={e => {
           if (e.key === 'Enter') commit();
@@ -331,7 +331,7 @@ function ChangeBody({ group, context, edit, system }: {
               <Field label="Сколько — кости">
                 <SlotInput
                   value={(group.amount as any).dice} context={context} dice
-                  placeholder="какие кости: 1к8, 2к6…"
+                  placeholder="какие кости: 1d8, 2d6…"
                   onChange={next => edit(0, draft => { (draft as any).dice = next ?? undefined; })}
                 />
               </Field>
@@ -419,7 +419,7 @@ function NumberBody({ step, context, edit }: {
         <>
           <Field label="кости">
             <SlotInput
-              value={step.dice} context={context} dice placeholder="какие кости: 1к8, 2к6…"
+              value={step.dice} context={context} dice placeholder="какие кости: 1d8, 2d6…"
               onChange={next => edit(0, draft => { (draft as any).dice = next ?? undefined; })}
             />
           </Field>
