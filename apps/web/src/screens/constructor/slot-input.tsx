@@ -102,7 +102,7 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
       <input
         className="input input--mono"
         value={shown}
-        placeholder={placeholder ?? 'число, формула — или выберите из списка'}
+        placeholder={placeholder ?? 'число или формула'}
         spellCheck={false}
         onFocus={() => setOpen(true)}
         onChange={e => { setDraft(e.target.value); setOpen(true); }}
