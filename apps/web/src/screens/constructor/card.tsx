@@ -186,10 +186,14 @@ function CheckBody({ step, context, edit, system }: {
                 onChange={next => edit(0, draft => { (draft as any).continueOn = next; })}
               />
             </Field>
-            <Field label="мишень модификаторов">
+            {/* Мишень — крючок для преимуществ и бонусов (словарь «Мишени
+                бросков»): всё, что повешено на мишень, ловит любой бросок
+                по ней. Бросок без мишени не ловит ничего — сказать прямо. */}
+            <Field label="какой это бросок" hint="Из словаря «Мишени бросков»: преимущества и бонусы вешаются на мишень, и этот бросок поймает всё, что на неё повешено.">
               <Select
                 value={String(step.roll?.check ?? '')}
-                options={[['', '— нет —'], ...(context.system.rolls ?? []).map(r => [r.tag, r.label] as const)] as never}
+                options={[['', '— ничей: преимущества и бонусы не сработают —'],
+                  ...(context.system.rolls ?? []).map(r => [r.tag, r.label] as const)] as never}
                 onChange={next => edit(0, draft => { ((draft as any).roll ??= {}).check = next || null; })}
               />
             </Field>
