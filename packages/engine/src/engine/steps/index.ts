@@ -73,7 +73,19 @@ export interface StepModule {
   resolve(step: StepData, ctx: StepContext): StepResult;
   lint?: (...args: never[]) => unknown;
   traceLine?: (...args: never[]) => unknown;
+  /** Код обрыва человеческими словами: перевод знает тот, кто код и придумал. */
+  reasonWord?: (reason: string) => string | null;
   [k: string]: unknown;
+}
+
+/**
+ * Почему конвейер оборвался — словами для журнала. Спрашиваем у модуля шага,
+ * который обрыв и объявил; неизвестный код показываем как есть, а не прячем:
+ * молчание хуже непонятного слова.
+ */
+export function breakReasonWord(type: string, reason: string): string {
+  const mod = registry.get(type);
+  return mod?.reasonWord?.(reason) ?? reason;
 }
 
 export const registry = new Map<string, StepModule>();

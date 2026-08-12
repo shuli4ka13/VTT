@@ -42,6 +42,11 @@ export function breakLine(step: StepData) {
   return words[String(step.breakIf || 'less')] || null;
 }
 
+/** Код обрыва человеческими словами — для журнала за столом. */
+export function reasonWord(reason: string): string | null {
+  return reason === 'compare-short' ? 'не пробило' : null;
+}
+
 export const icon = '⇄';
 
 export function traceLine(t: any, h: any) {

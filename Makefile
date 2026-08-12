@@ -6,6 +6,11 @@
 VTT_PORT ?= 8100
 export VTT_PORT
 
+# Порт сервера НОВОГО стека. Отдельной переменной: VTT_PORT выше принадлежит
+# докер-стенду и экспортируется во все цели — сервер монорепо, прочитав его,
+# лез на 8100 и падал с EADDRINUSE о контейнер.
+VTT_API_PORT ?= 8200
+
 .PHONY: help up down reset rebuild seed logs status test dev offline url \
         install ts ts-server ts-web ts-test ts-check ts-seed
 
@@ -72,15 +77,15 @@ install:
 	pnpm install
 
 ts-server:
-	cd apps/server && pnpm dev
+	cd apps/server && VTT_PORT=$(VTT_API_PORT) pnpm dev
 
 ts-web:
 	cd apps/web && pnpm dev
 
 # Сервер в фоне, веб на переднем плане: Ctrl-C гасит оба.
 ts:
-	@echo "сервер :8200 · веб :8300"
-	@(cd apps/server && pnpm dev &) ; cd apps/web && pnpm dev
+	@echo "сервер :$(VTT_API_PORT) · веб :8300"
+	@(cd apps/server && VTT_PORT=$(VTT_API_PORT) pnpm dev &) ; cd apps/web && pnpm dev
 
 # Образцы публикуются готовыми мирами — конструктор при этом стартует пустым.
 ts-seed:

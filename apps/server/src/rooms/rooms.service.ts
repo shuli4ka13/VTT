@@ -19,6 +19,7 @@ import type {
 import { exchange } from '@vtt/engine/events/exchange';
 import { effectLabelOf } from '@vtt/engine/events/envelope';
 import { findEffect, usesMax } from '@vtt/engine/engine/effects';
+import { breakReasonWord } from '@vtt/engine/engine/steps/index';
 
 /** Роль из владения, а не из настройки: кто создал комнату, тот и ведущий. */
 export type Role = 'gm' | 'player';
@@ -309,7 +310,10 @@ export class RoomsService {
       ? `${nameOf(entry.fromId)} отвечает «${label}» по ${nameOf(entry.toId)}`
       : `${nameOf(entry.fromId)} применяет «${label}» по ${nameOf(entry.toId)}`;
 
-    if (entry.report.stopped) return `${head} — не дошло: ${entry.report.stopped.reason}`;
+    if (entry.report.stopped) {
+      const { type, reason } = entry.report.stopped as { type: string; reason: string };
+      return `${head} — ${breakReasonWord(type, reason)}`;
+    }
     const changes = (entry.report.changes ?? []) as { tag: string; from: unknown; to: unknown }[];
     if (!changes.length) return head;
 

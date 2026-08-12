@@ -86,6 +86,15 @@ export function breakLine(step: StepData) {
     : 'если порог не взят — промах';
 }
 
+// Почему конвейер кончился здесь — человеческими словами. Код обрыва
+// («threshold-miss») внятен движку, но в журнале за столом его читает
+// игрок, поэтому перевод даёт сам шаг: он один знает, что значит его код.
+export function reasonWord(reason: string): string | null {
+  return reason === 'threshold-miss' ? 'промах'
+    : reason === 'threshold-held' ? 'цель устояла'
+      : null;
+}
+
 export const icon = '⌖';
 
 export function lint(step: StepData) {
