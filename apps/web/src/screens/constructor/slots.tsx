@@ -13,7 +13,7 @@
 //   ref                            — результат предыдущего шага
 
 import type { ReactNode } from 'react';
-import type { System, Effect, SlotRef } from '@vtt/schema';
+import type { System, Effect, RecordKind, SlotRef } from '@vtt/schema';
 import { Input, Select } from '../../ui/primitives.tsx';
 import { FormulaInput, labelOfTag } from '../../ui/formula.tsx';
 
@@ -24,6 +24,13 @@ export interface SlotContext {
   effect: Effect;
   /** Имена шагов, на результат которых можно сослаться (все, что ВЫШЕ по цепочке). */
   earlier: string[];
+  /**
+   * Ограничение «свойство закрывает потребность этим родом» — контекст уже
+   * знает, какой род заполняет потребность (BindingEditor, records-tab.tsx).
+   * Список свойств тогда сужается до собственных props этого рода; без
+   * ограничения виден весь словарь системы (declaredProps), как раньше.
+   */
+  recordKind?: RecordKind;
 }
 
 export interface SlotKindModule {
@@ -156,7 +163,7 @@ export const SLOT_KINDS: SlotKindModule[] = [
       return declared ? `${declared} (спросят у записи)` : `«${key}» — род не объявлен`;
     },
     editor: (ref, onChange, ctx) => {
-      const props = [...declaredProps(ctx.system)];
+      const props = [...propsFor(ctx)];
       return (
         <Select
           value={ref.prop ?? ref.item ?? ''}
@@ -226,6 +233,21 @@ export function declaredProps(system: System): Map<string, string> {
     for (const prop of kind.props ?? []) {
       out.set(prop.key, `${prop.label ?? prop.key} · ${kind.label ?? 'род'}`);
     }
+  }
+  return out;
+}
+
+/**
+ * Свойства, которые ПРЕДЛАГАТЬ в выпадашке вида «prop»: с `recordKind` в
+ * контексте — собственные props этого рода (потребность закрывает
+ * конкретный род, а не любой в системе); без него — весь словарь
+ * (declaredProps), как было до появления ограничения.
+ */
+function propsFor(ctx: SlotContext): Map<string, string> {
+  if (!ctx.recordKind) return declaredProps(ctx.system);
+  const out = new Map<string, string>();
+  for (const prop of ctx.recordKind.props ?? []) {
+    out.set(prop.key, prop.label ?? prop.key);
   }
   return out;
 }

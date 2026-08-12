@@ -227,6 +227,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
               key={index}
               binding={binding}
               system={system}
+              recordKind={kind}
               onEdit={change => edit(draft => { change(draft.bindings![index]!); })}
               onDelete={() => edit(draft => { draft.bindings!.splice(index, 1); })}
               onFillWithProp={param => edit(draft => {
@@ -245,9 +246,13 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
   );
 }
 
-function BindingEditor({ binding, system, onEdit, onDelete, onFillWithProp }: {
+function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWithProp }: {
   binding: Binding;
   system: System;
+  /** Род, которому принадлежит эта привязка — сужает выпадашку «свойство
+      записи» до собственных props рода, а не всего словаря системы: иначе
+      привязку рода A можно закрыть свойством, которого у его записей нет. */
+  recordKind: RecordKind;
   onEdit: (change: (draft: Binding) => void) => void;
   onDelete: () => void;
   /** Заводит роду новое свойство под конкретную потребность и тем же кликом
@@ -297,7 +302,7 @@ function BindingEditor({ binding, system, onEdit, onDelete, onFillWithProp }: {
                     if (next) draft.args[param.key] = next;
                     else delete draft.args[param.key];
                   })}
-                  context={{ system, effect: effect!, earlier: [] }}
+                  context={{ system, effect: effect!, earlier: [], recordKind }}
                   allow={['prop', 'const', 'expr', 'empty']}
                 />
               </Field>
