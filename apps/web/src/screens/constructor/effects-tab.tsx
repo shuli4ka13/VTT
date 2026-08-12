@@ -380,7 +380,7 @@ function ParamsEditor({ effect, onEdit }: { effect: Effect; onEdit: (change: (dr
       {params.length === 0 ? (
         <Empty
           title="Потребностей нет"
-          hint="Слоты шагов заполнены прямо здесь. Заведите потребность, когда значение должно приходить от записи."
+          hint="Значения шагов заполняются прямо на карточках. Заведите потребность, когда значение должно приходить от записи."
         />
       ) : (
         <div className="stack stack--tight">

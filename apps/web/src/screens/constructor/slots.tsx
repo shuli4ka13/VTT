@@ -51,11 +51,11 @@ export const SLOT_KINDS: SlotKindModule[] = [
   {
     kind: 'empty',
     label: '— пусто —',
-    hint: 'Слот не заполнен. Для необязательных это законно.',
+    hint: 'Значение придёт откуда-то ещё. Для необязательных мест это законно.',
     matches: ref => ref === null || ref === undefined,
     blank: () => null,
     summary: () => '—',
-    editor: () => <span className="faint">Слот пуст.</span>,
+    editor: () => <span className="faint">Ничего не выбрано.</span>,
   },
   {
     kind: 'const',
