@@ -32,6 +32,8 @@ const AUTHOR_ONLY = [
   'constructor/records-tab.tsx',
   'constructor/step-card.tsx',
   'constructor/slots.tsx',
+  // Словари вводят новые теги (кости, мишени бросков) — значит, автор.
+  'constructor/dictionaries.tsx',
 ];
 
 const PLAY_SCREENS = ['screens/play/sheet.tsx', 'screens/play/table.tsx', 'screens/play/lobby.tsx'];
