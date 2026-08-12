@@ -171,8 +171,8 @@ export const SLOT_KINDS: SlotKindModule[] = [
   },
   {
     kind: 'param',
-    label: 'Параметр эффекта',
-    hint: 'Дырка, которую заполнит привязка рода. Нужен, когда один эффект обслуживает разные рода.',
+    label: 'Потребность эффекта',
+    hint: 'Потребность, которую закроет род записи. Нужен, когда один эффект обслуживает разные рода.',
     matches: ref => has(ref, 'param'),
     blank: ctx => ({ param: ctx.effect.params?.[0]?.key ?? '' }),
     summary: (ref, ctx) => {
@@ -183,7 +183,7 @@ export const SLOT_KINDS: SlotKindModule[] = [
       <Select
         value={ref.param ?? ''}
         options={[
-          ['', '— выберите параметр —'],
+          ['', '— выберите потребность —'],
           ...(ctx.effect.params ?? []).map(p => [p.key, p.label ?? p.key] as const),
         ] as never}
         onChange={param => onChange({ param })}

@@ -366,3 +366,19 @@
 .need-list__head { padding-bottom: var(--s-1); }
 .need { border-left-color: var(--from-record); }
 .need + .need { border-top: 1px solid var(--border); }
+
+/* ── потребность рода: та же строка-контракт, только с ДРУГОЙ стороны.
+   Там эффект её объявляет (.need выше); здесь род её закрывает — своим
+   свойством или кнопкой, что заводит его на лету. Маркер меняет цвет
+   по закрытости: янтарь ждёт, зелёный «сходится» — не форма с рамкой,
+   а строка списка ровно как у соседа. */
+.need-fill {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-3);
+  border-left: 3px solid var(--from-record);
+}
+.need-fill + .need-fill { border-top: 1px solid var(--border); }
+.need-fill--ok { border-left-color: var(--ok); }
+.need-fill .field { flex: 1; min-width: 0; }

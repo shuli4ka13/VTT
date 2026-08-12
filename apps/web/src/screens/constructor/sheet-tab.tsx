@@ -8,7 +8,7 @@
 // формулы ссылаются только на него. Переименование лейбла не должно ломать
 // ничего — это критерий приёмки №2.
 
-import { useWorld, fieldsByGroup, freeId } from '../../store/world.ts';
+import { useWorld, fieldsByGroup, freeId, slugOf } from '../../store/world.ts';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
   Card, CardHead, Field, Input, Select, Button, Empty, Fold, Verdict, Chip,
@@ -28,10 +28,6 @@ const TYPES = [
   ['text', 'текст'],
   ['boolean', 'да / нет'],
 ] as const;
-
-// Зеркало slug-правила freeId: по нему проверяется, выведен ли тег из названия.
-const slugOf = (label: string) =>
-  label.toLowerCase().replace(/[^a-zа-яё0-9]+/gi, '_').replace(/^_+|_+$/g, '');
 
 export function SheetTab() {
   const system = useWorld(s => s.system);

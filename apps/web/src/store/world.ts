@@ -163,13 +163,18 @@ export const effectsByCategory = (system: System): [string, [string, Effect][]][
   return [...groups];
 };
 
+/**
+ * Slug из человеческого текста — первый шаг `freeId`, отдельно: нужен там,
+ * где коллизия проверяется своим правилом (девственность тега поля в
+ * sheet-tab.tsx), а не общим счётчиком `_2`, `_3`.
+ */
+export const slugOf = (label: string): string =>
+  label.toLowerCase().replace(/[^a-zа-яё0-9]+/gi, '_').replace(/^_+|_+$/g, '');
+
 /** Свободный машинный идентификатор из человеческого имени. */
 export function freeId(taken: Iterable<string>, base: string): string {
   const used = new Set(taken);
-  const slug = base
-    .toLowerCase()
-    .replace(/[^a-zа-яё0-9]+/gi, '_')
-    .replace(/^_+|_+$/g, '') || 'item';
+  const slug = slugOf(base) || 'item';
   if (!used.has(slug)) return slug;
   for (let n = 2; ; n++) {
     const candidate = `${slug}_${n}`;

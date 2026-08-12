@@ -12,10 +12,10 @@
 import { useWorld, freeId } from '../../store/world.ts';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
-  Card, CardHead, Field, Input, Select, Button, Empty, Verdict, Fold, Chip,
+  Card, CardHead, Field, Input, Select, Button, Empty, Verdict, Chip,
 } from '../../ui/primitives.tsx';
 import { SlotEditor } from './slots.tsx';
-import type { System, RecordKind, Binding } from '@vtt/schema';
+import type { System, RecordKind, Binding, Param } from '@vtt/schema';
 
 const BASIS = [
   ['item', 'вещь — надевают и снимают'],
@@ -29,6 +29,19 @@ const PROP_KINDS = [
   ['expr', 'формула'],
   ['effect', 'ссылка на эффект'],
 ] as const;
+
+// Чем эффект просит заполнить потребность (`param.kind`, effects-tab.tsx)
+// → каким свойством рода это заводится кнопкой. Не тождество: у потребности
+// есть виды, которых у свойства нет («выбор», «поле листа» — последнее
+// считает лист заполняющей стороны, а не сама запись) — они падают
+// в «формулу», единственный вид без своего смысла.
+const PARAM_TO_PROP_KIND: Record<string, string> = {
+  dice: 'dice',
+  number: 'number',
+  effect: 'effect',
+  tag: 'text',
+};
+const propKindFor = (paramKind?: string) => PARAM_TO_PROP_KIND[paramKind ?? ''] ?? 'expr';
 
 export function RecordsTab() {
   const system = useWorld(s => s.system);
@@ -198,17 +211,17 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
                 draft.bindings ??= [];
                 draft.bindings.push({ label: 'Применение', effect: Object.keys(system.effects)[0] ?? '', args: {} });
               })}
-            >+ привязка</Button>
+            >+ подключить эффект</Button>
           }
         />
         {Object.keys(system.effects).length === 0 ? (
           <Verdict tone="warn">
-            В системе ещё нет эффектов — привязывать нечего. Заведите их на вкладке «Эффекты».
+            В системе ещё нет эффектов — подключать нечего. Заведите их на вкладке «Эффекты».
           </Verdict>
         ) : null}
 
         {bindings.length === 0
-          ? <span className="faint">Привязок нет: род ничего не автоматизирует.</span>
+          ? <span className="faint">Ничего не подключено: род ничего не автоматизирует.</span>
           : bindings.map((binding, index) => (
             <BindingEditor
               key={index}
@@ -216,6 +229,15 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
               system={system}
               onEdit={change => edit(draft => { change(draft.bindings![index]!); })}
               onDelete={() => edit(draft => { draft.bindings!.splice(index, 1); })}
+              onFillWithProp={param => edit(draft => {
+                draft.props ??= [];
+                const label = param.label ?? param.key;
+                const newKey = freeId(draft.props.map(p => p.key), label);
+                draft.props.push({ key: newKey, label, kind: propKindFor(param.kind) });
+                const target = draft.bindings![index]!;
+                target.args ??= {};
+                target.args[param.key] = { prop: newKey };
+              })}
             />
           ))}
       </Card>
@@ -223,14 +245,23 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
   );
 }
 
-function BindingEditor({ binding, system, onEdit, onDelete }: {
+function BindingEditor({ binding, system, onEdit, onDelete, onFillWithProp }: {
   binding: Binding;
   system: System;
   onEdit: (change: (draft: Binding) => void) => void;
   onDelete: () => void;
+  /** Заводит роду новое свойство под конкретную потребность и тем же кликом
+      закрывает её этим свойством — без похода к соседней карточке «Что
+      спросить у человека». */
+  onFillWithProp: (param: Param) => void;
 }) {
   const effect = system.effects[binding.effect];
   const params = effect?.params ?? [];
+  const isClosed = (key: string) => {
+    const value = binding.args?.[key];
+    return value !== undefined && value !== null;
+  };
+  const unclosed = params.filter(param => !isClosed(param.key));
 
   return (
     <Card tone="flat">
@@ -249,29 +280,42 @@ function BindingEditor({ binding, system, onEdit, onDelete }: {
           />
         </Field>
         <Field label=" ">
-          <Button size="sm" variant="danger" onClick={onDelete}>Убрать привязку</Button>
+          <Button size="sm" variant="danger" onClick={onDelete}>Убрать</Button>
         </Field>
       </div>
 
       {params.length ? (
-        <Fold title="Чем заполнить дырки эффекта" count={params.length} open>
+        <div className="stack stack--tight">
+          <span className="field__label">Что эффект берёт из записи</span>
           {params.map(param => (
-            <Field key={param.key} label={param.label ?? param.key}>
-              <SlotEditor
-                value={binding.args?.[param.key]}
-                onChange={next => onEdit(draft => {
-                  draft.args ??= {};
-                  if (next) draft.args[param.key] = next;
-                  else delete draft.args[param.key];
-                })}
-                context={{ system, effect: effect!, earlier: [] }}
-                allow={['prop', 'const', 'expr', 'empty']}
-              />
-            </Field>
+            <div key={param.key} className={`need-fill ${isClosed(param.key) ? 'need-fill--ok' : ''}`}>
+              <Field label={param.label ?? param.key}>
+                <SlotEditor
+                  value={binding.args?.[param.key]}
+                  onChange={next => onEdit(draft => {
+                    draft.args ??= {};
+                    if (next) draft.args[param.key] = next;
+                    else delete draft.args[param.key];
+                  })}
+                  context={{ system, effect: effect!, earlier: [] }}
+                  allow={['prop', 'const', 'expr', 'empty']}
+                />
+              </Field>
+              {!isClosed(param.key) ? (
+                <Button size="sm" onClick={() => onFillWithProp(param)}>
+                  + завести свойство «{param.label ?? param.key}»
+                </Button>
+              ) : null}
+            </div>
           ))}
-        </Fold>
+          {unclosed.length ? (
+            <Verdict tone="bad">
+              не закрыто: {unclosed.map(param => param.label ?? param.key).join(', ')}
+            </Verdict>
+          ) : null}
+        </div>
       ) : effect ? (
-        <Chip>дырок нет — эффект заполнен целиком</Chip>
+        <Chip>эффект ничего не берёт из записи</Chip>
       ) : null}
     </Card>
   );
