@@ -1,14 +1,13 @@
 // apps/web/src/screens/constructor/dictionaries.test.tsx
 // @vitest-environment jsdom
+//
+// Словари переехали из фолда на вкладке «Эффекты» в свою вкладку
+// (задача 8, дом словарей) — тесты теперь рендерят DictionariesTab
+// напрямую, без клика по фолду, которого больше нет.
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { EffectsTab } from './effects-tab.tsx';
+import { DictionariesTab } from './dictionaries.tsx';
 import { useWorld, emptySystem } from '../../store/world.ts';
-
-const openDictionaries = () => {
-  render(<EffectsTab />);
-  fireEvent.click(screen.getByText('Словари'));
-};
 
 describe('Словари: кости, мишени бросков, таблицы, типы действий', () => {
   beforeEach(() => {
@@ -20,7 +19,7 @@ describe('Словари: кости, мишени бросков, таблиц�
   });
 
   it('кость заводится и попадает в словарь системы', () => {
-    openDictionaries();
+    render(<DictionariesTab />);
     fireEvent.click(screen.getByText('+ кость'));
     const dies = Object.values(useWorld.getState().system.constants ?? {});
     expect(dies.some(c => c.kind === 'die')).toBe(true);
@@ -30,7 +29,7 @@ describe('Словари: кости, мишени бросков, таблиц�
   // нигде в мире — следует за лейблом при наборе (тот же приём, что и у
   // тега поля в sheet-tab.tsx). Реальный ввод в Input, не прямая правка стора.
   it('мишень броска заводится с тегом из названия', () => {
-    openDictionaries();
+    render(<DictionariesTab />);
     fireEvent.click(screen.getByText('+ мишень'));
     const input = screen.getByPlaceholderText('название мишени');
     fireEvent.change(input, { target: { value: 'Бросок защиты' } });
@@ -39,7 +38,7 @@ describe('Словари: кости, мишени бросков, таблиц�
   });
 
   it('таблица по диапазонам заводится в словарь системы', () => {
-    openDictionaries();
+    render(<DictionariesTab />);
     fireEvent.click(screen.getByText('+ таблица'));
     const tables = Object.values(useWorld.getState().system.tables ?? {});
     expect(tables.length).toBe(1);
@@ -55,14 +54,13 @@ describe('Словари: кости, мишени бросков, таблиц�
       },
       activeEffectId: null,
     }));
-    render(<EffectsTab />);
-    fireEvent.click(screen.getByText('Словари'));
+    render(<DictionariesTab />);
     const guarded = screen.getByTitle('таблица используется') as HTMLButtonElement;
     expect(guarded.disabled).toBe(true);
   });
 
   it('тип действия заводится в словарь системы', () => {
-    openDictionaries();
+    render(<DictionariesTab />);
     fireEvent.click(screen.getByText('+ тип'));
     const types = Object.values(useWorld.getState().system.action_types ?? {});
     expect(types.length).toBe(1);
@@ -78,8 +76,7 @@ describe('Словари: кости, мишени бросков, таблиц�
       },
       activeEffectId: null,
     }));
-    render(<EffectsTab />);
-    fireEvent.click(screen.getByText('Словари'));
+    render(<DictionariesTab />);
     const guarded = screen.getByTitle('тип используется') as HTMLButtonElement;
     expect(guarded.disabled).toBe(true);
   });

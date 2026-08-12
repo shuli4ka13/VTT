@@ -20,7 +20,6 @@ import { groupSteps, BRICKS } from './cards.ts';
 import { GroupCard } from './card.tsx';
 import { ModifiersEditor } from './modifiers.tsx';
 import { DonorPalette, findDonorBlock, copyDonorBlock } from './donors.tsx';
-import { DictionariesFold } from './dictionaries.tsx';
 import type { System, Effect, Activation } from '@vtt/schema';
 
 const ACTIVATIONS = [
@@ -122,7 +121,6 @@ export function EffectsTab() {
             </div>
 
             <RoomRules system={system} />
-            <DictionariesFold system={system} />
           </>
         ),
       }}

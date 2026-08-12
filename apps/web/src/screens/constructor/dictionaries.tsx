@@ -4,17 +4,24 @@
 // воспроизводим конструктором с нуля» был недостижим: бонус мастерства
 // по уровню без таблиц по диапазонам не собрать.
 //
-// Список, а не карточки (design-note §4, «Плотность и тишина»): строка
-// ~32px, разделяет только тонкая линия. Таблица — исключение: у неё есть
-// вложенные диапазоны, и она раскрывается фолдом, но сама остаётся строкой
-// списка, не карточкой.
+// Своя вкладка, а не фолд внутри «Эффектов»: словарь принадлежит ВСЕЙ
+// системе — на него ссылаются и «Лист», и «Эффекты», и «Записи», значит
+// вкладке «Эффекты» он не принадлежит. В узкой (~280px) левой колонке
+// строки к тому же резались по ширине — здесь у секций вся ширина центра.
+//
+// Список, а не карточки (design-note §4, «Плотность и тишина») ВНУТРИ
+// каждой секции: строка ~32px, разделяет только тонкая линия. Таблица —
+// исключение: у неё есть вложенные диапазоны, и она раскрывается фолдом,
+// но сама остаётся строкой списка, не карточкой. Card здесь ровно один
+// уровень — на секцию, не на строку: вложенные карточки запрещены.
 //
 // Инвариант «стабильный тег» соблюдён тем же приёмом, что и у поля
 // (sheet-tab.tsx): ключ/тег свежей записи следует за лейблом, пока запись
 // не встретилась нигде в мире; первая ссылка — замораживает его навсегда.
 
 import { useWorld, freeId, slugOf } from '../../store/world.ts';
-import { Input, Button, Fold, Verdict } from '../../ui/primitives.tsx';
+import { Columns } from '../../ui/layout.tsx';
+import { Card, CardHead, Input, Button, Fold, Verdict } from '../../ui/primitives.tsx';
 import { normalizeDice } from './slot-input.tsx';
 import type { System, RangeTable } from '@vtt/schema';
 import type { WorldState } from '../../store/world.ts';
@@ -74,30 +81,63 @@ function renameRoll(rolls: { tag: string; label: string }[], index: number, labe
   cur.label = label;
 }
 
-function SectionHead({ title, action, onAction }: { title: string; action: string; onAction: () => void }) {
-  return (
-    <div className="inline">
-      <span className="field__label">{title}</span>
-      <span className="spacer" />
-      <Button size="sm" onClick={onAction}>{action}</Button>
-    </div>
-  );
-}
+const addDie = (editSystem: EditSystem) => editSystem(draft => {
+  draft.constants ??= {};
+  const key = freeId(Object.keys(draft.constants), 'кость');
+  draft.constants[key] = { label: '', kind: 'die', dice: [{ count: 1, sides: 20 }] };
+});
 
-export function DictionariesFold({ system }: { system: System }) {
+const addRoll = (editSystem: EditSystem) => editSystem(draft => {
+  draft.rolls ??= [];
+  const tag = freeId(draft.rolls.map(r => r.tag), 'бросок');
+  draft.rolls.push({ tag, label: '' });
+});
+
+const addTable = (editSystem: EditSystem) => editSystem(draft => {
+  draft.tables ??= {};
+  const key = freeId(Object.keys(draft.tables), 'таблица');
+  draft.tables[key] = { label: '', ranges: [] };
+});
+
+const addActionType = (editSystem: EditSystem) => editSystem(draft => {
+  draft.action_types ??= {};
+  const key = freeId(Object.keys(draft.action_types), 'действие');
+  draft.action_types[key] = { label: '' };
+});
+
+export function DictionariesTab() {
+  const system = useWorld(s => s.system);
   const editSystem = useWorld(s => s.editSystem);
-  const count = Object.keys(system.constants ?? {}).length
-    + (system.rolls ?? []).length
-    + Object.keys(system.tables ?? {}).length
-    + Object.keys(system.action_types ?? {}).length;
 
   return (
-    <Fold title="Словари" count={count}>
-      <DiceSection system={system} editSystem={editSystem} />
-      <RollsSection system={system} editSystem={editSystem} />
-      <TablesSection system={system} editSystem={editSystem} />
-      <ActionTypesSection system={system} editSystem={editSystem} />
-    </Fold>
+    <Columns
+      main={{
+        head: 'Словари системы',
+        body: (
+          <>
+            <Card>
+              <CardHead title="Кости" actions={<Button size="sm" onClick={() => addDie(editSystem)}>+ кость</Button>} />
+              <DiceSection system={system} editSystem={editSystem} />
+            </Card>
+
+            <Card>
+              <CardHead title="Мишени бросков" actions={<Button size="sm" onClick={() => addRoll(editSystem)}>+ мишень</Button>} />
+              <RollsSection system={system} editSystem={editSystem} />
+            </Card>
+
+            <Card>
+              <CardHead title="Таблицы по диапазонам" actions={<Button size="sm" onClick={() => addTable(editSystem)}>+ таблица</Button>} />
+              <TablesSection system={system} editSystem={editSystem} />
+            </Card>
+
+            <Card>
+              <CardHead title="Типы действий" actions={<Button size="sm" onClick={() => addActionType(editSystem)}>+ тип</Button>} />
+              <ActionTypesSection system={system} editSystem={editSystem} />
+            </Card>
+          </>
+        ),
+      }}
+    />
   );
 }
 
@@ -106,15 +146,8 @@ export function DictionariesFold({ system }: { system: System }) {
 function DiceSection({ system, editSystem }: Props) {
   const entries = Object.entries(system.constants ?? {}).filter(([, c]) => c.kind === 'die');
 
-  const add = () => editSystem(draft => {
-    draft.constants ??= {};
-    const key = freeId(Object.keys(draft.constants), 'кость');
-    draft.constants[key] = { label: '', kind: 'die', dice: [{ count: 1, sides: 20 }] };
-  });
-
   return (
     <div className="stack stack--tight">
-      <SectionHead title="Кости" action="+ кость" onAction={add} />
       {entries.length === 0 ? (
         <span className="faint">Своих костей нет — броски берут ведущую кость системы.</span>
       ) : entries.map(([key, constant], index) => {
@@ -175,15 +208,8 @@ function DiceSection({ system, editSystem }: Props) {
 function RollsSection({ system, editSystem }: Props) {
   const rolls = system.rolls ?? [];
 
-  const add = () => editSystem(draft => {
-    draft.rolls ??= [];
-    const tag = freeId(draft.rolls.map(r => r.tag), 'бросок');
-    draft.rolls.push({ tag, label: '' });
-  });
-
   return (
     <div className="stack stack--tight">
-      <SectionHead title="Мишени бросков" action="+ мишень" onAction={add} />
       <span className="faint">Чек-мишени полей включаются на «Листе».</span>
       {rolls.length === 0 ? (
         <span className="faint">Мишеней пока нет.</span>
@@ -221,15 +247,8 @@ function RollsSection({ system, editSystem }: Props) {
 function TablesSection({ system, editSystem }: Props) {
   const entries = Object.entries(system.tables ?? {});
 
-  const add = () => editSystem(draft => {
-    draft.tables ??= {};
-    const key = freeId(Object.keys(draft.tables), 'таблица');
-    draft.tables[key] = { label: '', ranges: [] };
-  });
-
   return (
     <div className="stack stack--tight">
-      <SectionHead title="Таблицы по диапазонам" action="+ таблица" onAction={add} />
       {entries.length === 0 ? (
         <span className="faint">Таблиц пока нет — например, бонус мастерства по уровню.</span>
       ) : entries.map(([key, table], index) => (
@@ -320,15 +339,8 @@ function TableRow({ id, table, system, editSystem }: Props & { id: string; table
 function ActionTypesSection({ system, editSystem }: Props) {
   const entries = Object.entries(system.action_types ?? {});
 
-  const add = () => editSystem(draft => {
-    draft.action_types ??= {};
-    const key = freeId(Object.keys(draft.action_types), 'действие');
-    draft.action_types[key] = { label: '' };
-  });
-
   return (
     <div className="stack stack--tight">
-      <SectionHead title="Типы действий" action="+ тип" onAction={add} />
       <span className="faint">Чего стоит активируемый эффект — выбирается из этого списка.</span>
       {entries.length === 0 ? (
         <span className="faint">Типов пока нет.</span>
