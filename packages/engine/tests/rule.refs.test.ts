@@ -1,9 +1,7 @@
 import { group, test, eq, deepEq, throws } from './harness.ts';
 import { packRef, resolveRef, resolveNumber } from '../src/engine/refs.ts';
 import { newPass } from '../src/engine/calc.ts';
-import { system } from '../src/model/system.ts';
-import { arven } from '../src/model/sheets.ts';
-import { compendium } from '../src/model/compendium.ts';
+import { system, arven, compendium } from './fixtures.ts';
 
 // Структурные ссылки — язык слотов правила. Не строковый мини-язык нарочно:
 // из структуры выводится интерфейс (выпадашка допустимых значений вместо

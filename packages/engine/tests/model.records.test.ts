@@ -1,7 +1,5 @@
 import { group, test, eq, ok } from './harness.ts';
-import { system } from '../src/model/system.ts';
-import { compendium } from '../src/model/compendium.ts';
-import { cyberpunk, cpCompendium } from '../src/model/system-cyberpunk.ts';
+import { system, compendium, cyberpunk, cpCompendium } from './fixtures.ts';
 
 // Роды записей компендиума объявляет СИСТЕМА, а не движок и не разметка.
 // Палитра «что можно добавить», слова и подсказки выводятся из system.records —

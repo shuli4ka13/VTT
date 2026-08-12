@@ -3,9 +3,7 @@ import { send, receive } from '../src/events/envelope.ts';
 import { rollNotation, rollCheck } from '../src/engine/dice.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
 import { serializeSheet } from '../src/model/serialize.ts';
-import { system } from '../src/model/system.ts';
-import { arven, mirra } from '../src/model/sheets.ts';
-import { compendium } from '../src/model/compendium.ts';
+import { system, arven, mirra, compendium } from './fixtures.ts';
 
 // Кубик с заранее известными гранями — иначе тест нечем закрепить.
 const queue = (...values) => {

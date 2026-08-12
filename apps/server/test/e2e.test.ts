@@ -13,11 +13,9 @@ import { openDatabase } from '../src/db/db.ts';
 import type { Database } from '../src/db/db.ts';
 
 // @ts-expect-error — образцы движка без деклараций.
-import { system as dnd } from '@vtt/engine/model/system';
-// @ts-expect-error
-import { compendium } from '@vtt/engine/model/compendium';
-// @ts-expect-error
-import { sheets } from '@vtt/engine/model/sheets';
+import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
+
+const { system: dnd, compendium, sheets } = SAMPLE_WORLDS[0];
 
 let app: INestApplication;
 let db: Database;

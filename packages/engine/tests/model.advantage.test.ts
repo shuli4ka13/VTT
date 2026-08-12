@@ -1,7 +1,6 @@
 import { group, test, eq, ok } from './harness.ts';
 import { ADVANTAGE_METHODS } from '../src/model/advantage-methods.ts';
-import { system } from '../src/model/system.ts';
-import { cyberpunk } from '../src/model/system-cyberpunk.ts';
+import { system, cyberpunk } from './fixtures.ts';
 
 // Механики преимущества: СЛОВАРЬ — межсистемный справочник (какие вообще
 // бывают, с примерами), а какие СУЩЕСТВУЮТ в конкретном мире — объявляет

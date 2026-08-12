@@ -5,9 +5,7 @@ import * as thresholdStep from '../src/engine/steps/threshold.ts';
 import * as applyStep from '../src/engine/steps/apply.ts';
 import { newPass } from '../src/engine/calc.ts';
 import { targets, incomingTagOf } from '../src/engine/targets.ts';
-import { system } from '../src/model/system.ts';
-import { arven, mirra } from '../src/model/sheets.ts';
-import { compendium } from '../src/model/compendium.ts';
+import { system, arven, mirra, compendium } from './fixtures.ts';
 
 // Встроенные типы шагов. Каждый тест гоняет шаг через ОБЕ фазы —
 // packRule (отправитель) и resolveRule (получатель) — потому что разрез

@@ -1,8 +1,7 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.ts';
 import { calc, calcAll, newPass, dependenciesOf } from '../src/engine/calc.ts';
 import { UnknownTagError, CycleError, TableError } from '../src/engine/errors.ts';
-import { system } from '../src/model/system.ts';
-import { arven, mirra } from '../src/model/sheets.ts';
+import { system, arven, mirra } from './fixtures.ts';
 
 // Крошечная система «на коленке» — доказывает, что движок не знает ни одного
 // конкретного имени стата. Ни «str», ни «level» здесь нет.

@@ -1,8 +1,11 @@
 import { group, test, eq, ok, throws } from './harness.ts';
 import { send, receive, availableActions } from '../src/events/envelope.ts';
-import { system } from '../src/model/system.ts';
-import { arven, mirra } from '../src/model/sheets.ts';
-import { compendium, findItem } from '../src/model/compendium.ts';
+import { system, arven, mirra, compendium } from './fixtures.ts';
+
+// findItem раньше жил в src/model/compendium.ts — тривиальный поиск по id
+// в собственных items модуля. Данные переехали в JSON, а с ними и повод
+// держать однострочный хелпер: единственный вызов инлайнится здесь.
+const findItem = (id: string) => compendium.items.find(i => i.id === id) || null;
 
 // Предмет — ИСТОЧНИК действий, как в Foundry: надел меч — получил его атаку,
 // снял — потерял. Но объявлять эту атаку мечу не нужно: её даёт ПРИВЯЗКА

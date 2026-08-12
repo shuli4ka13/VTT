@@ -1,10 +1,7 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.ts';
 import { send, receive, bindingsOf } from '../src/events/envelope.ts';
 import { serializeSheet } from '../src/model/serialize.ts';
-import { system } from '../src/model/system.ts';
-import { arven, mirra } from '../src/model/sheets.ts';
-import { compendium } from '../src/model/compendium.ts';
-import { cyberpunk, cpCompendium, silver, raze } from '../src/model/system-cyberpunk.ts';
+import { system, arven, mirra, compendium, cyberpunk, cpCompendium, silver, raze } from './fixtures.ts';
 import { AMOUNT_SOURCES } from '../src/model/amount-sources.ts';
 import { SOURCES } from '../src/engine/steps/amount.ts';
 
@@ -179,9 +176,9 @@ group('две системы одними слотами', () => {
         ...compendium,
         items: [...compendium.items,
           { id: 'axe-item', rk: 'weapon', label: 'Топор', props: { damage_dice: '1d12' }, modifiers: [],
-            // Аргументов нет: у топора спрашивают только кость урона,
-            // всё остальное — закон мира внутри эффекта «Атака».
-            activities: [{ label: 'Удар', effect: 'strike', args: {} }] }],
+            // Аргумент закрывает потребность эффекта в кости урона свойством
+            // записи; всё остальное — закон мира внутри эффекта «Атака».
+            activities: [{ label: 'Удар', effect: 'strike', args: { damage_dice: { prop: 'damage_dice' } } }] }],
       };
       const margined = {
         ...system,

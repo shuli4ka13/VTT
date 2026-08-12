@@ -2,9 +2,7 @@ import { group, test, eq, ok, deepEq } from './harness.ts';
 import { receive, send } from '../src/events/envelope.ts';
 import { exchange } from '../src/events/exchange.ts';
 import { serializeSheet } from '../src/model/serialize.ts';
-import { system } from '../src/model/system.ts';
-import { arven, mirra } from '../src/model/sheets.ts';
-import { compendium } from '../src/model/compendium.ts';
+import { system, arven, mirra, compendium } from './fixtures.ts';
 
 // Trigger Event: эффект, который вызывает ДРУГОЙ чарник.
 //

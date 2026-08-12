@@ -6,13 +6,14 @@ import { describe, it, expect } from 'vitest';
 import { world as W, api } from '../src/index.ts';
 
 // @ts-expect-error — образцы лежат в пакете движка, деклараций не имеют.
-import { SAMPLE_SYSTEMS } from '../../engine/src/model/systems.ts';
-// @ts-expect-error
-import { sheets } from '../../engine/src/model/sheets.ts';
-// @ts-expect-error
-import { compendium } from '../../engine/src/model/compendium.ts';
+import { SAMPLE_SYSTEMS, SAMPLE_WORLDS } from '../../engine/src/model/systems.ts';
 // @ts-expect-error
 import { migrateWorld } from '../../engine/src/model/migrate.ts';
+
+// dnd5e — первый элемент SAMPLE_WORLDS (см. systems.ts): его компендиум
+// и чарники раньше жили отдельными ts-модулями (model/compendium.ts,
+// model/sheets.ts), теперь — данными в samples/dnd5e.world.json.
+const { compendium, sheets } = SAMPLE_WORLDS[0];
 
 describe('схема мира на образцовых данных', () => {
   it('обе образцовые системы проходят схему', () => {

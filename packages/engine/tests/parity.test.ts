@@ -25,8 +25,7 @@ import { compendium as OLD_COMPENDIUM } from '../../../src/model/compendium.js';
 import { calc, newPass } from '../src/engine/calc.ts';
 import { exchange } from '../src/events/exchange.ts';
 import { SAMPLE_SYSTEMS } from '../src/model/systems.ts';
-import { sheets } from '../src/model/sheets.ts';
-import { compendium } from '../src/model/compendium.ts';
+import { sheets, compendium } from './fixtures.ts';
 import type { System, Sheet } from '../src/model/types.ts';
 
 type Outcome = { ok: true; value: unknown } | { ok: false; error: string };

@@ -3,9 +3,7 @@ import { calc, newPass } from '../src/engine/calc.ts';
 import { resolveRoll } from '../src/engine/modifiers.ts';
 import { targets, assertTarget } from '../src/engine/targets.ts';
 import { UnknownTagError } from '../src/engine/errors.ts';
-import { system } from '../src/model/system.ts';
-import { arven, mirra } from '../src/model/sheets.ts';
-import { compendium } from '../src/model/compendium.ts';
+import { system, arven, mirra, compendium } from './fixtures.ts';
 
 const withGear = (sheet, book = compendium) => newPass(system, sheet, { compendium: book });
 

@@ -1,6 +1,6 @@
 import { group, test, eq, ok, deepEq, deepSame, throws } from './harness.ts';
 import { serializeSheet, deserializeSheet, SheetShapeError } from '../src/model/serialize.ts';
-import { sheets } from '../src/model/sheets.ts';
+import { sheets } from './fixtures.ts';
 
 const sample = () => ({
   id: 'test',

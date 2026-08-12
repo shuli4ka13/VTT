@@ -10,17 +10,11 @@
 //   VTT_URL   — адрес сервера (умолчание http://localhost:8200)
 //   VTT_OWNER — под кем публиковать (умолчание «Стенд»)
 
-import { system as dnd5e } from '@vtt/engine/model/system';
-import { compendium as dndCompendium } from '@vtt/engine/model/compendium';
-import { arven, mirra } from '@vtt/engine/model/sheets';
-import { cyberpunk, cpCompendium, silver, raze } from '@vtt/engine/model/system-cyberpunk';
+import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
 
-// Копия глубокая: сид не смеет мутировать модули-образцы.
+// Копия глубокая: сид не смеет мутировать образцы движка.
 export function sampleWorlds() {
-  return structuredClone([
-    { title: String(dnd5e.name), world: { system: dnd5e, compendium: dndCompendium, sheets: [arven, mirra] } },
-    { title: String(cyberpunk.name), world: { system: cyberpunk, compendium: cpCompendium, sheets: [silver, raze] } },
-  ]);
+  return structuredClone(SAMPLE_WORLDS.map(({ title, ...world }) => ({ title, world })));
 }
 
 export async function seed(url: string, owner: string): Promise<string[]> {

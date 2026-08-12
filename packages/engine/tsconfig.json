@@ -4,6 +4,7 @@
   "compilerOptions": {
     "types": [],
     "allowJs": true,
-    "checkJs": false
+    "checkJs": false,
+    "resolveJsonModule": true
   }
 }

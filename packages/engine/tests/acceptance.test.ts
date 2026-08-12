@@ -6,9 +6,7 @@ import { serializeSheet, deserializeSheet } from '../src/model/serialize.ts';
 import { calc, calcAll, newPass } from '../src/engine/calc.ts';
 import { CycleError } from '../src/engine/errors.ts';
 import { send, receive } from '../src/events/envelope.ts';
-import { system } from '../src/model/system.ts';
-import { arven, mirra, sheets } from '../src/model/sheets.ts';
-import { compendium } from '../src/model/compendium.ts';
+import { system, arven, mirra, sheets, compendium } from './fixtures.ts';
 import { SAMPLE_SYSTEMS, SAMPLE_WORLDS } from '../src/model/systems.ts';
 
 const all = (sys, sheet, book = compendium) =>
