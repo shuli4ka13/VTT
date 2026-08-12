@@ -43,7 +43,12 @@ export function groupSteps(list: Step[]): CardGroup[] {
     const step = list[i]!;
     const next = list[i + 1];
     const source = (step as any).source;
-    const glue = step.type === 'amount' && step.id && next?.type === 'apply'
+    // Клеим и к «состоянию» тоже: карточка «изменение» — одна и та же,
+    // переключатель поле/состояние внутри неё не должен разваливать её
+    // надвое. Числу у состояния работы нет, но оно сохраняется — вернул
+    // переключатель обратно, вернулась и величина.
+    const glue = step.type === 'amount' && step.id
+      && (next?.type === 'apply' || next?.type === 'status')
       && (source === 'roll' || source === undefined)
       && takesWhole((next as any).value, step.id)
       && list.every((other, j) => j === i || j === i + 1 || !mentions(other, step.id!));

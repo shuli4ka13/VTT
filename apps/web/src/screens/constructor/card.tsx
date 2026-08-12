@@ -171,10 +171,33 @@ function RollExprInput({ step, context, edit }: {
 }) {
   const [draft, setDraft] = useState<string | null>(null);
   const [trouble, setTrouble] = useState<string | null>(null);
-  const shown = draft ?? formatRollExpr(step.roll, context.system);
+
+  // Кость, объявленная в словарях, — ССЫЛКА, а не число: сменили ведущую
+  // кость системы, и все броски поменялись разом. Поэтому она стоит фишкой,
+  // как всякая ссылка. Своё число («3d15», такого в словаре нет) остаётся
+  // текстом — по виду сразу понятно, что перед вами.
+  const die = step.roll?.die;
+  const dieChip = draft === null && die && typeof die === 'object' && 'constant' in die
+    ? chipOf(die, context)
+    : null;
+  const shown = draft ?? (dieChip
+    ? exprText(step.roll?.bonus)
+    : formatRollExpr(step.roll, context.system));
 
   const commit = () => {
     if (draft === null) return;
+    // Кость стоит фишкой — строка правит только прибавку, иначе текст
+    // молча снёс бы ссылку на словарь.
+    if (dieChip || (die && typeof die === 'object' && 'constant' in die)) {
+      const bonus = draft.trim() ? parseAmountExpr(draft, context.system).bonus : null;
+      edit(0, target => {
+        const roll = ((target as any).roll ??= {});
+        if (bonus === null || bonus === undefined) delete roll.bonus; else roll.bonus = bonus;
+      });
+      setDraft(null);
+      setTrouble(null);
+      return;
+    }
     const parsed = parseRollExpr(draft, context.system);
     if (parsed.error) { setTrouble(parsed.error); return; }
     edit(0, target => {
@@ -192,7 +215,29 @@ function RollExprInput({ step, context, edit }: {
       <FormulaChips
         value={shown}
         system={context.system}
-        placeholder="кость и прибавка: 1d20 + @поле"
+        placeholder={dieChip ? 'и прибавка: @поле, число…' : 'кость и прибавка: 1d20 + @поле'}
+        extraOptions={Object.entries(context.system.constants ?? {})
+          .filter(([, c]) => c.kind === 'die')
+          .map(([key, c]) => ({
+            group: 'кость системы',
+            label: c.label ?? key,
+            onPick: () => edit(0, target => { ((target as any).roll ??= {}).die = { constant: key }; }),
+          }))}
+        prefix={dieChip ? (
+          <>
+            <span className="chips__chip" title="кость из словарей системы">
+              {dieChip.label}
+              <button
+                type="button" className="chips__x" aria-label="убрать кость"
+                onMouseDown={e => {
+                  e.preventDefault();
+                  edit(0, target => { delete ((target as any).roll ??= {}).die; });
+                }}
+              >×</button>
+            </span>
+            <span className="chips__plus" aria-hidden>+</span>
+          </>
+        ) : null}
         onChange={next => { setDraft(next); setTrouble(null); }}
         onBlur={commit}
         onKeyDown={e => {
@@ -540,6 +585,14 @@ function ChangeBody({ group, context, edit, system, onAddParam }: {
         </>
       ) : (
         <>
+          {/* Состоянию число не нужно, но выбрасывать набранное нельзя:
+              вернул переключатель — вернулась и величина. Говорим об этом,
+              чтобы «куда делась кость урона» не пришлось гадать. */}
+          {group.amount ? (
+            <span className="faint">
+              величина сохранена — вернётся, если снова выбрать «поле»
+            </span>
+          ) : null}
           <Field label="что делаем">
             <Select
               value={String(step.mode ?? 'apply')}

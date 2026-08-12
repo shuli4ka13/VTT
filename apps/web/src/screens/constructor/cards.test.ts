@@ -85,3 +85,14 @@ describe('moveGroup', () => {
     expect(moveGroup(source, 2, 1)).toBe(source);
   });
 });
+
+describe('склейка и состояние', () => {
+  it('переключение «поле → состояние» не разваливает карточку', () => {
+    const groups = groupSteps(steps([
+      { id: 'dmg', type: 'amount', source: 'roll' },
+      { type: 'status', mode: 'apply', value: { ref: 'dmg' } },
+    ]));
+    expect(groups.map(g => g.kind)).toEqual(['change']);
+    expect(groups[0]!.amount?.id).toBe('dmg');
+  });
+});
