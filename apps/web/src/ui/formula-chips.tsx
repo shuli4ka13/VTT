@@ -35,13 +35,17 @@ export function joinParts(parts: Part[]): string {
   return parts.map(p => ('tag' in p ? `#${p.tag}` : p.text)).join('');
 }
 
-export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur }: {
+export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus }: {
   value: string;
   onChange: (next: string) => void;
   system: System;
   placeholder?: string;
   onKeyDown?: (e: React.KeyboardEvent) => void;
   onBlur?: () => void;
+  /** Фокус вошёл в поле — слоту это нужно, чтобы показать свои варианты. */
+  onFocus?: () => void;
+  /** Есть незакрытый запрос тега: слот прячет своё меню, чтобы не спорить. */
+  onQuery?: (active: boolean) => void;
 }) {
   const parts = useMemo(() => partsOf(value), [value]);
   const host = useRef<HTMLDivElement>(null);
@@ -145,7 +149,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
             placeholder={empty ? placeholder : undefined}
             size={Math.max(1, part.text.length || (empty ? (placeholder?.length ?? 8) : 1))}
             spellCheck={false}
-            onFocus={e => { setActive(index); setCaret(e.currentTarget.selectionStart ?? 0); }}
+            onFocus={e => { setActive(index); setCaret(e.currentTarget.selectionStart ?? 0); onFocus?.(); }}
             onBlur={leave}
             onChange={e => editText(index, e.target.value, e.currentTarget.selectionStart ?? e.target.value.length)}
             onKeyUp={e => setCaret(e.currentTarget.selectionStart ?? 0)}

@@ -362,10 +362,12 @@ function ChangeBody({ group, context, edit, system, onAddParam }: {
               onChange={next => edit(applyIndex, draft => { (draft as any).target = next ?? undefined; })}
             />
           </Field>
+          {/* Та же азбука, что и у проверки: операция — знак, а не слово.
+              Что он делает, договаривает пересказ над карточкой. */}
           <Field label="как">
             <Select
               value={String(step.direction ?? 'subtract')}
-              options={[['subtract', 'вычесть'], ['add', 'прибавить'], ['set', 'задать']] as const}
+              options={[['subtract', '−'], ['add', '+'], ['set', '=']] as const}
               onChange={next => edit(applyIndex, draft => { (draft as any).direction = next; })}
             />
           </Field>

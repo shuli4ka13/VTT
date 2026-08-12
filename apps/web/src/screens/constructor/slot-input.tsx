@@ -8,6 +8,8 @@ import type { System, Effect, SlotRef, Step } from '@vtt/schema';
 import { Select } from '../../ui/primitives.tsx';
 import { labelOfTag } from '../../ui/formula.tsx';
 import { dieWord } from './readback.ts';
+import { FormulaChips } from '../../ui/formula-chips.tsx';
+import { matchTagQuery } from '../../ui/tag-suggest.tsx';
 import type { SlotContext, SlotKind } from './slots.tsx';
 
 export function parseTyped(text: string): SlotRef | null {
@@ -93,6 +95,10 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
   const needle = (draft ?? '').toLowerCase();
   const filtered = needle ? options.filter(o => o.label.toLowerCase().includes(needle)) : options;
 
+  // Пока набирается «@…», подсказку даёт редактор формулы — два меню разом
+  // спорили бы за одно место.
+  const typingTag = matchTagQuery(draft ?? '', (draft ?? '').length) !== null;
+
   const commitTyped = () => {
     if (draft !== null) {
       const diced = dice ? normalizeDice(draft) : null;
@@ -109,20 +115,23 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
 
   return (
     <div className="slot">
-      <input
-        className="input input--mono"
+      {/* Тот же редактор, что и у строки броска: формула везде выглядит
+          одинаково, и тег в ней — фишка с человеческим названием, а не
+          машинной решёткой. Своё меню слота показываем, пока человек не
+          начал набирать тег: тогда подсказку даёт редактор формулы. */}
+      <FormulaChips
         value={shown}
+        system={context.system}
         placeholder={placeholder ?? 'число или формула'}
-        spellCheck={false}
         onFocus={() => setOpen(true)}
-        onChange={e => { setDraft(e.target.value); setOpen(true); }}
-        onBlur={() => setTimeout(commitTyped, 120)}
+        onChange={next => { setDraft(next); setOpen(true); }}
+        onBlur={commitTyped}
         onKeyDown={e => {
           if (e.key === 'Enter') commitTyped();
           if (e.key === 'Escape') { setDraft(null); setOpen(false); }
         }}
       />
-      {open && filtered.length ? (
+      {open && filtered.length && !typingTag ? (
         <div className="slot__menu">
           {filtered.map((option, i) => (
             <button
