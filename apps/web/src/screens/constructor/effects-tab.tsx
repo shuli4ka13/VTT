@@ -195,7 +195,9 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
 
   const cards = groupSteps(steps);
   const problems = steps.map((step, index) => problemOf(step, system, effect, earlierOf(index)));
-  const broken = problems.filter(Boolean).length;
+  // Считаем КАРТОЧКИ с бедой, а не шаги: склеенная пара — одна карточка,
+  // и «сломано 3» при двух карточках на экране — арифметика не для человека.
+  const broken = cards.filter(card => card.indices.some(i => problems[i])).length;
 
   return (
     <>
@@ -326,9 +328,9 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
             <span className="screen-title" style={{ fontSize: 'var(--fs-5)' }}>Цепочка шагов</span>
             <span className="spacer" />
             {broken
-              ? <Verdict tone="bad">шагов со сломанными ссылками: {broken}</Verdict>
+              ? <Verdict tone="bad">карточек со сломанными ссылками: {broken}</Verdict>
               : steps.length
-                ? <Verdict tone="ok">эффект верный · шагов {steps.length}</Verdict>
+                ? <Verdict tone="ok">эффект верный · карточек {cards.length}</Verdict>
                 : <Verdict tone="warn">шагов ещё нет — эффект ничего не делает</Verdict>}
           </div>
 
@@ -500,11 +502,14 @@ function RoomRules({ system }: { system: System }) {
   );
 }
 
+// Считаем КАРТОЧКИ, а не шаги движка: на экране их столько же, сколько
+// в списке, и человеку незачем знать, что «изменение» внутри держит ещё
+// и число. Пара, склеенная в одну карточку, — одно решение автора.
 const metaOf = (effect: Effect) => {
   const kind = ACTIVATIONS.find(a => a.key === (effect.activation ?? 'manual'))?.label ?? '';
   const payload = (effect.activation ?? 'manual') === 'passive'
     ? `модификаторов: ${effect.modifiers?.length ?? 0}`
-    : `шагов: ${effect.steps?.length ?? 0}`;
+    : `карточек: ${groupSteps(effect.steps ?? []).length}`;
   return `${kind.toLowerCase()} · ${payload}`;
 };
 
