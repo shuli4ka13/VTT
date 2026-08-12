@@ -215,53 +215,81 @@ function AmountExprInput({ amount, context, edit, onCreateFromRecord }: {
   onCreateFromRecord?: () => SlotRef;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
-  const dice = (amount as any).dice;
+  const dice = (amount as Record<string, any>).dice;
 
-  // Кость может прийти ИЗ ЗАПИСИ — такую строкой не напишешь, и строка её
-  // молча стёрла бы. Тогда у кости свой слот, а строка остаётся прибавке.
-  const structural = dice && typeof dice === 'object'
-    && !('const' in dice) && !('constant' in dice);
+  // Кость из записи живёт отдельным слотом (формула ссылаться на запись
+  // не умеет), но человеку она — такая же ссылка, как поле листа. Поэтому
+  // в строке она стоит фишкой цвета нити, а правится не текстом.
+  const fromRecordDice = dice && typeof dice === 'object'
+    && !('const' in dice) && !('constant' in dice)
+    ? String((dice as any).param ?? (dice as any).prop ?? (dice as any).item ?? (dice as any).ref ?? '')
+    : null;
 
-  if (structural) {
-    return (
-      <>
-        <Field label="сколько — кости">
-          <SlotInput
-            value={dice} context={context} dice
-            placeholder="1d8, 2d6 — или из записи"
-            onChange={next => edit(0, draft => { (draft as any).dice = next ?? undefined; })}
-            onCreateFromRecord={onCreateFromRecord}
-          />
-        </Field>
-        <Field label="и прибавка">
-          <SlotInput
-            value={(amount as any).bonus} context={context}
-            onChange={next => edit(0, draft => { (draft as any).bonus = next ?? undefined; })}
-          />
-        </Field>
-      </>
-    );
-  }
+  const needLabel = (key: string) =>
+    context.effect.params?.find(p => p.key === key)?.label ?? key;
 
-  const shown = draft ?? formatAmountExpr(amount, context.system);
+  const setDice = (next: SlotRef | undefined) => edit(0, target => {
+    const t = target as Record<string, unknown>;
+    if (next === undefined) delete t.dice; else t.dice = next;
+  });
+
+  // Строка правит ТОЛЬКО прибавку, если кость пришла из записи: иначе
+  // текст молча стёр бы то, что в него не записывается.
+  const shown = draft ?? (fromRecordDice
+    ? exprText((amount as Record<string, any>).bonus)
+    : formatAmountExpr(amount, context.system));
 
   const commit = () => {
     if (draft === null) return;
-    const parsed = parseAmountExpr(draft, context.system);
-    edit(0, target => {
-      const t = target as any;
-      if (parsed.die === undefined) delete t.dice; else t.dice = parsed.die;
-      if (parsed.bonus === null) delete t.bonus; else t.bonus = parsed.bonus;
-    });
+    if (fromRecordDice) {
+      const bonus = draft.trim() ? parseAmountExpr(draft, context.system).bonus : null;
+      edit(0, target => {
+        const t = target as Record<string, unknown>;
+        if (bonus === null || bonus === undefined) delete t.bonus; else t.bonus = bonus;
+      });
+    } else {
+      const parsed = parseAmountExpr(draft, context.system);
+      edit(0, target => {
+        const t = target as Record<string, unknown>;
+        if (parsed.die === undefined) delete t.dice; else t.dice = parsed.die;
+        if (parsed.bonus === null) delete t.bonus; else t.bonus = parsed.bonus;
+      });
+    }
     setDraft(null);
   };
+
+  const needs = (context.effect.params ?? []).map(p => ({
+    group: 'из записи',
+    label: p.label ?? p.key,
+    onPick: () => setDice({ param: p.key } as SlotRef),
+  }));
+  if (onCreateFromRecord) {
+    needs.push({
+      group: 'из записи',
+      label: 'новая потребность…',
+      onPick: () => setDice(onCreateFromRecord()),
+    });
+  }
 
   return (
     <Field label="сколько">
       <FormulaChips
         value={shown}
         system={context.system}
-        placeholder="1d8 + @Мод Силы"
+        placeholder={fromRecordDice ? 'и ещё: @Мод Силы, 2…' : '1d8 + @Мод Силы'}
+        extraOptions={needs}
+        prefix={fromRecordDice ? (
+          <>
+            <span className="chips__chip chips__chip--record" title="придёт из записи компендиума">
+              {needLabel(fromRecordDice)}
+              <button
+                type="button" className="chips__x" aria-label="убрать из записи"
+                onMouseDown={e => { e.preventDefault(); setDice(undefined); }}
+              >×</button>
+            </span>
+            <span className="chips__plus" aria-hidden>+</span>
+          </>
+        ) : null}
         onChange={setDraft}
         onBlur={commit}
         onKeyDown={e => {
@@ -271,6 +299,15 @@ function AmountExprInput({ amount, context, edit, onCreateFromRecord }: {
       />
     </Field>
   );
+}
+
+/** Текст прибавки как её набирают: формула строкой, число числом. */
+function exprText(bonus: unknown): string {
+  if (!bonus || typeof bonus !== 'object') return '';
+  const b = bonus as Record<string, unknown>;
+  if ('expr' in b) return String(b.expr ?? '');
+  if ('const' in b) return String(b.const ?? '');
+  return '';
 }
 
 function CheckBody({ step, context, edit, system }: {

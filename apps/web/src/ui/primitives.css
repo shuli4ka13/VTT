@@ -413,3 +413,10 @@
   padding: var(--s-1) 0;
 }
 .range-row + .range-row { border-top: 1px solid var(--border); }
+/* Фишка того, что придёт из записи: тот же цвет нити, что и у пропусков
+   в пересказе — «здесь ждут конкретный меч». */
+.chips__chip--record {
+  background: var(--from-record-soft);
+  border-color: var(--from-record);
+}
+.chips__plus { color: var(--text-faint); padding: 0 var(--s-1); }

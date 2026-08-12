@@ -7,6 +7,7 @@
 // обновляет все формулы и не ломает ни одной (критерий №2).
 
 import { useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
 import { matchTagQuery, applyTag } from './tag-suggest.tsx';
 
@@ -35,7 +36,7 @@ export function joinParts(parts: Part[]): string {
   return parts.map(p => ('tag' in p ? `#${p.tag}` : p.text)).join('');
 }
 
-export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus }: {
+export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, extraOptions }: {
   value: string;
   onChange: (next: string) => void;
   system: System;
@@ -46,6 +47,18 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
   onFocus?: () => void;
   /** Есть незакрытый запрос тега: слот прячет своё меню, чтобы не спорить. */
   onQuery?: (active: boolean) => void;
+  /**
+   * Фишка перед строкой — то, что живёт не в тексте формулы, а отдельным
+   * слотом: кость из записи, например. В строке она выглядит как все
+   * остальные, но правится не текстом.
+   */
+  prefix?: ReactNode;
+  /**
+   * Что ещё предложить в подсказке по «@» помимо полей листа. Такой пункт
+   * не вставляется в текст (формула умеет ссылаться только на поля) —
+   * он сам знает, куда себя записать.
+   */
+  extraOptions?: { group: string; label: string; onPick: () => void }[];
 }) {
   const parts = useMemo(() => partsOf(value), [value]);
   const host = useRef<HTMLDivElement>(null);
@@ -78,6 +91,20 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
       || f.label.toLowerCase().includes(query.needle)
       || f.tag.toLowerCase().includes(query.needle)).slice(0, 8)
     : [];
+  const extras = query
+    ? (extraOptions ?? []).filter(o => !query.needle || o.label.toLowerCase().includes(query.needle))
+    : [];
+
+  /** Чужой пункт сам знает, куда записаться; из текста запрос «@…» убираем. */
+  const pickExtra = (onPick: () => void) => {
+    if (active === null || !query) return;
+    const part = parts[active] as { text: string };
+    const next = parts.map((p, i) => (i === active
+      ? { text: part.text.slice(0, query.at) + part.text.slice(caret) }
+      : p));
+    onChange(joinParts(next));
+    onPick();
+  };
 
   const pick = (tag: string) => {
     if (active === null || !query) return;
@@ -132,6 +159,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
           inputs.current.get(parts.length - 1)?.focus();
         }
       }}>
+        {prefix}
         {parts.map((part, index) => 'tag' in part ? (
           <span key={index} className="chips__chip" title={`#${part.tag}`}>
             {labelOfTag(system, part.tag)}
@@ -165,8 +193,17 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
           />
         ))}
       </div>
-      {matches.length ? (
+      {matches.length || extras.length ? (
         <div className="slot__menu">
+          {extras.map((option, i) => (
+            <button
+              key={`extra-${i}`} type="button" className="slot__option"
+              onMouseDown={e => { e.preventDefault(); pickExtra(option.onPick); }}
+            >
+              <span className="slot__group slot__group--record">{option.group}</span>
+              {option.label}
+            </button>
+          ))}
           {matches.map(f => (
             <button
               key={f.tag} type="button" className="slot__option"

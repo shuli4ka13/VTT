@@ -128,19 +128,49 @@ describe('GroupCard', () => {
   });
 });
 
-// Кость «из записи» строкой не выражается: если бы она попала в общую
-// строку, коммит стёр бы её молча. Такой слот обязан остаться отдельным.
+// Кость «из записи» формулой не выражается — но человеку она такая же
+// ссылка, как поле листа: в строке стоит фишкой, а текст правит только
+// прибавку. Стереть её строкой нельзя, только крестиком на фишке.
 describe('GroupCard: величина из записи', () => {
-  it('кость из записи правится своим слотом, а не строкой', () => {
-    const steps = [
-      { id: 'n', type: 'amount', source: 'roll', dice: { param: 'кость_урона' } },
-      { type: 'apply', direction: 'subtract', value: { ref: 'n' } },
-    ] as unknown as Step[];
-    const withParam = { params: [{ key: 'кость_урона', label: 'Кость урона', kind: 'dice' }] } as unknown as Effect;
-    const group = groupSteps(steps)[0]!;
+  const steps = () => [
+    { id: 'n', type: 'amount', source: 'roll', dice: { param: 'кость_урона' }, bonus: { expr: '#armor' } },
+    { type: 'apply', direction: 'subtract', value: { ref: 'n' } },
+  ] as unknown as Step[];
+  const withParam = { params: [{ key: 'кость_урона', label: 'Кость урона', kind: 'dice' }] } as unknown as Effect;
+
+  it('кость из записи стоит в строке фишкой', () => {
+    const group = groupSteps(steps())[0]!;
     render(<GroupCard group={group} position={1} system={system} effect={withParam}
       earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
-    expect(screen.getByText('сколько — кости')).toBeTruthy();
-    expect(screen.queryByPlaceholderText('1d8 + @Мод Силы')).toBeNull();
+    expect(screen.getByText('Кость урона')).toBeTruthy();
+    expect(screen.getByText('сколько')).toBeTruthy();
+    expect(screen.queryByText('сколько — кости')).toBeNull();
+  });
+
+  it('правка строки трогает прибавку, но не кость из записи', () => {
+    const list = steps();
+    const amount = list[0] as Record<string, any>;
+    const group = groupSteps(list)[0]!;
+    render(<GroupCard group={group} position={1} system={system} effect={withParam}
+      earlier={[]} problem={null}
+      edit={(_, change) => change(amount as never)} onDelete={() => {}} />);
+    // «#armor» нарисован фишкой, дописываем в хвост ЭТОЙ строки — как рукой.
+    const line = screen.getByText('сколько').closest('label')!;
+    const tail = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;
+    fireEvent.change(tail, { target: { value: ' + 2' } });
+    fireEvent.keyDown(tail, { key: 'Enter' });
+    expect(amount.bonus).toEqual({ expr: '#armor + 2' });
+    expect(amount.dice).toEqual({ param: 'кость_урона' });
+  });
+
+  it('крестик на фишке убирает кость из записи', () => {
+    const list = steps();
+    const amount = list[0] as Record<string, any>;
+    const group = groupSteps(list)[0]!;
+    render(<GroupCard group={group} position={1} system={system} effect={withParam}
+      earlier={[]} problem={null}
+      edit={(_, change) => change(amount as never)} onDelete={() => {}} />);
+    fireEvent.mouseDown(screen.getByLabelText('убрать из записи'));
+    expect(amount.dice).toBeUndefined();
   });
 });
