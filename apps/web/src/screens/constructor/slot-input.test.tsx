@@ -100,3 +100,27 @@ describe('SlotInput', () => {
     expect(got).toEqual({ param: 'новая' });
   });
 });
+
+describe('SlotInput: дописывание после фишки', () => {
+  it('набранное после фишки не приклеивается к тегу', () => {
+    let value: unknown = { expr: '#сила' };
+    const onChange = (next: unknown) => { value = next; };
+    const ctxWithField: SlotContext = {
+      ...ctx,
+      system: { ...ctx.system, fields: [{ tag: 'сила', label: 'Сила', value: { kind: 'stored', type: 'number', default: 10 } }] } as never,
+    };
+    const { rerender } = render(
+      <SlotInput value={value} onChange={onChange} context={ctxWithField} />,
+    );
+    // Дописываем посимвольно, как человек: каждый ввод — новая перерисовка,
+    // и текст обязан копиться, а не склеиваться с тегом.
+    for (const step of [' ', ' +', ' + ', ' + 2']) {
+      const tail = screen.getAllByRole('textbox').at(-1) as HTMLInputElement;
+      fireEvent.change(tail, { target: { value: step } });
+      rerender(<SlotInput value={value} onChange={onChange} context={ctxWithField} />);
+    }
+    const tail = screen.getAllByRole('textbox').at(-1) as HTMLInputElement;
+    fireEvent.keyDown(tail, { key: 'Enter' });
+    expect(value).toEqual({ expr: '#сила + 2' });
+  });
+});

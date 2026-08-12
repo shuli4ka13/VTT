@@ -338,6 +338,10 @@
   flex: 0 1 auto; min-width: 8px; border: none; background: none; outline: none;
   font-family: var(--font-mono); font-size: var(--fs-3); color: var(--text); padding: var(--s-1) 0;
 }
+/* Хвост строки после фишки — место, куда дописывают: в один символ шириной
+   по нему не попасть мышью. Клик мимо всех полей ловит вся строка, но
+   целиться человек будет сюда. */
+.chips__text:last-child { min-width: 48px; flex: 1 1 auto; }
 .chips__chip {
   display: inline-flex; align-items: center; gap: var(--s-1);
   padding: 0 var(--s-1) 0 var(--s-3); border-radius: var(--r-1);
