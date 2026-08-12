@@ -224,7 +224,7 @@ function CheckBody({ step, context, edit, system }: {
           </Field>
           <Field label="против">
             <SlotInput
-              value={step.versus} context={context} allow={['tag', 'param', 'ref']}
+              value={step.versus} context={context} allow={['tag', 'expr', 'const', 'param', 'ref']}
               onChange={next => edit(0, draft => { (draft as any).versus = next ?? undefined; })}
             />
           </Field>
@@ -247,7 +247,7 @@ function CheckBody({ step, context, edit, system }: {
           </Field>
           <Field label="против">
             <SlotInput
-              value={step.versus} context={context} allow={['tag', 'param', 'ref']}
+              value={step.versus} context={context} allow={['tag', 'expr', 'const', 'param', 'ref']}
               onChange={next => edit(0, draft => { (draft as any).versus = next ?? undefined; })}
             />
           </Field>
@@ -378,13 +378,13 @@ function ChangeBody({ group, context, edit, system, onAddParam }: {
           <Fold title="Тонкости">
             <Field label="не ниже">
               <SlotInput
-                value={step.floor} context={context} allow={['tag']}
+                value={step.floor} context={context} allow={['const', 'tag']}
                 onChange={next => edit(applyIndex, draft => { (draft as any).floor = next ?? undefined; })}
               />
             </Field>
             <Field label="не выше">
               <SlotInput
-                value={step.ceiling} context={context} allow={['tag']}
+                value={step.ceiling} context={context} allow={['const', 'tag']}
                 onChange={next => edit(applyIndex, draft => { (draft as any).ceiling = next ?? undefined; })}
               />
             </Field>

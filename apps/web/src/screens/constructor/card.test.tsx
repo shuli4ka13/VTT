@@ -58,6 +58,62 @@ describe('GroupCard', () => {
     expect(edited).toEqual({ at: 0 });
   });
 
+  // STEP_SPECS (step-card.tsx) держит «против» на ['tag', 'expr', 'const'] —
+  // карточка была строже своей же модели и отбрасывала набранное число или
+  // формулу молча (allow не пускал ни 'const', ни 'expr'). Образцовый
+  // «Спасбросок» хранит versus: {expr:'#spell_dc'}, а «против 15» — обычный
+  // случай; оба обязаны коммититься.
+  it('слот «против» принимает число', () => {
+    const steps = attackSteps();
+    const group = groupSteps(steps)[0]!;
+    const edits: Array<(draft: Step) => void> = [];
+    render(<GroupCard group={group} position={1} system={system} effect={effect}
+      earlier={[]} problem={null} edit={(_, change) => edits.push(change)} onDelete={() => {}} />);
+
+    const versus = screen.getByPlaceholderText('число или формула');
+    fireEvent.change(versus, { target: { value: '15' } });
+    fireEvent.keyDown(versus, { key: 'Enter' });
+
+    const draft = structuredClone(steps[0]!);
+    edits.forEach(change => change(draft));
+    expect((draft as any).versus).toEqual({ const: 15 });
+  });
+
+  it('слот «против» принимает формулу', () => {
+    const steps = attackSteps();
+    const group = groupSteps(steps)[0]!;
+    const edits: Array<(draft: Step) => void> = [];
+    render(<GroupCard group={group} position={1} system={system} effect={effect}
+      earlier={[]} problem={null} edit={(_, change) => edits.push(change)} onDelete={() => {}} />);
+
+    const versus = screen.getByPlaceholderText('число или формула');
+    fireEvent.change(versus, { target: { value: '#что-то' } });
+    fireEvent.keyDown(versus, { key: 'Enter' });
+
+    const draft = structuredClone(steps[0]!);
+    edits.forEach(change => change(draft));
+    expect((draft as any).versus).toEqual({ expr: '#что-то' });
+  });
+
+  // STEP_SPECS держит floor/ceiling на ['const', 'tag', 'empty'] — карточка
+  // разрешала только 'tag', как у трёх эффектов образца (floor: {const: 0}).
+  it('слот «не ниже» принимает число', () => {
+    const steps = attackSteps();
+    const group = groupSteps(steps)[1]!;
+    const applyIndex = group.amount ? 1 : 0;
+    const edits: Array<{ at: number; change: (draft: Step) => void }> = [];
+    render(<GroupCard group={group} position={2} system={system} effect={effect}
+      earlier={[]} problem={null} edit={(at, change) => edits.push({ at, change })} onDelete={() => {}} />);
+
+    const floor = screen.getByLabelText('не ниже');
+    fireEvent.change(floor, { target: { value: '0' } });
+    fireEvent.keyDown(floor, { key: 'Enter' });
+
+    const draft = structuredClone(steps[2]!);
+    edits.filter(e => e.at === applyIndex).forEach(e => e.change(draft));
+    expect((draft as any).floor).toEqual({ const: 0 });
+  });
+
   it('пересказ не отрывает точку от слова', () => {
     const group = groupSteps(attackSteps())[0]!;
     const { container } = render(<GroupCard group={group} position={1} system={system} effect={effect}
