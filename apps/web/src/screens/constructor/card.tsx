@@ -35,7 +35,10 @@ export function Readback({ segments }: { segments: Segment[] }) {
   );
 }
 
-export function GroupCard({ group, position, system, effect, earlier, problem, problemAction, edit, onDelete, onAddParam }: {
+export function GroupCard({
+  group, position, system, effect, earlier, problem, problemAction,
+  edit, onDelete, onMoveUp, onMoveDown, onAddParam,
+}: {
   group: CardGroup;
   position: number;
   system: System;
@@ -50,6 +53,9 @@ export function GroupCard({ group, position, system, effect, earlier, problem, p
   problemAction?: ReactNode;
   edit: (slotIndexInGroup: number, change: (draft: Step) => void) => void;
   onDelete: () => void;
+  /** Перенос карточки соседям навстречу. Нет обработчика — карточка с краю. */
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
   /**
    * Заводит потребность на эффекте (не на шаге — `edit` шага сюда не
    * дотягивается) и возвращает её ключ. Задача 2, «согласованное
@@ -60,12 +66,29 @@ export function GroupCard({ group, position, system, effect, earlier, problem, p
 }) {
   const context: SlotContext = { system, effect, earlier };
   const step = group.step as any;
+  // Удаление в два шага вместо подтверждения окном: первый клик взводит,
+  // второй убирает. Карточка на восемь заполненных мест не должна умирать
+  // от одного промаха мышью, а модальное окно ради этого — перебор.
+  const [armed, setArmed] = useState(false);
+
+  const actions = armed ? (
+    <>
+      <Button size="sm" variant="danger" onClick={onDelete}>убрать</Button>
+      <Button size="sm" variant="ghost" onClick={() => setArmed(false)}>отмена</Button>
+    </>
+  ) : (
+    <>
+      <Button size="sm" variant="ghost" title="выше" disabled={!onMoveUp} onClick={onMoveUp}>↑</Button>
+      <Button size="sm" variant="ghost" title="ниже" disabled={!onMoveDown} onClick={onMoveDown}>↓</Button>
+      <Button size="sm" variant="ghost" title="убрать карточку" onClick={() => setArmed(true)}>×</Button>
+    </>
+  );
 
   if (group.kind === 'unknown') {
     return (
       <Card tone="bad">
         <CardHead title={`${position} · движок не знает типа «${group.step.type}»`}
-          actions={<Button size="sm" variant="danger" onClick={onDelete}>×</Button>} />
+          actions={actions} />
       </Card>
     );
   }
@@ -90,7 +113,7 @@ export function GroupCard({ group, position, system, effect, earlier, problem, p
               })}
             />
           ) : null}
-          actions={<Button size="sm" variant="danger" onClick={onDelete}>×</Button>}
+          actions={actions}
         />
         {problem ? <Verdict tone="bad" action={problemAction}>{problem.text}</Verdict> : null}
         <Readback segments={segments} />

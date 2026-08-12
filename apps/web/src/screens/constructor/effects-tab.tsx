@@ -16,7 +16,7 @@ import {
   Card, CardHead, Field, Input, Select, Button, Empty, Segmented, Verdict, Fold, Chip,
 } from '../../ui/primitives.tsx';
 import { problemOf } from './step-card.tsx';
-import { groupSteps, BRICKS } from './cards.ts';
+import { groupSteps, moveGroup, BRICKS } from './cards.ts';
 import { GroupCard } from './card.tsx';
 import { ModifiersEditor } from './modifiers.tsx';
 import { DonorPalette, findDonorBlock, copyDonorBlock } from './donors.tsx';
@@ -172,6 +172,7 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
   const earlierOf = (index: number) =>
     steps.slice(0, index).map(step => step.id).filter(Boolean) as string[];
 
+  const cards = groupSteps(steps);
   const problems = steps.map((step, index) => problemOf(step, system, effect, earlierOf(index)));
   const broken = problems.filter(Boolean).length;
 
@@ -304,7 +305,7 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
                 : <Verdict tone="warn">шагов ещё нет — эффект ничего не делает</Verdict>}
           </div>
 
-          {groupSteps(steps).map((group, at) => {
+          {cards.map((group, at) => {
             const problem = group.indices.map(i => problems[i]).find(Boolean) ?? null;
             // Диагноз «поля нет» лечится сам: если тег нашёлся в блоке
             // какого-то образца, кнопка рядом с ошибкой привозит блок
@@ -332,6 +333,12 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
                 })}
                 onDelete={() => edit(draft => {
                   [...group.indices].sort((a, b) => b - a).forEach(i => draft.steps!.splice(i, 1));
+                })}
+                onMoveUp={at === 0 ? undefined : () => edit(draft => {
+                  draft.steps = moveGroup(draft.steps ?? [], at, -1);
+                })}
+                onMoveDown={at === cards.length - 1 ? undefined : () => edit(draft => {
+                  draft.steps = moveGroup(draft.steps ?? [], at, 1);
                 })}
               />
             );

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { groupSteps, BRICKS } from './cards.ts';
+import { groupSteps, BRICKS, moveGroup } from './cards.ts';
 import type { System, Step } from '@vtt/schema';
 
 const steps = (list: object[]) => list as unknown as Step[];
@@ -57,5 +57,31 @@ describe('BRICKS', () => {
   it('имя нового числа не сталкивается с занятыми', () => {
     const number = BRICKS.find(b => b.key === 'number')!;
     expect(number.make(system, ['n'])[0]!.id).toBe('n_2');
+  });
+});
+
+describe('moveGroup', () => {
+  const chain = () => steps([
+    { type: 'threshold' },
+    { id: 'n', type: 'amount', source: 'roll' },
+    { type: 'apply', value: { ref: 'n' } },
+    { type: 'status', mode: 'apply' },
+  ]);
+
+  it('склеенная пара переносится целиком, а не половиной', () => {
+    const moved = moveGroup(chain(), 1, -1);
+    expect(moved.map(s => s.type)).toEqual(['amount', 'apply', 'threshold', 'status']);
+    expect(groupSteps(moved).map(g => g.kind)).toEqual(['change', 'check', 'change']);
+  });
+
+  it('перенос вниз меняет соседей местами', () => {
+    const moved = moveGroup(chain(), 0, 1);
+    expect(moved.map(s => s.type)).toEqual(['amount', 'apply', 'threshold', 'status']);
+  });
+
+  it('за край не двигает', () => {
+    const source = chain();
+    expect(moveGroup(source, 0, -1)).toBe(source);
+    expect(moveGroup(source, 2, 1)).toBe(source);
   });
 });

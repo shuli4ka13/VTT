@@ -96,3 +96,25 @@ export const BRICKS: StepTemplate[] = [
     make: (_system, taken) => [{ id: freeId(taken, 'n'), type: 'amount', source: 'roll' } as unknown as Step],
   },
 ];
+
+/**
+ * Перенос карточки на соседнее место. Двигается ГРУППА целиком: склеенная
+ * пара «число + изменение» — одна карточка на экране и обязана оставаться
+ * одной при переносе, иначе половина уедет, а половина останется.
+ *
+ * Ссылки при переносе не чинятся сознательно: если изменение уехало выше
+ * своей проверки, приговор так и скажет — «шага выше нет». Молча
+ * переписывать ссылки значило бы решать за автора.
+ */
+export function moveGroup(steps: Step[], groupIndex: number, delta: -1 | 1): Step[] {
+  const groups = groupSteps(steps);
+  const here = groups[groupIndex];
+  const there = groups[groupIndex + delta];
+  if (!here || !there) return steps;
+
+  const slice = (g: CardGroup) => g.indices.map(i => steps[i]!);
+  const [first, second] = delta === -1 ? [there, here] : [here, there];
+  const head = steps.slice(0, first.indices[0]!);
+  const tail = steps.slice(second.indices[second.indices.length - 1]! + 1);
+  return [...head, ...slice(second), ...slice(first), ...tail];
+}
