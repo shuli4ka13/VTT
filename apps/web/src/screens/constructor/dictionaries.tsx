@@ -55,7 +55,15 @@ const rangesBroken = (ranges: { from: number; to: number }[]): boolean => {
 
 /** Ключ записи словаря (кости, таблицы, типы действий — все `Record`)
  * следует за лейблом, пока запись нигде не используется; мутирует переданный
- * `dict` на месте — вызывающий уже держит клон-черновик из `editSystem`. */
+ * `dict` на месте — вызывающий уже держит клон-черновик из `editSystem`.
+ *
+ * Смена ключа не может быть delete+insert: у объекта это отправляет запись
+ * в конец (порядок ключей — порядок вставки), а строки словаря рисуются по
+ * этому же порядку. При двух и более записях автор печатает в поле первой,
+ * а после первого же символа, сменившего ключ, оно физически уезжает вниз —
+ * фокус остаётся на прежнем месте экрана, то есть теперь на ЧУЖОЙ строке.
+ * Вместо этого объект пересобирается целиком, с новым ключом на месте
+ * старого — позиция записи переживает переименование. */
 function renameKeyed<T extends { label?: string }>(
   dict: Record<string, T>, id: string, label: string, inUse: boolean,
 ): void {
@@ -64,8 +72,13 @@ function renameKeyed<T extends { label?: string }>(
   if (!inUse && slugOf(label)) {
     const fresh = freeId(Object.keys(dict).filter(k => k !== id), label);
     if (fresh !== id) {
-      delete dict[id];
-      dict[fresh] = { ...cur, label };
+      // Порядок читается ДО единой правки: если чистить и переставлять ключи
+      // по одному, каждый нетронутый ключ тоже уедет в конец в момент своей
+      // очереди — не поможет и та запись, которую переименовывать не просили.
+      const ordered = Object.keys(dict).map((key): [string, T] =>
+        key === id ? [fresh, { ...cur, label }] : [key, dict[key]!]);
+      for (const key of Object.keys(dict)) delete dict[key];
+      for (const [key, value] of ordered) dict[key] = value;
       return;
     }
   }
@@ -190,14 +203,18 @@ function DiceSection({ system, editSystem }: Props) {
     <div className="stack stack--tight">
       {entries.length === 0 ? (
         <span className="faint">Своих костей нет — броски берут ведущую кость системы.</span>
-      ) : entries.map(([key, constant], index) => {
+      ) : entries.map(([key, constant]) => {
         const dice = constant.dice ?? [];
         const compound = dice.length > 1 || dice.some(d => d.name);
         const inUse = usedIn(system, `"constant":"${key}"`);
         const notation = dice[0] ? `${dice[0].count ?? 1}d${dice[0].sides}` : '';
 
         return (
-          <div key={index} className="dict-row">
+          // Ключ строки — сам ключ словаря, не позиция: переименование
+          // (renameKeyed) меняет ключ на месте, не сдвигая порядок, но
+          // строка обязана остаться ПРИВЯЗАНА к записи, а не к позиции —
+          // иначе после любой будущей перестановки набор снова уедет не туда.
+          <div key={key} className="dict-row">
             {compound ? (
               <>
                 <span className="dict-row__static">{constant.label || key}</span>
@@ -287,8 +304,8 @@ function TablesSection({ system, editSystem }: Props) {
     <div className="stack stack--tight">
       {entries.length === 0 ? (
         <span className="faint">Таблиц пока нет — например, бонус мастерства по уровню.</span>
-      ) : entries.map(([key, table], index) => (
-        <TableRow key={index} id={key} table={table} system={system} editSystem={editSystem} />
+      ) : entries.map(([key, table]) => (
+        <TableRow key={key} id={key} table={table} system={system} editSystem={editSystem} />
       ))}
     </div>
   );
@@ -380,10 +397,10 @@ function ActionTypesSection({ system, editSystem }: Props) {
       <span className="faint">Чего стоит активируемый эффект — выбирается из этого списка.</span>
       {entries.length === 0 ? (
         <span className="faint">Типов пока нет.</span>
-      ) : entries.map(([key, type], index) => {
+      ) : entries.map(([key, type]) => {
         const inUse = usedIn(system, `"cost":"${key}"`);
         return (
-          <div key={index} className="dict-row">
+          <div key={key} className="dict-row">
             <Input
               value={type.label ?? ''}
               placeholder="действие"

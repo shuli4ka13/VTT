@@ -79,6 +79,34 @@ describe('Словари: кости, мишени бросков, таблиц�
     expect(tables.length).toBe(1);
   });
 
+  // Смена ключа была delete+insert — запись уезжала в конец объекта,
+  // а строки рисовались по index. При двух и более костях после
+  // переименования первой фокус-строка визуально становилась второй,
+  // и дальнейший набор правил уже не ту кость. Проверяем на данных стора:
+  // порядок и содержимое второй записи не тронуты переименованием первой.
+  it('переименование первой кости не трогает вторую и не меняет порядок', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        constants: {
+          dieA: { label: 'Кость А', kind: 'die', dice: [{ count: 1, sides: 20 }] },
+          dieB: { label: 'Кость Б', kind: 'die', dice: [{ count: 1, sides: 6 }] },
+        },
+      },
+      activeEffectId: null,
+    }));
+    render(<DictionariesTab />);
+
+    const first = screen.getByDisplayValue('Кость А');
+    fireEvent.change(first, { target: { value: 'Секира' } });
+
+    const constants = useWorld.getState().system.constants!;
+    expect(Object.keys(constants)).toEqual(['секира', 'dieB']);
+    expect(constants.dieB).toEqual({ label: 'Кость Б', kind: 'die', dice: [{ count: 1, sides: 6 }] });
+    expect(constants['секира']).toEqual({ label: 'Секира', kind: 'die', dice: [{ count: 1, sides: 20 }] });
+  });
+
   it('таблицу, на которую ссылается поле, удалить нельзя', () => {
     useWorld.setState(state => ({
       ...state,
