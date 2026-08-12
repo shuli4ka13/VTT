@@ -3,6 +3,7 @@
 // в том, чтобы форма карточки была ОДНА на всё приложение, а не сочинялась
 // заново на каждом экране.
 
+import { useState } from 'react';
 import type { ReactNode, ChangeEvent, FocusEvent, KeyboardEvent } from 'react';
 
 export function Card({ children, tone, className = '' }: {
@@ -105,6 +106,35 @@ export function Button({ children, onClick, variant, size, wide, disabled, title
     <button type="button" className={classes.join(' ')} onClick={onClick} disabled={disabled} title={title}>
       {children}
     </button>
+  );
+}
+
+
+/**
+ * Кнопка, которая не срабатывает с первого раза. Удаление заполненной
+ * карточки, эффекта или рода — работа получаса, и ей нельзя умирать
+ * от промаха мышью. Не окно подтверждения: взвод и отмена живут на месте
+ * кнопки, ничего не перекрывая и не требуя целиться в модалку.
+ */
+export function DangerButton({ children, onConfirm, size, title }: {
+  children: ReactNode;
+  onConfirm: () => void;
+  size?: 'sm';
+  title?: string;
+}) {
+  const [armed, setArmed] = useState(false);
+  if (!armed) {
+    return (
+      <Button size={size} variant="danger" title={title} onClick={() => setArmed(true)}>
+        {children}
+      </Button>
+    );
+  }
+  return (
+    <>
+      <Button size={size} variant="danger" onClick={onConfirm}>точно убрать</Button>
+      <Button size={size} variant="ghost" onClick={() => setArmed(false)}>отмена</Button>
+    </>
   );
 }
 

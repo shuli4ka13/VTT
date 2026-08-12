@@ -11,7 +11,7 @@
 import { useWorld, fieldsByGroup, freeId, slugOf } from '../../store/world.ts';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
-  Card, CardHead, Field, Input, Select, Button, Empty, Fold, Verdict, Chip,
+  Card, CardHead, Field, Input, Select, Button, Empty, Fold, Verdict, Chip, DangerButton,
 } from '../../ui/primitives.tsx';
 import { FormulaInput } from '../../ui/formula.tsx';
 import { DonorPalette } from './donors.tsx';
@@ -125,12 +125,12 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
           title={field.label || 'Без имени'}
           badge={<span className="chip mono" title="машинный тег — на него ссылаются формулы">#{field.tag}</span>}
           actions={
-            <Button size="sm" variant="danger" onClick={() => {
+            <DangerButton size="sm" onConfirm={() => {
               editSystem(draft => { draft.fields = draft.fields.filter(f => f.tag !== field.tag); });
               pick({ activeFieldTag: null });
             }}>
               Удалить
-            </Button>
+            </DangerButton>
           }
         />
 

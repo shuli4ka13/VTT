@@ -8,7 +8,7 @@
 import { useWorld, freeId } from '../../store/world.ts';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
-  Card, CardHead, Field, Input, Select, Button, Empty, Verdict,
+  Card, CardHead, Field, Input, Select, Button, Empty, Verdict, DangerButton,
 } from '../../ui/primitives.tsx';
 import { ModifiersEditor } from '../constructor/modifiers.tsx';
 import type { CompendiumRecord, RecordKind, System } from '@vtt/schema';
@@ -128,7 +128,7 @@ function RecordEditor({ record, system }: { record: CompendiumRecord; system: Sy
         <CardHead
           title={<Input value={record.label ?? ''} onChange={label => edit(draft => { draft.label = label; })} />}
           badge={<span className="chip">{kind?.label ?? 'род неизвестен'}</span>}
-          actions={<Button size="sm" variant="danger" onClick={remove}>Удалить</Button>}
+          actions={<DangerButton size="sm" onConfirm={remove}>Удалить</DangerButton>}
         />
         <Field label="Описание">
           <textarea

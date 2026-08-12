@@ -13,7 +13,7 @@
 import { useWorld, effectsByCategory, freeId } from '../../store/world.ts';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
-  Card, CardHead, Field, Input, Select, Button, Empty, Segmented, Verdict, Fold, Chip,
+  Card, CardHead, Field, Input, Select, Button, Empty, Segmented, Verdict, Fold, Chip, DangerButton,
 } from '../../ui/primitives.tsx';
 import { problemOf } from './step-card.tsx';
 import { groupSteps, moveGroup, BRICKS } from './cards.ts';
@@ -203,7 +203,7 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
         <CardHead
           title={<Input value={effect.label ?? ''} onChange={label => edit(draft => { draft.label = label; })} />}
           actions={
-            <Button size="sm" variant="danger" onClick={() => {
+            <DangerButton size="sm" onConfirm={() => {
               editSystem(draft => {
                 delete draft.effects[id];
                 draft.room_rules = (draft.room_rules ?? []).filter(x => x !== id);
@@ -211,7 +211,7 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
               pick({ activeEffectId: null });
             }}>
               Удалить
-            </Button>
+            </DangerButton>
           }
         />
 

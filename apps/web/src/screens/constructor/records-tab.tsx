@@ -12,7 +12,7 @@
 import { useWorld, freeId } from '../../store/world.ts';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
-  Card, CardHead, Field, Input, Select, Button, Empty, Verdict, Chip,
+  Card, CardHead, Field, Input, Select, Button, Empty, Verdict, Chip, DangerButton,
 } from '../../ui/primitives.tsx';
 import { SlotEditor } from './slots.tsx';
 import type { System, RecordKind, Binding, Param } from '@vtt/schema';
@@ -132,10 +132,10 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
           title={<Input value={kind.label ?? ''} onChange={label => edit(draft => { draft.label = label; })} />}
           badge={<span className="chip mono">{id}</span>}
           actions={
-            <Button size="sm" variant="danger" onClick={() => {
+            <DangerButton size="sm" onConfirm={() => {
               editSystem(draft => { delete draft.records?.[id]; });
               pick({ activeRecordKind: null });
-            }}>Удалить</Button>
+            }}>Удалить</DangerButton>
           }
         />
         <div className="row">
