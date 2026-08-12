@@ -5,11 +5,11 @@
 // не стирая — вернул переключатель, вернулась и работа.
 
 import { useState, type ReactNode } from 'react';
-import type { System, Effect, Step } from '@vtt/schema';
+import type { System, Effect, Step, SlotRef } from '@vtt/schema';
 import { Card, CardHead, Field, Fold, Segmented, Verdict, Button, Select, Input } from '../../ui/primitives.tsx';
 import type { CardGroup } from './cards.ts';
 import { checkReadback, changeReadback, numberReadback, type Segment } from './readback.ts';
-import { parseRollExpr, formatRollExpr } from './roll-expr.ts';
+import { parseRollExpr, formatRollExpr, parseAmountExpr, formatAmountExpr } from './roll-expr.ts';
 import { FormulaChips } from '../../ui/formula-chips.tsx';
 import { SlotInput, type SlotOption } from './slot-input.tsx';
 import type { SlotContext } from './slots.tsx';
@@ -204,6 +204,75 @@ function RollExprInput({ step, context, edit }: {
   );
 }
 
+
+// Величина изменения одной строкой: «1d8 + ⟦Мод Силы⟧». Кость и прибавка
+// живут в движке порознь (кость бросает отправитель, формулу считает лист),
+// но набирают их вместе — парсер делит, формат собирает обратно.
+function AmountExprInput({ amount, context, edit, onCreateFromRecord }: {
+  amount: Step;
+  context: SlotContext;
+  edit: EditFn;
+  onCreateFromRecord?: () => SlotRef;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const dice = (amount as any).dice;
+
+  // Кость может прийти ИЗ ЗАПИСИ — такую строкой не напишешь, и строка её
+  // молча стёрла бы. Тогда у кости свой слот, а строка остаётся прибавке.
+  const structural = dice && typeof dice === 'object'
+    && !('const' in dice) && !('constant' in dice);
+
+  if (structural) {
+    return (
+      <>
+        <Field label="сколько — кости">
+          <SlotInput
+            value={dice} context={context} dice
+            placeholder="1d8, 2d6 — или из записи"
+            onChange={next => edit(0, draft => { (draft as any).dice = next ?? undefined; })}
+            onCreateFromRecord={onCreateFromRecord}
+          />
+        </Field>
+        <Field label="и прибавка">
+          <SlotInput
+            value={(amount as any).bonus} context={context}
+            onChange={next => edit(0, draft => { (draft as any).bonus = next ?? undefined; })}
+          />
+        </Field>
+      </>
+    );
+  }
+
+  const shown = draft ?? formatAmountExpr(amount, context.system);
+
+  const commit = () => {
+    if (draft === null) return;
+    const parsed = parseAmountExpr(draft, context.system);
+    edit(0, target => {
+      const t = target as any;
+      if (parsed.die === undefined) delete t.dice; else t.dice = parsed.die;
+      if (parsed.bonus === null) delete t.bonus; else t.bonus = parsed.bonus;
+    });
+    setDraft(null);
+  };
+
+  return (
+    <Field label="сколько">
+      <FormulaChips
+        value={shown}
+        system={context.system}
+        placeholder="1d8 + @Мод Силы"
+        onChange={setDraft}
+        onBlur={commit}
+        onKeyDown={e => {
+          if (e.key === 'Enter') commit();
+          if (e.key === 'Escape') setDraft(null);
+        }}
+      />
+    </Field>
+  );
+}
+
 function CheckBody({ step, context, edit, system }: {
   step: any;
   context: SlotContext;
@@ -362,8 +431,11 @@ function ChangeBody({ group, context, edit, system, onAddParam }: {
               onChange={next => edit(applyIndex, draft => { (draft as any).target = next ?? undefined; })}
             />
           </Field>
-          {/* Та же азбука, что и у проверки: операция — знак, а не слово.
-              Что он делает, договаривает пересказ над карточкой. */}
+          {/* Операция стоит МЕЖДУ полем и величиной — карточка читается
+              уравнением: «Текущие ХП − 1d8 + Мод Силы». Отдельным знаком,
+              а не формулой: на неё завязаны сопротивления цели (движок
+              обязан знать, что это вычитание) и границы «не ниже/не выше»,
+              а формула вдобавок не умеет бросать кости. */}
           <Field label="как">
             <Select
               value={String(step.direction ?? 'subtract')}
@@ -372,30 +444,17 @@ function ChangeBody({ group, context, edit, system, onAddParam }: {
             />
           </Field>
 
-          {/* «Сколько» склеенного изменения: кости правят amount (индекс 0), поле — apply (индекс 1). */}
+          {/* Величина — ОДНА строка, как в броске: кость и прибавка были
+              двумя полями по устройству движка, а человек пишет их вместе. */}
           {group.amount ? (
-            <>
-              <Field label="Сколько — кости">
-                <SlotInput
-                  value={(group.amount as any).dice} context={context} dice
-                  placeholder="какие кости: 1d8, 2d6…"
-                  onChange={next => edit(0, draft => { (draft as any).dice = next ?? undefined; })}
-                  onCreateFromRecord={fromRecord('Сколько — кости', 'dice')}
-                />
-              </Field>
-              <Field label="и прибавка">
-                <SlotInput
-                  value={(group.amount as any).bonus} context={context}
-                  onChange={next => edit(0, draft => { (draft as any).bonus = next ?? undefined; })}
-                />
-              </Field>
-            </>
+            <AmountExprInput amount={group.amount} context={context} edit={edit}
+              onCreateFromRecord={fromRecord('сколько — кости', 'dice')} />
           ) : (
-            <Field label="Сколько">
+            <Field label="сколько">
               <SlotInput
                 value={step.value} context={context} allow={['ref', 'param', 'const']}
                 onChange={next => edit(0, draft => { (draft as any).value = next ?? undefined; })}
-                onCreateFromRecord={fromRecord('Сколько', 'expr')}
+                onCreateFromRecord={fromRecord('сколько', 'expr')}
               />
             </Field>
           )}

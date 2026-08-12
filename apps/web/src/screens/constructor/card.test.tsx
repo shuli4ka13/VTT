@@ -44,18 +44,23 @@ describe('GroupCard', () => {
     expect((draft as any).roll).toBeDefined();
   });
 
-  it('склеенное изменение правит кости внутреннего числа', () => {
+  // Кость и прибавка набираются ОДНОЙ строкой, а в данные ложатся порознь:
+  // кость бросает отправитель, формулу считает лист.
+  it('строка величины делится на кость и прибавку внутреннего числа', () => {
     const steps = attackSteps();
     const group = groupSteps(steps)[1]!;
-    let edited: { at: number } | null = null;
+    const amount = structuredClone(group.amount!) as any;
+    let editedAt: number | null = null;
     render(<GroupCard group={group} position={2} system={system} effect={effect}
       earlier={[]} problem={null}
-      edit={(at, change) => { edited = { at }; change(structuredClone(group.amount!)); }}
+      edit={(at, change) => { editedAt = at; change(amount); }}
       onDelete={() => {}} />);
-    const dice = screen.getByPlaceholderText('какие кости: 1d8, 2d6…');
-    fireEvent.change(dice, { target: { value: '1d8' } });
-    fireEvent.keyDown(dice, { key: 'Enter' });
-    expect(edited).toEqual({ at: 0 });
+    const value = screen.getByPlaceholderText('1d8 + @Мод Силы');
+    fireEvent.change(value, { target: { value: '1d8 + #power' } });
+    fireEvent.keyDown(value, { key: 'Enter' });
+    expect(editedAt).toBe(0);
+    expect(amount.dice).toEqual({ const: '1d8' });
+    expect(amount.bonus).toEqual({ expr: '#power' });
   });
 
   // STEP_SPECS (step-card.tsx) держит «против» на ['tag', 'expr', 'const'] —
@@ -120,5 +125,22 @@ describe('GroupCard', () => {
       earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
     const text = container.querySelector('.readback')!.textContent!;
     expect(text).not.toMatch(/\s[.,]/);
+  });
+});
+
+// Кость «из записи» строкой не выражается: если бы она попала в общую
+// строку, коммит стёр бы её молча. Такой слот обязан остаться отдельным.
+describe('GroupCard: величина из записи', () => {
+  it('кость из записи правится своим слотом, а не строкой', () => {
+    const steps = [
+      { id: 'n', type: 'amount', source: 'roll', dice: { param: 'кость_урона' } },
+      { type: 'apply', direction: 'subtract', value: { ref: 'n' } },
+    ] as unknown as Step[];
+    const withParam = { params: [{ key: 'кость_урона', label: 'Кость урона', kind: 'dice' }] } as unknown as Effect;
+    const group = groupSteps(steps)[0]!;
+    render(<GroupCard group={group} position={1} system={system} effect={withParam}
+      earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
+    expect(screen.getByText('сколько — кости')).toBeTruthy();
+    expect(screen.queryByPlaceholderText('1d8 + @Мод Силы')).toBeNull();
   });
 });

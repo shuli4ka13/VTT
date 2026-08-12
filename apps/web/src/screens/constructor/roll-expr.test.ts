@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseRollExpr, formatRollExpr } from './roll-expr.ts';
+import { parseRollExpr, formatRollExpr, parseAmountExpr, formatAmountExpr } from './roll-expr.ts';
 import type { System } from '@vtt/schema';
 
 const system = {
@@ -40,5 +40,28 @@ describe('formatRollExpr', () => {
 
   it('литерал остаётся латиницей', () => {
     expect(formatRollExpr({ die: { const: '2d6' } }, system)).toBe('2d6');
+  });
+});
+
+describe('parseAmountExpr', () => {
+  it('кость с прибавкой делится как в броске', () => {
+    expect(parseAmountExpr('1d8 + #мод', system))
+      .toEqual({ die: { const: '1d8' }, bonus: { expr: '#мод' } });
+  });
+
+  it('без кости вся строка — величина', () => {
+    expect(parseAmountExpr('#мод + 2', system)).toEqual({ die: undefined, bonus: { expr: '#мод + 2' } });
+    expect(parseAmountExpr('3', system)).toEqual({ die: undefined, bonus: { const: 3 } });
+  });
+
+  it('пусто — пустая величина', () => {
+    expect(parseAmountExpr('', system)).toEqual({ die: undefined, bonus: null });
+  });
+});
+
+describe('formatAmountExpr', () => {
+  it('кость и прибавка собираются в одну строку', () => {
+    expect(formatAmountExpr({ dice: { const: '1d8' }, bonus: { expr: '#мод' } }, system))
+      .toBe('1d8 + #мод');
   });
 });

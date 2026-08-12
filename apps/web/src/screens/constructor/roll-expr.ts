@@ -56,3 +56,31 @@ export function formatRollExpr(roll: unknown, system: System): string {
   }
   return [head, tail].filter(Boolean).join(' + ');
 }
+
+/**
+ * То же для величины изменения: «1d8 + #мод_силы», но кость НЕОБЯЗАТЕЛЬНА —
+ * лечение бывает и просто числом, и просто формулой. Голова строки, если
+ * она похожа на кость, уезжает в слот костей (её бросает отправитель),
+ * остальное — в прибавку, которую считают формулой.
+ *
+ * Зачем делить, раз человек пишет одной строкой: бросок и формула живут
+ * в движке по-разному — кости бросаются при упаковке у отправителя, а
+ * формула считается листом той стороны, которой она адресована.
+ */
+export function parseAmountExpr(text: string, system: System): ParsedRoll {
+  const t = text.trim();
+  if (!t) return { die: undefined, bonus: null };
+  if (HEAD.test(t)) return parseRollExpr(t, system);
+
+  // Кости нет — вся строка это величина: число числом, прочее формулой.
+  const bonus = /^-?\d+(\.\d+)?$/.test(t)
+    ? { const: Number(t) } as SlotRef
+    : { expr: t } as SlotRef;
+  return { die: undefined, bonus };
+}
+
+/** Строка величины: кость и прибавка вместе, как их набирают. */
+export function formatAmountExpr(amount: unknown, system: System): string {
+  const a = (amount ?? {}) as { dice?: unknown; bonus?: unknown };
+  return formatRollExpr({ die: a.dice, bonus: a.bonus }, system);
+}
