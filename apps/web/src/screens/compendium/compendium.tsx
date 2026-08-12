@@ -8,7 +8,7 @@
 import { useWorld, freeId } from '../../store/world.ts';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
-  Card, CardHead, Field, Input, Select, Button, Empty, Verdict, Chip,
+  Card, CardHead, Field, Input, Select, Button, Empty, Verdict,
 } from '../../ui/primitives.tsx';
 import { ModifiersEditor } from '../constructor/modifiers.tsx';
 import type { CompendiumRecord, RecordKind, System } from '@vtt/schema';
