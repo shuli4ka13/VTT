@@ -145,6 +145,12 @@ function RecordEditor({ record, system }: { record: CompendiumRecord; system: Sy
         </Verdict>
       ) : null}
 
+      {bindings.length ? (
+        <span className="faint">
+          владелец получит: {bindings.map(b => b.label ?? 'Применение').join(' · ')}
+        </span>
+      ) : null}
+
       {kind?.props?.length ? (
         <Card>
           <CardHead title="Циферки" />
