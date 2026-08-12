@@ -24,18 +24,23 @@ import { useWorld, freeId, slugOf } from '../../store/world.ts';
 import { Columns } from '../../ui/layout.tsx';
 import { Card, CardHead, Input, Button, Fold, Verdict } from '../../ui/primitives.tsx';
 import { normalizeDice } from './slot-input.tsx';
-import type { System, RangeTable } from '@vtt/schema';
+import type { System, Compendium, RangeTable } from '@vtt/schema';
 import type { WorldState } from '../../store/world.ts';
 
 type EditSystem = WorldState['editSystem'];
-interface Props { system: System; editSystem: EditSystem }
+interface Props { system: System; compendium: Compendium; editSystem: EditSystem }
 
 /** Мир сериализован — тот же приём, что и у «кто на это поле смотрит»
  * (whoUses, sheet-tab.tsx), только маркер точнее: не тег целиком, а его
  * СТРУКТУРНАЯ форма ссылки — так собственное определение записи в словаре
- * не засчитывается как использование. */
-const usedIn = (system: System, ...markers: string[]): boolean => {
-  const text = JSON.stringify({ system });
+ * не засчитывается как использование.
+ *
+ * Компендиум обязан сканироваться тоже: roll-модификатор (kind: 'roll')
+ * бывает не только у системы, но и у предмета — `compendium.items[*]
+ * .modifiers`. Без этого сторож удаления мишени бросков не видел вещь,
+ * которая на неё смотрит, и мишень можно было убрать у неё из-под ног. */
+const usedIn = (system: System, compendium: Compendium, ...markers: string[]): boolean => {
+  const text = JSON.stringify({ system, compendium });
   return markers.some(marker => text.includes(marker));
 };
 
@@ -121,6 +126,7 @@ const addActionType = (editSystem: EditSystem) => editSystem(draft => {
 
 export function DictionariesTab() {
   const system = useWorld(s => s.system);
+  const compendium = useWorld(s => s.compendium);
   const editSystem = useWorld(s => s.editSystem);
 
   return (
@@ -131,22 +137,22 @@ export function DictionariesTab() {
           <>
             <Card>
               <CardHead title="Кости" actions={<Button size="sm" onClick={() => addDie(editSystem)}>+ кость</Button>} />
-              <DiceSection system={system} editSystem={editSystem} />
+              <DiceSection system={system} compendium={compendium} editSystem={editSystem} />
             </Card>
 
             <Card>
               <CardHead title="Мишени бросков" actions={<Button size="sm" onClick={() => addRoll(editSystem)}>+ мишень</Button>} />
-              <RollsSection system={system} editSystem={editSystem} />
+              <RollsSection system={system} compendium={compendium} editSystem={editSystem} />
             </Card>
 
             <Card>
               <CardHead title="Таблицы по диапазонам" actions={<Button size="sm" onClick={() => addTable(editSystem)}>+ таблица</Button>} />
-              <TablesSection system={system} editSystem={editSystem} />
+              <TablesSection system={system} compendium={compendium} editSystem={editSystem} />
             </Card>
 
             <Card>
               <CardHead title="Типы действий" actions={<Button size="sm" onClick={() => addActionType(editSystem)}>+ тип</Button>} />
-              <ActionTypesSection system={system} editSystem={editSystem} />
+              <ActionTypesSection system={system} compendium={compendium} editSystem={editSystem} />
             </Card>
           </>
         ),
@@ -196,7 +202,7 @@ function DiceNotationInput({ notation, onCommit }: { notation: string; onCommit:
   );
 }
 
-function DiceSection({ system, editSystem }: Props) {
+function DiceSection({ system, compendium, editSystem }: Props) {
   const entries = Object.entries(system.constants ?? {}).filter(([, c]) => c.kind === 'die');
 
   return (
@@ -206,7 +212,7 @@ function DiceSection({ system, editSystem }: Props) {
       ) : entries.map(([key, constant]) => {
         const dice = constant.dice ?? [];
         const compound = dice.length > 1 || dice.some(d => d.name);
-        const inUse = usedIn(system, `"constant":"${key}"`);
+        const inUse = usedIn(system, compendium, `"constant":"${key}"`);
         const notation = dice[0] ? `${dice[0].count ?? 1}d${dice[0].sides}` : '';
 
         return (
@@ -258,7 +264,7 @@ function DiceSection({ system, editSystem }: Props) {
 
 // ── мишени бросков ──────────────────────────────────────────────────────
 
-function RollsSection({ system, editSystem }: Props) {
+function RollsSection({ system, compendium, editSystem }: Props) {
   const rolls = system.rolls ?? [];
 
   return (
@@ -267,7 +273,7 @@ function RollsSection({ system, editSystem }: Props) {
       {rolls.length === 0 ? (
         <span className="faint">Мишеней пока нет.</span>
       ) : rolls.map((roll, index) => {
-        const inUse = usedIn(system, `"check":"${roll.tag}"`, `"target":"${roll.tag}"`);
+        const inUse = usedIn(system, compendium, `"check":"${roll.tag}"`, `"target":"${roll.tag}"`);
         return (
           <div key={index} className="dict-row">
             <Input
@@ -297,7 +303,7 @@ function RollsSection({ system, editSystem }: Props) {
 
 // ── таблицы по диапазонам ───────────────────────────────────────────────
 
-function TablesSection({ system, editSystem }: Props) {
+function TablesSection({ system, compendium, editSystem }: Props) {
   const entries = Object.entries(system.tables ?? {});
 
   return (
@@ -305,15 +311,15 @@ function TablesSection({ system, editSystem }: Props) {
       {entries.length === 0 ? (
         <span className="faint">Таблиц пока нет — например, бонус мастерства по уровню.</span>
       ) : entries.map(([key, table]) => (
-        <TableRow key={key} id={key} table={table} system={system} editSystem={editSystem} />
+        <TableRow key={key} id={key} table={table} system={system} compendium={compendium} editSystem={editSystem} />
       ))}
     </div>
   );
 }
 
-function TableRow({ id, table, system, editSystem }: Props & { id: string; table: RangeTable }) {
+function TableRow({ id, table, system, compendium, editSystem }: Props & { id: string; table: RangeTable }) {
   const ranges = table.ranges ?? [];
-  const inUse = usedIn(system, `"table":"${id}"`);
+  const inUse = usedIn(system, compendium, `"table":"${id}"`);
   const broken = rangesBroken(ranges);
 
   return (
@@ -389,7 +395,7 @@ function TableRow({ id, table, system, editSystem }: Props & { id: string; table
 
 // ── типы действий ───────────────────────────────────────────────────────
 
-function ActionTypesSection({ system, editSystem }: Props) {
+function ActionTypesSection({ system, compendium, editSystem }: Props) {
   const entries = Object.entries(system.action_types ?? {});
 
   return (
@@ -398,7 +404,7 @@ function ActionTypesSection({ system, editSystem }: Props) {
       {entries.length === 0 ? (
         <span className="faint">Типов пока нет.</span>
       ) : entries.map(([key, type]) => {
-        const inUse = usedIn(system, `"cost":"${key}"`);
+        const inUse = usedIn(system, compendium, `"cost":"${key}"`);
         return (
           <div key={key} className="dict-row">
             <Input

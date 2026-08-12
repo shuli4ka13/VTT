@@ -107,6 +107,28 @@ describe('Словари: кости, мишени бросков, таблиц�
     expect(constants['секира']).toEqual({ label: 'Секира', kind: 'die', dice: [{ count: 1, sides: 20 }] });
   });
 
+  // usedIn сканировал только {system}, но roll-модификатор (kind: 'roll')
+  // бывает и у предмета компендиума — сторож должен видеть его тоже,
+  // иначе мишень, на которую смотрит вещь, можно было убрать у неё
+  // из-под ног.
+  it('мишень, на которую смотрит модификатор предмета компендиума, удалить нельзя', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: { ...emptySystem(), rolls: [{ tag: 'attack_roll', label: 'Бросок атаки' }] },
+      compendium: {
+        items: [{
+          id: 'lucky-charm', label: 'Талисман удачи',
+          modifiers: [{ kind: 'roll', target: 'attack_roll', effect: 'advantage' }],
+        }],
+        actions: [],
+      },
+      activeEffectId: null,
+    }));
+    render(<DictionariesTab />);
+    const guarded = screen.getByTitle('мишень используется') as HTMLButtonElement;
+    expect(guarded.disabled).toBe(true);
+  });
+
   it('таблицу, на которую ссылается поле, удалить нельзя', () => {
     useWorld.setState(state => ({
       ...state,
