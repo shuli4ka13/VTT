@@ -4,7 +4,7 @@
 // слоты выбранного источника); переключатели меняют step.type, ничего
 // не стирая — вернул переключатель, вернулась и работа.
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { System, Effect, Step } from '@vtt/schema';
 import { Card, CardHead, Field, Fold, Segmented, Verdict, Button, Select, Input } from '../../ui/primitives.tsx';
 import type { CardGroup } from './cards.ts';
@@ -35,13 +35,19 @@ export function Readback({ segments }: { segments: Segment[] }) {
   );
 }
 
-export function GroupCard({ group, position, system, effect, earlier, problem, edit, onDelete, onAddParam }: {
+export function GroupCard({ group, position, system, effect, earlier, problem, problemAction, edit, onDelete, onAddParam }: {
   group: CardGroup;
   position: number;
   system: System;
   effect: Effect;
   earlier: string[];
   problem: Problem | null;
+  /**
+   * Лекарство рядом с диагнозом (задача 3): если беда в отсутствующем поле
+   * и нашёлся донор, эффект-таб кладёт сюда кнопку «взять блок» — она
+   * рендерится внутри того же Verdict, а не отдельной карточкой.
+   */
+  problemAction?: ReactNode;
   edit: (slotIndexInGroup: number, change: (draft: Step) => void) => void;
   onDelete: () => void;
   /**
@@ -86,7 +92,7 @@ export function GroupCard({ group, position, system, effect, earlier, problem, e
           ) : null}
           actions={<Button size="sm" variant="danger" onClick={onDelete}>×</Button>}
         />
-        {problem ? <Verdict tone="bad">{problem.text}</Verdict> : null}
+        {problem ? <Verdict tone="bad" action={problemAction}>{problem.text}</Verdict> : null}
         <Readback segments={segments} />
         {group.kind === 'check' ? <CheckBody step={step} context={context} edit={edit} system={system} /> : null}
         {group.kind === 'change' ? <ChangeBody group={group} context={context} edit={edit} system={system} onAddParam={onAddParam} /> : null}

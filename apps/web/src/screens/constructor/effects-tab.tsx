@@ -19,7 +19,7 @@ import { problemOf } from './step-card.tsx';
 import { groupSteps, BRICKS } from './cards.ts';
 import { GroupCard } from './card.tsx';
 import { ModifiersEditor } from './modifiers.tsx';
-import { DonorPalette } from './donors.tsx';
+import { DonorPalette, findDonorBlock, copyDonorBlock } from './donors.tsx';
 import type { System, Effect, Activation } from '@vtt/schema';
 
 const ACTIVATIONS = [
@@ -304,25 +304,38 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
                 : <Verdict tone="warn">шагов ещё нет — эффект ничего не делает</Verdict>}
           </div>
 
-          {groupSteps(steps).map((group, at) => (
-            <GroupCard
-              key={group.indices[0]}
-              group={group}
-              position={at + 1}
-              system={system}
-              effect={effect}
-              earlier={earlierOf(group.indices[0]!)}
-              problem={group.indices.map(i => problems[i]).find(Boolean) ?? null}
-              onAddParam={addParam}
-              edit={(k, change) => edit(draft => {
-                const index = group.indices[k] ?? group.indices[0]!;
-                change(draft.steps![index]!);
-              })}
-              onDelete={() => edit(draft => {
-                [...group.indices].sort((a, b) => b - a).forEach(i => draft.steps!.splice(i, 1));
-              })}
-            />
-          ))}
+          {groupSteps(steps).map((group, at) => {
+            const problem = group.indices.map(i => problems[i]).find(Boolean) ?? null;
+            // Диагноз «поля нет» лечится сам: если тег нашёлся в блоке
+            // какого-то образца, кнопка рядом с ошибкой привозит блок
+            // целиком (с зависимостями) — тем же правилом, что и палитра.
+            const donorFix = problem?.missingField ? findDonorBlock(problem.missingField) : null;
+
+            return (
+              <GroupCard
+                key={group.indices[0]}
+                group={group}
+                position={at + 1}
+                system={system}
+                effect={effect}
+                earlier={earlierOf(group.indices[0]!)}
+                problem={problem}
+                problemAction={donorFix ? (
+                  <Button size="sm" onClick={() => copyDonorBlock(editSystem, donorFix.donor, donorFix.group)}>
+                    {`взять блок «${donorFix.group}» из «${donorFix.donor.name}»`}
+                  </Button>
+                ) : undefined}
+                onAddParam={addParam}
+                edit={(k, change) => edit(draft => {
+                  const index = group.indices[k] ?? group.indices[0]!;
+                  change(draft.steps![index]!);
+                })}
+                onDelete={() => edit(draft => {
+                  [...group.indices].sort((a, b) => b - a).forEach(i => draft.steps!.splice(i, 1));
+                })}
+              />
+            );
+          })}
 
           <div className="inline inline--tight">
             {BRICKS.map(b => (

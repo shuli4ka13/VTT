@@ -42,6 +42,49 @@ export function DonorPalette({ kind }: { kind: 'blocks' | 'effects' }) {
 
 // ── блоки полей ─────────────────────────────────────────────────────────
 
+/**
+ * Ищет по образцам поле с данным тегом и возвращает его донора и блок.
+ * Вход задачи 3: карточка шага знает только тег отсутствующего поля
+ * (`problem.missingField`), а кнопка чинит его блоком — надо найти, откуда.
+ */
+export function findDonorBlock(tag: string): { donor: System; group: string } | null {
+  for (const donor of DONORS) {
+    const field = donor.fields.find(f => f.tag === tag);
+    if (field) return { donor, group: field.group ?? 'Без блока' };
+  }
+  return null;
+}
+
+/**
+ * Копирует блок целиком — с транзитивными зависимостями по блокам,
+ * в топологическом порядке (см. заголовок файла). Вынесено из `Blocks`,
+ * чтобы кнопка починки в карточке шага (задача 3) переиспользовала то же
+ * правило копирования, а не заводила своё.
+ */
+export function copyDonorBlock(
+  editSystem: (edit: (draft: System) => void) => void,
+  donor: System,
+  group: string,
+): void {
+  const order = orderedBlocks(donor, neededBlocks(donor, group));
+  editSystem(draft => {
+    const present = new Set(draft.fields.map(f => f.tag));
+    for (const block of order) {
+      for (const field of donor.fields.filter(f => (f.group ?? 'Без блока') === block)) {
+        if (present.has(field.tag)) continue;
+        draft.fields.push(structuredClone(field));
+        present.add(field.tag);
+
+        // Таблица — часть правила поля, без неё оно не считается.
+        if (field.value.kind === 'table' && donor.tables?.[field.value.table]) {
+          draft.tables = draft.tables ?? {};
+          draft.tables[field.value.table] ??= structuredClone(donor.tables[field.value.table]!);
+        }
+      }
+    }
+  });
+}
+
 function Blocks({ donor }: { donor: System }) {
   const system = useWorld(s => s.system);
   const editSystem = useWorld(s => s.editSystem);
@@ -57,25 +100,7 @@ function Blocks({ donor }: { donor: System }) {
 
   const have = new Set(system.fields.map(f => f.tag));
 
-  const copy = (group: string) => {
-    const order = orderedBlocks(donor, neededBlocks(donor, group));
-    editSystem(draft => {
-      const present = new Set(draft.fields.map(f => f.tag));
-      for (const block of order) {
-        for (const field of donor.fields.filter(f => (f.group ?? 'Без блока') === block)) {
-          if (present.has(field.tag)) continue;
-          draft.fields.push(structuredClone(field));
-          present.add(field.tag);
-
-          // Таблица — часть правила поля, без неё оно не считается.
-          if (field.value.kind === 'table' && donor.tables?.[field.value.table]) {
-            draft.tables = draft.tables ?? {};
-            draft.tables[field.value.table] ??= structuredClone(donor.tables[field.value.table]!);
-          }
-        }
-      }
-    });
-  };
+  const copy = (group: string) => copyDonorBlock(editSystem, donor, group);
 
   return (
     <div className="palette">

@@ -150,12 +150,18 @@ export function Chip({ children, onClick, onRemove, active, title }: {
  * Приговор о разборе. Показывается ТАМ, где виноват, а не только сверху:
  * красная строка в шапке экрана не помогает найти, какая из карточек сломана.
  */
-export function Verdict({ tone, children }: { tone: 'ok' | 'warn' | 'bad'; children: ReactNode }) {
+export function Verdict({ tone, action, children }: {
+  tone: 'ok' | 'warn' | 'bad';
+  /** Лекарство рядом с диагнозом — внутри того же блока, не отдельной карточкой. */
+  action?: ReactNode;
+  children: ReactNode;
+}) {
   const mark = tone === 'ok' ? '✓' : tone === 'warn' ? '!' : '×';
   return (
     <div className={`verdict verdict--${tone}`} role={tone === 'bad' ? 'alert' : undefined}>
       <span className="verdict__mark" aria-hidden>{mark}</span>
       <span className="verdict__text">{children}</span>
+      {action ? <span className="verdict__action">{action}</span> : null}
     </div>
   );
 }

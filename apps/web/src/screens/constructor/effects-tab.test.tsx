@@ -77,4 +77,24 @@ describe('EffectsTab: палитра трёх понятий', () => {
     const effect = useWorld.getState().system.effects.strike!;
     expect(effect.params!.length).toBe(1);
   });
+
+  it('ошибка про недостающее поле предлагает взять блок донора', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...state.system,
+        effects: {
+          strike: {
+            label: 'Атака', activation: 'manual', params: [],
+            steps: [{ type: 'apply', target: { tag: 'hp_current' }, value: { const: 1 } }],
+          },
+        },
+      },
+      activeEffectId: 'strike',
+    }));
+    render(<EffectsTab />);
+    const fix = screen.getByText(/взять блок/);
+    fireEvent.click(fix);
+    expect(useWorld.getState().system.fields.some(f => f.tag === 'hp_current')).toBe(true);
+  });
 });
