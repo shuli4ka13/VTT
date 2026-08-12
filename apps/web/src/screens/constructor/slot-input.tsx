@@ -46,7 +46,7 @@ export function displayOf(ref: unknown, ctx: SlotContext): string {
   return '';
 }
 
-export interface SlotOption { group: string; label: string; ref: SlotRef }
+export interface SlotOption { group: string; label: string; ref: SlotRef; synthetic?: boolean }
 
 export function optionsFor(ctx: SlotContext, allow?: SlotKind[]): SlotOption[] {
   const ok = (kind: SlotKind) => !allow || allow.includes(kind);
@@ -62,7 +62,7 @@ export function optionsFor(ctx: SlotContext, allow?: SlotKind[]): SlotOption[] {
   return out;
 }
 
-export function SlotInput({ value, onChange, context, allow, placeholder, extraOptions, dice }: {
+export function SlotInput({ value, onChange, context, allow, placeholder, extraOptions, dice, onCreateFromRecord }: {
   value: unknown;
   onChange: (next: SlotRef | null) => void;
   context: SlotContext;
@@ -72,13 +72,23 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
   extraOptions?: SlotOption[];
   /** Слот костей: набранная нотация («1к8») приводится к каноническому виду движка. */
   dice?: boolean;
+  /**
+   * Потребность может родиться прямо тут: пункт «из записи → новая
+   * потребность…» в конце группы «Из записи» заводит её на эффекте и
+   * отдаёт готовый `{param}`-ref, который слот сразу и коммитит.
+   */
+  onCreateFromRecord?: () => SlotRef;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
-  const options = useMemo(
-    () => [...(extraOptions ?? []), ...optionsFor(context, allow)],
-    [context, allow, extraOptions],
-  );
+  const options = useMemo(() => {
+    const base = [...(extraOptions ?? []), ...optionsFor(context, allow)];
+    if (!onCreateFromRecord) return base;
+    let insertAt = 0;
+    base.forEach((option, i) => { if (option.group === 'Из записи') insertAt = i + 1; });
+    const born: SlotOption = { group: 'Из записи', label: 'из записи → новая потребность…', ref: { param: '' }, synthetic: true };
+    return [...base.slice(0, insertAt), born, ...base.slice(insertAt)];
+  }, [context, allow, extraOptions, onCreateFromRecord]);
   const shown = draft ?? displayOf(value, context);
   const needle = (draft ?? '').toLowerCase();
   const filtered = needle ? options.filter(o => o.label.toLowerCase().includes(needle)) : options;
@@ -117,9 +127,15 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
           {filtered.map((option, i) => (
             <button
               key={i} type="button" className="slot__option"
-              onMouseDown={e => { e.preventDefault(); onChange(option.ref); setDraft(null); setOpen(false); }}
+              onMouseDown={e => {
+                e.preventDefault();
+                onChange(option.synthetic && onCreateFromRecord ? onCreateFromRecord() : option.ref);
+                setDraft(null); setOpen(false);
+              }}
             >
-              <span className="slot__group">{option.group}</span>
+              <span className={`slot__group${option.group === 'Из записи' ? ' slot__group--record' : ''}`}>
+                {option.group}
+              </span>
               {option.label}
             </button>
           ))}

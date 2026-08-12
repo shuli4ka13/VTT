@@ -136,18 +136,25 @@ const write = (step: Step, path: string, value: unknown): void => {
 };
 
 /**
+ * Приговор о шаге: текст плюс, если беда в отсутствующем поле, его тег —
+ * кнопка задачи 3 заводит поле прямо по этому тегу, не заставляя автора
+ * переписывать его вручную с экрана.
+ */
+export interface Problem { text: string; missingField?: string }
+
+/**
  * Приговор о шаге. Проверяется то, что можно проверить БЕЗ листа и без броска:
  * заполненность обязательных слотов и разрешимость ссылок. Значения здесь
  * не считаются — персонажа в конструкторе нет.
  */
-export function problemOf(step: Step, system: System, effect: Effect, earlier: string[]): string | null {
+export function problemOf(step: Step, system: System, effect: Effect, earlier: string[]): Problem | null {
   const spec = specOf(step.type);
-  if (!spec) return `движок не знает типа шага «${step.type}»`;
+  if (!spec) return { text: `движок не знает типа шага «${step.type}»` };
 
   for (const slot of spec.slots) {
     const value = read(step, slot.key);
     if (slot.required && (value === null || value === undefined)) {
-      return `не заполнено: ${slot.label.toLowerCase()}`;
+      return { text: `не заполнено: ${slot.label.toLowerCase()}` };
     }
     if (value === null || value === undefined) continue;
 
@@ -156,32 +163,32 @@ export function problemOf(step: Step, system: System, effect: Effect, earlier: s
 
     if (kind.kind === 'prop') {
       const key = String(ref.prop ?? ref.item);
-      if (!key) return `${slot.label.toLowerCase()}: свойство не выбрано`;
+      if (!key) return { text: `${slot.label.toLowerCase()}: свойство не выбрано` };
       if (!declaredProps(system).has(key)) {
-        return `свойство «${key}» не объявлено ни одним родом записей — заведите его на вкладке «Записи»`;
+        return { text: `свойство «${key}» не объявлено ни одним родом записей — заведите его на вкладке «Записи»` };
       }
     }
     if (kind.kind === 'param') {
       const key = String(ref.param);
       if (!effect.params?.some(p => p.key === key)) {
-        return `параметр «${key}» эффектом не объявлен`;
+        return { text: `потребность «${key}» эффектом не объявлена` };
       }
     }
     if (kind.kind === 'tag') {
       const tag = String(ref.tag);
-      if (!tag) return `${slot.label.toLowerCase()}: поле не выбрано`;
+      if (!tag) return { text: `${slot.label.toLowerCase()}: поле не выбрано` };
       if (!system.fields.some(f => f.tag === tag)) {
-        return `поля «${tag}» в системе нет — заведите его на вкладке «Лист»`;
+        return { text: `поля «${tag}» в системе нет — заведите его на вкладке «Лист»`, missingField: tag };
       }
     }
     if (kind.kind === 'constant') {
       const name = String(ref.constant);
-      if (!system.constants?.[name]) return `кости «${name}» в системе нет`;
+      if (!system.constants?.[name]) return { text: `кости «${name}» в системе нет` };
     }
     if (kind.kind === 'ref') {
       const name = String(ref.ref).split('.')[0]!;
       if (!earlier.includes(name)) {
-        return `шага «${name}» выше по цепочке нет — на его результат не сослаться`;
+        return { text: `шага «${name}» выше по цепочке нет — на его результат не сослаться` };
       }
     }
   }

@@ -90,4 +90,13 @@ describe('SlotInput', () => {
     expect(called).toBe(false);
     expect(input.value).toBe(displayOf({ tag: 'armor' }, ctx));
   });
+
+  it('пункт «новая потребность» зовёт колбэк и коммитит его ref', () => {
+    let got: unknown = null;
+    render(<SlotInput value={undefined} onChange={next => { got = next; }} context={ctx}
+      onCreateFromRecord={() => ({ param: 'новая' })} />);
+    fireEvent.focus(screen.getByRole('textbox'));
+    fireEvent.mouseDown(screen.getByText(/новая потребность/));
+    expect(got).toEqual({ param: 'новая' });
+  });
 });

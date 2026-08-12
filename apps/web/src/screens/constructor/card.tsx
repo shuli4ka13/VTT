@@ -13,6 +13,7 @@ import { parseRollExpr, formatRollExpr } from './roll-expr.ts';
 import { FormulaChips } from '../../ui/formula-chips.tsx';
 import { SlotInput, type SlotOption } from './slot-input.tsx';
 import type { SlotContext } from './slots.tsx';
+import type { Problem } from './step-card.tsx';
 
 const TITLES: Record<string, string> = { check: 'Проверка', change: 'Изменение', number: 'Число' };
 
@@ -34,15 +35,22 @@ export function Readback({ segments }: { segments: Segment[] }) {
   );
 }
 
-export function GroupCard({ group, position, system, effect, earlier, problem, edit, onDelete }: {
+export function GroupCard({ group, position, system, effect, earlier, problem, edit, onDelete, onAddParam }: {
   group: CardGroup;
   position: number;
   system: System;
   effect: Effect;
   earlier: string[];
-  problem: string | null;
+  problem: Problem | null;
   edit: (slotIndexInGroup: number, change: (draft: Step) => void) => void;
   onDelete: () => void;
+  /**
+   * Заводит потребность на эффекте (не на шаге — `edit` шага сюда не
+   * дотягивается) и возвращает её ключ. Задача 2, «согласованное
+   * расширение пропсов»: потребность может родиться прямо там, где её
+   * не хватило в слоте, а не только со вкладки эффекта.
+   */
+  onAddParam?: (label: string, kind: string) => string;
 }) {
   const context: SlotContext = { system, effect, earlier };
   const step = group.step as any;
@@ -78,11 +86,11 @@ export function GroupCard({ group, position, system, effect, earlier, problem, e
           ) : null}
           actions={<Button size="sm" variant="danger" onClick={onDelete}>×</Button>}
         />
-        {problem ? <Verdict tone="bad">{problem}</Verdict> : null}
+        {problem ? <Verdict tone="bad">{problem.text}</Verdict> : null}
         <Readback segments={segments} />
         {group.kind === 'check' ? <CheckBody step={step} context={context} edit={edit} system={system} /> : null}
-        {group.kind === 'change' ? <ChangeBody group={group} context={context} edit={edit} system={system} /> : null}
-        {group.kind === 'number' ? <NumberBody step={step} context={context} edit={edit} /> : null}
+        {group.kind === 'change' ? <ChangeBody group={group} context={context} edit={edit} system={system} onAddParam={onAddParam} /> : null}
+        {group.kind === 'number' ? <NumberBody step={step} context={context} edit={edit} onAddParam={onAddParam} /> : null}
       </Card>
       {breakLine(group)}
     </>
@@ -275,15 +283,23 @@ function CheckBody({ step, context, edit, system }: {
 
 // ── изменение ─────────────────────────────────────────────────────────────
 
-function ChangeBody({ group, context, edit, system }: {
+function ChangeBody({ group, context, edit, system, onAddParam }: {
   group: CardGroup;
   context: SlotContext;
   edit: EditFn;
   system: System;
+  onAddParam?: (label: string, kind: string) => string;
 }) {
   const step = group.step as any;
   const mode = step.type === 'status' ? 'status' : 'apply';
   const applyIndex = group.amount ? 1 : 0;
+
+  // Потребность рождается по подписи слота: dice-слоту — «кости», карточке
+  // состояния — «эффект-состояние», остальным — «формула». Без колбэка
+  // (например, в тестах карточки) пункт «новая потребность…» просто не
+  // появляется — SlotInput проверяет это сам.
+  const fromRecord = (label: string, kind: string) =>
+    onAddParam ? () => ({ param: onAddParam(label, kind) }) : undefined;
 
   // Состояния для карточки «изменение → состояние»: пассивные эффекты системы.
   const statusOptions: SlotOption[] = Object.entries(system.effects ?? {})
@@ -333,6 +349,7 @@ function ChangeBody({ group, context, edit, system }: {
                   value={(group.amount as any).dice} context={context} dice
                   placeholder="какие кости: 1d8, 2d6…"
                   onChange={next => edit(0, draft => { (draft as any).dice = next ?? undefined; })}
+                  onCreateFromRecord={fromRecord('Сколько — кости', 'dice')}
                 />
               </Field>
               <Field label="и прибавка">
@@ -347,6 +364,7 @@ function ChangeBody({ group, context, edit, system }: {
               <SlotInput
                 value={step.value} context={context} allow={['ref', 'param', 'const']}
                 onChange={next => edit(0, draft => { (draft as any).value = next ?? undefined; })}
+                onCreateFromRecord={fromRecord('Сколько', 'expr')}
               />
             </Field>
           )}
@@ -386,6 +404,7 @@ function ChangeBody({ group, context, edit, system }: {
             <SlotInput
               value={step.effect} context={context} extraOptions={statusOptions}
               onChange={next => edit(applyIndex, draft => { (draft as any).effect = next ?? undefined; })}
+              onCreateFromRecord={fromRecord('какое', 'effect')}
             />
           </Field>
         </>
@@ -396,12 +415,15 @@ function ChangeBody({ group, context, edit, system }: {
 
 // ── число ─────────────────────────────────────────────────────────────────
 
-function NumberBody({ step, context, edit }: {
+function NumberBody({ step, context, edit, onAddParam }: {
   step: any;
   context: SlotContext;
   edit: EditFn;
+  onAddParam?: (label: string, kind: string) => string;
 }) {
   const source = typeof step.source === 'object' ? 'roll' : (step.source ?? 'roll');
+  const fromRecord = (label: string, kind: string) =>
+    onAddParam ? () => ({ param: onAddParam(label, kind) }) : undefined;
 
   return (
     <>
@@ -421,6 +443,7 @@ function NumberBody({ step, context, edit }: {
             <SlotInput
               value={step.dice} context={context} dice placeholder="какие кости: 1d8, 2d6…"
               onChange={next => edit(0, draft => { (draft as any).dice = next ?? undefined; })}
+              onCreateFromRecord={fromRecord('кости', 'dice')}
             />
           </Field>
           <Field label="прибавка">
@@ -446,6 +469,7 @@ function NumberBody({ step, context, edit }: {
           <SlotInput
             value={step.fixed} context={context}
             onChange={next => edit(0, draft => { (draft as any).fixed = next ?? undefined; })}
+            onCreateFromRecord={fromRecord('фикс записи', 'expr')}
           />
         </Field>
       ) : null}

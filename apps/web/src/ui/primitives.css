@@ -304,6 +304,9 @@
 }
 .slot__option:hover { background: rgba(122, 132, 255, .12); }
 .slot__group { font-size: 10px; text-transform: uppercase; letter-spacing: .4px; opacity: .5; min-width: 92px; }
+/* Группа «Из записи» — цветом нити: то же обещание, что и в пересказе
+   эффекта и в секции потребностей, только тут ещё до выбора. */
+.slot__group--record { opacity: 1; color: var(--from-record); }
 
 /* ── пересказ на карточке шага ── */
 .readback {
@@ -312,7 +315,7 @@
   font-size: 13.5px; line-height: 1.5;
 }
 .readback__hole {
-  background: rgba(255, 152, 0, .16); border: 1px dashed #ff9800;
+  background: var(--from-record-soft); border: 1px dashed var(--from-record);
   border-radius: 4px; padding: 0 5px; margin-right: 4px; white-space: nowrap;
 }
 .card-forks { margin: -4px 0 10px 14px; display: grid; gap: 2px; }
@@ -345,3 +348,20 @@
   font-size: var(--fs-2); padding: 0 var(--s-1);
 }
 .chips__x:hover { color: var(--danger); }
+
+/* ── потребность эффекта: строка-контракт с записью ──
+   Не форма с тремя полями в рамке — плотная строка списка. Маркер слева
+   цветом нити («сюда придёт значение из записи»), подписи колонок — один
+   раз сверху, а не на каждой строке. Ряды разделяет только тонкая линия,
+   без теней и без вложенной карточки вокруг каждой. */
+.need-list__head, .need {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(140px, 180px) minmax(150px, 190px) auto;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-3);
+  border-left: 3px solid transparent;
+}
+.need-list__head { padding-bottom: var(--s-1); }
+.need { border-left-color: var(--from-record); }
+.need + .need { border-top: 1px solid var(--border); }

@@ -48,6 +48,23 @@ const STACKING = [
   ['stack', 'копится'],
 ] as const;
 
+// Чем заполнят потребность: тот же словарь видов, что и у свойств рода
+// записи (records-tab.tsx), плюс два вида, которые эффекту нужны, а роду —
+// нет: «выбор» и «поле листа» (последнее считает лист заполняющей стороны).
+const PARAM_KINDS = [
+  ['dice', 'кости (1d8)'],
+  ['number', 'число'],
+  ['expr', 'формула'],
+  ['effect', 'эффект-состояние'],
+  ['choice', 'выбор'],
+  ['tag', 'поле листа'],
+] as const;
+
+const PARAM_SIDES = [
+  ['source', 'отправитель'],
+  ['target', 'цель — её листом'],
+] as const;
+
 export function EffectsTab() {
   const system = useWorld(s => s.system);
   const activeId = useWorld(s => s.activeEffectId);
@@ -130,6 +147,20 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
       const target = draft.effects[id];
       if (target) change(target);
     });
+  };
+
+  // Потребность рождается прямо там, где её не хватило в слоте (задача 2):
+  // живёт она на эффекте, а не на шаге, поэтому заводит её эффект-`edit`,
+  // а не тот, что правит конкретный шаг. Возвращает готовый ключ — слот
+  // сразу коммитит на него ссылку.
+  const addParam = (label: string, kind: string): string => {
+    let key = '';
+    edit(draft => {
+      draft.params ??= [];
+      key = freeId(draft.params.map(p => p.key), 'из_записи');
+      draft.params.push({ key, label, kind });
+    });
+    return key;
   };
 
   const activation = (effect.activation ?? 'manual') as Activation;
@@ -282,6 +313,7 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
               effect={effect}
               earlier={earlierOf(group.indices[0]!)}
               problem={group.indices.map(i => problems[i]).find(Boolean) ?? null}
+              onAddParam={addParam}
               edit={(k, change) => edit(draft => {
                 const index = group.indices[k] ?? group.indices[0]!;
                 change(draft.steps![index]!);
@@ -317,23 +349,34 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
   );
 }
 
-/** Параметры — дырки, которые заполнит запись. Свёрнуты: чаще всего их нет. */
+/**
+ * Потребности — то, что эффект берёт из записи. Раньше жили в свёрнутом
+ * Fold: чаще всего их нет, и это казалось поводом спрятать. Но именно
+ * поэтому их стоит видеть сразу — свернуть легко забыть, что заглянуть.
+ * Строка-контракт: маркер цветом нити слева, дальше поля без обводки
+ * карточки на каждую — карточка тут одна, на всю секцию.
+ */
 function ParamsEditor({ effect, onEdit }: { effect: Effect; onEdit: (change: (draft: Effect) => void) => void }) {
   const params = effect.params ?? [];
 
   return (
-    <Fold
-      title="Что эффект берёт из записи"
-      count={params.length}
-      summary={params.length ? undefined : 'ничего — все значения заданы в шагах'}
-    >
-      {params.map(param => (
-        <Card key={param.key} tone="flat">
-          <div className="row">
-            <Field label="Ключ">
-              <Input mono value={param.key} onChange={() => { /* ключ неизменен по построению */ }} />
-            </Field>
-            <Field label="Как называть человеку">
+    <Card>
+      <CardHead title="Что эффект берёт из записи" />
+      {params.length === 0 ? (
+        <Empty
+          title="Потребностей нет"
+          hint="Слоты шагов заполнены прямо здесь. Заведите потребность, когда значение должно приходить от записи."
+        />
+      ) : (
+        <div className="stack stack--tight">
+          <div className="need-list__head">
+            <span className="field__label">Название</span>
+            <span className="field__label">Чем заполняют</span>
+            <span className="field__label">Кто считает</span>
+            <span aria-hidden />
+          </div>
+          {params.map(param => (
+            <div key={param.key} className="need">
               <Input
                 value={param.label ?? ''}
                 onChange={next => onEdit(draft => {
@@ -341,33 +384,40 @@ function ParamsEditor({ effect, onEdit }: { effect: Effect; onEdit: (change: (dr
                   if (target) target.label = next;
                 })}
               />
-            </Field>
-            <Field label="Кто считает">
+              <Select
+                value={String(param.kind ?? 'expr')}
+                options={PARAM_KINDS}
+                onChange={next => onEdit(draft => {
+                  const target = draft.params?.find(p => p.key === param.key);
+                  if (target) target.kind = next;
+                })}
+              />
               <Select
                 value={param.of ?? 'source'}
-                options={[['source', 'отправитель'], ['target', 'цель']] as const}
+                options={PARAM_SIDES}
                 onChange={next => onEdit(draft => {
                   const target = draft.params?.find(p => p.key === param.key);
                   if (target) target.of = next === 'source' ? undefined : next;
                 })}
               />
-            </Field>
-          </div>
-          <Button size="sm" variant="danger" onClick={() => onEdit(draft => {
-            draft.params = (draft.params ?? []).filter(p => p.key !== param.key);
-          })}>
-            Убрать параметр
-          </Button>
-        </Card>
-      ))}
+              <Button size="sm" variant="danger" onClick={() => onEdit(draft => {
+                draft.params = (draft.params ?? []).filter(p => p.key !== param.key);
+              })}>
+                Убрать
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
 
       <Button size="sm" onClick={() => onEdit(draft => {
         draft.params ??= [];
-        draft.params.push({ key: freeId(draft.params.map(p => p.key), 'param'), label: 'Новый параметр', kind: 'expr' });
+        const key = freeId(draft.params.map(p => p.key), 'из_записи');
+        draft.params.push({ key, label: 'Новая потребность', kind: 'expr' });
       })}>
         + брать из записи
       </Button>
-    </Fold>
+    </Card>
   );
 }
 

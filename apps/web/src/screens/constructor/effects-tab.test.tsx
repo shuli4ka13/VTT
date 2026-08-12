@@ -69,4 +69,12 @@ describe('EffectsTab: палитра трёх понятий', () => {
     expect(screen.queryByText(/дырк/i)).toBeNull();
     expect(screen.getByText('Что эффект берёт из записи')).toBeTruthy();
   });
+
+  it('«Берёт из записи» — видимая секция с кнопкой', () => {
+    render(<EffectsTab />);
+    expect(screen.getByText('Что эффект берёт из записи')).toBeTruthy();
+    fireEvent.click(screen.getByText('+ брать из записи'));
+    const effect = useWorld.getState().system.effects.strike!;
+    expect(effect.params!.length).toBe(1);
+  });
 });
