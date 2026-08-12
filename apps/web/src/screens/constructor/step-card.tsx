@@ -15,6 +15,7 @@
 // экрана не помогает найти, какой из трёх шагов сломан.
 
 import type { System, Effect, Step } from '@vtt/schema';
+import { compile } from '@vtt/engine/formula';
 import { kindOf, declaredProps } from './slots.tsx';
 import type { SlotKind } from './slots.tsx';
 
@@ -118,6 +119,12 @@ export const STEP_SPECS: StepSpec[] = [
 
 export const specOf = (type: string) => STEP_SPECS.find(s => s.type === type) ?? null;
 
+/** Теги формулы, если она вообще разбирается. Недописанная формула не даёт
+ * зависимостей молча — это забота панели формулы (`ui/formula.tsx`), не этого места. */
+const formulaDeps = (source: string): readonly string[] | null => {
+  try { return compile(source).deps; } catch { return null; }
+};
+
 // ── чтение и запись вложенных слотов ────────────────────────────────────
 
 const read = (step: Step, path: string): unknown =>
@@ -179,6 +186,17 @@ export function problemOf(step: Step, system: System, effect: Effect, earlier: s
       if (!tag) return { text: `${slot.label.toLowerCase()}: поле не выбрано` };
       if (!system.fields.some(f => f.tag === tag)) {
         return { text: `поля «${tag}» в системе нет — заведите его на вкладке «Лист»`, missingField: tag };
+      }
+    }
+    if (kind.kind === 'expr') {
+      const source = String(ref.expr ?? '').trim();
+      const deps = source ? formulaDeps(source) : null;
+      const missing = deps?.find(tag => !system.fields.some(f => f.tag === tag));
+      if (missing) {
+        return {
+          text: `формула ссылается на поле «${missing}», которого в системе нет — заведите его на вкладке «Лист»`,
+          missingField: missing,
+        };
       }
     }
     if (kind.kind === 'constant') {
