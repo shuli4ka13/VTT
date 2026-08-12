@@ -26,13 +26,34 @@
 
 ---
 
+### Task 0: Образцы переезжают в `samples/*.world.json`
+
+**Files:**
+- Create: `samples/dnd5e.world.json`, `samples/cyberpunk.world.json` (корень репо)
+- Modify: `packages/engine/src/model/systems.ts` (реэкспорт из JSON), `packages/engine/tsconfig.json` (`resolveJsonModule`, если ещё нет)
+- Modify: `packages/engine/src/model/system.ts`, `system-cyberpunk.ts`, `compendium.ts`, `sheets.ts` — УДАЛЯЮТСЯ после переноса данных (комментарии-знания перенести в `samples/README.md`)
+- Modify: `apps/server/src/seed.ts`, `apps/web/src/screens/constructor/donors.tsx`, тесты движка — на новый источник
+
+**Rules:**
+1. Формат файла: `{ "title": …, "system": …, "compendium": …, "sheets": … }` — ровно то, что собирает `sampleWorlds()` в seed.ts сейчас. Данные выгружаются ИЗ ТЕКУЩИХ ts-модулей одноразовым node-скриптом (написать в scratchpad, в репо не коммитить), НЕ переписываются руками — ни один байт данных не должен измениться, только упаковка.
+2. `packages/engine/src/model/systems.ts` остаётся единственной точкой доступа: `import dnd from '../../../../samples/dnd5e.world.json'` (или через `createRequire` — что примет вся цепочка vitest/vite/tsc; критерий — все прогоны зелёные) и экспортирует, как раньше, `SAMPLE_SYSTEMS` (массив `system`-частей) плюс новый `SAMPLE_WORLDS` (полные миры) для сида.
+3. `seed.ts` строит миры из `SAMPLE_WORLDS`. Тесты движка, импортировавшие `system.ts`/`system-cyberpunk.ts` напрямую, переводятся на `SAMPLE_SYSTEMS`/`SAMPLE_WORLDS`.
+4. Комментарии из ts-модулей (решения, «протягивание», объяснения) — в `samples/README.md`, они знания, не данные.
+
+- [ ] **Step 1:** скрипт выгрузки → два json; `git diff` данных против ts-источников проверить программно (скрипт сравнения в scratchpad: JSON.stringify старого объекта === содержимому файла).
+- [ ] **Step 2:** перевести читателей; удалить ts-модули данных.
+- [ ] **Step 3:** `pnpm --filter @vtt/engine test && cd apps/web && pnpm vitest run && pnpm typecheck && make ts-check` — всё зелёное; `make ts-test` тоже (сид-тесты сервера).
+- [ ] **Step 4:** Commit `"Образцы — данные: миры в samples/*.json, код их только читает"`.
+
+---
+
 ### Task 1: Конвертер `unifyRecordRefs` + образцы на потребностях
 
 **Files:**
 - Create: `apps/web/src/store/unify.ts`
 - Test: `apps/web/src/store/unify.test.ts`
 - Modify: `apps/web/src/store/world.ts` (вызовы конвертера)
-- Modify: `packages/engine/src/model/system.ts` (эффект `strike` и род `weapon`)
+- Modify: `samples/dnd5e.world.json` (эффект `strike` и род `weapon` — Task 0 уже перевёз их в JSON), при находках `grep '"prop"'` — и `samples/cyberpunk.world.json`
 - Modify: при падении — тесты движка, ссылающиеся на прежнюю структуру `strike` (`packages/engine/tests/rule.weapon.test.ts` и соседи): менять только структуру данных в тестах, не смысл проверок.
 
 **Interfaces:**
@@ -194,7 +215,7 @@ export function unifyRecordRefs(system: System): System {
 
 - [ ] **Step 6: Переписать образец D&D на потребности**
 
-В `packages/engine/src/model/system.ts`, эффект `strike`: слот костей шага-величины `{ prop: 'damage_dice' }` → `{ param: 'damage_dice' }`; в `params` эффекта добавить `{ key: 'damage_dice', label: 'Кость урона', kind: 'dice' }`; в привязке рода `weapon` — `args: { damage_dice: { prop: 'damage_dice' } }`. Комментарий у привязки обновить: аргументы теперь ЕСТЬ — они закрывают потребности. Проверить `system-cyberpunk.ts` тем же способом (`grep "prop:"` по файлу) и привести найденное.
+В `samples/dnd5e.world.json`, эффект `strike`: слот костей шага-величины `{ "prop": "damage_dice" }` → `{ "param": "damage_dice" }`; в `params` эффекта добавить `{ "key": "damage_dice", "label": "Кость урона", "kind": "dice" }`; в привязке рода `weapon` — `"args": { "damage_dice": { "prop": "damage_dice" } }`. Проверить `samples/cyberpunk.world.json` (`grep '"prop"'`) и привести найденное. Заметку о решении добавить в `samples/README.md`.
 
 - [ ] **Step 7: Полные прогоны**
 
@@ -371,6 +392,8 @@ it('незакрытая потребность заводит свойство 
 - `DictionariesFold({ system })` (стор берёт сам через useWorld): `<Fold title="Словари">` с двумя подсекциями.
 - **Кости** (`system.constants`, `kind === 'die'`): строка = Input лейбла + Input записи (`1d20`; парсить `normalizeDice` из `slot-input.tsx` — экспортирована) + удалить. Составная кость (`dice.length > 1` или именованные части) — read-only строка «составная — правится в данных». Добавление: `+ кость` → ключ `freeId(keys, slugOf(label || 'кость'))`, `{ label, kind:'die', dice:[{count,sides}] }`. Удаление разрешено, только если ключ не встречается в мире: `JSON.stringify({system}).split('"constant":"key"')` — иначе кнопка задизаблена с title «кость используется».
 - **Мишени бросков** (`system.rolls`): строка = Input лейбла (тег показывается `.mono`-бейджем) + удалить (если тег не встречается как `roll.check`/мишень модификаторов: скан JSON по `"key"`). Добавление: `+ мишень` → `{ tag: freeId(теги, slugOf(label || 'бросок')), label }`. Подпись-хинт: «чек-мишени полей включаются на „Листе“».
+- **Таблицы по диапазонам** (`system.tables`, схема `rangeTable`: `{label?, ranges: [{from, to, value}]}`) — нужны dogfood-критерию (бонус мастерства D&D иначе не собрать): строка таблицы раскрывается фолдом; внутри ряды `от / до / значение` (Input number/number/Input со свободным значением: число как число, `true/false` как булево, прочее строкой), `+ диапазон`, удалить ряд; `+ таблица` → ключ `freeId(keys, slugOf(label || 'таблица'))`; удалить таблицу — только если ключ не используется полями (`"table":"key"` скан). Приговор строки: диапазоны с дырами/нахлёстом — жёлтый Verdict «диапазоны перекрываются или дырявы» (проверка: сортировка по from, соседние to+1 == from — предупреждение, не запрет).
+- **Типы действий** (`system.action_types`): строка = Input лейбла + удалить (если ключ не используется: `"cost":"key"` скан); `+ тип` → ключ `freeId(keys, slugOf(label || 'действие'))`. Это «Чего стоит» активируемых эффектов.
 
 - [ ] **Step 1: Падающий тест**
 
