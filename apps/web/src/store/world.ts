@@ -9,7 +9,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { world as W } from '@vtt/schema';
 import type { System, Compendium, Sheet, Effect, Field } from '@vtt/schema';
-import { unifyRecordRefs } from '@vtt/engine/model/unify';
+import { unifyWorld } from '@vtt/engine/model/unify';
 
 export interface WorldState {
   system: System;
@@ -87,7 +87,7 @@ export const useWorld = create<WorldState>()(persist(set => ({
 
   replaceWorld: world => set({
     ...world,
-    system: unifyRecordRefs(world.system),
+    ...unifyWorld(world),
     activeFieldTag: null,
     activeEffectId: null,
     activeRecordKind: null,
@@ -119,8 +119,10 @@ export const useWorld = create<WorldState>()(persist(set => ({
   // Сохранённый мир мог быть записан до унификации ссылок на записи: прямые
   // {prop} в слотах шагов конвертируются в потребности эффекта один раз,
   // сразу после гидрации — так же, как при загрузке файла в replaceWorld.
+  // Мир целиком, не только система: {prop} звал эффект и из собственных
+  // активностей записи компендиума, не только из привязки рода.
   onRehydrateStorage: () => state => {
-    if (state) state.system = unifyRecordRefs(state.system);
+    if (state) Object.assign(state, unifyWorld(state));
   },
 }));
 
