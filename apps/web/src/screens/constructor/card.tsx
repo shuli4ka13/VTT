@@ -11,7 +11,7 @@ import type { CardGroup } from './cards.ts';
 import { checkReadback, changeReadback, numberReadback, type Segment } from './readback.ts';
 import { parseRollExpr, formatRollExpr, parseAmountExpr, formatAmountExpr } from './roll-expr.ts';
 import { FormulaChips } from '../../ui/formula-chips.tsx';
-import { SlotInput, type SlotOption } from './slot-input.tsx';
+import { SlotInput, chipOf, type SlotOption } from './slot-input.tsx';
 import type { SlotContext } from './slots.tsx';
 import type { Problem } from './step-card.tsx';
 
@@ -208,56 +208,58 @@ function RollExprInput({ step, context, edit }: {
 // Величина изменения одной строкой: «1d8 + ⟦Мод Силы⟧». Кость и прибавка
 // живут в движке порознь (кость бросает отправитель, формулу считает лист),
 // но набирают их вместе — парсер делит, формат собирает обратно.
-function AmountExprInput({ amount, context, edit, onCreateFromRecord }: {
+function AmountExprInput({ amount, apply, applyIndex, context, edit, onCreateFromRecord }: {
   amount: Step;
+  /** Шаг «применить»: он несёт мишень и операцию, и они тоже в этой строке. */
+  apply: Step;
+  applyIndex: number;
   context: SlotContext;
   edit: EditFn;
   onCreateFromRecord?: () => SlotRef;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
   const dice = (amount as Record<string, any>).dice;
+  const target = (apply as Record<string, any>).target;
+  const direction = String((apply as Record<string, any>).direction ?? 'subtract');
 
-  // Кость из записи живёт отдельным слотом (формула ссылаться на запись
-  // не умеет), но человеку она — такая же ссылка, как поле листа. Поэтому
-  // в строке она стоит фишкой цвета нити, а правится не текстом.
-  const fromRecordDice = dice && typeof dice === 'object'
-    && !('const' in dice) && !('constant' in dice)
-    ? String((dice as any).param ?? (dice as any).prop ?? (dice as any).item ?? (dice as any).ref ?? '')
-    : null;
+  const targetChip = chipOf(target, context);
+  const diceChip = chipOf(dice, context);
 
-  const needLabel = (key: string) =>
-    context.effect.params?.find(p => p.key === key)?.label ?? key;
-
-  const setDice = (next: SlotRef | undefined) => edit(0, target => {
-    const t = target as Record<string, unknown>;
-    if (next === undefined) delete t.dice; else t.dice = next;
+  const setDice = (next: SlotRef | undefined) => edit(0, step => {
+    const s = step as Record<string, unknown>;
+    if (next === undefined) delete s.dice; else s.dice = next;
   });
 
-  // Строка правит ТОЛЬКО прибавку, если кость пришла из записи: иначе
-  // текст молча стёр бы то, что в него не записывается.
-  const shown = draft ?? (fromRecordDice
+  // Строка правит только текстовую часть величины; мишень, операция и кость
+  // из записи — фишки и знак, у них свои жесты.
+  const shown = draft ?? (diceChip
     ? exprText((amount as Record<string, any>).bonus)
     : formatAmountExpr(amount, context.system));
 
   const commit = () => {
     if (draft === null) return;
-    if (fromRecordDice) {
+    if (diceChip) {
       const bonus = draft.trim() ? parseAmountExpr(draft, context.system).bonus : null;
-      edit(0, target => {
-        const t = target as Record<string, unknown>;
-        if (bonus === null || bonus === undefined) delete t.bonus; else t.bonus = bonus;
+      edit(0, step => {
+        const s = step as Record<string, unknown>;
+        if (bonus === null || bonus === undefined) delete s.bonus; else s.bonus = bonus;
       });
     } else {
       const parsed = parseAmountExpr(draft, context.system);
-      edit(0, target => {
-        const t = target as Record<string, unknown>;
-        if (parsed.die === undefined) delete t.dice; else t.dice = parsed.die;
-        if (parsed.bonus === null) delete t.bonus; else t.bonus = parsed.bonus;
+      edit(0, step => {
+        const s = step as Record<string, unknown>;
+        if (parsed.die === undefined) delete s.dice; else s.dice = parsed.die;
+        if (parsed.bonus === null) delete s.bonus; else s.bonus = parsed.bonus;
       });
     }
     setDraft(null);
   };
 
+  const fields = context.system.fields.map(f => ({
+    group: 'поле цели',
+    label: f.label ?? f.tag,
+    onPick: () => edit(applyIndex, step => { (step as Record<string, unknown>).target = { tag: f.tag }; }),
+  }));
   const needs = (context.effect.params ?? []).map(p => ({
     group: 'из записи',
     label: p.label ?? p.key,
@@ -272,24 +274,56 @@ function AmountExprInput({ amount, context, edit, onCreateFromRecord }: {
   }
 
   return (
-    <Field label="сколько">
+    <Field
+      label="что меняется"
+      hint={targetChip ? undefined : 'Начните с поля цели: наберите «@» и выберите, что меняем.'}
+    >
       <FormulaChips
         value={shown}
         system={context.system}
-        placeholder={fromRecordDice ? 'и ещё: @Мод Силы, 2…' : '1d8 + @Мод Силы'}
-        extraOptions={needs}
-        prefix={fromRecordDice ? (
+        placeholder={diceChip ? 'и ещё: @Мод Силы, 2…' : '1d8 + @Мод Силы'}
+        extraOptions={targetChip ? needs : [...fields, ...needs]}
+        prefix={
           <>
-            <span className="chips__chip chips__chip--record" title="придёт из записи компендиума">
-              {needLabel(fromRecordDice)}
-              <button
-                type="button" className="chips__x" aria-label="убрать из записи"
-                onMouseDown={e => { e.preventDefault(); setDice(undefined); }}
-              >×</button>
-            </span>
-            <span className="chips__plus" aria-hidden>+</span>
+            {targetChip ? (
+              <span className="chips__chip">
+                {targetChip.label}
+                <button
+                  type="button" className="chips__x" aria-label="убрать поле цели"
+                  onMouseDown={e => {
+                    e.preventDefault();
+                    edit(applyIndex, step => { delete (step as Record<string, unknown>).target; });
+                  }}
+                >×</button>
+              </span>
+            ) : null}
+            <select
+              className="chips__op"
+              aria-label="что делаем с полем"
+              value={direction}
+              onChange={e => {
+                const next = e.target.value;
+                edit(applyIndex, step => { (step as Record<string, unknown>).direction = next; });
+              }}
+            >
+              <option value="subtract">−</option>
+              <option value="add">+</option>
+              <option value="set">=</option>
+            </select>
+            {diceChip ? (
+              <>
+                <span className={`chips__chip${diceChip.record ? ' chips__chip--record' : ''}`}>
+                  {diceChip.label}
+                  <button
+                    type="button" className="chips__x" aria-label="убрать из записи"
+                    onMouseDown={e => { e.preventDefault(); setDice(undefined); }}
+                  >×</button>
+                </span>
+                <span className="chips__plus" aria-hidden>+</span>
+              </>
+            ) : null}
           </>
-        ) : null}
+        }
         onChange={setDraft}
         onBlur={commit}
         onKeyDown={e => {
@@ -462,29 +496,15 @@ function ChangeBody({ group, context, edit, system, onAddParam }: {
 
       {mode === 'apply' ? (
         <>
-          <Field label="какое поле">
-            <SlotInput
-              value={step.target} context={context} allow={['tag']}
-              onChange={next => edit(applyIndex, draft => { (draft as any).target = next ?? undefined; })}
-            />
-          </Field>
-          {/* Операция стоит МЕЖДУ полем и величиной — карточка читается
-              уравнением: «Текущие ХП − 1d8 + Мод Силы». Отдельным знаком,
-              а не формулой: на неё завязаны сопротивления цели (движок
-              обязан знать, что это вычитание) и границы «не ниже/не выше»,
-              а формула вдобавок не умеет бросать кости. */}
-          <Field label="как">
-            <Select
-              value={String(step.direction ?? 'subtract')}
-              options={[['subtract', '−'], ['add', '+'], ['set', '=']] as const}
-              onChange={next => edit(applyIndex, draft => { (draft as any).direction = next; })}
-            />
-          </Field>
-
-          {/* Величина — ОДНА строка, как в броске: кость и прибавка были
-              двумя полями по устройству движка, а человек пишет их вместе. */}
+          {/* Одна строка присвоения: «Текущие ХП − Кость урона + Мод Силы».
+              Отдельных полей «какое поле» и «как» больше нет — мишень стоит
+              фишкой в начале строки, операция знаком следом. В данных они
+              по-прежнему врозь: на операцию завязаны сопротивления цели
+              и границы, а кость обязана остаться броском, а не текстом. */}
           {group.amount ? (
-            <AmountExprInput amount={group.amount} context={context} edit={edit}
+            <AmountExprInput
+              amount={group.amount} apply={step} applyIndex={applyIndex}
+              context={context} edit={edit}
               onCreateFromRecord={fromRecord('сколько — кости', 'dice')} />
           ) : (
             <Field label="сколько">

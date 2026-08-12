@@ -48,6 +48,25 @@ export function displayOf(ref: unknown, ctx: SlotContext): string {
   return '';
 }
 
+/**
+ * Структурная ссылка одной фишкой: то, что не выражается текстом формулы —
+ * поле цели, значение из записи, результат шага, кость системы. Цвет нити
+ * («из записи») отличает то, что придёт от конкретной записи компендиума.
+ */
+export function chipOf(ref: unknown, ctx: SlotContext): { label: string; record: boolean } | null {
+  if (!ref || typeof ref !== 'object') return null;
+  const r = ref as Record<string, unknown>;
+  if ('tag' in r) return { label: labelOfTag(ctx.system, String(r.tag)), record: false };
+  if ('param' in r) {
+    const declared = ctx.effect.params?.find(p => p.key === r.param);
+    return { label: declared?.label ?? String(r.param), record: true };
+  }
+  if ('prop' in r || 'item' in r) return { label: String(r.prop ?? r.item), record: true };
+  if ('ref' in r) return { label: `результат «${String(r.ref)}»`, record: false };
+  if ('constant' in r) return { label: dieWord(ctx.system, String(r.constant)), record: false };
+  return null;
+}
+
 export interface SlotOption { group: string; label: string; ref: SlotRef; synthetic?: boolean }
 
 export function optionsFor(ctx: SlotContext, allow?: SlotKind[]): SlotOption[] {
@@ -91,7 +110,10 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
     const born: SlotOption = { group: 'Из записи', label: 'из записи → новая потребность…', ref: { param: '' }, synthetic: true };
     return [...base.slice(0, insertAt), born, ...base.slice(insertAt)];
   }, [context, allow, extraOptions, onCreateFromRecord]);
-  const shown = draft ?? displayOf(value, context);
+  // Структурная ссылка стоит фишкой, а не текстом «поле: …»: в строке
+  // она выглядит так же, как тег формулы, и правится так же — крестиком.
+  const chip = draft === null ? chipOf(value, context) : null;
+  const shown = chip ? '' : (draft ?? displayOf(value, context));
   const needle = (draft ?? '').toLowerCase();
   const filtered = needle ? options.filter(o => o.label.toLowerCase().includes(needle)) : options;
 
@@ -122,7 +144,16 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
       <FormulaChips
         value={shown}
         system={context.system}
-        placeholder={placeholder ?? 'число или формула'}
+        placeholder={chip ? undefined : (placeholder ?? 'число или формула')}
+        prefix={chip ? (
+          <span className={`chips__chip${chip.record ? ' chips__chip--record' : ''}`}>
+            {chip.label}
+            <button
+              type="button" className="chips__x" aria-label="убрать"
+              onMouseDown={e => { e.preventDefault(); onChange(null); }}
+            >×</button>
+          </span>
+        ) : null}
         onFocus={() => setOpen(true)}
         onChange={next => { setDraft(next); setOpen(true); }}
         onBlur={commitTyped}

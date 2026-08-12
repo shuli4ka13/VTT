@@ -143,7 +143,7 @@ describe('GroupCard: величина из записи', () => {
     render(<GroupCard group={group} position={1} system={system} effect={withParam}
       earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
     expect(screen.getByText('Кость урона')).toBeTruthy();
-    expect(screen.getByText('сколько')).toBeTruthy();
+    expect(screen.getByText('что меняется')).toBeTruthy();
     expect(screen.queryByText('сколько — кости')).toBeNull();
   });
 
@@ -155,7 +155,7 @@ describe('GroupCard: величина из записи', () => {
       earlier={[]} problem={null}
       edit={(_, change) => change(amount as never)} onDelete={() => {}} />);
     // «#armor» нарисован фишкой, дописываем в хвост ЭТОЙ строки — как рукой.
-    const line = screen.getByText('сколько').closest('label')!;
+    const line = screen.getByText('что меняется').closest('label')!;
     const tail = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;
     fireEvent.change(tail, { target: { value: ' + 2' } });
     fireEvent.keyDown(tail, { key: 'Enter' });

@@ -81,14 +81,23 @@ describe('SlotInput', () => {
     expect(got).toEqual({ const: '1d8' });
   });
 
-  it('allow сужает набранный текст: чужой вид отменяется, поле возвращается', () => {
+  it('allow сужает набранный текст: чужой вид отменяется, фишка остаётся', () => {
     let called = false;
     render(<SlotInput value={{ tag: 'armor' }} onChange={() => { called = true; }} context={ctx} allow={['constant']} />);
+    // Ссылка стоит фишкой; набранное поверх неё чужого вида — отменяется.
+    expect(screen.getByText('Класс брони')).toBeTruthy();
     const input = screen.getByRole('textbox') as HTMLInputElement;
     fireEvent.change(input, { target: { value: 'abc' } });
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(called).toBe(false);
-    expect(input.value).toBe(displayOf({ tag: 'armor' }, ctx));
+    expect(screen.getByText('Класс брони')).toBeTruthy();
+  });
+
+  it('крестик на фишке очищает слот', () => {
+    let got: unknown = 'untouched';
+    render(<SlotInput value={{ tag: 'armor' }} onChange={next => { got = next; }} context={ctx} />);
+    fireEvent.mouseDown(screen.getByLabelText('убрать'));
+    expect(got).toBeNull();
   });
 
   it('пункт «новая потребность» зовёт колбэк и коммитит его ref', () => {

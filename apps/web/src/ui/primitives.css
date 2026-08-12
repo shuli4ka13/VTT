@@ -420,3 +420,10 @@
   border-color: var(--from-record);
 }
 .chips__plus { color: var(--text-faint); padding: 0 var(--s-1); }
+/* Знак операции внутри строки — не поле формы, а часть выражения. */
+.chips__op {
+  background: none; border: none; color: var(--text); cursor: pointer;
+  font-family: var(--font-mono); font-size: var(--fs-4); padding: 0 var(--s-2);
+  appearance: none; text-align: center;
+}
+.chips__op:hover { color: var(--accent); }
