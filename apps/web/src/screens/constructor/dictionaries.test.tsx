@@ -107,6 +107,49 @@ describe('Словари: кости, мишени бросков, таблиц�
     expect(constants['секира']).toEqual({ label: 'Секира', kind: 'die', dice: [{ count: 1, sides: 20 }] });
   });
 
+  // Гарды удаления были покрыты только для таблицы и типа действия —
+  // кость и мишень бросков сторожатся тем же usedIn, но своего теста
+  // не имели.
+  it('кость, на которую ссылается бросок в эффекте, удалить нельзя', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        constants: { lead: { label: 'Ведущая кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
+        effects: {
+          hit: {
+            label: 'Удар', activation: 'manual', params: [],
+            steps: [{ type: 'threshold', roll: { die: { constant: 'lead' }, check: null } }],
+          },
+        },
+      },
+      activeEffectId: null,
+    }));
+    render(<DictionariesTab />);
+    const guarded = screen.getByTitle('кость используется') as HTMLButtonElement;
+    expect(guarded.disabled).toBe(true);
+  });
+
+  it('мишень, на которую ссылается бросок эффекта, удалить нельзя', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        rolls: [{ tag: 'attack_roll', label: 'Бросок атаки' }],
+        effects: {
+          hit: {
+            label: 'Удар', activation: 'manual', params: [],
+            steps: [{ type: 'threshold', roll: { die: undefined, check: 'attack_roll' } }],
+          },
+        },
+      },
+      activeEffectId: null,
+    }));
+    render(<DictionariesTab />);
+    const guarded = screen.getByTitle('мишень используется') as HTMLButtonElement;
+    expect(guarded.disabled).toBe(true);
+  });
+
   // usedIn сканировал только {system}, но roll-модификатор (kind: 'roll')
   // бывает и у предмета компендиума — сторож должен видеть его тоже,
   // иначе мишень, на которую смотрит вещь, можно было убрать у неё
