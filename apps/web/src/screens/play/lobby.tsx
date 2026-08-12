@@ -25,7 +25,14 @@ export function Lobby() {
     try {
       setWorlds(await listWorlds());
       if (currentToken()) setRooms(await listRooms());
-    } catch (err) { setError((err as Error).message); }
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      // Токен мог протухнуть и быть выброшен клиентом — тогда вход обязан
+      // появиться снова, иначе человек заперт между «войдите заново» и
+      // спрятанной формой входа.
+      setSigned(Boolean(currentToken()));
+    }
   };
 
   useEffect(() => { void refresh(); }, [signed]);

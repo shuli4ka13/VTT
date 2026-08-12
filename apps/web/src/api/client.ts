@@ -43,6 +43,10 @@ async function call<S extends ZodType>(path: string, schema: S, init?: RequestIn
   const body = await response.json().catch(() => null);
 
   if (!response.ok) {
+    // Сеанса больше нет — сервер перезапустили, токен протух. Держать мёртвый
+    // токен нельзя: прихожая по нему считает человека вошедшим и не показывает
+    // вход, а каждый запрос отвечает «войдите заново» — выйти из этого некуда.
+    if (response.status === 401) setToken(null);
     const message = typeof body?.message === 'string' ? body.message : `запрос не прошёл (${response.status})`;
     throw new ApiError(message, response.status, body?.issues ?? []);
   }
