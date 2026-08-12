@@ -8,3 +8,4 @@ coverage/
 *.tsbuildinfo
 apps/server/*.db
 apps/server/*.db-*
+.superpowers/
