@@ -25,10 +25,19 @@ import { compendium as OLD_COMPENDIUM } from '../../../src/model/compendium.js';
 import { calc, newPass } from '../src/engine/calc.ts';
 import { exchange } from '../src/events/exchange.ts';
 import { SAMPLE_SYSTEMS } from '../src/model/systems.ts';
+import { unifyRecordRefs } from '../src/model/unify.ts';
 import { sheets, compendium } from './fixtures.ts';
 import type { System, Sheet } from '../src/model/types.ts';
 
 type Outcome = { ok: true; value: unknown } | { ok: false; error: string };
+
+/** Каноничный вид: ключи по алфавиту вглубь. Сверка содержимого, не порядка. */
+const canon = (value: unknown): unknown => Array.isArray(value)
+  ? value.map(canon)
+  : value && typeof value === 'object'
+    ? Object.fromEntries(Object.keys(value as object).sort()
+      .map(key => [key, canon((value as Record<string, unknown>)[key])]))
+    : value;
 
 const attempt = (fn: () => unknown): Outcome => {
   try { return { ok: true, value: fn() }; } catch (err) {
@@ -37,8 +46,14 @@ const attempt = (fn: () => unknown): Outcome => {
 };
 
 describe('паритет со старым движком', () => {
-  it('образцы совпадают побайтно — сверяем поведение, а не разные данные', () => {
-    expect(JSON.stringify(SAMPLE_SYSTEMS)).toBe(JSON.stringify(OLD_SYSTEMS));
+  it('образцы совпадают после миграции — сверяем поведение, а не разные данные', () => {
+    // Форма ссылки на запись в новом стеке эволюционировала: прямое свойство
+    // в слоте шага сменили потребность эффекта плюс аргумент привязки. Это
+    // не «заодно улучшил», а объявленная миграция (unifyRecordRefs), которую
+    // проходит каждый загружаемый мир. Поэтому старые образцы сверяются с
+    // новыми ПОСЛЕ неё — и обязаны совпасть до последнего ключа. Порядок
+    // ключей после миграции другой, содержимое — то же; сверяем канонично.
+    expect(canon(SAMPLE_SYSTEMS)).toEqual(canon((OLD_SYSTEMS as System[]).map(unifyRecordRefs)));
     expect(JSON.stringify(sheets)).toBe(JSON.stringify(OLD_SHEETS));
     expect(JSON.stringify(compendium)).toBe(JSON.stringify(OLD_COMPENDIUM));
   });

@@ -136,6 +136,16 @@
             "label": "Чем спасается цель",
             "kind": "expr",
             "of": "target"
+          },
+          {
+            "key": "damage_dice",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "status",
+            "label": "Состояние при провале",
+            "kind": "effect"
           }
         ],
         "steps": [
@@ -162,7 +172,7 @@
             "type": "amount",
             "source": "roll",
             "dice": {
-              "prop": "damage_dice"
+              "param": "damage_dice"
             }
           },
           {
@@ -183,7 +193,7 @@
             "type": "status",
             "mode": "apply",
             "effect": {
-              "prop": "status",
+              "param": "status",
               "optional": true
             }
           }
@@ -195,14 +205,25 @@
         "category": "Лечение",
         "activation": "manual",
         "cost": "action",
-        "params": [],
+        "params": [
+          {
+            "key": "heal_dice",
+            "label": "Кость лечения",
+            "kind": "dice"
+          },
+          {
+            "key": "cure",
+            "label": "Что снимает",
+            "kind": "effect"
+          }
+        ],
         "steps": [
           {
             "id": "amt",
             "type": "amount",
             "source": "roll",
             "dice": {
-              "prop": "heal_dice"
+              "param": "heal_dice"
             },
             "bonus": {
               "expr": "#cha_mod"
@@ -226,7 +247,7 @@
             "type": "status",
             "mode": "remove",
             "effect": {
-              "prop": "cure",
+              "param": "cure",
               "optional": true
             }
           }
@@ -426,6 +447,12 @@
             "args": {
               "save": {
                 "prop": "save_by"
+              },
+              "damage_dice": {
+                "prop": "damage_dice"
+              },
+              "status": {
+                "prop": "status"
               }
             }
           }
@@ -453,7 +480,14 @@
           {
             "label": "Сотворить",
             "effect": "heal",
-            "args": {}
+            "args": {
+              "heal_dice": {
+                "prop": "heal_dice"
+              },
+              "cure": {
+                "prop": "cure"
+              }
+            }
           }
         ]
       },
