@@ -45,7 +45,11 @@ describe('EffectsTab: палитра трёх понятий', () => {
       .filter(b => (b.textContent ?? '').trimStart().startsWith('+ '))
       .map(b => b.textContent!.trim())
       .filter(t => !t.startsWith('+ актив') && !t.startsWith('+ триггер')
-        && !t.startsWith('+ пассив') && !t.startsWith('+ брать'));
+        && !t.startsWith('+ пассив') && !t.startsWith('+ брать')
+        // Словари (задача 6) — своя палитра в левой колонке, ниже «Действуют
+        // на всех», к трём кирпичам шага отношения не имеет.
+        && !t.startsWith('+ кость') && !t.startsWith('+ мишень')
+        && !t.startsWith('+ таблица') && !t.startsWith('+ тип'));
     expect(palette).toEqual(['+ проверка', '+ изменение', '+ число']);
     fireEvent.click(screen.getByText('+ проверка'));
     expect(screen.getByText('1 · Проверка')).toBeTruthy();

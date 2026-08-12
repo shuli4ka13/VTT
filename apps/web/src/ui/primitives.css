@@ -382,3 +382,30 @@
 .need-fill + .need-fill { border-top: 1px solid var(--border); }
 .need-fill--ok { border-left-color: var(--ok); }
 .need-fill .field { flex: 1; min-width: 0; }
+
+/* ── строка словаря (вкладка «Эффекты» → «Словари»): кости, мишени бросков,
+   таблицы, типы действий. Список, а не карточки (design-note §4) — ряд
+   ~32px, разделяет только тонкая линия сверху, без теней и обводки на
+   каждой строке в отдельности. */
+.dict-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2) 0;
+  min-height: 32px;
+}
+.dict-row + .dict-row { border-top: 1px solid var(--border); }
+.dict-row > .input { flex: 1; min-width: 0; }
+/* Составная кость и прочее «правится в данных» — человеческий текст,
+   поэтому не .mono, только приглушённый цвет. */
+.dict-row__static { flex: 1; min-width: 0; color: var(--text-faint); }
+
+/* ── строка диапазона (таблица словаря внутри «Словарей»): от / до / значение. */
+.range-row {
+  display: grid;
+  grid-template-columns: 72px 72px 1fr auto;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-1) 0;
+}
+.range-row + .range-row { border-top: 1px solid var(--border); }
