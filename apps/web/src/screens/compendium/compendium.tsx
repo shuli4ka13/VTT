@@ -145,6 +145,8 @@ function RecordEditor({ record, system }: { record: CompendiumRecord; system: Sy
         </Verdict>
       ) : null}
 
+      {/* Зачем у этой записи спрашивают циферки — сказано ДО того, как их
+          спросили: строка стоит над формой, а не под ней. */}
       {bindings.length ? (
         <span className="faint">
           владелец получит: {bindings.map(b => b.label ?? 'Применение').join(' · ')}
@@ -182,19 +184,6 @@ function RecordEditor({ record, system }: { record: CompendiumRecord; system: Sy
                   />
                 )}
               </Field>
-            ))}
-          </div>
-        </Card>
-      ) : null}
-
-      {bindings.length ? (
-        <Card>
-          <CardHead title="Что эта запись даст владельцу" />
-          <div className="inline inline--tight">
-            {bindings.map((binding, index) => (
-              <Chip key={index} title={`эффект «${binding.effect}»`}>
-                {binding.label ?? 'Применение'}
-              </Chip>
             ))}
           </div>
         </Card>
