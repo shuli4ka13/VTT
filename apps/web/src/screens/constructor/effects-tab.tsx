@@ -20,6 +20,7 @@ import { groupSteps, moveGroup, BRICKS } from './cards.ts';
 import { GroupCard } from './card.tsx';
 import { ModifiersEditor } from './modifiers.tsx';
 import { DonorPalette, findDonorBlock, copyDonorBlock } from './donors.tsx';
+import { registry } from '@vtt/engine/engine/steps/index';
 import type { System, Effect, Activation } from '@vtt/schema';
 
 const ACTIVATIONS = [
@@ -136,6 +137,26 @@ export function EffectsTab() {
       right={{ head: 'Готовое из образцов', body: <DonorPalette kind="effects" /> }}
     />
   );
+}
+
+/**
+ * Чем условиться триггеру: именованные шаги слушаемого эффекта и их выходы
+ * вида «да/нет». Список выводится из реестра шагов — вкладка не знает ни
+ * одного типа лично, и новый тип шага попадает сюда сам.
+ */
+function conditionsOf(system: System, listened: string | undefined): (readonly [string, string])[] {
+  const source = listened ? system.effects[listened] : undefined;
+  if (!source) return [];
+  const out: (readonly [string, string])[] = [];
+  for (const step of source.steps ?? []) {
+    if (!step.id) continue;
+    const mod = registry.get(step.type);
+    for (const output of (mod?.outputs ?? []) as { path: string; label: string; kind?: string }[]) {
+      if (output.kind !== 'boolean') continue;
+      out.push([`${step.id}${output.path}`, `шаг «${step.id}» · ${output.label}`] as const);
+    }
+  }
+  return out;
 }
 
 function EffectEditor({ id, effect, system }: { id: string; effect: Effect; system: System }) {
@@ -279,11 +300,17 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
                 onChange={next => edit(draft => { draft.trigger = { ...draft.trigger, on: next }; })}
               />
             </Field>
-            <Field label="Условие">
-              <Input
-                mono
-                placeholder="hit.success — пусто: всегда"
+            {/* Условие — не свободный текст: помнить имена чужих шагов и пути
+                к их результатам человек не обязан. Список строится из шагов
+                слушаемого эффекта и их логических выходов; числовой выход
+                условием быть не может — движок ждёт «да/нет». */}
+            <Field label="Только если" hint={conditionsOf(system, effect.trigger?.on).length
+              ? undefined
+              : 'У выбранного эффекта нет именованных шагов с исходом «да/нет» — сработает всегда.'}>
+              <Select
                 value={String((effect.trigger?.condition as { ref?: string })?.ref ?? '')}
+                options={[['', 'всегда'],
+                  ...conditionsOf(system, effect.trigger?.on)] as never}
                 onChange={next => edit(draft => {
                   draft.trigger = { ...draft.trigger!, condition: next ? { ref: next } : null };
                 })}

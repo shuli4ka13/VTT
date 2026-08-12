@@ -29,7 +29,7 @@ export const slots = [
 ];
 
 export const outputs = [
-  { path: '', label: 'величина' },
+  { path: '', label: 'величина', kind: 'number' },
 ];
 
 export const mayBreak = false;

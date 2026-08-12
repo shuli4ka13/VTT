@@ -70,8 +70,11 @@ const OUTCOMES: Record<string, (total: number, versus: number) => { success: boo
 // Чем шаг делится с последующими — конструктор строит из этого выпадашку
 // допустимых ссылок, не зная типа.
 export const outputs = [
-  { path: '.margin', label: 'превышение' },
-  { path: '.total', label: 'итог броска' },
+  // Логический выход стоит первым: на него смотрит условие триггера, а оно
+  // требует именно «да/нет» — число условием быть не может.
+  { path: '.success', label: 'вышло', kind: 'boolean' },
+  { path: '.margin', label: 'превышение', kind: 'number' },
+  { path: '.total', label: 'итог броска', kind: 'number' },
 ];
 
 // Может оборвать цепочку — приговор о разборе говорит об этом словами.

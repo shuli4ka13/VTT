@@ -27,7 +27,7 @@ export const slots = [
 ];
 
 export const outputs = [
-  { path: '.margin', label: 'разница' },
+  { path: '.margin', label: 'разница', kind: 'number' },
 ];
 
 export const mayBreak = true;
