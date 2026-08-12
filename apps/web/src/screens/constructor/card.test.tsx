@@ -174,3 +174,51 @@ describe('GroupCard: величина из записи', () => {
     expect(amount.dice).toBeUndefined();
   });
 });
+
+// Кость — фишка и не исчезает, пока набирают прибавку; набранная нотация
+// её заменяет; неразбираемая формула не уходит в данные молча.
+describe('GroupCard: строка броска с фишкой кости', () => {
+  const rollSteps = () => [{
+    type: 'threshold', side: 'sender', successWhen: 'atLeast', continueOn: 'success',
+    roll: { die: { constant: 'lead' }, bonus: { expr: '#armor' }, check: null },
+  }] as unknown as Step[];
+
+  it('фишка кости остаётся видна во время набора', () => {
+    const group = groupSteps(rollSteps())[0]!;
+    render(<GroupCard group={group} position={1} system={system} effect={effect}
+      earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
+    const line = screen.getByText('бросок').closest('label')!;
+    const tail = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;
+    fireEvent.change(tail, { target: { value: ' + 2' } });
+    // Фишка кости — в самой строке, а не только в пересказе над карточкой.
+    expect(line.querySelector('.chips__chip')?.textContent).toContain('1d20');
+  });
+
+  it('набранная нотация заменяет кость', () => {
+    const steps = rollSteps();
+    const step = steps[0] as Record<string, any>;
+    const group = groupSteps(steps)[0]!;
+    render(<GroupCard group={group} position={1} system={system} effect={effect}
+      earlier={[]} problem={null} edit={(_, change) => change(step as never)} onDelete={() => {}} />);
+    const line = screen.getByText('бросок').closest('label')!;
+    // Нотацию пишут в начале строки — там же, где её читают.
+    const head = line.querySelector('.chips__text') as HTMLInputElement;
+    fireEvent.change(head, { target: { value: '3d15 + ' } });
+    fireEvent.keyDown(head, { key: 'Enter' });
+    expect(step.roll.die).toEqual({ const: '3d15' });
+  });
+
+  it('непонятая формула не уходит в данные, а показывается ошибкой', () => {
+    const steps = rollSteps();
+    const step = steps[0] as Record<string, any>;
+    const group = groupSteps(steps)[0]!;
+    render(<GroupCard group={group} position={1} system={system} effect={effect}
+      earlier={[]} problem={null} edit={(_, change) => change(step as never)} onDelete={() => {}} />);
+    const line = screen.getByText('бросок').closest('label')!;
+    const tail = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;
+    fireEvent.change(tail, { target: { value: '@ерунда' } });
+    fireEvent.keyDown(tail, { key: 'Enter' });
+    expect(step.roll.bonus).toEqual({ expr: '#armor' });
+    expect(line.querySelector('.field__error')).toBeTruthy();
+  });
+});

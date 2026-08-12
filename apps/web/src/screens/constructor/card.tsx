@@ -10,6 +10,7 @@ import { Card, CardHead, Field, Fold, Segmented, Verdict, Button, Select, Input 
 import type { CardGroup } from './cards.ts';
 import { checkReadback, changeReadback, numberReadback, type Segment } from './readback.ts';
 import { parseRollExpr, formatRollExpr, parseAmountExpr, formatAmountExpr } from './roll-expr.ts';
+import { compile } from '@vtt/engine/formula';
 import { FormulaChips } from '../../ui/formula-chips.tsx';
 import { SlotInput, chipOf, type SlotOption } from './slot-input.tsx';
 import type { SlotContext } from './slots.tsx';
@@ -177,21 +178,24 @@ function RollExprInput({ step, context, edit }: {
   // как всякая ссылка. Своё число («3d15», такого в словаре нет) остаётся
   // текстом — по виду сразу понятно, что перед вами.
   const die = step.roll?.die;
-  const dieChip = draft === null && die && typeof die === 'object' && 'constant' in die
-    ? chipOf(die, context)
-    : null;
+  const dieChip = die && typeof die === 'object' && 'constant' in die ? chipOf(die, context) : null;
   const shown = draft ?? (dieChip
     ? exprText(step.roll?.bonus)
     : formatRollExpr(step.roll, context.system));
 
   const commit = () => {
     if (draft === null) return;
-    // Кость стоит фишкой — строка правит только прибавку, иначе текст
-    // молча снёс бы ссылку на словарь.
-    if (dieChip || (die && typeof die === 'object' && 'constant' in die)) {
-      const bonus = draft.trim() ? parseAmountExpr(draft, context.system).bonus : null;
+    // Кость стоит фишкой, и строка обычно правит только прибавку. Но если
+    // человек НАБРАЛ нотацию — он меняет кость, а не пишет формулу: такой
+    // текст заменяет фишку, как и было до неё.
+    if (dieChip) {
+      const parsed = parseAmountExpr(draft, context.system);
+      const bonus = draft.trim() ? parsed.bonus : null;
+      const trouble = badFormula(bonus);
+      if (trouble) { setTrouble(trouble); return; }
       edit(0, target => {
         const roll = ((target as any).roll ??= {});
+        if (parsed.die !== undefined) roll.die = parsed.die;
         if (bonus === null || bonus === undefined) delete roll.bonus; else roll.bonus = bonus;
       });
       setDraft(null);
@@ -200,6 +204,8 @@ function RollExprInput({ step, context, edit }: {
     }
     const parsed = parseRollExpr(draft, context.system);
     if (parsed.error) { setTrouble(parsed.error); return; }
+    const trouble = badFormula(parsed.bonus);
+    if (trouble) { setTrouble(trouble); return; }
     edit(0, target => {
       const roll = ((target as any).roll ??= {});
       roll.die = parsed.die;
@@ -378,6 +384,20 @@ function AmountExprInput({ amount, apply, applyIndex, context, edit, onCreateFro
       />
     </Field>
   );
+}
+
+/**
+ * Формулу, которую не разобрать, нельзя пускать в данные молча: набранное
+ * «@…», которое ничего не выбрало, — обычный случай, и человек должен
+ * увидеть, что строка не понята, а не гадать за столом.
+ */
+function badFormula(bonus: unknown): string | null {
+  if (!bonus || typeof bonus !== 'object' || !('expr' in (bonus as object))) return null;
+  const text = String((bonus as { expr: unknown }).expr ?? '').trim();
+  if (!text) return null;
+  try { compile(text); return null; } catch (err) {
+    return (err as Error).message;
+  }
 }
 
 /** Текст прибавки как её набирают: формула строкой, число числом. */
