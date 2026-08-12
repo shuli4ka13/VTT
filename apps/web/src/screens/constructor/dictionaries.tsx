@@ -19,6 +19,7 @@
 // (sheet-tab.tsx): ключ/тег свежей записи следует за лейблом, пока запись
 // не встретилась нигде в мире; первая ссылка — замораживает его навсегда.
 
+import { useState } from 'react';
 import { useWorld, freeId, slugOf } from '../../store/world.ts';
 import { Columns } from '../../ui/layout.tsx';
 import { Card, CardHead, Input, Button, Fold, Verdict } from '../../ui/primitives.tsx';
@@ -143,6 +144,45 @@ export function DictionariesTab() {
 
 // ── кости ────────────────────────────────────────────────────────────────
 
+// Нотация набирается посимвольно («1», «1d», «1d2» — ни одно не разбирается
+// как NdM), а поле было управляемым и откатывало onChange на каждой такой
+// промежуточной строке — набрать «1d20» с клавиатуры было нельзя, работала
+// только вставка готовой строки целиком. Тот же приём, что RollExprInput
+// (card.tsx) и SlotInput (slot-input.tsx): набор живёт в местном черновике
+// и коммитится по уходу с поля или Enter; Escape возвращает как было.
+// Неразобранное — не молча отбрасывается, а показывается ошибкой поля.
+function DiceNotationInput({ notation, onCommit }: { notation: string; onCommit: (norm: string) => void }) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const [trouble, setTrouble] = useState<string | null>(null);
+  const shown = draft ?? notation;
+
+  const commit = () => {
+    if (draft === null) return;
+    const norm = normalizeDice(draft);
+    if (!norm) { setTrouble(`не разобрать «${draft}» — нужна запись вида 1d20`); return; }
+    onCommit(norm);
+    setDraft(null);
+    setTrouble(null);
+  };
+
+  return (
+    <>
+      <Input
+        mono
+        value={shown}
+        placeholder="1d20"
+        onChange={text => { setDraft(text); setTrouble(null); }}
+        onBlur={commit}
+        onKeyDown={e => {
+          if (e.key === 'Enter') commit();
+          if (e.key === 'Escape') { setDraft(null); setTrouble(null); }
+        }}
+      />
+      {trouble ? <span className="field__error">{trouble}</span> : null}
+    </>
+  );
+}
+
 function DiceSection({ system, editSystem }: Props) {
   const entries = Object.entries(system.constants ?? {}).filter(([, c]) => c.kind === 'die');
 
@@ -173,13 +213,9 @@ function DiceSection({ system, editSystem }: Props) {
                     renameKeyed(draft.constants, key, label, inUse);
                   })}
                 />
-                <Input
-                  mono
-                  value={notation}
-                  placeholder="1d20"
-                  onChange={text => {
-                    const norm = normalizeDice(text);
-                    if (!norm) return;
+                <DiceNotationInput
+                  notation={notation}
+                  onCommit={norm => {
                     const m = /^(\d+)d(\d+)$/.exec(norm)!;
                     editSystem(draft => {
                       const cur = draft.constants?.[key];

@@ -3,7 +3,7 @@
 // в том, чтобы форма карточки была ОДНА на всё приложение, а не сочинялась
 // заново на каждом экране.
 
-import type { ReactNode, ChangeEvent } from 'react';
+import type { ReactNode, ChangeEvent, FocusEvent, KeyboardEvent } from 'react';
 
 export function Card({ children, tone, className = '' }: {
   children: ReactNode;
@@ -48,13 +48,20 @@ export function Field({ label, hint, error, needed, children }: {
   );
 }
 
-export function Input({ value, onChange, placeholder, mono, invalid, type = 'text' }: {
+export function Input({ value, onChange, placeholder, mono, invalid, type = 'text', onBlur, onKeyDown }: {
   value: string | number;
   onChange: (value: string) => void;
   placeholder?: string;
   mono?: boolean;
   invalid?: boolean;
   type?: string;
+  /**
+   * Для полей с черновиком (набор коммитится по уходу/Enter, а не на каждый
+   * символ — тот же приём, что RollExprInput в card.tsx и SlotInput):
+   * onChange здесь пишет только в локальный черновик компонента-обёртки.
+   */
+  onBlur?: (e: FocusEvent<HTMLInputElement>) => void;
+  onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
 }) {
   return (
     <input
@@ -63,6 +70,8 @@ export function Input({ value, onChange, placeholder, mono, invalid, type = 'tex
       value={value}
       placeholder={placeholder}
       onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
+      onBlur={onBlur}
+      onKeyDown={onKeyDown}
     />
   );
 }

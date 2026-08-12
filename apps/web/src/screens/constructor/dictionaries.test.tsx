@@ -25,6 +25,41 @@ describe('Словари: кости, мишени бросков, таблиц�
     expect(dies.some(c => c.kind === 'die')).toBe(true);
   });
 
+  // Поле было управляемым и откатывало onChange на любой промежуточной строке
+  // («1», «1d» — ни одна не разбирается как NdM), поэтому с клавиатуры набрать
+  // «1d8» было нельзя, только вставить целиком. Печатаем посимвольно и
+  // проверяем, что каждая промежуточная строка остаётся в поле.
+  it('нотация кости набирается посимвольно — промежуточный ввод не откатывается', () => {
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ кость'));
+    const input = screen.getByPlaceholderText('1d20') as HTMLInputElement;
+
+    fireEvent.change(input, { target: { value: '1' } });
+    expect(input.value).toBe('1');
+    fireEvent.change(input, { target: { value: '1d' } });
+    expect(input.value).toBe('1d');
+    fireEvent.change(input, { target: { value: '1d8' } });
+    expect(input.value).toBe('1d8');
+
+    fireEvent.keyDown(input, { key: 'Enter' });
+    const dies = Object.values(useWorld.getState().system.constants ?? {});
+    expect(dies[0]?.dice).toEqual([{ count: 1, sides: 8 }]);
+  });
+
+  it('неразобранная запись остаётся в поле и показывается как ошибка, а не отбрасывается молча', () => {
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ кость'));
+    const input = screen.getByPlaceholderText('1d20') as HTMLInputElement;
+
+    fireEvent.change(input, { target: { value: 'abc' } });
+    fireEvent.blur(input);
+
+    expect(input.value).toBe('abc');
+    expect(screen.getByText(/не разобрать/)).toBeTruthy();
+    const dies = Object.values(useWorld.getState().system.constants ?? {});
+    expect(dies[0]?.dice).toEqual([{ count: 1, sides: 20 }]);
+  });
+
   // Тег рождается заготовкой («бросок»), но пока запись не встретилась
   // нигде в мире — следует за лейблом при наборе (тот же приём, что и у
   // тега поля в sheet-tab.tsx). Реальный ввод в Input, не прямая правка стора.
