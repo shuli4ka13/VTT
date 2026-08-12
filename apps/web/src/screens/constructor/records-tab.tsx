@@ -23,7 +23,7 @@ const BASIS = [
 ] as const;
 
 const PROP_KINDS = [
-  ['dice', 'кость (2d6)'],
+  ['dice', 'кость'],
   ['number', 'число'],
   ['text', 'текст'],
   ['expr', 'формула'],

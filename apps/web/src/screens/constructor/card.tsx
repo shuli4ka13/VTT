@@ -192,7 +192,7 @@ function RollExprInput({ step, context, edit }: {
       <FormulaChips
         value={shown}
         system={context.system}
-        placeholder="1d20 + @Бонус атаки"
+        placeholder="кость и прибавка: 1d20 + @поле"
         onChange={next => { setDraft(next); setTrouble(null); }}
         onBlur={commit}
         onKeyDown={e => {
@@ -281,7 +281,7 @@ function AmountExprInput({ amount, apply, applyIndex, context, edit, onCreateFro
       <FormulaChips
         value={shown}
         system={context.system}
-        placeholder={diceChip ? 'и ещё: @Мод Силы, 2…' : '1d8 + @Мод Силы'}
+        placeholder={diceChip ? 'и ещё: @поле, число…' : 'кости и прибавка: 2d6 + @поле'}
         extraOptions={targetChip ? needs : [...fields, ...needs]}
         prefix={
           <>
@@ -588,7 +588,7 @@ function NumberBody({ step, context, edit, onAddParam }: {
         <>
           <Field label="кости">
             <SlotInput
-              value={step.dice} context={context} dice placeholder="какие кости: 1d8, 2d6…"
+              value={step.dice} context={context} dice placeholder="кости или из записи"
               onChange={next => edit(0, draft => { (draft as any).dice = next ?? undefined; })}
               onCreateFromRecord={fromRecord('кости', 'dice')}
             />

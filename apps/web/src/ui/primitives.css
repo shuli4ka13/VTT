@@ -333,7 +333,10 @@
   min-height: 32px; padding: var(--s-1) var(--s-3); cursor: text;
   background: var(--bg-sunken); border: 1px solid var(--border); border-radius: var(--r-2);
 }
-.chips__row:focus-within { border-color: var(--accent); }
+/* Фокус показывает СТРОКА целиком: кольцо вокруг каждого текстового куска
+   рисовало коробку внутри коробки — будто «1d20» живёт в своём поле. */
+.chips__row:focus-within { border-color: var(--accent); box-shadow: var(--focus); }
+.chips__text:focus-visible, .chips__op:focus-visible { box-shadow: none; }
 .chips__text {
   flex: 0 1 auto; min-width: 8px; border: none; background: none; outline: none;
   font-family: var(--font-mono); font-size: var(--fs-3); color: var(--text); padding: var(--s-1) 0;

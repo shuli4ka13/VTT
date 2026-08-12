@@ -55,7 +55,7 @@ describe('GroupCard', () => {
       earlier={[]} problem={null}
       edit={(at, change) => { editedAt = at; change(amount); }}
       onDelete={() => {}} />);
-    const value = screen.getByPlaceholderText('1d8 + @Мод Силы');
+    const value = screen.getByPlaceholderText('кости и прибавка: 2d6 + @поле');
     fireEvent.change(value, { target: { value: '1d8 + #power' } });
     fireEvent.keyDown(value, { key: 'Enter' });
     expect(editedAt).toBe(0);
