@@ -8,6 +8,9 @@
 //   kind: 'roll'  — правит БРОСОК. Преимущество — это не «+2», это два к20 и выбор
 //                   лучшего. Не число, не складывается: два преимущества дают
 //                   одно преимущество, а помеха гасит преимущество целиком.
+//                   Сам модификатор механики не знает: он называет ЗАПИСЬ
+//                   словаря «Правки броска» (`system.roll_edits`), а что она
+//                   делает и чем гасится — сказано в записи.
 //
 // Смешивать их нельзя. Попытка выразить преимущество числом — самая частая
 // ошибка в конструкторах систем: она работает для 5e примерно никогда,
@@ -17,9 +20,8 @@ import { compile } from '../formula/index.ts';
 import { assertTarget } from './targets.ts';
 import { roomEffects, wornEffects, activationOf } from './effects.ts';
 import { EngineError } from './errors.ts';
-import type { System, Sheet, Compendium, Modifier } from '../model/types.ts';
+import type { System, Sheet, Compendium, Modifier, RollEdit } from '../model/types.ts';
 import type { Pass } from './calc.ts';
-import type { RollMode } from './dice.ts';
 
 /** Откуда приехал модификатор — предмет, эффект на листе или правило комнаты. */
 export interface ModifierSource {
@@ -40,9 +42,9 @@ export interface CollectedModifiers {
 
 export interface RollResolution {
   tag: string;
-  mode: RollMode;
+  /** Записи словаря «Правки броска», уцелевшие после гашения. */
+  edits: RollEdit[];
   bonus: number;
-  methods: string[];
   sources: unknown[];
 }
 
@@ -148,29 +150,37 @@ export function resolveRoll(
   const mods = (pass.modifiers ? pass.modifiers.roll.get(rollTag) || [] : [])
     .filter(m => conditionHolds(m, pass));
 
-  const hasAdvantage = mods.some(m => m.effect === 'advantage');
-  const hasDisadvantage = mods.some(m => m.effect === 'disadvantage');
+  // Ключи записей словаря, названные модификаторами. Не сумма и не счёт:
+  // две одинаковых правки дают одну — это закон движка (нестакаемость).
+  const named = [...new Set(mods.map(m => m.edit).filter(Boolean))] as string[];
+  const dictionary = system.roll_edits || {};
+  for (const key of named) {
+    if (!dictionary[key]) {
+      throw new EngineError(
+        `модификатор ссылается на правку броска «${key}», которой нет в словаре системы`);
+    }
+  }
 
-  // Не сумма и не счёт. Помеха гасит преимущество целиком, сколько бы
-  // источников ни было с каждой стороны.
-  let mode: RollMode = 'normal';
-  if (hasAdvantage && !hasDisadvantage) mode = 'advantage';
-  else if (hasDisadvantage && !hasAdvantage) mode = 'disadvantage';
+  // Гашение — ДАННЫЕ, а не закон движка: «Помеха гасится Преимуществом»
+  // объявлено в самой записи. Взаимно объявленная пара гасит друг друга
+  // целиком, сколько бы источников ни было с каждой стороны (правило 5e);
+  // мир, где они складываются, просто не заполняет это поле.
+  const surviving = named.filter(key => {
+    const canceledBy = dictionary[key]!.canceledBy;
+    return !canceledBy || !named.includes(canceledBy);
+  });
 
-  // Числовая прибавка к броску — третье, отдельное от режима. «+5 ко всем
+  // Числовая прибавка к броску — третье, отдельное от правок. «+5 ко всем
   // проверкам» это не преимущество и не правка характеристики: складывается
-  // обычной арифметикой и на выбор кости не влияет.
-  const adds = mods.filter(m => m.op === 'add' || m.op === 'mul');
-  const bonus = adds.length ? totalOf(adds.filter(m => m.op === 'add'), pass, rollTag) : 0;
+  // обычной арифметикой и на состав костей не влияет.
+  const adds = mods.filter(m => m.op === 'add');
+  const bonus = adds.length ? totalOf(adds, pass, rollTag) : 0;
 
   return {
     tag: rollTag,
-    mode,
+    edits: surviving.map(key => ({ ...dictionary[key]!, label: dictionary[key]!.label || key })),
     bonus,
-    // Механику отыгрыша задаёт система, а не движок: переброс с выбором лучшего,
-    // добавление кости, сдвиг степени успеха — всё это разные способы.
-    methods: [...new Set(mods.map(m => m.method).filter(Boolean))] as string[],
-    sources: mods.map(m => ({ ...m.source, effect: m.effect, method: m.method })),
+    sources: mods.map(m => ({ ...m.source, edit: m.edit })),
   };
 }
 

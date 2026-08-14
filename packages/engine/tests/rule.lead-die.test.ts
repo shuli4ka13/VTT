@@ -48,7 +48,8 @@ group('ведущая кость', () => {
   group('total есть всегда', () => {
     test('одна к20: total равен выпавшему, именованных частей нет', () => {
       deepEq(rollLead(d20, queue(14)), {
-        rolls: [14], kept: 14, total: 14, parts: {}, mode: 'normal',
+        rolls: [14], kept: 14, total: 14, parts: {},
+        edits: [], versusShift: 0,
         read: 'sum', tally: { dice: 1, atMax: 0, atMin: 0 },
       });
     });
@@ -76,35 +77,70 @@ group('ведущая кость', () => {
     });
   });
 
-  group('режим броска', () => {
-    test('преимущество на одиночной кости: две, берётся лучшая', () => {
-      const r = rollLead(d20, queue(4, 17), 'advantage');
+  group('правки броска приезжают записями словаря', () => {
+    // Записи именует АВТОР мира; движок складывает примитивы и не знает
+    // ни одного из этих имён лично.
+    const advantage = {
+      label: 'Преимущество',
+      ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }],
+    };
+    const disadvantage = {
+      label: 'Помеха',
+      ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }],
+    };
+
+    test('преимущество: добавить кость плюс оставить лучшую', () => {
+      const r = rollLead(d20, queue(4, 17), [advantage]);
       deepEq(r.rolls, [4, 17]);
       eq(r.kept, 17);
       eq(r.total, 17);
-      eq(r.mode, 'advantage');
+      deepEq(r.edits, ['Преимущество'], 'журналу нужно ИМЯ автора, не примитивы');
     });
 
-    test('помеха на одиночной кости: две, берётся худшая', () => {
-      const r = rollLead(d20, queue(4, 17), 'disadvantage');
-      eq(r.total, 4);
+    test('помеха: та же добавленная кость, оставлена худшая', () => {
+      eq(rollLead(d20, queue(4, 17), [disadvantage]).total, 4);
     });
 
-    test('на составном броске режим не отыгрывается — честно помечено в результате', () => {
-      // Что значит «преимущество» для пары Надежда/Страх, решает система,
-      // а не движок; пока — в докe производственных отличий.
-      const r = rollLead(daggerheart, queue(7, 4), 'advantage');
-      eq(r.mode, 'normal', 'молча выбрать за систему было бы хуже, чем не выбрать');
-      eq(r.total, 11);
+    test('на составном броске правка тоже работает — сумма из трёх костей', () => {
+      // Что значит «преимущество» для пары Надежда/Страх, решает автор:
+      // добавленная к12 идёт в общую сумму, части остаются как были.
+      const r = rollLead(daggerheart, queue(7, 4, 9), [{ label: 'Прилив', ops: [{ op: 'addDie' }] }]);
+      eq(r.rolls.length, 3);
+      eq(r.total, 20);
+      deepEq(r.parts, { hope: 7, fear: 4 }, 'добавленная кость — ничья, в части не лезет');
     });
 
-    test('на чтении, отличном от суммы, режим тоже не отыгрывается', () => {
-      // «Преимущество для пула» — вопрос правок заявки следующего этапа
-      // (+1 кость в Blades), а не выбора лучшей из двух СУММ пулов.
+    test('пул Blades: та же правка даёт лишнюю кость, чтение уже читает лучшую', () => {
       const pool = { kind: 'die', dice: [{ count: 2, sides: 6 }], read: 'best' };
-      const r = rollLead(pool, queue(3, 5), 'advantage');
-      eq(r.mode, 'normal');
-      eq(r.total, 5);
+      const r = rollLead(pool, queue(3, 5, 6), [{ label: 'Помощь', ops: [{ op: 'addDie' }] }]);
+      deepEq(r.rolls, [3, 5, 6]);
+      eq(r.total, 6);
+    });
+
+    test('ступень кости: Savage Worlds — к6 становится к8', () => {
+      const trait = { kind: 'die', dice: [{ count: 1, sides: 6 }] };
+      const asked: number[] = [];
+      const spy = (sides: number) => { asked.push(sides); return 3; };
+      rollLead(trait, spy, [{ label: 'Ступень', ops: [{ op: 'dieStep', by: 1 }] }]);
+      deepEq(asked, [8], 'кинута кость следующей величины, а не прежняя');
+    });
+
+    test('сдвиг порога не трогает кости — его применяет сравнивающий', () => {
+      const r = rollLead(d20, queue(11), [{ label: 'Фора', ops: [{ op: 'shiftVersus', by: -2 }] }]);
+      eq(r.total, 11, 'бросок как был');
+      eq(r.versusShift, -2, 'сдвиг уехал наверх, к порогу');
+    });
+
+    test('взрыв — правка РЕЗУЛЬТАТА: максимум кидается ещё раз и прибавляется', () => {
+      const d6 = { kind: 'die', dice: [{ count: 1, sides: 6 }] };
+      const r = rollLead(d6, queue(6, 6, 2), [{ label: 'Взрыв', ops: [{ op: 'explode' }] }]);
+      eq(r.total, 14, '6 + 6 + 2');
+      deepEq(r.tally, { dice: 1, atMax: 1, atMin: 0 },
+        'счёт снят с НАТУРАЛЬНОГО броска: после взрыва максимума уже не видно');
+    });
+
+    test('неизвестный примитив — ошибка перечисляет реестр', () => {
+      throws(() => rollLead(d20, queue(1), [{ label: 'Чудо', ops: [{ op: 'котик' }] }]), 'котик');
     });
   });
 

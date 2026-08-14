@@ -119,6 +119,28 @@ export const rangeTable = z.object({
   })),
 });
 
+// ── правки броска: словарь автора ───────────────────────────────────────
+
+/**
+ * Один примитив правки. `op` — имя из реестра движка (engine/roll-edits.ts):
+ * добавить кость, оставить лучшие, ступень кости, сдвиг порога, прибавка,
+ * взрыв. Параметры — сверх op, их знает модуль примитива.
+ */
+export const rollEditOp = z.object({ op: z.string().min(1) }).passthrough();
+
+/**
+ * Запись словаря «Правки броска». Имя даёт АВТОР («Преимущество», «Фора»,
+ * «Вдохновение») — механике доменные слова запрещены. Что запись делает —
+ * список примитивов; «гасится: …» — ссылка на другую запись, и это данные,
+ * а не закон движка. Нестакаемость записи с самой собой — закон движка:
+ * два преимущества дают одно.
+ */
+export const rollEdit = z.object({
+  label: z.string().optional(),
+  ops: z.array(rollEditOp),
+  canceledBy: z.string().optional(),
+}).passthrough();
+
 // ── модификаторы: две породы, и это принципиально ───────────────────────
 
 export const valueModifier = z.object({
@@ -130,12 +152,22 @@ export const valueModifier = z.object({
   condition: z.string().nullable().optional(),
 }).passthrough();
 
-/** Правит БРОСОК: не число, не складывается, помеха гасит преимущество. */
+/**
+ * Правит БРОСОК. Двумя способами:
+ *   edit — ссылка на запись словаря «Правки броска» (`system.roll_edits`):
+ *          не число, не складывается, гашение объявлено в самой записи;
+ *   op   — числовая прибавка к броску («+5 ко всем проверкам»): обычная
+ *          арифметика, на состав и чтение костей не влияет.
+ * Старая форма `effect: 'advantage'|'disadvantage'` переводится в edit
+ * конвертером (model/unify.ts) — движок её не знает.
+ */
 export const rollModifier = z.object({
   kind: z.literal('roll'),
   target: z.string(),
-  effect: z.enum(['advantage', 'disadvantage']),
-  method: z.string().optional(),
+  edit: z.string().min(1).optional(),
+  op: z.string().optional(),
+  value: z.unknown().optional(),
+  stacking: z.string().optional(),
   condition: z.string().nullable().optional(),
 }).passthrough();
 
@@ -238,6 +270,8 @@ export const system = z.object({
   constants: z.record(systemConstant).optional(),
   tables: z.record(rangeTable).optional(),
   rolls: z.array(z.object({ tag: z.string(), label: z.string() })).optional(),
+  /** Словарь «Правки броска»: записи с именами автора, ссылаются модификаторы. */
+  roll_edits: z.record(rollEdit).optional(),
   action_types: z.record(z.object({
     label: z.string(),
     icon: z.string().optional(),
@@ -304,6 +338,8 @@ export type DiceTerm = z.infer<typeof diceTerm>;
 export type DiceReading = z.infer<typeof diceReading>;
 export type DieConstant = z.infer<typeof dieConstant>;
 export type SystemConstant = z.infer<typeof systemConstant>;
+export type RollEditOp = z.infer<typeof rollEditOp>;
+export type RollEdit = z.infer<typeof rollEdit>;
 export type RangeTable = z.infer<typeof rangeTable>;
 export type Activation = z.infer<typeof activation>;
 export type DurationKind = z.infer<typeof durationKind>;

@@ -60,6 +60,117 @@ const hasDirect = (system: Loose): boolean => {
   return found;
 };
 
+// ── правки броска: зашитый режим → запись словаря автора ────────────────
+//
+// Было: модификатор нёс `effect: 'advantage'` и `method: 'rerollBest'` —
+// движок знал слово «преимущество» лично, а гашение было законом кода.
+// Стало: модификатор называет ЗАПИСЬ словаря (`system.roll_edits`), запись
+// собрана из примитивов и сама говорит, чем гасится. Конвертер заводит две
+// стартовые записи с привычными именами — дальше автор волен их переименовать,
+// разделить или добавить третью.
+
+const LEGACY_EDITS: Record<string, Loose> = {
+  advantage: {
+    label: 'Преимущество',
+    ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }],
+    canceledBy: 'disadvantage',
+  },
+  disadvantage: {
+    label: 'Помеха',
+    ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }],
+    canceledBy: 'advantage',
+  },
+};
+
+/** Модификаторы одного носителя: старую форму — на ссылку в словарь. */
+function convertRollMods(mods: Loose[] | undefined, used: Set<string>): Loose[] | null {
+  if (!mods?.length) return null;
+  let changed = false;
+  const next = mods.map(mod => {
+    if (mod.kind !== 'roll' || !mod.effect) return mod;
+    const key = String(mod.effect);
+    used.add(key);
+    changed = true;
+    // `method` уходит вместе с `effect`: чем правка отыгрывается, сказано
+    // теперь в самой записи, а не в каждой ссылке на неё.
+    const { effect: _effect, method: _method, ...rest } = mod;
+    return { ...rest, edit: key };
+  });
+  return changed ? next : null;
+}
+
+const hasLegacyRoll = (carriers: Loose[]) =>
+  carriers.some(c => ((c.modifiers ?? []) as Loose[]).some(m => m.kind === 'roll' && m.effect));
+
+/**
+ * Перевод правок броска на словарь — система и компендиум разом: бонусы
+ * НОСИТ И ПРЕДМЕТ («меч даёт преимущество»), и переводить только систему
+ * значило бы оставить мир на двух формах сразу.
+ *
+ * Чистая: миру без старой формы возвращает его же. Заводит только те записи,
+ * на которые правда ссылаются, и не трогает уже существующие в словаре —
+ * свои имена автора важнее наших.
+ */
+function convertRollEdits(
+  system: System, compendium?: Compendium,
+): { system: System; compendium?: Compendium } {
+  const source = system as unknown as Loose;
+  const items = ((compendium?.items ?? []) as unknown as Loose[]);
+  if (!hasLegacyRoll(Object.values(source.effects ?? {}) as Loose[]) && !hasLegacyRoll(items)) {
+    return { system, compendium };
+  }
+
+  const next: Loose = JSON.parse(JSON.stringify(source));
+  const used = new Set<string>();
+
+  for (const effect of Object.values(next.effects ?? {}) as Loose[]) {
+    const converted = convertRollMods(effect.modifiers, used);
+    if (converted) effect.modifiers = converted;
+  }
+
+  let nextCompendium = compendium;
+  if (compendium && hasLegacyRoll(items)) {
+    const copy: Loose = JSON.parse(JSON.stringify(compendium));
+    for (const item of (copy.items ?? []) as Loose[]) {
+      const converted = convertRollMods(item.modifiers, used);
+      if (converted) item.modifiers = converted;
+    }
+    nextCompendium = copy as unknown as Compendium;
+  }
+
+  next.roll_edits ??= {};
+  for (const key of used) {
+    if (!next.roll_edits[key] && LEGACY_EDITS[key]) {
+      next.roll_edits[key] = JSON.parse(JSON.stringify(LEGACY_EDITS[key]));
+    }
+  }
+  // Пара гасит друг друга только если в мире есть обе: одинокое преимущество
+  // ссылалось бы на несуществующую запись, а это ошибка приговора.
+  for (const [key, edit] of Object.entries(next.roll_edits) as [string, Loose][]) {
+    if (edit.canceledBy && !next.roll_edits[edit.canceledBy]) delete edit.canceledBy;
+    if (!edit.label) edit.label = key;
+  }
+
+  // `advantage.methods` — прежний межсистемный справочник механик. Механика
+  // переехала в записи словаря, справочник больше ни на что не влияет.
+  delete next.advantage;
+
+  return { system: next as unknown as System, compendium: nextCompendium };
+}
+
+/** Только система — для вызывающих, у кого компендиума под рукой нет. */
+export function unifyRollEdits(system: System): System {
+  return convertRollEdits(system).system;
+}
+
+/** Мир целиком — этим заканчивает миграцию с версии 1 (model/migrate.ts). */
+export function unifyRollEditsWorld<T extends { system: System; compendium: Compendium }>(
+  world: T,
+): T {
+  const next = convertRollEdits(world.system, world.compendium);
+  return { ...world, system: next.system, compendium: next.compendium ?? world.compendium };
+}
+
 /** Переименования одного эффекта: propKey записи → paramKey потребности. */
 type EffectRenames = Map<string, string>;
 /** Переименования всего мира, по эффекту — что писать в args любого вызова. */
@@ -140,7 +251,7 @@ function unifySystem(system: System): { system: System; renames: Renames } {
  * закроет: он живёт не в системе. Для целого мира — `unifyWorld`.
  */
 export function unifyRecordRefs(system: System): System {
-  return unifySystem(system).system;
+  return unifyRollEdits(unifySystem(system).system);
 }
 
 /** Одна привязка (activities-запись либо record.effect/record.args) закрывает
@@ -211,6 +322,7 @@ export function unifyWorld(
   world: { system: System; compendium: Compendium },
 ): { system: System; compendium: Compendium } {
   const { system, renames } = unifySystem(world.system);
-  const compendium = unifyCompendium(world.compendium, renames);
-  return { system, compendium };
+  const withRefs = unifyCompendium(world.compendium, renames);
+  const edited = convertRollEdits(system, withRefs);
+  return { system: edited.system, compendium: edited.compendium ?? withRefs };
 }

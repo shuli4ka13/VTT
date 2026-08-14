@@ -85,6 +85,25 @@ describe('схема стережёт инварианты, а не только
     expect(die('4'), 'строка счётом не бывает — это дыра черновика').toBe(false);
   });
 
+  it('roll-модификатор называет ЗАПИСЬ словаря, а не механику', () => {
+    const mod = (extra: object) =>
+      W.modifier.safeParse({ kind: 'roll', target: 'attack_roll', ...extra }).success;
+    expect(mod({ edit: 'преимущество' }), 'ссылка на запись словаря').toBe(true);
+    expect(mod({ op: 'add', value: 5 }), 'числовая прибавка — другая порода, но тоже roll').toBe(true);
+    // Старая форма больше не производится, но чужой мир её ещё принесёт:
+    // схема пропускает (passthrough), а конвертер переводит — терять данные
+    // на входе нельзя, это критерий №1.
+    expect(mod({ effect: 'advantage', method: 'rerollBest' }), 'старый мир не отвергается').toBe(true);
+  });
+
+  it('запись словаря правок: имя автора, примитивы, «гасится»', () => {
+    const edit = (value: unknown) => W.rollEdit.safeParse(value).success;
+    expect(edit({ label: 'Фора', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }] })).toBe(true);
+    expect(edit({ label: 'Помеха', ops: [], canceledBy: 'advantage' }), 'пустая правка — законна').toBe(true);
+    expect(edit({ label: 'Кривая', ops: [{ n: 1 }] }), 'примитив без имени — не примитив').toBe(false);
+    expect(edit({ label: 'Без списка' }), 'ops обязателен: правка без действий не описана').toBe(false);
+  });
+
   it('чтение кости: имя или объект с kind; мусор не проходит', () => {
     const die = (read: unknown) =>
       W.dieConstant.safeParse({ kind: 'die', dice: [{ sides: 6 }], read }).success;

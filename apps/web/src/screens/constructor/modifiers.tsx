@@ -13,7 +13,7 @@
 // не работает вовсе.
 
 import type { System, Modifier } from '@vtt/schema';
-import { Card, CardHead, Field, Input, Select, Button, Segmented, Empty } from '../../ui/primitives.tsx';
+import { Card, CardHead, Field, Input, Select, Button, Empty } from '../../ui/primitives.tsx';
 import { FormulaInput } from '../../ui/formula.tsx';
 import { targets } from '@vtt/engine/engine/targets';
 
@@ -29,10 +29,9 @@ const STACKING = [
   ['override', 'последний перебивает'],
 ] as const;
 
-const EFFECTS = [
-  { key: 'advantage' as const, label: 'Преимущество', icon: '▲' },
-  { key: 'disadvantage' as const, label: 'Помеха', icon: '▼' },
-];
+// Списка «преимущество / помеха» здесь нет и быть не может: как правки зовут
+// в этом мире, решает автор в словаре «Правки броска». Модификатор только
+// показывает объявленное — как слот показывает объявленные кости.
 
 export function ModifiersEditor({ system, modifiers, onEdit }: {
   system: System;
@@ -42,6 +41,7 @@ export function ModifiersEditor({ system, modifiers, onEdit }: {
   const all = targets(system) as { tag: string; label: string; kind: string; group?: string }[];
   const valueTargets = all.filter(t => t.kind === 'value' || t.kind === 'incoming');
   const rollTargets = all.filter(t => t.kind === 'roll');
+  const edits = Object.entries(system.roll_edits ?? {});
 
   return (
     <>
@@ -53,9 +53,17 @@ export function ModifiersEditor({ system, modifiers, onEdit }: {
         })}>
           + правит значение
         </Button>
-        <Button size="sm" onClick={() => onEdit(draft => {
-          draft.push({ kind: 'roll', target: rollTargets[0]?.tag ?? '', effect: 'advantage', method: 'rerollBest', condition: null });
-        })} disabled={rollTargets.length === 0}>
+        <Button
+          size="sm"
+          onClick={() => onEdit(draft => {
+            draft.push({
+              kind: 'roll', target: rollTargets[0]?.tag ?? '',
+              edit: edits[0]?.[0] ?? '', condition: null,
+            });
+          })}
+          disabled={rollTargets.length === 0 || edits.length === 0}
+          title={edits.length === 0 ? 'Сначала заведите правку в словаре «Правки броска»' : undefined}
+        >
           + правит бросок
         </Button>
       </div>
@@ -120,11 +128,12 @@ export function ModifiersEditor({ system, modifiers, onEdit }: {
                   onChange={target => onEdit(draft => { (draft[index] as Modifier).target = target; })}
                 />
               </Field>
-              <Field label="Что делает">
-                <Segmented
-                  value={modifier.effect}
-                  options={EFFECTS}
-                  onChange={effect => onEdit(draft => { (draft[index] as { effect: string }).effect = effect; })}
+              <Field label="Какая правка" needed={!modifier.edit}>
+                <Select
+                  value={String(modifier.edit ?? '')}
+                  options={[['', '— выберите правку —'],
+                    ...edits.map(([key, e]) => [key, e.label || key] as const)] as never}
+                  onChange={edit => onEdit(draft => { (draft[index] as { edit: string }).edit = edit; })}
                 />
               </Field>
             </div>

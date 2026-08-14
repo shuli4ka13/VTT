@@ -15,6 +15,7 @@ import type { System, Sheet, Compendium } from '@vtt/schema';
 import { newPass, calc } from '@vtt/engine/engine/calc';
 import { resolveRoll } from '@vtt/engine/engine/modifiers';
 import type { Pass } from '@vtt/engine/engine/calc';
+import type { RollResolution } from '@vtt/engine/engine/modifiers';
 
 export type Computed =
   | { ok: true; value: unknown }
@@ -23,8 +24,8 @@ export type Computed =
 export interface Reader {
   /** Значение поля. Ошибка не бросается — она возвращается и рисуется в ячейке. */
   valueOf: (tag: string) => Computed;
-  /** Режим броска: обычный, преимущество или помеха. */
-  rollOf: (tag: string) => { mode: string; bonus: number; methods: string[] } | null;
+  /** Разбор броска: какие правки словаря на нём висят и числовая прибавка. */
+  rollOf: (tag: string) => RollResolution | null;
 }
 
 export function useReader(system: System, sheet: Sheet | null, compendium: Compendium): Reader {

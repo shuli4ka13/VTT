@@ -12,17 +12,6 @@ export interface NotationRoll {
   total: number;
 }
 
-export type RollMode = 'normal' | 'advantage' | 'disadvantage';
-
-export interface CheckRoll {
-  sides: number;
-  mode: RollMode;
-  rolls: number[];
-  kept: number;
-  bonus: number;
-  total: number;
-}
-
 export const randomDie: Die = sides => 1 + Math.floor(Math.random() * sides);
 
 const NOTATION = /^(\d+)d(\d+)$/;
@@ -39,19 +28,6 @@ export function rollNotation(notation: unknown, die: Die): NotationRoll {
   return { notation, rolls, total: rolls.reduce((a, b) => a + b, 0) };
 }
 
-// Проверка: кость плюс бонус, с учётом режима броска.
-// Режим приходит из модификаторов породы «правящие бросок» (см. modifiers.ts)
-// и здесь только отыгрывается.
-export function rollCheck(
-  { sides = 20, bonus = 0, mode = 'normal' as RollMode },
-  die: Die,
-): CheckRoll {
-  const rolls = [die(sides)];
-  if (mode === 'advantage' || mode === 'disadvantage') rolls.push(die(sides));
-
-  const kept = mode === 'advantage' ? Math.max(...rolls)
-    : mode === 'disadvantage' ? Math.min(...rolls)
-      : rolls[0]!;
-
-  return { sides, mode, rolls, kept, bonus, total: kept + bonus };
-}
+// Проверки бросает engine/lead-die.ts: состав, правки и чтение живут там,
+// и второго способа кинуть кость с преимуществом в движке нет намеренно —
+// разойтись двум реализациям одного броска проще всего.

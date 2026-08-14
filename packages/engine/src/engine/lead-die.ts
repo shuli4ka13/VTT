@@ -14,14 +14,18 @@
 // сумма. Порог сравнивает его одинаково во всех системах; именованные части
 // лежат сверх него, и смотрит на них только тот шаг, которому они нужны.
 //
+// Правки броска (преимущество и его родня) приезжают сюда СПИСКОМ ЗАПИСЕЙ
+// словаря системы, а не режимом: что запись делает — сложено из примитивов
+// (engine/roll-edits.ts), как её зовут — дело автора мира.
+//
 // Броски правил ссылаются на константу ({ constant: 'lead_die' }), а не пишут
 // «1d20»: смена размера кости в данных системы меняет все броски разом.
 
 import { EngineError } from './errors.ts';
-import { readingOf, applyReading } from './readings.ts';
+import { applyReading } from './readings.ts';
+import { claimOf, applyClaimEdits, applyResultEdits, keptDice } from './roll-edits.ts';
 import type { RolledDie } from './readings.ts';
-import type { System, DieConstant, Die } from '../model/types.ts';
-import type { RollMode } from './dice.ts';
+import type { System, DieConstant, Die, RollEdit } from '../model/types.ts';
 
 /**
  * Результат ведущего броска. `total` есть ВСЕГДА — порог сравнивает его
@@ -32,11 +36,15 @@ export interface LeadRoll {
   kept: number | null;
   total: number;
   parts: Record<string, number>;
-  mode: RollMode;
+  /** Какие записи словаря правок применились — журналу и трассе. */
+  edits: string[];
+  /** Сдвиг порога от правок: его прибавляет сравнивающий шаг. */
+  versusShift: number;
   /** Чем читали — журнал пишет «успехов 2» и «сумма 11» по-разному. */
   read: string;
-  /** Счёт по выпавшему: кинуто костей, из них на максимуме и на единице.
-   * Дёшев и ждёт степеней следующего этапа: глитч Shadowrun — единиц больше
+  /** Счёт по НАТУРАЛЬНО выпавшему: кинуто костей, из них на максимуме и на
+   * единице. Считается до правок результата — «выпал максимум» это про
+   * натуральную кость. Ждёт степеней: глитч Shadowrun — единиц больше
    * полпула, криты Blades и Daggerheart — по максимумам. */
   tally: { dice: number; atMax: number; atMin: number };
 }
@@ -84,50 +92,50 @@ export function unfoldDice(def: DieConstant, resolveCount?: CountResolver): DieC
   return { ...def, dice };
 }
 
-export function rollLead(def: DieConstant, die: Die, mode: RollMode = 'normal'): LeadRoll {
-  const spec = readingOf(def.read);
-  const dice = def.dice || [];
-  const first = dice[0];
-  const single = dice.length === 1 && !!first && (first.count || 1) === 1 && !first.name
-    && spec.kind === 'sum';
-
-  // Преимущество и помеха определены для одиночной кости с чтением-суммой:
-  // две, берём лучшую или худшую. Что они значат для составного броска (пара
-  // Надежда/Страх) или пула с другим чтением, решает система, а не движок —
-  // до этапа правок заявки честно не отыгрываем и говорим об этом ('normal'
-  // в результате); см. docs/production-differences.md.
-  if (single && (mode === 'advantage' || mode === 'disadvantage')) {
-    const sides = first!.sides;
-    const entries: RolledDie[] = [{ value: die(sides), sides }, { value: die(sides), sides }];
-    const values = entries.map(e => e.value);
-    const kept = mode === 'advantage' ? Math.max(...values) : Math.min(...values);
-    return {
-      rolls: values, kept, total: kept, parts: {}, mode,
-      read: spec.kind, tally: tallyOf(entries),
-    };
-  }
+/**
+ * Бросок целиком: заявка → правки заявки → кости → правки результата →
+ * чтение. Правки приезжают записями словаря системы; движок не знает
+ * ни одного их имени — только примитивы, из которых они собраны.
+ */
+export function rollLead(def: DieConstant, die: Die, edits: RollEdit[] = []): LeadRoll {
+  const claim = applyClaimEdits(claimOf(def), edits);
 
   const entries: RolledDie[] = [];
-  const parts: Record<string, number> = {};
-  for (const term of dice) {
+  for (const term of claim.dice) {
     const count = term.count ?? 1;
     if (typeof count !== 'number') {
       throw new EngineError(
         `счёт костей «${def.label || '?'}» — неразрешённая ссылка; сперва unfoldDice`);
     }
-    let sum = 0;
     for (let i = 0; i < count; i++) {
-      const value = die(term.sides);
-      entries.push({ value, sides: term.sides, ...(term.name ? { name: String(term.name) } : {}) });
-      sum += value;
+      entries.push({
+        value: die(term.sides), sides: term.sides,
+        ...(term.name ? { name: String(term.name) } : {}),
+      });
     }
-    if (term.name) parts[String(term.name)] = sum;
   }
 
-  const { total, kept } = applyReading(entries, spec);
+  // Счёт по натуральному броску снимается до правок результата: взрыв
+  // выносит значение за грани, и «выпал максимум» после него уже не прочесть.
+  const tally = tallyOf(entries);
+
+  const grown = applyResultEdits(entries, edits, die);
+  const { total, kept } = applyReading(keptDice(grown, claim.keep), claim.read);
+
+  // Именованные части — по выросшим костям: взорвавшаяся Надежда должна быть
+  // видна той величиной, которой она пошла в total.
+  const parts: Record<string, number> = {};
+  for (const entry of grown) {
+    if (entry.name) parts[entry.name] = (parts[entry.name] ?? 0) + entry.value;
+  }
+
   return {
-    rolls: entries.map(e => e.value), kept, total, parts, mode: 'normal',
-    read: spec.kind, tally: tallyOf(entries),
+    rolls: grown.map(e => e.value),
+    kept, total, parts,
+    edits: edits.map(e => e.label || '').filter(Boolean),
+    versusShift: claim.versusShift,
+    read: claim.read.kind,
+    tally,
   };
 }
 

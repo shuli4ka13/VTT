@@ -181,6 +181,12 @@
   background: transparent; border: 0; cursor: pointer;
   color: var(--text-faint); padding: 0 0 0 var(--s-1);
 }
+/* Число прямо внутри фишки: «оставить 2 лучших», «порог −2». Отдельного поля
+   рядом не заводим — параметр принадлежит примитиву, а не строке. */
+.chip__num {
+  width: 2.5ch; background: transparent; border: 0; border-bottom: 1px solid var(--border);
+  color: var(--text); font: inherit; text-align: center; padding: 0;
+}
 .chip__x:hover { color: var(--danger); }
 
 /* ── бейдж вердикта ───────────────────────────────────────────────────── */
@@ -408,6 +414,10 @@
 .dict-row > .select { flex: 0 1 150px; width: auto; }
 .dict-row__num { flex: 0 0 64px; }
 .dict-row__num > .input { width: 100%; }
+/* Запись словаря о двух строках (правка броска: имя сверху, из чего собрана
+   снизу) — линия рисуется вокруг блока, а не между его собственными строками. */
+.dict-block + .dict-block { border-top: 1px solid var(--border); }
+.dict-block .dict-row + .dict-row { border-top: 0; padding-top: 0; }
 /* Составная кость и прочее «правится в данных» — человеческий текст,
    поэтому не .mono, только приглушённый цвет. */
 .dict-row__static { flex: 1; min-width: 0; color: var(--text-faint); }

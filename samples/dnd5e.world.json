@@ -35,11 +35,6 @@
         ]
       }
     },
-    "advantage": {
-      "methods": {
-        "rerollBest": true
-      }
-    },
     "constants": {
       "lead_die": {
         "label": "Ведущая кость",
@@ -267,9 +262,8 @@
           {
             "kind": "roll",
             "target": "attack_roll",
-            "effect": "disadvantage",
-            "method": "rerollBest",
-            "condition": null
+            "condition": null,
+            "edit": "disadvantage"
           }
         ]
       },
@@ -305,9 +299,8 @@
           {
             "kind": "roll",
             "target": "skill_roll",
-            "effect": "disadvantage",
-            "method": "rerollBest",
-            "condition": "#armor_heavy"
+            "condition": "#armor_heavy",
+            "edit": "disadvantage"
           }
         ]
       },
@@ -323,9 +316,8 @@
           {
             "kind": "roll",
             "target": "skill_roll",
-            "effect": "advantage",
-            "method": "rerollBest",
-            "condition": "#prof_bonus >= 4"
+            "condition": "#prof_bonus >= 4",
+            "edit": "advantage"
           }
         ]
       },
@@ -991,7 +983,35 @@
           "expr": "8 + #prof_bonus + #cha_mod"
         }
       }
-    ]
+    ],
+    "roll_edits": {
+      "disadvantage": {
+        "label": "Помеха",
+        "ops": [
+          {
+            "op": "addDie"
+          },
+          {
+            "op": "keepWorst",
+            "n": 1
+          }
+        ],
+        "canceledBy": "advantage"
+      },
+      "advantage": {
+        "label": "Преимущество",
+        "ops": [
+          {
+            "op": "addDie"
+          },
+          {
+            "op": "keepBest",
+            "n": 1
+          }
+        ],
+        "canceledBy": "disadvantage"
+      }
+    }
   },
   "compendium": {
     "items": [

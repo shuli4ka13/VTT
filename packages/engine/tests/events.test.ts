@@ -1,6 +1,6 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.ts';
 import { send, receive } from '../src/events/envelope.ts';
-import { rollNotation, rollCheck } from '../src/engine/dice.ts';
+import { rollNotation } from '../src/engine/dice.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
 import { serializeSheet } from '../src/model/serialize.ts';
 import { system, arven, mirra, compendium } from './fixtures.ts';
@@ -23,23 +23,9 @@ group('кубики', () => {
     eq(r.total, 7);
   });
 
-  test('обычный бросок — одна кость', () => {
-    const r = rollCheck({ sides: 20, bonus: 6, mode: 'normal' }, queue(15));
-    deepEq(r.rolls, [15]);
-    eq(r.kept, 15);
-    eq(r.total, 21);
-  });
-
-  test('преимущество — две кости, берётся лучшая', () => {
-    const r = rollCheck({ sides: 20, bonus: 0, mode: 'advantage' }, queue(4, 17));
-    deepEq(r.rolls, [4, 17]);
-    eq(r.kept, 17);
-  });
-
-  test('помеха — две кости, берётся худшая', () => {
-    const r = rollCheck({ sides: 20, bonus: 0, mode: 'disadvantage' }, queue(4, 17));
-    eq(r.kept, 4);
-  });
+  // Проверки бросает lead-die (rule.lead-die.test.ts): состав, правки
+  // и чтение живут там. Здесь остаётся только нотация — ею считают величины
+  // («1d8 урона»), и это другой механизм, не бросок проверки.
 
   test('битая нотация — внятная ошибка', () => {
     throws(() => rollNotation('котик', queue()), 'котик');
@@ -182,7 +168,7 @@ group('событийный конверт', () => {
       const shakenSys = { ...system, effects: { ...system.effects,
         shaken: {
           label: 'Потрясён', activation: 'passive', duration: { kind: 'temporary' },
-          modifiers: [{ kind: 'roll', target: 'save_roll', effect: 'disadvantage', method: 'rerollBest', condition: null }],
+          modifiers: [{ kind: 'roll', target: 'save_roll', edit: 'disadvantage', condition: null }],
         } } };
       const sheet = { ...arven, effects: [{ effectId: 'shaken' }] };
       const { report } = receive(poisonAt(), { system: shakenSys, sheet, compendium, die: queue(19, 5) });

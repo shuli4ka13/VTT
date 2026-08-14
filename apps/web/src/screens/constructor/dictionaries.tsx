@@ -21,6 +21,7 @@
 
 import { useState } from 'react';
 import { readingKinds } from '@vtt/engine/engine/readings';
+import { editPrimitives } from '@vtt/engine/engine/roll-edits';
 import { useWorld, freeId, slugOf } from '../../store/world.ts';
 import { Columns } from '../../ui/layout.tsx';
 import { Card, CardHead, Input, Button, Fold, Select, Verdict } from '../../ui/primitives.tsx';
@@ -107,6 +108,14 @@ const addDie = (editSystem: EditSystem) => editSystem(draft => {
   draft.constants[key] = { label: '', kind: 'die', dice: [{ count: 1, sides: 20 }] };
 });
 
+const addRollEdit = (editSystem: EditSystem) => editSystem(draft => {
+  draft.roll_edits ??= {};
+  const key = freeId(Object.keys(draft.roll_edits), 'правка');
+  // Пустая правка ничего не делает и об этом честно говорит приговором:
+  // угадывать за автора «наверное, преимущество» — ровно то, чего мы избегаем.
+  draft.roll_edits[key] = { label: '', ops: [] };
+});
+
 const addRoll = (editSystem: EditSystem) => editSystem(draft => {
   draft.rolls ??= [];
   const tag = freeId(draft.rolls.map(r => r.tag), 'бросок');
@@ -139,6 +148,14 @@ export function DictionariesTab() {
             <Card>
               <CardHead title="Кости" actions={<Button size="sm" onClick={() => addDie(editSystem)}>+ кость</Button>} />
               <DiceSection system={system} compendium={compendium} editSystem={editSystem} />
+            </Card>
+
+            <Card>
+              <CardHead
+                title="Правки броска"
+                actions={<Button size="sm" onClick={() => addRollEdit(editSystem)}>+ правка</Button>}
+              />
+              <RollEditsSection system={system} compendium={compendium} editSystem={editSystem} />
             </Card>
 
             <Card>
@@ -302,6 +319,134 @@ function DiceSection({ system, compendium, editSystem }: Props) {
       })}
     </div>
   );
+}
+
+// ── правки броска ───────────────────────────────────────────────────────
+//
+// Здесь автор заводит СВОЁ имя механики: «Преимущество», «Фора», «Ускорение».
+// Слово доменное, а механике доменные слова запрещены — потому список имён
+// нигде в коде не зашит. Что правка делает — набор примитивов из реестра
+// движка; «гасится» — ссылка на другую правку, и это данные, а не закон.
+
+/** Примитив словами: «добавить кость», «оставить 2 лучших», «порог −2». */
+function opWord(op: { op: string; [k: string]: unknown }): string {
+  const label = editPrimitives().find(p => p.op === op.op)?.label ?? op.op;
+  if (op.op === 'keepBest' || op.op === 'keepWorst') {
+    const n = Number(op.n ?? 1);
+    return n > 1 ? `оставить ${n} ${op.op === 'keepBest' ? 'лучших' : 'худших'}` : label;
+  }
+  if (op.op === 'dieStep') {
+    const by = Number(op.by ?? 1);
+    return by >= 0 ? `кость на ${by} ступень выше` : `кость на ${-by} ступень ниже`;
+  }
+  if (op.op === 'shiftVersus') {
+    const by = Number(op.by ?? 0);
+    return `порог ${by > 0 ? '+' : '−'}${Math.abs(by)}`;
+  }
+  return label;
+}
+
+function RollEditsSection({ system, compendium, editSystem }: Props) {
+  const entries = Object.entries(system.roll_edits ?? {});
+  const primitives = editPrimitives();
+
+  if (entries.length === 0) {
+    return (
+      <span className="faint">
+        Правок нет — броски идут как есть. Заведите свою: «Преимущество»,
+        «Фора», «Ускорение» — как это зовётся в вашем мире.
+      </span>
+    );
+  }
+
+  return (
+    <div className="stack stack--tight">
+      {entries.map(([key, edit]) => {
+        const inUse = usedIn(system, compendium, `"edit":"${key}"`);
+        const ops = edit.ops ?? [];
+        return (
+          <div key={key} className="stack stack--tight dict-block">
+            <div className="dict-row">
+              <Input
+                value={edit.label ?? ''}
+                placeholder="как это зовётся в вашем мире"
+                onChange={label => editSystem(draft => {
+                  draft.roll_edits ??= {};
+                  renameKeyed(draft.roll_edits, key, label, inUse);
+                })}
+              />
+              <span className="dict-row__static">
+                {ops.length ? ops.map(opWord).join(' · ') : 'пока ничего не делает'}
+              </span>
+              <Button
+                size="sm" variant="danger" disabled={inUse}
+                title={inUse ? 'правка используется эффектом' : undefined}
+                onClick={() => editSystem(draft => { delete draft.roll_edits?.[key]; })}
+              >
+                Убрать
+              </Button>
+            </div>
+
+            <div className="dict-row">
+              <Select
+                value=""
+                options={[['', '+ что делает…'],
+                  ...primitives.map(p => [p.op, p.label] as const)] as never}
+                onChange={op => { if (op) editSystem(draft => { addOp(draft.roll_edits?.[key], op); }); }}
+              />
+              {ops.map((op, i) => (
+                <span key={i} className="chip">
+                  {opWord(op)}
+                  {'n' in op || 'by' in op ? (
+                    <input
+                      className="chip__num"
+                      value={String(op.n ?? op.by ?? '')}
+                      onChange={e => editSystem(draft => {
+                        const target = draft.roll_edits?.[key]?.ops?.[i];
+                        const n = Number(e.target.value);
+                        if (!target || !Number.isFinite(n)) return;
+                        if ('n' in target) target.n = n; else target.by = n;
+                      })}
+                    />
+                  ) : null}
+                  <button
+                    className="chip__x" type="button" title="убрать"
+                    onClick={() => editSystem(draft => {
+                      const list = draft.roll_edits?.[key]?.ops;
+                      if (list) list.splice(i, 1);
+                    })}
+                  >×</button>
+                </span>
+              ))}
+              <span className="spacer" />
+              <span className="faint">гасится</span>
+              <Select
+                value={String(edit.canceledBy ?? '')}
+                options={[['', '— ничем —'],
+                  ...entries.filter(([k]) => k !== key).map(([k, e]) => [k, e.label || k] as const),
+                ] as never}
+                onChange={other => editSystem(draft => {
+                  const cur = draft.roll_edits?.[key];
+                  if (!cur) return;
+                  if (other) cur.canceledBy = other; else delete cur.canceledBy;
+                })}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Примитив кладётся со своим умолчанием: пустой параметр ничего не значит. */
+function addOp(edit: { ops?: { op: string }[] } | undefined, op: string) {
+  if (!edit) return;
+  edit.ops ??= [];
+  const withDefaults: Record<string, Record<string, number>> = {
+    keepBest: { n: 1 }, keepWorst: { n: 1 }, dieStep: { by: 1 }, shiftVersus: { by: -2 },
+  };
+  edit.ops.push({ op, ...(withDefaults[op] ?? {}) });
 }
 
 // ── мишени бросков ──────────────────────────────────────────────────────

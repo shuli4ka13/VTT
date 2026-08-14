@@ -108,14 +108,15 @@ group('модификаторы', () => {
 
   group('правящие бросок — другая порода, не арифметика', () => {
     const poisoned = sheet => ({ ...sheet, effects: [{ effectId: 'poisoned' }] });
+    const names = roll => roll.edits.map(e => e.label);
 
-    test('без эффектов бросок обычный', () => {
-      eq(resolveRoll(system, arven, 'attack_roll', withGear(arven)).mode, 'normal');
+    test('без эффектов правок нет', () => {
+      deepEq(names(resolveRoll(system, arven, 'attack_roll', withGear(arven))), []);
     });
 
-    test('отравление даёт помеху на бросок атаки', () => {
+    test('отравление приносит правку, названную автором мира', () => {
       const sheet = poisoned(arven);
-      eq(resolveRoll(system, sheet, 'attack_roll', withGear(sheet)).mode, 'disadvantage');
+      deepEq(names(resolveRoll(system, sheet, 'attack_roll', withGear(sheet))), ['Помеха']);
     });
 
     test('помеха не является числом и в значение не превращается', () => {
@@ -123,28 +124,59 @@ group('модификаторы', () => {
       eq(calc(system, sheet, 'attack_bonus', withGear(sheet)), 6, 'бонус атаки не изменился');
     });
 
-    test('преимущество и помеха гасят друг друга', () => {
+    test('гашение объявлено в СЛОВАРЕ, а не зашито в движке', () => {
       const sys = withEffects({
         blessed: passive('Благословение',
-          [{ kind: 'roll', target: 'attack_roll', effect: 'advantage', method: 'rerollBest', condition: null }]),
+          [{ kind: 'roll', target: 'attack_roll', edit: 'advantage', condition: null }]),
       });
       const sheet = { ...arven, effects: [{ effectId: 'poisoned' }, { effectId: 'blessed' }] };
-      eq(resolveRoll(sys, sheet, 'attack_roll', newPass(sys, sheet, { compendium })).mode, 'normal');
+      deepEq(names(resolveRoll(sys, sheet, 'attack_roll', newPass(sys, sheet, { compendium }))), [],
+        'у обеих записей объявлено «гасится другой» — обе уходят');
     });
 
-    test('два преимущества не складываются — это по-прежнему одно преимущество', () => {
+    test('без объявленного гашения обе правки применяются — так живут другие миры', () => {
+      // Тот же движок, другие ДАННЫЕ: автор просто не заполнил «гасится».
+      const loose = {
+        ...system,
+        roll_edits: {
+          ...system.roll_edits,
+          advantage: { ...system.roll_edits.advantage, canceledBy: undefined },
+          disadvantage: { ...system.roll_edits.disadvantage, canceledBy: undefined },
+        },
+        effects: {
+          ...system.effects,
+          blessed: passive('Благословение',
+            [{ kind: 'roll', target: 'attack_roll', edit: 'advantage', condition: null }]),
+        },
+      };
+      const sheet = { ...arven, effects: [{ effectId: 'poisoned' }, { effectId: 'blessed' }] };
+      const roll = resolveRoll(loose, sheet, 'attack_roll', newPass(loose, sheet, { compendium }));
+      eq(roll.edits.length, 2, 'закон гашения переехал в данные — движок его не навязывает');
+    });
+
+    test('две одинаковых правки не складываются — это по-прежнему одна правка', () => {
       const adv = n => passive('Пре' + n,
-        [{ kind: 'roll', target: 'attack_roll', effect: 'advantage', method: 'rerollBest', condition: null }]);
+        [{ kind: 'roll', target: 'attack_roll', edit: 'advantage', condition: null }]);
       const sys = withEffects({ adv1: adv(1), adv2: adv(2) });
       const sheet = { ...arven, effects: [{ effectId: 'adv1' }, { effectId: 'adv2' }] };
       const roll = resolveRoll(sys, sheet, 'attack_roll', newPass(sys, sheet, { compendium }));
-      eq(roll.mode, 'advantage');
+      deepEq(names(roll), ['Преимущество'], 'нестакаемость — закон движка, а не данных');
       eq(roll.sources.length, 2, 'оба источника видны в разборе броска');
     });
 
-    test('механика преимущества берётся из модификатора, а не зашита в движок', () => {
+    test('ссылка на правку, которой нет в словаре — внятная ошибка', () => {
+      const sys = withEffects({
+        weird: passive('Странное',
+          [{ kind: 'roll', target: 'attack_roll', edit: 'котик', condition: null }]),
+      });
+      const sheet = { ...arven, effects: [{ effectId: 'weird' }] };
+      throws(() => resolveRoll(sys, sheet, 'attack_roll', newPass(sys, sheet, { compendium })), 'котик');
+    });
+
+    test('что правка ДЕЛАЕТ, движок берёт из записи словаря', () => {
       const sheet = poisoned(arven);
-      deepEq(resolveRoll(system, sheet, 'attack_roll', withGear(sheet)).methods, ['rerollBest']);
+      const [edit] = resolveRoll(system, sheet, 'attack_roll', withGear(sheet)).edits;
+      deepEq(edit.ops, [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }]);
     });
   });
 
@@ -158,30 +190,30 @@ group('модификаторы', () => {
     test('правило системы применяется без предметов и эффектов', () => {
       const sys = withRule({
         kind: 'roll', label: 'Тяжёлый доспех мешает', target: 'skill_roll',
-        effect: 'disadvantage', method: 'rerollBest', condition: null,
+        edit: 'disadvantage', condition: null,
       });
       const p = newPass(sys, arven, { compendium });
-      eq(resolveRoll(sys, arven, 'skill_roll', p).mode, 'disadvantage');
+      deepEq(resolveRoll(sys, arven, 'skill_roll', p).edits.map(e => e.label), ['Помеха']);
     });
 
     test('условие правила считается по каждому чарнику отдельно', () => {
       const sys = withRule({
         kind: 'roll', label: 'Мастерство даёт фору', target: 'skill_roll',
-        effect: 'advantage', method: 'rerollBest', condition: '#prof_bonus >= 3',
+        edit: 'advantage', condition: '#prof_bonus >= 3',
       });
-      eq(resolveRoll(sys, arven, 'skill_roll', newPass(sys, arven, { compendium })).mode,
-        'advantage', 'у Арвен бонус мастерства 3');
-      eq(resolveRoll(sys, mirra, 'skill_roll', newPass(sys, mirra, { compendium })).mode,
-        'normal', 'у Мирры 2');
+      eq(resolveRoll(sys, arven, 'skill_roll', newPass(sys, arven, { compendium })).edits.length,
+        1, 'у Арвен бонус мастерства 3');
+      eq(resolveRoll(sys, mirra, 'skill_roll', newPass(sys, mirra, { compendium })).edits.length,
+        0, 'у Мирры 2');
     });
 
     test('правило системы гасится помехой от эффекта наравне с прочими', () => {
       const sys = withRule({
         kind: 'roll', label: 'Фора', target: 'attack_roll',
-        effect: 'advantage', method: 'rerollBest', condition: null,
+        edit: 'advantage', condition: null,
       });
       const sheet = { ...arven, effects: [{ effectId: 'poisoned' }] };
-      eq(resolveRoll(sys, sheet, 'attack_roll', newPass(sys, sheet, { compendium })).mode, 'normal');
+      eq(resolveRoll(sys, sheet, 'attack_roll', newPass(sys, sheet, { compendium })).edits.length, 0);
     });
 
     test('правило системы может править и значение, а не только бросок', () => {
@@ -195,7 +227,7 @@ group('модификаторы', () => {
     test('источник правила виден в разборе броска под своим ярлыком', () => {
       const sys = withRule({
         kind: 'roll', label: 'Тяжёлый доспех мешает', target: 'skill_roll',
-        effect: 'disadvantage', method: 'rerollBest', condition: null,
+        edit: 'disadvantage', condition: null,
       });
       const roll = resolveRoll(sys, arven, 'skill_roll', newPass(sys, arven, { compendium }));
       eq(roll.sources[0].label, 'Тяжёлый доспех мешает');
@@ -230,27 +262,27 @@ group('модификаторы', () => {
       const both = withEffects({
         guidance: passive('Наставление', [
           { kind: 'roll', target: 'skill_roll', op: 'add', value: 2, stacking: 'sum', condition: null },
-          { kind: 'roll', target: 'skill_roll', effect: 'advantage', method: 'rerollBest', condition: null },
+          { kind: 'roll', target: 'skill_roll', edit: 'advantage', condition: null },
         ]),
       });
       // Без кольчуги: иначе правило комнаты «тяжёлый доспех мешает ловким
       // проверкам» даёт помеху, и она гасит преимущество — как и должна.
       const bare = { ...arven, equipped: [], effects: [{ effectId: 'guidance' }] };
       const result = resolveRoll(both, bare, 'skill_roll', newPass(both, bare, { compendium }));
-      eq(result.bonus, 2, 'число живёт отдельно от режима');
-      eq(result.mode, 'advantage');
+      eq(result.bonus, 2, 'число живёт отдельно от правки');
+      deepEq(result.edits.map(e => e.label), ['Преимущество']);
     });
 
     test('прибавка остаётся, даже когда преимущество погашено помехой', () => {
       const both = withEffects({
         guidance: passive('Наставление', [
           { kind: 'roll', target: 'skill_roll', op: 'add', value: 2, stacking: 'sum', condition: null },
-          { kind: 'roll', target: 'skill_roll', effect: 'advantage', method: 'rerollBest', condition: null },
+          { kind: 'roll', target: 'skill_roll', edit: 'advantage', condition: null },
         ]),
       });
       // У Арвен кольчуга → правило комнаты даёт помеху → преимущество гасится.
       const result = roll(both);
-      eq(result.mode, 'normal', 'помеха от правила комнаты погасила преимущество');
+      eq(result.edits.length, 0, 'помеха от правила комнаты погасила преимущество');
       eq(result.bonus, 2, 'а число уцелело: это другая порода');
     });
 

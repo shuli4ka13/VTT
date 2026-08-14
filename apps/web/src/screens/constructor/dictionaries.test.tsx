@@ -91,6 +91,66 @@ describe('Словари: кости, мишени бросков, таблиц�
     expect(rolls[0]).toEqual({ tag: 'бросок_защиты', label: 'Бросок защиты' });
   });
 
+  // Правки броска: механику именует АВТОР. Ни «преимущества», ни «помехи»
+  // в коде нет — есть пустая запись, которую автор называет и собирает.
+  it('правка броска заводится со своим именем и набором примитивов', () => {
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ правка'));
+
+    const name = screen.getByPlaceholderText('как это зовётся в вашем мире');
+    fireEvent.change(name, { target: { value: 'Фора' } });
+
+    const [add] = screen.getAllByDisplayValue('+ что делает…') as HTMLSelectElement[];
+    fireEvent.change(add!, { target: { value: 'addDie' } });
+    fireEvent.change(screen.getAllByDisplayValue('+ что делает…')[0]!, { target: { value: 'keepBest' } });
+
+    const edits = useWorld.getState().system.roll_edits!;
+    expect(Object.keys(edits)).toEqual(['фора']);
+    expect(edits['фора']).toEqual({
+      label: 'Фора', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }],
+    });
+  });
+
+  it('«гасится» ссылается на другую правку — закон гашения это данные', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        roll_edits: {
+          up: { label: 'Фора', ops: [{ op: 'addDie' }] },
+          down: { label: 'Подножка', ops: [{ op: 'addDie' }] },
+        },
+      },
+      activeEffectId: null,
+    }));
+    render(<DictionariesTab />);
+
+    const [cancel] = screen.getAllByDisplayValue('— ничем —') as HTMLSelectElement[];
+    fireEvent.change(cancel!, { target: { value: 'down' } });
+    expect(useWorld.getState().system.roll_edits!.up!.canceledBy).toBe('down');
+  });
+
+  it('правку, на которую ссылается эффект, удалить нельзя', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        roll_edits: { up: { label: 'Фора', ops: [{ op: 'addDie' }] } },
+        rolls: [{ tag: 'attack_roll', label: 'Бросок атаки' }],
+        effects: {
+          lucky: {
+            label: 'Везучий', activation: 'passive',
+            modifiers: [{ kind: 'roll', target: 'attack_roll', edit: 'up', condition: null }],
+          },
+        },
+      },
+      activeEffectId: null,
+    }));
+    render(<DictionariesTab />);
+    const guarded = screen.getByTitle('правка используется эффектом') as HTMLButtonElement;
+    expect(guarded.disabled).toBe(true);
+  });
+
   it('таблица по диапазонам заводится в словарь системы', () => {
     render(<DictionariesTab />);
     fireEvent.click(screen.getByText('+ таблица'));
@@ -180,7 +240,7 @@ describe('Словари: кости, мишени бросков, таблиц�
       compendium: {
         items: [{
           id: 'lucky-charm', label: 'Талисман удачи',
-          modifiers: [{ kind: 'roll', target: 'attack_roll', effect: 'advantage' }],
+          modifiers: [{ kind: 'roll', target: 'attack_roll', edit: 'advantage' }],
         }],
         actions: [],
       },

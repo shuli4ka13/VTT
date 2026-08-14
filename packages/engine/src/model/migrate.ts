@@ -15,6 +15,7 @@
 // на эффект напрямую и несёт аргументы сама, поэтому промежуточная запись
 // исчезает, а не переименовывается.
 
+import { unifyRollEditsWorld } from './unify.ts';
 import type { World, Effect, RecordKind, Binding, Modifier } from './types.ts';
 
 /** Мир старого формата читается свободно: его формы уже не существует. */
@@ -103,7 +104,12 @@ export function migrateWorld(world: Legacy): World {
   });
   delete compendium.effects;
 
-  return { ...world, system, compendium, sheets: world.sheets } as World;
+  // 6. Правки броска: зашитое `effect: 'advantage'` — на запись словаря.
+  //    Живёт в unify.ts, потому что переехать обязан и мир версии 2, который
+  //    сюда не заходит вовсе; здесь только зовём, чтобы мир версии 1 после
+  //    миграции работал сразу, а не оставался на полпути между формами.
+  return unifyRollEditsWorld(
+    { ...world, system, compendium, sheets: world.sheets } as World);
 }
 
 function resolveCall(activity: Legacy, calls: Map<string, Legacy>): Binding {

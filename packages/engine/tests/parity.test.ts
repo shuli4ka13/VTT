@@ -39,6 +39,18 @@ const canon = (value: unknown): unknown => Array.isArray(value)
       .map(key => [key, canon((value as Record<string, unknown>)[key])]))
     : value;
 
+/**
+ * Убрать УПРАЗДНЁННЫЙ ключ с обеих сторон сверки. Пользоваться только для
+ * полей, которых в новой модели нет вовсе: сверка «как было» держится ровно
+ * на том, что здесь перечислено мало и с объяснением на месте вызова.
+ */
+const retire = (value: unknown, key: string): unknown => Array.isArray(value)
+  ? value.map(v => retire(v, key))
+  : value && typeof value === 'object'
+    ? Object.fromEntries(Object.entries(value as object)
+      .filter(([k]) => k !== key).map(([k, v]) => [k, retire(v, key)]))
+    : value;
+
 const attempt = (fn: () => unknown): Outcome => {
   try { return { ok: true, value: fn() }; } catch (err) {
     return { ok: false, error: (err as Error).constructor.name };
@@ -110,7 +122,11 @@ describe('паритет со старым движком', () => {
     const before = attempt(() => oldExchange.exchange({ ...args, die: queue(...rolls) }));
     const after = attempt(() => exchange({ ...args, die: queue(...rolls) }));
 
-    expect(after).toEqual(before);
+    // `mode` из трассы ушёл вместе с самим понятием: режим броска сменился
+    // списком применённых записей словаря «Правки броска». Это объявленная
+    // смена модели, а не расхождение поведения — числа, кости и исходы ниже
+    // сверяются как были, до последнего ключа.
+    expect(retire(after, 'mode')).toEqual(retire(before, 'mode'));
     expect(before.ok, 'ход вообще прошёл — иначе сверялись бы две ошибки').toBe(true);
   });
 });

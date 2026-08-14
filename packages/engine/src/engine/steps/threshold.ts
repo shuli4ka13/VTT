@@ -20,7 +20,6 @@ import { dieConstant, rollLead, unfoldDice } from '../lead-die.ts';
 import { packRef, resolveNumber, resolveOptionalNumber } from '../refs.ts';
 import { EngineError } from '../errors.ts';
 import type { StepData, StepContext } from './index.ts';
-import type { RollMode } from '../dice.ts';
 
 export const type = 'threshold';
 export const label = 'Порог';
@@ -126,7 +125,10 @@ export function traceLine(t: any, h: any) {
     ? ' · ' + Object.entries(t.parts).map(([k, v]) => `${k}: ${v}`).join(', ')
     : '';
   const verdict = t.success ? `взят (запас ${t.margin})` : `не взят (недобор ${-t.margin})`;
-  return `порог: ${dice} + ${t.bonus} = ${t.total} против ${versusName}${t.versus.value} — ${verdict}${parts}`;
+  // Правки названы именами АВТОРА: в журнале за столом игрок читает
+  // «Преимущество», а не «addDie + keepBest».
+  const edits = t.edits?.length ? ` · ${t.edits.join(', ')}` : '';
+  return `порог: ${dice} + ${t.bonus} = ${t.total} против ${versusName}${t.versus.value} — ${verdict}${edits}${parts}`;
 }
 
 export function pack(step: StepData, ctx: StepContext) {
@@ -149,8 +151,8 @@ export function pack(step: StepData, ctx: StepContext) {
 
   const mods = roll.check
     ? resolveRoll(ctx.system, ctx.sheet, roll.check, ctx.pass)
-    : { mode: 'normal' as RollMode, bonus: 0 };
-  const rolled = rollLead(unfold(roll.die, ctx), ctx.die, mods.mode);
+    : { edits: [], bonus: 0 };
+  const rolled = rollLead(unfold(roll.die, ctx), ctx.die, mods.edits);
   return { ...base, rolled, bonus: packRef(roll.bonus, ctx), modBonus: mods.bonus };
 }
 
@@ -162,8 +164,8 @@ export function resolve(step: StepData, ctx: StepContext) {
     // Порог на стороне цели: бросаем здесь и сейчас, её костью и модификаторами.
     const mods = step.roll.check
       ? resolveRoll(ctx.system, ctx.sheet, step.roll.check, ctx.pass)
-      : { mode: 'normal' as RollMode, bonus: 0 };
-    rolled = rollLead(unfold(step.roll.die, ctx), ctx.die, mods.mode);
+      : { edits: [], bonus: 0 };
+    rolled = rollLead(unfold(step.roll.die, ctx), ctx.die, mods.edits);
     modBonus = mods.bonus;
   }
 
@@ -171,7 +173,14 @@ export function resolve(step: StepData, ctx: StepContext) {
   const bonus = (resolveOptionalNumber(bonusRef, ctx, 'бонус порога') ?? 0) + modBonus;
   const total = rolled.total + bonus;
 
-  const versus = resolveNumber(step.versus, ctx, 'порогу не с чем сравнить бросок');
+  // Сдвиг порога — тоже правка броска (GURPS, PF2e): её принесла заявка,
+  // а применить может только сравнивающий. Знак — «в пользу бросающего»
+  // независимо от направления: −2 к сложности и в мире «не выше навыка»
+  // делает бросок легче.
+  const shift = rolled.versusShift || 0;
+  const eased = (String(step.successWhen) === 'notOver' || String(step.successWhen) === 'under')
+    ? -shift : shift;
+  const versus = resolveNumber(step.versus, ctx, 'порогу не с чем сравнить бросок') + eased;
   const outcome = OUTCOMES[String(step.successWhen)] || OUTCOMES.atLeast!;
   const { success, margin } = outcome(total, versus);
 
@@ -185,9 +194,11 @@ export function resolve(step: StepData, ctx: StepContext) {
   return {
     value,
     trace: {
-      rolls: rolled.rolls, kept: rolled.kept, mode: rolled.mode, bonus, total,
-      // Чтение пишется только небанальное: старые миры (сумма) — трасса как была.
+      rolls: rolled.rolls, kept: rolled.kept, bonus, total,
+      // Чтение и правки пишутся только небанальные: чистый бросок в старом
+      // мире даёт ту же трассу, что и раньше.
       ...(rolled.read && rolled.read !== 'sum' ? { read: rolled.read } : {}),
+      ...(rolled.edits?.length ? { edits: rolled.edits } : {}),
       versus: step.versus && typeof step.versus === 'object' && 'tag' in step.versus
         ? { tag: step.versus.tag, value: versus }
         : { value: versus },

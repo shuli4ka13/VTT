@@ -189,19 +189,13 @@
           {
             "kind": "roll",
             "target": "attack_roll",
-            "effect": "advantage",
-            "method": "rerollBest",
-            "condition": null
+            "condition": null,
+            "edit": "advantage"
           }
         ]
       }
     },
     "room_rules": [],
-    "advantage": {
-      "methods": {
-        "rerollBest": true
-      }
-    },
     "fields": [
       {
         "tag": "handle",
@@ -243,7 +237,21 @@
           "default": 0
         }
       }
-    ]
+    ],
+    "roll_edits": {
+      "advantage": {
+        "label": "Преимущество",
+        "ops": [
+          {
+            "op": "addDie"
+          },
+          {
+            "op": "keepBest",
+            "n": 1
+          }
+        ]
+      }
+    }
   },
   "compendium": {
     "items": [

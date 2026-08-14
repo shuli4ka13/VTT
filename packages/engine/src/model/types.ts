@@ -11,7 +11,8 @@
 
 export type {
   SlotRef, RefSide, Tag, Field, FieldValue, DiceTerm, DieConstant,
-  SystemConstant, RangeTable, Modifier, Param, Step, Trigger, Effect,
+  SystemConstant, RangeTable, RollEditOp, RollEdit, Modifier, Param,
+  Step, Trigger, Effect,
   Activation, DurationKind, Stacking, Binding, RecordKind, System,
   StoredValue, WornEffect, Sheet, CompendiumRecord, Compendium, World,
 } from '@vtt/schema';
