@@ -25,40 +25,47 @@ describe('Словари: кости, виды бросков, таблицы, �
     expect(dies.some(c => c.kind === 'die')).toBe(true);
   });
 
-  // Формы броска — кнопками, а не синтаксисом в голове: про «#пул d6»
-  // и «1d12 Надежда + 1d12 Страх» из плейсхолдера «1d20» не догадаться.
-  it('кнопка «+ из частей» кладёт готовый составной бросок', () => {
+  // Состав — строками, а не строкой текста: «+» и слово-после-кости
+  // угадать было нельзя, и слово «название» стояло сразу в двух смыслах.
+  it('«+ ещё часть» превращает бросок в составной и просит имена частей', () => {
     render(<DictionariesTab />);
-    fireEvent.click(screen.getByText('+ из частей'));
+    fireEvent.click(screen.getByText('+ кость'));
+    fireEvent.click(screen.getByText('+ ещё часть'));
+
     const die = Object.values(useWorld.getState().system.constants ?? {})[0];
-    expect(die?.dice).toEqual([
-      { count: 1, sides: 12, name: 'надежда', label: 'Надежда' },
-      { count: 1, sides: 12, name: 'страх', label: 'Страх' },
-    ]);
-    expect(screen.getByDisplayValue('1d12 Надежда + 1d12 Страх')).toBeTruthy();
+    expect(die?.dice).toHaveLength(2);
+    // У обеих частей появилось своё поле имени — с подписью, а не в тексте.
+    expect(screen.getAllByPlaceholderText('как зовётся эта часть')).toHaveLength(2);
+
+    const [first] = screen.getAllByPlaceholderText('как зовётся эта часть');
+    fireEvent.change(first!, { target: { value: 'Надежда' } });
+    expect(Object.values(useWorld.getState().system.constants ?? {})[0]?.dice?.[0])
+      .toEqual({ count: 1, sides: 20, name: 'надежда', label: 'Надежда' });
   });
 
-  it('«+ пул» без числового поля на листе заблокирован и объясняет почему', () => {
-    render(<DictionariesTab />);
-    const button = screen.getByText('+ пул').closest('button') as HTMLButtonElement;
-    expect(button.disabled).toBe(true);
-    expect(button.title).toMatch(/числовое поле/);
-  });
-
-  it('«+ пул» берёт размер из поля листа', () => {
+  it('счёт костей берётся из поля листа кнопкой, а не решёткой в тексте', () => {
     useWorld.setState(state => ({
       ...state,
       system: {
         ...emptySystem(),
         fields: [{ tag: 'пул', label: 'Пул', value: { kind: 'stored', type: 'number', default: 6 } }],
+        constants: { d: { label: 'Пул', kind: 'die', dice: [{ count: 1, sides: 6 }] } },
       },
       activeEffectId: null,
     }));
     render(<DictionariesTab />);
-    fireEvent.click(screen.getByText('+ пул'));
-    const die = Object.values(useWorld.getState().system.constants ?? {})[0];
-    expect(die?.dice).toEqual([{ count: { tag: 'пул' }, sides: 6 }]);
-    expect(screen.getByDisplayValue('#пул d6')).toBeTruthy();
+    fireEvent.click(screen.getByText('из поля'));
+
+    expect(Object.values(useWorld.getState().system.constants ?? {})[0]?.dice?.[0])
+      .toEqual({ count: { tag: 'пул' }, sides: 6 });
+    expect(screen.getByText(/по числу «Пул»/)).toBeTruthy();
+  });
+
+  it('без числовых полей кнопка «из поля» заблокирована', () => {
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ кость'));
+    const button = screen.getByText('из поля').closest('button') as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
   });
 
   // Чтение — вторая ось кости (спека «Что такое бросок»): сумма — умолчание
@@ -68,10 +75,8 @@ describe('Словари: кости, виды бросков, таблицы, �
     fireEvent.click(screen.getByText('+ кость'));
     const [key] = Object.keys(useWorld.getState().system.constants ?? {});
 
-    // Сперва состав из нескольких костей: у одной кости выбирать нечего.
-    const notation = screen.getByPlaceholderText('1d20') as HTMLInputElement;
-    fireEvent.change(notation, { target: { value: '4d6' } });
-    fireEvent.keyDown(notation, { key: 'Enter' });
+    // Сперва костей больше одной: у одной выбирать нечего.
+    fireEvent.click(screen.getByText('+ ещё часть'));
 
     const select = screen.getByDisplayValue('сумма') as HTMLSelectElement;
     fireEvent.change(select, { target: { value: 'best' } });
@@ -79,7 +84,7 @@ describe('Словари: кости, виды бросков, таблицы, �
 
     fireEvent.change(select, { target: { value: 'count' } });
     expect(useWorld.getState().system.constants?.[key!]?.read)
-      .toEqual({ kind: 'count', atLeast: 5 });
+      .toEqual({ kind: 'count', atLeast: 19 }, 'порог предлагается «почти максимум» по граням кости');
 
     fireEvent.change(select, { target: { value: 'sum' } });
     expect('read' in (useWorld.getState().system.constants?.[key!] ?? {})).toBe(false);
@@ -94,9 +99,7 @@ describe('Словари: кости, виды бросков, таблицы, �
     expect(screen.queryByDisplayValue('сумма')).toBe(null);
 
     // Стало костей больше — вопрос появился.
-    const notation = screen.getByPlaceholderText('1d20') as HTMLInputElement;
-    fireEvent.change(notation, { target: { value: '4d6' } });
-    fireEvent.keyDown(notation, { key: 'Enter' });
+    fireEvent.click(screen.getByText('+ ещё часть'));
     expect(screen.getByDisplayValue('сумма')).toBeTruthy();
   });
 
@@ -104,37 +107,8 @@ describe('Словари: кости, виды бросков, таблицы, �
   // («1», «1d» — ни одна не разбирается как NdM), поэтому с клавиатуры набрать
   // «1d8» было нельзя, только вставить целиком. Печатаем посимвольно и
   // проверяем, что каждая промежуточная строка остаётся в поле.
-  it('нотация кости набирается посимвольно — промежуточный ввод не откатывается', () => {
-    render(<DictionariesTab />);
-    fireEvent.click(screen.getByText('+ кость'));
-    const input = screen.getByPlaceholderText('1d20') as HTMLInputElement;
-
-    fireEvent.change(input, { target: { value: '1' } });
-    expect(input.value).toBe('1');
-    fireEvent.change(input, { target: { value: '1d' } });
-    expect(input.value).toBe('1d');
-    fireEvent.change(input, { target: { value: '1d8' } });
-    expect(input.value).toBe('1d8');
-
-    fireEvent.keyDown(input, { key: 'Enter' });
-    const dies = Object.values(useWorld.getState().system.constants ?? {});
-    expect(dies[0]?.dice).toEqual([{ count: 1, sides: 8 }]);
-  });
-
-  it('неразобранная запись остаётся в поле и показывается как ошибка, а не отбрасывается молча', () => {
-    render(<DictionariesTab />);
-    fireEvent.click(screen.getByText('+ кость'));
-    const input = screen.getByPlaceholderText('1d20') as HTMLInputElement;
-
-    fireEvent.change(input, { target: { value: 'abc' } });
-    fireEvent.blur(input);
-
-    expect(input.value).toBe('abc');
-    expect(screen.getByText(/не разобрать/)).toBeTruthy();
-    const dies = Object.values(useWorld.getState().system.constants ?? {});
-    expect(dies[0]?.dice).toEqual([{ count: 1, sides: 20 }]);
-  });
-
+  
+  
   // Тег рождается заготовкой («бросок»), но пока запись не встретилась
   // нигде в мире — следует за лейблом при наборе (тот же приём, что и у
   // тега поля в sheet-tab.tsx). Реальный ввод в Input, не прямая правка стора.

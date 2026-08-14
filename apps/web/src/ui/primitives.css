@@ -467,3 +467,26 @@
   color: var(--text-muted); font: inherit; font-size: var(--fs-2);
   padding: 0 0 0 var(--s-1); max-width: 11ch;
 }
+
+/* ── состав броска ───────────────────────────────────────────────────────
+   Части броска — строки в общей рамке, а не «+» в тексте: связь видно
+   глазами, и поле имени части не путается с названием самой записи,
+   потому что физически лежит внутри рамки состава. */
+.dice-composer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  align-items: flex-start;
+  padding: var(--s-3);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--border-strong);
+  border-radius: var(--r-2);
+  background: var(--bg-sunken);
+}
+.dice-term { display: flex; align-items: center; gap: var(--s-2); width: 100%; }
+.dice-term__num { flex: 0 0 56px; }
+.dice-term__num > .input { width: 100%; text-align: center; }
+.dice-term__d { color: var(--text-faint); font-family: var(--font-mono); }
+.dice-term > .input { flex: 1; min-width: 0; }
+.dice-term > .select { flex: 0 1 200px; width: auto; }
+.dict-row__label--tight { flex: 0 0 auto; }

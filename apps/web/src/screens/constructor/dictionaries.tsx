@@ -27,7 +27,7 @@ import { editReadback, dieReadback } from './readback.ts';
 import { useWorld, freeId, slugOf } from '../../store/world.ts';
 import { Columns } from '../../ui/layout.tsx';
 import { Card, CardHead, Input, Button, Fold, Select, Verdict } from '../../ui/primitives.tsx';
-import { parseDiceExpr, formatDiceExpr, diceCount } from './dice-expr.ts';
+import { diceCount } from './dice-expr.ts';
 import type { System, Compendium, RangeTable, SystemConstant, DiceTerm } from '@vtt/schema';
 import type { WorldState } from '../../store/world.ts';
 
@@ -104,32 +104,10 @@ function renameRoll(rolls: { tag: string; label: string }[], index: number, labe
   cur.label = label;
 }
 
-/**
- * Три ФОРМЫ броска — тремя кнопками, а не синтаксисом в голове автора.
- * Строку состава можно править руками, но узнать про «#пул d6» и «1d12
- * Надежда + 1d12 Страх» из плейсхолдера «1d20» было нельзя никак: кнопка
- * кладёт готовый образец, дальше правятся цифры и слова.
- */
-type DieShape = 'plain' | 'pool' | 'parts';
-
-const SHAPES: Record<DieShape, { label: string; hint: string }> = {
-  plain: { label: '+ кость', hint: 'Один кубик: D&D — 1d20, Cyberpunk — 1d10' },
-  pool: { label: '+ пул', hint: 'Столько костей, сколько скажет поле листа: Shadowrun, Blades' },
-  parts: { label: '+ из частей', hint: 'Один бросок из названных половин: Надежда и Страх в Daggerheart' },
-};
-
-const addDie = (editSystem: EditSystem, shape: DieShape, poolTag?: string) => editSystem(draft => {
+const addDie = (editSystem: EditSystem) => editSystem(draft => {
   draft.constants ??= {};
   const key = freeId(Object.keys(draft.constants), 'кость');
-  const dice = shape === 'pool'
-    ? [{ count: { tag: poolTag ?? '' }, sides: 6 } as never]
-    : shape === 'parts'
-      ? [
-        { count: 1, sides: 12, name: 'надежда', label: 'Надежда' },
-        { count: 1, sides: 12, name: 'страх', label: 'Страх' },
-      ]
-      : [{ count: 1, sides: 20 }];
-  draft.constants[key] = { label: '', kind: 'die', dice };
+  draft.constants[key] = { label: '', kind: 'die', dice: [{ count: 1, sides: 20 }] };
 });
 
 const addRollEdit = (editSystem: EditSystem) => editSystem(draft => {
@@ -173,7 +151,7 @@ export function DictionariesTab() {
               <CardHead
                 title="Кости"
                 sub="Чем бросают проверки в этом мире. Обычно тут одна запись. Кость урона сюда не нужна — она живёт на самом мече."
-                actions={<DiceShapeButtons system={system} editSystem={editSystem} />}
+                actions={<Button size="sm" onClick={() => addDie(editSystem)}>+ кость</Button>}
               />
               <DiceSection system={system} compendium={compendium} editSystem={editSystem} />
             </Card>
@@ -222,6 +200,14 @@ export function DictionariesTab() {
 
 // ── кости ────────────────────────────────────────────────────────────────
 
+/** Чтение — как выпавшие кости становятся числом (спека «Что такое бросок»):
+ * сумма (5e), лучшая (Blades), счёт успехов (Shadowrun). Имена — реестр
+ * движка (engine/readings.ts), словарь их только показывает. */
+function readKindOf(constant: SystemConstant): string {
+  const read = constant.read;
+  return typeof read === 'string' ? read : read?.kind ?? 'sum';
+}
+
 // Нотация набирается посимвольно («1», «1d», «1d2» — ни одно не разбирается
 // как NdM), а поле было управляемым и откатывало onChange на каждой такой
 // промежуточной строке — набрать «1d20» с клавиатуры было нельзя, работала
@@ -229,169 +215,214 @@ export function DictionariesTab() {
 // (card.tsx) и SlotInput (slot-input.tsx): набор живёт в местном черновике
 // и коммитится по уходу с поля или Enter; Escape возвращает как было.
 // Неразобранное — не молча отбрасывается, а показывается ошибкой поля.
-function DiceNotationInput({ notation, system, onCommit }: {
-  notation: string;
-  system: System;
-  onCommit: (dice: DiceTerm[]) => void;
-}) {
-  const [draft, setDraft] = useState<string | null>(null);
-  const [trouble, setTrouble] = useState<string | null>(null);
-  const shown = draft ?? notation;
-
-  const commit = () => {
-    if (draft === null) return;
-    const parsed = parseDiceExpr(draft, system);
-    if (parsed.error || !parsed.dice) { setTrouble(parsed.error ?? 'не разобрать'); return; }
-    onCommit(parsed.dice);
-    setDraft(null);
-    setTrouble(null);
-  };
-
-  return (
-    <>
-      <Input
-        mono
-        value={shown}
-        placeholder="1d20"
-        onChange={text => { setDraft(text); setTrouble(null); }}
-        onBlur={commit}
-        onKeyDown={e => {
-          if (e.key === 'Enter') commit();
-          if (e.key === 'Escape') { setDraft(null); setTrouble(null); }
-        }}
-      />
-      {trouble ? <span className="field__error">{trouble}</span> : null}
-    </>
-  );
-}
-
-// Чтение — как выпавшие кости становятся числом (спека «Что такое бросок»):
-// сумма (5e), лучшая (Blades), счёт успехов (Shadowrun). Имена — реестр
-// движка (engine/readings.ts), словарь их только показывает.
-function readKindOf(constant: SystemConstant): string {
-  const read = constant.read;
-  return typeof read === 'string' ? read : read?.kind ?? 'sum';
-}
-
-/** Кнопки трёх форм. «Пул» без числового поля на листе завести нельзя —
- * и кнопка честно говорит почему, вместо ссылки в пустоту. */
-function DiceShapeButtons({ system, editSystem }: { system: System; editSystem: EditSystem }) {
-  const poolTag = system.fields.find(f =>
-    f.value.kind === 'stored' ? f.value.type === 'number' : f.value.kind !== 'table')?.tag;
-  return (
-    <>
-      {(Object.keys(SHAPES) as DieShape[]).map(shape => {
-        const blocked = shape === 'pool' && !poolTag;
-        return (
-          <Button
-            key={shape}
-            size="sm"
-            disabled={blocked}
-            title={blocked ? 'Сначала заведите на «Листе» числовое поле — оно и скажет размер пула' : SHAPES[shape].hint}
-            onClick={() => addDie(editSystem, shape, poolTag)}
-          >
-            {SHAPES[shape].label}
-          </Button>
-        );
-      })}
-    </>
-  );
-}
-
 function DiceSection({ system, compendium, editSystem }: Props) {
   const entries = Object.entries(system.constants ?? {}).filter(([, c]) => c.kind === 'die');
 
+  if (entries.length === 0) {
+    return (
+      <span className="faint">
+        Костей нет. Заведите ту, которой в этом мире бросают проверки.
+      </span>
+    );
+  }
+
   return (
-    <div className="stack stack--tight">
-      {entries.length === 0 ? (
-        <span className="faint">Костей нет. Заведите ту, которой в этом мире бросают проверки: «1d20», «#пул d6», «1d12 Надежда + 1d12 Страх».</span>
-      ) : entries.map(([key, constant]) => {
+    <div className="stack">
+      {entries.map(([key, constant]) => {
         const dice = constant.dice ?? [];
         const inUse = usedIn(system, compendium, `"constant":"${key}"`);
-        // Весь состав — одной строкой: «1d20», «#пул d6», «1d12 Надежда +
-        // 1d12 Страх». Null — состав, который строкой не выразить; такой
-        // по-прежнему правится в данных.
-        const notation = formatDiceExpr(dice);
         const total = diceCount(dice);
-        // Выбор из одной кости — не выбор. Раньше селектор оставался,
-        // показывая единственную «сумму»: контрол, который ничего не делает,
-        // хуже жаргона — он обещает выбор, которого нет.
+        // Выбор из одной кости — не выбор: спрашивать «что берём из выпавшего»
+        // имеет смысл, только когда выпавшего больше одного.
         const asksReading = total !== 1;
         const readKind = readKindOf(constant);
         const countRead = typeof constant.read === 'object' ? constant.read : null;
 
+        const editDice = (change: (list: DiceTerm[]) => void) => editSystem(draft => {
+          const cur = draft.constants?.[key];
+          if (!cur) return;
+          cur.dice ??= [];
+          change(cur.dice);
+        });
+
         return (
           // Ключ строки — сам ключ словаря, не позиция: переименование
           // (renameKeyed) меняет ключ на месте, не сдвигая порядок, но
-          // строка обязана остаться ПРИВЯЗАНА к записи, а не к позиции —
-          // иначе после любой будущей перестановки набор снова уедет не туда.
+          // строка обязана остаться ПРИВЯЗАНА к записи, а не к позиции.
           <div key={key} className="dict-block">
-          <div className="dict-row">
-            <Input
-              value={constant.label ?? ''}
-              placeholder="название кости"
-              onChange={label => editSystem(draft => {
-                draft.constants ??= {};
-                renameKeyed(draft.constants, key, label, inUse);
-              })}
-            />
-            {notation === null ? (
-              <span className="dict-row__static">состав правится в данных</span>
-            ) : (
-              <DiceNotationInput
-                notation={notation}
-                system={system}
-                onCommit={next => editSystem(draft => {
-                  const cur = draft.constants?.[key];
-                  if (cur) cur.dice = next;
+            <div className="dict-row">
+              <Input
+                value={constant.label ?? ''}
+                placeholder="название кости"
+                onChange={label => editSystem(draft => {
+                  draft.constants ??= {};
+                  renameKeyed(draft.constants, key, label, inUse);
                 })}
               />
-            )}
+              <Button
+                size="sm" variant="danger" disabled={inUse}
+                title={inUse ? 'кость используется' : undefined}
+                onClick={() => editSystem(draft => { delete draft.constants?.[key]; })}
+              >
+                Убрать
+              </Button>
+            </div>
+
+            <Readback segments={dieReadback(constant, system)} />
+
+            <DiceComposer dice={dice} system={system} onEdit={editDice} />
+
             {asksReading ? (
-            <Select
-              value={readKind}
-              options={readingKinds().map(r => [r.kind, r.label] as const) as never}
-              onChange={kind => editSystem(draft => {
-                const cur = draft.constants?.[key];
-                if (!cur) return;
-                // Сумма — умолчание движка: в данных её не пишем вовсе,
-                // старые миры и новые кости выглядят одинаково.
-                if (kind === 'sum') delete cur.read;
-                else if (kind === 'count') {
-                  cur.read = { kind: 'count', atLeast: (dice[0]?.sides ?? 6) - 1 };
-                } else cur.read = kind;
-              })}
-            />
-            ) : null}
-            {asksReading && readKind === 'count' ? (
-              <span className="dict-row__num" title="успех — кость не ниже этого">
-                <Input
-                  mono
-                  value={String(countRead?.atLeast ?? '')}
-                  placeholder="порог"
-                  onChange={text => editSystem(draft => {
+              <div className="dict-row">
+                <span className="dict-row__label">Из выпавшего берём</span>
+                <Select
+                  value={readKind}
+                  options={readingKinds().map(r => [r.kind, r.label] as const) as never}
+                  onChange={kind => editSystem(draft => {
                     const cur = draft.constants?.[key];
-                    const n = Number(text);
-                    if (cur && Number.isFinite(n)) cur.read = { kind: 'count', atLeast: n };
+                    if (!cur) return;
+                    // Сумма — умолчание движка: в данных её не пишем вовсе,
+                    // старые миры и новые кости выглядят одинаково.
+                    if (kind === 'sum') delete cur.read;
+                    else if (kind === 'count') {
+                      cur.read = { kind: 'count', atLeast: (dice[0]?.sides ?? 6) - 1 };
+                    } else cur.read = kind;
                   })}
                 />
-              </span>
+                {readKind === 'count' ? (
+                  <>
+                    <span className="dict-row__label dict-row__label--tight">не ниже</span>
+                    <span className="dict-row__num">
+                      <Input
+                        mono
+                        value={String(countRead?.atLeast ?? '')}
+                        onChange={text => editSystem(draft => {
+                          const cur = draft.constants?.[key];
+                          const n = Number(text);
+                          if (cur && Number.isFinite(n)) cur.read = { kind: 'count', atLeast: n };
+                        })}
+                      />
+                    </span>
+                  </>
+                ) : null}
+              </div>
             ) : null}
-            <Button
-              size="sm" variant="danger" disabled={inUse}
-              title={inUse ? 'кость используется' : undefined}
-              onClick={() => editSystem(draft => { delete draft.constants?.[key]; })}
-            >
-              Убрать
-            </Button>
-          </div>
-          {/* Чтение — понятие новое, и списком «сумма / лучшая / счёт успехов»
-              оно не объясняется. Фраза объясняет: видно, что именно будет
-              брошено и что из выпавшего станет числом. */}
-          <Readback segments={dieReadback(constant, system)} />
           </div>
         );
       })}
+    </div>
+  );
+}
+
+/**
+ * Состав броска — строками, а не строкой текста.
+ *
+ * Было: одно поле, где «+» соединял части, а слово после кости молча
+ * становилось её именем. Ни того, ни другого автор угадать не мог, а слово
+ * «название» при этом стояло и слева, у самой записи. Здесь каждая часть —
+ * своя строка со своими полями, «+ ещё часть» показывает, что части вообще
+ * бывают, а счёт костей переключается между числом и полем листа кнопкой,
+ * а не решёткой в тексте.
+ */
+function DiceComposer({ dice, system, onEdit }: {
+  dice: DiceTerm[];
+  system: System;
+  onEdit: (change: (list: DiceTerm[]) => void) => void;
+}) {
+  const many = dice.length > 1;
+  const numeric = system.fields.filter(f =>
+    f.value.kind === 'formula' || f.value.kind === 'table'
+    || (f.value.kind === 'stored' && f.value.type === 'number'));
+
+  return (
+    <div className="dice-composer">
+      {dice.map((term, i) => {
+        const fromField = typeof term.count === 'object' && term.count !== null;
+        return (
+          <div key={i} className="dice-term">
+            {fromField ? (
+              <Select
+                value={String((term.count as { tag?: string }).tag ?? '')}
+                options={[['', '— какое поле? —'],
+                  ...numeric.map(f => [f.tag, f.label] as const)] as never}
+                onChange={tag => onEdit(list => { list[i]!.count = { tag } as never; })}
+              />
+            ) : (
+              <span className="dice-term__num">
+                <Input
+                  mono
+                  value={String(term.count ?? 1)}
+                  onChange={text => onEdit(list => {
+                    const n = Number(text);
+                    if (Number.isInteger(n) && n > 0) list[i]!.count = n;
+                  })}
+                />
+              </span>
+            )}
+
+            <span className="dice-term__d">к</span>
+
+            <span className="dice-term__num">
+              <Input
+                mono
+                value={String(term.sides)}
+                onChange={text => onEdit(list => {
+                  const n = Number(text);
+                  if (Number.isInteger(n) && n > 1) list[i]!.sides = n;
+                })}
+              />
+            </span>
+
+            {many ? (
+              <Input
+                value={term.label ?? term.name ?? ''}
+                placeholder="как зовётся эта часть"
+                onChange={label => onEdit(list => {
+                  list[i]!.label = label;
+                  list[i]!.name = slugOf(label) || `часть_${i + 1}`;
+                })}
+              />
+            ) : null}
+
+            <Button
+              size="sm" variant="ghost"
+              title={fromField ? 'задать числом' : 'взять число из поля листа'}
+              disabled={!fromField && numeric.length === 0}
+              onClick={() => onEdit(list => {
+                list[i]!.count = fromField ? 1 : ({ tag: numeric[0]?.tag ?? '' } as never);
+              })}
+            >
+              {fromField ? 'числом' : 'из поля'}
+            </Button>
+
+            {many ? (
+              <Button
+                size="sm" variant="ghost" title="убрать часть"
+                onClick={() => onEdit(list => {
+                  list.splice(i, 1);
+                  if (list.length === 1) { delete list[0]!.name; delete list[0]!.label; }
+                })}
+              >
+                ×
+              </Button>
+            ) : null}
+          </div>
+        );
+      })}
+
+      <Button
+        size="sm" variant="ghost"
+        title="Бросок из названных половин: Надежда и Страх в Daggerheart"
+        onClick={() => onEdit(list => {
+          if (list.length === 1) {
+            list[0]!.label ??= 'Первая';
+            list[0]!.name ??= 'первая';
+          }
+          list.push({ count: 1, sides: list[0]?.sides ?? 12 });
+        })}
+      >
+        + ещё часть
+      </Button>
     </div>
   );
 }
