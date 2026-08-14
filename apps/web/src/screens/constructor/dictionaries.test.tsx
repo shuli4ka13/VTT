@@ -9,7 +9,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { DictionariesTab } from './dictionaries.tsx';
 import { useWorld, emptySystem } from '../../store/world.ts';
 
-describe('Словари: кости, мишени бросков, таблицы, типы действий', () => {
+describe('Словари: кости, виды бросков, таблицы, цена действий', () => {
   beforeEach(() => {
     useWorld.setState(state => ({
       ...state,
@@ -82,10 +82,10 @@ describe('Словари: кости, мишени бросков, таблиц�
   // Тег рождается заготовкой («бросок»), но пока запись не встретилась
   // нигде в мире — следует за лейблом при наборе (тот же приём, что и у
   // тега поля в sheet-tab.tsx). Реальный ввод в Input, не прямая правка стора.
-  it('мишень броска заводится с тегом из названия', () => {
+  it('вид броска заводится с тегом из названия', () => {
     render(<DictionariesTab />);
-    fireEvent.click(screen.getByText('+ мишень'));
-    const input = screen.getByPlaceholderText('название мишени');
+    fireEvent.click(screen.getByText('+ вид'));
+    const input = screen.getByPlaceholderText('название броска');
     fireEvent.change(input, { target: { value: 'Бросок защиты' } });
     const rolls = useWorld.getState().system.rolls ?? [];
     expect(rolls[0]).toEqual({ tag: 'бросок_защиты', label: 'Бросок защиты' });
@@ -297,7 +297,7 @@ describe('Словари: кости, мишени бросков, таблиц�
     expect(guarded.disabled).toBe(true);
   });
 
-  it('мишень, на которую ссылается бросок эффекта, удалить нельзя', () => {
+  it('вид броска, на который ссылается эффект, удалить нельзя', () => {
     useWorld.setState(state => ({
       ...state,
       system: {
@@ -313,7 +313,7 @@ describe('Словари: кости, мишени бросков, таблиц�
       activeEffectId: null,
     }));
     render(<DictionariesTab />);
-    const guarded = screen.getByTitle('мишень используется') as HTMLButtonElement;
+    const guarded = screen.getByTitle('этот вид броска используется') as HTMLButtonElement;
     expect(guarded.disabled).toBe(true);
   });
 
@@ -321,7 +321,7 @@ describe('Словари: кости, мишени бросков, таблиц�
   // бывает и у предмета компендиума — сторож должен видеть его тоже,
   // иначе мишень, на которую смотрит вещь, можно было убрать у неё
   // из-под ног.
-  it('мишень, на которую смотрит модификатор предмета компендиума, удалить нельзя', () => {
+  it('вид броска, на который смотрит модификатор предмета, удалить нельзя', () => {
     useWorld.setState(state => ({
       ...state,
       system: { ...emptySystem(), rolls: [{ tag: 'attack_roll', label: 'Бросок атаки' }] },
@@ -335,7 +335,7 @@ describe('Словари: кости, мишени бросков, таблиц�
       activeEffectId: null,
     }));
     render(<DictionariesTab />);
-    const guarded = screen.getByTitle('мишень используется') as HTMLButtonElement;
+    const guarded = screen.getByTitle('этот вид броска используется') as HTMLButtonElement;
     expect(guarded.disabled).toBe(true);
   });
 

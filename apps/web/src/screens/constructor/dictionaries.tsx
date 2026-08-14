@@ -148,30 +148,47 @@ export function DictionariesTab() {
         body: (
           <>
             <Card>
-              <CardHead title="Кости" actions={<Button size="sm" onClick={() => addDie(editSystem)}>+ кость</Button>} />
+              <CardHead
+                title="Кости"
+                sub="Чем в этом мире бросают. «Ведущая кость 1к20» — и все броски сменятся разом, если её поменять."
+                actions={<Button size="sm" onClick={() => addDie(editSystem)}>+ кость</Button>}
+              />
               <DiceSection system={system} compendium={compendium} editSystem={editSystem} />
             </Card>
 
             <Card>
               <CardHead
                 title="Правки броска"
+                sub="Преимущество, помеха и всё, что меняет бросок. Здесь только ЧТО это значит; когда включается — говорит эффект."
                 actions={<Button size="sm" onClick={() => addRollEdit(editSystem)}>+ правка</Button>}
               />
               <RollEditsSection system={system} compendium={compendium} editSystem={editSystem} />
             </Card>
 
             <Card>
-              <CardHead title="Мишени бросков" actions={<Button size="sm" onClick={() => addRoll(editSystem)}>+ мишень</Button>} />
+              <CardHead
+                title="Виды бросков"
+                sub="Чтобы можно было сказать «помеха только на атаки». Бросок «Любой» есть всегда, заводить его не надо."
+                actions={<Button size="sm" onClick={() => addRoll(editSystem)}>+ вид</Button>}
+              />
               <RollsSection system={system} compendium={compendium} editSystem={editSystem} />
             </Card>
 
             <Card>
-              <CardHead title="Таблицы по диапазонам" actions={<Button size="sm" onClick={() => addTable(editSystem)}>+ таблица</Button>} />
+              <CardHead
+                title="Таблицы"
+                sub="Ступеньки, которые формулой не сказать: бонус мастерства по уровню, исход хода по итогу броска."
+                actions={<Button size="sm" onClick={() => addTable(editSystem)}>+ таблица</Button>}
+              />
               <TablesSection system={system} compendium={compendium} editSystem={editSystem} />
             </Card>
 
             <Card>
-              <CardHead title="Типы действий" actions={<Button size="sm" onClick={() => addActionType(editSystem)}>+ тип</Button>} />
+              <CardHead
+                title="Чего стоит действие"
+                sub="Из этого списка эффект выбирает свою цену: действие, бонусное действие, реакция."
+                actions={<Button size="sm" onClick={() => addActionType(editSystem)}>+ тип</Button>}
+              />
               <ActionTypesSection system={system} compendium={compendium} editSystem={editSystem} />
             </Card>
           </>
@@ -550,16 +567,16 @@ function RollsSection({ system, compendium, editSystem }: Props) {
 
   return (
     <div className="stack stack--tight">
-      <span className="faint">Чек-мишени полей включаются на «Листе».</span>
+      <span className="faint">Проверки по полям («Проверка Ловкости») включаются на «Листе».</span>
       {rolls.length === 0 ? (
-        <span className="faint">Мишеней пока нет.</span>
+        <span className="faint">Видов бросков пока нет.</span>
       ) : rolls.map((roll, index) => {
         const inUse = usedIn(system, compendium, `"check":"${roll.tag}"`, `"target":"${roll.tag}"`);
         return (
           <div key={index} className="dict-row">
             <Input
               value={roll.label}
-              placeholder="название мишени"
+              placeholder="название броска"
               onChange={label => editSystem(draft => {
                 draft.rolls ??= [];
                 renameRoll(draft.rolls, index, label, inUse);
@@ -568,7 +585,7 @@ function RollsSection({ system, compendium, editSystem }: Props) {
             <span className="chip mono">{roll.tag}</span>
             <Button
               size="sm" variant="danger" disabled={inUse}
-              title={inUse ? 'мишень используется' : undefined}
+              title={inUse ? 'этот вид броска используется' : undefined}
               onClick={() => editSystem(draft => {
                 draft.rolls = (draft.rolls ?? []).filter((_, i) => i !== index);
               })}

@@ -14,15 +14,26 @@ export function Card({ children, tone, className = '' }: {
   return <div className={`card ${tone ? `card--${tone}` : ''} ${className}`}>{children}</div>;
 }
 
-export function CardHead({ title, badge, actions }: {
+/**
+ * Шапка карточки. `sub` — одна строка человеческими словами о том, ЧТО это
+ * и зачем: заголовок вроде «Правки броска» ничего не объясняет тому, кто
+ * видит его впервые, а «Преимущество, помеха и всё, что меняет бросок» —
+ * объясняет. Строка короткая и всегда на виду: подсказка, спрятанная под
+ * знак вопроса, не помогает тому, кто не знает, что спросить.
+ */
+export function CardHead({ title, sub, badge, actions }: {
   title: ReactNode;
+  sub?: ReactNode;
   badge?: ReactNode;
   actions?: ReactNode;
 }) {
   return (
-    <div className="card__head">
-      <h3 className="card__title">{title}{badge}</h3>
-      {actions ? <div className="inline inline--tight">{actions}</div> : null}
+    <div className="card__headline">
+      <div className="card__head">
+        <h3 className="card__title">{title}{badge}</h3>
+        {actions ? <div className="inline inline--tight">{actions}</div> : null}
+      </div>
+      {sub ? <p className="card__sub">{sub}</p> : null}
     </div>
   );
 }

@@ -56,7 +56,7 @@ export const STEP_SPECS: StepSpec[] = [
       { key: 'roll.die', label: 'Кость', main: true, required: true, allow: ['constant'] },
       { key: 'roll.bonus', label: 'Прибавка к броску', main: true, allow: ['expr', 'const', 'param', 'prop', 'empty'] },
       { key: 'versus', label: 'Против чего', main: true, required: true, allow: ['tag', 'expr', 'const'] },
-      { key: 'roll.check', label: 'Мишень модификаторов броска', allow: [] },
+      { key: 'roll.check', label: 'Какой это бросок', allow: [] },
       { key: 'side', label: 'Кто бросает', fallback: 'sender',
         choice: [['sender', 'отправитель — это атака'], ['target', 'цель — это спасбросок']] },
       { key: 'successWhen', label: 'Успех, если бросок', fallback: 'atLeast',

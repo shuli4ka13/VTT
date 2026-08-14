@@ -89,7 +89,7 @@ export function ModifiersEditor({ system, modifiers, onEdit }: {
               <Field label="Что правим" needed={!modifier.target}>
                 <Select
                   value={modifier.target}
-                  options={[['', '— выберите мишень —'],
+                  options={[['', '— выберите, что правим —'],
                     ...valueTargets.map(t => [t.tag, t.kind === 'incoming' ? `${t.label}` : t.label] as const)] as never}
                   onChange={target => onEdit(draft => { (draft[index] as Modifier).target = target; })}
                 />
