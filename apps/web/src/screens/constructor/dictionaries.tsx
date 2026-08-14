@@ -27,8 +27,8 @@ import { editReadback, dieReadback } from './readback.ts';
 import { useWorld, freeId, slugOf } from '../../store/world.ts';
 import { Columns } from '../../ui/layout.tsx';
 import { Card, CardHead, Input, Button, Fold, Select, Verdict } from '../../ui/primitives.tsx';
-import { normalizeDice } from './slot-input.tsx';
-import type { System, Compendium, RangeTable, SystemConstant } from '@vtt/schema';
+import { parseDiceExpr, formatDiceExpr, diceCount } from './dice-expr.ts';
+import type { System, Compendium, RangeTable, SystemConstant, DiceTerm } from '@vtt/schema';
 import type { WorldState } from '../../store/world.ts';
 
 type EditSystem = WorldState['editSystem'];
@@ -207,16 +207,20 @@ export function DictionariesTab() {
 // (card.tsx) и SlotInput (slot-input.tsx): набор живёт в местном черновике
 // и коммитится по уходу с поля или Enter; Escape возвращает как было.
 // Неразобранное — не молча отбрасывается, а показывается ошибкой поля.
-function DiceNotationInput({ notation, onCommit }: { notation: string; onCommit: (norm: string) => void }) {
+function DiceNotationInput({ notation, system, onCommit }: {
+  notation: string;
+  system: System;
+  onCommit: (dice: DiceTerm[]) => void;
+}) {
   const [draft, setDraft] = useState<string | null>(null);
   const [trouble, setTrouble] = useState<string | null>(null);
   const shown = draft ?? notation;
 
   const commit = () => {
     if (draft === null) return;
-    const norm = normalizeDice(draft);
-    if (!norm) { setTrouble(`не разобрать «${draft}» — нужна запись вида 1d20`); return; }
-    onCommit(norm);
+    const parsed = parseDiceExpr(draft, system);
+    if (parsed.error || !parsed.dice) { setTrouble(parsed.error ?? 'не разобрать'); return; }
+    onCommit(parsed.dice);
     setDraft(null);
     setTrouble(null);
   };
@@ -256,12 +260,17 @@ function DiceSection({ system, compendium, editSystem }: Props) {
         <span className="faint">Своих костей нет — броски берут ведущую кость системы.</span>
       ) : entries.map(([key, constant]) => {
         const dice = constant.dice ?? [];
-        // Пул со счётом-ссылкой правится в данных, как составная кость:
-        // редактора состава пула в этом заходе нет.
-        const compound = dice.length > 1
-          || dice.some(d => d.name || typeof d.count === 'object');
         const inUse = usedIn(system, compendium, `"constant":"${key}"`);
-        const notation = dice[0] ? `${dice[0].count ?? 1}d${dice[0].sides}` : '';
+        // Весь состав — одной строкой: «1d20», «#пул d6», «1d12 Надежда +
+        // 1d12 Страх». Null — состав, который строкой не выразить; такой
+        // по-прежнему правится в данных.
+        const notation = formatDiceExpr(dice);
+        const total = diceCount(dice);
+        // Выбор из одной кости — не выбор: «лучшая» при одной кости
+        // бессмысленна, и предлагать её значит обещать несуществующее.
+        const readings = total === 1
+          ? readingKinds().filter(r => r.kind === 'sum')
+          : readingKinds();
         const readKind = readKindOf(constant);
         const countRead = typeof constant.read === 'object' ? constant.read : null;
 
@@ -272,36 +281,29 @@ function DiceSection({ system, compendium, editSystem }: Props) {
           // иначе после любой будущей перестановки набор снова уедет не туда.
           <div key={key} className="dict-block">
           <div className="dict-row">
-            {compound ? (
-              <>
-                <span className="dict-row__static">{constant.label || key}</span>
-                <span className="dict-row__static">составная — правится в данных</span>
-              </>
+            <Input
+              value={constant.label ?? ''}
+              placeholder="кость"
+              onChange={label => editSystem(draft => {
+                draft.constants ??= {};
+                renameKeyed(draft.constants, key, label, inUse);
+              })}
+            />
+            {notation === null ? (
+              <span className="dict-row__static">состав правится в данных</span>
             ) : (
-              <>
-                <Input
-                  value={constant.label ?? ''}
-                  placeholder="кость"
-                  onChange={label => editSystem(draft => {
-                    draft.constants ??= {};
-                    renameKeyed(draft.constants, key, label, inUse);
-                  })}
-                />
-                <DiceNotationInput
-                  notation={notation}
-                  onCommit={norm => {
-                    const m = /^(\d+)d(\d+)$/.exec(norm)!;
-                    editSystem(draft => {
-                      const cur = draft.constants?.[key];
-                      if (cur) cur.dice = [{ count: Number(m[1]), sides: Number(m[2]) }];
-                    });
-                  }}
-                />
-              </>
+              <DiceNotationInput
+                notation={notation}
+                system={system}
+                onCommit={next => editSystem(draft => {
+                  const cur = draft.constants?.[key];
+                  if (cur) cur.dice = next;
+                })}
+              />
             )}
             <Select
               value={readKind}
-              options={readingKinds().map(r => [r.kind, r.label] as const) as never}
+              options={readings.map(r => [r.kind, r.label] as const) as never}
               onChange={kind => editSystem(draft => {
                 const cur = draft.constants?.[key];
                 if (!cur) return;

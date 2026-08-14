@@ -241,11 +241,14 @@ export function editReadback(
 export function dieReadback(constant: SystemConstant, system: System): Segment[] {
   // Пул, собранный из листа, нельзя приписать к кости слева («Пул костейd6»):
   // это не число, а «столько, сколько скажет поле».
-  const dice = (constant.dice ?? []).map(d => (
-    typeof d.count === 'object' && d.count !== null
+  const dice = (constant.dice ?? []).map(d => {
+    const head = typeof d.count === 'object' && d.count !== null
       ? `d${d.sides} по числу «${countWord(system, d.count)}»`
-      : `${d.count ?? 1}d${d.sides}`
-  )).join(' + ');
+      : `${d.count ?? 1}d${d.sides}`;
+    // Имя части — половина смысла составного броска: «1d12 + 1d12» не говорит
+    // ничего, «Надежда + Страх» говорит всё.
+    return d.name ? `${head} (${d.label || d.name})` : head;
+  }).join(' + ');
   if (!dice) return [hole('из чего состоит бросок?')];
 
   const read = constant.read;

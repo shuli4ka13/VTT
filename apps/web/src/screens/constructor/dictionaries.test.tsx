@@ -31,17 +31,31 @@ describe('Словари: кости, виды бросков, таблицы, �
     render(<DictionariesTab />);
     fireEvent.click(screen.getByText('+ кость'));
     const [key] = Object.keys(useWorld.getState().system.constants ?? {});
-    const select = screen.getByDisplayValue('сумма') as HTMLSelectElement;
 
+    // Сперва состав из нескольких костей: у одной кости выбирать нечего.
+    const notation = screen.getByPlaceholderText('1d20') as HTMLInputElement;
+    fireEvent.change(notation, { target: { value: '4d6' } });
+    fireEvent.keyDown(notation, { key: 'Enter' });
+
+    const select = screen.getByDisplayValue('сумма') as HTMLSelectElement;
     fireEvent.change(select, { target: { value: 'best' } });
     expect(useWorld.getState().system.constants?.[key!]?.read).toBe('best');
 
     fireEvent.change(select, { target: { value: 'count' } });
     expect(useWorld.getState().system.constants?.[key!]?.read)
-      .toEqual({ kind: 'count', atLeast: 19 });
+      .toEqual({ kind: 'count', atLeast: 5 });
 
     fireEvent.change(select, { target: { value: 'sum' } });
     expect('read' in (useWorld.getState().system.constants?.[key!] ?? {})).toBe(false);
+  });
+
+  // «Кинуть 1d20 и взять лучшую» — бессмыслица, которую экран показывал:
+  // выбор из одной кости не выбор.
+  it('у одной кости чтение не предлагается вовсе', () => {
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ кость'));
+    const select = screen.getByDisplayValue('сумма') as HTMLSelectElement;
+    expect([...select.options].map(o => o.textContent)).toEqual(['сумма']);
   });
 
   // Поле было управляемым и откатывало onChange на любой промежуточной строке
