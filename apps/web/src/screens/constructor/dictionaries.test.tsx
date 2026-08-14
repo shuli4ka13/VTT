@@ -127,7 +127,35 @@ describe('Словари: кости, мишени бросков, таблиц�
 
     const [cancel] = screen.getAllByDisplayValue('— ничем, складывается —') as HTMLSelectElement[];
     fireEvent.change(cancel!, { target: { value: 'down' } });
-    expect(useWorld.getState().system.roll_edits!.up!.canceledBy).toBe('down');
+
+    // Гашение взаимно, и говорится об этом ОДИН раз: вторая запись
+    // получает встречную ссылку сама. Два поля про одно и то же — это
+    // ровно та стена настроек «что с чем», от которой ушли.
+    const edits = useWorld.getState().system.roll_edits!;
+    expect(edits.up!.canceledBy).toBe('down');
+    expect(edits.down!.canceledBy).toBe('up');
+  });
+
+  it('удалённая правка забирает за собой встречную ссылку', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        roll_edits: {
+          up: { label: 'Фора', ops: [{ op: 'addDie' }], canceledBy: 'down' },
+          down: { label: 'Подножка', ops: [{ op: 'addDie' }], canceledBy: 'up' },
+        },
+      },
+      activeEffectId: null,
+    }));
+    render(<DictionariesTab />);
+
+    const [remove] = screen.getAllByText('Убрать') as HTMLButtonElement[];
+    fireEvent.click(remove!);
+
+    const edits = useWorld.getState().system.roll_edits!;
+    expect(edits.up).toBeUndefined();
+    expect('canceledBy' in edits.down!, 'ссылки в пустоту не остаётся').toBe(false);
   });
 
   it('правку, на которую ссылается эффект, удалить нельзя', () => {

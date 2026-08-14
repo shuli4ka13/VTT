@@ -390,7 +390,12 @@ function RollEditsSection({ system, compendium, editSystem }: Props) {
     <div className="stack">
       {entries.map(([key, edit]) => {
         const inUse = usedIn(system, compendium, `"edit":"${key}"`);
+        // Ключ замораживает и ссылка «гасится» с чужой записи: без этого
+        // переименование правки, которую никто не носит, но которой кто-то
+        // гасится, рвало бы связь молча.
+        const named = inUse || usedIn(system, compendium, `"canceledBy":"${key}"`);
         const ops = edit.ops ?? [];
+        const counter = edit.canceledBy ? entries.find(([k]) => k === edit.canceledBy)?.[1] : null;
         return (
           <div key={key} className="dict-block">
             <div className="dict-row">
@@ -399,13 +404,20 @@ function RollEditsSection({ system, compendium, editSystem }: Props) {
                 placeholder="как это зовётся в вашем мире"
                 onChange={label => editSystem(draft => {
                   draft.roll_edits ??= {};
-                  renameKeyed(draft.roll_edits, key, label, inUse);
+                  renameKeyed(draft.roll_edits, key, label, named);
                 })}
               />
               <Button
                 size="sm" variant="danger" disabled={inUse}
                 title={inUse ? 'правка используется эффектом' : undefined}
-                onClick={() => editSystem(draft => { delete draft.roll_edits?.[key]; })}
+                onClick={() => editSystem(draft => {
+                  delete draft.roll_edits?.[key];
+                  // Забрать за собой встречную ссылку: «гасится тем, чего нет»
+                  // — это ошибка, а не пустое поле.
+                  for (const other of Object.values(draft.roll_edits ?? {})) {
+                    if (other.canceledBy === key) delete other.canceledBy;
+                  }
+                })}
               >
                 Убрать
               </Button>
@@ -437,20 +449,42 @@ function RollEditsSection({ system, compendium, editSystem }: Props) {
               />
             </div>
 
-            <div className="dict-row">
-              <span className="dict-row__label">Гасится</span>
-              <Select
-                value={String(edit.canceledBy ?? '')}
-                options={[['', '— ничем, складывается —'],
-                  ...entries.filter(([k]) => k !== key).map(([k, e]) => [k, e.label || k] as const),
-                ] as never}
-                onChange={other => editSystem(draft => {
-                  const cur = draft.roll_edits?.[key];
-                  if (!cur) return;
-                  if (other) cur.canceledBy = other; else delete cur.canceledBy;
-                })}
-              />
-            </div>
+            {/* Гашение — тонкость: в большинстве миров его либо нет вовсе,
+                либо это одна привычная пара. На виду ему делать нечего —
+                тот же приём, что у «Тонкостей» карточки шага.
+                И ставится оно ОДИН раз на обе записи: гашение взаимно,
+                а два поля про одно и то же — это старая стена настроек
+                «что с чем взаимодействует». */}
+            <Fold
+              title="Гашение"
+              summary={counter ? `гасится: ${counter.label || edit.canceledBy}` : 'ничем — складывается'}
+            >
+              <div className="dict-row">
+                <span className="dict-row__label">Гасится</span>
+                <Select
+                  value={String(edit.canceledBy ?? '')}
+                  options={[['', '— ничем, складывается —'],
+                    ...entries.filter(([k]) => k !== key).map(([k, e]) => [k, e.label || k] as const),
+                  ] as never}
+                  onChange={other => editSystem(draft => {
+                    const dict = draft.roll_edits;
+                    const cur = dict?.[key];
+                    if (!dict || !cur) return;
+                    // Прежняя пара распадается целиком, новая связывается тоже
+                    // целиком: автор говорит «эти две гасят друг друга» один раз.
+                    if (cur.canceledBy && dict[cur.canceledBy]?.canceledBy === key) {
+                      delete dict[cur.canceledBy]!.canceledBy;
+                    }
+                    if (other) {
+                      cur.canceledBy = other;
+                      dict[other]!.canceledBy = key;
+                    } else {
+                      delete cur.canceledBy;
+                    }
+                  })}
+                />
+              </div>
+            </Fold>
           </div>
         );
       })}
