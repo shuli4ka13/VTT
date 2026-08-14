@@ -22,6 +22,8 @@
 import { useState } from 'react';
 import { readingKinds } from '@vtt/engine/engine/readings';
 import { editPrimitives } from '@vtt/engine/engine/roll-edits';
+import { Readback } from './card.tsx';
+import { editReadback, dieReadback } from './readback.ts';
 import { useWorld, freeId, slugOf } from '../../store/world.ts';
 import { Columns } from '../../ui/layout.tsx';
 import { Card, CardHead, Input, Button, Fold, Select, Verdict } from '../../ui/primitives.tsx';
@@ -251,7 +253,8 @@ function DiceSection({ system, compendium, editSystem }: Props) {
           // (renameKeyed) меняет ключ на месте, не сдвигая порядок, но
           // строка обязана остаться ПРИВЯЗАНА к записи, а не к позиции —
           // иначе после любой будущей перестановки набор снова уедет не туда.
-          <div key={key} className="dict-row">
+          <div key={key} className="dict-block">
+          <div className="dict-row">
             {compound ? (
               <>
                 <span className="dict-row__static">{constant.label || key}</span>
@@ -315,6 +318,11 @@ function DiceSection({ system, compendium, editSystem }: Props) {
               Убрать
             </Button>
           </div>
+          {/* Чтение — понятие новое, и списком «сумма / лучшая / счёт успехов»
+              оно не объясняется. Фраза объясняет: видно, что именно будет
+              брошено и что из выпавшего станет числом. */}
+          <Readback segments={dieReadback(constant, system)} />
+          </div>
         );
       })}
     </div>
@@ -327,23 +335,42 @@ function DiceSection({ system, compendium, editSystem }: Props) {
 // Слово доменное, а механике доменные слова запрещены — потому список имён
 // нигде в коде не зашит. Что правка делает — набор примитивов из реестра
 // движка; «гасится» — ссылка на другую правку, и это данные, а не закон.
+//
+// Строка устроена как карточка эффекта (card.tsx), а не как строка таблицы:
+// сперва ПЕРЕСКАЗ словами — «Кинуть на кость больше, оставить лучшую» — и
+// только под ним то, чем он набран. Машинный список «addDie · keepBest»
+// не отвечает на вопрос «получилось ли то, что я хотел», а фраза отвечает.
+// Карточки при этом не заводятся: Card в словарях один на секцию.
 
-/** Примитив словами: «добавить кость», «оставить 2 лучших», «порог −2». */
+/** Короткая подпись примитива — только на фишке, фраза целиком в пересказе. */
 function opWord(op: { op: string; [k: string]: unknown }): string {
-  const label = editPrimitives().find(p => p.op === op.op)?.label ?? op.op;
-  if (op.op === 'keepBest' || op.op === 'keepWorst') {
-    const n = Number(op.n ?? 1);
-    return n > 1 ? `оставить ${n} ${op.op === 'keepBest' ? 'лучших' : 'худших'}` : label;
-  }
-  if (op.op === 'dieStep') {
-    const by = Number(op.by ?? 1);
-    return by >= 0 ? `кость на ${by} ступень выше` : `кость на ${-by} ступень ниже`;
-  }
-  if (op.op === 'shiftVersus') {
-    const by = Number(op.by ?? 0);
-    return `порог ${by > 0 ? '+' : '−'}${Math.abs(by)}`;
-  }
-  return label;
+  return editPrimitives().find(p => p.op === op.op)?.label ?? op.op;
+}
+
+/** Параметр примитива правится прямо на фишке: он принадлежит ей, не строке. */
+function OpChip({ op, onNumber, onRemove }: {
+  op: Record<string, unknown>;
+  onNumber: (value: number) => void;
+  onRemove: () => void;
+}) {
+  const numeric = 'n' in op ? 'n' : 'by' in op ? 'by' : null;
+  return (
+    <span className="chip">
+      {opWord(op as { op: string })}
+      {numeric ? (
+        <input
+          className="chip__num"
+          aria-label="сколько"
+          value={String(op[numeric] ?? '')}
+          onChange={e => {
+            const value = Number(e.target.value);
+            if (Number.isFinite(value)) onNumber(value);
+          }}
+        />
+      ) : null}
+      <button className="chip__x" type="button" title="убрать" onClick={onRemove}>×</button>
+    </span>
+  );
 }
 
 function RollEditsSection({ system, compendium, editSystem }: Props) {
@@ -360,12 +387,12 @@ function RollEditsSection({ system, compendium, editSystem }: Props) {
   }
 
   return (
-    <div className="stack stack--tight">
+    <div className="stack">
       {entries.map(([key, edit]) => {
         const inUse = usedIn(system, compendium, `"edit":"${key}"`);
         const ops = edit.ops ?? [];
         return (
-          <div key={key} className="stack stack--tight dict-block">
+          <div key={key} className="dict-block">
             <div className="dict-row">
               <Input
                 value={edit.label ?? ''}
@@ -375,9 +402,6 @@ function RollEditsSection({ system, compendium, editSystem }: Props) {
                   renameKeyed(draft.roll_edits, key, label, inUse);
                 })}
               />
-              <span className="dict-row__static">
-                {ops.length ? ops.map(opWord).join(' · ') : 'пока ничего не делает'}
-              </span>
               <Button
                 size="sm" variant="danger" disabled={inUse}
                 title={inUse ? 'правка используется эффектом' : undefined}
@@ -387,42 +411,37 @@ function RollEditsSection({ system, compendium, editSystem }: Props) {
               </Button>
             </div>
 
-            <div className="dict-row">
+            <Readback segments={editReadback(edit, system)} />
+
+            <div className="dict-row dict-row--wrap">
+              <span className="dict-row__label">Что делает</span>
+              {ops.map((op, i) => (
+                <OpChip
+                  key={i}
+                  op={op}
+                  onNumber={value => editSystem(draft => {
+                    const target = draft.roll_edits?.[key]?.ops?.[i];
+                    if (!target) return;
+                    if ('n' in target) target.n = value; else target.by = value;
+                  })}
+                  onRemove={() => editSystem(draft => {
+                    draft.roll_edits?.[key]?.ops?.splice(i, 1);
+                  })}
+                />
+              ))}
               <Select
                 value=""
-                options={[['', '+ что делает…'],
+                options={[['', '+ добавить…'],
                   ...primitives.map(p => [p.op, p.label] as const)] as never}
                 onChange={op => { if (op) editSystem(draft => { addOp(draft.roll_edits?.[key], op); }); }}
               />
-              {ops.map((op, i) => (
-                <span key={i} className="chip">
-                  {opWord(op)}
-                  {'n' in op || 'by' in op ? (
-                    <input
-                      className="chip__num"
-                      value={String(op.n ?? op.by ?? '')}
-                      onChange={e => editSystem(draft => {
-                        const target = draft.roll_edits?.[key]?.ops?.[i];
-                        const n = Number(e.target.value);
-                        if (!target || !Number.isFinite(n)) return;
-                        if ('n' in target) target.n = n; else target.by = n;
-                      })}
-                    />
-                  ) : null}
-                  <button
-                    className="chip__x" type="button" title="убрать"
-                    onClick={() => editSystem(draft => {
-                      const list = draft.roll_edits?.[key]?.ops;
-                      if (list) list.splice(i, 1);
-                    })}
-                  >×</button>
-                </span>
-              ))}
-              <span className="spacer" />
-              <span className="faint">гасится</span>
+            </div>
+
+            <div className="dict-row">
+              <span className="dict-row__label">Гасится</span>
               <Select
                 value={String(edit.canceledBy ?? '')}
-                options={[['', '— ничем —'],
+                options={[['', '— ничем, складывается —'],
                   ...entries.filter(([k]) => k !== key).map(([k, e]) => [k, e.label || k] as const),
                 ] as never}
                 onChange={other => editSystem(draft => {

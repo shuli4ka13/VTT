@@ -5,7 +5,7 @@
 // Все имена — лейблы ТЕКУЩЕЙ системы (labelOfTag): переименовал поле —
 // пересказ перестроился, ничего не сломалось (критерий №2).
 
-import type { System, Effect, Step } from '@vtt/schema';
+import type { System, Effect, Step, SystemConstant } from '@vtt/schema';
 import { labelOfTag } from '../../ui/formula.tsx';
 
 export type Segment = { text: string } | { hole: string };
@@ -152,6 +152,93 @@ export function numberReadback(step: Step, system: System, effect: Effect): Segm
   const out: Segment[] = [seg('Считается число:'), ...amountValueSegments(step, system, effect)];
   out.push(step.id ? seg(`— дальше это «${step.id}».`) : seg('.'));
   return out;
+}
+
+// ── пересказ записей словаря ────────────────────────────────────────────
+//
+// Словарь читается теми же словами, что и карточка эффекта: строка сверху
+// говорит, ЧТО запись делает, а поля под ней — чем это набрано. Без неё
+// «addDie · keepBest» остаётся машинным списком, по которому непонятно,
+// получилось ли то, что задумано.
+
+const plural = (n: number, one: string, few: string, many: string) => {
+  const t = Math.abs(n) % 100;
+  const d = t % 10;
+  if (t > 10 && t < 20) return many;
+  if (d === 1) return one;
+  if (d >= 2 && d <= 4) return few;
+  return many;
+};
+
+/** Один примитив — куском фразы. */
+function opPhrase(op: Record<string, unknown>): string {
+  const n = Number(op.n ?? 1);
+  const by = Number(op.by ?? 0);
+  switch (op.op) {
+    case 'addDie':
+      return n === 1 ? 'кинуть на кость больше'
+        : `кинуть на ${n} ${plural(n, 'кость', 'кости', 'костей')} больше`;
+    case 'keepBest':
+      return n === 1 ? 'оставить лучшую' : `оставить ${n} лучших`;
+    case 'keepWorst':
+      return n === 1 ? 'оставить худшую' : `оставить ${n} худших`;
+    case 'dieStep':
+      return by >= 0
+        ? `взять кость на ${by} ${plural(by, 'ступень', 'ступени', 'ступеней')} выше`
+        : `взять кость на ${-by} ${plural(by, 'ступень', 'ступени', 'ступеней')} ниже`;
+    case 'shiftVersus':
+      // Знак объясняется словом: «−2 к порогу» читается двусмысленно в мире,
+      // где бросают вниз, а «легче» и «труднее» — одинаково в любом.
+      return by <= 0 ? `сделать порог легче на ${-by}` : `сделать порог труднее на ${by}`;
+    case 'explode':
+      return 'на максимуме кинуть ещё раз и прибавить';
+    default:
+      return String(op.op);
+  }
+}
+
+/** Запись словаря «Правки броска» словами: что делает и чем гасится. */
+export function editReadback(
+  edit: { ops?: Record<string, unknown>[]; canceledBy?: string },
+  system: System,
+): Segment[] {
+  const ops = edit.ops ?? [];
+  if (!ops.length) return [hole('что она делает с броском?')];
+
+  const phrases = ops.map(opPhrase);
+  const head = phrases[0]!;
+  const text = head.charAt(0).toUpperCase() + head.slice(1)
+    + (phrases.length > 1 ? ', ' + phrases.slice(1).join(', ') : '');
+  const out: Segment[] = [seg(text + '.')];
+
+  if (edit.canceledBy) {
+    const other = system.roll_edits?.[edit.canceledBy];
+    out.push(seg(`Гасится: ${other?.label || edit.canceledBy}.`));
+  }
+  return out;
+}
+
+/** Кость словами: состав плюс чтение — «кинуть, взять сумму». */
+export function dieReadback(constant: SystemConstant, system: System): Segment[] {
+  // Пул, собранный из листа, нельзя приписать к кости слева («Пул костейd6»):
+  // это не число, а «столько, сколько скажет поле».
+  const dice = (constant.dice ?? []).map(d => (
+    typeof d.count === 'object' && d.count !== null
+      ? `d${d.sides} по числу «${countWord(system, d.count)}»`
+      : `${d.count ?? 1}d${d.sides}`
+  )).join(' + ');
+  if (!dice) return [hole('из чего состоит бросок?')];
+
+  const read = constant.read;
+  const kind = typeof read === 'string' ? read : read?.kind ?? 'sum';
+  const atLeast = typeof read === 'object' ? read.atLeast : undefined;
+
+  const tail = kind === 'best' ? 'взять лучшую'
+    : kind === 'worst' ? 'взять худшую'
+      : kind === 'count'
+        ? `посчитать, сколько выпало не ниже ${atLeast ?? '?'}`
+        : 'сложить';
+  return [seg(`Кинуть ${dice} и ${tail}.`)];
 }
 
 /** Для тестов и свёрнутых сводок: пропуски в ⟨угловых скобках⟩. */

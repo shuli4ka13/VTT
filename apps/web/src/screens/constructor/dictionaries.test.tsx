@@ -100,9 +100,9 @@ describe('Словари: кости, мишени бросков, таблиц�
     const name = screen.getByPlaceholderText('как это зовётся в вашем мире');
     fireEvent.change(name, { target: { value: 'Фора' } });
 
-    const [add] = screen.getAllByDisplayValue('+ что делает…') as HTMLSelectElement[];
+    const [add] = screen.getAllByDisplayValue('+ добавить…') as HTMLSelectElement[];
     fireEvent.change(add!, { target: { value: 'addDie' } });
-    fireEvent.change(screen.getAllByDisplayValue('+ что делает…')[0]!, { target: { value: 'keepBest' } });
+    fireEvent.change(screen.getAllByDisplayValue('+ добавить…')[0]!, { target: { value: 'keepBest' } });
 
     const edits = useWorld.getState().system.roll_edits!;
     expect(Object.keys(edits)).toEqual(['фора']);
@@ -125,7 +125,7 @@ describe('Словари: кости, мишени бросков, таблиц�
     }));
     render(<DictionariesTab />);
 
-    const [cancel] = screen.getAllByDisplayValue('— ничем —') as HTMLSelectElement[];
+    const [cancel] = screen.getAllByDisplayValue('— ничем, складывается —') as HTMLSelectElement[];
     fireEvent.change(cancel!, { target: { value: 'down' } });
     expect(useWorld.getState().system.roll_edits!.up!.canceledBy).toBe('down');
   });

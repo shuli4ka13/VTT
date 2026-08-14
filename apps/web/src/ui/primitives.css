@@ -414,10 +414,20 @@
 .dict-row > .select { flex: 0 1 150px; width: auto; }
 .dict-row__num { flex: 0 0 64px; }
 .dict-row__num > .input { width: 100%; }
-/* Запись словаря о двух строках (правка броска: имя сверху, из чего собрана
-   снизу) — линия рисуется вокруг блока, а не между его собственными строками. */
-.dict-block + .dict-block { border-top: 1px solid var(--border); }
-.dict-block .dict-row + .dict-row { border-top: 0; padding-top: 0; }
+/* Запись словаря о нескольких строках: имя, пересказ словами, чем набрано.
+   Устроена как карточка эффекта, но карточкой НЕ является — Card в словарях
+   один на секцию. Линия рисуется вокруг блока, а не внутри него. */
+.dict-block + .dict-block { border-top: 1px solid var(--border); padding-top: var(--s-3); }
+.dict-block .dict-row + .dict-row { border-top: 0; }
+.dict-block .readback { margin: 2px 0 6px; }
+/* Пересказ — главное в строке, поэтому у него полная ширина, а поля под ним
+   выравниваются по одной подписи слева. */
+.dict-row--wrap { flex-wrap: wrap; }
+.dict-row__label {
+  flex: 0 0 92px;
+  color: var(--text-faint);
+  font-size: var(--fs-2);
+}
 /* Составная кость и прочее «правится в данных» — человеческий текст,
    поэтому не .mono, только приглушённый цвет. */
 .dict-row__static { flex: 1; min-width: 0; color: var(--text-faint); }
