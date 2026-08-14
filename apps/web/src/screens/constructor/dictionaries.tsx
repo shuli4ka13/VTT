@@ -150,7 +150,7 @@ export function DictionariesTab() {
             <Card>
               <CardHead
                 title="Кости"
-                sub="Чем в этом мире бросают. «Ведущая кость 1к20» — и все броски сменятся разом, если её поменять."
+                sub="Чем бросают проверки в этом мире. Обычно тут одна запись. Кость урона сюда не нужна — она живёт на самом мече."
                 actions={<Button size="sm" onClick={() => addDie(editSystem)}>+ кость</Button>}
               />
               <DiceSection system={system} compendium={compendium} editSystem={editSystem} />
@@ -257,7 +257,7 @@ function DiceSection({ system, compendium, editSystem }: Props) {
   return (
     <div className="stack stack--tight">
       {entries.length === 0 ? (
-        <span className="faint">Своих костей нет — броски берут ведущую кость системы.</span>
+        <span className="faint">Костей нет. Заведите ту, которой в этом мире бросают проверки: «1d20», «#пул d6», «1d12 Надежда + 1d12 Страх».</span>
       ) : entries.map(([key, constant]) => {
         const dice = constant.dice ?? [];
         const inUse = usedIn(system, compendium, `"constant":"${key}"`);
@@ -266,11 +266,10 @@ function DiceSection({ system, compendium, editSystem }: Props) {
         // по-прежнему правится в данных.
         const notation = formatDiceExpr(dice);
         const total = diceCount(dice);
-        // Выбор из одной кости — не выбор: «лучшая» при одной кости
-        // бессмысленна, и предлагать её значит обещать несуществующее.
-        const readings = total === 1
-          ? readingKinds().filter(r => r.kind === 'sum')
-          : readingKinds();
+        // Выбор из одной кости — не выбор. Раньше селектор оставался,
+        // показывая единственную «сумму»: контрол, который ничего не делает,
+        // хуже жаргона — он обещает выбор, которого нет.
+        const asksReading = total !== 1;
         const readKind = readKindOf(constant);
         const countRead = typeof constant.read === 'object' ? constant.read : null;
 
@@ -301,9 +300,10 @@ function DiceSection({ system, compendium, editSystem }: Props) {
                 })}
               />
             )}
+            {asksReading ? (
             <Select
               value={readKind}
-              options={readings.map(r => [r.kind, r.label] as const) as never}
+              options={readingKinds().map(r => [r.kind, r.label] as const) as never}
               onChange={kind => editSystem(draft => {
                 const cur = draft.constants?.[key];
                 if (!cur) return;
@@ -315,7 +315,8 @@ function DiceSection({ system, compendium, editSystem }: Props) {
                 } else cur.read = kind;
               })}
             />
-            {readKind === 'count' ? (
+            ) : null}
+            {asksReading && readKind === 'count' ? (
               <span className="dict-row__num" title="успех — кость не ниже этого">
                 <Input
                   mono

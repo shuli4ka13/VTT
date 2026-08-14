@@ -103,9 +103,14 @@ describe('editReadback — правка броска словами', () => {
 });
 
 describe('dieReadback — кость словами', () => {
-  it('сумма — умолчание, и о ней говорится прямо', () => {
+  it('одна кость — складывать нечего, и об этом не говорят', () => {
     const die = { kind: 'die', dice: [{ count: 1, sides: 20 }] };
-    expect(joinReadback(dieReadback(die, system))).toBe('Кинуть 1d20 и сложить.');
+    expect(joinReadback(dieReadback(die, system))).toBe('Кинуть 1d20.');
+  });
+
+  it('несколько костей — сумма названа: их и правда складывают', () => {
+    const die = { kind: 'die', dice: [{ count: 2, sides: 6 }] };
+    expect(joinReadback(dieReadback(die, system))).toBe('Кинуть 2d6 и сложить.');
   });
 
   it('счёт успехов объясняет порог на кость', () => {

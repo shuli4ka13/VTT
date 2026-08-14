@@ -255,6 +255,12 @@ export function dieReadback(constant: SystemConstant, system: System): Segment[]
   const kind = typeof read === 'string' ? read : read?.kind ?? 'sum';
   const atLeast = typeof read === 'object' ? read.atLeast : undefined;
 
+  // Одна кость складывать не с чем: «Кинуть 1d20» — вся фраза целиком.
+  const single = (constant.dice ?? []).length === 1
+    && typeof (constant.dice ?? [])[0]?.count === 'number'
+    && ((constant.dice ?? [])[0]!.count as number) === 1;
+  if (single && kind === 'sum') return [seg(`Кинуть ${dice}.`)];
+
   const tail = kind === 'best' ? 'взять лучшую'
     : kind === 'worst' ? 'взять худшую'
       : kind === 'count'

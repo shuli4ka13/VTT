@@ -49,13 +49,19 @@ describe('Словари: кости, виды бросков, таблицы, �
     expect('read' in (useWorld.getState().system.constants?.[key!] ?? {})).toBe(false);
   });
 
-  // «Кинуть 1d20 и взять лучшую» — бессмыслица, которую экран показывал:
-  // выбор из одной кости не выбор.
-  it('у одной кости чтение не предлагается вовсе', () => {
+  // «Кинуть 1d20 и взять лучшую» — бессмыслица, которую экран показывал.
+  // Выбор из одной кости не выбор, поэтому селектора нет вовсе: контрол
+  // с единственным пунктом обещает выбор, которого не существует.
+  it('у одной кости чтение не спрашивают — селектора нет', () => {
     render(<DictionariesTab />);
     fireEvent.click(screen.getByText('+ кость'));
-    const select = screen.getByDisplayValue('сумма') as HTMLSelectElement;
-    expect([...select.options].map(o => o.textContent)).toEqual(['сумма']);
+    expect(screen.queryByDisplayValue('сумма')).toBe(null);
+
+    // Стало костей больше — вопрос появился.
+    const notation = screen.getByPlaceholderText('1d20') as HTMLInputElement;
+    fireEvent.change(notation, { target: { value: '4d6' } });
+    fireEvent.keyDown(notation, { key: 'Enter' });
+    expect(screen.getByDisplayValue('сумма')).toBeTruthy();
   });
 
   // Поле было управляемым и откатывало onChange на любой промежуточной строке
