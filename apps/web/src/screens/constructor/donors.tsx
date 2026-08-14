@@ -210,6 +210,21 @@ function Effects({ donor }: { donor: System }) {
           if (!draft.rolls.some(r => r.tag === roll.tag)) draft.rolls.push({ ...roll });
         }
       }
+      // Правки броска — такой же закон мира: эффект «Тяжёлый доспех мешает»
+      // ссылается на запись «Помеха», и без неё приедет ссылка в пустоту.
+      // Вместе с записью едет и та, которой она гасится: пара «преимущество —
+      // помеха» без второй половины гасить нечем.
+      const bringEdit = (key: string) => {
+        const edit = donor.roll_edits?.[key];
+        if (!edit) return;
+        draft.roll_edits = draft.roll_edits ?? {};
+        if (draft.roll_edits[key]) return;
+        draft.roll_edits[key] = structuredClone(edit);
+        if (edit.canceledBy) bringEdit(edit.canceledBy);
+      };
+      for (const mod of effect.modifiers ?? []) {
+        if (mod.kind === 'roll' && mod.edit) bringEdit(mod.edit);
+      }
       if (effect.cost && donor.action_types?.[effect.cost]) {
         draft.action_types = draft.action_types ?? {};
         draft.action_types[effect.cost] ??= structuredClone(donor.action_types[effect.cost]!);
