@@ -191,7 +191,9 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
   // Ссылаться можно только на шаги ВЫШЕ по цепочке: результат ещё не
   // случившегося шага — это не «пусто», а невозможность.
   const earlierOf = (index: number) =>
-    steps.slice(0, index).map(step => step.id).filter(Boolean) as string[];
+    steps.slice(0, index)
+      .filter(step => step.id)
+      .map(step => ({ id: String(step.id), type: step.type }));
 
   const cards = groupSteps(steps);
   const problems = steps.map((step, index) => problemOf(step, system, effect, earlierOf(index)));

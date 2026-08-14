@@ -12,7 +12,8 @@ const ctx: SlotContext = {
     effects: {},
   } as unknown as System,
   effect: { params: [{ key: 'p_1', label: 'кость урона', kind: 'dice' }] } as unknown as Effect,
-  earlier: ['hit'],
+  // Шаг выше по цепочке: id и тип — по типу берутся его выходы.
+  earlier: [{ id: 'hit', type: 'threshold' }],
 };
 
 describe('parseTyped', () => {
@@ -39,7 +40,7 @@ describe('displayOf', () => {
   it('структурные ссылки показываются словами', () => {
     expect(displayOf({ tag: 'armor' }, ctx)).toBe('поле: Класс брони');
     expect(displayOf({ param: 'p_1' }, ctx)).toBe('из записи: кость урона');
-    expect(displayOf({ ref: 'hit' }, ctx)).toBe('результат «hit»');
+    expect(displayOf({ ref: 'hit.margin' }, ctx)).toBe('«hit» — превышение');
     expect(displayOf({ const: 5 }, ctx)).toBe('5');
   });
 });
@@ -50,7 +51,17 @@ describe('optionsFor', () => {
     expect(groups).toEqual(new Set(['Поля цели', 'Из записи', 'Результаты шагов', 'Кости']));
   });
   it('allow сужает список', () => {
-    expect(optionsFor(ctx, ['ref']).map(o => o.label)).toEqual(['результат «hit»']);
+    // По одному пункту на КАЖДЫЙ выход шага, а не «результат целиком»:
+    // объект в числовой слот не лезет, и раньше это выяснялось при броске.
+    expect(optionsFor(ctx, ['ref']).map(o => o.label)).toEqual([
+      '«hit» — вышло',
+      '«hit» — превышение',
+      '«hit» — итог броска',
+      '«hit» — степень успеха',
+      '«hit» — сколько костей кинуто',
+      '«hit» — костей на максимуме',
+      '«hit» — костей на единице',
+    ]);
   });
 });
 

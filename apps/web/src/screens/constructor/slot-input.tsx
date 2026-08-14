@@ -10,6 +10,7 @@ import { labelOfTag } from '../../ui/formula.tsx';
 import { dieWord, readingWord } from './readback.ts';
 import { FormulaChips } from '../../ui/formula-chips.tsx';
 import { matchTagQuery } from '../../ui/tag-suggest.tsx';
+import { outputRefs, outputLabel } from './slots.tsx';
 import type { SlotContext, SlotKind } from './slots.tsx';
 
 export function parseTyped(text: string): SlotRef | null {
@@ -43,7 +44,7 @@ export function displayOf(ref: unknown, ctx: SlotContext): string {
     return `из записи: ${declared?.label ?? String(r.param)}`;
   }
   if ('prop' in r || 'item' in r) return `из записи: ${String(r.prop ?? r.item)}`;
-  if ('ref' in r) return `результат «${String(r.ref)}»`;
+  if ('ref' in r) return outputLabel(String(r.ref), ctx.earlier);
   if ('constant' in r) return `кость: ${dieWord(ctx.system, String(r.constant))}`;
   return '';
 }
@@ -62,7 +63,7 @@ export function chipOf(ref: unknown, ctx: SlotContext): { label: string; record:
     return { label: declared?.label ?? String(r.param), record: true };
   }
   if ('prop' in r || 'item' in r) return { label: String(r.prop ?? r.item), record: true };
-  if ('ref' in r) return { label: `результат «${String(r.ref)}»`, record: false };
+  if ('ref' in r) return { label: outputLabel(String(r.ref), ctx.earlier), record: false };
   if ('constant' in r) {
     const name = String(r.constant);
     const reading = readingWord(ctx.system, name);
@@ -80,7 +81,11 @@ export function optionsFor(ctx: SlotContext, allow?: SlotKind[]): SlotOption[] {
   if (ok('param')) {
     for (const p of ctx.effect.params ?? []) out.push({ group: 'Из записи', label: p.label ?? p.key, ref: { param: p.key } });
   }
-  if (ok('ref')) for (const name of ctx.earlier) out.push({ group: 'Результаты шагов', label: `результат «${name}»`, ref: { ref: name } });
+  if (ok('ref')) {
+    for (const o of outputRefs(ctx.earlier)) {
+      out.push({ group: 'Результаты шагов', label: o.label, ref: { ref: o.ref } });
+    }
+  }
   if (ok('tag')) for (const f of ctx.system.fields) out.push({ group: 'Поля цели', label: f.label ?? f.tag, ref: { tag: f.tag } });
   if (ok('constant')) {
     for (const [key, c] of Object.entries(ctx.system.constants ?? {})) out.push({ group: 'Кости', label: c.label ?? key, ref: { constant: key } });

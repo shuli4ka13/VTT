@@ -17,14 +17,57 @@ import type { System, Effect, RecordKind, SlotRef } from '@vtt/schema';
 import { Input, Select } from '../../ui/primitives.tsx';
 import { FormulaInput, labelOfTag } from '../../ui/formula.tsx';
 import { countWord } from './readback.ts';
+import { stepModule } from '@vtt/engine/engine/steps/index';
+
+/** Шаг выше по цепочке: на что ссылаться (id) и чем он делится (type). */
+export interface EarlierStep { id: string; type: string }
+
+/**
+ * Что можно взять у шагов выше по цепочке — по одному пункту на КАЖДЫЙ выход,
+ * а не «результат целиком».
+ *
+ * Раньше выпадашка предлагала только имя шага, то есть весь его результат:
+ * у величины это число и всё работало, а у проверки — объект, который
+ * в числовой слот не лезет и падает при броске. Сами выходы модули объявляли
+ * с самого начала (`outputs`), но интерфейс их не спрашивал.
+ */
+export function outputRefs(earlier: EarlierStep[]): { ref: string; label: string }[] {
+  const out: { ref: string; label: string }[] = [];
+  for (const step of earlier) {
+    let outputs: { path: string; label: string }[] = [];
+    try {
+      outputs = (stepModule(step.type).outputs ?? []) as { path: string; label: string }[];
+    } catch {
+      // Шаг неизвестного типа — предложим хотя бы результат целиком.
+    }
+    if (!outputs.length) {
+      out.push({ ref: step.id, label: `«${step.id}» — результат` });
+      continue;
+    }
+    for (const o of outputs) {
+      out.push({ ref: `${step.id}${o.path}`, label: `«${step.id}» — ${o.label}` });
+    }
+  }
+  return out;
+}
+
+/** Как показать уже выбранную ссылку: имя шага плюс имя выхода. */
+export function outputLabel(ref: string, earlier: EarlierStep[]): string {
+  const found = outputRefs(earlier).find(o => o.ref === ref);
+  if (found) return found.label;
+  const [head, ...path] = ref.split('.');
+  return path.length ? `«${head}» — ${path.join('.')}` : `шаг «${head}»`;
+}
 
 export type SlotKind = 'const' | 'expr' | 'tag' | 'constant' | 'prop' | 'param' | 'ref' | 'empty';
 
 export interface SlotContext {
   system: System;
   effect: Effect;
-  /** Имена шагов, на результат которых можно сослаться (все, что ВЫШЕ по цепочке). */
-  earlier: string[];
+  /** Шаги выше по цепочке: id и тип. Тип обязателен — по нему берутся
+   * ВЫХОДЫ шага (engine/steps/*.outputs), а без них выпадашка предлагала
+   * «результат целиком», то есть объект, который в числовой слот не лезет. */
+  earlier: EarlierStep[];
   /**
    * Ограничение «свойство закрывает потребность этим родом» — контекст уже
    * знает, какой род заполняет потребность (BindingEditor, records-tab.tsx).
@@ -205,14 +248,14 @@ export const SLOT_KINDS: SlotKindModule[] = [
     label: 'Результат шага',
     hint: 'То, что уже посчитал шаг выше по цепочке.',
     matches: ref => has(ref, 'ref'),
-    blank: ctx => ({ ref: ctx.earlier[0] ?? '' }),
-    summary: ref => `шаг «${ref.ref}»`,
+    blank: ctx => ({ ref: outputRefs(ctx.earlier)[0]?.ref ?? '' }),
+    summary: (ref, ctx) => outputLabel(String(ref.ref), ctx.earlier),
     editor: (ref, onChange, ctx) => (
       <Select
         value={ref.ref ?? ''}
         options={[
-          ['', '— выберите шаг —'],
-          ...ctx.earlier.map(name => [name, `шаг «${name}»`] as const),
+          ['', '— выберите, что берём —'],
+          ...outputRefs(ctx.earlier).map(o => [o.ref, o.label] as const),
         ] as never}
         onChange={next => onChange({ ref: next })}
       />

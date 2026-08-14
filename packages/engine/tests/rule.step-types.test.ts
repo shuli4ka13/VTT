@@ -59,6 +59,9 @@ group('шаг «порог»', () => {
     const out = run([hit()], { die: queue(10) });
     deepEq(out.results.hit, {
       success: true, margin: 2, total: 16,
+      // Счёт по натурально выпавшему едет вместе с исходом: из него автор
+      // собирает криты и глитчи своими условиями.
+      rolled: 1, atMax: 0, atMin: 0,
       dice: { rolls: [10], kept: 10 }, parts: {},
     }, 'бросок 10 + бонус 6 против КД Мирры 14');
     eq(out.stopped, null);

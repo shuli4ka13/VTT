@@ -86,6 +86,13 @@ export const outputs = [
   { path: '.margin', label: 'превышение', kind: 'number' },
   { path: '.total', label: 'итог броска', kind: 'number' },
   { path: '.degree', label: 'степень успеха', kind: 'text' },
+  // Счёт по НАТУРАЛЬНО выпавшему. Отсюда собираются криты и глитчи, и
+  // собирает их автор: «две шестёрки» в Blades, «дубль» в Daggerheart,
+  // «натуральная 20» в 5e — это условие на этих числах, а не понятие движка.
+  // Доменных слов «крит» и «провал» здесь нет и быть не может.
+  { path: '.rolled', label: 'сколько костей кинуто', kind: 'number' },
+  { path: '.atMax', label: 'костей на максимуме', kind: 'number' },
+  { path: '.atMin', label: 'костей на единице', kind: 'number' },
 ];
 
 // Может оборвать цепочку — приговор о разборе говорит об этом словами.
@@ -205,6 +212,9 @@ export function resolve(step: StepData, ctx: StepContext) {
 
   const value = {
     success, margin, total,
+    rolled: rolled.tally?.dice ?? rolled.rolls.length,
+    atMax: rolled.tally?.atMax ?? 0,
+    atMin: rolled.tally?.atMin ?? 0,
     ...(scale ? { degree } : {}),
     dice: { rolls: rolled.rolls, kept: rolled.kept },
     parts: rolled.parts || {},

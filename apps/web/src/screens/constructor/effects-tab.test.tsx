@@ -98,3 +98,51 @@ describe('EffectsTab: палитра трёх понятий', () => {
     expect(useWorld.getState().system.fields.some(f => f.tag === 'hp_current')).toBe(true);
   });
 });
+
+// Криты и глитчи собираются из счёта по натурально выпавшему. Чтобы это
+// было возможно, до слота должны доехать три вещи разом: у проверки есть
+// ИМЯ (иначе на неё не сослаться), карточка знает ТИП шага выше по цепочке
+// (иначе не спросить его выходы), и выпадашка предлагает выходы поимённо,
+// а не «результат целиком». Раньше рвалось в каждом из трёх мест.
+describe('ссылка на результат шага', () => {
+  beforeEach(() => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...state.system,
+        constants: { lead: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
+        effects: {
+          strike: {
+            label: 'Атака', activation: 'manual', params: [],
+            steps: [
+              {
+                id: 'бросок', type: 'threshold',
+                roll: { die: { constant: 'lead' }, check: null },
+                versus: { const: 10 },
+              },
+              { id: 'сколько', type: 'amount', source: 'margin' },
+            ],
+          },
+        },
+      },
+      activeEffectId: 'strike',
+    }));
+  });
+
+  it('у проверки есть поле имени — без него на неё не сослаться', () => {
+    render(<EffectsTab />);
+    expect(screen.getAllByPlaceholderText('имя').length).toBeGreaterThan(1);
+  });
+
+  it('слот «какое превышение» предлагает выходы проверки поимённо', () => {
+    render(<EffectsTab />);
+    const label = screen.getByText('какое превышение');
+    const input = label.parentElement!.querySelector('.chips__text') as HTMLInputElement;
+    fireEvent.focus(input);
+
+    const options = [...document.querySelectorAll('.slot__option')].map(o => o.textContent?.trim());
+    expect(options).toContain('Результаты шагов«бросок» — превышение');
+    expect(options).toContain('Результаты шагов«бросок» — костей на максимуме');
+    expect(options).toContain('Результаты шагов«бросок» — костей на единице');
+  });
+});

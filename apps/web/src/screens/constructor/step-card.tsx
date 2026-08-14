@@ -17,7 +17,7 @@
 import type { System, Effect, Step } from '@vtt/schema';
 import { compile } from '@vtt/engine/formula';
 import { kindOf, declaredProps } from './slots.tsx';
-import type { SlotKind } from './slots.tsx';
+import type { SlotKind, EarlierStep } from './slots.tsx';
 
 interface SlotSpec {
   key: string;
@@ -154,7 +154,7 @@ export interface Problem { text: string; missingField?: string }
  * заполненность обязательных слотов и разрешимость ссылок. Значения здесь
  * не считаются — персонажа в конструкторе нет.
  */
-export function problemOf(step: Step, system: System, effect: Effect, earlier: string[]): Problem | null {
+export function problemOf(step: Step, system: System, effect: Effect, earlier: EarlierStep[]): Problem | null {
   const spec = specOf(step.type);
   if (!spec) return { text: `движок не знает типа шага «${step.type}»` };
 
@@ -205,7 +205,7 @@ export function problemOf(step: Step, system: System, effect: Effect, earlier: s
     }
     if (kind.kind === 'ref') {
       const name = String(ref.ref).split('.')[0]!;
-      if (!earlier.includes(name)) {
+      if (!earlier.some(s => s.id === name)) {
         return { text: `шага «${name}» выше по цепочке нет — на его результат не сослаться` };
       }
     }

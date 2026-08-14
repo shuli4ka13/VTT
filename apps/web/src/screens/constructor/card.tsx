@@ -13,7 +13,7 @@ import { parseRollExpr, formatRollExpr, parseAmountExpr, formatAmountExpr } from
 import { compile } from '@vtt/engine/formula';
 import { FormulaChips } from '../../ui/formula-chips.tsx';
 import { SlotInput, chipOf, type SlotOption } from './slot-input.tsx';
-import type { SlotContext } from './slots.tsx';
+import type { SlotContext, EarlierStep } from './slots.tsx';
 import type { Problem } from './step-card.tsx';
 
 const TITLES: Record<string, string> = { check: 'Проверка', change: 'Изменение', number: 'Число' };
@@ -44,7 +44,7 @@ export function GroupCard({
   position: number;
   system: System;
   effect: Effect;
-  earlier: string[];
+  earlier: EarlierStep[];
   problem: Problem | null;
   /**
    * Лекарство рядом с диагнозом (задача 3): если беда в отсутствующем поле
@@ -103,7 +103,12 @@ export function GroupCard({
       <Card tone={problem ? 'bad' : undefined}>
         <CardHead
           title={`${position} · ${TITLES[group.kind]}`}
-          badge={group.kind === 'number' ? (
+          // Имя нужно всякому шагу, на результат которого ссылаются, а не
+          // только «Числу»: без имени проверку нельзя назвать в слоте, и
+          // «костей на максимуме» из неё не достать. Раньше поле стояло
+          // только у «Числа» — потому свежесобранная проверка и была
+          // невидима для последующих шагов.
+          badge={group.kind === 'change' ? null : (
             <Input
               value={step.id ?? ''}
               mono
@@ -113,7 +118,7 @@ export function GroupCard({
                 if (id) (draft as any).id = id; else delete (draft as any).id;
               })}
             />
-          ) : null}
+          )}
           actions={actions}
         />
         {problem ? <Verdict tone="bad" action={problemAction}>{problem.text}</Verdict> : null}
