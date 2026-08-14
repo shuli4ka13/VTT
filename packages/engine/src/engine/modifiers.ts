@@ -17,7 +17,7 @@
 // а для WFRP, Fate и Blades не работает вовсе.
 
 import { compile } from '../formula/index.ts';
-import { assertTarget } from './targets.ts';
+import { assertTarget, ANY_ROLL } from './targets.ts';
 import { roomEffects, wornEffects, activationOf } from './effects.ts';
 import { EngineError } from './errors.ts';
 import type { System, Sheet, Compendium, Modifier, RollEdit } from '../model/types.ts';
@@ -143,11 +143,20 @@ export function applyValueModifiers(base: unknown, tag: string, pass: Pass): unk
 // Разбор броска: какая порода модификаторов на нём висит и что из этого следует.
 // Возвращает не число, а режим — движок броска сам решит, как его отыграть.
 export function resolveRoll(
-  system: System, sheet: Sheet, rollTag: string, pass: Pass,
+  system: System, sheet: Sheet, rollTag: string | null, pass: Pass,
 ): RollResolution {
-  assertTarget(system, rollTag);
+  if (rollTag) assertTarget(system, rollTag);
 
-  const mods = (pass.modifiers ? pass.modifiers.roll.get(rollTag) || [] : [])
+  // Две мишени сразу: своя («Бросок атаки») и общая («Любой бросок»). Бросок
+  // принадлежит обеим, ничего для этого не объявляя, — поэтому «помеха на всё»
+  // достаёт и те правила, которых при её написании ещё не существовало.
+  // Бросок вовсе без своей мишени ловит общую: он всё равно бросок.
+  // Проход может не приехать вовсе (упаковка без листа — так зовут разбор
+  // конструктор и тесты шагов): модификаторов тогда просто нет, и это не
+  // ошибка. Раньше такой вызов сюда не доходил, потому что бросок без своей
+  // мишени разбор пропускал — теперь доходит любой.
+  const bucket = (tag: string) => (pass?.modifiers ? pass.modifiers.roll.get(tag) || [] : []);
+  const mods = [...(rollTag ? bucket(rollTag) : []), ...bucket(ANY_ROLL)]
     .filter(m => conditionHolds(m, pass));
 
   // Ключи записей словаря, названные модификаторами. Не сумма и не счёт:
@@ -174,10 +183,10 @@ export function resolveRoll(
   // проверкам» это не преимущество и не правка характеристики: складывается
   // обычной арифметикой и на состав костей не влияет.
   const adds = mods.filter(m => m.op === 'add');
-  const bonus = adds.length ? totalOf(adds, pass, rollTag) : 0;
+  const bonus = adds.length ? totalOf(adds, pass, rollTag ?? ANY_ROLL) : 0;
 
   return {
-    tag: rollTag,
+    tag: rollTag ?? ANY_ROLL,
     edits: surviving.map(key => ({ ...dictionary[key]!, label: dictionary[key]!.label || key })),
     bonus,
     sources: mods.map(m => ({ ...m.source, edit: m.edit })),

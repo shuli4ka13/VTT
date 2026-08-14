@@ -149,9 +149,7 @@ export function pack(step: StepData, ctx: StepContext) {
     return { ...base, roll: { die: roll.die, bonus: packRef(roll.bonus, ctx), check: roll.check || null } };
   }
 
-  const mods = roll.check
-    ? resolveRoll(ctx.system, ctx.sheet, roll.check, ctx.pass)
-    : { edits: [], bonus: 0 };
+  const mods = resolveRoll(ctx.system, ctx.sheet, roll.check || null, ctx.pass);
   const rolled = rollLead(unfold(roll.die, ctx), ctx.die, mods.edits);
   return { ...base, rolled, bonus: packRef(roll.bonus, ctx), modBonus: mods.bonus };
 }
@@ -162,9 +160,7 @@ export function resolve(step: StepData, ctx: StepContext) {
 
   if (!rolled) {
     // Порог на стороне цели: бросаем здесь и сейчас, её костью и модификаторами.
-    const mods = step.roll.check
-      ? resolveRoll(ctx.system, ctx.sheet, step.roll.check, ctx.pass)
-      : { edits: [], bonus: 0 };
+    const mods = resolveRoll(ctx.system, ctx.sheet, step.roll.check || null, ctx.pass);
     rolled = rollLead(unfold(step.roll.die, ctx), ctx.die, mods.edits);
     modBonus = mods.bonus;
   }

@@ -1,6 +1,8 @@
 import { group, test, eq, deepEq } from './harness.ts';
 import { packRule, resolveRule } from '../src/engine/rule.ts';
 import { newPass } from '../src/engine/calc.ts';
+import { send, receive } from '../src/events/envelope.ts';
+import { system as dnd, arven, mirra, compendium as dndBook } from './fixtures.ts';
 
 // Вопрос Влада: механики РАЗНЫХ систем правда доезжают через эффекты — или
 // эффектом можно повесить только преимущество д&д-шного вида?
@@ -114,5 +116,61 @@ group('механики разных систем доезжают через э
     sys.effects.помощь.modifiers[0].target = 'другой';
     const r = run(sys, sheet(['помощь']), 5);
     deepEq(r.trace[0].rolls, [5], 'одна кость: правка висит на другой мишени');
+  });
+});
+
+// «Помеха на любой бросок» — то, ради чего мишень «Любой бросок» и заведена.
+// Проверяется на ОБРАЗЦЕ D&D, не на выдуманном мире: «Атака» в нём объявляет
+// себя «Броском атаки» и после этой правки не менялась ни на байт.
+group('любой бросок ловит правку, ничего для этого не объявляя', () => {
+  const withRule = (edit: string) => ({
+    ...dnd,
+    effects: {
+      ...dnd.effects,
+      всякий: {
+        label: 'Проклятие невезения', activation: 'passive', duration: { kind: 'permanent' },
+        modifiers: [{ kind: 'roll', target: 'roll:any', edit, condition: null }],
+      },
+    },
+  });
+  const cursed = (sys: any, ids: string[]) => ({ ...arven, effects: ids.map(effectId => ({ effectId })) });
+
+  const attack = (sys: any, sheet: any, ...dice: number[]) => {
+    const env = send('longsword-item:0', { system: sys, sheet, compendium: dndBook, die: queue(...dice) });
+    return receive(env, { system: sys, sheet: mirra, compendium: dndBook, die: queue() }).report.trace[0] as any;
+  };
+
+  test('правка «на любой бросок» достаёт атаку, хотя та объявлена «Броском атаки»', () => {
+    const sys = withRule('disadvantage');
+    const t = attack(sys, cursed(sys, ['всякий']), 18, 4, 5);
+    deepEq(t.rolls, [18, 4], 'кости две — общая мишень сработала');
+    eq(t.kept, 4, 'взята худшая');
+    deepEq(t.edits, ['Помеха']);
+  });
+
+  test('преимущество «на любой бросок» работает так же — порода одна', () => {
+    const sys = withRule('advantage');
+    const t = attack(sys, cursed(sys, ['всякий']), 4, 18, 5);
+    eq(t.kept, 18, 'взята лучшая');
+  });
+
+  test('общая правка гасится своей: помеха на всё против преимущества на атаки', () => {
+    const sys: any = withRule('disadvantage');
+    sys.effects.фланг = {
+      label: 'Во фланге', activation: 'passive', duration: { kind: 'permanent' },
+      modifiers: [{ kind: 'roll', target: 'attack_roll', edit: 'advantage', condition: null }],
+    };
+    const t = attack(sys, cursed(sys, ['всякий', 'фланг']), 18, 4, 5);
+    deepEq(t.rolls, [18], 'одна кость: гашение не смотрит, с какой мишени пришла правка');
+    eq(t.edits, undefined, 'правок не осталось — трасса о них и не заикается');
+  });
+
+  test('спасбросок ЦЕЛИ ловит её собственную общую правку — считает получатель', () => {
+    const sys = withRule('disadvantage');
+    const env = send('poison-spray:0', { system: sys, sheet: mirra, compendium: dndBook, die: queue(3, 4) });
+    const t = receive(env, { system: sys, sheet: cursed(sys, ['всякий']), compendium: dndBook, die: queue(19, 2) })
+      .report.trace[0] as any;
+    deepEq(t.rolls, [19, 2], 'проклятие висит на ЦЕЛИ, и бросает его она');
+    eq(t.kept, 2);
   });
 });

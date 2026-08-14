@@ -306,10 +306,14 @@ group('модификаторы', () => {
       const all = targets(system);
       const derived = system.fields.filter(f => f.roll).length;
       const incoming = system.fields.filter(f => f.value.kind === 'stored').length;
-      eq(all.length, system.fields.length + system.rolls.length + derived + incoming,
-        'поля, объявленные броски, броски из полей и входящее хранимых');
+      eq(all.length, 1 + system.fields.length + system.rolls.length + derived + incoming,
+        'общая мишень, поля, объявленные броски, броски из полей и входящее хранимых');
       ok(all.some(t => t.tag === 'ac' && t.kind === 'value'));
       ok(all.some(t => t.tag === 'attack_roll' && t.kind === 'roll'));
+      // «Любой бросок» есть всегда и ничего для этого не требует: система
+      // может не объявить ни одной своей мишени, а помеху на всё — захотеть.
+      ok(all.some(t => t.tag === 'roll:any' && t.kind === 'roll'),
+        'общая мишень выводится, как и все прочие');
       ok(all.some(t => t.tag === 'incoming:hp_current' && t.kind === 'incoming'),
         'на входящее вешаются сопротивления');
     });
