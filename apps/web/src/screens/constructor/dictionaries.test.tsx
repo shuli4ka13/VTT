@@ -25,6 +25,42 @@ describe('Словари: кости, виды бросков, таблицы, �
     expect(dies.some(c => c.kind === 'die')).toBe(true);
   });
 
+  // Формы броска — кнопками, а не синтаксисом в голове: про «#пул d6»
+  // и «1d12 Надежда + 1d12 Страх» из плейсхолдера «1d20» не догадаться.
+  it('кнопка «+ из частей» кладёт готовый составной бросок', () => {
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ из частей'));
+    const die = Object.values(useWorld.getState().system.constants ?? {})[0];
+    expect(die?.dice).toEqual([
+      { count: 1, sides: 12, name: 'надежда', label: 'Надежда' },
+      { count: 1, sides: 12, name: 'страх', label: 'Страх' },
+    ]);
+    expect(screen.getByDisplayValue('1d12 Надежда + 1d12 Страх')).toBeTruthy();
+  });
+
+  it('«+ пул» без числового поля на листе заблокирован и объясняет почему', () => {
+    render(<DictionariesTab />);
+    const button = screen.getByText('+ пул').closest('button') as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
+    expect(button.title).toMatch(/числовое поле/);
+  });
+
+  it('«+ пул» берёт размер из поля листа', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        fields: [{ tag: 'пул', label: 'Пул', value: { kind: 'stored', type: 'number', default: 6 } }],
+      },
+      activeEffectId: null,
+    }));
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ пул'));
+    const die = Object.values(useWorld.getState().system.constants ?? {})[0];
+    expect(die?.dice).toEqual([{ count: { tag: 'пул' }, sides: 6 }]);
+    expect(screen.getByDisplayValue('#пул d6')).toBeTruthy();
+  });
+
   // Чтение — вторая ось кости (спека «Что такое бросок»): сумма — умолчание
   // и в данных не пишется; счёт успехов приносит порог на кость.
   it('чтение кости выбирается селектом; сумма в данных не оседает', () => {

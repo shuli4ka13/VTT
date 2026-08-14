@@ -104,10 +104,32 @@ function renameRoll(rolls: { tag: string; label: string }[], index: number, labe
   cur.label = label;
 }
 
-const addDie = (editSystem: EditSystem) => editSystem(draft => {
+/**
+ * Три ФОРМЫ броска — тремя кнопками, а не синтаксисом в голове автора.
+ * Строку состава можно править руками, но узнать про «#пул d6» и «1d12
+ * Надежда + 1d12 Страх» из плейсхолдера «1d20» было нельзя никак: кнопка
+ * кладёт готовый образец, дальше правятся цифры и слова.
+ */
+type DieShape = 'plain' | 'pool' | 'parts';
+
+const SHAPES: Record<DieShape, { label: string; hint: string }> = {
+  plain: { label: '+ кость', hint: 'Один кубик: D&D — 1d20, Cyberpunk — 1d10' },
+  pool: { label: '+ пул', hint: 'Столько костей, сколько скажет поле листа: Shadowrun, Blades' },
+  parts: { label: '+ из частей', hint: 'Один бросок из названных половин: Надежда и Страх в Daggerheart' },
+};
+
+const addDie = (editSystem: EditSystem, shape: DieShape, poolTag?: string) => editSystem(draft => {
   draft.constants ??= {};
   const key = freeId(Object.keys(draft.constants), 'кость');
-  draft.constants[key] = { label: '', kind: 'die', dice: [{ count: 1, sides: 20 }] };
+  const dice = shape === 'pool'
+    ? [{ count: { tag: poolTag ?? '' }, sides: 6 } as never]
+    : shape === 'parts'
+      ? [
+        { count: 1, sides: 12, name: 'надежда', label: 'Надежда' },
+        { count: 1, sides: 12, name: 'страх', label: 'Страх' },
+      ]
+      : [{ count: 1, sides: 20 }];
+  draft.constants[key] = { label: '', kind: 'die', dice };
 });
 
 const addRollEdit = (editSystem: EditSystem) => editSystem(draft => {
@@ -151,7 +173,7 @@ export function DictionariesTab() {
               <CardHead
                 title="Кости"
                 sub="Чем бросают проверки в этом мире. Обычно тут одна запись. Кость урона сюда не нужна — она живёт на самом мече."
-                actions={<Button size="sm" onClick={() => addDie(editSystem)}>+ кость</Button>}
+                actions={<DiceShapeButtons system={system} editSystem={editSystem} />}
               />
               <DiceSection system={system} compendium={compendium} editSystem={editSystem} />
             </Card>
@@ -251,6 +273,31 @@ function readKindOf(constant: SystemConstant): string {
   return typeof read === 'string' ? read : read?.kind ?? 'sum';
 }
 
+/** Кнопки трёх форм. «Пул» без числового поля на листе завести нельзя —
+ * и кнопка честно говорит почему, вместо ссылки в пустоту. */
+function DiceShapeButtons({ system, editSystem }: { system: System; editSystem: EditSystem }) {
+  const poolTag = system.fields.find(f =>
+    f.value.kind === 'stored' ? f.value.type === 'number' : f.value.kind !== 'table')?.tag;
+  return (
+    <>
+      {(Object.keys(SHAPES) as DieShape[]).map(shape => {
+        const blocked = shape === 'pool' && !poolTag;
+        return (
+          <Button
+            key={shape}
+            size="sm"
+            disabled={blocked}
+            title={blocked ? 'Сначала заведите на «Листе» числовое поле — оно и скажет размер пула' : SHAPES[shape].hint}
+            onClick={() => addDie(editSystem, shape, poolTag)}
+          >
+            {SHAPES[shape].label}
+          </Button>
+        );
+      })}
+    </>
+  );
+}
+
 function DiceSection({ system, compendium, editSystem }: Props) {
   const entries = Object.entries(system.constants ?? {}).filter(([, c]) => c.kind === 'die');
 
@@ -282,7 +329,7 @@ function DiceSection({ system, compendium, editSystem }: Props) {
           <div className="dict-row">
             <Input
               value={constant.label ?? ''}
-              placeholder="кость"
+              placeholder="название кости"
               onChange={label => editSystem(draft => {
                 draft.constants ??= {};
                 renameKeyed(draft.constants, key, label, inUse);
