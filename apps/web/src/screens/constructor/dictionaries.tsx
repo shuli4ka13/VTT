@@ -21,7 +21,7 @@
 
 import { useState } from 'react';
 import { readingKinds } from '@vtt/engine/engine/readings';
-import { editPrimitives } from '@vtt/engine/engine/roll-edits';
+import { editPalette, paletteKeyOf } from '@vtt/engine/engine/roll-edits';
 import { Readback } from './card.tsx';
 import { editReadback, dieReadback } from './readback.ts';
 import { useWorld, freeId, slugOf } from '../../store/world.ts';
@@ -344,16 +344,38 @@ function DiceSection({ system, compendium, editSystem }: Props) {
 
 /** Короткая подпись примитива — только на фишке, фраза целиком в пересказе. */
 function opWord(op: { op: string; [k: string]: unknown }): string {
-  return editPrimitives().find(p => p.op === op.op)?.label ?? op.op;
+  const key = paletteKeyOf(op);
+  return editPalette().find(p => p.key === key)?.label ?? op.op;
 }
 
+/** Части составных костей мира: Надежда и Страх Daggerheart, десятки CoC.
+ * Пусто — значит в этом мире составных костей нет, и спрашивать про часть
+ * не у кого: селектор не появится вовсе. */
+function partsOf(system: System): { name: string; label: string }[] {
+  const seen = new Map<string, string>();
+  for (const constant of Object.values(system.constants ?? {})) {
+    for (const term of constant.dice ?? []) {
+      if (term.name && !seen.has(term.name)) seen.set(term.name, term.label || term.name);
+    }
+  }
+  return [...seen].map(([name, label]) => ({ name, label }));
+}
+
+/** Примитивы, которые можно адресовать одной части броска. */
+const PART_ABLE = ['addDie', 'keepBest', 'keepWorst', 'dieStep', 'explode'];
+
 /** Параметр примитива правится прямо на фишке: он принадлежит ей, не строке. */
-function OpChip({ op, onNumber, onRemove }: {
+function OpChip({ op, parts, onNumber, onPart, onRemove }: {
   op: Record<string, unknown>;
+  parts: { name: string; label: string }[];
   onNumber: (value: number) => void;
+  onPart: (part: string) => void;
   onRemove: () => void;
 }) {
   const numeric = 'n' in op ? 'n' : 'by' in op ? 'by' : null;
+  // Про часть спрашиваем ТОЛЬКО там, где части есть. В мире с одной костью
+  // (то есть почти всегда) этого селектора не существует.
+  const askPart = parts.length > 0 && PART_ABLE.includes(String(op.op));
   return (
     <span className="chip">
       {opWord(op as { op: string })}
@@ -368,6 +390,17 @@ function OpChip({ op, onNumber, onRemove }: {
           }}
         />
       ) : null}
+      {askPart ? (
+        <select
+          className="chip__part"
+          aria-label="чему именно"
+          value={String(op.part ?? '')}
+          onChange={e => onPart(e.target.value)}
+        >
+          <option value="">всему броску</option>
+          {parts.map(p => <option key={p.name} value={p.name}>{p.label}</option>)}
+        </select>
+      ) : null}
       <button className="chip__x" type="button" title="убрать" onClick={onRemove}>×</button>
     </span>
   );
@@ -375,7 +408,8 @@ function OpChip({ op, onNumber, onRemove }: {
 
 function RollEditsSection({ system, compendium, editSystem }: Props) {
   const entries = Object.entries(system.roll_edits ?? {});
-  const primitives = editPrimitives();
+  const palette = editPalette();
+  const parts = partsOf(system);
 
   if (entries.length === 0) {
     return (
@@ -431,10 +465,16 @@ function RollEditsSection({ system, compendium, editSystem }: Props) {
                 <OpChip
                   key={i}
                   op={op}
+                  parts={parts}
                   onNumber={value => editSystem(draft => {
                     const target = draft.roll_edits?.[key]?.ops?.[i];
                     if (!target) return;
                     if ('n' in target) target.n = value; else target.by = value;
+                  })}
+                  onPart={part => editSystem(draft => {
+                    const target = draft.roll_edits?.[key]?.ops?.[i];
+                    if (!target) return;
+                    if (part) target.part = part; else delete target.part;
                   })}
                   onRemove={() => editSystem(draft => {
                     draft.roll_edits?.[key]?.ops?.splice(i, 1);
@@ -444,8 +484,18 @@ function RollEditsSection({ system, compendium, editSystem }: Props) {
               <Select
                 value=""
                 options={[['', '+ добавить…'],
-                  ...primitives.map(p => [p.op, p.label] as const)] as never}
-                onChange={op => { if (op) editSystem(draft => { addOp(draft.roll_edits?.[key], op); }); }}
+                  ...palette.map(p => [p.key, p.label] as const)] as never}
+                onChange={pick => {
+                  if (!pick) return;
+                  const chosen = palette.find(p => p.key === pick);
+                  if (!chosen) return;
+                  editSystem(draft => {
+                    const edit = draft.roll_edits?.[key];
+                    if (!edit) return;
+                    edit.ops ??= [];
+                    edit.ops.push(JSON.parse(JSON.stringify(chosen.op)));
+                  });
+                }}
               />
             </div>
 
@@ -492,15 +542,6 @@ function RollEditsSection({ system, compendium, editSystem }: Props) {
   );
 }
 
-/** Примитив кладётся со своим умолчанием: пустой параметр ничего не значит. */
-function addOp(edit: { ops?: { op: string }[] } | undefined, op: string) {
-  if (!edit) return;
-  edit.ops ??= [];
-  const withDefaults: Record<string, Record<string, number>> = {
-    keepBest: { n: 1 }, keepWorst: { n: 1 }, dieStep: { by: 1 }, shiftVersus: { by: -2 },
-  };
-  edit.ops.push({ op, ...(withDefaults[op] ?? {}) });
-}
 
 // ── мишени бросков ──────────────────────────────────────────────────────
 

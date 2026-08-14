@@ -455,3 +455,11 @@
   appearance: none; text-align: center;
 }
 .chips__op:hover { color: var(--accent); }
+
+/* Часть составного броска прямо на фишке — появляется только в мирах,
+   где у кости есть части (Надежда/Страх). В обычном мире её нет вовсе. */
+.chip__part {
+  background: transparent; border: 0; border-bottom: 1px solid var(--border);
+  color: var(--text-muted); font: inherit; font-size: var(--fs-2);
+  padding: 0 0 0 var(--s-1); max-width: 11ch;
+}

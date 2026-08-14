@@ -49,7 +49,7 @@ group('ведущая кость', () => {
     test('одна к20: total равен выпавшему, именованных частей нет', () => {
       deepEq(rollLead(d20, queue(14)), {
         rolls: [14], kept: 14, total: 14, parts: {},
-        edits: [], versusShift: 0,
+        edits: [], versusShift: 0, degreeShift: 0,
         read: 'sum', tally: { dice: 1, atMax: 0, atMin: 0 },
       });
     });

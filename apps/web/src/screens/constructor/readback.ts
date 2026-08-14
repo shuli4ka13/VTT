@@ -170,28 +170,47 @@ const plural = (n: number, one: string, few: string, many: string) => {
   return many;
 };
 
+/** Как зовут часть составного броска: «Надежда», а не «hope». */
+function partLabel(system: System, part: string): string {
+  for (const constant of Object.values(system.constants ?? {})) {
+    const term = (constant.dice ?? []).find(d => d.name === part);
+    if (term) return term.label || part;
+  }
+  return part;
+}
+
 /** Один примитив — куском фразы. */
-function opPhrase(op: Record<string, unknown>): string {
+function opPhrase(op: Record<string, unknown>, system: System): string {
   const n = Number(op.n ?? 1);
   const by = Number(op.by ?? 0);
+  // Часть приписывается в скобках, а не склоняется в фразу: «оставить лучшую
+  // (Надежда)» читается одинаково правильно при любом имени, какое придумал
+  // автор, — а склонять чужие слова движок не берётся.
+  const only = op.part ? ` (${partLabel(system, String(op.part))})` : '';
   switch (op.op) {
     case 'addDie':
-      return n === 1 ? 'кинуть на кость больше'
-        : `кинуть на ${n} ${plural(n, 'кость', 'кости', 'костей')} больше`;
+      return (n === 1 ? 'кинуть на кость больше'
+        : `кинуть на ${n} ${plural(n, 'кость', 'кости', 'костей')} больше`) + only;
     case 'keepBest':
-      return n === 1 ? 'оставить лучшую' : `оставить ${n} лучших`;
+      return (n === 1 ? 'оставить лучшую' : `оставить ${n} лучших`) + only;
     case 'keepWorst':
-      return n === 1 ? 'оставить худшую' : `оставить ${n} худших`;
+      return (n === 1 ? 'оставить худшую' : `оставить ${n} худших`) + only;
     case 'dieStep':
-      return by >= 0
+      return (by >= 0
         ? `взять кость на ${by} ${plural(by, 'ступень', 'ступени', 'ступеней')} выше`
-        : `взять кость на ${-by} ${plural(by, 'ступень', 'ступени', 'ступеней')} ниже`;
+        : `взять кость на ${-by} ${plural(by, 'ступень', 'ступени', 'ступеней')} ниже`) + only;
     case 'shiftVersus':
       // Знак объясняется словом: «−2 к порогу» читается двусмысленно в мире,
       // где бросают вниз, а «легче» и «труднее» — одинаково в любом.
       return by <= 0 ? `сделать порог легче на ${-by}` : `сделать порог труднее на ${by}`;
+    case 'shiftDegree':
+      return by >= 0
+        ? `сдвинуть степень успеха на ${by} вверх`
+        : `сдвинуть степень успеха на ${-by} вниз`;
     case 'explode':
-      return 'на максимуме кинуть ещё раз и прибавить';
+      return String(op.at ?? 'max') === 'min'
+        ? `на единице кинуть ещё раз и вычесть${only}`
+        : `на максимуме кинуть ещё раз и прибавить${only}`;
     default:
       return String(op.op);
   }
@@ -205,7 +224,7 @@ export function editReadback(
   const ops = edit.ops ?? [];
   if (!ops.length) return [hole('что она делает с броском?')];
 
-  const phrases = ops.map(opPhrase);
+  const phrases = ops.map(op => opPhrase(op, system));
   const head = phrases[0]!;
   const text = head.charAt(0).toUpperCase() + head.slice(1)
     + (phrases.length > 1 ? ', ' + phrases.slice(1).join(', ') : '');

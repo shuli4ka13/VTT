@@ -40,6 +40,8 @@ export interface LeadRoll {
   edits: string[];
   /** Сдвиг порога от правок: его прибавляет сравнивающий шаг. */
   versusShift: number;
+  /** Сдвиг степени успеха: его применяет тот же шаг, по своей таблице. */
+  degreeShift: number;
   /** Чем читали — журнал пишет «успехов 2» и «сумма 11» по-разному. */
   read: string;
   /** Счёт по НАТУРАЛЬНО выпавшему: кинуто костей, из них на максимуме и на
@@ -120,12 +122,14 @@ export function rollLead(def: DieConstant, die: Die, edits: RollEdit[] = []): Le
   const tally = tallyOf(entries);
 
   const grown = applyResultEdits(entries, edits, die);
-  const { total, kept } = applyReading(keptDice(grown, claim.keep), claim.read);
+  const taken = keptDice(grown, claim.keeps);
+  const { total, kept } = applyReading(taken, claim.read);
 
-  // Именованные части — по выросшим костям: взорвавшаяся Надежда должна быть
-  // видна той величиной, которой она пошла в total.
+  // Именованные части — по ОСТАВЛЕННЫМ костям: отброшенная отбором Надежда
+  // в total не пошла, и показывать её как Надежду броска нельзя. Величина —
+  // после правок результата: взорвавшаяся кость видна тем, чем сыграла.
   const parts: Record<string, number> = {};
-  for (const entry of grown) {
+  for (const entry of taken) {
     if (entry.name) parts[entry.name] = (parts[entry.name] ?? 0) + entry.value;
   }
 
@@ -134,6 +138,7 @@ export function rollLead(def: DieConstant, die: Die, edits: RollEdit[] = []): Le
     kept, total, parts,
     edits: edits.map(e => e.label || '').filter(Boolean),
     versusShift: claim.versusShift,
+    degreeShift: claim.degreeShift,
     read: claim.read.kind,
     tally,
   };

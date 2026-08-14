@@ -16,6 +16,7 @@
 // threshold-held.
 
 import { resolveRoll } from '../modifiers.ts';
+import { lookupDegree } from '../tables.ts';
 import { dieConstant, rollLead, unfoldDice } from '../lead-die.ts';
 import { packRef, resolveNumber, resolveOptionalNumber } from '../refs.ts';
 import { EngineError } from '../errors.ts';
@@ -34,6 +35,10 @@ export const slots = [
     kind: 'choice', options: ['atLeast', 'notOver', 'over', 'under', 'equals'],
   },
   { key: 'continueOn', label: 'Дальше при', kind: 'choice', options: ['success', 'fail'] },
+  // Степени успеха: миру PbtA и PF2e мало «да/нет». Шкала — обычная таблица
+  // по диапазонам из словаря, читается либо по итогу броска (2d6: 6−/7–9/10+),
+  // либо по запасу против порога (PF2e: ±10 от сложности).
+  { key: 'degrees', label: 'Степени успеха', kind: 'degrees' },
 ];
 
 // Направление сравнения — свойство системы, не движка: 5e бросает d20 «вверх»
@@ -80,6 +85,7 @@ export const outputs = [
   { path: '.success', label: 'вышло', kind: 'boolean' },
   { path: '.margin', label: 'превышение', kind: 'number' },
   { path: '.total', label: 'итог броска', kind: 'number' },
+  { path: '.degree', label: 'степень успеха', kind: 'text' },
 ];
 
 // Может оборвать цепочку — приговор о разборе говорит об этом словами.
@@ -124,7 +130,11 @@ export function traceLine(t: any, h: any) {
   const parts = t.parts && Object.keys(t.parts).length
     ? ' · ' + Object.entries(t.parts).map(([k, v]) => `${k}: ${v}`).join(', ')
     : '';
-  const verdict = t.success ? `взят (запас ${t.margin})` : `не взят (недобор ${-t.margin})`;
+  // Степень названа словом автора и вытесняет «взят/не взят»: в мире со
+  // степенями «частичный успех» — и есть исход, а не оттенок к нему.
+  const verdict = t.degree !== undefined && t.degree !== null
+    ? `${t.degree} (запас ${t.margin})`
+    : t.success ? `взят (запас ${t.margin})` : `не взят (недобор ${-t.margin})`;
   // Правки названы именами АВТОРА: в журнале за столом игрок читает
   // «Преимущество», а не «addDie + keepBest».
   const edits = t.edits?.length ? ` · ${t.edits.join(', ')}` : '';
@@ -142,6 +152,9 @@ export function pack(step: StepData, ctx: StepContext) {
     continueOn: step.continueOn || 'success',
     successWhen: step.successWhen || 'atLeast',
     versus: packRef(step.versus, ctx),
+    // Шкала степеней уезжает В КОНВЕРТЕ: читать её будет получатель, и по
+    // СВОЕЙ таблице — как и всё остальное, что он считает за себя.
+    ...(step.degrees && step.degrees.table ? { degrees: step.degrees } : {}),
   };
 
   if (base.side === 'target') {
@@ -180,8 +193,19 @@ export function resolve(step: StepData, ctx: StepContext) {
   const outcome = OUTCOMES[String(step.successWhen)] || OUTCOMES.atLeast!;
   const { success, margin } = outcome(total, versus);
 
+  // Степень: та же шкала, сдвинутая правками («сдвинуть степень» PF2e и PbtA).
+  // Считается только если мир её объявил — иначе исход остаётся «да/нет».
+  const scale = step.degrees && step.degrees.table ? step.degrees : null;
+  const degree = scale
+    ? lookupDegree(
+      ctx.system, scale.table,
+      scale.of === 'margin' ? margin : total,
+      rolled.degreeShift || 0, ctx.owner)
+    : null;
+
   const value = {
     success, margin, total,
+    ...(scale ? { degree } : {}),
     dice: { rolls: rolled.rolls, kept: rolled.kept },
     parts: rolled.parts || {},
   };
@@ -199,6 +223,7 @@ export function resolve(step: StepData, ctx: StepContext) {
         ? { tag: step.versus.tag, value: versus }
         : { value: versus },
       margin, success,
+      ...(scale ? { degree } : {}),
       ...(Object.keys(rolled.parts || {}).length ? { parts: rolled.parts } : {}),
     },
     break: goOn ? null : {

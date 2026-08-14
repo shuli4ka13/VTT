@@ -416,6 +416,7 @@ function CheckBody({ step, context, edit, system }: {
   system: System;
 }) {
   const mode = step.type === 'compare' ? 'plain' : 'roll';
+  const tables = Object.entries(system.tables ?? {});
 
   return (
     <>
@@ -509,6 +510,35 @@ function CheckBody({ step, context, edit, system }: {
               onChange={next => edit(0, draft => { ((draft as any).roll ??= {}).check = next || null; })}
             />
           </Field>
+          {/* Степени успеха — мирам PbtA и PF2e мало «да/нет». Строка живёт
+              в тонкостях и по умолчанию выключена: кто играет в 5e, её
+              не встретит. Шкала — обычная таблица из словарей. */}
+          <Field
+            label="степени успеха"
+            hint={tables.length
+              ? 'Вместо «да/нет» исход читается ступенями по таблице: «провал / успех с ценой / полный успех».'
+              : 'Сначала заведите таблицу ступеней в «Словарях».'}
+          >
+            <Select
+              value={String(step.degrees?.table ?? '')}
+              options={[['', '— не считать, просто да/нет —'],
+                ...tables.map(([key, t]) => [key, t.label || key] as const)] as never}
+              onChange={next => edit(0, draft => {
+                const d = draft as any;
+                if (!next) delete d.degrees;
+                else d.degrees = { table: next, of: d.degrees?.of ?? 'total' };
+              })}
+            />
+          </Field>
+          {step.degrees?.table ? (
+            <Field label="ступень по">
+              <Select
+                value={String(step.degrees.of ?? 'total')}
+                options={[['total', 'итогу броска'], ['margin', 'запасу против порога']] as const}
+                onChange={next => edit(0, draft => { (draft as any).degrees.of = next; })}
+              />
+            </Field>
+          ) : null}
         </Fold>
       ) : null}
     </>

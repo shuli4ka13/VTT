@@ -111,6 +111,66 @@ describe('Словари: кости, мишени бросков, таблиц�
     });
   });
 
+  // Правило подачи: примитив — готовая фраза в списке, а не объект
+  // с настройками внутри. Взрыв вверх и вниз — два пункта, ноль выпадашек.
+  it('палитра правок — готовые фразы, включая оба направления взрыва', () => {
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ правка'));
+    const [add] = screen.getAllByDisplayValue('+ добавить…') as HTMLSelectElement[];
+    const options = [...add!.options].map(o => o.textContent);
+    expect(options).toContain('взрывать на максимуме');
+    expect(options).toContain('взрывать на единице');
+    expect(options).toContain('сдвинуть степень успеха');
+  });
+
+  // Часть составного броска спрашивается ТОЛЬКО там, где части есть.
+  it('в мире с одной костью про части не спрашивают вовсе', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        constants: { lead: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
+        roll_edits: { фора: { label: 'Фора', ops: [{ op: 'addDie' }] } },
+      },
+      activeEffectId: null,
+    }));
+    render(<DictionariesTab />);
+    expect(document.querySelectorAll('.chip__part').length).toBe(0);
+  });
+
+  it('в мире с составной костью часть выбирается прямо на фишке', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        constants: {
+          duality: {
+            label: 'Кости дуальности', kind: 'die',
+            dice: [
+              { count: 1, sides: 12, name: 'hope', label: 'Надежда' },
+              { count: 1, sides: 12, name: 'fear', label: 'Страх' },
+            ],
+          },
+        },
+        roll_edits: { вдох: { label: 'Вдохновение', ops: [{ op: 'addDie' }] } },
+      },
+      activeEffectId: null,
+    }));
+    render(<DictionariesTab />);
+
+    const part = document.querySelector('.chip__part') as HTMLSelectElement;
+    expect(part, 'части есть — селектор появился').toBeTruthy();
+    expect([...part.options].map(o => o.textContent))
+      .toEqual(['всему броску', 'Надежда', 'Страх']);
+
+    fireEvent.change(part, { target: { value: 'hope' } });
+    expect(useWorld.getState().system.roll_edits!.вдох!.ops[0]).toEqual({ op: 'addDie', part: 'hope' });
+    // И пересказ немедленно говорит, чему именно достанется кость.
+    // Пересказ именно этой записи, а не кости выше по экрану.
+    const phrase = part.closest('.dict-block')!.querySelector('.readback')!.textContent;
+    expect(phrase).toBe('Кинуть на кость больше (Надежда).');
+  });
+
   it('«гасится» ссылается на другую правку — закон гашения это данные', () => {
     useWorld.setState(state => ({
       ...state,
