@@ -25,9 +25,26 @@ export function dieWord(system: System, name: string): string {
   const constant = system.constants?.[name];
   if (!constant) return name;
   // Запись кости — латиницей, как её ест движок: d20, а не к20.
+  // БЕЗ слова чтения: dieWord попадает в редактируемый текст броска
+  // (formatRollExpr), а тот обязан разбираться обратно.
   const dice = (constant.dice ?? [])
     .map(d => `${countWord(system, d.count)}d${d.sides}`).join(' + ');
   return dice || (constant.label ?? name);
+}
+
+/** Чтение кости словом — пересказу и фишкам. Сумма — умолчание, о ней молчим. */
+export function readingWord(system: System, name: string): string | null {
+  const read = system.constants?.[name]?.read;
+  if (!read || read === 'sum') return null;
+  const kind = typeof read === 'string' ? read : read.kind;
+  if (kind === 'sum') return null;
+  if (kind === 'count') {
+    const n = typeof read === 'object' ? read.atLeast : undefined;
+    return typeof n === 'number' ? `успехи от ${n}` : 'счёт успехов';
+  }
+  if (kind === 'best') return 'лучшая';
+  if (kind === 'worst') return 'худшая';
+  return String(kind);
 }
 
 /** Ссылка слота одним сегментом. Чем описать пустоту — знает вызывающий. */
@@ -48,7 +65,11 @@ export function refSegment(ref: unknown, system: System, effect: Effect, emptyAs
   }
   if ('prop' in r || 'item' in r) return hole(`${String(r.prop ?? r.item)} — из записи`);
   if ('ref' in r) return seg(`результат «${String(r.ref).split('.')[0]}»`);
-  if ('constant' in r) return seg(dieWord(system, String(r.constant)));
+  if ('constant' in r) {
+    const name = String(r.constant);
+    const reading = readingWord(system, name);
+    return seg(reading ? `${dieWord(system, name)} (${reading})` : dieWord(system, name));
+  }
   return hole(emptyAs);
 }
 

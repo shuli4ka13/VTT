@@ -7,7 +7,7 @@ import { useMemo, useState } from 'react';
 import type { System, Effect, SlotRef, Step } from '@vtt/schema';
 import { Select } from '../../ui/primitives.tsx';
 import { labelOfTag } from '../../ui/formula.tsx';
-import { dieWord } from './readback.ts';
+import { dieWord, readingWord } from './readback.ts';
 import { FormulaChips } from '../../ui/formula-chips.tsx';
 import { matchTagQuery } from '../../ui/tag-suggest.tsx';
 import type { SlotContext, SlotKind } from './slots.tsx';
@@ -63,7 +63,12 @@ export function chipOf(ref: unknown, ctx: SlotContext): { label: string; record:
   }
   if ('prop' in r || 'item' in r) return { label: String(r.prop ?? r.item), record: true };
   if ('ref' in r) return { label: `результат «${String(r.ref)}»`, record: false };
-  if ('constant' in r) return { label: dieWord(ctx.system, String(r.constant)), record: false };
+  if ('constant' in r) {
+    const name = String(r.constant);
+    const reading = readingWord(ctx.system, name);
+    const die = dieWord(ctx.system, name);
+    return { label: reading ? `${die} (${reading})` : die, record: false };
+  }
   return null;
 }
 
