@@ -19,6 +19,16 @@ describe('parseRollExpr', () => {
       .toEqual({ die: { const: '2d6' }, bonus: { const: 3 } });
   });
 
+  it('кость с чтением, отличным от суммы, не подменяет литерал', () => {
+    // «1к20» в тексте — сумма; молча связать её с костью-счётчиком значило бы
+    // подменить арифметику броска.
+    const withPool = {
+      ...system,
+      constants: { pool: { kind: 'die', dice: [{ count: 1, sides: 20 }], read: 'best' } },
+    } as unknown as System;
+    expect(parseRollExpr('1к20', withPool)).toEqual({ die: { const: '1d20' }, bonus: null });
+  });
+
   it('кость без счёта и без хвоста', () => {
     expect(parseRollExpr('к20', system)).toEqual({ die: { constant: 'lead' }, bonus: null });
   });

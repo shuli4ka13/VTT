@@ -28,7 +28,10 @@ export function parseRollExpr(text: string, system: System): ParsedRoll {
   const sides = Number(m[2]);
   const known = Object.entries(system.constants ?? {}).find(([, c]) =>
     c.kind === 'die' && c.dice?.length === 1
-    && (c.dice[0]!.count ?? 1) === count && c.dice[0]!.sides === sides && !c.dice[0]!.name);
+    && (c.dice[0]!.count ?? 1) === count && c.dice[0]!.sides === sides && !c.dice[0]!.name
+    // Кость с чтением, отличным от суммы, — не то же самое, что «2d6»:
+    // связать их молча значило бы подменить сумму счётом успехов.
+    && (!c.read || c.read === 'sum'));
   const die = (known ? { constant: known[0] } : { const: `${count}d${sides}` }) as SlotRef;
 
   const rest = (m[3] ?? '').trim();

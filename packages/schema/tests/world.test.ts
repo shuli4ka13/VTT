@@ -76,6 +76,24 @@ describe('схема стережёт инварианты, а не только
     const parsed = W.system.parse(withExtra);
     expect((parsed as Record<string, unknown>).futureSection).toEqual({ hello: 'world' });
   });
+
+  it('состав кости: счёт — число или ссылка на поле, но не свободный текст', () => {
+    const die = (count: unknown) =>
+      W.dieConstant.safeParse({ kind: 'die', dice: [{ count, sides: 6 }] }).success;
+    expect(die(4), 'литеральный счёт').toBe(true);
+    expect(die({ tag: 'pool' }), 'пул из листа — Shadowrun, Blades').toBe(true);
+    expect(die('4'), 'строка счётом не бывает — это дыра черновика').toBe(false);
+  });
+
+  it('чтение кости: имя или объект с kind; мусор не проходит', () => {
+    const die = (read: unknown) =>
+      W.dieConstant.safeParse({ kind: 'die', dice: [{ sides: 6 }], read }).success;
+    expect(die(undefined), 'пусто — сумма по умолчанию').toBe(true);
+    expect(die('best')).toBe(true);
+    expect(die({ kind: 'count', atLeast: 5 })).toBe(true);
+    expect(die(7), 'число чтением не бывает').toBe(false);
+    expect(die({ atLeast: 5 }), 'объект без kind — не чтение').toBe(false);
+  });
 });
 
 describe('round-trip: разбор и сборка не теряют и не добавляют', () => {

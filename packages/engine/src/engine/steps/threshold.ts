@@ -16,7 +16,7 @@
 // threshold-held.
 
 import { resolveRoll } from '../modifiers.ts';
-import { dieConstant, rollLead } from '../lead-die.ts';
+import { dieConstant, rollLead, unfoldDice } from '../lead-die.ts';
 import { packRef, resolveNumber, resolveOptionalNumber } from '../refs.ts';
 import { EngineError } from '../errors.ts';
 import type { StepData, StepContext } from './index.ts';
@@ -56,6 +56,12 @@ function dieOf(system: Parameters<typeof dieConstant>[0], die: unknown) {
     return { label: text, kind: 'die' as const, dice: [{ count: Number(m[1] ?? 1), sides: Number(m[2]) }] };
   }
   return dieConstant(system, (die as { constant: string }).constant);
+}
+
+// Счёт костей в составе может быть ссылкой (пул из листа) — разворачиваем
+// контекстом той стороны, которая бросает: пул цели считается её листом.
+function unfold(die: unknown, ctx: StepContext) {
+  return unfoldDice(dieOf(ctx.system, die), (ref, what) => resolveNumber(ref, ctx, what));
 }
 
 const OUTCOMES: Record<string, (total: number, versus: number) => { success: boolean; margin: number }> = {
@@ -111,7 +117,11 @@ export function lint(step: StepData) {
 // интерфейс не ветвится по типам.
 export function traceLine(t: any, h: any) {
   const versusName = t.versus.tag ? `${h.labelOf(t.versus.tag)} ` : '';
-  const dice = t.rolls.length > 1 ? `[${t.rolls.join(', ')}] → ${t.kept}` : `[${t.rolls[0]}]`;
+  // Кости пишутся по чтению: счёт успехов — счётом, выбор одной — стрелкой,
+  // сумма нескольких (составной бросок) — просто списком, без «→ null».
+  const dice = t.read === 'count' ? `[${t.rolls.join(', ')}] → успехов ${t.total - t.bonus}`
+    : t.kept != null && t.rolls.length > 1 ? `[${t.rolls.join(', ')}] → ${t.kept}`
+      : `[${t.rolls.join(', ')}]`;
   const parts = t.parts && Object.keys(t.parts).length
     ? ' · ' + Object.entries(t.parts).map(([k, v]) => `${k}: ${v}`).join(', ')
     : '';
@@ -140,7 +150,7 @@ export function pack(step: StepData, ctx: StepContext) {
   const mods = roll.check
     ? resolveRoll(ctx.system, ctx.sheet, roll.check, ctx.pass)
     : { mode: 'normal' as RollMode, bonus: 0 };
-  const rolled = rollLead(dieOf(ctx.system, roll.die), ctx.die, mods.mode);
+  const rolled = rollLead(unfold(roll.die, ctx), ctx.die, mods.mode);
   return { ...base, rolled, bonus: packRef(roll.bonus, ctx), modBonus: mods.bonus };
 }
 
@@ -153,7 +163,7 @@ export function resolve(step: StepData, ctx: StepContext) {
     const mods = step.roll.check
       ? resolveRoll(ctx.system, ctx.sheet, step.roll.check, ctx.pass)
       : { mode: 'normal' as RollMode, bonus: 0 };
-    rolled = rollLead(dieOf(ctx.system, step.roll.die), ctx.die, mods.mode);
+    rolled = rollLead(unfold(step.roll.die, ctx), ctx.die, mods.mode);
     modBonus = mods.bonus;
   }
 
@@ -176,6 +186,8 @@ export function resolve(step: StepData, ctx: StepContext) {
     value,
     trace: {
       rolls: rolled.rolls, kept: rolled.kept, mode: rolled.mode, bonus, total,
+      // Чтение пишется только небанальное: старые миры (сумма) — трасса как была.
+      ...(rolled.read && rolled.read !== 'sum' ? { read: rolled.read } : {}),
       versus: step.versus && typeof step.versus === 'object' && 'tag' in step.versus
         ? { tag: step.versus.tag, value: versus }
         : { value: versus },

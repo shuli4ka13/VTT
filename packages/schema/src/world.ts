@@ -73,17 +73,30 @@ export const field = z.object({
 // ── словари системы ─────────────────────────────────────────────────────
 
 export const diceTerm = z.object({
-  count: z.number().int().positive().optional(),
+  /** Число — обычный состав; ссылка — пул из листа (Тело + Оружие в Shadowrun). */
+  count: z.union([z.number().int().positive(), slotRef]).optional(),
   sides: z.number().int().positive(),
   /** Имя части составного броска — Надежда/Страх в Daggerheart. */
   name: z.string().optional(),
   label: z.string().optional(),
 });
 
+/**
+ * Чтение: КАК выпавшие кости становятся числом. Пусто — сумма; строка —
+ * имя чтения без параметров («best»); объект — имя с параметрами
+ * ({ kind: 'count', atLeast: 5 } — счёт успехов Shadowrun). Набор чтений —
+ * реестр движка (engine/readings.ts), схема имена не перечисляет.
+ */
+export const diceReading = z.union([
+  z.string(),
+  z.object({ kind: z.string().min(1) }).passthrough(),
+]);
+
 export const systemConstant = z.object({
   label: z.string().optional(),
   kind: z.string().optional(),
   dice: z.array(diceTerm).optional(),
+  read: diceReading.optional(),
 }).passthrough();
 
 /**
@@ -94,6 +107,7 @@ export const dieConstant = z.object({
   label: z.string().optional(),
   kind: z.literal('die'),
   dice: z.array(diceTerm),
+  read: diceReading.optional(),
 }).passthrough();
 
 export const rangeTable = z.object({
@@ -287,6 +301,7 @@ export type SlotRef = z.infer<typeof slotRef>;
 export type RefSide = z.infer<typeof refSide>;
 export type Tag = z.infer<typeof tag>;
 export type DiceTerm = z.infer<typeof diceTerm>;
+export type DiceReading = z.infer<typeof diceReading>;
 export type DieConstant = z.infer<typeof dieConstant>;
 export type SystemConstant = z.infer<typeof systemConstant>;
 export type RangeTable = z.infer<typeof rangeTable>;

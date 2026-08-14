@@ -16,6 +16,7 @@ import type { ReactNode } from 'react';
 import type { System, Effect, RecordKind, SlotRef } from '@vtt/schema';
 import { Input, Select } from '../../ui/primitives.tsx';
 import { FormulaInput, labelOfTag } from '../../ui/formula.tsx';
+import { countWord } from './readback.ts';
 
 export type SlotKind = 'const' | 'expr' | 'tag' | 'constant' | 'prop' | 'param' | 'ref' | 'empty';
 
@@ -137,7 +138,8 @@ export const SLOT_KINDS: SlotKindModule[] = [
     blank: ctx => ({ constant: Object.keys(ctx.system.constants ?? {})[0] ?? 'lead_die' }),
     summary: (ref, ctx) => {
       const constant = ctx.system.constants?.[ref.constant];
-      const dice = (constant?.dice ?? []).map(d => `${d.count ?? 1}к${d.sides}`).join(' + ');
+      const dice = (constant?.dice ?? [])
+        .map(d => `${countWord(ctx.system, d.count)}к${d.sides}`).join(' + ');
       return dice || ref.constant;
     },
     editor: (ref, onChange, ctx) => (

@@ -25,6 +25,25 @@ describe('Словари: кости, мишени бросков, таблиц�
     expect(dies.some(c => c.kind === 'die')).toBe(true);
   });
 
+  // Чтение — вторая ось кости (спека «Что такое бросок»): сумма — умолчание
+  // и в данных не пишется; счёт успехов приносит порог на кость.
+  it('чтение кости выбирается селектом; сумма в данных не оседает', () => {
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ кость'));
+    const [key] = Object.keys(useWorld.getState().system.constants ?? {});
+    const select = screen.getByDisplayValue('сумма') as HTMLSelectElement;
+
+    fireEvent.change(select, { target: { value: 'best' } });
+    expect(useWorld.getState().system.constants?.[key!]?.read).toBe('best');
+
+    fireEvent.change(select, { target: { value: 'count' } });
+    expect(useWorld.getState().system.constants?.[key!]?.read)
+      .toEqual({ kind: 'count', atLeast: 19 });
+
+    fireEvent.change(select, { target: { value: 'sum' } });
+    expect('read' in (useWorld.getState().system.constants?.[key!] ?? {})).toBe(false);
+  });
+
   // Поле было управляемым и откатывало onChange на любой промежуточной строке
   // («1», «1d» — ни одна не разбирается как NdM), поэтому с клавиатуры набрать
   // «1d8» было нельзя, только вставить целиком. Печатаем посимвольно и

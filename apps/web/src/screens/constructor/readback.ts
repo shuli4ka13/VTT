@@ -13,11 +13,20 @@ export type Segment = { text: string } | { hole: string };
 const seg = (text: string): Segment => ({ text });
 const hole = (label: string): Segment => ({ hole: label });
 
+/** Счёт костей словом: число как есть, пул-ссылка — лейблом поля листа. */
+export function countWord(system: System, count: unknown): string {
+  if (typeof count !== 'object' || count === null) return String(count ?? 1);
+  const tag = (count as { tag?: unknown }).tag;
+  if (tag) return system.fields.find(f => f.tag === tag)?.label || `#${String(tag)}`;
+  return '…';
+}
+
 export function dieWord(system: System, name: string): string {
   const constant = system.constants?.[name];
   if (!constant) return name;
   // Запись кости — латиницей, как её ест движок: d20, а не к20.
-  const dice = (constant.dice ?? []).map(d => `${d.count ?? 1}d${d.sides}`).join(' + ');
+  const dice = (constant.dice ?? [])
+    .map(d => `${countWord(system, d.count)}d${d.sides}`).join(' + ');
   return dice || (constant.label ?? name);
 }
 

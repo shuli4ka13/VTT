@@ -20,11 +20,12 @@
 // не встретилась нигде в мире; первая ссылка — замораживает его навсегда.
 
 import { useState } from 'react';
+import { readingKinds } from '@vtt/engine/engine/readings';
 import { useWorld, freeId, slugOf } from '../../store/world.ts';
 import { Columns } from '../../ui/layout.tsx';
-import { Card, CardHead, Input, Button, Fold, Verdict } from '../../ui/primitives.tsx';
+import { Card, CardHead, Input, Button, Fold, Select, Verdict } from '../../ui/primitives.tsx';
 import { normalizeDice } from './slot-input.tsx';
-import type { System, Compendium, RangeTable } from '@vtt/schema';
+import type { System, Compendium, RangeTable, SystemConstant } from '@vtt/schema';
 import type { WorldState } from '../../store/world.ts';
 
 type EditSystem = WorldState['editSystem'];
@@ -202,6 +203,14 @@ function DiceNotationInput({ notation, onCommit }: { notation: string; onCommit:
   );
 }
 
+// Чтение — как выпавшие кости становятся числом (спека «Что такое бросок»):
+// сумма (5e), лучшая (Blades), счёт успехов (Shadowrun). Имена — реестр
+// движка (engine/readings.ts), словарь их только показывает.
+function readKindOf(constant: SystemConstant): string {
+  const read = constant.read;
+  return typeof read === 'string' ? read : read?.kind ?? 'sum';
+}
+
 function DiceSection({ system, compendium, editSystem }: Props) {
   const entries = Object.entries(system.constants ?? {}).filter(([, c]) => c.kind === 'die');
 
@@ -211,9 +220,14 @@ function DiceSection({ system, compendium, editSystem }: Props) {
         <span className="faint">Своих костей нет — броски берут ведущую кость системы.</span>
       ) : entries.map(([key, constant]) => {
         const dice = constant.dice ?? [];
-        const compound = dice.length > 1 || dice.some(d => d.name);
+        // Пул со счётом-ссылкой правится в данных, как составная кость:
+        // редактора состава пула в этом заходе нет.
+        const compound = dice.length > 1
+          || dice.some(d => d.name || typeof d.count === 'object');
         const inUse = usedIn(system, compendium, `"constant":"${key}"`);
         const notation = dice[0] ? `${dice[0].count ?? 1}d${dice[0].sides}` : '';
+        const readKind = readKindOf(constant);
+        const countRead = typeof constant.read === 'object' ? constant.read : null;
 
         return (
           // Ключ строки — сам ключ словаря, не позиция: переименование
@@ -248,6 +262,32 @@ function DiceSection({ system, compendium, editSystem }: Props) {
                 />
               </>
             )}
+            <Select
+              value={readKind}
+              options={readingKinds().map(r => [r.kind, r.label] as const) as never}
+              onChange={kind => editSystem(draft => {
+                const cur = draft.constants?.[key];
+                if (!cur) return;
+                // Сумма — умолчание движка: в данных её не пишем вовсе,
+                // старые миры и новые кости выглядят одинаково.
+                if (kind === 'sum') delete cur.read;
+                else if (kind === 'count') {
+                  cur.read = { kind: 'count', atLeast: (dice[0]?.sides ?? 6) - 1 };
+                } else cur.read = kind;
+              })}
+            />
+            {readKind === 'count' ? (
+              <Input
+                mono
+                value={String(countRead?.atLeast ?? '')}
+                placeholder="порог"
+                onChange={text => editSystem(draft => {
+                  const cur = draft.constants?.[key];
+                  const n = Number(text);
+                  if (cur && Number.isFinite(n)) cur.read = { kind: 'count', atLeast: n };
+                })}
+              />
+            ) : null}
             <Button
               size="sm" variant="danger" disabled={inUse}
               title={inUse ? 'кость используется' : undefined}
