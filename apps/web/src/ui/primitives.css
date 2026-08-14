@@ -403,6 +403,11 @@
 }
 .dict-row + .dict-row { border-top: 1px solid var(--border); }
 .dict-row > .input { flex: 1; min-width: 0; }
+/* Чтение кости в строке словаря: селекту — своя доля, а не 100% ширины,
+   иначе он задавит имя и нотацию. Порог счёта — узкая колонка под число. */
+.dict-row > .select { flex: 0 1 150px; width: auto; }
+.dict-row__num { flex: 0 0 64px; }
+.dict-row__num > .input { width: 100%; }
 /* Составная кость и прочее «правится в данных» — человеческий текст,
    поэтому не .mono, только приглушённый цвет. */
 .dict-row__static { flex: 1; min-width: 0; color: var(--text-faint); }

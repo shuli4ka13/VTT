@@ -277,16 +277,18 @@ function DiceSection({ system, compendium, editSystem }: Props) {
               })}
             />
             {readKind === 'count' ? (
-              <Input
-                mono
-                value={String(countRead?.atLeast ?? '')}
-                placeholder="порог"
-                onChange={text => editSystem(draft => {
-                  const cur = draft.constants?.[key];
-                  const n = Number(text);
-                  if (cur && Number.isFinite(n)) cur.read = { kind: 'count', atLeast: n };
-                })}
-              />
+              <span className="dict-row__num" title="успех — кость не ниже этого">
+                <Input
+                  mono
+                  value={String(countRead?.atLeast ?? '')}
+                  placeholder="порог"
+                  onChange={text => editSystem(draft => {
+                    const cur = draft.constants?.[key];
+                    const n = Number(text);
+                    if (cur && Number.isFinite(n)) cur.read = { kind: 'count', atLeast: n };
+                  })}
+                />
+              </span>
             ) : null}
             <Button
               size="sm" variant="danger" disabled={inUse}
