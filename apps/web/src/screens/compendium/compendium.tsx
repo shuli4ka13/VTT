@@ -172,10 +172,15 @@ function RecordEditor({ record, system }: { record: CompendiumRecord; system: Sy
                         .map(([key, e]) => [key, e.label ?? key] as const)] as never}
                     onChange={next => edit(draft => { (draft.props ??= {})[prop.key] = next; })}
                   />
+                ) : String(prop.kind) === 'dice' ? (
+                  <DiceProp
+                    value={String(record.props?.[prop.key] ?? '')}
+                    onChange={next => edit(draft => { (draft.props ??= {})[prop.key] = next; })}
+                  />
                 ) : (
                   <Input
-                    mono={String(prop.kind) === 'dice' || String(prop.kind) === 'expr'}
-                    placeholder={String(prop.kind) === 'dice' ? '2d6' : String(prop.kind) === 'expr' ? '#тег' : undefined}
+                    mono={String(prop.kind) === 'expr'}
+                    placeholder={String(prop.kind) === 'expr' ? '#тег' : undefined}
                     value={String(record.props?.[prop.key] ?? '')}
                     onChange={next => edit(draft => {
                       (draft.props ??= {})[prop.key] =
@@ -201,3 +206,41 @@ function RecordEditor({ record, system }: { record: CompendiumRecord; system: Sy
   );
 }
 
+
+/**
+ * Кость записи — та же формочка, что у костей системы в словаре: счёт,
+ * «к», грани. Не текст «2d6»: нотацию, о которой автору нигде не сказано,
+ * угадать нельзя — а два числа с «к» между читаются без инструкции.
+ *
+ * Хранится при этом по-прежнему строкой «2d6»: столько понимает движок
+ * (engine/dice.ts), и столько же лежит в образцах. Форма — над записью,
+ * не в ней.
+ */
+function DiceProp({ value, onChange }: {
+  value: string;
+  onChange: (next: string) => void;
+}) {
+  const m = /^(\d+)?\s*[dдк]\s*(\d+)$/iu.exec(value.trim());
+  const count = m ? (m[1] ?? '1') : '';
+  const sides = m ? m[2]! : '';
+
+  const put = (c: string, s: string) => {
+    const cn = Number(c);
+    const sn = Number(s);
+    if (Number.isInteger(cn) && cn > 0 && Number.isInteger(sn) && sn > 1) onChange(`${cn}d${sn}`);
+  };
+
+  return (
+    <div className="dice-term">
+      <span className="dice-term__num">
+        <Input mono value={count} placeholder="1"
+          onChange={next => put(next, sides || '6')} />
+      </span>
+      <span className="dice-term__d">к</span>
+      <span className="dice-term__num">
+        <Input mono value={sides} placeholder="8"
+          onChange={next => put(count || '1', next)} />
+      </span>
+    </div>
+  );
+}
