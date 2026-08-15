@@ -173,6 +173,15 @@ function breakLine(group: CardGroup) {
 // Одно поле на весь бросок: «1d20 + #бонус_атаки». Черновик держится
 // локально и уходит в структуру по Enter/уходу с поля; ошибка разбора
 // не затирает данные — остаётся в поле, пока автор не поправит.
+/**
+ * Строка броска — ОБЫЧНОЕ поле формулы: «1d20 + @Бонус атаки».
+ *
+ * Никаких декоративных знаков: всё, что видно в строке, автор и написал.
+ * Прежняя версия рисовала кость фишкой и подставляла «+» за автора — и
+ * человек, дописывая своё «+», получал два. Кость снова текстом: она и есть
+ * математика, а ссылкой на словарь остаётся в данных — разбор сам узнаёт
+ * записанную в словаре кость и ставит ссылку (roll-expr.ts).
+ */
 function RollExprInput({ step, context, edit }: {
   step: any;
   context: SlotContext;
@@ -180,49 +189,23 @@ function RollExprInput({ step, context, edit }: {
 }) {
   const [draft, setDraft] = useState<string | null>(null);
   const [trouble, setTrouble] = useState<string | null>(null);
-
-  // Кость, объявленная в словарях, — ССЫЛКА, а не число: сменили ведущую
-  // кость системы, и все броски поменялись разом. Поэтому она стоит фишкой,
-  // как всякая ссылка. Своё число («3d15», такого в словаре нет) остаётся
-  // текстом — по виду сразу понятно, что перед вами.
-  const die = step.roll?.die;
-  const dieChip = die && typeof die === 'object' && 'constant' in die ? chipOf(die, context) : null;
-  const shown = draft ?? (dieChip
-    ? exprText(step.roll?.bonus)
-    : formatRollExpr(step.roll, context.system));
+  const shown = draft ?? formatRollExpr(step.roll, context.system);
 
   const commit = () => {
     if (draft === null) return;
-    // Кость стоит фишкой, и строка обычно правит только прибавку. Но если
-    // человек НАБРАЛ нотацию — он меняет кость, а не пишет формулу: такой
-    // текст заменяет фишку, как и было до неё.
-    if (dieChip) {
-      // Свой «+» в начале — законный способ написать прибавку: человек
-      // читает строку как формулу и дописывает знак сам. Съедаем его,
-      // чтобы не спорить с тем, кто прав.
-      const draftText = draft.replace(/^\s*\+/, '');
-      const parsed = parseAmountExpr(draftText, context.system);
-      const bonus = draftText.trim() ? parsed.bonus : null;
-      const trouble = badFormula(bonus);
-      if (trouble) { setTrouble(trouble); return; }
-      edit(0, target => {
-        const roll = ((target as any).roll ??= {});
-        if (parsed.die !== undefined) roll.die = parsed.die;
-        if (bonus === null || bonus === undefined) delete roll.bonus; else roll.bonus = bonus;
-      });
-      setDraft(null);
-      setTrouble(null);
+    if (!draft.trim()) {
+      edit(0, target => { delete ((target as any).roll ??= {}).bonus; });
+      setDraft(null); setTrouble(null);
       return;
     }
     const parsed = parseRollExpr(draft, context.system);
     if (parsed.error) { setTrouble(parsed.error); return; }
-    const trouble = badFormula(parsed.bonus);
-    if (trouble) { setTrouble(trouble); return; }
+    const bad = badFormula(parsed.bonus);
+    if (bad) { setTrouble(bad); return; }
     edit(0, target => {
       const roll = ((target as any).roll ??= {});
       roll.die = parsed.die;
-      if (parsed.bonus === null) delete roll.bonus;
-      else roll.bonus = parsed.bonus;
+      if (parsed.bonus === null) delete roll.bonus; else roll.bonus = parsed.bonus;
     });
     setDraft(null);
     setTrouble(null);
@@ -234,33 +217,22 @@ function RollExprInput({ step, context, edit }: {
         value={shown}
         system={context.system}
         side={String(step.side ?? 'sender') === 'target' ? 'target' : 'self'}
-        placeholder={dieChip ? 'и прибавка: @поле, число…' : 'кость и прибавка: 1d20 + @поле'}
+        placeholder="1d20 + @поле"
         extraOptions={Object.entries(context.system.constants ?? {})
           .filter(([, c]) => c.kind === 'die')
           .map(([key, c]) => ({
             group: 'кость системы',
             label: c.label ?? key,
-            onPick: () => edit(0, target => { ((target as any).roll ??= {}).die = { constant: key }; }),
+            // Кость вставляется ТЕКСТОМ, как её и пишут: «1d20». Ссылкой
+            // на словарь она станет при разборе, если такая кость там есть.
+            onPick: () => setDraft(prev => {
+              const notation = (c.dice ?? [])
+                .map(d => `${typeof d.count === 'number' ? d.count : 1}d${d.sides}`).join(' + ');
+              const text = (prev ?? shown).trim();
+              return text ? `${text} + ${notation}` : notation;
+            }),
           }))}
-        prefix={dieChip ? (
-          <>
-            <span className="chips__chip" title="кость из словарей системы">
-              {dieChip.label}
-              <button
-                type="button" className="chips__x" aria-label="убрать кость"
-                onMouseDown={e => {
-                  e.preventDefault();
-                  edit(0, target => { delete ((target as any).roll ??= {}).die; });
-                }}
-              >×</button>
-            </span>
-            {/* «+» рисуется, только когда после него правда что-то стоит.
-                Постоянный плюс читался как «сюда обязательно вписать» и
-                провоцировал набрать второй своими руками. */}
-            {shown.trim() ? <span className="chips__plus" aria-hidden>+</span> : null}
-          </>
-        ) : null}
-        onChange={next => { setDraft(next); setTrouble(null); }}
+        onChange={setDraft}
         onBlur={commit}
         onKeyDown={e => {
           if (e.key === 'Enter') commit();

@@ -198,21 +198,31 @@ describe('GroupCard: величина из записи', () => {
 
 // Кость — фишка и не исчезает, пока набирают прибавку; набранная нотация
 // её заменяет; неразбираемая формула не уходит в данные молча.
-describe('GroupCard: строка броска с фишкой кости', () => {
+// Строка броска — обычная формула: кость пишется текстом, поля становятся
+// фишками. Декоративных знаков нет: что видно, то автор и написал.
+describe('GroupCard: строка броска', () => {
   const rollSteps = () => [{
     type: 'threshold', side: 'sender', successWhen: 'atLeast', continueOn: 'success',
     roll: { die: { constant: 'lead' }, bonus: { expr: '#armor' }, check: null },
   }] as unknown as Step[];
 
-  it('фишка кости остаётся видна во время набора', () => {
+  it('кость стоит в строке текстом, поле — фишкой', () => {
     const group = groupSteps(rollSteps())[0]!;
     render(<GroupCard group={group} position={1} system={system} effect={effect}
       earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
     const line = screen.getByText('бросок').closest('label')!;
-    const tail = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;
-    fireEvent.change(tail, { target: { value: ' + 2' } });
-    // Фишка кости — в самой строке, а не только в пересказе над карточкой.
-    expect(line.querySelector('.chips__chip')?.textContent).toContain('1d20');
+    // Кость — часть математики, а не отдельная сущность в рамке.
+    expect(line.textContent).toContain('Класс брони');
+    const head = line.querySelector('.chips__text') as HTMLInputElement;
+    expect(head.value).toContain('1d20');
+  });
+
+  // Прежняя версия рисовала «+» за автора, и его собственный плюс давал два.
+  it('лишнего знака в строке нет: что видно, то и написано', () => {
+    const group = groupSteps(rollSteps())[0]!;
+    const { container } = render(<GroupCard group={group} position={1} system={system} effect={effect}
+      earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
+    expect(container.querySelector('.chips__plus')).toBeNull();
   });
 
   it('набранная нотация заменяет кость', () => {
