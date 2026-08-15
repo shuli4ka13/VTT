@@ -130,8 +130,9 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
     <>
       <Card>
         <CardHead
+          // Машинного имени рода на экране нет: в отличие от тега поля,
+          // автор его нигде не печатает — оно живёт только в данных.
           title={<Input value={kind.label ?? ''} onChange={label => edit(draft => { draft.label = label; })} />}
-          badge={<span className="chip mono">{id}</span>}
           actions={
             <DangerButton size="sm" onConfirm={() => {
               editSystem(draft => { delete draft.records?.[id]; });
@@ -154,7 +155,51 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
 
       <Card>
         <CardHead
+          title="Что запись даёт владельцу"
+          actions={
+            <Button
+              size="sm"
+              disabled={Object.keys(system.effects).length === 0}
+              onClick={() => edit(draft => {
+                draft.bindings ??= [];
+                draft.bindings.push({ label: 'Применение', effect: Object.keys(system.effects)[0] ?? '', args: {} });
+              })}
+            >+ подключить эффект</Button>
+          }
+        />
+        {Object.keys(system.effects).length === 0 ? (
+          <Verdict tone="warn">
+            В системе ещё нет эффектов — подключать нечего. Заведите их на вкладке «Эффекты».
+          </Verdict>
+        ) : null}
+
+        {bindings.length === 0
+          ? <span className="faint">Ничего не подключено: род ничего не автоматизирует.</span>
+          : bindings.map((binding, index) => (
+            <BindingEditor
+              key={index}
+              binding={binding}
+              system={system}
+              recordKind={kind}
+              onEdit={change => edit(draft => { change(draft.bindings![index]!); })}
+              onDelete={() => edit(draft => { draft.bindings!.splice(index, 1); })}
+              onFillWithProp={param => edit(draft => {
+                draft.props ??= [];
+                const label = param.label ?? param.key;
+                const newKey = freeId(draft.props.map(p => p.key), label);
+                draft.props.push({ key: newKey, label, kind: propKindFor(param.kind) });
+                const target = draft.bindings![index]!;
+                target.args ??= {};
+                target.args[param.key] = { prop: newKey };
+              })}
+            />
+          ))}
+      </Card>
+
+      <Card>
+        <CardHead
           title="Что спросить у человека"
+          sub="Форма записи. Обычно собирается сама — кнопкой «завести свойство» при подключении эффекта; руками сюда добавляют справочное: вес, цену."
           actions={
             <Button size="sm" onClick={() => edit(draft => {
               draft.props ??= [];
@@ -228,48 +273,6 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
         </Card>
       ) : null}
 
-      <Card>
-        <CardHead
-          title="Что запись даёт владельцу"
-          actions={
-            <Button
-              size="sm"
-              disabled={Object.keys(system.effects).length === 0}
-              onClick={() => edit(draft => {
-                draft.bindings ??= [];
-                draft.bindings.push({ label: 'Применение', effect: Object.keys(system.effects)[0] ?? '', args: {} });
-              })}
-            >+ подключить эффект</Button>
-          }
-        />
-        {Object.keys(system.effects).length === 0 ? (
-          <Verdict tone="warn">
-            В системе ещё нет эффектов — подключать нечего. Заведите их на вкладке «Эффекты».
-          </Verdict>
-        ) : null}
-
-        {bindings.length === 0
-          ? <span className="faint">Ничего не подключено: род ничего не автоматизирует.</span>
-          : bindings.map((binding, index) => (
-            <BindingEditor
-              key={index}
-              binding={binding}
-              system={system}
-              recordKind={kind}
-              onEdit={change => edit(draft => { change(draft.bindings![index]!); })}
-              onDelete={() => edit(draft => { draft.bindings!.splice(index, 1); })}
-              onFillWithProp={param => edit(draft => {
-                draft.props ??= [];
-                const label = param.label ?? param.key;
-                const newKey = freeId(draft.props.map(p => p.key), label);
-                draft.props.push({ key: newKey, label, kind: propKindFor(param.kind) });
-                const target = draft.bindings![index]!;
-                target.args ??= {};
-                target.args[param.key] = { prop: newKey };
-              })}
-            />
-          ))}
-      </Card>
     </>
   );
 }
@@ -377,9 +380,12 @@ function ArgEditor({ value, recordKind, onChange }: {
         value={mode}
         options={[
           ['', '— не заполнять —'],
-          ...props.map(p => [`prop:${p.key}`, `${p.label ?? p.key} — свойство записи`] as const),
-          ['const', 'ввести значение…'],
-          ['expr', 'ввести формулу…'],
+          // Действием, а не типом данных: «спросить у записи» говорит, ЧТО
+          // произойдёт — у каждого меча спросят его кость. Название то же,
+          // что стоит в форме «Что спросить у человека»: это одна нить.
+          ...props.map(p => [`prop:${p.key}`, `спросить у записи: «${p.label ?? p.key}»`] as const),
+          ['const', 'одно значение на все записи…'],
+          ['expr', 'формула…'],
         ] as never}
         onChange={next => {
           if (!next) return onChange(null);

@@ -81,7 +81,7 @@ describe('RecordsTab: род видит потребности эффекта', 
     const select = need.querySelector('select') as HTMLSelectElement;
     const options = Array.from(select.options).map(o => o.textContent);
 
-    expect(options).toContain('Кость урона — свойство записи');
+    expect(options).toContain('спросить у записи: «Кость урона»');
     expect(options.some(o => o?.includes('Класс защиты'))).toBe(false);
   });
 });
