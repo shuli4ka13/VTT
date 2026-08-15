@@ -198,6 +198,10 @@ function RecordEditor({ record, system }: { record: CompendiumRecord; system: Sy
         <ModifiersEditor
           system={system}
           title="Что правит эта вещь"
+          empty={{
+            title: 'Своих правок у вещи нет',
+            hint: 'Добавка поверх родовой: кольцо даёт +1 к защите, проклятый клинок — помеху. Общее для всех вещей рода живёт на самом роде и здесь не повторяется.',
+          }}
           modifiers={record.modifiers ?? []}
           onEdit={change => edit(draft => { change(draft.modifiers ??= []); })}
         />

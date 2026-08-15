@@ -33,12 +33,18 @@ const STACKING = [
 // в этом мире, решает автор в словаре «Правки броска». Модификатор только
 // показывает объявленное — как слот показывает объявленные кости.
 
-export function ModifiersEditor({ system, modifiers, onEdit, title }: {
+export function ModifiersEditor({ system, modifiers, onEdit, title, empty }: {
   system: System;
   modifiers: Modifier[];
   onEdit: (change: (draft: Modifier[]) => void) => void;
   /** Заголовок над списком: у вещи и у рода он разный, и разница важна. */
   title?: string;
+  /**
+   * Слова пустого состояния — от ВЛАДЕЛЬЦА списка. Редактор один на троих
+   * (пассивный эффект, род записей, конкретная вещь), и заглушка про
+   * «эффект» на экране рода читалась дублем вкладки эффектов.
+   */
+  empty?: { title: string; hint: string };
 }) {
   const all = targets(system) as { tag: string; label: string; kind: string; group?: string }[];
   const valueTargets = all.filter(t => t.kind === 'value' || t.kind === 'incoming');
@@ -76,8 +82,8 @@ export function ModifiersEditor({ system, modifiers, onEdit, title }: {
 
       {modifiers.length === 0 ? (
         <Empty
-          title="Эффект пока ничего не делает"
-          hint="Пассивный эффект правит цифры: даёт бонус к полю или вешает преимущество на бросок."
+          title={empty?.title ?? 'Эффект пока ничего не делает'}
+          hint={empty?.hint ?? 'Пассивный эффект правит цифры: даёт бонус к полю или вешает преимущество на бросок.'}
         />
       ) : null}
 
