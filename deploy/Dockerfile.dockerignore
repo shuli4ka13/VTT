@@ -1,0 +1,14 @@
+# Свой контекст нового стека: BuildKit берёт этот файл ВМЕСТО корневого
+# .dockerignore (тот — про старый ванильный стенд и остаётся нетронутым).
+*
+!pnpm-workspace.yaml
+!pnpm-lock.yaml
+!package.json
+!tsconfig.base.json
+!packages/
+!apps/server/
+!apps/web/
+!samples/
+**/node_modules
+**/dist
+**/*.db

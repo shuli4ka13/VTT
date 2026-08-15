@@ -10,6 +10,7 @@
 //   VTT_URL   — адрес сервера (умолчание http://localhost:8200)
 //   VTT_OWNER — под кем публиковать (умолчание «Стенд»)
 
+import { createHash } from 'node:crypto';
 import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
 
 // Копия глубокая: сид не смеет мутировать образцы движка.
@@ -43,6 +44,10 @@ async function call(url: string, method: string, token: string | null, body?: un
     headers: {
       'content-type': 'application/json',
       ...(token ? { authorization: `Bearer ${token}` } : {}),
+      // Полигон за калиткой: кука та же, что ставит Basic-вход (main.ts).
+      ...(process.env.VTT_AUTH
+        ? { cookie: 'vtt_gate=' + createHash('sha256').update(process.env.VTT_AUTH).digest('hex') }
+        : {}),
     },
     ...(body ? { body: JSON.stringify(body) } : {}),
   });

@@ -1,0 +1,25 @@
+# Полигон на чужой машине: отдельный проект, отдельная папка (/opt/vtt),
+# ни одного общего имени с соседями. Лимит памяти жёсткий — рядом живёт
+# чужой прод, и наш стенд не имеет права его подвинуть.
+#
+#   VTT_AUTH  — логин:пароль калитки (обязателен, см. .env)
+#   VTT_PORT  — порт на хосте (умолчание 8100)
+#   VTT_BIND  — 127.0.0.1, пока порт не открыт в security group
+
+name: vtt
+
+services:
+  vtt:
+    image: vtt-poligon:latest
+    container_name: vtt-poligon
+    ports:
+      - "${VTT_BIND:-0.0.0.0}:${VTT_PORT:-8100}:8100"
+    environment:
+      VTT_AUTH: "${VTT_AUTH:?задайте VTT_AUTH=логин:пароль в /opt/vtt/.env}"
+    volumes:
+      - vtt_data:/data
+    mem_limit: 300m
+    restart: unless-stopped
+
+volumes:
+  vtt_data:
