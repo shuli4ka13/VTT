@@ -490,3 +490,15 @@
 .dice-term > .input { flex: 1; min-width: 0; }
 .dice-term > .select { flex: 0 1 200px; width: auto; }
 .dict-row__label--tight { flex: 0 0 auto; }
+
+/* Цель изменения — не первое слагаемое, а то, ЧТО меняется: заливка
+   акцентом отделяет её от операндов, идущих справа от знака. */
+.chips__chip--target {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+.chips__chip--target .chips__x { color: var(--on-accent); opacity: .7; }
+/* Скобка вокруг величины: «ХП − (кость + мод)» — вычитается сумма,
+   а не «вычесть кость и прибавить мод». */
+.chips__paren { color: var(--text-faint); font-family: var(--font-mono); padding: 0 2px; }

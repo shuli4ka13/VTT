@@ -194,8 +194,12 @@ function RollExprInput({ step, context, edit }: {
     // человек НАБРАЛ нотацию — он меняет кость, а не пишет формулу: такой
     // текст заменяет фишку, как и было до неё.
     if (dieChip) {
-      const parsed = parseAmountExpr(draft, context.system);
-      const bonus = draft.trim() ? parsed.bonus : null;
+      // Свой «+» в начале — законный способ написать прибавку: человек
+      // читает строку как формулу и дописывает знак сам. Съедаем его,
+      // чтобы не спорить с тем, кто прав.
+      const draftText = draft.replace(/^\s*\+/, '');
+      const parsed = parseAmountExpr(draftText, context.system);
+      const bonus = draftText.trim() ? parsed.bonus : null;
       const trouble = badFormula(bonus);
       if (trouble) { setTrouble(trouble); return; }
       edit(0, target => {
@@ -246,7 +250,10 @@ function RollExprInput({ step, context, edit }: {
                 }}
               >×</button>
             </span>
-            <span className="chips__plus" aria-hidden>+</span>
+            {/* «+» рисуется, только когда после него правда что-то стоит.
+                Постоянный плюс читался как «сюда обязательно вписать» и
+                провоцировал набрать второй своими руками. */}
+            {shown.trim() ? <span className="chips__plus" aria-hidden>+</span> : null}
           </>
         ) : null}
         onChange={next => { setDraft(next); setTrouble(null); }}
@@ -332,7 +339,9 @@ function AmountExprInput({ amount, apply, applyIndex, context, edit, onCreateFro
   return (
     <Field
       label="что меняется"
-      hint={targetChip ? undefined : 'Начните с поля цели: наберите «@» и выберите, что меняем.'}
+      hint={targetChip
+        ? 'Первым стоит поле, которое меняется; дальше — на сколько.'
+        : 'Начните с поля цели: наберите «@» и выберите, что меняем.'}
     >
       <FormulaChips
         value={shown}
@@ -342,7 +351,11 @@ function AmountExprInput({ amount, apply, applyIndex, context, edit, onCreateFro
         prefix={
           <>
             {targetChip ? (
-              <span className="chips__chip">
+              // Цель — не операнд формулы, а то, ЧТО меняется. Раньше она
+              // выглядела как первое слагаемое, и строка читалась
+              // арифметикой: «ХП минус кость плюс мод Силы». Отсюда и
+              // вопрос «а где поле, которое меняется».
+              <span className="chips__chip chips__chip--target">
                 {targetChip.label}
                 <button
                   type="button" className="chips__x" aria-label="убрать поле цели"
@@ -368,6 +381,10 @@ function AmountExprInput({ amount, apply, applyIndex, context, edit, onCreateFro
             </select>
             {diceChip ? (
               <>
+                {/* Скобка — не украшение: «ХП − кость + мод Силы» читается
+                    как «вычесть кость и ПРИБАВИТЬ мод», а на деле вычитается
+                    их сумма. Пока слагаемых два, скобка это и говорит. */}
+                {shown.trim() ? <span className="chips__paren" aria-hidden>(</span> : null}
                 <span className={`chips__chip${diceChip.record ? ' chips__chip--record' : ''}`}>
                   {diceChip.label}
                   <button
@@ -375,11 +392,14 @@ function AmountExprInput({ amount, apply, applyIndex, context, edit, onCreateFro
                     onMouseDown={e => { e.preventDefault(); setDice(undefined); }}
                   >×</button>
                 </span>
-                <span className="chips__plus" aria-hidden>+</span>
+                {shown.trim() ? <span className="chips__plus" aria-hidden>+</span> : null}
               </>
             ) : null}
           </>
         }
+        suffix={diceChip && shown.trim()
+          ? <span className="chips__paren" aria-hidden>)</span>
+          : null}
         onChange={setDraft}
         onBlur={commit}
         onKeyDown={e => {

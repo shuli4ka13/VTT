@@ -36,7 +36,7 @@ export function joinParts(parts: Part[]): string {
   return parts.map(p => ('tag' in p ? `#${p.tag}` : p.text)).join('');
 }
 
-export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, extraOptions }: {
+export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, extraOptions }: {
   value: string;
   onChange: (next: string) => void;
   system: System;
@@ -53,6 +53,8 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
    * остальные, но правится не текстом.
    */
   prefix?: ReactNode;
+  /** То же, но ПОСЛЕ строки: закрывающая скобка группы, например. */
+  suffix?: ReactNode;
   /**
    * Что ещё предложить в подсказке по «@» помимо полей листа. Такой пункт
    * не вставляется в текст (формула умеет ссылаться только на поля) —
@@ -192,6 +194,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
             }}
           />
         ))}
+        {suffix}
       </div>
       {matches.length || extras.length ? (
         <div className="slot__menu">
