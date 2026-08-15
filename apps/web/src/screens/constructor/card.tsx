@@ -318,11 +318,6 @@ function AmountExprInput({ amount, apply, applyIndex, context, edit, onCreateFro
     setDraft(null);
   };
 
-  const fields = context.system.fields.map(f => ({
-    group: 'поле цели',
-    label: f.label ?? f.tag,
-    onPick: () => edit(applyIndex, step => { (step as Record<string, unknown>).target = { tag: f.tag }; }),
-  }));
   const needs = (context.effect.params ?? []).map(p => ({
     group: 'из записи',
     label: p.label ?? p.key,
@@ -337,77 +332,76 @@ function AmountExprInput({ amount, apply, applyIndex, context, edit, onCreateFro
   }
 
   return (
-    <Field
-      label="что меняется"
-      hint={targetChip
-        ? 'Первым стоит поле, которое меняется; дальше — на сколько.'
-        : 'Начните с поля цели: наберите «@» и выберите, что меняем.'}
-    >
-      <FormulaChips
-        value={shown}
-        system={context.system}
-        placeholder={diceChip ? 'и ещё: @поле, число…' : 'кости и прибавка: 2d6 + @поле'}
-        extraOptions={targetChip ? needs : [...fields, ...needs]}
-        prefix={
-          <>
-            {targetChip ? (
-              // Цель — не операнд формулы, а то, ЧТО меняется. Раньше она
-              // выглядела как первое слагаемое, и строка читалась
-              // арифметикой: «ХП минус кость плюс мод Силы». Отсюда и
-              // вопрос «а где поле, которое меняется».
-              <span className="chips__chip chips__chip--target">
-                {targetChip.label}
-                <button
-                  type="button" className="chips__x" aria-label="убрать поле цели"
-                  onMouseDown={e => {
-                    e.preventDefault();
-                    edit(applyIndex, step => { delete (step as Record<string, unknown>).target; });
-                  }}
-                >×</button>
-              </span>
-            ) : null}
-            <select
-              className="chips__op"
-              aria-label="что делаем с полем"
-              value={direction}
-              onChange={e => {
-                const next = e.target.value;
-                edit(applyIndex, step => { (step as Record<string, unknown>).direction = next; });
+    <>
+      {/* Две подписанные вещи вместо одной строки-формулы.
+          Раньше цель стояла первой фишкой в общем ряду, и строка читалась
+          арифметикой: «ХП − кость + мод». Теперь поле выбирается отдельно,
+          а вторая строка отвечает на вопрос «чем оно станет» — словами,
+          а не знаком: «станет меньше на …». */}
+      <Field
+        label="что меняется"
+        needed={!targetChip}
+        hint={targetChip ? undefined : 'Поле цели: что этот шаг поменяет.'}
+      >
+        <SlotInput
+          value={target}
+          context={context}
+          allow={['tag', 'param']}
+          placeholder="поле цели"
+          onChange={next => edit(applyIndex, target => {
+            const t = target as Record<string, unknown>;
+            if (next) t.target = next; else delete t.target;
+          })}
+          onCreateFromRecord={onCreateFromRecord}
+        />
+      </Field>
+
+      <Field label="станет">
+        <div className="inline">
+          <select
+            className="chips__op chips__op--word"
+            aria-label="как меняется"
+            value={direction}
+            onChange={e => {
+              const next = e.target.value;
+              edit(applyIndex, target => { (target as Record<string, unknown>).direction = next; });
+            }}
+          >
+            <option value="subtract">меньше на</option>
+            <option value="add">больше на</option>
+            <option value="set">равно</option>
+          </select>
+
+          <span className="grow">
+            <FormulaChips
+              value={shown}
+              system={context.system}
+              placeholder={diceChip ? 'и ещё: @поле, число…' : 'кости и прибавка: 2d6 + @поле'}
+              extraOptions={needs}
+              prefix={diceChip ? (
+                <>
+                  <span className={`chips__chip${diceChip.record ? ' chips__chip--record' : ''}`}>
+                    {diceChip.label}
+                    <button
+                      type="button" className="chips__x" aria-label="убрать из записи"
+                      onMouseDown={e => { e.preventDefault(); setDice(undefined); }}
+                    >×</button>
+                  </span>
+                  {/* «+» — только когда после него правда что-то есть. */}
+                  {shown.trim() ? <span className="chips__plus" aria-hidden>+</span> : null}
+                </>
+              ) : null}
+              onChange={setDraft}
+              onBlur={commit}
+              onKeyDown={e => {
+                if (e.key === 'Enter') commit();
+                if (e.key === 'Escape') setDraft(null);
               }}
-            >
-              <option value="subtract">−</option>
-              <option value="add">+</option>
-              <option value="set">=</option>
-            </select>
-            {diceChip ? (
-              <>
-                {/* Скобка — не украшение: «ХП − кость + мод Силы» читается
-                    как «вычесть кость и ПРИБАВИТЬ мод», а на деле вычитается
-                    их сумма. Пока слагаемых два, скобка это и говорит. */}
-                {shown.trim() ? <span className="chips__paren" aria-hidden>(</span> : null}
-                <span className={`chips__chip${diceChip.record ? ' chips__chip--record' : ''}`}>
-                  {diceChip.label}
-                  <button
-                    type="button" className="chips__x" aria-label="убрать из записи"
-                    onMouseDown={e => { e.preventDefault(); setDice(undefined); }}
-                  >×</button>
-                </span>
-                {shown.trim() ? <span className="chips__plus" aria-hidden>+</span> : null}
-              </>
-            ) : null}
-          </>
-        }
-        suffix={diceChip && shown.trim()
-          ? <span className="chips__paren" aria-hidden>)</span>
-          : null}
-        onChange={setDraft}
-        onBlur={commit}
-        onKeyDown={e => {
-          if (e.key === 'Enter') commit();
-          if (e.key === 'Escape') setDraft(null);
-        }}
-      />
-    </Field>
+            />
+          </span>
+        </div>
+      </Field>
+    </>
   );
 }
 

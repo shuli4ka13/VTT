@@ -154,8 +154,9 @@ describe('GroupCard: величина из записи', () => {
     render(<GroupCard group={group} position={1} system={system} effect={withParam}
       earlier={[]} problem={null}
       edit={(_, change) => change(amount as never)} onDelete={() => {}} />);
-    // «#armor» нарисован фишкой, дописываем в хвост ЭТОЙ строки — как рукой.
-    const line = screen.getByText('что меняется').closest('label')!;
+    // Величина переехала в свою строку «станет»: «что меняется» — это
+    // теперь отдельный выбор поля, а не начало формулы.
+    const line = screen.getByText('станет').closest('label')!;
     const tail = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;
     fireEvent.change(tail, { target: { value: ' + 2' } });
     fireEvent.keyDown(tail, { key: 'Enter' });
