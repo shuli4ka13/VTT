@@ -69,11 +69,16 @@ describe('GroupCard', () => {
     // Кость уехала в величину — формулой её не посчитать, её бросает
     // отправитель, — а в выражении осталось имя.
     expect(amount.dice).toEqual({ const: '1d8' });
-    expect(apply.value).toEqual({ expr: '#n + #n', of: 'target' });
+    // Имя числа в строке ОДНО: кость уехала внутрь него, а не встала
+    // вторым слагаемым. Раньше здесь и появлялся второй «+ #n».
+    expect(apply.value).toEqual({ expr: '#n', of: 'target' });
     expect(apply.direction).toBe('set');
   });
 
-  it('без величины кость в формулу не пускают — и объясняют почему', () => {
+  // Без обработчика, умеющего завести число (так карточка живёт в этих
+  // тестах), набранная кость не теряется молча — карточка объясняет.
+  // В приложении обработчик есть, и число заводится само: см. тест ниже.
+  it('завести число некому — набранная кость не теряется молча', () => {
     const steps = [
       { type: 'apply', target: { tag: 'armor' }, direction: 'set' },
     ] as unknown as Step[];
@@ -275,7 +280,7 @@ describe('GroupCard: присланное число по слагаемым', (
     expect(sent[0]!.textContent).toContain('Кость урона');
     expect(sent[1]!.textContent).toContain('Класс брони');
     // И обе честно подписаны стороной: считал их не тот, чей это лист.
-    expect(sent.every(c => c.textContent?.includes('прислано'))).toBe(true);
+    expect(sent.every(c => c.textContent?.includes('у отправителя'))).toBe(true);
   });
 
   it('крестик убирает ровно своё слагаемое', () => {
@@ -292,5 +297,132 @@ describe('GroupCard: присланное число по слагаемым', (
 
     expect(amount.dice).toBeUndefined();
     expect(amount.bonus).toEqual({ expr: '#armor' }, 'прибавка не тронута');
+  });
+});
+
+// Число — не карточка, которую автор обязан завести заранее, а внутренность
+// изменения. Пока его заводили руками, «изменение» стояло одиноким `apply`,
+// и всё, что считает отправитель, писалось некуда: выбор «из записи» тихо
+// уходил в никуда, а набранная кость упиралась в совет завести карточку.
+describe('GroupCard: изменение само заводит число', () => {
+  const lone = () => [
+    { type: 'apply', target: { tag: 'armor' }, direction: 'set' },
+  ] as unknown as Step[];
+
+  // Тот же обработчик, что даёт вкладка эффектов: заводит число перед
+  // изменением и правит пару одной правкой.
+  const mount = (steps: Step[], effectOf: Effect = effect) => {
+    const group = groupSteps(steps)[0]!;
+    render(<GroupCard group={group} position={1} system={system} effect={effectOf}
+      earlier={[]} problem={null}
+      edit={(at, change) => change(steps[group.indices[at] ?? group.indices[0]!]!)}
+      withNumber={change => {
+        const applyAt = group.indices[group.indices.length - 1]!;
+        let amountAt = group.amount ? group.indices[0]! : -1;
+        if (amountAt < 0) {
+          steps.splice(applyAt, 0, { id: 'n', type: 'amount', source: 'roll' } as never);
+          amountAt = applyAt;
+        }
+        change(steps[amountAt]!, steps[amountAt + 1]!, String(steps[amountAt]!.id));
+      }}
+      onDelete={() => {}} />);
+    const line = screen.getByText('станет').closest('label')!;
+    return { line, value: [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement };
+  };
+
+  it('набранная кость заводит число и оставляет в строке его имя', () => {
+    const steps = lone();
+    const { value } = mount(steps);
+    fireEvent.change(value, { target: { value: '1d8' } });
+    fireEvent.keyDown(value, { key: 'Enter' });
+
+    expect(steps).toHaveLength(2);
+    expect(steps[0]).toMatchObject({ type: 'amount', dice: { const: '1d8' } });
+    expect((steps[1] as any).value).toEqual({ expr: '#n', of: 'target' });
+  });
+
+  it('«из записи» больше не проваливается в пустоту', () => {
+    const steps = [
+      { type: 'apply', target: { tag: 'armor' }, direction: 'set', value: { expr: '#armor - ', of: 'target' } },
+    ] as unknown as Step[];
+    const withParam = { params: [{ key: 'урон', label: 'Кость урона', kind: 'dice' }] } as unknown as Effect;
+    const { value } = mount(steps, withParam);
+
+    // Подсказка живёт от каретки: фокус, набор «@», каретка за ним.
+    fireEvent.focus(value);
+    fireEvent.change(value, { target: { value: ' - @' } });
+    value.selectionStart = 4;
+    fireEvent.keyUp(value, { key: '@' });
+    fireEvent.mouseDown(screen.getByText('Кость урона'));
+
+    // Значение из записи уехало в число (его берёт отправитель), а строка
+    // зовёт его по имени — раньше клик не делал ничего.
+    expect(steps[0]).toMatchObject({ type: 'amount', dice: { param: 'урон' } });
+    expect((steps[1] as any).value).toEqual({ expr: '#armor - #n', of: 'target' });
+  });
+
+  // Ответ на «как поменять у цели на у отправителя»: щелчок по подписи.
+  // Слагаемое уезжает в число — считать его листом ЦЕЛИ нельзя, там чужая
+  // сила (tests/rule.sides.test.ts в движке).
+  it('щелчок по подписи «у цели» переносит слагаемое на лист отправителя', () => {
+    const steps = lone();
+    const { line } = mount(steps);
+    const value = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;
+    fireEvent.change(value, { target: { value: '#armor' } });
+    fireEvent.keyDown(value, { key: 'Enter' });
+
+    fireEvent.mouseDown(screen.getByTitle(/считать у отправителя/));
+
+    expect(steps[0]).toMatchObject({ type: 'amount', bonus: { expr: '#armor' } });
+    expect((steps[1] as any).value).toEqual({ expr: '#n', of: 'target' });
+  });
+
+  // Второе слагаемое складывается с содержимым числа, и знак тут решает
+  // всё: «ХП − #n + Сила» это «ХП − (урон − Сила)». Сложить их через «+»
+  // значило бы поменять математику молча — ровно то, ради чего затевался
+  // весь разбор сторон.
+  it('знак слагаемого сохраняется при переносе к отправителю', () => {
+    const steps = [
+      { id: 'n', type: 'amount', source: 'roll', bonus: { expr: '#armor' } },
+      { type: 'apply', target: { tag: 'armor' }, direction: 'set',
+        value: { expr: '#armor - #n + #armor', of: 'target' } },
+    ] as unknown as Step[];
+    mount(steps);
+
+    // Переключаем ПОСЛЕДНЕЕ слагаемое — оно стоит с «+», а число с «−».
+    const flips = [...screen.getByText('станет').closest('label')!
+      .querySelectorAll('.chips__side--pick')];
+    fireEvent.mouseDown(flips.at(-1)!);
+
+    expect((steps[0] as any).bonus).toEqual({ expr: '#armor - #armor' });
+    expect((steps[1] as any).value).toEqual({ expr: '#armor - #n', of: 'target' });
+  });
+
+  it('умножение не переносят молча — карточка объясняет, что делать', () => {
+    const steps = [
+      { id: 'n', type: 'amount', source: 'roll' },
+      { type: 'apply', target: { tag: 'armor' }, direction: 'set',
+        value: { expr: '#n * #armor', of: 'target' } },
+    ] as unknown as Step[];
+    mount(steps);
+
+    fireEvent.mouseDown([...screen.getByText('станет').closest('label')!
+      .querySelectorAll('.chips__side--pick')].at(-1)!);
+
+    expect((steps[0] as any).bonus).toBeUndefined();
+    expect(screen.getByText(/вынесите его отдельной карточкой/)).toBeTruthy();
+  });
+
+  it('и обратно: присланное слагаемое возвращается цели', () => {
+    const steps = [
+      { id: 'n', type: 'amount', source: 'roll', bonus: { expr: '#armor' } },
+      { type: 'apply', target: { tag: 'armor' }, direction: 'set', value: { expr: '#n', of: 'target' } },
+    ] as unknown as Step[];
+    mount(steps);
+
+    fireEvent.mouseDown(screen.getByTitle(/вернуть цели/));
+
+    expect((steps[0] as any).bonus).toBeUndefined();
+    expect((steps[1] as any).value).toEqual({ expr: '#armor', of: 'target' });
   });
 });

@@ -191,7 +191,11 @@ export function problemOf(step: Step, system: System, effect: Effect, earlier: E
     if (kind.kind === 'expr') {
       const source = String(ref.expr ?? '').trim();
       const deps = source ? formulaDeps(source) : null;
-      const missing = deps?.find(tag => !system.fields.some(f => f.tag === tag));
+      // Имя в формуле — не обязательно поле: результат шага выше зовётся
+      // так же (engine/refs.ts), и «#хп − #n» — законная формула. Спрашивать
+      // за «n» поле значило бы ругаться на то, что карточка сама и создала.
+      const missing = deps?.find(tag =>
+        !system.fields.some(f => f.tag === tag) && !earlier.some(step => step.id === tag));
       if (missing) {
         return {
           text: `формула ссылается на поле «${missing}», которого в системе нет — заведите его на вкладке «Лист»`,

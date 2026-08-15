@@ -22,6 +22,7 @@ import type { Problem } from './step-card.tsx';
 const TITLES: Record<string, string> = { check: 'Проверка', change: 'Изменение', number: 'Число' };
 
 type EditFn = (slotIndexInGroup: number, change: (draft: Step) => void) => void;
+type WithNumber = (change: (amount: Step, apply: Step, id: string) => void) => void;
 
 const firstDie = (system: System): string | undefined => Object.keys(system.constants ?? {})[0];
 
@@ -29,7 +30,11 @@ export function Readback({ segments }: { segments: Segment[] }) {
   return (
     <p className="readback">
       {segments.map((part, i) => {
-        const glue = 'text' in part && /^[.,]/.test(part.text);
+        // Пробел не ставится перед знаком препинания и внутри скобок:
+        // «( Кость урона )» читается разорванно.
+        const prev = segments[i - 1];
+        const glue = ('text' in part && /^[.,)]/.test(part.text))
+          || (prev !== undefined && 'text' in prev && prev.text.endsWith('('));
         const lead = i === 0 || glue ? '' : ' ';
         return 'text' in part
           ? <span key={i}>{lead}{part.text}</span>
@@ -41,7 +46,7 @@ export function Readback({ segments }: { segments: Segment[] }) {
 
 export function GroupCard({
   group, position, system, effect, earlier, problem, problemAction,
-  edit, onDelete, onMoveUp, onMoveDown, onAddParam,
+  edit, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam,
 }: {
   group: CardGroup;
   position: number;
@@ -56,6 +61,21 @@ export function GroupCard({
    */
   problemAction?: ReactNode;
   edit: (slotIndexInGroup: number, change: (draft: Step) => void) => void;
+  /**
+   * Правка «изменения» ВМЕСТЕ с его числом, одним движением.
+   *
+   * Число (шаг `amount`) не отдельная карточка, а внутренность изменения:
+   * его заводит не автор, а сама карточка — в тот момент, когда в строке
+   * появилось то, что считает ОТПРАВИТЕЛЬ (кость, значение из записи,
+   * поле с его листа). Считать это у цели нельзя: у получателя нет ни
+   * кости, ни чужого листа (tests/rule.sides.test.ts).
+   *
+   * Почему одним движением, а не «завести, потом дописать»: карточка
+   * склеена из двух шагов по тому, что выражение зовёт число по имени.
+   * Между двумя правками пара распалась бы надвое, экран перерисовал бы
+   * две карточки вместо одной — и набранное в поле потерялось бы.
+   */
+  withNumber?: (change: (amount: Step, apply: Step, id: string) => void) => void;
   onDelete: () => void;
   /** Перенос карточки соседям навстречу. Нет обработчика — карточка с краю. */
   onMoveUp?: () => void;
@@ -127,7 +147,7 @@ export function GroupCard({
         {problem ? <Verdict tone="bad" action={problemAction}>{problem.text}</Verdict> : null}
         <Readback segments={segments} />
         {group.kind === 'check' ? <CheckBody step={step} context={context} edit={edit} system={system} /> : null}
-        {group.kind === 'change' ? <ChangeBody group={group} context={context} edit={edit} system={system} onAddParam={onAddParam} /> : null}
+        {group.kind === 'change' ? <ChangeBody group={group} context={context} edit={edit} withNumber={withNumber} system={system} onAddParam={onAddParam} /> : null}
         {group.kind === 'number' ? <NumberBody step={step} context={context} edit={edit} onAddParam={onAddParam} /> : null}
       </Card>
       {breakLine(group)}
@@ -230,13 +250,9 @@ function RollExprInput({ step, context, edit }: {
             // Кость вставляется ТЕКСТОМ, как её и пишут: «1d20» — строка
             // остаётся обычным выражением. Ссылкой на словарь она станет
             // при разборе: по выбору (picked) или по совпадению нотации.
-            onPick: () => {
+            onPick: (insert: (piece: string) => string) => {
               setPicked(key);
-              const notation = notationOf(context.system, key);
-              setDraft(prev => {
-                const text = (prev ?? shown).trim();
-                return text ? `${text} + ${notation}` : notation;
-              });
+              setDraft(insert(notationOf(context.system, key)));
             },
           }))}
         onChange={setDraft}
@@ -254,7 +270,7 @@ function RollExprInput({ step, context, edit }: {
 // Величина изменения одной строкой: «1d8 + ⟦Мод Силы⟧». Кость и прибавка
 // живут в движке порознь (кость бросает отправитель, формулу считает лист),
 // но набирают их вместе — парсер делит, формат собирает обратно.
-function ChangeValue({ amount, apply, applyIndex, context, edit, onCreateFromRecord }: {
+function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onCreateFromRecord }: {
   /** Величина карточки, если она есть: только она умеет бросать кость. */
   amount?: Step;
   /** Шаг «применить»: он несёт поле цели и новое значение. */
@@ -262,6 +278,8 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, onCreateFromRec
   applyIndex: number;
   context: SlotContext;
   edit: EditFn;
+  /** Завести число, если его ещё нет, и править пару разом. */
+  withNumber?: WithNumber;
   onCreateFromRecord?: () => SlotRef;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
@@ -308,10 +326,19 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, onCreateFromRec
   const bonusText = exprText(bonus);
   const both = Boolean(diceChip && bonusText);
 
-  const sentChip = (label: ReactNode, onRemove: () => void, key: string) => (
+  const sentChip = (label: ReactNode, onRemove: () => void, key: string, onBack?: () => void) => (
     <span key={key} className="chips__chip chips__chip--sent">
       {label}
-      <span className="chips__side">прислано</span>
+      {onBack ? (
+        <button
+          type="button" className="chips__side chips__side--pick"
+          title="вернуть цели: считать это её листом"
+          onMouseDown={e => { e.preventDefault(); onBack(); }}
+        >у отправителя ⇄</button>
+      ) : (
+        // Кость возвращать некуда: её бросает отправитель, у цели её нет.
+        <span className="chips__side" title="кость бросает отправитель">у отправителя</span>
+      )}
       <button
         type="button" className="chips__x" aria-label="убрать слагаемое"
         onMouseDown={e => { e.preventDefault(); onRemove(); }}
@@ -333,6 +360,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, onCreateFromRec
           bonusText.replace(/#([\p{L}\p{N}_]+)/gu, (_, tag: string) => labelOfTag(context.system, tag)),
           () => edit(0, step => { delete (step as Record<string, unknown>).bonus; }),
           'bonus',
+          withNumber ? backToTarget : undefined,
         ) : null}
         {both ? <span className="chips__paren" aria-hidden>)</span> : null}
       </>
@@ -345,19 +373,73 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, onCreateFromRec
   // выбери человек кость из подсказки.
   const DICE = /(\d+)?\s*[dдк]\s*(\d+)/iu;
 
+  /** Убрать след вынутого слагаемого: висящий знак и двойные пробелы. */
+  const tidy = (text: string) => text
+    .replace(/\+\s*\+/g, '+')
+    .replace(/[-+*/]\s*$/, '')
+    .replace(/^\s*\+/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  /** Стоит ли имя числа в строке. Второй раз дописывать его нельзя. */
+  const mentions = (text: string, id: string) =>
+    new RegExp(`#${id}(?![\\p{L}\\p{N}_])`, 'u').test(text);
+
+  /**
+   * Всё, что считает отправитель, попадает в строку одинаково: кладём это
+   * в число карточки (заводя его при надобности) и дописываем в выражение
+   * имя числа. Правка одна на пару — иначе карточка на миг распалась бы
+   * надвое и набранное потерялось.
+   */
+  const sendThrough = (
+    fill: (amount: Record<string, any>) => void,
+    /** Куда поставить имя числа. По умолчанию — в хвост строки. */
+    place?: (name: string) => string,
+  ) => {
+    const line = (draft ?? asExpr()).trim();
+    const put = (a: Step, apply: Step, id: string) => {
+      fill(a as Record<string, any>);
+      const name = `#${id}`;
+      const next = (place ? place(name) : (mentions(line, id) ? line : (line ? `${line} + ${name}` : name)))
+        .replace(/\s+/g, ' ').trim();
+      const target = apply as Record<string, any>;
+      target.direction = 'set';
+      target.value = { expr: next, of: 'target' };
+    };
+    if (!withNumber && !amountId) {
+      // Завести число некому (так карточка живёт в своих тестах) — молча
+      // терять набранное нельзя.
+      setTrouble('кость бросает отправитель — заведите карточку «число» и назовите её');
+      return;
+    }
+    if (withNumber) withNumber(put);
+    else {
+      // Число уже есть — обойдёмся обычной правкой пары (так живут тесты
+      // карточки, где вставлять шаги некуда).
+      edit(0, a => fill(a as Record<string, any>));
+      edit(applyIndex, apply => put({} as Step, apply, amountId));
+    }
+    setDraft(null);
+    setTrouble(null);
+  };
+
   const commit = () => {
     if (draft === null) return;
-    let text = draft.trim();
+    const text = draft.trim();
 
+    // Набрана кость — она уезжает в число, а в строке остаётся его имя.
     const rolled = text.match(DICE);
     if (rolled) {
-      if (!amountId) {
-        setTrouble('кость бросает отправитель — заведите карточку «число» и назовите её');
-        return;
-      }
       const notation = `${rolled[1] ?? 1}d${rolled[2]}`;
-      edit(0, step => { (step as Record<string, unknown>).dice = { const: notation }; });
-      text = text.replace(DICE, `#${amountId}`);
+      const picked = parseRollExpr(notation, context.system).die;
+      // Имя встаёт ровно туда, где стояла нотация: «#хп − 1d8» читается
+      // «#хп − #n», а не «#хп − + #n». А если имя в строке уже стоит —
+      // кость уехала ВНУТРЬ него, и второй раз называть его не нужно:
+      // «#n + 1d8» это «#n», а не «#n + #n».
+      sendThrough(a => { a.dice = picked; }, name => (mentions(text, name.slice(1))
+        ? tidy(text.replace(DICE, ''))
+        : text.replace(DICE, name)));
+      return;
     }
 
     edit(applyIndex, step => {
@@ -372,29 +454,82 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, onCreateFromRec
 
   // «Из записи» тоже приносит ЧИСЛО, которого у формулы нет: его берёт
   // величина карточки, а выражение зовёт её по имени — как и кость.
-  const putIntoAmount = (ref: SlotRef) => {
-    edit(0, step => { (step as Record<string, unknown>).dice = ref; });
-    if (!amountId) return;
-    // Число уже стоит в строке — второй раз его дописывать нельзя: именно
-    // так клик по «Кость урона» приводил к тому, что вся присланная сумма
-    // появлялась ещё раз, одной фишкой.
-    const already = new RegExp(`#${amountId}(?![\\p{L}\\p{N}_])`, 'u').test(shown);
-    if (already) return;
-    setDraft(prev => {
-      const text = (prev ?? shown).trim();
-      return text ? `${text} + #${amountId}` : `#${amountId}`;
-    });
+  const putIntoAmount = (ref: SlotRef, place?: (name: string) => string) =>
+    sendThrough(a => { a.dice = ref; }, place);
+
+  /**
+   * Поле, которое надо взять У ОТПРАВИТЕЛЯ.
+   *
+   * Оно уезжает в число: отправитель считает его своим листом при упаковке
+   * и присылает готовым. Иначе «Мод Силы» в выражении цели стал бы силой
+   * ЖЕРТВЫ — молча и с другим результатом (tests/rule.sides.test.ts).
+   *
+   * Если имени числа в строке ещё нет — оно просто встаёт на место
+   * слагаемого: и место, и знак перед ним остаются те же. Если уже
+   * стоит, слагаемое складывается с содержимым числа, и вот тут знак
+   * приходится считать: «ХП − #n + Сила» это «ХП − (урон − Сила)»,
+   * а не «− (урон + Сила)».
+   */
+  const takeFromSender = (tag: string, place: (name: string) => string) => {
+    const line = place('');
+    const marked = place('§');
+    // Умножение и деление так не переносятся: «(a − b)·c» и «a − b·c» —
+    // разные числа, и молча подменять одно другим нельзя.
+    if (/[*/]\s*§|§\s*[*/]/.test(marked)) {
+      setTrouble('это слагаемое умножается — вынесите его отдельной карточкой «число»');
+      return;
+    }
+    /** С каким знаком слагаемое стоит в строке. */
+    const signOf = (what: string) => {
+      const at = marked.indexOf(what);
+      return at > 0 && marked.slice(0, at).trimEnd().endsWith('-') ? '-' : '+';
+    };
+
+    // Имя числа уже в строке — слагаемое складывается с его содержимым,
+    // и знак считается относительно знака самого числа: «ХП − #n + Сила»
+    // это «ХП − (урон − Сила)», а не «− (урон + Сила)».
+    const folding = Boolean(amountId && mentions(line, amountId));
+    const sign = folding && signOf('§') !== signOf(`#${amountId}`) ? '-' : '+';
+    const was = exprText((amount as Record<string, any> | undefined)?.bonus).trim();
+    const expr = was ? `${was} ${sign} #${tag}`
+      : sign === '-' ? `0 - #${tag}` : `#${tag}`;
+
+    sendThrough(a => { a.bonus = { expr }; }, name => (folding ? tidy(line) : place(name)));
   };
+
+  /** Обратно: присланное слагаемое считает цель — вернуть его в строку. */
+  // Объявлением, а не переменной: карточка выше (присланная фишка) зовёт
+  // его до этого места.
+  function backToTarget() {
+    const was = exprText((amount as Record<string, any> | undefined)?.bonus).trim();
+    if (!was) return;
+    const line = (draft ?? asExpr()).trim();
+    const put = (a: Step, apply: Step, id: string) => {
+      delete (a as Record<string, any>).bonus;
+      const dice = (a as Record<string, any>).dice;
+      // Число осталось только костью — имя в строке живёт дальше; если и
+      // кости нет, имени ссылаться не на что, и оно уходит вместе с ним.
+      const next = dice
+        ? `${line} + ${was}`
+        : line.replace(new RegExp(`#${id}(?![\\p{L}\\p{N}_])`, 'u'), was).trim();
+      const t = apply as Record<string, any>;
+      t.direction = 'set';
+      t.value = { expr: next, of: 'target' };
+    };
+    if (withNumber) withNumber(put);
+    setDraft(null);
+  }
+
   const needs = (context.effect.params ?? []).map(p => ({
     group: 'из записи',
     label: p.label ?? p.key,
-    onPick: () => putIntoAmount({ param: p.key } as SlotRef),
+    onPick: (insert: (piece: string) => string) => putIntoAmount({ param: p.key } as SlotRef, insert),
   }));
   if (onCreateFromRecord) {
     needs.push({
       group: 'из записи',
       label: 'новая потребность…',
-      onPick: () => putIntoAmount(onCreateFromRecord()),
+      onPick: (insert: (piece: string) => string) => putIntoAmount(onCreateFromRecord(), insert),
     });
   }
 
@@ -431,7 +566,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, onCreateFromRec
       <Field
         label="станет"
         error={trouble}
-        hint="Математика по листу ЦЕЛИ. Фишка — число, которое посчитал отправитель и прислал готовым; из чего оно складывается, видно в «Тонкостях»."
+        hint="Математика по листу ЦЕЛИ. Слагаемому, которое надо взять у бьющего, щёлкните подпись «у цели» — он посчитает его своим листом и пришлёт готовым."
       >
         <FormulaChips
           value={shown}
@@ -440,6 +575,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, onCreateFromRec
           side="target"
           placeholder="например: #хп − #урон"
           extraOptions={needs}
+          onFlipSide={withNumber ? takeFromSender : undefined}
           onChange={setDraft}
           onBlur={commit}
           onKeyDown={e => {
@@ -613,10 +749,11 @@ function CheckBody({ step, context, edit, system }: {
 
 // ── изменение ─────────────────────────────────────────────────────────────
 
-function ChangeBody({ group, context, edit, system, onAddParam }: {
+function ChangeBody({ group, context, edit, withNumber, system, onAddParam }: {
   group: CardGroup;
   context: SlotContext;
   edit: EditFn;
+  withNumber?: WithNumber;
   system: System;
   onAddParam?: (label: string, kind: string) => string;
 }) {
@@ -663,7 +800,7 @@ function ChangeBody({ group, context, edit, system, onAddParam }: {
               выглядела двумя разными. */}
           <ChangeValue
             amount={group.amount ?? undefined} apply={step} applyIndex={applyIndex}
-            context={context} edit={edit}
+            context={context} edit={edit} withNumber={withNumber}
             onCreateFromRecord={fromRecord('сколько — кости', 'dice')} />
 
 

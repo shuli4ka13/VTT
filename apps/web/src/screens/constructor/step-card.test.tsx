@@ -51,3 +51,27 @@ describe('problemOf: тег внутри формулы слота', () => {
     expect(problemOf(step, systemWithDie(), blankEffect, [])).toBeNull();
   });
 });
+
+// Имя в формуле — не обязательно поле: результат шага выше зовётся так же
+// (engine/refs.ts), и «#хп − #n» законно. Проверка требовала поле «n» и
+// красила карточку в красное — притом что число ей завела сама карточка.
+describe('формула зовёт шаг выше', () => {
+  const system = {
+    fields: [{ tag: 'hp', label: 'Текущие ХП', value: { kind: 'stored', type: 'number', default: 20 } }],
+    effects: {},
+  } as unknown as System;
+  const effect = { params: [] } as unknown as Effect;
+  const apply = {
+    type: 'apply', target: { tag: 'hp' }, direction: 'set',
+    value: { expr: '#hp - #n', of: 'target' },
+  } as unknown as Step;
+
+  it('имя шага выше — не «поля нет»', () => {
+    expect(problemOf(apply, system, effect, [{ id: 'n', type: 'amount' }])).toBeNull();
+  });
+
+  it('а вот незнакомое имя по-прежнему беда', () => {
+    const problem = problemOf(apply, system, effect, []);
+    expect(problem?.missingField).toBe('n');
+  });
+});

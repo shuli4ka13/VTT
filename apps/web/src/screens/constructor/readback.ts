@@ -127,6 +127,34 @@ export function amountValueSegments(step: Step, system: System, effect: Effect):
   return out;
 }
 
+/**
+ * Выражение словами. Имена полей становятся лейблами, имя числа —
+ * его содержимым в скобках: имён шагов автор не вводил и знать не обязан.
+ */
+function exprSegments(expr: string, amount: Step | null, system: System, effect: Effect): Segment[] {
+  const id = String((amount as any)?.id ?? '');
+  const out: Segment[] = [];
+  let rest = expr.trim();
+  if (!rest) return [hole('чем станет?')];
+  for (;;) {
+    const m = rest.match(/#([\p{L}\p{N}_]+)/u);
+    if (!m || m.index === undefined) break;
+    const before = rest.slice(0, m.index).trim();
+    if (before) out.push(seg(before));
+    if (id && m[1] === id && amount) {
+      const inner = amountValueSegments(amount, system, effect);
+      out.push(seg('('), ...inner, seg(')'));
+    } else {
+      const known = system.fields.some(f => f.tag === m[1]);
+      out.push(known ? seg(`«${labelOfTag(system, m[1]!)}»`) : hole(`${m[1]} — такого нет`));
+    }
+    rest = rest.slice(m.index + m[0].length);
+  }
+  const tail = rest.trim();
+  if (tail) out.push(seg(tail));
+  return out;
+}
+
 export function changeReadback(step: Step, amount: Step | null, system: System, effect: Effect): Segment[] {
   const s = step as any;
   if (step.type === 'status') {
@@ -142,9 +170,17 @@ export function changeReadback(step: Step, amount: Step | null, system: System, 
       : [seg('На цель вешается состояние'), what];
   }
   const field = refSegment(s.target, system, effect, 'какое поле?');
-  const what = amount
-    ? amountValueSegments(amount, system, effect)
-    : [refSegment(s.value, system, effect, 'сколько?')];
+  // Выражение читается ЦЕЛИКОМ, как написано: «ХП − (кость + Мод Силы)».
+  // Пересказывать вместо него содержимое числа — врать: пока значение было
+  // «ровно это число», совпадало, а у настоящей формулы отваливалось всё
+  // остальное, и «ХП −» из фразы пропадало.
+  const expr = s.value && typeof s.value === 'object' && 'expr' in s.value
+    ? String(s.value.expr ?? '') : null;
+  const what = expr !== null
+    ? exprSegments(expr, amount, system, effect)
+    : amount
+      ? amountValueSegments(amount, system, effect)
+      : [refSegment(s.value, system, effect, 'сколько?')];
   const direction = s.direction ?? 'subtract';
   if (direction === 'set') return [seg('У цели'), field, seg('становится'), ...what, seg('.')];
   if (direction === 'add') return [seg('Цель получает'), ...what, seg('в'), field, seg('.')];

@@ -36,7 +36,7 @@ export function joinParts(parts: Part[]): string {
   return parts.map(p => ('tag' in p ? `#${p.tag}` : p.text)).join('');
 }
 
-export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, side, extraOptions }: {
+export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, side, extraOptions, onFlipSide }: {
   value: string;
   onChange: (next: string) => void;
   system: System;
@@ -71,9 +71,18 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
   /**
    * Что ещё предложить в подсказке по «@» помимо полей листа. Такой пункт
    * не вставляется в текст (формула умеет ссылаться только на поля) —
-   * он сам знает, куда себя записать.
+   * он сам знает, куда себя записать. Вместо строки ему дают `insert`:
+   * положить кусок ТУДА, где стоял «@», и получить строку целиком. Так
+   * имя встаёт в то место, куда человек его и звал, а не в хвост; и своё
+   * состояние вызывающему перечитывать не надо — оно ещё старое.
    */
-  extraOptions?: { group: string; label: string; onPick: () => void }[];
+  extraOptions?: { group: string; label: string; onPick: (insert: (piece: string) => string) => void }[];
+  /**
+   * Дать щёлкнуть по подписи стороны: «у цели» → «у отправителя».
+   * Фишка при этом уходит из строки — считать её будет другой лист, — и
+   * на её место встаёт то, что вернёт вызывающий через `insert`.
+   */
+  onFlipSide?: (tag: string, insert: (piece: string) => string) => void;
 }) {
   const parts = useMemo(() => partsOf(value), [value]);
   const host = useRef<HTMLDivElement>(null);
@@ -111,14 +120,16 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
     : [];
 
   /** Чужой пункт сам знает, куда записаться; из текста запрос «@…» убираем. */
-  const pickExtra = (onPick: () => void) => {
+  const pickExtra = (onPick: (insert: (piece: string) => string) => void) => {
     if (active === null || !query) return;
     const part = parts[active] as { text: string };
-    const next = parts.map((p, i) => (i === active
-      ? { text: part.text.slice(0, query.at) + part.text.slice(caret) }
-      : p));
-    onChange(joinParts(next));
-    onPick();
+    const before = part.text.slice(0, query.at);
+    const after = part.text.slice(caret);
+    const insert = (piece: string) => joinParts(parts.map((p, i) => (i === active
+      ? { text: before + piece + after }
+      : p)));
+    onChange(insert(''));
+    onPick(insert);
   };
 
   const pick = (tag: string) => {
@@ -141,17 +152,20 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
     commitParts(next);
   };
 
-  const dropChip = (chipIndex: number) => {
-    // Сливаем соседние текстовые куски вокруг удалённой фишки.
+  /** Строка, где на месте фишки стоит кусок текста (пустой — просто убрать). */
+  const without = (chipIndex: number, piece = ''): { parts: Part[]; caret: number } => {
     const before = parts[chipIndex - 1] as { text: string } | undefined;
     const after = parts[chipIndex + 1] as { text: string } | undefined;
-    const merged = { text: `${before?.text ?? ''}${after?.text ?? ''}` };
-    const next = [
-      ...parts.slice(0, Math.max(0, chipIndex - 1)),
-      merged,
-      ...parts.slice(chipIndex + 2),
-    ];
-    commitParts(next, { index: Math.max(0, chipIndex - 1), caret: (before?.text ?? '').length });
+    const merged = { text: `${before?.text ?? ''}${piece}${after?.text ?? ''}` };
+    return {
+      parts: [...parts.slice(0, Math.max(0, chipIndex - 1)), merged, ...parts.slice(chipIndex + 2)],
+      caret: (before?.text ?? '').length + piece.length,
+    };
+  };
+
+  const dropChip = (chipIndex: number) => {
+    const gone = without(chipIndex);
+    commitParts(gone.parts, { index: Math.max(0, chipIndex - 1), caret: gone.caret });
   };
 
   const leave = () => {
@@ -184,7 +198,19 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
           ) : (
           <span key={index} className="chips__chip" title={`#${part.tag}`}>
             {labelOfTag(system, part.tag)}
-            {side ? <span className="chips__side">{side === 'self' ? 'у себя' : 'у цели'}</span> : null}
+            {side && onFlipSide ? (
+              // Сторона — не ярлык, а выбор: щелчок переносит слагаемое
+              // на лист отправителя. Кнопкой, а не текстом, потому что
+              // именно этого «как поменять» здесь и ищут глазами.
+              <button
+                type="button" className="chips__side chips__side--pick"
+                title="считать у отправителя: он посчитает своим листом и пришлёт готовым"
+                onMouseDown={e => {
+                  e.preventDefault();
+                  onFlipSide(part.tag, piece => joinParts(without(index, piece).parts));
+                }}
+              >{side === 'self' ? 'у себя' : 'у цели'} ⇄</button>
+            ) : side ? <span className="chips__side">{side === 'self' ? 'у себя' : 'у цели'}</span> : null}
             <button
               type="button" className="chips__x" aria-label="убрать поле"
               onMouseDown={e => { e.preventDefault(); dropChip(index); }}

@@ -362,6 +362,25 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
                   const index = group.indices[k] ?? group.indices[0]!;
                   change(draft.steps![index]!);
                 })}
+                // Число заводит не автор, а карточка — в тот момент, когда
+                // в строку попало то, что считает отправитель. Одной правкой
+                // с выражением: между двумя пара «число + изменение»
+                // распалась бы надвое, и карточка на экране пересоздалась бы
+                // вместе с полем ввода.
+                withNumber={change => edit(draft => {
+                  const steps = draft.steps ?? (draft.steps = []);
+                  const applyAt = group.indices[group.indices.length - 1]!;
+                  let amountAt = group.amount ? group.indices[0]! : -1;
+                  if (amountAt < 0) {
+                    const taken = steps.map(step => step.id).filter(Boolean) as string[];
+                    steps.splice(applyAt, 0, {
+                      id: freeId(taken, 'n'), type: 'amount', source: 'roll',
+                    } as never);
+                    amountAt = applyAt;
+                  }
+                  const amount = steps[amountAt]!;
+                  change(amount, steps[amountAt + 1]!, String(amount.id));
+                })}
                 onDelete={() => edit(draft => {
                   [...group.indices].sort((a, b) => b - a).forEach(i => draft.steps!.splice(i, 1));
                 })}
