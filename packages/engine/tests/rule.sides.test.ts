@@ -29,17 +29,18 @@ const sys: any = {
   effects: {},
 };
 
-const богатырь = { id: 'богатырь', values: { хп: 30, сила: 5 }, effects: [] };
-const хиляк = { id: 'хиляк', values: { хп: 20, сила: 1 }, effects: [] };
+// Два листа с РАЗНОЙ Силой — иначе подмену стороны не увидеть.
+const атакующий = { id: 'атакующий', values: { хп: 30, сила: 5 }, effects: [] };
+const цель = { id: 'цель', values: { хп: 20, сила: 1 }, effects: [] };
 
 const hit = (rule: any) => {
   const packed = packRule(rule, {
-    system: sys, sheet: богатырь, params: {}, item: null,
-    die: queue(4), pass: newPass(sys, богатырь, { compendium: { items: [] } }),
+    system: sys, sheet: атакующий, params: {}, item: null,
+    die: queue(4), pass: newPass(sys, атакующий, { compendium: { items: [] } }),
   } as any);
   return resolveRule(packed, {
-    system: sys, sheet: хиляк, params: {}, item: null,
-    die: queue(), pass: newPass(sys, хиляк, { compendium: { items: [] } }),
+    system: sys, sheet: цель, params: {}, item: null,
+    die: queue(), pass: newPass(sys, цель, { compendium: { items: [] } }),
   } as any);
 };
 
@@ -51,7 +52,7 @@ group('чей лист считает слагаемое', () => {
         { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { ref: 'урон' } },
       ],
     };
-    eq(hit(rule).sheet.values.хп, 11, '20 − (4 + Сила БОГАТЫРЯ 5)');
+    eq(hit(rule).sheet.values.хп, 11, '20 − (4 + Сила АТАКУЮЩЕГО 5)');
   });
 
   test('та же прибавка В ВЫРАЖЕНИИ считается целью — её Силой', () => {
@@ -61,7 +62,7 @@ group('чей лист считает слагаемое', () => {
         { type: 'apply', target: { tag: 'хп' }, direction: 'set', value: { expr: '#хп - (#урон + #сила)', of: 'target' } },
       ],
     };
-    eq(hit(rule).sheet.values.хп, 15, '20 − (4 + Сила ХИЛЯКА 1) — другое число, и молча');
+    eq(hit(rule).sheet.values.хп, 15, '20 − (4 + Сила ЦЕЛИ 1) — другое число, и молча');
   });
 
   test('число уезжает в конверте посчитанным: у получателя оно уже готово', () => {
