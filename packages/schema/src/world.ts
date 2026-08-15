@@ -255,6 +255,13 @@ export const recordKind = z.object({
     kind: z.string().optional(),
   }).passthrough()).optional(),
   bindings: z.array(binding).optional(),
+  /**
+   * Общая пассивная половина рода: «все тяжёлые доспехи мешают красться».
+   * Пишется один раз на роде вместо строчки на каждой кольчуге — и это
+   * та же пара, что props/bindings: род говорит, ЧТО его вещи делают,
+   * а сами вещи приносят только свои циферки.
+   */
+  modifiers: z.array(modifier).optional(),
 }).passthrough();
 
 // ── система ─────────────────────────────────────────────────────────────

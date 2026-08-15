@@ -33,10 +33,12 @@ const STACKING = [
 // в этом мире, решает автор в словаре «Правки броска». Модификатор только
 // показывает объявленное — как слот показывает объявленные кости.
 
-export function ModifiersEditor({ system, modifiers, onEdit }: {
+export function ModifiersEditor({ system, modifiers, onEdit, title }: {
   system: System;
   modifiers: Modifier[];
   onEdit: (change: (draft: Modifier[]) => void) => void;
+  /** Заголовок над списком: у вещи и у рода он разный, и разница важна. */
+  title?: string;
 }) {
   const all = targets(system) as { tag: string; label: string; kind: string; group?: string }[];
   const valueTargets = all.filter(t => t.kind === 'value' || t.kind === 'incoming');
@@ -46,7 +48,11 @@ export function ModifiersEditor({ system, modifiers, onEdit }: {
   return (
     <>
       <div className="inline">
-        <span className="screen-title" style={{ fontSize: 'var(--fs-5)' }}>Что правит</span>
+        {/* Пустой заголовок — когда его уже написала карточка вокруг:
+            два заголовка об одном подряд читаются как два разных списка. */}
+        {title === '' ? null : (
+          <span className="screen-title" style={{ fontSize: 'var(--fs-5)' }}>{title ?? 'Что правит'}</span>
+        )}
         <span className="spacer" />
         <Button size="sm" onClick={() => onEdit(draft => {
           draft.push({ kind: 'value', target: valueTargets[0]?.tag ?? '', op: 'add', value: 1, stacking: 'sum', condition: null });

@@ -87,3 +87,39 @@ describe('RecordsTab: род видит потребности эффекта', 
     expect(options).not.toContain('Класс защиты');
   });
 });
+
+// Пассивная половина рода: «все тяжёлые доспехи мешают красться» пишется
+// один раз здесь, а не строчкой на каждой кольчуге.
+describe('модификаторы рода', () => {
+  beforeEach(() => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...state.system,
+        fields: [{
+          tag: 'скрытность', label: 'Скрытность',
+          value: { kind: 'stored', type: 'number', default: 0 },
+          roll: { label: 'Проверка: Скрытность' },
+        }],
+        roll_edits: { помеха: { label: 'Помеха', ops: [{ op: 'addDie' }] } },
+        records: { тяжёлый: { kind: 'item', label: 'Тяжёлый доспех', props: [], bindings: [] } },
+      },
+      activeRecordKind: 'тяжёлый',
+    }));
+  });
+
+  it('у рода-вещи есть своя секция «Что правит каждая вещь этого рода»', () => {
+    render(<RecordsTab />);
+    expect(screen.getByText('Что правит каждая вещь этого рода')).toBeTruthy();
+  });
+
+  it('правка броска пишется в род, а не в запись компендиума', () => {
+    render(<RecordsTab />);
+    fireEvent.click(screen.getByText('+ правит бросок'));
+
+    const kind = useWorld.getState().system.records!['тяжёлый']!;
+    expect(kind.modifiers).toHaveLength(1);
+    expect(kind.modifiers![0]).toMatchObject({ kind: 'roll', edit: 'помеха' });
+    expect(useWorld.getState().compendium.items).toEqual([]);
+  });
+});

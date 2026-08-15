@@ -25,7 +25,7 @@ import type { Pass } from './calc.ts';
 
 /** Откуда приехал модификатор — предмет, эффект на листе или правило комнаты. */
 export interface ModifierSource {
-  type: 'room' | 'item' | 'effect';
+  type: 'room' | 'item' | 'kind' | 'effect';
   id: string;
   label?: string;
   modifiers: Modifier[];
@@ -94,9 +94,23 @@ function sourcesOf(system: System, sheet: Sheet, compendium: Compendium): Modifi
 
   // Предмет носит свои бонусы сам: кольчуга задаёт базу доспеха, и это
   // свойство вещи, а не отдельный именованный эффект.
+  //
+  // А общее для всех вещей рода («тяжёлый доспех мешает красться») написано
+  // ОДИН раз на роде — и приезжает вместе с каждой надетой вещью этого рода.
+  // Именно вместе с каждой: строчка на роде значит ровно то же, что строчка,
+  // написанная на самой вещи, и два надетых кольца рода «Кольцо» дают вдвое.
+  // Кому нужно «один раз», ставит правило стакинга «берётся наибольший».
   for (const id of sheet.equipped || []) {
     const item = (compendium.items || []).find(i => i.id === id);
     if (!item) throw new EngineError(`чарник «${sheet.id}» носит предмет «${id}», которого нет в компендиуме`);
+
+    const kind = item.rk ? (system.records || {})[item.rk] : undefined;
+    if (kind?.modifiers?.length) {
+      sources.push({
+        type: 'kind', id: String(item.rk), label: kind.label || String(item.rk),
+        modifiers: kind.modifiers,
+      });
+    }
     sources.push({ type: 'item', id: item.id, label: item.label, modifiers: item.modifiers || [] });
   }
 

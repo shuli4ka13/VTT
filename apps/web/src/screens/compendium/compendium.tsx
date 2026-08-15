@@ -192,6 +192,7 @@ function RecordEditor({ record, system }: { record: CompendiumRecord; system: Sy
       {kind?.kind === 'item' ? (
         <ModifiersEditor
           system={system}
+          title="Что правит эта вещь"
           modifiers={record.modifiers ?? []}
           onEdit={change => edit(draft => { change(draft.modifiers ??= []); })}
         />

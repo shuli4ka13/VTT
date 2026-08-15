@@ -10,6 +10,7 @@
 // что здесь есть.
 
 import { useWorld, freeId } from '../../store/world.ts';
+import { ModifiersEditor } from './modifiers.tsx';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
   Card, CardHead, Field, Input, Select, Button, Empty, Verdict, Chip, DangerButton,
@@ -199,6 +200,25 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
             </div>
           ))}
       </Card>
+
+      {/* Пассивная половина рода — рядом с активной. Активная («что запись
+          даёт владельцу») подключает эффекты, пассивная правит цифры сразу
+          у всех вещей рода: «тяжёлый доспех мешает красться» пишется здесь
+          один раз вместо строчки на каждой кольчуге. */}
+      {kind.kind === 'item' ? (
+        <Card>
+          <CardHead
+            title="Что правит каждая вещь этого рода"
+            sub="Пишется один раз — действует, пока надета любая вещь этого рода. То, что своё у конкретной вещи, правится в компендиуме."
+          />
+          <ModifiersEditor
+            system={system}
+            title=""
+            modifiers={kind.modifiers ?? []}
+            onEdit={change => edit(draft => { change(draft.modifiers ??= []); })}
+          />
+        </Card>
+      ) : null}
 
       <Card>
         <CardHead
