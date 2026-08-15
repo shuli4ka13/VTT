@@ -273,15 +273,6 @@ function RollExprInput({ step, context, edit }: {
 // Величина изменения одной строкой: «1d8 + ⟦Мод Силы⟧». Кость и прибавка
 // живут в движке порознь (кость бросает отправитель, формулу считает лист),
 // но набирают их вместе — парсер делит, формат собирает обратно.
-/** Чем подписать число в строке: тем, что оно бросает. */
-function diceWord(amount: Step, context: SlotContext): string {
-  const dice = (amount as Record<string, any>).dice;
-  const chip = chipOf(dice, context);
-  if (chip) return chip.label;
-  if (dice && typeof dice === 'object' && 'const' in dice) return String((dice as any).const);
-  return 'число';
-}
-
 function ChangeValue({ amount, apply, applyIndex, context, edit, onCreateFromRecord }: {
   /** Величина карточки, если она есть: только она умеет бросать кость. */
   amount?: Step;
@@ -308,13 +299,12 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, onCreateFromRec
     const a = apply as Record<string, any>;
     const value = a.value;
     if (value && typeof value === 'object' && 'expr' in value) return String(value.expr);
-    // Число разворачивается на слагаемые: кость формулой не выразить (её
-    // бросает отправитель), а прибавка — обычная формула, и держать её
-    // внутри одной фишки значит слепить выражение в нечитаемый ком.
-    const bonusText = exprText((amount as Record<string, any> | undefined)?.bonus);
-    const dicePart = amountId ? `#${amountId}` : '';
-    const amountName = !dicePart ? bonusText
-      : bonusText ? `(${dicePart} + ${bonusText})` : dicePart;
+    // Число стоит ОДНОЙ фишкой, и это не косметика: оно целиком посчитано
+    // ОТПРАВИТЕЛЕМ — кость брошена им, прибавка взята с его листа — и
+    // приехало в конверте готовым. Разобрать его на слагаемые прямо здесь
+    // нельзя: выражение считает лист ЦЕЛИ, и «Мод Силы» в нём стал бы
+    // силой жертвы, а не бьющего (tests/rule.sides.test.ts).
+    const amountName = amountId ? `#${amountId}` : '';
     const targetName = target && typeof target === 'object' && 'tag' in target ? `#${target.tag}` : '';
     const direction = String(a.direction ?? 'subtract');
     if (direction === 'set') return amountName;
@@ -329,7 +319,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, onCreateFromRec
   // Имя числа в строке подписано его содержимым: «Кость урона + Мод Силы»,
   // а не «dmg». Машинное имя нужно данным, человеку — нет.
   const names = amountId && amount
-    ? { [amountId]: diceWord(amount, context) }
+    ? { [amountId]: joinReadback(amountValueSegments(amount, context.system, context.effect)) }
     : undefined;
 
   // Кость в формуле не считается: её бросает ОТПРАВИТЕЛЬ при упаковке, а
@@ -353,9 +343,6 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, onCreateFromRec
       text = text.replace(DICE, `#${amountId}`);
     }
 
-    // Прибавка переехала в выражение — в числе ей больше не место, иначе
-    // она посчиталась бы дважды: и внутри числа, и в формуле.
-    if (amountId) edit(0, step => { delete (step as Record<string, unknown>).bonus; });
     edit(applyIndex, step => {
       const a = step as Record<string, any>;
       if (!text) { delete a.value; return; }
@@ -417,7 +404,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, onCreateFromRec
       <Field
         label="станет"
         error={trouble}
-        hint="Математика по листу цели. Брошенное число зовите по имени шага."
+        hint="Математика по листу ЦЕЛИ. Фишка — число, которое посчитал отправитель и прислал готовым; из чего оно складывается, видно в «Тонкостях»."
       >
         <FormulaChips
           value={shown}
