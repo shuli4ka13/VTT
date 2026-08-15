@@ -93,7 +93,7 @@ export function optionsFor(ctx: SlotContext, allow?: SlotKind[]): SlotOption[] {
   return out;
 }
 
-export function SlotInput({ value, onChange, context, allow, placeholder, extraOptions, dice, onCreateFromRecord }: {
+export function SlotInput({ value, onChange, context, allow, placeholder, extraOptions, dice, side, onCreateFromRecord }: {
   value: unknown;
   onChange: (next: SlotRef | null) => void;
   context: SlotContext;
@@ -103,6 +103,8 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
   extraOptions?: SlotOption[];
   /** Слот костей: набранная нотация («1к8») приводится к каноническому виду движка. */
   dice?: boolean;
+  /** Чей лист считает то, что здесь стоит: «у себя» или «у цели». */
+  side?: 'self' | 'target';
   /**
    * Потребность может родиться прямо тут: пункт «из записи → новая
    * потребность…» в конце группы «Из записи» заводит её на эффекте и
@@ -154,10 +156,12 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
       <FormulaChips
         value={shown}
         system={context.system}
+        side={side}
         placeholder={chip ? undefined : (placeholder ?? 'число или формула')}
         prefix={chip ? (
           <span className={`chips__chip${chip.record ? ' chips__chip--record' : ''}`}>
             {chip.label}
+            {side ? <span className="chips__side">{side === 'self' ? 'у себя' : 'у цели'}</span> : null}
             <button
               type="button" className="chips__x" aria-label="убрать"
               onMouseDown={e => { e.preventDefault(); onChange(null); }}

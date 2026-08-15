@@ -232,6 +232,7 @@ function RollExprInput({ step, context, edit }: {
       <FormulaChips
         value={shown}
         system={context.system}
+        side={String(step.side ?? 'sender') === 'target' ? 'target' : 'self'}
         placeholder={dieChip ? 'и прибавка: @поле, число…' : 'кость и прибавка: 1d20 + @поле'}
         extraOptions={Object.entries(context.system.constants ?? {})
           .filter(([, c]) => c.kind === 'die')
@@ -386,6 +387,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, onCreateFromRec
           value={target}
           context={context}
           allow={['tag', 'param']}
+          side="target"
           placeholder="поле цели"
           onChange={next => edit(applyIndex, target => {
             const t = target as Record<string, unknown>;
@@ -410,6 +412,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, onCreateFromRec
           value={shown}
           system={context.system}
           names={names}
+          side="target"
           placeholder="например: #хп − #урон"
           extraOptions={needs}
           onChange={setDraft}
@@ -491,7 +494,7 @@ function CheckBody({ step, context, edit, system }: {
           </Field>
           <Field label="против">
             <SlotInput
-              value={step.versus} context={context} allow={['tag', 'expr', 'const', 'param', 'ref']}
+              value={step.versus} context={context} allow={['tag', 'expr', 'const', 'param', 'ref']} side="target"
               onChange={next => edit(0, draft => { (draft as any).versus = next ?? undefined; })}
             />
           </Field>
@@ -514,7 +517,7 @@ function CheckBody({ step, context, edit, system }: {
           </Field>
           <Field label="против">
             <SlotInput
-              value={step.versus} context={context} allow={['tag', 'expr', 'const', 'param', 'ref']}
+              value={step.versus} context={context} allow={['tag', 'expr', 'const', 'param', 'ref']} side="target"
               onChange={next => edit(0, draft => { (draft as any).versus = next ?? undefined; })}
             />
           </Field>

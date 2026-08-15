@@ -95,7 +95,10 @@ export function checkReadback(step: Step, system: System, effect: Effect): Segme
     ];
   }
   const roll = s.roll ?? {};
-  const out: Segment[] = [seg(s.side === 'target' ? 'Цель бросает' : 'Отправитель бросает')];
+  // Правило читается так, как его прочли бы вслух за столом: «Ты бросаешь
+  // 1d20 + свой Бонус атаки против Класса брони цели». Слова «отправитель»
+  // и «получатель» — из транспорта, автору они ни о чём не говорят.
+  const out: Segment[] = [seg(s.side === 'target' ? 'Цель бросает' : 'Ты бросаешь')];
   out.push(roll.die ? refSegment(roll.die, system, effect, 'какой костью?') : hole('какой костью?'));
   if (roll.bonus !== undefined && roll.bonus !== null) {
     const bonus = refSegment(roll.bonus, system, effect, 'прибавка?');
@@ -143,7 +146,7 @@ export function changeReadback(step: Step, amount: Step | null, system: System, 
     ? amountValueSegments(amount, system, effect)
     : [refSegment(s.value, system, effect, 'сколько?')];
   const direction = s.direction ?? 'subtract';
-  if (direction === 'set') return [seg('Полю'), field, seg('цели ставится'), ...what, seg('.')];
+  if (direction === 'set') return [seg('У цели'), field, seg('становится'), ...what, seg('.')];
   if (direction === 'add') return [seg('Цель получает'), ...what, seg('в'), field, seg('.')];
   return [seg('Цель теряет'), ...what, seg('из'), field, seg('.')];
 }

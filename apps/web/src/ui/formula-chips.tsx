@@ -36,7 +36,7 @@ export function joinParts(parts: Part[]): string {
   return parts.map(p => ('tag' in p ? `#${p.tag}` : p.text)).join('');
 }
 
-export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraOptions }: {
+export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, side, extraOptions }: {
   value: string;
   onChange: (next: string) => void;
   system: System;
@@ -61,6 +61,13 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
    * («Кость урона + Мод Силы»), а не машинным именем.
    */
   names?: Record<string, string>;
+  /**
+   * Чей лист считает эти имена. Автор пишет правило, а не играет за кого-то,
+   * поэтому слова его: «у себя» — лист того, кто применяет, «у цели» — того,
+   * по кому. Сторона принадлежит СЛОТУ: в одном выражении все имена с одного
+   * листа, и подпись стоит там, где глаз и так читает имя.
+   */
+  side?: 'self' | 'target';
   /**
    * Что ещё предложить в подсказке по «@» помимо полей листа. Такой пункт
    * не вставляется в текст (формула умеет ссылаться только на поля) —
@@ -171,6 +178,12 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
         {parts.map((part, index) => 'tag' in part ? (
           <span key={index} className="chips__chip" title={`#${part.tag}`}>
             {names?.[part.tag] ?? labelOfTag(system, part.tag)}
+            {/* Число, посчитанное ДРУГОЙ стороной и приехавшее готовым, —
+                не «у цели» и не «у себя»: оно уже сосчитано, и подписать
+                его чужим листом значит соврать. */}
+            {names?.[part.tag] ? <span className="chips__side">прислано</span>
+              : side ? <span className="chips__side">{side === 'self' ? 'у себя' : 'у цели'}</span>
+                : null}
             <button
               type="button" className="chips__x" aria-label="убрать поле"
               onMouseDown={e => { e.preventDefault(); dropChip(index); }}

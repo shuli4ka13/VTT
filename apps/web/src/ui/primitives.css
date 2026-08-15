@@ -511,3 +511,14 @@
   min-height: 32px;
 }
 .grow { flex: 1; min-width: 0; }
+
+/* Чей лист считает имя. Не третий цвет (те заняты: поле и «из записи»),
+   а слово — тем же языком, каким правило читается вслух. */
+.chips__side {
+  font-size: 10px;
+  letter-spacing: .02em;
+  color: var(--text-faint);
+  border-left: 1px solid var(--border);
+  padding-left: var(--s-2);
+  margin-left: var(--s-1);
+}
