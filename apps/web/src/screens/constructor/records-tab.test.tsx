@@ -121,3 +121,44 @@ describe('модификаторы рода', () => {
     expect(useWorld.getState().compendium.items).toEqual([]);
   });
 });
+
+// «Кость урона» в свойствах и «Кость урона» в подключении эффекта — не
+// дубль, а два конца одной нити, и нить теперь видна: свойство говорит,
+// в какую кнопку уходит. Машинного ключа на экране больше нет — он выдан
+// при создании и автору не нужен (тот же принцип, что у словарей).
+describe('RecordsTab: свойство знает свою судьбу', () => {
+  beforeEach(() => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...state.system,
+        effects: {
+          hit: { label: 'Удар', activation: 'manual', params: [{ key: 'кость', label: 'Кость урона', kind: 'dice' }], steps: [] },
+        },
+        records: {
+          weapon: {
+            kind: 'item', label: 'Оружие', group: 'Снаряжение',
+            props: [
+              { key: 'damage_dice', label: 'Кость урона', kind: 'dice' },
+              { key: 'вес', label: 'Вес', kind: 'number' },
+            ],
+            bindings: [{ label: 'Удар', effect: 'hit', args: { кость: { prop: 'damage_dice' } } }],
+          },
+        },
+      },
+      activeRecordKind: 'weapon',
+    }));
+  });
+
+  it('протянутое свойство называет кнопку, справочное — говорит «никуда»', () => {
+    render(<RecordsTab />);
+    expect(screen.getByText('уходит в кнопку «Удар»')).toBeTruthy();
+    expect(screen.getByText(/никуда не уходит/)).toBeTruthy();
+  });
+
+  it('поля «Ключ» на экране нет', () => {
+    render(<RecordsTab />);
+    expect(screen.queryByText('Ключ')).toBeNull();
+    expect(screen.queryByDisplayValue('damage_dice')).toBeNull();
+  });
+});

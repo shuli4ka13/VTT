@@ -169,34 +169,38 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
         {props.length === 0
           ? <span className="faint">Свойств нет: записи этого рода — чистые данные без автоматизации.</span>
           : props.map(prop => (
-            <div key={prop.key} className="row">
-              <Field label="Ключ">
-                <Input mono value={prop.key} onChange={() => { /* ключ неизменен */ }} />
-              </Field>
-              <Field label="Как спросить">
-                <Input
-                  value={prop.label ?? ''}
-                  onChange={next => edit(draft => {
-                    const target = draft.props?.find(p => p.key === prop.key);
-                    if (target) target.label = next;
-                  })}
-                />
-              </Field>
-              <Field label="Чем заполняют">
-                <Select
-                  value={String(prop.kind ?? 'number')}
-                  options={PROP_KINDS}
-                  onChange={next => edit(draft => {
-                    const target = draft.props?.find(p => p.key === prop.key);
-                    if (target) target.kind = next;
-                  })}
-                />
-              </Field>
-              <Field label=" ">
-                <Button size="sm" variant="danger" onClick={() => edit(draft => {
-                  draft.props = (draft.props ?? []).filter(p => p.key !== prop.key);
-                })}>Убрать</Button>
-              </Field>
+            // Машинного ключа на экране нет: он выдан при создании и живёт
+            // в данных. Вместо него — то, что автору правда важно: КУДА
+            // свойство уходит. Одна и та же «Кость урона» здесь и в
+            // подключении эффекта — не дубль, а два конца одной нити.
+            <div key={prop.key} className="stack stack--tight">
+              <div className="row">
+                <Field label="Как спросить">
+                  <Input
+                    value={prop.label ?? ''}
+                    onChange={next => edit(draft => {
+                      const target = draft.props?.find(p => p.key === prop.key);
+                      if (target) target.label = next;
+                    })}
+                  />
+                </Field>
+                <Field label="Чем заполняют">
+                  <Select
+                    value={String(prop.kind ?? 'number')}
+                    options={PROP_KINDS}
+                    onChange={next => edit(draft => {
+                      const target = draft.props?.find(p => p.key === prop.key);
+                      if (target) target.kind = next;
+                    })}
+                  />
+                </Field>
+                <Field label=" ">
+                  <Button size="sm" variant="danger" onClick={() => edit(draft => {
+                    draft.props = (draft.props ?? []).filter(p => p.key !== prop.key);
+                  })}>Убрать</Button>
+                </Field>
+              </div>
+              <span className="faint">{propDestiny(kind, prop.key)}</span>
             </div>
           ))}
       </Card>
@@ -402,4 +406,19 @@ function ArgEditor({ value, recordKind, onChange }: {
       ) : null}
     </div>
   );
+}
+
+/**
+ * Куда уходит свойство: в какие кнопки рода оно протянуто. «Никуда» — тоже
+ * ответ: свойство-справка (вес, цена) законно, но об этом сказано вслух,
+ * а не оставлено догадкой.
+ */
+function propDestiny(kind: RecordKind, propKey: string): string {
+  const buttons = (kind.bindings ?? [])
+    .filter(b => Object.values(b.args ?? {}).some(arg =>
+      arg !== null && typeof arg === 'object' && (arg as { prop?: string }).prop === propKey))
+    .map(b => `«${b.label ?? 'Применение'}»`);
+  return buttons.length
+    ? `уходит в кнопку ${buttons.join(', ')}`
+    : 'никуда не уходит — просто справка на записи';
 }
