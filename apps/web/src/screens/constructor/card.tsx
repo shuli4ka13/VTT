@@ -356,20 +356,30 @@ function AmountExprInput({ amount, apply, applyIndex, context, edit, onCreateFro
         />
       </Field>
 
+      {/* Вторая строка — ВЫРАЖЕНИЕ: чем поле станет. Поэтому оно и начинается
+          с самого поля, а знак стоит внутри строки как знак формулы, а не
+          выбором из трёх слов. «Текущие ХП − (кость + мод)» — это то самое
+          новое значение, и оно может быть и меньше, и больше прежнего.
+          При «=» поле впереди не нужно: новое значение берётся целиком. */}
       <Field label="станет">
         <div className="inline">
+          {direction !== 'set' && targetChip ? (
+            <span className="chips__chip chips__chip--mirror" title="то же поле, что выбрано выше">
+              {targetChip.label}
+            </span>
+          ) : null}
           <select
-            className="chips__op chips__op--word"
-            aria-label="как меняется"
+            className="chips__op"
+            aria-label="что делаем с полем"
             value={direction}
             onChange={e => {
               const next = e.target.value;
               edit(applyIndex, target => { (target as Record<string, unknown>).direction = next; });
             }}
           >
-            <option value="subtract">меньше на</option>
-            <option value="add">больше на</option>
-            <option value="set">равно</option>
+            <option value="subtract">−</option>
+            <option value="add">+</option>
+            <option value="set">=</option>
           </select>
 
           <span className="grow">
@@ -380,6 +390,7 @@ function AmountExprInput({ amount, apply, applyIndex, context, edit, onCreateFro
               extraOptions={needs}
               prefix={diceChip ? (
                 <>
+                  {shown.trim() ? <span className="chips__paren" aria-hidden>(</span> : null}
                   <span className={`chips__chip${diceChip.record ? ' chips__chip--record' : ''}`}>
                     {diceChip.label}
                     <button
@@ -391,6 +402,9 @@ function AmountExprInput({ amount, apply, applyIndex, context, edit, onCreateFro
                   {shown.trim() ? <span className="chips__plus" aria-hidden>+</span> : null}
                 </>
               ) : null}
+              suffix={diceChip && shown.trim()
+                ? <span className="chips__paren" aria-hidden>)</span>
+                : null}
               onChange={setDraft}
               onBlur={commit}
               onKeyDown={e => {
