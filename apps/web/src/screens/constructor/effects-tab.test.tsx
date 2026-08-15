@@ -78,6 +78,24 @@ describe('EffectsTab: палитра трёх понятий', () => {
     expect(effect.params!.length).toBe(1);
   });
 
+  // «Кто считает» врало про механику: считает ВСЕГДА получатель, отправитель
+  // при упаковке лишь подставляет своё. Колонка спрашивает «чей лист», и
+  // выбор есть только у формулы; кости — не выбор, а факт.
+  it('сторона — выбор у формулы и факт у костей', () => {
+    render(<EffectsTab />);
+    fireEvent.click(screen.getByText('+ брать из записи'));
+    expect(screen.getByText('Чей лист')).toBeTruthy();
+
+    // Новая потребность — формула: выпадашка со сторонами листа.
+    const need = document.querySelector('.need')!;
+    const sides = [...need.querySelectorAll('select')].at(-1)!;
+    expect([...sides.options].map(o => o.textContent)).toEqual(['отправителя', 'цели']);
+
+    // Переключили на кости — выбора не стало, остался факт.
+    fireEvent.change(need.querySelectorAll('select')[0]!, { target: { value: 'dice' } });
+    expect(screen.getByText('бросает отправитель')).toBeTruthy();
+  });
+
   it('ошибка про недостающее поле предлагает взять блок донора', () => {
     useWorld.setState(state => ({
       ...state,

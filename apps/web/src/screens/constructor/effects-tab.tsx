@@ -61,10 +61,19 @@ const PARAM_KINDS = [
   ['tag', 'поле листа'],
 ] as const;
 
+// Считает-то всегда получатель: он распаковывает конверт и решает всё своим
+// движком. Вопрос — ЧЕЙ ЛИСТ подставлять в формулу из записи: «#ловкость»
+// отправителя или цели. Тем же словом, что подписи на фишках.
 const PARAM_SIDES = [
-  ['source', 'отправитель'],
-  ['target', 'цель — её листом'],
+  ['source', 'отправителя'],
+  ['target', 'цели'],
 ] as const;
+
+/** Для не-формул стороне выбирать нечего — там написана правда как есть. */
+const FIXED_SIDE: Record<string, string> = {
+  dice: 'бросает отправитель',
+  tag: 'лист цели',
+};
 
 export function EffectsTab() {
   const system = useWorld(s => s.system);
@@ -442,7 +451,7 @@ function ParamsEditor({ effect, onEdit }: { effect: Effect; onEdit: (change: (dr
           <div className="need-list__head">
             <span className="field__label">Название</span>
             <span className="field__label">Чем заполняют</span>
-            <span className="field__label">Кто считает</span>
+            <span className="field__label">Чей лист</span>
             <span aria-hidden />
           </div>
           {params.map(param => (
@@ -462,14 +471,20 @@ function ParamsEditor({ effect, onEdit }: { effect: Effect; onEdit: (change: (dr
                   if (target) target.kind = next;
                 })}
               />
-              <Select
-                value={param.of ?? 'source'}
-                options={PARAM_SIDES}
-                onChange={next => onEdit(draft => {
-                  const target = draft.params?.find(p => p.key === param.key);
-                  if (target) target.of = next === 'source' ? undefined : next;
-                })}
-              />
+              {String(param.kind ?? 'expr') === 'expr' ? (
+                <Select
+                  value={param.of ?? 'source'}
+                  options={PARAM_SIDES}
+                  onChange={next => onEdit(draft => {
+                    const target = draft.params?.find(p => p.key === param.key);
+                    if (target) target.of = next === 'source' ? undefined : next;
+                  })}
+                />
+              ) : (
+                // Не выбор, а факт: кости бросает отправитель при упаковке,
+                // поле-мишень читается листом цели, литералу лист не нужен.
+                <span className="faint">{FIXED_SIDE[String(param.kind ?? '')] ?? '—'}</span>
+              )}
               <Button size="sm" variant="danger" onClick={() => onEdit(draft => {
                 draft.params = (draft.params ?? []).filter(p => p.key !== param.key);
               })}>
