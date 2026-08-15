@@ -757,18 +757,10 @@ function ChangeBody({ group, context, edit, withNumber, system, onAddParam }: {
 
 
           <Fold title="Тонкости">
-            {/* Само число живёт ВНУТРИ изменения — так и было решено: атака
-                это две карточки, а не три. В строке выше оно читается тем,
-                чем является («Кость урона + Мод Силы»), а его устройство
-                правится здесь, не занимая места у главного. */}
-            {group.amount ? (
-              <NumberBody
-                step={group.amount}
-                context={context}
-                edit={(_, change) => edit(0, change)}
-                onAddParam={onAddParam}
-              />
-            ) : null}
+            {/* Внутренностей числа здесь больше нет — они видны и правятся
+                прямо в строке «станет»: кость — фишка с крестиком, «из
+                записи» — по собачке. Остались три вещи, которые формулой
+                не выразить: пол, потолок и сопротивления цели. */}
             <Field label="не ниже">
               <SlotInput
                 value={step.floor} context={context} allow={['const', 'tag']}
