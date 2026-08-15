@@ -11,7 +11,7 @@ import type { CardGroup } from './cards.ts';
 import {
   checkReadback, changeReadback, numberReadback, amountValueSegments, joinReadback, type Segment,
 } from './readback.ts';
-import { parseRollExpr, formatRollExpr, parseAmountExpr, formatAmountExpr } from './roll-expr.ts';
+import { parseRollExpr, formatRollExpr, notationOf } from './roll-expr.ts';
 import { compile } from '@vtt/engine/formula';
 import { FormulaChips } from '../../ui/formula-chips.tsx';
 import { labelOfTag } from '../../ui/formula.tsx';
@@ -189,16 +189,19 @@ function RollExprInput({ step, context, edit }: {
 }) {
   const [draft, setDraft] = useState<string | null>(null);
   const [trouble, setTrouble] = useState<string | null>(null);
+  // Какую кость человек взял из подсказки. Нотация её не заменяет: чтение
+  // («считать успехи») по «5d10» не восстановить.
+  const [picked, setPicked] = useState<string | null>(null);
   const shown = draft ?? formatRollExpr(step.roll, context.system);
 
   const commit = () => {
     if (draft === null) return;
     if (!draft.trim()) {
       edit(0, target => { delete ((target as any).roll ??= {}).bonus; });
-      setDraft(null); setTrouble(null);
+      setDraft(null); setTrouble(null); setPicked(null);
       return;
     }
-    const parsed = parseRollExpr(draft, context.system);
+    const parsed = parseRollExpr(draft, context.system, picked);
     if (parsed.error) { setTrouble(parsed.error); return; }
     const bad = badFormula(parsed.bonus);
     if (bad) { setTrouble(bad); return; }
@@ -209,6 +212,7 @@ function RollExprInput({ step, context, edit }: {
     });
     setDraft(null);
     setTrouble(null);
+    setPicked(null);
   };
 
   return (
@@ -223,20 +227,23 @@ function RollExprInput({ step, context, edit }: {
           .map(([key, c]) => ({
             group: 'кость системы',
             label: c.label ?? key,
-            // Кость вставляется ТЕКСТОМ, как её и пишут: «1d20». Ссылкой
-            // на словарь она станет при разборе, если такая кость там есть.
-            onPick: () => setDraft(prev => {
-              const notation = (c.dice ?? [])
-                .map(d => `${typeof d.count === 'number' ? d.count : 1}d${d.sides}`).join(' + ');
-              const text = (prev ?? shown).trim();
-              return text ? `${text} + ${notation}` : notation;
-            }),
+            // Кость вставляется ТЕКСТОМ, как её и пишут: «1d20» — строка
+            // остаётся обычным выражением. Ссылкой на словарь она станет
+            // при разборе: по выбору (picked) или по совпадению нотации.
+            onPick: () => {
+              setPicked(key);
+              const notation = notationOf(context.system, key);
+              setDraft(prev => {
+                const text = (prev ?? shown).trim();
+                return text ? `${text} + ${notation}` : notation;
+              });
+            },
           }))}
         onChange={setDraft}
         onBlur={commit}
         onKeyDown={e => {
           if (e.key === 'Enter') commit();
-          if (e.key === 'Escape') { setDraft(null); setTrouble(null); }
+          if (e.key === 'Escape') { setDraft(null); setTrouble(null); setPicked(null); }
         }}
       />
     </Field>

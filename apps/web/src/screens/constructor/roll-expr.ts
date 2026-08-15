@@ -17,7 +17,33 @@ export interface ParsedRoll {
 
 const HEAD = /^(\d+)?\s*[dдк]\s*(\d+)\s*(?:\+\s*(.+))?$/iu;
 
-export function parseRollExpr(text: string, system: System): ParsedRoll {
+/** Нотация кости словаря одной строкой: «2d6», «1d20». */
+export function notationOf(system: System, key: string): string {
+  const dice = system.constants?.[key]?.dice ?? [];
+  return dice.map(d => `${typeof d.count === 'number' ? d.count : 1}d${d.sides}`).join(' + ');
+}
+
+/**
+ * Чем стала набранная кость: ссылкой на словарь или литералом.
+ *
+ * `picked` — кость, которую человек ВЫБРАЛ в подсказке. Выбор весомее
+ * совпадения нотации: у кости бывает своё чтение («считать успехи»), и
+ * узнать его по «5d10» нельзя — а потерять, свалившись в литерал, легко.
+ * Выбор действует, пока в строке стоит его нотация; переписал руками —
+ * разбор снова идёт по совпадению.
+ */
+function dieRef(count: number, sides: number, system: System, picked?: string | null): SlotRef {
+  if (picked && notationOf(system, picked) === `${count}d${sides}`) return { constant: picked } as SlotRef;
+  const known = Object.entries(system.constants ?? {}).find(([, c]) =>
+    c.kind === 'die' && c.dice?.length === 1
+    && (c.dice[0]!.count ?? 1) === count && c.dice[0]!.sides === sides && !c.dice[0]!.name
+    // Кость с чтением, отличным от суммы, — не то же самое, что «2d6»:
+    // связать их молча значило бы подменить сумму счётом успехов.
+    && (!c.read || c.read === 'sum'));
+  return (known ? { constant: known[0] } : { const: `${count}d${sides}` }) as SlotRef;
+}
+
+export function parseRollExpr(text: string, system: System, picked?: string | null): ParsedRoll {
   const t = text.trim();
   if (!t) return { die: undefined, bonus: null };
 
@@ -26,13 +52,7 @@ export function parseRollExpr(text: string, system: System): ParsedRoll {
 
   const count = Number(m[1] ?? 1);
   const sides = Number(m[2]);
-  const known = Object.entries(system.constants ?? {}).find(([, c]) =>
-    c.kind === 'die' && c.dice?.length === 1
-    && (c.dice[0]!.count ?? 1) === count && c.dice[0]!.sides === sides && !c.dice[0]!.name
-    // Кость с чтением, отличным от суммы, — не то же самое, что «2d6»:
-    // связать их молча значило бы подменить сумму счётом успехов.
-    && (!c.read || c.read === 'sum'));
-  const die = (known ? { constant: known[0] } : { const: `${count}d${sides}` }) as SlotRef;
+  const die = dieRef(count, sides, system, picked);
 
   const rest = (m[3] ?? '').trim();
   const bonus = !rest ? null
@@ -70,10 +90,10 @@ export function formatRollExpr(roll: unknown, system: System): string {
  * в движке по-разному — кости бросаются при упаковке у отправителя, а
  * формула считается листом той стороны, которой она адресована.
  */
-export function parseAmountExpr(text: string, system: System): ParsedRoll {
+export function parseAmountExpr(text: string, system: System, picked?: string | null): ParsedRoll {
   const t = text.trim();
   if (!t) return { die: undefined, bonus: null };
-  if (HEAD.test(t)) return parseRollExpr(t, system);
+  if (HEAD.test(t)) return parseRollExpr(t, system, picked);
 
   // Кости нет — вся строка это величина: число числом, прочее формулой.
   const bonus = /^-?\d+(\.\d+)?$/.test(t)

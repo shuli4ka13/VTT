@@ -62,47 +62,16 @@ const rangesBroken = (ranges: { from: number; to: number }[]): boolean => {
   return sorted.some((r, i) => i > 0 && sorted[i - 1]!.to + 1 !== r.from);
 };
 
-/** Ключ записи словаря (кости, таблицы, типы действий — все `Record`)
- * следует за лейблом, пока запись нигде не используется; мутирует переданный
- * `dict` на месте — вызывающий уже держит клон-черновик из `editSystem`.
+/**
+ * Ключ записи словаря выдаётся ОДИН раз, при создании, и больше не меняется.
  *
- * Смена ключа не может быть delete+insert: у объекта это отправляет запись
- * в конец (порядок ключей — порядок вставки), а строки словаря рисуются по
- * этому же порядку. При двух и более записях автор печатает в поле первой,
- * а после первого же символа, сменившего ключ, оно физически уезжает вниз —
- * фокус остаётся на прежнем месте экрана, то есть теперь на ЧУЖОЙ строке.
- * Вместо этого объект пересобирается целиком, с новым ключом на месте
- * старого — позиция записи переживает переименование. */
-function renameKeyed<T extends { label?: string }>(
-  dict: Record<string, T>, id: string, label: string, inUse: boolean,
-): void {
-  const cur = dict[id];
-  if (!cur) return;
-  if (!inUse && slugOf(label)) {
-    const fresh = freeId(Object.keys(dict).filter(k => k !== id), label);
-    if (fresh !== id) {
-      // Порядок читается ДО единой правки: если чистить и переставлять ключи
-      // по одному, каждый нетронутый ключ тоже уедет в конец в момент своей
-      // очереди — не поможет и та запись, которую переименовывать не просили.
-      const ordered = Object.keys(dict).map((key): [string, T] =>
-        key === id ? [fresh, { ...cur, label }] : [key, dict[key]!]);
-      for (const key of Object.keys(dict)) delete dict[key];
-      for (const [key, value] of ordered) dict[key] = value;
-      return;
-    }
-  }
-  cur.label = label;
-}
-
-/** То же самое для мишеней бросков — они не `Record`, а массив `{tag,label}`. */
-function renameRoll(rolls: { tag: string; label: string }[], index: number, label: string, inUse: boolean): void {
-  const cur = rolls[index];
-  if (!cur) return;
-  if (!inUse && slugOf(label)) {
-    cur.tag = freeId(rolls.filter((_, i) => i !== index).map(r => r.tag), label);
-  }
-  cur.label = label;
-}
+ * Раньше он следовал за названием, пока запись нигде не использовалась —
+ * и это ломало ввод: ключ стоит в React-key строки, смена ключа
+ * пересоздавала строку вместе с полем, фокус терялся, и набрать больше
+ * одного слова было нельзя. А смысла в этом не было: ключ автор нигде
+ * не печатает — подсказка по «@» ищет по НАЗВАНИЮ, ссылки хранят ключ.
+ * Значит переименование всегда безопасно и ничего не переносит.
+ */
 
 const addDie = (editSystem: EditSystem) => editSystem(draft => {
   draft.constants ??= {};
@@ -246,17 +215,17 @@ function DiceSection({ system, compendium, editSystem }: Props) {
         });
 
         return (
-          // Ключ строки — сам ключ словаря, не позиция: переименование
-          // (renameKeyed) меняет ключ на месте, не сдвигая порядок, но
-          // строка обязана остаться ПРИВЯЗАНА к записи, а не к позиции.
+          // Ключ строки — сам ключ словаря, не позиция: он неизменен,
+          // поэтому строка привязана к записи и переживает и переименование,
+          // и любую будущую перестановку.
           <div key={key} className="dict-block">
             <div className="dict-row">
               <Input
                 value={constant.label ?? ''}
                 placeholder="название кости"
                 onChange={label => editSystem(draft => {
-                  draft.constants ??= {};
-                  renameKeyed(draft.constants, key, label, inUse);
+                  const cur = draft.constants?.[key];
+                  if (cur) cur.label = label;
                 })}
               />
               <Button
@@ -535,8 +504,8 @@ function RollEditsSection({ system, compendium, editSystem }: Props) {
                 value={edit.label ?? ''}
                 placeholder="как это зовётся в вашем мире"
                 onChange={label => editSystem(draft => {
-                  draft.roll_edits ??= {};
-                  renameKeyed(draft.roll_edits, key, label, named);
+                  const cur = draft.roll_edits?.[key];
+                  if (cur) cur.label = label;
                 })}
               />
               <Button
@@ -660,7 +629,8 @@ function RollsSection({ system, compendium, editSystem }: Props) {
               placeholder="название броска"
               onChange={label => editSystem(draft => {
                 draft.rolls ??= [];
-                renameRoll(draft.rolls, index, label, inUse);
+                const cur = draft.rolls?.[index];
+            if (cur) cur.label = label;
               })}
             />
             <span className="chip mono">{roll.tag}</span>
@@ -709,7 +679,8 @@ function TableRow({ id, table, system, compendium, editSystem }: Props & { id: s
           placeholder="таблица"
           onChange={label => editSystem(draft => {
             draft.tables ??= {};
-            renameKeyed(draft.tables, id, label, inUse);
+            const cur = draft.tables?.[id];
+            if (cur) cur.label = label;
           })}
         />
         <Button
@@ -791,7 +762,8 @@ function ActionTypesSection({ system, compendium, editSystem }: Props) {
               placeholder="действие"
               onChange={label => editSystem(draft => {
                 draft.action_types ??= {};
-                renameKeyed(draft.action_types, key, label, inUse);
+                const cur = draft.action_types?.[key];
+                if (cur) cur.label = label;
               })}
             />
             <Button

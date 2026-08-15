@@ -29,6 +29,23 @@ describe('parseRollExpr', () => {
     expect(parseRollExpr('1к20', withPool)).toEqual({ die: { const: '1d20' }, bonus: null });
   });
 
+  // Обратная сторона той же осторожности: если кость ВЫБРАНА в подсказке,
+  // связать надо именно её — иначе выбор «5d10, считать успехи» падал
+  // в литерал «5d10», и бросок начинал молча суммировать.
+  it('выбранная в подсказке кость связывается даже с чужим чтением', () => {
+    const withPool = {
+      ...system,
+      constants: { pool: { label: 'Пул', kind: 'die', dice: [{ count: 5, sides: 10 }], read: 'count' } },
+    } as unknown as System;
+    expect(parseRollExpr('5d10', withPool, 'pool')).toEqual({ die: { constant: 'pool' }, bonus: null });
+    expect(parseRollExpr('5d10', withPool)).toEqual({ die: { const: '5d10' }, bonus: null },
+      'без выбора — по-прежнему литерал');
+  });
+
+  it('выбор перестаёт действовать, когда нотацию переписали руками', () => {
+    expect(parseRollExpr('2d6', system, 'lead')).toEqual({ die: { const: '2d6' }, bonus: null });
+  });
+
   it('кость без счёта и без хвоста', () => {
     expect(parseRollExpr('к20', system)).toEqual({ die: { constant: 'lead' }, bonus: null });
   });

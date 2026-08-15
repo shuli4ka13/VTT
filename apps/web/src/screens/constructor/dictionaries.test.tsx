@@ -109,16 +109,22 @@ describe('Словари: кости, виды бросков, таблицы, �
   // проверяем, что каждая промежуточная строка остаётся в поле.
   
   
-  // Тег рождается заготовкой («бросок»), но пока запись не встретилась
-  // нигде в мире — следует за лейблом при наборе (тот же приём, что и у
-  // тега поля в sheet-tab.tsx). Реальный ввод в Input, не прямая правка стора.
-  it('вид броска заводится с тегом из названия', () => {
+  // Тег выдаётся при создании и БОЛЬШЕ НЕ МЕНЯЕТСЯ: он стоит в React-key
+  // строки, и смена ключа пересоздавала поле ввода — фокус терялся, и
+  // набрать больше одного слова было нельзя. Печатать тег автору негде:
+  // подсказка ищет по названию.
+  it('вид броска: название правится, тег остаётся прежним', () => {
     render(<DictionariesTab />);
     fireEvent.click(screen.getByText('+ вид'));
     const input = screen.getByPlaceholderText('название броска');
+    const выданный = (useWorld.getState().system.rolls ?? [])[0]!.tag;
+
+    fireEvent.change(input, { target: { value: 'Бросок' } });
     fireEvent.change(input, { target: { value: 'Бросок защиты' } });
+
     const rolls = useWorld.getState().system.rolls ?? [];
-    expect(rolls[0]).toEqual({ tag: 'бросок_защиты', label: 'Бросок защиты' });
+    expect(rolls[0]!.label).toBe('Бросок защиты', 'название дописывается целиком');
+    expect(rolls[0]!.tag).toBe(выданный, 'тег не переезжает под каждую букву');
   });
 
   // Правки броска: механику именует АВТОР. Ни «преимущества», ни «помехи»
@@ -135,10 +141,29 @@ describe('Словари: кости, виды бросков, таблицы, �
     fireEvent.change(screen.getAllByDisplayValue('+ добавить…')[0]!, { target: { value: 'keepBest' } });
 
     const edits = useWorld.getState().system.roll_edits!;
-    expect(Object.keys(edits)).toEqual(['фора']);
-    expect(edits['фора']).toEqual({
+    const [key] = Object.keys(edits);
+    expect(edits[key!]).toEqual({
       label: 'Фора', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }],
     });
+  });
+
+  // Название из нескольких слов — самый обычный случай («Ведущая кость»,
+  // «Фора от прицела»). Пока ключ следовал за названием, пробел менял ключ,
+  // ключ стоял в React-key строки, строка пересоздавалась — и набор
+  // обрывался на первом же слове. Ключ и запись должны пережить пробелы.
+  it('название из нескольких слов набирается целиком, ключ не меняется', () => {
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ кость'));
+    const [ключ] = Object.keys(useWorld.getState().system.constants ?? {});
+    const name = screen.getByPlaceholderText('название кости');
+
+    for (const шаг of ['Ведущая', 'Ведущая ', 'Ведущая кость', 'Ведущая кость ', 'Ведущая кость проверки']) {
+      fireEvent.change(name, { target: { value: шаг } });
+    }
+
+    const constants = useWorld.getState().system.constants!;
+    expect(Object.keys(constants)).toEqual([ключ]);
+    expect(constants[ключ!]!.label).toBe('Ведущая кость проверки');
   });
 
   // Правило подачи: примитив — готовая фраза в списке, а не объект
@@ -276,11 +301,9 @@ describe('Словари: кости, виды бросков, таблицы, �
     expect(tables.length).toBe(1);
   });
 
-  // Смена ключа была delete+insert — запись уезжала в конец объекта,
-  // а строки рисовались по index. При двух и более костях после
-  // переименования первой фокус-строка визуально становилась второй,
-  // и дальнейший набор правил уже не ту кость. Проверяем на данных стора:
-  // порядок и содержимое второй записи не тронуты переименованием первой.
+  // Переименование не трогает ни ключи, ни порядок — ключ выдан при
+  // создании навсегда. Раньше он следовал за названием, и строка уезжала
+  // в конец прямо во время набора.
   it('переименование первой кости не трогает вторую и не меняет порядок', () => {
     useWorld.setState(state => ({
       ...state,
@@ -299,9 +322,9 @@ describe('Словари: кости, виды бросков, таблицы, �
     fireEvent.change(first, { target: { value: 'Секира' } });
 
     const constants = useWorld.getState().system.constants!;
-    expect(Object.keys(constants)).toEqual(['секира', 'dieB']);
+    expect(Object.keys(constants)).toEqual(['dieA', 'dieB']);
     expect(constants.dieB).toEqual({ label: 'Кость Б', kind: 'die', dice: [{ count: 1, sides: 6 }] });
-    expect(constants['секира']).toEqual({ label: 'Секира', kind: 'die', dice: [{ count: 1, sides: 20 }] });
+    expect(constants.dieA).toEqual({ label: 'Секира', kind: 'die', dice: [{ count: 1, sides: 20 }] });
   });
 
   // Гарды удаления были покрыты только для таблицы и типа действия —
