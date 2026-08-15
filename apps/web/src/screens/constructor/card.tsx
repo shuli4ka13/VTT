@@ -315,6 +315,11 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
 
   const shown = draft ?? asExpr();
 
+  // Кого в выражении считает отправитель — пометки на именах.
+  const rawValue = (apply as Record<string, any>).value;
+  const senderMarks: string[] = rawValue && typeof rawValue === 'object' && Array.isArray(rawValue.sender)
+    ? rawValue.sender : [];
+
   // Имя числа в строке подписано его содержимым: «Кость урона + Мод Силы»,
   // а не «dmg». Машинное имя нужно данным, человеку — нет.
   // Присланное число — не один ком, а свои слагаемые: кость и прибавка,
@@ -326,19 +331,10 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   const bonusText = exprText(bonus);
   const both = Boolean(diceChip && bonusText);
 
-  const sentChip = (label: ReactNode, onRemove: () => void, key: string, onBack?: () => void) => (
+  const sentChip = (label: ReactNode, onRemove: () => void, key: string) => (
     <span key={key} className="chips__chip chips__chip--sent">
       {label}
-      {onBack ? (
-        <button
-          type="button" className="chips__side chips__side--pick"
-          title="вернуть цели: считать это её листом"
-          onMouseDown={e => { e.preventDefault(); onBack(); }}
-        >у отправителя ⇄</button>
-      ) : (
-        // Кость возвращать некуда: её бросает отправитель, у цели её нет.
-        <span className="chips__side" title="кость бросает отправитель">у отправителя</span>
-      )}
+      <span className="chips__side" title="посчитано отправителем, приходит числом">у отправителя</span>
       <button
         type="button" className="chips__x" aria-label="убрать слагаемое"
         onMouseDown={e => { e.preventDefault(); onRemove(); }}
@@ -360,7 +356,6 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
           bonusText.replace(/#([\p{L}\p{N}_]+)/gu, (_, tag: string) => labelOfTag(context.system, tag)),
           () => edit(0, step => { delete (step as Record<string, unknown>).bonus; }),
           'bonus',
-          withNumber ? backToTarget : undefined,
         ) : null}
         {both ? <span className="chips__paren" aria-hidden>)</span> : null}
       </>
@@ -372,14 +367,6 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   // величину карточки, а в тексте остаётся имя — то же, что и было бы,
   // выбери человек кость из подсказки.
   const DICE = /(\d+)?\s*[dдк]\s*(\d+)/iu;
-
-  /** Убрать след вынутого слагаемого: висящий знак и двойные пробелы. */
-  const tidy = (text: string) => text
-    .replace(/\+\s*\+/g, '+')
-    .replace(/[-+*/]\s*$/, '')
-    .replace(/^\s*\+/, '')
-    .replace(/\s+/g, ' ')
-    .trim();
 
   /** Стоит ли имя числа в строке. Второй раз дописывать его нельзя. */
   const mentions = (text: string, id: string) =>
@@ -404,7 +391,9 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
         .replace(/\s+/g, ' ').trim();
       const target = apply as Record<string, any>;
       target.direction = 'set';
-      target.value = { expr: next, of: 'target' };
+      // Пометки сторон не теряются: остаются те, чьи имена ещё в строке.
+      const kept = senderMarks.filter(tag => mentions(next, tag));
+      target.value = { expr: next, of: 'target', sender: kept.length ? kept : undefined };
     };
     if (!withNumber && !amountId) {
       // Завести число некому (так карточка живёт в своих тестах) — молча
@@ -437,7 +426,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
       // кость уехала ВНУТРЬ него, и второй раз называть его не нужно:
       // «#n + 1d8» это «#n», а не «#n + #n».
       sendThrough(a => { a.dice = picked; }, name => (mentions(text, name.slice(1))
-        ? tidy(text.replace(DICE, ''))
+        ? text.replace(DICE, '').replace(/\+\s*\+/g, '+').replace(/[-+*/]\s*$/, '').replace(/\s+/g, ' ').trim()
         : text.replace(DICE, name)));
       return;
     }
@@ -446,7 +435,10 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
       const a = step as Record<string, any>;
       if (!text) { delete a.value; return; }
       a.direction = 'set';
-      a.value = { expr: text, of: 'target' };
+      // Пометки сторон переживают правку текста: остаются те, чьи имена
+      // ещё стоят в выражении.
+      const kept = senderMarks.filter(tag => mentions(text, tag));
+      a.value = { expr: text, of: 'target', sender: kept.length ? kept : undefined };
     });
     setDraft(null);
     setTrouble(null);
@@ -458,67 +450,26 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
     sendThrough(a => { a.dice = ref; }, place);
 
   /**
-   * Поле, которое надо взять У ОТПРАВИТЕЛЯ.
-   *
-   * Оно уезжает в число: отправитель считает его своим листом при упаковке
-   * и присылает готовым. Иначе «Мод Силы» в выражении цели стал бы силой
-   * ЖЕРТВЫ — молча и с другим результатом (tests/rule.sides.test.ts).
-   *
-   * Если имени числа в строке ещё нет — оно просто встаёт на место
-   * слагаемого: и место, и знак перед ним остаются те же. Если уже
-   * стоит, слагаемое складывается с содержимым числа, и вот тут знак
-   * приходится считать: «ХП − #n + Сила» это «ХП − (урон − Сила)»,
-   * а не «− (урон + Сила)».
+   * Пометить имя: считает отправитель или цель. ТОЛЬКО пометка — текст
+   * выражения не меняется, никакой перестановки слагаемых. Отправитель
+   * посчитает помеченные имена своим листом при упаковке и пришлёт
+   * числами; получатель подставит их и дорешает остальное своим листом
+   * (engine/refs.ts, список `sender`).
    */
-  const takeFromSender = (tag: string, place: (name: string) => string) => {
-    const line = place('');
-    const marked = place('§');
-    // Умножение и деление так не переносятся: «(a − b)·c» и «a − b·c» —
-    // разные числа, и молча подменять одно другим нельзя.
-    if (/[*/]\s*§|§\s*[*/]/.test(marked)) {
-      setTrouble('это слагаемое умножается — вынесите его отдельной карточкой «число»');
-      return;
-    }
-    /** С каким знаком слагаемое стоит в строке. */
-    const signOf = (what: string) => {
-      const at = marked.indexOf(what);
-      return at > 0 && marked.slice(0, at).trimEnd().endsWith('-') ? '-' : '+';
-    };
-
-    // Имя числа уже в строке — слагаемое складывается с его содержимым,
-    // и знак считается относительно знака самого числа: «ХП − #n + Сила»
-    // это «ХП − (урон − Сила)», а не «− (урон + Сила)».
-    const folding = Boolean(amountId && mentions(line, amountId));
-    const sign = folding && signOf('§') !== signOf(`#${amountId}`) ? '-' : '+';
-    const was = exprText((amount as Record<string, any> | undefined)?.bonus).trim();
-    const expr = was ? `${was} ${sign} #${tag}`
-      : sign === '-' ? `0 - #${tag}` : `#${tag}`;
-
-    sendThrough(a => { a.bonus = { expr }; }, name => (folding ? tidy(line) : place(name)));
-  };
-
-  /** Обратно: присланное слагаемое считает цель — вернуть его в строку. */
-  // Объявлением, а не переменной: карточка выше (присланная фишка) зовёт
-  // его до этого места.
-  function backToTarget() {
-    const was = exprText((amount as Record<string, any> | undefined)?.bonus).trim();
-    if (!was) return;
+  const flipSide = (tag: string) => {
     const line = (draft ?? asExpr()).trim();
-    const put = (a: Step, apply: Step, id: string) => {
-      delete (a as Record<string, any>).bonus;
-      const dice = (a as Record<string, any>).dice;
-      // Число осталось только костью — имя в строке живёт дальше; если и
-      // кости нет, имени ссылаться не на что, и оно уходит вместе с ним.
-      const next = dice
-        ? `${line} + ${was}`
-        : line.replace(new RegExp(`#${id}(?![\\p{L}\\p{N}_])`, 'u'), was).trim();
-      const t = apply as Record<string, any>;
-      t.direction = 'set';
-      t.value = { expr: next, of: 'target' };
-    };
-    if (withNumber) withNumber(put);
+    edit(applyIndex, step => {
+      const a = step as Record<string, any>;
+      const value = (a.value && typeof a.value === 'object' && 'expr' in a.value)
+        ? a.value : { expr: line, of: 'target' };
+      const marked: string[] = Array.isArray(value.sender) ? value.sender : [];
+      const sender = marked.includes(tag) ? marked.filter(t => t !== tag) : [...marked, tag];
+      a.direction = 'set';
+      a.value = { ...value, sender: sender.length ? sender : undefined };
+    });
     setDraft(null);
-  }
+    setTrouble(null);
+  };
 
   const needs = (context.effect.params ?? []).map(p => ({
     group: 'из записи',
@@ -566,7 +517,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
       <Field
         label="станет"
         error={trouble}
-        hint="Математика по листу ЦЕЛИ. Слагаемому, которое надо взять у бьющего, щёлкните подпись «у цели» — он посчитает его своим листом и пришлёт готовым."
+        hint="Обычная математика. Подпись у поля — чей лист его считает: щёлкните, чтобы взять у отправителя — он пришлёт своё число."
       >
         <FormulaChips
           value={shown}
@@ -575,7 +526,8 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
           side="target"
           placeholder="например: #хп − #урон"
           extraOptions={needs}
-          onFlipSide={withNumber ? takeFromSender : undefined}
+          fromSender={senderMarks}
+          onFlipSide={flipSide}
           onChange={setDraft}
           onBlur={commit}
           onKeyDown={e => {

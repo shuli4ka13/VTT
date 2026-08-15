@@ -131,7 +131,7 @@ export function amountValueSegments(step: Step, system: System, effect: Effect):
  * Выражение словами. Имена полей становятся лейблами, имя числа —
  * его содержимым в скобках: имён шагов автор не вводил и знать не обязан.
  */
-function exprSegments(expr: string, amount: Step | null, system: System, effect: Effect): Segment[] {
+function exprSegments(expr: string, amount: Step | null, system: System, effect: Effect, sender: string[] = []): Segment[] {
   const id = String((amount as any)?.id ?? '');
   const out: Segment[] = [];
   let rest = expr.trim();
@@ -146,7 +146,10 @@ function exprSegments(expr: string, amount: Step | null, system: System, effect:
       out.push(seg('('), ...inner, seg(')'));
     } else {
       const known = system.fields.some(f => f.tag === m[1]);
-      out.push(known ? seg(`«${labelOfTag(system, m[1]!)}»`) : hole(`${m[1]} — такого нет`));
+      // Помеченное имя считает отправитель — фраза говорит это вслух,
+      // теми же словами, что и подпись на фишке.
+      const suffix = sender.includes(m[1]!) ? ' отправителя' : '';
+      out.push(known ? seg(`«${labelOfTag(system, m[1]!)}»${suffix}`) : hole(`${m[1]} — такого нет`));
     }
     rest = rest.slice(m.index + m[0].length);
   }
@@ -176,8 +179,9 @@ export function changeReadback(step: Step, amount: Step | null, system: System, 
   // остальное, и «ХП −» из фразы пропадало.
   const expr = s.value && typeof s.value === 'object' && 'expr' in s.value
     ? String(s.value.expr ?? '') : null;
+  const sender: string[] = expr !== null && Array.isArray(s.value.sender) ? s.value.sender : [];
   const what = expr !== null
-    ? exprSegments(expr, amount, system, effect)
+    ? exprSegments(expr, amount, system, effect, sender)
     : amount
       ? amountValueSegments(amount, system, effect)
       : [refSegment(s.value, system, effect, 'сколько?')];

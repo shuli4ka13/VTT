@@ -29,7 +29,12 @@ export const refSide = z.enum(['source', 'target']);
  * явной проверкой — на случай, если порядок кто-то переставит.
  */
 export const slotRef = z.union([
-  z.object({ expr: z.string(), of: refSide.optional(), optional: z.boolean().optional() }),
+  // `sender` — имена в выражении цели, которые считает ОТПРАВИТЕЛЬ своим
+  // листом: он подставит числа при упаковке, а текст выражения не меняется.
+  z.object({
+    expr: z.string(), of: refSide.optional(),
+    sender: z.array(z.string()).optional(), optional: z.boolean().optional(),
+  }),
   z.object({ tag: z.string(), of: refSide.optional(), optional: z.boolean().optional() }),
   z.object({ param: z.string(), optional: z.boolean().optional() }),
   z.object({ prop: z.string(), optional: z.boolean().optional() }),

@@ -36,7 +36,7 @@ export function joinParts(parts: Part[]): string {
   return parts.map(p => ('tag' in p ? `#${p.tag}` : p.text)).join('');
 }
 
-export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, side, extraOptions, onFlipSide }: {
+export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, side, extraOptions, fromSender, onFlipSide }: {
   value: string;
   onChange: (next: string) => void;
   system: System;
@@ -78,11 +78,12 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
    */
   extraOptions?: { group: string; label: string; onPick: (insert: (piece: string) => string) => void }[];
   /**
-   * Дать щёлкнуть по подписи стороны: «у цели» → «у отправителя».
-   * Фишка при этом уходит из строки — считать её будет другой лист, — и
-   * на её место встаёт то, что вернёт вызывающий через `insert`.
+   * Теги, помеченные «у отправителя»: он посчитает их своим листом и
+   * пришлёт числами. Текст формулы от пометки не меняется.
    */
-  onFlipSide?: (tag: string, insert: (piece: string) => string) => void;
+  fromSender?: string[];
+  /** Дать щёлкнуть по подписи стороны — просто перекинуть пометку. */
+  onFlipSide?: (tag: string) => void;
 }) {
   const parts = useMemo(() => partsOf(value), [value]);
   const host = useRef<HTMLDivElement>(null);
@@ -152,20 +153,17 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
     commitParts(next);
   };
 
-  /** Строка, где на месте фишки стоит кусок текста (пустой — просто убрать). */
-  const without = (chipIndex: number, piece = ''): { parts: Part[]; caret: number } => {
+  const dropChip = (chipIndex: number) => {
+    // Сливаем соседние текстовые куски вокруг удалённой фишки.
     const before = parts[chipIndex - 1] as { text: string } | undefined;
     const after = parts[chipIndex + 1] as { text: string } | undefined;
-    const merged = { text: `${before?.text ?? ''}${piece}${after?.text ?? ''}` };
-    return {
-      parts: [...parts.slice(0, Math.max(0, chipIndex - 1)), merged, ...parts.slice(chipIndex + 2)],
-      caret: (before?.text ?? '').length + piece.length,
-    };
-  };
-
-  const dropChip = (chipIndex: number) => {
-    const gone = without(chipIndex);
-    commitParts(gone.parts, { index: Math.max(0, chipIndex - 1), caret: gone.caret });
+    const merged = { text: `${before?.text ?? ''}${after?.text ?? ''}` };
+    const next = [
+      ...parts.slice(0, Math.max(0, chipIndex - 1)),
+      merged,
+      ...parts.slice(chipIndex + 2),
+    ];
+    commitParts(next, { index: Math.max(0, chipIndex - 1), caret: (before?.text ?? '').length });
   };
 
   const leave = () => {
@@ -199,17 +197,19 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
           <span key={index} className="chips__chip" title={`#${part.tag}`}>
             {labelOfTag(system, part.tag)}
             {side && onFlipSide ? (
-              // Сторона — не ярлык, а выбор: щелчок переносит слагаемое
-              // на лист отправителя. Кнопкой, а не текстом, потому что
-              // именно этого «как поменять» здесь и ищут глазами.
+              // Сторона — выбор, а не ярлык: щелчок перекидывает пометку,
+              // чей лист считает это имя. Формула не меняется — отправитель
+              // просто пришлёт своё число, и получатель его подставит.
               <button
                 type="button" className="chips__side chips__side--pick"
-                title="считать у отправителя: он посчитает своим листом и пришлёт готовым"
+                title={fromSender?.includes(part.tag)
+                  ? 'считает отправитель и присылает числом; щёлкните — считать листом цели'
+                  : 'считает цель своим листом; щёлкните — взять у отправителя'}
                 onMouseDown={e => {
                   e.preventDefault();
-                  onFlipSide(part.tag, piece => joinParts(without(index, piece).parts));
+                  onFlipSide(part.tag);
                 }}
-              >{side === 'self' ? 'у себя' : 'у цели'} ⇄</button>
+              >{fromSender?.includes(part.tag) ? 'у отправителя' : side === 'self' ? 'у себя' : 'у цели'} ⇄</button>
             ) : side ? <span className="chips__side">{side === 'self' ? 'у себя' : 'у цели'}</span> : null}
             <button
               type="button" className="chips__x" aria-label="убрать поле"

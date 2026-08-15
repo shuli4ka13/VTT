@@ -65,7 +65,17 @@ export function packRef(ref: unknown, ctx: RefContext): unknown {
   if ('const' in r) return { const: r.const };
 
   if ('expr' in r) {
-    if ((r.of || 'sender') === 'target') return { expr: r.expr, of: 'target' };
+    if ((r.of || 'sender') === 'target') {
+      // Имена из списка `sender` считает отправитель — здесь и сейчас,
+      // своим листом — и кладёт в конверт ЧИСЛАМИ. Текст выражения не
+      // меняется: у получателя эти имена разрешатся из `sent`, остальные —
+      // его листом. Так одно выражение честно живёт на двух листах.
+      const names = Array.isArray(r.sender) ? r.sender : [];
+      if (!names.length) return { expr: r.expr, of: 'target' };
+      const sent: Record<string, unknown> = {};
+      for (const name of names) sent[String(name)] = evaluate(`#${name}`, ctx);
+      return { expr: r.expr, of: 'target', sent };
+    }
     return { const: evaluate(r.expr, ctx) };
   }
 
@@ -142,7 +152,7 @@ export function resolveRef(ref: unknown, ctx: RefContext): unknown {
       throw new EngineError(
         `${who(ctx)}: выражение «${r.expr}» стороны отправителя пришло неразрешённым — конверт бит`);
     }
-    return evaluate(r.expr, ctx);
+    return evaluate(r.expr, ctx, r.sent as Record<string, unknown> | undefined);
   }
 
   if ('param' in r) {
@@ -211,13 +221,18 @@ export function resolveOptionalNumber(ref: unknown, ctx: RefContext, what: strin
  * и величины порознь. Теперь брошенное число у формулы есть под своим
  * именем, и «чем поле станет» пишется как обычная математика.
  *
- * Поле важнее шага: мир, где поле и шаг названы одинаково, продолжает
+ * Присланное — сильнее всего: имя из `sent` посчитал отправитель, и оно
+ * ОБЯЗАНО победить одноимённое поле получателя — в этом весь смысл пометки
+ * «у отправителя»: Сила бьющего, а не жертвы.
+ *
+ * Дальше поле важнее шага: мир, где поле и шаг названы одинаково, продолжает
  * считать поле — иначе переименование шага молча меняло бы смысл формул.
  */
-function evaluate(expr: unknown, ctx: RefContext): unknown {
+function evaluate(expr: unknown, ctx: RefContext, sent?: Record<string, unknown>): unknown {
   const results = ctx.results;
-  const resolve = !results ? ctx.pass.resolve : (name: string) => {
-    if (name in results) {
+  const resolve = (name: string) => {
+    if (sent && name in sent) return sent[name];
+    if (results && name in results) {
       const known = ctx.pass.system.fields.some(f => f.tag === name);
       if (!known) return (results as Record<string, unknown>)[name];
     }

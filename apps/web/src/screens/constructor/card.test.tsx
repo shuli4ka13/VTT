@@ -361,68 +361,51 @@ describe('GroupCard: изменение само заводит число', () 
     expect((steps[1] as any).value).toEqual({ expr: '#armor - #n', of: 'target' });
   });
 
-  // Ответ на «как поменять у цели на у отправителя»: щелчок по подписи.
-  // Слагаемое уезжает в число — считать его листом ЦЕЛИ нельзя, там чужая
-  // сила (tests/rule.sides.test.ts в движке).
-  it('щелчок по подписи «у цели» переносит слагаемое на лист отправителя', () => {
-    const steps = lone();
+  // Ответ на «как поменять у цели на у отправителя»: щелчок по подписи —
+  // ПОМЕТКА, и только она. Текст выражения не меняется, слагаемые не
+  // переезжают, знаки не пересчитываются: отправитель посчитает помеченные
+  // имена своим листом и пришлёт числами (engine/refs.ts, список sender).
+  it('щелчок по подписи помечает имя «у отправителя», не трогая формулу', () => {
+    const steps = [
+      { type: 'apply', target: { tag: 'armor' }, direction: 'set',
+        value: { expr: '#armor - #armor / 2', of: 'target' } },
+    ] as unknown as Step[];
+    const { line } = mount(steps);
+
+    fireEvent.mouseDown([...line.querySelectorAll('.chips__side--pick')].at(-1)!);
+
+    expect((steps[0] as any).value).toEqual({
+      expr: '#armor - #armor / 2', of: 'target', sender: ['armor'],
+    });
+  });
+
+  it('и обратно: второй щелчок снимает пометку', () => {
+    const steps = [
+      { type: 'apply', target: { tag: 'armor' }, direction: 'set',
+        value: { expr: '#armor - 1', of: 'target', sender: ['armor'] } },
+    ] as unknown as Step[];
+    const { line } = mount(steps);
+
+    const badge = [...line.querySelectorAll('.chips__side--pick')].at(-1)!;
+    expect(badge.textContent).toContain('у отправителя');
+    fireEvent.mouseDown(badge);
+
+    expect((steps[0] as any).value).toEqual({ expr: '#armor - 1', of: 'target', sender: undefined });
+  });
+
+  it('правка текста не теряет пометку, пока имя стоит в выражении', () => {
+    const steps = [
+      { type: 'apply', target: { tag: 'armor' }, direction: 'set',
+        value: { expr: '#armor - 1', of: 'target', sender: ['armor'] } },
+    ] as unknown as Step[];
     const { line } = mount(steps);
     const value = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;
-    fireEvent.change(value, { target: { value: '#armor' } });
+
+    fireEvent.change(value, { target: { value: ' - 2' } });
     fireEvent.keyDown(value, { key: 'Enter' });
 
-    fireEvent.mouseDown(screen.getByTitle(/считать у отправителя/));
-
-    expect(steps[0]).toMatchObject({ type: 'amount', bonus: { expr: '#armor' } });
-    expect((steps[1] as any).value).toEqual({ expr: '#n', of: 'target' });
-  });
-
-  // Второе слагаемое складывается с содержимым числа, и знак тут решает
-  // всё: «ХП − #n + Сила» это «ХП − (урон − Сила)». Сложить их через «+»
-  // значило бы поменять математику молча — ровно то, ради чего затевался
-  // весь разбор сторон.
-  it('знак слагаемого сохраняется при переносе к отправителю', () => {
-    const steps = [
-      { id: 'n', type: 'amount', source: 'roll', bonus: { expr: '#armor' } },
-      { type: 'apply', target: { tag: 'armor' }, direction: 'set',
-        value: { expr: '#armor - #n + #armor', of: 'target' } },
-    ] as unknown as Step[];
-    mount(steps);
-
-    // Переключаем ПОСЛЕДНЕЕ слагаемое — оно стоит с «+», а число с «−».
-    const flips = [...screen.getByText('станет').closest('label')!
-      .querySelectorAll('.chips__side--pick')];
-    fireEvent.mouseDown(flips.at(-1)!);
-
-    expect((steps[0] as any).bonus).toEqual({ expr: '#armor - #armor' });
-    expect((steps[1] as any).value).toEqual({ expr: '#armor - #n', of: 'target' });
-  });
-
-  it('умножение не переносят молча — карточка объясняет, что делать', () => {
-    const steps = [
-      { id: 'n', type: 'amount', source: 'roll' },
-      { type: 'apply', target: { tag: 'armor' }, direction: 'set',
-        value: { expr: '#n * #armor', of: 'target' } },
-    ] as unknown as Step[];
-    mount(steps);
-
-    fireEvent.mouseDown([...screen.getByText('станет').closest('label')!
-      .querySelectorAll('.chips__side--pick')].at(-1)!);
-
-    expect((steps[0] as any).bonus).toBeUndefined();
-    expect(screen.getByText(/вынесите его отдельной карточкой/)).toBeTruthy();
-  });
-
-  it('и обратно: присланное слагаемое возвращается цели', () => {
-    const steps = [
-      { id: 'n', type: 'amount', source: 'roll', bonus: { expr: '#armor' } },
-      { type: 'apply', target: { tag: 'armor' }, direction: 'set', value: { expr: '#n', of: 'target' } },
-    ] as unknown as Step[];
-    mount(steps);
-
-    fireEvent.mouseDown(screen.getByTitle(/вернуть цели/));
-
-    expect((steps[0] as any).bonus).toBeUndefined();
-    expect((steps[1] as any).value).toEqual({ expr: '#armor', of: 'target' });
+    expect((steps[0] as any).value).toEqual({
+      expr: '#armor - 2', of: 'target', sender: ['armor'],
+    });
   });
 });
