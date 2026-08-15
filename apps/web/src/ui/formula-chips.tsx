@@ -60,7 +60,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
    * шагом выше, и в строке оно обязано читаться тем, чем оно является
    * («Кость урона + Мод Силы»), а не машинным именем.
    */
-  names?: Record<string, string>;
+  names?: Record<string, ReactNode>;
   /**
    * Чей лист считает эти имена. Автор пишет правило, а не играет за кого-то,
    * поэтому слова его: «у себя» — лист того, кто применяет, «у цели» — того,
@@ -176,19 +176,21 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
       }}>
         {prefix}
         {parts.map((part, index) => 'tag' in part ? (
+          // Имя, за которым стоит не поле листа, а посчитанное другой
+          // стороной, рисует сам вызывающий: там оно разворачивается в свои
+          // слагаемые, каждое своей фишкой со своим крестиком.
+          names?.[part.tag] !== undefined ? (
+            <span key={index} className="chips__group">{names[part.tag]}</span>
+          ) : (
           <span key={index} className="chips__chip" title={`#${part.tag}`}>
-            {names?.[part.tag] ?? labelOfTag(system, part.tag)}
-            {/* Число, посчитанное ДРУГОЙ стороной и приехавшее готовым, —
-                не «у цели» и не «у себя»: оно уже сосчитано, и подписать
-                его чужим листом значит соврать. */}
-            {names?.[part.tag] ? <span className="chips__side">прислано</span>
-              : side ? <span className="chips__side">{side === 'self' ? 'у себя' : 'у цели'}</span>
-                : null}
+            {labelOfTag(system, part.tag)}
+            {side ? <span className="chips__side">{side === 'self' ? 'у себя' : 'у цели'}</span> : null}
             <button
               type="button" className="chips__x" aria-label="убрать поле"
               onMouseDown={e => { e.preventDefault(); dropChip(index); }}
             >×</button>
           </span>
+          )
         ) : (
           <input
             key={index}

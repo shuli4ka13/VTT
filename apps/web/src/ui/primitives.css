@@ -522,3 +522,8 @@
   padding-left: var(--s-2);
   margin-left: var(--s-1);
 }
+
+/* Присланное число — не один ком: его слагаемые стоят своими фишками
+   в общей группе, и у каждой свой крестик. */
+.chips__group { display: inline-flex; align-items: center; gap: var(--s-1); }
+.chips__chip--sent { border-style: dashed; }

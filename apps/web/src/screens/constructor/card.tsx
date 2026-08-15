@@ -14,6 +14,7 @@ import {
 import { parseRollExpr, formatRollExpr, parseAmountExpr, formatAmountExpr } from './roll-expr.ts';
 import { compile } from '@vtt/engine/formula';
 import { FormulaChips } from '../../ui/formula-chips.tsx';
+import { labelOfTag } from '../../ui/formula.tsx';
 import { SlotInput, chipOf, type SlotOption } from './slot-input.tsx';
 import type { SlotContext, EarlierStep } from './slots.tsx';
 import type { Problem } from './step-card.tsx';
@@ -319,9 +320,45 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, onCreateFromRec
 
   // Имя числа в строке подписано его содержимым: «Кость урона + Мод Силы»,
   // а не «dmg». Машинное имя нужно данным, человеку — нет.
-  const names = amountId && amount
-    ? { [amountId]: joinReadback(amountValueSegments(amount, context.system, context.effect)) }
-    : undefined;
+  // Присланное число — не один ком, а свои слагаемые: кость и прибавка,
+  // каждая своей фишкой со своим крестиком. Считает их ОТПРАВИТЕЛЬ (потому
+  // и «прислано»), но видеть и править автор должен по отдельности.
+  const dice = (amount as Record<string, any> | undefined)?.dice;
+  const bonus = (amount as Record<string, any> | undefined)?.bonus;
+  const diceChip = chipOf(dice, context);
+  const bonusText = exprText(bonus);
+  const both = Boolean(diceChip && bonusText);
+
+  const sentChip = (label: ReactNode, onRemove: () => void, key: string) => (
+    <span key={key} className="chips__chip chips__chip--sent">
+      {label}
+      <span className="chips__side">прислано</span>
+      <button
+        type="button" className="chips__x" aria-label="убрать слагаемое"
+        onMouseDown={e => { e.preventDefault(); onRemove(); }}
+      >×</button>
+    </span>
+  );
+
+  const names = amountId && amount ? {
+    [amountId]: (
+      <>
+        {both ? <span className="chips__paren" aria-hidden>(</span> : null}
+        {diceChip ? sentChip(
+          diceChip.label,
+          () => edit(0, step => { delete (step as Record<string, unknown>).dice; }),
+          'dice',
+        ) : null}
+        {both ? <span className="chips__plus" aria-hidden>+</span> : null}
+        {bonusText ? sentChip(
+          bonusText.replace(/#([\p{L}\p{N}_]+)/gu, (_, tag: string) => labelOfTag(context.system, tag)),
+          () => edit(0, step => { delete (step as Record<string, unknown>).bonus; }),
+          'bonus',
+        ) : null}
+        {both ? <span className="chips__paren" aria-hidden>)</span> : null}
+      </>
+    ),
+  } : undefined;
 
   // Кость в формуле не считается: её бросает ОТПРАВИТЕЛЬ при упаковке, а
   // выражение считает лист цели. Поэтому набранная нотация уезжает в
@@ -358,7 +395,16 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, onCreateFromRec
   // величина карточки, а выражение зовёт её по имени — как и кость.
   const putIntoAmount = (ref: SlotRef) => {
     edit(0, step => { (step as Record<string, unknown>).dice = ref; });
-    if (amountId) setDraft(prev => `${(prev ?? shown).trim()} #${amountId}`.trim());
+    if (!amountId) return;
+    // Число уже стоит в строке — второй раз его дописывать нельзя: именно
+    // так клик по «Кость урона» приводил к тому, что вся присланная сумма
+    // появлялась ещё раз, одной фишкой.
+    const already = new RegExp(`#${amountId}(?![\\p{L}\\p{N}_])`, 'u').test(shown);
+    if (already) return;
+    setDraft(prev => {
+      const text = (prev ?? shown).trim();
+      return text ? `${text} + #${amountId}` : `#${amountId}`;
+    });
   };
   const needs = (context.effect.params ?? []).map(p => ({
     group: 'из записи',

@@ -243,3 +243,44 @@ describe('GroupCard: строка броска с фишкой кости', () =
     expect(line.querySelector('.field__error')).toBeTruthy();
   });
 });
+
+// Присланное число — это слагаемые, а не один ком: у кости и у прибавки
+// свои фишки и свои крестики. Считает их отправитель (потому «прислано»),
+// но видеть и убирать автор должен по отдельности.
+describe('GroupCard: присланное число по слагаемым', () => {
+  const steps = () => [
+    { id: 'n', type: 'amount', source: 'roll', dice: { param: 'кость_урона' }, bonus: { expr: '#armor' } },
+    { type: 'apply', target: { tag: 'armor' }, direction: 'subtract', value: { ref: 'n' } },
+  ] as unknown as Step[];
+  const withParam = { params: [{ key: 'кость_урона', label: 'Кость урона', kind: 'dice' }] } as unknown as Effect;
+
+  it('кость и прибавка стоят разными фишками', () => {
+    const group = groupSteps(steps())[0]!;
+    render(<GroupCard group={group} position={1} system={system} effect={withParam}
+      earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
+
+    const line = screen.getByText('станет').closest('label')!;
+    const sent = [...line.querySelectorAll('.chips__chip--sent')];
+    expect(sent).toHaveLength(2);
+    expect(sent[0]!.textContent).toContain('Кость урона');
+    expect(sent[1]!.textContent).toContain('Класс брони');
+    // И обе честно подписаны стороной: считал их не тот, чей это лист.
+    expect(sent.every(c => c.textContent?.includes('прислано'))).toBe(true);
+  });
+
+  it('крестик убирает ровно своё слагаемое', () => {
+    const list = steps();
+    const amount = list[0] as Record<string, any>;
+    const group = groupSteps(list)[0]!;
+    render(<GroupCard group={group} position={1} system={system} effect={withParam}
+      earlier={[]} problem={null}
+      edit={(at, change) => { if (at === 0) change(amount as never); }} onDelete={() => {}} />);
+
+    const line = screen.getByText('станет').closest('label')!;
+    const [diceX] = [...line.querySelectorAll('.chips__chip--sent .chips__x')];
+    fireEvent.mouseDown(diceX!);
+
+    expect(amount.dice).toBeUndefined();
+    expect(amount.bonus).toEqual({ expr: '#armor' }, 'прибавка не тронута');
+  });
+});
