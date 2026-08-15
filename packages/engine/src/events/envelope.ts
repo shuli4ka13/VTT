@@ -30,7 +30,7 @@ import {
 } from '../engine/effects.ts';
 import { EngineError } from '../engine/errors.ts';
 import type {
-  System, Sheet, Compendium, CompendiumRecord, Binding, Die,
+  System, Sheet, Compendium, CompendiumRecord, Binding, Die, Effect,
 } from '../model/types.ts';
 import type { StepData } from '../engine/steps/index.ts';
 import type { RefContext } from '../engine/refs.ts';
@@ -76,6 +76,8 @@ export interface Report {
   effects: string[];
   removed: string[];
   spent: string[];
+  /** Реакции получателя на себя (trigger.to: 'self'), уже разрешённые. */
+  reactions?: Report[];
 }
 
 export interface ReceiveResult {
@@ -207,7 +209,7 @@ export function receive(
   // помеченные триггеры молчат. Без этого два шипастых обменивались бы
   // уроном бесконечно. Аналог из 5e — «одна реакция в раунд».
   const fired = envelope.reply
-    ? { sheet: out.sheet, replies: [], spent: [] }
+    ? { sheet: out.sheet, replies: [], spent: [], reactions: [] }
     : fireTriggers(envelope, out, { system, compendium, die });
 
   return {
@@ -225,24 +227,42 @@ export function receive(
       effects: out.effects,
       removed: out.removed,
       spent: fired.spent,
+      // Реакции на себя — в отчёте события: журнал обязан рассказать,
+      // что удар не только снял хиты, но и убил. Пустой список не пишем —
+      // отчёты без реакций остаются прежней формы.
+      ...(fired.reactions.length ? { reactions: fired.reactions } : {}),
     },
   };
 }
 
 // Триггеры получателя: событие уже разрешено и посчитано, теперь эффекты,
-// висящие на нём, отвечают. Каждый ответ — обычный конверт в обратную
-// сторону; считать его будет исходный отправитель, у себя и своей системой.
+// висящие на нём, отвечают. Адресат — у самого триггера:
+//   'sender' — ответка обычным конвертом в обратную сторону; считать её
+//              будет исходный отправитель, у себя и своей системой (шипы);
+//   'self'   — реакция на себя: разрешается сразу, здесь же, и видит
+//              результаты события по именам его шагов (мгновенная смерть).
+// Реакция конверта не рождает — значит и каскада за собой не тянет.
 function fireTriggers(
   envelope: Envelope, out: { sheet: Sheet; results: Record<string, unknown> }, { system, compendium, die }: WorldContext,
-): { sheet: Sheet; replies: Envelope[]; spent: string[] } {
+): { sheet: Sheet; replies: Envelope[]; spent: string[]; reactions: Report[] } {
   const replies: Envelope[] = [];
   const spent: string[] = [];
+  const reactions: Report[] = [];
   let sheet = out.sheet;
 
   // Список снимается ДО правок: срабатывание может убрать запись с листа
   // (счётчик дошёл до нуля), и перебирать живой массив нельзя.
-  const candidates = wornEffects(system, sheet, { strict: false })
-    .filter(({ effect }) => activationOf(effect) === 'triggered');
+  // Правила комнаты слушают наравне с надетым: «мгновенная смерть» — базовое
+  // правило мира, а не вещь на поясе.
+  const worn = wornEffects(system, sheet, { strict: false });
+  const wornIds = new Set(worn.map(w => w.id));
+  const candidates = [
+    ...worn,
+    ...(system.room_rules ?? [])
+      .filter(id => !wornIds.has(id))
+      .map(id => ({ id, effect: findEffect(system, id) }))
+      .filter((c): c is { id: string; effect: Effect } => Boolean(c.effect)),
+  ].filter(({ effect }) => activationOf(effect) === 'triggered');
 
   for (const { id, effect } of candidates) {
     const trigger = effect.trigger;
@@ -254,21 +274,44 @@ function fireTriggers(
     const owner = `триггер «${effect.label || id}»`;
     if (!conditionHolds(trigger.condition, { pass, results: out.results, owner })) continue;
 
-    replies.push({
-      kind: 'effect',
-      effect: id,
-      from: sheet.id,
-      to: envelope.from,
-      reply: true,
-      action: id,
-      label: effect.label || id,
-      steps: packRule(effect, {
+    if ((trigger.to ?? 'sender') === 'self') {
+      // Пакуем и разрешаем ОДНИМ листом — своим: реакция не пересекает
+      // границу отправитель/получатель, ей не нужен конверт.
+      const packed = packRule(effect, {
         system, sheet, pass, die,
         params: (effect.args || {}) as Record<string, unknown>,
         props: null,
         owner,
-      }),
-    });
+      });
+      const done = resolveRule(packed, {
+        system, sheet, die,
+        pass: newPass(system, sheet, { compendium }),
+        results: out.results,
+        owner,
+      });
+      sheet = done.sheet;
+      reactions.push({
+        kind: 'effect', effect: id, from: sheet.id, label: effect.label || id,
+        reply: false, trace: done.trace, stopped: done.stopped,
+        changes: done.changes, effects: done.effects, removed: done.removed, spent: [],
+      });
+    } else {
+      replies.push({
+        kind: 'effect',
+        effect: id,
+        from: sheet.id,
+        to: envelope.from,
+        reply: true,
+        action: id,
+        label: effect.label || id,
+        steps: packRule(effect, {
+          system, sheet, pass, die,
+          params: (effect.args || {}) as Record<string, unknown>,
+          props: null,
+          owner,
+        }),
+      });
+    }
 
     if (durationOf(effect) === 'uses') {
       sheet = spendUse(sheet, id);
@@ -276,7 +319,7 @@ function fireTriggers(
     }
   }
 
-  return { sheet, replies, spent };
+  return { sheet, replies, spent, reactions };
 }
 
 // Условие триггера — структурная ссылка, как слоты шагов: { ref: 'hit.success' }

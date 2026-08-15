@@ -57,7 +57,10 @@ export function resolveRule(steps: StepData[], ctx: StepContext): RuleReport {
   const changes: Change[] = [];
   const effects: string[] = [];
   const removed: string[] = [];
-  const results: Record<string, unknown> = {};
+  // Засев извне — для реакций на себя: событие уже разрешилось, и его
+  // результаты видны по именам его шагов. Свой одноимённый шаг перекрывает
+  // событийный — как и всюду, своё ближе.
+  const results: Record<string, unknown> = { ...(ctx.results ?? {}) };
   const trace: Record<string, unknown>[] = [];
   let stopped: StopReason | null = null;
 

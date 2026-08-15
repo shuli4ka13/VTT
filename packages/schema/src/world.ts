@@ -209,6 +209,13 @@ export const trigger = z.object({
   on: z.string().min(1),
   when: z.string().optional(),
   condition: slotRef.nullable().optional(),
+  /**
+   * Кому адресована реакция. 'sender' (умолчание) — ответка обратным
+   * конвертом: шипы, контратака. 'self' — реакция на себя: мгновенная
+   * смерть, срабатывание брони. Реакция на себя видит результаты события
+   * по именам его шагов и разрешается сразу, без конверта.
+   */
+  to: z.enum(['sender', 'self']).optional(),
 }).passthrough();
 
 /**

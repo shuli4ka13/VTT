@@ -46,6 +46,10 @@ export const slots = [
 
 export const outputs = [
   { path: '.amount', label: 'применено' },
+  // Насколько удар пробил бы НИЖЕ нижней границы поля, если бы она не
+  // держала. Мгновенная смерть 5e: перебор ≥ максимума хитов — смерть,
+  // а не 0. Ноль — границы нет или до неё не дошло.
+  { path: '.overkill', label: 'перебор' },
 ];
 
 export const mayBreak = false;
@@ -98,13 +102,15 @@ export function resolve(step: StepData, ctx: StepContext) {
       `поле «${tag}» держит не число (${typeof from}) — прибавлять и вычитать нечего`);
   }
 
-  let to = DIRECTIONS[String(step.direction)]!(from as number, amount);
-  to = clampToField(to, field, ctx);
+  const raw = DIRECTIONS[String(step.direction)]!(from as number, amount);
+  const { to, overkill } = clampToField(raw, field, ctx);
 
   ctx.write!(tag, to);
 
   return {
-    value: { amount, from, to },
+    // Перебор — в результат, но НЕ в трассу: журнал рассказывает, что
+    // случилось (from → to), а перебор — сырьё для чужих реакций.
+    value: { amount, from, to, overkill },
     trace: { target: tag, direction: step.direction, incoming, amount, from, to },
     break: null,
   };
@@ -114,12 +120,14 @@ export function resolve(step: StepData, ctx: StepContext) {
  * Зажать значение в объявленные полем границы. Формула границы («#hp_max»)
  * считается листом ПОЛУЧАТЕЛЯ — потолок лечения это его максимум, не чужой.
  */
-function clampToField(to: number, field: { value: Record<string, unknown> }, ctx: StepContext): number {
+function clampToField(
+  raw: number, field: { value: Record<string, unknown> }, ctx: StepContext,
+): { to: number; overkill: number } {
   const low = boundOf(field.value.min, ctx, 'нижняя граница поля');
   const high = boundOf(field.value.max, ctx, 'верхняя граница поля');
-  if (low !== null && to < low) return low;
-  if (high !== null && to > high) return high;
-  return to;
+  if (low !== null && raw < low) return { to: low, overkill: low - raw };
+  if (high !== null && raw > high) return { to: high, overkill: 0 };
+  return { to: raw, overkill: 0 };
 }
 
 function boundOf(bound: unknown, ctx: StepContext, what: string): number | null {

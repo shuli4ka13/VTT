@@ -315,12 +315,25 @@ export class RoomsService {
       return `${head} — ${breakReasonWord(type, reason)}`;
     }
     const changes = (entry.report.changes ?? []) as { tag: string; from: unknown; to: unknown }[];
-    if (!changes.length) return head;
-
     const shown = changes.map(c => {
       const field = system.fields.find(f => f.tag === c.tag);
       return `${field?.label ?? c.tag}: ${c.from} → ${c.to}`;
     });
-    return `${head} · ${shown.join(', ')}`;
+
+    // Реакции жертвы на себя (мгновенная смерть) — в ТОЙ ЖЕ строке журнала:
+    // удар и его последствие — одна история, а не два события.
+    const reactions = (entry.report.reactions ?? []) as {
+      label: string; stopped?: { reason?: string } | null; effects?: string[];
+    }[];
+    const told = reactions
+      .filter(r => !r.stopped)
+      .map(r => {
+        const hung = (r.effects ?? []).map(id => effectLabelOf(system, id)).join(', ');
+        return hung ? `${r.label}: ${hung}` : r.label;
+      });
+
+    const tail = [shown.join(', '), told.join('; ')].filter(Boolean).join(' — ');
+    if (!tail) return head;
+    return `${head} · ${tail}`;
   }
 }

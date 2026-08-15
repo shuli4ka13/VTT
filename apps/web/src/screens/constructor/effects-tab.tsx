@@ -329,6 +329,22 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
                 })}
               />
             </Field>
+            {/* Куда направлена реакция — вторая ось триггера. Ответка летит
+                обратным конвертом и считается отправителем (шипы); реакция
+                на себя разрешается сразу и видит числа события по именам
+                его шагов (мгновенная смерть). */}
+            <Field label="Кому">
+              <Select
+                value={String(effect.trigger?.to ?? 'sender')}
+                options={[
+                  ['sender', 'отправителю — ответкой'],
+                  ['self', 'себе — реакцией'],
+                ] as const}
+                onChange={next => edit(draft => {
+                  draft.trigger = { ...draft.trigger!, to: next === 'sender' ? undefined : 'self' };
+                })}
+              />
+            </Field>
           </div>
         </Card>
       ) : null}
