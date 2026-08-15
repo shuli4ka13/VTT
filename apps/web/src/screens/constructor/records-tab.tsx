@@ -15,7 +15,7 @@ import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
   Card, CardHead, Field, Input, Select, Button, Empty, Verdict, Chip, DangerButton,
 } from '../../ui/primitives.tsx';
-import { SlotEditor } from './slots.tsx';
+import type { SlotRef } from '@vtt/schema';
 import type { System, RecordKind, Binding, Param } from '@vtt/schema';
 
 const BASIS = [
@@ -315,15 +315,14 @@ function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWi
           {params.map(param => (
             <div key={param.key} className={`need-fill ${isClosed(param.key) ? 'need-fill--ok' : ''}`}>
               <Field label={param.label ?? param.key}>
-                <SlotEditor
+                <ArgEditor
                   value={binding.args?.[param.key]}
+                  recordKind={recordKind}
                   onChange={next => onEdit(draft => {
                     draft.args ??= {};
                     if (next) draft.args[param.key] = next;
                     else delete draft.args[param.key];
                   })}
-                  context={{ system, effect: effect!, earlier: [], recordKind }}
-                  allow={['prop', 'const', 'expr', 'empty']}
                 />
               </Field>
               {!isClosed(param.key) ? (
@@ -343,5 +342,60 @@ function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWi
         <Chip>эффект ничего не берёт из записи</Chip>
       ) : null}
     </Card>
+  );
+}
+
+/**
+ * Чем закрыть потребность эффекта — ОДНИМ выбором, а не парой безымянных
+ * выпадашек («Свойство записи» + «Кость урона» читались как два вопроса,
+ * хотя вопрос один: откуда взять значение). Главный случай — свойство
+ * рода — просто пункт списка; «число» и «формула» раскрывают один инпут.
+ */
+function ArgEditor({ value, recordKind, onChange }: {
+  value: unknown;
+  recordKind: RecordKind;
+  onChange: (next: SlotRef | null) => void;
+}) {
+  const r = (value ?? null) as Record<string, unknown> | null;
+  const mode = r === null ? ''
+    : 'prop' in r || 'item' in r ? `prop:${String(r.prop ?? r.item)}`
+      : 'expr' in r ? 'expr'
+        : 'const';
+  const props = recordKind.props ?? [];
+
+  return (
+    <div className="stack stack--tight">
+      <Select
+        value={mode}
+        options={[
+          ['', '— не заполнять —'],
+          ...props.map(p => [`prop:${p.key}`, `${p.label ?? p.key} — свойство записи`] as const),
+          ['const', 'ввести значение…'],
+          ['expr', 'ввести формулу…'],
+        ] as never}
+        onChange={next => {
+          if (!next) return onChange(null);
+          if (next.startsWith('prop:')) return onChange({ prop: next.slice(5) } as SlotRef);
+          onChange((next === 'expr' ? { expr: '' } : { const: '' }) as SlotRef);
+        }}
+      />
+      {mode === 'const' ? (
+        <Input
+          value={String((r as { const?: unknown })?.const ?? '')}
+          placeholder="число или текст — одно на все записи"
+          onChange={next => onChange({
+            const: /^-?\d+(\.\d+)?$/.test(next.trim()) ? Number(next) : next,
+          } as SlotRef)}
+        />
+      ) : null}
+      {mode === 'expr' ? (
+        <Input
+          value={String((r as { expr?: unknown })?.expr ?? '')}
+          mono
+          placeholder="#поле + 2"
+          onChange={next => onChange({ expr: next } as SlotRef)}
+        />
+      ) : null}
+    </div>
   );
 }

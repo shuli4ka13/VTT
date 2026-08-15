@@ -77,14 +77,12 @@ describe('RecordsTab: род видит потребности эффекта', 
     const { container } = render(<RecordsTab />);
     const need = container.querySelector('.need-fill') as HTMLElement;
 
-    // Первый select — выбор вида ссылки; переключаем на «свойство записи»,
-    // тогда рядом появляется второй select — сам выбор свойства.
-    fireEvent.change(need.querySelectorAll('select')[0]!, { target: { value: 'prop' } });
-    const propSelect = need.querySelectorAll('select')[1] as HTMLSelectElement;
-    const options = Array.from(propSelect.options).map(o => o.textContent);
+    // Выбор ОДИН: свойства своего рода — пункты списка, чужого — нет вовсе.
+    const select = need.querySelector('select') as HTMLSelectElement;
+    const options = Array.from(select.options).map(o => o.textContent);
 
-    expect(options).toContain('Кость урона');
-    expect(options).not.toContain('Класс защиты');
+    expect(options).toContain('Кость урона — свойство записи');
+    expect(options.some(o => o?.includes('Класс защиты'))).toBe(false);
   });
 });
 

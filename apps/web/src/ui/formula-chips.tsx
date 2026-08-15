@@ -221,7 +221,11 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
           <input
             key={index}
             ref={el => { if (el) inputs.current.set(index, el); else inputs.current.delete(index); }}
-            className="chips__text"
+            // Пустой кусок между фишками (и перед первой) не занимает места:
+            // видимая ширина у него была ни зачем, а строку она сдвигала —
+            // «Текущие ХП» в «станет» начинались правее, чем строкой выше.
+            // Хвост строки — не призрак: туда дописывают, по нему целятся.
+            className={`chips__text ${!part.text && index !== parts.length - 1 ? 'chips__text--ghost' : ''}`}
             value={part.text}
             placeholder={empty ? placeholder : undefined}
             size={Math.max(1, part.text.length || (empty ? (placeholder?.length ?? 8) : 1))}

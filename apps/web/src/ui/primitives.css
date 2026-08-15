@@ -355,6 +355,9 @@
    по нему не попасть мышью. Клик мимо всех полей ловит вся строка, но
    целиться человек будет сюда. */
 .chips__text:last-child { min-width: 48px; flex: 1 1 auto; }
+/* Пустой кусок между фишками ширины не имеет: он лишь место для каретки
+   (стрелки, Backspace), а видимый зазор сдвигал первую фишку вправо. */
+.chips__text--ghost { min-width: 0; width: 2px; padding-left: 0; padding-right: 0; }
 .chips__chip {
   display: inline-flex; align-items: center; gap: var(--s-1);
   padding: 0 var(--s-1) 0 var(--s-3); border-radius: var(--r-1);

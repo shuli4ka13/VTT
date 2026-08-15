@@ -141,6 +141,28 @@ describe('GroupCard', () => {
     expect(screen.queryByText('не выше')).toBeNull();
   });
 
+  // «Рофельная» формула — не эксцентрика, а первый же день автора: зажал
+  // минус, опечатался, бросил на полуслове. Что математике НЕ читается —
+  // получает приговор ЗДЕСЬ и в данные не едет, иначе молча ронял бы удар
+  // за столом. (А «#хп ------ 5» — законная математика: минус на минус.)
+  it('оборванная строка «станет» получает приговор, данные не тронуты', () => {
+    const steps = [
+      { type: 'apply', target: { tag: 'armor' }, direction: 'set', value: { expr: '#armor', of: 'target' } },
+    ] as unknown as Step[];
+    const group = groupSteps(steps)[0]!;
+    render(<GroupCard group={group} position={1} system={system} effect={effect}
+      earlier={[]} problem={null}
+      edit={(_, change) => change(steps[0]!)} onDelete={() => {}} />);
+
+    const line = screen.getByText('станет').closest('label')!;
+    const value = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;
+    fireEvent.change(value, { target: { value: ' + ' } });
+    fireEvent.keyDown(value, { key: 'Enter' });
+
+    expect((steps[0] as any).value).toEqual({ expr: '#armor', of: 'target' }, 'мусор не записан');
+    expect(screen.getByText(/оборвано/)).toBeTruthy();
+  });
+
   it('пересказ не отрывает точку от слова', () => {
     const group = groupSteps(attackSteps())[0]!;
     const { container } = render(<GroupCard group={group} position={1} system={system} effect={effect}

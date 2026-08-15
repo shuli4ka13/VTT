@@ -14,6 +14,7 @@ import {
   Card, CardHead, Field, Input, Select, Button, Empty, Fold, Verdict, Chip, DangerButton,
 } from '../../ui/primitives.tsx';
 import { FormulaInput } from '../../ui/formula.tsx';
+import { compile } from '@vtt/engine/formula';
 import { DonorPalette } from './donors.tsx';
 import type { Field as FieldModel, FieldValue, System } from '@vtt/schema';
 
@@ -203,17 +204,21 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
             // применение; эффектам объявлять нечего. Число или формула-ссылка
             // на поле максимума.
             <div className="row">
-              <Field label="Не ниже" hint="Пусто — границы нет. Число или формула.">
+              <Field label="Не ниже" hint="Пусто — границы нет. Число или формула."
+                error={boundProblem(field.value.min, system)}>
                 <BoundInput
                   value={field.value.min}
+                  invalid={Boolean(boundProblem(field.value.min, system))}
                   onChange={min => edit(draft => {
                     if (draft.value.kind === 'stored') draft.value.min = min;
                   })}
                 />
               </Field>
-              <Field label="Не выше" hint="Потолок лечения — ссылка на поле максимума.">
+              <Field label="Не выше" hint="Потолок лечения — ссылка на поле максимума."
+                error={boundProblem(field.value.max, system)}>
                 <BoundInput
                   value={field.value.max}
+                  invalid={Boolean(boundProblem(field.value.max, system))}
                   onChange={max => edit(draft => {
                     if (draft.value.kind === 'stored') draft.value.max = max;
                   })}
@@ -307,11 +312,30 @@ const metaOf = (value: FieldValue) =>
  * в черновике бонусы «никуда не резолвились».
  */
 /**
- * Граница поля: число хранится числом, формула — строкой, пусто — undefined.
- * Свой черновик, чтобы «#hp_» на полпути не превращалось в NaN.
+ * Приговор границе — тем же судом, что и формулам: в режиме автора значений
+ * нет, есть только разбор. Мусор («------», опечатка в теге) виден здесь,
+ * при вводе, а не роняет удар за столом. Промежуточное состояние набора
+ * («#ма» на полпути к «#макс») — тоже приговор, но набор он не блокирует:
+ * данные пишутся как есть, красная строка честно ждёт, пока допишут.
  */
-function BoundInput({ value, onChange }: {
+export function boundProblem(bound: number | string | undefined, system: System): string | undefined {
+  if (bound === undefined || typeof bound === 'number') return undefined;
+  const text = bound.trim();
+  if (!text) return undefined;
+  try {
+    for (const dep of compile(text).deps) {
+      if (!system.fields.some(f => f.tag === dep)) return `поля «${dep}» в системе нет`;
+    }
+    return undefined;
+  } catch (err) {
+    return (err as Error).message;
+  }
+}
+
+/** Граница поля: число хранится числом, формула — строкой, пусто — undefined. */
+function BoundInput({ value, invalid, onChange }: {
   value: number | string | undefined;
+  invalid?: boolean;
   onChange: (next: number | string | undefined) => void;
 }) {
   const commit = (raw: string) => {
@@ -323,6 +347,7 @@ function BoundInput({ value, onChange }: {
     <Input
       value={value === undefined ? '' : String(value)}
       mono
+      invalid={invalid}
       placeholder="число или #поле"
       onChange={commit}
     />

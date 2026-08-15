@@ -246,7 +246,7 @@ function RollExprInput({ step, context, edit }: {
           .filter(([, c]) => c.kind === 'die')
           .map(([key, c]) => ({
             group: 'кость системы',
-            label: c.label ?? key,
+            label: c.label || key,
             // Кость вставляется ТЕКСТОМ, как её и пишут: «1d20» — строка
             // остаётся обычным выражением. Ссылкой на словарь она станет
             // при разборе: по выбору (picked) или по совпадению нотации.
@@ -425,11 +425,20 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
       // «#хп − #n», а не «#хп − + #n». А если имя в строке уже стоит —
       // кость уехала ВНУТРЬ него, и второй раз называть его не нужно:
       // «#n + 1d8» это «#n», а не «#n + #n».
-      sendThrough(a => { a.dice = picked; }, name => (mentions(text, name.slice(1))
+      const next = (name: string) => (mentions(text, name.slice(1))
         ? text.replace(DICE, '').replace(/\+\s*\+/g, '+').replace(/[-+*/]\s*$/, '').replace(/\s+/g, ' ').trim()
-        : text.replace(DICE, name)));
+        : text.replace(DICE, name));
+      // Мусор не едет в данные и отсюда: проверяем строку, какой она СТАНЕТ.
+      const bad = badFormula({ expr: next('#x') });
+      if (bad) { setTrouble(bad); return; }
+      sendThrough(a => { a.dice = picked; }, next);
       return;
     }
+
+    // Строка — формула, и мусор в данные не едет: «------» получает
+    // приговор здесь, в конструкторе, а не роняет удар за столом.
+    const bad = text ? badFormula({ expr: text }) : null;
+    if (bad) { setTrouble(bad); return; }
 
     edit(applyIndex, step => {
       const a = step as Record<string, any>;
@@ -481,6 +490,17 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
       group: 'из записи',
       label: 'новая потребность…',
       onPick: (insert: (piece: string) => string) => putIntoAmount(onCreateFromRecord(), insert),
+    });
+  }
+  // Кость добавляется отсюда же, где и всё остальное, — по собачке. Ссылкой
+  // на словарь, не текстом: у кости бывает своё чтение («считать успехи»),
+  // и его нельзя терять, роняя выбор в литерал «5d10».
+  for (const [key, c] of Object.entries(context.system.constants ?? {})) {
+    if (c.kind !== 'die') continue;
+    needs.push({
+      group: 'кость системы',
+      label: c.label || key,
+      onPick: (insert: (piece: string) => string) => putIntoAmount({ constant: key } as SlotRef, insert),
     });
   }
 

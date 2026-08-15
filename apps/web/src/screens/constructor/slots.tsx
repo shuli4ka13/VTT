@@ -190,7 +190,7 @@ export const SLOT_KINDS: SlotKindModule[] = [
         value={ref.constant ?? ''}
         options={[
           ['', '— выберите кость —'],
-          ...Object.entries(ctx.system.constants ?? {}).map(([key, c]) => [key, c.label ?? key] as const),
+          ...Object.entries(ctx.system.constants ?? {}).map(([key, c]) => [key, c.label || key] as const),
         ] as never}
         onChange={constant => onChange({ ...ref, constant })}
       />
