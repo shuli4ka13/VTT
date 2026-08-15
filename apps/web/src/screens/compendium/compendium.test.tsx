@@ -107,4 +107,24 @@ describe('CompendiumScreen: кость записи — формочкой, а �
     const sword = useWorld.getState().compendium.items!.find(i => i.id === 'sword')!;
     expect(sword.props!.damage_dice).toBe('1d8');
   });
+
+  // Черновик: цифру можно СТЕРЕТЬ и набрать заново. Без него пустота не
+  // сохранялась, инпут затирал её прежним значением, и «6 → 12» требовало
+  // выделить и перепечатать.
+  it('стёр грани, набрал «12» — кость стала 1d12', () => {
+    const { container } = render(<CompendiumScreen />);
+    const term = container.querySelector('.dice-term')!;
+    const [, sides] = [...term.querySelectorAll('input')] as HTMLInputElement[];
+
+    fireEvent.change(sides!, { target: { value: '' } });
+    expect(sides!.value).toBe('', 'пустота живёт, пока набирают');
+
+    fireEvent.change(sides!, { target: { value: '1' } });
+    fireEvent.change(sides!, { target: { value: '12' } });
+    fireEvent.blur(sides!);
+
+    const sword = useWorld.getState().compendium.items!.find(i => i.id === 'sword')!;
+    expect(sword.props!.damage_dice).toBe('1d12');
+    expect(sides!.value).toBe('12', 'после ухода фокуса — из данных');
+  });
 });

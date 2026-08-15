@@ -166,6 +166,23 @@ describe('Словари: кости, виды бросков, таблицы, �
     expect(constants[ключ!]!.label).toBe('Ведущая кость проверки');
   });
 
+  // Черновик у чисел кости: цифру можно стереть и набрать заново — без
+  // него пустота затиралась прежним значением на каждой букве.
+  it('грани кости: стёр «20», набрал «100» — кость стала к100', () => {
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ кость'));
+    const term = document.querySelector('.dice-term')!;
+    const [, sides] = [...term.querySelectorAll('input')] as HTMLInputElement[];
+
+    fireEvent.change(sides!, { target: { value: '' } });
+    expect(sides!.value).toBe('', 'пустота живёт, пока набирают');
+    fireEvent.change(sides!, { target: { value: '100' } });
+    fireEvent.blur(sides!);
+
+    const [key] = Object.keys(useWorld.getState().system.constants ?? {});
+    expect(useWorld.getState().system.constants![key!]!.dice![0]!.sides).toBe(100);
+  });
+
   // Правило подачи: примитив — готовая фраза в списке, а не объект
   // с настройками внутри. Взрыв вверх и вниз — два пункта, ноль выпадашек.
   it('палитра правок — готовые фразы, включая оба направления взрыва', () => {

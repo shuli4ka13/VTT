@@ -5,6 +5,7 @@
 // не может — запись ссылается только на объявленное и нового не вводит,
 // потому завести её волен и игрок, а не только автор.
 
+import { useState } from 'react';
 import { useWorld, freeId } from '../../store/world.ts';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
@@ -225,25 +226,33 @@ function DiceProp({ value, onChange }: {
   onChange: (next: string) => void;
 }) {
   const m = /^(\d+)?\s*[dдк]\s*(\d+)$/iu.exec(value.trim());
-  const count = m ? (m[1] ?? '1') : '';
-  const sides = m ? m[2]! : '';
+  const stored = { count: m ? (m[1] ?? '1') : '', sides: m ? m[2]! : '' };
 
-  const put = (c: string, s: string) => {
-    const cn = Number(c);
-    const sn = Number(s);
-    if (Number.isInteger(cn) && cn > 0 && Number.isInteger(sn) && sn > 1) onChange(`${cn}d${sn}`);
+  // Черновик на время набора. Без него цифру нельзя было СТЕРЕТЬ: пустота
+  // не проходила проверку, не сохранялась — и инпут тут же затирал её
+  // прежним значением. «6 → 12» требовало выделить и перепечатать.
+  // Теперь пустота живёт, пока набирают; ушёл фокус — показчисло из данных.
+  const [draft, setDraft] = useState<{ count: string; sides: string } | null>(null);
+  const shown = draft ?? stored;
+
+  const edit = (part: 'count' | 'sides') => (text: string) => {
+    const next = { ...shown, [part]: text };
+    setDraft(next);
+    const c = Number(next.count);
+    const n = Number(next.sides);
+    if (Number.isInteger(c) && c > 0 && Number.isInteger(n) && n > 1) onChange(`${c}d${n}`);
   };
 
   return (
     <div className="dice-term">
       <span className="dice-term__num">
-        <Input mono value={count} placeholder="1"
-          onChange={next => put(next, sides || '6')} />
+        <Input mono value={shown.count} placeholder="1"
+          onChange={edit('count')} onBlur={() => setDraft(null)} />
       </span>
       <span className="dice-term__d">к</span>
       <span className="dice-term__num">
-        <Input mono value={sides} placeholder="8"
-          onChange={next => put(count || '1', next)} />
+        <Input mono value={shown.sides} placeholder="8"
+          onChange={edit('sides')} onBlur={() => setDraft(null)} />
       </span>
     </div>
   );

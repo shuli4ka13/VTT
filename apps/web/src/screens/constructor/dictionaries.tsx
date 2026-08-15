@@ -318,13 +318,10 @@ function DiceComposer({ dice, system, onEdit }: {
               />
             ) : (
               <span className="dice-term__num">
-                <Input
-                  mono
-                  value={String(term.count ?? 1)}
-                  onChange={text => onEdit(list => {
-                    const n = Number(text);
-                    if (Number.isInteger(n) && n > 0) list[i]!.count = n;
-                  })}
+                <DraftNum
+                  value={Number(term.count ?? 1)}
+                  least={1}
+                  onCommit={n => onEdit(list => { list[i]!.count = n; })}
                 />
               </span>
             )}
@@ -332,13 +329,10 @@ function DiceComposer({ dice, system, onEdit }: {
             <span className="dice-term__d">к</span>
 
             <span className="dice-term__num">
-              <Input
-                mono
-                value={String(term.sides)}
-                onChange={text => onEdit(list => {
-                  const n = Number(text);
-                  if (Number.isInteger(n) && n > 1) list[i]!.sides = n;
-                })}
+              <DraftNum
+                value={term.sides}
+                least={2}
+                onCommit={n => onEdit(list => { list[i]!.sides = n; })}
               />
             </span>
 
@@ -777,5 +771,30 @@ function ActionTypesSection({ system, compendium, editSystem }: Props) {
         );
       })}
     </div>
+  );
+}
+
+/**
+ * Число с черновиком: цифру можно СТЕРЕТЬ и набрать заново. Без черновика
+ * пустота не проходила проверку и инпут тут же затирал её прежним значением —
+ * «6 → 12» требовало выделить и перепечатать. Ушёл фокус — число из данных.
+ */
+function DraftNum({ value, least, onCommit }: {
+  value: number;
+  least: number;
+  onCommit: (n: number) => void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  return (
+    <Input
+      mono
+      value={draft ?? String(value)}
+      onChange={text => {
+        setDraft(text);
+        const n = Number(text);
+        if (Number.isInteger(n) && n >= least) onCommit(n);
+      }}
+      onBlur={() => setDraft(null)}
+    />
   );
 }
