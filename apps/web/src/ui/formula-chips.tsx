@@ -36,7 +36,7 @@ export function joinParts(parts: Part[]): string {
   return parts.map(p => ('tag' in p ? `#${p.tag}` : p.text)).join('');
 }
 
-export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, extraOptions }: {
+export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraOptions }: {
   value: string;
   onChange: (next: string) => void;
   system: System;
@@ -55,6 +55,12 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
   prefix?: ReactNode;
   /** То же, но ПОСЛЕ строки: закрывающая скобка группы, например. */
   suffix?: ReactNode;
+  /**
+   * Чем подписать имя, которое не поле листа: «#dmg» — это число, посчитанное
+   * шагом выше, и в строке оно обязано читаться тем, чем оно является
+   * («Кость урона + Мод Силы»), а не машинным именем.
+   */
+  names?: Record<string, string>;
   /**
    * Что ещё предложить в подсказке по «@» помимо полей листа. Такой пункт
    * не вставляется в текст (формула умеет ссылаться только на поля) —
@@ -164,7 +170,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
         {prefix}
         {parts.map((part, index) => 'tag' in part ? (
           <span key={index} className="chips__chip" title={`#${part.tag}`}>
-            {labelOfTag(system, part.tag)}
+            {names?.[part.tag] ?? labelOfTag(system, part.tag)}
             <button
               type="button" className="chips__x" aria-label="убрать поле"
               onMouseDown={e => { e.preventDefault(); dropChip(index); }}

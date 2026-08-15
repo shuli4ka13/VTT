@@ -167,11 +167,12 @@ describe('GroupCard: величина из записи', () => {
     const group = groupSteps(steps())[0]!;
     render(<GroupCard group={group} position={1} system={system} effect={withParam}
       earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
-    // Данные не тронуты, но человек видит то, что посчитается: поле-тег
-    // рисуется фишкой, имя величины остаётся текстом.
+    // Данные не тронуты, но человек видит то, что посчитается. Имя числа
+    // подписано его содержимым: «dmg» человеку ничего не говорит.
     const line = screen.getByText('станет').closest('label')!;
     expect(line.textContent).toContain('Класс брони');
-    expect(line.textContent).toContain('n');
+    expect(line.textContent).toContain('Кость урона');
+    expect(line.textContent).not.toContain('#n');
   });
 
   it('правка выражения кладёт его в «применить» и не трогает величину', () => {

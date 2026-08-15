@@ -8,7 +8,9 @@ import { useState, type ReactNode } from 'react';
 import type { System, Effect, Step, SlotRef } from '@vtt/schema';
 import { Card, CardHead, Field, Fold, Segmented, Verdict, Button, Select, Input } from '../../ui/primitives.tsx';
 import type { CardGroup } from './cards.ts';
-import { checkReadback, changeReadback, numberReadback, joinReadback, type Segment } from './readback.ts';
+import {
+  checkReadback, changeReadback, numberReadback, amountValueSegments, joinReadback, type Segment,
+} from './readback.ts';
 import { parseRollExpr, formatRollExpr, parseAmountExpr, formatAmountExpr } from './roll-expr.ts';
 import { compile } from '@vtt/engine/formula';
 import { FormulaChips } from '../../ui/formula-chips.tsx';
@@ -309,6 +311,12 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, onCreateFromRec
 
   const shown = draft ?? asExpr();
 
+  // Имя числа в строке подписано его содержимым: «Кость урона + Мод Силы»,
+  // а не «dmg». Машинное имя нужно данным, человеку — нет.
+  const names = amountId && amount
+    ? { [amountId]: joinReadback(amountValueSegments(amount, context.system, context.effect)) }
+    : undefined;
+
   // Кость в формуле не считается: её бросает ОТПРАВИТЕЛЬ при упаковке, а
   // выражение считает лист цели. Поэтому набранная нотация уезжает в
   // величину карточки, а в тексте остаётся имя — то же, что и было бы,
@@ -396,6 +404,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, onCreateFromRec
         <FormulaChips
           value={shown}
           system={context.system}
+          names={names}
           placeholder="например: #хп − #урон"
           extraOptions={needs}
           onChange={setDraft}
@@ -624,26 +633,20 @@ function ChangeBody({ group, context, edit, system, onAddParam }: {
             context={context} edit={edit}
             onCreateFromRecord={fromRecord('сколько — кости', 'dice')} />
 
-          {/* Само число — здесь же, а не за именем. Выражение выше зовёт его
-              по имени, и не показать, из чего оно складывается, значит
-              спрятать половину карточки: «станет ХП − dmg» ничего не говорит
-              о том, что такое dmg. */}
-          {group.amount ? (
-            <Fold
-              title={<>Число <code className="mono">{(group.amount as any).id}</code></>}
-              summary={joinReadback(numberReadback(group.amount, system, context.effect))}
-              open
-            >
+
+          <Fold title="Тонкости">
+            {/* Само число живёт ВНУТРИ изменения — так и было решено: атака
+                это две карточки, а не три. В строке выше оно читается тем,
+                чем является («Кость урона + Мод Силы»), а его устройство
+                правится здесь, не занимая места у главного. */}
+            {group.amount ? (
               <NumberBody
                 step={group.amount}
                 context={context}
                 edit={(_, change) => edit(0, change)}
                 onAddParam={onAddParam}
               />
-            </Fold>
-          ) : null}
-
-          <Fold title="Тонкости">
+            ) : null}
             <Field label="не ниже">
               <SlotInput
                 value={step.floor} context={context} allow={['const', 'tag']}
