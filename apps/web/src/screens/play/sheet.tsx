@@ -11,7 +11,7 @@ import { useRoom } from '../../store/room.ts';
 import { tableSocket } from '../../api/socket.ts';
 import { useReader, show } from '../../engine/use-calc.ts';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
-import { Card, CardHead, Field, Input, Button, Empty, Fold, Chip } from '../../ui/primitives.tsx';
+import { Card, CardHead, Field, Input, Button, Empty, Fold, Chip, NumInput } from '../../ui/primitives.tsx';
 import { Lobby } from './lobby.tsx';
 import type { Sheet, System, Field as FieldModel, StoredValue, RoomState } from '@vtt/schema';
 import { availableActions } from '@vtt/engine/events/envelope';
@@ -138,14 +138,17 @@ function FieldCell({ field, sheet, reader, onChange }: {
 
     return (
       <Field label={field.label}>
-        <Input
-          type={field.value.type === 'number' ? 'number' : 'text'}
-          value={String(stored ?? '')}
-          onChange={next => onChange(
-            field.tag,
-            field.value.kind === 'stored' && field.value.type === 'number' ? (Number(next) || 0) : next,
-          )}
-        />
+        {field.value.kind === 'stored' && field.value.type === 'number' ? (
+          <NumInput
+            value={Number(stored ?? 0)}
+            onCommit={n => onChange(field.tag, n)}
+          />
+        ) : (
+          <Input
+            value={String(stored ?? '')}
+            onChange={next => onChange(field.tag, next)}
+          />
+        )}
       </Field>
     );
   }

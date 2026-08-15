@@ -13,6 +13,7 @@
 // не работает вовсе.
 
 import type { System, Modifier } from '@vtt/schema';
+import { useState } from 'react';
 import { Card, CardHead, Field, Input, Select, Button, Empty } from '../../ui/primitives.tsx';
 import { FormulaInput } from '../../ui/formula.tsx';
 import { targets } from '@vtt/engine/engine/targets';
@@ -114,11 +115,10 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty }: {
                 />
               </Field>
               <Field label="На сколько">
-                <Input
-                  value={String(modifier.value ?? '')}
-                  onChange={next => onEdit(draft => {
-                    (draft[index] as { value: unknown }).value =
-                      /^-?\d+(\.\d+)?$/.test(next) ? Number(next) : next === 'true' ? true : next === 'false' ? false : next;
+                <DraftValue
+                  value={modifier.value}
+                  onCommit={next => onEdit(draft => {
+                    (draft[index] as { value: unknown }).value = next;
                   })}
                 />
               </Field>
@@ -167,5 +167,26 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty }: {
         </Card>
       ))}
     </>
+  );
+}
+
+/**
+ * Значение модификатора: число числом, «true/false» флагом, прочее текстом.
+ * С черновиком — иначе «−2» нельзя было начать с минуса: «-» не число,
+ * коммитился текстом, а «-2» затем число, и поле дёргалось между видами.
+ */
+function DraftValue({ value, onCommit }: { value: unknown; onCommit: (next: unknown) => void }) {
+  const [draft, setDraft] = useState<string | null>(null);
+  return (
+    <Input
+      value={draft ?? String(value ?? '')}
+      onChange={text => {
+        setDraft(text);
+        if (/^-?\d+(\.\d+)?$/.test(text)) onCommit(Number(text));
+        else if (text === 'true' || text === 'false') onCommit(text === 'true');
+        else if (text.trim() !== '' && text !== '-') onCommit(text);
+      }}
+      onBlur={() => setDraft(null)}
+    />
   );
 }

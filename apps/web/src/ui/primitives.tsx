@@ -88,6 +88,41 @@ export function Input({ value, onChange, placeholder, mono, invalid, type = 'tex
   );
 }
 
+/**
+ * Число с черновиком. Управляемый инпут без черновика затирает пустоту
+ * сохранённым значением на каждой букве: цифру нельзя стереть, минус
+ * нельзя начать. Здесь недописанное живёт, пока набирают; валидное число
+ * уходит в данные сразу; ушёл фокус — поле показывает сохранённое.
+ */
+export function NumInput({ value, onCommit, int, least, mono, placeholder }: {
+  value: number;
+  onCommit: (n: number) => void;
+  /** Только целые. */
+  int?: boolean;
+  /** Не меньше этого — недобор не коммитится (грани кости ⩾ 2). */
+  least?: number;
+  mono?: boolean;
+  placeholder?: string;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  return (
+    <Input
+      mono={mono}
+      placeholder={placeholder}
+      value={draft ?? String(value)}
+      onChange={text => {
+        setDraft(text);
+        const n = Number(text);
+        if (!Number.isFinite(n) || text.trim() === '') return;
+        if (int && !Number.isInteger(n)) return;
+        if (least !== undefined && n < least) return;
+        onCommit(n);
+      }}
+      onBlur={() => setDraft(null)}
+    />
+  );
+}
+
 export function Select<T extends string>({ value, options, onChange }: {
   value: T;
   options: readonly (readonly [T, string])[];

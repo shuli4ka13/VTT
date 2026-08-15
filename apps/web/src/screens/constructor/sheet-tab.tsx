@@ -11,7 +11,7 @@
 import { useWorld, fieldsByGroup, freeId, slugOf } from '../../store/world.ts';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
-  Card, CardHead, Field, Input, Select, Button, Empty, Fold, Verdict, Chip, DangerButton,
+  Card, CardHead, Field, Input, Select, Button, Empty, Fold, Verdict, Chip, DangerButton, NumInput,
 } from '../../ui/primitives.tsx';
 import { FormulaInput } from '../../ui/formula.tsx';
 import { compile } from '@vtt/engine/formula';
@@ -188,14 +188,22 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
               />
             </Field>
             <Field label="По умолчанию">
-              <Input
-                value={String(field.value.default)}
-                onChange={next => edit(draft => {
-                  if (draft.value.kind !== 'stored') return;
-                  draft.value.default = draft.value.type === 'number' ? Number(next) || 0
-                    : draft.value.type === 'boolean' ? next === 'true' : next;
-                })}
-              />
+              {field.value.type === 'number' ? (
+                <NumInput
+                  value={Number(field.value.default) || 0}
+                  onCommit={n => edit(draft => {
+                    if (draft.value.kind === 'stored') draft.value.default = n;
+                  })}
+                />
+              ) : (
+                <Input
+                  value={String(field.value.default)}
+                  onChange={next => edit(draft => {
+                    if (draft.value.kind !== 'stored') return;
+                    draft.value.default = draft.value.type === 'boolean' ? next === 'true' : next;
+                  })}
+                />
+              )}
             </Field>
           </div>
           {field.value.type === 'number' ? (

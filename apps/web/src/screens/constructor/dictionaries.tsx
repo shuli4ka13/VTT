@@ -26,7 +26,7 @@ import { Readback } from './card.tsx';
 import { editReadback, dieReadback } from './readback.ts';
 import { useWorld, freeId, slugOf } from '../../store/world.ts';
 import { Columns } from '../../ui/layout.tsx';
-import { Card, CardHead, Input, Button, Fold, Select, Verdict } from '../../ui/primitives.tsx';
+import { Card, CardHead, Input, NumInput, Button, Fold, Select, Verdict } from '../../ui/primitives.tsx';
 import { diceCount } from './dice-expr.ts';
 import type { System, Compendium, RangeTable, SystemConstant, DiceTerm } from '@vtt/schema';
 import type { WorldState } from '../../store/world.ts';
@@ -441,15 +441,7 @@ function OpChip({ op, parts, onNumber, onPart, onRemove }: {
     <span className="chip">
       {opWord(op as { op: string })}
       {numeric ? (
-        <input
-          className="chip__num"
-          aria-label="сколько"
-          value={String(op[numeric] ?? '')}
-          onChange={e => {
-            const value = Number(e.target.value);
-            if (Number.isFinite(value)) onNumber(value);
-          }}
-        />
+        <ChipNum value={Number(op[numeric] ?? 0)} onCommit={onNumber} />
       ) : null}
       {askPart ? (
         <select
@@ -690,20 +682,18 @@ function TableRow({ id, table, system, compendium, editSystem }: Props & { id: s
 
       {ranges.map((range, i) => (
         <div key={i} className="range-row">
-          <Input
-            type="number"
+          <NumInput
             value={range.from}
-            onChange={next => editSystem(draft => {
+            onCommit={n => editSystem(draft => {
               const r = draft.tables?.[id]?.ranges[i];
-              if (r) r.from = Number(next) || 0;
+              if (r) r.from = n;
             })}
           />
-          <Input
-            type="number"
+          <NumInput
             value={range.to}
-            onChange={next => editSystem(draft => {
+            onCommit={n => editSystem(draft => {
               const r = draft.tables?.[id]?.ranges[i];
-              if (r) r.to = Number(next) || 0;
+              if (r) r.to = n;
             })}
           />
           <Input
@@ -784,15 +774,21 @@ function DraftNum({ value, least, onCommit }: {
   least: number;
   onCommit: (n: number) => void;
 }) {
+  return <NumInput mono int least={least} value={value} onCommit={onCommit} />;
+}
+
+/** Число в чипе примитива — тот же черновик, но своим классом. */
+function ChipNum({ value, onCommit }: { value: number; onCommit: (n: number) => void }) {
   const [draft, setDraft] = useState<string | null>(null);
   return (
-    <Input
-      mono
+    <input
+      className="chip__num"
+      aria-label="сколько"
       value={draft ?? String(value)}
-      onChange={text => {
-        setDraft(text);
-        const n = Number(text);
-        if (Number.isInteger(n) && n >= least) onCommit(n);
+      onChange={e => {
+        setDraft(e.target.value);
+        const n = Number(e.target.value);
+        if (Number.isFinite(n) && e.target.value.trim() !== '') onCommit(n);
       }}
       onBlur={() => setDraft(null)}
     />

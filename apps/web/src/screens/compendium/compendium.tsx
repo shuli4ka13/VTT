@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { useWorld, freeId } from '../../store/world.ts';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
-  Card, CardHead, Field, Input, Select, Button, Empty, Verdict, DangerButton,
+  Card, CardHead, Field, Input, Select, Button, Empty, Verdict, DangerButton, NumInput,
 } from '../../ui/primitives.tsx';
 import { ModifiersEditor } from '../constructor/modifiers.tsx';
 import type { CompendiumRecord, RecordKind, System } from '@vtt/schema';
@@ -178,15 +178,17 @@ function RecordEditor({ record, system }: { record: CompendiumRecord; system: Sy
                     value={String(record.props?.[prop.key] ?? '')}
                     onChange={next => edit(draft => { (draft.props ??= {})[prop.key] = next; })}
                   />
+                ) : String(prop.kind) === 'number' ? (
+                  <NumInput
+                    value={Number(record.props?.[prop.key] ?? 0)}
+                    onCommit={n => edit(draft => { (draft.props ??= {})[prop.key] = n; })}
+                  />
                 ) : (
                   <Input
                     mono={String(prop.kind) === 'expr'}
                     placeholder={String(prop.kind) === 'expr' ? '#тег' : undefined}
                     value={String(record.props?.[prop.key] ?? '')}
-                    onChange={next => edit(draft => {
-                      (draft.props ??= {})[prop.key] =
-                        String(prop.kind) === 'number' ? Number(next) || 0 : next;
-                    })}
+                    onChange={next => edit(draft => { (draft.props ??= {})[prop.key] = next; })}
                   />
                 )}
               </Field>
