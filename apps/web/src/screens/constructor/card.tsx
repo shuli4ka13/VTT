@@ -8,7 +8,7 @@ import { useState, type ReactNode } from 'react';
 import type { System, Effect, Step, SlotRef } from '@vtt/schema';
 import { Card, CardHead, Field, Fold, Segmented, Verdict, Button, Select, Input } from '../../ui/primitives.tsx';
 import type { CardGroup } from './cards.ts';
-import { checkReadback, changeReadback, numberReadback, type Segment } from './readback.ts';
+import { checkReadback, changeReadback, numberReadback, joinReadback, type Segment } from './readback.ts';
 import { parseRollExpr, formatRollExpr, parseAmountExpr, formatAmountExpr } from './roll-expr.ts';
 import { compile } from '@vtt/engine/formula';
 import { FormulaChips } from '../../ui/formula-chips.tsx';
@@ -623,6 +623,25 @@ function ChangeBody({ group, context, edit, system, onAddParam }: {
             amount={group.amount ?? undefined} apply={step} applyIndex={applyIndex}
             context={context} edit={edit}
             onCreateFromRecord={fromRecord('сколько — кости', 'dice')} />
+
+          {/* Само число — здесь же, а не за именем. Выражение выше зовёт его
+              по имени, и не показать, из чего оно складывается, значит
+              спрятать половину карточки: «станет ХП − dmg» ничего не говорит
+              о том, что такое dmg. */}
+          {group.amount ? (
+            <Fold
+              title={<>Число <code className="mono">{(group.amount as any).id}</code></>}
+              summary={joinReadback(numberReadback(group.amount, system, context.effect))}
+              open
+            >
+              <NumberBody
+                step={group.amount}
+                context={context}
+                edit={(_, change) => edit(0, change)}
+                onAddParam={onAddParam}
+              />
+            </Fold>
+          ) : null}
 
           <Fold title="Тонкости">
             <Field label="не ниже">

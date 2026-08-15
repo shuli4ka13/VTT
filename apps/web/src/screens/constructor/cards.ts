@@ -29,13 +29,24 @@ const KIND_OF: Record<string, CardKind> = {
   threshold: 'check', compare: 'check', apply: 'change', status: 'change', amount: 'number',
 };
 
+/** Кто-нибудь вообще упоминает результат — хоть целиком, хоть частью. */
+const mentions = (step: Step, id: string): boolean => {
+  const text = JSON.stringify(step);
+  if (text.includes(`"ref":"${id}"`) || text.includes(`"ref":"${id}.`)) return true;
+  return names(step, id);
+};
+
+/** Число взято ЦЕЛИКОМ: ссылкой `{ref: 'dmg'}` либо именем в выражении. */
 const takesWhole = (value: unknown, id: string): boolean =>
   !!value && typeof value === 'object' && (value as Record<string, unknown>).ref === id;
 
-const mentions = (step: Step, id: string): boolean => {
-  const text = JSON.stringify(step);
-  return text.includes(`"ref":"${id}"`) || text.includes(`"ref":"${id}.`);
-};
+/**
+ * Имя числа в формуле — «#хп − #dmg». Такая же ссылка, как `{ref}`, и
+ * держать карточку она должна не слабее: без этого пара разваливалась
+ * надвое ровно в тот момент, когда автор впервые правил выражение.
+ */
+const names = (step: Step, id: string): boolean =>
+  new RegExp(`#${id}(?![\\p{L}\\p{N}_])`, 'u').test(JSON.stringify(step));
 
 export function groupSteps(list: Step[]): CardGroup[] {
   const out: CardGroup[] = [];
@@ -50,7 +61,7 @@ export function groupSteps(list: Step[]): CardGroup[] {
     const glue = step.type === 'amount' && step.id
       && (next?.type === 'apply' || next?.type === 'status')
       && (source === 'roll' || source === undefined)
-      && takesWhole((next as any).value, step.id)
+      && (takesWhole((next as any).value, step.id) || names(next, step.id))
       && list.every((other, j) => j === i || j === i + 1 || !mentions(other, step.id!));
     if (glue) {
       out.push({ kind: 'change', indices: [i, i + 1], step: next!, amount: step });
