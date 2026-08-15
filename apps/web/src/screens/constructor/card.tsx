@@ -271,9 +271,10 @@ function RollExprInput({ step, context, edit }: {
 // Величина изменения одной строкой: «1d8 + ⟦Мод Силы⟧». Кость и прибавка
 // живут в движке порознь (кость бросает отправитель, формулу считает лист),
 // но набирают их вместе — парсер делит, формат собирает обратно.
-function AmountExprInput({ amount, apply, applyIndex, context, edit, onCreateFromRecord }: {
-  amount: Step;
-  /** Шаг «применить»: он несёт мишень и операцию, и они тоже в этой строке. */
+function ChangeValue({ amount, apply, applyIndex, context, edit, onCreateFromRecord }: {
+  /** Величина карточки, если она есть: только она умеет бросать кость. */
+  amount?: Step;
+  /** Шаг «применить»: он несёт поле цели и новое значение. */
   apply: Step;
   applyIndex: number;
   context: SlotContext;
@@ -281,67 +282,92 @@ function AmountExprInput({ amount, apply, applyIndex, context, edit, onCreateFro
   onCreateFromRecord?: () => SlotRef;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
-  const dice = (amount as Record<string, any>).dice;
+  const [trouble, setTrouble] = useState<string | null>(null);
   const target = (apply as Record<string, any>).target;
-  const direction = String((apply as Record<string, any>).direction ?? 'subtract');
 
-  const targetChip = chipOf(target, context);
-  const diceChip = chipOf(dice, context);
+  // Имя, которым выражение зовёт брошенное число. У склеенной пары это имя
+  // её же величины: она бросает кость (или берёт значение из записи), а
+  // выражение ниже с ним считает.
+  const amountId = String((amount as Record<string, any> | undefined)?.id ?? '');
 
-  const setDice = (next: SlotRef | undefined) => edit(0, step => {
-    const s = step as Record<string, unknown>;
-    if (next === undefined) delete s.dice; else s.dice = next;
-  });
+  // Показываем ровно то, что посчитается. Старые эффекты (и образцы) хранят
+  // «направление + величина» — их выражение собирается для показа, а при
+  // первой же правке ложится в данные тем, чем читается.
+  const asExpr = (): string => {
+    const a = apply as Record<string, any>;
+    const value = a.value;
+    if (value && typeof value === 'object' && 'expr' in value) return String(value.expr);
+    const amountName = amountId ? `#${amountId}` : '';
+    const targetName = target && typeof target === 'object' && 'tag' in target ? `#${target.tag}` : '';
+    const direction = String(a.direction ?? 'subtract');
+    if (direction === 'set') return amountName;
+    if (!targetName) return amountName;
+    // Минус здесь ОБЫЧНЫЙ дефис, а не типографский «−»: строка уходит
+    // в формулу, и красивый знак парсер не понимает.
+    return `${targetName} ${direction === 'add' ? '+' : '-'} ${amountName}`;
+  };
 
-  // Строка правит только текстовую часть величины; мишень, операция и кость
-  // из записи — фишки и знак, у них свои жесты.
-  const shown = draft ?? (diceChip
-    ? exprText((amount as Record<string, any>).bonus)
-    : formatAmountExpr(amount, context.system));
+  const shown = draft ?? asExpr();
+
+  // Кость в формуле не считается: её бросает ОТПРАВИТЕЛЬ при упаковке, а
+  // выражение считает лист цели. Поэтому набранная нотация уезжает в
+  // величину карточки, а в тексте остаётся имя — то же, что и было бы,
+  // выбери человек кость из подсказки.
+  const DICE = /(\d+)?\s*[dдк]\s*(\d+)/iu;
 
   const commit = () => {
     if (draft === null) return;
-    if (diceChip) {
-      const bonus = draft.trim() ? parseAmountExpr(draft, context.system).bonus : null;
-      edit(0, step => {
-        const s = step as Record<string, unknown>;
-        if (bonus === null || bonus === undefined) delete s.bonus; else s.bonus = bonus;
-      });
-    } else {
-      const parsed = parseAmountExpr(draft, context.system);
-      edit(0, step => {
-        const s = step as Record<string, unknown>;
-        if (parsed.die === undefined) delete s.dice; else s.dice = parsed.die;
-        if (parsed.bonus === null) delete s.bonus; else s.bonus = parsed.bonus;
-      });
+    let text = draft.trim();
+
+    const rolled = text.match(DICE);
+    if (rolled) {
+      if (!amountId) {
+        setTrouble('кость бросает отправитель — заведите карточку «число» и назовите её');
+        return;
+      }
+      const notation = `${rolled[1] ?? 1}d${rolled[2]}`;
+      edit(0, step => { (step as Record<string, unknown>).dice = { const: notation }; });
+      text = text.replace(DICE, `#${amountId}`);
     }
+
+    edit(applyIndex, step => {
+      const a = step as Record<string, any>;
+      if (!text) { delete a.value; return; }
+      a.direction = 'set';
+      a.value = { expr: text, of: 'target' };
+    });
     setDraft(null);
+    setTrouble(null);
   };
 
+  // «Из записи» тоже приносит ЧИСЛО, которого у формулы нет: его берёт
+  // величина карточки, а выражение зовёт её по имени — как и кость.
+  const putIntoAmount = (ref: SlotRef) => {
+    edit(0, step => { (step as Record<string, unknown>).dice = ref; });
+    if (amountId) setDraft(prev => `${(prev ?? shown).trim()} #${amountId}`.trim());
+  };
   const needs = (context.effect.params ?? []).map(p => ({
     group: 'из записи',
     label: p.label ?? p.key,
-    onPick: () => setDice({ param: p.key } as SlotRef),
+    onPick: () => putIntoAmount({ param: p.key } as SlotRef),
   }));
   if (onCreateFromRecord) {
     needs.push({
       group: 'из записи',
       label: 'новая потребность…',
-      onPick: () => setDice(onCreateFromRecord()),
+      onPick: () => putIntoAmount(onCreateFromRecord()),
     });
   }
 
   return (
     <>
-      {/* Две подписанные вещи вместо одной строки-формулы.
-          Раньше цель стояла первой фишкой в общем ряду, и строка читалась
-          арифметикой: «ХП − кость + мод». Теперь поле выбирается отдельно,
-          а вторая строка отвечает на вопрос «чем оно станет» — словами,
-          а не знаком: «станет меньше на …». */}
+      {/* Две подписанные вещи: ЧТО меняем и ЧЕМ ОНО СТАНЕТ. Вторая —
+          обычная математика, без знаков-выпадашек: «#хп − #урон», «0»,
+          «#максхп / 2» — всё это законные ответы. */}
       <Field
         label="что меняется"
-        needed={!targetChip}
-        hint={targetChip ? undefined : 'Поле цели: что этот шаг поменяет.'}
+        needed={!target}
+        hint={target ? undefined : 'Поле цели: что этот шаг поменяет.'}
       >
         <SlotInput
           value={target}
@@ -356,64 +382,29 @@ function AmountExprInput({ amount, apply, applyIndex, context, edit, onCreateFro
         />
       </Field>
 
-      {/* Вторая строка — ВЫРАЖЕНИЕ: чем поле станет. Поэтому оно и начинается
-          с самого поля, а знак стоит внутри строки как знак формулы, а не
-          выбором из трёх слов. «Текущие ХП − (кость + мод)» — это то самое
-          новое значение, и оно может быть и меньше, и больше прежнего.
-          При «=» поле впереди не нужно: новое значение берётся целиком. */}
-      <Field label="станет">
-        <div className="inline">
-          {direction !== 'set' && targetChip ? (
-            <span className="chips__chip chips__chip--mirror" title="то же поле, что выбрано выше">
-              {targetChip.label}
-            </span>
-          ) : null}
-          <select
-            className="chips__op"
-            aria-label="что делаем с полем"
-            value={direction}
-            onChange={e => {
-              const next = e.target.value;
-              edit(applyIndex, target => { (target as Record<string, unknown>).direction = next; });
-            }}
-          >
-            <option value="subtract">−</option>
-            <option value="add">+</option>
-            <option value="set">=</option>
-          </select>
-
-          <span className="grow">
-            <FormulaChips
-              value={shown}
-              system={context.system}
-              placeholder={diceChip ? 'и ещё: @поле, число…' : 'кости и прибавка: 2d6 + @поле'}
-              extraOptions={needs}
-              prefix={diceChip ? (
-                <>
-                  {shown.trim() ? <span className="chips__paren" aria-hidden>(</span> : null}
-                  <span className={`chips__chip${diceChip.record ? ' chips__chip--record' : ''}`}>
-                    {diceChip.label}
-                    <button
-                      type="button" className="chips__x" aria-label="убрать из записи"
-                      onMouseDown={e => { e.preventDefault(); setDice(undefined); }}
-                    >×</button>
-                  </span>
-                  {/* «+» — только когда после него правда что-то есть. */}
-                  {shown.trim() ? <span className="chips__plus" aria-hidden>+</span> : null}
-                </>
-              ) : null}
-              suffix={diceChip && shown.trim()
-                ? <span className="chips__paren" aria-hidden>)</span>
-                : null}
-              onChange={setDraft}
-              onBlur={commit}
-              onKeyDown={e => {
-                if (e.key === 'Enter') commit();
-                if (e.key === 'Escape') setDraft(null);
-              }}
-            />
-          </span>
-        </div>
+      {/* Вторая строка — ЧЕМ ПОЛЕ СТАНЕТ, и это обычная математика.
+          Ни знака-выпадашки, ни обязательного поля впереди: «#хп − #урон»,
+          «0», «#максхп / 2» — всё это законные ответы на один и тот же
+          вопрос. Кость, брошенную отправителем, формула зовёт по имени
+          шага (engine/refs.ts): без этого выражение пришлось бы разбирать
+          на «направление» и «величину», чем карточка и занималась раньше. */}
+      <Field
+        label="станет"
+        error={trouble}
+        hint="Математика по листу цели. Брошенное число зовите по имени шага."
+      >
+        <FormulaChips
+          value={shown}
+          system={context.system}
+          placeholder="например: #хп − #урон"
+          extraOptions={needs}
+          onChange={setDraft}
+          onBlur={commit}
+          onKeyDown={e => {
+            if (e.key === 'Enter') commit();
+            if (e.key === 'Escape') { setDraft(null); setTrouble(null); }
+          }}
+        />
       </Field>
     </>
   );
@@ -624,25 +615,14 @@ function ChangeBody({ group, context, edit, system, onAddParam }: {
 
       {mode === 'apply' ? (
         <>
-          {/* Одна строка присвоения: «Текущие ХП − Кость урона + Мод Силы».
-              Отдельных полей «какое поле» и «как» больше нет — мишень стоит
-              фишкой в начале строки, операция знаком следом. В данных они
-              по-прежнему врозь: на операцию завязаны сопротивления цели
-              и границы, а кость обязана остаться броском, а не текстом. */}
-          {group.amount ? (
-            <AmountExprInput
-              amount={group.amount} apply={step} applyIndex={applyIndex}
-              context={context} edit={edit}
-              onCreateFromRecord={fromRecord('сколько — кости', 'dice')} />
-          ) : (
-            <Field label="сколько">
-              <SlotInput
-                value={step.value} context={context} allow={['ref', 'param', 'const']}
-                onChange={next => edit(0, draft => { (draft as any).value = next ?? undefined; })}
-                onCreateFromRecord={fromRecord('сколько', 'expr')}
-              />
-            </Field>
-          )}
+          {/* Карточка «изменение» выглядит одинаково, есть у неё величина
+              или нет: поле цели и выражение. Раньше без величины показывался
+              другой набор полей («сколько»), и одна и та же карточка
+              выглядела двумя разными. */}
+          <ChangeValue
+            amount={group.amount ?? undefined} apply={step} applyIndex={applyIndex}
+            context={context} edit={edit}
+            onCreateFromRecord={fromRecord('сколько — кости', 'dice')} />
 
           <Fold title="Тонкости">
             <Field label="не ниже">

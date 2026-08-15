@@ -201,8 +201,29 @@ export function resolveOptionalNumber(ref: unknown, ctx: RefContext, what: strin
 
 // ── внутреннее ───────────────────────────────────────────────────────────────
 
+/**
+ * Вычислить выражение. Имя в формуле — это поле листа, а если поля с таким
+ * именем нет, то РЕЗУЛЬТАТ ШАГА выше по цепочке.
+ *
+ * Зачем: кость бросает отправитель, а формулу считает лист получателя, и
+ * до сих пор из-за этого «новое значение поля» нельзя было написать одним
+ * выражением — «ХП минус кость урона» приходилось собирать из направления
+ * и величины порознь. Теперь брошенное число у формулы есть под своим
+ * именем, и «чем поле станет» пишется как обычная математика.
+ *
+ * Поле важнее шага: мир, где поле и шаг названы одинаково, продолжает
+ * считать поле — иначе переименование шага молча меняло бы смысл формул.
+ */
 function evaluate(expr: unknown, ctx: RefContext): unknown {
-  return compile(String(expr)).evaluate(ctx.pass.resolve);
+  const results = ctx.results;
+  const resolve = !results ? ctx.pass.resolve : (name: string) => {
+    if (name in results) {
+      const known = ctx.pass.system.fields.some(f => f.tag === name);
+      if (!known) return (results as Record<string, unknown>)[name];
+    }
+    return ctx.pass.resolve(name);
+  };
+  return compile(String(expr)).evaluate(resolve);
 }
 
 function who(ctx: RefContext): string {

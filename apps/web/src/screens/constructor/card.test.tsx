@@ -44,23 +44,48 @@ describe('GroupCard', () => {
     expect((draft as any).roll).toBeDefined();
   });
 
-  // Кость и прибавка набираются ОДНОЙ строкой, а в данные ложатся порознь:
-  // кость бросает отправитель, формулу считает лист.
-  it('строка величины делится на кость и прибавку внутреннего числа', () => {
-    const steps = attackSteps();
-    const group = groupSteps(steps)[1]!;
-    const amount = structuredClone(group.amount!) as any;
-    let editedAt: number | null = null;
+  // «Чем поле станет» — обычная математика. Кость в формуле не считается
+  // (её бросает отправитель), поэтому набранная нотация уезжает в величину
+  // карточки, а в выражении остаётся её имя.
+  it('выражение ложится в «применить», а кость — в величину под своим именем', () => {
+    const steps = [
+      { id: 'n', type: 'amount', source: 'roll' },
+      { type: 'apply', target: { tag: 'armor' }, direction: 'set', value: { ref: 'n' } },
+    ] as unknown as Step[];
+    const group = groupSteps(steps)[0]!;
+    const amount = steps[0] as any;
+    const apply = steps[1] as any;
     render(<GroupCard group={group} position={2} system={system} effect={effect}
       earlier={[]} problem={null}
-      edit={(at, change) => { editedAt = at; change(amount); }}
+      edit={(at, change) => change((at === 0 ? amount : apply) as never)}
       onDelete={() => {}} />);
-    const value = screen.getByPlaceholderText('кости и прибавка: 2d6 + @поле');
-    fireEvent.change(value, { target: { value: '1d8 + #power' } });
+
+    // Дописываем в хвост, как рукой: «станет #n + 1d8».
+    const line = screen.getByText('станет').closest('label')!;
+    const value = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;
+    fireEvent.change(value, { target: { value: ' + 1d8' } });
     fireEvent.keyDown(value, { key: 'Enter' });
-    expect(editedAt).toBe(0);
+
+    // Кость уехала в величину — формулой её не посчитать, её бросает
+    // отправитель, — а в выражении осталось имя.
     expect(amount.dice).toEqual({ const: '1d8' });
-    expect(amount.bonus).toEqual({ expr: '#power' });
+    expect(apply.value).toEqual({ expr: '#n + #n', of: 'target' });
+    expect(apply.direction).toBe('set');
+  });
+
+  it('без величины кость в формулу не пускают — и объясняют почему', () => {
+    const steps = [
+      { type: 'apply', target: { tag: 'armor' }, direction: 'set' },
+    ] as unknown as Step[];
+    const group = groupSteps(steps)[0]!;
+    render(<GroupCard group={group} position={1} system={system} effect={effect}
+      earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
+
+    const line = screen.getByText('станет').closest('label')!;
+    const value = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;
+    fireEvent.change(value, { target: { value: '1d8' } });
+    fireEvent.keyDown(value, { key: 'Enter' });
+    expect(screen.getByText(/кость бросает отправитель/)).toBeTruthy();
   });
 
   // STEP_SPECS (step-card.tsx) держит «против» на ['tag', 'expr', 'const'] —
@@ -128,51 +153,45 @@ describe('GroupCard', () => {
   });
 });
 
-// Кость «из записи» формулой не выражается — но человеку она такая же
-// ссылка, как поле листа: в строке стоит фишкой, а текст правит только
-// прибавку. Стереть её строкой нельзя, только крестиком на фишке.
+// «Из записи» — тоже число, которого у формулы нет: его берёт величина
+// карточки, а выражение зовёт её по имени. Так кость меча и брошенный кубик
+// живут одинаково, и выражение остаётся обычной математикой.
 describe('GroupCard: величина из записи', () => {
   const steps = () => [
-    { id: 'n', type: 'amount', source: 'roll', dice: { param: 'кость_урона' }, bonus: { expr: '#armor' } },
-    { type: 'apply', direction: 'subtract', value: { ref: 'n' } },
+    { id: 'n', type: 'amount', source: 'roll', dice: { param: 'кость_урона' } },
+    { type: 'apply', target: { tag: 'armor' }, direction: 'subtract', value: { ref: 'n' } },
   ] as unknown as Step[];
   const withParam = { params: [{ key: 'кость_урона', label: 'Кость урона', kind: 'dice' }] } as unknown as Effect;
 
-  it('кость из записи стоит в строке фишкой', () => {
+  it('старое «направление + величина» показывается выражением', () => {
     const group = groupSteps(steps())[0]!;
     render(<GroupCard group={group} position={1} system={system} effect={withParam}
       earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
-    expect(screen.getByText('Кость урона')).toBeTruthy();
-    expect(screen.getByText('что меняется')).toBeTruthy();
-    expect(screen.queryByText('сколько — кости')).toBeNull();
+    // Данные не тронуты, но человек видит то, что посчитается: поле-тег
+    // рисуется фишкой, имя величины остаётся текстом.
+    const line = screen.getByText('станет').closest('label')!;
+    expect(line.textContent).toContain('Класс брони');
+    expect(line.textContent).toContain('n');
   });
 
-  it('правка строки трогает прибавку, но не кость из записи', () => {
+  it('правка выражения кладёт его в «применить» и не трогает величину', () => {
     const list = steps();
     const amount = list[0] as Record<string, any>;
+    const apply = list[1] as Record<string, any>;
     const group = groupSteps(list)[0]!;
     render(<GroupCard group={group} position={1} system={system} effect={withParam}
       earlier={[]} problem={null}
-      edit={(_, change) => change(amount as never)} onDelete={() => {}} />);
-    // Величина переехала в свою строку «станет»: «что меняется» — это
-    // теперь отдельный выбор поля, а не начало формулы.
+      edit={(at, change) => change((at === 0 ? amount : apply) as never)} onDelete={() => {}} />);
+
     const line = screen.getByText('станет').closest('label')!;
     const tail = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;
-    fireEvent.change(tail, { target: { value: ' + 2' } });
+    fireEvent.change(tail, { target: { value: ' - 2' } });
     fireEvent.keyDown(tail, { key: 'Enter' });
-    expect(amount.bonus).toEqual({ expr: '#armor + 2' });
-    expect(amount.dice).toEqual({ param: 'кость_урона' });
-  });
 
-  it('крестик на фишке убирает кость из записи', () => {
-    const list = steps();
-    const amount = list[0] as Record<string, any>;
-    const group = groupSteps(list)[0]!;
-    render(<GroupCard group={group} position={1} system={system} effect={withParam}
-      earlier={[]} problem={null}
-      edit={(_, change) => change(amount as never)} onDelete={() => {}} />);
-    fireEvent.mouseDown(screen.getByLabelText('убрать из записи'));
-    expect(amount.dice).toBeUndefined();
+    // Было «#armor - #n» показом старых данных, стало выражением в данных.
+    expect(apply.value).toEqual({ expr: '#armor - #n - 2', of: 'target' });
+    expect(apply.direction).toBe('set');
+    expect(amount.dice).toEqual({ param: 'кость_урона' }, 'величина осталась своей');
   });
 });
 
