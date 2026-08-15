@@ -1,18 +1,24 @@
 // Шаг «применить» — ЕДИНСТВЕННЫЙ способ что-либо менять на чарнике цели.
 //
 // Слоты: мишень (тег хранимого поля), направление (плюс/минус/присвоить),
-// величина, границы (пол и потолок), применять ли модификаторы цели.
+// величина, применять ли модификаторы цели.
 //
 // Правило не знает слова «урон». Урон, лечение, износ брони, трата ресурса —
 // это разные заполнения ЭТИХ слотов:
-//   урон:    subtract, пол 0, targetModifiers: true  (сопротивления цели)
-//   лечение: add, потолок — тег максимума хитов, targetModifiers: false
-//   износ:   subtract 1 из прочности, пол 0, без модификаторов
+//   урон:    subtract, targetModifiers: true  (сопротивления цели)
+//   лечение: add, targetModifiers: false
+//   износ:   subtract 1 из прочности, без модификаторов
+//
+// Пола и потолка у ШАГА нет: «ХП не ниже нуля и не выше максимума» — природа
+// САМОГО ПОЛЯ, а не каждого эффекта, который его трогает. Границы объявляет
+// поле (min/max хранимого значения, число или формула), движок зажимает
+// при каждом применении — см. clampToField ниже.
 //
 // Модификаторы цели — это мишень «входящее» (incoming:тег): сопротивление
 // половинит, уязвимость удваивает. Результат округляется ВНИЗ — соглашение
 // движка, записано в docs/production-differences.md.
 
+import { compile } from '../../formula/index.ts';
 import { findField } from '../calc.ts';
 import { applyValueModifiers } from '../modifiers.ts';
 import { incomingTagOf } from '../targets.ts';
@@ -35,8 +41,6 @@ export const slots = [
   { key: 'target', label: 'Мишень', kind: 'tag' },
   { key: 'direction', label: 'Направление', kind: 'choice', options: Object.keys(DIRECTIONS) },
   { key: 'value', label: 'Величина', kind: 'ref' },
-  { key: 'floor', label: 'Пол', kind: 'ref' },
-  { key: 'ceiling', label: 'Потолок', kind: 'ref' },
   { key: 'targetModifiers', label: 'Модификаторы цели', kind: 'flag' },
 ];
 
@@ -75,15 +79,13 @@ export function pack(step: StepData, ctx: StepContext) {
     target: packRef(step.target, ctx),
     direction,
     value: packRef(step.value, ctx),
-    floor: step.floor !== undefined ? packRef(step.floor, ctx) : null,
-    ceiling: step.ceiling !== undefined ? packRef(step.ceiling, ctx) : null,
     targetModifiers: !!step.targetModifiers,
   };
 }
 
 export function resolve(step: StepData, ctx: StepContext) {
   const tag = tagOf(step.target, ctx);
-  assertWritable(ctx.system, tag);
+  const field = assertWritable(ctx.system, tag);
 
   const incoming = resolveNumber(step.value, ctx, 'величина применения');
   const amount = step.targetModifiers
@@ -96,20 +98,37 @@ export function resolve(step: StepData, ctx: StepContext) {
       `поле «${tag}» держит не число (${typeof from}) — прибавлять и вычитать нечего`);
   }
 
-  const floor = step.floor == null ? null : resolveNumber(step.floor, ctx, 'пол применения');
-  const ceiling = step.ceiling == null ? null : resolveNumber(step.ceiling, ctx, 'потолок применения');
-
   let to = DIRECTIONS[String(step.direction)]!(from as number, amount);
-  if (floor !== null && to < floor) to = floor;
-  if (ceiling !== null && to > ceiling) to = ceiling;
+  to = clampToField(to, field, ctx);
 
   ctx.write!(tag, to);
 
   return {
     value: { amount, from, to },
-    trace: { target: tag, direction: step.direction, incoming, amount, from, to, floor, ceiling },
+    trace: { target: tag, direction: step.direction, incoming, amount, from, to },
     break: null,
   };
+}
+
+/**
+ * Зажать значение в объявленные полем границы. Формула границы («#hp_max»)
+ * считается листом ПОЛУЧАТЕЛЯ — потолок лечения это его максимум, не чужой.
+ */
+function clampToField(to: number, field: { value: Record<string, unknown> }, ctx: StepContext): number {
+  const low = boundOf(field.value.min, ctx, 'нижняя граница поля');
+  const high = boundOf(field.value.max, ctx, 'верхняя граница поля');
+  if (low !== null && to < low) return low;
+  if (high !== null && to > high) return high;
+  return to;
+}
+
+function boundOf(bound: unknown, ctx: StepContext, what: string): number | null {
+  if (bound === undefined || bound === null || bound === '') return null;
+  const value = typeof bound === 'number' ? bound : compile(String(bound)).evaluate(ctx.pass.resolve);
+  if (typeof value !== 'number') {
+    throw new EngineError(`${what} — не число (${JSON.stringify(bound)} даёт ${typeof value})`);
+  }
+  return value;
 }
 
 // Мишень — тег, а не значение: { tag } или голая строка. Всё остальное —
@@ -123,11 +142,12 @@ function tagOf(ref: unknown, ctx: StepContext): string {
     `${ctx.owner || 'правило'}: мишень применения должна быть тегом, а пришло ${JSON.stringify(ref)}`);
 }
 
-function assertWritable(system: System, tag: string): void {
+function assertWritable(system: System, tag: string) {
   const field = findField(system, tag);
   if (!field) throw new EngineError(`система не объявляет поля «${tag}» — применять некуда`);
   if (field.value.kind !== 'stored') {
     throw new EngineError(
       `в поле «${tag}» нельзя писать: его считает движок по формуле, а не событие`);
   }
+  return field;
 }

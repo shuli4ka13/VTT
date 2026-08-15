@@ -757,22 +757,11 @@ function ChangeBody({ group, context, edit, withNumber, system, onAddParam }: {
 
 
           <Fold title="Тонкости">
-            {/* Внутренностей числа здесь больше нет — они видны и правятся
-                прямо в строке «станет»: кость — фишка с крестиком, «из
-                записи» — по собачке. Остались три вещи, которые формулой
-                не выразить: пол, потолок и сопротивления цели. */}
-            <Field label="не ниже">
-              <SlotInput
-                value={step.floor} context={context} allow={['const', 'tag']}
-                onChange={next => edit(applyIndex, draft => { (draft as any).floor = next ?? undefined; })}
-              />
-            </Field>
-            <Field label="не выше">
-              <SlotInput
-                value={step.ceiling} context={context} allow={['const', 'tag']}
-                onChange={next => edit(applyIndex, draft => { (draft as any).ceiling = next ?? undefined; })}
-              />
-            </Field>
+            {/* Одна тонкость, и та не про математику: право цели поправить
+                входящее своими модификаторами (сопротивление половинит,
+                уязвимость удваивает). Пола и потолка у эффекта НЕТ: «не ниже
+                нуля, не выше максимума» — природа самого ПОЛЯ, границы
+                задаются в его карточке на вкладке «Лист». */}
             <Field label="сопротивления цели">
               <Select
                 value={String(step.targetModifiers ?? true)}

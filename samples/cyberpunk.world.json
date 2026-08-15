@@ -155,9 +155,6 @@
             "value": {
               "ref": "pen.margin"
             },
-            "floor": {
-              "const": 0
-            },
             "targetModifiers": false
           },
           {
@@ -168,9 +165,6 @@
             "direction": "subtract",
             "value": {
               "const": 1
-            },
-            "floor": {
-              "const": 0
             },
             "targetModifiers": false
           }
@@ -192,7 +186,8 @@
             "condition": null,
             "edit": "advantage"
           }
-        ]
+        ],
+        "steps": []
       }
     },
     "room_rules": [],
@@ -224,7 +219,8 @@
         "value": {
           "kind": "stored",
           "type": "number",
-          "default": 20
+          "default": 20,
+          "min": 0
         }
       },
       {
@@ -234,7 +230,8 @@
         "value": {
           "kind": "stored",
           "type": "number",
-          "default": 0
+          "default": 0,
+          "min": 0
         }
       }
     ],

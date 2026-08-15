@@ -16,7 +16,7 @@ import * as oldCalc from '../../../src/engine/calc.js';
 // @ts-expect-error
 import * as oldExchange from '../../../src/events/exchange.js';
 // @ts-expect-error
-import { SAMPLE_SYSTEMS as OLD_SYSTEMS } from '../../../src/model/systems.js';
+import { SAMPLE_SYSTEMS as OLD_SYSTEMS, SAMPLE_WORLDS as OLD_WORLDS } from '../../../src/model/systems.js';
 // @ts-expect-error
 import { sheets as OLD_SHEETS } from '../../../src/model/sheets.js';
 // @ts-expect-error
@@ -25,7 +25,7 @@ import { compendium as OLD_COMPENDIUM } from '../../../src/model/compendium.js';
 import { calc, newPass } from '../src/engine/calc.ts';
 import { exchange } from '../src/events/exchange.ts';
 import { SAMPLE_SYSTEMS } from '../src/model/systems.ts';
-import { unifyRecordRefs } from '../src/model/unify.ts';
+import { unifyRecordRefs, unifyBounds } from '../src/model/unify.ts';
 import { sheets, compendium } from './fixtures.ts';
 import type { System, Sheet } from '../src/model/types.ts';
 
@@ -65,7 +65,16 @@ describe('паритет со старым движком', () => {
     // проходит каждый загружаемый мир. Поэтому старые образцы сверяются с
     // новыми ПОСЛЕ неё — и обязаны совпасть до последнего ключа. Порядок
     // ключей после миграции другой, содержимое — то же; сверяем канонично.
-    expect(canon(SAMPLE_SYSTEMS)).toEqual(canon((OLD_SYSTEMS as System[]).map(unifyRecordRefs)));
+    //
+    // unifyBounds — вторая объявленная миграция: границы значения переехали
+    // с шагов «применить» на сами поля (floor/ceiling → min/max), потому что
+    // «ХП не ниже нуля» — природа поля, а не каждого эффекта. Компендиум ей
+    // нужен, чтобы разрешить мишень-параметр в теги, — СВОЙ компендиум
+    // каждого мира: киберпанковый strike целится параметром, и чем тот
+    // заполнен, знают только его собственные записи.
+    type OldWorld = { system: System; compendium: typeof OLD_COMPENDIUM };
+    expect(canon(SAMPLE_SYSTEMS)).toEqual(canon((OLD_WORLDS as OldWorld[]).map(world =>
+      unifyBounds({ system: unifyRecordRefs(world.system), compendium: world.compendium }).system)));
     expect(JSON.stringify(sheets)).toBe(JSON.stringify(OLD_SHEETS));
     expect(JSON.stringify(compendium)).toBe(JSON.stringify(OLD_COMPENDIUM));
   });
@@ -126,7 +135,11 @@ describe('паритет со старым движком', () => {
     // списком применённых записей словаря «Правки броска». Это объявленная
     // смена модели, а не расхождение поведения — числа, кости и исходы ниже
     // сверяются как были, до последнего ключа.
-    expect(retire(after, 'mode')).toEqual(retire(before, 'mode'));
+    // floor/ceiling ушли из трассы вместе с шаговыми границами: движок
+    // зажимает по границам ПОЛЯ (unifyBounds выше), и числа сходятся —
+    // а ключей с нулями и null в новой трассе больше нет.
+    const tidy = (o: Outcome) => retire(retire(retire(o, 'mode'), 'floor'), 'ceiling');
+    expect(tidy(after)).toEqual(tidy(before));
     expect(before.ok, 'ход вообще прошёл — иначе сверялись бы две ошибки').toBe(true);
   });
 });

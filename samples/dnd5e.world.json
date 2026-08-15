@@ -112,9 +112,6 @@
             "value": {
               "ref": "dmg"
             },
-            "floor": {
-              "const": 0
-            },
             "targetModifiers": true
           }
         ]
@@ -179,9 +176,6 @@
             "value": {
               "ref": "dmg"
             },
-            "floor": {
-              "const": 0
-            },
             "targetModifiers": true
           },
           {
@@ -233,9 +227,6 @@
             "value": {
               "ref": "amt"
             },
-            "ceiling": {
-              "tag": "hp_max"
-            },
             "targetModifiers": false
           },
           {
@@ -265,7 +256,8 @@
             "condition": null,
             "edit": "disadvantage"
           }
-        ]
+        ],
+        "steps": []
       },
       "stoneskin": {
         "label": "Каменная кожа",
@@ -285,7 +277,8 @@
             "stacking": "sum",
             "condition": null
           }
-        ]
+        ],
+        "steps": []
       },
       "heavy_armor_rule": {
         "label": "Тяжёлый доспех мешает ловким проверкам",
@@ -302,7 +295,8 @@
             "condition": "#armor_heavy",
             "edit": "disadvantage"
           }
-        ]
+        ],
+        "steps": []
       },
       "mastery_rule": {
         "label": "Мастерство даёт фору",
@@ -319,7 +313,8 @@
             "condition": "#prof_bonus >= 4",
             "edit": "advantage"
           }
-        ]
+        ],
+        "steps": []
       },
       "thorns": {
         "label": "Шипы",
@@ -356,9 +351,6 @@
             "direction": "subtract",
             "value": {
               "ref": "back"
-            },
-            "floor": {
-              "const": 0
             },
             "targetModifiers": true
           }
@@ -962,7 +954,9 @@
         "value": {
           "kind": "stored",
           "type": "number",
-          "default": 1
+          "default": 1,
+          "min": 0,
+          "max": "#hp_max"
         }
       },
       {

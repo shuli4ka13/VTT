@@ -313,6 +313,115 @@ function unifyCompendium(compendium: Compendium, renames: Renames): Compendium {
 }
 
 /**
+ * Границы значения переезжают с шага «применить» на САМО поле.
+ *
+ * Старый формат писал floor/ceiling на каждом эффекте — и в образцах D&D
+ * «не ниже нуля» повторялся трижды на трёх эффектах, трогающих одни ХП.
+ * Это природа поля, а не эффекта: hp_current ⩾ 0 и ⩽ hp_max, кто бы его
+ * ни менял. Движок с тех пор зажимает по границам поля (steps/apply.ts),
+ * а шаговых floor/ceiling не читает.
+ *
+ * Куда писать границу, говорит мишень шага: тег — прямо в поле; параметр —
+ * во все поля, которыми этот параметр заполняют привязки родов, свои
+ * активности записей и ярлыки действий. Конфликт (у поля уже другая
+ * граница) не перетирается: первая объявленная остаётся.
+ */
+export function unifyBounds(
+  world: { system: System; compendium?: Compendium },
+): { system: System; compendium?: Compendium } {
+  const system = world.system as unknown as Loose;
+  const effects = (system.effects ?? {}) as Record<string, Loose>;
+
+  /** Чем заполняют параметр `key` эффекта `effectId` — собрать теги по миру. */
+  const tagsOfParam = (effectId: string, key: string): string[] => {
+    const out = new Set<string>();
+    const take = (binding: Loose | undefined) => {
+      if (!binding || String(binding.effect) !== effectId) return;
+      const arg = (binding.args as Loose | undefined)?.[key];
+      if (typeof arg === 'string' && arg) out.add(arg);
+    };
+    for (const record of Object.values((system.records ?? {}) as Record<string, Loose>)) {
+      for (const b of (record.bindings as Loose[] | undefined) ?? []) take(b);
+    }
+    for (const list of [world.compendium?.items, world.compendium?.actions]) {
+      for (const record of (list ?? []) as Loose[]) {
+        take(record);
+        for (const b of (record.activities as Loose[] | undefined) ?? []) take(b);
+      }
+    }
+    return [...out];
+  };
+
+  const boundValue = (ref: unknown): number | string | null => {
+    if (!ref || typeof ref !== 'object') return null;
+    const r = ref as Loose;
+    if ('const' in r && typeof r.const === 'number') return r.const;
+    if ('tag' in r) return `#${String(r.tag)}`;
+    if ('expr' in r) return String(r.expr);
+    return null;
+  };
+
+  // Первый проход: собрать границы по тегам и запомнить, какие шаги
+  // удалось перевести (только их и чистим — непереводимое честнее оставить
+  // мёртвыми данными, чем потерять молча).
+  const bounds = new Map<string, { min?: number | string; max?: number | string }>();
+  const translated = new Set<Loose>();
+
+  for (const [effectId, effect] of Object.entries(effects)) {
+    for (const step of (effect.steps as Loose[] | undefined) ?? []) {
+      if (step.type !== 'apply' || (step.floor === undefined && step.ceiling === undefined)) continue;
+      const target = step.target as Loose | undefined;
+      const tags = target && 'tag' in target ? [String(target.tag)]
+        : target && 'param' in target ? tagsOfParam(effectId, String(target.param))
+          : [];
+      if (!tags.length) continue;
+      const min = boundValue(step.floor);
+      const max = boundValue(step.ceiling);
+      if ((step.floor !== undefined && min === null) || (step.ceiling !== undefined && max === null)) continue;
+      for (const tag of tags) {
+        const entry = bounds.get(tag) ?? {};
+        if (min !== null) entry.min = entry.min ?? min;
+        if (max !== null) entry.max = entry.max ?? max;
+        bounds.set(tag, entry);
+      }
+      translated.add(step);
+    }
+  }
+
+  if (!translated.size && !bounds.size) return world;
+
+  // Второй проход: пересобрать без мутации входа — шаги без floor/ceiling,
+  // поля с границами. Уже объявленная на поле граница не перетирается.
+  const nextEffects = Object.fromEntries(Object.entries(effects).map(([id, effect]) => {
+    const steps = ((effect.steps as Loose[] | undefined) ?? []).map(step => {
+      if (!translated.has(step)) return step;
+      const { floor: _floor, ceiling: _ceiling, ...rest } = step;
+      return rest;
+    });
+    return [id, { ...effect, steps }];
+  }));
+
+  const fields = ((system.fields ?? []) as Loose[]).map(field => {
+    const entry = bounds.get(String(field.tag));
+    const value = field.value as Loose | undefined;
+    if (!entry || !value || value.kind !== 'stored') return field;
+    return {
+      ...field,
+      value: {
+        ...value,
+        ...(entry.min !== undefined && value.min === undefined ? { min: entry.min } : {}),
+        ...(entry.max !== undefined && value.max === undefined ? { max: entry.max } : {}),
+      },
+    };
+  });
+
+  return {
+    ...world,
+    system: { ...(system as object), fields, effects: nextEffects } as unknown as System,
+  };
+}
+
+/**
  * Перевод ЦЕЛОГО мира: система плюс компендиум одним вызовом. Конвертер
  * обязан видеть весь мир — {prop} разрешается и из привязки рода, и из
  * собственной активности записи компендиума, и переносить только систему
@@ -324,5 +433,6 @@ export function unifyWorld(
   const { system, renames } = unifySystem(world.system);
   const withRefs = unifyCompendium(world.compendium, renames);
   const edited = convertRollEdits(system, withRefs);
-  return { system: edited.system, compendium: edited.compendium ?? withRefs };
+  const bounded = unifyBounds({ system: edited.system, compendium: edited.compendium ?? withRefs });
+  return { system: bounded.system, compendium: bounded.compendium ?? withRefs };
 }

@@ -204,26 +204,28 @@ group('шаг «сравнение»', () => {
 });
 
 group('шаг «применить»', () => {
-  test('вычесть с полом: хиты падают, журнал изменений полон', () => {
-    const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { const: 8 }, floor: { const: 0 } }]);
+  // Пола и потолка у ШАГА больше нет: границы объявляет САМО поле
+  // (hp_current в образце: min 0, max #hp_max), и движок зажимает по ним
+  // каждое применение — эффекту объявлять нечего.
+  test('вычесть: хиты падают, журнал изменений полон', () => {
+    const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { const: 8 } }]);
     deepEq(out.changes, [{ tag: 'hp_current', from: 21, to: 13 }]);
     eq(out.sheet.values.hp_current, 13);
     eq(mirra.values.hp_current, 21, 'исходный чарник не тронут');
   });
 
-  test('пол держит: хиты не уходят ниже нуля', () => {
+  test('нижняя граница поля держит: хиты не уходят ниже нуля', () => {
     const weak = { ...mirra, values: { ...mirra.values, hp_current: 3 } };
-    const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { const: 8 }, floor: { const: 0 } }],
+    const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { const: 8 } }],
       { targetSheet: weak });
-    eq(out.sheet.values.hp_current, 0);
+    eq(out.sheet.values.hp_current, 0, 'min поля, эффект о нуле не знает');
   });
 
-  test('прибавить с потолком-тегом: лечение не выше максимума хитов', () => {
+  test('верхняя граница-формула: лечение не выше максимума хитов', () => {
     const wounded = { ...mirra, values: { ...mirra.values, hp_current: 15 } };
-    const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'add', value: { const: 10 }, ceiling: { tag: 'hp_max' } }],
+    const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'add', value: { const: 10 } }],
       { targetSheet: wounded });
-    eq(out.sheet.values.hp_current, 21, '15 + 10, но потолок 21');
-    eq(out.trace[0].ceiling, 21, 'потолок посчитан листом цели и виден в трассе');
+    eq(out.sheet.values.hp_current, 21, '15 + 10, но max поля — «#hp_max» листа цели');
   });
 
   test('присвоить: направление «set» пишет величину как есть', () => {
@@ -233,7 +235,7 @@ group('шаг «применить»', () => {
 
   test('модификаторы цели: сопротивление половинит входящее, округляя вниз', () => {
     const stony = { ...mirra, effects: [{ effectId: 'stoneskin' }] };
-    const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { const: 9 }, floor: { const: 0 }, targetModifiers: true }],
+    const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { const: 9 }, targetModifiers: true }],
       { targetSheet: stony });
     eq(out.sheet.values.hp_current, 17, '21 минус floor(9/2)');
     eq(out.trace[0].incoming, 9, 'в трассе видно, что пришло…');

@@ -222,7 +222,7 @@ const PARAMETRIC = {
     { id: 'dmg', type: 'amount', source: 'roll',
       dice: { prop: 'damage_dice' }, bonus: { param: 'damage_bonus' } },
     { type: 'apply', target: { param: 'apply_to' }, direction: 'subtract',
-      value: { ref: 'dmg' }, floor: { const: 0 }, targetModifiers: true },
+      value: { ref: 'dmg' }, targetModifiers: true },
   ],
 };
 const paramSys = { ...system, effects: { ...system.effects, parametric: PARAMETRIC } };

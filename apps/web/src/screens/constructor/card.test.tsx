@@ -130,23 +130,15 @@ describe('GroupCard', () => {
     expect((draft as any).versus).toEqual({ expr: '#что-то' });
   });
 
-  // STEP_SPECS держит floor/ceiling на ['const', 'tag', 'empty'] — карточка
-  // разрешала только 'tag', как у трёх эффектов образца (floor: {const: 0}).
-  it('слот «не ниже» принимает число', () => {
+  // Пола и потолка у карточки больше НЕТ: границы — свойство самого поля
+  // (min/max на вкладке «Лист»), движок зажимает каждое применение сам.
+  it('в тонкостях изменения нет ни «не ниже», ни «не выше»', () => {
     const steps = attackSteps();
     const group = groupSteps(steps)[1]!;
-    const applyIndex = group.amount ? 1 : 0;
-    const edits: Array<{ at: number; change: (draft: Step) => void }> = [];
     render(<GroupCard group={group} position={2} system={system} effect={effect}
-      earlier={[]} problem={null} edit={(at, change) => edits.push({ at, change })} onDelete={() => {}} />);
-
-    const floor = screen.getByLabelText('не ниже');
-    fireEvent.change(floor, { target: { value: '0' } });
-    fireEvent.keyDown(floor, { key: 'Enter' });
-
-    const draft = structuredClone(steps[2]!);
-    edits.filter(e => e.at === applyIndex).forEach(e => e.change(draft));
-    expect((draft as any).floor).toEqual({ const: 0 });
+      earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
+    expect(screen.queryByText('не ниже')).toBeNull();
+    expect(screen.queryByText('не выше')).toBeNull();
   });
 
   it('пересказ не отрывает точку от слова', () => {

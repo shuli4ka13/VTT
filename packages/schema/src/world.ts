@@ -48,11 +48,18 @@ export const slotRef = z.union([
 
 // ── поля листа ──────────────────────────────────────────────────────────
 
+// Границы — свойство САМОГО поля, а не каждого эффекта, который его трогает:
+// «ХП не ниже нуля и не выше максимума» — природа ресурса, и движок зажимает
+// значение при каждом применении. Строка — формула («#hp_max»), число — число.
+const bound = z.union([z.number(), z.string()]);
+
 export const fieldValue = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('stored'),
     type: z.enum(['number', 'text', 'boolean']),
     default: z.union([z.number(), z.string(), z.boolean()]),
+    min: bound.optional(),
+    max: bound.optional(),
   }),
   z.object({ kind: z.literal('formula'), expr: z.string() }),
   z.object({ kind: z.literal('table'), table: z.string(), arg: z.string() }),

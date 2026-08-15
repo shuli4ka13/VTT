@@ -81,8 +81,9 @@ group('две системы одними слотами', () => {
       const env = send('healing-word', ctx5(mirra, queue(2)));
       const { sheet, report } = receive(env, ctx5(wounded, queue()));
       eq(report.trace[1].amount, 5, 'кость 2 плюс Харизма лекаря 3');
-      eq(sheet.values.hp_current, 44, '40 + 5, но потолок 44');
-      eq(report.trace[1].ceiling, 44, 'потолок посчитан листом цели');
+      // Потолок — не слот эффекта, а граница САМОГО поля (max: «#hp_max»),
+      // посчитанная листом цели: у эффекта лечения про максимум ни слова.
+      eq(sheet.values.hp_current, 44, '40 + 5, но max поля — 44');
     });
 
     test('лечение — не урон с минусом: сопротивление его не половинит', () => {

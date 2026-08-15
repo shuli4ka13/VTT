@@ -197,6 +197,30 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
               />
             </Field>
           </div>
+          {field.value.type === 'number' ? (
+            // Границы — свойство САМОГО поля, не эффектов: «не ниже нуля,
+            // не выше максимума» — природа ресурса. Движок зажимает каждое
+            // применение; эффектам объявлять нечего. Число или формула-ссылка
+            // на поле максимума.
+            <div className="row">
+              <Field label="Не ниже" hint="Пусто — границы нет. Число или формула.">
+                <BoundInput
+                  value={field.value.min}
+                  onChange={min => edit(draft => {
+                    if (draft.value.kind === 'stored') draft.value.min = min;
+                  })}
+                />
+              </Field>
+              <Field label="Не выше" hint="Потолок лечения — ссылка на поле максимума.">
+                <BoundInput
+                  value={field.value.max}
+                  onChange={max => edit(draft => {
+                    if (draft.value.kind === 'stored') draft.value.max = max;
+                  })}
+                />
+              </Field>
+            </div>
+          ) : null}
         </Card>
       ) : null}
 
@@ -282,6 +306,29 @@ const metaOf = (value: FieldValue) =>
  * означало бы разрешённое удаление и висячую ссылку — ту самую, из-за которой
  * в черновике бонусы «никуда не резолвились».
  */
+/**
+ * Граница поля: число хранится числом, формула — строкой, пусто — undefined.
+ * Свой черновик, чтобы «#hp_» на полпути не превращалось в NaN.
+ */
+function BoundInput({ value, onChange }: {
+  value: number | string | undefined;
+  onChange: (next: number | string | undefined) => void;
+}) {
+  const commit = (raw: string) => {
+    const text = raw.trim();
+    if (!text) return onChange(undefined);
+    onChange(/^-?\d+(\.\d+)?$/.test(text) ? Number(text) : text);
+  };
+  return (
+    <Input
+      value={value === undefined ? '' : String(value)}
+      mono
+      placeholder="число или #поле"
+      onChange={commit}
+    />
+  );
+}
+
 function whoUses(system: System, tag: string): string[] {
   const marker = new RegExp(`#${tag}(?![\\p{L}\\p{N}_])`, 'u');
   const found: string[] = [];
