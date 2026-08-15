@@ -224,3 +224,51 @@ describe('старый мир открывается', () => {
     expect(res.body.id).toBeTruthy();
   });
 });
+
+describe('комната, созданная до смены модели', () => {
+  // Комнаты в БД переживают релизы движка. Эта — со «старым» миром: пол
+  // урона лежит ШАГОМ (floor на apply), как писали до переезда границ на
+  // поля. Движок шаговых floor больше не читает — без миграции при чтении
+  // хиты уходили в минус молча (живой баг стенда: «ХП: 0 → −3»).
+  it('старый floor на шаге держит хиты не ниже нуля через миграцию', async () => {
+    const login = await http().post('/auth/login').send({ name: 'Хранитель' });
+    const auth = (r: request.Test) => r.set('Authorization', `Bearer ${login.body.token}`);
+
+    const world = {
+      system: {
+        id: 'legacy-floor', name: 'Старый пол',
+        fields: [
+          { tag: 'hp', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 5 } },
+        ],
+        effects: {
+          strike: {
+            label: 'Удар', activation: 'manual', params: [],
+            steps: [{
+              type: 'apply', target: { tag: 'hp' }, direction: 'subtract',
+              value: { const: 8 }, floor: { const: 0 },
+            }],
+          },
+        },
+      },
+      compendium: {
+        items: [],
+        actions: [{ id: 'hit', rk: 'приём', label: 'Удар', effect: 'strike', args: {} }],
+      },
+      sheets: [
+        { id: 'a', systemId: 'legacy-floor', kind: 'pc', name: 'А', values: { hp: 5 }, equipped: [], actions: ['hit'], effects: [] },
+        { id: 'b', systemId: 'legacy-floor', kind: 'pc', name: 'Б', values: { hp: 5 }, equipped: [], actions: [], effects: [] },
+      ],
+    };
+
+    const pub = await auth(http().post('/worlds')).send({ title: 'Старый пол', world }).expect(201);
+    const made = await auth(http().post('/rooms')).send({ worldId: pub.body.id, title: 'Архив' }).expect(201);
+    const roomId = made.body.id;
+
+    const res = await auth(http().post(`/rooms/${roomId}/act`))
+      .send({ roomId, actionId: 'hit:0', fromId: 'a', toId: 'b' })
+      .expect(201);
+
+    const hit = res.body.sheets.find((s: { id: string }) => s.id === 'b');
+    expect(hit.values.hp).toBe(0);
+  });
+});

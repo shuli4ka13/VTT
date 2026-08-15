@@ -17,6 +17,7 @@ import type {
   RoomState, RoomSummary, RoomDelta, ActIntent, Sheet, System, Compendium, StoredValue,
 } from '@vtt/schema';
 import { exchange } from '@vtt/engine/events/exchange';
+import { unifyWorld } from '@vtt/engine/model/unify';
 import { effectLabelOf } from '@vtt/engine/events/envelope';
 import { findEffect, usesMax } from '@vtt/engine/engine/effects';
 import { breakReasonWord } from '@vtt/engine/engine/steps/index';
@@ -33,6 +34,21 @@ export class RoomsService {
     @Inject(DIE) private readonly die: (sides: number) => number,
     @Inject(WorldsService) private readonly worldsService: WorldsService,
   ) {}
+
+  /**
+   * Мир комнаты — через объявленные миграции движка. Комната в БД могла быть
+   * создана до смены модели (границы полей вместо шаговых floor/ceiling,
+   * форма ссылок на записи) — движок старые формы уже не читает, и без
+   * миграции хиты уходили в минус молча. Мигрируем при чтении, а не в БД:
+   * данные комнаты не трогаем, что и снимает вопрос отката.
+   */
+  private worldOf(room: { system: string; compendium: string }): { system: System; compendium: Compendium } {
+    const world = unifyWorld({
+      system: JSON.parse(room.system) as System,
+      compendium: JSON.parse(room.compendium) as Compendium,
+    });
+    return { system: world.system, compendium: world.compendium as Compendium };
+  }
 
   /** Комната — КОПИЯ мира: партия играет в свой экземпляр, публикация не мутирует. */
   async create(userId: string, worldId: string, title: string): Promise<RoomSummary> {
@@ -78,8 +94,7 @@ export class RoomsService {
     return {
       id: room.id,
       title: room.title,
-      system: JSON.parse(room.system) as System,
-      compendium: JSON.parse(room.compendium) as Compendium,
+      ...this.worldOf(room),
       sheets: sheetRows.map(r => JSON.parse(r.data) as Sheet),
       members: people,
       log: await this.log(roomId),
@@ -96,8 +111,7 @@ export class RoomsService {
       throw new ForbiddenException('вы не в этой комнате');
     }
 
-    const system = JSON.parse(room.system) as System;
-    const compendium = JSON.parse(room.compendium) as Compendium;
+    const { system, compendium } = this.worldOf(room);
     const rows = await this.db.select().from(roomSheets)
       .where(eq(roomSheets.roomId, intent.roomId));
     const sheets = rows.map(r => JSON.parse(r.data) as Sheet);
@@ -141,7 +155,7 @@ export class RoomsService {
     const room = await this.requireRoom(roomId);
     if (!await this.memberOf(roomId, userId)) throw new ForbiddenException('вы не в этой комнате');
 
-    const system = JSON.parse(room.system) as System;
+    const { system } = this.worldOf(room);
     const field = system.fields.find(f => f.tag === tag);
     if (!field) throw new BadRequestException(`система не объявляет поля «${tag}»`);
     if (field.value.kind !== 'stored') {
@@ -173,7 +187,7 @@ export class RoomsService {
     const room = await this.requireRoom(roomId);
     if (!await this.memberOf(roomId, userId)) throw new ForbiddenException('вы не в этой комнате');
 
-    const system = JSON.parse(room.system) as System;
+    const { system } = this.worldOf(room);
     // Через схему, а не голым объектом: лист обязан быть валидным DTO
     // с рождения — иначе он падал бы позже, на первом же ходе.
     const sheet = W.sheet.parse({
@@ -206,8 +220,7 @@ export class RoomsService {
     const room = await this.requireRoom(roomId);
     if (!await this.memberOf(roomId, userId)) throw new ForbiddenException('вы не в этой комнате');
 
-    const system = JSON.parse(room.system) as System;
-    const compendium = JSON.parse(room.compendium) as Compendium;
+    const { system, compendium } = this.worldOf(room);
 
     // Ссылка обязана вести в объявленное — иначе на листе повиснет пустота,
     // которая упадёт при первом же ходе, у игрока за столом.
