@@ -1,0 +1,24 @@
+# VTT — стенд конструктора ролевых систем (отдельный проект, не часть CDM).
+# Один контейнер: Node отдаёт статику фронта, REST и вебсокет; sqlite в томе.
+# Образ приезжает готовым (docker save | ssh docker load) — сборки на машине нет.
+# Исходники: https://github.com/shuli4ka13/VTT (ветка rules-constructor, deploy/).
+
+name: vtt
+
+services:
+  vtt:
+    image: vtt-poligon:latest
+    container_name: vtt-poligon
+    ports:
+      # 127.0.0.1 — если наружу выводит nginx поддоменом;
+      # убрать префикс — если открывается порт в security group.
+      - "${VTT_BIND:-0.0.0.0}:${VTT_PORT:-8100}:8100"
+    environment:
+      VTT_AUTH: "${VTT_AUTH:?логин:пароль калитки, см. .env.example}"
+    volumes:
+      - vtt_data:/data
+    mem_limit: 300m
+    restart: unless-stopped
+
+volumes:
+  vtt_data:
