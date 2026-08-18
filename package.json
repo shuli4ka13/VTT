@@ -8,6 +8,6 @@
     "test:poc": "node tests/run.js"
   },
   "devDependencies": {
-    "tsx": "^4.23.11"
+    "tsx": "^4.23.12"
   }
 }

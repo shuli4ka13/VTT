@@ -11,26 +11,26 @@
     "seed": "tsx src/seed-run.ts"
   },
   "dependencies": {
-    "@nestjs/common": "^11.0.7",
-    "@nestjs/core": "^11.0.7",
-    "@nestjs/platform-express": "^11.0.7",
-    "@nestjs/platform-ws": "^11.0.7",
-    "@nestjs/websockets": "^11.0.7",
+    "@nestjs/common": "^11.2.1",
+    "@nestjs/core": "^11.2.1",
+    "@nestjs/platform-express": "^11.2.1",
+    "@nestjs/platform-ws": "^11.2.1",
+    "@nestjs/websockets": "^11.2.1",
     "@vtt/engine": "workspace:*",
     "@vtt/schema": "workspace:*",
-    "drizzle-orm": "^0.39.1",
+    "drizzle-orm": "^0.45.2",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1",
-    "ws": "^8.18.0",
-    "zod": "^3.24.1"
+    "rxjs": "^7.8.2",
+    "ws": "^8.21.3",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@nestjs/testing": "^11.1.28",
-    "@types/node": "^22.10.7",
+    "@nestjs/testing": "^11.2.1",
+    "@types/node": "^24.13.3",
     "@types/supertest": "^7.2.1",
-    "@types/ws": "^8.5.14",
-    "supertest": "^7.0.0",
-    "typescript": "^5.7.2",
-    "vitest": "^3.0.5"
+    "@types/ws": "^8.18.1",
+    "supertest": "^7.2.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
   }
 }

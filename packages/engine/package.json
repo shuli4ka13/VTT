@@ -15,8 +15,8 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "typescript": "^5.7.2",
-    "vitest": "^3.0.5",
-    "@vtt/schema": "workspace:*"
+    "@vtt/schema": "workspace:*",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
   }
 }

@@ -258,7 +258,7 @@ export const bindingArg = z.union([
 export const binding = z.object({
   label: z.string().optional(),
   effect: z.string().min(1),
-  args: z.record(bindingArg).optional(),
+  args: z.record(z.string(), bindingArg).optional(),
 }).passthrough();
 
 export const recordKind = z.object({
@@ -289,20 +289,20 @@ export const system = z.object({
   id: z.string().optional(),
   name: z.string().optional(),
   fields: z.array(field),
-  effects: z.record(effect),
+  effects: z.record(z.string(), effect),
   /** Пассивные эффекты, включённые на ВСЕХ: ссылки, не копии. */
   room_rules: z.array(z.string()).optional(),
-  records: z.record(recordKind).optional(),
-  constants: z.record(systemConstant).optional(),
-  tables: z.record(rangeTable).optional(),
+  records: z.record(z.string(), recordKind).optional(),
+  constants: z.record(z.string(), systemConstant).optional(),
+  tables: z.record(z.string(), rangeTable).optional(),
   rolls: z.array(z.object({ tag: z.string(), label: z.string() })).optional(),
   /** Словарь «Правки броска»: записи с именами автора, ссылаются модификаторы. */
-  roll_edits: z.record(rollEdit).optional(),
-  action_types: z.record(z.object({
+  roll_edits: z.record(z.string(), rollEdit).optional(),
+  action_types: z.record(z.string(), z.object({
     label: z.string(),
     icon: z.string().optional(),
   }).passthrough()).optional(),
-  advantage: z.object({ methods: z.record(z.boolean()).optional() }).passthrough().optional(),
+  advantage: z.object({ methods: z.record(z.string(), z.boolean()).optional() }).passthrough().optional(),
 }).passthrough();
 
 // ── чарник ──────────────────────────────────────────────────────────────
@@ -322,7 +322,7 @@ export const sheet = z.object({
   /** Персонаж игрока или ведущего: метка владения, а не правило системы. */
   kind: z.enum(['pc', 'npc']),
   name: z.string(),
-  values: z.record(storedValue),
+  values: z.record(z.string(), storedValue),
   /** Ссылки по id, не копии: копия записи в чарнике — уже расхождение. */
   equipped: z.array(z.string()),
   effects: z.array(wornEffect),
@@ -337,7 +337,7 @@ export const compendiumRecord = z.object({
   rk: z.string().optional(),
   label: z.string().optional(),
   description: z.string().optional(),
-  props: z.record(z.unknown()).optional(),
+  props: z.record(z.string(), z.unknown()).optional(),
   modifiers: z.array(modifier).optional(),
   /** Своя привязка перебивает привязку рода — так живут штучные вещи. */
   activities: z.array(binding).optional(),
