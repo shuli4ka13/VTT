@@ -6,7 +6,8 @@
 
 import { api } from '@vtt/schema';
 import type {
-  Session, WorldSummary, RoomSummary, RoomState, ActIntent, RoomDelta, World,
+  Session, SystemSummary, PublishedSystem, CompendiumSummary, PublishedCompendium,
+  WorldSummary, RoomSummary, RoomState, ActIntent, RoomDelta, System, Compendium, Sheet,
 } from '@vtt/schema';
 import { z } from 'zod';
 import type { ZodType } from 'zod';
@@ -71,11 +72,33 @@ const post = <S extends ZodType>(path: string, schema: S, body: unknown) =>
 export const login = (name: string): Promise<Session> =>
   post('/auth/login', api.session, { name });
 
+export const listSystems = (): Promise<SystemSummary[]> =>
+  call('/systems', api.systemSummary.array());
+
+export const getSystem = (id: string): Promise<PublishedSystem> =>
+  call(`/systems/${id}`, api.publishedSystem);
+
+export const publishSystem = (title: string, system: System): Promise<{ id: string }> =>
+  post('/systems', publishedId, { title, system });
+
+export const listCompendiums = (systemId?: string): Promise<CompendiumSummary[]> =>
+  call(`/compendiums${systemId ? `?systemId=${encodeURIComponent(systemId)}` : ''}`,
+    api.compendiumSummary.array());
+
+export const getCompendium = (id: string): Promise<PublishedCompendium> =>
+  call(`/compendiums/${id}`, api.publishedCompendium);
+
+export const publishCompendium = (
+  title: string, systemId: string, compendium: Compendium,
+): Promise<{ id: string }> => post('/compendiums', publishedId, { title, systemId, compendium });
+
 export const listWorlds = (): Promise<WorldSummary[]> =>
   call('/worlds', api.worldSummary.array());
 
-export const publishWorld = (title: string, world: World): Promise<{ id: string }> =>
-  post('/worlds', publishedId, { title, world });
+export const publishWorld = (
+  title: string, systemId: string, compendiumIds: string[], sheets: Sheet[],
+): Promise<{ id: string }> => post('/worlds', publishedId,
+  { title, systemId, compendiumIds, sheets });
 
 export const listRooms = (): Promise<RoomSummary[]> =>
   call('/rooms', api.roomSummary.array());

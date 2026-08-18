@@ -31,7 +31,13 @@ export async function seed(url: string, owner: string): Promise<string[]> {
       console.log(`· «${title}» уже на стенде — пропущен`);
       continue;
     }
-    await call(`${url}/worlds`, 'POST', token, { title, world });
+    const system = await call(`${url}/systems`, 'POST', token,
+      { title, system: world.system }) as { id: string };
+    const compendium = await call(`${url}/compendiums`, 'POST', token,
+      { title: `${title} · основная книга`, systemId: system.id, compendium: world.compendium }) as { id: string };
+    await call(`${url}/worlds`, 'POST', token, {
+      title, systemId: system.id, compendiumIds: [compendium.id], sheets: world.sheets,
+    });
     console.log(`✓ «${title}» опубликован (автор: ${owner})`);
     published.push(title);
   }

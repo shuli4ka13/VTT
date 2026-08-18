@@ -187,6 +187,16 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
 
   const items = room.compendium.items ?? [];
   const actions = room.compendium.actions ?? [];
+  const itemDetails = (item: (typeof items)[number]): string[] => {
+    const kind = room.system.records?.[String(item.rk)];
+    return (kind?.props ?? [])
+      .filter(prop => item.props?.[prop.key] !== undefined && item.props[prop.key] !== '')
+      .map(prop => {
+        const value = String(item.props?.[prop.key]);
+        const shown = String(prop.kind) === 'dice' ? value.replace(/d/gi, 'к') : value;
+        return `${prop.label ?? prop.key}: ${shown}`;
+      });
+  };
   // Вешают пассивные и триггерные; активируемые — применяют, их тут нет.
   const hangable = Object.entries(room.system.effects)
     .filter(([, effect]) => (effect.activation ?? 'manual') !== 'manual');
@@ -207,16 +217,21 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
         {items.length === 0
           ? <span className="faint">В компендиуме мира нет предметов.</span>
           : (
-            <div className="inline inline--tight">
-              {items.map(item => (
-                <Chip
-                  key={item.id}
-                  active={equipped.has(item.id)}
-                  onClick={() => toggle('equipped', item.id, !equipped.has(item.id))}
-                >
-                  {item.label ?? item.id}
-                </Chip>
-              ))}
+            <div className="stack stack--tight">
+              {items.map(item => {
+                const details = itemDetails(item);
+                return (
+                  <div key={item.id}>
+                    <Chip
+                      active={equipped.has(item.id)}
+                      onClick={() => toggle('equipped', item.id, !equipped.has(item.id))}
+                    >
+                      {item.label ?? item.id}
+                    </Chip>
+                    {details.length ? <div className="faint">{details.join(' · ')}</div> : null}
+                  </div>
+                );
+              })}
             </div>
           )}
       </Fold>

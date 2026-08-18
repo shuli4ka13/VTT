@@ -16,9 +16,16 @@ CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS sessions (
   token TEXT PRIMARY KEY, user_id TEXT NOT NULL, created_at TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS worlds (
+CREATE TABLE IF NOT EXISTS published_systems (
   id TEXT PRIMARY KEY, title TEXT NOT NULL, owner_id TEXT NOT NULL,
   data TEXT NOT NULL, updated_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS published_compendiums (
+  id TEXT PRIMARY KEY, title TEXT NOT NULL, owner_id TEXT NOT NULL,
+  system_id TEXT NOT NULL, data TEXT NOT NULL, updated_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS worlds (
+  id TEXT PRIMARY KEY, title TEXT NOT NULL, owner_id TEXT NOT NULL,
+  system_id TEXT NOT NULL, compendium_ids TEXT NOT NULL,
+  sheets TEXT NOT NULL, updated_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS rooms (
   id TEXT PRIMARY KEY, title TEXT NOT NULL, world_id TEXT NOT NULL,
   system TEXT NOT NULL, compendium TEXT NOT NULL, created_at TEXT NOT NULL);

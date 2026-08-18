@@ -57,6 +57,16 @@ const post = (path: string, body: object, token?: string) =>
     body: JSON.stringify(body),
   }).then(r => r.json());
 
+const publish = async (title: string, token: string, worldSheets: unknown[]) => {
+  const system = await post('/systems', { title, system: dnd }, token);
+  const book = await post('/compendiums', {
+    title: `${title} · книга`, systemId: system.id, compendium,
+  }, token);
+  return post('/worlds', {
+    title, systemId: system.id, compendiumIds: [book.id], sheets: worldSheets,
+  }, token);
+};
+
 beforeAll(async () => {
   db = openDatabase(':memory:');
   const ref = await Test.createTestingModule({
@@ -85,11 +95,8 @@ describe('канал стола', () => {
     const gm = await post('/auth/login', { name: 'Ведущий' });
     const player = await post('/auth/login', { name: 'Игрок' });
 
-    const world = {
-      system: dnd, compendium,
-      sheets: sheets.filter((s: { systemId: string }) => s.systemId === dnd.id),
-    };
-    const published = await post('/worlds', { title: 'Мир', world }, gm.token);
+    const published = await publish('Мир', gm.token,
+      sheets.filter((s: { systemId: string }) => s.systemId === dnd.id));
     const room = await post('/rooms', { worldId: published.id, title: 'Стол' }, gm.token);
 
     const first = await open();
@@ -149,8 +156,7 @@ describe('партия строит себя сама', () => {
     const gm = await post('/auth/login', { name: 'Мастерица' });
 
     // Мир БЕЗ листов: конструктор отдаёт систему, героев делает партия.
-    const world = { system: dnd, compendium, sheets: [] };
-    const published = await post('/worlds', { title: 'Пустой мир', world }, gm.token);
+    const published = await publish('Пустой мир', gm.token, []);
     const room = await post('/rooms', { worldId: published.id, title: 'Стол с нуля' }, gm.token);
 
     const socket = await open();

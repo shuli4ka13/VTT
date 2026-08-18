@@ -16,13 +16,32 @@ export const sessions = sqliteTable('sessions', {
   createdAt: text('created_at').notNull(),
 });
 
+/** Опубликованные сущности — версии: повторная публикация создаёт новую строку. */
+export const publishedSystems = sqliteTable('published_systems', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  ownerId: text('owner_id').notNull(),
+  data: text('data').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
+
+export const publishedCompendiums = sqliteTable('published_compendiums', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  ownerId: text('owner_id').notNull(),
+  systemId: text('system_id').notNull(),
+  data: text('data').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
+
 /** Опубликованный мир. Автор — не роль из выпадашки, а владение. */
 export const worlds = sqliteTable('worlds', {
   id: text('id').primaryKey(),
   title: text('title').notNull(),
   ownerId: text('owner_id').notNull(),
-  /** Весь мир одним JSON, валидируемым схемой на входе и выходе. */
-  data: text('data').notNull(),
+  systemId: text('system_id').notNull(),
+  compendiumIds: text('compendium_ids').notNull(),
+  sheets: text('sheets').notNull(),
   updatedAt: text('updated_at').notNull(),
 });
 

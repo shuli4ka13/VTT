@@ -7,7 +7,7 @@
 // конверта: отправитель не считает за получателя.
 
 import { z } from 'zod';
-import { system, compendium, sheet, world } from './world.ts';
+import { system, compendium, sheet } from './world.ts';
 
 // ── вход ────────────────────────────────────────────────────────────────
 
@@ -21,17 +21,52 @@ export const session = z.object({
   token: z.string(),
 });
 
+// ── каталог автора ──────────────────────────────────────────────────────
+
+export const publishSystemRequest = z.object({
+  title: z.string().min(1).max(120),
+  system,
+});
+
+export const systemSummary = z.object({
+  id: z.string(), title: z.string(), systemName: z.string(),
+  authorName: z.string(), updatedAt: z.string(),
+});
+
+export const publishedSystem = z.object({
+  id: z.string(), title: z.string(), system,
+});
+
+export const publishCompendiumRequest = z.object({
+  title: z.string().min(1).max(120),
+  systemId: z.string().min(1),
+  compendium,
+});
+
+export const compendiumSummary = z.object({
+  id: z.string(), title: z.string(), systemId: z.string(),
+  systemName: z.string(), authorName: z.string(),
+  itemCount: z.number().int().nonnegative(), updatedAt: z.string(),
+});
+
+export const publishedCompendium = z.object({
+  id: z.string(), title: z.string(), systemId: z.string(), compendium,
+});
+
 // ── миры ────────────────────────────────────────────────────────────────
 
 export const publishRequest = z.object({
   title: z.string().min(1).max(120),
-  world,
+  systemId: z.string().min(1),
+  compendiumIds: z.array(z.string().min(1)),
+  sheets: z.array(sheet),
 });
 
 export const worldSummary = z.object({
   id: z.string(),
   title: z.string(),
   systemName: z.string(),
+  compendiumCount: z.number().int().nonnegative(),
   authorName: z.string(),
   sheetCount: z.number().int().nonnegative(),
   updatedAt: z.string(),
@@ -122,6 +157,12 @@ export const clientMessage = z.discriminatedUnion('type', [
 
 export type LoginRequest = z.infer<typeof loginRequest>;
 export type Session = z.infer<typeof session>;
+export type PublishSystemRequest = z.infer<typeof publishSystemRequest>;
+export type SystemSummary = z.infer<typeof systemSummary>;
+export type PublishedSystem = z.infer<typeof publishedSystem>;
+export type PublishCompendiumRequest = z.infer<typeof publishCompendiumRequest>;
+export type CompendiumSummary = z.infer<typeof compendiumSummary>;
+export type PublishedCompendium = z.infer<typeof publishedCompendium>;
 export type PublishRequest = z.infer<typeof publishRequest>;
 export type WorldSummary = z.infer<typeof worldSummary>;
 export type CreateRoomRequest = z.infer<typeof createRoomRequest>;

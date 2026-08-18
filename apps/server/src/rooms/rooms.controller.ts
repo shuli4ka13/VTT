@@ -26,7 +26,8 @@ export class RoomsController {
   @UsePipes(new ZodValidationPipe(api.publishRequest))
   async publish(@Body() body: PublishRequest, @Headers('authorization') header?: string) {
     const { userId } = await this.auth.whoIs(bearer(header));
-    return this.worldsService.publish(userId, body.title, body.world);
+    return this.worldsService.publish(
+      userId, body.title, body.systemId, body.compendiumIds, body.sheets);
   }
 
   // ── комнаты ───────────────────────────────────────────────────────────

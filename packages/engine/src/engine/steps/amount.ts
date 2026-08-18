@@ -50,13 +50,17 @@ export function lint(step: StepData) {
 }
 
 export function traceLine(t: any) {
-  const parts = [];
-  if (t.rolls.length) parts.push(`[${t.rolls.join(', ')}]`);
-  if (t.flat) parts.push(String(t.flat));
+  const parts: string[] = [];
+  if (t.rolls.length) {
+    const notation = String(t.notation ?? '').replace(/d/gi, 'к');
+    parts.push(`${notation ? `${notation} ` : ''}[${t.rolls.join(', ')}]`);
+  }
+  if (t.flat || t.source === 'item') parts.push(String(t.flat));
   if (t.bonus) parts.push(String(t.bonus));
-  if (t.margin) parts.push(`превышение ${t.margin}`);
+  if (t.margin) parts.push(`запас ${t.margin}`);
   if (!parts.length) parts.push('0');
-  return `величина: ${parts.join(' + ')} = ${t.total}`;
+  const formula = parts.join(' + ').replace(/\+ -/g, '− ');
+  return `расчёт: ${formula} = ${t.total}`;
 }
 
 export function pack(step: StepData, ctx: StepContext) {

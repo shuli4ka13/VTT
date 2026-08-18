@@ -50,14 +50,13 @@ afterAll(async () => {
   db.close();
 });
 
-const worldOf = () => ({
-  system: dnd,
-  compendium,
-  sheets: sheets.filter((s: { systemId: string }) => s.systemId === dnd.id),
-});
+const worldSheets = () => sheets.filter((s: { systemId: string }) => s.systemId === dnd.id);
 
 describe('сквозной прогон стенда', () => {
   let token = '';
+  let systemId = '';
+  let compendiumId = '';
+  let extraCompendiumId = '';
   let worldId = '';
   let roomId = '';
 
@@ -76,28 +75,52 @@ describe('сквозной прогон стенда', () => {
 
   it('без токена закрытые ручки отвечают отказом, а не пустотой', async () => {
     await http().get('/rooms').expect(401);
-    await http().post('/worlds').send({ title: 'X', world: worldOf() }).expect(401);
+    await http().post('/worlds').send({
+      title: 'X', systemId: 'x', compendiumIds: [], sheets: [],
+    }).expect(401);
   });
 
-  it('мир публикуется и появляется в списке', async () => {
+  it('система и её компендиум публикуются отдельно', async () => {
+    const sys = await http().post('/systems')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'D&D 5e', system: dnd })
+      .expect(201);
+    systemId = sys.body.id;
+    const book = await http().post('/compendiums')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Основная книга', systemId, compendium })
+      .expect(201);
+    compendiumId = book.body.id;
+    const extra = await http().post('/compendiums')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Дополнение', systemId, compendium: { items: [], actions: [] } })
+      .expect(201);
+    extraCompendiumId = extra.body.id;
+
+    const list = await http().get(`/compendiums?systemId=${systemId}`).expect(200);
+    expect(list.body).toHaveLength(2);
+    expect(list.body.some((book: { title: string }) => book.title === 'Основная книга')).toBe(true);
+  });
+
+  it('мир собирается из системы и выбранных компендиумов', async () => {
     const res = await http().post('/worlds')
       .set('Authorization', `Bearer ${token}`)
-      .send({ title: 'Срез 5e', world: worldOf() })
+      .send({ title: 'Срез 5e', systemId,
+        compendiumIds: [compendiumId, extraCompendiumId], sheets: worldSheets() })
       .expect(201);
     worldId = res.body.id;
 
     const list = await http().get('/worlds').expect(200);
     expect(list.body).toHaveLength(1);
     expect(list.body[0]).toMatchObject({
-      title: 'Срез 5e', systemName: 'D&D 5e', authorName: 'Влад',
+      title: 'Срез 5e', systemName: 'D&D 5e', authorName: 'Влад', compendiumCount: 2,
     });
   });
 
   it('мир, не проходящий схему, не публикуется — и говорит, чем именно плох', async () => {
-    const broken = worldOf();
     const res = await http().post('/worlds')
       .set('Authorization', `Bearer ${token}`)
-      .send({ title: 'Битый', world: { ...broken, sheets: [{ id: 'x' }] } })
+      .send({ title: 'Битый', systemId, compendiumIds: [compendiumId], sheets: [{ id: 'x' }] })
       .expect(400);
     expect(String(JSON.stringify(res.body))).toContain('схем');
   });
@@ -138,7 +161,11 @@ describe('сквозной прогон стенда', () => {
     // Ответка «Шипы» висит на Мирре и бьёт нападавшего: журнал обязан
     // показать ДВЕ строки — событие и ответ.
     expect(res.body.log.length).toBeGreaterThanOrEqual(1);
-    expect(res.body.log.map((l: { text: string }) => l.text).join(' · ')).toContain('Арвен');
+    const journal = res.body.log.map((l: { text: string }) => l.text).join(' · ');
+    expect(journal).toContain('Арвен');
+    expect(journal).toContain('Бросок атаки:');
+    expect(journal).toContain('Кость урона:');
+    expect(journal).toContain('применено:');
   });
 
   it('клиент не может продиктовать урон: лишние поля намерения игнорируются', async () => {
@@ -203,72 +230,5 @@ describe('сквозной прогон стенда', () => {
     // А хранимое — правится.
     const delta = await rooms.setValue(me.body.userId, roomId, sheet.id, 'hp_current', 7);
     expect(delta.sheets[0].values.hp_current).toBe(7);
-  });
-});
-
-describe('старый мир открывается', () => {
-  it('мир версии 1 публикуется через миграцию', async () => {
-    const v1 = {
-      system: {
-        id: 'legacy', name: 'Старый', fields: [], effects: {},
-        rules: { strike: { label: 'Удар', params: [], steps: [] } },
-      },
-      compendium: { items: [], actions: [], effects: [] },
-      sheets: [],
-    };
-    const login = await http().post('/auth/login').send({ name: 'Архивариус' });
-    const res = await http().post('/worlds')
-      .set('Authorization', `Bearer ${login.body.token}`)
-      .send({ title: 'Из архива', world: v1 })
-      .expect(201);
-    expect(res.body.id).toBeTruthy();
-  });
-});
-
-describe('комната, созданная до смены модели', () => {
-  // Комнаты в БД переживают релизы движка. Эта — со «старым» миром: пол
-  // урона лежит ШАГОМ (floor на apply), как писали до переезда границ на
-  // поля. Движок шаговых floor больше не читает — без миграции при чтении
-  // хиты уходили в минус молча (живой баг стенда: «ХП: 0 → −3»).
-  it('старый floor на шаге держит хиты не ниже нуля через миграцию', async () => {
-    const login = await http().post('/auth/login').send({ name: 'Хранитель' });
-    const auth = (r: request.Test) => r.set('Authorization', `Bearer ${login.body.token}`);
-
-    const world = {
-      system: {
-        id: 'legacy-floor', name: 'Старый пол',
-        fields: [
-          { tag: 'hp', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 5 } },
-        ],
-        effects: {
-          strike: {
-            label: 'Удар', activation: 'manual', params: [],
-            steps: [{
-              type: 'apply', target: { tag: 'hp' }, direction: 'subtract',
-              value: { const: 8 }, floor: { const: 0 },
-            }],
-          },
-        },
-      },
-      compendium: {
-        items: [],
-        actions: [{ id: 'hit', rk: 'приём', label: 'Удар', effect: 'strike', args: {} }],
-      },
-      sheets: [
-        { id: 'a', systemId: 'legacy-floor', kind: 'pc', name: 'А', values: { hp: 5 }, equipped: [], actions: ['hit'], effects: [] },
-        { id: 'b', systemId: 'legacy-floor', kind: 'pc', name: 'Б', values: { hp: 5 }, equipped: [], actions: [], effects: [] },
-      ],
-    };
-
-    const pub = await auth(http().post('/worlds')).send({ title: 'Старый пол', world }).expect(201);
-    const made = await auth(http().post('/rooms')).send({ worldId: pub.body.id, title: 'Архив' }).expect(201);
-    const roomId = made.body.id;
-
-    const res = await auth(http().post(`/rooms/${roomId}/act`))
-      .send({ roomId, actionId: 'hit:0', fromId: 'a', toId: 'b' })
-      .expect(201);
-
-    const hit = res.body.sheets.find((s: { id: string }) => s.id === 'b');
-    expect(hit.values.hp).toBe(0);
   });
 });

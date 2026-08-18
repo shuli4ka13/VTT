@@ -62,6 +62,7 @@
 .worldbar .spacer { flex: 1; min-width: var(--s-3); }
 .worldbar__name { width: clamp(140px, 18vw, 240px); }
 .worldbar__note { font-size: var(--fs-2); max-width: 40ch; }
+.worldbar__books { display: flex; gap: var(--s-2); flex-wrap: wrap; font-size: var(--fs-2); }
 
 /* ── вкладки раздела ──────────────────────────────────────────────────── */
 

@@ -20,7 +20,7 @@ import { exchange } from '@vtt/engine/events/exchange';
 import { unifyWorld } from '@vtt/engine/model/unify';
 import { effectLabelOf } from '@vtt/engine/events/envelope';
 import { findEffect, usesMax } from '@vtt/engine/engine/effects';
-import { breakReasonWord } from '@vtt/engine/engine/steps/index';
+import { breakReasonWord, registry as stepRegistry } from '@vtt/engine/engine/steps/index';
 
 /** Роль из владения, а не из настройки: кто создал комнату, тот и ведущий. */
 export type Role = 'gm' | 'player';
@@ -323,14 +323,68 @@ export class RoomsService {
       ? `${nameOf(entry.fromId)} отвечает «${label}» по ${nameOf(entry.toId)}`
       : `${nameOf(entry.fromId)} применяет «${label}» по ${nameOf(entry.toId)}`;
 
-    if (entry.report.stopped) {
-      const { type, reason } = entry.report.stopped as { type: string; reason: string };
-      return `${head} — ${breakReasonWord(type, reason)}`;
-    }
     const changes = (entry.report.changes ?? []) as { tag: string; from: unknown; to: unknown }[];
     const shown = changes.map(c => {
       const field = system.fields.find(f => f.tag === c.tag);
       return `${field?.label ?? c.tag}: ${c.from} → ${c.to}`;
+    });
+    const labelOf = (tag: string) =>
+      system.fields.find(f => f.tag === tag)?.label
+      ?? system.rolls?.find(r => r.tag === tag)?.label
+      ?? tag;
+    const effect = system.effects[String(entry.report.effect)] as any;
+    const stepOf = (trace: Record<string, unknown>) => (effect?.steps ?? [])
+      .find((step: any, index: number) => String(step.id ?? index) === String(trace.step));
+    const refLabel = (ref: any): string | null => {
+      if (!ref || typeof ref !== 'object') return null;
+      if ('param' in ref) return effect?.params?.find((p: any) => p.key === ref.param)?.label ?? String(ref.param);
+      if ('tag' in ref) return labelOf(String(ref.tag));
+      if ('prop' in ref) {
+        for (const kind of Object.values(system.records ?? {}) as any[]) {
+          const prop = kind.props?.find((p: any) => p.key === ref.prop);
+          if (prop) return prop.label ?? String(ref.prop);
+        }
+        return String(ref.prop);
+      }
+      if ('constant' in ref) return system.constants?.[String(ref.constant)]?.label ?? String(ref.constant);
+      if ('expr' in ref) {
+        const exact = /^#([\p{L}\p{N}_-]+)$/u.exec(String(ref.expr).trim());
+        return exact ? labelOf(exact[1]!) : String(ref.expr).replace(
+          /#([\p{L}\p{N}_-]+)/gu, (_: string, tag: string) => labelOf(tag));
+      }
+      return null;
+    };
+    const namedTrace = (trace: Record<string, any>): string | null => {
+      const step = stepOf(trace);
+      if (trace.type === 'threshold') {
+        const rolls = trace.kept != null && trace.rolls?.length > 1
+          ? `[${trace.rolls.join(', ')}] → ${trace.kept}` : `[${(trace.rolls ?? []).join(', ')}]`;
+        const check = system.rolls?.find(r => r.tag === step?.roll?.check)?.label ?? 'Проверка';
+        const bonus = step?.roll?.bonus ? ` + ${refLabel(step.roll.bonus) ?? 'Бонус'}: ${trace.bonus}` : '';
+        const versus = trace.versus?.tag ? labelOf(String(trace.versus.tag)) : 'порог';
+        const verdict = trace.success ? 'успех' : 'промах';
+        return `${check}: ${rolls}${bonus} = ${trace.total} против ${versus}: ${trace.versus?.value} — ${verdict}`;
+      }
+      if (trace.type === 'amount') {
+        const terms: string[] = [];
+        if (trace.rolls?.length) {
+          const value = trace.rolls.reduce((sum: number, die: number) => sum + die, 0);
+          terms.push(`${refLabel(step?.dice) ?? 'Бросок'}: ${value}`);
+        }
+        if (step?.fixed !== undefined) terms.push(`${refLabel(step.fixed) ?? 'Значение'}: ${trace.flat}`);
+        if (step?.bonus !== undefined) terms.push(`${refLabel(step.bonus) ?? 'Бонус'}: ${trace.bonus}`);
+        if (step?.margin !== undefined) terms.push(`${refLabel(step.margin) ?? 'Запас'}: ${trace.margin}`);
+        return `${terms.join(' + ') || '0'} = ${trace.total}`;
+      }
+      return null;
+    };
+    const calculation = (entry.report.trace ?? []).flatMap((trace: Record<string, unknown>) => {
+      const named = namedTrace(trace);
+      if (named) return [named];
+      const line = stepRegistry.get(String(trace.type))?.traceLine;
+      if (!line) return [];
+      try { return [String((line as any)(trace, { labelOf }))]; }
+      catch { return []; }
     });
 
     // Реакции жертвы на себя (мгновенная смерть) — в ТОЙ ЖЕ строке журнала:
@@ -345,7 +399,11 @@ export class RoomsService {
         return hung ? `${r.label}: ${hung}` : r.label;
       });
 
-    const tail = [shown.join(', '), told.join('; ')].filter(Boolean).join(' — ');
+    const stopped = entry.report.stopped as { type: string; reason: string } | null;
+    const stop = stopped ? breakReasonWord(stopped.type, stopped.reason) : '';
+
+    const tail = [calculation.join(' · '), shown.join(', '), told.join('; '), stop]
+      .filter(Boolean).join(' · ');
     if (!tail) return head;
     return `${head} · ${tail}`;
   }

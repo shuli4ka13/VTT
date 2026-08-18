@@ -14,6 +14,8 @@ import { WorldsService } from './worlds/worlds.service.ts';
 import { RoomsService } from './rooms/rooms.service.ts';
 import { RoomsController } from './rooms/rooms.controller.ts';
 import { TableGateway } from './gateway/table.gateway.ts';
+import { CatalogController } from './catalog/catalog.controller.ts';
+import { CatalogService } from './catalog/catalog.service.ts';
 
 export interface AppOptions {
   database?: Database;
@@ -29,7 +31,7 @@ export class AppModule {
 
     return {
       module: AppModule,
-      controllers: [AuthController, RoomsController],
+      controllers: [AuthController, CatalogController, RoomsController],
       providers: [
         { provide: DB, useValue: database.drizzle },
         { provide: CLOCK, useValue: options.now ?? (() => new Date().toISOString()) },
@@ -38,6 +40,7 @@ export class AppModule {
         // серверная решает.
         { provide: DIE, useValue: options.die ?? ((sides: number) => 1 + Math.floor(Math.random() * sides)) },
         AuthService,
+        CatalogService,
         WorldsService,
         RoomsService,
         TableGateway,

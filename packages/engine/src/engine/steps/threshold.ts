@@ -128,6 +128,7 @@ export function lint(step: StepData) {
 // Строка журнала. Живёт в модуле шага: новый тип приносит свою подачу сам,
 // интерфейс не ветвится по типам.
 export function traceLine(t: any, h: any) {
+  const checkName = t.check ? ` «${h.labelOf(t.check)}»` : '';
   const versusName = t.versus.tag ? `${h.labelOf(t.versus.tag)} ` : '';
   // Кости пишутся по чтению: счёт успехов — счётом, выбор одной — стрелкой,
   // сумма нескольких (составной бросок) — просто списком, без «→ null».
@@ -145,7 +146,7 @@ export function traceLine(t: any, h: any) {
   // Правки названы именами АВТОРА: в журнале за столом игрок читает
   // «Преимущество», а не «addDie + keepBest».
   const edits = t.edits?.length ? ` · ${t.edits.join(', ')}` : '';
-  return `порог: ${dice} + ${t.bonus} = ${t.total} против ${versusName}${t.versus.value} — ${verdict}${edits}${parts}`;
+  return `проверка${checkName}: ${dice} + ${t.bonus} = ${t.total} против ${versusName}${t.versus.value} — ${verdict}${edits}${parts}`;
 }
 
 export function pack(step: StepData, ctx: StepContext) {

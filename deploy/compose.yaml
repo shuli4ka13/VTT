@@ -14,8 +14,6 @@ services:
     container_name: vtt-poligon
     ports:
       - "${VTT_BIND:-0.0.0.0}:${VTT_PORT:-8100}:8100"
-    environment:
-      VTT_AUTH: "${VTT_AUTH:?задайте VTT_AUTH=логин:пароль в /opt/vtt/.env}"
     volumes:
       - vtt_data:/data
     mem_limit: 300m

@@ -14,6 +14,8 @@ export type {
 } from './world.ts';
 
 export type {
-  LoginRequest, Session, PublishRequest, WorldSummary, CreateRoomRequest,
+  LoginRequest, Session, PublishSystemRequest, SystemSummary, PublishedSystem,
+  PublishCompendiumRequest, CompendiumSummary, PublishedCompendium,
+  PublishRequest, WorldSummary, CreateRoomRequest,
   RoomSummary, RoomState, ActIntent, RoomDelta, ServerMessage, ClientMessage,
 } from './api.ts';
