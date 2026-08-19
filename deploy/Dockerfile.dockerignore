@@ -1,0 +1,11 @@
+*
+!yarn.lock
+!package.json
+!tsconfig.base.json
+!packages/
+!apps/server/
+!apps/web/
+!samples/
+**/node_modules
+**/dist
+**/*.db

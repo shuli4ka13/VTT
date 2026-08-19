@@ -1,0 +1,13 @@
+{
+
+  "extends": "../../tsconfig.base.json",
+  "include": ["src", "test"],
+  "compilerOptions": {
+    "module": "ESNext",
+    "types": ["node", "vitest/globals"],
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+    "strict": false,
+    "noImplicitAny": false
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "vtt-monorepo",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "test": "yarn workspaces run test",
+    "typecheck": "yarn workspaces run typecheck"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.12"
+  }
+}

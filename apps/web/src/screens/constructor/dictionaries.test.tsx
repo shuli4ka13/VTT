@@ -1,0 +1,399 @@
+// @vitest-environment jsdom
+import { describe, it, expect, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { DictionariesTab } from './dictionaries.tsx';
+import { useWorld, emptySystem } from '../../store/world.ts';
+
+describe('Словари: кости, виды бросков, таблицы, цена действий', () => {
+  beforeEach(() => {
+    useWorld.setState(state => ({
+      ...state,
+      system: emptySystem(),
+      activeEffectId: null,
+    }));
+  });
+
+  it('кость заводится и попадает в словарь системы', () => {
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ кость'));
+    const dies = Object.values(useWorld.getState().system.constants ?? {});
+    expect(dies.some(c => c.kind === 'die')).toBe(true);
+  });
+
+  it('«+ ещё часть» превращает бросок в составной и просит имена частей', () => {
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ кость'));
+    fireEvent.click(screen.getByText('+ ещё часть'));
+
+    const die = Object.values(useWorld.getState().system.constants ?? {})[0];
+    expect(die?.dice).toHaveLength(2);
+
+    expect(screen.getAllByPlaceholderText('как зовётся эта часть')).toHaveLength(2);
+
+    const [first] = screen.getAllByPlaceholderText('как зовётся эта часть');
+    fireEvent.change(first!, { target: { value: 'Надежда' } });
+    expect(Object.values(useWorld.getState().system.constants ?? {})[0]?.dice?.[0])
+      .toEqual({ count: 1, sides: 20, name: 'надежда', label: 'Надежда' });
+  });
+
+  it('счёт костей берётся из поля листа кнопкой, а не решёткой в тексте', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        fields: [{ tag: 'пул', label: 'Пул', value: { kind: 'stored', type: 'number', default: 6 } }],
+        constants: { d: { label: 'Пул', kind: 'die', dice: [{ count: 1, sides: 6 }] } },
+      },
+      activeEffectId: null,
+    }));
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('из поля'));
+
+    expect(Object.values(useWorld.getState().system.constants ?? {})[0]?.dice?.[0])
+      .toEqual({ count: { tag: 'пул' }, sides: 6 });
+    expect(screen.getByText(/по числу «Пул»/)).toBeTruthy();
+  });
+
+  it('без числовых полей кнопка «из поля» заблокирована', () => {
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ кость'));
+    const button = screen.getByText('из поля').closest('button') as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
+  });
+
+  it('чтение кости выбирается селектом; сумма в данных не оседает', () => {
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ кость'));
+    const [key] = Object.keys(useWorld.getState().system.constants ?? {});
+
+    fireEvent.click(screen.getByText('+ ещё часть'));
+
+    const select = screen.getByDisplayValue('сумма') as HTMLSelectElement;
+    fireEvent.change(select, { target: { value: 'best' } });
+    expect(useWorld.getState().system.constants?.[key!]?.read).toBe('best');
+
+    fireEvent.change(select, { target: { value: 'count' } });
+    expect(useWorld.getState().system.constants?.[key!]?.read)
+      .toEqual({ kind: 'count', atLeast: 19 }, 'порог предлагается «почти максимум» по граням кости');
+
+    fireEvent.change(select, { target: { value: 'sum' } });
+    expect('read' in (useWorld.getState().system.constants?.[key!] ?? {})).toBe(false);
+  });
+
+  it('у одной кости чтение не спрашивают — селектора нет', () => {
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ кость'));
+    expect(screen.queryByDisplayValue('сумма')).toBe(null);
+
+    fireEvent.click(screen.getByText('+ ещё часть'));
+    expect(screen.getByDisplayValue('сумма')).toBeTruthy();
+  });
+
+  it('вид броска: название правится, тег остаётся прежним', () => {
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ вид'));
+    const input = screen.getByPlaceholderText('название броска');
+    const выданный = (useWorld.getState().system.rolls ?? [])[0]!.tag;
+
+    fireEvent.change(input, { target: { value: 'Бросок' } });
+    fireEvent.change(input, { target: { value: 'Бросок защиты' } });
+
+    const rolls = useWorld.getState().system.rolls ?? [];
+    expect(rolls[0]!.label).toBe('Бросок защиты', 'название дописывается целиком');
+    expect(rolls[0]!.tag).toBe(выданный, 'тег не переезжает под каждую букву');
+  });
+
+  it('правка броска заводится со своим именем и набором примитивов', () => {
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ правка'));
+
+    const name = screen.getByPlaceholderText('как это зовётся в вашем мире');
+    fireEvent.change(name, { target: { value: 'Фора' } });
+
+    const [add] = screen.getAllByDisplayValue('+ добавить…') as HTMLSelectElement[];
+    fireEvent.change(add!, { target: { value: 'addDie' } });
+    fireEvent.change(screen.getAllByDisplayValue('+ добавить…')[0]!, { target: { value: 'keepBest' } });
+
+    const edits = useWorld.getState().system.roll_edits!;
+    const [key] = Object.keys(edits);
+    expect(edits[key!]).toEqual({
+      label: 'Фора', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }],
+    });
+  });
+
+  it('название из нескольких слов набирается целиком, ключ не меняется', () => {
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ кость'));
+    const [ключ] = Object.keys(useWorld.getState().system.constants ?? {});
+    const name = screen.getByPlaceholderText('название кости');
+
+    for (const шаг of ['Ведущая', 'Ведущая ', 'Ведущая кость', 'Ведущая кость ', 'Ведущая кость проверки']) {
+      fireEvent.change(name, { target: { value: шаг } });
+    }
+
+    const constants = useWorld.getState().system.constants!;
+    expect(Object.keys(constants)).toEqual([ключ]);
+    expect(constants[ключ!]!.label).toBe('Ведущая кость проверки');
+  });
+
+  it('грани кости: стёр «20», набрал «100» — кость стала к100', () => {
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ кость'));
+    const term = document.querySelector('.dice-term')!;
+    const [, sides] = [...term.querySelectorAll('input')] as HTMLInputElement[];
+
+    fireEvent.change(sides!, { target: { value: '' } });
+    expect(sides!.value).toBe('', 'пустота живёт, пока набирают');
+    fireEvent.change(sides!, { target: { value: '100' } });
+    fireEvent.blur(sides!);
+
+    const [key] = Object.keys(useWorld.getState().system.constants ?? {});
+    expect(useWorld.getState().system.constants![key!]!.dice![0]!.sides).toBe(100);
+  });
+
+  it('палитра правок — готовые фразы, включая оба направления взрыва', () => {
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ правка'));
+    const [add] = screen.getAllByDisplayValue('+ добавить…') as HTMLSelectElement[];
+    const options = [...add!.options].map(o => o.textContent);
+    expect(options).toContain('взрывать на максимуме');
+    expect(options).toContain('взрывать на единице');
+    expect(options).toContain('сдвинуть степень успеха');
+  });
+
+  it('в мире с одной костью про части не спрашивают вовсе', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        constants: { lead: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
+        roll_edits: { фора: { label: 'Фора', ops: [{ op: 'addDie' }] } },
+      },
+      activeEffectId: null,
+    }));
+    render(<DictionariesTab />);
+    expect(document.querySelectorAll('.chip__part').length).toBe(0);
+  });
+
+  it('в мире с составной костью часть выбирается прямо на фишке', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        constants: {
+          duality: {
+            label: 'Кости дуальности', kind: 'die',
+            dice: [
+              { count: 1, sides: 12, name: 'hope', label: 'Надежда' },
+              { count: 1, sides: 12, name: 'fear', label: 'Страх' },
+            ],
+          },
+        },
+        roll_edits: { вдох: { label: 'Вдохновение', ops: [{ op: 'addDie' }] } },
+      },
+      activeEffectId: null,
+    }));
+    render(<DictionariesTab />);
+
+    const part = document.querySelector('.chip__part') as HTMLSelectElement;
+    expect(part, 'части есть — селектор появился').toBeTruthy();
+    expect([...part.options].map(o => o.textContent))
+      .toEqual(['всему броску', 'Надежда', 'Страх']);
+
+    fireEvent.change(part, { target: { value: 'hope' } });
+    expect(useWorld.getState().system.roll_edits!.вдох!.ops[0]).toEqual({ op: 'addDie', part: 'hope' });
+
+    const phrase = part.closest('.dict-block')!.querySelector('.readback')!.textContent;
+    expect(phrase).toBe('Кинуть на кость больше (Надежда).');
+  });
+
+  it('«гасится» ссылается на другую правку — закон гашения это данные', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        roll_edits: {
+          up: { label: 'Фора', ops: [{ op: 'addDie' }] },
+          down: { label: 'Подножка', ops: [{ op: 'addDie' }] },
+        },
+      },
+      activeEffectId: null,
+    }));
+    render(<DictionariesTab />);
+
+    const [cancel] = screen.getAllByDisplayValue('— ничем, складывается —') as HTMLSelectElement[];
+    fireEvent.change(cancel!, { target: { value: 'down' } });
+
+    const edits = useWorld.getState().system.roll_edits!;
+    expect(edits.up!.canceledBy).toBe('down');
+    expect(edits.down!.canceledBy).toBe('up');
+  });
+
+  it('удалённая правка забирает за собой встречную ссылку', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        roll_edits: {
+          up: { label: 'Фора', ops: [{ op: 'addDie' }], canceledBy: 'down' },
+          down: { label: 'Подножка', ops: [{ op: 'addDie' }], canceledBy: 'up' },
+        },
+      },
+      activeEffectId: null,
+    }));
+    render(<DictionariesTab />);
+
+    const [remove] = screen.getAllByText('Убрать') as HTMLButtonElement[];
+    fireEvent.click(remove!);
+
+    const edits = useWorld.getState().system.roll_edits!;
+    expect(edits.up).toBeUndefined();
+    expect('canceledBy' in edits.down!, 'ссылки в пустоту не остаётся').toBe(false);
+  });
+
+  it('правку, на которую ссылается эффект, удалить нельзя', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        roll_edits: { up: { label: 'Фора', ops: [{ op: 'addDie' }] } },
+        rolls: [{ tag: 'attack_roll', label: 'Бросок атаки' }],
+        effects: {
+          lucky: {
+            label: 'Везучий', activation: 'passive',
+            modifiers: [{ kind: 'roll', target: 'attack_roll', edit: 'up', condition: null }],
+          },
+        },
+      },
+      activeEffectId: null,
+    }));
+    render(<DictionariesTab />);
+    const guarded = screen.getByTitle('правка используется эффектом') as HTMLButtonElement;
+    expect(guarded.disabled).toBe(true);
+  });
+
+  it('таблица по диапазонам заводится в словарь системы', () => {
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ таблица'));
+    const tables = Object.values(useWorld.getState().system.tables ?? {});
+    expect(tables.length).toBe(1);
+  });
+
+  it('переименование первой кости не трогает вторую и не меняет порядок', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        constants: {
+          dieA: { label: 'Кость А', kind: 'die', dice: [{ count: 1, sides: 20 }] },
+          dieB: { label: 'Кость Б', kind: 'die', dice: [{ count: 1, sides: 6 }] },
+        },
+      },
+      activeEffectId: null,
+    }));
+    render(<DictionariesTab />);
+
+    const first = screen.getByDisplayValue('Кость А');
+    fireEvent.change(first, { target: { value: 'Секира' } });
+
+    const constants = useWorld.getState().system.constants!;
+    expect(Object.keys(constants)).toEqual(['dieA', 'dieB']);
+    expect(constants.dieB).toEqual({ label: 'Кость Б', kind: 'die', dice: [{ count: 1, sides: 6 }] });
+    expect(constants.dieA).toEqual({ label: 'Секира', kind: 'die', dice: [{ count: 1, sides: 20 }] });
+  });
+
+  it('кость, на которую ссылается бросок в эффекте, удалить нельзя', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        constants: { lead: { label: 'Ведущая кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
+        effects: {
+          hit: {
+            label: 'Удар', activation: 'manual', params: [],
+            steps: [{ type: 'threshold', roll: { die: { constant: 'lead' }, check: null } }],
+          },
+        },
+      },
+      activeEffectId: null,
+    }));
+    render(<DictionariesTab />);
+    const guarded = screen.getByTitle('кость используется') as HTMLButtonElement;
+    expect(guarded.disabled).toBe(true);
+  });
+
+  it('вид броска, на который ссылается эффект, удалить нельзя', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        rolls: [{ tag: 'attack_roll', label: 'Бросок атаки' }],
+        effects: {
+          hit: {
+            label: 'Удар', activation: 'manual', params: [],
+            steps: [{ type: 'threshold', roll: { die: undefined, check: 'attack_roll' } }],
+          },
+        },
+      },
+      activeEffectId: null,
+    }));
+    render(<DictionariesTab />);
+    const guarded = screen.getByTitle('этот вид броска используется') as HTMLButtonElement;
+    expect(guarded.disabled).toBe(true);
+  });
+
+  it('вид броска, на который смотрит модификатор предмета, удалить нельзя', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: { ...emptySystem(), rolls: [{ tag: 'attack_roll', label: 'Бросок атаки' }] },
+      compendium: {
+        items: [{
+          id: 'lucky-charm', label: 'Талисман удачи',
+          modifiers: [{ kind: 'roll', target: 'attack_roll', edit: 'advantage' }],
+        }],
+        actions: [],
+      },
+      activeEffectId: null,
+    }));
+    render(<DictionariesTab />);
+    const guarded = screen.getByTitle('этот вид броска используется') as HTMLButtonElement;
+    expect(guarded.disabled).toBe(true);
+  });
+
+  it('таблицу, на которую ссылается поле, удалить нельзя', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        tables: { proficiency: { label: 'Бонус мастерства', ranges: [{ from: 1, to: 4, value: 2 }] } },
+        fields: [{ tag: 'pb', label: 'Бонус мастерства', value: { kind: 'table', table: 'proficiency', arg: '#level' } }],
+      },
+      activeEffectId: null,
+    }));
+    render(<DictionariesTab />);
+    const guarded = screen.getByTitle('таблица используется') as HTMLButtonElement;
+    expect(guarded.disabled).toBe(true);
+  });
+
+  it('тип действия заводится в словарь системы', () => {
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ тип'));
+    const types = Object.values(useWorld.getState().system.action_types ?? {});
+    expect(types.length).toBe(1);
+  });
+
+  it('тип действия, которым платит эффект, удалить нельзя', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        action_types: { action: { label: 'Действие' } },
+        effects: { strike: { label: 'Атака', activation: 'manual', cost: 'action', params: [], steps: [] } },
+      },
+      activeEffectId: null,
+    }));
+    render(<DictionariesTab />);
+    const guarded = screen.getByTitle('тип используется') as HTMLButtonElement;
+    expect(guarded.disabled).toBe(true);
+  });
+});
