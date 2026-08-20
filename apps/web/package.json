@@ -4,11 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "build": "tsc -b ../../packages/engine && vite build",
+    "dev": "tsc -b ../../packages/engine && vite",
     "preview": "vite preview",
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "test": "tsc -b ../../packages/engine && vite build && vitest run",
+    "typecheck": "tsc -b ../../packages/engine && tsc --noEmit"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.4",

@@ -4,11 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/main.ts",
-    "start": "tsx src/main.ts",
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit",
-    "seed": "tsx src/seed-run.ts"
+    "build": "tsc -b",
+    "dev": "tsc -b ../../packages/engine && tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "test": "tsc -b ../../packages/engine && vitest run",
+    "typecheck": "tsc -b ../../packages/engine && tsc --noEmit",
+    "seed": "tsc -b ../../packages/engine && tsx src/seed-run.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.1",

@@ -1,11 +1,21 @@
 {
   "extends": "../../tsconfig.base.json",
   "include": ["src"],
+  "references": [
+    { "path": "../../packages/schema" },
+    { "path": "../../packages/engine" }
+  ],
   "compilerOptions": {
     "module": "ESNext",
     "types": ["node"],
 
     "experimentalDecorators": true,
-    "useDefineForClassFields": false
+    "useDefineForClassFields": false,
+
+    "noEmit": false,
+    "rootDir": "src",
+    "outDir": "dist",
+    "sourceMap": true,
+    "rewriteRelativeImportExtensions": true
   }
 }

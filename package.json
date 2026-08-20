@@ -7,6 +7,9 @@
     "apps/*"
   ],
   "scripts": {
+    "build": "tsc -b packages/schema packages/engine apps/server && yarn --cwd apps/web build",
+    "build:packages": "tsc -b packages/schema packages/engine",
+    "build:watch": "tsc -b packages/schema packages/engine --watch",
     "test": "yarn workspaces run test",
     "typecheck": "yarn workspaces run typecheck"
   },

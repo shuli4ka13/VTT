@@ -3,16 +3,34 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./formula": "./src/formula/index.ts",
-    "./model/*": "./src/model/*.ts",
-    "./engine/*": "./src/engine/*.ts",
-    "./events/*": "./src/events/*.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./formula": {
+      "types": "./dist/formula/index.d.ts",
+      "default": "./dist/formula/index.js"
+    },
+    "./model/*": {
+      "types": "./dist/model/*.d.ts",
+      "default": "./dist/model/*.js"
+    },
+    "./engine/*": {
+      "types": "./dist/engine/*.d.ts",
+      "default": "./dist/engine/*.js"
+    },
+    "./events/*": {
+      "types": "./dist/events/*.d.ts",
+      "default": "./dist/events/*.js"
+    }
   },
   "scripts": {
+    "build": "tsc -b",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc -b ../schema && tsc --noEmit"
   },
   "devDependencies": {
     "@vtt/schema": "*",
