@@ -429,7 +429,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
           system={context.system}
           names={names}
           side="target"
-          placeholder="например: #хп − #урон"
+          placeholder="например: @хп − @урон"
           extraOptions={needs}
           fromSender={senderMarks}
           onFlipSide={flipSide}

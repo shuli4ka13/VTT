@@ -3,7 +3,7 @@ import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
   Card, CardHead, Field, Input, Select, Button, Empty, Fold, Verdict, Chip, DangerButton, NumInput,
 } from '../../ui/primitives.tsx';
-import { FormulaInput } from '../../ui/formula.tsx';
+import { FormulaInput, formulaAsLabels } from '../../ui/formula.tsx';
 import { compile } from '@vtt/engine/formula';
 import { DonorPalette } from './donors.tsx';
 import type { Field as FieldModel, FieldValue, System } from '@vtt/schema';
@@ -61,7 +61,7 @@ export function SheetTab() {
                     <ListItem
                       key={field.tag}
                       name={field.label}
-                      meta={metaOf(field.value)}
+                      meta={metaOf(system, field.value)}
                       active={field.tag === activeTag}
                       onClick={() => pick({ activeFieldTag: field.tag })}
                     />
@@ -113,7 +113,6 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
       <Card>
         <CardHead
           title={field.label || 'Без имени'}
-          badge={<span className="chip mono" title="машинный тег — на него ссылаются формулы">#{field.tag}</span>}
           actions={
             <DangerButton size="sm" onConfirm={() => {
               editSystem(draft => { draft.fields = draft.fields.filter(f => f.tag !== field.tag); });
@@ -251,7 +250,7 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
               system={system}
               value={field.value.arg}
               onChange={arg => edit(draft => { if (draft.value.kind === 'table') draft.value.arg = arg; })}
-              placeholder="например: #level"
+              placeholder="например: @уровень"
             />
           </Field>
         </Card>
@@ -290,9 +289,9 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
   );
 }
 
-const metaOf = (value: FieldValue) =>
+const metaOf = (system: System, value: FieldValue) =>
   value.kind === 'stored' ? `вводит игрок · ${value.type}`
-    : value.kind === 'formula' ? value.expr || 'формула не дописана'
+    : value.kind === 'formula' ? (value.expr ? formulaAsLabels(system, value.expr) : 'формула не дописана')
       : `таблица «${value.table || '—'}»`;
 
 export function boundProblem(bound: number | string | undefined, system: System): string | undefined {
@@ -324,7 +323,7 @@ function BoundInput({ value, invalid, onChange }: {
       value={value === undefined ? '' : String(value)}
       mono
       invalid={invalid}
-      placeholder="число или #поле"
+      placeholder="число или формула"
       onChange={commit}
     />
   );

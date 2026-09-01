@@ -178,7 +178,7 @@ function RecordEditor({ record, system }: { record: CompendiumRecord; system: Sy
                 ) : (
                   <Input
                     mono={String(prop.kind) === 'expr'}
-                    placeholder={String(prop.kind) === 'expr' ? '#тег' : undefined}
+                    placeholder={String(prop.kind) === 'expr' ? 'формула' : undefined}
                     value={String(record.props?.[prop.key] ?? '')}
                     onChange={next => edit(draft => { (draft.props ??= {})[prop.key] = next; })}
                   />

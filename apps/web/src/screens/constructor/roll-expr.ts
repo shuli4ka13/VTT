@@ -29,7 +29,7 @@ export function parseRollExpr(text: string, system: System, picked?: string | nu
   if (!t) return { die: undefined, bonus: null };
 
   const m = t.match(HEAD);
-  if (!m) return { error: 'бросок начинается с кости: «1к20» или «1к20 + #бонус»' };
+  if (!m) return { error: 'бросок начинается с кости: «1к20» или «1к20 + @бонус»' };
 
   const count = Number(m[1] ?? 1);
   const sides = Number(m[2]);

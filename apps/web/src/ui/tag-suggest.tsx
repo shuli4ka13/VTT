@@ -1,6 +1,6 @@
 export function matchTagQuery(text: string, caret: number): { at: number; needle: string } | null {
   const head = text.slice(0, caret);
-  const m = head.match(/[#@]([\p{L}\p{N}_ ]*)$/u);
+  const m = head.match(/@([\p{L}\p{N}_ ]*)$/u);
   if (!m) return null;
   return { at: caret - m[0].length, needle: m[1]!.trim().toLowerCase() };
 }

@@ -80,7 +80,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
   const matches = query
     ? fields.filter(f => !query.needle
       || f.label.toLowerCase().includes(query.needle)
-      || f.tag.toLowerCase().includes(query.needle)).slice(0, 8)
+      || f.tag.toLowerCase().includes(query.needle))
     : [];
   const extras = query
     ? (extraOptions ?? []).filter(o => !query.needle || o.label.toLowerCase().includes(query.needle))
@@ -157,7 +157,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
           names?.[part.tag] !== undefined ? (
             <span key={index} className="chips__group">{names[part.tag]}</span>
           ) : (
-          <span key={index} className="chips__chip" title={`#${part.tag}`}>
+          <span key={index} className="chips__chip">
             {labelOfTag(system, part.tag)}
             {side && onFlipSide ? (
 

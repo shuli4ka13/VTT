@@ -9,7 +9,7 @@ const hole = (label: string): Segment => ({ hole: label });
 export function countWord(system: System, count: unknown): string {
   if (typeof count !== 'object' || count === null) return String(count ?? 1);
   const tag = (count as { tag?: unknown }).tag;
-  if (tag) return system.fields.find(f => f.tag === tag)?.label || `#${String(tag)}`;
+  if (tag) return system.fields.find(f => f.tag === tag)?.label || String(tag);
   return '…';
 }
 

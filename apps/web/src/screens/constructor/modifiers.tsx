@@ -138,7 +138,7 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty }: {
               onChange={condition => onEdit(draft => {
                 (draft[index] as { condition?: string | null }).condition = condition || null;
               })}
-              placeholder="например: #armor_heavy"
+              placeholder="например: @тяжёлая броня"
             />
           </Field>
         </Card>

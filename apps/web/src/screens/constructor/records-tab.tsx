@@ -371,7 +371,7 @@ function ArgEditor({ value, recordKind, onChange }: {
         <Input
           value={String((r as { expr?: unknown })?.expr ?? '')}
           mono
-          placeholder="#поле + 2"
+          placeholder="формула"
           onChange={next => onChange({ expr: next } as SlotRef)}
         />
       ) : null}

@@ -2,13 +2,13 @@ import { describe, it, expect } from 'vitest';
 import { matchTagQuery, applyTag } from './tag-suggest.tsx';
 
 describe('matchTagQuery', () => {
-  it('ловит запрос за решёткой и за собакой, с пробелами в названии', () => {
+  it('ловит запрос за собакой, с пробелами в названии', () => {
     expect(matchTagQuery('1d20 + @бонус ат', 16)).toEqual({ at: 7, needle: 'бонус ат' });
-    expect(matchTagQuery('#сил', 4)).toEqual({ at: 0, needle: 'сил' });
   });
 
-  it('без сигила запроса нет', () => {
+  it('без собаки запроса нет — решётка тоже не считается', () => {
     expect(matchTagQuery('1d20 + 5', 8)).toBeNull();
+    expect(matchTagQuery('#сил', 4)).toBeNull();
   });
 });
 
