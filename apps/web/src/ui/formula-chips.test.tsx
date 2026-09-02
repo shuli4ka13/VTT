@@ -50,6 +50,26 @@ describe('FormulaChips', () => {
     expect(value).toBe('1d20 +  + 2');
   });
 
+  it('калькулятор виден в фокусе и вставляет операцию в позицию курсора', () => {
+    let value = '2 + 2';
+    render(<FormulaChips value={value} system={system} calculator onChange={next => { value = next; }} />);
+    expect(screen.queryByText('округлить вниз')).toBeNull();
+    const input = screen.getByDisplayValue('2 + 2') as HTMLInputElement;
+    input.focus();
+    input.setSelectionRange(0, 0);
+    fireEvent.click(input);
+    fireEvent.mouseDown(screen.getByText('округлить вниз'));
+    expect(value).toBe('floor()2 + 2');
+  });
+
+  it('без флага calculator ряда операций нет и в фокусе', () => {
+    render(<FormulaChips value="2 + 2" system={system} onChange={() => {}} />);
+    const input = screen.getByDisplayValue('2 + 2') as HTMLInputElement;
+    input.focus();
+    fireEvent.click(input);
+    expect(screen.queryByText('модуль')).toBeNull();
+  });
+
   it('backspace в начале куска съедает фишку слева', () => {
     let value = '#сила + 2';
     render(<FormulaChips value={value} system={system} onChange={next => { value = next; }} />);

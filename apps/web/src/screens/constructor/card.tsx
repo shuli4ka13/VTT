@@ -188,6 +188,7 @@ function RollExprInput({ step, context, edit }: {
         system={context.system}
         side={String(step.side ?? 'sender') === 'target' ? 'target' : 'self'}
         placeholder="1d20 + @поле"
+        calculator
         extraOptions={Object.entries(context.system.constants ?? {})
           .filter(([, c]) => c.kind === 'die')
           .map(([key, c]) => ({
@@ -430,6 +431,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
           names={names}
           side="target"
           placeholder="например: @хп − @урон"
+          calculator
           extraOptions={needs}
           fromSender={senderMarks}
           onFlipSide={flipSide}

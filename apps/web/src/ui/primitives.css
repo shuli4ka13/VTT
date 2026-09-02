@@ -399,6 +399,23 @@
 }
 .chips__op:hover { color: var(--accent); }
 
+.chips__ops {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2);
+  width: fit-content; max-width: 100%;
+  margin-top: var(--s-3); padding: var(--s-2);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-2);
+}
+.chips__ops .chips__op {
+  min-width: 26px; min-height: 26px; padding: 0 var(--s-3);
+  border: 1px solid var(--border); border-radius: var(--r-1);
+  background: var(--surface-2); color: var(--text-muted);
+  font-size: var(--fs-2); line-height: 1;
+}
+.chips__ops .chips__op:hover {
+  color: var(--text); border-color: var(--accent); background: var(--accent-soft);
+}
+.chips__ops-split { width: 1px; align-self: stretch; background: var(--border); margin: 0 var(--s-1); }
+
 .chip__part {
   background: transparent; border: 0; border-bottom: 1px solid var(--border);
   color: var(--text-muted); font: inherit; font-size: var(--fs-2);

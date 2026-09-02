@@ -45,8 +45,9 @@ export function FormulaInput({ system, value, onChange, placeholder }: {
       <FormulaChips
         value={value}
         system={system}
-        placeholder={placeholder ?? 'например: floor((@Сила - 10) / 2)'}
+        placeholder={placeholder ?? 'наберите @ и выберите поле'}
         onChange={onChange}
+        calculator
       />
 
       {value.trim() ? (

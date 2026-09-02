@@ -9,6 +9,8 @@ interface Fn { arity: number | '1+'; apply: (args: number[]) => number }
 const FUNCTIONS: Record<string, Fn> = {
   floor: { arity: 1, apply: args => Math.floor(args[0]!) },
   ceil: { arity: 1, apply: args => Math.ceil(args[0]!) },
+  round: { arity: 1, apply: args => Math.round(args[0]!) },
+  abs: { arity: 1, apply: args => Math.abs(args[0]!) },
   min: { arity: '1+', apply: args => Math.min(...args) },
   max: { arity: '1+', apply: args => Math.max(...args) },
 };

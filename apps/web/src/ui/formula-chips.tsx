@@ -8,6 +8,20 @@ const labelOfTag = (system: System, tag: string): string =>
 
 export type Part = { text: string } | { tag: string };
 
+const OPS: { label: string; hint: string; open: string; close?: string; word?: boolean }[] = [
+  { label: '+', hint: 'сложить', open: ' + ' },
+  { label: '−', hint: 'вычесть', open: ' - ' },
+  { label: '×', hint: 'умножить', open: ' * ' },
+  { label: '÷', hint: 'поделить', open: ' / ' },
+  { label: '( )', hint: 'скобки: что внутри — считается первым', open: '(', close: ')' },
+  { label: 'округлить вниз', hint: 'отбросить дробную часть: 7,9 → 7', open: 'floor(', close: ')', word: true },
+  { label: 'округлить вверх', hint: 'добить до целого: 7,1 → 8', open: 'ceil(', close: ')', word: true },
+  { label: 'округлить', hint: 'по школьным правилам: 7,5 → 8, 7,4 → 7', open: 'round(', close: ')', word: true },
+  { label: 'модуль', hint: 'число без минуса: −3 → 3', open: 'abs(', close: ')', word: true },
+  { label: 'большее из', hint: 'самое большое из перечисленного через запятую', open: 'max(', close: ', )', word: true },
+  { label: 'меньшее из', hint: 'самое маленькое из перечисленного через запятую', open: 'min(', close: ', )', word: true },
+];
+
 export function partsOf(value: string): Part[] {
   const out: Part[] = [];
   let rest = value;
@@ -26,7 +40,7 @@ export function joinParts(parts: Part[]): string {
   return parts.map(p => ('tag' in p ? `#${p.tag}` : p.text)).join('');
 }
 
-export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, side, extraOptions, fromSender, onFlipSide }: {
+export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, side, extraOptions, fromSender, onFlipSide, calculator }: {
   value: string;
   onChange: (next: string) => void;
   system: System;
@@ -51,6 +65,8 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
   fromSender?: string[];
 
   onFlipSide?: (tag: string) => void;
+
+  calculator?: boolean;
 }) {
   const parts = useMemo(() => partsOf(value), [value]);
   const host = useRef<HTMLDivElement>(null);
@@ -111,6 +127,25 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
     ];
     commitParts(next, { index: active + 2, caret: 0 });
   };
+
+  const insertOp = (open: string, close = '') => {
+    const index = active !== null && 'text' in (parts[active] ?? {}) ? active : parts.length - 1;
+    const part = parts[index] as { text: string };
+    const at = index === active ? Math.min(caret, part.text.length) : part.text.length;
+    const text = part.text.slice(0, at) + open + close + part.text.slice(at);
+    const next = parts.map((p, i) => (i === index ? { text } : p));
+    setCaret(at + open.length);
+    commitParts(next, { index, caret: at + open.length });
+  };
+
+  const opButton = (op: typeof OPS[number]) => (
+    <button
+      key={op.label} type="button"
+      className={op.word ? 'chips__op chips__op--word' : 'chips__op'}
+      title={op.hint}
+      onMouseDown={e => { e.preventDefault(); insertOp(op.open, op.close); }}
+    >{op.label}</button>
+  );
 
   const editText = (index: number, text: string, at: number) => {
     const next = parts.map((p, i) => (i === index ? { text } : p));
@@ -205,6 +240,13 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
         ))}
         {suffix}
       </div>
+      {calculator && active !== null ? (
+        <div className="chips__ops">
+          {OPS.filter(op => !op.word).map(opButton)}
+          <span className="chips__ops-split" aria-hidden />
+          {OPS.filter(op => op.word).map(opButton)}
+        </div>
+      ) : null}
       {matches.length || extras.length ? (
         <div className="slot__menu">
           {extras.map((option, i) => (
