@@ -161,6 +161,18 @@
   color: var(--text-faint);
   padding: var(--s-4) var(--s-3) var(--s-1);
 }
+.list__group-pick {
+  background: none; border: none; padding: 0; cursor: pointer;
+  font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit;
+  border-radius: var(--r-1);
+}
+.list__group-pick:hover { color: var(--text); }
+.list__group-pick--active { color: var(--accent); }
+.list__nest {
+  margin-left: var(--s-3);
+  padding-left: var(--s-2);
+  border-left: 1px solid var(--border);
+}
 
 .screen-title {
   font-size: var(--fs-6);

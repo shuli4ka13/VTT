@@ -1,4 +1,4 @@
-import { useWorld, fieldsByGroup, freeId, slugOf } from '../../store/world.ts';
+import { useWorld, freeId, slugOf } from '../../store/world.ts';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
   Card, CardHead, Field, Input, Select, Button, Empty, Fold, Verdict, Chip, DangerButton, NumInput,
@@ -6,6 +6,9 @@ import {
 import { FormulaInput, formulaAsLabels } from '../../ui/formula.tsx';
 import { compile } from '@vtt/engine/formula';
 import { DonorPalette } from './donors.tsx';
+import { GroupEditor } from './group-editor.tsx';
+import { groupTree, effectiveDefault, sameValue } from './groups.ts';
+import type { GroupNode } from './groups.ts';
 import type { Field as FieldModel, FieldValue, System } from '@vtt/schema';
 
 const KINDS = [
@@ -26,62 +29,73 @@ export function SheetTab() {
   const pick = useWorld(s => s.pick);
   const editSystem = useWorld(s => s.editSystem);
 
-  const groups = fieldsByGroup(system);
+  const activeGroup = useWorld(s => s.activeGroupName);
+
+  const tree = groupTree(system);
   const active = system.fields.find(f => f.tag === activeTag) ?? null;
 
   const addField = (group: string) => {
     const tag = freeId(system.fields.map(f => f.tag), 'field');
+    const preset = effectiveDefault(system, group);
     editSystem(draft => {
       draft.fields.push({
         tag,
         label: 'Новое поле',
         group,
-        value: { kind: 'stored', type: 'number', default: 0 },
+        value: preset ? structuredClone(preset) : { kind: 'stored', type: 'number', default: 0 },
       });
     });
-    pick({ activeFieldTag: tag });
+    pick({ activeFieldTag: tag, activeGroupName: null });
   };
+
+  const branch = (node: GroupNode, depth: number) => (
+    <div key={node.name} className={depth ? 'list__nest' : undefined}>
+      <ListGroup>
+        <button
+          type="button"
+          className={`list__group-pick${node.name === activeGroup && !active ? ' list__group-pick--active' : ''}`}
+          title="настройки блока: значение по умолчанию и подгруппы"
+          onClick={() => pick({ activeGroupName: node.name, activeFieldTag: null })}
+        >{node.name}</button>
+      </ListGroup>
+      {node.fields.map(field => (
+        <ListItem
+          key={field.tag}
+          name={field.label}
+          meta={metaOf(system, field.value)}
+          active={field.tag === activeTag}
+          onClick={() => pick({ activeFieldTag: field.tag, activeGroupName: null })}
+        />
+      ))}
+      <Button size="sm" variant="ghost" wide onClick={() => addField(node.name)}>
+        + поле в «{node.name}»
+      </Button>
+      {node.children.map(child => branch(child, depth + 1))}
+    </div>
+  );
 
   return (
     <Columns
       left={{
         head: 'Блоки и поля',
         tools: <Button size="sm" onClick={() => addField('Новый блок')}>+ блок</Button>,
-        body: groups.length === 0
+        body: tree.length === 0
           ? <Empty
               title="Лист пуст"
               hint="Заведите первое поле кнопкой выше — или возьмите готовый блок из образцовой системы справа."
             />
-          : (
-            <List>
-              {groups.map(([group, fields]) => (
-                <div key={group}>
-                  <ListGroup>{group}</ListGroup>
-                  {fields.map(field => (
-                    <ListItem
-                      key={field.tag}
-                      name={field.label}
-                      meta={metaOf(system, field.value)}
-                      active={field.tag === activeTag}
-                      onClick={() => pick({ activeFieldTag: field.tag })}
-                    />
-                  ))}
-                  <Button size="sm" variant="ghost" wide onClick={() => addField(group)}>
-                    + поле в «{group}»
-                  </Button>
-                </div>
-              ))}
-            </List>
-          ),
+          : <List>{tree.map(node => branch(node, 0))}</List>,
       }}
       main={{
-        head: active ? 'Поле' : undefined,
+        head: active ? 'Поле' : activeGroup ? 'Блок' : undefined,
         body: active
           ? <FieldEditor field={active} system={system} />
-          : <Empty
-              title="Выберите поле слева"
-              hint="Или добавьте новое. Поле — это то, что бывает у персонажа: характеристика, навык, ресурс."
-            />,
+          : activeGroup
+            ? <GroupEditor name={activeGroup} system={system} />
+            : <Empty
+                title="Выберите поле слева"
+                hint="Или добавьте новое. Поле — это то, что бывает у персонажа: характеристика, навык, ресурс. Клик по заголовку блока откроет его настройки."
+              />,
       }}
       right={{ head: 'Готовое из образцов', body: <DonorPalette kind="blocks" /> }}
     />
@@ -107,6 +121,8 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
   });
 
   const users = whoUses(system, field.tag);
+  const preset = effectiveDefault(system, field.group ?? 'Без блока');
+  const follows = preset !== undefined && sameValue(field.value, preset);
 
   return (
     <>
@@ -155,6 +171,12 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
             <Select value={field.value.kind} options={KINDS} onChange={setKind} />
           </Field>
         </div>
+        {follows ? (
+          <p className="faint">
+            Значение совпадает с умолчанием блока и поменяется вместе с ним.
+            Отредактируйте его здесь — и поле отвяжется.
+          </p>
+        ) : null}
       </Card>
 
       {field.value.kind === 'stored' ? (

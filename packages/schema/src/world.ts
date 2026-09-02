@@ -33,6 +33,11 @@ export const fieldValue = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('table'), table: z.string(), arg: z.string() }),
 ]);
 
+export const groupSpec = z.object({
+  parent: z.string().optional(),
+  default: fieldValue.optional(),
+}).passthrough();
+
 export const tag = z.string().min(1).refine(v => !v.includes(':'), {
   message: 'двоеточие в теге запрещено — им размечены выведенные мишени',
 });
@@ -187,6 +192,7 @@ export const system = z.object({
   id: z.string().optional(),
   name: z.string().optional(),
   fields: z.array(field),
+  groups: z.record(z.string(), groupSpec).optional(),
   effects: z.record(z.string(), effect),
 
   room_rules: z.array(z.string()).optional(),
@@ -262,6 +268,7 @@ export type Stacking = z.infer<typeof stacking>;
 export type StoredValue = z.infer<typeof storedValue>;
 export type Field = z.infer<typeof field>;
 export type FieldValue = z.infer<typeof fieldValue>;
+export type GroupSpec = z.infer<typeof groupSpec>;
 export type Modifier = z.infer<typeof modifier>;
 export type Param = z.infer<typeof param>;
 export type Step = z.infer<typeof step>;

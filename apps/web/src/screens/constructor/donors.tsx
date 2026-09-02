@@ -4,6 +4,7 @@ import { Select, Empty } from '../../ui/primitives.tsx';
 import type { System, Field, Effect } from '@vtt/schema';
 import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
 import { compile } from '@vtt/engine/formula';
+import { groupChain, subtreeNames } from './groups.ts';
 
 const DONORS = SAMPLE_SYSTEMS as System[];
 
@@ -41,10 +42,14 @@ export function copyDonorBlock(
   donor: System,
   group: string,
 ): void {
-  const order = orderedBlocks(donor, neededBlocks(donor, group));
+  const order = orderedBlocks(donor, neededBlocks(donor, subtreeNames(donor, group)));
   editSystem(draft => {
     const present = new Set(draft.fields.map(f => f.tag));
     for (const block of order) {
+      for (const link of groupChain(donor, block)) {
+        const spec = donor.groups?.[link];
+        if (spec && !draft.groups?.[link]) (draft.groups ??= {})[link] = structuredClone(spec);
+      }
       for (const field of donor.fields.filter(f => (f.group ?? 'Без блока') === block)) {
         if (present.has(field.tag)) continue;
         draft.fields.push(structuredClone(field));
@@ -66,7 +71,7 @@ function Blocks({ donor }: { donor: System }) {
   const blocks = useMemo(() => {
     const names = new Map<string, number>();
     for (const field of donor.fields) {
-      const key = field.group ?? 'Без блока';
+      const key = groupChain(donor, field.group ?? 'Без блока').at(-1)!;
       names.set(key, (names.get(key) ?? 0) + 1);
     }
     return [...names];
@@ -79,9 +84,13 @@ function Blocks({ donor }: { donor: System }) {
   return (
     <div className="palette">
       {blocks.map(([group, count]) => {
-        const fields = donor.fields.filter(f => (f.group ?? 'Без блока') === group);
+        const inside = new Set(subtreeNames(donor, group));
+        const fields = donor.fields.filter(f => inside.has(f.group ?? 'Без блока'));
         const already = fields.every(f => have.has(f.tag));
-        const brings = orderedBlocks(donor, neededBlocks(donor, group));
+        const brings = [...new Set(
+          orderedBlocks(donor, neededBlocks(donor, subtreeNames(donor, group)))
+            .map(block => groupChain(donor, block).at(-1)!),
+        )];
 
         return (
           <button
@@ -104,10 +113,10 @@ function Blocks({ donor }: { donor: System }) {
   );
 }
 
-function neededBlocks(donor: System, group: string): Set<string> {
+function neededBlocks(donor: System, seeds: string[]): Set<string> {
   const blockOf = new Map(donor.fields.map(f => [f.tag, f.group ?? 'Без блока']));
-  const need = new Set([group]);
-  const queue = [group];
+  const need = new Set(seeds);
+  const queue = [...seeds];
 
   while (queue.length) {
     const current = queue.shift()!;

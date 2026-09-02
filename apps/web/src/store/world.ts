@@ -10,13 +10,14 @@ export interface WorldState {
   sheets: Sheet[];
 
   activeFieldTag: string | null;
+  activeGroupName: string | null;
   activeEffectId: string | null;
   activeRecordKind: string | null;
   activeRecordId: string | null;
   activeSheetId: string | null;
 
   pick: (what: Partial<Pick<WorldState,
-    'activeFieldTag' | 'activeEffectId' | 'activeRecordKind' | 'activeRecordId' | 'activeSheetId'>>) => void;
+    'activeFieldTag' | 'activeGroupName' | 'activeEffectId' | 'activeRecordKind' | 'activeRecordId' | 'activeSheetId'>>) => void;
 
   editSystem: (edit: (draft: System) => void) => void;
   editCompendium: (edit: (draft: Compendium) => void) => void;
@@ -44,6 +45,7 @@ export const useWorld = create<WorldState>()(persist(set => ({
   sheets: [],
 
   activeFieldTag: null,
+  activeGroupName: null,
   activeEffectId: null,
   activeRecordKind: null,
   activeRecordId: null,
@@ -73,6 +75,7 @@ export const useWorld = create<WorldState>()(persist(set => ({
     ...world,
     ...unifyWorld(world),
     activeFieldTag: null,
+    activeGroupName: null,
     activeEffectId: null,
     activeRecordKind: null,
     activeRecordId: null,
