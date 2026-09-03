@@ -10,7 +10,7 @@ export const label = 'Порог';
 export const hint = 'Бросок против величины. Не вышло — цепочка обрывается.';
 
 export const slots = [
-  { key: 'side', label: 'Кто бросает', kind: 'choice', options: ['sender', 'target'] },
+  { key: 'side', label: 'Кто бросает', kind: 'choice', options: ['source', 'target'] },
   { key: 'roll', label: 'Бросок', kind: 'roll' },
   { key: 'versus', label: 'Против', kind: 'ref' },
   {
@@ -110,7 +110,7 @@ export function pack(step: StepData, ctx: StepContext) {
       `${ctx.owner || 'правило'}: порогу нужна кость — слот roll.die ссылается на константу системы, например { constant: 'lead_die' }`);
   }
   const base = {
-    side: step.side || 'sender',
+    side: step.side || 'source',
     continueOn: step.continueOn || 'success',
     successWhen: step.successWhen || 'atLeast',
     versus: packRef(step.versus, ctx),

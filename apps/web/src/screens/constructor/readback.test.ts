@@ -17,7 +17,7 @@ const effect = { params: [{ key: 'p_1', label: 'кость урона', kind: 'd
 describe('checkReadback', () => {
   it('порог броском читается фразой с лейблами системы', () => {
     const step = {
-      type: 'threshold', side: 'sender', successWhen: 'atLeast', continueOn: 'success',
+      type: 'threshold', successWhen: 'atLeast', continueOn: 'success',
       roll: { die: { constant: 'lead' }, bonus: { expr: '#power_mod' }, check: null },
       versus: { tag: 'armor' },
     } as unknown as Step;

@@ -63,7 +63,7 @@ const firstDie = (system: System): string | undefined => Object.keys(system.cons
 const blankCheck = (system: System): Step => {
   const die = firstDie(system);
   return {
-    type: 'threshold', side: 'sender', successWhen: 'atLeast', continueOn: 'success',
+    type: 'threshold', successWhen: 'atLeast', continueOn: 'success',
     roll: { die: die ? { constant: die } : undefined, check: null },
   } as unknown as Step;
 };

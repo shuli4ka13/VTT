@@ -14,7 +14,7 @@ const effect = { params: [] } as unknown as Effect;
 
 const attackSteps = () => [
   {
-    type: 'threshold', side: 'sender', successWhen: 'atLeast', continueOn: 'success',
+    type: 'threshold', successWhen: 'atLeast', continueOn: 'success',
     roll: { die: { constant: 'lead' }, check: null },
   },
   { id: 'n', type: 'amount', source: 'roll' },
@@ -189,7 +189,7 @@ describe('GroupCard: величина из записи', () => {
 
 describe('GroupCard: строка броска', () => {
   const rollSteps = () => [{
-    type: 'threshold', side: 'sender', successWhen: 'atLeast', continueOn: 'success',
+    type: 'threshold', successWhen: 'atLeast', continueOn: 'success',
     roll: { die: { constant: 'lead' }, bonus: { expr: '#armor' }, check: null },
   }] as unknown as Step[];
 

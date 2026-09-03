@@ -5,6 +5,17 @@ type Legacy = Record<string, any>;
 
 const isCall = (record: Legacy) => Boolean(record && record.rule);
 
+export function healLegacySides(world: Legacy): Legacy {
+  const effects = world?.system?.effects;
+  if (!effects || typeof effects !== 'object') return world;
+  for (const effect of Object.values<Legacy>(effects)) {
+    for (const step of (effect?.steps as Legacy[]) || []) {
+      if (step?.side === 'sender') delete step.side;
+    }
+  }
+  return world;
+}
+
 export function needsMigration(world: Legacy): boolean {
   const system = world.system || {};
   const compendium = world.compendium || {};

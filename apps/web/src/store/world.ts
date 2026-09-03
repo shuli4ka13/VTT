@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { world as W } from '@vtt/schema';
 import type { System, Compendium, Sheet, Effect, Field } from '@vtt/schema';
 import { unifyWorld } from '@vtt/engine/model/unify';
+import { healLegacySides } from '@vtt/engine/model/migrate';
 
 export interface WorldState {
   system: System;
@@ -91,7 +92,7 @@ export const useWorld = create<WorldState>()(persist(set => ({
   }),
 
   merge: (saved, current) => {
-    const parsed = W.world.safeParse(saved);
+    const parsed = W.world.safeParse(healLegacySides(saved as Record<string, any>));
     if (parsed.success) return { ...current, ...parsed.data };
 
     const first = parsed.error.issues[0];

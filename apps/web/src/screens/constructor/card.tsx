@@ -186,7 +186,7 @@ function RollExprInput({ step, context, edit }: {
       <FormulaChips
         value={shown}
         system={context.system}
-        side={String(step.side ?? 'sender') === 'target' ? 'target' : 'self'}
+        side={step.side === 'target' ? 'target' : 'self'}
         placeholder="1d20 + @поле"
         calculator
         extraOptions={Object.entries(context.system.constants ?? {})
@@ -484,7 +484,7 @@ function CheckBody({ step, context, edit, system }: {
           if (next === 'roll') {
             draft.type = 'threshold';
             d.roll ??= { die: firstDie(system) ? { constant: firstDie(system) } : undefined, check: null };
-            d.side ??= 'sender'; d.successWhen ??= 'atLeast'; d.continueOn ??= 'success';
+            d.successWhen ??= 'atLeast'; d.continueOn ??= 'success';
           } else {
             draft.type = 'compare';
             d.breakIf ??= 'less';
@@ -540,9 +540,12 @@ function CheckBody({ step, context, edit, system }: {
         <Fold title="Тонкости">
           <Field label="кто бросает">
             <Select
-              value={String(step.side ?? 'sender')}
-              options={[['sender', 'отправитель'], ['target', 'цель']] as const}
-              onChange={next => edit(0, draft => { (draft as any).side = next; })}
+              value={String(step.side ?? 'source')}
+              options={[['source', 'отправитель'], ['target', 'цель']] as const}
+              onChange={next => edit(0, draft => {
+                const d = draft as any;
+                if (next === 'target') d.side = 'target'; else delete d.side;
+              })}
             />
           </Field>
           <Field label="дальше при">

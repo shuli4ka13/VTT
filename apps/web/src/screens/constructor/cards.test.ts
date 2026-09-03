@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { groupSteps, BRICKS, moveGroup } from './cards.ts';
+import { world as W } from '@vtt/schema';
 import type { System, Step } from '@vtt/schema';
 
 const steps = (list: object[]) => list as unknown as Step[];
@@ -94,5 +95,22 @@ describe('склейка и состояние', () => {
     ]));
     expect(groups.map(g => g.kind)).toEqual(['change']);
     expect(groups[0]!.amount?.id).toBe('dmg');
+  });
+});
+
+describe('BRICKS дают документ, который примет сервер', () => {
+  for (const brick of BRICKS) {
+    it(`«${brick.label}» проходит схему шага`, () => {
+      for (const step of brick.make(system, [])) {
+        const parsed = W.step.safeParse(step);
+        expect(parsed.success ? null : parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`))
+          .toBe(null);
+      }
+    });
+  }
+
+  it('проверка не пишет сторону, пока автор её не выбрал', () => {
+    const [step] = BRICKS.find(b => b.key === 'check')!.make(system, []);
+    expect(step).not.toHaveProperty('side');
   });
 });
