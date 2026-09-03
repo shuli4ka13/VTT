@@ -5,12 +5,13 @@ import type { System, Compendium, Sheet, Effect, Field } from '@vtt/schema';
 import { unifyWorld } from '@vtt/engine/model/unify';
 import { healLegacySides } from '@vtt/engine/model/migrate';
 
-export type OriginKind = 'blank' | 'edit' | 'copy';
+export type WorkMode = 'system' | 'compendium';
 
 export interface Origin {
-  kind: OriginKind;
+  mode: WorkMode;
   systemId?: string;
   systemTitle?: string;
+  systemMine?: boolean;
   compendiumId?: string;
   compendiumTitle?: string;
 }
@@ -56,7 +57,7 @@ export const useWorld = create<WorldState>()(persist(set => ({
   system: emptySystem(),
   compendium: { items: [], actions: [] },
   sheets: [],
-  origin: { kind: 'blank' },
+  origin: { mode: 'system' },
 
   activeFieldTag: null,
   activeGroupName: null,

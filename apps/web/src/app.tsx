@@ -5,6 +5,7 @@ import { GateScreen } from './screens/gate/gate.tsx';
 import { useSession } from './store/session.ts';
 
 const AuthorApp = lazy(() => import('./apps/author.tsx'));
+const BookApp = lazy(() => import('./apps/book.tsx'));
 const PlayApp = lazy(() => import('./apps/play.tsx'));
 
 export function App() {
@@ -13,12 +14,13 @@ export function App() {
   return (
     <div className="shell">
       {pathname === '/' ? null : (
-        <TopBar author={pathname.startsWith('/author')} bare={pathname.endsWith('/start')} />
+        <TopBar where={whereOf(pathname)} bare={pathname.endsWith('/start')} />
       )}
       <Suspense fallback={<div className="column column--main"><span className="faint">загрузка…</span></div>}>
         <Routes>
           <Route path="/" element={<GateScreen />} />
           <Route path="/author/*" element={<Guarded><AuthorApp /></Guarded>} />
+          <Route path="/book/*" element={<Guarded><BookApp /></Guarded>} />
           <Route path="/play/*" element={<Guarded><PlayApp /></Guarded>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
@@ -27,20 +29,25 @@ export function App() {
   );
 }
 
-function TopBar({ author, bare }: { author: boolean; bare?: boolean }) {
+type Where = 'system' | 'book' | 'play';
+
+const whereOf = (pathname: string): Where =>
+  pathname.startsWith('/author') ? 'system' : pathname.startsWith('/book') ? 'book' : 'play';
+
+const TITLE: Record<Where, string> = {
+  system: 'система',
+  book: 'компендиум',
+  play: 'партия',
+};
+
+function TopBar({ where, bare }: { where: Where; bare?: boolean }) {
   return (
     <header className="topbar">
       <NavLink className="topbar__brand" to="/" title="сменить роль">
-        <em>VTT</em> {author ? 'автор' : 'партия'}
+        <em>VTT</em> {TITLE[where]}
       </NavLink>
       <nav className="topbar__nav">
-        {bare ? null : author ? (
-          <>
-            <NavLink className="topbar__link" to="/author/system">Система</NavLink>
-            <NavLink className="topbar__link" to="/author/compendium">Компендиум</NavLink>
-            <NavLink className="topbar__link" to="/author/start">Сменить систему</NavLink>
-          </>
-        ) : (
+        {bare || where !== 'play' ? null : (
           <>
             <NavLink className="topbar__link" to="/play/sheet">Персонаж</NavLink>
             <NavLink className="topbar__link" to="/play/table">Стол</NavLink>

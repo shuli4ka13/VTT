@@ -53,13 +53,29 @@ export class CatalogService {
     return { id, updatedAt };
   }
 
-  async playableSystem(id: string): Promise<{ id: string; title: string; system: System }> {
+  async systemFor(id: string, viewerId?: string) {
+    const row = (await this.db.select().from(publishedSystems).where(eq(publishedSystems.id, id)))[0];
+    if (!row) throw new NotFoundException(`системы «${id}» нет`);
+    return row.ownerId === viewerId ? this.system(id) : this.playableSystem(id);
+  }
+
+  async compendiumFor(id: string, viewerId?: string) {
+    const row = (await this.db.select().from(publishedCompendiums)
+      .where(eq(publishedCompendiums.id, id)))[0];
+    if (!row) throw new NotFoundException(`компендиума «${id}» нет`);
+    return row.ownerId === viewerId ? this.compendium(id) : this.playableCompendium(id);
+  }
+
+  async playableSystem(id: string): Promise<{ id: string; title: string; updatedAt: string; system: System }> {
     const row = (await this.db.select().from(publishedSystems).where(eq(publishedSystems.id, id)))[0];
     if (!row) throw new NotFoundException(`системы «${id}» нет`);
     if (!row.publishedData) {
       throw new BadRequestException(`система «${row.title}» ещё не опубликована`);
     }
-    return { id: row.id, title: row.title, system: JSON.parse(row.publishedData) as System };
+    return {
+      id: row.id, title: row.title, updatedAt: row.updatedAt,
+      system: JSON.parse(row.publishedData) as System,
+    };
   }
 
   private async ownedSystem(ownerId: string, id: string) {
@@ -140,7 +156,7 @@ export class CatalogService {
     if (!row.publishedData) {
       throw new BadRequestException(`компендиум «${row.title}» ещё не опубликован`);
     }
-    return { id: row.id, title: row.title, systemId: row.systemId,
+    return { id: row.id, title: row.title, systemId: row.systemId, updatedAt: row.updatedAt,
       compendium: JSON.parse(row.publishedData) as Compendium };
   }
 

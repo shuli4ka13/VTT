@@ -4,9 +4,9 @@ import { useWorld } from '../../store/world.ts';
 import { useSession } from '../../store/session.ts';
 import { useAutosave, rememberVersion } from '../../store/autosave.ts';
 import { Button, Input } from '../../ui/primitives.tsx';
-import { ApiError, publishSystem, publishCompendium, publishWorld } from '../../api/client.ts';
+import { ApiError, publishSystem, publishWorld } from '../../api/client.ts';
 
-export function WorldBar() {
+export function SystemBar() {
   const system = useWorld(s => s.system);
   const sheets = useWorld(s => s.sheets);
   const origin = useWorld(s => s.origin);
@@ -24,13 +24,9 @@ export function WorldBar() {
   const publish = async () => {
     if (!origin.systemId) return;
     try {
-      const system = await publishSystem(origin.systemId);
-      rememberVersion({ system: system.updatedAt });
-      if (origin.compendiumId) {
-        const book = await publishCompendium(origin.compendiumId);
-        rememberVersion({ compendium: book.updatedAt });
-      }
-      setNote({ text: 'опубликовано — партия увидит эту версию', bad: false });
+      const saved = await publishSystem(origin.systemId);
+      rememberVersion({ system: saved.updatedAt });
+      setNote({ text: 'система опубликована — партия увидит эту версию', bad: false });
     } catch (err) { fail(err); }
   };
 
@@ -54,13 +50,12 @@ export function WorldBar() {
     </div>
     <span className={`worldbar__state${saving.kind === 'failed' ? ' field__error' : ''}`}>{saved}</span>
     <NavLink className="topbar__link" to="/author/start">сменить систему</NavLink>
-    <NavLink className="topbar__link" to="/author/compendium/start">компендиум…</NavLink>
 
     <span className="spacer" />
 
     {note ? <span className={`worldbar__note ${note.bad ? 'field__error' : 'muted'}`}>{note.text}</span> : null}
     <span className="muted">{name}</span>
-    <Button size="sm" onClick={() => void publish()} disabled={!origin.systemId}>Опубликовать</Button>
+    <Button size="sm" onClick={() => void publish()} disabled={!origin.systemId}>Опубликовать систему</Button>
     <Button size="sm" variant="primary" onClick={() => void makeWorld()} disabled={!origin.systemId}>Создать мир</Button>
   </div>;
 }

@@ -29,6 +29,7 @@ let pending: (() => Promise<void>) | null = null;
 
 export const rememberVersion = (patch: { system?: string; compendium?: string }): void => {
   versions = { ...versions, ...patch };
+  sent = '';
 };
 
 async function flush(): Promise<void> {
@@ -41,21 +42,26 @@ async function flush(): Promise<void> {
 
 function schedule(): void {
   const { system, compendium, origin } = useWorld.getState();
-  const { systemId, compendiumId, compendiumTitle } = origin;
-  if (!systemId) return;
+  const { mode, systemId, compendiumId, compendiumTitle } = origin;
 
-  const title = system.name ?? 'Без имени';
-  const snapshot = JSON.stringify({ title, system, compendium, compendiumId });
+  const target = mode === 'system' ? systemId : compendiumId;
+  if (!target) return;
+
+  const title = mode === 'system'
+    ? (system.name ?? 'Без имени')
+    : (compendiumTitle ?? 'Без имени');
+  const snapshot = JSON.stringify({ mode, title, body: mode === 'system' ? system : compendium });
   if (snapshot === sent) return;
 
   pending = async () => {
     useAutosave.getState().set({ kind: 'saving' });
     try {
-      const saved = await saveSystem(systemId, title, system, versions.system);
-      versions.system = saved.updatedAt;
-      if (compendiumId) {
+      if (mode === 'system') {
+        const saved = await saveSystem(target, title, system, versions.system);
+        versions.system = saved.updatedAt;
+      } else {
         const book = await saveCompendium(
-          compendiumId, compendiumTitle ?? title, systemId, compendium, versions.compendium);
+          target, title, systemId!, compendium, versions.compendium);
         versions.compendium = book.updatedAt;
       }
       sent = snapshot;

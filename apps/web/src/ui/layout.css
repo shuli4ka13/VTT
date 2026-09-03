@@ -289,3 +289,6 @@
   color: var(--text-muted);
 }
 .tag--done { border-color: var(--ok); color: var(--ok); }
+
+.start__item--row { cursor: default; }
+.start__item-actions { display: flex; gap: var(--s-2); margin-top: var(--s-2); }

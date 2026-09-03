@@ -26,7 +26,12 @@ export class CatalogController {
   @Get('systems') async systems(@Headers('authorization') header?: string) {
     return this.catalog.systems(await this.viewer(header));
   }
-  @Get('systems/:id') system(@Param('id') id: string) { return this.catalog.system(id); }
+  @Get('systems/:id') async system(
+    @Param('id') id: string,
+    @Headers('authorization') header?: string,
+  ) {
+    return this.catalog.systemFor(id, await this.viewer(header));
+  }
   @Post('systems')
   @UsePipes(new ZodValidationPipe(api.publishSystemRequest))
   async createSystem(@Body() body: PublishSystemRequest, @Headers('authorization') header?: string) {
@@ -56,7 +61,12 @@ export class CatalogController {
   ) {
     return this.catalog.compendiums(systemId, await this.viewer(header));
   }
-  @Get('compendiums/:id') compendium(@Param('id') id: string) { return this.catalog.compendium(id); }
+  @Get('compendiums/:id') async compendium(
+    @Param('id') id: string,
+    @Headers('authorization') header?: string,
+  ) {
+    return this.catalog.compendiumFor(id, await this.viewer(header));
+  }
   @Post('compendiums')
   @UsePipes(new ZodValidationPipe(api.publishCompendiumRequest))
   async createCompendium(@Body() body: PublishCompendiumRequest, @Headers('authorization') header?: string) {
