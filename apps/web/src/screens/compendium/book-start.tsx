@@ -91,7 +91,7 @@ export function BookStart() {
   };
 
   return (
-    <div className="start">
+    <div className="start__scroll"><div className="start">
       <h1 className="start__title">Компендиум — для какой системы?</h1>
       <p className="start__lead">
         Компендиум наполняет готовую систему вещами. Система может быть чужой — важно только,
@@ -168,6 +168,6 @@ export function BookStart() {
           </Card>
         </>
       ) : null}
-    </div>
+    </div></div>
   );
 }

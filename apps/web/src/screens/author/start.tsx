@@ -71,7 +71,7 @@ export function SystemStart() {
   };
 
   return (
-    <div className="start">
+    <div className="start__scroll"><div className="start">
       <h1 className="start__title">С чего начнём?</h1>
       {trouble ? <Verdict tone="bad">{trouble}</Verdict> : null}
 
@@ -133,6 +133,6 @@ export function SystemStart() {
             )}
         </Card>
       ) : null}
-    </div>
+    </div></div>
   );
 }
