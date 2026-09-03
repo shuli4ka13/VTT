@@ -41,6 +41,9 @@ async function flush(): Promise<void> {
 }
 
 function schedule(): void {
+  if (timer) { clearTimeout(timer); timer = null; }
+  pending = null;
+
   const { system, compendium, origin } = useWorld.getState();
   const { mode, systemId, compendiumId, compendiumTitle } = origin;
 
