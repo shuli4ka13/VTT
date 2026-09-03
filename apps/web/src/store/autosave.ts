@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { create } from 'zustand';
 import { useWorld } from './world.ts';
 import { saveSystem, saveCompendium } from '../api/client.ts';
 
@@ -10,40 +10,70 @@ export type SaveState =
   | { kind: 'saved'; at: string }
   | { kind: 'failed'; why: string };
 
-export function useAutosave(): SaveState {
-  const system = useWorld(s => s.system);
-  const compendium = useWorld(s => s.compendium);
-  const origin = useWorld(s => s.origin);
+interface AutosaveState {
+  state: SaveState;
+  set: (next: SaveState) => void;
+}
 
-  const [state, setState] = useState<SaveState>({ kind: 'idle' });
-  const sent = useRef('');
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+export const useAutosave = create<AutosaveState>()(set => ({
+  state: { kind: 'idle' },
+  set: next => set({ state: next }),
+}));
 
-  useEffect(() => {
-    const { systemId, compendiumId } = origin;
-    if (!systemId) return;
+const clock = () => new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
 
-    const title = system.name ?? 'Без имени';
-    const snapshot = JSON.stringify({ title, system, compendium, compendiumId });
-    if (snapshot === sent.current) return;
+let versions: { system?: string; compendium?: string } = {};
+let sent = '';
+let timer: ReturnType<typeof setTimeout> | null = null;
+let pending: (() => Promise<void>) | null = null;
 
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => {
-      setState({ kind: 'saving' });
-      const jobs = [saveSystem(systemId, title, system)];
+export const rememberVersion = (patch: { system?: string; compendium?: string }): void => {
+  versions = { ...versions, ...patch };
+};
+
+async function flush(): Promise<void> {
+  if (!pending) return;
+  const job = pending;
+  pending = null;
+  if (timer) { clearTimeout(timer); timer = null; }
+  await job();
+}
+
+function schedule(): void {
+  const { system, compendium, origin } = useWorld.getState();
+  const { systemId, compendiumId, compendiumTitle } = origin;
+  if (!systemId) return;
+
+  const title = system.name ?? 'Без имени';
+  const snapshot = JSON.stringify({ title, system, compendium, compendiumId });
+  if (snapshot === sent) return;
+
+  pending = async () => {
+    useAutosave.getState().set({ kind: 'saving' });
+    try {
+      const saved = await saveSystem(systemId, title, system, versions.system);
+      versions.system = saved.updatedAt;
       if (compendiumId) {
-        jobs.push(saveCompendium(compendiumId, origin.compendiumTitle ?? title, systemId, compendium));
+        const book = await saveCompendium(
+          compendiumId, compendiumTitle ?? title, systemId, compendium, versions.compendium);
+        versions.compendium = book.updatedAt;
       }
-      Promise.all(jobs)
-        .then(() => {
-          sent.current = snapshot;
-          setState({ kind: 'saved', at: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) });
-        })
-        .catch(err => setState({ kind: 'failed', why: (err as Error).message }));
-    }, PAUSE);
+      sent = snapshot;
+      useAutosave.getState().set({ kind: 'saved', at: clock() });
+    } catch (err) {
+      useAutosave.getState().set({ kind: 'failed', why: (err as Error).message });
+    }
+  };
 
-    return () => { if (timer.current) clearTimeout(timer.current); };
-  }, [system, compendium, origin]);
+  if (timer) clearTimeout(timer);
+  timer = setTimeout(() => { void flush(); }, PAUSE);
+}
 
-  return state;
+useWorld.subscribe(schedule);
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') void flush();
+  });
+  window.addEventListener('pagehide', () => { void flush(); });
 }

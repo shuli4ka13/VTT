@@ -1,7 +1,7 @@
 import { api } from '@vtt/schema';
 import type {
   Session, SystemSummary, PublishedSystem, CompendiumSummary, PublishedCompendium,
-  WorldSummary, RoomSummary, RoomState, ActIntent, RoomDelta, System, Compendium, Sheet,
+  WorldSummary, RoomSummary, RoomState, ActIntent, RoomDelta, System, Compendium, Sheet, SavedRef,
 } from '@vtt/schema';
 import { z } from 'zod';
 import type { ZodType } from 'zod';
@@ -71,14 +71,15 @@ export const listSystems = (): Promise<SystemSummary[]> =>
 export const getSystem = (id: string): Promise<PublishedSystem> =>
   call(`/systems/${id}`, api.publishedSystem);
 
-export const createSystem = (title: string, system: System): Promise<{ id: string }> =>
-  post('/systems', publishedId, { title, system });
+export const createSystem = (title: string, system: System): Promise<SavedRef> =>
+  post('/systems', api.savedRef, { title, system });
 
-export const saveSystem = (id: string, title: string, system: System): Promise<{ id: string }> =>
-  put(`/systems/${id}`, publishedId, { title, system });
+export const saveSystem = (
+  id: string, title: string, system: System, since?: string,
+): Promise<SavedRef> => put(`/systems/${id}`, api.savedRef, { title, system, since });
 
-export const publishSystem = (id: string): Promise<{ id: string }> =>
-  post(`/systems/${id}/publish`, publishedId, {});
+export const publishSystem = (id: string): Promise<SavedRef> =>
+  post(`/systems/${id}/publish`, api.savedRef, {});
 
 export const listCompendiums = (systemId?: string): Promise<CompendiumSummary[]> =>
   call(`/compendiums${systemId ? `?systemId=${encodeURIComponent(systemId)}` : ''}`,
@@ -89,14 +90,15 @@ export const getCompendium = (id: string): Promise<PublishedCompendium> =>
 
 export const createCompendium = (
   title: string, systemId: string, compendium: Compendium,
-): Promise<{ id: string }> => post('/compendiums', publishedId, { title, systemId, compendium });
+): Promise<SavedRef> => post('/compendiums', api.savedRef, { title, systemId, compendium });
 
 export const saveCompendium = (
-  id: string, title: string, systemId: string, compendium: Compendium,
-): Promise<{ id: string }> => put(`/compendiums/${id}`, publishedId, { title, systemId, compendium });
+  id: string, title: string, systemId: string, compendium: Compendium, since?: string,
+): Promise<SavedRef> =>
+  put(`/compendiums/${id}`, api.savedRef, { title, systemId, compendium, since });
 
-export const publishCompendium = (id: string): Promise<{ id: string }> =>
-  post(`/compendiums/${id}/publish`, publishedId, {});
+export const publishCompendium = (id: string): Promise<SavedRef> =>
+  post(`/compendiums/${id}/publish`, api.savedRef, {});
 
 export const listWorlds = (): Promise<WorldSummary[]> =>
   call('/worlds', api.worldSummary.array());

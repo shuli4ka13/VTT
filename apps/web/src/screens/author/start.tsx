@@ -6,6 +6,7 @@ import {
   listSystems, getSystem, createSystem,
   listCompendiums, getCompendium, createCompendium,
 } from '../../api/client.ts';
+import { rememberVersion } from '../../store/autosave.ts';
 import type { CompendiumSummary, SystemSummary } from '@vtt/schema';
 
 type Mode = 'edit' | 'copy' | 'blank' | null;
@@ -40,6 +41,7 @@ export function SystemStart() {
     try {
       const named = { ...system, name };
       const saved = await createSystem(name, named);
+      rememberVersion({ system: saved.updatedAt, compendium: undefined });
       replaceWorld({ system: named, compendium: { items: [], actions: [] }, sheets: [] });
       setOrigin({
         kind: 'edit', systemId: saved.id, systemTitle: name,
@@ -59,6 +61,7 @@ export function SystemStart() {
     setBusy(true);
     try {
       const saved = await getSystem(summary.id);
+      rememberVersion({ system: saved.updatedAt, compendium: undefined });
       replaceWorld({ system: saved.system, compendium: { items: [], actions: [] }, sheets: [] });
       setOrigin({
         kind: 'edit', systemId: saved.id, systemTitle: saved.title,
@@ -99,7 +102,7 @@ export function SystemStart() {
         <Card>
           <CardHead title="Как назовём систему" sub="Имя можно поменять потом — оно нужно, чтобы система нашлась в списке." />
           <div className="gate__form">
-            <Input value={title} onChange={setTitle} placeholder="например: Полынь и порох"
+            <Input value={title} onChange={setTitle}
               onKeyDown={e => { if (e.key === 'Enter' && title.trim()) void start(title.trim()); }} />
             <Button variant="primary" disabled={!title.trim() || busy}
               onClick={() => void start(title.trim())}>
@@ -164,6 +167,7 @@ export function CompendiumStart() {
     setTrouble(null);
     try {
       const saved = await createCompendium(name, origin.systemId, book);
+      rememberVersion({ compendium: saved.updatedAt });
       replaceWorld({ system, compendium: book, sheets });
       setOrigin({ compendiumId: saved.id, compendiumTitle: name });
       navigate('/author/compendium');
@@ -177,6 +181,7 @@ export function CompendiumStart() {
     if (mode === 'copy') return start(`${saved.title} — копия`, saved.compendium as never);
     setBusy(true);
     try {
+      rememberVersion({ compendium: saved.updatedAt });
       replaceWorld({ system, compendium: saved.compendium, sheets });
       setOrigin({ compendiumId: saved.id, compendiumTitle: saved.title });
       navigate('/author/compendium');

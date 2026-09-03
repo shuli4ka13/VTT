@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink } from 'react-router';
 import { useWorld } from '../../store/world.ts';
 import { useSession } from '../../store/session.ts';
-import { useAutosave } from '../../store/autosave.ts';
+import { useAutosave, rememberVersion } from '../../store/autosave.ts';
 import { Button, Input } from '../../ui/primitives.tsx';
 import { ApiError, publishSystem, publishCompendium, publishWorld } from '../../api/client.ts';
 
@@ -12,7 +12,7 @@ export function WorldBar() {
   const origin = useWorld(s => s.origin);
   const editSystem = useWorld(s => s.editSystem);
   const name = useSession(s => s.name);
-  const saving = useAutosave();
+  const saving = useAutosave(s => s.state);
 
   const [note, setNote] = useState<{ text: string; bad: boolean } | null>(null);
 
@@ -24,8 +24,12 @@ export function WorldBar() {
   const publish = async () => {
     if (!origin.systemId) return;
     try {
-      await publishSystem(origin.systemId);
-      if (origin.compendiumId) await publishCompendium(origin.compendiumId);
+      const system = await publishSystem(origin.systemId);
+      rememberVersion({ system: system.updatedAt });
+      if (origin.compendiumId) {
+        const book = await publishCompendium(origin.compendiumId);
+        rememberVersion({ compendium: book.updatedAt });
+      }
       setNote({ text: 'опубликовано — партия увидит эту версию', bad: false });
     } catch (err) { fail(err); }
   };

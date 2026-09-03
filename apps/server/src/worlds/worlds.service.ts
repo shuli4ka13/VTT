@@ -18,7 +18,7 @@ export class WorldsService {
 
   async publish(ownerId: string, title: string, systemId: string,
     compendiumIds: string[], sheets: Sheet[]): Promise<{ id: string }> {
-    await this.catalog.system(systemId);
+    await this.catalog.playableSystem(systemId);
     await this.mergeCompendiums(systemId, compendiumIds);
     const parsedSheets = W.sheet.array().safeParse(sheets);
     if (!parsedSheets.success) throw new BadRequestException('листы мира не проходят схему');
@@ -38,7 +38,7 @@ export class WorldsService {
     const out: WorldSummary[] = [];
 
     for (const row of rows) {
-      const system = await this.catalog.system(row.systemId);
+      const system = await this.catalog.playableSystem(row.systemId);
       const owner = await this.db.select().from(users).where(eq(users.id, row.ownerId));
       out.push({
         id: row.id,
@@ -57,7 +57,7 @@ export class WorldsService {
     const rows = await this.db.select().from(worlds).where(eq(worlds.id, id));
     const row = rows[0];
     if (!row) throw new NotFoundException(`мира «${id}» на сервере нет`);
-    const system = await this.catalog.system(row.systemId);
+    const system = await this.catalog.playableSystem(row.systemId);
     const compendium = await this.mergeCompendiums(
       row.systemId, JSON.parse(row.compendiumIds) as string[]);
     return { system: system.system, compendium,
@@ -68,7 +68,7 @@ export class WorldsService {
     const merged: Compendium = { items: [], actions: [] };
     const seen = new Set<string>();
     for (const id of ids) {
-      const published = await this.catalog.compendium(id);
+      const published = await this.catalog.playableCompendium(id);
       if (published.systemId !== systemId) {
         throw new BadRequestException(`компендиум «${published.title}» относится к другой системе`);
       }

@@ -55,6 +55,8 @@ const publish = async (title: string, token: string, worldSheets: unknown[]) => 
   const book = await post('/compendiums', {
     title: `${title} · книга`, systemId: system.id, compendium,
   }, token);
+  await post(`/systems/${system.id}/publish`, {}, token);
+  await post(`/compendiums/${book.id}/publish`, {}, token);
   return post('/worlds', {
     title, systemId: system.id, compendiumIds: [book.id], sheets: worldSheets,
   }, token);

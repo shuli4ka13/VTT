@@ -14,4 +14,5 @@ export type {
   PublishCompendiumRequest, CompendiumSummary, PublishedCompendium,
   PublishRequest, WorldSummary, CreateRoomRequest,
   RoomSummary, RoomState, ActIntent, RoomDelta, ServerMessage, ClientMessage,
+  PublishState, SavedRef,
 } from './api.ts';

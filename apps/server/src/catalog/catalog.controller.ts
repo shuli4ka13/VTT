@@ -15,7 +15,17 @@ export class CatalogController {
     @Inject(AuthService) private readonly auth: AuthService,
   ) {}
 
-  @Get('systems') systems() { return this.catalog.systems(); }
+  private async viewer(header?: string): Promise<string | undefined> {
+    try {
+      return (await this.auth.whoIs(bearer(header))).userId;
+    } catch {
+      return undefined;
+    }
+  }
+
+  @Get('systems') async systems(@Headers('authorization') header?: string) {
+    return this.catalog.systems(await this.viewer(header));
+  }
   @Get('systems/:id') system(@Param('id') id: string) { return this.catalog.system(id); }
   @Post('systems')
   @UsePipes(new ZodValidationPipe(api.publishSystemRequest))
@@ -31,7 +41,7 @@ export class CatalogController {
     @Headers('authorization') header?: string,
   ) {
     const { userId } = await this.auth.whoIs(bearer(header));
-    return this.catalog.saveSystem(userId, id, body.title, body.system);
+    return this.catalog.saveSystem(userId, id, body.title, body.system, body.since);
   }
 
   @Post('systems/:id/publish')
@@ -40,8 +50,11 @@ export class CatalogController {
     return this.catalog.publishSystem(userId, id);
   }
 
-  @Get('compendiums') compendiums(@Query('systemId') systemId?: string) {
-    return this.catalog.compendiums(systemId);
+  @Get('compendiums') async compendiums(
+    @Query('systemId') systemId?: string,
+    @Headers('authorization') header?: string,
+  ) {
+    return this.catalog.compendiums(systemId, await this.viewer(header));
   }
   @Get('compendiums/:id') compendium(@Param('id') id: string) { return this.catalog.compendium(id); }
   @Post('compendiums')
@@ -58,7 +71,7 @@ export class CatalogController {
     @Headers('authorization') header?: string,
   ) {
     const { userId } = await this.auth.whoIs(bearer(header));
-    return this.catalog.saveCompendium(userId, id, body.title, body.compendium);
+    return this.catalog.saveCompendium(userId, id, body.title, body.compendium, body.since);
   }
 
   @Post('compendiums/:id/publish')

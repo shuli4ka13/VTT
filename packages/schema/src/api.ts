@@ -11,9 +11,13 @@ export const session = z.object({
   token: z.string(),
 });
 
+export const savedRef = z.object({ id: z.string(), updatedAt: z.string() });
+
 export const publishSystemRequest = z.object({
   title: z.string().min(1).max(120),
   system,
+
+  since: z.string().optional(),
 });
 
 export const publishState = z.enum(['draft', 'published']);
@@ -25,13 +29,15 @@ export const systemSummary = z.object({
 });
 
 export const publishedSystem = z.object({
-  id: z.string(), title: z.string(), system,
+  id: z.string(), title: z.string(), updatedAt: z.string(), system,
 });
 
 export const publishCompendiumRequest = z.object({
   title: z.string().min(1).max(120),
   systemId: z.string().min(1),
   compendium,
+
+  since: z.string().optional(),
 });
 
 export const compendiumSummary = z.object({
@@ -42,7 +48,7 @@ export const compendiumSummary = z.object({
 });
 
 export const publishedCompendium = z.object({
-  id: z.string(), title: z.string(), systemId: z.string(), compendium,
+  id: z.string(), title: z.string(), systemId: z.string(), updatedAt: z.string(), compendium,
 });
 
 export const publishRequest = z.object({
@@ -139,6 +145,7 @@ export type PublishedSystem = z.infer<typeof publishedSystem>;
 export type PublishCompendiumRequest = z.infer<typeof publishCompendiumRequest>;
 export type CompendiumSummary = z.infer<typeof compendiumSummary>;
 export type PublishState = z.infer<typeof publishState>;
+export type SavedRef = z.infer<typeof savedRef>;
 export type PublishedCompendium = z.infer<typeof publishedCompendium>;
 export type PublishRequest = z.infer<typeof publishRequest>;
 export type WorldSummary = z.infer<typeof worldSummary>;

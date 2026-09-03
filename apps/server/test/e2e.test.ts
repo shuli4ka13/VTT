@@ -73,7 +73,7 @@ describe('сквозной прогон стенда', () => {
     }).expect(401);
   });
 
-  it('система и её компендиум публикуются отдельно', async () => {
+  it('создание кладёт систему в черновики: чужой её не видит, автор — да', async () => {
     const sys = await http().post('/systems')
       .set('Authorization', `Bearer ${token}`)
       .send({ title: 'D&D 5e', system: dnd })
@@ -90,9 +90,35 @@ describe('сквозной прогон стенда', () => {
       .expect(201);
     extraCompendiumId = extra.body.id;
 
-    const list = await http().get(`/compendiums?systemId=${systemId}`).expect(200);
-    expect(list.body).toHaveLength(2);
-    expect(list.body.some((book: { title: string }) => book.title === 'Основная книга')).toBe(true);
+    const anonymous = await http().get(`/compendiums?systemId=${systemId}`).expect(200);
+    expect(anonymous.body).toHaveLength(0);
+
+    const mine = await http().get(`/compendiums?systemId=${systemId}`)
+      .set('Authorization', `Bearer ${token}`).expect(200);
+    expect(mine.body).toHaveLength(2);
+    expect(mine.body.every((book: { status: string }) => book.status === 'draft')).toBe(true);
+    expect(mine.body.some((book: { title: string }) => book.title === 'Основная книга')).toBe(true);
+  });
+
+  it('мир не собрать из неопубликованного', async () => {
+    await http().post('/worlds')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Рано', systemId, compendiumIds: [compendiumId], sheets: worldSheets() })
+      .expect(400);
+  });
+
+  it('публикация делает снимок: правки черновика в него не протекают', async () => {
+    for (const path of [
+      `/systems/${systemId}/publish`,
+      `/compendiums/${compendiumId}/publish`,
+      `/compendiums/${extraCompendiumId}/publish`,
+    ]) {
+      await http().post(path).set('Authorization', `Bearer ${token}`).send({}).expect(201);
+    }
+
+    const listed = await http().get('/systems').expect(200);
+    expect(listed.body.some((item: { id: string; status: string }) =>
+      item.id === systemId && item.status === 'published')).toBe(true);
   });
 
   it('мир собирается из системы и выбранных компендиумов', async () => {

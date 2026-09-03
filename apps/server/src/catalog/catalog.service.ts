@@ -1,7 +1,8 @@
 import {
-  BadRequestException, ForbiddenException, Inject, Injectable, NotFoundException,
+  BadRequestException, ConflictException, ForbiddenException,
+  Inject, Injectable, NotFoundException,
 } from '@nestjs/common';
-import { desc, eq } from 'drizzle-orm';
+import { and, desc, eq, or } from 'drizzle-orm';
 import { world as schemas } from '@vtt/schema';
 import type { Compendium, System } from '@vtt/schema';
 import { DB, CLOCK, IDS } from '../common/tokens.ts';
@@ -20,29 +21,45 @@ export class CatalogService {
     const parsed = schemas.system.safeParse(data);
     if (!parsed.success) throw new BadRequestException('система не проходит схему');
     const id = this.newId();
+    const updatedAt = this.now();
     await this.db.insert(publishedSystems).values({
       id, title, ownerId, data: JSON.stringify(parsed.data),
-      status: 'draft', updatedAt: this.now(),
+      publishedData: null, status: 'draft', updatedAt,
     });
-    return { id };
+    return { id, updatedAt };
   }
 
-  async saveSystem(ownerId: string, id: string, title: string, data: unknown) {
+  async saveSystem(ownerId: string, id: string, title: string, data: unknown, since?: string) {
     const parsed = schemas.system.safeParse(data);
     if (!parsed.success) throw new BadRequestException('система не проходит схему');
-    await this.ownedSystem(ownerId, id);
+    const row = await this.ownedSystem(ownerId, id);
+    if (since && since !== row.updatedAt) {
+      throw new ConflictException(
+        'систему изменили в другом месте — обновите страницу, иначе затрёте ту правку');
+    }
+    const updatedAt = this.now();
     await this.db.update(publishedSystems)
-      .set({ title, data: JSON.stringify(parsed.data), updatedAt: this.now() })
+      .set({ title, data: JSON.stringify(parsed.data), updatedAt })
       .where(eq(publishedSystems.id, id));
-    return { id };
+    return { id, updatedAt };
   }
 
   async publishSystem(ownerId: string, id: string) {
-    await this.ownedSystem(ownerId, id);
+    const row = await this.ownedSystem(ownerId, id);
+    const updatedAt = this.now();
     await this.db.update(publishedSystems)
-      .set({ status: 'published', updatedAt: this.now() })
+      .set({ publishedData: row.data, status: 'published', updatedAt })
       .where(eq(publishedSystems.id, id));
-    return { id };
+    return { id, updatedAt };
+  }
+
+  async playableSystem(id: string): Promise<{ id: string; title: string; system: System }> {
+    const row = (await this.db.select().from(publishedSystems).where(eq(publishedSystems.id, id)))[0];
+    if (!row) throw new NotFoundException(`системы «${id}» нет`);
+    if (!row.publishedData) {
+      throw new BadRequestException(`система «${row.title}» ещё не опубликована`);
+    }
+    return { id: row.id, title: row.title, system: JSON.parse(row.publishedData) as System };
   }
 
   private async ownedSystem(ownerId: string, id: string) {
@@ -52,8 +69,12 @@ export class CatalogService {
     return row;
   }
 
-  async systems() {
-    const rows = await this.db.select().from(publishedSystems).orderBy(desc(publishedSystems.updatedAt));
+  async systems(viewerId?: string) {
+    const visible = viewerId
+      ? or(eq(publishedSystems.status, 'published'), eq(publishedSystems.ownerId, viewerId))
+      : eq(publishedSystems.status, 'published');
+    const rows = await this.db.select().from(publishedSystems)
+      .where(visible).orderBy(desc(publishedSystems.updatedAt));
     return Promise.all(rows.map(async row => {
       const data = JSON.parse(row.data) as System;
       return { id: row.id, title: row.title, systemName: data.name ?? data.id,
@@ -62,10 +83,13 @@ export class CatalogService {
     }));
   }
 
-  async system(id: string): Promise<{ id: string; title: string; system: System }> {
+  async system(id: string): Promise<{ id: string; title: string; updatedAt: string; system: System }> {
     const row = (await this.db.select().from(publishedSystems).where(eq(publishedSystems.id, id)))[0];
     if (!row) throw new NotFoundException(`системы «${id}» нет`);
-    return { id: row.id, title: row.title, system: JSON.parse(row.data) as System };
+    return {
+      id: row.id, title: row.title, updatedAt: row.updatedAt,
+      system: JSON.parse(row.data) as System,
+    };
   }
 
   async createCompendium(ownerId: string, title: string, systemId: string, data: unknown) {
@@ -77,29 +101,47 @@ export class CatalogService {
     if (unknown) throw new BadRequestException(
       `запись «${unknown.label ?? unknown.id}» не соответствует выбранной системе`);
     const id = this.newId();
+    const updatedAt = this.now();
     await this.db.insert(publishedCompendiums).values({
       id, title, ownerId, systemId, data: JSON.stringify(parsed.data),
-      status: 'draft', updatedAt: this.now(),
+      publishedData: null, status: 'draft', updatedAt,
     });
-    return { id };
+    return { id, updatedAt };
   }
 
-  async saveCompendium(ownerId: string, id: string, title: string, data: unknown) {
+  async saveCompendium(ownerId: string, id: string, title: string, data: unknown, since?: string) {
     const parsed = schemas.compendium.safeParse(data);
     if (!parsed.success) throw new BadRequestException('компендиум не проходит схему');
-    await this.ownedCompendium(ownerId, id);
+    const row = await this.ownedCompendium(ownerId, id);
+    if (since && since !== row.updatedAt) {
+      throw new ConflictException(
+        'компендиум изменили в другом месте — обновите страницу, иначе затрёте ту правку');
+    }
+    const updatedAt = this.now();
     await this.db.update(publishedCompendiums)
-      .set({ title, data: JSON.stringify(parsed.data), updatedAt: this.now() })
+      .set({ title, data: JSON.stringify(parsed.data), updatedAt })
       .where(eq(publishedCompendiums.id, id));
-    return { id };
+    return { id, updatedAt };
   }
 
   async publishCompendium(ownerId: string, id: string) {
-    await this.ownedCompendium(ownerId, id);
+    const row = await this.ownedCompendium(ownerId, id);
+    const updatedAt = this.now();
     await this.db.update(publishedCompendiums)
-      .set({ status: 'published', updatedAt: this.now() })
+      .set({ publishedData: row.data, status: 'published', updatedAt })
       .where(eq(publishedCompendiums.id, id));
-    return { id };
+    return { id, updatedAt };
+  }
+
+  async playableCompendium(id: string) {
+    const row = (await this.db.select().from(publishedCompendiums)
+      .where(eq(publishedCompendiums.id, id)))[0];
+    if (!row) throw new NotFoundException(`компендиума «${id}» нет`);
+    if (!row.publishedData) {
+      throw new BadRequestException(`компендиум «${row.title}» ещё не опубликован`);
+    }
+    return { id: row.id, title: row.title, systemId: row.systemId,
+      compendium: JSON.parse(row.publishedData) as Compendium };
   }
 
   private async ownedCompendium(ownerId: string, id: string) {
@@ -110,11 +152,16 @@ export class CatalogService {
     return row;
   }
 
-  async compendiums(systemId?: string) {
+  async compendiums(systemId?: string, viewerId?: string) {
+    const visible = viewerId
+      ? or(eq(publishedCompendiums.status, 'published'), eq(publishedCompendiums.ownerId, viewerId))
+      : eq(publishedCompendiums.status, 'published');
     const rows = systemId
       ? await this.db.select().from(publishedCompendiums)
-        .where(eq(publishedCompendiums.systemId, systemId)).orderBy(desc(publishedCompendiums.updatedAt))
-      : await this.db.select().from(publishedCompendiums).orderBy(desc(publishedCompendiums.updatedAt));
+        .where(and(eq(publishedCompendiums.systemId, systemId), visible))
+        .orderBy(desc(publishedCompendiums.updatedAt))
+      : await this.db.select().from(publishedCompendiums)
+        .where(visible).orderBy(desc(publishedCompendiums.updatedAt));
     return Promise.all(rows.map(async row => {
       const data = JSON.parse(row.data) as Compendium;
       const system = await this.system(row.systemId);
@@ -130,7 +177,7 @@ export class CatalogService {
     const row = (await this.db.select().from(publishedCompendiums)
       .where(eq(publishedCompendiums.id, id)))[0];
     if (!row) throw new NotFoundException(`компендиума «${id}» нет`);
-    return { id: row.id, title: row.title, systemId: row.systemId,
+    return { id: row.id, title: row.title, systemId: row.systemId, updatedAt: row.updatedAt,
       compendium: JSON.parse(row.data) as Compendium };
   }
 
