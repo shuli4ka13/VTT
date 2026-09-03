@@ -121,3 +121,33 @@ describe('CompendiumScreen: кость записи — формочкой, а �
     expect(sides!.value).toBe('12', 'после ухода фокуса — из данных');
   });
 });
+
+describe('CompendiumScreen: id новой записи не завязан только на род', () => {
+  beforeEach(() => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...state.system,
+        records: {
+          weapon: { kind: 'item', label: 'Оружие', group: 'Снаряжение', props: [] },
+        },
+      },
+      compendium: { items: [], actions: [] },
+      activeRecordId: null,
+    }));
+  });
+
+  it('первая запись рода в двух разных компендиумах получает разные id', () => {
+    const { container } = render(<CompendiumScreen />);
+    const pick = () => fireEvent.click(container.querySelector('.card--pick')!);
+
+    pick();
+    const first = useWorld.getState().compendium.items![0]!.id;
+
+    useWorld.setState({ compendium: { items: [], actions: [] }, activeRecordId: null });
+    pick();
+    const second = useWorld.getState().compendium.items![0]!.id;
+
+    expect(second).not.toBe(first);
+  });
+});

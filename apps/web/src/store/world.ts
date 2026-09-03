@@ -167,3 +167,5 @@ export function freeId(taken: Iterable<string>, base: string): string {
     if (!used.has(candidate)) return candidate;
   }
 }
+
+export const randomTag = (): string => Math.random().toString(36).slice(2, 8);

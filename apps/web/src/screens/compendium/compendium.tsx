@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useWorld, freeId } from '../../store/world.ts';
+import { useWorld, freeId, randomTag } from '../../store/world.ts';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
   Card, CardHead, Field, Input, Select, Button, Empty, Verdict, DangerButton, NumInput,
@@ -24,7 +24,7 @@ export function CompendiumScreen() {
 
   const add = (rk: string, kind: RecordKind) => {
     const taken = all.map(e => e.record.id);
-    const id = freeId(taken, kind.label ?? rk);
+    const id = freeId(taken, `${kind.label ?? rk}_${randomTag()}`);
     editCompendium(draft => {
       const list = kind.kind === 'item' ? (draft.items ??= []) : (draft.actions ??= []);
       list.push({ id, rk, label: `Новая запись (${kind.label ?? rk})`, props: {} });
