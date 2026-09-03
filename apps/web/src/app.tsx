@@ -12,7 +12,9 @@ export function App() {
 
   return (
     <div className="shell">
-      {pathname === '/' ? null : <TopBar author={pathname.startsWith('/author')} />}
+      {pathname === '/' ? null : (
+        <TopBar author={pathname.startsWith('/author')} bare={pathname.endsWith('/start')} />
+      )}
       <Suspense fallback={<div className="column column--main"><span className="faint">загрузка…</span></div>}>
         <Routes>
           <Route path="/" element={<GateScreen />} />
@@ -25,14 +27,14 @@ export function App() {
   );
 }
 
-function TopBar({ author }: { author: boolean }) {
+function TopBar({ author, bare }: { author: boolean; bare?: boolean }) {
   return (
     <header className="topbar">
       <NavLink className="topbar__brand" to="/" title="сменить роль">
         <em>VTT</em> {author ? 'автор' : 'партия'}
       </NavLink>
       <nav className="topbar__nav">
-        {author ? (
+        {bare ? null : author ? (
           <>
             <NavLink className="topbar__link" to="/author/system">Система</NavLink>
             <NavLink className="topbar__link" to="/author/compendium">Компендиум</NavLink>

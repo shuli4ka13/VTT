@@ -10,9 +10,13 @@ type Mode = 'edit' | 'copy' | null;
 const when = (iso: string): string => new Date(iso).toLocaleDateString('ru-RU');
 
 export function SystemStart() {
+  const draft = useWorld(s => s.system);
+  const origin = useWorld(s => s.origin);
   const replaceWorld = useWorld(s => s.replaceWorld);
   const setOrigin = useWorld(s => s.setOrigin);
   const navigate = useNavigate();
+
+  const started = draft.fields.length > 0 || Object.keys(draft.effects ?? {}).length > 0;
 
   const [mode, setMode] = useState<Mode>(null);
   const [systems, setSystems] = useState<SystemSummary[]>([]);
@@ -48,6 +52,14 @@ export function SystemStart() {
     <div className="start">
       <h1 className="start__title">С чего начнём?</h1>
       {trouble ? <Verdict tone="bad">{trouble}</Verdict> : null}
+
+      {started ? (
+        <Verdict tone="ok" action={
+          <Button size="sm" onClick={() => navigate('/author/system')}>вернуться к нему</Button>
+        }>
+          Открыт черновик «{draft.name}» — {origin.kind === 'edit' ? 'правится опубликованная система' : 'ещё не опубликован'}.
+        </Verdict>
+      ) : null}
 
       <div className="roles__grid">
         <button type="button" className={`role${mode === 'edit' ? ' role--active' : ''}`}
