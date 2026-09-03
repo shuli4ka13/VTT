@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useWorld } from '../../store/world.ts';
+import { useSession } from '../../store/session.ts';
 import { rememberVersion } from '../../store/autosave.ts';
 import { Button, Card, CardHead, Empty, Input, Verdict } from '../../ui/primitives.tsx';
 import {
@@ -13,6 +14,7 @@ const EMPTY: Compendium = { items: [], actions: [] };
 
 export function BookStart() {
   const sheets = useWorld(s => s.sheets);
+  const me = useSession(s => s.name);
   const replaceWorld = useWorld(s => s.replaceWorld);
   const setOrigin = useWorld(s => s.setOrigin);
   const navigate = useNavigate();
@@ -43,6 +45,7 @@ export function BookStart() {
       replaceWorld({ system: saved.system, compendium: EMPTY, sheets });
       setOrigin({
         mode: 'compendium', systemId: saved.id, systemTitle: saved.title,
+        systemMine: summary.authorName === me,
         compendiumId: undefined, compendiumTitle: undefined,
       });
       setChosen({ id: saved.id, title: saved.title });

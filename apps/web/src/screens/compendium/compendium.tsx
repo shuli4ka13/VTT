@@ -9,6 +9,7 @@ import type { CompendiumRecord, RecordKind, System } from '@vtt/schema';
 
 export function CompendiumScreen() {
   const system = useWorld(s => s.system);
+  const origin = useWorld(s => s.origin);
   const compendium = useWorld(s => s.compendium);
   const activeId = useWorld(s => s.activeRecordId);
   const pick = useWorld(s => s.pick);
@@ -77,7 +78,14 @@ export function CompendiumScreen() {
       right={{
         head: 'Завести запись',
         body: kinds.length === 0
-          ? <Empty title="Родов ещё нет" hint="Рода объявляются в конструкторе, на вкладке «Записи»." />
+          ? <Empty
+            title="Родов ещё нет"
+            hint={origin.systemMine
+              ? 'Рода объявляются в конструкторе системы, на вкладке «Записи».'
+              : `В системе «${origin.systemTitle ?? system.name}» не объявлено ни одного рода записей — `
+                + 'заводить вещи не из чего. Это делает автор системы: попросите его добавить рода '
+                + 'и опубликовать систему заново.'}
+          />
           : (
             <div className="stack stack--tight">
               {kinds.map(([rk, kind]) => (
