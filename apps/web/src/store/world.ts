@@ -5,10 +5,21 @@ import type { System, Compendium, Sheet, Effect, Field } from '@vtt/schema';
 import { unifyWorld } from '@vtt/engine/model/unify';
 import { healLegacySides } from '@vtt/engine/model/migrate';
 
+export type OriginKind = 'blank' | 'edit' | 'copy';
+
+export interface Origin {
+  kind: OriginKind;
+  systemId?: string;
+  systemTitle?: string;
+  compendiumId?: string;
+  compendiumTitle?: string;
+}
+
 export interface WorldState {
   system: System;
   compendium: Compendium;
   sheets: Sheet[];
+  origin: Origin;
 
   activeFieldTag: string | null;
   activeGroupName: string | null;
@@ -25,6 +36,7 @@ export interface WorldState {
   editSheets: (edit: (draft: Sheet[]) => void) => void;
 
   replaceWorld: (world: { system: System; compendium: Compendium; sheets: Sheet[] }) => void;
+  setOrigin: (patch: Partial<Origin>) => void;
 }
 
 export const emptySystem = (): System => ({
@@ -44,6 +56,7 @@ export const useWorld = create<WorldState>()(persist(set => ({
   system: emptySystem(),
   compendium: { items: [], actions: [] },
   sheets: [],
+  origin: { kind: 'blank' },
 
   activeFieldTag: null,
   activeGroupName: null,
@@ -72,6 +85,8 @@ export const useWorld = create<WorldState>()(persist(set => ({
     return { sheets: draft };
   }),
 
+  setOrigin: patch => set(state => ({ origin: { ...state.origin, ...patch } })),
+
   replaceWorld: world => set({
     ...world,
     ...unifyWorld(world),
@@ -89,11 +104,13 @@ export const useWorld = create<WorldState>()(persist(set => ({
     system: state.system,
     compendium: state.compendium,
     sheets: state.sheets,
+    origin: state.origin,
   }),
 
   merge: (saved, current) => {
     const parsed = W.world.safeParse(healLegacySides(saved as Record<string, any>));
-    if (parsed.success) return { ...current, ...parsed.data };
+    const origin = (saved as { origin?: Origin })?.origin;
+    if (parsed.success) return { ...current, ...parsed.data, ...(origin ? { origin } : {}) };
 
     const first = parsed.error.issues[0];
     restoreProblem = first
