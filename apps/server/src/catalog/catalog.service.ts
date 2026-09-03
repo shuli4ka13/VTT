@@ -142,11 +142,34 @@ export class CatalogService {
 
   async publishCompendium(ownerId: string, id: string) {
     const row = await this.ownedCompendium(ownerId, id);
+    const compendium = JSON.parse(row.data) as Compendium;
+    const system = await this.system(row.systemId);
+    this.assertRecordsFilled(system.system, compendium);
     const updatedAt = this.now();
     await this.db.update(publishedCompendiums)
       .set({ publishedData: row.data, status: 'published', updatedAt })
       .where(eq(publishedCompendiums.id, id));
     return { id, updatedAt };
+  }
+
+  private assertRecordsFilled(system: System, compendium: Compendium): void {
+    for (const record of [...(compendium.items ?? []), ...(compendium.actions ?? [])]) {
+      const kind = system.records?.[String(record.rk)];
+      const bindings = [...(kind?.bindings ?? []), ...(record.activities ?? [])];
+      for (const binding of bindings) {
+        for (const arg of Object.values(binding.args ?? {})) {
+          if (!arg || typeof arg !== 'object' || Array.isArray(arg)) continue;
+          const ref = arg as Record<string, unknown>;
+          if (typeof ref.prop !== 'string' || ref.optional === true) continue;
+          const value = record.props?.[ref.prop];
+          if (value === undefined || value === '') {
+            const label = kind?.props?.find(p => p.key === ref.prop)?.label ?? ref.prop;
+            throw new BadRequestException(
+              `запись «${record.label ?? record.id}»: не заполнено «${label}»`);
+          }
+        }
+      }
+    }
   }
 
   async playableCompendium(id: string) {

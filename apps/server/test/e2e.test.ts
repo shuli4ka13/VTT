@@ -245,4 +245,46 @@ describe('сквозной прогон стенда', () => {
     const delta = await rooms.setValue(me.body.userId, roomId, sheet.id, 'hp_current', 7);
     expect(delta.sheets[0].values.hp_current).toBe(7);
   });
+
+  it('публикация компендиума ловит незаполненную запись — до стола, а не на столе', async () => {
+    const sys = await http().post('/systems')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        title: 'Для проверки заполненности',
+        system: {
+          name: 'Для проверки заполненности', fields: [], effects: {},
+          records: {
+            weapon: { kind: 'item', label: 'Оружие',
+              props: [{ key: 'dmg', label: 'Кость урона', kind: 'dice' }],
+              bindings: [{ label: 'Удар', effect: 'strike', args: { damage_dice: { prop: 'dmg' } } }] },
+          },
+        },
+      })
+      .expect(201);
+    await http().post(`/systems/${sys.body.id}/publish`)
+      .set('Authorization', `Bearer ${token}`).send({}).expect(201);
+
+    const book = await http().post('/compendiums')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        title: 'Пустая оружейная', systemId: sys.body.id,
+        compendium: { items: [{ id: 'sword', rk: 'weapon', label: 'Меч', props: {} }], actions: [] },
+      })
+      .expect(201);
+
+    const rejected = await http().post(`/compendiums/${book.body.id}/publish`)
+      .set('Authorization', `Bearer ${token}`).send({}).expect(400);
+    expect(rejected.body.message).toContain('Кость урона');
+
+    await http().put(`/compendiums/${book.body.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        title: 'Пустая оружейная', systemId: sys.body.id,
+        compendium: { items: [{ id: 'sword', rk: 'weapon', label: 'Меч', props: { dmg: '1d6' } }], actions: [] },
+      })
+      .expect(200);
+
+    await http().post(`/compendiums/${book.body.id}/publish`)
+      .set('Authorization', `Bearer ${token}`).send({}).expect(201);
+  });
 });
