@@ -4,11 +4,10 @@ import { useWorld } from '../../store/world.ts';
 import { useSession } from '../../store/session.ts';
 import { useAutosave, rememberVersion } from '../../store/autosave.ts';
 import { Button, Input } from '../../ui/primitives.tsx';
-import { ApiError, publishSystem, publishWorld } from '../../api/client.ts';
+import { ApiError, publishSystem } from '../../api/client.ts';
 
 export function SystemBar() {
   const system = useWorld(s => s.system);
-  const sheets = useWorld(s => s.sheets);
   const origin = useWorld(s => s.origin);
   const editSystem = useWorld(s => s.editSystem);
   const name = useSession(s => s.name);
@@ -30,15 +29,6 @@ export function SystemBar() {
     } catch (err) { fail(err); }
   };
 
-  const makeWorld = async () => {
-    if (!origin.systemId) return;
-    try {
-      const books = origin.compendiumId ? [origin.compendiumId] : [];
-      await publishWorld(system.name ?? 'Без имени', origin.systemId, books, sheets);
-      setNote({ text: `мир создан · компендиумов: ${books.length}`, bad: false });
-    } catch (err) { fail(err); }
-  };
-
   const saved = saving.kind === 'saving' ? 'сохраняем…'
     : saving.kind === 'saved' ? `сохранено в ${saving.at}`
       : saving.kind === 'failed' ? `не сохранилось: ${saving.why}`
@@ -55,7 +45,7 @@ export function SystemBar() {
 
     {note ? <span className={`worldbar__note ${note.bad ? 'field__error' : 'muted'}`}>{note.text}</span> : null}
     <span className="muted">{name}</span>
-    <Button size="sm" onClick={() => void publish()} disabled={!origin.systemId}>Опубликовать систему</Button>
-    <Button size="sm" variant="primary" onClick={() => void makeWorld()} disabled={!origin.systemId}>Создать мир</Button>
+    <Button size="sm" variant="primary" onClick={() => void publish()}
+      disabled={!origin.systemId}>Опубликовать систему</Button>
   </div>;
 }

@@ -3,6 +3,7 @@ import { useRoom } from '../../store/room.ts';
 import { Card, CardHead, Button, Input, Verdict, Empty } from '../../ui/primitives.tsx';
 import { Columns } from '../../ui/layout.tsx';
 import { login, setToken, currentToken, listRooms, listWorlds, createRoom } from '../../api/client.ts';
+import { BuildWorld } from './build-world.tsx';
 import type { RoomSummary, WorldSummary } from '@vtt/schema';
 
 export function Lobby() {
@@ -75,11 +76,13 @@ export function Lobby() {
               )}
           </Card>
 
+          {signed ? <BuildWorld onBuilt={() => void refresh()} /> : null}
+
           <Card>
-            <CardHead title="Опубликованные миры" />
+            <CardHead title="Собранные миры" />
             {worlds.length === 0
               ? <span className="faint">
-                  Миров нет. Их публикует автор — из приложения автора, кнопкой «Опубликовать».
+                  Миров нет. Соберите первый выше — из опубликованной системы и компендиумов к ней.
                 </span>
               : (
                 <div className="stack stack--tight">
