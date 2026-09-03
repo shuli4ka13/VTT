@@ -7,6 +7,7 @@
     "apps/*"
   ],
   "scripts": {
+    "dev": "yarn build:packages && (yarn build:watch &) && (cd apps/server && VTT_PORT=8200 yarn dev &) && cd apps/web && yarn dev --host 0.0.0.0 --port 8100",
     "build": "tsc -b packages/schema packages/engine apps/server && yarn --cwd apps/web build",
     "build:packages": "tsc -b packages/schema packages/engine",
     "build:watch": "tsc -b packages/schema packages/engine --watch",
