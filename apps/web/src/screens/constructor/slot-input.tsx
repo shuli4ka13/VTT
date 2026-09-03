@@ -8,11 +8,29 @@ import { matchTagQuery } from '../../ui/tag-suggest.tsx';
 import { outputRefs, outputLabel } from './slots.tsx';
 import type { SlotContext, SlotKind } from './slots.tsx';
 
+const WORD_OF: Record<SlotKind, string> = {
+  const: 'число',
+  expr: 'формулу',
+  tag: 'поле листа',
+  constant: 'константу системы',
+  prop: 'свойство записи',
+  param: 'значение из записи',
+  ref: 'результат шага',
+  empty: 'пусто',
+};
+
 export function parseTyped(text: string): SlotRef | null {
   const t = text.trim();
   if (!t) return null;
   if (/^-?\d+(\.\d+)?$/.test(t)) return { const: Number(t) };
   return { expr: t };
+}
+
+export function singleTag(text: string, system: System): SlotRef | null {
+  const m = /^[#@]([\p{L}\p{N}_]+)$/u.exec(text.trim());
+  if (!m) return null;
+  const tag = m[1]!;
+  return system.fields.some(f => f.tag === tag) ? { tag } : null;
 }
 
 export function normalizeDice(text: string): string | null {
@@ -96,6 +114,7 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
 }) {
   const [draft, setDraft] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [trouble, setTrouble] = useState<string | null>(null);
   const options = useMemo(() => {
     const base = [...(extraOptions ?? []), ...optionsFor(context, allow)];
     if (!onCreateFromRecord) return base;
@@ -115,13 +134,21 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
   const commitTyped = () => {
     if (draft !== null) {
       const diced = dice ? normalizeDice(draft) : null;
-      const candidate: SlotRef | null = diced !== null ? { const: diced } : parseTyped(draft);
+      const tagged = singleTag(draft, context.system);
+      const candidate: SlotRef | null = tagged
+        ?? (diced !== null ? { const: diced } : parseTyped(draft));
       if (candidate !== null && allow) {
-        const kind: SlotKind = 'const' in candidate ? 'const' : 'expr';
-        if (!allow.includes(kind)) { setDraft(null); setOpen(false); return; }
+        const kind: SlotKind = tagged ? 'tag' : 'const' in candidate ? 'const' : 'expr';
+        if (!allow.includes(kind)) {
+          setTrouble(`сюда нельзя ${WORD_OF[kind]} — только ${allow.map(k => WORD_OF[k]).join(', ')}`);
+          setDraft(null);
+          setOpen(false);
+          return;
+        }
       }
       onChange(candidate);
       setDraft(null);
+      setTrouble(null);
     }
     setOpen(false);
   };
@@ -144,7 +171,7 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
             >×</button>
           </span>
         ) : null}
-        onFocus={() => setOpen(true)}
+        onFocus={() => { setOpen(true); setTrouble(null); }}
         onChange={next => { setDraft(next); setOpen(true); }}
         onBlur={commitTyped}
         onKeyDown={e => {
@@ -171,6 +198,7 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
           ))}
         </div>
       ) : null}
+      {trouble ? <span className="field__error">{trouble}</span> : null}
       {value && typeof value === 'object' && 'expr' in (value as object) ? (
         <Select
           value={(value as { of?: string }).of ?? 'source'}
