@@ -16,9 +16,12 @@ export const publishSystemRequest = z.object({
   system,
 });
 
+export const publishState = z.enum(['draft', 'published']);
+
 export const systemSummary = z.object({
   id: z.string(), title: z.string(), systemName: z.string(),
   authorName: z.string(), updatedAt: z.string(),
+  status: publishState,
 });
 
 export const publishedSystem = z.object({
@@ -35,6 +38,7 @@ export const compendiumSummary = z.object({
   id: z.string(), title: z.string(), systemId: z.string(),
   systemName: z.string(), authorName: z.string(),
   itemCount: z.number().int().nonnegative(), updatedAt: z.string(),
+  status: publishState,
 });
 
 export const publishedCompendium = z.object({
@@ -134,6 +138,7 @@ export type SystemSummary = z.infer<typeof systemSummary>;
 export type PublishedSystem = z.infer<typeof publishedSystem>;
 export type PublishCompendiumRequest = z.infer<typeof publishCompendiumRequest>;
 export type CompendiumSummary = z.infer<typeof compendiumSummary>;
+export type PublishState = z.infer<typeof publishState>;
 export type PublishedCompendium = z.infer<typeof publishedCompendium>;
 export type PublishRequest = z.infer<typeof publishRequest>;
 export type WorldSummary = z.infer<typeof worldSummary>;

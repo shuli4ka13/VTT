@@ -1,4 +1,6 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException, ForbiddenException, Inject, Injectable, NotFoundException,
+} from '@nestjs/common';
 import { desc, eq } from 'drizzle-orm';
 import { world as schemas } from '@vtt/schema';
 import type { Compendium, System } from '@vtt/schema';
@@ -14,14 +16,40 @@ export class CatalogService {
     @Inject(IDS) private readonly newId: () => string,
   ) {}
 
-  async publishSystem(ownerId: string, title: string, data: unknown) {
+  async createSystem(ownerId: string, title: string, data: unknown) {
     const parsed = schemas.system.safeParse(data);
     if (!parsed.success) throw new BadRequestException('система не проходит схему');
     const id = this.newId();
     await this.db.insert(publishedSystems).values({
-      id, title, ownerId, data: JSON.stringify(parsed.data), updatedAt: this.now(),
+      id, title, ownerId, data: JSON.stringify(parsed.data),
+      status: 'draft', updatedAt: this.now(),
     });
     return { id };
+  }
+
+  async saveSystem(ownerId: string, id: string, title: string, data: unknown) {
+    const parsed = schemas.system.safeParse(data);
+    if (!parsed.success) throw new BadRequestException('система не проходит схему');
+    await this.ownedSystem(ownerId, id);
+    await this.db.update(publishedSystems)
+      .set({ title, data: JSON.stringify(parsed.data), updatedAt: this.now() })
+      .where(eq(publishedSystems.id, id));
+    return { id };
+  }
+
+  async publishSystem(ownerId: string, id: string) {
+    await this.ownedSystem(ownerId, id);
+    await this.db.update(publishedSystems)
+      .set({ status: 'published', updatedAt: this.now() })
+      .where(eq(publishedSystems.id, id));
+    return { id };
+  }
+
+  private async ownedSystem(ownerId: string, id: string) {
+    const row = (await this.db.select().from(publishedSystems).where(eq(publishedSystems.id, id)))[0];
+    if (!row) throw new NotFoundException(`системы «${id}» нет`);
+    if (row.ownerId !== ownerId) throw new ForbiddenException('система принадлежит другому автору');
+    return row;
   }
 
   async systems() {
@@ -29,7 +57,8 @@ export class CatalogService {
     return Promise.all(rows.map(async row => {
       const data = JSON.parse(row.data) as System;
       return { id: row.id, title: row.title, systemName: data.name ?? data.id,
-        authorName: await this.author(row.ownerId), updatedAt: row.updatedAt };
+        authorName: await this.author(row.ownerId), updatedAt: row.updatedAt,
+        status: row.status === 'published' ? 'published' as const : 'draft' as const };
     }));
   }
 
@@ -39,7 +68,7 @@ export class CatalogService {
     return { id: row.id, title: row.title, system: JSON.parse(row.data) as System };
   }
 
-  async publishCompendium(ownerId: string, title: string, systemId: string, data: unknown) {
+  async createCompendium(ownerId: string, title: string, systemId: string, data: unknown) {
     const parsed = schemas.compendium.safeParse(data);
     if (!parsed.success) throw new BadRequestException('компендиум не проходит схему');
     const system = await this.system(systemId);
@@ -49,9 +78,36 @@ export class CatalogService {
       `запись «${unknown.label ?? unknown.id}» не соответствует выбранной системе`);
     const id = this.newId();
     await this.db.insert(publishedCompendiums).values({
-      id, title, ownerId, systemId, data: JSON.stringify(parsed.data), updatedAt: this.now(),
+      id, title, ownerId, systemId, data: JSON.stringify(parsed.data),
+      status: 'draft', updatedAt: this.now(),
     });
     return { id };
+  }
+
+  async saveCompendium(ownerId: string, id: string, title: string, data: unknown) {
+    const parsed = schemas.compendium.safeParse(data);
+    if (!parsed.success) throw new BadRequestException('компендиум не проходит схему');
+    await this.ownedCompendium(ownerId, id);
+    await this.db.update(publishedCompendiums)
+      .set({ title, data: JSON.stringify(parsed.data), updatedAt: this.now() })
+      .where(eq(publishedCompendiums.id, id));
+    return { id };
+  }
+
+  async publishCompendium(ownerId: string, id: string) {
+    await this.ownedCompendium(ownerId, id);
+    await this.db.update(publishedCompendiums)
+      .set({ status: 'published', updatedAt: this.now() })
+      .where(eq(publishedCompendiums.id, id));
+    return { id };
+  }
+
+  private async ownedCompendium(ownerId: string, id: string) {
+    const row = (await this.db.select().from(publishedCompendiums)
+      .where(eq(publishedCompendiums.id, id)))[0];
+    if (!row) throw new NotFoundException(`компендиума «${id}» нет`);
+    if (row.ownerId !== ownerId) throw new ForbiddenException('компендиум принадлежит другому автору');
+    return row;
   }
 
   async compendiums(systemId?: string) {
@@ -65,7 +121,8 @@ export class CatalogService {
       return { id: row.id, title: row.title, systemId: row.systemId,
         systemName: system.system.name ?? system.system.id,
         authorName: await this.author(row.ownerId),
-        itemCount: (data.items?.length ?? 0) + (data.actions?.length ?? 0), updatedAt: row.updatedAt };
+        itemCount: (data.items?.length ?? 0) + (data.actions?.length ?? 0), updatedAt: row.updatedAt,
+        status: row.status === 'published' ? 'published' as const : 'draft' as const };
     }));
   }
 

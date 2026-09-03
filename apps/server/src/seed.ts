@@ -22,6 +22,8 @@ export async function seed(url: string, owner: string): Promise<string[]> {
       { title, system: world.system }) as { id: string };
     const compendium = await call(`${url}/compendiums`, 'POST', token,
       { title: `${title} · основная книга`, systemId: system.id, compendium: world.compendium }) as { id: string };
+    await call(`${url}/systems/${system.id}/publish`, 'POST', token, {});
+    await call(`${url}/compendiums/${compendium.id}/publish`, 'POST', token, {});
     await call(`${url}/worlds`, 'POST', token, {
       title, systemId: system.id, compendiumIds: [compendium.id], sheets: world.sheets,
     });

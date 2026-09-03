@@ -1,4 +1,6 @@
-import { Body, Controller, Get, Headers, Inject, Param, Post, Query, UsePipes } from '@nestjs/common';
+import {
+  Body, Controller, Get, Headers, Inject, Param, Post, Put, Query, UsePipes,
+} from '@nestjs/common';
 import { api } from '@vtt/schema';
 import type { PublishCompendiumRequest, PublishSystemRequest } from '@vtt/schema';
 import { AuthService } from '../auth/auth.service.ts';
@@ -17,9 +19,25 @@ export class CatalogController {
   @Get('systems/:id') system(@Param('id') id: string) { return this.catalog.system(id); }
   @Post('systems')
   @UsePipes(new ZodValidationPipe(api.publishSystemRequest))
-  async publishSystem(@Body() body: PublishSystemRequest, @Headers('authorization') header?: string) {
+  async createSystem(@Body() body: PublishSystemRequest, @Headers('authorization') header?: string) {
     const { userId } = await this.auth.whoIs(bearer(header));
-    return this.catalog.publishSystem(userId, body.title, body.system);
+    return this.catalog.createSystem(userId, body.title, body.system);
+  }
+
+  @Put('systems/:id')
+  async saveSystem(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(api.publishSystemRequest)) body: PublishSystemRequest,
+    @Headers('authorization') header?: string,
+  ) {
+    const { userId } = await this.auth.whoIs(bearer(header));
+    return this.catalog.saveSystem(userId, id, body.title, body.system);
+  }
+
+  @Post('systems/:id/publish')
+  async publishSystem(@Param('id') id: string, @Headers('authorization') header?: string) {
+    const { userId } = await this.auth.whoIs(bearer(header));
+    return this.catalog.publishSystem(userId, id);
   }
 
   @Get('compendiums') compendiums(@Query('systemId') systemId?: string) {
@@ -28,8 +46,24 @@ export class CatalogController {
   @Get('compendiums/:id') compendium(@Param('id') id: string) { return this.catalog.compendium(id); }
   @Post('compendiums')
   @UsePipes(new ZodValidationPipe(api.publishCompendiumRequest))
-  async publishCompendium(@Body() body: PublishCompendiumRequest, @Headers('authorization') header?: string) {
+  async createCompendium(@Body() body: PublishCompendiumRequest, @Headers('authorization') header?: string) {
     const { userId } = await this.auth.whoIs(bearer(header));
-    return this.catalog.publishCompendium(userId, body.title, body.systemId, body.compendium);
+    return this.catalog.createCompendium(userId, body.title, body.systemId, body.compendium);
+  }
+
+  @Put('compendiums/:id')
+  async saveCompendium(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(api.publishCompendiumRequest)) body: PublishCompendiumRequest,
+    @Headers('authorization') header?: string,
+  ) {
+    const { userId } = await this.auth.whoIs(bearer(header));
+    return this.catalog.saveCompendium(userId, id, body.title, body.compendium);
+  }
+
+  @Post('compendiums/:id/publish')
+  async publishCompendium(@Param('id') id: string, @Headers('authorization') header?: string) {
+    const { userId } = await this.auth.whoIs(bearer(header));
+    return this.catalog.publishCompendium(userId, id);
   }
 }

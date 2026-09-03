@@ -17,6 +17,7 @@ export const publishedSystems = sqliteTable('published_systems', {
   title: text('title').notNull(),
   ownerId: text('owner_id').notNull(),
   data: text('data').notNull(),
+  status: text('status').notNull(),
   updatedAt: text('updated_at').notNull(),
 });
 
@@ -26,6 +27,7 @@ export const publishedCompendiums = sqliteTable('published_compendiums', {
   ownerId: text('owner_id').notNull(),
   systemId: text('system_id').notNull(),
   data: text('data').notNull(),
+  status: text('status').notNull(),
   updatedAt: text('updated_at').notNull(),
 });
 

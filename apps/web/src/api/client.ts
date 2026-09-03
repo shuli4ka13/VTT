@@ -59,6 +59,9 @@ async function call<S extends ZodType>(path: string, schema: S, init?: RequestIn
 const post = <S extends ZodType>(path: string, schema: S, body: unknown) =>
   call(path, schema, { method: 'POST', body: JSON.stringify(body) });
 
+const put = <S extends ZodType>(path: string, schema: S, body: unknown) =>
+  call(path, schema, { method: 'PUT', body: JSON.stringify(body) });
+
 export const login = (name: string): Promise<Session> =>
   post('/auth/login', api.session, { name });
 
@@ -68,8 +71,14 @@ export const listSystems = (): Promise<SystemSummary[]> =>
 export const getSystem = (id: string): Promise<PublishedSystem> =>
   call(`/systems/${id}`, api.publishedSystem);
 
-export const publishSystem = (title: string, system: System): Promise<{ id: string }> =>
+export const createSystem = (title: string, system: System): Promise<{ id: string }> =>
   post('/systems', publishedId, { title, system });
+
+export const saveSystem = (id: string, title: string, system: System): Promise<{ id: string }> =>
+  put(`/systems/${id}`, publishedId, { title, system });
+
+export const publishSystem = (id: string): Promise<{ id: string }> =>
+  post(`/systems/${id}/publish`, publishedId, {});
 
 export const listCompendiums = (systemId?: string): Promise<CompendiumSummary[]> =>
   call(`/compendiums${systemId ? `?systemId=${encodeURIComponent(systemId)}` : ''}`,
@@ -78,9 +87,16 @@ export const listCompendiums = (systemId?: string): Promise<CompendiumSummary[]>
 export const getCompendium = (id: string): Promise<PublishedCompendium> =>
   call(`/compendiums/${id}`, api.publishedCompendium);
 
-export const publishCompendium = (
+export const createCompendium = (
   title: string, systemId: string, compendium: Compendium,
 ): Promise<{ id: string }> => post('/compendiums', publishedId, { title, systemId, compendium });
+
+export const saveCompendium = (
+  id: string, title: string, systemId: string, compendium: Compendium,
+): Promise<{ id: string }> => put(`/compendiums/${id}`, publishedId, { title, systemId, compendium });
+
+export const publishCompendium = (id: string): Promise<{ id: string }> =>
+  post(`/compendiums/${id}/publish`, publishedId, {});
 
 export const listWorlds = (): Promise<WorldSummary[]> =>
   call('/worlds', api.worldSummary.array());

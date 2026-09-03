@@ -277,3 +277,15 @@
 .start__item-name { font-weight: 600; }
 .start__item-meta { font-size: var(--fs-2); color: var(--text-muted); }
 .worldbar__state { font-size: var(--fs-2); color: var(--text-muted); }
+
+.start__item-head { display: flex; align-items: center; gap: var(--s-2); }
+.tag {
+  font-size: var(--fs-1);
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--text-muted);
+}
+.tag--done { border-color: var(--ok); color: var(--ok); }
