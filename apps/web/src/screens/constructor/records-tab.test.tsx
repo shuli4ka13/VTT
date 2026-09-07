@@ -4,7 +4,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { RecordsTab } from './records-tab.tsx';
 import { useWorld } from '../../store/world.ts';
 
-describe('RecordsTab: род видит потребности эффекта', () => {
+describe('RecordsTab: тип видит потребности эффекта', () => {
   beforeEach(() => {
     useWorld.setState(state => ({
       ...state,
@@ -44,7 +44,7 @@ describe('RecordsTab: род видит потребности эффекта', 
     expect(screen.queryByText(/привязк/i)).toBeNull();
   });
 
-  it('в привязке рода «Оружие» не предлагается свойство рода «Доспех»', () => {
+  it('в привязке типа «Оружие» не предлагается свойство типа «Доспех»', () => {
     useWorld.setState(state => ({
       ...state,
       system: {
@@ -79,7 +79,7 @@ describe('RecordsTab: род видит потребности эффекта', 
   });
 });
 
-describe('модификаторы рода', () => {
+describe('модификаторы типа', () => {
   beforeEach(() => {
     useWorld.setState(state => ({
       ...state,
@@ -97,12 +97,12 @@ describe('модификаторы рода', () => {
     }));
   });
 
-  it('у рода-вещи есть своя секция «Что правит каждая вещь этого рода»', () => {
+  it('у типа-вещи есть своя секция «Что правит каждая вещь этого типа»', () => {
     render(<RecordsTab />);
-    expect(screen.getByText('Что правит каждая вещь этого рода')).toBeTruthy();
+    expect(screen.getByText('Что правит каждая вещь этого типа')).toBeTruthy();
   });
 
-  it('правка броска пишется в род, а не в запись компендиума', () => {
+  it('правка броска пишется в тип, а не в запись компендиума', () => {
     render(<RecordsTab />);
     fireEvent.click(screen.getByText('+ правит бросок'));
 

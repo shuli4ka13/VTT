@@ -41,7 +41,7 @@ export function RecordsTab() {
     const key = freeId(Object.keys(system.records ?? {}), 'kind');
     editSystem(draft => {
       draft.records = draft.records ?? {};
-      draft.records[key] = { kind: 'item', label: 'Новый род', group: 'Снаряжение', props: [], bindings: [] };
+      draft.records[key] = { kind: 'item', label: 'Новый тип', group: 'Снаряжение', props: [], bindings: [] };
     });
     pick({ activeRecordKind: key });
   };
@@ -57,12 +57,12 @@ export function RecordsTab() {
   return (
     <Columns
       left={{
-        head: 'Рода записей',
-        tools: <Button size="sm" onClick={add}>+ род</Button>,
+        head: 'типы записей',
+        tools: <Button size="sm" onClick={add}>+ тип</Button>,
         body: kinds.length === 0
           ? <Empty
-              title="Родов ещё нет"
-              hint="Род — форма заполнения: какие циферки спросить у человека и к каким эффектам их привязать."
+              title="типов ещё нет"
+              hint="тип — форма заполнения: какие циферки спросить у человека и к каким эффектам их привязать."
             />
           : (
             <List>
@@ -84,11 +84,11 @@ export function RecordsTab() {
           ),
       }}
       main={{
-        head: active ? 'Род записи' : undefined,
+        head: active ? 'тип записи' : undefined,
         body: active && activeKind
           ? <KindEditor id={activeKind} kind={active} system={system} />
           : <Empty
-              title="Выберите род слева"
+              title="Выберите тип слева"
               hint="У меча спрашивают только кость урона — а «Атака» появляется у владельца сама. Это и настраивается здесь."
             />,
       }}
@@ -157,7 +157,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
         ) : null}
 
         {bindings.length === 0
-          ? <span className="faint">Ничего не подключено: род ничего не автоматизирует.</span>
+          ? <span className="faint">Ничего не подключено: тип ничего не автоматизирует.</span>
           : bindings.map((binding, index) => (
             <BindingEditor
               key={index}
@@ -195,7 +195,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
           }
         />
         {props.length === 0
-          ? <span className="faint">Свойств нет: записи этого рода — чистые данные без автоматизации.</span>
+          ? <span className="faint">Свойств нет: записи этого типа — чистые данные без автоматизации.</span>
           : props.map(prop => (
 
             <div key={prop.key} className="stack stack--tight">
@@ -234,13 +234,13 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
       {kind.kind === 'item' ? (
         <Card>
           <CardHead
-            title="Что правит каждая вещь этого рода"
-            sub="Пишется один раз — действует, пока надета любая вещь этого рода. То, что своё у конкретной вещи, правится в компендиуме."
+            title="Что правит каждая вещь этого типа"
+            sub="Пишется один раз — действует, пока надета любая вещь этого типа. То, что своё у конкретной вещи, правится в компендиуме."
           />
           <ModifiersEditor
             empty={{
-              title: 'Род пока ничего не правит',
-              hint: 'Пассивная половина рода: бонус к полю или правка броска, пока надета любая вещь этого рода. «Тяжёлый доспех мешает красться» пишется здесь один раз — кольчуга и латы получат его без единой строчки на себе.',
+              title: 'тип пока ничего не правит',
+              hint: 'Пассивная половина типа: бонус к полю или правка броска, пока надета любая вещь этого типа. «Тяжёлый доспех мешает красться» пишется здесь один раз — кольчуга и латы получат его без единой строчки на себе.',
             }}
             system={system}
             title=""

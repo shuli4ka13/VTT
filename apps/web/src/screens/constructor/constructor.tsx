@@ -9,9 +9,9 @@ type Tab = 'sheet' | 'effects' | 'records' | 'dictionaries';
 
 const TABS = [
   { key: 'sheet' as const, label: 'Лист' },
-  { key: 'dictionaries' as const, label: 'Словари' },
+  { key: 'dictionaries' as const, label: 'Правила' },
   { key: 'effects' as const, label: 'Эффекты' },
-  { key: 'records' as const, label: 'Записи' },
+  { key: 'records' as const, label: 'Шаблон Компендиума' },
 ];
 
 export function ConstructorScreen() {
