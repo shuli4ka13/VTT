@@ -149,6 +149,83 @@ describe('GroupCard', () => {
   });
 });
 
+describe('GroupCard: условие выполнения шага', () => {
+  const earlier = [{ id: 'hit', type: 'threshold' }];
+
+  it('когда выше есть проверка с исходом да/нет, у карточки появляется «Когда выполнять»', () => {
+    const steps = [{ type: 'apply', direction: 'subtract', targetModifiers: true, value: { const: 4 } }] as unknown as Step[];
+    const group = groupSteps(steps)[0]!;
+    const apply = steps[0] as any;
+    render(<GroupCard group={group} position={2} system={system} effect={effect}
+      earlier={earlier} problem={null} edit={(_, change) => change(apply as never)} onDelete={() => {}} />);
+    expect(screen.getByText('Когда выполнять')).toBeTruthy();
+    const selects = [...document.querySelectorAll('select')] as HTMLSelectElement[];
+    const picker = selects.find(el => [...el.options].some(o => o.value === 'hit.success'))!;
+    fireEvent.change(picker, { target: { value: 'hit.success' } });
+    expect(apply.when).toEqual({ ref: 'hit.success' });
+  });
+
+  it('условие читается фразой, отрицание — словом «не»', () => {
+    const steps = [{ type: 'apply', direction: 'subtract', targetModifiers: true, value: { const: 4 },
+      when: { ref: 'hit.success', not: true } }] as unknown as Step[];
+    const group = groupSteps(steps)[0]!;
+    render(<GroupCard group={group} position={2} system={system} effect={effect}
+      earlier={earlier} problem={null} edit={() => {}} onDelete={() => {}} />);
+    expect(screen.getByText('Только если «hit» — не вышло.')).toBeTruthy();
+  });
+
+  it('без проверок выше секции условия нет', () => {
+    const group = groupSteps(attackSteps())[0]!;
+    render(<GroupCard group={group} position={1} system={system} effect={effect}
+      earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
+    expect(screen.queryByText('Когда выполнять')).toBeNull();
+  });
+});
+
+describe('GroupCard: изменение как событие', () => {
+  const eventful = {
+    ...system,
+    events: { damage: { label: 'Урон', tags: ['огонь'], receive: [] } },
+  } as unknown as System;
+
+  it('в мире с событиями у изменения есть третий режим — «событие», и он переводит шаг в emit', () => {
+    const steps = [
+      { id: 'n', type: 'amount', source: 'roll' },
+      { type: 'apply', direction: 'subtract', targetModifiers: true, value: { ref: 'n' } },
+    ] as unknown as Step[];
+    const group = groupSteps(steps)[0]!;
+    const apply = steps[1] as any;
+    render(<GroupCard group={group} position={1} system={eventful} effect={effect}
+      earlier={[]} problem={null} edit={(at, change) => change((at === 1 ? apply : steps[0]) as never)}
+      onDelete={() => {}} />);
+    fireEvent.click(screen.getByText('событие'));
+    expect(apply.type).toBe('emit');
+    expect(apply.event).toBe('damage');
+    expect(apply.amount).toEqual({ ref: 'n' });
+  });
+
+  it('шаг «отправить» читается фразой: цель получает событие', () => {
+    const steps = [
+      { id: 'n', type: 'amount', source: 'roll' },
+      { type: 'emit', event: 'damage', amount: { ref: 'n' }, tags: ['огонь'] },
+    ] as unknown as Step[];
+    const group = groupSteps(steps)[0]!;
+    expect(group.kind).toBe('change');
+    expect(group.amount?.id).toBe('n');
+    render(<GroupCard group={group} position={1} system={eventful} effect={effect}
+      earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
+    expect(screen.getByText('«Урон»:')).toBeTruthy();
+    expect(screen.getByText('[огонь]')).toBeTruthy();
+  });
+
+  it('без событий в словаре режима «событие» нет', () => {
+    const group = groupSteps(attackSteps())[1]!;
+    render(<GroupCard group={group} position={2} system={system} effect={effect}
+      earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
+    expect(screen.queryByText('событие')).toBeNull();
+  });
+});
+
 describe('GroupCard: величина из записи', () => {
   const steps = () => [
     { id: 'n', type: 'amount', source: 'roll', dice: { param: 'кость_урона' } },

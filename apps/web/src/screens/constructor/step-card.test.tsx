@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { problemOf } from './step-card.tsx';
+import { problemOf, slotsOf } from './step-card.tsx';
+import { registry } from '@vtt/engine/engine/steps/index';
 import { emptySystem } from '../../store/world.ts';
 import type { Effect, Step, System } from '@vtt/schema';
 
@@ -63,5 +64,26 @@ describe('формула зовёт шаг выше', () => {
   it('а вот незнакомое имя по-прежнему беда', () => {
     const problem = problemOf(apply, system, effect, []);
     expect(problem?.missingField).toBe('n');
+  });
+});
+
+describe('описание слотов живёт в движке, а не в копии конструктора', () => {
+  it('у каждого типа шага из реестра есть слоты с человеческими подписями', () => {
+    expect(registry.size).toBeGreaterThan(0);
+    for (const [type] of registry) {
+      const slots = slotsOf(type) ?? [];
+      expect(slots.length, type).toBeGreaterThan(0);
+      for (const slot of slots) expect(slot.label, `${type}.${slot.key}`).toMatch(/[а-яё]/i);
+    }
+  });
+
+  it('обязательный слот описан движком: пустая мишень применения — приговор', () => {
+    const step = { type: 'apply', direction: 'subtract', value: { const: 1 } } as unknown as Step;
+    expect(problemOf(step, systemWithDie(), blankEffect, [])?.text).toContain('не заполнено');
+  });
+
+  it('неизвестный тип шага — приговор называет тип', () => {
+    expect(problemOf({ type: 'котик' } as unknown as Step, systemWithDie(), blankEffect, [])?.text)
+      .toContain('котик');
   });
 });

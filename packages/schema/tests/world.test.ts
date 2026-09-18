@@ -148,6 +148,36 @@ describe('контракты клиент ↔ сервер', () => {
     })).toEqual({ roomId: 'r1', actionId: 'sword:0', fromId: 'arven', toId: 'mirra' });
   });
 
+  it('намерение может нести заявки правок броска — за себя и за цель', () => {
+    const parsed = api.actIntent.parse({
+      roomId: 'r1', actionId: 'sword:0', fromId: 'arven', toId: 'mirra',
+      edits: ['advantage'], targetEdits: ['disadvantage'],
+    });
+    expect(parsed.edits).toEqual(['advantage']);
+    expect(parsed.targetEdits).toEqual(['disadvantage']);
+    expect(api.actIntent.safeParse({
+      roomId: 'r1', actionId: 'sword:0', fromId: 'arven', toId: 'mirra', edits: [''],
+    }).success, 'пустой ключ правки — не заявка').toBe(false);
+  });
+
+  it('часы комнаты и команда хода описаны схемой', () => {
+    expect(api.clockState.safeParse({ round: 0, order: [], active: null, spent: {} }).success).toBe(true);
+    expect(api.turnIntent.safeParse({ roomId: 'r', op: 'start' }).success).toBe(true);
+    expect(api.turnIntent.safeParse({ roomId: 'r', op: 'next', order: ['a'] }).success).toBe(true);
+    expect(api.turnIntent.safeParse({ roomId: 'r', op: 'котик' }).success).toBe(false);
+    expect(api.clientMessage.safeParse({ type: 'room:turn', intent: { roomId: 'r', op: 'stop' } }).success).toBe(true);
+  });
+
+  it('пауза стола и ответ игрока описаны схемой', () => {
+    expect(api.pendingState.safeParse({
+      id: 'p1', sheetId: 'arven', stage: 'sender', question: '?', options: [{ id: 'shield', label: 'Щит' }], preview: [],
+    }).success).toBe(true);
+    expect(api.answerIntent.safeParse({ roomId: 'r', pendingId: 'p1', chosen: [] }).success).toBe(true);
+    expect(api.answerIntent.safeParse({ roomId: 'r', pendingId: '', chosen: [] }).success).toBe(false);
+    expect(api.clientMessage.safeParse({ type: 'room:answer', intent: { roomId: 'r', pendingId: 'p1', chosen: ['shield'] } }).success).toBe(true);
+    expect(W.activation.safeParse('reaction').success).toBe(true);
+  });
+
   it('пустое действие или пустая цель не проходят', () => {
     expect(api.actIntent.safeParse({ roomId: 'r', actionId: '', fromId: 'a', toId: 'b' }).success).toBe(false);
     expect(api.actIntent.safeParse({ roomId: 'r', actionId: 'x:0', fromId: 'a', toId: '' }).success).toBe(false);

@@ -1,39 +1,51 @@
-import { send, receive } from './envelope.ts';
-import type { Report } from './envelope.ts';
+import { send, receive, fireOutgoing } from './envelope.ts';
+import type { Report, Envelope } from './envelope.ts';
 import type { System, Sheet, Compendium, Die } from '../model/types.ts';
+import type { Clock } from '../engine/clock.ts';
 
-export interface ExchangeArgs {
+export interface WorldArgs {
   system: System;
   compendium: Compendium;
   die: Die;
   sheets: Sheet[];
+
+  clock?: Clock | null;
+}
+
+export interface ExchangeArgs extends WorldArgs {
   actionId: string;
   fromId: string;
   toId: string;
+
+  claims?: { source?: string[]; target?: string[] };
+}
+
+export interface DeliverArgs extends WorldArgs {
+  envelope: Envelope;
+  fromId: string;
+  toId: string;
+
+  claims?: { target?: string[] };
 }
 
 export interface ExchangeEntry { fromId: string; toId: string; report: Report }
 
 export interface ExchangeResult { sheets: Sheet[]; reports: ExchangeEntry[] }
 
-export function exchange({
-  system, compendium, die, sheets, actionId, fromId, toId,
-}: ExchangeArgs): ExchangeResult {
-  const find = (id: string): Sheet | null => sheets.find(s => s.id === id) || null;
+const finder = (sheets: Sheet[]) => (id: string): Sheet | null => sheets.find(s => s.id === id) || null;
 
-  const from = find(fromId);
-  const to = find(toId);
-  if (!from) throw new Error(`не найден отправитель «${fromId}»`);
-  if (!to) throw new Error(`не найдена цель «${toId}»`);
-
-  const ctx = { system, compendium, die };
-  const envelope = send(actionId, { ...ctx, sheet: from });
-
+export function deliver({
+  system, compendium, die, clock, sheets, envelope, fromId, toId, claims,
+}: DeliverArgs): ExchangeResult {
+  const ctx = { system, compendium, die, clock };
   let updated = [...sheets];
   const put = (sheet: Sheet): void => { updated = updated.map(s => (s.id === sheet.id ? sheet : s)); };
   const live = (id: string): Sheet | null => updated.find(s => s.id === id) || null;
 
-  const main = receive(envelope, { ...ctx, sheet: to });
+  const to = live(toId);
+  if (!to) throw new Error(`не найдена цель «${toId}»`);
+
+  const main = receive(envelope, { ...ctx, sheet: to, claims: claims?.target });
   put(main.sheet);
   const reports: ExchangeEntry[] = [{ fromId, toId, report: main.report }];
 
@@ -45,5 +57,32 @@ export function exchange({
     reports.push({ fromId: reply.from, toId: String(reply.to), report: back.report });
   }
 
+  const sender = live(fromId);
+  if (sender && !envelope.reply) {
+    const out = fireOutgoing(envelope, { results: main.results, emitted: main.report.emitted }, { sheet: sender, targetId: toId }, ctx);
+    put(out.sheet);
+    for (const report of out.reactions) reports.push({ fromId, toId: fromId, report });
+    for (const reply of out.replies) {
+      const target = live(String(reply.to));
+      if (!target) continue;
+      const back = receive(reply, { ...ctx, sheet: target });
+      put(back.sheet);
+      reports.push({ fromId: reply.from, toId: String(reply.to), report: back.report });
+    }
+  }
+
   return { sheets: updated, reports };
+}
+
+export function exchange({
+  system, compendium, die, sheets, actionId, fromId, toId, claims, clock,
+}: ExchangeArgs): ExchangeResult {
+  const find = finder(sheets);
+  const from = find(fromId);
+  const to = find(toId);
+  if (!from) throw new Error(`не найден отправитель «${fromId}»`);
+  if (!to) throw new Error(`не найдена цель «${toId}»`);
+
+  const envelope = send(actionId, { system, compendium, die, clock, sheet: from, against: to, claims: claims?.source });
+  return deliver({ system, compendium, die, clock, sheets, envelope, fromId, toId, claims: { target: claims?.target } });
 }

@@ -50,11 +50,13 @@
     "action_types": {
       "action": {
         "label": "Действие",
-        "icon": "◆"
+        "icon": "◆",
+        "perTurn": 1
       },
       "reaction": {
         "label": "Реакция",
-        "icon": "↩"
+        "icon": "↩",
+        "perTurn": 1
       },
       "movement": {
         "label": "Передвижение",
@@ -239,6 +241,51 @@
           }
         ]
       },
+      "fire_bolt": {
+        "label": "Огненный снаряд",
+        "icon": "🔥",
+        "category": "Атака",
+        "activation": "manual",
+        "cost": "action",
+        "params": [],
+        "steps": [
+          {
+            "id": "hit",
+            "type": "threshold",
+            "roll": {
+              "die": {
+                "constant": "lead_die"
+              },
+              "bonus": {
+                "expr": "#attack_bonus"
+              },
+              "check": "attack_roll"
+            },
+            "versus": {
+              "tag": "ac"
+            }
+          },
+          {
+            "id": "dmg",
+            "type": "amount",
+            "source": "roll",
+            "dice": {
+              "const": "1d10"
+            }
+          },
+          {
+            "type": "emit",
+            "event": "damage",
+            "amount": {
+              "ref": "dmg"
+            },
+            "tags": [
+              "огонь",
+              "магический"
+            ]
+          }
+        ]
+      },
       "poisoned": {
         "label": "Отравлен",
         "icon": "☠",
@@ -276,6 +323,161 @@
             "value": 0.5,
             "stacking": "sum",
             "condition": null
+          }
+        ],
+        "steps": []
+      },
+      "fire_resistance": {
+        "label": "Сопротивление огню",
+        "icon": "🧯",
+        "category": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "temporary"
+        },
+        "description": "Входящий урон с тегом «огонь» половинится.",
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "event:damage",
+            "op": "mul",
+            "value": 0.5,
+            "stacking": "max",
+            "condition": null,
+            "tags": [
+              "огонь"
+            ]
+          }
+        ],
+        "steps": []
+      },
+      "blessed": {
+        "label": "Благословлён",
+        "icon": "✨",
+        "category": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "rounds",
+          "max": 2
+        },
+        "description": "+2 к любому броску на два раунда боя; вне боя — пока не снимут.",
+        "modifiers": [
+          {
+            "kind": "roll",
+            "target": "roll:any",
+            "op": "add",
+            "value": 2,
+            "stacking": "sum",
+            "condition": null
+          }
+        ],
+        "steps": []
+      },
+      "shield": {
+        "label": "Щит",
+        "icon": "🛡",
+        "category": "Реакции",
+        "activation": "reaction",
+        "cost": "reaction",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Когда по тебе попали — +5 к КД до конца твоего следующего хода.",
+        "trigger": {
+          "on": "*",
+          "window": "target",
+          "condition": {
+            "ref": "hit.success"
+          }
+        },
+        "params": [],
+        "steps": [
+          {
+            "type": "status",
+            "mode": "apply",
+            "effect": {
+              "const": "shield_up"
+            }
+          }
+        ]
+      },
+      "shield_up": {
+        "label": "Под щитом",
+        "icon": "🛡",
+        "category": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "turns",
+          "max": 1
+        },
+        "description": "+5 к КД.",
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "ac",
+            "op": "add",
+            "value": 5,
+            "stacking": "sum",
+            "condition": null
+          }
+        ],
+        "steps": []
+      },
+      "inspire": {
+        "label": "Вдохновение: перебросить с преимуществом",
+        "icon": "✨",
+        "category": "Реакции",
+        "activation": "reaction",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Увидел свой бросок — потратил очко вдохновения и бросил заново с преимуществом.",
+        "trigger": {
+          "on": "*",
+          "window": "sender",
+          "condition": {
+            "expr": "#inspiration > 0"
+          },
+          "claims": [
+            "advantage"
+          ]
+        },
+        "params": [],
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "inspiration"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          }
+        ]
+      },
+      "prone": {
+        "label": "Лежит",
+        "icon": "🛌",
+        "category": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "temporary"
+        },
+        "description": "Атаки по лежащему — с преимуществом, его собственные атаки — с помехой.",
+        "modifiers": [
+          {
+            "kind": "roll",
+            "target": "incoming:attack_roll",
+            "condition": null,
+            "edit": "advantage"
+          },
+          {
+            "kind": "roll",
+            "target": "attack_roll",
+            "condition": null,
+            "edit": "disadvantage"
           }
         ],
         "steps": []
@@ -671,6 +873,17 @@
         }
       },
       {
+        "tag": "inspiration",
+        "label": "Вдохновение",
+        "group": "Прогрессия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0
+        }
+      },
+      {
         "tag": "prof_bonus",
         "label": "Бонус мастерства",
         "group": "Прогрессия",
@@ -1050,6 +1263,42 @@
         ],
         "canceledBy": "disadvantage"
       }
+    },
+    "events": {
+      "damage": {
+        "label": "Урон",
+        "tags": [
+          "рубящий",
+          "колющий",
+          "дробящий",
+          "огонь",
+          "холод",
+          "яд",
+          "магический"
+        ],
+        "receive": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "hp_current"
+            },
+            "direction": "subtract",
+            "value": {
+              "ref": "event.amount"
+            },
+            "targetModifiers": true
+          }
+        ]
+      }
+    },
+    "initiative": {
+      "die": {
+        "constant": "lead_die"
+      },
+      "bonus": {
+        "expr": "#dex_mod"
+      },
+      "check": "skill_roll"
     }
   },
   "compendium": {
@@ -1116,6 +1365,13 @@
         "rk": "lore",
         "label": "Ветхая карта",
         "description": "Нейтральная запись: род без привязок, автоматизации нет."
+      },
+      {
+        "id": "fire-bolt",
+        "rk": "action",
+        "label": "Огненный снаряд",
+        "description": "Сгусток огня: попадание по КД, 1d10 огнём.",
+        "effect": "fire_bolt"
       }
     ]
   },

@@ -26,7 +26,10 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty }: {
   empty?: { title: string; hint: string };
 }) {
   const all = targets(system) as { tag: string; label: string; kind: string; group?: string }[];
-  const valueTargets = all.filter(t => t.kind === 'value' || t.kind === 'incoming');
+  const valueTargets = all.filter(t => t.kind === 'value' || t.kind === 'incoming' || t.kind === 'event');
+  const isEvent = (tag: string) => all.find(t => t.tag === tag)?.kind === 'event';
+  const listOf = (raw: unknown) => (Array.isArray(raw) ? raw.map(String).join(', ') : '');
+  const parseList = (text: string) => text.split(',').map(s => s.trim()).filter(Boolean);
   const rollTargets = all.filter(t => t.kind === 'roll');
   const edits = Object.entries(system.roll_edits ?? {});
 
@@ -106,6 +109,30 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty }: {
                   onChange={stacking => onEdit(draft => { (draft[index] as { stacking?: string }).stacking = stacking; })}
                 />
               </Field>
+              {isEvent(modifier.target) ? (
+                <>
+                  <Field label="Если тег" hint="Через запятую. Пусто — любой.">
+                    <Input
+                      value={listOf((modifier as { tags?: unknown }).tags)}
+                      onChange={text => onEdit(draft => {
+                        const m = draft[index] as { tags?: string[] };
+                        const list = parseList(text);
+                        if (list.length) m.tags = list; else delete m.tags;
+                      })}
+                    />
+                  </Field>
+                  <Field label="Кроме тега">
+                    <Input
+                      value={listOf((modifier as { notTags?: unknown }).notTags)}
+                      onChange={text => onEdit(draft => {
+                        const m = draft[index] as { notTags?: string[] };
+                        const list = parseList(text);
+                        if (list.length) m.notTags = list; else delete m.notTags;
+                      })}
+                    />
+                  </Field>
+                </>
+              ) : null}
             </div>
           ) : (
             <div className="row">

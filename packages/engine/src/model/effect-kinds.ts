@@ -17,23 +17,44 @@ export const ACTIVATIONS = {
     hint: 'Висит и правит цифры: бонусы, помеха, сопротивление.',
     payload: 'modifiers',
   },
+  reaction: {
+    label: 'Реакция',
+    icon: '🛡',
+    hint: 'Стол делает паузу и спрашивает игрока: применить? Перед чужим действием или после своего броска.',
+    payload: 'steps',
+  },
 };
 
 export const DURATIONS = {
   permanent: {
     label: 'Постоянный',
     hint: 'Живёт, пока жив источник: снял предмет — ушёл, выключил из правил комнаты — ушёл.',
-    forActivations: ['passive', 'triggered'],
+    forActivations: ['passive', 'triggered', 'reaction'],
   },
   temporary: {
     label: 'Временный',
     hint: 'Снимается рукой или шагом «состояние» в режиме «снять».',
-    forActivations: ['passive', 'triggered'],
+    forActivations: ['passive', 'triggered', 'reaction'],
   },
   uses: {
     label: 'Счётчик срабатываний',
     hint: 'Сработал — минус один; на нуле спадает сам.',
-    forActivations: ['triggered'],
+    forActivations: ['triggered', 'reaction'],
+  },
+  rounds: {
+    label: 'Раунды боя',
+    hint: 'Спадает в начале раунда через N раундов. Вне боя висит, пока не снимут.',
+    forActivations: ['passive', 'triggered'],
+  },
+  turns: {
+    label: 'Ходы владельца',
+    hint: 'Спадает в конце N-го своего хода. Вне боя висит, пока не снимут.',
+    forActivations: ['passive', 'triggered'],
+  },
+  scene: {
+    label: 'До конца сцены',
+    hint: 'Спадает, когда ведущий закрывает сцену.',
+    forActivations: ['passive', 'triggered'],
   },
 };
 

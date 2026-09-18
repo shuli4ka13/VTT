@@ -94,6 +94,20 @@ describe('editReadback — правка броска словами', () => {
       .toBe('Кинуть на 2 кости больше, оставить 3 лучших.');
   });
 
+  it('переворот цифр — фразой, с направлением', () => {
+    expect(joinReadback(editReadback({ ops: [{ op: 'flip', prefer: 'low' }] }, sys)))
+      .toBe('Перевернуть цифры, если так меньше.');
+    expect(joinReadback(editReadback({ ops: [{ op: 'flip', prefer: 'high' }] }, sys)))
+      .toBe('Перевернуть цифры, если так больше.');
+  });
+
+  it('переброс — фразой, с порогом', () => {
+    expect(joinReadback(editReadback({ ops: [{ op: 'reroll', n: 1 }] }, sys)))
+      .toBe('Перебросить единицы, новый результат обязателен.');
+    expect(joinReadback(editReadback({ ops: [{ op: 'reroll', n: 2 }] }, sys)))
+      .toBe('Перебросить кости не выше 2, новый результат обязателен.');
+  });
+
   it('пустая правка — оранжевый пропуск, а не молчание', () => {
     expect(joinReadback(editReadback({ label: 'Фора', ops: [] }, sys)))
       .toBe('⟨что она делает с броском?⟩');

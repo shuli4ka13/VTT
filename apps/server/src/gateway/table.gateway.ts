@@ -67,6 +67,38 @@ export class TableGateway {
     }
   }
 
+  @SubscribeMessage('room:turn')
+  async turn(@MessageBody() raw: unknown, @ConnectedSocket() socket: WebSocket) {
+    const guest = this.guestOf(socket);
+    if (!guest) return this.fail(socket, 'сначала войдите в комнату');
+
+    const parsed = api.turnIntent.safeParse((raw as { intent?: unknown })?.intent ?? raw);
+    if (!parsed.success) return this.fail(socket, 'команда хода не проходит схему');
+
+    try {
+      const delta = await this.roomsService.turn(guest.userId, parsed.data);
+      this.broadcast(delta.roomId, { type: 'room:delta', delta });
+    } catch (err) {
+      this.fail(socket, (err as Error).message);
+    }
+  }
+
+  @SubscribeMessage('room:answer')
+  async answer(@MessageBody() raw: unknown, @ConnectedSocket() socket: WebSocket) {
+    const guest = this.guestOf(socket);
+    if (!guest) return this.fail(socket, 'сначала войдите в комнату');
+
+    const parsed = api.answerIntent.safeParse((raw as { intent?: unknown })?.intent ?? raw);
+    if (!parsed.success) return this.fail(socket, 'ответ не проходит схему');
+
+    try {
+      const delta = await this.roomsService.answer(guest.userId, parsed.data);
+      this.broadcast(delta.roomId, { type: 'room:delta', delta });
+    } catch (err) {
+      this.fail(socket, (err as Error).message);
+    }
+  }
+
   @SubscribeMessage('sheet:set')
   async setValue(@MessageBody() raw: unknown, @ConnectedSocket() socket: WebSocket) {
     const guest = this.guestOf(socket);

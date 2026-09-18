@@ -1,4 +1,4 @@
-import { resolveRoll } from '../modifiers.ts';
+import { resolveRoll, claimedModifiers } from '../modifiers.ts';
 import { lookupDegree } from '../tables.ts';
 import { dieConstant, rollLead, unfoldDice } from '../lead-die.ts';
 import { packRef, resolveNumber, resolveOptionalNumber } from '../refs.ts';
@@ -10,15 +10,30 @@ export const label = 'Порог';
 export const hint = 'Бросок против величины. Не вышло — цепочка обрывается.';
 
 export const slots = [
-  { key: 'side', label: 'Кто бросает', kind: 'choice', options: ['source', 'target'] },
-  { key: 'roll', label: 'Бросок', kind: 'roll' },
-  { key: 'versus', label: 'Против', kind: 'ref' },
+  { key: 'roll.die', label: 'Кость', kind: 'ref', main: true, required: true, allow: ['constant'] },
   {
-    key: 'successWhen', label: 'Успех, если бросок',
-    kind: 'choice', options: ['atLeast', 'notOver', 'over', 'under', 'equals'],
+    key: 'roll.bonus', label: 'Прибавка к броску', kind: 'ref', main: true,
+    allow: ['expr', 'const', 'param', 'prop', 'empty'],
   },
-  { key: 'continueOn', label: 'Дальше при', kind: 'choice', options: ['success', 'fail'] },
-
+  {
+    key: 'versus', label: 'Против чего', kind: 'ref', main: true, required: true,
+    allow: ['tag', 'expr', 'const', 'param', 'ref'],
+  },
+  { key: 'roll.check', label: 'Какой это бросок', kind: 'roll', allow: [] },
+  {
+    key: 'side', label: 'Кто бросает', kind: 'choice', options: ['source', 'target'], fallback: 'source',
+    choice: [['source', 'отправитель — это атака'], ['target', 'цель — это спасбросок']],
+  },
+  {
+    key: 'successWhen', label: 'Успех, если бросок', kind: 'choice', fallback: 'atLeast',
+    options: ['atLeast', 'notOver', 'over', 'under', 'equals'],
+    choice: [['atLeast', 'не меньше порога'], ['notOver', 'не больше порога'],
+      ['over', 'строго больше'], ['under', 'строго меньше'], ['equals', 'ровно порог']],
+  },
+  {
+    key: 'continueOn', label: 'Дальше при', kind: 'choice', options: ['success', 'fail', 'always'], fallback: 'success',
+    choice: [['success', 'успехе'], ['fail', 'провале'], ['always', 'всегда — ветвят следующие шаги']],
+  },
   { key: 'degrees', label: 'Степени успеха', kind: 'degrees' },
 ];
 
@@ -59,12 +74,15 @@ export const outputs = [
   { path: '.rolled', label: 'сколько костей кинуто', kind: 'number' },
   { path: '.atMax', label: 'костей на максимуме', kind: 'number' },
   { path: '.atMin', label: 'костей на единице', kind: 'number' },
+  { path: '.edited', label: 'бросок был с правкой', kind: 'boolean' },
 ];
 
 export const mayBreak = true;
 
 export function breakLine(step: StepData) {
-  return (step.continueOn || 'success') === 'fail'
+  const mode = step.continueOn || 'success';
+  if (mode === 'always') return null;
+  return mode === 'fail'
     ? 'если порог взят — цель устояла'
     : 'если порог не взят — промах';
 }
@@ -88,16 +106,20 @@ export function traceLine(t: any, h: any) {
   const checkName = t.check ? ` «${h.labelOf(t.check)}»` : '';
   const versusName = t.versus.tag ? `${h.labelOf(t.versus.tag)} ` : '';
 
-  const dice = t.read === 'count' ? `[${t.rolls.join(', ')}] → успехов ${t.total - t.bonus}`
-    : t.kept != null && t.rolls.length > 1 ? `[${t.rolls.join(', ')}] → ${t.kept}`
-      : `[${t.rolls.join(', ')}]`;
+  const shown = Array.isArray(t.raw) && t.raw.length === t.rolls.length
+    ? t.rolls.map((v: number, i: number) => (t.raw[i] === v ? String(v) : `${t.raw[i]}→${v}`)).join(', ')
+    : t.rolls.join(', ');
+  const dice = t.read === 'count' ? `[${shown}] → успехов ${t.total - t.bonus}`
+    : t.kept != null && t.rolls.length > 1 ? `[${shown}] → ${t.kept}`
+      : `[${shown}]`;
   const parts = t.parts && Object.keys(t.parts).length
     ? ' · ' + Object.entries(t.parts).map(([k, v]) => `${k}: ${v}`).join(', ')
     : '';
 
+  const taken = t.success ? `взят (запас ${t.margin})` : `не взят (недобор ${-t.margin})`;
   const verdict = t.degree !== undefined && t.degree !== null
-    ? `${t.degree} (запас ${t.margin})`
-    : t.success ? `взят (запас ${t.margin})` : `не взят (недобор ${-t.margin})`;
+    ? `${taken}, степень ${t.degree}`
+    : taken;
 
   const edits = t.edits?.length ? ` · ${t.edits.join(', ')}` : '';
   return `проверка${checkName}: ${dice} + ${t.bonus} = ${t.total} против ${versusName}${t.versus.value} — ${verdict}${edits}${parts}`;
@@ -123,9 +145,14 @@ export function pack(step: StepData, ctx: StepContext) {
     return { ...base, roll: { die: roll.die, bonus: packRef(roll.bonus, ctx), check: roll.check || null } };
   }
 
-  const mods = resolveRoll(ctx.system, ctx.sheet, roll.check || null, ctx.pass);
+  const check = roll.check || null;
+  const extra = [
+    ...(ctx.against ? ctx.against(check) : []),
+    ...claimedModifiers(ctx.system, ctx.claims ?? [], check),
+  ];
+  const mods = resolveRoll(ctx.system, ctx.sheet, check, ctx.pass, extra);
   const rolled = rollLead(unfold(roll.die, ctx), ctx.die, mods.edits);
-  return { ...base, rolled, bonus: packRef(roll.bonus, ctx), modBonus: mods.bonus };
+  return { ...base, check, rolled, bonus: packRef(roll.bonus, ctx), modBonus: mods.bonus };
 }
 
 export function resolve(step: StepData, ctx: StepContext) {
@@ -134,7 +161,9 @@ export function resolve(step: StepData, ctx: StepContext) {
 
   if (!rolled) {
 
-    const mods = resolveRoll(ctx.system, ctx.sheet, step.roll.check || null, ctx.pass);
+    const check = step.roll.check || null;
+    const mods = resolveRoll(
+      ctx.system, ctx.sheet, check, ctx.pass, claimedModifiers(ctx.system, ctx.claims ?? [], check));
     rolled = rollLead(unfold(step.roll.die, ctx), ctx.die, mods.edits);
     modBonus = mods.bonus;
   }
@@ -163,16 +192,18 @@ export function resolve(step: StepData, ctx: StepContext) {
     rolled: rolled.tally?.dice ?? rolled.rolls.length,
     atMax: rolled.tally?.atMax ?? 0,
     atMin: rolled.tally?.atMin ?? 0,
+    edited: (rolled.edits?.length ?? 0) > 0,
     ...(scale ? { degree } : {}),
     dice: { rolls: rolled.rolls, kept: rolled.kept },
     parts: rolled.parts || {},
   };
 
-  const goOn = step.continueOn === 'fail' ? !success : success;
+  const goOn = step.continueOn === 'always' ? true : step.continueOn === 'fail' ? !success : success;
   return {
     value,
     trace: {
       rolls: rolled.rolls, kept: rolled.kept, bonus, total,
+      ...(rolled.raw && rolled.raw.some((v: number, i: number) => v !== rolled.rolls[i]) ? { raw: rolled.raw } : {}),
 
       ...(rolled.read && rolled.read !== 'sum' ? { read: rolled.read } : {}),
       ...(rolled.edits?.length ? { edits: rolled.edits } : {}),

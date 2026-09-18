@@ -102,6 +102,9 @@ export const valueModifier = z.object({
   value: z.unknown(),
   stacking: z.string().optional(),
   condition: z.string().nullable().optional(),
+
+  tags: z.array(z.string().min(1)).optional(),
+  notTags: z.array(z.string().min(1)).optional(),
 }).passthrough();
 
 export const rollModifier = z.object({
@@ -116,8 +119,8 @@ export const rollModifier = z.object({
 
 export const modifier = z.discriminatedUnion('kind', [valueModifier, rollModifier]);
 
-export const activation = z.enum(['manual', 'triggered', 'passive']);
-export const durationKind = z.enum(['permanent', 'temporary', 'uses']);
+export const activation = z.enum(['manual', 'triggered', 'passive', 'reaction']);
+export const durationKind = z.enum(['permanent', 'temporary', 'uses', 'rounds', 'turns', 'scene']);
 export const stacking = z.enum(['ignore', 'refresh', 'stack']);
 
 export const param = z.object({
@@ -128,10 +131,23 @@ export const param = z.object({
   of: refSide.optional(),
 }).passthrough();
 
+export const guard = z.union([
+  z.object({ ref: z.string().min(1), is: z.unknown().optional(), not: z.boolean().optional() }),
+  z.object({ expr: z.string(), of: refSide.optional() }),
+]);
+
 export const step = z.object({
   id: z.string().optional(),
   type: z.string().min(1),
   side: refSide.optional(),
+
+  when: guard.optional(),
+}).passthrough();
+
+export const systemEvent = z.object({
+  label: z.string().optional(),
+  tags: z.array(z.string().min(1)).optional(),
+  receive: z.array(step).optional(),
 }).passthrough();
 
 export const trigger = z.object({
@@ -139,7 +155,12 @@ export const trigger = z.object({
   when: z.string().optional(),
   condition: slotRef.nullable().optional(),
 
-  to: z.enum(['sender', 'self']).optional(),
+  to: z.enum(['sender', 'self', 'target']).optional(),
+
+  direction: z.enum(['in', 'out']).optional(),
+
+  window: z.enum(['sender', 'target']).optional(),
+  claims: z.array(z.string().min(1)).optional(),
 }).passthrough();
 
 export const effect = z.object({
@@ -205,8 +226,18 @@ export const system = z.object({
   action_types: z.record(z.string(), z.object({
     label: z.string(),
     icon: z.string().optional(),
+
+    perTurn: z.number().int().positive().optional(),
   }).passthrough()).optional(),
   advantage: z.object({ methods: z.record(z.string(), z.boolean()).optional() }).passthrough().optional(),
+
+  events: z.record(z.string(), systemEvent).optional(),
+
+  initiative: z.object({
+    die: z.object({ constant: z.string().min(1) }),
+    bonus: slotRef.optional(),
+    check: z.string().optional(),
+  }).passthrough().optional(),
 }).passthrough();
 
 export const storedValue = z.union([z.number(), z.string(), z.boolean(), z.null()]);
@@ -272,6 +303,8 @@ export type GroupSpec = z.infer<typeof groupSpec>;
 export type Modifier = z.infer<typeof modifier>;
 export type Param = z.infer<typeof param>;
 export type Step = z.infer<typeof step>;
+export type Guard = z.infer<typeof guard>;
+export type SystemEvent = z.infer<typeof systemEvent>;
 export type Trigger = z.infer<typeof trigger>;
 export type Effect = z.infer<typeof effect>;
 export type Binding = z.infer<typeof binding>;

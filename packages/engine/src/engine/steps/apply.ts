@@ -5,7 +5,7 @@ import { incomingTagOf } from '../targets.ts';
 import { packRef, resolveNumber, resolveRef } from '../refs.ts';
 import { EngineError } from '../errors.ts';
 import type { StepData, StepContext } from './index.ts';
-import type { System } from '../../model/types.ts';
+import type { System, StoredValue } from '../../model/types.ts';
 
 export const type = 'apply';
 export const label = 'Применить';
@@ -18,10 +18,17 @@ const DIRECTIONS: Record<string, (from: number, x: number) => number> = {
 };
 
 export const slots = [
-  { key: 'target', label: 'Мишень', kind: 'tag' },
-  { key: 'direction', label: 'Направление', kind: 'choice', options: Object.keys(DIRECTIONS) },
-  { key: 'value', label: 'Величина', kind: 'ref' },
-  { key: 'targetModifiers', label: 'Модификаторы цели', kind: 'flag' },
+  { key: 'target', label: 'Какое поле меняем', kind: 'tag', main: true, required: true, allow: ['tag', 'param'] },
+  {
+    key: 'direction', label: 'Как', kind: 'choice', main: true, fallback: 'subtract',
+    options: Object.keys(DIRECTIONS),
+    choice: [['subtract', 'вычесть'], ['add', 'прибавить'], ['set', 'задать']],
+  },
+  { key: 'value', label: 'Сколько', kind: 'ref', main: true, required: true, allow: ['ref', 'expr', 'const', 'param'] },
+  {
+    key: 'targetModifiers', label: 'Сопротивления цели', kind: 'flag', fallback: 'true',
+    choice: [['true', 'учитываются'], ['false', 'не учитываются']],
+  },
 ];
 
 export const outputs = [
@@ -68,19 +75,32 @@ export function pack(step: StepData, ctx: StepContext) {
 export function resolve(step: StepData, ctx: StepContext) {
   const tag = tagOf(step.target, ctx);
   const field = assertWritable(ctx.system, tag);
-
-  const incoming = resolveNumber(step.value, ctx, 'величина применения');
-  const amount = step.targetModifiers
-    ? Math.floor(Number(applyValueModifiers(incoming, incomingTagOf(tag), ctx.pass)))
-    : incoming;
-
+  const direction = String(step.direction);
   const from = ctx.read!(tag);
-  if (typeof from !== 'number' && step.direction !== 'set') {
+
+  if (direction === 'set' && (typeof from !== 'number' || typeof resolveRef(step.value, ctx) !== 'number')) {
+    const to = resolveRef(step.value, ctx) as StoredValue;
+    ctx.write!(tag, to);
+    return {
+      value: { amount: to, from, to, overkill: 0 },
+      trace: { target: tag, direction, incoming: to, amount: to, from, to },
+      break: null,
+    };
+  }
+  if (typeof from !== 'number') {
     throw new EngineError(
       `поле «${tag}» держит не число (${typeof from}) — прибавлять и вычитать нечего`);
   }
 
-  const raw = DIRECTIONS[String(step.direction)]!(from as number, amount);
+  const value = resolveNumber(step.value, ctx, 'величина применения');
+  const incoming = direction === 'set' ? Math.abs(value - from) : value;
+  const amount = step.targetModifiers
+    ? Math.floor(Number(applyValueModifiers(incoming, incomingTagOf(tag), ctx.pass)))
+    : incoming;
+
+  const raw = direction === 'set'
+    ? from + Math.sign(value - from) * amount
+    : DIRECTIONS[direction]!(from, amount);
   const { to, overkill } = clampToField(raw, field, ctx);
 
   ctx.write!(tag, to);
@@ -88,7 +108,7 @@ export function resolve(step: StepData, ctx: StepContext) {
   return {
 
     value: { amount, from, to, overkill },
-    trace: { target: tag, direction: step.direction, incoming, amount, from, to },
+    trace: { target: tag, direction, incoming, amount, from, to },
     break: null,
   };
 }

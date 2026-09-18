@@ -1,0 +1,86 @@
+import { packRef, resolveRef, resolveOptionalNumber } from '../refs.ts';
+import { applyValueModifiers } from '../modifiers.ts';
+import { eventTagOf } from '../targets.ts';
+import { requireEvent } from '../effects.ts';
+import type { StepData, StepContext } from './index.ts';
+
+export const type = 'emit';
+export const label = 'Отправить';
+export const hint = 'Отправить получателю событие из словаря: урон, лечение. Что с ним делать — знает правило приёма.';
+
+export const slots = [
+  { key: 'event', label: 'Событие', kind: 'event', main: true, required: true, allow: [] },
+  { key: 'amount', label: 'Сколько', kind: 'ref', main: true, allow: ['ref', 'expr', 'const', 'param', 'empty'] },
+  { key: 'tags', label: 'Теги', kind: 'tags', allow: [] },
+];
+
+export const outputs = [
+  { path: '.incoming', label: 'отправлено', kind: 'number' },
+  { path: '.amount', label: 'дошло до цели', kind: 'number' },
+];
+
+export const mayBreak = false;
+
+export const icon = '➤';
+
+export function lint(step: StepData) {
+  if (!step.event) return 'отправке нужно событие — заведите его в «Словарях»';
+  return null;
+}
+
+export function traceLine(t: any, h: any) {
+  const name = typeof h?.eventLabel === 'function' ? h.eventLabel(t.event) : t.event;
+  const tags = t.tags?.length ? ` [${t.tags.join(', ')}]` : '';
+  const mods = t.incoming !== t.amount
+    ? ` (отправлено ${t.incoming}, после модификаторов цели ${t.amount})`
+    : '';
+  return `событие «${name}»${tags}: ${t.amount}${mods}`;
+}
+
+export function pack(step: StepData, ctx: StepContext) {
+  const id = String(step.event ?? '');
+  requireEvent(ctx.system, id, who(ctx));
+  const tags = (Array.isArray(step.tags) ? step.tags : [])
+    .map((t: unknown) => (typeof t === 'string' ? t : packRef(t, ctx)));
+  return {
+    event: id,
+    amount: step.amount === undefined ? null : packRef(step.amount, ctx),
+    tags,
+  };
+}
+
+export function resolve(step: StepData, ctx: StepContext) {
+  const id = String(step.event);
+  const spec = requireEvent(ctx.system, id, who(ctx));
+  const incoming = resolveOptionalNumber(step.amount, ctx, 'величина события') ?? 0;
+  const tags = tagsOf(step.tags, ctx);
+  const amount = Math.floor(Number(applyValueModifiers(incoming, eventTagOf(id), ctx.pass, { tags })));
+  const payload = { event: id, amount, incoming, tags };
+
+  ctx.emit?.(payload);
+
+  let received: string | null = null;
+  if (ctx.run && spec.receive?.length) {
+    const out = ctx.run(spec.receive, { event: payload }, id);
+    if (out.stopped) received = String(out.stopped.reason ?? 'оборвано');
+  }
+
+  return {
+    value: payload,
+    trace: { event: id, incoming, amount, tags, ...(received ? { received } : {}) },
+    break: null,
+  };
+}
+
+function tagsOf(raw: unknown, ctx: StepContext): string[] {
+  const out: string[] = [];
+  for (const item of Array.isArray(raw) ? raw : []) {
+    const value = typeof item === 'string' ? item : resolveRef(item, ctx);
+    if (value === null || value === undefined || value === '') continue;
+    if (Array.isArray(value)) out.push(...value.map(String));
+    else out.push(...String(value).split(',').map(s => s.trim()).filter(Boolean));
+  }
+  return [...new Set(out)];
+}
+
+const who = (ctx: StepContext): string => ctx.owner || 'правило';

@@ -93,11 +93,99 @@ export function TableScreen() {
               </div>
             </Card>
 
+            <Combat room={room} onError={setError} />
+            {room.pending ? <Prompt room={room} onError={setError} /> : null}
             <Actions room={room} sender={sender} target={target} onError={setError} />
           </>
         ),
       }}
     />
+  );
+}
+
+function Combat({ room, onError }: { room: RoomState; onError: (message: string | null) => void }) {
+  const clock = room.clock;
+  const nameOf = (id: string) => room.sheets.find(s => s.id === id)?.name ?? id;
+  const send = (op: 'start' | 'next' | 'stop' | 'scene') => {
+    onError(null);
+    tableSocket.turn({ roomId: room.id, op });
+  };
+  const fighting = Boolean(clock && clock.round > 0 && clock.active);
+
+  return (
+    <Card>
+      <CardHead
+        title={fighting ? `Раунд ${clock!.round} · ход: ${nameOf(String(clock!.active))}` : 'Бой не идёт'}
+        actions={
+          <>
+            {fighting
+              ? <>
+                  <Button size="sm" variant="primary" onClick={() => send('next')}>Следующий ход</Button>
+                  <Button size="sm" onClick={() => send('stop')}>Конец боя</Button>
+                </>
+              : <Button size="sm" variant="primary" onClick={() => send('start')}>Инициатива</Button>}
+            <Button size="sm" variant="ghost" onClick={() => send('scene')}>Закрыть сцену</Button>
+          </>
+        }
+      />
+      {fighting ? (
+        <div className="inline inline--tight">
+          {clock!.order.map(id => (
+            <Chip key={id} active={id === clock!.active}>{nameOf(id)}</Chip>
+          ))}
+        </div>
+      ) : null}
+    </Card>
+  );
+}
+
+function Prompt({ room, onError }: { room: RoomState; onError: (message: string | null) => void }) {
+  const pending = room.pending!;
+  const [chosen, setChosen] = useState<string[]>([]);
+  const reply = (ids: string[]) => {
+    onError(null);
+    tableSocket.answer({ roomId: room.id, pendingId: pending.id, chosen: ids });
+    setChosen([]);
+  };
+  return (
+    <Card>
+      <CardHead title={pending.question} />
+      {pending.preview.map((line, i) => <div key={i} className="faint">{line}</div>)}
+      <div className="inline inline--tight">
+        {pending.options.map(option => (
+          <Chip
+            key={option.id}
+            active={chosen.includes(option.id)}
+            onClick={() => setChosen(chosen.includes(option.id)
+              ? chosen.filter(id => id !== option.id) : [...chosen, option.id])}
+          >
+            {option.label}
+          </Chip>
+        ))}
+      </div>
+      <div className="inline inline--tight">
+        <Button size="sm" variant="primary" disabled={!chosen.length} onClick={() => reply(chosen)}>Применить</Button>
+        <Button size="sm" onClick={() => reply([])}>Пропустить</Button>
+      </div>
+    </Card>
+  );
+}
+
+function ClaimRow({ label, edits, picked, onToggle }: {
+  label: string;
+  edits: [string, { label?: string }][];
+  picked: string[];
+  onToggle: (key: string) => void;
+}) {
+  return (
+    <div className="inline inline--tight">
+      <span className="faint">{label}:</span>
+      {edits.map(([key, edit]) => (
+        <Chip key={key} active={picked.includes(key)} onClick={() => onToggle(key)}>
+          {edit.label || key}
+        </Chip>
+      ))}
+    </div>
   );
 }
 
@@ -107,6 +195,12 @@ function Actions({ room, sender, target, onError }: {
   target: Sheet | null;
   onError: (message: string | null) => void;
 }) {
+  const [mine, setMine] = useState<string[]>([]);
+  const [theirs, setTheirs] = useState<string[]>([]);
+  const edits = Object.entries(room.system.roll_edits ?? {});
+  const flip = (list: string[], key: string) =>
+    (list.includes(key) ? list.filter(k => k !== key) : [...list, key]);
+
   if (!sender) {
     return <Empty title="Кто действует?" hint="Кликните фишку — она станет отправителем." />;
   }
@@ -126,6 +220,12 @@ function Actions({ room, sender, target, onError }: {
           ? <Chip>по {target.name}</Chip>
           : <span className="faint">выберите цель</span>}
       />
+      {edits.length && available.length ? (
+        <div className="stack stack--tight">
+          <ClaimRow label="мой бросок" edits={edits} picked={mine} onToggle={key => setMine(flip(mine, key))} />
+          <ClaimRow label="бросок цели" edits={edits} picked={theirs} onToggle={key => setTheirs(flip(theirs, key))} />
+        </div>
+      ) : null}
       {available.length === 0
         ? <span className="faint">
             У этого листа нет применимых действий — наденьте предмет или выучите приём на листе персонажа.
@@ -136,13 +236,17 @@ function Actions({ room, sender, target, onError }: {
               <Button
                 key={action.id}
                 variant="primary"
-                disabled={!target}
+                disabled={!target || Boolean(room.pending)}
                 onClick={() => {
                   onError(null);
                   tableSocket.act({
                     roomId: room.id, actionId: action.id,
                     fromId: sender.id, toId: target!.id,
+                    ...(mine.length ? { edits: mine } : {}),
+                    ...(theirs.length ? { targetEdits: theirs } : {}),
                   });
+                  setMine([]);
+                  setTheirs([]);
                 }}
               >
                 {action.label}

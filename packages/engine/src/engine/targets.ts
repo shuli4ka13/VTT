@@ -1,7 +1,7 @@
 import { UnknownTagError } from './errors.ts';
 import type { System } from '../model/types.ts';
 
-export type TargetKind = 'value' | 'roll' | 'incoming';
+export type TargetKind = 'value' | 'roll' | 'incoming' | 'event';
 
 export interface Target {
   tag: string;
@@ -18,11 +18,11 @@ export const incomingTagOf = (tag: string) => `incoming:${tag}`;
 
 export const ANY_ROLL = 'roll:any';
 
-export function targets(system: System): Target[] {
-  return [
-    { tag: ANY_ROLL, label: 'Любой бросок', group: 'Броски', kind: 'roll' },
+export const eventTagOf = (id: string) => `event:${id}`;
 
-    ...system.fields.map((f): Target => ({ tag: f.tag, label: f.label, group: f.group, kind: 'value' })),
+export function targets(system: System): Target[] {
+  const rolls: Target[] = [
+    { tag: ANY_ROLL, label: 'Любой бросок', group: 'Броски', kind: 'roll' },
 
     ...(system.rolls || []).map((r): Target => ({ tag: r.tag, label: r.label, group: 'Броски', kind: 'roll' })),
 
@@ -33,6 +33,20 @@ export function targets(system: System): Target[] {
       kind: 'roll',
       from: f.tag,
     })),
+  ];
+
+  return [
+    ...rolls,
+
+    ...system.fields.map((f): Target => ({ tag: f.tag, label: f.label, group: f.group, kind: 'value' })),
+
+    ...rolls.map((r): Target => ({
+      tag: incomingTagOf(r.tag),
+      label: `Против меня: ${r.label.toLowerCase()}`,
+      group: 'Броски по мне',
+      kind: 'roll',
+      from: r.tag,
+    })),
 
     ...system.fields.filter(f => f.value.kind === 'stored').map((f): Target => ({
       tag: incomingTagOf(f.tag),
@@ -40,6 +54,14 @@ export function targets(system: System): Target[] {
       group: f.group,
       kind: 'incoming',
       from: f.tag,
+    })),
+
+    ...Object.entries(system.events || {}).map(([id, event]): Target => ({
+      tag: eventTagOf(id),
+      label: `Входящее событие: ${event.label || id}`,
+      group: 'События',
+      kind: 'event',
+      from: id,
     })),
   ];
 }

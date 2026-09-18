@@ -160,3 +160,48 @@ group('любой бросок ловит правку, ничего для эт
     eq(t.kept, 2);
   });
 });
+
+group('переворот к100 доезжает через эффект — проверка под навык', () => {
+  const sys = (lucky: boolean) => ({
+    id: 'варгейм',
+    fields: [],
+    rolls: [{ tag: 'проверка', label: 'Проверка' }],
+    constants: { сотня: { label: 'к100', kind: 'die', dice: [{ count: 1, sides: 100 }] } },
+    roll_edits: { удача: { label: 'Удача', ops: [{ op: 'flip', prefer: 'low' }] } },
+    effects: lucky ? { удача: passive('удача', 'удача') } : {},
+  });
+  const under = {
+    steps: [{
+      id: 'try', type: 'threshold',
+      roll: { die: { constant: 'сотня' }, bonus: { const: 0 }, check: 'проверка' },
+      versus: { const: 45 }, successWhen: 'notOver',
+    }],
+  };
+  const play = (s: any, sh: any, ...dice: number[]) => {
+    const ctx = () => ({
+      system: s, sheet: sh, params: {}, item: null,
+      die: queue(...dice), pass: newPass(s, sh, { compendium: { items: [] } }),
+    });
+    return resolveRule(packRule(under, ctx()), ctx());
+  };
+
+  test('без правки 71 против 45 «не выше» — провал', () => {
+    eq(play(sys(false), sheet([]), 71).results.try.success, false);
+  });
+
+  test('с «Удачей» тот же бросок читается как 17 — успех, журнал называет правку', () => {
+    const r = play(sys(true), sheet(['удача']), 71);
+    eq(r.results.try.success, true);
+    eq(r.results.try.total, 17);
+    deepEq(r.trace[0].edits, ['Удача']);
+  });
+});
+
+group('исход шага помнит, была ли правка', () => {
+  test('без правок — «нет», с правкой — «да»: на это можно повесить условие', () => {
+    const plain = run(world({}, []), sheet([]), 6);
+    eq(plain.results.try.edited, false);
+    const sys = world({ помощь: { label: 'Помощь', ops: [{ op: 'addDie' }] } }, ['помощь']);
+    eq(run(sys, sheet(['помощь']), 2, 6).results.try.edited, true);
+  });
+});

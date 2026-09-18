@@ -58,6 +58,17 @@ export const roomSheets = sqliteTable('room_sheets', {
   data: text('data').notNull(),
 });
 
+export const roomClocks = sqliteTable('room_clocks', {
+  roomId: text('room_id').primaryKey(),
+  data: text('data').notNull(),
+});
+
+export const roomPending = sqliteTable('room_pending', {
+  id: text('id').primaryKey(),
+  roomId: text('room_id').notNull(),
+  data: text('data').notNull(),
+});
+
 export const members = sqliteTable('members', {
   roomId: text('room_id').notNull(),
   userId: text('user_id').notNull(),

@@ -71,7 +71,11 @@ export function listenToRoom(): void {
           if (!known.has(fresh.id)) sheets.push(fresh);
         }
         return {
-          room: { ...current.room, sheets },
+          room: {
+            ...current.room, sheets,
+            ...(message.delta.clock ? { clock: message.delta.clock } : {}),
+            ...(message.delta.pending !== undefined ? { pending: message.delta.pending } : {}),
+          },
           log: [...current.log, ...message.delta.log],
         };
       });

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { readingKinds } from '@vtt/engine/engine/readings';
 import { editPalette, paletteKeyOf } from '@vtt/engine/engine/roll-edits';
+import { ADVANTAGE_METHODS, findMethod } from '@vtt/engine/model/advantage-methods';
 import { Readback } from './card.tsx';
 import { editReadback, dieReadback } from './readback.ts';
 import { useWorld, freeId, slugOf } from '../../store/world.ts';
 import { Columns } from '../../ui/layout.tsx';
 import { Card, CardHead, Input, NumInput, Button, Fold, Select, Verdict } from '../../ui/primitives.tsx';
+import { FormulaInput } from '../../ui/formula.tsx';
 import { diceCount } from './dice-expr.ts';
 import type { System, Compendium, RangeTable, SystemConstant, DiceTerm } from '@vtt/schema';
 import type { WorldState } from '../../store/world.ts';
@@ -43,6 +45,20 @@ const addRollEdit = (editSystem: EditSystem) => editSystem(draft => {
   draft.roll_edits[key] = { label: '', ops: [] };
 });
 
+const addFromCatalog = (editSystem: EditSystem, methodId: string) => editSystem(draft => {
+  const method = findMethod(methodId);
+  if (!method) return;
+  draft.roll_edits ??= {};
+  for (const recipe of method.recipes) {
+    if (draft.roll_edits[recipe.key]) continue;
+    draft.roll_edits[recipe.key] = {
+      label: recipe.label,
+      ops: JSON.parse(JSON.stringify(recipe.ops)),
+      ...(recipe.canceledBy ? { canceledBy: recipe.canceledBy } : {}),
+    };
+  }
+});
+
 const addRoll = (editSystem: EditSystem) => editSystem(draft => {
   draft.rolls ??= [];
   const tag = freeId(draft.rolls.map(r => r.tag), 'бросок');
@@ -54,6 +70,29 @@ const addTable = (editSystem: EditSystem) => editSystem(draft => {
   const key = freeId(Object.keys(draft.tables), 'таблица');
   draft.tables[key] = { label: '', ranges: [] };
 });
+
+const addEvent = (editSystem: EditSystem, system: System) => editSystem(draft => {
+  draft.events ??= {};
+  const key = freeId(Object.keys(draft.events), 'событие');
+  const field = system.fields.find(f => f.value.kind === 'stored' && f.value.type === 'number');
+  draft.events[key] = {
+    label: '',
+    tags: [],
+    ...(field ? { receive: [simpleReceive(field.tag, 'subtract', true)] } : {}),
+  };
+});
+
+const simpleReceive = (tag: string, direction: 'subtract' | 'add', targetModifiers: boolean) => ({
+  type: 'apply', target: { tag }, direction, value: { ref: 'event.amount' }, targetModifiers,
+});
+
+const simpleReceiveOf = (receive: unknown): { tag: string; direction: 'subtract' | 'add'; targetModifiers: boolean } | null => {
+  if (!Array.isArray(receive) || receive.length !== 1) return null;
+  const step = receive[0] as Record<string, any>;
+  if (step.type !== 'apply' || !step.target?.tag || step.value?.ref !== 'event.amount') return null;
+  const direction = step.direction === 'add' ? 'add' : 'subtract';
+  return { tag: String(step.target.tag), direction, targetModifiers: step.targetModifiers !== false };
+};
 
 const addActionType = (editSystem: EditSystem) => editSystem(draft => {
   draft.action_types ??= {};
@@ -85,9 +124,41 @@ export function DictionariesTab() {
               <CardHead
                 title="Правки броска"
                 sub="Преимущество, помеха и всё, что меняет бросок. Здесь только ЧТО это значит; когда включается — говорит эффект."
-                actions={<Button size="sm" onClick={() => addRollEdit(editSystem)}>+ правка</Button>}
+                actions={
+                  <>
+                    <select
+                      className="select"
+                      style={{ width: 260 }}
+                      value=""
+                      onChange={e => { const id = e.target.value; if (id && findMethod(id)?.implemented) addFromCatalog(editSystem, id); }}
+                    >
+                      <option value="">+ из справочника…</option>
+                      {ADVANTAGE_METHODS.map(m => (
+                        <option key={m.id} value={m.id}>{m.implemented ? m.label : `${m.label} — пока нет`}</option>
+                      ))}
+                    </select>
+                    <Button size="sm" onClick={() => addRollEdit(editSystem)}>+ правка</Button>
+                  </>
+                }
               />
               <RollEditsSection system={system} compendium={compendium} editSystem={editSystem} />
+            </Card>
+
+            <Card>
+              <CardHead
+                title="События"
+                sub="Урон, лечение и другие вещи, которые один лист посылает другому. Здесь — как лист их принимает; кто и сколько посылает, говорит эффект."
+                actions={<Button size="sm" onClick={() => addEvent(editSystem, system)}>+ событие</Button>}
+              />
+              <EventsSection system={system} compendium={compendium} editSystem={editSystem} />
+            </Card>
+
+            <Card>
+              <CardHead
+                title="Инициатива"
+                sub="Чем решается порядок ходов в бою. Обычный бросок системы: правила комнаты и правки бросков действуют и на него."
+              />
+              <InitiativeSection system={system} compendium={compendium} editSystem={editSystem} />
             </Card>
 
             <Card>
@@ -335,7 +406,7 @@ function partsOf(system: System): { name: string; label: string }[] {
   return [...seen].map(([name, label]) => ({ name, label }));
 }
 
-const PART_ABLE = ['addDie', 'keepBest', 'keepWorst', 'dieStep', 'explode'];
+const PART_ABLE = ['addDie', 'keepBest', 'keepWorst', 'dieStep', 'explode', 'flip', 'reroll'];
 
 function OpChip({ op, parts, onNumber, onPart, onRemove }: {
   op: Record<string, unknown>;
@@ -623,12 +694,163 @@ function TableRow({ id, table, system, compendium, editSystem }: Props & { id: s
   );
 }
 
+function EventsSection({ system, compendium, editSystem }: Props) {
+  const entries = Object.entries(system.events ?? {});
+  const numeric = system.fields.filter(f => f.value.kind === 'stored' && f.value.type === 'number');
+
+  if (entries.length === 0) {
+    return <span className="faint">Событий нет. Без них атака пишет прямо в поле цели; с ними — посылает «Урон», а сопротивления и реакции слушают слово.</span>;
+  }
+
+  return (
+    <div className="stack">
+      {entries.map(([key, event]) => {
+        const inUse = usedIn(system, compendium, `"event":"${key}"`, `"event:${key}"`);
+        const simple = simpleReceiveOf(event.receive);
+        const custom = Boolean(event.receive?.length) && !simple;
+        const mode = !event.receive?.length ? 'signal' : simple ? 'field' : 'custom';
+        const edit = (change: (cur: Record<string, any>) => void) => editSystem(draft => {
+          const cur = draft.events?.[key];
+          if (cur) change(cur as Record<string, any>);
+        });
+        return (
+          <div key={key} className="dict-block">
+            <div className="dict-row">
+              <Input
+                value={event.label ?? ''}
+                placeholder="название события"
+                onChange={label => edit(cur => { cur.label = label; })}
+              />
+              <span className="chip mono">{key}</span>
+              <Button
+                size="sm" variant="danger" disabled={inUse}
+                title={inUse ? 'событие используется' : undefined}
+                onClick={() => editSystem(draft => { delete draft.events?.[key]; })}
+              >
+                Убрать
+              </Button>
+            </div>
+            <div className="dict-row">
+              <span className="dict-row__label">Теги</span>
+              <Input
+                value={(event.tags ?? []).join(', ')}
+                placeholder="огонь, холод, яд — через запятую"
+                onChange={text => edit(cur => {
+                  const list = text.split(',').map(s => s.trim()).filter(Boolean);
+                  if (list.length) cur.tags = list; else delete cur.tags;
+                })}
+              />
+            </div>
+            <div className="dict-row dict-row--wrap">
+              <span className="dict-row__label">Приём</span>
+              <Select
+                value={mode}
+                options={[
+                  ['field', 'поле листа'],
+                  ['signal', 'только сигнал'],
+                  ...(custom ? [['custom', 'своё правило'] as const] : []),
+                ] as never}
+                onChange={next => edit(cur => {
+                  if (next === 'signal') delete cur.receive;
+                  else if (next === 'field') cur.receive = [simpleReceive(numeric[0]?.tag ?? '', 'subtract', true)];
+                })}
+              />
+              {simple ? (
+                <>
+                  <Select
+                    value={simple.direction}
+                    options={[['subtract', 'вычесть из'], ['add', 'прибавить к']] as const}
+                    onChange={direction => edit(cur => {
+                      cur.receive = [simpleReceive(simple.tag, direction, simple.targetModifiers)];
+                    })}
+                  />
+                  <Select
+                    value={simple.tag}
+                    options={[['', '— поле —'], ...numeric.map(f => [f.tag, f.label] as const)] as never}
+                    onChange={tag => edit(cur => {
+                      cur.receive = [simpleReceive(tag, simple.direction, simple.targetModifiers)];
+                    })}
+                  />
+                </>
+              ) : null}
+              {custom ? <span className="faint">шагов приёма: {event.receive!.length}</span> : null}
+            </div>
+            {simple ? (
+              <div className="dict-row dict-row--wrap">
+                <span className="dict-row__label">Сопротивления</span>
+                <Select
+                  value={simple.targetModifiers ? 'yes' : 'no'}
+                  options={[['yes', 'на событии и на поле'], ['no', 'только на событии']] as const}
+                  onChange={v => edit(cur => {
+                    cur.receive = [simpleReceive(simple.tag, simple.direction, v === 'yes')];
+                  })}
+                />
+              </div>
+            ) : null}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function InitiativeSection({ system, editSystem }: Props) {
+  const dice = Object.entries(system.constants ?? {}).filter(([, c]) => c.kind === 'die');
+  const spec = system.initiative;
+  const bonus = spec?.bonus && typeof spec.bonus === 'object' && 'expr' in spec.bonus ? String(spec.bonus.expr ?? '') : '';
+
+  return (
+    <div className="stack stack--tight">
+      <div className="dict-row">
+        <span className="dict-row__label">Кость</span>
+        <Select
+          value={spec?.die?.constant ?? ''}
+          options={[['', '— инициативы нет: порядок как перечислены листы —'],
+            ...dice.map(([key, c]) => [key, c.label || key] as const)] as never}
+          onChange={key => editSystem(draft => {
+            if (!key) { delete draft.initiative; return; }
+            draft.initiative = { ...(draft.initiative ?? {}), die: { constant: key } };
+          })}
+        />
+      </div>
+      {spec ? (
+        <>
+          <div className="dict-row">
+            <span className="dict-row__label">Плюс</span>
+            <FormulaInput
+              system={system}
+              value={bonus}
+              placeholder="например: @Модификатор Ловкости"
+              onChange={expr => editSystem(draft => {
+                if (!draft.initiative) return;
+                if (expr.trim()) draft.initiative.bonus = { expr }; else delete draft.initiative.bonus;
+              })}
+            />
+          </div>
+          <div className="dict-row">
+            <span className="dict-row__label">Вид броска</span>
+            <Select
+              value={spec.check ?? ''}
+              options={[['', '— просто бросок —'],
+                ...(system.rolls ?? []).map(r => [r.tag, r.label] as const)] as never}
+              onChange={tag => editSystem(draft => {
+                if (!draft.initiative) return;
+                if (tag) draft.initiative.check = tag; else delete draft.initiative.check;
+              })}
+            />
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
 function ActionTypesSection({ system, compendium, editSystem }: Props) {
   const entries = Object.entries(system.action_types ?? {});
 
   return (
     <div className="stack stack--tight">
-      <span className="faint">Чего стоит активируемый эффект — выбирается из этого списка.</span>
+      <span className="faint">Чего стоит активируемый эффект — выбирается из этого списка. «За ход» — сколько раз можно за один ход в бою; пусто или 0 — без счёта.</span>
       {entries.length === 0 ? (
         <span className="faint">Типов пока нет.</span>
       ) : entries.map(([key, type]) => {
@@ -642,6 +864,16 @@ function ActionTypesSection({ system, compendium, editSystem }: Props) {
                 draft.action_types ??= {};
                 const cur = draft.action_types?.[key];
                 if (cur) cur.label = label;
+              })}
+            />
+            <span className="dict-row__label">за ход</span>
+            <NumInput
+              int least={0} mono
+              value={type.perTurn ?? 0}
+              onCommit={n => editSystem(draft => {
+                const cur = draft.action_types?.[key];
+                if (!cur) return;
+                if (n > 0) cur.perTurn = n; else delete cur.perTurn;
               })}
             />
             <Button

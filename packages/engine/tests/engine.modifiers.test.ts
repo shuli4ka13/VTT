@@ -295,8 +295,12 @@ group('модификаторы', () => {
       const all = targets(system);
       const derived = system.fields.filter(f => f.roll).length;
       const incoming = system.fields.filter(f => f.value.kind === 'stored').length;
-      eq(all.length, 1 + system.fields.length + system.rolls.length + derived + incoming,
-        'общая мишень, поля, объявленные броски, броски из полей и входящее хранимых');
+      const rolls = 1 + system.rolls.length + derived;
+      const events = Object.keys(system.events ?? {}).length;
+      eq(all.length, rolls * 2 + system.fields.length + incoming + events,
+        'общая мишень, поля, объявленные броски, броски из полей, входящее хранимых, «против меня» на каждый бросок и входящие события');
+      ok(all.some(t => t.tag === 'incoming:attack_roll' && t.kind === 'roll'),
+        'состояние цели может править чужой бросок по ней');
       ok(all.some(t => t.tag === 'ac' && t.kind === 'value'));
       ok(all.some(t => t.tag === 'attack_roll' && t.kind === 'roll'));
 

@@ -13,6 +13,64 @@ describe('Словари: кости, виды бросков, таблицы, �
     }));
   });
 
+  it('«+ из справочника» кладёт в словарь готовую пару: преимущество и помеха гасят друг друга', () => {
+    render(<DictionariesTab />);
+    const catalog = screen.getByDisplayValue('+ из справочника…');
+    fireEvent.change(catalog, { target: { value: 'rerollBest' } });
+
+    const edits = useWorld.getState().system.roll_edits ?? {};
+    expect(edits.advantage?.canceledBy).toBe('disadvantage');
+    expect(edits.disadvantage?.canceledBy).toBe('advantage');
+    expect(edits.advantage?.ops).toEqual([{ op: 'addDie' }, { op: 'keepBest', n: 1 }]);
+    expect(screen.getByText('Кинуть на кость больше, оставить лучшую.')).toBeTruthy();
+    expect(screen.getByText(/Гасится: Помеха\./)).toBeTruthy();
+  });
+
+  it('справочник не затирает запись, которую автор уже завёл под тем же ключом', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: { ...emptySystem(), roll_edits: { advantage: { label: 'Своё преимущество', ops: [{ op: 'addDie' }] } } },
+      activeEffectId: null,
+    }));
+    render(<DictionariesTab />);
+    fireEvent.change(screen.getByDisplayValue('+ из справочника…'), { target: { value: 'rerollBest' } });
+
+    const edits = useWorld.getState().system.roll_edits ?? {};
+    expect(edits.advantage?.label).toBe('Своё преимущество');
+    expect(edits.disadvantage?.label).toBe('Помеха');
+  });
+
+  it('«+ событие» заводит событие с приёмом в первое числовое поле листа', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        fields: [{ tag: 'hp', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 10 } }],
+      },
+      activeEffectId: null,
+    }));
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ событие'));
+    const events = Object.values(useWorld.getState().system.events ?? {});
+    expect(events).toHaveLength(1);
+    expect(events[0]!.receive).toEqual([
+      { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { ref: 'event.amount' }, targetModifiers: true },
+    ]);
+    fireEvent.change(screen.getByPlaceholderText('огонь, холод, яд — через запятую'), { target: { value: 'огонь, яд' } });
+    expect(Object.values(useWorld.getState().system.events ?? {})[0]!.tags).toEqual(['огонь', 'яд']);
+  });
+
+  it('инициатива объявляется костью системы и снимается выбором «нет»', () => {
+    render(<DictionariesTab />);
+    fireEvent.click(screen.getByText('+ кость'));
+    const dieKey = Object.keys(useWorld.getState().system.constants ?? {})[0]!;
+    const select = [...document.querySelectorAll('select')].find(el => [...el.options].some(o => o.textContent?.includes('инициативы нет')))!;
+    fireEvent.change(select, { target: { value: dieKey } });
+    expect(useWorld.getState().system.initiative).toEqual({ die: { constant: dieKey } });
+    fireEvent.change(select, { target: { value: '' } });
+    expect(useWorld.getState().system.initiative).toBeUndefined();
+  });
+
   it('кость заводится и попадает в словарь системы', () => {
     render(<DictionariesTab />);
     fireEvent.click(screen.getByText('+ кость'));

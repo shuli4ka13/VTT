@@ -10,6 +10,7 @@ import { compile } from '@vtt/engine/formula';
 import { FormulaChips } from '../../ui/formula-chips.tsx';
 import { labelOfTag } from '../../ui/formula.tsx';
 import { SlotInput, chipOf, type SlotOption } from './slot-input.tsx';
+import { outputRefs, outputLabel } from './slots.tsx';
 import type { SlotContext, EarlierStep } from './slots.tsx';
 import type { Problem } from './step-card.tsx';
 
@@ -86,9 +87,10 @@ export function GroupCard({
     );
   }
 
-  const segments = group.kind === 'check' ? checkReadback(group.step, system, effect)
+  const body = group.kind === 'check' ? checkReadback(group.step, system, effect)
     : group.kind === 'change' ? changeReadback(group.step, group.amount, system, effect)
       : numberReadback(group.step, system, effect);
+  const segments = [...whenSegments(step, earlier), ...body];
 
   return (
     <>
@@ -114,9 +116,60 @@ export function GroupCard({
         {group.kind === 'check' ? <CheckBody step={step} context={context} edit={edit} system={system} /> : null}
         {group.kind === 'change' ? <ChangeBody group={group} context={context} edit={edit} withNumber={withNumber} system={system} onAddParam={onAddParam} /> : null}
         {group.kind === 'number' ? <NumberBody step={step} context={context} edit={edit} onAddParam={onAddParam} /> : null}
+        <ConditionFold group={group} earlier={earlier} edit={edit} />
       </Card>
       {breakLine(group)}
     </>
+  );
+}
+
+function whenSegments(step: any, earlier: EarlierStep[]): Segment[] {
+  const when = step?.when as { ref?: string; not?: boolean } | undefined;
+  if (!when?.ref) return [];
+  const label = outputLabel(when.ref, earlier);
+  return [{ text: `Только если ${when.not ? label.replace(' — ', ' — не ') : label}.` }];
+}
+
+function ConditionFold({ group, earlier, edit }: {
+  group: CardGroup;
+  earlier: EarlierStep[];
+  edit: EditFn;
+}) {
+  const step = group.step as any;
+  const when = step.when as { ref?: string; not?: boolean } | undefined;
+  const flags = outputRefs(earlier).filter(o => o.kind === 'boolean');
+  if (!flags.length && !when?.ref) return null;
+  const setAll = (change: (draft: any) => void) => group.indices.forEach((_, k) => edit(k, change));
+  const summary = when?.ref
+    ? `${when.not ? 'если не' : 'если'} ${outputLabel(when.ref, earlier)}`
+    : 'всегда';
+
+  return (
+    <Fold title="Когда выполнять" summary={summary}>
+      <div className="row">
+        <Field label="выполнять" hint="Исход шага выше по цепочке. Не сошлось — шаг пропускается, цепочка идёт дальше.">
+          <Select
+            value={when?.ref ?? ''}
+            options={[['', 'всегда'], ...flags.map(f => [f.ref, `если ${f.label}`] as const)] as never}
+            onChange={next => setAll(draft => {
+              if (!next) { delete draft.when; return; }
+              draft.when = { ref: next, ...(draft.when?.not ? { not: true } : {}) };
+            })}
+          />
+        </Field>
+        {when?.ref ? (
+          <Field label="исход">
+            <Select
+              value={when.not ? 'no' : 'yes'}
+              options={[['yes', 'да'], ['no', 'нет']] as const}
+              onChange={next => setAll(draft => {
+                draft.when = { ref: draft.when?.ref, ...(next === 'no' ? { not: true } : {}) };
+              })}
+            />
+          </Field>
+        ) : null}
+      </div>
+    </Fold>
   );
 }
 
@@ -137,6 +190,7 @@ function breakLine(group: CardGroup) {
       </div>
     );
   }
+  if ((s.continueOn ?? 'success') === 'always') return null;
   const op = String(s.successWhen ?? 'atLeast');
   const onSuccess = (s.continueOn ?? 'success') === 'success';
   const sign = OP_SIGN[op] ?? '≥';
@@ -551,7 +605,8 @@ function CheckBody({ step, context, edit, system }: {
           <Field label="дальше при">
             <Select
               value={String(step.continueOn ?? 'success')}
-              options={[['success', 'успехе'], ['fail', 'провале']] as const}
+              options={[['success', 'успехе'], ['fail', 'провале'],
+                ['always', 'всегда — дальше решают условия на шагах']] as const}
               onChange={next => edit(0, draft => { (draft as any).continueOn = next; })}
             />
           </Field>
@@ -606,8 +661,9 @@ function ChangeBody({ group, context, edit, withNumber, system, onAddParam }: {
   onAddParam?: (label: string, kind: string) => string;
 }) {
   const step = group.step as any;
-  const mode = step.type === 'status' ? 'status' : 'apply';
+  const mode = step.type === 'status' ? 'status' : step.type === 'emit' ? 'emit' : 'apply';
   const applyIndex = group.amount ? 1 : 0;
+  const firstEvent = Object.keys(system.events ?? {})[0];
 
   const fromRecord = (label: string, kind: string) =>
     onAddParam ? () => ({ param: onAddParam(label, kind) }) : undefined;
@@ -621,12 +677,20 @@ function ChangeBody({ group, context, edit, withNumber, system, onAddParam }: {
       {}
       <Segmented
         value={mode}
-        options={[{ key: 'apply', label: 'поле' }, { key: 'status', label: 'состояние' }]}
+        options={[
+          { key: 'apply', label: 'поле' }, { key: 'status', label: 'состояние' },
+          ...(firstEvent || mode === 'emit' ? [{ key: 'emit', label: 'событие' }] : []),
+        ]}
         onChange={next => edit(applyIndex, draft => {
           const d = draft as any;
           if (next === 'status') {
             draft.type = 'status';
             d.mode ??= 'apply';
+          } else if (next === 'emit') {
+            draft.type = 'emit';
+            d.event ??= firstEvent ?? '';
+            d.tags ??= [];
+            if (group.amount?.id && d.amount === undefined) d.amount = { ref: group.amount.id };
           } else {
             draft.type = 'apply';
             d.direction ??= 'subtract';
@@ -634,6 +698,10 @@ function ChangeBody({ group, context, edit, withNumber, system, onAddParam }: {
           }
         })}
       />
+
+      {mode === 'emit' ? (
+        <SendBody step={step} at={applyIndex} context={context} edit={edit} system={system} />
+      ) : null}
 
       {mode === 'apply' ? (
         <>
@@ -679,6 +747,44 @@ function ChangeBody({ group, context, edit, withNumber, system, onAddParam }: {
         </>
       )}
     </>
+  );
+}
+
+function SendBody({ step, at, context, edit, system }: {
+  step: any;
+  at: number;
+  context: SlotContext;
+  edit: EditFn;
+  system: System;
+}) {
+  const events = Object.entries(system.events ?? {});
+  const tags: string[] = Array.isArray(step.tags) ? step.tags.filter((t: unknown) => typeof t === 'string') : [];
+  return (
+    <div className="row">
+      <Field label="событие" needed={!step.event}
+        hint={events.length ? undefined : 'Сначала заведите событие в «Словарях».'}>
+        <Select
+          value={String(step.event ?? '')}
+          options={[['', '— выберите событие —'],
+            ...events.map(([id, e]) => [id, e.label || id] as const)] as never}
+          onChange={next => edit(at, draft => { (draft as any).event = next; })}
+        />
+      </Field>
+      <Field label="сколько">
+        <SlotInput
+          value={step.amount} context={context} allow={['ref', 'expr', 'const', 'param']}
+          onChange={next => edit(at, draft => { (draft as any).amount = next ?? undefined; })}
+        />
+      </Field>
+      <Field label="теги" hint="Через запятую: огонь, магический. По ним цель узнаёт своё сопротивление.">
+        <Input
+          value={tags.join(', ')}
+          onChange={text => edit(at, draft => {
+            (draft as any).tags = text.split(',').map(s => s.trim()).filter(Boolean);
+          })}
+        />
+      </Field>
+    </div>
   );
 }
 

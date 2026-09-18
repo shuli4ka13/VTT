@@ -10,11 +10,14 @@ export const hint = 'Вычислить число: бросок, превыше
 export const SOURCES = ['roll', 'margin', 'item'];
 
 export const slots = [
-  { key: 'source', label: 'Источник', kind: 'choice', options: SOURCES },
-  { key: 'dice', label: 'Кости', kind: 'ref' },
-  { key: 'fixed', label: 'Фикс', kind: 'ref' },
-  { key: 'bonus', label: 'Бонус', kind: 'ref' },
-  { key: 'margin', label: 'Превышение шага', kind: 'ref' },
+  {
+    key: 'source', label: 'Откуда число', kind: 'choice', options: SOURCES, main: true, fallback: 'roll',
+    choice: [['roll', 'свой бросок костей'], ['margin', 'превышение шага'], ['item', 'фикс записи']],
+  },
+  { key: 'dice', label: 'Кости', kind: 'ref', main: true, allow: ['prop', 'const', 'param', 'constant', 'empty'] },
+  { key: 'bonus', label: 'Прибавка', kind: 'ref', main: true, allow: ['expr', 'const', 'param', 'empty'] },
+  { key: 'fixed', label: 'Фикс записи', kind: 'ref', allow: ['prop', 'const', 'param', 'empty'] },
+  { key: 'margin', label: 'Превышение шага', kind: 'ref', allow: ['ref', 'empty'] },
 ];
 
 export const outputs = [

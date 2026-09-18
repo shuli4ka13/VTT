@@ -13,13 +13,15 @@ import type { System, Effect, Activation } from '@vtt/schema';
 
 const ACTIVATIONS = [
   { key: 'manual' as const, label: 'Активируемый', title: 'Жмёшь сам — кнопкой на листе' },
-  { key: 'triggered' as const, label: 'Триггерный', title: 'Отвечает на чужое событие' },
+  { key: 'triggered' as const, label: 'Триггерный', title: 'Срабатывает сам' },
+  { key: 'reaction' as const, label: 'Реакция', title: 'Стол делает паузу и спрашивает игрока' },
   { key: 'passive' as const, label: 'Пассивный', title: 'Просто висит и правит цифры' },
 ];
 
 const ACTIVATION_ANSWERS: Record<Activation, string> = {
   manual: 'Когда игрок нажал кнопку на листе. Кнопку даёт запись компендиума или сам эффект.',
-  triggered: 'Сам, когда на владельце разрешился чужой эффект. Что слушать — выберете ниже.',
+  triggered: 'Сам, без вопросов: когда случилось то, что он слушает. Что слушать — выберете ниже.',
+  reaction: 'Стол останавливается и спрашивает игрока: применить? Когда именно — выберете ниже.',
   passive: 'Никогда: не срабатывает, а висит и правит цифры, пока не снят.',
 };
 
@@ -27,7 +29,12 @@ const DURATIONS = [
   ['permanent', 'постоянно'],
   ['temporary', 'временно'],
   ['uses', 'на N срабатываний'],
+  ['rounds', 'на N раундов боя'],
+  ['turns', 'на N своих ходов'],
+  ['scene', 'до конца сцены'],
 ] as const;
+
+const COUNTED = new Set(['uses', 'rounds', 'turns']);
 
 const STACKING = [
   ['ignore', 'второй раз ничего не делает'],
@@ -142,6 +149,15 @@ function conditionsOf(system: System, listened: string | undefined): (readonly [
   return out;
 }
 
+function conditionsOfAny(system: System): (readonly [string, string])[] {
+  const seen = new Map<string, string>();
+  for (const [key, effect] of Object.entries(system.effects)) {
+    if ((effect.activation ?? 'manual') !== 'manual') continue;
+    for (const [ref, label] of conditionsOf(system, key)) if (!seen.has(ref)) seen.set(ref, label);
+  }
+  return [...seen].map(([ref, label]) => [ref, label] as const);
+}
+
 function EffectEditor({ id, effect, system }: { id: string; effect: Effect; system: System }) {
   const editSystem = useWorld(s => s.editSystem);
   const pick = useWorld(s => s.pick);
@@ -205,6 +221,7 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
               if (next === 'passive') draft.modifiers ??= [];
               else draft.steps ??= [];
               if (next === 'triggered') draft.trigger ??= { on: '' };
+              if (next === 'reaction') draft.trigger ??= { on: '*', window: 'target' };
             })}
           />
         </Field>
@@ -213,7 +230,7 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
           <Field label="Категория">
             <Input value={effect.category ?? ''} onChange={next => edit(draft => { draft.category = next; })} />
           </Field>
-          {activation === 'manual' ? (
+          {activation === 'manual' || activation === 'reaction' ? (
             <Field label="Чего стоит">
               <Select
                 value={effect.cost ?? ''}
@@ -237,17 +254,17 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
                   value={effect.duration?.kind ?? 'permanent'}
                   options={DURATIONS}
                   onChange={kind => edit(draft => {
-                    draft.duration = kind === 'uses' ? { kind, max: draft.duration?.max ?? 1 } : { kind };
+                    draft.duration = COUNTED.has(kind) ? { kind, max: draft.duration?.max ?? 1 } : { kind };
                   })}
                 />
               </Field>
-              {effect.duration?.kind === 'uses' ? (
-                <Field label="Срабатываний">
+              {COUNTED.has(effect.duration?.kind ?? '') ? (
+                <Field label="Сколько">
                   <Input
                     type="number"
-                    value={effect.duration.max ?? 1}
+                    value={effect.duration?.max ?? 1}
                     onChange={next => edit(draft => {
-                      if (draft.duration?.kind === 'uses') draft.duration.max = Math.max(1, Number(next) || 1);
+                      if (draft.duration && COUNTED.has(draft.duration.kind)) draft.duration.max = Math.max(1, Number(next) || 1);
                     })}
                   />
                 </Field>
@@ -272,6 +289,8 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
               <Select
                 value={effect.trigger?.on ?? ''}
                 options={[['', '— выберите —'],
+                  ...Object.entries(system.events ?? {})
+                    .map(([key, e]) => [`event:${key}`, `событие «${e.label ?? key}»`] as const),
                   ...Object.entries(system.effects)
                     .filter(([key, e]) => key !== id && (e.activation ?? 'manual') !== 'passive')
                     .map(([key, e]) => [key, e.label ?? key] as const)] as never}
@@ -292,19 +311,90 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
               />
             </Field>
             {}
+            <Field label="Чьё это действие" hint="«Со мной» — я цель чужого действия. «Моё» — я его сделал.">
+              <Select
+                value={String(effect.trigger?.direction ?? 'in')}
+                options={[['in', 'случилось со мной'], ['out', 'сделал я']] as const}
+                onChange={next => edit(draft => {
+                  draft.trigger = { ...draft.trigger!, direction: next === 'in' ? undefined : 'out' };
+                  if (next === 'out' && draft.trigger.to === 'sender') draft.trigger.to = 'self';
+                })}
+              />
+            </Field>
             <Field label="Кому">
               <Select
-                value={String(effect.trigger?.to ?? 'sender')}
-                options={[
-                  ['sender', 'отправителю — ответкой'],
-                  ['self', 'себе — реакцией'],
-                ] as const}
+                value={String(effect.trigger?.to ?? ((effect.trigger?.direction ?? 'in') === 'out' ? 'self' : 'sender'))}
+                options={((effect.trigger?.direction ?? 'in') === 'out'
+                  ? [['self', 'себе'], ['target', 'цели моего действия']]
+                  : [['sender', 'отправителю — ответкой'], ['self', 'себе']]) as never}
                 onChange={next => edit(draft => {
-                  draft.trigger = { ...draft.trigger!, to: next === 'sender' ? undefined : 'self' };
+                  draft.trigger = { ...draft.trigger!, to: next === 'sender' ? undefined : next as 'self' | 'target' };
                 })}
               />
             </Field>
           </div>
+        </Card>
+      ) : null}
+
+      {activation === 'reaction' ? (
+        <Card>
+          <CardHead title="Когда стол спрашивает" />
+          <div className="row">
+            <Field label="Момент">
+              <Select
+                value={String(effect.trigger?.window ?? 'target')}
+                options={[
+                  ['target', 'на меня действуют — перед тем как это разрешится'],
+                  ['sender', 'я бросил — перед тем как результат уйдёт цели'],
+                ] as const}
+                onChange={next => edit(draft => {
+                  draft.trigger = { ...(draft.trigger ?? { on: '*' }), window: next as 'target' | 'sender' };
+                })}
+              />
+            </Field>
+            <Field label="На что">
+              <Select
+                value={effect.trigger?.on ?? '*'}
+                options={[['*', 'любое действие'],
+                  ...Object.entries(system.effects)
+                    .filter(([key, e]) => key !== id && (e.activation ?? 'manual') === 'manual')
+                    .map(([key, e]) => [key, e.label ?? key] as const)] as never}
+                onChange={next => edit(draft => { draft.trigger = { ...(draft.trigger ?? {}), on: next || '*' }; })}
+              />
+            </Field>
+            <Field label="Только если" hint={(effect.trigger?.on ?? '*') === '*'
+              ? 'Исход именованной проверки. Если в действии такого шага нет, реакция не предлагается.'
+              : undefined}>
+              <Select
+                value={String((effect.trigger?.condition as { ref?: string })?.ref ?? '')}
+                options={[['', 'всегда'],
+                  ...((effect.trigger?.on ?? '*') === '*' ? conditionsOfAny(system) : conditionsOf(system, effect.trigger!.on))] as never}
+                onChange={next => edit(draft => {
+                  draft.trigger = { ...(draft.trigger ?? { on: '*' }), condition: next ? { ref: next } : null };
+                })}
+              />
+            </Field>
+          </div>
+          {(effect.trigger?.window ?? 'target') === 'sender' ? (
+            <Field label="Перебросить с правкой" hint="Если выбрано — после реакции бросок собирается заново с этими правками из словаря.">
+              <div className="inline inline--tight">
+                {Object.entries(system.roll_edits ?? {}).map(([key, e]) => {
+                  const picked = (effect.trigger?.claims ?? []).includes(key);
+                  return (
+                    <Chip key={key} active={picked} onClick={() => edit(draft => {
+                      const list = new Set(draft.trigger?.claims ?? []);
+                      if (picked) list.delete(key); else list.add(key);
+                      draft.trigger = { ...(draft.trigger ?? { on: '*' }), claims: [...list] };
+                    })}>
+                      {e.label || key}
+                    </Chip>
+                  );
+                })}
+                {Object.keys(system.roll_edits ?? {}).length === 0
+                  ? <span className="faint">Правок броска в словаре нет.</span> : null}
+              </div>
+            </Field>
+          ) : null}
         </Card>
       ) : null}
 

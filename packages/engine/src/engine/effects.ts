@@ -1,12 +1,12 @@
 import { EngineError } from './errors.ts';
 import type {
-  System, Sheet, Compendium, Effect, Modifier, Step,
+  System, Sheet, Compendium, Effect, Modifier, Step, SystemEvent,
   Activation, DurationKind, Stacking, WornEffect,
 } from '../model/types.ts';
 
-const PIPELINE_ACTIVATIONS: Activation[] = ['manual', 'triggered'];
+const PIPELINE_ACTIVATIONS: Activation[] = ['manual', 'triggered', 'reaction'];
 const ACTIVATIONS: Activation[] = [...PIPELINE_ACTIVATIONS, 'passive'];
-const DURATIONS: DurationKind[] = ['permanent', 'temporary', 'uses'];
+const DURATIONS: DurationKind[] = ['permanent', 'temporary', 'uses', 'rounds', 'turns', 'scene'];
 const STACKINGS: Stacking[] = ['ignore', 'refresh', 'stack'];
 
 const pick = <T extends string>(value: unknown, allowed: T[], fallback: T): T =>
@@ -38,6 +38,19 @@ export function requireEffect(system: System, id: string, who: string): Effect {
         effectsOf(system).map(([key]) => key).join(', ') || '(пусто)'}`);
   }
   return effect;
+}
+
+export const eventsOf = (system: System): [string, SystemEvent][] =>
+  Object.entries(system.events || {});
+
+export function requireEvent(system: System, id: string, who: string): SystemEvent {
+  const event = (system.events || {})[id];
+  if (!event) {
+    throw new EngineError(
+      `${who}: система не объявляет события «${id}» — словарь знает: ${
+        eventsOf(system).map(([key]) => key).join(', ') || '(пусто)'}`);
+  }
+  return event;
 }
 
 export function usesMax(effect: Effect): number | null {

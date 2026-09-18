@@ -12,8 +12,14 @@ export const MODES = {
 };
 
 export const slots = [
-  { key: 'mode', label: 'Что делаем', kind: 'choice', choices: MODES },
-  { key: 'effect', label: 'Эффект', kind: 'ref' },
+  {
+    key: 'mode', label: 'Что делаем', kind: 'choice', options: Object.keys(MODES), main: true, fallback: 'apply',
+    choice: Object.entries(MODES).map(([key, m]) => [key, m.label.toLowerCase()]),
+  },
+  {
+    key: 'effect', label: 'Какой эффект', kind: 'ref', main: true, required: true,
+    allow: ['prop', 'const', 'param', 'empty'],
+  },
 ];
 
 export const outputs = [];

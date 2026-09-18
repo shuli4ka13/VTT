@@ -60,7 +60,11 @@ export function packRef(ref: unknown, ctx: RefContext): unknown {
   }
 
   if ('tag' in r) return { tag: r.tag };
-  if ('ref' in r) return { ref: r.ref };
+  if ('ref' in r) {
+    const head = String(r.ref).split('.')[0] ?? '';
+    if (ctx.results && head in ctx.results) return { const: resolveRef(r, ctx) };
+    return { ref: r.ref };
+  }
 
   return unknownForm(r, ctx);
 }

@@ -14,7 +14,7 @@ export interface CardGroup {
 }
 
 const KIND_OF: Record<string, CardKind> = {
-  threshold: 'check', compare: 'check', apply: 'change', status: 'change', amount: 'number',
+  threshold: 'check', compare: 'check', apply: 'change', status: 'change', emit: 'change', amount: 'number',
 };
 
 const mentions = (step: Step, id: string): boolean => {
@@ -36,10 +36,11 @@ export function groupSteps(list: Step[]): CardGroup[] {
     const next = list[i + 1];
     const source = (step as any).source;
 
+    const carried = next?.type === 'emit' ? (next as any).amount : (next as any)?.value;
     const glue = step.type === 'amount' && step.id
-      && (next?.type === 'apply' || next?.type === 'status')
+      && (next?.type === 'apply' || next?.type === 'status' || next?.type === 'emit')
       && (source === 'roll' || source === undefined)
-      && (takesWhole((next as any).value, step.id) || names(next, step.id))
+      && (takesWhole(carried, step.id) || names(next!, step.id))
       && list.every((other, j) => j === i || j === i + 1 || !mentions(other, step.id!));
     if (glue) {
       out.push({ kind: 'change', indices: [i, i + 1], step: next!, amount: step });

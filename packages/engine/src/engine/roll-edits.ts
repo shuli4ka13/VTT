@@ -143,7 +143,46 @@ const PRIMITIVES: Record<string, ClaimPrimitive | ResultPrimitive> = {
       });
     },
   },
+
+  flip: {
+    stage: 'result',
+    label: 'перевернуть цифры',
+    apply(dice, op) {
+      const low = String(op.prefer ?? 'low') !== 'high';
+      const part = partOf(op);
+      return dice.map(entry => {
+        if (!inPart(entry.name, part)) return entry;
+        const flipped = flipDigits(entry.value, entry.sides);
+        if (flipped === null) return entry;
+        const value = low ? Math.min(entry.value, flipped) : Math.max(entry.value, flipped);
+        return value === entry.value ? entry : { ...entry, value };
+      });
+    },
+  },
 };
+
+const rerollPrimitive: ResultPrimitive = {
+  stage: 'result',
+  label: 'перебросить кости',
+  apply(dice, op, die) {
+    const limit = num(op.n, 1);
+    const part = partOf(op);
+    return dice.map(entry => {
+      if (!inPart(entry.name, part)) return entry;
+      if (entry.value > limit) return entry;
+      return { ...entry, value: die(entry.sides) };
+    });
+  },
+};
+PRIMITIVES.reroll = rerollPrimitive;
+
+function flipDigits(value: number, sides: number): number | null {
+  const width = String(sides - 1).length;
+  if (width < 2 || 10 ** width !== sides) return null;
+  const digits = String(value % sides).padStart(width, '0');
+  const flipped = Number([...digits].reverse().join(''));
+  return flipped === 0 ? sides : flipped;
+}
 
 export const editPalette = (): { key: string; label: string; op: RollEditOp }[] => [
   { key: 'addDie', label: 'добавить кость', op: { op: 'addDie' } },
@@ -154,11 +193,16 @@ export const editPalette = (): { key: string; label: string; op: RollEditOp }[] 
   { key: 'shiftDegree', label: 'сдвинуть степень успеха', op: { op: 'shiftDegree', by: 1 } },
   { key: 'explodeUp', label: 'взрывать на максимуме', op: { op: 'explode' } },
   { key: 'explodeDown', label: 'взрывать на единице', op: { op: 'explode', at: 'min' } },
+  { key: 'flipLow', label: 'перевернуть цифры в меньшую', op: { op: 'flip', prefer: 'low' } },
+  { key: 'flipHigh', label: 'перевернуть цифры в большую', op: { op: 'flip', prefer: 'high' } },
+  { key: 'rerollLow', label: 'перебросить кости не выше…', op: { op: 'reroll', n: 1 } },
 ];
 
 export const paletteKeyOf = (op: RollEditOp): string =>
   op.op === 'explode' ? (String(op.at ?? 'max') === 'min' ? 'explodeDown' : 'explodeUp')
-    : String(op.op);
+    : op.op === 'flip' ? (String(op.prefer ?? 'low') === 'high' ? 'flipHigh' : 'flipLow')
+      : op.op === 'reroll' ? 'rerollLow'
+        : String(op.op);
 
 export const editPrimitives = () =>
   Object.entries(PRIMITIVES).map(([op, p]) => ({ op, label: p.label, stage: p.stage }));

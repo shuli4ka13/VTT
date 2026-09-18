@@ -139,6 +139,7 @@ function exprSegments(expr: string, amount: Step | null, system: System, effect:
 }
 
 export function changeReadback(step: Step, amount: Step | null, system: System, effect: Effect): Segment[] {
+  if (step.type === 'emit') return sendReadback(step, system, effect);
   const s = step as any;
   if (step.type === 'status') {
     const ref = s.effect;
@@ -166,6 +167,20 @@ export function changeReadback(step: Step, amount: Step | null, system: System, 
   if (direction === 'set') return [seg('У цели'), field, seg('становится'), ...what, seg('.')];
   if (direction === 'add') return [seg('Цель получает'), ...what, seg('в'), field, seg('.')];
   return [seg('Цель теряет'), ...what, seg('из'), field, seg('.')];
+}
+
+export function sendReadback(step: Step, system: System, effect: Effect): Segment[] {
+  const s = step as Record<string, unknown>;
+  const id = String(s.event ?? '');
+  const event = system.events?.[id];
+  const name = id ? seg(`«${event?.label || id}»:`) : hole('какое событие?');
+  const amount = s.amount === undefined ? seg('без величины') : refSegment(s.amount, system, effect, 'сколько?');
+  const tags = Array.isArray(s.tags) ? s.tags.map(t => (typeof t === 'string' ? t : '…')).filter(Boolean) : [];
+  return [
+    seg('Цель получает'), name, amount,
+    ...(tags.length ? [seg(`[${tags.join(', ')}]`)] : []),
+    seg('.'),
+  ];
 }
 
 export function numberReadback(step: Step, system: System, effect: Effect): Segment[] {
@@ -219,6 +234,14 @@ function opPhrase(op: Record<string, unknown>, system: System): string {
       return String(op.at ?? 'max') === 'min'
         ? `на единице кинуть ещё раз и вычесть${only}`
         : `на максимуме кинуть ещё раз и прибавить${only}`;
+    case 'reroll':
+      return (n === 1
+        ? 'перебросить единицы, новый результат обязателен'
+        : `перебросить кости не выше ${n}, новый результат обязателен`) + only;
+    case 'flip':
+      return String(op.prefer ?? 'low') === 'high'
+        ? `перевернуть цифры, если так больше${only}`
+        : `перевернуть цифры, если так меньше${only}`;
     default:
       return String(op.op);
   }

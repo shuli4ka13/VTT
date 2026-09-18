@@ -6,6 +6,8 @@ import type { System, DieConstant, Die, RollEdit } from '../model/types.ts';
 
 export interface LeadRoll {
   rolls: number[];
+
+  raw: number[];
   kept: number | null;
   total: number;
   parts: Record<string, number>;
@@ -89,6 +91,7 @@ export function rollLead(def: DieConstant, die: Die, edits: RollEdit[] = []): Le
 
   return {
     rolls: grown.map(e => e.value),
+    raw: entries.map(e => e.value),
     kept, total, parts,
     edits: edits.map(e => e.label || '').filter(Boolean),
     versusShift: claim.versusShift,

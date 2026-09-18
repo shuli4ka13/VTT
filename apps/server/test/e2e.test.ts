@@ -230,6 +230,143 @@ describe('сквозной прогон стенда', () => {
       .expect(403);
   });
 
+
+  it('заявка преимущества едет в намерении, сервер применяет её по словарю', async () => {
+    const state = await http().get(`/rooms/${roomId}`)
+      .set('Authorization', `Bearer ${token}`).expect(200);
+    const [arven, mirra] = state.body.sheets;
+
+    const res = await http().post(`/rooms/${roomId}/act`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id, edits: ['advantage'] })
+      .expect(201);
+    const journal = res.body.log.map((l: { text: string }) => l.text).join(' · ');
+    expect(journal).toContain('Преимущество');
+  });
+
+  it('заявка на правку, которой нет в словаре, — отказ с именем правки', async () => {
+    const state = await http().get(`/rooms/${roomId}`)
+      .set('Authorization', `Bearer ${token}`).expect(200);
+    const [arven, mirra] = state.body.sheets;
+
+    const res = await http().post(`/rooms/${roomId}/act`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id, edits: ['котик'] })
+      .expect(400);
+    expect(res.body.message).toContain('котик');
+  });
+
+  it('бой: инициатива строит порядок, ход идёт по кругу, часы приходят в дельте', async () => {
+    const started = await http().post(`/rooms/${roomId}/turn`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ roomId, op: 'start' })
+      .expect(201);
+    expect(started.body.clock.round).toBe(1);
+    expect(started.body.clock.order.length).toBeGreaterThan(1);
+    const journal = started.body.log.map((l: { text: string }) => l.text).join(' · ');
+    expect(journal).toContain('Инициатива');
+    expect(journal).toContain('Раунд 1');
+
+    const stepped = await http().post(`/rooms/${roomId}/turn`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ roomId, op: 'next' })
+      .expect(201);
+    expect(stepped.body.clock.active).toBe(started.body.clock.order[1]);
+  });
+
+  it('в бою действие с ценой тратится: второе за ход — отказ, после смены хода — снова можно', async () => {
+    const state = await http().get(`/rooms/${roomId}`)
+      .set('Authorization', `Bearer ${token}`).expect(200);
+    const [arven, mirra] = state.body.sheets;
+    const swing = () => http().post(`/rooms/${roomId}/act`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id });
+
+    await swing().expect(201);
+    const denied = await swing().expect(400);
+    expect(denied.body.message).toContain('потрачено');
+
+    await http().post(`/rooms/${roomId}/turn`).set('Authorization', `Bearer ${token}`)
+      .send({ roomId, op: 'next' }).expect(201);
+    await http().post(`/rooms/${roomId}/turn`).set('Authorization', `Bearer ${token}`)
+      .send({ roomId, op: 'next' }).expect(201);
+    await swing().expect(201);
+  });
+
+  it('конец боя сбрасывает часы, комната отдаёт их в состоянии', async () => {
+    const stopped = await http().post(`/rooms/${roomId}/turn`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ roomId, op: 'stop' })
+      .expect(201);
+    expect(stopped.body.clock.round).toBe(0);
+    const state = await http().get(`/rooms/${roomId}`)
+      .set('Authorization', `Bearer ${token}`).expect(200);
+    expect(state.body.clock.active).toBeNull();
+  });
+
+  it('реакция отправителя: стол ставит ход на паузу, ответ тратит очко и собирает бросок заново', async () => {
+    const rooms = app.get(await import('../src/rooms/rooms.service.ts').then(m => m.RoomsService));
+    const me = await http().get('/auth/me').set('Authorization', `Bearer ${token}`).expect(200);
+    const state = await http().get(`/rooms/${roomId}`)
+      .set('Authorization', `Bearer ${token}`).expect(200);
+    const [arven, mirra] = state.body.sheets;
+    await rooms.setValue(me.body.userId, roomId, arven.id, 'inspiration', 1);
+    await rooms.setBelonging(me.body.userId, roomId, arven.id, 'effects', 'inspire', true);
+
+    const swing = () => http().post(`/rooms/${roomId}/act`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id });
+
+    const paused = await swing().expect(201);
+    expect(paused.body.pending).toBeTruthy();
+    expect(paused.body.pending.sheetId).toBe(arven.id);
+    expect(paused.body.pending.options.map((o: { id: string }) => o.id)).toEqual(['inspire']);
+    expect(paused.body.pending.preview.join(' ')).toContain('Бросок атаки');
+
+    const denied = await swing().expect(400);
+    expect(denied.body.message).toContain('ждёт ответа');
+
+    const answered = await http().post(`/rooms/${roomId}/answer`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ roomId, pendingId: paused.body.pending.id, chosen: ['inspire'] })
+      .expect(201);
+    expect(answered.body.pending).toBeNull();
+    const journal = answered.body.log.map((l: { text: string }) => l.text).join(' · ');
+    expect(journal).toContain('собран заново');
+    expect(journal).toContain('Преимущество');
+
+    const after = await http().get(`/rooms/${roomId}`)
+      .set('Authorization', `Bearer ${token}`).expect(200);
+    expect(after.body.sheets.find((s: { id: string }) => s.id === arven.id).values.inspiration).toBe(0);
+    expect(after.body.pending).toBeNull();
+  });
+
+  it('пропустить реакцию — ход идёт дальше, очко на месте', async () => {
+    const rooms = app.get(await import('../src/rooms/rooms.service.ts').then(m => m.RoomsService));
+    const me = await http().get('/auth/me').set('Authorization', `Bearer ${token}`).expect(200);
+    const state = await http().get(`/rooms/${roomId}`)
+      .set('Authorization', `Bearer ${token}`).expect(200);
+    const [arven, mirra] = state.body.sheets;
+    await rooms.setValue(me.body.userId, roomId, arven.id, 'inspiration', 1);
+
+    const paused = await http().post(`/rooms/${roomId}/act`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id })
+      .expect(201);
+    expect(paused.body.pending).toBeTruthy();
+
+    const answered = await http().post(`/rooms/${roomId}/answer`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ roomId, pendingId: paused.body.pending.id, chosen: [] })
+      .expect(201);
+    expect(answered.body.pending).toBeNull();
+    expect(answered.body.log.map((l: { text: string }) => l.text).join(' · ')).toContain('пропускает');
+
+    const after = await http().get(`/rooms/${roomId}`)
+      .set('Authorization', `Bearer ${token}`).expect(200);
+    expect(after.body.sheets.find((s: { id: string }) => s.id === arven.id).values.inspiration).toBe(1);
+    await rooms.setBelonging(me.body.userId, roomId, arven.id, 'effects', 'inspire', false);
+  });
   it('вычисляемое поле не правится вручную — его считает движок', async () => {
     const state = await http().get(`/rooms/${roomId}`)
       .set('Authorization', `Bearer ${token}`).expect(200);

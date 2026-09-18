@@ -1,12 +1,12 @@
 import { compile } from '../formula/index.ts';
-import { assertTarget, ANY_ROLL } from './targets.ts';
+import { assertTarget, incomingTagOf, ANY_ROLL } from './targets.ts';
 import { roomEffects, wornEffects, activationOf } from './effects.ts';
 import { EngineError } from './errors.ts';
 import type { System, Sheet, Compendium, Modifier, RollEdit } from '../model/types.ts';
 import type { Pass } from './calc.ts';
 
 export interface ModifierSource {
-  type: 'room' | 'item' | 'kind' | 'effect';
+  type: 'room' | 'item' | 'kind' | 'effect' | 'claim';
   id: string;
   label?: string;
   modifiers: Modifier[];
@@ -82,12 +82,16 @@ function sourcesOf(system: System, sheet: Sheet, compendium: Compendium): Modifi
   return sources;
 }
 
-export function applyValueModifiers(base: unknown, tag: string, pass: Pass): unknown {
+export interface ModifierContext { tags?: string[] }
+
+export function applyValueModifiers(
+  base: unknown, tag: string, pass: Pass, context: ModifierContext = {},
+): unknown {
   if (!pass.modifiers) return base;
   const mods = pass.modifiers.value.get(tag);
   if (!mods || mods.length === 0) return base;
 
-  const active = mods.filter(m => conditionHolds(m, pass));
+  const active = mods.filter(m => conditionHolds(m, pass) && tagsMatch(m, context.tags ?? []));
   if (active.length === 0) return base;
 
   let value = base;
@@ -112,12 +116,15 @@ export function applyValueModifiers(base: unknown, tag: string, pass: Pass): unk
 
 export function resolveRoll(
   system: System, sheet: Sheet, rollTag: string | null, pass: Pass,
+  extra: SourcedModifier[] = [],
 ): RollResolution {
   if (rollTag) assertTarget(system, rollTag);
 
   const bucket = (tag: string) => (pass?.modifiers ? pass.modifiers.roll.get(tag) || [] : []);
-  const mods = [...(rollTag ? bucket(rollTag) : []), ...bucket(ANY_ROLL)]
-    .filter(m => conditionHolds(m, pass));
+  const mods = [
+    ...[...(rollTag ? bucket(rollTag) : []), ...bucket(ANY_ROLL)].filter(m => conditionHolds(m, pass)),
+    ...extra,
+  ];
 
   const named = [...new Set(mods.map(m => m.edit).filter(Boolean))] as string[];
   const dictionary = system.roll_edits || {};
@@ -142,6 +149,37 @@ export function resolveRoll(
     bonus,
     sources: mods.map(m => ({ ...m.source, edit: m.edit })),
   };
+}
+
+export function incomingRollModifiers(rollTag: string | null, pass: Pass): SourcedModifier[] {
+  if (!pass.modifiers) return [];
+  const bucket = (tag: string) => pass.modifiers!.roll.get(tag) || [];
+  return [...(rollTag ? bucket(incomingTagOf(rollTag)) : []), ...bucket(incomingTagOf(ANY_ROLL))]
+    .filter(m => conditionHolds(m, pass));
+}
+
+export function claimedModifiers(system: System, keys: string[], rollTag: string | null): SourcedModifier[] {
+  const dictionary = system.roll_edits || {};
+  return keys.map(key => {
+    const edit = dictionary[key];
+    if (!edit) {
+      throw new EngineError(
+        `заявлена правка броска «${key}», которой нет в словаре системы; есть: ${
+          Object.keys(dictionary).join(', ') || '(пусто)'}`);
+    }
+    return {
+      kind: 'roll' as const, target: rollTag ?? ANY_ROLL, edit: key, condition: null,
+      source: { type: 'claim' as const, id: key, label: edit.label || key, modifiers: [] },
+    };
+  });
+}
+
+function tagsMatch(mod: SourcedModifier, tags: string[]): boolean {
+  const want = (mod as { tags?: string[] }).tags;
+  const avoid = (mod as { notTags?: string[] }).notTags;
+  if (want?.length && !want.some(t => tags.includes(t))) return false;
+  if (avoid?.length && avoid.some(t => tags.includes(t))) return false;
+  return true;
 }
 
 function conditionHolds(mod: SourcedModifier, pass: Pass): boolean {

@@ -7,12 +7,12 @@ import { stepModule } from '@vtt/engine/engine/steps/index';
 
 export interface EarlierStep { id: string; type: string }
 
-export function outputRefs(earlier: EarlierStep[]): { ref: string; label: string }[] {
-  const out: { ref: string; label: string }[] = [];
+export function outputRefs(earlier: EarlierStep[]): { ref: string; label: string; kind?: string }[] {
+  const out: { ref: string; label: string; kind?: string }[] = [];
   for (const step of earlier) {
-    let outputs: { path: string; label: string }[] = [];
+    let outputs: { path: string; label: string; kind?: string }[] = [];
     try {
-      outputs = (stepModule(step.type).outputs ?? []) as { path: string; label: string }[];
+      outputs = (stepModule(step.type).outputs ?? []) as { path: string; label: string; kind?: string }[];
     } catch {
 
     }
@@ -21,7 +21,7 @@ export function outputRefs(earlier: EarlierStep[]): { ref: string; label: string
       continue;
     }
     for (const o of outputs) {
-      out.push({ ref: `${step.id}${o.path}`, label: `«${step.id}» — ${o.label}` });
+      out.push({ ref: `${step.id}${o.path}`, label: `«${step.id}» — ${o.label}`, ...(o.kind ? { kind: o.kind } : {}) });
     }
   }
   return out;

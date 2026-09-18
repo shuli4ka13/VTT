@@ -52,7 +52,7 @@ group('шаг «порог»', () => {
     deepEq(out.results.hit, {
       success: true, margin: 2, total: 16,
 
-      rolled: 1, atMax: 0, atMin: 0,
+      rolled: 1, atMax: 0, atMin: 0, edited: false,
       dice: { rolls: [10], kept: 10 }, parts: {},
     }, 'бросок 10 + бонус 6 против КД Мирры 14');
     eq(out.stopped, null);

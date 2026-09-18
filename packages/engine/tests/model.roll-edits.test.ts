@@ -1,5 +1,5 @@
 import { group, test, eq, ok, deepEq } from './harness.ts';
-import { editPrimitives } from '../src/engine/roll-edits.ts';
+import { editPrimitives, editPalette, paletteKeyOf } from '../src/engine/roll-edits.ts';
 import { unifyRollEdits } from '../src/model/unify.ts';
 import { ADVANTAGE_METHODS } from '../src/model/advantage-methods.ts';
 import { system, cyberpunk } from './fixtures.ts';
@@ -101,6 +101,40 @@ group('справочник механик — материал для обра�
   test('ни одна система на него не ссылается — механика теперь в записях', () => {
     for (const world of [system, cyberpunk]) {
       eq(world.advantage, undefined, 'секция advantage.methods упразднена');
+    }
+  });
+});
+
+group('переворот числа — из справочника в реестр', () => {
+  test('палитра предлагает переворот в обе стороны, и ключ восстанавливается из записи', () => {
+    const keys = editPalette().map(p => p.key);
+    ok(keys.includes('flipLow') && keys.includes('flipHigh'));
+    eq(paletteKeyOf({ op: 'flip', prefer: 'high' }), 'flipHigh');
+    eq(paletteKeyOf({ op: 'flip' }), 'flipLow', 'без указания стороны — в меньшую');
+  });
+
+  test('справочник механик не врёт о том, что уже есть в реестре', () => {
+    const ops = new Set(editPrimitives().map(p => p.op));
+    const backed: Record<string, string> = {
+      rerollNew: 'reroll', difficulty: 'shiftVersus', flip: 'flip',
+      addDie: 'addDie', dieSize: 'dieStep', degree: 'shiftDegree',
+    };
+    for (const m of ADVANTAGE_METHODS) {
+      const op = backed[m.id];
+      if (op) eq(m.implemented, ops.has(op), `${m.id}: флаг должен совпадать с реестром`);
+    }
+    ok(ADVANTAGE_METHODS.every(m => m.implemented), 'все семь способов черновика отыгрываются примитивами');
+  });
+
+  test('у каждого способа есть рецепт из известных примитивов, гашение — внутри рецепта', () => {
+    const ops = new Set(editPrimitives().map(p => p.op));
+    for (const m of ADVANTAGE_METHODS) {
+      ok(m.recipes.length > 0, `${m.id}: рецепта нет — нечего положить в словарь`);
+      const keys = new Set(m.recipes.map(r => r.key));
+      for (const recipe of m.recipes) {
+        for (const op of recipe.ops) ok(ops.has(String(op.op)), `${m.id}/${recipe.key}: примитив «${op.op}» неизвестен`);
+        if (recipe.canceledBy) ok(keys.has(recipe.canceledBy), `${m.id}/${recipe.key}: гасится тем, чего в рецепте нет`);
+      }
     }
   });
 });

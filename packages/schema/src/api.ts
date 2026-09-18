@@ -80,6 +80,28 @@ export const roomSummary = z.object({
   memberCount: z.number().int().nonnegative(),
 });
 
+export const pendingState = z.object({
+  id: z.string(),
+  sheetId: z.string(),
+  stage: z.enum(['sender', 'target']),
+  question: z.string(),
+  options: z.array(z.object({ id: z.string(), label: z.string() })),
+  preview: z.array(z.string()),
+});
+
+export const answerIntent = z.object({
+  roomId: z.string(),
+  pendingId: z.string().min(1),
+  chosen: z.array(z.string().min(1)),
+});
+
+export const clockState = z.object({
+  round: z.number().int().nonnegative(),
+  order: z.array(z.string()),
+  active: z.string().nullable(),
+  spent: z.record(z.string(), z.record(z.string(), z.number().int().nonnegative())),
+});
+
 export const roomState = z.object({
   id: z.string(),
   title: z.string(),
@@ -92,6 +114,15 @@ export const roomState = z.object({
     at: z.string(),
     text: z.string(),
   })),
+
+  clock: clockState.optional(),
+  pending: pendingState.nullable().optional(),
+});
+
+export const turnIntent = z.object({
+  roomId: z.string(),
+  op: z.enum(['start', 'next', 'stop', 'scene']),
+  order: z.array(z.string().min(1)).optional(),
 });
 
 export const actIntent = z.object({
@@ -99,6 +130,9 @@ export const actIntent = z.object({
   actionId: z.string().min(1),
   fromId: z.string().min(1),
   toId: z.string().min(1),
+
+  edits: z.array(z.string().min(1)).optional(),
+  targetEdits: z.array(z.string().min(1)).optional(),
 });
 
 export const roomDelta = z.object({
@@ -109,6 +143,9 @@ export const roomDelta = z.object({
     at: z.string(),
     text: z.string(),
   })),
+
+  clock: clockState.optional(),
+  pending: pendingState.nullable().optional(),
 });
 
 export const serverMessage = z.discriminatedUnion('type', [
@@ -123,6 +160,8 @@ export const serverMessage = z.discriminatedUnion('type', [
 export const clientMessage = z.discriminatedUnion('type', [
   z.object({ type: z.literal('room:join'), roomId: z.string(), token: z.string() }),
   z.object({ type: z.literal('room:act'), intent: actIntent }),
+  z.object({ type: z.literal('room:turn'), intent: turnIntent }),
+  z.object({ type: z.literal('room:answer'), intent: answerIntent }),
   z.object({ type: z.literal('sheet:set'), roomId: z.string(), sheetId: z.string(), tag: z.string(), value: z.union([z.number(), z.string(), z.boolean(), z.null()]) }),
 
   z.object({ type: z.literal('sheet:create'), roomId: z.string(), name: z.string().min(1).max(64), kind: z.enum(['pc', 'npc']).optional() }),
@@ -153,6 +192,10 @@ export type CreateRoomRequest = z.infer<typeof createRoomRequest>;
 export type RoomSummary = z.infer<typeof roomSummary>;
 export type RoomState = z.infer<typeof roomState>;
 export type ActIntent = z.infer<typeof actIntent>;
+export type ClockState = z.infer<typeof clockState>;
+export type PendingState = z.infer<typeof pendingState>;
+export type AnswerIntent = z.infer<typeof answerIntent>;
+export type TurnIntent = z.infer<typeof turnIntent>;
 export type RoomDelta = z.infer<typeof roomDelta>;
 export type ServerMessage = z.infer<typeof serverMessage>;
 export type ClientMessage = z.infer<typeof clientMessage>;

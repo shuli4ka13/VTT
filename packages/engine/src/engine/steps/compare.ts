@@ -13,9 +13,15 @@ const BREAKS: Record<string, (margin: number) => boolean> = {
 };
 
 export const slots = [
-  { key: 'value', label: 'Величина', kind: 'ref' },
-  { key: 'versus', label: 'Против', kind: 'ref' },
-  { key: 'breakIf', label: 'Обрыв когда', kind: 'choice', options: Object.keys(BREAKS) },
+  { key: 'value', label: 'Что сравниваем', kind: 'ref', main: true, required: true, allow: ['ref', 'expr', 'const'] },
+  {
+    key: 'versus', label: 'С чем', kind: 'ref', main: true, required: true,
+    allow: ['tag', 'expr', 'const', 'param', 'ref'],
+  },
+  {
+    key: 'breakIf', label: 'Обрыв когда', kind: 'choice', options: Object.keys(BREAKS), fallback: 'less',
+    choice: [['less', 'величина меньше'], ['atMost', 'величина не больше'], ['never', 'никогда']],
+  },
 ];
 
 export const outputs = [

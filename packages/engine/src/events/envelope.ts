@@ -1,14 +1,18 @@
 import { newPass } from '../engine/calc.ts';
 import { packRule, resolveRule } from '../engine/rule.ts';
-import { resolveRef } from '../engine/refs.ts';
+import { packRef, resolveRef } from '../engine/refs.ts';
 import {
   requireEffect, findEffect, isPipeline, activationOf, durationOf, wornEffects,
 } from '../engine/effects.ts';
 import { EngineError } from '../engine/errors.ts';
+import { incomingRollModifiers } from '../engine/modifiers.ts';
+import { expiryOf } from '../engine/clock.ts';
+import type { Clock } from '../engine/clock.ts';
 import type {
-  System, Sheet, Compendium, CompendiumRecord, Binding, Die, Effect,
+  System, Sheet, Compendium, CompendiumRecord, Binding, Die, Effect, Activation,
 } from '../model/types.ts';
 import type { StepData } from '../engine/steps/index.ts';
+import type { EmittedEvent } from '../engine/rule.ts';
 import type { RefContext } from '../engine/refs.ts';
 
 export interface Action {
@@ -23,6 +27,8 @@ export interface WorldContext {
   system: System;
   compendium: Compendium;
   die: Die;
+
+  clock?: Clock | null;
 }
 
 export interface Envelope {
@@ -50,6 +56,8 @@ export interface Report {
   removed: string[];
   spent: string[];
 
+  emitted: EmittedEvent[];
+
   reactions?: Report[];
 }
 
@@ -57,6 +65,8 @@ export interface ReceiveResult {
   sheet: Sheet;
   replies: Envelope[];
   report: Report;
+
+  results: Record<string, unknown>;
 }
 
 export function bindingsOf(record: CompendiumRecord, system: System): Binding[] {
@@ -117,9 +127,14 @@ function actionsOfRecord(record: CompendiumRecord, system: System, fromItem: boo
   }));
 }
 
+export interface SendOptions {
+  against?: Sheet | null;
+  claims?: string[];
+}
+
 export function send(
   actionId: string,
-  { system, sheet, compendium, die }: WorldContext & { sheet: Sheet },
+  { system, sheet, compendium, die, against, claims }: WorldContext & { sheet: Sheet } & SendOptions,
 ): Envelope {
   const action = actionOf(actionId, { system, compendium });
 
@@ -131,11 +146,14 @@ export function send(
   }
 
   const pass = newPass(system, sheet, { compendium });
+  const targetPass = against ? newPass(system, against, { compendium }) : null;
   const steps = packRule(effect, {
     system, sheet, pass, die,
     params: action.binding.args || {},
     props: propsOf(action.record, system),
     owner: `эффект «${effect.label || action.effect}»`,
+    ...(targetPass ? { against: (rollTag: string | null) => incomingRollModifiers(rollTag, targetPass) } : {}),
+    ...(claims?.length ? { claims } : {}),
   });
 
   return {
@@ -150,21 +168,24 @@ export function send(
 
 export function receive(
   envelope: Envelope,
-  { system, sheet, compendium, die }: WorldContext & { sheet: Sheet },
+  { system, sheet, compendium, die, claims, clock }: WorldContext & { sheet: Sheet } & { claims?: string[] },
 ): ReceiveResult {
   const pass = newPass(system, sheet, { compendium });
   const out = resolveRule(envelope.steps || [], {
     system, sheet, pass, die,
     owner: `конверт «${envelope.label}»`,
+    expiry: (effect: Effect) => expiryOf(effect, clock),
+    ...(claims?.length ? { claims } : {}),
   });
 
   const fired = envelope.reply
     ? { sheet: out.sheet, replies: [], spent: [], reactions: [] }
-    : fireTriggers(envelope, out, { system, compendium, die });
+    : fireTriggers(envelope, out, { system, compendium, die, clock });
 
   return {
     sheet: fired.sheet,
     replies: fired.replies,
+    results: out.results,
     report: {
       kind: envelope.kind,
       effect: envelope.effect,
@@ -177,76 +198,123 @@ export function receive(
       effects: out.effects,
       removed: out.removed,
       spent: fired.spent,
+      emitted: out.emitted,
 
       ...(fired.reactions.length ? { reactions: fired.reactions } : {}),
     },
   };
 }
 
+export const EVENT_PREFIX = 'event:';
+
+export type TriggerDirection = 'in' | 'out';
+export type ReactionWindow = 'sender' | 'target';
+
+interface Candidate { id: string; effect: Effect }
+
+function candidatesOf(system: System, sheet: Sheet, activation: Activation, withRoom: boolean): Candidate[] {
+  const worn = wornEffects(system, sheet, { strict: false });
+  const wornIds = new Set(worn.map(w => w.id));
+  const room = withRoom
+    ? (system.room_rules ?? [])
+      .filter(id => !wornIds.has(id))
+      .map(id => ({ id, effect: findEffect(system, id) }))
+      .filter((c): c is Candidate => Boolean(c.effect))
+    : [];
+  return [...worn, ...room].filter(({ effect }) => activationOf(effect) === activation);
+}
+
+function heardBy(on: string, effectId: string, emitted: EmittedEvent[]): EmittedEvent | undefined | null {
+  if (on === '*') return undefined;
+  if (on.startsWith(EVENT_PREFIX)) return emitted.filter(e => `${EVENT_PREFIX}${e.event}` === on).at(-1) ?? null;
+  return on === effectId ? undefined : null;
+}
+
+function withEvent(results: Record<string, unknown>, heard: EmittedEvent | undefined): Record<string, unknown> {
+  if (!heard) return results;
+  return { ...results, event: heard, event_amount: heard.amount, event_incoming: heard.incoming };
+}
+
+function runOnSelf(
+  id: string, effect: Effect, sheet: Sheet, results: Record<string, unknown>, owner: string,
+  { system, compendium, die, clock }: WorldContext,
+): { sheet: Sheet; report: Report } {
+  const pass = newPass(system, sheet, { compendium });
+  const packed = packRule(effect, {
+    system, sheet, pass, die,
+    params: (effect.args || {}) as Record<string, unknown>,
+    props: null,
+    owner,
+    results,
+  });
+  const done = resolveRule(packed, {
+    system, sheet, die,
+    pass: newPass(system, sheet, { compendium }),
+    results,
+    owner,
+    expiry: (hung: Effect) => expiryOf(hung, clock),
+  });
+  return {
+    sheet: done.sheet,
+    report: {
+      kind: 'effect', effect: id, from: sheet.id, label: effect.label || id,
+      reply: false, trace: done.trace, stopped: done.stopped,
+      changes: done.changes, effects: done.effects, removed: done.removed, spent: [],
+      emitted: done.emitted,
+    },
+  };
+}
+
+function replyFrom(
+  id: string, effect: Effect, sheet: Sheet, to: string, results: Record<string, unknown>, owner: string,
+  { system, compendium, die }: WorldContext,
+): Envelope {
+  const pass = newPass(system, sheet, { compendium });
+  return {
+    kind: 'effect',
+    effect: id,
+    from: sheet.id,
+    to,
+    reply: true,
+    action: id,
+    label: effect.label || id,
+    steps: packRule(effect, {
+      system, sheet, pass, die,
+      params: (effect.args || {}) as Record<string, unknown>,
+      props: null,
+      owner,
+      results,
+    }),
+  };
+}
+
 function fireTriggers(
-  envelope: Envelope, out: { sheet: Sheet; results: Record<string, unknown> }, { system, compendium, die }: WorldContext,
+  envelope: Envelope,
+  out: { sheet: Sheet; results: Record<string, unknown>; emitted: EmittedEvent[] },
+  ctx: WorldContext,
 ): { sheet: Sheet; replies: Envelope[]; spent: string[]; reactions: Report[] } {
   const replies: Envelope[] = [];
   const spent: string[] = [];
   const reactions: Report[] = [];
   let sheet = out.sheet;
 
-  const worn = wornEffects(system, sheet, { strict: false });
-  const wornIds = new Set(worn.map(w => w.id));
-  const candidates = [
-    ...worn,
-    ...(system.room_rules ?? [])
-      .filter(id => !wornIds.has(id))
-      .map(id => ({ id, effect: findEffect(system, id) }))
-      .filter((c): c is { id: string; effect: Effect } => Boolean(c.effect)),
-  ].filter(({ effect }) => activationOf(effect) === 'triggered');
-
-  for (const { id, effect } of candidates) {
+  for (const { id, effect } of candidatesOf(ctx.system, sheet, 'triggered', true)) {
     const trigger = effect.trigger;
-    if (!trigger) continue;
-    if (trigger.on !== envelope.effect) continue;
+    if (!trigger || (trigger.direction ?? 'in') !== 'in') continue;
+    const heard = heardBy(trigger.on, envelope.effect, out.emitted);
+    if (heard === null) continue;
     if ((trigger.when || 'resolved') !== 'resolved') continue;
 
-    const pass = newPass(system, sheet, { compendium });
+    const results = withEvent(out.results, heard);
     const owner = `триггер «${effect.label || id}»`;
-    if (!conditionHolds(trigger.condition, { pass, results: out.results, owner })) continue;
+    if (!conditionHolds(trigger.condition, { pass: newPass(ctx.system, sheet, { compendium: ctx.compendium }), results, owner })) continue;
 
     if ((trigger.to ?? 'sender') === 'self') {
-
-      const packed = packRule(effect, {
-        system, sheet, pass, die,
-        params: (effect.args || {}) as Record<string, unknown>,
-        props: null,
-        owner,
-      });
-      const done = resolveRule(packed, {
-        system, sheet, die,
-        pass: newPass(system, sheet, { compendium }),
-        results: out.results,
-        owner,
-      });
+      const done = runOnSelf(id, effect, sheet, results, owner, ctx);
       sheet = done.sheet;
-      reactions.push({
-        kind: 'effect', effect: id, from: sheet.id, label: effect.label || id,
-        reply: false, trace: done.trace, stopped: done.stopped,
-        changes: done.changes, effects: done.effects, removed: done.removed, spent: [],
-      });
+      reactions.push(done.report);
     } else {
-      replies.push({
-        kind: 'effect',
-        effect: id,
-        from: sheet.id,
-        to: envelope.from,
-        reply: true,
-        action: id,
-        label: effect.label || id,
-        steps: packRule(effect, {
-          system, sheet, pass, die,
-          params: (effect.args || {}) as Record<string, unknown>,
-          props: null,
-          owner,
-        }),
-      });
+      replies.push(replyFrom(id, effect, sheet, envelope.from, results, owner, ctx));
     }
 
     if (durationOf(effect) === 'uses') {
@@ -256,6 +324,108 @@ function fireTriggers(
   }
 
   return { sheet, replies, spent, reactions };
+}
+
+export function fireOutgoing(
+  envelope: Envelope,
+  outcome: { results: Record<string, unknown>; emitted: EmittedEvent[] },
+  { sheet: sender, targetId }: { sheet: Sheet; targetId: string },
+  ctx: WorldContext,
+): { sheet: Sheet; replies: Envelope[]; spent: string[]; reactions: Report[] } {
+  const replies: Envelope[] = [];
+  const spent: string[] = [];
+  const reactions: Report[] = [];
+  let sheet = sender;
+
+  for (const { id, effect } of candidatesOf(ctx.system, sheet, 'triggered', true)) {
+    const trigger = effect.trigger;
+    if (!trigger || trigger.direction !== 'out') continue;
+    const heard = heardBy(trigger.on, envelope.effect, outcome.emitted);
+    if (heard === null) continue;
+
+    const results = withEvent(outcome.results, heard);
+    const owner = `триггер «${effect.label || id}»`;
+    if (!conditionHolds(trigger.condition, { pass: newPass(ctx.system, sheet, { compendium: ctx.compendium }), results, owner })) continue;
+
+    if (trigger.to === 'target') {
+      replies.push(replyFrom(id, effect, sheet, targetId, results, owner, ctx));
+    } else {
+      const done = runOnSelf(id, effect, sheet, results, owner, ctx);
+      sheet = done.sheet;
+      reactions.push(done.report);
+    }
+
+    if (durationOf(effect) === 'uses') {
+      sheet = spendUse(sheet, id);
+      spent.push(id);
+    }
+  }
+
+  return { sheet, replies, spent, reactions };
+}
+
+export interface Offer { id: string; label: string; cost?: string; claims: string[] }
+
+export function offers(
+  envelope: Envelope, window: ReactionWindow,
+  { system, sheet, compendium }: WorldContext & { sheet: Sheet },
+  results: Record<string, unknown> = {},
+): Offer[] {
+  const out: Offer[] = [];
+  for (const { id, effect } of candidatesOf(system, sheet, 'reaction', false)) {
+    const trigger = effect.trigger;
+    if (!trigger || (trigger.window ?? 'target') !== window) continue;
+    if (heardBy(trigger.on, envelope.effect, []) === null) continue;
+    const owner = `реакция «${effect.label || id}»`;
+    const ctx = { pass: newPass(system, sheet, { compendium }), results, owner };
+    let fits: boolean;
+    try {
+      fits = conditionHolds(trigger.condition === undefined || trigger.condition === null
+        ? null : packRef(trigger.condition, ctx), ctx);
+    } catch (err) {
+      if (!(err instanceof EngineError)) throw err;
+      fits = false;
+    }
+    if (!fits) continue;
+    out.push({
+      id, label: effect.label || id,
+      ...(effect.cost ? { cost: effect.cost } : {}),
+      claims: [...(trigger.claims ?? [])],
+    });
+  }
+  return out;
+}
+
+export interface Reacted { sheet: Sheet; reports: Report[]; claims: string[]; spent: string[] }
+
+export function react(
+  chosen: string[], envelope: Envelope, window: ReactionWindow,
+  ctx: WorldContext & { sheet: Sheet },
+  results: Record<string, unknown> = {},
+): Reacted {
+  const offered = offers(envelope, window, ctx, results);
+  let sheet = ctx.sheet;
+  const reports: Report[] = [];
+  const claims: string[] = [];
+  const spent: string[] = [];
+
+  for (const id of chosen) {
+    const offer = offered.find(o => o.id === id);
+    if (!offer) {
+      throw new EngineError(
+        `реакция «${id}» сейчас не предлагается; можно: ${offered.map(o => o.id).join(', ') || '(ничего)'}`);
+    }
+    const effect = requireEffect(ctx.system, id, 'реакция');
+    const done = runOnSelf(id, effect, sheet, results, `реакция «${offer.label}»`, ctx);
+    sheet = done.sheet;
+    reports.push(done.report);
+    claims.push(...offer.claims);
+    if (durationOf(effect) === 'uses') {
+      sheet = spendUse(sheet, id);
+      spent.push(id);
+    }
+  }
+  return { sheet, reports, claims: [...new Set(claims)], spent };
 }
 
 function conditionHolds(condition: unknown, ctx: RefContext): boolean {

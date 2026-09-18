@@ -42,7 +42,7 @@ group('ведущая кость', () => {
   group('total есть всегда', () => {
     test('одна к20: total равен выпавшему, именованных частей нет', () => {
       deepEq(rollLead(d20, queue(14)), {
-        rolls: [14], kept: 14, total: 14, parts: {},
+        rolls: [14], raw: [14], kept: 14, total: 14, parts: {},
         edits: [], versusShift: 0, degreeShift: 0,
         read: 'sum', tally: { dice: 1, atMax: 0, atMin: 0 },
       });
@@ -206,5 +206,81 @@ group('ведущая кость', () => {
   test('результат броска — чистые данные', () => {
     const r = rollLead(daggerheart, queue(7, 4));
     deepEq(JSON.parse(JSON.stringify(r)), r);
+  });
+});
+
+group('переворот цифр — правка результата, к100', () => {
+  const d100 = { label: 'к100', kind: 'die', dice: [{ count: 1, sides: 100 }] };
+  const low = { label: 'Переворот', ops: [{ op: 'flip', prefer: 'low' }] };
+  const high = { label: 'Переворот против', ops: [{ op: 'flip', prefer: 'high' }] };
+
+  test('71 становится 17, когда меньше — лучше', () => {
+    const r = rollLead(d100, queue(71), [low]);
+    eq(r.total, 17);
+    deepEq(r.rolls, [17]);
+    deepEq(r.edits, ['Переворот']);
+  });
+
+  test('17 остаётся 17: переворот берётся только когда он выгоден', () => {
+    eq(rollLead(d100, queue(17), [low]).total, 17);
+  });
+
+  test('«в большую» — та же правка в другую сторону: 17 становится 71', () => {
+    eq(rollLead(d100, queue(17), [high]).total, 71);
+  });
+
+  test('однозначное число дополняется нулём: 5 ↔ 50', () => {
+    eq(rollLead(d100, queue(5), [high]).total, 50);
+    eq(rollLead(d100, queue(50), [low]).total, 5);
+  });
+
+  test('сотня остаётся сотней, десятка переворачивается в единицу', () => {
+    eq(rollLead(d100, queue(100), [low]).total, 100);
+    eq(rollLead(d100, queue(10), [low]).total, 1);
+  });
+
+  test('кость не из степеней десяти переворот не трогает: к20 остаётся как есть', () => {
+    eq(rollLead(d20, queue(17), [high]).total, 17);
+  });
+
+  test('переворот адресуется части броска', () => {
+    const twin = {
+      kind: 'die',
+      dice: [{ count: 1, sides: 100, name: 'своя' }, { count: 1, sides: 100, name: 'чужая' }],
+    };
+    const r = rollLead(twin, queue(71, 82), [{ label: 'Своя', ops: [{ op: 'flip', part: 'своя' }] }]);
+    deepEq(r.parts, { своя: 17, чужая: 82 });
+  });
+
+  test('счёт единиц и максимумов снят до переворота', () => {
+    const r = rollLead(d100, queue(1), [high]);
+    eq(r.total, 10, 'единица перевернулась в десятку');
+    deepEq(r.tally, { dice: 1, atMax: 0, atMin: 1 }, 'а натуральная единица в счёте осталась');
+  });
+});
+
+group('переброс с обязательным новым результатом', () => {
+  const lucky = { label: 'Удача', ops: [{ op: 'reroll', n: 1 }] };
+
+  test('единица перебрасывается, и берётся новое, даже если оно хуже некуда', () => {
+    eq(rollLead(d20, queue(1, 14), [lucky]).total, 14);
+    eq(rollLead(d20, queue(1, 1), [lucky]).total, 1, 'перебрасывается один раз');
+  });
+
+  test('не единица остаётся как есть', () => {
+    eq(rollLead(d20, queue(5), [lucky]).total, 5);
+  });
+
+  test('порог переброса задаётся: не выше 2', () => {
+    eq(rollLead(d20, queue(2, 9), [{ label: 'Щедрая удача', ops: [{ op: 'reroll', n: 2 }] }]).total, 9);
+  });
+
+  test('счёт единиц снят с натурального броска', () => {
+    deepEq(rollLead(d20, queue(1, 14), [lucky]).tally, { dice: 1, atMax: 0, atMin: 1 });
+  });
+
+  test('переброс адресуется части броска', () => {
+    const r = rollLead(daggerheart, queue(1, 1, 9), [{ label: 'Надежда', ops: [{ op: 'reroll', n: 1, part: 'hope' }] }]);
+    deepEq(r.parts, { hope: 9, fear: 1 });
   });
 });

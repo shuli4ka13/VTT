@@ -42,7 +42,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
       .filter(b => (b.textContent ?? '').trimStart().startsWith('+ '))
       .map(b => b.textContent!.trim())
       .filter(t => !t.startsWith('+ актив') && !t.startsWith('+ триггер')
-        && !t.startsWith('+ пассив') && !t.startsWith('+ брать'));
+        && !t.startsWith('+ пассив') && !t.startsWith('+ реакц') && !t.startsWith('+ брать'));
     expect(palette).toEqual(['+ проверка', '+ изменение', '+ число']);
     fireEvent.click(screen.getByText('+ проверка'));
     expect(screen.getByText('1 · Проверка')).toBeTruthy();
