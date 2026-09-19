@@ -46,6 +46,13 @@ export class CatalogService {
 
   async publishSystem(ownerId: string, id: string) {
     const row = await this.ownedSystem(ownerId, id);
+    const parsed = schemas.system.safeParse(JSON.parse(row.data));
+    if (!parsed.success) {
+      throw new BadRequestException({
+        message: 'сохранённая система не проходит схему — публиковать нельзя',
+        issues: parsed.error.issues.slice(0, 5).map(i => `${i.path.join('.')}: ${i.message}`),
+      });
+    }
     const updatedAt = this.now();
     await this.db.update(publishedSystems)
       .set({ publishedData: row.data, status: 'published', updatedAt })

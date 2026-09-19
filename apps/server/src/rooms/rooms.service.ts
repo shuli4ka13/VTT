@@ -126,6 +126,12 @@ export class RoomsService {
       .where(eq(roomSheets.roomId, intent.roomId));
     const sheets = rows.map(r => JSON.parse(r.data) as Sheet);
     const nameOf = (id: string) => sheets.find(s => s.id === id)?.name ?? id;
+
+    const waiting = await this.pendingOf(intent.roomId);
+    if (waiting) {
+      throw new BadRequestException(
+        `стол ждёт ответа: ${nameOf(waiting.sheetId)} решает, применить ли реакцию — ход и сцену двигать рано`);
+    }
     const clock = await this.clockOf(intent.roomId);
 
     let next: ClockState = clock;
@@ -221,17 +227,18 @@ export class RoomsService {
       if (err instanceof NotFoundException) throw err;
       throw new BadRequestException((err as Error).message);
     }
-    if (nextClock !== clock) await this.saveClock(intent.roomId, nextClock);
-
     return this.proceed({
       roomId: intent.roomId, intent, envelope, clock: nextClock, stage: 'sender',
       claims: intent.edits ?? [], results: {},
-    }, { system, compendium, sheets, log: [], touched: [] });
+    }, { system, compendium, sheets, log: [], touched: [], clockDirty: nextClock !== clock });
   }
 
   private async proceed(
     state: PendingRecord,
-    world: { system: System; compendium: Compendium; sheets: Sheet[]; log: string[]; touched: Sheet[] },
+    world: {
+      system: System; compendium: Compendium; sheets: Sheet[]; log: string[]; touched: Sheet[];
+      clockDirty: boolean;
+    },
   ): Promise<RoomDelta> {
     const { system, compendium } = world;
     let { sheets } = world;
@@ -281,6 +288,7 @@ export class RoomsService {
     }
     sheets = result.sheets;
 
+    if (world.clockDirty) await this.saveClock(state.roomId, state.clock);
     const touched = await this.persistSheets(state.roomId, world.sheets, sheets, world.touched);
     const log = await this.appendLog(state.roomId, [
       ...world.log,
@@ -294,10 +302,11 @@ export class RoomsService {
   private async park(
     state: PendingRecord & { sheetId: string; offered: Offer[] },
     asked: Sheet, preview: string[],
-    world: { system: System; sheets: Sheet[]; log: string[]; touched: Sheet[] },
+    world: { system: System; sheets: Sheet[]; log: string[]; touched: Sheet[]; clockDirty: boolean },
   ): Promise<RoomDelta> {
     const id = this.newId();
     const record: PendingRecord = { ...state, id, preview };
+    if (world.clockDirty) await this.saveClock(state.roomId, state.clock);
     await this.db.delete(roomPending).where(eq(roomPending.roomId, state.roomId));
     await this.db.insert(roomPending).values({ id, roomId: state.roomId, data: JSON.stringify(record) });
     const pending = this.pendingView(record, asked);
@@ -329,6 +338,7 @@ export class RoomsService {
     const lines: string[] = [];
     let envelope = record.envelope;
     let claims = record.claims;
+    let changed: Sheet[] = [];
     try {
       const reacted = react(intent.chosen, envelope, record.stage as ReactionWindow,
         { system, compendium, die: this.die, clock, sheet: asked }, record.results);
@@ -337,6 +347,7 @@ export class RoomsService {
         if (effect) clock = spendAction(system, clock, asked.id, effect);
       }
       sheets = sheets.map(s => (s.id === asked.id ? reacted.sheet : s));
+      if (reacted.sheet !== asked) changed = [reacted.sheet];
       for (const report of reacted.reports) {
         lines.push(this.describe({ fromId: asked.id, toId: asked.id, report }, system, sheets));
       }
@@ -354,14 +365,11 @@ export class RoomsService {
     } catch (err) {
       throw new BadRequestException((err as Error).message);
     }
-    if (clock !== record.clock) await this.saveClock(intent.roomId, clock);
-
-    const original = rows.map(r => JSON.parse(r.data) as Sheet);
     return this.proceed({
       ...record, envelope, clock, claims,
       stage: record.stage === 'sender' ? 'target' : 'deliver',
       results: {},
-    }, { system, compendium, sheets, log: lines, touched: sheets.filter((s, i) => s !== original[i]) });
+    }, { system, compendium, sheets, log: lines, touched: changed, clockDirty: clock !== record.clock });
   }
 
   private async persistSheets(roomId: string, before: Sheet[], after: Sheet[], already: Sheet[]): Promise<Sheet[]> {
