@@ -95,3 +95,41 @@ describe('часы и бюджет действий не портятся', () =
     expect(denied.body.message).toContain('потрачено');
   });
 });
+
+describe('пробный расчёт и итог бросают одни кости', () => {
+  it('спасбросок цели в предпросмотре совпадает со спасброском в журнале', async () => {
+    const guarded = {
+      ...dnd,
+      effects: {
+        ...dnd.effects,
+        watch: { label: 'Настороже', activation: 'reaction', duration: { kind: 'permanent' }, params: [], steps: [], trigger: { on: '*', window: 'target' } },
+      },
+    };
+    const token = (await http().post('/auth/login').send({ name: 'Страж' })).body.token as string;
+    const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
+    const me = (await as(http().get('/auth/me'))).body.userId as string;
+    const systemId = (await as(http().post('/systems')).send({ title: '5e+', system: guarded })).body.id;
+    const bookId = (await as(http().post('/compendiums')).send({ title: 'Книга', systemId, compendium })).body.id;
+    await as(http().post(`/systems/${systemId}/publish`)).send({});
+    await as(http().post(`/compendiums/${bookId}/publish`)).send({});
+    const worldId = (await as(http().post('/worlds')).send({
+      title: 'Мир', systemId, compendiumIds: [bookId],
+      sheets: sheets.filter((s: { systemId: string }) => s.systemId === dnd.id),
+    })).body.id;
+    const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол' })).body.id as string;
+    const [arven, mirra] = (await as(http().get(`/rooms/${roomId}`))).body.sheets;
+    await app.get(RoomsService).setBelonging(me, roomId, arven.id, 'effects', 'watch', true);
+
+    const paused = await as(http().post(`/rooms/${roomId}/act`))
+      .send({ roomId, actionId: 'poison-spray:0', fromId: mirra.id, toId: arven.id }).expect(201);
+    expect(paused.body.pending?.sheetId).toBe(arven.id);
+    const previewed = paused.body.pending.preview.join(' · ');
+    const rolled = previewed.match(/бросок цели \[([^\]]+)\]/);
+    expect(rolled, previewed).toBeTruthy();
+
+    const answered = await as(http().post(`/rooms/${roomId}/answer`))
+      .send({ roomId, pendingId: paused.body.pending.id, chosen: [] }).expect(201);
+    const journal = answered.body.log.map((l: { text: string }) => l.text).join(' · ');
+    expect(journal).toContain(`[${rolled![1]}]`);
+  });
+});

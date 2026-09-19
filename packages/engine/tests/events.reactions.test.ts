@@ -171,3 +171,23 @@ function resultsOf(out: ReturnType<typeof receive>): Record<string, unknown> {
   }
   return results;
 }
+
+group('окно «я бросил» видит факты собственного броска', () => {
+  test('senderResults отдаёт итог, число костей и признаки максимума/единицы по упакованному порогу', () => {
+    const { senderResults } = require('../src/events/envelope.ts');
+    const envelope = {
+      kind: 'effect', effect: 'x', from: 'a', action: 'x:0', label: 'x',
+      steps: [
+        { type: 'threshold', id: 'hit', rolled: { total: 17, rolls: [17], kept: null, edits: [], tally: { dice: 1, atMax: 0, atMin: 0 } }, bonus: { const: 5 }, modBonus: 2 },
+        { type: 'threshold', id: 'save', roll: {} },
+        { type: 'amount', id: 'n', rolled: null },
+        { type: 'amount', id: 'dmg' },
+      ],
+    };
+    const seen = senderResults(envelope);
+    deepEq(Object.keys(seen), ['hit']);
+    eq(seen.hit.total, 24);
+    eq(seen.hit.rolled, 1);
+    eq(seen.hit.edited, false);
+  });
+});

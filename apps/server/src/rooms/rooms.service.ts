@@ -11,7 +11,8 @@ import type {
 } from '@vtt/schema';
 import { deliver } from '@vtt/engine/events/exchange';
 import { unifyWorld } from '@vtt/engine/model/unify';
-import { effectLabelOf, actionOf, send, receive, offers, react } from '@vtt/engine/events/envelope';
+import { effectLabelOf, actionOf, send, receive, offers, react, senderResults } from '@vtt/engine/events/envelope';
+import { tapeDie, replayDie } from '@vtt/engine/engine/dice';
 import type { Envelope, Offer, ReactionWindow } from '@vtt/engine/events/envelope';
 import { findEffect, usesMax } from '@vtt/engine/engine/effects';
 import {
@@ -33,6 +34,7 @@ interface PendingRecord {
   sheetId?: string;
   offered?: Offer[];
   preview?: string[];
+  tape?: number[];
 }
 
 @Injectable()
@@ -252,23 +254,27 @@ export class RoomsService {
 
     let stage: ReactionWindow | 'deliver' = state.stage;
     let results: Record<string, unknown> = state.results;
+    let tape: number[] = state.tape ?? [];
     try {
       if (stage === 'sender') {
         const sender = sheetOf(intent.fromId);
-        const offered = offers(state.envelope, 'sender', { ...ctx, sheet: sender });
+        const seen = senderResults(state.envelope);
+        const offered = offers(state.envelope, 'sender', { ...ctx, sheet: sender }, seen);
         if (offered.length) {
-          return this.park({ ...state, stage: 'sender', sheetId: sender.id, offered, results: {} },
+          return this.park({ ...state, stage: 'sender', sheetId: sender.id, offered, results: seen },
             sender, this.preview(state.envelope, system, null), world);
         }
         stage = 'target';
       }
       if (stage === 'target') {
         const target = sheetOf(intent.toId);
-        const dry = receive(state.envelope, { ...ctx, sheet: target, claims: intent.targetEdits ?? [] });
+        const taped = tapeDie(this.die);
+        const dry = receive(state.envelope, { ...ctx, die: taped.die, sheet: target, claims: intent.targetEdits ?? [] });
         results = dry.results;
+        tape = taped.tape;
         const offered = offers(state.envelope, 'target', { ...ctx, sheet: target }, results);
         if (offered.length) {
-          return this.park({ ...state, stage: 'target', sheetId: target.id, offered, results },
+          return this.park({ ...state, stage: 'target', sheetId: target.id, offered, results, tape },
             target, this.preview(state.envelope, system, dry), world);
         }
       }
@@ -280,7 +286,7 @@ export class RoomsService {
     let result: { sheets: Sheet[]; reports: { fromId: string; toId: string; report: any }[] };
     try {
       result = deliver({
-        ...ctx, sheets, envelope: state.envelope, fromId: intent.fromId, toId: intent.toId,
+        ...ctx, die: replayDie(tape, this.die), sheets, envelope: state.envelope, fromId: intent.fromId, toId: intent.toId,
         claims: { target: intent.targetEdits ?? [] },
       });
     } catch (err) {
@@ -426,11 +432,14 @@ export class RoomsService {
         ? `[${step.rolled.rolls.join(', ')}] → ${step.rolled.kept}` : `[${step.rolled.rolls.join(', ')}]`;
       lines.push(`${check}: ${rolls}${bonus ? ` + ${bonus}` : ''} = ${step.rolled.total + bonus}`);
     }
+    const packed = new Set((envelope.steps as Record<string, any>[]).filter(s => s.type === 'threshold' && s.rolled).map(s => String(s.id ?? '')));
     for (const trace of dry?.report.trace ?? []) {
       if (trace.type !== 'threshold' || trace.skipped) continue;
       const versus = trace.versus?.tag
         ? system.fields.find(f => f.tag === trace.versus.tag)?.label ?? trace.versus.tag : 'порог';
-      lines.push(`против ${versus} ${trace.versus?.value}: ${trace.success ? 'попадание' : 'промах'}`);
+      const own = !packed.has(String(trace.step ?? '')) && Array.isArray(trace.rolls)
+        ? `бросок цели [${trace.rolls.join(', ')}] + ${trace.bonus ?? 0} = ${trace.total} ` : '';
+      lines.push(`${own}против ${versus} ${trace.versus?.value}: ${trace.success ? 'попадание' : 'промах'}`);
     }
     return lines;
   }
