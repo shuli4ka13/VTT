@@ -105,7 +105,9 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty }: {
               <Field label="Если таких несколько">
                 <Select
                   value={String(modifier.stacking ?? 'sum')}
-                  options={STACKING}
+                  options={modifier.op === 'mul'
+                    ? STACKING.map(([key, label]) => [key, key === 'sum' ? 'перемножаются' : label] as const)
+                    : STACKING}
                   onChange={stacking => onEdit(draft => { (draft[index] as { stacking?: string }).stacking = stacking; })}
                 />
               </Field>

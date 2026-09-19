@@ -208,10 +208,13 @@ function totalOf(mods: SourcedModifier[], pass: Pass, tag: string, seed = 0): nu
     if (!list) { list = []; byRule.set(rule, list); }
     list.push(valueOf(mod, pass));
   }
+  const multiplying = seed !== 0;
   let total = seed;
   for (const [rule, values] of byRule) {
-    const part = reduce(rule, values, tag) as number;
-    total = seed === 0 ? total + part : total * part;
+    const part = multiplying && rule === 'sum'
+      ? (values as number[]).reduce((a, b) => a * b, 1)
+      : reduce(rule, values, tag) as number;
+    total = multiplying ? total * part : total + part;
   }
   return total;
 }

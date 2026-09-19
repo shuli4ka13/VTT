@@ -28,6 +28,30 @@ const book = extraItems => ({
 
 group('модификаторы', () => {
   group('правящие значение', () => {
+    const times = (id, value, stacking = 'sum') => ({
+      id, label: id, slot: 'ring',
+      modifiers: [{ kind: 'value', target: 'ac', op: 'mul', value, stacking, condition: null }],
+    });
+    const bare = { ...arven, equipped: [] };
+
+    test('один множитель ×0.5 уполовинивает значение', () => {
+      eq(ac({ ...bare, equipped: ['half-a'] }, book([times('half-a', 0.5)])), 5.5);
+    });
+
+    test('два множителя ×0.5 с накоплением «сумма» перемножаются, а не складываются в ×1', () => {
+      eq(ac({ ...bare, equipped: ['half-a', 'half-b'] }, book([times('half-a', 0.5), times('half-b', 0.5)])), 2.75);
+    });
+
+    test('три множителя ×0.5 дают ×0.125, а не ×1.5', () => {
+      const items = [times('half-a', 0.5), times('half-b', 0.5), times('half-c', 0.5)];
+      eq(ac({ ...bare, equipped: ['half-a', 'half-b', 'half-c'] }, book(items)), 1.375);
+    });
+
+    test('накопление «наибольшее» у множителей по-прежнему берёт один — так выражается «сопротивления не складываются»', () => {
+      const items = [times('half-a', 0.5, 'max'), times('half-b', 0.5, 'max')];
+      eq(ac({ ...bare, equipped: ['half-a', 'half-b'] }, book(items)), 5.5);
+    });
+
     test('без снаряжения класс брони считается по голым характеристикам', () => {
       eq(ac({ ...arven, equipped: [] }), 11);
     });
