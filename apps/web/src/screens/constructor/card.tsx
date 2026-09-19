@@ -3,7 +3,7 @@ import type { System, Effect, Step, SlotRef } from '@vtt/schema';
 import { Card, CardHead, Field, Fold, Segmented, Verdict, Button, Select, Input } from '../../ui/primitives.tsx';
 import type { CardGroup } from './cards.ts';
 import {
-  checkReadback, changeReadback, numberReadback, amountValueSegments, joinReadback, type Segment,
+  checkReadback, changeReadback, numberReadback, type Segment,
 } from './readback.ts';
 import { parseRollExpr, formatRollExpr, notationOf } from './roll-expr.ts';
 import { compile } from '@vtt/engine/formula';

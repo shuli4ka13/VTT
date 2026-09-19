@@ -4,7 +4,7 @@ import { editPalette, paletteKeyOf } from '@vtt/engine/engine/roll-edits';
 import { ADVANTAGE_METHODS, findMethod } from '@vtt/engine/model/advantage-methods';
 import { Readback } from './card.tsx';
 import { editReadback, dieReadback } from './readback.ts';
-import { useWorld, freeId, slugOf } from '../../store/world.ts';
+import { useWorld, slugOf } from '../../store/world.ts';
 import { Columns } from '../../ui/layout.tsx';
 import { Card, CardHead, Input, NumInput, Button, Fold, Select, Verdict } from '../../ui/primitives.tsx';
 import { FormulaInput } from '../../ui/formula.tsx';
@@ -444,8 +444,6 @@ function RollEditsSection({ system, compendium, editSystem }: Props) {
     <div className="stack">
       {entries.map(([key, edit]) => {
         const inUse = usedIn(system, compendium, `"edit":"${key}"`);
-
-        const named = inUse || usedIn(system, compendium, `"canceledBy":"${key}"`);
         const ops = edit.ops ?? [];
         const counter = edit.canceledBy ? entries.find(([k]) => k === edit.canceledBy)?.[1] : null;
         return (

@@ -115,7 +115,7 @@ export function applyValueModifiers(
 }
 
 export function resolveRoll(
-  system: System, sheet: Sheet, rollTag: string | null, pass: Pass,
+  system: System, _sheet: Sheet, rollTag: string | null, pass: Pass,
   extra: SourcedModifier[] = [],
 ): RollResolution {
   if (rollTag) assertTarget(system, rollTag);

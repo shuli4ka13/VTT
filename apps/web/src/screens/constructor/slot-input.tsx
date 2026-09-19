@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { System, Effect, SlotRef, Step } from '@vtt/schema';
+import type { System, SlotRef } from '@vtt/schema';
 import { Select } from '../../ui/primitives.tsx';
 import { labelOfTag } from '../../ui/formula.tsx';
 import { dieWord, readingWord } from './readback.ts';

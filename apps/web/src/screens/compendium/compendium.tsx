@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useWorld, freeId, randomTag } from '../../store/world.ts';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
-  Card, CardHead, Field, Input, Select, Button, Empty, Verdict, DangerButton, NumInput,
+  Card, CardHead, Field, Input, Select, Empty, Verdict, DangerButton, NumInput,
 } from '../../ui/primitives.tsx';
 import { ModifiersEditor } from '../constructor/modifiers.tsx';
 import type { CompendiumRecord, RecordKind, System } from '@vtt/schema';

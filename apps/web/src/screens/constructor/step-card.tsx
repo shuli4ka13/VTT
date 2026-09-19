@@ -26,18 +26,6 @@ const formulaDeps = (source: string): readonly string[] | null => {
 const read = (step: Step, path: string): unknown =>
   path.split('.').reduce<any>((node, key) => (node == null ? undefined : node[key]), step);
 
-const write = (step: Step, path: string, value: unknown): void => {
-  const keys = path.split('.');
-  const last = keys.pop()!;
-  let node = step as any;
-  for (const key of keys) {
-    node[key] ??= {};
-    node = node[key];
-  }
-  if (value === null || value === undefined) delete node[last];
-  else node[last] = value;
-};
-
 export interface Problem { text: string; missingField?: string }
 
 export function problemOf(step: Step, system: System, effect: Effect, earlier: EarlierStep[]): Problem | null {

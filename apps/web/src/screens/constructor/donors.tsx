@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useWorld } from '../../store/world.ts';
 import { Select, Empty } from '../../ui/primitives.tsx';
-import type { System, Field, Effect } from '@vtt/schema';
+import type { System, Effect } from '@vtt/schema';
 import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
 import { compile } from '@vtt/engine/formula';
 import { groupChain, subtreeNames } from './groups.ts';

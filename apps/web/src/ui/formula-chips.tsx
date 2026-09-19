@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
-import { matchTagQuery, applyTag } from './tag-suggest.tsx';
+import { matchTagQuery } from './tag-suggest.tsx';
 
 const labelOfTag = (system: System, tag: string): string =>
   system.fields.find(f => f.tag === tag)?.label ?? tag;

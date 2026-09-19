@@ -48,7 +48,7 @@ const shed = (
   return left.length === worn.length ? sheet : { ...sheet, effects: left };
 };
 
-export function startCombat(clock: Clock, order: string[]): Clock {
+export function startCombat(_clock: Clock, order: string[]): Clock {
   if (!order.length) throw new EngineError('бой не начать: порядок ходов пуст');
   return { round: 1, order: [...order], active: order[0]!, spent: {} };
 }
