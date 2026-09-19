@@ -39,11 +39,7 @@ const addButtons = (root: HTMLElement): HTMLButtonElement[] =>
   [...root.querySelectorAll('button')]
     .filter(b => !b.disabled && (b.textContent ?? '').trimStart().startsWith('+'));
 
-const KNOWN_DEFECTS = [
-  'trigger.on: Too small',
-  'effect: Too small',
-  'edit: Too small',
-];
+const KNOWN_DEFECTS: string[] = [];
 
 const seen: string[] = [];
 

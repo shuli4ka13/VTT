@@ -10,12 +10,25 @@ type ActionType = NonNullable<System['action_types']>[string];
 type RollKind = NonNullable<System['rolls']>[number];
 type Prop = NonNullable<RecordKind['props']>[number];
 
-export const newEffect = (system: System, activation: Activation): Made<Effect> => ({
-  key: freeId(Object.keys(system.effects), 'effect'),
-  value: activation === 'passive'
-    ? { label: 'Новый эффект', activation, duration: { kind: 'permanent' }, modifiers: [] }
-    : { label: 'Новый эффект', activation, params: [], steps: [], ...(activation === 'triggered' ? { trigger: { on: '' } } : {}) },
-});
+export const firstHeard = (system: System): string => {
+  const event = Object.keys(system.events ?? {})[0];
+  return event ? `event:${event}` : '';
+};
+
+export const newTrigger = (system: System, activation: Activation): Effect['trigger'] | undefined =>
+  activation === 'triggered' ? { on: firstHeard(system) }
+    : activation === 'reaction' ? { on: '*', window: 'target' }
+      : undefined;
+
+export const newEffect = (system: System, activation: Activation): Made<Effect> => {
+  const trigger = newTrigger(system, activation);
+  return {
+    key: freeId(Object.keys(system.effects), 'effect'),
+    value: activation === 'passive'
+      ? { label: 'Новый эффект', activation, duration: { kind: 'permanent' }, modifiers: [] }
+      : { label: 'Новый эффект', activation, params: [], steps: [], ...(trigger ? { trigger } : {}) },
+  };
+};
 
 export const newField = (system: System, group: string): Made<Field> => {
   const tag = freeId(system.fields.map(f => f.tag), 'field');

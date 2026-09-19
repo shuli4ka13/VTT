@@ -1,5 +1,5 @@
 import { useWorld, effectsByCategory, freeId } from '../../store/world.ts';
-import { newEffect } from './factory.ts';
+import { newEffect, newTrigger } from './factory.ts';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
   Card, CardHead, Field, Input, Select, Button, Empty, Segmented, Verdict, Fold, Chip, DangerButton,
@@ -217,8 +217,7 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
 
               if (next === 'passive') draft.modifiers ??= [];
               else draft.steps ??= [];
-              if (next === 'triggered') draft.trigger ??= { on: '' };
-              if (next === 'reaction') draft.trigger ??= { on: '*', window: 'target' };
+              draft.trigger ??= newTrigger(system, next);
             })}
           />
         </Field>

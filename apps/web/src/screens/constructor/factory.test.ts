@@ -20,8 +20,6 @@ const issuesOf = (system: System): string[] => {
 
 const ACTIVATIONS: Activation[] = ['manual', 'triggered', 'reaction', 'passive'];
 
-const BROKEN_NOW = new Set(['triggered']);
-
 for (const [name, base] of BASES) {
   describe(`фабрики конструктора поверх «${name}»`, () => {
     it('основа сама проходит схему', () => {
@@ -35,13 +33,19 @@ for (const [name, base] of BASES) {
         system.effects[made.key] = made.value;
         expect(issuesOf(system)).toEqual([]);
       };
-      if (BROKEN_NOW.has(activation)) it.fails(`новый эффект «${activation}» проходит схему`, check);
-      else it(`новый эффект «${activation}» проходит схему`, check);
+      it(`новый эффект «${activation}» проходит схему`, check);
     }
 
-    it.fails('новый эффект «reaction» получает настройку, когда стол спрашивает', () => {
+    it('новый эффект «reaction» получает настройку, когда стол спрашивает', () => {
       const made = newEffect(base(), 'reaction');
-      expect(made.value.trigger?.on).toBeTruthy();
+      expect(made.value.trigger).toEqual({ on: '*', window: 'target' });
+    });
+
+    it('новый эффект «triggered» сразу слушает первый общий эффект системы, если он есть', () => {
+      const system = base();
+      const made = newEffect(system, 'triggered');
+      const first = Object.keys(system.events ?? {})[0];
+      expect(made.value.trigger?.on).toBe(first ? `event:${first}` : '');
     });
 
     it('новое поле проходит схему', () => {

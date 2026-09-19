@@ -110,7 +110,7 @@ export const valueModifier = z.object({
 export const rollModifier = z.object({
   kind: z.literal('roll'),
   target: z.string(),
-  edit: z.string().min(1).optional(),
+  edit: z.string().optional(),
   op: z.string().optional(),
   value: z.unknown().optional(),
   stacking: z.string().optional(),
@@ -151,7 +151,7 @@ export const systemEvent = z.object({
 }).passthrough();
 
 export const trigger = z.object({
-  on: z.string().min(1),
+  on: z.string(),
   when: z.string().optional(),
   condition: slotRef.nullable().optional(),
 
@@ -188,7 +188,7 @@ export const bindingArg = z.union([
 
 export const binding = z.object({
   label: z.string().optional(),
-  effect: z.string().min(1),
+  effect: z.string(),
   args: z.record(z.string(), bindingArg).optional(),
 }).passthrough();
 
