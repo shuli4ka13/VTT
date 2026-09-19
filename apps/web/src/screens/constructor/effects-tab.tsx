@@ -1,11 +1,13 @@
+import { useState } from 'react';
 import { useWorld, effectsByCategory, freeId } from '../../store/world.ts';
+import { STEP } from '../../words.ts';
 import { newEffect, newTrigger } from './factory.ts';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
   Card, CardHead, Field, Input, Select, Button, Empty, Segmented, Verdict, Fold, Chip, DangerButton,
 } from '../../ui/primitives.tsx';
 import { problemOf } from './step-card.tsx';
-import { groupSteps, moveGroup, BRICKS } from './cards.ts';
+import { groupSteps, moveGroup, removeSteps, BRICKS } from './cards.ts';
 import { GroupCard } from './card.tsx';
 import { ModifiersEditor } from './modifiers.tsx';
 import { DonorPalette, findDonorBlock, copyDonorBlock } from './donors.tsx';
@@ -158,6 +160,7 @@ function conditionsOfAny(system: System): (readonly [string, string])[] {
 function EffectEditor({ id, effect, system }: { id: string; effect: Effect; system: System }) {
   const editSystem = useWorld(s => s.editSystem);
   const pick = useWorld(s => s.pick);
+  const [removed, setRemoved] = useState<string | null>(null);
 
   const edit = (change: (draft: Effect) => void) => {
     editSystem(draft => {
@@ -406,6 +409,8 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
                 : <Verdict tone="warn">шагов ещё нет — эффект ничего не делает</Verdict>}
           </div>
 
+          {removed ? <Verdict tone="warn" action={<Button size="sm" variant="ghost" onClick={() => setRemoved(null)}>ясно</Button>}>{removed}</Verdict> : null}
+
           {cards.map((group, at) => {
             const problem = group.indices.map(i => problems[i]).find(Boolean) ?? null;
 
@@ -445,9 +450,13 @@ function EffectEditor({ id, effect, system }: { id: string; effect: Effect; syst
                   const amount = steps[amountAt]!;
                   change(amount, steps[amountAt + 1]!, String(amount.id));
                 })}
-                onDelete={() => edit(draft => {
-                  [...group.indices].sort((a, b) => b - a).forEach(i => draft.steps!.splice(i, 1));
-                })}
+                onDelete={() => {
+                  const removal = removeSteps(steps, group.indices);
+                  edit(draft => { draft.steps = removal.steps; });
+                  setRemoved(removal.cleared.length
+                    ? `${STEP.one} убран; ссылки на него очищены: ${removal.cleared.map(c => `${STEP.one} ${c.step + 1} · ${c.slot}`).join(', ')}`
+                    : null);
+                }}
                 onMoveUp={at === 0 ? undefined : () => edit(draft => {
                   draft.steps = moveGroup(draft.steps ?? [], at, -1);
                 })}

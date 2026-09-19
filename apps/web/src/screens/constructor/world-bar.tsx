@@ -5,6 +5,8 @@ import { useSession } from '../../store/session.ts';
 import { useAutosave, rememberVersion, settle, saveLabel } from '../../store/autosave.ts';
 import { Button, Input } from '../../ui/primitives.tsx';
 import { ApiError, publishSystem } from '../../api/client.ts';
+import { ProblemsButton } from './problems-panel.tsx';
+import { pathWords } from './problems.ts';
 
 export function SystemBar() {
   const system = useWorld(s => s.system);
@@ -16,7 +18,7 @@ export function SystemBar() {
   const [note, setNote] = useState<{ text: string; bad: boolean } | null>(null);
 
   const fail = (err: unknown) => {
-    const issues = err instanceof ApiError && err.issues.length ? ` (${err.issues[0]})` : '';
+    const issues = err instanceof ApiError && err.issues.length ? ` (${pathWords(err.issues[0]!, system)})` : '';
     setNote({ text: (err as Error).message + issues, bad: true });
   };
 
@@ -34,7 +36,7 @@ export function SystemBar() {
   };
 
   const saved = saveLabel(saving, origin.systemId ? 'изменений нет' : 'система не создана');
-  const details = saving.kind === 'failed' && saving.issues.length ? saving.issues.join('\n') : undefined;
+  const details = saving.kind === 'failed' && saving.issues.length ? saving.issues.map(issue => pathWords(issue, system)).join('\n') : undefined;
 
   return <div className="worldbar">
     <div className="worldbar__name">
@@ -47,6 +49,7 @@ export function SystemBar() {
 
     {note ? <span className={`worldbar__note ${note.bad ? 'field__error' : 'muted'}`}>{note.text}</span> : null}
     <span className="muted">{name}</span>
+    <ProblemsButton />
     <Button size="sm" variant="primary" onClick={() => void publish()}
       disabled={!origin.systemId}>Опубликовать систему</Button>
   </div>;

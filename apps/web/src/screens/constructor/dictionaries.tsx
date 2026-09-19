@@ -14,14 +14,11 @@ import {
 } from './factory.ts';
 import type { System, Compendium, RangeTable, SystemConstant, DiceTerm } from '@vtt/schema';
 import type { WorldState } from '../../store/world.ts';
+import { useUsage, inUse as isUsed } from './usage.ts';
+import type { UsageIndex } from './usage.ts';
 
 type EditSystem = WorldState['editSystem'];
-interface Props { system: System; compendium: Compendium; editSystem: EditSystem }
-
-const usedIn = (system: System, compendium: Compendium, ...markers: string[]): boolean => {
-  const text = JSON.stringify({ system, compendium });
-  return markers.some(marker => text.includes(marker));
-};
+interface Props { system: System; compendium: Compendium; editSystem: EditSystem; usage: UsageIndex }
 
 const parseFree = (text: string): number | string | boolean =>
   /^-?\d+(\.\d+)?$/.test(text) ? Number(text)
@@ -90,6 +87,7 @@ export function DictionariesTab() {
   const system = useWorld(s => s.system);
   const compendium = useWorld(s => s.compendium);
   const editSystem = useWorld(s => s.editSystem);
+  const usage = useUsage();
 
   return (
     <Columns
@@ -103,7 +101,7 @@ export function DictionariesTab() {
                 sub="Чем бросают проверки в этом мире. Обычно тут одна запись. Кость урона сюда не нужна — она живёт на самом мече."
                 actions={<Button size="sm" onClick={() => addDie(editSystem)}>+ кость</Button>}
               />
-              <DiceSection system={system} compendium={compendium} editSystem={editSystem} />
+              <DiceSection system={system} compendium={compendium} editSystem={editSystem} usage={usage} />
             </Card>
 
             <Card>
@@ -127,7 +125,7 @@ export function DictionariesTab() {
                   </>
                 }
               />
-              <RollEditsSection system={system} compendium={compendium} editSystem={editSystem} />
+              <RollEditsSection system={system} compendium={compendium} editSystem={editSystem} usage={usage} />
             </Card>
 
             <Card>
@@ -136,7 +134,7 @@ export function DictionariesTab() {
                 sub="Урон, лечение и другие вещи, которые один лист посылает другому. Здесь — как лист их принимает; кто и сколько посылает, говорит эффект."
                 actions={<Button size="sm" onClick={() => addEvent(editSystem)}>+ событие</Button>}
               />
-              <EventsSection system={system} compendium={compendium} editSystem={editSystem} />
+              <EventsSection system={system} compendium={compendium} editSystem={editSystem} usage={usage} />
             </Card>
 
             <Card>
@@ -144,7 +142,7 @@ export function DictionariesTab() {
                 title="Инициатива"
                 sub="Чем решается порядок ходов в бою. Обычный бросок системы: правила комнаты и правки бросков действуют и на него."
               />
-              <InitiativeSection system={system} compendium={compendium} editSystem={editSystem} />
+              <InitiativeSection system={system} compendium={compendium} editSystem={editSystem} usage={usage} />
             </Card>
 
             <Card>
@@ -153,7 +151,7 @@ export function DictionariesTab() {
                 sub="Чтобы можно было сказать «помеха только на атаки». Бросок «Любой» есть всегда, заводить его не надо."
                 actions={<Button size="sm" onClick={() => addRoll(editSystem)}>+ вид</Button>}
               />
-              <RollsSection system={system} compendium={compendium} editSystem={editSystem} />
+              <RollsSection system={system} compendium={compendium} editSystem={editSystem} usage={usage} />
             </Card>
 
             <Card>
@@ -162,7 +160,7 @@ export function DictionariesTab() {
                 sub="Ступеньки, которые формулой не сказать: бонус мастерства по уровню, исход хода по итогу броска."
                 actions={<Button size="sm" onClick={() => addTable(editSystem)}>+ таблица</Button>}
               />
-              <TablesSection system={system} compendium={compendium} editSystem={editSystem} />
+              <TablesSection system={system} compendium={compendium} editSystem={editSystem} usage={usage} />
             </Card>
 
             <Card>
@@ -171,7 +169,7 @@ export function DictionariesTab() {
                 sub="Из этого списка эффект выбирает свою цену: действие, бонусное действие, реакция."
                 actions={<Button size="sm" onClick={() => addActionType(editSystem)}>+ тип</Button>}
               />
-              <ActionTypesSection system={system} compendium={compendium} editSystem={editSystem} />
+              <ActionTypesSection system={system} compendium={compendium} editSystem={editSystem} usage={usage} />
             </Card>
           </>
         ),
@@ -185,7 +183,7 @@ function readKindOf(constant: SystemConstant): string {
   return typeof read === 'string' ? read : read?.kind ?? 'sum';
 }
 
-function DiceSection({ system, compendium, editSystem }: Props) {
+function DiceSection({ system, editSystem, usage }: Props) {
   const entries = Object.entries(system.constants ?? {}).filter(([, c]) => c.kind === 'die');
 
   if (entries.length === 0) {
@@ -200,7 +198,7 @@ function DiceSection({ system, compendium, editSystem }: Props) {
     <div className="stack">
       {entries.map(([key, constant]) => {
         const dice = constant.dice ?? [];
-        const inUse = usedIn(system, compendium, `"constant":"${key}"`);
+        const inUse = isUsed(usage, 'constant', key);
         const total = diceCount(dice);
 
         const asksReading = total !== 1;
@@ -426,7 +424,7 @@ function OpChip({ op, parts, onNumber, onPart, onRemove }: {
   );
 }
 
-function RollEditsSection({ system, compendium, editSystem }: Props) {
+function RollEditsSection({ system, editSystem, usage }: Props) {
   const entries = Object.entries(system.roll_edits ?? {});
   const palette = editPalette();
   const parts = partsOf(system);
@@ -443,7 +441,7 @@ function RollEditsSection({ system, compendium, editSystem }: Props) {
   return (
     <div className="stack">
       {entries.map(([key, edit]) => {
-        const inUse = usedIn(system, compendium, `"edit":"${key}"`);
+        const inUse = isUsed(usage, 'rollEdit', key);
         const ops = edit.ops ?? [];
         const counter = edit.canceledBy ? entries.find(([k]) => k === edit.canceledBy)?.[1] : null;
         return (
@@ -551,7 +549,7 @@ function RollEditsSection({ system, compendium, editSystem }: Props) {
   );
 }
 
-function RollsSection({ system, compendium, editSystem }: Props) {
+function RollsSection({ system, editSystem, usage }: Props) {
   const rolls = system.rolls ?? [];
 
   return (
@@ -560,7 +558,7 @@ function RollsSection({ system, compendium, editSystem }: Props) {
       {rolls.length === 0 ? (
         <span className="faint">Видов бросков пока нет.</span>
       ) : rolls.map((roll, index) => {
-        const inUse = usedIn(system, compendium, `"check":"${roll.tag}"`, `"target":"${roll.tag}"`);
+        const inUse = isUsed(usage, 'roll', roll.tag);
         return (
           <div key={index} className="dict-row">
             <Input
@@ -589,7 +587,7 @@ function RollsSection({ system, compendium, editSystem }: Props) {
   );
 }
 
-function TablesSection({ system, compendium, editSystem }: Props) {
+function TablesSection({ system, editSystem, usage }: Props) {
   const entries = Object.entries(system.tables ?? {});
 
   return (
@@ -597,15 +595,15 @@ function TablesSection({ system, compendium, editSystem }: Props) {
       {entries.length === 0 ? (
         <span className="faint">Таблиц пока нет — например, бонус мастерства по уровню.</span>
       ) : entries.map(([key, table]) => (
-        <TableRow key={key} id={key} table={table} system={system} compendium={compendium} editSystem={editSystem} />
+        <TableRow key={key} id={key} table={table} editSystem={editSystem} usage={usage} />
       ))}
     </div>
   );
 }
 
-function TableRow({ id, table, system, compendium, editSystem }: Props & { id: string; table: RangeTable }) {
+function TableRow({ id, table, editSystem, usage }: Omit<Props, 'system' | 'compendium'> & { id: string; table: RangeTable }) {
   const ranges = table.ranges ?? [];
-  const inUse = usedIn(system, compendium, `"table":"${id}"`);
+  const inUse = isUsed(usage, 'table', id);
   const broken = rangesBroken(ranges);
 
   return (
@@ -678,7 +676,7 @@ function TableRow({ id, table, system, compendium, editSystem }: Props & { id: s
   );
 }
 
-function EventsSection({ system, compendium, editSystem }: Props) {
+function EventsSection({ system, editSystem, usage }: Props) {
   const entries = Object.entries(system.events ?? {});
   const numeric = system.fields.filter(f => f.value.kind === 'stored' && f.value.type === 'number');
 
@@ -689,7 +687,7 @@ function EventsSection({ system, compendium, editSystem }: Props) {
   return (
     <div className="stack">
       {entries.map(([key, event]) => {
-        const inUse = usedIn(system, compendium, `"event":"${key}"`, `"event:${key}"`);
+        const inUse = isUsed(usage, 'event', key);
         const simple = simpleReceiveOf(event.receive);
         const custom = Boolean(event.receive?.length) && !simple;
         const mode = !event.receive?.length ? 'signal' : simple ? 'field' : 'custom';
@@ -832,7 +830,7 @@ function InitiativeSection({ system, editSystem }: Props) {
   );
 }
 
-function ActionTypesSection({ system, compendium, editSystem }: Props) {
+function ActionTypesSection({ system, editSystem, usage }: Props) {
   const entries = Object.entries(system.action_types ?? {});
 
   return (
@@ -841,7 +839,7 @@ function ActionTypesSection({ system, compendium, editSystem }: Props) {
       {entries.length === 0 ? (
         <span className="faint">Типов пока нет.</span>
       ) : entries.map(([key, type]) => {
-        const inUse = usedIn(system, compendium, `"cost":"${key}"`);
+        const inUse = isUsed(usage, 'actionType', key);
         return (
           <div key={key} className="dict-row">
             <Input

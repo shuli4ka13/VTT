@@ -17,6 +17,8 @@ export interface Origin {
   compendiumTitle?: string;
 }
 
+export type ConstructorTab = 'sheet' | 'dictionaries' | 'effects' | 'records';
+
 export interface WorldState {
   system: System;
   compendium: Compendium;
@@ -29,9 +31,12 @@ export interface WorldState {
   activeRecordKind: string | null;
   activeRecordId: string | null;
   activeSheetId: string | null;
+  activeTab: ConstructorTab;
+  activeStepIndex: number | null;
 
   pick: (what: Partial<Pick<WorldState,
-    'activeFieldTag' | 'activeGroupName' | 'activeEffectId' | 'activeRecordKind' | 'activeRecordId' | 'activeSheetId'>>) => void;
+    'activeFieldTag' | 'activeGroupName' | 'activeEffectId' | 'activeRecordKind' | 'activeRecordId' | 'activeSheetId'
+    | 'activeTab' | 'activeStepIndex'>>) => void;
 
   editSystem: (edit: (draft: System) => void) => void;
   editCompendium: (edit: (draft: Compendium) => void) => void;
@@ -72,6 +77,8 @@ export const useWorld = create<WorldState>()(persist(set => ({
   activeRecordKind: null,
   activeRecordId: null,
   activeSheetId: null,
+  activeTab: 'sheet',
+  activeStepIndex: null,
 
   pick: what => set(what),
 

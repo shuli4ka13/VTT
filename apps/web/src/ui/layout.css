@@ -48,6 +48,7 @@
 .worldbar__name { width: clamp(140px, 18vw, 240px); }
 .worldbar__note { font-size: var(--fs-2); max-width: 40ch; }
 .worldbar__books { display: flex; gap: var(--s-2); flex-wrap: wrap; font-size: var(--fs-2); }
+.problems { position: absolute; right: var(--s-3); top: 100%; z-index: 20; width: min(640px, calc(100vw - 2 * var(--s-3))); max-height: 60vh; overflow: auto; display: flex; flex-direction: column; gap: var(--s-2); padding: var(--s-2); background: var(--bg-raised, var(--bg)); border: 1px solid var(--line); border-radius: var(--r-2, 8px); box-shadow: 0 8px 24px rgba(0,0,0,.35); }
 
 .tabs {
   display: flex;

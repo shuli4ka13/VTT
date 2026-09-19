@@ -389,7 +389,8 @@ describe('сквозной прогон стенда', () => {
       .send({
         title: 'Для проверки заполненности',
         system: {
-          name: 'Для проверки заполненности', fields: [], effects: {},
+          name: 'Для проверки заполненности', fields: [],
+          effects: { strike: { label: 'Удар', activation: 'manual', params: [{ key: 'damage_dice', label: 'Кость урона', kind: 'dice' }], steps: [] } },
           records: {
             weapon: { kind: 'item', label: 'Оружие',
               props: [{ key: 'dmg', label: 'Кость урона', kind: 'dice' }],

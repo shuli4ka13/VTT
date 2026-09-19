@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { groupSteps, BRICKS, moveGroup } from './cards.ts';
+import { groupSteps, BRICKS, moveGroup, removeSteps } from './cards.ts';
 import { world as W } from '@vtt/schema';
 import type { System, Step } from '@vtt/schema';
 
@@ -112,5 +112,33 @@ describe('BRICKS дают документ, который примет серв
   it('проверка не пишет сторону, пока автор её не выбрал', () => {
     const [step] = BRICKS.find(b => b.key === 'check')!.make(system, []);
     expect(step).not.toHaveProperty('side');
+  });
+});
+
+describe('удаление шага чистит ссылки на него', () => {
+  it('ссылка на результат, условие «выполнять» и вложенная прибавка очищаются, формула — только называется', () => {
+    const list = steps([
+      { id: 'hit', type: 'threshold', roll: { die: { constant: 'lead' } }, versus: { const: 10 } },
+      { id: 'n', type: 'amount', source: 'roll', dice: { const: '1d8' } },
+      { type: 'apply', target: { tag: 'hp' }, value: { ref: 'n' }, when: { ref: 'hit.success' } },
+      { type: 'threshold', roll: { die: { constant: 'lead' }, bonus: { ref: 'n' } }, versus: { expr: '#n + 1' } },
+    ]);
+    const removal = removeSteps(list, [1]);
+    expect(removal.steps).toHaveLength(3);
+    expect(removal.steps[1]).toEqual({ type: 'apply', target: { tag: 'hp' }, when: { ref: 'hit.success' } });
+    expect((removal.steps[2] as { roll: { bonus?: unknown } }).roll.bonus).toBeUndefined();
+    expect(removal.cleared).toEqual([
+      { step: 1, slot: 'value' },
+      { step: 2, slot: 'roll.bonus' },
+      { step: 2, slot: 'versus (формула)' },
+    ]);
+    expect(list[2]).toHaveProperty('value');
+  });
+
+  it('шаг без имени убирается молча', () => {
+    const list = steps([{ type: 'apply', target: { tag: 'hp' }, value: { const: 1 } }, { type: 'apply', target: { tag: 'hp' }, value: { const: 2 } }]);
+    const removal = removeSteps(list, [0]);
+    expect(removal.steps).toHaveLength(1);
+    expect(removal.cleared).toEqual([]);
   });
 });

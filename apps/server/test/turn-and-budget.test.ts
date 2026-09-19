@@ -133,3 +133,25 @@ describe('пробный расчёт и итог бросают одни кос
     expect(journal).toContain(`[${rolled![1]}]`);
   });
 });
+
+describe('публикация проверяет систему линтом', () => {
+  it('эффект «срабатывает сам» без слушателя — отказ человеческим текстом', async () => {
+    const token = (await http().post('/auth/login').send({ name: 'Автор' })).body.token as string;
+    const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
+    const system = {
+      name: 'Сломанная', fields: [],
+      effects: { thorns: { label: 'Шипы', activation: 'triggered', trigger: { on: '' }, steps: [] } },
+    };
+    const id = (await as(http().post('/systems')).send({ title: 'Сломанная', system })).body.id as string;
+    const rejected = await as(http().post(`/systems/${id}/publish`)).send({}).expect(400);
+    expect(rejected.body.message).toContain('не сказано на что');
+    expect(rejected.body.message).toContain('«Шипы»');
+    expect(rejected.body.issues[0]).toContain('Эффекты');
+
+    await as(http().put(`/systems/${id}`)).send({
+      title: 'Сломанная',
+      system: { ...system, effects: { thorns: { ...system.effects.thorns, trigger: { on: '*' } } } },
+    }).expect(200);
+    await as(http().post(`/systems/${id}/publish`)).send({}).expect(201);
+  });
+});

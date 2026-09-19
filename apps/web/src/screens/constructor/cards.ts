@@ -66,3 +66,36 @@ export function moveGroup(steps: Step[], groupIndex: number, delta: -1 | 1): Ste
   const tail = steps.slice(second.indices[second.indices.length - 1]! + 1);
   return [...head, ...slice(second), ...slice(first), ...tail];
 }
+
+export interface Removal { steps: Step[]; cleared: { step: number; slot: string }[] }
+
+export function removeSteps(steps: Step[], indices: number[]): Removal {
+  const gone = new Set(indices);
+  const ids = new Set(steps.filter((_, i) => gone.has(i)).map(s => s.id).filter((id): id is string => Boolean(id)));
+  const kept = steps.filter((_, i) => !gone.has(i)).map(step => structuredClone(step));
+  const cleared: Removal['cleared'] = [];
+  if (!ids.size) return { steps: kept, cleared };
+  const headOf = (ref: unknown): string => String(ref).split('.')[0] ?? '';
+  const isRef = (value: unknown): value is { ref: unknown } =>
+    Boolean(value) && typeof value === 'object' && 'ref' in (value as object);
+  const isExpr = (value: unknown): value is { expr: unknown } =>
+    Boolean(value) && typeof value === 'object' && 'expr' in (value as object);
+  const sweep = (node: Record<string, unknown>, at: number, prefix: string) => {
+    for (const [key, value] of Object.entries(node)) {
+      const slot = prefix ? `${prefix}.${key}` : key;
+      if (isRef(value) && ids.has(headOf(value.ref))) {
+        delete node[key];
+        cleared.push({ step: at, slot: key === 'when' ? 'выполнять' : slot });
+        continue;
+      }
+      if (isExpr(value)) {
+        const expr = String(value.expr ?? '');
+        if ([...ids].some(id => names({ expr } as unknown as Step, id))) cleared.push({ step: at, slot: `${slot} (формула)` });
+        continue;
+      }
+      if (value && typeof value === 'object' && !Array.isArray(value)) sweep(value as Record<string, unknown>, at, slot);
+    }
+  };
+  kept.forEach((step, at) => sweep(step as Record<string, unknown>, at, ''));
+  return { steps: kept, cleared };
+}

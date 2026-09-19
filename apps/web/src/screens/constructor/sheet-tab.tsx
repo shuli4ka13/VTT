@@ -1,4 +1,5 @@
 import { useWorld, freeId, slugOf } from '../../store/world.ts';
+import { useUsage, usersOf } from './usage.ts';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
   Card, CardHead, Field, Input, Select, Button, Empty, Fold, Verdict, Chip, DangerButton, NumInput,
@@ -113,7 +114,8 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
         : { kind: 'table', table: '', arg: '' };
   });
 
-  const users = whoUses(system, field.tag);
+  const usage = useUsage();
+  const users = usersOf(usage, 'field', field.tag, system);
   const preset = effectiveDefault(system, field.group ?? 'Без блока');
   const follows = preset !== undefined && sameValue(field.value, preset);
 
@@ -344,23 +346,3 @@ function BoundInput({ value, invalid, onChange }: {
   );
 }
 
-function whoUses(system: System, tag: string): string[] {
-  const marker = new RegExp(`#${tag}(?![\\p{L}\\p{N}_])`, 'u');
-  const found: string[] = [];
-
-  for (const field of system.fields) {
-    if (field.tag === tag) continue;
-    const source = field.value.kind === 'formula' ? field.value.expr
-      : field.value.kind === 'table' ? field.value.arg : '';
-    if (marker.test(source)) found.push(`поле «${field.label}»`);
-  }
-
-  for (const [id, effect] of Object.entries(system.effects)) {
-    const text = JSON.stringify(effect);
-    if (marker.test(text) || text.includes(`"tag":"${tag}"`)) {
-      found.push(`эффект «${effect.label ?? id}»`);
-    }
-  }
-
-  return found;
-}

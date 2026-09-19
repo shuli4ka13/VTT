@@ -4,6 +4,7 @@ import {
 } from '@nestjs/common';
 import { and, desc, eq, or } from 'drizzle-orm';
 import { world as schemas } from '@vtt/schema';
+import { lintSystem, errorsOf, describeWhere } from '@vtt/engine/model/lint';
 import type { Compendium, System } from '@vtt/schema';
 import { DB, CLOCK, IDS } from '../common/tokens.ts';
 import type { Db } from '../db/db.ts';
@@ -51,6 +52,13 @@ export class CatalogService {
       throw new BadRequestException({
         message: 'сохранённая система не проходит схему — публиковать нельзя',
         issues: parsed.error.issues.slice(0, 5).map(i => `${i.path.join('.')}: ${i.message}`),
+      });
+    }
+    const problems = errorsOf(lintSystem(parsed.data as System));
+    if (problems.length) {
+      throw new BadRequestException({
+        message: `система не готова к публикации: ${problems.length} ${problems.length === 1 ? 'ошибка' : 'ошибок'} — ${describeWhere(problems[0]!.where, parsed.data as System)}: ${problems[0]!.text}`,
+        issues: problems.slice(0, 5).map(p => `${describeWhere(p.where, parsed.data as System)}: ${p.text}`),
       });
     }
     const updatedAt = this.now();
