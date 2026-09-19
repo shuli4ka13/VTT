@@ -116,6 +116,7 @@ export const useWorld = create<WorldState>()(persist(set => ({
   }),
 
   merge: (saved, current) => {
+    if (saved == null) return current;
     const parsed = W.world.safeParse(healLegacySides(saved as Record<string, any>));
     const origin = (saved as { origin?: Origin })?.origin;
     if (parsed.success) return { ...current, ...parsed.data, ...(origin ? { origin } : {}) };

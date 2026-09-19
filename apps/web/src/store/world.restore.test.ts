@@ -9,6 +9,13 @@ const load = async () => {
 describe('восстановление черновика из браузера', () => {
   beforeEach(() => { localStorage.clear(); });
 
+  it('пустой браузер — не сломанный черновик: ни причины, ни копии', async () => {
+    const world = await load();
+    expect(world.useWorld.getState().system.name).toBe('Новая система');
+    expect(world.takeRestoreProblem()).toBeNull();
+    expect(world.brokenDraft()).toBeNull();
+  });
+
   it('верный черновик поднимается как был', async () => {
     const first = await load();
     first.useWorld.getState().editSystem(draft => { draft.name = 'Моя система'; });
