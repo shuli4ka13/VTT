@@ -57,7 +57,7 @@ export class CatalogService {
     const problems = errorsOf(lintSystem(parsed.data as System));
     if (problems.length) {
       throw new BadRequestException({
-        message: `система не готова к публикации: ${problems.length} ${problems.length === 1 ? 'ошибка' : 'ошибок'} — ${describeWhere(problems[0]!.where, parsed.data as System)}: ${problems[0]!.text}`,
+        message: `система не готова к публикации: ${countErrors(problems.length)} — смотрите «Проблемы»`,
         issues: problems.slice(0, 5).map(p => `${describeWhere(p.where, parsed.data as System)}: ${p.text}`),
       });
     }
@@ -240,3 +240,10 @@ export class CatalogService {
     return row?.name ?? 'неизвестен';
   }
 }
+
+const countErrors = (n: number): string => {
+  const last = n % 10;
+  const teen = n % 100 >= 11 && n % 100 <= 14;
+  const word = teen ? 'ошибок' : last === 1 ? 'ошибка' : last >= 2 && last <= 4 ? 'ошибки' : 'ошибок';
+  return `${n} ${word}`;
+};

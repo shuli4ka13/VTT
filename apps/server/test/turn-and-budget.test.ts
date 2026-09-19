@@ -144,9 +144,9 @@ describe('публикация проверяет систему линтом', 
     };
     const id = (await as(http().post('/systems')).send({ title: 'Сломанная', system })).body.id as string;
     const rejected = await as(http().post(`/systems/${id}/publish`)).send({}).expect(400);
-    expect(rejected.body.message).toContain('не сказано на что');
-    expect(rejected.body.message).toContain('«Шипы»');
-    expect(rejected.body.issues[0]).toContain('Эффекты');
+    expect(rejected.body.message).toContain('1 ошибка');
+    expect(rejected.body.issues[0]).toContain('Эффекты · эффект «Шипы»');
+    expect(rejected.body.issues[0]).toContain('не сказано на что');
 
     await as(http().put(`/systems/${id}`)).send({
       title: 'Сломанная',
