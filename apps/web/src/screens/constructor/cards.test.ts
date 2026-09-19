@@ -45,7 +45,7 @@ describe('groupSteps', () => {
 });
 
 describe('BRICKS', () => {
-  it('кирпичи пишут только типы движка и ни одного тега поля', () => {
+  it('шаблоны шагов пишут только типы движка и ни одного тега поля', () => {
     for (const brick of BRICKS) {
       const made = brick.make(system, []);
       for (const step of made) {
@@ -88,7 +88,7 @@ describe('moveGroup', () => {
 });
 
 describe('склейка и состояние', () => {
-  it('переключение «поле → состояние» не разваливает карточку', () => {
+  it('переключение «поле → состояние» не разваливает шаг', () => {
     const groups = groupSteps(steps([
       { id: 'dmg', type: 'amount', source: 'roll' },
       { type: 'status', mode: 'apply', value: { ref: 'dmg' } },

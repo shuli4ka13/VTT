@@ -27,6 +27,14 @@ const AUTHOR_ONLY = [
 
 const PLAY_SCREENS = ['screens/play/sheet.tsx', 'screens/play/table.tsx', 'screens/play/lobby.tsx'];
 
+const AUTHOR_MARKERS = ['Цепочка шагов', 'Библиотека эффектов', 'Что запись даёт владельцу', 'Готовое из образцов'];
+const PLAY_MARKERS = ['Кто действует?', 'За столом', 'Создать стол'];
+
+const sourceOf = (dirs: string[]): string =>
+  dirs.flatMap(dir => [...walk(join(src, dir))])
+    .filter(file => !/\.test\.tsx?$/.test(file))
+    .map(file => readFileSync(file, 'utf8')).join('\n');
+
 describe('граница режимов', () => {
   it('ни один экран партии не импортирует модулей конструктора', () => {
     for (const screen of PLAY_SCREENS) {
@@ -111,6 +119,13 @@ describe('вид отделён от логики', () => {
 });
 
 describe('граница держится СБОРКОЙ, а не только импортами', () => {
+  it('маркеры живые: каждый встречается в исходниках своей стороны', () => {
+    const author = sourceOf(['screens/constructor', 'screens/compendium']);
+    const play = sourceOf(['screens/play']);
+    for (const trace of AUTHOR_MARKERS) expect(author.includes(trace), `маркер автора «${trace}» мёртв`).toBe(true);
+    for (const trace of PLAY_MARKERS) expect(play.includes(trace), `маркер партии «${trace}» мёртв`).toBe(true);
+  });
+
 
   const dist = join(src, '..', 'dist');
 
@@ -149,7 +164,7 @@ describe('граница держится СБОРКОЙ, а не только �
       return;
     }
 
-    for (const trace of ['Цепочка шагов', 'Библиотека эффектов', 'Рода записей', 'Дырки для записей']) {
+    for (const trace of AUTHOR_MARKERS) {
       expect(play.includes(trace), `в сборку партии просочилось «${trace}»`).toBe(false);
     }
   });
@@ -157,7 +172,7 @@ describe('граница держится СБОРКОЙ, а не только �
   it('автору не уезжает стол — граница двусторонняя', () => {
     const author = bundleOf('apps/author.tsx');
     if (!author) return;
-    for (const trace of ['Кто действует?', 'За столом', 'Создать стол']) {
+    for (const trace of PLAY_MARKERS) {
       expect(author.includes(trace), `в сборку автора просочилось «${trace}»`).toBe(false);
     }
   });

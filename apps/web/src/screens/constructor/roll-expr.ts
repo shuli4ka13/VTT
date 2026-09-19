@@ -1,5 +1,6 @@
 import type { System, SlotRef } from '@vtt/schema';
 import { dieWord } from './readback.ts';
+import { asDice } from '../../words.ts';
 
 export interface ParsedRoll {
   die?: SlotRef;
@@ -48,7 +49,7 @@ export function formatRollExpr(roll: unknown, system: System): string {
   let head = '';
   if (r.die && typeof r.die === 'object') {
     if ('constant' in r.die) head = dieWord(system, String((r.die as { constant: unknown }).constant));
-    else if ('const' in r.die) head = String((r.die as { const: unknown }).const);
+    else if ('const' in r.die) head = asDice(String((r.die as { const: unknown }).const));
   }
   let tail = '';
   if (r.bonus && typeof r.bonus === 'object') {

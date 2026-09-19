@@ -7,6 +7,7 @@ import { FormulaChips } from '../../ui/formula-chips.tsx';
 import { matchTagQuery } from '../../ui/tag-suggest.tsx';
 import { outputRefs, outputLabel } from './slots.tsx';
 import type { SlotContext, SlotKind } from './slots.tsx';
+import { asDice } from '../../words.ts';
 
 const WORD_OF: Record<SlotKind, string> = {
   const: 'число',
@@ -45,7 +46,7 @@ export function displayOf(ref: unknown, ctx: SlotContext): string {
   if (ref === null || ref === undefined) return '';
   if (typeof ref !== 'object') return String(ref);
   const r = ref as Record<string, unknown>;
-  if ('const' in r) return String(r.const ?? '');
+  if ('const' in r) return asDice(String(r.const ?? ''));
   if ('expr' in r) return String(r.expr ?? '');
   if ('tag' in r) return `поле: ${labelOfTag(ctx.system, String(r.tag))}`;
   if ('param' in r) {

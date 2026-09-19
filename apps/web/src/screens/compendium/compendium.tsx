@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { TABS } from '../../words.ts';
 import { useWorld, freeId, randomTag } from '../../store/world.ts';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
@@ -35,7 +36,7 @@ export function CompendiumScreen() {
   const groups = new Map<string, typeof all>();
   for (const entry of all) {
     const kind = system.records?.[String(entry.record.rk)];
-    const group = kind?.group ?? 'Без рода';
+    const group = kind?.group ?? 'Без типа';
     const list = groups.get(group);
     if (list) list.push(entry);
     else groups.set(group, [entry]);
@@ -46,7 +47,7 @@ export function CompendiumScreen() {
       left={{
         head: 'Записи',
         body: all.length === 0
-          ? <Empty title="Компендиум пуст" hint="Заведите запись, выбрав род справа." />
+          ? <Empty title="Компендиум пуст" hint="Заведите запись, выбрав тип справа." />
           : (
             <List>
               {[...groups].map(([group, list]) => (
@@ -56,7 +57,7 @@ export function CompendiumScreen() {
                     <ListItem
                       key={record.id}
                       name={record.label ?? record.id}
-                      meta={system.records?.[String(record.rk)]?.label ?? 'род неизвестен'}
+                      meta={system.records?.[String(record.rk)]?.label ?? 'тип неизвестен'}
                       active={record.id === activeId}
                       onClick={() => pick({ activeRecordId: record.id })}
                     />
@@ -72,7 +73,7 @@ export function CompendiumScreen() {
           ? <RecordEditor record={active.record} system={system} />
           : <Empty
               title="Выберите запись слева"
-              hint="Запись — это циферки по форме её рода: у меча спросят кость урона, у заклинания — чем спасаются."
+              hint="Запись — это циферки по форме её типа: у меча спросят кость урона, у заклинания — чем спасаются."
             />,
       }}
       right={{
@@ -81,9 +82,9 @@ export function CompendiumScreen() {
           ? <Empty
             title="Родов ещё нет"
             hint={origin.systemMine
-              ? 'Рода объявляются в конструкторе системы, на вкладке «Записи».'
-              : `В системе «${origin.systemTitle ?? system.name}» не объявлено ни одного рода записей — `
-                + 'заводить вещи не из чего. Это делает автор системы: попросите его добавить рода '
+              ? `Типы записей объявляются в конструкторе системы, на вкладке «${TABS.records}».`
+              : `В системе «${origin.systemTitle ?? system.name}» не объявлено ни одного типа записей — `
+                + 'заводить вещи не из чего. Это делает автор системы: попросите его добавить типы '
                 + 'и опубликовать систему заново.'}
           />
           : (
@@ -129,7 +130,7 @@ function RecordEditor({ record, system }: { record: CompendiumRecord; system: Sy
       <Card>
         <CardHead
           title={<Input value={record.label ?? ''} onChange={label => edit(draft => { draft.label = label; })} />}
-          badge={<span className="chip">{kind?.label ?? 'род неизвестен'}</span>}
+          badge={<span className="chip">{kind?.label ?? 'тип неизвестен'}</span>}
           actions={<DangerButton size="sm" onConfirm={remove}>Удалить</DangerButton>}
         />
         <Field label="Описание">
@@ -203,7 +204,7 @@ function RecordEditor({ record, system }: { record: CompendiumRecord; system: Sy
           title="Что правит эта вещь"
           empty={{
             title: 'Своих правок у вещи нет',
-            hint: 'Добавка поверх родовой: кольцо даёт +1 к защите, проклятый клинок — помеху. Общее для всех вещей рода живёт на самом роде и здесь не повторяется.',
+            hint: 'Добавка поверх общей для типа: кольцо даёт +1 к защите, проклятый клинок — помеху. Общее для всех вещей типа живёт на самом типе записи и здесь не повторяется.',
           }}
           modifiers={record.modifiers ?? []}
           onEdit={change => edit(draft => { change(draft.modifiers ??= []); })}

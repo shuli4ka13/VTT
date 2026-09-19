@@ -152,7 +152,7 @@ describe('GroupCard', () => {
 describe('GroupCard: условие выполнения шага', () => {
   const earlier = [{ id: 'hit', type: 'threshold' }];
 
-  it('когда выше есть проверка с исходом да/нет, у карточки появляется «Когда выполнять»', () => {
+  it('когда выше есть проверка с исходом да/нет, у шага появляется «Когда выполнять»', () => {
     const steps = [{ type: 'apply', direction: 'subtract', targetModifiers: true, value: { const: 4 } }] as unknown as Step[];
     const group = groupSteps(steps)[0]!;
     const apply = steps[0] as any;
@@ -278,7 +278,7 @@ describe('GroupCard: строка броска', () => {
 
     expect(line.textContent).toContain('Класс брони');
     const head = line.querySelector('.chips__text') as HTMLInputElement;
-    expect(head.value).toContain('1d20');
+    expect(head.value).toContain('1к20');
   });
 
   it('лишнего знака в строке нет: что видно, то и написано', () => {

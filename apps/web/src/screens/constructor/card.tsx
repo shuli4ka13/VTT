@@ -74,7 +74,7 @@ export function GroupCard({
     <>
       <Button size="sm" variant="ghost" title="выше" disabled={!onMoveUp} onClick={onMoveUp}>↑</Button>
       <Button size="sm" variant="ghost" title="ниже" disabled={!onMoveDown} onClick={onMoveDown}>↓</Button>
-      <Button size="sm" variant="ghost" title="убрать карточку" onClick={() => setArmed(true)}>×</Button>
+      <Button size="sm" variant="ghost" title="убрать шаг" onClick={() => setArmed(true)}>×</Button>
     </>
   );
 
@@ -241,7 +241,7 @@ function RollExprInput({ step, context, edit }: {
         value={shown}
         system={context.system}
         side={step.side === 'target' ? 'target' : 'self'}
-        placeholder="1d20 + @поле"
+        placeholder="1к20 + @поле"
         calculator
         extraOptions={Object.entries(context.system.constants ?? {})
           .filter(([, c]) => c.kind === 'die')
@@ -364,7 +364,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
     };
     if (!withNumber && !amountId) {
 
-      setTrouble('кость бросает отправитель — заведите карточку «число» и назовите её');
+      setTrouble('кость бросает отправитель — заведите шаг «число» и назовите его');
       return;
     }
     if (withNumber) withNumber(put);

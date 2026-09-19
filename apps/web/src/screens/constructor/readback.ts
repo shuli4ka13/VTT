@@ -1,5 +1,6 @@
 import type { System, Effect, Step, SystemConstant } from '@vtt/schema';
 import { labelOfTag } from '../../ui/formula.tsx';
+import { dice as diceText, asDice, DIE_LETTER } from '../../words.ts';
 
 export type Segment = { text: string } | { hole: string };
 
@@ -18,7 +19,7 @@ export function dieWord(system: System, name: string): string {
   if (!constant) return name;
 
   const dice = (constant.dice ?? [])
-    .map(d => `${countWord(system, d.count)}d${d.sides}`).join(' + ');
+    .map(d => diceText(countWord(system, d.count), d.sides)).join(' + ');
   return dice || (constant.label ?? name);
 }
 
@@ -40,7 +41,7 @@ export function refSegment(ref: unknown, system: System, effect: Effect, emptyAs
   if (ref === null || ref === undefined || ref === '') return hole(emptyAs);
   if (typeof ref !== 'object') return seg(String(ref));
   const r = ref as Record<string, unknown>;
-  if ('const' in r) return r.const === '' || r.const == null ? hole(emptyAs) : seg(String(r.const));
+  if ('const' in r) return r.const === '' || r.const == null ? hole(emptyAs) : seg(asDice(String(r.const)));
   if ('expr' in r) {
     const text = String(r.expr ?? '').trim();
     if (!text) return hole(emptyAs);
@@ -271,8 +272,8 @@ export function dieReadback(constant: SystemConstant, system: System): Segment[]
 
   const dice = (constant.dice ?? []).map(d => {
     const head = typeof d.count === 'object' && d.count !== null
-      ? `d${d.sides} по числу «${countWord(system, d.count)}»`
-      : `${d.count ?? 1}d${d.sides}`;
+      ? `${DIE_LETTER}${d.sides} по числу «${countWord(system, d.count)}»`
+      : diceText(d.count, d.sides);
 
     return d.name ? `${head} (${d.label || d.name})` : head;
   }).join(' + ');

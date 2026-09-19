@@ -22,13 +22,13 @@ describe('checkReadback', () => {
       versus: { tag: 'armor' },
     } as unknown as Step;
     expect(joinReadback(checkReadback(step, system, effect)))
-      .toBe('Ты бросаешь 1d20 + Мод Силы против «Класс брони». Не добросил — эффект кончается.');
+      .toBe('Ты бросаешь 1к20 + Мод Силы против «Класс брони». Не добросил — эффект кончается.');
   });
 
   it('пустая мишень — оранжевый пропуск', () => {
     const step = { type: 'threshold', roll: { die: { constant: 'lead' } } } as unknown as Step;
     expect(joinReadback(checkReadback(step, system, effect)))
-      .toBe('Ты бросаешь 1d20 против ⟨какого поля цели?⟩. Не добросил — эффект кончается.');
+      .toBe('Ты бросаешь 1к20 против ⟨какого поля цели?⟩. Не добросил — эффект кончается.');
   });
 
   it('сравнение без броска', () => {
@@ -57,7 +57,7 @@ describe('numberReadback', () => {
   it('одиночное число с именем', () => {
     const step = { id: 'dmg', type: 'amount', source: 'roll', dice: { const: '2d6' } } as unknown as Step;
     expect(joinReadback(numberReadback(step, system, effect)))
-      .toBe('Считается число: 2d6 — дальше это «dmg».');
+      .toBe('Считается число: 2к6 — дальше это «dmg».');
   });
 });
 
@@ -117,18 +117,18 @@ describe('editReadback — правка броска словами', () => {
 describe('dieReadback — кость словами', () => {
   it('одна кость — складывать нечего, и об этом не говорят', () => {
     const die = { kind: 'die', dice: [{ count: 1, sides: 20 }] };
-    expect(joinReadback(dieReadback(die, system))).toBe('Кинуть 1d20.');
+    expect(joinReadback(dieReadback(die, system))).toBe('Кинуть 1к20.');
   });
 
   it('несколько костей — сумма названа: их и правда складывают', () => {
     const die = { kind: 'die', dice: [{ count: 2, sides: 6 }] };
-    expect(joinReadback(dieReadback(die, system))).toBe('Кинуть 2d6 и сложить.');
+    expect(joinReadback(dieReadback(die, system))).toBe('Кинуть 2к6 и сложить.');
   });
 
   it('счёт успехов объясняет порог на кость', () => {
     const die = { kind: 'die', dice: [{ count: 4, sides: 6 }], read: { kind: 'count', atLeast: 5 } };
     expect(joinReadback(dieReadback(die, system)))
-      .toBe('Кинуть 4d6 и посчитать, сколько выпало не ниже 5.');
+      .toBe('Кинуть 4к6 и посчитать, сколько выпало не ниже 5.');
   });
 
   it('пул из листа назван лейблом поля, а не тегом', () => {
@@ -138,6 +138,6 @@ describe('dieReadback — кость словами', () => {
     } as unknown as System;
     const die = { kind: 'die', dice: [{ count: { tag: 'pool' }, sides: 6 }], read: 'best' };
     expect(joinReadback(dieReadback(die, sys)))
-      .toBe('Кинуть d6 по числу «Пул костей» и взять лучшую.');
+      .toBe('Кинуть к6 по числу «Пул костей» и взять лучшую.');
   });
 });

@@ -36,7 +36,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
     expect(screen.queryByText('Чего стоит')).toBeNull();
   });
 
-  it('палитра — только три кирпича, клик кладёт карточку', () => {
+  it('палитра — только три шага, клик кладёт шаг', () => {
     render(<EffectsTab />);
     const palette = screen.getAllByRole('button')
       .filter(b => (b.textContent ?? '').trimStart().startsWith('+ '))

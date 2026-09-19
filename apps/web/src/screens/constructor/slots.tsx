@@ -4,6 +4,7 @@ import { Input, Select } from '../../ui/primitives.tsx';
 import { FormulaInput, labelOfTag } from '../../ui/formula.tsx';
 import { countWord } from './readback.ts';
 import { stepModule } from '@vtt/engine/engine/steps/index';
+import { dice as diceText } from '../../words.ts';
 
 export interface EarlierStep { id: string; type: string }
 
@@ -152,7 +153,7 @@ export const SLOT_KINDS: SlotKindModule[] = [
     summary: (ref, ctx) => {
       const constant = ctx.system.constants?.[ref.constant];
       const dice = (constant?.dice ?? [])
-        .map(d => `${countWord(ctx.system, d.count)}к${d.sides}`).join(' + ');
+        .map(d => diceText(countWord(ctx.system, d.count), d.sides)).join(' + ');
       return dice || ref.constant;
     },
     editor: (ref, onChange, ctx) => (
@@ -194,7 +195,7 @@ export const SLOT_KINDS: SlotKindModule[] = [
   {
     kind: 'param',
     label: 'Потребность эффекта',
-    hint: 'Потребность, которую закроет род записи. Нужен, когда один эффект обслуживает разные рода.',
+    hint: 'Потребность, которую закроет тип записи. Нужен, когда один эффект обслуживает разные типы.',
     matches: ref => has(ref, 'param'),
     blank: ctx => ({ param: ctx.effect.params?.[0]?.key ?? '' }),
     summary: (ref, ctx) => {
