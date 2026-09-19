@@ -3,7 +3,7 @@ import { world as W, api } from '../src/index.ts';
 
 // @ts-expect-error — образцы лежат в пакете движка, деклараций не имеют.
 import { SAMPLE_SYSTEMS, SAMPLE_WORLDS } from '../../engine/src/model/systems.ts';
-// @ts-expect-error
+// @ts-expect-error — та же причина.
 import { migrateWorld } from '../../engine/src/model/migrate.ts';
 
 const { compendium, sheets } = SAMPLE_WORLDS[0];

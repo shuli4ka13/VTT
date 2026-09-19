@@ -12,9 +12,15 @@
     "build:packages": "tsc -b packages/schema packages/engine",
     "build:watch": "tsc -b packages/schema packages/engine --watch",
     "test": "yarn workspaces run test",
-    "typecheck": "yarn workspaces run typecheck"
+    "typecheck": "yarn workspaces run typecheck && yarn lint",
+    "lint": "eslint . --max-warnings 108"
   },
   "devDependencies": {
-    "tsx": "^4.23.12"
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.11.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.12.0",
+    "tsx": "^4.23.12",
+    "typescript-eslint": "^8.70.0"
   }
 }

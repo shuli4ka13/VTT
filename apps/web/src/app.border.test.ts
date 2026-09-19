@@ -99,7 +99,7 @@ describe('вид отделён от логики', () => {
 
   it('экраны не знают ни одного имени стата', () => {
 
-    const stats = /\b(str_mod|dex_mod|hp_max|hp_current|ac_base|prof_bonus|attack_bonus)\b|['"\/](hp|health|хит|мана|stamina)[|'"\/]/i;
+    const stats = /\b(str_mod|dex_mod|hp_max|hp_current|ac_base|prof_bonus|attack_bonus)\b|['"/](hp|health|хит|мана|stamina)[|'"/]/i;
     for (const file of walk(join(src, 'screens'))) {
       if (file.endsWith('.test.ts') || file.endsWith('.test.tsx')) continue;
       const code = readFileSync(file, 'utf8');

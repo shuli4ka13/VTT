@@ -137,9 +137,17 @@ function blockDeps(donor: System, group: string): string[] {
     const source = field.value.kind === 'formula' ? field.value.expr
       : field.value.kind === 'table' ? field.value.arg : '';
     if (!source) continue;
-    try { out.push(...compile(source).deps); } catch {  }
+    out.push(...depsOf(source));
   }
   return out;
+}
+
+function depsOf(source: string): readonly string[] {
+  try {
+    return compile(source).deps;
+  } catch {
+    return [];
+  }
 }
 
 function orderedBlocks(donor: System, blocks: Set<string>): string[] {

@@ -163,12 +163,8 @@ export class TableGateway {
   }
 
   private async announceMembers(roomId: string) {
-    try {
-      const state = await this.roomsService.state(roomId);
-      this.broadcast(roomId, { type: 'room:members', members: state.members });
-    } catch {
-
-    }
+    const state = await this.roomsService.state(roomId).catch(() => null);
+    if (state) this.broadcast(roomId, { type: 'room:members', members: state.members });
   }
 
   private guestOf(socket: WebSocket): Guest | null {

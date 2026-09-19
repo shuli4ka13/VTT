@@ -21,7 +21,6 @@ export function BuildWorld({ onBuilt }: { onBuilt: () => void }) {
 
   useEffect(() => {
     if (!system) return;
-    setTitle(system.title);
     listCompendiums(system.id)
       .then(all => setBooks(all.filter(item => item.status === 'published')))
       .catch(err => setTrouble((err as Error).message));
@@ -59,7 +58,7 @@ export function BuildWorld({ onBuilt }: { onBuilt: () => void }) {
             <div className="stack stack--tight">
               <span className="field__label">Из какой системы</span>
               {systems.map(item => (
-                <Button key={item.id} wide onClick={() => setSystem(item)}>
+                <Button key={item.id} wide onClick={() => { setSystem(item); setTitle(item.title); }}>
                   {item.title} <span className="faint">· {item.authorName}</span>
                 </Button>
               ))}

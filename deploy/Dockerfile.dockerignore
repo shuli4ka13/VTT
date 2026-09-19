@@ -2,6 +2,7 @@
 !yarn.lock
 !package.json
 !tsconfig.base.json
+!eslint.config.js
 !packages/
 !apps/server/
 !apps/web/

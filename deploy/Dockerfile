@@ -4,7 +4,7 @@ WORKDIR /app
 
 FROM base AS builder
 
-COPY package.json yarn.lock tsconfig.base.json ./
+COPY package.json yarn.lock tsconfig.base.json eslint.config.js ./
 COPY packages/engine/package.json ./packages/engine/package.json
 COPY packages/schema/package.json ./packages/schema/package.json
 COPY apps/server/package.json ./apps/server/package.json

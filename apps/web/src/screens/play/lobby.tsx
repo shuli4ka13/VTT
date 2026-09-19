@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRoom } from '../../store/room.ts';
 import { Card, CardHead, Button, Input, Verdict, Empty } from '../../ui/primitives.tsx';
 import { Columns } from '../../ui/layout.tsx';
@@ -16,19 +16,16 @@ export function Lobby() {
   const [rooms, setRooms] = useState<RoomSummary[]>([]);
   const [worlds, setWorlds] = useState<WorldSummary[]>([]);
 
-  const refresh = async () => {
-    try {
-      setWorlds(await listWorlds());
-      if (currentToken()) setRooms(await listRooms());
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
+  const refresh = useCallback(() => Promise
+    .all([listWorlds(), currentToken() ? listRooms() : Promise.resolve(null)])
+    .then(([nextWorlds, nextRooms]) => {
+      setWorlds(nextWorlds);
+      if (nextRooms) setRooms(nextRooms);
+    })
+    .catch(err => setError((err as Error).message))
+    .finally(() => setSigned(Boolean(currentToken()))), [setError]);
 
-      setSigned(Boolean(currentToken()));
-    }
-  };
-
-  useEffect(() => { void refresh(); }, [signed]);
+  useEffect(() => { void refresh(); }, [refresh, signed]);
 
   return (
     <Columns main={{

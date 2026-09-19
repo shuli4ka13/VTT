@@ -150,11 +150,16 @@ function FieldCell({ field, sheet, reader, onChange }: {
   );
 }
 
-function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
-  let available: { id: string; label: string }[] = [];
+function actionsOf(sheet: Sheet, room: RoomState): { id: string; label: string }[] {
   try {
-    available = availableActions(sheet, { system: room.system, compendium: room.compendium });
-  } catch { available = []; }
+    return availableActions(sheet, { system: room.system, compendium: room.compendium });
+  } catch {
+    return [];
+  }
+}
+
+function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
+  const available = actionsOf(sheet, room);
 
   const equipped = new Set(sheet.equipped ?? []);
   const known = new Set(sheet.actions ?? []);

@@ -17,7 +17,7 @@ const ALLOWED = [/^\/\/ @vitest-environment\b/, /^\/\/ @ts-expect-error\b/, /^\/
 
 function filesOf(dir: string): string[] {
   const out: string[] = [];
-  let names: string[] = [];
+  let names: string[];
   try { names = readdirSync(dir); } catch { return out; }
   for (const name of names) {
     const path = join(dir, name);

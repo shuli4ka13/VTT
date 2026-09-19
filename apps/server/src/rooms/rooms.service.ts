@@ -253,7 +253,6 @@ export class RoomsService {
     };
 
     let stage: ReactionWindow | 'deliver' = state.stage;
-    let results: Record<string, unknown> = state.results;
     let tape: number[] = state.tape ?? [];
     try {
       if (stage === 'sender') {
@@ -270,7 +269,7 @@ export class RoomsService {
         const target = sheetOf(intent.toId);
         const taped = tapeDie(this.die);
         const dry = receive(state.envelope, { ...ctx, die: taped.die, sheet: target, claims: intent.targetEdits ?? [] });
-        results = dry.results;
+        const results = dry.results;
         tape = taped.tape;
         const offered = offers(state.envelope, 'target', { ...ctx, sheet: target }, results);
         if (offered.length) {

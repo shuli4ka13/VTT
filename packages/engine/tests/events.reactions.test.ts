@@ -1,5 +1,5 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.ts';
-import { send, receive, offers, react } from '../src/events/envelope.ts';
+import { send, receive, offers, react, senderResults } from '../src/events/envelope.ts';
 import { exchange, deliver } from '../src/events/exchange.ts';
 import { system, arven, mirra, compendium } from './fixtures.ts';
 
@@ -174,7 +174,6 @@ function resultsOf(out: ReturnType<typeof receive>): Record<string, unknown> {
 
 group('окно «я бросил» видит факты собственного броска', () => {
   test('senderResults отдаёт итог, число костей и признаки максимума/единицы по упакованному порогу', () => {
-    const { senderResults } = require('../src/events/envelope.ts');
     const envelope = {
       kind: 'effect', effect: 'x', from: 'a', action: 'x:0', label: 'x',
       steps: [

@@ -76,7 +76,7 @@ group('модификаторы', () => {
 
   group('правила стакинга', () => {
     const two = [plus('a', 'A', 'ac', 1), plus('b', 'B', 'ac', 2)];
-    const sheet = stacking => ({
+    const sheet = () => ({
       ...arven,
       equipped: ['a', 'b'],
     });
