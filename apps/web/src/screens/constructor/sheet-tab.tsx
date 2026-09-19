@@ -6,6 +6,7 @@ import {
 import { FormulaInput, formulaAsLabels } from '../../ui/formula.tsx';
 import { compile } from '@vtt/engine/formula';
 import { DonorPalette } from './donors.tsx';
+import { newField } from './factory.ts';
 import { GroupEditor } from './group-editor.tsx';
 import { groupTree, effectiveDefault, sameValue } from './groups.ts';
 import type { GroupNode } from './groups.ts';
@@ -35,17 +36,9 @@ export function SheetTab() {
   const active = system.fields.find(f => f.tag === activeTag) ?? null;
 
   const addField = (group: string) => {
-    const tag = freeId(system.fields.map(f => f.tag), 'field');
-    const preset = effectiveDefault(system, group);
-    editSystem(draft => {
-      draft.fields.push({
-        tag,
-        label: 'Новое поле',
-        group,
-        value: preset ? structuredClone(preset) : { kind: 'stored', type: 'number', default: 0 },
-      });
-    });
-    pick({ activeFieldTag: tag, activeGroupName: null });
+    const made = newField(system, group);
+    editSystem(draft => { draft.fields.push(made.value); });
+    pick({ activeFieldTag: made.key, activeGroupName: null });
   };
 
   const branch = (node: GroupNode, depth: number) => (

@@ -1,5 +1,6 @@
 import { useWorld, freeId } from '../../store/world.ts';
 import { ModifiersEditor } from './modifiers.tsx';
+import { newRecordKind, newBinding, newProp } from './factory.ts';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
   Card, CardHead, Field, Input, Select, Button, Empty, Verdict, Chip, DangerButton,
@@ -38,12 +39,9 @@ export function RecordsTab() {
   const active = activeKind ? system.records?.[activeKind] : undefined;
 
   const add = () => {
-    const key = freeId(Object.keys(system.records ?? {}), 'kind');
-    editSystem(draft => {
-      draft.records = draft.records ?? {};
-      draft.records[key] = { kind: 'item', label: 'Новый тип', group: 'Снаряжение', props: [], bindings: [] };
-    });
-    pick({ activeRecordKind: key });
+    const made = newRecordKind(system);
+    editSystem(draft => { (draft.records ??= {})[made.key] = made.value; });
+    pick({ activeRecordKind: made.key });
   };
 
   const groups = new Map<string, [string, RecordKind][]>();
@@ -144,8 +142,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
               size="sm"
               disabled={Object.keys(system.effects).length === 0}
               onClick={() => edit(draft => {
-                draft.bindings ??= [];
-                draft.bindings.push({ label: 'Применение', effect: Object.keys(system.effects)[0] ?? '', args: {} });
+                (draft.bindings ??= []).push(newBinding(system));
               })}
             >+ подключить эффект</Button>
           }
@@ -185,12 +182,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
           sub="Форма записи. Обычно собирается сама — кнопкой «завести свойство» при подключении эффекта; руками сюда добавляют справочное: вес, цену."
           actions={
             <Button size="sm" onClick={() => edit(draft => {
-              draft.props ??= [];
-              draft.props.push({
-                key: freeId(draft.props.map(p => p.key), 'prop'),
-                label: 'Новое свойство',
-                kind: 'number',
-              });
+              (draft.props ??= []).push(newProp(draft));
             })}>+ свойство</Button>
           }
         />

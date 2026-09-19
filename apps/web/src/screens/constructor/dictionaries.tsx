@@ -9,6 +9,9 @@ import { Columns } from '../../ui/layout.tsx';
 import { Card, CardHead, Input, NumInput, Button, Fold, Select, Verdict } from '../../ui/primitives.tsx';
 import { FormulaInput } from '../../ui/formula.tsx';
 import { diceCount } from './dice-expr.ts';
+import {
+  newDie, newRollEdit, newRoll, newTable, newEvent, newActionType, simpleReceive,
+} from './factory.ts';
 import type { System, Compendium, RangeTable, SystemConstant, DiceTerm } from '@vtt/schema';
 import type { WorldState } from '../../store/world.ts';
 
@@ -33,16 +36,13 @@ const rangesBroken = (ranges: { from: number; to: number }[]): boolean => {
 };
 
 const addDie = (editSystem: EditSystem) => editSystem(draft => {
-  draft.constants ??= {};
-  const key = freeId(Object.keys(draft.constants), 'кость');
-  draft.constants[key] = { label: '', kind: 'die', dice: [{ count: 1, sides: 20 }] };
+  const made = newDie(draft);
+  (draft.constants ??= {})[made.key] = made.value;
 });
 
 const addRollEdit = (editSystem: EditSystem) => editSystem(draft => {
-  draft.roll_edits ??= {};
-  const key = freeId(Object.keys(draft.roll_edits), 'правка');
-
-  draft.roll_edits[key] = { label: '', ops: [] };
+  const made = newRollEdit(draft);
+  (draft.roll_edits ??= {})[made.key] = made.value;
 });
 
 const addFromCatalog = (editSystem: EditSystem, methodId: string) => editSystem(draft => {
@@ -60,30 +60,17 @@ const addFromCatalog = (editSystem: EditSystem, methodId: string) => editSystem(
 });
 
 const addRoll = (editSystem: EditSystem) => editSystem(draft => {
-  draft.rolls ??= [];
-  const tag = freeId(draft.rolls.map(r => r.tag), 'бросок');
-  draft.rolls.push({ tag, label: '' });
+  (draft.rolls ??= []).push(newRoll(draft));
 });
 
 const addTable = (editSystem: EditSystem) => editSystem(draft => {
-  draft.tables ??= {};
-  const key = freeId(Object.keys(draft.tables), 'таблица');
-  draft.tables[key] = { label: '', ranges: [] };
+  const made = newTable(draft);
+  (draft.tables ??= {})[made.key] = made.value;
 });
 
-const addEvent = (editSystem: EditSystem, system: System) => editSystem(draft => {
-  draft.events ??= {};
-  const key = freeId(Object.keys(draft.events), 'событие');
-  const field = system.fields.find(f => f.value.kind === 'stored' && f.value.type === 'number');
-  draft.events[key] = {
-    label: '',
-    tags: [],
-    ...(field ? { receive: [simpleReceive(field.tag, 'subtract', true)] } : {}),
-  };
-});
-
-const simpleReceive = (tag: string, direction: 'subtract' | 'add', targetModifiers: boolean) => ({
-  type: 'apply', target: { tag }, direction, value: { ref: 'event.amount' }, targetModifiers,
+const addEvent = (editSystem: EditSystem) => editSystem(draft => {
+  const made = newEvent(draft);
+  (draft.events ??= {})[made.key] = made.value;
 });
 
 const simpleReceiveOf = (receive: unknown): { tag: string; direction: 'subtract' | 'add'; targetModifiers: boolean } | null => {
@@ -95,9 +82,8 @@ const simpleReceiveOf = (receive: unknown): { tag: string; direction: 'subtract'
 };
 
 const addActionType = (editSystem: EditSystem) => editSystem(draft => {
-  draft.action_types ??= {};
-  const key = freeId(Object.keys(draft.action_types), 'действие');
-  draft.action_types[key] = { label: '' };
+  const made = newActionType(draft);
+  (draft.action_types ??= {})[made.key] = made.value;
 });
 
 export function DictionariesTab() {
@@ -148,7 +134,7 @@ export function DictionariesTab() {
               <CardHead
                 title="События"
                 sub="Урон, лечение и другие вещи, которые один лист посылает другому. Здесь — как лист их принимает; кто и сколько посылает, говорит эффект."
-                actions={<Button size="sm" onClick={() => addEvent(editSystem, system)}>+ событие</Button>}
+                actions={<Button size="sm" onClick={() => addEvent(editSystem)}>+ событие</Button>}
               />
               <EventsSection system={system} compendium={compendium} editSystem={editSystem} />
             </Card>

@@ -1,5 +1,4 @@
-import type { System, Step } from '@vtt/schema';
-import { freeId } from '../../store/world.ts';
+import type { Step } from '@vtt/schema';
 
 export type CardKind = 'check' | 'change' | 'number' | 'unknown';
 
@@ -52,40 +51,8 @@ export function groupSteps(list: Step[]): CardGroup[] {
   return out;
 }
 
-export interface StepTemplate {
-  key: string;
-  label: string;
-  hint: string;
-  make(system: System, takenIds: string[]): Step[];
-}
-
-const firstDie = (system: System): string | undefined => Object.keys(system.constants ?? {})[0];
-
-const blankCheck = (system: System): Step => {
-  const die = firstDie(system);
-  return {
-    type: 'threshold', successWhen: 'atLeast', continueOn: 'success',
-    roll: { die: die ? { constant: die } : undefined, check: null },
-  } as unknown as Step;
-};
-
-export const BRICKS: StepTemplate[] = [
-  {
-    key: 'check', label: '+ проверка',
-    hint: 'Бросок или сравнение против поля цели. Может оборвать эффект.',
-    make: system => [blankCheck(system)],
-  },
-  {
-    key: 'change', label: '+ изменение',
-    hint: 'Изменить поле цели или повесить состояние. Единственное, что меняет мир.',
-    make: () => [{ type: 'apply', direction: 'subtract', targetModifiers: true } as unknown as Step],
-  },
-  {
-    key: 'number', label: '+ число',
-    hint: 'Отдельное число: превышение проверки или одно число на несколько изменений.',
-    make: (_system, taken) => [{ id: freeId(taken, 'n'), type: 'amount', source: 'roll' } as unknown as Step],
-  },
-];
+export { BRICKS } from './factory.ts';
+export type { StepTemplate } from './factory.ts';
 
 export function moveGroup(steps: Step[], groupIndex: number, delta: -1 | 1): Step[] {
   const groups = groupSteps(steps);

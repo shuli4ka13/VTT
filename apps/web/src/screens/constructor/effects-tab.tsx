@@ -1,4 +1,5 @@
 import { useWorld, effectsByCategory, freeId } from '../../store/world.ts';
+import { newEffect } from './factory.ts';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
   Card, CardHead, Field, Input, Select, Button, Empty, Segmented, Verdict, Fold, Chip, DangerButton,
@@ -71,13 +72,9 @@ export function EffectsTab() {
   const active = activeId ? system.effects[activeId] : undefined;
 
   const add = (activation: Activation) => {
-    const id = freeId(Object.keys(system.effects), 'effect');
-    editSystem(draft => {
-      draft.effects[id] = activation === 'passive'
-        ? { label: 'Новый эффект', activation, duration: { kind: 'permanent' }, modifiers: [] }
-        : { label: 'Новый эффект', activation, params: [], steps: [], ...(activation === 'triggered' ? { trigger: { on: '' } } : {}) };
-    });
-    pick({ activeEffectId: id });
+    const made = newEffect(system, activation);
+    editSystem(draft => { draft.effects[made.key] = made.value; });
+    pick({ activeEffectId: made.key });
   };
 
   return (
