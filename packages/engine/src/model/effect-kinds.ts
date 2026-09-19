@@ -25,6 +25,34 @@ export const ACTIVATIONS = {
   },
 };
 
+export type LaunchKind = 'manual' | 'passive' | 'auto';
+
+export interface Launch {
+  kind: LaunchKind;
+  moment: 'before' | 'after';
+  ask: boolean;
+}
+
+export const LAUNCHES: Record<LaunchKind, { label: string; hint: string }> = {
+  manual: { label: 'Кнопкой', hint: 'Игрок нажимает сам: кнопка на листе из записи или самого эффекта.' },
+  passive: { label: 'Висит и правит', hint: 'Ничего не делает сам — пока надет или наложен, правит цифры и броски.' },
+  auto: { label: 'Срабатывает сам', hint: 'Слушает чужое действие или событие и запускается: молча или спросив игрока.' },
+};
+
+export function launchOf(effect: { activation?: string | null; trigger?: { when?: string; window?: string } | null } | null | undefined): Launch {
+  const activation = effect?.activation ?? 'manual';
+  if (activation === 'passive') return { kind: 'passive', moment: 'after', ask: false };
+  if (activation === 'triggered') return { kind: 'auto', moment: 'after', ask: false };
+  if (activation === 'reaction') return { kind: 'auto', moment: 'before', ask: true };
+  return { kind: 'manual', moment: 'after', ask: false };
+}
+
+export function activationFor(launch: Launch): 'manual' | 'passive' | 'triggered' | 'reaction' {
+  if (launch.kind === 'manual') return 'manual';
+  if (launch.kind === 'passive') return 'passive';
+  return launch.ask ? 'reaction' : 'triggered';
+}
+
 export const DURATIONS = {
   permanent: {
     label: 'Постоянный',

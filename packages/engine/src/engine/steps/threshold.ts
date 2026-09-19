@@ -144,6 +144,7 @@ export function resolve(step: StepData, ctx: StepContext) {
 
   const value = {
     success, margin, total,
+    natural: rolled.total,
     rolled: rolled.tally?.dice ?? rolled.rolls.length,
     atMax: rolled.tally?.atMax ?? 0,
     atMin: rolled.tally?.atMin ?? 0,

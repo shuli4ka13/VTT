@@ -132,7 +132,10 @@ export const param = z.object({
 }).passthrough();
 
 export const guard = z.union([
-  z.object({ ref: z.string().min(1), is: z.unknown().optional(), not: z.boolean().optional() }),
+  z.object({
+    ref: z.string().min(1), is: z.unknown().optional(), not: z.boolean().optional(),
+    atLeast: z.number().optional(), atMost: z.number().optional(), has: z.string().optional(),
+  }),
   z.object({ expr: z.string(), of: refSide.optional() }),
 ]);
 

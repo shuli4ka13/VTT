@@ -61,7 +61,15 @@ export function guardHolds(guard: unknown, ctx: StepContext): boolean {
     const value = resolveRef({ ref: g.ref }, ctx);
     let holds: boolean;
     if (g.is !== undefined) holds = value === g.is;
-    else if (typeof value === 'boolean') holds = value;
+    else if (g.atLeast !== undefined || g.atMost !== undefined) {
+      if (typeof value !== 'number') {
+        throw new EngineError(
+          `${who(ctx)}: условие шага «${g.ref}» сравнивает с числом, а там ${JSON.stringify(value)}`);
+      }
+      holds = (g.atLeast === undefined || value >= Number(g.atLeast)) && (g.atMost === undefined || value <= Number(g.atMost));
+    } else if (g.has !== undefined) {
+      holds = Array.isArray(value) ? value.map(String).includes(String(g.has)) : String(value ?? '') === String(g.has);
+    } else if (typeof value === 'boolean') holds = value;
     else {
       throw new EngineError(
         `${who(ctx)}: условие шага «${g.ref}» должно давать да/нет, а дало ${JSON.stringify(value)}`);

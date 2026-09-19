@@ -44,6 +44,7 @@ export const STEP_WORDS = {
       { path: '.success', label: 'вышло', kind: 'boolean' },
       { path: '.margin', label: 'превышение', kind: 'number' },
       { path: '.total', label: 'итог броска', kind: 'number' },
+      { path: '.natural', label: 'выпало на костях, без прибавок', kind: 'number' },
       { path: '.degree', label: 'степень успеха', kind: 'text' },
       { path: '.rolled', label: 'сколько костей кинуто', kind: 'number' },
       { path: '.atMax', label: 'костей на максимуме', kind: 'number' },
