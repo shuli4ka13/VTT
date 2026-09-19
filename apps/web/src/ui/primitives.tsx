@@ -96,13 +96,15 @@ export function NumInput({ value, onCommit, int, least, mono, placeholder }: {
   );
 }
 
-export function Select<T extends string>({ value, options, onChange }: {
+export function Select<T extends string>({ value, options, onChange, disabled, title }: {
   value: T;
   options: readonly (readonly [T, string])[];
   onChange: (value: T) => void;
+  disabled?: boolean;
+  title?: string;
 }) {
   return (
-    <select className="select" value={value} onChange={e => onChange(e.target.value as T)}>
+    <select className="select" value={value} disabled={disabled} title={title} onChange={e => onChange(e.target.value as T)}>
       {options.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
     </select>
   );

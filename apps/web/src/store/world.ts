@@ -4,6 +4,7 @@ import { world as W } from '@vtt/schema';
 import type { System, Compendium, Sheet, Effect, Field } from '@vtt/schema';
 import { unifyWorld } from '@vtt/engine/model/unify';
 import { healLegacySides } from '@vtt/engine/model/migrate';
+import { lazyStorage } from './lazy-storage.ts';
 
 export type WorkMode = 'system' | 'compendium';
 
@@ -53,6 +54,12 @@ export const emptySystem = (): System => ({
   action_types: {},
 });
 
+const BROKEN_KEY = 'vtt.world.broken';
+
+let restoreProblem: string | null = null;
+
+const worldStorage = lazyStorage(() => localStorage);
+
 export const useWorld = create<WorldState>()(persist(set => ({
   system: emptySystem(),
   compendium: { items: [], actions: [] },
@@ -100,7 +107,7 @@ export const useWorld = create<WorldState>()(persist(set => ({
   }),
 }), {
   name: 'vtt.world',
-  storage: createJSONStorage(() => localStorage),
+  storage: createJSONStorage(() => worldStorage),
   partialize: state => ({
     system: state.system,
     compendium: state.compendium,
@@ -117,6 +124,7 @@ export const useWorld = create<WorldState>()(persist(set => ({
     restoreProblem = first
       ? `${first.path.join('.')}: ${first.message}`
       : 'формат не распознан';
+    try { localStorage.setItem(BROKEN_KEY, JSON.stringify(saved)); } catch { restoreProblem += ' · копию сохранить не удалось'; }
     return current;
   },
 
@@ -125,7 +133,9 @@ export const useWorld = create<WorldState>()(persist(set => ({
   },
 }));
 
-let restoreProblem: string | null = null;
+export const brokenDraft = (): string | null => localStorage.getItem(BROKEN_KEY);
+
+export const forgetBrokenDraft = (): void => { localStorage.removeItem(BROKEN_KEY); };
 
 export const takeRestoreProblem = (): string | null => {
   const problem = restoreProblem;

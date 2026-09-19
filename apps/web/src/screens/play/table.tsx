@@ -111,6 +111,8 @@ function Combat({ room, onError }: { room: RoomState; onError: (message: string 
     tableSocket.turn({ roomId: room.id, op });
   };
   const fighting = Boolean(clock && clock.round > 0 && clock.active);
+  const waiting = Boolean(room.pending);
+  const why = waiting ? 'стол ждёт ответа на вопрос ниже' : undefined;
 
   return (
     <Card>
@@ -120,11 +122,11 @@ function Combat({ room, onError }: { room: RoomState; onError: (message: string 
           <>
             {fighting
               ? <>
-                  <Button size="sm" variant="primary" onClick={() => send('next')}>Следующий ход</Button>
-                  <Button size="sm" onClick={() => send('stop')}>Конец боя</Button>
+                  <Button size="sm" variant="primary" disabled={waiting} title={why} onClick={() => send('next')}>Следующий ход</Button>
+                  <Button size="sm" disabled={waiting} title={why} onClick={() => send('stop')}>Конец боя</Button>
                 </>
-              : <Button size="sm" variant="primary" onClick={() => send('start')}>Инициатива</Button>}
-            <Button size="sm" variant="ghost" onClick={() => send('scene')}>Закрыть сцену</Button>
+              : <Button size="sm" variant="primary" disabled={waiting} title={why} onClick={() => send('start')}>Инициатива</Button>}
+            <Button size="sm" variant="ghost" disabled={waiting} title={why} onClick={() => send('scene')}>Закрыть сцену</Button>
           </>
         }
       />

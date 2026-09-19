@@ -729,12 +729,15 @@ function EventsSection({ system, compendium, editSystem }: Props) {
               <span className="dict-row__label">Приём</span>
               <Select
                 value={mode}
+                disabled={custom}
+                title={custom ? 'правило приёма собрано из нескольких шагов — переключатель его стёр бы' : undefined}
                 options={[
                   ['field', 'поле листа'],
                   ['signal', 'только сигнал'],
                   ...(custom ? [['custom', 'своё правило'] as const] : []),
                 ] as never}
                 onChange={next => edit(cur => {
+                  if (custom) return;
                   if (next === 'signal') delete cur.receive;
                   else if (next === 'field') cur.receive = [simpleReceive(numeric[0]?.tag ?? '', 'subtract', true)];
                 })}

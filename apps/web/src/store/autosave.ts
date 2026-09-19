@@ -1,14 +1,15 @@
 import { create } from 'zustand';
 import { useWorld } from './world.ts';
-import { saveSystem, saveCompendium } from '../api/client.ts';
+import { saveSystem, saveCompendium, ApiError } from '../api/client.ts';
 
 const PAUSE = 1500;
 
 export type SaveState =
   | { kind: 'idle' }
+  | { kind: 'dirty' }
   | { kind: 'saving' }
   | { kind: 'saved'; at: string }
-  | { kind: 'failed'; why: string };
+  | { kind: 'failed'; why: string; issues: string[] };
 
 interface AutosaveState {
   state: SaveState;
@@ -40,6 +41,19 @@ async function flush(): Promise<void> {
   await job();
 }
 
+export async function settle(): Promise<boolean> {
+  if (typeof document !== 'undefined') (document.activeElement as HTMLElement | null)?.blur?.();
+  await flush();
+  return useAutosave.getState().state.kind !== 'failed';
+}
+
+export const saveLabel = (state: SaveState, idle: string): string =>
+  state.kind === 'saving' ? 'сохраняем…'
+    : state.kind === 'dirty' ? 'есть несохранённые правки'
+      : state.kind === 'saved' ? `сохранено в ${state.at}`
+        : state.kind === 'failed' ? `не сохранилось: ${[state.why, ...state.issues.slice(0, 2)].join(' · ')}`
+          : idle;
+
 function schedule(): void {
   if (timer) { clearTimeout(timer); timer = null; }
   pending = null;
@@ -70,9 +84,15 @@ function schedule(): void {
       sent = snapshot;
       useAutosave.getState().set({ kind: 'saved', at: clock() });
     } catch (err) {
-      useAutosave.getState().set({ kind: 'failed', why: (err as Error).message });
+      useAutosave.getState().set({
+        kind: 'failed',
+        why: (err as Error).message,
+        issues: err instanceof ApiError ? err.issues : [],
+      });
     }
   };
+
+  useAutosave.getState().set({ kind: 'dirty' });
 
   if (timer) clearTimeout(timer);
   timer = setTimeout(() => { void flush(); }, PAUSE);

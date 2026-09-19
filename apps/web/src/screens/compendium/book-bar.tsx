@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink } from 'react-router';
 import { useWorld } from '../../store/world.ts';
 import { useSession } from '../../store/session.ts';
-import { useAutosave, rememberVersion } from '../../store/autosave.ts';
+import { useAutosave, rememberVersion, settle, saveLabel } from '../../store/autosave.ts';
 import { Button, Input } from '../../ui/primitives.tsx';
 import { ApiError, publishCompendium } from '../../api/client.ts';
 
@@ -16,6 +16,10 @@ export function BookBar() {
 
   const publish = async () => {
     if (!origin.compendiumId) return;
+    if (!await settle()) {
+      setNote({ text: 'публиковать нечего: последние правки не сохранились — причина слева', bad: true });
+      return;
+    }
     try {
       const saved = await publishCompendium(origin.compendiumId);
       rememberVersion({ compendium: saved.updatedAt });
@@ -26,10 +30,8 @@ export function BookBar() {
     }
   };
 
-  const saved = saving.kind === 'saving' ? 'сохраняем…'
-    : saving.kind === 'saved' ? `сохранено в ${saving.at}`
-      : saving.kind === 'failed' ? `не сохранилось: ${saving.why}`
-        : origin.compendiumId ? 'изменений нет' : 'компендиум не создан';
+  const saved = saveLabel(saving, origin.compendiumId ? 'изменений нет' : 'компендиум не создан');
+  const details = saving.kind === 'failed' && saving.issues.length ? saving.issues.join('\n') : undefined;
 
   return <div className="worldbar">
     <span className="field__label">Компендиум</span>
@@ -37,7 +39,7 @@ export function BookBar() {
       <Input value={origin.compendiumTitle ?? ''}
         onChange={next => setOrigin({ compendiumTitle: next })} />
     </div>
-    <span className={`worldbar__state${saving.kind === 'failed' ? ' field__error' : ''}`}>{saved}</span>
+    <span className={`worldbar__state${saving.kind === 'failed' ? ' field__error' : ''}`} title={details}>{saved}</span>
     <span className="worldbar__state">для системы «{origin.systemTitle ?? '—'}»</span>
     <NavLink className="topbar__link" to="/book/start">сменить</NavLink>
 

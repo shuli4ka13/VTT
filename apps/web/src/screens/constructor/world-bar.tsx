@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink } from 'react-router';
 import { useWorld } from '../../store/world.ts';
 import { useSession } from '../../store/session.ts';
-import { useAutosave, rememberVersion } from '../../store/autosave.ts';
+import { useAutosave, rememberVersion, settle, saveLabel } from '../../store/autosave.ts';
 import { Button, Input } from '../../ui/primitives.tsx';
 import { ApiError, publishSystem } from '../../api/client.ts';
 
@@ -22,6 +22,10 @@ export function SystemBar() {
 
   const publish = async () => {
     if (!origin.systemId) return;
+    if (!await settle()) {
+      setNote({ text: 'публиковать нечего: последние правки не сохранились — причина слева', bad: true });
+      return;
+    }
     try {
       const saved = await publishSystem(origin.systemId);
       rememberVersion({ system: saved.updatedAt });
@@ -29,16 +33,14 @@ export function SystemBar() {
     } catch (err) { fail(err); }
   };
 
-  const saved = saving.kind === 'saving' ? 'сохраняем…'
-    : saving.kind === 'saved' ? `сохранено в ${saving.at}`
-      : saving.kind === 'failed' ? `не сохранилось: ${saving.why}`
-        : origin.systemId ? 'изменений нет' : 'система не создана';
+  const saved = saveLabel(saving, origin.systemId ? 'изменений нет' : 'система не создана');
+  const details = saving.kind === 'failed' && saving.issues.length ? saving.issues.join('\n') : undefined;
 
   return <div className="worldbar">
     <div className="worldbar__name">
       <Input value={system.name ?? ''} onChange={next => editSystem(draft => { draft.name = next; })} />
     </div>
-    <span className={`worldbar__state${saving.kind === 'failed' ? ' field__error' : ''}`}>{saved}</span>
+    <span className={`worldbar__state${saving.kind === 'failed' ? ' field__error' : ''}`} title={details}>{saved}</span>
     <NavLink className="topbar__link" to="/author/start">сменить систему</NavLink>
 
     <span className="spacer" />
