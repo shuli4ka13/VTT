@@ -1,0 +1,210 @@
+import { group, test, eq, ok } from './harness.ts';
+import { lintSystem, lintStep, errorsOf } from '../src/model/lint.ts';
+import { referencesOf, listenerOf } from '../src/model/references.ts';
+import { SAMPLE_SYSTEMS, SAMPLE_WORLDS } from '../src/model/systems.ts';
+import type { System, Effect, Step } from '../src/model/types.ts';
+
+const bare = (): System => ({
+  id: 'x', name: 'x', fields: [{ tag: 'hp', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 10 } }],
+  effects: {}, constants: { d20: { kind: 'die', dice: [{ count: 1, sides: 20 }] } },
+}) as unknown as System;
+
+const withEffect = (id: string, effect: Partial<Effect>): System => {
+  const system = bare();
+  system.effects[id] = { label: id, activation: 'manual', steps: [], ...effect } as Effect;
+  return system;
+};
+
+const texts = (system: System) => lintSystem(system).map(p => `${p.level}: ${p.text}`);
+const errorTexts = (system: System) => errorsOf(lintSystem(system)).map(p => p.text);
+
+group('линт: образцы чисты', () => {
+  for (const system of SAMPLE_SYSTEMS) {
+    test(`${system.name}: ноль ошибок`, () => {
+      const world = SAMPLE_WORLDS.find(w => w.system === system);
+      eq(errorsOf(lintSystem(system as System, world?.compendium)).map(p => p.text).join('\n'), '');
+    });
+  }
+});
+
+group('линт: висячие ссылки называются словами экрана', () => {
+  test('поле, которого нет — с подсказкой завести его на «Листе»', () => {
+    const system = withEffect('hit', { steps: [{ type: 'apply', target: { tag: 'нет_такого' }, value: { const: 1 } }] as Step[] });
+    const [problem] = errorsOf(lintSystem(system));
+    ok(problem?.text.includes('«нет_такого»'), problem?.text);
+    ok(problem?.text.includes('Лист'), problem?.text);
+    eq(problem?.fix?.tag, 'нет_такого');
+    eq(problem?.where.effect, 'hit');
+    eq(problem?.where.step, 0);
+  });
+
+  test('слушатель события, которого нет', () => {
+    const system = withEffect('t', { activation: 'triggered', trigger: { on: 'event:нету' } });
+    ok(errorTexts(system).some(t => t.includes('события «нету»')), errorTexts(system).join('|'));
+  });
+
+  test('слушатель эффекта, которого нет', () => {
+    const system = withEffect('t', { activation: 'triggered', trigger: { on: 'нет_эффекта' } });
+    ok(errorTexts(system).some(t => t.includes('эффекта «нет_эффекта»')), errorTexts(system).join('|'));
+  });
+
+  test('привязка типа записи к несуществующему эффекту', () => {
+    const system = bare();
+    system.records = { weapon: { kind: 'item', label: 'Оружие', bindings: [{ label: 'Удар', effect: 'нету', args: {} }] } } as never;
+    const [problem] = errorsOf(lintSystem(system));
+    ok(problem?.text.includes('эффекта «нету»'), problem?.text);
+    eq(problem?.where.tab, 'records');
+    eq(problem?.where.kind, 'weapon');
+  });
+
+  test('кость инициативы, таблица поля, правило комнаты, тип действия, правка броска', () => {
+    const system = bare();
+    system.initiative = { die: { constant: 'нет_кости' }, check: 'нет_броска' } as never;
+    system.fields.push({ tag: 'lvl', label: 'Ур', value: { kind: 'table', table: 'нет_таблицы', arg: '#hp' } } as never);
+    system.room_rules = ['нет_правила'];
+    system.effects.spell = { label: 'x', activation: 'manual', cost: 'нет_типа', steps: [], trigger: undefined } as never;
+    system.effects.buff = { label: 'y', activation: 'passive', modifiers: [{ kind: 'roll', target: '*', edit: 'нет_правки' }] } as never;
+    const found = errorTexts(system).join('\n');
+    for (const key of ['кости «нет_кости»', 'вида броска «нет_броска»', 'таблицы «нет_таблицы»', 'эффекта «нет_правила»', 'типа действия «нет_типа»', 'правки броска «нет_правки»']) {
+      ok(found.includes(key), `нет «${key}» в:\n${found}`);
+    }
+  });
+
+  test('ссылка на шаг выше по цепочке — законна, ниже — нет', () => {
+    const okSystem = withEffect('e', {
+      steps: [{ id: 'roll', type: 'amount', source: 'roll', dice: { constant: 'd20' } }, { type: 'apply', target: { tag: 'hp' }, value: { ref: 'roll' } }] as Step[],
+    });
+    eq(errorTexts(okSystem).join(''), '');
+    const badSystem = withEffect('e', {
+      steps: [{ type: 'apply', target: { tag: 'hp' }, value: { ref: 'roll' } }, { id: 'roll', type: 'amount', source: 'roll', dice: { constant: 'd20' } }] as Step[],
+    });
+    ok(errorTexts(badSystem).some(t => t.includes('«roll» выше по цепочке нет')), errorTexts(badSystem).join('|'));
+  });
+
+  test('условие «только если» ссылается на шаг выше', () => {
+    const system = withEffect('e', {
+      steps: [{ type: 'apply', target: { tag: 'hp' }, value: { const: 1 }, when: { ref: 'нет.success' } }] as Step[],
+    });
+    ok(errorTexts(system).some(t => t.includes('«нет» выше по цепочке нет')), errorTexts(system).join('|'));
+  });
+
+  test('потребность, которую эффект не объявил', () => {
+    const system = withEffect('e', { params: [], steps: [{ type: 'apply', target: { tag: 'hp' }, value: { param: 'dmg' } }] as Step[] });
+    ok(errorTexts(system).some(t => t.includes('потребность «dmg» эффектом не объявлена')), errorTexts(system).join('|'));
+  });
+
+  test('условие срабатывания смотрит на шаг слушаемого эффекта', () => {
+    const system = withEffect('strike', { steps: [{ id: 'hit', type: 'threshold', roll: { die: { constant: 'd20' } }, versus: { const: 10 } }] as Step[] });
+    system.effects.thorns = { label: 'Шипы', activation: 'triggered', trigger: { on: 'strike', condition: { ref: 'hit.success' } }, steps: [] } as never;
+    eq(errorTexts(system).join(''), '');
+    system.effects.thorns = { label: 'Шипы', activation: 'triggered', trigger: { on: 'strike', condition: { ref: 'miss.success' } }, steps: [] } as never;
+    ok(errorTexts(system).some(t => t.includes('нет шага «miss»')), errorTexts(system).join('|'));
+  });
+
+  test('выведенные мишени правок броска (с двоеточием) — не ссылки на виды бросков', () => {
+    const system = withEffect('buff', { activation: 'passive', modifiers: [{ kind: 'roll', target: 'roll:any', edit: 'adv' }] });
+    system.roll_edits = { adv: { label: 'Преимущество', ops: [] } } as never;
+    eq(errorTexts(system).join(''), '');
+  });
+
+  test('в цепочке приёма события «event.amount» — не висячая ссылка', () => {
+    const system = bare();
+    system.events = { damage: { label: 'Урон', receive: [{ type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { ref: 'event.amount' } }] } } as never;
+    eq(errorTexts(system).join(''), '');
+  });
+});
+
+group('линт: слушатели, круги, потребности', () => {
+  test('срабатывающий сам эффект без слушателя — ошибка человеческим текстом', () => {
+    const system = withEffect('t', { activation: 'triggered', trigger: { on: '' } });
+    const [problem] = errorsOf(lintSystem(system));
+    ok(problem?.text.includes('не сказано на что'), problem?.text);
+    eq(problem?.where.part, 'trigger');
+    const noTrigger = withEffect('r', { activation: 'reaction' });
+    ok(errorTexts(noTrigger).some(t => t.includes('не сказано на что')));
+  });
+
+  test('вызовы по кругу: эффект шлёт событие, на которое сам и срабатывает', () => {
+    const system = withEffect('loop', {
+      activation: 'triggered', trigger: { on: 'event:damage' },
+      steps: [{ type: 'emit', event: 'damage', amount: { const: 1 } }] as Step[],
+    });
+    system.events = { damage: { label: 'Урон', receive: [] } } as never;
+    const found = errorTexts(system).find(t => t.includes('по кругу'));
+    ok(found, errorTexts(system).join('|'));
+    ok(found!.includes('«loop»') && found!.includes('«Урон»'), found);
+  });
+
+  test('без круга — тишина', () => {
+    const system = withEffect('a', { steps: [{ type: 'emit', event: 'damage', amount: { const: 1 } }] as Step[] });
+    system.events = { damage: { label: 'Урон', receive: [{ type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { ref: 'event.amount' } }] } } as never;
+    ok(!texts(system).some(t => t.includes('по кругу')));
+  });
+
+  test('событие шлют, а принимать некому — предупреждение', () => {
+    const system = withEffect('a', { steps: [{ type: 'emit', event: 'ping', amount: { const: 1 } }] as Step[] });
+    system.events = { ping: { label: 'Пинг' } } as never;
+    ok(texts(system).some(t => t.startsWith('warn') && t.includes('«Пинг» никто не принимает')), texts(system).join('|'));
+    eq(errorTexts(system).length, 0);
+  });
+
+  test('привязка не закрывает потребность эффекта', () => {
+    const system = withEffect('strike', { params: [{ key: 'dice', label: 'Кость урона' }], steps: [] });
+    system.records = { weapon: { kind: 'item', label: 'Оружие', props: [], bindings: [{ label: 'Удар', effect: 'strike', args: {} }] } } as never;
+    const [problem] = errorsOf(lintSystem(system));
+    ok(problem?.text.includes('не заполняет потребность «Кость урона»'), problem?.text);
+    eq(problem?.where.binding, 0);
+  });
+
+  test('привязка берёт свойство, которого у этого типа нет', () => {
+    const system = withEffect('strike', { params: [{ key: 'dice' }], steps: [] });
+    system.records = {
+      weapon: { kind: 'item', label: 'Оружие', props: [{ key: 'dmg' }], bindings: [{ label: 'Удар', effect: 'strike', args: { dice: { prop: 'other' } } }] },
+      armor: { kind: 'item', label: 'Броня', props: [{ key: 'other' }] },
+    } as never;
+    ok(errorTexts(system).some(t => t.includes('«other» не объявлено у этого типа')), errorTexts(system).join('|'));
+  });
+
+  test('активируемый эффект, который никто не даёт — предупреждение, не ошибка', () => {
+    const system = withEffect('lonely', { steps: [] });
+    ok(texts(system).some(t => t.startsWith('warn') && t.includes('никак не запускается')));
+    eq(errorTexts(system).length, 0);
+  });
+});
+
+group('линт одного шага — то, что раньше считал конструктор', () => {
+  const effect = { label: 'e', activation: 'manual', params: [], steps: [] } as unknown as Effect;
+
+  test('обязательный слот пуст', () => {
+    const problem = lintStep({ type: 'apply' } as Step, bare(), effect, []);
+    ok(problem?.text.includes('не заполнено'), problem?.text);
+  });
+
+  test('неизвестный тип называет тип', () => {
+    ok(lintStep({ type: 'котик' } as Step, bare(), effect, [])?.text.includes('«котик»'));
+  });
+
+  test('формула с именем шага выше — не беда, с чужим именем — беда', () => {
+    const step = { type: 'apply', target: { tag: 'hp' }, value: { expr: '#n + 1' } } as unknown as Step;
+    eq(lintStep(step, bare(), effect, [{ id: 'n', type: 'amount' }]), null);
+    const problem = lintStep(step, bare(), effect, []);
+    eq(problem?.fix?.tag, 'n');
+  });
+});
+
+group('ссылки и слушатели', () => {
+  test('referencesOf образца видит привязки, инициативу и правила комнаты', () => {
+    const refs = referencesOf(SAMPLE_SYSTEMS[0] as System);
+    ok(refs.some(r => r.kind === 'effect' && r.from.tab === 'records'));
+    ok(refs.some(r => r.kind === 'constant' && r.from.section === 'initiative'));
+    ok(refs.some(r => r.kind === 'effect' && r.from.section === 'room_rules'));
+  });
+
+  test('listenerOf разбирает три вида слушателя и пустоту', () => {
+    eq(listenerOf('*').kind, 'any');
+    eq(listenerOf('event:damage').key, 'damage');
+    eq(listenerOf('strike').kind, 'effect');
+    eq(listenerOf('').kind, 'empty');
+    eq(listenerOf(undefined).kind, 'empty');
+  });
+});

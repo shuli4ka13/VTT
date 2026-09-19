@@ -124,7 +124,7 @@ export const STEP_WORDS = {
       },
       {
         key: 'effect', label: 'Какой эффект', kind: 'ref', main: true, required: true,
-        allow: ['prop', 'const', 'param', 'empty'],
+        allow: ['prop', 'const', 'param', 'empty'], refersTo: 'effect',
       },
     ],
     outputs: [],
