@@ -200,7 +200,7 @@ group('шаг «применить»', () => {
     const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { const: 8 } }]);
     deepEq(out.changes, [{ tag: 'hp_current', from: 21, to: 13 }]);
     eq(out.sheet.values.hp_current, 13);
-    eq(mirra.values.hp_current, 21, 'исходный чарник не тронут');
+    eq(mirra.values.hp_current, 21, 'исходный лист не тронут');
   });
 
   test('нижняя граница поля держит: хиты не уходят ниже нуля', () => {

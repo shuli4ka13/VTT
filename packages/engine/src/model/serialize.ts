@@ -15,7 +15,7 @@ const isScalar = (v: unknown) => v === null || ['number', 'boolean', 'string'].i
 
 export function assertSheetShape(sheet: unknown): Sheet {
   if (!sheet || typeof sheet !== 'object' || Array.isArray(sheet)) {
-    throw new SheetShapeError('чарник должен быть объектом');
+    throw new SheetShapeError('лист должен быть объектом');
   }
 
   const s = sheet as Record<string, any>;
@@ -23,12 +23,12 @@ export function assertSheetShape(sheet: unknown): Sheet {
   for (const key of Object.keys(s)) {
     if (!TOP_KEYS.includes(key)) {
       throw new SheetShapeError(
-        `«${key}» не является полем чарника; в DTO допустимы только: ${TOP_KEYS.join(', ')}. ` +
-        'Вычисленные значения в чарнике не хранятся — их считает движок.');
+        `«${key}» не является полем листа; в DTO допустимы только: ${TOP_KEYS.join(', ')}. ` +
+        'Вычисленные значения в листе не хранятся — их считает движок.');
     }
   }
   for (const key of TOP_KEYS) {
-    if (!(key in s)) throw new SheetShapeError(`в чарнике нет обязательного поля «${key}»`);
+    if (!(key in s)) throw new SheetShapeError(`в листе нет обязательного поля «${key}»`);
   }
 
   if (!KINDS.includes(s.kind)) {
@@ -46,7 +46,7 @@ export function assertSheetShape(sheet: unknown): Sheet {
     if (!isScalar(value)) {
       throw new SheetShapeError(
         `значение «${tag}» имеет тип ${typeof value} — хранимое значение обязано быть скаляром. ` +
-        'Похоже, в чарник попало вычисленное или производное значение.');
+        'Похоже, в лист попало вычисленное или производное значение.');
     }
   }
 
@@ -58,7 +58,7 @@ export function assertSheetShape(sheet: unknown): Sheet {
   if (!Array.isArray(s.actions)) throw new SheetShapeError('«actions» должен быть массивом');
   for (const id of s.actions) {
     if (typeof id !== 'string') {
-      throw new SheetShapeError('«actions» содержит не ссылку на действие, а объект — копий записей в чарнике не держим');
+      throw new SheetShapeError('«actions» содержит не ссылку на действие, а объект — копий записей в листе не держим');
     }
   }
 
@@ -93,7 +93,7 @@ export function deserializeSheet(json: string): Sheet {
   try {
     parsed = JSON.parse(json);
   } catch (err) {
-    throw new SheetShapeError(`чарник не разбирается как JSON: ${(err as Error).message}`);
+    throw new SheetShapeError(`лист не разбирается как JSON: ${(err as Error).message}`);
   }
   assertSheetShape(parsed);
   return {

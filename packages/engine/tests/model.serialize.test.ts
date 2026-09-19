@@ -13,19 +13,19 @@ const sample = () => ({
   kind: 'pc',
 });
 
-group('сериализация чарника', () => {
+group('сериализация листа', () => {
   test('строка выдерживает круг JSON → объект → JSON побайтно', () => {
     for (const sheet of sheets) {
       const once = serializeSheet(sheet);
       const twice = serializeSheet(deserializeSheet(once));
-      eq(twice, once, `чарник ${sheet.id}`);
+      eq(twice, once, `лист ${sheet.id}`);
     }
   });
 
   test('объект выдерживает круг объект → JSON → объект', () => {
 
     for (const sheet of sheets) {
-      deepSame(deserializeSheet(serializeSheet(sheet)), sheet, `чарник ${sheet.id}`);
+      deepSame(deserializeSheet(serializeSheet(sheet)), sheet, `лист ${sheet.id}`);
     }
   });
 
@@ -46,7 +46,7 @@ group('сериализация чарника', () => {
       throws(() => serializeSheet(dirty), SheetShapeError, 'computed');
     });
 
-    test('метод на чарнике отвергается', () => {
+    test('метод на листе отвергается', () => {
       const dirty = sample();
       dirty.getModifier = () => 3;
       throws(() => serializeSheet(dirty), SheetShapeError, 'getModifier');
@@ -70,7 +70,7 @@ group('сериализация чарника', () => {
   });
 
   group('ссылки на записи компендиума', () => {
-    test('чарник хранит ссылки на действия, а не копии', () => {
+    test('лист хранит ссылки на действия, а не копии', () => {
       for (const sheet of sheets) {
         ok(Array.isArray(sheet.actions), `у ${sheet.id} нет списка действий`);
         for (const id of sheet.actions) eq(typeof id, 'string', 'действие — ссылка, а не объект');
@@ -82,7 +82,7 @@ group('сериализация чарника', () => {
       throws(() => serializeSheet(dirty), SheetShapeError, 'действ');
     });
 
-    test('без списка действий чарник неполон', () => {
+    test('без списка действий лист неполон', () => {
       const { actions, ...rest } = sample();
       throws(() => serializeSheet(rest), SheetShapeError, 'actions');
     });
@@ -106,7 +106,7 @@ group('сериализация чарника', () => {
     });
   });
 
-  group('образцовые чарники', () => {
+  group('образцовые листы', () => {
     test('их ровно два и они разные', () => {
       eq(sheets.length, 2);
       ok(sheets[0].id !== sheets[1].id);

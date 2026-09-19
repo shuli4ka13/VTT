@@ -2,7 +2,7 @@ export const ACTIVATIONS = {
   manual: {
     label: 'Активируемый',
     icon: '⚔',
-    hint: 'Жмёшь сам: кнопка на чарнике. Конвейер шагов.',
+    hint: 'Жмёшь сам: кнопка на листе. Конвейер шагов.',
     payload: 'steps',
   },
   triggered: {

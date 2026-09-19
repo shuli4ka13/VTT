@@ -22,7 +22,7 @@ describe('схема мира на образцовых данных', () => {
     expect(result.success, JSON.stringify(result.error?.issues?.slice(0, 3))).toBe(true);
   });
 
-  it('все образцовые чарники проходят схему', () => {
+  it('все образцовые листы проходят схему', () => {
     for (const sheet of sheets) {
       const result = W.sheet.safeParse(sheet);
       expect(result.success, `${sheet.id}: ${JSON.stringify(result.error?.issues?.slice(0, 3))}`)
@@ -37,7 +37,7 @@ describe('схема мира на образцовых данных', () => {
 });
 
 describe('схема стережёт инварианты, а не только форму', () => {
-  it('вычисленное значение в чарник не проходит — это критерий №1', () => {
+  it('вычисленное значение в лист не проходит — это критерий №1', () => {
     const bad = {
       ...sheets[0],
       values: { ...sheets[0].values, computed: { total: 12 } },
@@ -46,7 +46,7 @@ describe('схема стережёт инварианты, а не только
       .toBe(false);
   });
 
-  it('лишний ключ верхнего уровня в чарник не проходит', () => {
+  it('лишний ключ верхнего уровня в лист не проходит', () => {
     const bad = { ...sheets[0], cache: {} };
     expect(W.sheet.safeParse(bad).success).toBe(false);
   });
@@ -107,7 +107,7 @@ describe('схема стережёт инварианты, а не только
 });
 
 describe('round-trip: разбор и сборка не теряют и не добавляют', () => {
-  it('чарник переживает JSON → схема → JSON без изменений', () => {
+  it('лист переживает JSON → схема → JSON без изменений', () => {
     for (const sheet of sheets) {
       const once = JSON.parse(JSON.stringify(sheet));
       const parsed = W.sheet.parse(once);

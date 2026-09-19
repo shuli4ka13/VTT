@@ -1,10 +1,19 @@
 import { packRef, resolveNumber } from '../refs.ts';
 import { EngineError } from '../errors.ts';
 import type { StepData, StepContext } from './index.ts';
+import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 
 export const type = 'compare';
-export const label = 'Сравнение';
-export const hint = 'Величина против поля цели. Не дотянула — цепочка обрывается.';
+const words: StepWords = STEP_WORDS.compare;
+export const { label, hint, slots, outputs } = words;
+
+export function breakLine(step: StepData) {
+  return words.breakLines[String(step.breakIf || 'less')] ?? null;
+}
+
+export function reasonWord(reason: string): string | null {
+  return words.reasons[reason] ?? null;
+}
 
 const BREAKS: Record<string, (margin: number) => boolean> = {
   less: margin => margin < 0,
@@ -12,35 +21,7 @@ const BREAKS: Record<string, (margin: number) => boolean> = {
   never: () => false,
 };
 
-export const slots = [
-  { key: 'value', label: 'Что сравниваем', kind: 'ref', main: true, required: true, allow: ['ref', 'expr', 'const'] },
-  {
-    key: 'versus', label: 'С чем', kind: 'ref', main: true, required: true,
-    allow: ['tag', 'expr', 'const', 'param', 'ref'],
-  },
-  {
-    key: 'breakIf', label: 'Обрыв когда', kind: 'choice', options: Object.keys(BREAKS), fallback: 'less',
-    choice: [['less', 'величина меньше'], ['atMost', 'величина не больше'], ['never', 'никогда']],
-  },
-];
-
-export const outputs = [
-  { path: '.margin', label: 'разница', kind: 'number' },
-];
-
 export const mayBreak = true;
-
-export function breakLine(step: StepData) {
-  const words: Record<string, string> = {
-    less: 'если величина меньше порога — не пробило',
-    atMost: 'если величина не выше порога — не пробило',
-  };
-  return words[String(step.breakIf || 'less')] || null;
-}
-
-export function reasonWord(reason: string): string | null {
-  return reason === 'compare-short' ? 'не пробило' : null;
-}
 
 export const icon = '⇄';
 

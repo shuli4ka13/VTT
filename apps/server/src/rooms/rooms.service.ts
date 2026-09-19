@@ -148,7 +148,7 @@ export class RoomsService {
         let order = intent.order ?? [];
         if (order.length) {
           const unknown = order.find(id => !sheets.some(s => s.id === id));
-          if (unknown) throw new BadRequestException(`в комнате нет чарника «${unknown}»`);
+          if (unknown) throw new BadRequestException(`в комнате нет листа «${unknown}»`);
         } else {
           const rolled = rollInitiative(system, sheets, compendium, this.die);
           order = rolled.order;
@@ -220,8 +220,8 @@ export class RoomsService {
       if (effect) nextClock = spendAction(system, clock, intent.fromId, effect);
       const from = sheets.find(s => s.id === intent.fromId);
       const to = sheets.find(s => s.id === intent.toId);
-      if (!from) throw new NotFoundException(`в комнате нет чарника «${intent.fromId}»`);
-      if (!to) throw new NotFoundException(`в комнате нет чарника «${intent.toId}»`);
+      if (!from) throw new NotFoundException(`в комнате нет листа «${intent.fromId}»`);
+      if (!to) throw new NotFoundException(`в комнате нет листа «${intent.toId}»`);
       envelope = send(intent.actionId, {
         system, compendium, die: this.die, clock: nextClock, sheet: from, against: to, claims: intent.edits ?? [],
       });
@@ -248,7 +248,7 @@ export class RoomsService {
     const ctx = { system, compendium, die: this.die, clock: state.clock };
     const sheetOf = (id: string) => {
       const found = sheets.find(s => s.id === id);
-      if (!found) throw new NotFoundException(`в комнате нет чарника «${id}»`);
+      if (!found) throw new NotFoundException(`в комнате нет листа «${id}»`);
       return found;
     };
 
@@ -337,7 +337,7 @@ export class RoomsService {
       .where(eq(roomSheets.roomId, intent.roomId));
     let sheets = rows.map(r => JSON.parse(r.data) as Sheet);
     const asked = sheets.find(s => s.id === record.sheetId);
-    if (!asked) throw new NotFoundException(`в комнате нет чарника «${record.sheetId}»`);
+    if (!asked) throw new NotFoundException(`в комнате нет листа «${record.sheetId}»`);
 
     let clock = record.clock;
     const lines: string[] = [];
@@ -460,7 +460,7 @@ export class RoomsService {
     const rows = await this.db.select().from(roomSheets)
       .where(and(eq(roomSheets.roomId, roomId), eq(roomSheets.sheetId, sheetId)));
     const row = rows[0];
-    if (!row) throw new NotFoundException(`в комнате нет чарника «${sheetId}»`);
+    if (!row) throw new NotFoundException(`в комнате нет листа «${sheetId}»`);
 
     const sheet = JSON.parse(row.data) as Sheet;
     const next: Sheet = { ...sheet, values: { ...sheet.values, [tag]: value } };
@@ -522,7 +522,7 @@ export class RoomsService {
     const rows = await this.db.select().from(roomSheets)
       .where(and(eq(roomSheets.roomId, roomId), eq(roomSheets.sheetId, sheetId)));
     const row = rows[0];
-    if (!row) throw new NotFoundException(`в комнате нет чарника «${sheetId}»`);
+    if (!row) throw new NotFoundException(`в комнате нет листа «${sheetId}»`);
     const sheet = JSON.parse(row.data) as Sheet;
 
     const next: Sheet = { ...sheet };

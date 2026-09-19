@@ -123,7 +123,7 @@ group('миграция мира со старого формата', () => {
     deepEq(Object.keys(system.records).sort(), ['action', 'weapon']);
   });
 
-  test('чарники не трогаются: ссылка на эффект по id как была', () => {
+  test('листы не трогаются: ссылка на эффект по id как была', () => {
     const { sheets } = migrateWorld(oldWorld());
     deepEq(sheets[0].effects, [{ effectId: 'poisoned' }]);
   });

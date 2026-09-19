@@ -4,7 +4,7 @@ export const AMOUNT_SOURCES = [
     label: 'Свой бросок',
     hint: 'Проверка решила только «вышло или нет». Величина — отдельный бросок костей плюс бонусы.',
     examples: [
-      { system: 'D&D 5e', example: '1d8 меча + модификатор Силы' },
+      { system: 'D&D 5e', example: '1к8 меча + модификатор Силы' },
       { system: 'Pathfinder 2e', example: 'кость оружия + бонусы' },
     ],
   },

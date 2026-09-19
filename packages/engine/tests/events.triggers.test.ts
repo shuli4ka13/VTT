@@ -113,7 +113,7 @@ group('длительность: счётчик срабатываний', () =>
     deepEq(out.sheet.effects, [{ effectId: 'thorns', usesLeft: 3 }]);
   });
 
-  test('остаток — скаляр: чарник остаётся законным DTO (критерий №1)', () => {
+  test('остаток — скаляр: лист остаётся законным DTO (критерий №1)', () => {
     const sys = thorny();
     const env = send('longsword-item:0', { system: sys, sheet: arven, compendium, die: queue(15, 5) });
     const out = receive(env, { system: sys, sheet: spiked(mirra, 3), compendium, die: queue(3) });

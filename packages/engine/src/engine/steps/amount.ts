@@ -2,27 +2,13 @@ import { rollNotation } from '../dice.ts';
 import { packRef, resolveOptionalNumber } from '../refs.ts';
 import { EngineError } from '../errors.ts';
 import type { StepData, StepContext } from './index.ts';
+import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 
 export const type = 'amount';
-export const label = 'Величина';
-export const hint = 'Вычислить число: бросок, превышение или фикс предмета.';
+const words: StepWords = STEP_WORDS.amount;
+export const { label, hint, slots, outputs } = words;
 
 export const SOURCES = ['roll', 'margin', 'item'];
-
-export const slots = [
-  {
-    key: 'source', label: 'Откуда число', kind: 'choice', options: SOURCES, main: true, fallback: 'roll',
-    choice: [['roll', 'свой бросок костей'], ['margin', 'превышение шага'], ['item', 'фикс записи']],
-  },
-  { key: 'dice', label: 'Кости', kind: 'ref', main: true, allow: ['prop', 'const', 'param', 'constant', 'empty'] },
-  { key: 'bonus', label: 'Прибавка', kind: 'ref', main: true, allow: ['expr', 'const', 'param', 'empty'] },
-  { key: 'fixed', label: 'Фикс записи', kind: 'ref', allow: ['prop', 'const', 'param', 'empty'] },
-  { key: 'margin', label: 'Превышение шага', kind: 'ref', allow: ['ref', 'empty'] },
-];
-
-export const outputs = [
-  { path: '', label: 'величина', kind: 'number' },
-];
 
 export const mayBreak = false;
 

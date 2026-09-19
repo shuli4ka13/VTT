@@ -89,7 +89,7 @@ export function wornEffects(
     if (!effect) {
       if (!strict) continue;
       throw new EngineError(
-        `на чарнике «${sheet.id}» висит эффект «${entry.effectId}», которого система не объявляет`);
+        `на листе «${sheet.id}» висит эффект «${entry.effectId}», которого система не объявляет`);
     }
     out.push({ id: entry.effectId, effect, entry });
   }

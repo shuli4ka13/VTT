@@ -124,7 +124,7 @@ group('две системы одними слотами', () => {
       eq(sheet.values.armor, 4, 'и броня цела: не пробита — не изнашивается');
     });
 
-    test('чарник получателя после удара — по-прежнему законный DTO', () => {
+    test('лист получателя после удара — по-прежнему законный DTO', () => {
       const env = send('mono-knife:0', ctxB(silver, queue(7)));
       const { sheet } = receive(env, ctxB(raze, queue()));
       serializeSheet(sheet);

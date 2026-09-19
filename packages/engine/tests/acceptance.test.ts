@@ -18,7 +18,7 @@ group('критерии приёмки', () => {
 
       const raw = JSON.parse(json);
       for (const value of Object.values(raw.values)) {
-        ok(['number', 'boolean', 'string'].includes(typeof value), 'в чарнике только скаляры');
+        ok(['number', 'boolean', 'string'].includes(typeof value), 'в листе только скаляры');
       }
     }
   });
@@ -29,7 +29,7 @@ group('критерии приёмки', () => {
       fields: system.fields.map(f => ({ ...f, label: `Переименовано ${f.tag}` })),
     };
     for (const sheet of sheets) {
-      deepEq(all(renamed, sheet), all(system, sheet), `чарник ${sheet.id}`);
+      deepEq(all(renamed, sheet), all(system, sheet), `лист ${sheet.id}`);
     }
   });
 
@@ -57,7 +57,7 @@ group('критерии приёмки', () => {
     eq(calc(extended, sheet, 'initiative', newPass(extended, sheet, { compendium: book })), 8);
   });
 
-  test('4. два чарника разных персонажей считаются по одной и той же системе', () => {
+  test('4. два листа разных персонажей считаются по одной и той же системе', () => {
     eq(arven.systemId, mirra.systemId);
     const a = all(system, arven);
     const b = all(system, mirra);
@@ -67,7 +67,7 @@ group('критерии приёмки', () => {
     eq(b.ac, 14);
   });
 
-  test('5. событие от одного чарника меняет значение у второго, расчёт — у получателя', () => {
+  test('5. событие от одного листа меняет значение у второго, расчёт — у получателя', () => {
     const die = (...values) => { const q = [...values]; return () => q.shift(); };
     const ctx = (sheet, d) => ({ system, sheet, compendium, die: d });
 
@@ -79,7 +79,7 @@ group('критерии приёмки', () => {
     const { sheet, report } = receive(envelope, ctx(mirra, die()));
     const after = calc(system, sheet, 'hp_current', newPass(system, sheet, { compendium }));
 
-    eq(report.trace[0].versus.value, 14, 'класс брони посчитан получателем по его чарнику');
+    eq(report.trace[0].versus.value, 14, 'класс брони посчитан получателем по его листу');
     ok(after < before, `значение у получателя изменилось: ${before} → ${after}`);
   });
 

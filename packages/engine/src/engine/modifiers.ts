@@ -62,7 +62,7 @@ function sourcesOf(system: System, sheet: Sheet, compendium: Compendium): Modifi
 
   for (const id of sheet.equipped || []) {
     const item = (compendium.items || []).find(i => i.id === id);
-    if (!item) throw new EngineError(`чарник «${sheet.id}» носит предмет «${id}», которого нет в компендиуме`);
+    if (!item) throw new EngineError(`лист «${sheet.id}» носит предмет «${id}», которого нет в компендиуме`);
 
     const kind = item.rk ? (system.records || {})[item.rk] : undefined;
     if (kind?.modifiers?.length) {

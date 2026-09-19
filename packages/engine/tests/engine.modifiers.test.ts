@@ -118,7 +118,7 @@ group('модификаторы', () => {
       eq(ac({ ...arven, equipped: ['cond'] }, book([conditional('#level >= 99')])), 11);
     });
 
-    test('условие считается по чарнику владельца, а не по константам', () => {
+    test('условие считается по листу владельца, а не по константам', () => {
       const gear = book([conditional('#dex_mod > 2')]);
       eq(ac({ ...arven, equipped: ['cond'] }, gear), 11, 'у Арвен Ловкость мала');
       eq(ac({ ...mirra, equipped: ['cond'] }, gear), 24, 'у Мирры Ловкость велика');
@@ -212,7 +212,7 @@ group('модификаторы', () => {
       deepEq(resolveRoll(sys, arven, 'skill_roll', p).edits.map(e => e.label), ['Помеха']);
     });
 
-    test('условие правила считается по каждому чарнику отдельно', () => {
+    test('условие правила считается по каждому листу отдельно', () => {
       const sys = withRule({
         kind: 'roll', label: 'Мастерство даёт фору', target: 'skill_roll',
         edit: 'advantage', condition: '#prof_bonus >= 3',

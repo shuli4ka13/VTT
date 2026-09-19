@@ -5,37 +5,18 @@ import { incomingTagOf } from '../targets.ts';
 import { packRef, resolveNumber, resolveRef } from '../refs.ts';
 import { EngineError } from '../errors.ts';
 import type { StepData, StepContext } from './index.ts';
+import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 import type { System, StoredValue } from '../../model/types.ts';
 
 export const type = 'apply';
-export const label = 'Применить';
-export const hint = 'Изменить поле цели. Единственный шаг, который что-то меняет.';
+const words: StepWords = STEP_WORDS.apply;
+export const { label, hint, slots, outputs } = words;
 
 const DIRECTIONS: Record<string, (from: number, x: number) => number> = {
   add: (from, x) => from + x,
   subtract: (from, x) => from - x,
   set: (_from, x) => x,
 };
-
-export const slots = [
-  { key: 'target', label: 'Какое поле меняем', kind: 'tag', main: true, required: true, allow: ['tag', 'param'] },
-  {
-    key: 'direction', label: 'Как', kind: 'choice', main: true, fallback: 'subtract',
-    options: Object.keys(DIRECTIONS),
-    choice: [['subtract', 'вычесть'], ['add', 'прибавить'], ['set', 'задать']],
-  },
-  { key: 'value', label: 'Сколько', kind: 'ref', main: true, required: true, allow: ['ref', 'expr', 'const', 'param'] },
-  {
-    key: 'targetModifiers', label: 'Сопротивления цели', kind: 'flag', fallback: 'true',
-    choice: [['true', 'учитываются'], ['false', 'не учитываются']],
-  },
-];
-
-export const outputs = [
-  { path: '.amount', label: 'применено' },
-
-  { path: '.overkill', label: 'перебор' },
-];
 
 export const mayBreak = false;
 

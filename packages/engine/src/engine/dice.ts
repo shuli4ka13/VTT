@@ -12,7 +12,7 @@ const NOTATION = /^(\d+)d(\d+)$/;
 
 export function rollNotation(notation: unknown, die: Die): NotationRoll {
   const match = NOTATION.exec(String(notation).trim());
-  if (!match) throw new Error(`не понимаю запись кубиков «${notation}»; ожидается вид «2d6»`);
+  if (!match) throw new Error(`не понимаю запись кубиков «${notation}»; ожидается вид «2к6»`);
 
   const count = Number(match[1]);
   const sides = Number(match[2]);

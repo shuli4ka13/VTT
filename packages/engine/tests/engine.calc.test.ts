@@ -11,17 +11,17 @@ const formula = (tag, expr) => ({ tag, label: tag, group: 'g', value: { kind: 'f
 
 group('движок вычислений', () => {
   group('источники значения', () => {
-    test('хранимое значение берётся из чарника', () => {
+    test('хранимое значение берётся из листа', () => {
       eq(calc(system, arven, 'str'), 16);
     });
 
-    test('если в чарнике значения нет — берётся умолчание из системы', () => {
+    test('если в листе значения нет — берётся умолчание из системы', () => {
       const empty = { ...arven, values: {} };
       eq(calc(system, empty, 'str'), 10);
       eq(calc(system, empty, 'armor_heavy'), false);
     });
 
-    test('формула вычисляется, а не читается из чарника', () => {
+    test('формула вычисляется, а не читается из листа', () => {
       eq(calc(system, arven, 'str_mod'), 3);
       eq(calc(system, mirra, 'str_mod'), -1);
     });
@@ -67,7 +67,7 @@ group('движок вычислений', () => {
       eq(calc(sys, tinySheet({ 'крутость': 7 }), 'удвоенная'), 14);
     });
 
-    test('два разных чарника считаются по одной и той же системе', () => {
+    test('два разных листа считаются по одной и той же системе', () => {
       eq(calc(system, arven, 'attack_bonus'), 6);
       eq(calc(system, mirra, 'attack_bonus'), 1);
     });
@@ -94,7 +94,7 @@ group('движок вычислений', () => {
       eq(pass.computed.filter(t => t === 'doubled').length, 1, 'doubled должен считаться один раз');
     });
 
-    test('разные проходы не делят кэш — иначе правка чарника не была бы видна', () => {
+    test('разные проходы не делят кэш — иначе правка листа не была бы видна', () => {
       const sys = tinySystem([stored('base', 1), formula('doubled', '#base * 2')]);
       eq(calc(sys, tinySheet({ base: 1 }), 'doubled'), 2);
       eq(calc(sys, tinySheet({ base: 10 }), 'doubled'), 20);
@@ -153,10 +153,10 @@ group('движок вычислений', () => {
       eq(all.spell_dc, 10);
     });
 
-    test('вычисленные значения возвращаются отдельно и в чарник не попадают', () => {
+    test('вычисленные значения возвращаются отдельно и в лист не попадают', () => {
       const before = JSON.stringify(arven);
       calcAll(system, arven);
-      eq(JSON.stringify(arven), before, 'чарник не должен измениться после пересчёта');
+      eq(JSON.stringify(arven), before, 'лист не должен измениться после пересчёта');
     });
   });
 });

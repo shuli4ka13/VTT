@@ -3,21 +3,11 @@ import { applyValueModifiers } from '../modifiers.ts';
 import { eventTagOf } from '../targets.ts';
 import { requireEvent } from '../effects.ts';
 import type { StepData, StepContext } from './index.ts';
+import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 
 export const type = 'emit';
-export const label = 'Отправить';
-export const hint = 'Отправить получателю событие из словаря: урон, лечение. Что с ним делать — знает правило приёма.';
-
-export const slots = [
-  { key: 'event', label: 'Событие', kind: 'event', main: true, required: true, allow: [] },
-  { key: 'amount', label: 'Сколько', kind: 'ref', main: true, allow: ['ref', 'expr', 'const', 'param', 'empty'] },
-  { key: 'tags', label: 'Теги', kind: 'tags', allow: [] },
-];
-
-export const outputs = [
-  { path: '.incoming', label: 'отправлено', kind: 'number' },
-  { path: '.amount', label: 'дошло до цели', kind: 'number' },
-];
+const words: StepWords = STEP_WORDS.emit;
+export const { label, hint, slots, outputs } = words;
 
 export const mayBreak = false;
 

@@ -4,38 +4,20 @@ import { dieConstant, rollLead, unfoldDice } from '../lead-die.ts';
 import { packRef, resolveNumber, resolveOptionalNumber } from '../refs.ts';
 import { EngineError } from '../errors.ts';
 import type { StepData, StepContext } from './index.ts';
+import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 
 export const type = 'threshold';
-export const label = 'Порог';
-export const hint = 'Бросок против величины. Не вышло — цепочка обрывается.';
+const words: StepWords = STEP_WORDS.threshold;
+export const { label, hint, slots, outputs } = words;
 
-export const slots = [
-  { key: 'roll.die', label: 'Кость', kind: 'ref', main: true, required: true, allow: ['constant'] },
-  {
-    key: 'roll.bonus', label: 'Прибавка к броску', kind: 'ref', main: true,
-    allow: ['expr', 'const', 'param', 'prop', 'empty'],
-  },
-  {
-    key: 'versus', label: 'Против чего', kind: 'ref', main: true, required: true,
-    allow: ['tag', 'expr', 'const', 'param', 'ref'],
-  },
-  { key: 'roll.check', label: 'Какой это бросок', kind: 'roll', allow: [] },
-  {
-    key: 'side', label: 'Кто бросает', kind: 'choice', options: ['source', 'target'], fallback: 'source',
-    choice: [['source', 'отправитель — это атака'], ['target', 'цель — это спасбросок']],
-  },
-  {
-    key: 'successWhen', label: 'Успех, если бросок', kind: 'choice', fallback: 'atLeast',
-    options: ['atLeast', 'notOver', 'over', 'under', 'equals'],
-    choice: [['atLeast', 'не меньше порога'], ['notOver', 'не больше порога'],
-      ['over', 'строго больше'], ['under', 'строго меньше'], ['equals', 'ровно порог']],
-  },
-  {
-    key: 'continueOn', label: 'Дальше при', kind: 'choice', options: ['success', 'fail', 'always'], fallback: 'success',
-    choice: [['success', 'успехе'], ['fail', 'провале'], ['always', 'всегда — ветвят следующие шаги']],
-  },
-  { key: 'degrees', label: 'Степени успеха', kind: 'degrees' },
-];
+export function breakLine(step: StepData) {
+  const mode = String(step.continueOn || 'success');
+  return words.breakLines[mode] ?? null;
+}
+
+export function reasonWord(reason: string): string | null {
+  return words.reasons[reason] ?? null;
+}
 
 const LITERAL = /^(\d+)?\s*[dдк]\s*(\d+)$/iu;
 
@@ -44,7 +26,7 @@ function dieOf(system: Parameters<typeof dieConstant>[0], die: unknown) {
     const text = String((die as { const: unknown }).const ?? '');
     const m = text.trim().match(LITERAL);
     if (!m) {
-      throw new EngineError(`«${text}» — не запись кости; жду вроде «1d20» или «2к6»`);
+      throw new EngineError(`«${text}» — не запись кости; жду вроде «1к20» или «2к6»`);
     }
     return { label: text, kind: 'die' as const, dice: [{ count: Number(m[1] ?? 1), sides: Number(m[2]) }] };
   }
@@ -64,34 +46,7 @@ const OUTCOMES: Record<string, (total: number, versus: number) => { success: boo
   equals: (total, versus) => ({ success: total === versus, margin: -Math.abs(total - versus) }),
 };
 
-export const outputs = [
-
-  { path: '.success', label: 'вышло', kind: 'boolean' },
-  { path: '.margin', label: 'превышение', kind: 'number' },
-  { path: '.total', label: 'итог броска', kind: 'number' },
-  { path: '.degree', label: 'степень успеха', kind: 'text' },
-
-  { path: '.rolled', label: 'сколько костей кинуто', kind: 'number' },
-  { path: '.atMax', label: 'костей на максимуме', kind: 'number' },
-  { path: '.atMin', label: 'костей на единице', kind: 'number' },
-  { path: '.edited', label: 'бросок был с правкой', kind: 'boolean' },
-];
-
 export const mayBreak = true;
-
-export function breakLine(step: StepData) {
-  const mode = step.continueOn || 'success';
-  if (mode === 'always') return null;
-  return mode === 'fail'
-    ? 'если порог взят — цель устояла'
-    : 'если порог не взят — промах';
-}
-
-export function reasonWord(reason: string): string | null {
-  return reason === 'threshold-miss' ? 'промах'
-    : reason === 'threshold-held' ? 'цель устояла'
-      : null;
-}
 
 export const icon = '⌖';
 

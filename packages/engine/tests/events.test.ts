@@ -119,15 +119,15 @@ group('событийный конверт', () => {
       eq(sheet.values.hp_current, 44);
     });
 
-    test('чарник получателя не мутируется — возвращается новый', () => {
+    test('лист получателя не мутируется — возвращается новый', () => {
       const env = send('longsword-item:0', ctx(arven, queue(15, 5)));
       const before = serializeSheet(mirra);
       const { sheet } = receive(env, ctx(mirra, queue()));
-      eq(serializeSheet(mirra), before, 'исходный чарник остался прежним');
+      eq(serializeSheet(mirra), before, 'исходный лист остался прежним');
       ok(sheet !== mirra);
     });
 
-    test('новый чарник остаётся законным DTO', () => {
+    test('новый лист остаётся законным DTO', () => {
       const env = send('longsword-item:0', ctx(arven, queue(15, 5)));
       const { sheet } = receive(env, ctx(mirra, queue()));
       serializeSheet(sheet);
@@ -185,7 +185,7 @@ group('событийный конверт', () => {
   });
 
   group('критерий приёмки №5', () => {
-    test('событие от одного чарника меняет значение у второго, расчёт — у получателя', () => {
+    test('событие от одного листа меняет значение у второго, расчёт — у получателя', () => {
       const before = calc(system, mirra, 'hp_current', newPass(system, mirra, { compendium }));
       const env = send('longsword-item:0', ctx(arven, queue(15, 5)));
       const { sheet, report } = receive(env, ctx(mirra, queue()));
