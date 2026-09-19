@@ -27,6 +27,8 @@ export interface RuleReport {
 
 export interface NestedRun { results: Record<string, unknown>; stopped: StopReason | null }
 
+export const MAX_CALL_DEPTH = 8;
+
 const packGuard = (guard: unknown, ctx: StepContext): unknown => {
   if (guard === null || guard === undefined) return undefined;
   if (typeof guard === 'object' && 'ref' in (guard as object)) return guard;
@@ -145,9 +147,21 @@ export function resolveRule(steps: StepData[], ctx: StepContext): RuleReport {
     return { results, stopped };
   }
 
+  const chain: string[] = [];
   const run = (list: Step[], seed: Record<string, unknown>, within?: string): NestedRun => {
-    const packed = packSteps(list, { ...ctx, results: seed });
-    return runSteps(packed, seed, within);
+    if (within) {
+      if (chain.length >= MAX_CALL_DEPTH) {
+        throw new EngineError(
+          `${who(ctx)}: вызовы вложены глубже ${MAX_CALL_DEPTH} — похоже, идут по кругу: ${[...chain, within].join(' → ')}`);
+      }
+      chain.push(within);
+    }
+    try {
+      const packed = packSteps(list, { ...ctx, results: seed });
+      return runSteps(packed, seed, within);
+    } finally {
+      if (within) chain.pop();
+    }
   };
 
   const results: Record<string, unknown> = { ...(ctx.results ?? {}) };

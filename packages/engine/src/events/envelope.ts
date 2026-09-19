@@ -1,12 +1,11 @@
 import { newPass } from '../engine/calc.ts';
-import { packRule, resolveRule } from '../engine/rule.ts';
+import { packCall, runCall } from './call.ts';
 import { packRef, resolveRef } from '../engine/refs.ts';
 import {
   requireEffect, findEffect, isPipeline, activationOf, durationOf, wornEffects,
 } from '../engine/effects.ts';
 import { EngineError } from '../engine/errors.ts';
 import { incomingRollModifiers } from '../engine/modifiers.ts';
-import { expiryOf } from '../engine/clock.ts';
 import type { Clock } from '../engine/clock.ts';
 import type {
   System, Sheet, Compendium, CompendiumRecord, Binding, Die, Effect, Activation,
@@ -145,16 +144,15 @@ export function send(
       'а он пассивный: у пассивного конвейера шагов нет, его вешают, а не применяют');
   }
 
-  const pass = newPass(system, sheet, { compendium });
   const targetPass = against ? newPass(system, against, { compendium }) : null;
-  const steps = packRule(effect, {
-    system, sheet, pass, die,
-    params: action.binding.args || {},
+  const steps = packCall({
+    effectId: action.effect, effect, sheet,
+    args: action.binding.args || {},
     props: propsOf(action.record, system),
     owner: `эффект «${effect.label || action.effect}»`,
     ...(targetPass ? { against: (rollTag: string | null) => incomingRollModifiers(rollTag, targetPass) } : {}),
     ...(claims?.length ? { claims } : {}),
-  });
+  }, { system, compendium, die });
 
   return {
     kind: 'effect',
@@ -170,13 +168,9 @@ export function receive(
   envelope: Envelope,
   { system, sheet, compendium, die, claims, clock }: WorldContext & { sheet: Sheet } & { claims?: string[] },
 ): ReceiveResult {
-  const pass = newPass(system, sheet, { compendium });
-  const out = resolveRule(envelope.steps || [], {
-    system, sheet, pass, die,
-    owner: `конверт «${envelope.label}»`,
-    expiry: (effect: Effect) => expiryOf(effect, clock),
-    ...(claims?.length ? { claims } : {}),
-  });
+  const out = runCall(envelope.steps || [], {
+    sheet, owner: `конверт «${envelope.label}»`, ...(claims?.length ? { claims } : {}),
+  }, { system, compendium, die, clock });
 
   const fired = envelope.reply
     ? { sheet: out.sheet, replies: [], spent: [], reactions: [] }
@@ -257,21 +251,10 @@ function runOnSelf(
   id: string, effect: Effect, sheet: Sheet, results: Record<string, unknown>, owner: string,
   { system, compendium, die, clock }: WorldContext,
 ): { sheet: Sheet; report: Report } {
-  const pass = newPass(system, sheet, { compendium });
-  const packed = packRule(effect, {
-    system, sheet, pass, die,
-    params: (effect.args || {}) as Record<string, unknown>,
-    props: null,
-    owner,
-    results,
-  });
-  const done = resolveRule(packed, {
-    system, sheet, die,
-    pass: newPass(system, sheet, { compendium }),
-    results,
-    owner,
-    expiry: (hung: Effect) => expiryOf(hung, clock),
-  });
+  const world = { system, compendium, die, clock };
+  const call = { effectId: id, effect, sheet, owner, args: (effect.args || {}) as Record<string, unknown>, props: null, seed: results };
+  const packed = packCall(call, world);
+  const done = runCall(packed, { sheet, owner, seed: results }, world);
   return {
     sheet: done.sheet,
     report: {
@@ -287,7 +270,6 @@ function replyFrom(
   id: string, effect: Effect, sheet: Sheet, to: string, results: Record<string, unknown>, owner: string,
   { system, compendium, die }: WorldContext,
 ): Envelope {
-  const pass = newPass(system, sheet, { compendium });
   return {
     kind: 'effect',
     effect: id,
@@ -296,13 +278,9 @@ function replyFrom(
     reply: true,
     action: id,
     label: effect.label || id,
-    steps: packRule(effect, {
-      system, sheet, pass, die,
-      params: (effect.args || {}) as Record<string, unknown>,
-      props: null,
-      owner,
-      results,
-    }),
+    steps: packCall({
+      effectId: id, effect, sheet, owner, args: (effect.args || {}) as Record<string, unknown>, props: null, seed: results,
+    }, { system, compendium, die }),
   };
 }
 
