@@ -44,9 +44,16 @@ export function TableScreen() {
               <span className="field__label">Журнал</span>
               {log.length === 0
                 ? <span className="faint">Броски и события появятся здесь.</span>
-                : log.slice(-40).map(entry => (
-                  <div key={entry.id} className="log-line">{entry.text}</div>
-                ))}
+                : (
+                  <div className="log">
+                    {log.slice(-80).map(entry => (
+                      <div key={entry.id} className="log-line">
+                        <span className="log-line__at">{timeOf(entry.at)}</span>
+                        <span>{entry.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
             </div>
           </>
         ),
@@ -132,13 +139,40 @@ function Combat({ room, onError }: { room: RoomState; onError: (message: string 
         }
       />
       {fighting ? (
-        <div className="inline inline--tight">
-          {clock!.order.map(id => (
-            <Chip key={id} active={id === clock!.active}>{nameOf(id)}</Chip>
-          ))}
-        </div>
+        <>
+          <div className="inline inline--tight">
+            {clock!.order.map(id => (
+              <Chip key={id} active={id === clock!.active}>{nameOf(id)}</Chip>
+            ))}
+          </div>
+          <Budget room={room} sheetId={String(clock!.active)} />
+        </>
       ) : null}
     </Card>
+  );
+}
+
+function Budget({ room, sheetId }: { room: RoomState; sheetId: string }) {
+  const types = Object.entries(room.system.action_types ?? {});
+  if (!types.length) return null;
+  const spent = room.clock?.spent[sheetId] ?? {};
+
+  return (
+    <div className="stack stack--tight">
+      <span className="field__label">Бюджет хода</span>
+      <div className="inline inline--tight">
+        {types.map(([key, type]) => {
+          const perTurn = type.perTurn ?? 0;
+          const used = spent[key] ?? 0;
+          const left = perTurn ? Math.max(0, perTurn - used) : null;
+          return (
+            <Chip key={key} active={left === null ? used === 0 : left > 0}>
+              {type.label}: {left === null ? (used ? `потрачено ${used}` : 'без счёта') : `${left} из ${perTurn}`}
+            </Chip>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -262,3 +296,10 @@ function Actions({ room, sender, target, onError }: {
     </Card>
   );
 }
+
+const timeOf = (at: string): string => {
+  const stamp = new Date(at);
+  return Number.isNaN(stamp.getTime())
+    ? ''
+    : `${String(stamp.getHours()).padStart(2, '0')}:${String(stamp.getMinutes()).padStart(2, '0')}`;
+};

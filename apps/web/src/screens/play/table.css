@@ -30,3 +30,7 @@
   padding: var(--s-2) 0;
   border-bottom: 1px solid var(--border);
 }
+
+.log { display: flex; flex-direction: column; gap: var(--s-1); max-height: 42vh; overflow-y: auto; }
+.log-line { display: flex; gap: var(--s-2); align-items: baseline; }
+.log-line__at { color: var(--text-muted); font-variant-numeric: tabular-nums; font-size: var(--fs-1); }
