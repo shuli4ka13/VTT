@@ -482,3 +482,5 @@
 .input--shown { display: flex; align-items: center; background: var(--surface-2); }
 
 .trial__line { margin: 0 0 var(--s-2); font-size: var(--fs-2); }
+
+.live__value { font-size: var(--fs-4); font-variant-numeric: tabular-nums; }

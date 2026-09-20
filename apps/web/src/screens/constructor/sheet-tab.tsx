@@ -1,5 +1,6 @@
 import { useWorld, freeId, slugOf } from '../../store/world.ts';
 import { useUsage, usersOf } from './usage.ts';
+import { LiveValue } from './live-value.tsx';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
   Card, CardHead, Field, Input, Select, Button, Empty, Fold, Verdict, Chip, DangerButton, NumInput,
@@ -97,6 +98,7 @@ export function SheetTab() {
 }
 
 function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
+  const compendium = useWorld(s => s.compendium);
   const editSystem = useWorld(s => s.editSystem);
   const editField = useWorld(s => s.editField);
   const pick = useWorld(s => s.pick);
@@ -242,6 +244,7 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
               onChange={expr => edit(draft => { if (draft.value.kind === 'formula') draft.value.expr = expr; })}
             />
           </Field>
+          <LiveValue system={system} compendium={compendium} tag={field.tag} source={field.value.expr} />
         </Card>
       ) : null}
 
@@ -266,6 +269,7 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
               placeholder="например: @уровень"
             />
           </Field>
+          <LiveValue system={system} compendium={compendium} tag={field.tag} source={field.value.arg} />
         </Card>
       ) : null}
 
