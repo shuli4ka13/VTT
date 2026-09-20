@@ -241,6 +241,8 @@ export const system = z.object({
     bonus: slotRef.optional(),
     check: z.string().optional(),
   }).passthrough().optional(),
+
+  mannequins: z.array(z.lazy(() => sheet)).optional(),
 }).passthrough();
 
 export const storedValue = z.union([z.number(), z.string(), z.boolean(), z.null()]);

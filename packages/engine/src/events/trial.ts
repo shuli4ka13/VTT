@@ -23,7 +23,7 @@ export function dieOf(mode: DiceMode, random: () => number = Math.random): Die {
 }
 
 export function sampleArg(kind: string | undefined, system: System, effect?: Effect, key?: string): unknown {
-  if (kind === 'dice') return '1d6';
+  if (kind === 'dice') return '1к6';
   if (kind === 'number') return 1;
   if (kind === 'expr') return '0';
   if (kind === 'effect') return Object.keys(system.effects)[0] ?? '';

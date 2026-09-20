@@ -8,13 +8,13 @@ export interface NotationRoll {
 
 export const randomDie: Die = sides => 1 + Math.floor(Math.random() * sides);
 
-const NOTATION = /^(\d+)d(\d+)$/;
+const NOTATION = /^(\d+)?\s*[dдк]\s*(\d+)$/iu;
 
 export function rollNotation(notation: unknown, die: Die): NotationRoll {
   const match = NOTATION.exec(String(notation).trim());
   if (!match) throw new Error(`не понимаю запись кубиков «${notation}»; ожидается вид «2к6»`);
 
-  const count = Number(match[1]);
+  const count = Number(match[1] ?? 1);
   const sides = Number(match[2]);
   const rolls: number[] = [];
   for (let i = 0; i < count; i++) rolls.push(die(sides));
