@@ -42,12 +42,16 @@ export const tag = z.string().min(1).refine(v => !v.includes(':'), {
   message: 'двоеточие в теге запрещено — им размечены выведенные мишени',
 });
 
+export const control = z.enum(['stepper', 'pips', 'toggle', 'ring', 'bar', 'die']);
+
 export const field = z.object({
   tag,
   label: z.string(),
   group: z.string().optional(),
   roll: z.object({ label: z.string().optional() }).passthrough().optional(),
   value: fieldValue,
+
+  control: control.optional(),
 }).passthrough();
 
 export const diceTerm = z.object({
@@ -330,6 +334,7 @@ export type Modifier = z.infer<typeof modifier>;
 export type Param = z.infer<typeof param>;
 export type Step = z.infer<typeof step>;
 export type Ask = z.infer<typeof ask>;
+export type Control = z.infer<typeof control>;
 export type Guard = z.infer<typeof guard>;
 export type Scale = z.infer<typeof scale>;
 export type SystemEvent = z.infer<typeof systemEvent>;

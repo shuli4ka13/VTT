@@ -40,3 +40,45 @@ describe('стартовые блоки на пустом листе', () => {
     expect(metas.some(text => text.startsWith('= ')), metas.join(' | ')).toBe(true);
   });
 });
+
+describe('вид поля на листе выбирается в конструкторе', () => {
+  beforeEach(() => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 10 } }],
+      },
+      activeFieldTag: 'хиты',
+      activeGroupName: null,
+    }));
+  });
+
+  it('выбор «полоса запаса» ложится в поле, а «обычное поле» убирает его', () => {
+    render(<SheetTab />);
+    const picker = [...document.querySelectorAll('select')]
+      .find(el => [...el.options].some(o => o.value === 'bar'))!;
+    expect(picker).toBeTruthy();
+
+    fireEvent.change(picker, { target: { value: 'bar' } });
+    expect(useWorld.getState().system.fields[0]!.control).toBe('bar');
+
+    fireEvent.change(picker, { target: { value: '' } });
+    expect('control' in useWorld.getState().system.fields[0]!).toBe(false);
+  });
+
+  it('у вычисляемого поля вида не спрашивают — его не правят руками', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        fields: [{ tag: 'мод', label: 'Мод', value: { kind: 'formula', expr: '1' } }],
+      },
+      activeFieldTag: 'мод',
+    }));
+    render(<SheetTab />);
+    const picker = [...document.querySelectorAll('select')]
+      .find(el => [...el.options].some(o => o.value === 'bar'));
+    expect(picker).toBeUndefined();
+  });
+});

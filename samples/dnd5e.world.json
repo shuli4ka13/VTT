@@ -1133,7 +1133,8 @@
           "type": "number",
           "default": 0,
           "min": 0
-        }
+        },
+        "control": "pips"
       },
       {
         "tag": "prof_bonus",
@@ -1155,7 +1156,8 @@
           "default": 2,
           "min": 0,
           "max": "#level"
-        }
+        },
+        "control": "pips"
       },
       {
         "tag": "athletics",
@@ -1391,7 +1393,8 @@
           "kind": "stored",
           "type": "boolean",
           "default": false
-        }
+        },
+        "control": "toggle"
       },
       {
         "tag": "ac",
@@ -1434,7 +1437,8 @@
           "default": 1,
           "min": 0,
           "max": "#hp_max"
-        }
+        },
+        "control": "bar"
       },
       {
         "tag": "hp_temp",
@@ -1445,7 +1449,8 @@
           "type": "number",
           "default": 0,
           "min": 0
-        }
+        },
+        "control": "stepper"
       },
       {
         "tag": "death_ok",
@@ -1457,7 +1462,8 @@
           "default": 0,
           "min": 0,
           "max": 3
-        }
+        },
+        "control": "pips"
       },
       {
         "tag": "death_fail",
@@ -1469,7 +1475,8 @@
           "default": 0,
           "min": 0,
           "max": 3
-        }
+        },
+        "control": "pips"
       },
       {
         "tag": "attack_bonus",

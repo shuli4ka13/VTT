@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Field, Input, Button, NumInput } from '../ui/primitives.tsx';
 import { show } from '../engine/use-calc.ts';
+import { CONTROL_VIEWS } from './controls/index.tsx';
 import type { Reader } from '../engine/use-calc.ts';
 import type { Sheet, Field as FieldModel, StoredValue } from '@vtt/schema';
 
@@ -23,6 +24,25 @@ export function FieldCell({ field, sheet, reader, onChange, onRoll }: {
     const stored = sheet.values[field.tag] ?? field.value.default;
 
     if (!onChange) return <Shown label={field.label} text={String(stored ?? '—')} roll={roll} />;
+
+    const View = field.control ? CONTROL_VIEWS[field.control] : null;
+    if (View) {
+      const bounds = field.value.kind === 'stored' ? field.value : undefined;
+      return (
+        <Field label={field.label}>
+          <div className="inline inline--tight">
+            <View
+              value={stored}
+              label={field.label}
+              min={typeof bounds?.min === 'number' ? bounds.min : undefined}
+              max={typeof bounds?.max === 'number' ? bounds.max : boundOf(bounds?.max, reader)}
+              onChange={next => onChange(field.tag, next)}
+            />
+            {roll}
+          </div>
+        </Field>
+      );
+    }
 
     if (field.value.type === 'boolean') {
       return (
@@ -64,4 +84,12 @@ function Shown({ label, text, title, bad, roll }: {
       </div>
     </Field>
   );
+}
+
+function boundOf(bound: unknown, reader: Reader): number | undefined {
+  if (typeof bound !== 'string') return undefined;
+  const tag = /^#([\p{L}\p{N}_-]+)$/u.exec(bound.trim())?.[1];
+  if (!tag) return undefined;
+  const value = reader.valueOf(tag);
+  return value.ok && typeof value.value === 'number' ? value.value : undefined;
 }

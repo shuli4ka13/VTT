@@ -2,6 +2,7 @@ import { useWorld, freeId, slugOf } from '../../store/world.ts';
 import { useUsage, usersOf } from './usage.ts';
 import { LiveValue } from './live-value.tsx';
 import { Starters } from './starters.tsx';
+import { CONTROLS } from '../../sheet/controls/index.tsx';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
   Card, CardHead, Field, Input, Select, Button, Empty, Fold, Verdict, Chip, DangerButton, NumInput,
@@ -163,6 +164,20 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
           <Field label="Блок">
             <Input value={field.group ?? ''} onChange={next => edit(draft => { draft.group = next; })} />
           </Field>
+          {field.value.kind === 'stored' ? (
+            <Field label="Как выглядит на листе" hint="Обычное поле подойдёт всегда; остальное — для счётчиков и запасов.">
+              <Select
+                value={field.control ?? ''}
+                options={[['', 'обычное поле'],
+                  ...(Object.keys(CONTROLS) as (keyof typeof CONTROLS)[])
+                    .map(key => [key, CONTROLS[key]] as const)] as never}
+                onChange={next => edit(draft => {
+                  if (next) draft.control = next as typeof draft.control; else delete draft.control;
+                })}
+              />
+            </Field>
+          ) : null}
+
           <Field label="Откуда значение">
             <Select value={field.value.kind} options={KINDS} onChange={setKind} />
           </Field>
