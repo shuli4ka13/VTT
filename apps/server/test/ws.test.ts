@@ -187,3 +187,35 @@ describe('партия строит себя сама', () => {
     socket.close();
   });
 });
+
+describe('бросок с листа', () => {
+  it('поле с броском даёт строку журнала, поле без броска — отказ', async () => {
+    const gm = await post('/auth/login', { name: 'Ведущий броска' });
+    const published = await publish('Мир броска', gm.token,
+      sheets.filter((s: { systemId: string }) => s.systemId === dnd.id));
+    const room = await post('/rooms', { worldId: published.id, title: 'Стол броска' }, gm.token);
+
+    const socket = await open();
+    const joined = waitFor(socket, 'room:state');
+    say(socket, 'room:join', { roomId: room.id, token: gm.token });
+    const state = await joined;
+    const [hero] = state.state.sheets;
+    const rollable = state.state.system.fields.find((field: { roll?: unknown }) => field.roll);
+    expect(rollable, 'в образце есть поле с броском').toBeTruthy();
+
+    const rolled = waitFor(socket, 'room:delta');
+    say(socket, 'sheet:roll', { roomId: room.id, sheetId: hero.id, tag: rollable.tag });
+    const delta = await rolled;
+    const said = delta.delta.log.map((entry: { text: string }) => entry.text).join(' ');
+    expect(said).toContain(hero.name);
+    expect(said).toMatch(/\[\d+/);
+
+    const refused = waitFor(socket, 'error');
+    const plain = state.state.system.fields.find((field: { roll?: unknown; value: { kind: string } }) =>
+      !field.roll && field.value.kind === 'stored');
+    say(socket, 'sheet:roll', { roomId: room.id, sheetId: hero.id, tag: plain.tag });
+    expect((await refused).message).toContain('не бросают');
+
+    socket.close();
+  });
+});

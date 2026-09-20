@@ -137,6 +137,24 @@ export class TableGateway {
     }
   }
 
+  @SubscribeMessage('sheet:roll')
+  async rollField(@MessageBody() raw: unknown, @ConnectedSocket() socket: WebSocket) {
+    const guest = this.guestOf(socket);
+    if (!guest) return this.fail(socket, 'сначала войдите в комнату');
+
+    const parsed = api.clientMessage.safeParse({ type: 'sheet:roll', ...(raw as object) });
+    if (!parsed.success || parsed.data.type !== 'sheet:roll') {
+      return this.fail(socket, 'бросок с листа не проходит схему');
+    }
+    const { roomId, sheetId, tag } = parsed.data;
+    try {
+      const delta = await this.roomsService.rollField(guest.userId, roomId, sheetId, tag);
+      this.broadcast(roomId, { type: 'room:delta', delta });
+    } catch (err) {
+      this.fail(socket, (err as Error).message);
+    }
+  }
+
   @SubscribeMessage('sheet:belong')
   async setBelonging(@MessageBody() raw: unknown, @ConnectedSocket() socket: WebSocket) {
     const guest = this.guestOf(socket);

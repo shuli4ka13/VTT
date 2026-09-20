@@ -14,6 +14,8 @@ export interface RefContext {
 
   params?: Record<string, unknown>;
 
+  inputs?: Record<string, number | string>;
+
   results?: Record<string, unknown>;
 }
 
@@ -86,6 +88,8 @@ function packParam(key: string, optional: boolean, ctx: RefContext): unknown {
 }
 
 function fromArgs(key: string, ctx: RefContext): unknown {
+  const asked = (ctx.inputs || {})[key];
+  if (asked !== undefined) return asked;
   const arg = (ctx.params || {})[key];
   if (arg === null || typeof arg !== 'object') return arg;
   if ('prop' in arg) return (ctx.props || {})[String((arg as AnyRef).prop)];

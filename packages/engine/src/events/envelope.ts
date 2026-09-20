@@ -127,13 +127,14 @@ function actionsOfRecord(record: CompendiumRecord, system: System, fromItem: boo
 }
 
 export interface SendOptions {
+  inputs?: Record<string, number | string>;
   against?: Sheet | null;
   claims?: string[];
 }
 
 export function send(
   actionId: string,
-  { system, sheet, compendium, die, against, claims }: WorldContext & { sheet: Sheet } & SendOptions,
+  { system, sheet, compendium, die, against, claims, inputs }: WorldContext & { sheet: Sheet } & SendOptions,
 ): Envelope {
   const action = actionOf(actionId, { system, compendium });
 
@@ -150,6 +151,7 @@ export function send(
     args: action.binding.args || {},
     props: propsOf(action.record, system),
     owner: `эффект «${effect.label || action.effect}»`,
+    ...(inputs ? { inputs } : {}),
     ...(targetPass ? { against: (rollTag: string | null) => incomingRollModifiers(rollTag, targetPass) } : {}),
     ...(claims?.length ? { claims } : {}),
   }, { system, compendium, die });

@@ -15,6 +15,7 @@ export interface Call {
   sheet: Sheet;
   owner: string;
   args?: Record<string, unknown>;
+  inputs?: Record<string, number | string>;
   props?: Record<string, unknown> | null;
   seed?: Record<string, unknown>;
   against?: (rollTag: string | null) => SourcedModifier[];
@@ -26,6 +27,7 @@ export function packCall(call: Call, world: WorldContext): StepData[] {
   return packRule(call.effect, {
     system: world.system, sheet: call.sheet, pass, die: world.die,
     params: call.args ?? {},
+    ...(call.inputs ? { inputs: call.inputs } : {}),
     props: call.props ?? null,
     owner: call.owner,
     ...(call.seed ? { results: call.seed } : {}),

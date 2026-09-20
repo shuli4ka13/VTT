@@ -16,6 +16,10 @@ import { effectLabelOf, actionOf, send, receive, offers, react, senderResults } 
 import { tapeDie, replayDie } from '@vtt/engine/engine/dice';
 import type { Envelope, Offer, ReactionWindow } from '@vtt/engine/events/envelope';
 import { findEffect, usesMax } from '@vtt/engine/engine/effects';
+import { asksOf, checkInputs, normalizeInputs } from '@vtt/engine/model/asks';
+import { resolveRoll } from '@vtt/engine/engine/modifiers';
+import { newPass, calc } from '@vtt/engine/engine/calc';
+import { rollLead, dieConstant } from '@vtt/engine/engine/lead-die';
 import {
   idleClock, startCombat, stopCombat, nextTurn, endScene, spendAction, rollInitiative, expiryOf,
 } from '@vtt/engine/engine/clock';
@@ -222,8 +226,13 @@ export class RoomsService {
       const to = sheets.find(s => s.id === intent.toId);
       if (!from) throw new NotFoundException(`в комнате нет листа «${intent.fromId}»`);
       if (!to) throw new NotFoundException(`в комнате нет листа «${intent.toId}»`);
+      const asked = asksOf(intent.actionId, { system, compendium });
+      const trouble = checkInputs(asked, intent.inputs);
+      if (trouble) throw new BadRequestException(trouble);
+      const inputs = normalizeInputs(asked, intent.inputs);
       envelope = send(intent.actionId, {
         system, compendium, die: this.die, clock: nextClock, sheet: from, against: to, claims: intent.edits ?? [],
+        ...(Object.keys(inputs).length ? { inputs } : {}),
       });
     } catch (err) {
       if (err instanceof NotFoundException) throw err;
@@ -445,6 +454,43 @@ export class RoomsService {
       .where(and(eq(roomSheets.roomId, roomId), eq(roomSheets.sheetId, sheetId)));
 
     return { roomId, sheets: [next], log: [] };
+  }
+
+  async rollField(userId: string, roomId: string, sheetId: string, tag: string): Promise<RoomDelta> {
+    const room = await this.requireRoom(roomId);
+    if (!await this.memberOf(roomId, userId)) throw new ForbiddenException('вы не в этой комнате');
+
+    const { system, compendium } = this.worldOf(room);
+    const field = system.fields.find(f => f.tag === tag);
+    if (!field) throw new BadRequestException(`система не объявляет поля «${tag}»`);
+    if (!field.roll) throw new BadRequestException(`по полю «${field.label}» не бросают — включите броски в конструкторе`);
+    if (!system.initiative?.die?.constant) {
+      throw new BadRequestException('в системе не объявлена кость — броски с листа делать нечем');
+    }
+
+    const rows = await this.db.select().from(roomSheets)
+      .where(and(eq(roomSheets.roomId, roomId), eq(roomSheets.sheetId, sheetId)));
+    const row = rows[0];
+    if (!row) throw new NotFoundException(`в комнате нет листа «${sheetId}»`);
+    const sheet = JSON.parse(row.data) as Sheet;
+
+    let line: string;
+    try {
+      const pass = newPass(system, sheet, { compendium });
+      const resolution = resolveRoll(system, sheet, null, pass);
+      const bonus = Number(calc(system, sheet, tag, pass) ?? 0);
+      const rolled = rollLead(dieConstant(system, system.initiative.die.constant), this.die, resolution.edits);
+      const total = rolled.total + bonus + resolution.bonus;
+      const edits = resolution.edits.length ? ` (${resolution.edits.map(edit => edit.label).join(', ')})` : '';
+      const shown = rolled.kept != null && rolled.rolls.length > 1
+        ? `[${rolled.rolls.join(', ')}] → ${rolled.kept}` : `[${rolled.rolls.join(', ')}]`;
+      line = `${sheet.name} бросает «${field.roll.label ?? field.label}»: ${shown}${edits} + ${bonus + resolution.bonus} = ${total}`;
+    } catch (err) {
+      throw new BadRequestException((err as Error).message);
+    }
+
+    const log = await this.appendLog(roomId, [line]);
+    return { roomId, sheets: [], log };
   }
 
   async createSheet(

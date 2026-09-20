@@ -225,6 +225,7 @@ function paramProblems(system: System): Problem[] {
       if (!effect) return;
       for (const param of effect.params ?? []) {
         if (binding.args?.[param.key] !== undefined) continue;
+        if (param.ask) continue;
         out.push({
           where: { tab: 'records', kind, part: 'bindings', binding: index }, level: 'error',
           text: `привязка «${binding.label ?? effect.label ?? binding.effect}» не заполняет потребность «${param.label ?? param.key}» эффекта «${effect.label ?? binding.effect}»`,

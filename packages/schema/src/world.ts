@@ -123,12 +123,23 @@ export const activation = z.enum(['manual', 'triggered', 'passive', 'reaction'])
 export const durationKind = z.enum(['permanent', 'temporary', 'uses', 'rounds', 'turns', 'scene']);
 export const stacking = z.enum(['ignore', 'refresh', 'stack']);
 
+export const ask = z.object({
+  by: z.enum(['actor', 'gm']).optional(),
+  kind: z.enum(['number', 'text', 'choice']).optional(),
+  options: z.array(z.string().min(1)).optional(),
+  min: z.number().optional(),
+  max: z.number().optional(),
+  hint: z.string().optional(),
+});
+
 export const param = z.object({
   key: z.string().min(1),
   label: z.string().optional(),
   kind: z.string().optional(),
 
   of: refSide.optional(),
+
+  ask: ask.optional(),
 }).passthrough();
 
 export const guard = z.union([
@@ -308,6 +319,7 @@ export type GroupSpec = z.infer<typeof groupSpec>;
 export type Modifier = z.infer<typeof modifier>;
 export type Param = z.infer<typeof param>;
 export type Step = z.infer<typeof step>;
+export type Ask = z.infer<typeof ask>;
 export type Guard = z.infer<typeof guard>;
 export type SystemEvent = z.infer<typeof systemEvent>;
 export type Trigger = z.infer<typeof trigger>;

@@ -156,6 +156,12 @@ group('линт: слушатели, круги, потребности', () => 
     eq(problem?.where.binding, 0);
   });
 
+  test('потребность, которую спрашивают за столом, привязка закрывать не обязана', () => {
+    const system = withEffect('strike', { params: [{ key: 'дистанция', label: 'Дистанция', ask: { by: 'actor', kind: 'number' } }], steps: [] });
+    system.records = { weapon: { kind: 'item', label: 'Оружие', props: [], bindings: [{ label: 'Удар', effect: 'strike', args: {} }] } } as never;
+    eq(errorTexts(system).join(''), '');
+  });
+
   test('привязка берёт свойство, которого у этого типа нет', () => {
     const system = withEffect('strike', { params: [{ key: 'dice' }], steps: [] });
     system.records = {

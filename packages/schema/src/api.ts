@@ -133,6 +133,8 @@ export const actIntent = z.object({
 
   edits: z.array(z.string().min(1)).optional(),
   targetEdits: z.array(z.string().min(1)).optional(),
+
+  inputs: z.record(z.string().min(1), z.union([z.number(), z.string()])).optional(),
 });
 
 export const roomDelta = z.object({
@@ -165,6 +167,8 @@ export const clientMessage = z.discriminatedUnion('type', [
   z.object({ type: z.literal('sheet:set'), roomId: z.string(), sheetId: z.string(), tag: z.string(), value: z.union([z.number(), z.string(), z.boolean(), z.null()]) }),
 
   z.object({ type: z.literal('sheet:create'), roomId: z.string(), name: z.string().min(1).max(64), kind: z.enum(['pc', 'npc']).optional() }),
+
+  z.object({ type: z.literal('sheet:roll'), roomId: z.string(), sheetId: z.string(), tag: z.string().min(1) }),
 
   z.object({
     type: z.literal('sheet:belong'),

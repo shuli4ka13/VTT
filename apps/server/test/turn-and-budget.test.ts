@@ -155,3 +155,47 @@ describe('публикация проверяет систему линтом', 
     await as(http().post(`/systems/${id}/publish`)).send({}).expect(201);
   });
 });
+
+describe('значение, которое называет человек за столом', () => {
+  it('сервер принимает только объявленное и проверяет границы', async () => {
+    const token = (await http().post('/auth/login').send({ name: 'Ведущий вопросов' })).body.token as string;
+    const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
+
+    const system = {
+      id: 'ask', name: 'Со спросом',
+      fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } }],
+      effects: {
+        выстрел: {
+          label: 'Выстрел', activation: 'manual',
+          params: [{ key: 'дистанция', label: 'Дистанция', kind: 'number', ask: { by: 'actor', kind: 'number', min: 1, max: 50 } }],
+          steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { param: 'дистанция' } }],
+        },
+      },
+      records: { ствол: { kind: 'action', label: 'Ствол', props: [], bindings: [{ label: 'Выстрел', effect: 'выстрел', args: {} }] } },
+    };
+    const book = { items: [], actions: [{ id: 'ствол', rk: 'ствол', label: 'Ствол', props: {} }] };
+    const sheet = (id: string) => ({
+      id, systemId: 'ask', kind: 'pc', name: id, values: { хиты: 20 }, equipped: [], effects: [], actions: ['ствол'],
+    });
+
+    const systemId = (await as(http().post('/systems')).send({ title: 'Со спросом', system })).body.id;
+    const bookId = (await as(http().post('/compendiums')).send({ title: 'Книга', systemId, compendium: book })).body.id;
+    await as(http().post(`/systems/${systemId}/publish`)).send({}).expect(201);
+    await as(http().post(`/compendiums/${bookId}/publish`)).send({}).expect(201);
+    const worldId = (await as(http().post('/worlds')).send({
+      title: 'Мир', systemId, compendiumIds: [bookId], sheets: [sheet('а'), sheet('б')],
+    })).body.id;
+    const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол' })).body.id as string;
+
+    const act = (inputs?: Record<string, unknown>) => as(http().post(`/rooms/${roomId}/act`))
+      .send({ roomId, actionId: 'ствол:0', fromId: 'а', toId: 'б', ...(inputs ? { inputs } : {}) });
+
+    expect((await act().expect(400)).body.message).toContain('Дистанция');
+    expect((await act({ дистанция: 0 }).expect(400)).body.message).toContain('не меньше 1');
+    expect((await act({ дистанция: 99 }).expect(400)).body.message).toContain('не больше 50');
+    expect((await act({ дистанция: 5, лишнее: 1 }).expect(400)).body.message).toContain('лишнее');
+
+    const done = await act({ дистанция: 5 }).expect(201);
+    expect(done.body.sheets.find((s: { id: string }) => s.id === 'б').values.хиты).toBe(15);
+  });
+});

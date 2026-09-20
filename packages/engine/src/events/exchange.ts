@@ -17,6 +17,8 @@ export interface ExchangeArgs extends WorldArgs {
   fromId: string;
   toId: string;
 
+  inputs?: Record<string, number | string>;
+
   claims?: { source?: string[]; target?: string[] };
 }
 
@@ -75,7 +77,7 @@ export function deliver({
 }
 
 export function exchange({
-  system, compendium, die, sheets, actionId, fromId, toId, claims, clock,
+  system, compendium, die, sheets, actionId, fromId, toId, claims, clock, inputs,
 }: ExchangeArgs): ExchangeResult {
   const find = finder(sheets);
   const from = find(fromId);
@@ -83,6 +85,6 @@ export function exchange({
   if (!from) throw new Error(`не найден отправитель «${fromId}»`);
   if (!to) throw new Error(`не найдена цель «${toId}»`);
 
-  const envelope = send(actionId, { system, compendium, die, clock, sheet: from, against: to, claims: claims?.source });
+  const envelope = send(actionId, { system, compendium, die, clock, sheet: from, against: to, claims: claims?.source, ...(inputs ? { inputs } : {}) });
   return deliver({ system, compendium, die, clock, sheets, envelope, fromId, toId, claims: { target: claims?.target } });
 }
