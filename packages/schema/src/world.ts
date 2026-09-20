@@ -57,6 +57,8 @@ export const diceTerm = z.object({
 
   name: z.string().optional(),
   label: z.string().optional(),
+
+  bonus: z.boolean().optional(),
 });
 
 export const diceReading = z.union([

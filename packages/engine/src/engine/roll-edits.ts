@@ -72,6 +72,31 @@ const PRIMITIVES: Record<string, ClaimPrimitive | ResultPrimitive> = {
     },
   },
 
+  bonusDie: {
+    stage: 'claim',
+    label: 'добавить кость сверх',
+    apply(claim, op) {
+      const first = claim.dice[0];
+      if (!first) throw new EngineError('«добавить кость сверх» нечего добавлять: в броске нет костей');
+      const count = num(op.count, 1);
+      const sides = num(op.sides, first.sides);
+      return { ...claim, dice: [...claim.dice, { count, sides, bonus: true }] };
+    },
+  },
+
+  floorDie: {
+    stage: 'result',
+    label: 'считать не меньше',
+    apply(dice, op) {
+      const least = num(op.least, 10);
+      const part = partOf(op);
+      return dice.map(entry => {
+        if (!inPart(entry.name, part)) return entry;
+        return entry.value >= least ? entry : { ...entry, value: least };
+      });
+    },
+  },
+
   keepBest: {
     stage: 'claim',
     label: 'оставить лучшую',
@@ -186,6 +211,8 @@ function flipDigits(value: number, sides: number): number | null {
 
 export const editPalette = (): { key: string; label: string; op: RollEditOp }[] => [
   { key: 'addDie', label: 'добавить кость', op: { op: 'addDie' } },
+  { key: 'bonusDie', label: 'добавить кость сверх — её не отбрасывают', op: { op: 'bonusDie', sides: 4 } },
+  { key: 'floorDie', label: 'считать не меньше…', op: { op: 'floorDie', least: 10 } },
   { key: 'keepBest', label: 'оставить лучшую', op: { op: 'keepBest', n: 1 } },
   { key: 'keepWorst', label: 'оставить худшую', op: { op: 'keepWorst', n: 1 } },
   { key: 'dieStep', label: 'сменить величину кости', op: { op: 'dieStep', by: 1 } },
@@ -249,7 +276,7 @@ export function keptDice(dice: RolledDie[], keeps: KeepSpec[]): RolledDie[] {
   let out = dice;
   for (const keep of keeps) {
 
-    const mine = keep.part ? out.filter(d => d.name === keep.part) : out;
+    const mine = (keep.part ? out.filter(d => d.name === keep.part) : out).filter(d => !d.bonus);
     const chosen = new Set([...mine]
       .sort((a, b) => (keep.from === 'best' ? b.value - a.value : a.value - b.value))
       .slice(0, Math.max(1, keep.n)));

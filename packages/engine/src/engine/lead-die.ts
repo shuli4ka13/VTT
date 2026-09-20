@@ -74,6 +74,7 @@ export function rollLead(def: DieConstant, die: Die, edits: RollEdit[] = []): Le
       entries.push({
         value: die(term.sides), sides: term.sides,
         ...(term.name ? { name: String(term.name) } : {}),
+        ...(term.bonus ? { bonus: true } : {}),
       });
     }
   }

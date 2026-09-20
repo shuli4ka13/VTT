@@ -360,13 +360,12 @@
           "kind": "rounds",
           "max": 2
         },
-        "description": "+2 к любому броску на два раунда боя; вне боя — пока не снимут.",
+        "description": "+1к4 к любому броску на два раунда боя; вне боя — пока не снимут. Кость сверх: преимущество её не отбрасывает.",
         "modifiers": [
           {
             "kind": "roll",
             "target": "roll:any",
-            "op": "add",
-            "value": 2,
+            "edit": "bless",
             "stacking": "sum",
             "condition": null
           }
@@ -1262,6 +1261,15 @@
           }
         ],
         "canceledBy": "disadvantage"
+      },
+      "bless": {
+        "label": "Благословение",
+        "ops": [
+          {
+            "op": "bonusDie",
+            "sides": 4
+          }
+        ]
       }
     },
     "events": {
