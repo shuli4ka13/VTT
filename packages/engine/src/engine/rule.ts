@@ -30,6 +30,8 @@ export interface NestedRun { results: Record<string, unknown>; stopped: StopReas
 
 export const MAX_CALL_DEPTH = 8;
 
+export const packGuardRef = (guard: unknown, ctx: StepContext): unknown => packGuard(guard, ctx);
+
 const packGuard = (guard: unknown, ctx: StepContext): unknown => {
   if (guard === null || guard === undefined) return undefined;
   if (typeof guard === 'object' && 'ref' in (guard as object)) return guard;

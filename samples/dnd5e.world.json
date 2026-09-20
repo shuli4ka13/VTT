@@ -604,6 +604,85 @@
             }
           }
         ]
+      },
+      "fireball": {
+        "label": "Огненный шар",
+        "icon": "💥",
+        "category": "Атака",
+        "description": "Тратит ячейку. Каждая цель делает спасбросок Ловкости: провал — полный урон, успех — половина. Ведущий называет, кто попал в область.",
+        "activation": "manual",
+        "cost": "action",
+        "self": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "slots_1"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            }
+          }
+        ],
+        "params": [
+          {
+            "key": "save_by",
+            "label": "Чем спасается цель",
+            "kind": "expr",
+            "of": "target"
+          },
+          {
+            "key": "damage_dice",
+            "label": "Кость урона",
+            "kind": "dice"
+          }
+        ],
+        "steps": [
+          {
+            "id": "save",
+            "type": "threshold",
+            "side": "target",
+            "roll": {
+              "die": {
+                "constant": "lead_die"
+              },
+              "bonus": {
+                "param": "save_by"
+              },
+              "check": "save_roll"
+            },
+            "versus": {
+              "expr": "#spell_dc"
+            },
+            "successWhen": "atLeast",
+            "continueOn": "always"
+          },
+          {
+            "id": "dmg",
+            "type": "amount",
+            "source": "roll",
+            "dice": {
+              "param": "damage_dice"
+            },
+            "scale": {
+              "times": 0.5,
+              "when": {
+                "ref": "save.success"
+              }
+            }
+          },
+          {
+            "type": "emit",
+            "event": "damage",
+            "amount": {
+              "ref": "dmg"
+            },
+            "tags": [
+              "огонь",
+              "магический"
+            ]
+          }
+        ]
       }
     },
     "room_rules": [
@@ -743,6 +822,39 @@
             "label": "Сотворить",
             "effect": "bless",
             "args": {}
+          }
+        ]
+      },
+      "area-spell": {
+        "kind": "action",
+        "label": "Заклинание по области",
+        "icon": "💥",
+        "group": "Заклинания",
+        "hint": "Бьёт по нескольким целям сразу: кости урона кидаются один раз, спасбросок — у каждого.",
+        "props": [
+          {
+            "key": "save_by",
+            "label": "Чем спасаются",
+            "kind": "expr"
+          },
+          {
+            "key": "damage_dice",
+            "label": "Кость урона",
+            "kind": "dice"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Сотворить",
+            "effect": "fireball",
+            "args": {
+              "save_by": {
+                "prop": "save_by"
+              },
+              "damage_dice": {
+                "prop": "damage_dice"
+              }
+            }
           }
         ]
       }
@@ -1247,6 +1359,17 @@
         }
       },
       {
+        "tag": "hp_temp",
+        "label": "Временные ХП",
+        "group": "Здоровье",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0
+        }
+      },
+      {
         "tag": "attack_bonus",
         "label": "Бонус атаки",
         "group": "Атака",
@@ -1361,15 +1484,27 @@
         ],
         "receive": [
           {
+            "id": "по_временным",
             "type": "apply",
             "target": {
-              "tag": "hp_current"
+              "tag": "hp_temp"
             },
             "direction": "subtract",
             "value": {
               "ref": "event.amount"
             },
             "targetModifiers": true
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "hp_current"
+            },
+            "direction": "subtract",
+            "value": {
+              "ref": "по_временным.overkill"
+            },
+            "targetModifiers": false
           }
         ]
       }
@@ -1462,6 +1597,16 @@
         "label": "Благословение",
         "description": "Пока держишь концентрацию, цели получают +1к4 к любому броску.",
         "props": {}
+      },
+      {
+        "id": "fireball-spell",
+        "rk": "area-spell",
+        "label": "Огненный шар",
+        "description": "Взрыв по области: спасбросок Ловкости, при успехе — половина урона.",
+        "props": {
+          "save_by": "#dex_save",
+          "damage_dice": "6d6"
+        }
       }
     ]
   },
@@ -1486,7 +1631,8 @@
         "armor_heavy": false,
         "hp_max": 44,
         "hp_current": 44,
-        "slots_1": 2
+        "slots_1": 2,
+        "hp_temp": 0
       },
       "equipped": [
         "chain-mail",
@@ -1517,12 +1663,14 @@
         "armor_heavy": false,
         "hp_max": 21,
         "hp_current": 21,
-        "slots_1": 2
+        "slots_1": 2,
+        "hp_temp": 0
       },
       "equipped": [],
       "effects": [],
       "actions": [
-        "poison-spray"
+        "poison-spray",
+        "fireball-spell"
       ]
     }
   ]

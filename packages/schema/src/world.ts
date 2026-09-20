@@ -152,6 +152,11 @@ export const guard = z.union([
   z.object({ expr: z.string(), of: refSide.optional() }),
 ]);
 
+export const scale = z.object({
+  times: z.number().positive(),
+  when: guard.optional(),
+});
+
 export const step = z.object({
   id: z.string().optional(),
   type: z.string().min(1),
@@ -326,6 +331,7 @@ export type Param = z.infer<typeof param>;
 export type Step = z.infer<typeof step>;
 export type Ask = z.infer<typeof ask>;
 export type Guard = z.infer<typeof guard>;
+export type Scale = z.infer<typeof scale>;
 export type SystemEvent = z.infer<typeof systemEvent>;
 export type Trigger = z.infer<typeof trigger>;
 export type Effect = z.infer<typeof effect>;

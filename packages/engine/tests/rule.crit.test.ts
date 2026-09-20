@@ -94,3 +94,45 @@ group('крит: кости удваиваются до броска', () => {
     eq(rolls.length, 2, 'итог 15+9=24, но на костях 15 — не крит');
   });
 });
+
+group('доля величины: половина при удачном спасброске', () => {
+  const chain = (times: number) => [
+    { id: 'спас', type: 'threshold', side: 'target', roll: { die: { constant: 'к20' } }, versus: { const: 10 }, continueOn: 'always' },
+    { id: 'урон', type: 'amount', source: 'roll', dice: { const: '2d6' }, scale: { times, when: { ref: 'спас.success' } } },
+    { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { ref: 'урон' } },
+  ];
+
+  const run = (rolls: number[], times = 0.5) => {
+    let at = 0;
+    const die = () => rolls[at++] ?? 1;
+    const from = sheet('а');
+    const to = sheet('б');
+    const packed = packRule({ label: 'e', activation: 'manual', steps: chain(times) } as unknown as Effect, {
+      system, sheet: from, pass: newPass(system, from, { compendium: { items: [], actions: [] } }), die, owner: 'тест',
+    } as never);
+    const out = resolveRule(packed, {
+      system, sheet: to, pass: newPass(system, to, { compendium: { items: [], actions: [] } }), die, owner: 'тест',
+    } as never);
+    return { out, used: at };
+  };
+
+  test('спасся — половина, провалил — полный урон, кости кидаются один раз', () => {
+    const saved = run([5, 5, 15]);
+    eq(saved.out.sheet.values.хиты, 25, 'урон 10 пополам');
+    const failed = run([5, 5, 3]);
+    eq(failed.out.sheet.values.хиты, 20, 'урон 10 целиком');
+    eq(saved.used, 3, 'две кости урона и один спасбросок');
+  });
+
+  test('доля округляется вниз и видна в трассе', () => {
+    const saved = run([3, 4, 15]);
+    eq(saved.out.sheet.values.хиты, 27, 'семь пополам — три');
+    const trace = saved.out.trace.find(line => line.step === 'урон') as { share?: number; full?: number };
+    eq(trace?.share, 0.5);
+    eq(trace?.full, 7);
+  });
+
+  test('чужая доля тоже работает: треть', () => {
+    eq(run([6, 6, 15], 1 / 3).out.sheet.values.хиты, 26);
+  });
+});

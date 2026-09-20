@@ -3,7 +3,7 @@ import { dieConstant } from '../lead-die.ts';
 import { packRef, resolveOptionalNumber } from '../refs.ts';
 import { EngineError } from '../errors.ts';
 import type { StepData, StepContext } from './index.ts';
-import { guardHolds } from '../rule.ts';
+import { guardHolds, packGuardRef } from '../rule.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 
 export const type = 'amount';
@@ -82,6 +82,7 @@ export function pack(step: StepData, ctx: StepContext) {
     source,
     rolled: notation ? rollNotation(notation, ctx.die) : { notation: null, rolls: [], total: 0 },
     ...(doubled ? { doubled: true } : {}),
+    ...(step.scale ? { scale: { times: step.scale.times, ...(step.scale.when ? { when: packGuardRef(step.scale.when, ctx) } : {}) } } : {}),
     fixed, bonus, margin,
   };
 }
@@ -95,7 +96,9 @@ export function resolve(step: StepData, ctx: StepContext) {
   const flat = resolveOptionalNumber(step.fixed, ctx, 'фикс величины') ?? 0;
   const bonus = resolveOptionalNumber(step.bonus, ctx, 'бонус величины') ?? 0;
   const margin = resolveOptionalNumber(step.margin, ctx, 'превышение для величины') ?? 0;
-  const total = step.rolled.total + flat + bonus + margin;
+  const full = step.rolled.total + flat + bonus + margin;
+  const share = shareOf(step, ctx);
+  const total = share === null ? full : Math.floor(full * share);
 
   return {
     value: total,
@@ -103,10 +106,21 @@ export function resolve(step: StepData, ctx: StepContext) {
       source: step.source,
       notation: step.rolled.notation, rolls: step.rolled.rolls,
       ...(step.doubled ? { doubled: true } : {}),
+      ...(share === null ? {} : { share, full }),
       flat, bonus, margin, total,
     },
     break: null,
   };
+}
+
+function shareOf(step: StepData, ctx: StepContext): number | null {
+  const scale = step.scale as { times?: unknown; when?: unknown } | undefined;
+  if (!scale) return null;
+  const times = Number(scale.times);
+  if (!Number.isFinite(times) || times <= 0) {
+    throw new EngineError(`${who(ctx)}: доля величины должна быть положительным числом, а пришло ${JSON.stringify(scale.times)}`);
+  }
+  return guardHolds(scale.when, ctx) ? times : null;
 }
 
 function constant(packed: unknown, ctx: StepContext, what: string): any {

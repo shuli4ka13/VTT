@@ -3,8 +3,10 @@ import { serializeSheet, deserializeSheet } from '../src/model/serialize.ts';
 import { calc, calcAll, newPass } from '../src/engine/calc.ts';
 import { CycleError } from '../src/engine/errors.ts';
 import { send, receive } from '../src/events/envelope.ts';
+import { exchange } from '../src/events/exchange.ts';
 import { system, arven, mirra, sheets, compendium } from './fixtures.ts';
 import { SAMPLE_SYSTEMS, SAMPLE_WORLDS } from '../src/model/systems.ts';
+import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const all = (sys, sheet, book = compendium) =>
   calcAll(sys, sheet, newPass(sys, sheet, { compendium: book }));
@@ -190,3 +192,35 @@ if (inNode) {
 } else {
   console.log('  · критерий 6 (поиск eval по репозиторию) проверяется только через `node tests/run.js`');
 }
+
+group('образец D&D: урон сперва съедает временные хиты', () => {
+  const world = SAMPLE_WORLDS[0]!;
+  const dnd = world.system as System;
+
+  const hurt = (values: Record<string, number>, amount: number) => {
+    const target = { ...(world.sheets as Sheet[]).find(s => s.id === 'mirra')!, values: { ...(world.sheets as Sheet[]).find(s => s.id === 'mirra')!.values, ...values } };
+    const sender = (world.sheets as Sheet[]).find(s => s.id === 'arven')!;
+    const rolls = [20, amount];
+    let at = 0;
+    const out = exchange({
+      system: dnd, compendium: world.compendium as Compendium, die: () => rolls[at++] ?? 1,
+      sheets: [sender, target], actionId: 'fire-bolt:0', fromId: 'arven', toId: 'mirra',
+    });
+    return out.sheets.find(s => s.id === 'mirra')!.values;
+  };
+
+  test('временные хиты уходят первыми, остаток бьёт по текущим', () => {
+    const little = hurt({ hp_temp: 10, hp_current: 20 }, 4);
+    eq(little.hp_temp, 6, 'урон 4 съел четыре временных');
+    eq(little.hp_current, 20, 'до текущих не дошло');
+
+    const big = hurt({ hp_temp: 3, hp_current: 20 }, 10);
+    eq(big.hp_temp, 0);
+    eq(big.hp_current, 13, 'перебор 7 ушёл в текущие');
+  });
+
+  test('без временных хитов всё как раньше', () => {
+    const plain = hurt({ hp_temp: 0, hp_current: 20 }, 6);
+    eq(plain.hp_current, 14);
+  });
+});
