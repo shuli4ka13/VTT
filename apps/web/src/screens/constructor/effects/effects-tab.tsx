@@ -8,6 +8,8 @@ import { LAUNCH_KINDS } from './words.ts';
 import { STEP } from '../../../words.ts';
 import { EffectEditor } from './effect-editor.tsx';
 import { RoomRules } from './room-rules.tsx';
+import { CommonEffectEditor, COMMON_PREFIX, commonKeyOf } from './common-effect.tsx';
+import { newEvent } from '../factory.ts';
 import { launchOf, activationFor, LAUNCHES } from '@vtt/engine/model/effect-kinds';
 import type { LaunchKind } from '@vtt/engine/model/effect-kinds';
 import type { Effect } from '@vtt/schema';
@@ -19,7 +21,16 @@ export function EffectsTab() {
   const editSystem = useWorld(s => s.editSystem);
 
   const groups = effectsByCategory(system);
-  const active = activeId ? system.effects[activeId] : undefined;
+  const commonKey = commonKeyOf(activeId);
+  const common = commonKey ? system.events?.[commonKey] : undefined;
+  const active = activeId && !commonKey ? system.effects[activeId] : undefined;
+  const commons = Object.entries(system.events ?? {});
+
+  const addCommon = () => {
+    const made = newEvent(system);
+    editSystem(draft => { (draft.events ??= {})[made.key] = made.value; });
+    pick({ activeEffectId: `${COMMON_PREFIX}${made.key}` });
+  };
 
   const add = (kind: LaunchKind) => {
     const made = newEffect(system, activationFor({ kind, moment: 'after', ask: false }));
@@ -54,6 +65,19 @@ export function EffectsTab() {
                 </List>
               )}
 
+            <List>
+              <ListGroup>Общие · их вызывают другие эффекты</ListGroup>
+              {commons.map(([key, event]) => (
+                <ListItem
+                  key={key}
+                  name={event.label || key}
+                  meta={`${STEP.manyGen}: ${event.receive?.length ?? 0}`}
+                  active={key === commonKey}
+                  onClick={() => pick({ activeEffectId: `${COMMON_PREFIX}${key}` })}
+                />
+              ))}
+            </List>
+
             <div className="stack stack--tight">
               <span className="field__label">Создать с нуля</span>
               {LAUNCH_KINDS.map(kind => (
@@ -61,6 +85,9 @@ export function EffectsTab() {
                   + {kind.label.toLowerCase()}
                 </Button>
               ))}
+              <Button size="sm" wide onClick={addCommon} title="Общий эффект: его вызывают другие, а он делает своё — урон, лечение">
+                + общий
+              </Button>
             </div>
 
             <RoomRules system={system} />
@@ -69,8 +96,10 @@ export function EffectsTab() {
       }}
       main={{
         head: active ? 'Эффект' : undefined,
-        body: active && activeId
-          ? <EffectEditor id={activeId} effect={active} system={system} />
+        body: common && commonKey
+          ? <CommonEffectEditor id={commonKey} event={common} system={system} />
+          : active && activeId
+            ? <EffectEditor id={activeId} effect={active} system={system} />
           : <Empty
               title="Выберите эффект слева"
               hint="Эффект — единица автоматизации: всё, что мир делает сам. Проверки, изменения полей, состояния — а как их назвать, решаете вы."

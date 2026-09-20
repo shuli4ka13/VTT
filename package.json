@@ -13,7 +13,7 @@
     "build:watch": "tsc -b packages/schema packages/engine --watch",
     "test": "yarn workspaces run test",
     "typecheck": "yarn workspaces run typecheck && yarn lint",
-    "lint": "eslint . --max-warnings 104"
+    "lint": "eslint . --max-warnings 101"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

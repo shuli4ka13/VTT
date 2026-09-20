@@ -40,26 +40,6 @@ describe('Словари: кости, виды бросков, таблицы, �
     expect(edits.disadvantage?.label).toBe('Помеха');
   });
 
-  it('«+ событие» заводит событие с приёмом в первое числовое поле листа', () => {
-    useWorld.setState(state => ({
-      ...state,
-      system: {
-        ...emptySystem(),
-        fields: [{ tag: 'hp', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 10 } }],
-      },
-      activeEffectId: null,
-    }));
-    render(<DictionariesTab />);
-    fireEvent.click(screen.getByText('+ событие'));
-    const events = Object.values(useWorld.getState().system.events ?? {});
-    expect(events).toHaveLength(1);
-    expect(events[0]!.receive).toEqual([
-      { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { ref: 'event.amount' }, targetModifiers: true },
-    ]);
-    fireEvent.change(screen.getByPlaceholderText('огонь, холод, яд — через запятую'), { target: { value: 'огонь, яд' } });
-    expect(Object.values(useWorld.getState().system.events ?? {})[0]!.tags).toEqual(['огонь', 'яд']);
-  });
-
   it('инициатива объявляется костью системы и снимается выбором «нет»', () => {
     render(<DictionariesTab />);
     fireEvent.click(screen.getByText('+ кость'));

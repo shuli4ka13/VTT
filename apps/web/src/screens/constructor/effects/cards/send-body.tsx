@@ -11,16 +11,16 @@ export function SendBody({ step, at, context, edit, system }: {
   edit: EditFn;
   system: System;
 }) {
-  const events = Object.entries(system.events ?? {});
+  const commons = Object.entries(system.events ?? {});
   const tags: string[] = Array.isArray(step.tags) ? step.tags.filter((t: unknown) => typeof t === 'string') : [];
   return (
     <div className="row">
-      <Field label="событие" needed={!step.event}
-        hint={events.length ? undefined : 'Сначала заведите событие в «Словарях».'}>
+      <Field label="какой эффект вызываем" needed={!step.event}
+        hint={commons.length ? undefined : 'Общих эффектов пока нет — заведите кнопкой «+ общий» слева.'}>
         <Select
           value={String(step.event ?? '')}
-          options={[['', '— выберите событие —'],
-            ...events.map(([id, e]) => [id, e.label || id] as const)] as never}
+          options={[['', '— выберите —'],
+            ...commons.map(([id, e]) => [id, e.label || id] as const)] as never}
           onChange={next => edit(at, draft => { (draft as any).event = next; })}
         />
       </Field>

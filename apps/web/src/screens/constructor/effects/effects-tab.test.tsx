@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { EffectsTab } from './effects-tab.tsx';
-import { useWorld } from '../../../store/world.ts';
+import { useWorld, emptySystem } from '../../../store/world.ts';
 import { LAUNCH_KINDS } from './words.ts';
 
 describe('EffectsTab: палитра трёх понятий', () => {
@@ -42,7 +42,8 @@ describe('EffectsTab: палитра трёх понятий', () => {
     const palette = screen.getAllByRole('button')
       .filter(b => (b.textContent ?? '').trimStart().startsWith('+ '))
       .map(b => b.textContent!.trim())
-      .filter(t => !LAUNCH_KINDS.some(kind => t === `+ ${kind.label.toLowerCase()}`) && !t.startsWith('+ брать'));
+      .filter(t => !LAUNCH_KINDS.some(kind => t === `+ ${kind.label.toLowerCase()}`)
+        && t !== '+ общий' && !t.startsWith('+ брать'));
     expect(palette).toEqual(['+ проверка', '+ изменение', '+ число']);
     fireEvent.click(screen.getByText('+ проверка'));
     expect(screen.getByText('1 · Проверка')).toBeTruthy();
@@ -188,5 +189,44 @@ describe('три вида запуска вместо четырёх', () => {
     expect(again.activation).toBe('triggered');
     expect(again.trigger?.direction).toBe('out');
     expect(again.trigger?.window).toBeUndefined();
+  });
+});
+
+describe('общий эффект вместо «события»', () => {
+  beforeEach(() => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        fields: [{ tag: 'hp', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 10 } }],
+      },
+      activeEffectId: null,
+    }));
+  });
+  afterEach(() => { cleanup(); });
+
+  it('«+ общий» заводит его с приёмом в первое числовое поле и открывает редактор', () => {
+    render(<EffectsTab />);
+    fireEvent.click(screen.getByText('+ общий'));
+    const commons = Object.values(useWorld.getState().system.events ?? {});
+    expect(commons).toHaveLength(1);
+    expect(commons[0]!.receive).toEqual([
+      { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { ref: 'event.amount' }, targetModifiers: true },
+    ]);
+    expect(useWorld.getState().activeEffectId!.startsWith('event:')).toBe(true);
+    expect(screen.getByText(/Общий эффект: его вызывают другие/)).toBeTruthy();
+  });
+
+  it('правится обычной цепочкой шагов и обычными тегами', () => {
+    render(<EffectsTab />);
+    fireEvent.click(screen.getByText('+ общий'));
+    expect(screen.getByText('Цепочка шагов')).toBeTruthy();
+
+    fireEvent.click(screen.getByText('+ проверка'));
+    const key = useWorld.getState().activeEffectId!.slice('event:'.length);
+    expect(useWorld.getState().system.events![key]!.receive).toHaveLength(2);
+
+    fireEvent.change(screen.getByPlaceholderText('огонь, холод, яд — через запятую'), { target: { value: 'огонь, яд' } });
+    expect(useWorld.getState().system.events![key]!.tags).toEqual(['огонь', 'яд']);
   });
 });

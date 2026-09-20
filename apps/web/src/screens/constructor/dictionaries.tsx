@@ -10,7 +10,7 @@ import { Card, CardHead, Input, NumInput, Button, Fold, Select, Verdict } from '
 import { FormulaInput } from '../../ui/formula.tsx';
 import { diceCount } from './dice-expr.ts';
 import {
-  newDie, newRollEdit, newRoll, newTable, newEvent, newActionType, simpleReceive,
+  newDie, newRollEdit, newRoll, newTable, newActionType,
 } from './factory.ts';
 import type { System, Compendium, RangeTable, SystemConstant, DiceTerm } from '@vtt/schema';
 import type { WorldState } from '../../store/world.ts';
@@ -65,19 +65,6 @@ const addTable = (editSystem: EditSystem) => editSystem(draft => {
   (draft.tables ??= {})[made.key] = made.value;
 });
 
-const addEvent = (editSystem: EditSystem) => editSystem(draft => {
-  const made = newEvent(draft);
-  (draft.events ??= {})[made.key] = made.value;
-});
-
-const simpleReceiveOf = (receive: unknown): { tag: string; direction: 'subtract' | 'add'; targetModifiers: boolean } | null => {
-  if (!Array.isArray(receive) || receive.length !== 1) return null;
-  const step = receive[0] as Record<string, any>;
-  if (step.type !== 'apply' || !step.target?.tag || step.value?.ref !== 'event.amount') return null;
-  const direction = step.direction === 'add' ? 'add' : 'subtract';
-  return { tag: String(step.target.tag), direction, targetModifiers: step.targetModifiers !== false };
-};
-
 const addActionType = (editSystem: EditSystem) => editSystem(draft => {
   const made = newActionType(draft);
   (draft.action_types ??= {})[made.key] = made.value;
@@ -126,15 +113,6 @@ export function DictionariesTab() {
                 }
               />
               <RollEditsSection system={system} compendium={compendium} editSystem={editSystem} usage={usage} />
-            </Card>
-
-            <Card>
-              <CardHead
-                title="События"
-                sub="Урон, лечение и другие вещи, которые один лист посылает другому. Здесь — как лист их принимает; кто и сколько посылает, говорит эффект."
-                actions={<Button size="sm" onClick={() => addEvent(editSystem)}>+ событие</Button>}
-              />
-              <EventsSection system={system} compendium={compendium} editSystem={editSystem} usage={usage} />
             </Card>
 
             <Card>
@@ -673,109 +651,6 @@ function TableRow({ id, table, editSystem, usage }: Omit<Props, 'system' | 'comp
         + диапазон
       </Button>
     </Fold>
-  );
-}
-
-function EventsSection({ system, editSystem, usage }: Props) {
-  const entries = Object.entries(system.events ?? {});
-  const numeric = system.fields.filter(f => f.value.kind === 'stored' && f.value.type === 'number');
-
-  if (entries.length === 0) {
-    return <span className="faint">Событий нет. Без них атака пишет прямо в поле цели; с ними — посылает «Урон», а сопротивления и реакции слушают слово.</span>;
-  }
-
-  return (
-    <div className="stack">
-      {entries.map(([key, event]) => {
-        const inUse = isUsed(usage, 'event', key);
-        const simple = simpleReceiveOf(event.receive);
-        const custom = Boolean(event.receive?.length) && !simple;
-        const mode = !event.receive?.length ? 'signal' : simple ? 'field' : 'custom';
-        const edit = (change: (cur: Record<string, any>) => void) => editSystem(draft => {
-          const cur = draft.events?.[key];
-          if (cur) change(cur as Record<string, any>);
-        });
-        return (
-          <div key={key} className="dict-block">
-            <div className="dict-row">
-              <Input
-                value={event.label ?? ''}
-                placeholder="название события"
-                onChange={label => edit(cur => { cur.label = label; })}
-              />
-              <span className="chip mono">{key}</span>
-              <Button
-                size="sm" variant="danger" disabled={inUse}
-                title={inUse ? 'событие используется' : undefined}
-                onClick={() => editSystem(draft => { delete draft.events?.[key]; })}
-              >
-                Убрать
-              </Button>
-            </div>
-            <div className="dict-row">
-              <span className="dict-row__label">Теги</span>
-              <Input
-                value={(event.tags ?? []).join(', ')}
-                placeholder="огонь, холод, яд — через запятую"
-                onChange={text => edit(cur => {
-                  const list = text.split(',').map(s => s.trim()).filter(Boolean);
-                  if (list.length) cur.tags = list; else delete cur.tags;
-                })}
-              />
-            </div>
-            <div className="dict-row dict-row--wrap">
-              <span className="dict-row__label">Приём</span>
-              <Select
-                value={mode}
-                disabled={custom}
-                title={custom ? 'правило приёма собрано из нескольких шагов — переключатель его стёр бы' : undefined}
-                options={[
-                  ['field', 'поле листа'],
-                  ['signal', 'только сигнал'],
-                  ...(custom ? [['custom', 'своё правило'] as const] : []),
-                ] as never}
-                onChange={next => edit(cur => {
-                  if (custom) return;
-                  if (next === 'signal') delete cur.receive;
-                  else if (next === 'field') cur.receive = [simpleReceive(numeric[0]?.tag ?? '', 'subtract', true)];
-                })}
-              />
-              {simple ? (
-                <>
-                  <Select
-                    value={simple.direction}
-                    options={[['subtract', 'вычесть из'], ['add', 'прибавить к']] as const}
-                    onChange={direction => edit(cur => {
-                      cur.receive = [simpleReceive(simple.tag, direction, simple.targetModifiers)];
-                    })}
-                  />
-                  <Select
-                    value={simple.tag}
-                    options={[['', '— поле —'], ...numeric.map(f => [f.tag, f.label] as const)] as never}
-                    onChange={tag => edit(cur => {
-                      cur.receive = [simpleReceive(tag, simple.direction, simple.targetModifiers)];
-                    })}
-                  />
-                </>
-              ) : null}
-              {custom ? <span className="faint">шагов приёма: {event.receive!.length}</span> : null}
-            </div>
-            {simple ? (
-              <div className="dict-row dict-row--wrap">
-                <span className="dict-row__label">Сопротивления</span>
-                <Select
-                  value={simple.targetModifiers ? 'yes' : 'no'}
-                  options={[['yes', 'на событии и на поле'], ['no', 'только на событии']] as const}
-                  onChange={v => edit(cur => {
-                    cur.receive = [simpleReceive(simple.tag, simple.direction, v === 'yes')];
-                  })}
-                />
-              </div>
-            ) : null}
-          </div>
-        );
-      })}
-    </div>
   );
 }
 
