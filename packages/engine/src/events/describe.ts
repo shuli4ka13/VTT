@@ -114,7 +114,12 @@ export function describeEntry(
     if (named) return [named];
     const line = stepRegistry.get(String(trace.type))?.traceLine;
     if (!line) return [];
-    try { return [String((line as any)(trace, { labelOf, eventLabel, effectLabel: (id: string) => effectLabelOf(system, id) }))]; }
+    const helpers = {
+      labelOf, eventLabel,
+      tableLabel: (id: string) => system.tables?.[id]?.label ?? id,
+      effectLabel: (id: string) => effectLabelOf(system, id),
+    };
+    try { return [String((line as any)(trace, helpers))]; }
     catch { return []; }
   });
 

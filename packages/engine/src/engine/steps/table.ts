@@ -15,7 +15,8 @@ export const icon = '▦';
 
 export function traceLine(t: any, h: any) {
   const rolls = t.rolls?.length ? `[${t.rolls.join(', ')}] = ` : '';
-  return `таблица «${h.labelOf(t.table)}»: ${rolls}${t.value} → ${t.result}`;
+  const name = typeof h?.tableLabel === 'function' ? h.tableLabel(t.table) : t.table;
+  return `таблица «${name}»: ${rolls}${t.value} → ${t.result}`;
 }
 
 const nameOf = (packed: unknown, ctx: StepContext): string => {
