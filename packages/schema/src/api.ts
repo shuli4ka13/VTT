@@ -83,7 +83,7 @@ export const roomSummary = z.object({
 export const pendingState = z.object({
   id: z.string(),
   sheetId: z.string(),
-  stage: z.enum(['sender', 'target']),
+  stage: z.enum(['sender', 'target', 'after']),
   question: z.string(),
   options: z.array(z.object({ id: z.string(), label: z.string() })),
   preview: z.array(z.string()),

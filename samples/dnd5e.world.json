@@ -840,6 +840,69 @@
             "targetModifiers": false
           }
         ]
+      },
+      "hellish_rebuke": {
+        "label": "Адское возмездие",
+        "icon": "🔥",
+        "category": "Реакции",
+        "activation": "reaction",
+        "cost": "reaction",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Тебя ранили — обидчик тут же делает спасбросок Ловкости: провал — 2к10 огнём, успех — половина.",
+        "trigger": {
+          "on": "event:damage",
+          "window": "after"
+        },
+        "params": [],
+        "steps": [
+          {
+            "id": "save",
+            "type": "threshold",
+            "side": "target",
+            "roll": {
+              "die": {
+                "constant": "lead_die"
+              },
+              "bonus": {
+                "expr": "#dex_save",
+                "of": "target"
+              },
+              "check": "save_roll"
+            },
+            "versus": {
+              "expr": "#spell_dc"
+            },
+            "successWhen": "atLeast",
+            "continueOn": "always"
+          },
+          {
+            "id": "dmg",
+            "type": "amount",
+            "source": "roll",
+            "dice": {
+              "const": "2d10"
+            },
+            "scale": {
+              "times": 0.5,
+              "when": {
+                "ref": "save.success"
+              }
+            }
+          },
+          {
+            "type": "emit",
+            "event": "damage",
+            "amount": {
+              "ref": "dmg"
+            },
+            "tags": [
+              "огонь",
+              "магический"
+            ]
+          }
+        ]
       }
     },
     "room_rules": [
@@ -1848,7 +1911,11 @@
         "chain-mail",
         "longsword-item"
       ],
-      "effects": [],
+      "effects": [
+        {
+          "effectId": "hellish_rebuke"
+        }
+      ],
       "actions": [
         "bless-spell"
       ]

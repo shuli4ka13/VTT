@@ -172,8 +172,11 @@ export function receive(
   { system, sheet, compendium, die, claims, clock }: WorldContext & { sheet: Sheet } & { claims?: string[] },
 ): ReceiveResult {
   const holder = findEffect(system, envelope.effect);
+  const early = envelope.reply
+    ? { sheet, reactions: [] as Report[], spent: [] as string[] }
+    : fireBefore(envelope, sheet, { system, compendium, die, clock });
   const out = runCall(envelope.steps || [], {
-    sheet, owner: `конверт «${envelope.label}»`,
+    sheet: early.sheet, owner: `конверт «${envelope.label}»`,
     ...(claims?.length ? { claims } : {}),
     ...(holder?.bond ? { bond: { from: envelope.from, by: envelope.effect } } : {}),
   }, { system, compendium, die, clock });
@@ -181,6 +184,7 @@ export function receive(
   const fired = envelope.reply
     ? { sheet: out.sheet, replies: [], spent: [], reactions: [] }
     : fireTriggers(envelope, out, { system, compendium, die, clock });
+  const reactions = [...early.reactions, ...fired.reactions];
 
   return {
     sheet: fired.sheet,
@@ -197,12 +201,48 @@ export function receive(
       changes: out.changes,
       effects: out.effects,
       removed: out.removed,
-      spent: fired.spent,
+      spent: [...early.spent, ...fired.spent],
       emitted: out.emitted,
 
-      ...(fired.reactions.length ? { reactions: fired.reactions } : {}),
+      ...(reactions.length ? { reactions } : {}),
     },
   };
+}
+
+function fireBefore(
+  envelope: Envelope, sheet: Sheet, ctx: WorldContext,
+): { sheet: Sheet; reactions: Report[]; spent: string[] } {
+  const reactions: Report[] = [];
+  const spent: string[] = [];
+  let current = sheet;
+
+  for (const { id, effect } of candidatesOf(ctx.system, sheet, 'triggered', true)) {
+    const trigger = effect.trigger;
+    if (!trigger || (trigger.direction ?? 'in') !== 'in' || trigger.when !== 'before') continue;
+    if (heardBy(trigger.on, envelope.effect, []) === null) continue;
+
+    const owner = `триггер «${effect.label || id}»`;
+    const refs = { pass: newPass(ctx.system, current, { compendium: ctx.compendium }), results: {}, owner };
+    let fits: boolean;
+    try {
+      fits = conditionHolds(trigger.condition === undefined || trigger.condition === null
+        ? null : packRef(trigger.condition, refs), refs);
+    } catch (err) {
+      if (!(err instanceof EngineError)) throw err;
+      fits = false;
+    }
+    if (!fits) continue;
+
+    const done = runOnSelf(id, effect, current, {}, owner, ctx);
+    current = done.sheet;
+    reactions.push(done.report);
+    if (durationOf(effect) === 'uses') {
+      current = spendUse(current, id);
+      spent.push(id);
+    }
+  }
+
+  return { sheet: current, reactions, spent };
 }
 
 export function senderResults(envelope: Envelope): Record<string, unknown> {
@@ -212,7 +252,7 @@ export function senderResults(envelope: Envelope): Record<string, unknown> {
 export const EVENT_PREFIX = 'event:';
 
 export type TriggerDirection = 'in' | 'out';
-export type ReactionWindow = 'sender' | 'target';
+export type ReactionWindow = 'sender' | 'target' | 'after';
 
 interface Candidate { id: string; effect: Effect }
 
@@ -358,14 +398,16 @@ export function offers(
   envelope: Envelope, window: ReactionWindow,
   { system, sheet, compendium }: WorldContext & { sheet: Sheet },
   results: Record<string, unknown> = {},
+  emitted: EmittedEvent[] = [],
 ): Offer[] {
   const out: Offer[] = [];
   for (const { id, effect } of candidatesOf(system, sheet, 'reaction', false)) {
     const trigger = effect.trigger;
     if (!trigger || (trigger.window ?? 'target') !== window) continue;
-    if (heardBy(trigger.on, envelope.effect, []) === null) continue;
+    const heard = heardBy(trigger.on, envelope.effect, emitted);
+    if (heard === null) continue;
     const owner = `реакция «${effect.label || id}»`;
-    const ctx = { pass: newPass(system, sheet, { compendium }), results, owner };
+    const ctx = { pass: newPass(system, sheet, { compendium }), results: withEvent(results, heard), owner };
     let fits: boolean;
     try {
       fits = conditionHolds(trigger.condition === undefined || trigger.condition === null
@@ -384,18 +426,24 @@ export function offers(
   return out;
 }
 
-export interface Reacted { sheet: Sheet; reports: Report[]; claims: string[]; spent: string[] }
+export interface Reacted {
+  sheet: Sheet; reports: Report[]; claims: string[]; spent: string[];
+
+  replies: Envelope[];
+}
 
 export function react(
   chosen: string[], envelope: Envelope, window: ReactionWindow,
   ctx: WorldContext & { sheet: Sheet },
   results: Record<string, unknown> = {},
+  emitted: EmittedEvent[] = [],
 ): Reacted {
-  const offered = offers(envelope, window, ctx, results);
+  const offered = offers(envelope, window, ctx, results, emitted);
   let sheet = ctx.sheet;
   const reports: Report[] = [];
   const claims: string[] = [];
   const spent: string[] = [];
+  const replies: Envelope[] = [];
 
   for (const id of chosen) {
     const offer = offered.find(o => o.id === id);
@@ -404,16 +452,22 @@ export function react(
         `реакция «${id}» сейчас не предлагается; можно: ${offered.map(o => o.id).join(', ') || '(ничего)'}`);
     }
     const effect = requireEffect(ctx.system, id, 'реакция');
-    const done = runOnSelf(id, effect, sheet, results, `реакция «${offer.label}»`, ctx);
-    sheet = done.sheet;
-    reports.push(done.report);
+    const owner = `реакция «${offer.label}»`;
+    const seed = withEvent(results, heardBy(effect.trigger?.on ?? '*', envelope.effect, emitted) ?? undefined);
+    if (window === 'after' && (effect.trigger?.to ?? 'sender') !== 'self') {
+      replies.push(replyFrom(id, effect, sheet, envelope.from, seed, owner, ctx));
+    } else {
+      const done = runOnSelf(id, effect, sheet, seed, owner, ctx);
+      sheet = done.sheet;
+      reports.push(done.report);
+    }
     claims.push(...offer.claims);
     if (durationOf(effect) === 'uses') {
       sheet = spendUse(sheet, id);
       spent.push(id);
     }
   }
-  return { sheet, reports, claims: [...new Set(claims)], spent };
+  return { sheet, reports, claims: [...new Set(claims)], spent, replies };
 }
 
 function conditionHolds(condition: unknown, ctx: RefContext): boolean {

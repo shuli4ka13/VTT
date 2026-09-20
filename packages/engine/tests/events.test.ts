@@ -147,14 +147,14 @@ group('событийный конверт', () => {
     test('провал снимает хиты и вешает эффект', () => {
       const { sheet } = receive(poisonAt(), ctx(arven, queue(5)));
       eq(sheet.values.hp_current, 37, '44 минус 7');
-      deepEq(sheet.effects, [{ effectId: 'poisoned' }]);
+      deepEq(sheet.effects, [...arven.effects, { effectId: 'poisoned' }]);
     });
 
     test('успех не делает ничего — и в журнале это обрыв порога, не промах', () => {
       const { sheet, report } = receive(poisonAt(), ctx(arven, queue(19)));
       eq(report.stopped.reason, 'threshold-held');
       eq(sheet.values.hp_current, 44);
-      deepEq(sheet.effects, []);
+      deepEq(sheet.effects, arven.effects);
     });
 
     test('свои модификаторы броска получатель применяет сам', () => {

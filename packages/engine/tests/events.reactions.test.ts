@@ -190,3 +190,72 @@ group('окно «я бросил» видит факты собственног
     eq(seen.hit.edited, false);
   });
 });
+
+group('реакция после разрешения: «на меня подействовали — ответить?»', () => {
+  const rebukeWorld: any = {
+    ...system,
+    effects: {
+      ...system.effects,
+      rebuke: {
+        label: 'Возмездие', activation: 'reaction', cost: 'reaction',
+        trigger: { on: 'strike', window: 'after', condition: { ref: 'hit.success' } },
+        steps: [{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { const: 3 } }],
+      },
+    },
+  };
+  const vengeful = { ...mirra, effects: [{ effectId: 'rebuke' }] };
+  const ctx = (sheet: any) => ({ system: rebukeWorld, sheet, compendium, die: queue() });
+
+  test('предлагается только в окне «после» и только когда попали', () => {
+    const env = send('longsword-item:0', { system: rebukeWorld, sheet: arven, compendium, die: queue(9, 5) });
+    const main = receive(env, ctx(vengeful));
+    eq(offers(env, 'target', ctx(vengeful), main.results, main.report.emitted).length, 0);
+    deepEq(offers(env, 'after', ctx(vengeful), main.results, main.report.emitted).map(o => o.id), ['rebuke']);
+
+    const miss = send('longsword-item:0', { system: rebukeWorld, sheet: arven, compendium, die: queue(2, 5) });
+    const dry = receive(miss, ctx(vengeful));
+    eq(offers(miss, 'after', ctx(vengeful), dry.results, dry.report.emitted).length, 0);
+  });
+
+  test('согласие даёт ответный конверт нападавшему, и тот теряет хиты', () => {
+    const env = send('longsword-item:0', { system: rebukeWorld, sheet: arven, compendium, die: queue(9, 5) });
+    const main = receive(env, ctx(vengeful));
+    const reacted = react(['rebuke'], env, 'after', ctx(vengeful), main.results, main.report.emitted);
+    eq(reacted.reports.length, 0, 'на себе ничего не делает');
+    eq(reacted.replies.length, 1);
+    eq(reacted.replies[0]!.to, 'arven');
+    const back = receive(reacted.replies[0]!, ctx(arven));
+    eq(back.sheet.values.hp_current, (arven.values.hp_current as number) - 3);
+  });
+});
+
+group('триггер до разрешения: срабатывает молча, и чужое действие видит уже новый лист', () => {
+  const braceWorld: any = {
+    ...system,
+    effects: {
+      ...system.effects,
+      brace: {
+        label: 'Стойка', activation: 'triggered',
+        trigger: { on: 'strike', when: 'before' },
+        steps: [{ type: 'status', mode: 'apply', effect: { const: 'wall' } }],
+      },
+      wall: {
+        label: 'Стена', activation: 'passive', duration: { kind: 'turns', max: 1 },
+        modifiers: [{ kind: 'value', target: 'ac', op: 'add', value: 20, stacking: 'sum', condition: null }],
+      },
+    },
+  };
+  const braced = { ...mirra, effects: [{ effectId: 'brace' }] };
+
+  test('атака, которая попала бы, промахивается по поднятой броне', () => {
+    const attack = () => send('longsword-item:0', { system: braceWorld, sheet: arven, compendium, die: queue(9, 5) });
+    const plain = receive(attack(), { system: braceWorld, sheet: mirra, compendium, die: queue() });
+    ok((resultsOf(plain).hit as { success: boolean }).success, 'без стойки попадание');
+
+    const guarded = receive(attack(), { system: braceWorld, sheet: braced, compendium, die: queue() });
+    eq(guarded.report.reactions?.length, 1);
+    eq(guarded.report.reactions![0]!.effect, 'brace');
+    ok(!(resultsOf(guarded).hit as { success: boolean }).success, 'со стойкой промах');
+    ok(guarded.sheet.effects.some(e => e.effectId === 'wall'));
+  });
+});

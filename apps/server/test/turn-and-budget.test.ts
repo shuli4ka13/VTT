@@ -531,3 +531,65 @@ describe('два сообщения стола сразу', () => {
     expect(after.find((s: { id: string }) => s.id === 'а').values.хиты).toBe(11);
   });
 });
+
+describe('реакция после разрешения', () => {
+  it('удар уже прошёл, стол спрашивает цель, ответ бьёт нападавшего', async () => {
+    const token = (await http().post('/auth/login').send({ name: 'Ведущий возмездия' })).body.token as string;
+    const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
+
+    const system = {
+      id: 'возмездие', name: 'С возмездием',
+      fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } }],
+      constants: { к20: { label: 'Кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
+      effects: {
+        удар: {
+          label: 'Удар', activation: 'manual',
+          steps: [
+            { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' } }, versus: { const: 0 }, continueOn: 'success' },
+            { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { const: 5 } },
+          ],
+        },
+        возмездие: {
+          label: 'Возмездие', activation: 'reaction',
+          trigger: { on: 'удар', window: 'after' },
+          steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { const: 2 } }],
+        },
+      },
+      records: { приём: { kind: 'action', label: 'Приём', props: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
+    };
+    const book = { items: [], actions: [{ id: 'приём', rk: 'приём', label: 'Удар', props: {} }] };
+    const sheet = (id: string, worn: string[]) => ({
+      id, systemId: 'возмездие', kind: 'pc', name: id, values: { хиты: 20 },
+      equipped: [], actions: ['приём'], effects: worn.map(effectId => ({ effectId })),
+    });
+
+    const systemId = (await as(http().post('/systems')).send({ title: 'С возмездием', system })).body.id;
+    const bookId = (await as(http().post('/compendiums')).send({ title: 'Книга возмездия', systemId, compendium: book })).body.id;
+    await as(http().post(`/systems/${systemId}/publish`)).send({}).expect(201);
+    await as(http().post(`/compendiums/${bookId}/publish`)).send({}).expect(201);
+    const worldId = (await as(http().post('/worlds')).send({
+      title: 'Мир возмездия', systemId, compendiumIds: [bookId],
+      sheets: [sheet('боец', []), sheet('цель', ['возмездие'])],
+    })).body.id;
+    const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол возмездия' })).body.id as string;
+
+    const hit = await as(http().post(`/rooms/${roomId}/act`)).send({
+      roomId, actionId: 'приём:0', fromId: 'боец', toId: 'цель',
+    }).expect(201);
+    expect(hit.body.pending?.stage).toBe('after');
+    expect(hit.body.pending?.sheetId).toBe('цель');
+    expect(hit.body.pending?.question).toContain('подействовали');
+    const between = (await as(http().get(`/rooms/${roomId}`))).body.sheets;
+    expect(between.find((s: { id: string }) => s.id === 'цель').values.хиты, 'удар уже прошёл до вопроса').toBe(15);
+
+    const answered = await as(http().post(`/rooms/${roomId}/answer`)).send({
+      roomId, pendingId: hit.body.pending.id, chosen: ['возмездие'],
+    }).expect(201);
+    expect(answered.body.pending).toBeNull();
+    expect(answered.body.log.map((e: { text: string }) => e.text).join(' ')).toContain('Возмездие');
+
+    const after = (await as(http().get(`/rooms/${roomId}`))).body.sheets;
+    expect(after.find((s: { id: string }) => s.id === 'боец').values.хиты, 'ответка дошла до нападавшего').toBe(18);
+    expect(after.find((s: { id: string }) => s.id === 'цель').values.хиты, 'удар второй раз не прошёл').toBe(15);
+  });
+});

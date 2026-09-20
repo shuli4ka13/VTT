@@ -10,6 +10,8 @@ import type {
   Sheet, System, Compendium, StoredValue,
 } from '@vtt/schema';
 import { deliver } from '@vtt/engine/events/exchange';
+import type { Seen } from '@vtt/engine/events/exchange';
+import type { EmittedEvent } from '@vtt/engine/engine/rule';
 import { previewLines, describeEntry } from '@vtt/engine/events/describe';
 import { unifyWorld } from '@vtt/engine/model/unify';
 import { effectLabelOf, actionOf, send, receive, offers, react, senderResults } from '@vtt/engine/events/envelope';
@@ -46,6 +48,10 @@ interface PendingRecord {
 
   at?: number;
   tapes?: Record<string, number[]>;
+
+  emitted?: EmittedEvent[];
+  afterAt?: number;
+  afterSeen?: Record<string, Seen>;
 }
 
 const targetsOf = (intent: ActIntent): string[] =>
@@ -357,9 +363,9 @@ export class RoomsService {
           const dry = receive(state.envelope, { ...ctx, die: taped.die, sheet: target, claims: intent.targetEdits ?? [] });
           const results = dry.results;
           tapes[target.id] = taped.tape;
-          const offered = offers(state.envelope, 'target', { ...ctx, sheet: target }, results);
+          const offered = offers(state.envelope, 'target', { ...ctx, sheet: target }, results, dry.report.emitted);
           if (offered.length) {
-            return this.park({ ...state, stage: 'target', sheetId: target.id, offered, results, tapes, at },
+            return this.park({ ...state, stage: 'target', sheetId: target.id, offered, results, emitted: dry.report.emitted, tapes, at },
               target, previewLines(state.envelope, system, dry), world);
           }
         }
@@ -369,22 +375,27 @@ export class RoomsService {
       throw new BadRequestException((err as Error).message);
     }
 
-    const reports: { fromId: string; toId: string; report: any }[] = [];
-    try {
-      for (const toId of targets) {
-        const out = deliver({
-          ...ctx, die: replayDie(tapes[toId] ?? [], this.die), sheets, envelope: state.envelope,
-          fromId: intent.fromId, toId,
-          claims: { target: intent.targetEdits ?? [] },
-        });
-        sheets = out.sheets;
-        reports.push(...out.reports);
+    const lines: string[] = [];
+    const afterSeen: Record<string, Seen> = { ...(state.afterSeen ?? {}) };
+    if (stage !== 'after') {
+      const reports: { fromId: string; toId: string; report: any }[] = [];
+      try {
+        for (const toId of targets) {
+          const out = deliver({
+            ...ctx, die: replayDie(tapes[toId] ?? [], this.die), sheets, envelope: state.envelope,
+            fromId: intent.fromId, toId,
+            claims: { target: intent.targetEdits ?? [] },
+          });
+          sheets = out.sheets;
+          reports.push(...out.reports);
+          Object.assign(afterSeen, out.seen ?? {});
+        }
+      } catch (err) {
+        throw new BadRequestException((err as Error).message);
       }
-    } catch (err) {
-      throw new BadRequestException((err as Error).message);
+      lines.push(...reports.map(entry => describeEntry(entry, system, sheets)));
     }
 
-    const lines = reports.map(entry => describeEntry(entry, system, sheets));
     try {
       sheets = this.settle(ctx, world.origin ?? world.sheets, sheets, lines);
     } catch (err) {
@@ -394,8 +405,26 @@ export class RoomsService {
     if (world.clockDirty) await this.saveClock(state.roomId, state.clock);
     const touched = await this.persistSheets(state.roomId, world.sheets, sheets, world.touched);
     const log = await this.appendLog(state.roomId, [...world.log, ...lines]);
-    await this.db.delete(roomPending).where(eq(roomPending.roomId, state.roomId));
 
+    for (let at = state.afterAt ?? 0; at < targets.length; at++) {
+      const target = sheets.find(s => s.id === targets[at]);
+      const seen = afterSeen[targets[at]!];
+      if (!target || !seen) continue;
+      let offered: Offer[];
+      try {
+        offered = offers(state.envelope, 'after', { ...ctx, sheet: target }, seen.results, seen.emitted);
+      } catch (err) {
+        throw new BadRequestException((err as Error).message);
+      }
+      if (!offered.length) continue;
+      const parked = await this.park({
+        ...state, stage: 'after', sheetId: target.id, offered, tapes, afterAt: at, afterSeen,
+        results: seen.results, emitted: seen.emitted,
+      }, target, [], { system, sheets, log: [], touched: [], clockDirty: false });
+      return { ...parked, sheets: touched, log: [...log, ...parked.log] };
+    }
+
+    await this.db.delete(roomPending).where(eq(roomPending.roomId, state.roomId));
     return { roomId: state.roomId, sheets: touched, log, clock: state.clock, pending: null };
   }
 
@@ -440,18 +469,26 @@ export class RoomsService {
     const lines: string[] = [];
     let envelope = record.envelope;
     let claims = record.claims;
-    let changed: Sheet[] = [];
+    const changed: Sheet[] = [];
     try {
       const reacted = react(intent.chosen, envelope, record.stage as ReactionWindow,
-        { system, compendium, die: this.die, clock, sheet: asked }, record.results);
+        { system, compendium, die: this.die, clock, sheet: asked }, record.results, record.emitted ?? []);
       for (const id of intent.chosen) {
         const effect = findEffect(system, id);
         if (effect) clock = spendAction(system, clock, asked.id, effect);
       }
       sheets = sheets.map(s => (s.id === asked.id ? reacted.sheet : s));
-      if (reacted.sheet !== asked) changed = [reacted.sheet];
+      if (reacted.sheet !== asked) changed.push(reacted.sheet);
       for (const report of reacted.reports) {
         lines.push(describeEntry({ fromId: asked.id, toId: asked.id, report }, system, sheets));
+      }
+      for (const reply of reacted.replies) {
+        const target = sheets.find(s => s.id === reply.to);
+        if (!target) continue;
+        const back = receive(reply, { system, compendium, die: this.die, clock, sheet: target });
+        sheets = sheets.map(s => (s.id === back.sheet.id ? back.sheet : s));
+        if (back.sheet !== target) changed.push(back.sheet);
+        lines.push(describeEntry({ fromId: asked.id, toId: target.id, report: back.report }, system, sheets));
       }
       if (!intent.chosen.length) lines.push(`${asked.name} пропускает реакцию`);
 
@@ -473,8 +510,9 @@ export class RoomsService {
     const more = record.stage === 'target' && (record.at ?? 0) + 1 < targetsOf(record.intent).length;
     return this.proceed({
       ...record, envelope, clock, claims,
-      stage: record.stage === 'sender' || more ? 'target' : 'deliver',
+      stage: record.stage === 'sender' || more ? 'target' : record.stage === 'after' ? 'after' : 'deliver',
       ...(record.stage === 'target' ? { at: (record.at ?? 0) + 1 } : {}),
+      ...(record.stage === 'after' ? { afterAt: (record.afterAt ?? 0) + 1 } : {}),
       results: {},
     }, { system, compendium, sheets, log: lines, touched: changed, clockDirty: clock !== record.clock, origin });
   }
@@ -516,7 +554,9 @@ export class RoomsService {
       stage,
       question: stage === 'sender'
         ? `${asked.name}: бросок сделан — ответить реакцией?`
-        : `${asked.name}: на вас действуют — ответить реакцией?`,
+        : stage === 'after'
+          ? `${asked.name}: на вас подействовали — ответить реакцией?`
+          : `${asked.name}: на вас действуют — ответить реакцией?`,
       options: (record.offered ?? []).map(o => ({ id: o.id, label: o.label })),
       preview: record.preview ?? [],
     };

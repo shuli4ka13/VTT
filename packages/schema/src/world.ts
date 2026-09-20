@@ -184,7 +184,7 @@ export const trigger = z.object({
 
   direction: z.enum(['in', 'out']).optional(),
 
-  window: z.enum(['sender', 'target']).optional(),
+  window: z.enum(['sender', 'target', 'after']).optional(),
   claims: z.array(z.string().min(1)).optional(),
 }).passthrough();
 

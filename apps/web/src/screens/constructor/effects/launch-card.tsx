@@ -33,19 +33,34 @@ function conditionsOfAny(system: System): (readonly [string, string])[] {
 
 export const momentOf = (effect: Effect): Moment => {
   if ((effect.activation ?? 'manual') === 'reaction') {
-    return (effect.trigger?.window ?? 'target') === 'sender' ? 'ask-sender' : 'ask-target';
+    const window = effect.trigger?.window ?? 'target';
+    return window === 'sender' ? 'ask-sender' : window === 'after' ? 'ask-after' : 'ask-target';
   }
+  if (effect.trigger?.when === 'before') return 'before-in';
   return effect.trigger?.direction === 'out' ? 'after-out' : 'after-in';
 };
 
+const WINDOW_OF: Record<string, 'sender' | 'target' | 'after'> = { 'ask-sender': 'sender', 'ask-target': 'target', 'ask-after': 'after' };
+
 const applyMoment = (draft: Effect, moment: Moment): void => {
-  const asks = moment === 'ask-target' || moment === 'ask-sender';
+  const asks = moment in WINDOW_OF;
   const on = draft.trigger?.on ?? (asks ? '*' : '');
   draft.activation = asks ? 'reaction' : 'triggered';
   const kept = { on, ...(draft.trigger?.condition ? { condition: draft.trigger.condition } : {}) };
-  draft.trigger = asks
-    ? { ...kept, window: moment === 'ask-sender' ? 'sender' : 'target', ...(draft.trigger?.claims?.length ? { claims: draft.trigger.claims } : {}) }
-    : { ...kept, ...(moment === 'after-out' ? { direction: 'out' as const, to: draft.trigger?.to === 'sender' ? 'self' as const : draft.trigger?.to } : {}) };
+  const keptTo = draft.trigger?.to === 'sender' ? undefined : draft.trigger?.to;
+  if (asks) {
+    draft.trigger = {
+      ...kept, window: WINDOW_OF[moment]!,
+      ...(moment === 'ask-after' && keptTo === 'self' ? { to: 'self' as const } : {}),
+      ...(moment === 'ask-sender' && draft.trigger?.claims?.length ? { claims: draft.trigger.claims } : {}),
+    };
+    return;
+  }
+  draft.trigger = moment === 'after-out'
+    ? { ...kept, direction: 'out' as const, ...(keptTo ? { to: keptTo } : {}) }
+    : moment === 'before-in'
+      ? { ...kept, when: 'before' }
+      : { ...kept, ...(keptTo === 'self' ? { to: 'self' as const } : {}) };
 };
 
 export function LaunchCard({ id, effect, system, edit }: {
@@ -55,7 +70,8 @@ export function LaunchCard({ id, effect, system, edit }: {
   edit: (change: (draft: Effect) => void) => void;
 }) {
   const moment = momentOf(effect);
-  const asks = moment === 'ask-target' || moment === 'ask-sender';
+  const asks = moment === 'ask-target' || moment === 'ask-sender' || moment === 'ask-after';
+  const answers = moment === 'after-in' || moment === 'ask-after';
   const listened = effect.trigger?.on;
   const anyAction = !listened || listened === '*';
   const isMoment = Boolean(listened?.startsWith(MOMENT_PREFIX)) || Boolean(fieldOf(listened));
@@ -111,7 +127,7 @@ export function LaunchCard({ id, effect, system, edit }: {
           />
         </Field>
 
-        {asks || isMoment ? null : (
+        {(asks && !answers) || isMoment || moment === 'before-in' ? null : (
           <Field label="Кому" hint="Куда уходит цепочка шагов этого эффекта.">
             <Select
               value={String(effect.trigger?.to ?? (moment === 'after-out' ? 'self' : 'sender'))}

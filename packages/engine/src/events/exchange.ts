@@ -3,6 +3,7 @@ import { runSelfTrack } from './self.ts';
 import type { Report, Envelope } from './envelope.ts';
 import type { System, Sheet, Compendium, Die } from '../model/types.ts';
 import type { Clock } from '../engine/clock.ts';
+import type { EmittedEvent } from '../engine/rule.ts';
 
 export interface WorldArgs {
   system: System;
@@ -33,7 +34,14 @@ export interface DeliverArgs extends WorldArgs {
 
 export interface ExchangeEntry { fromId: string; toId: string; report: Report }
 
-export interface ExchangeResult { sheets: Sheet[]; reports: ExchangeEntry[] }
+export interface Seen { results: Record<string, unknown>; emitted: EmittedEvent[] }
+
+export interface ExchangeResult {
+  sheets: Sheet[];
+  reports: ExchangeEntry[];
+
+  seen?: Record<string, Seen>;
+}
 
 const finder = (sheets: Sheet[]) => (id: string): Sheet | null => sheets.find(s => s.id === id) || null;
 
@@ -51,6 +59,7 @@ export function deliver({
   const main = receive(envelope, { ...ctx, sheet: to, claims: claims?.target });
   put(main.sheet);
   const reports: ExchangeEntry[] = [{ fromId, toId, report: main.report }];
+  const seen: Record<string, Seen> = { [toId]: { results: main.results, emitted: main.report.emitted } };
 
   for (const reply of main.replies) {
     const target = live(String(reply.to));
@@ -82,7 +91,7 @@ export function deliver({
     }
   }
 
-  return { sheets: updated, reports };
+  return { sheets: updated, reports, seen };
 }
 
 export interface ManyArgs extends WorldArgs {
@@ -98,6 +107,7 @@ export function deliverMany({
 }: ManyArgs): ExchangeResult {
   let updated = sheets;
   const reports: ExchangeEntry[] = [];
+  const seen: Record<string, Seen> = {};
 
   for (const toId of toIds) {
     const out = deliver({
@@ -105,9 +115,10 @@ export function deliverMany({
     });
     updated = out.sheets;
     reports.push(...out.reports);
+    Object.assign(seen, out.seen ?? {});
   }
 
-  return { sheets: updated, reports };
+  return { sheets: updated, reports, seen };
 }
 
 export function exchange({

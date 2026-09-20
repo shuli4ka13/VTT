@@ -184,7 +184,7 @@ describe('три вида запуска вместо четырёх', () => {
     const moment = [...document.querySelectorAll('select')]
       .find(el => [...el.options].some(o => o.value === 'ask-target'))!;
     expect([...moment.options].map(o => o.value))
-      .toEqual(['after-in', 'after-out', 'ask-target', 'ask-sender']);
+      .toEqual(['after-in', 'after-out', 'before-in', 'ask-target', 'ask-sender', 'ask-after']);
 
     fireEvent.change(moment, { target: { value: 'ask-sender' } });
     const effect = Object.values(useWorld.getState().system.effects).at(-1)!;

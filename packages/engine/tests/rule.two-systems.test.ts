@@ -57,12 +57,12 @@ group('две системы одними слотами', () => {
       const failed = receive(env, ctx5(arven, queue(5)));
       eq(failed.report.stopped, null, 'спас провален — цепочка дошла до конца');
       eq(failed.sheet.values.hp_current, 37, '44 минус 2d6=7');
-      deepEq(failed.sheet.effects, [{ effectId: 'poisoned' }]);
+      deepEq(failed.sheet.effects, [...arven.effects, { effectId: 'poisoned' }]);
 
       const held = receive(env, ctx5(arven, queue(19)));
       eq(held.report.stopped.reason, 'threshold-held', 'спасся — обрыв, и он различим в журнале');
       eq(held.sheet.values.hp_current, 44);
-      deepEq(held.sheet.effects, []);
+      deepEq(held.sheet.effects, arven.effects);
     });
 
     test('лечение — не урон с минусом: потолок это максимум хитов', () => {

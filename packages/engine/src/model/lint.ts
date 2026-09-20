@@ -123,6 +123,7 @@ function cycleProblems(system: System): Problem[] {
 
   for (const [id, effect] of Object.entries(system.effects)) {
     for (const event of emitsOf(effect.steps)) link(effectNode(id), eventNode(event));
+    if (activationOf(effect) === 'reaction') continue;
     const heard = listenerOf(effect.trigger?.on);
     if (heard.kind === 'event') link(eventNode(heard.key!), effectNode(id));
     if (heard.kind === 'effect') link(effectNode(heard.key!), effectNode(id));

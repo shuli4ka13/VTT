@@ -7,13 +7,15 @@ export const LAUNCH_KINDS = (['manual', 'auto', 'passive'] as const)
 
 export const launchHint = (kind: LaunchKind): string => LAUNCHES[kind].hint;
 
-export type Moment = 'after-in' | 'after-out' | 'ask-target' | 'ask-sender';
+export type Moment = 'after-in' | 'after-out' | 'before-in' | 'ask-target' | 'ask-sender' | 'ask-after';
 
 export const MOMENTS: readonly (readonly [Moment, string])[] = [
   ['after-in', 'со мной что-то сделали — отвечаю сам, молча'],
   ['after-out', 'я что-то сделал — срабатывает сам, молча'],
+  ['before-in', 'на меня действуют — срабатывает само до того, как это разрешится, молча'],
   ['ask-target', 'на меня действуют — стол спрашивает меня до того, как это разрешится'],
   ['ask-sender', 'я бросил — стол спрашивает меня до того, как результат уйдёт цели'],
+  ['ask-after', 'на меня подействовали — стол спрашивает меня после того, как это разрешилось'],
 ];
 
 export type EditFn = (slotIndexInGroup: number, change: (draft: Step) => void) => void;

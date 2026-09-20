@@ -33,6 +33,12 @@ export interface Launch {
   ask: boolean;
 }
 
+export const REACTION_WINDOWS = {
+  target: 'до того, как чужое действие разрешится на мне',
+  sender: 'после моего броска, до того, как результат уйдёт цели',
+  after: 'после того, как чужое действие разрешилось на мне',
+} as const;
+
 export const LAUNCHES: Record<LaunchKind, { label: string; hint: string }> = {
   manual: { label: 'Кнопкой', hint: 'Игрок нажимает сам: кнопка на листе из записи или самого эффекта.' },
   passive: { label: 'Висит и правит', hint: 'Ничего не делает сам — пока надет или наложен, правит цифры и броски.' },
@@ -42,8 +48,8 @@ export const LAUNCHES: Record<LaunchKind, { label: string; hint: string }> = {
 export function launchOf(effect: { activation?: string | null; trigger?: { when?: string; window?: string } | null } | null | undefined): Launch {
   const activation = effect?.activation ?? 'manual';
   if (activation === 'passive') return { kind: 'passive', moment: 'after', ask: false };
-  if (activation === 'triggered') return { kind: 'auto', moment: 'after', ask: false };
-  if (activation === 'reaction') return { kind: 'auto', moment: 'before', ask: true };
+  if (activation === 'triggered') return { kind: 'auto', moment: effect?.trigger?.when === 'before' ? 'before' : 'after', ask: false };
+  if (activation === 'reaction') return { kind: 'auto', moment: effect?.trigger?.window === 'after' ? 'after' : 'before', ask: true };
   return { kind: 'manual', moment: 'after', ask: false };
 }
 
