@@ -34,6 +34,8 @@ export interface StepContext extends RefContext {
   run?: (steps: Step[], seed: Record<string, unknown>, within?: string) => NestedRun;
 
   expiry?: (effect: Effect) => Partial<WornEffect>;
+
+  bond?: { from: string; by: string };
   [k: string]: unknown;
 }
 

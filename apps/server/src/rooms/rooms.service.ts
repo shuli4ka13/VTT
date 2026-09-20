@@ -18,6 +18,7 @@ import type { Envelope, Offer, ReactionWindow } from '@vtt/engine/events/envelop
 import { findEffect, usesMax } from '@vtt/engine/engine/effects';
 import { asksOf, checkInputs, normalizeInputs } from '@vtt/engine/model/asks';
 import { fireMoments, describeMoment } from '@vtt/engine/events/moments';
+import { sweepBonds } from '@vtt/engine/events/bonds';
 import type { MomentEvent } from '@vtt/engine/events/moments';
 import { resolveRoll } from '@vtt/engine/engine/modifiers';
 import { newPass, calc } from '@vtt/engine/engine/calc';
@@ -199,6 +200,13 @@ export class RoomsService {
       const fired = fireMoments(momentsOf(intent.op, clock, next, after), after, world);
       after = fired.sheets;
       for (const entry of fired.reports) lines.push(describeMoment(world, entry, after));
+
+      const swept = sweepBonds(system, after);
+      after = swept.sheets;
+      for (const broken of swept.broken) {
+        const who = after.find(s => s.id === broken.sheetId)?.name ?? broken.sheetId;
+        lines.push(`«${effectLabelOf(system, broken.effectId)}» спало с ${who}: держать стало нечем`);
+      }
     } catch (err) {
       throw new BadRequestException((err as Error).message);
     }
@@ -326,12 +334,17 @@ export class RoomsService {
       throw new BadRequestException((err as Error).message);
     }
 
+    const lines = reports.map(entry => describeEntry(entry, system, sheets));
+    const swept = sweepBonds(system, sheets);
+    sheets = swept.sheets;
+    for (const broken of swept.broken) {
+      const who = sheets.find(s => s.id === broken.sheetId)?.name ?? broken.sheetId;
+      lines.push(`«${effectLabelOf(system, broken.effectId)}» спало с ${who}: держать стало нечем`);
+    }
+
     if (world.clockDirty) await this.saveClock(state.roomId, state.clock);
     const touched = await this.persistSheets(state.roomId, world.sheets, sheets, world.touched);
-    const log = await this.appendLog(state.roomId, [
-      ...world.log,
-      ...reports.map(entry => describeEntry(entry, system, sheets)),
-    ]);
+    const log = await this.appendLog(state.roomId, [...world.log, ...lines]);
     await this.db.delete(roomPending).where(eq(roomPending.roomId, state.roomId));
 
     return { roomId: state.roomId, sheets: touched, log, clock: state.clock, pending: null };

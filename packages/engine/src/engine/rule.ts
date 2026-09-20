@@ -108,7 +108,11 @@ export function resolveRule(steps: StepData[], ctx: StepContext): RuleReport {
   const attach = (effectId: string): void => {
     const effect = requireEffect(ctx.system, effectId, who(ctx));
     const at = worn.findIndex(e => e.effectId === effectId);
-    const fresh: WornEffect = { effectId, ...(ctx.expiry ? ctx.expiry(effect) : {}) };
+    const fresh: WornEffect = {
+      effectId,
+      ...(ctx.expiry ? ctx.expiry(effect) : {}),
+      ...(ctx.bond ? { from: ctx.bond.from, by: ctx.bond.by } : {}),
+    };
     const max = usesMax(effect);
     if (max !== null) fresh.usesLeft = max;
 

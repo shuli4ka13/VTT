@@ -180,6 +180,7 @@ export const trigger = z.object({
 }).passthrough();
 
 export const effect = z.object({
+  bond: z.boolean().optional(),
   label: z.string().optional(),
   icon: z.string().optional(),
   category: z.string().optional(),

@@ -41,6 +41,7 @@ export interface Run {
   owner: string;
   seed?: Record<string, unknown>;
   claims?: string[];
+  bond?: { from: string; by: string };
 }
 
 export function runCall(steps: StepData[], run: Run, world: WorldContext): RuleReport {
@@ -51,5 +52,6 @@ export function runCall(steps: StepData[], run: Run, world: WorldContext): RuleR
     owner: run.owner,
     expiry: (effect: Effect) => expiryOf(effect, world.clock),
     ...(run.claims?.length ? { claims: run.claims } : {}),
+    ...(run.bond ? { bond: run.bond } : {}),
   });
 }

@@ -170,8 +170,11 @@ export function receive(
   envelope: Envelope,
   { system, sheet, compendium, die, claims, clock }: WorldContext & { sheet: Sheet } & { claims?: string[] },
 ): ReceiveResult {
+  const holder = findEffect(system, envelope.effect);
   const out = runCall(envelope.steps || [], {
-    sheet, owner: `конверт «${envelope.label}»`, ...(claims?.length ? { claims } : {}),
+    sheet, owner: `конверт «${envelope.label}»`,
+    ...(claims?.length ? { claims } : {}),
+    ...(holder?.bond ? { bond: { from: envelope.from, by: envelope.effect } } : {}),
   }, { system, compendium, die, clock });
 
   const fired = envelope.reply

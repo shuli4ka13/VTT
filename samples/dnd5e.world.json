@@ -357,10 +357,9 @@
         "category": "Состояния",
         "activation": "passive",
         "duration": {
-          "kind": "rounds",
-          "max": 2
+          "kind": "permanent"
         },
-        "description": "+1к4 к любому броску на два раунда боя; вне боя — пока не снимут. Кость сверх: преимущество её не отбрасывает.",
+        "description": "+1к4 к любому броску, пока благословивший держит концентрацию. Кость сверх: преимущество её не отбрасывает.",
         "modifiers": [
           {
             "kind": "roll",
@@ -556,6 +555,25 @@
             "targetModifiers": true
           }
         ]
+      },
+      "bless": {
+        "label": "Благословение",
+        "icon": "✨",
+        "category": "Поддержка",
+        "description": "Пока держишь концентрацию, цели получают +1к4 к любому броску.",
+        "activation": "manual",
+        "cost": "action",
+        "bond": true,
+        "params": [],
+        "steps": [
+          {
+            "type": "status",
+            "mode": "apply",
+            "effect": {
+              "const": "blessed"
+            }
+          }
+        ]
       }
     },
     "room_rules": [
@@ -682,6 +700,21 @@
         "icon": "📜",
         "group": "Заклинания",
         "hint": "Чистые данные: род без привязок ничего не автоматизирует."
+      },
+      "support-spell": {
+        "kind": "action",
+        "label": "Поддерживающее заклинание",
+        "icon": "✨",
+        "group": "Заклинания",
+        "hint": "Вешает состояние на цель и держится концентрацией: снял — спало со всех.",
+        "props": [],
+        "bindings": [
+          {
+            "label": "Сотворить",
+            "effect": "bless",
+            "args": {}
+          }
+        ]
       }
     },
     "rolls": [
@@ -1380,6 +1413,13 @@
         "label": "Огненный снаряд",
         "description": "Сгусток огня: попадание по КД, 1d10 огнём.",
         "effect": "fire_bolt"
+      },
+      {
+        "id": "bless-spell",
+        "rk": "support-spell",
+        "label": "Благословение",
+        "description": "Пока держишь концентрацию, цели получают +1к4 к любому броску.",
+        "props": {}
       }
     ]
   },
@@ -1410,7 +1450,9 @@
         "longsword-item"
       ],
       "effects": [],
-      "actions": []
+      "actions": [
+        "bless-spell"
+      ]
     },
     {
       "id": "mirra",
