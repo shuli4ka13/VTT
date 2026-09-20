@@ -39,7 +39,13 @@ interface PendingRecord {
   offered?: Offer[];
   preview?: string[];
   tape?: number[];
+
+  at?: number;
+  tapes?: Record<string, number[]>;
 }
+
+const targetsOf = (intent: ActIntent): string[] =>
+  (intent.toIds?.length ? [...new Set(intent.toIds)] : [intent.toId]);
 
 @Injectable()
 export class RoomsService {
@@ -262,7 +268,8 @@ export class RoomsService {
     };
 
     let stage: ReactionWindow | 'deliver' = state.stage;
-    let tape: number[] = state.tape ?? [];
+    const targets = targetsOf(intent);
+    const tapes: Record<string, number[]> = { ...(state.tapes ?? {}) };
     try {
       if (stage === 'sender') {
         const sender = sheetOf(intent.fromId);
@@ -275,15 +282,17 @@ export class RoomsService {
         stage = 'target';
       }
       if (stage === 'target') {
-        const target = sheetOf(intent.toId);
-        const taped = tapeDie(this.die);
-        const dry = receive(state.envelope, { ...ctx, die: taped.die, sheet: target, claims: intent.targetEdits ?? [] });
-        const results = dry.results;
-        tape = taped.tape;
-        const offered = offers(state.envelope, 'target', { ...ctx, sheet: target }, results);
-        if (offered.length) {
-          return this.park({ ...state, stage: 'target', sheetId: target.id, offered, results, tape },
-            target, previewLines(state.envelope, system, dry), world);
+        for (let at = state.at ?? 0; at < targets.length; at++) {
+          const target = sheetOf(targets[at]!);
+          const taped = tapeDie(this.die);
+          const dry = receive(state.envelope, { ...ctx, die: taped.die, sheet: target, claims: intent.targetEdits ?? [] });
+          const results = dry.results;
+          tapes[target.id] = taped.tape;
+          const offered = offers(state.envelope, 'target', { ...ctx, sheet: target }, results);
+          if (offered.length) {
+            return this.park({ ...state, stage: 'target', sheetId: target.id, offered, results, tapes, at },
+              target, previewLines(state.envelope, system, dry), world);
+          }
         }
       }
     } catch (err) {
@@ -291,22 +300,26 @@ export class RoomsService {
       throw new BadRequestException((err as Error).message);
     }
 
-    let result: { sheets: Sheet[]; reports: { fromId: string; toId: string; report: any }[] };
+    const reports: { fromId: string; toId: string; report: any }[] = [];
     try {
-      result = deliver({
-        ...ctx, die: replayDie(tape, this.die), sheets, envelope: state.envelope, fromId: intent.fromId, toId: intent.toId,
-        claims: { target: intent.targetEdits ?? [] },
-      });
+      for (const toId of targets) {
+        const out = deliver({
+          ...ctx, die: replayDie(tapes[toId] ?? [], this.die), sheets, envelope: state.envelope,
+          fromId: intent.fromId, toId,
+          claims: { target: intent.targetEdits ?? [] },
+        });
+        sheets = out.sheets;
+        reports.push(...out.reports);
+      }
     } catch (err) {
       throw new BadRequestException((err as Error).message);
     }
-    sheets = result.sheets;
 
     if (world.clockDirty) await this.saveClock(state.roomId, state.clock);
     const touched = await this.persistSheets(state.roomId, world.sheets, sheets, world.touched);
     const log = await this.appendLog(state.roomId, [
       ...world.log,
-      ...result.reports.map(entry => describeEntry(entry, system, sheets)),
+      ...reports.map(entry => describeEntry(entry, system, sheets)),
     ]);
     await this.db.delete(roomPending).where(eq(roomPending.roomId, state.roomId));
 
@@ -379,9 +392,11 @@ export class RoomsService {
     } catch (err) {
       throw new BadRequestException((err as Error).message);
     }
+    const more = record.stage === 'target' && (record.at ?? 0) + 1 < targetsOf(record.intent).length;
     return this.proceed({
       ...record, envelope, clock, claims,
-      stage: record.stage === 'sender' ? 'target' : 'deliver',
+      stage: record.stage === 'sender' || more ? 'target' : 'deliver',
+      ...(record.stage === 'target' ? { at: (record.at ?? 0) + 1 } : {}),
       results: {},
     }, { system, compendium, sheets, log: lines, touched: changed, clockDirty: clock !== record.clock });
   }

@@ -76,6 +76,31 @@ export function deliver({
   return { sheets: updated, reports };
 }
 
+export interface ManyArgs extends WorldArgs {
+  envelope: Envelope;
+  fromId: string;
+  toIds: string[];
+
+  claims?: { target?: string[] };
+}
+
+export function deliverMany({
+  system, compendium, die, clock, sheets, envelope, fromId, toIds, claims,
+}: ManyArgs): ExchangeResult {
+  let updated = sheets;
+  const reports: ExchangeEntry[] = [];
+
+  for (const toId of toIds) {
+    const out = deliver({
+      system, compendium, die, clock, sheets: updated, envelope, fromId, toId, claims,
+    });
+    updated = out.sheets;
+    reports.push(...out.reports);
+  }
+
+  return { sheets: updated, reports };
+}
+
 export function exchange({
   system, compendium, die, sheets, actionId, fromId, toId, claims, clock, inputs,
 }: ExchangeArgs): ExchangeResult {

@@ -199,3 +199,26 @@ describe('значение, которое называет человек за 
     expect(done.body.sheets.find((s: { id: string }) => s.id === 'б').values.хиты).toBe(15);
   });
 });
+
+describe('одно действие по нескольким целям', () => {
+  it('число бросается один раз, пауза на второй цели не теряет остальных', async () => {
+    const { as, roomId, arven, mirra, rooms } = await table();
+    const state = (await as(http().get(`/rooms/${roomId}`))).body;
+    const third = (await (async () => {
+      await rooms.createSheet((await as(http().get('/auth/me'))).body.userId, roomId, 'Третий', 'npc');
+      return (await as(http().get(`/rooms/${roomId}`))).body.sheets.find((s: { name: string }) => s.name === 'Третий');
+    })());
+    expect(third, 'третий лист заведён').toBeTruthy();
+    expect(state.sheets.length).toBeGreaterThan(1);
+
+    const done = await as(http().post(`/rooms/${roomId}/act`)).send({
+      roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id, toIds: [mirra.id, third.id],
+    }).expect(201);
+
+    const said = done.body.log.map((entry: { text: string }) => entry.text).join('\n');
+    const hits = said.split('\n').filter((line: string) => line.includes('применяет'));
+    expect(hits.length, said).toBe(2);
+    expect(hits[0]).toContain(mirra.name);
+    expect(hits[1]).toContain('Третий');
+  });
+});

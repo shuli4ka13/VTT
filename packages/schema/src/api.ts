@@ -131,6 +131,8 @@ export const actIntent = z.object({
   fromId: z.string().min(1),
   toId: z.string().min(1),
 
+  toIds: z.array(z.string().min(1)).optional(),
+
   edits: z.array(z.string().min(1)).optional(),
   targetEdits: z.array(z.string().min(1)).optional(),
 
