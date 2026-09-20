@@ -194,6 +194,8 @@ export const effect = z.object({
   stacking: stacking.optional(),
   params: z.array(param).optional(),
   steps: z.array(step).optional(),
+
+  self: z.array(step).optional(),
   modifiers: z.array(modifier).optional(),
   trigger: trigger.optional(),
 }).passthrough();

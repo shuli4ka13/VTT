@@ -136,6 +136,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
       {pipeline ? (
         <>
           <Chain effect={effect} system={system} edit={edit} />
+          <SelfTrack effect={effect} system={system} edit={edit} />
           <ParamsEditor effect={effect} onEdit={edit} />
         </>
       ) : (
@@ -156,3 +157,39 @@ const durationSummary = (effect: Effect) => {
   const stack = STACKING.find(([key]) => key === (effect.stacking ?? 'ignore'))?.[1];
   return `${word}${uses} · ${stack}`;
 };
+
+function SelfTrack({ effect, system, edit }: {
+  effect: Effect;
+  system: System;
+  edit: (change: (draft: Effect) => void) => void;
+}) {
+  const track = effect.self ?? [];
+  const carrier = { ...effect, steps: track } as Effect;
+
+  const editTrack = (change: (draft: Effect) => void) => edit(draft => {
+    const own = { ...draft, steps: draft.self ?? [] } as Effect;
+    change(own);
+    const steps = own.steps ?? [];
+    if (steps.length) draft.self = steps; else delete draft.self;
+  });
+
+  return (
+    <Fold
+      title="Со мной — один раз за действие"
+      count={track.length}
+      summary={track.length ? undefined : 'ничего: ни ячейка, ни заряд не тратятся'}
+    >
+      <span className="faint">
+        Эта дорожка идёт по листу того, кто действует, и ровно один раз — даже если целей несколько.
+        Сюда кладут трату ячейки, заряда или ресурса.
+      </span>
+      <Chain
+        effect={carrier}
+        system={system}
+        edit={editTrack}
+        title="Шаги дорожки"
+        empty="пусто — ничего с собой не делается"
+      />
+    </Fold>
+  );
+}

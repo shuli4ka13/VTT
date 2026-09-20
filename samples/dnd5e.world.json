@@ -244,7 +244,20 @@
               "optional": true
             }
           }
-        ]
+        ],
+        "self": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "slots_1"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            }
+          }
+        ],
+        "description": "Тратит ячейку 1-го круга: восполняет хиты и, если задано, снимает состояние."
       },
       "fire_bolt": {
         "label": "Огненный снаряд",
@@ -565,7 +578,7 @@
         "label": "Благословение",
         "icon": "✨",
         "category": "Поддержка",
-        "description": "Пока держишь концентрацию, цели получают +1к4 к любому броску.",
+        "description": "Тратит ячейку 1-го круга. Пока держишь концентрацию, цели получают +1к4 к любому броску.",
         "activation": "manual",
         "cost": "action",
         "bond": true,
@@ -576,6 +589,18 @@
             "mode": "apply",
             "effect": {
               "const": "blessed"
+            }
+          }
+        ],
+        "self": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "slots_1"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
             }
           }
         ]
@@ -928,6 +953,18 @@
           "kind": "table",
           "table": "proficiency",
           "arg": "#level"
+        }
+      },
+      {
+        "tag": "slots_1",
+        "label": "Ячейки 1-го круга",
+        "group": "Прогрессия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 2,
+          "min": 0,
+          "max": "#level"
         }
       },
       {
@@ -1448,7 +1485,8 @@
         "ac_base": 10,
         "armor_heavy": false,
         "hp_max": 44,
-        "hp_current": 44
+        "hp_current": 44,
+        "slots_1": 2
       },
       "equipped": [
         "chain-mail",
@@ -1478,7 +1516,8 @@
         "ac_base": 10,
         "armor_heavy": false,
         "hp_max": 21,
-        "hp_current": 21
+        "hp_current": 21,
+        "slots_1": 2
       },
       "equipped": [],
       "effects": [],

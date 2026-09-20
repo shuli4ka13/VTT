@@ -40,12 +40,13 @@ describe('EffectsTab: палитра трёх понятий', () => {
   it('палитра шагов — только виды движка, клик кладёт шаг', () => {
     render(<EffectsTab />);
     const palette = screen.getAllByRole('button')
+      .filter(b => !b.closest('details'))
       .filter(b => (b.textContent ?? '').trimStart().startsWith('+ '))
       .map(b => b.textContent!.trim())
       .filter(t => !LAUNCH_KINDS.some(kind => t === `+ ${kind.label.toLowerCase()}`)
         && t !== '+ общий' && !t.startsWith('+ брать'));
     expect(palette).toEqual(['+ проверка', '+ изменение', '+ таблица', '+ число']);
-    fireEvent.click(screen.getByText('+ проверка'));
+    fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     expect(screen.getByText('1 · Проверка')).toBeTruthy();
     expect(screen.queryByText(/порог/i)).toBeNull();
   });
@@ -136,7 +137,7 @@ describe('ссылка на результат шага', () => {
   it('машинного имени шага на экране нет, а сослаться на шаг всё равно можно', () => {
     render(<EffectsTab />);
     expect(screen.queryAllByPlaceholderText('имя')).toHaveLength(0);
-    fireEvent.click(screen.getByText('+ проверка'));
+    fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     const steps = useWorld.getState().system.effects.strike!.steps!;
     const id = String(steps.at(-1)!.id);
     expect(id).toBeTruthy();
@@ -303,5 +304,32 @@ describe('крит собирается в шаге «число»', () => {
     fireEvent.change(least, { target: { value: '19' } });
     expect(useWorld.getState().system.effects.удар!.steps![1]!.double)
       .toEqual({ ref: 'проверка.natural', atLeast: 19 });
+  });
+});
+
+describe('дорожка «со мной» собирается отдельно от цепочки', () => {
+  beforeEach(() => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        fields: [{ tag: 'ячейки', label: 'Ячейки', value: { kind: 'stored', type: 'number', default: 3 } }],
+        effects: { снаряд: { label: 'Снаряд', activation: 'manual', params: [], steps: [] } },
+      },
+      activeEffectId: 'снаряд',
+    }));
+  });
+  afterEach(() => { cleanup(); });
+
+  it('шаг, добавленный в дорожку, ложится в self, а не в steps', () => {
+    render(<EffectsTab />);
+    fireEvent.click(screen.getByText('Со мной — один раз за действие'));
+
+    const adders = screen.getAllByText('+ изменение');
+    fireEvent.click(adders[adders.length - 1]!);
+
+    const effect = useWorld.getState().system.effects.снаряд!;
+    expect(effect.self).toHaveLength(1);
+    expect(effect.steps ?? []).toHaveLength(0);
   });
 });

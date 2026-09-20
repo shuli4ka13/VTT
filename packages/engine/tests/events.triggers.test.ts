@@ -83,7 +83,7 @@ group('триггерные эффекты: ответка получателя'
       sheets: [spiked(healer), spiked(mirra)], actionId: 'healing-word:0',
       fromId: 'arven', toId: 'mirra',
     });
-    eq(reports.length, 1, 'на лечение шипы не отвечают');
+    eq(reports.filter(r => r.report.kind === 'effect').length, 1, 'на лечение шипы не отвечают');
   });
 });
 
@@ -144,7 +144,8 @@ group('шаг «состояние» в режиме «снять»', () => {
 
     const cured = sheets.find(s => s.id === 'arven');
     deepEq(cured.effects, [], 'яд снят');
-    deepEq(reports[0].report.removed, ['poisoned'], 'и это видно в журнале');
+    const main = reports.find(r => r.report.kind === 'effect');
+    deepEq(main.report.removed, ['poisoned'], 'и это видно в журнале');
     ok(cured.values.hp_current > poisoned.values.hp_current
       || cured.values.hp_current === arven.values.hp_max, 'заодно подлечило');
   });

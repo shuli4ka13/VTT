@@ -19,6 +19,7 @@ import { findEffect, usesMax } from '@vtt/engine/engine/effects';
 import { asksOf, checkInputs, normalizeInputs } from '@vtt/engine/model/asks';
 import { fireMoments, describeMoment } from '@vtt/engine/events/moments';
 import { sweepBonds } from '@vtt/engine/events/bonds';
+import { runSelfTrack } from '@vtt/engine/events/self';
 import type { MomentEvent } from '@vtt/engine/events/moments';
 import { resolveRoll } from '@vtt/engine/engine/modifiers';
 import { newPass, calc } from '@vtt/engine/engine/calc';
@@ -243,6 +244,7 @@ export class RoomsService {
     const clock = await this.clockOf(intent.roomId);
     let nextClock: ClockState = clock;
     let envelope: Envelope;
+    let own: { sheet: Sheet; report: unknown } | null = null;
     try {
       const action = actionOf(intent.actionId, { system, compendium });
       const effect = findEffect(system, action.effect);
@@ -259,14 +261,27 @@ export class RoomsService {
         system, compendium, die: this.die, clock: nextClock, sheet: from, against: to, claims: intent.edits ?? [],
         ...(Object.keys(inputs).length ? { inputs } : {}),
       });
+      own = runSelfTrack(intent.actionId, from, {
+        system, compendium, die: this.die, clock: nextClock,
+        ...(Object.keys(inputs).length ? { inputs } : {}),
+      });
     } catch (err) {
       if (err instanceof NotFoundException) throw err;
       throw new BadRequestException((err as Error).message);
     }
+    const started = own?.report ? sheets.map(s => (s.id === own!.sheet.id ? own!.sheet : s)) : sheets;
+    const ownLines = own?.report
+      ? [describeEntry({ fromId: intent.fromId, toId: intent.fromId, report: own.report }, system, started)]
+      : [];
+
     return this.proceed({
       roomId: intent.roomId, intent, envelope, clock: nextClock, stage: 'sender',
       claims: intent.edits ?? [], results: {},
-    }, { system, compendium, sheets, log: [], touched: [], clockDirty: nextClock !== clock });
+    }, {
+      system, compendium, sheets: started, log: ownLines,
+      touched: own?.report ? [own.sheet] : [],
+      clockDirty: nextClock !== clock,
+    });
   }
 
   private async proceed(

@@ -271,3 +271,51 @@ describe('моменты хода', () => {
     expect(poisoned.values.хиты, 'на следующем своём ходу — ещё раз').toBe(14);
   });
 });
+
+describe('ячейка тратится один раз на действие', () => {
+  it('удар по трём целям списывает одну ячейку, а урон достаётся каждому', async () => {
+    const token = (await http().post('/auth/login').send({ name: 'Ведущий ячеек' })).body.token as string;
+    const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
+
+    const system = {
+      id: 'ячейки', name: 'С ячейками',
+      fields: [
+        { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
+        { tag: 'ячейки', label: 'Ячейки', value: { kind: 'stored', type: 'number', default: 3, min: 0 } },
+      ],
+      effects: {
+        шар: {
+          label: 'Огненный шар', activation: 'manual',
+          self: [{ type: 'apply', target: { tag: 'ячейки' }, direction: 'subtract', value: { const: 1 } }],
+          steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { const: 5 } }],
+        },
+      },
+      records: { свиток: { kind: 'action', label: 'Свиток', props: [], bindings: [{ label: 'Огненный шар', effect: 'шар', args: {} }] } },
+    };
+    const book = { items: [], actions: [{ id: 'свиток', rk: 'свиток', label: 'Свиток', props: {} }] };
+    const sheet = (id: string) => ({
+      id, systemId: 'ячейки', kind: 'pc', name: id, values: { хиты: 20, ячейки: 3 },
+      equipped: [], actions: ['свиток'], effects: [],
+    });
+
+    const systemId = (await as(http().post('/systems')).send({ title: 'С ячейками', system })).body.id;
+    const bookId = (await as(http().post('/compendiums')).send({ title: 'Книга ячеек', systemId, compendium: book })).body.id;
+    await as(http().post(`/systems/${systemId}/publish`)).send({}).expect(201);
+    await as(http().post(`/compendiums/${bookId}/publish`)).send({}).expect(201);
+    const worldId = (await as(http().post('/worlds')).send({
+      title: 'Мир ячеек', systemId, compendiumIds: [bookId],
+      sheets: [sheet('маг'), sheet('а'), sheet('б'), sheet('в')],
+    })).body.id;
+    const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол ячеек' })).body.id as string;
+
+    const done = await as(http().post(`/rooms/${roomId}/act`)).send({
+      roomId, actionId: 'свиток:0', fromId: 'маг', toId: 'а', toIds: ['а', 'б', 'в'],
+    }).expect(201);
+
+    const after = (await as(http().get(`/rooms/${roomId}`))).body.sheets;
+    const of = (id: string) => after.find((s: { id: string }) => s.id === id).values;
+    expect(of('маг').ячейки, 'одна ячейка на всё действие').toBe(2);
+    expect([of('а').хиты, of('б').хиты, of('в').хиты]).toEqual([15, 15, 15]);
+    expect(done.body.log.map((e: { text: string }) => e.text).join(' ')).toContain('Ячейки');
+  });
+});

@@ -9,10 +9,12 @@ import { GroupCard } from './cards/group-card.tsx';
 import { findDonorBlock, copyDonorBlock } from '../donors.tsx';
 import type { System, Effect } from '@vtt/schema';
 
-export function Chain({ effect, system, edit }: {
+export function Chain({ effect, system, edit, title = 'Цепочка шагов', empty = 'шагов ещё нет — эффект ничего не делает' }: {
   effect: Effect;
   system: System;
   edit: (change: (draft: Effect) => void) => void;
+  title?: string;
+  empty?: string;
 }) {
   const editSystem = useWorld(s => s.editSystem);
   const [removed, setRemoved] = useState<string | null>(null);
@@ -48,13 +50,13 @@ export function Chain({ effect, system, edit }: {
   return (
     <>
       <div className="inline">
-        <span className="screen-title" style={{ fontSize: 'var(--fs-5)' }}>Цепочка шагов</span>
+        <span className="screen-title" style={{ fontSize: 'var(--fs-5)' }}>{title}</span>
         <span className="spacer" />
         {broken
           ? <Verdict tone="bad">{STEP.manyGen} со сломанными ссылками: {broken}</Verdict>
           : steps.length
             ? <Verdict tone="ok">эффект верный · {STEP.manyGen} {cards.length}</Verdict>
-            : <Verdict tone="warn">шагов ещё нет — эффект ничего не делает</Verdict>}
+            : <Verdict tone="warn">{empty}</Verdict>}
       </div>
 
       {removed ? <Verdict tone="warn" action={<Button size="sm" variant="ghost" onClick={() => setRemoved(null)}>ясно</Button>}>{removed}</Verdict> : null}
