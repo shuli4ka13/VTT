@@ -132,6 +132,18 @@ export const STEP_WORDS = {
     reasons: {},
     breakLines: {},
   },
+  table: {
+    label: 'Таблица',
+    hint: 'Прочитать строку таблицы по числу или броску: травма, исход, сложность по дистанции.',
+    slots: [
+      { key: 'table', label: 'Какая таблица', kind: 'ref', main: true, required: true, allow: ['const', 'param', 'prop'] },
+      { key: 'dice', label: 'Бросить', kind: 'ref', main: true, allow: ['const', 'param', 'prop', 'constant', 'empty'] },
+      { key: 'value', label: 'Или взять число', kind: 'ref', main: true, allow: ['ref', 'expr', 'const', 'param', 'prop', 'empty'] },
+    ],
+    outputs: [{ path: '', label: 'строка таблицы', kind: 'text' }],
+    reasons: {},
+    breakLines: {},
+  },
   emit: {
     label: 'Вызов',
     hint: 'Вызвать общий эффект из словаря: урон, лечение. Что с ним делать — знает правило приёма.',

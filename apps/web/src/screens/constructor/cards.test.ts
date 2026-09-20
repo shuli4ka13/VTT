@@ -49,7 +49,7 @@ describe('BRICKS', () => {
     for (const brick of BRICKS) {
       const made = brick.make(system, []);
       for (const step of made) {
-        expect(['threshold', 'amount', 'compare', 'apply', 'status']).toContain(step.type);
+        expect(['threshold', 'amount', 'compare', 'apply', 'status', 'table']).toContain(step.type);
       }
       expect(JSON.stringify(made)).not.toMatch(/"tag"/);
     }

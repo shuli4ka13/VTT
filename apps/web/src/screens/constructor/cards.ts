@@ -14,7 +14,8 @@ export interface CardGroup {
 }
 
 const KIND_OF: Record<string, CardKind> = {
-  threshold: 'check', compare: 'check', apply: 'change', status: 'change', emit: 'change', amount: 'number',
+  threshold: 'check', compare: 'check', apply: 'change', status: 'change', emit: 'change',
+  amount: 'number', table: 'number',
 };
 
 const depsOf = (source: string): readonly string[] => {

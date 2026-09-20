@@ -37,14 +37,14 @@ describe('EffectsTab: палитра трёх понятий', () => {
     expect(screen.queryByText('Чего стоит')).toBeNull();
   });
 
-  it('палитра — только три шага, клик кладёт шаг', () => {
+  it('палитра шагов — только виды движка, клик кладёт шаг', () => {
     render(<EffectsTab />);
     const palette = screen.getAllByRole('button')
       .filter(b => (b.textContent ?? '').trimStart().startsWith('+ '))
       .map(b => b.textContent!.trim())
       .filter(t => !LAUNCH_KINDS.some(kind => t === `+ ${kind.label.toLowerCase()}`)
         && t !== '+ общий' && !t.startsWith('+ брать'));
-    expect(palette).toEqual(['+ проверка', '+ изменение', '+ число']);
+    expect(palette).toEqual(['+ проверка', '+ изменение', '+ таблица', '+ число']);
     fireEvent.click(screen.getByText('+ проверка'));
     expect(screen.getByText('1 · Проверка')).toBeTruthy();
     expect(screen.queryByText(/порог/i)).toBeNull();

@@ -1,4 +1,5 @@
 import { freeId } from '../../store/world.ts';
+import { dice } from '../../words.ts';
 import { effectiveDefault } from './groups.ts';
 import type {
   System, Effect, Activation, Field, RecordKind, Binding, Step, SystemConstant, RollEdit, RangeTable, SystemEvent,
@@ -128,6 +129,15 @@ export const BRICKS: StepTemplate[] = [
     hint: 'Изменить поле цели или повесить состояние. Единственное, что меняет мир.',
     make: (_system, taken) => [{
       id: freeId(taken, 'изменение'), type: 'apply', direction: 'subtract', targetModifiers: true,
+    } as unknown as Step],
+  },
+  {
+    key: 'table', label: '+ таблица',
+    hint: 'Прочитать строку таблицы по броску или числу: травма, исход, сложность по дистанции.',
+    make: (system, taken) => [{
+      id: freeId(taken, 'таблица'), type: 'table',
+      table: { const: Object.keys(system.tables ?? {})[0] ?? '' },
+      dice: { const: dice(1, 6) },
     } as unknown as Step],
   },
   {
