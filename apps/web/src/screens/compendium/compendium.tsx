@@ -80,7 +80,7 @@ export function CompendiumScreen() {
         head: 'Завести запись',
         body: kinds.length === 0
           ? <Empty
-            title="Родов ещё нет"
+            title="Типов записей ещё нет"
             hint={origin.systemMine
               ? `Типы записей объявляются в конструкторе системы, на вкладке «${TABS.records}».`
               : `В системе «${origin.systemTitle ?? system.name}» не объявлено ни одного типа записей — `
