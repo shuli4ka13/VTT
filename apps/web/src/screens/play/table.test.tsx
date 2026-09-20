@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { useRoom } from '../../store/room.ts';
 import { TableScreen } from './table.tsx';
 import type { RoomState } from '@vtt/schema';
@@ -52,5 +52,31 @@ describe('стол: бюджет хода и журнал', () => {
     render(<TableScreen />);
     expect(screen.queryByText('Бюджет хода')).toBeNull();
     expect(screen.getByText('Бой не идёт')).toBeTruthy();
+  });
+});
+
+describe('выбор целей на столе', () => {
+  beforeEach(() => {
+    useRoom.setState(state => ({ ...state, room: room(null), log: [], error: null }));
+  });
+  afterEach(() => { cleanup(); });
+
+  it('первый клик назначает действующего, следующие набирают цели и снимают их', () => {
+    render(<TableScreen />);
+    const token = (name: string) => screen.getAllByText(name)[0]!.closest('button')!;
+
+    fireEvent.click(token('Арвен'));
+    expect(token('Арвен').className).toContain('token--from');
+    expect(screen.getByText(/выберите цель/)).toBeTruthy();
+
+    fireEvent.click(token('Мирра'));
+    expect(token('Мирра').className).toContain('token--to');
+    expect(screen.getByText('по Мирра')).toBeTruthy();
+
+    fireEvent.click(token('Мирра'));
+    expect(token('Мирра').className).not.toContain('token--to');
+
+    fireEvent.click(token('Арвен'));
+    expect(token('Арвен').className).not.toContain('token--from');
   });
 });

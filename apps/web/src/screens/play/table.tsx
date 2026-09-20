@@ -17,14 +17,14 @@ export function TableScreen() {
   const leave = useRoom(s => s.leave);
 
   const [from, setFrom] = useState<string | null>(null);
-  const [to, setTo] = useState<string | null>(null);
+  const [to, setTo] = useState<string[]>([]);
 
   const [pinned, setPinned] = useState('');
 
   if (!room) return <Lobby />;
 
   const sender = room.sheets.find(s => s.id === from) ?? null;
-  const target = room.sheets.find(s => s.id === to) ?? null;
+  const targets = room.sheets.filter(s => to.includes(s.id));
 
   return (
     <Columns
@@ -88,10 +88,12 @@ export function TableScreen() {
                   <button
                     key={sheet.id}
                     type="button"
-                    className={`token ${sheet.id === from ? 'token--from' : ''} ${sheet.id === to ? 'token--to' : ''}`}
+                    className={`token ${sheet.id === from ? 'token--from' : ''} ${to.includes(sheet.id) ? 'token--to' : ''}`}
+                    title={sheet.id === from ? 'действует' : to.includes(sheet.id) ? 'цель — клик снимает' : 'клик: цель; без отправителя — станет отправителем'}
                     onClick={() => {
-                      if (!from || (from && to)) { setFrom(sheet.id); setTo(null); }
-                      else setTo(sheet.id);
+                      if (sheet.id === from) { setFrom(null); return; }
+                      if (!from) { setFrom(sheet.id); return; }
+                      setTo(ids => (ids.includes(sheet.id) ? ids.filter(id => id !== sheet.id) : [...ids, sheet.id]));
                     }}
                   >
                     <span className="token__name">{sheet.name ?? sheet.id}</span>
@@ -103,7 +105,7 @@ export function TableScreen() {
 
             <Combat room={room} onError={setError} />
             {room.pending ? <Prompt room={room} onError={setError} /> : null}
-            <Actions room={room} sender={sender} target={target} onError={setError} />
+            <Actions room={room} sender={sender} targets={targets} onError={setError} />
           </>
         ),
       }}
@@ -226,10 +228,10 @@ function ClaimRow({ label, edits, picked, onToggle }: {
   );
 }
 
-function Actions({ room, sender, target, onError }: {
+function Actions({ room, sender, targets, onError }: {
   room: RoomState;
   sender: Sheet | null;
-  target: Sheet | null;
+  targets: Sheet[];
   onError: (message: string | null) => void;
 }) {
   const [mine, setMine] = useState<string[]>([]);
@@ -253,9 +255,9 @@ function Actions({ room, sender, target, onError }: {
     <Card>
       <CardHead
         title={`${sender.name} действует`}
-        badge={target
-          ? <Chip>по {target.name}</Chip>
-          : <span className="faint">выберите цель</span>}
+        badge={targets.length
+          ? <span className="inline inline--tight">{targets.map(sheet => <Chip key={sheet.id}>по {sheet.name}</Chip>)}</span>
+          : <span className="faint">выберите цель — можно несколько</span>}
       />
       {edits.length && available.length ? (
         <div className="stack stack--tight">
@@ -276,12 +278,13 @@ function Actions({ room, sender, target, onError }: {
                 compendium={room.compendium}
                 actionId={action.id}
                 label={action.label}
-                disabled={!target || Boolean(room.pending)}
+                disabled={!targets.length || Boolean(room.pending)}
                 onAct={request => {
                   onError(null);
                   tableSocket.act({
                     roomId: room.id, actionId: request.actionId,
-                    fromId: sender.id, toId: target!.id,
+                    fromId: sender.id, toId: targets[0]!.id,
+                    ...(targets.length > 1 ? { toIds: targets.map(sheet => sheet.id) } : {}),
                     ...(request.inputs ? { inputs: request.inputs } : {}),
                     ...(mine.length ? { edits: mine } : {}),
                     ...(theirs.length ? { targetEdits: theirs } : {}),
