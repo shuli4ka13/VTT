@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { EffectsTab } from './effects-tab.tsx';
-import { useWorld } from '../../store/world.ts';
+import { useWorld } from '../../../store/world.ts';
 
 describe('EffectsTab: палитра трёх понятий', () => {
   beforeEach(() => {

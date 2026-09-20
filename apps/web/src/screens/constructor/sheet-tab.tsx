@@ -98,14 +98,10 @@ export function SheetTab() {
 
 function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
   const editSystem = useWorld(s => s.editSystem);
+  const editField = useWorld(s => s.editField);
   const pick = useWorld(s => s.pick);
 
-  const edit = (change: (draft: FieldModel) => void) => {
-    editSystem(draft => {
-      const target = draft.fields.find(f => f.tag === field.tag);
-      if (target) change(target);
-    });
-  };
+  const edit = (change: (draft: FieldModel) => void) => editField(field.tag, change);
 
   const setKind = (kind: FieldValue['kind']) => edit(draft => {
 

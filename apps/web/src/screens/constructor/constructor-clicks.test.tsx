@@ -7,7 +7,7 @@ import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
 import { useWorld, emptySystem } from '../../store/world.ts';
 import { SheetTab } from './sheet-tab.tsx';
 import { DictionariesTab } from './dictionaries.tsx';
-import { EffectsTab } from './effects-tab.tsx';
+import { EffectsTab } from './effects/effects-tab.tsx';
 import { RecordsTab } from './records-tab.tsx';
 import type { System } from '@vtt/schema';
 

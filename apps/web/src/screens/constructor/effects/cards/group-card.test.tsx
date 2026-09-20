@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { GroupCard } from './card.tsx';
-import { groupSteps } from './cards.ts';
+import { GroupCard } from './group-card.tsx';
+import { groupSteps } from '../../cards.ts';
 import type { System, Effect, Step } from '@vtt/schema';
 
 const system = {

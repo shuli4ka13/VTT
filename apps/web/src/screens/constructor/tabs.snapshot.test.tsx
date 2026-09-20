@@ -8,7 +8,7 @@ import { useWorld } from '../../store/world.ts';
 import { TABS } from '../../words.ts';
 import { SheetTab } from './sheet-tab.tsx';
 import { DictionariesTab } from './dictionaries.tsx';
-import { EffectsTab } from './effects-tab.tsx';
+import { EffectsTab } from './effects/effects-tab.tsx';
 import { RecordsTab } from './records-tab.tsx';
 
 const sample = (): System => structuredClone(SAMPLE_SYSTEMS[0]) as System;

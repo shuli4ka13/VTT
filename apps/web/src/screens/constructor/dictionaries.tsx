@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { readingKinds } from '@vtt/engine/engine/readings';
 import { editPalette, paletteKeyOf } from '@vtt/engine/engine/roll-edits';
 import { ADVANTAGE_METHODS, findMethod } from '@vtt/engine/model/advantage-methods';
-import { Readback } from './card.tsx';
+import { Readback } from './effects/cards/group-card.tsx';
 import { editReadback, dieReadback } from './readback.ts';
 import { useWorld, slugOf } from '../../store/world.ts';
 import { Columns } from '../../ui/layout.tsx';
