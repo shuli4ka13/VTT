@@ -23,6 +23,11 @@ const FIXED_SIDE: Record<string, string> = {
 
 export function ParamsEditor({ effect, onEdit }: { effect: Effect; onEdit: (change: (draft: Effect) => void) => void }) {
   const params = effect.params ?? [];
+  const addParam = () => onEdit(draft => {
+    draft.params ??= [];
+    const key = freeId(draft.params.map(p => p.key), 'из_записи');
+    draft.params.push({ key, label: 'Новая потребность', kind: 'expr' });
+  });
 
   return (
     <Card>
@@ -31,6 +36,7 @@ export function ParamsEditor({ effect, onEdit }: { effect: Effect; onEdit: (chan
         <Empty
           title="Потребностей нет"
           hint="Значения шагов заполняются прямо на шагах. Заведите потребность, когда значение должно приходить от записи."
+          action={<Button size="sm" onClick={addParam}>+ брать из записи</Button>}
         />
       ) : (
         <div className="stack stack--tight">
@@ -80,13 +86,7 @@ export function ParamsEditor({ effect, onEdit }: { effect: Effect; onEdit: (chan
         </div>
       )}
 
-      <Button size="sm" onClick={() => onEdit(draft => {
-        draft.params ??= [];
-        const key = freeId(draft.params.map(p => p.key), 'из_записи');
-        draft.params.push({ key, label: 'Новая потребность', kind: 'expr' });
-      })}>
-        + брать из записи
-      </Button>
+      {params.length ? <Button size="sm" onClick={addParam}>+ брать из записи</Button> : null}
     </Card>
   );
 }

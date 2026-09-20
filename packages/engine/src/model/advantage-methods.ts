@@ -104,9 +104,6 @@ export const ADVANTAGE_METHODS: AdvantageMethod[] = [
 
 export const findMethod = (id: string) => ADVANTAGE_METHODS.find(m => m.id === id) || null;
 
-export const enabledMethods = (system: System) =>
-  ADVANTAGE_METHODS.filter(m => ((system.advantage || {}).methods || {})[m.id]);
-
 export function installMethod(system: System, methodId: string): string[] {
   const method = findMethod(methodId);
   if (!method) return [];

@@ -56,7 +56,7 @@ export function ActionForm({ system, compendium, actionId, label, disabled, onAc
             ? (
               <Select
                 value={answers[param.key] ?? ''}
-                options={[['', '— выберите —'], ...(param.ask.options ?? []).map(option => [option, option] as const)] as never}
+                options={[['', '— какой вариант —'], ...(param.ask.options ?? []).map(option => [option, option] as const)] as never}
                 onChange={next => setAnswers(all => ({ ...all, [param.key]: next }))}
               />
             )

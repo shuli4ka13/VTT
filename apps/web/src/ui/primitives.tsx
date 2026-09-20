@@ -67,6 +67,35 @@ export function Input({ value, onChange, placeholder, mono, invalid, type = 'tex
   );
 }
 
+export function LabelInput({ value, onCommit, placeholder }: {
+  value: string;
+  onCommit: (next: string) => void;
+  placeholder?: string;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  return (
+    <Input
+      value={draft ?? value}
+      placeholder={placeholder}
+      onChange={setDraft}
+      onBlur={() => {
+        if (draft !== null && draft !== value) onCommit(draft);
+        setDraft(null);
+      }}
+      onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+    />
+  );
+}
+
+export function Tip({ text, children }: { text: string; children?: ReactNode }) {
+  return (
+    <span className="tip" title={text} aria-label={text}>
+      {children}
+      <span className="tip__mark" aria-hidden>ⓘ</span>
+    </span>
+  );
+}
+
 export function NumInput({ value, onCommit, int, least, mono, placeholder }: {
   value: number;
   onCommit: (n: number) => void;

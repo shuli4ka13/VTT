@@ -1,6 +1,6 @@
 import { useWorld } from '../../../store/world.ts';
 import { newTrigger } from '../factory.ts';
-import { Card, CardHead, Field, Input, Select, Segmented, Fold, DangerButton } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Field, Input, Select, Segmented, Fold, DangerButton, LabelInput } from '../../../ui/primitives.tsx';
 import { ModifiersEditor } from '../modifiers.tsx';
 import { LAUNCH_KINDS, launchHint } from './words.ts';
 import { LaunchCard } from './launch-card.tsx';
@@ -45,7 +45,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
     <>
       <Card>
         <CardHead
-          title={<Input value={effect.label ?? ''} onChange={label => edit(draft => { draft.label = label; })} />}
+          title={<LabelInput value={effect.label ?? ''} placeholder="как зовётся эффект" onCommit={label => edit(draft => { draft.label = label; })} />}
           actions={
             <DangerButton size="sm" onConfirm={() => {
               editSystem(draft => {

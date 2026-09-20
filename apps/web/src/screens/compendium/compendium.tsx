@@ -3,7 +3,7 @@ import { TABS } from '../../words.ts';
 import { useWorld, freeId, randomTag } from '../../store/world.ts';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
-  Card, CardHead, Field, Input, Select, Empty, Verdict, DangerButton, NumInput,
+  Card, CardHead, Field, Input, Select, Empty, Verdict, DangerButton, NumInput, LabelInput,
 } from '../../ui/primitives.tsx';
 import { ModifiersEditor } from '../constructor/modifiers.tsx';
 import { RecordView } from '../../sheet/record-view.tsx';
@@ -130,7 +130,7 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
     <>
       <Card>
         <CardHead
-          title={<Input value={record.label ?? ''} onChange={label => edit(draft => { draft.label = label; })} />}
+          title={<LabelInput value={record.label ?? ''} placeholder="как зовётся запись" onCommit={label => edit(draft => { draft.label = label; })} />}
           badge={<span className="chip">{kind?.label ?? 'тип неизвестен'}</span>}
           actions={<DangerButton size="sm" onConfirm={remove}>Удалить</DangerButton>}
         />

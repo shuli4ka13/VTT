@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { compile } from '@vtt/engine/formula';
-import { Chip } from '../../ui/primitives.tsx';
+import { Chip, Tip } from '../../ui/primitives.tsx';
 import { useReader, show } from '../../engine/use-calc.ts';
 import { mannequinsOf } from '../../engine/dry-run.ts';
 import { formulaAsLabels } from '../../ui/formula.tsx';
@@ -26,7 +26,7 @@ export function LiveValue({ system, compendium, tag, source }: {
     <div className="stack stack--tight live">
       <span className={`live__value ${value.bad ? 'field__error' : ''}`} title={value.title}>
         = {value.text}
-        <span className="faint"> на манекене</span>
+        <Tip text="Манекен — пробный лист с значениями по умолчанию; так автор видит формулу в числах, не заводя персонажа."><span className="faint"> на манекене</span></Tip>
       </span>
       {words && words !== source ? <span className="faint">{words}</span> : null}
       {deps.length ? (

@@ -178,8 +178,6 @@ function holds(
   return value;
 }
 
-export const momentLabel = (moment: MomentKey): string => MOMENTS[moment];
-
 export const describeMoment = (
   world: WorldContext, entry: { sheetId: string; report: Report }, sheets: Sheet[],
 ): string => {

@@ -95,7 +95,7 @@ export function LaunchCard({ id, effect, system, edit }: {
           <Select
             value={listened ?? (asks ? '*' : '')}
             options={[
-              ...(asks ? [['*', 'любое действие'] as const] : [['', '— выберите —'] as const]),
+              ...(asks ? [['*', 'любое действие'] as const] : [['', '— кого слушать —'] as const]),
               ...Object.entries(system.events ?? {})
                 .map(([key, e]) => [`event:${key}`, `общий эффект «${e.label || key}»`] as const),
               ...Object.entries(system.effects)

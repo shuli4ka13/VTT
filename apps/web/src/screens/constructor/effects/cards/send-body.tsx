@@ -19,7 +19,7 @@ export function SendBody({ step, at, context, edit, system }: {
         hint={commons.length ? undefined : 'Общих эффектов пока нет — заведите кнопкой «+ общий» слева.'}>
         <Select
           value={String(step.event ?? '')}
-          options={[['', '— выберите —'],
+          options={[['', '— какой общий эффект —'],
             ...commons.map(([id, e]) => [id, e.label || id] as const)] as never}
           onChange={next => edit(at, draft => { (draft as any).event = next; })}
         />

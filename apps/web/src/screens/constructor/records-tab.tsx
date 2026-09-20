@@ -3,7 +3,7 @@ import { ModifiersEditor } from './modifiers.tsx';
 import { newRecordKind, newBinding, newProp } from './factory.ts';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
-  Card, CardHead, Field, Input, Select, Button, Empty, Verdict, Chip, DangerButton,
+  Card, CardHead, Field, Input, Select, Button, Empty, Verdict, Chip, DangerButton, LabelInput,
 } from '../../ui/primitives.tsx';
 import type { SlotRef } from '@vtt/schema';
 import type { System, RecordKind, Binding, Param } from '@vtt/schema';
@@ -67,6 +67,7 @@ export function RecordsTab() {
           ? <Empty
               title="типов ещё нет"
               hint="тип — форма заполнения: какие циферки спросить у человека и к каким эффектам их привязать."
+              action={<Button size="sm" onClick={add}>+ тип</Button>}
             />
           : (
             <List>
@@ -119,7 +120,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
       <Card>
         <CardHead
 
-          title={<Input value={kind.label ?? ''} onChange={label => edit(draft => { draft.label = label; })} />}
+          title={<LabelInput value={kind.label ?? ''} placeholder="как зовётся тип" onCommit={label => edit(draft => { draft.label = label; })} />}
           actions={
             <DangerButton size="sm" onConfirm={() => {
               editSystem(draft => { delete draft.records?.[id]; });
@@ -291,7 +292,7 @@ function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWi
         <Field label="Какой эффект применяется" needed={!binding.effect}>
           <Select
             value={binding.effect}
-            options={[['', '— выберите —'],
+            options={[['', '— какой эффект —'],
               ...Object.entries(system.effects)
                 .filter(([, e]) => (e.activation ?? 'manual') !== 'passive')
                 .map(([key, e]) => [key, e.label ?? key] as const)] as never}

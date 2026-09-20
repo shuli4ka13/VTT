@@ -691,7 +691,7 @@
         "description": "На нуле хитов: в начале своего хода бросок к20. 10 и выше — успех, иначе провал. Три провала — смерть, три успеха — стабилизация; считает стол.",
         "activation": "triggered",
         "duration": {
-          "kind": "permanent"
+          "kind": "temporary"
         },
         "trigger": {
           "on": "moment:turn-start",
@@ -781,7 +781,7 @@
         "duration": {
           "kind": "permanent"
         },
-        "description": "Как только хиты опустились до нуля — вешает «Без сознания».",
+        "description": "Как только хиты опустились до нуля — вешает «Без сознания» и «При смерти».",
         "trigger": {
           "on": "field:down"
         },
@@ -792,6 +792,13 @@
             "mode": "apply",
             "effect": {
               "const": "unconscious"
+            }
+          },
+          {
+            "type": "status",
+            "mode": "apply",
+            "effect": {
+              "const": "dying"
             }
           }
         ]
@@ -804,7 +811,7 @@
         "duration": {
           "kind": "permanent"
         },
-        "description": "Хиты снова выше нуля — снимает «Без сознания» и сбрасывает спасброски от смерти.",
+        "description": "Хиты снова выше нуля — снимает «Без сознания» и «При смерти», сбрасывает спасброски от смерти.",
         "trigger": {
           "on": "field:up"
         },
@@ -815,6 +822,13 @@
             "mode": "remove",
             "effect": {
               "const": "unconscious"
+            }
+          },
+          {
+            "type": "status",
+            "mode": "remove",
+            "effect": {
+              "const": "dying"
             }
           },
           {

@@ -273,7 +273,7 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
             <Field label="Таблица" needed={!field.value.table}>
               <Select
                 value={field.value.table}
-                options={[['', '— выберите —'], ...Object.entries(system.tables ?? {})
+                options={[['', '— какая таблица —'], ...Object.entries(system.tables ?? {})
                   .map(([key, table]) => [key, table.label ?? key] as const)] as never}
                 onChange={next => edit(draft => { if (draft.value.kind === 'table') draft.value.table = next; })}
               />

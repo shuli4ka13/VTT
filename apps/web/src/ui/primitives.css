@@ -503,3 +503,6 @@
 .record-view__prop { display: grid; gap: var(--s-1); }
 .record-view__prop dt { font-size: var(--fs-2); color: var(--text-faint); }
 .record-view__prop dd { margin: 0; }
+
+.tip { display: inline-flex; align-items: center; gap: var(--s-1); cursor: help; }
+.tip__mark { font-size: var(--fs-1); color: var(--text-faint); }

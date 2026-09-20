@@ -1,5 +1,5 @@
 import { useWorld } from '../../../store/world.ts';
-import { Card, CardHead, Field, Input, DangerButton, Verdict } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Field, Input, DangerButton, Verdict, LabelInput } from '../../../ui/primitives.tsx';
 import { Chain } from './chain.tsx';
 import type { System, Effect, SystemEvent } from '@vtt/schema';
 
@@ -32,7 +32,7 @@ export function CommonEffectEditor({ id, event, system }: { id: string; event: S
     <>
       <Card>
         <CardHead
-          title={<Input value={event.label ?? ''} onChange={label => edit(draft => { draft.label = label; })} />}
+          title={<LabelInput value={event.label ?? ''} placeholder="как зовётся общий эффект" onCommit={label => edit(draft => { draft.label = label; })} />}
           sub="Общий эффект: его вызывают другие эффекты шагом «вызвать». Здесь написано, что он делает с целью."
           actions={
             <DangerButton size="sm" onConfirm={() => {

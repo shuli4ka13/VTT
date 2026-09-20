@@ -45,7 +45,11 @@ export function EffectsTab() {
         body: (
           <>
             {groups.length === 0
-              ? <Empty title="Эффектов ещё нет" hint="Заведите первый кнопкой ниже или возьмите готовый из образца справа." />
+              ? <Empty
+                  title="Эффектов ещё нет"
+                  hint="Заведите первый или возьмите готовый из образца справа."
+                  action={<Button size="sm" onClick={() => add('manual')}>+ кнопкой</Button>}
+                />
               : (
                 <List>
                   {groups.map(([category, effects]) => (
