@@ -39,6 +39,9 @@ export interface WorldState {
     | 'activeTab' | 'activeStepIndex'>>) => void;
 
   editSystem: (edit: (draft: System) => void) => void;
+  editEffect: (id: string, edit: (draft: Effect) => void) => void;
+  editField: (tag: string, edit: (draft: Field) => void) => void;
+  editRules: (edit: (draft: System) => void) => void;
   editCompendium: (edit: (draft: Compendium) => void) => void;
   editSheets: (edit: (draft: Sheet[]) => void) => void;
 
@@ -85,6 +88,35 @@ export const useWorld = create<WorldState>()(persist(set => ({
   editSystem: edit => set(state => {
     const draft = structuredClone(state.system);
     edit(draft);
+    return { system: draft };
+  }),
+
+  editEffect: (id, edit) => set(state => {
+    const current = state.system.effects[id];
+    if (!current) return {};
+    const draft = structuredClone(current);
+    edit(draft);
+    return { system: { ...state.system, effects: { ...state.system.effects, [id]: draft } } };
+  }),
+
+  editField: (tag, edit) => set(state => {
+    const at = state.system.fields.findIndex(f => f.tag === tag);
+    const current = state.system.fields[at];
+    if (!current) return {};
+    const draft = structuredClone(current);
+    edit(draft);
+    const fields = [...state.system.fields];
+    fields[at] = draft;
+    return { system: { ...state.system, fields } };
+  }),
+
+  editRules: edit => set(state => {
+    const { effects, fields, ...rest } = state.system;
+    const draft = { ...structuredClone(rest), effects, fields } as System;
+    edit(draft);
+    if (draft.effects !== effects || draft.fields !== fields) {
+      throw new Error('editRules правит словари; эффекты и поля правят editEffect и editField');
+    }
     return { system: draft };
   }),
 
