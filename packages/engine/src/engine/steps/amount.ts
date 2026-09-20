@@ -1,4 +1,5 @@
 import { rollNotation } from '../dice.ts';
+import { dieConstant } from '../lead-die.ts';
 import { packRef, resolveOptionalNumber } from '../refs.ts';
 import { EngineError } from '../errors.ts';
 import type { StepData, StepContext } from './index.ts';
@@ -38,6 +39,19 @@ export function traceLine(t: any) {
   return `расчёт: ${formula} = ${t.total}`;
 }
 
+function diceRef(ref: unknown, ctx: StepContext): unknown {
+  if (!ref || typeof ref !== 'object' || !('constant' in ref)) return ref;
+  const key = String((ref as { constant: unknown }).constant);
+  const die = dieConstant(ctx.system, key);
+  const terms = die.dice ?? [];
+  const first = terms[0];
+  if (terms.length !== 1 || !first || typeof first.count === 'object') {
+    throw new EngineError(
+      `${who(ctx)}: «${die.label || key}» — составная кость, а шаг «число» кидает одну; сложный бросок делает шаг «проверка»`);
+  }
+  return { const: `${first.count ?? 1}d${first.sides}` };
+}
+
 export function pack(step: StepData, ctx: StepContext) {
   const source = constant(packRef(step.source, ctx), ctx, 'источник величины');
   if (!SOURCES.includes(source)) {
@@ -45,7 +59,7 @@ export function pack(step: StepData, ctx: StepContext) {
       `${who(ctx)}: неизвестный источник величины «${source}» — умею: ${SOURCES.join(', ')}`);
   }
 
-  const notation = step.dice ? constant(packRef(step.dice, ctx), ctx, 'кости величины') : null;
+  const notation = step.dice ? constant(packRef(diceRef(step.dice, ctx), ctx), ctx, 'кости величины') : null;
   const fixed = step.fixed !== undefined ? packRef(step.fixed, ctx) : null;
   const bonus = step.bonus !== undefined ? packRef(step.bonus, ctx) : null;
   const margin = step.margin !== undefined ? packRef(step.margin, ctx) : null;

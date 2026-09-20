@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useRoom } from '../../store/room.ts';
 import { tableSocket } from '../../api/socket.ts';
-import { useReader, show } from '../../engine/use-calc.ts';
+import { useReader } from '../../engine/use-calc.ts';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
-import { Card, CardHead, Field, Input, Button, Empty, Fold, Chip, NumInput } from '../../ui/primitives.tsx';
+import { Card, Empty, Fold, Chip, Input, Button } from '../../ui/primitives.tsx';
+import { SheetView } from '../../sheet/sheet-view.tsx';
 import { Lobby } from './lobby.tsx';
-import type { Sheet, System, Field as FieldModel, StoredValue, RoomState } from '@vtt/schema';
+import type { Sheet, System, RoomState } from '@vtt/schema';
 import { availableActions } from '@vtt/engine/events/envelope';
 
 export function SheetScreen() {
@@ -69,84 +70,14 @@ export function SheetScreen() {
 function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   const reader = useReader(room.system as System, sheet, room.compendium);
 
-  const setValue = (tag: string, value: StoredValue) =>
-    tableSocket.setValue(room.id, sheet.id, tag, value);
-
-  const groups = new Map<string, FieldModel[]>();
-  for (const field of room.system.fields) {
-    const key = field.group ?? 'Без блока';
-    const list = groups.get(key);
-    if (list) list.push(field as FieldModel);
-    else groups.set(key, [field as FieldModel]);
-  }
-
   return (
-    <>
-      <Card>
-        <CardHead title={sheet.name ?? sheet.id} badge={<Chip>{sheet.kind === 'npc' ? 'НПС' : 'игрок'}</Chip>} />
-      </Card>
-
-      {[...groups].map(([group, fields]) => (
-        <Card key={group}>
-          <CardHead title={group} />
-          <div className="row">
-            {fields.map(field => (
-              <FieldCell key={field.tag} field={field} sheet={sheet} reader={reader} onChange={setValue} />
-            ))}
-          </div>
-        </Card>
-      ))}
-    </>
-  );
-}
-
-function FieldCell({ field, sheet, reader, onChange }: {
-  field: FieldModel;
-  sheet: Sheet;
-  reader: ReturnType<typeof useReader>;
-  onChange: (tag: string, value: StoredValue) => void;
-}) {
-  if (field.value.kind === 'stored') {
-    const stored = sheet.values[field.tag] ?? field.value.default;
-
-    if (field.value.type === 'boolean') {
-      return (
-        <Field label={field.label}>
-          <Button variant={stored ? 'primary' : undefined} onClick={() => onChange(field.tag, !stored)}>
-            {stored ? 'да' : 'нет'}
-          </Button>
-        </Field>
-      );
-    }
-
-    return (
-      <Field label={field.label}>
-        {field.value.kind === 'stored' && field.value.type === 'number' ? (
-          <NumInput
-            value={Number(stored ?? 0)}
-            onCommit={n => onChange(field.tag, n)}
-          />
-        ) : (
-          <Input
-            value={String(stored ?? '')}
-            onChange={next => onChange(field.tag, next)}
-          />
-        )}
-      </Field>
-    );
-  }
-
-  const computed = show(reader.valueOf(field.tag));
-  return (
-    <Field label={field.label}>
-      <div
-        className={`input num ${computed.bad ? 'input--bad' : ''}`}
-        title={computed.title}
-        style={{ display: 'flex', alignItems: 'center', background: 'var(--surface-2)' }}
-      >
-        {computed.text}
-      </div>
-    </Field>
+    <SheetView
+      system={room.system as System}
+      sheet={sheet}
+      reader={reader}
+      badge={sheet.kind === 'npc' ? 'НПС' : 'игрок'}
+      onChange={(tag, value) => tableSocket.setValue(room.id, sheet.id, tag, value)}
+    />
   );
 }
 

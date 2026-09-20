@@ -90,6 +90,17 @@ describe('граница режимов', () => {
     expect(compendium.includes('step-card.tsx'), 'шагов в компендиуме нет').toBe(false);
   });
 
+  it('общий каталог листа ничего не знает ни про сторы, ни про сокет', () => {
+    const files = [...walk(join(src, 'sheet'))];
+    expect(files.length).toBeGreaterThan(0);
+    for (const file of files) {
+      const code = readFileSync(file, 'utf8');
+      for (const forbidden of ['store/', 'api/socket', 'useWorld', 'useRoom', 'tableSocket']) {
+        expect(code.includes(forbidden), `${file} знает «${forbidden}»`).toBe(false);
+      }
+    }
+  });
+
   it('негативный контроль: проверка ловит нарушение, а не совпадение', () => {
 
     const fake = "import { SheetTab } from '../constructor/sheet-tab.tsx';";

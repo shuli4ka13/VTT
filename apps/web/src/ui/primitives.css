@@ -478,3 +478,7 @@
 
 .chips__group { display: inline-flex; align-items: center; gap: var(--s-1); }
 .chips__chip--sent { border-style: dashed; }
+
+.input--shown { display: flex; align-items: center; background: var(--surface-2); }
+
+.trial__line { margin: 0 0 var(--s-2); font-size: var(--fs-2); }

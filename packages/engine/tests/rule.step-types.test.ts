@@ -333,3 +333,24 @@ group('мишени «входящее»', () => {
     ok(!list.some(t => t.tag === incomingTagOf('ac')), 'у формульного поля входящего нет: в него не пишут');
   });
 });
+
+group('шаг «число» и кость из словаря системы', () => {
+  const withDice = (dice: unknown) => ({ id: 'n', type: 'amount', source: 'roll', dice });
+
+  test('ссылка на кость системы разворачивается в бросок', () => {
+    const out = run([withDice({ constant: 'lead_die' })] as never, { die: queue(7), targetDie: queue(7) });
+    eq(out.results.n, 7);
+  });
+
+  test('кости, которой нет, отказ называет по имени', () => {
+    throws(() => run([withDice({ constant: 'нет_такой' })] as never), 'нет_такой');
+  });
+
+  test('составная кость в «числе» — внятный отказ, а не «ссылка неизвестной формы»', () => {
+    const sys = {
+      ...SYS,
+      constants: { ...SYS.constants, пул: { label: 'Пул', kind: 'die', dice: [{ count: 2, sides: 6 }, { count: 1, sides: 8 }] } },
+    };
+    throws(() => run([withDice({ constant: 'пул' })] as never, { sys }), 'составная кость');
+  });
+});

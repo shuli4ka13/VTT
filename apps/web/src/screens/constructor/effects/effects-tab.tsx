@@ -3,7 +3,7 @@ import { newEffect } from '../factory.ts';
 import { Columns, List, ListItem, ListGroup } from '../../../ui/layout.tsx';
 import { Button, Empty } from '../../../ui/primitives.tsx';
 import { groupSteps } from '../cards.ts';
-import { DonorPalette } from '../donors.tsx';
+import { PreviewPanel } from './preview-panel.tsx';
 import { LAUNCH_KINDS } from './words.ts';
 import { STEP } from '../../../words.ts';
 import { EffectEditor } from './effect-editor.tsx';
@@ -105,7 +105,7 @@ export function EffectsTab() {
               hint="Эффект — единица автоматизации: всё, что мир делает сам. Проверки, изменения полей, состояния — а как их назвать, решаете вы."
             />,
       }}
-      right={{ head: 'Готовое из образцов', body: <DonorPalette kind="effects" /> }}
+      right={{ head: 'Рядом', body: <PreviewPanel effectId={commonKey ? null : activeId} /> }}
     />
   );
 }
