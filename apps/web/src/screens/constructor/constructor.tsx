@@ -4,7 +4,7 @@ import { TABS } from '../../words.ts';
 import { SheetTab } from './sheet-tab.tsx';
 import { EffectsTab } from './effects/effects-tab.tsx';
 import { RecordsTab } from './records-tab.tsx';
-import { DictionariesTab } from './dictionaries.tsx';
+import { RulesTab } from './rules/rules-tab.tsx';
 
 const TAB_LIST = [
   { key: 'sheet' as const, label: TABS.sheet },
@@ -23,7 +23,7 @@ export function ConstructorScreen() {
       {tab === 'sheet' ? <SheetTab /> : null}
       {tab === 'effects' ? <EffectsTab /> : null}
       {tab === 'records' ? <RecordsTab /> : null}
-      {tab === 'dictionaries' ? <DictionariesTab /> : null}
+      {tab === 'dictionaries' ? <RulesTab /> : null}
     </>
   );
 }

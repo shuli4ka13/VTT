@@ -7,7 +7,7 @@ import type { System } from '@vtt/schema';
 import { useWorld } from '../../store/world.ts';
 import { TABS } from '../../words.ts';
 import { SheetTab } from './sheet-tab.tsx';
-import { DictionariesTab } from './dictionaries.tsx';
+import { RulesTab } from './rules/rules-tab.tsx';
 import { EffectsTab } from './effects/effects-tab.tsx';
 import { RecordsTab } from './records-tab.tsx';
 
@@ -15,7 +15,7 @@ const sample = (): System => structuredClone(SAMPLE_SYSTEMS[0]) as System;
 
 const SCREENS: [string, () => ReactElement][] = [
   [TABS.sheet, () => <SheetTab />],
-  [TABS.rules, () => <DictionariesTab />],
+  [TABS.rules, () => <RulesTab />],
   [TABS.effects, () => <EffectsTab />],
   [TABS.records, () => <RecordsTab />],
 ];

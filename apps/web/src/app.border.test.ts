@@ -34,7 +34,13 @@ const AUTHOR_ONLY = [
   'constructor/step-card.tsx',
   'constructor/slots.tsx',
 
-  'constructor/dictionaries.tsx',
+  'constructor/rules/rules-tab.tsx',
+  'constructor/rules/dice-section.tsx',
+  'constructor/rules/roll-edits-section.tsx',
+  'constructor/rules/rolls-section.tsx',
+  'constructor/rules/tables-section.tsx',
+  'constructor/rules/initiative-section.tsx',
+  'constructor/rules/action-types-section.tsx',
 ];
 
 const PLAY_SCREENS = ['screens/play/sheet.tsx', 'screens/play/table.tsx', 'screens/play/lobby.tsx'];
