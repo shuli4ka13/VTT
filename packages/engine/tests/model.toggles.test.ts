@@ -61,11 +61,12 @@ group('тогл брони переписывает общий эффект ур
     deepEq(armorTail('threshold', 'sp_body', 'hp').map(s => s.type), ['compare', 'apply']);
   });
 
-  test('«вычитание и износ» даёт те же шаги, что собраны в образце RED руками', () => {
+  test('«вычитание и износ» даёт те же шаги, что собраны в образце RED руками для тела', () => {
     const system = red();
-    const before = clone(system.events!.damage!.receive);
+    const bodyBranch = clone(system.events!.damage!.receive!.slice(0, 3))
+      .map(step => { delete (step as Record<string, unknown>).when; return step; });
     setArmor(system, 'ablation', { event: 'damage', armor: 'sp_body', hp: 'hp' });
-    deepEq(system.events!.damage!.receive, before);
+    deepEq(system.events!.damage!.receive, bodyBranch);
   });
 
   test('переписанный хвост работает за столом: урон 7 сквозь броню 11 по порогу не проходит', () => {
@@ -77,7 +78,7 @@ group('тогл брони переписывает общий эффект ур
     const hpBefore = Number(to!.values.hp);
     const out = exchange({
       system, compendium: world.compendium as Compendium, die: () => 3, sheets,
-      actionId: 'heavy-pistol:0', fromId: from!.id, toId: to!.id, inputs: { distance: 5, luck: 0 },
+      actionId: 'heavy-pistol:0', fromId: from!.id, toId: to!.id, inputs: { distance: 5, luck: 0, aim: 'по телу' },
     });
     const after = out.sheets.find(s => s.id === to!.id)!;
     eq(Number(after.values.hp), hpBefore, 'по порогу малый урон не прошёл');

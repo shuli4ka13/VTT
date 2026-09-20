@@ -260,24 +260,24 @@ group('шаг «состояние»', () => {
 
   test('вешает эффект на цель', () => {
     const out = run([{ type: 'status', effect: { const: 'poisoned' } }]);
-    deepEq(out.sheet.effects, [{ effectId: 'poisoned' }]);
+    deepEq(out.sheet.effects, [...mirra.effects, { effectId: 'poisoned' }]);
     deepEq(out.effects, ['poisoned']);
   });
 
   test('«не накладывается повторно» — одна запись, второй раз молчание', () => {
     const out = twice(withStacking('ignore'));
-    deepEq(out.sheet.effects, [{ effectId: 'poisoned' }]);
+    deepEq(out.sheet.effects, [...mirra.effects, { effectId: 'poisoned' }]);
   });
 
   test('«обновляется» — тоже одна запись: наложили заново, а не рядом', () => {
     const out = twice(withStacking('refresh'));
-    deepEq(out.sheet.effects, [{ effectId: 'poisoned' }]);
+    deepEq(out.sheet.effects, [...mirra.effects, { effectId: 'poisoned' }]);
     deepEq(out.effects, ['poisoned'], 'журналу нужен факт, а не счёт наложений');
   });
 
   test('«копится» — каждое наложение отдельной записью', () => {
     const out = twice(withStacking('stack'));
-    eq(out.sheet.effects.length, 2);
+    eq(out.sheet.effects.length, mirra.effects.length + 2);
   });
 
   test('режим «снять» убирает висящий эффект', () => {
@@ -289,7 +289,7 @@ group('шаг «состояние»', () => {
 
   test('пустой слот — законная пустота: шаг молчит, а не падает', () => {
     const out = run([{ type: 'status', effect: { const: null } }]);
-    deepEq(out.sheet.effects, [], 'ничего не наложено');
+    deepEq(out.sheet.effects, mirra.effects, 'ничего не наложено');
     eq(out.trace[0].effect, null, 'и в журнале это видно');
   });
 

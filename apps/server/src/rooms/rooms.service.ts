@@ -1,5 +1,5 @@
 import { Injectable, Inject, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
-import { and, eq, asc } from 'drizzle-orm';
+import { and, eq, asc, desc } from 'drizzle-orm';
 import { DB, CLOCK, IDS, DIE } from '../common/tokens.ts';
 import type { Db } from '../db/db.ts';
 import { rooms, roomSheets, roomClocks, roomPending, members, logEntries, users } from '../db/schema.ts';
@@ -775,16 +775,15 @@ export class RoomsService {
   }
 
   async listFor(userId: string): Promise<RoomSummary[]> {
-    const mine = await this.db.select().from(members).where(eq(members.userId, userId));
-    const out: RoomSummary[] = [];
-    for (const m of mine) {
-      const found = await this.db.select().from(rooms).where(eq(rooms.id, m.roomId));
-      const room = found[0];
-      if (!room) continue;
-      const all = await this.db.select().from(members).where(eq(members.roomId, room.id));
-      out.push({ id: room.id, title: room.title, worldId: room.worldId, memberCount: all.length });
-    }
-    return out;
+    const all = await this.db.select().from(rooms).orderBy(desc(rooms.createdAt));
+    const seats = await this.db.select().from(members);
+    const mine = new Set(seats.filter(m => m.userId === userId).map(m => m.roomId));
+    return all
+      .map(room => ({
+        id: room.id, title: room.title, worldId: room.worldId,
+        memberCount: seats.filter(m => m.roomId === room.id).length,
+      }))
+      .sort((a, b) => Number(mine.has(b.id)) - Number(mine.has(a.id)));
   }
 
   private async requireRoom(roomId: string) {

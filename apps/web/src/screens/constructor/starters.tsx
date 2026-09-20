@@ -1,6 +1,7 @@
 import { useWorld } from '../../store/world.ts';
 import { Button } from '../../ui/primitives.tsx';
 import { copyDonorBlock } from './donors.tsx';
+import { subtreeNames } from './groups.ts';
 import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
 import type { System } from '@vtt/schema';
 
@@ -18,7 +19,9 @@ export const STARTERS: Starter[] = [
 export const startersOf = (): Starter[] =>
   STARTERS.filter(starter => {
     const donor = DONORS.find(d => d.id === starter.donor);
-    return donor?.fields.some(field => (field.group ?? 'Без блока') === starter.group);
+    if (!donor) return false;
+    const inside = new Set(subtreeNames(donor, starter.group));
+    return donor.fields.some(field => inside.has(field.group ?? 'Без блока'));
   });
 
 export function Starters() {

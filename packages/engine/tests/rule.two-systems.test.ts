@@ -87,11 +87,11 @@ group('две системы одними слотами', () => {
   });
 
   group('B: срез киберпанка', () => {
-    const shoot = (rolls: number[], inputs: Record<string, number>, sheets = [silver, raze]) => {
+    const shoot = (rolls: number[], inputs: Record<string, number | string>, sheets = [silver, raze]) => {
       let at = 0;
       return exchange({
         system: cyberpunk, compendium: cpCompendium, die: () => rolls[at++] ?? 1,
-        sheets, actionId: 'heavy-pistol:0', fromId: 'silver', toId: 'raze', inputs,
+        sheets, actionId: 'heavy-pistol:0', fromId: 'silver', toId: 'raze', inputs: { aim: 'по телу', ...inputs },
       });
     };
 

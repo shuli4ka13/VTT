@@ -189,12 +189,12 @@ group('ход в бою: наложенный эффект получает ср
     const clock = { ...startCombat(idleClock(), ['arven', 'mirra']), round: 3 };
     const r = exchange({ system: sys, compendium: book, die: queue(), sheets: [cleric, mirra],
       actionId: 'bless:0', fromId: 'arven', toId: 'mirra', clock });
-    deepEq(r.sheets.find(s => s.id === 'mirra')!.effects, [{ effectId: 'timed', until: 5 }]);
+    deepEq(r.sheets.find(s => s.id === 'mirra')!.effects, [...mirra.effects, { effectId: 'timed', until: 5 }]);
   });
 
   test('вне боя тот же эффект висит без срока', () => {
     const r = exchange({ system: sys, compendium: book, die: queue(), sheets: [cleric, mirra],
       actionId: 'bless:0', fromId: 'arven', toId: 'mirra' });
-    deepEq(r.sheets.find(s => s.id === 'mirra')!.effects, [{ effectId: 'timed' }]);
+    deepEq(r.sheets.find(s => s.id === 'mirra')!.effects, [...mirra.effects, { effectId: 'timed' }]);
   });
 });

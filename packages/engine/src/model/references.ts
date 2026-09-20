@@ -134,6 +134,7 @@ function guardRefs(guard: Guard | undefined, from: Where, scope: ChainScope, out
   if (!guard) return;
   if ('ref' in guard) {
     const head = String(guard.ref).split('.')[0] ?? '';
+    if (scope.eventChain && (EVENT_RESULTS as readonly string[]).includes(head)) return;
     if (head) out.push({ kind: 'step', key: head, from, scope: 'chain' });
     return;
   }
