@@ -158,15 +158,27 @@ function cycleProblems(system: System): Problem[] {
   return out;
 }
 
+const MOMENT_KEYS = new Set([
+  'turn-start', 'turn-end', 'round-start', 'combat-start', 'combat-end', 'scene-end',
+  'equipped', 'attached', 'expired',
+]);
+
 function listenerProblems(system: System): Problem[] {
   const out: Problem[] = [];
   for (const [id, effect] of Object.entries(system.effects)) {
     const activation = activationOf(effect);
     if (activation !== 'triggered' && activation !== 'reaction') continue;
-    if (listenerOf(effect.trigger?.on).kind === 'empty') {
+    const heard = listenerOf(effect.trigger?.on);
+    if (heard.kind === 'empty') {
       out.push({
         where: { tab: 'effects', effect: id, part: 'trigger' }, level: 'error',
         text: 'эффект срабатывает сам, но не сказано на что — выберите, что он слушает',
+      });
+    }
+    if (heard.kind === 'moment' && !MOMENT_KEYS.has(heard.key!)) {
+      out.push({
+        where: { tab: 'effects', effect: id, part: 'trigger' }, level: 'error',
+        text: `такого момента нет: «${heard.key}» — стол знает ${[...MOMENT_KEYS].join(', ')}`,
       });
     }
   }

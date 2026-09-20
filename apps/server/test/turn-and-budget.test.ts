@@ -222,3 +222,52 @@ describe('одно действие по нескольким целям', () =>
     expect(hits[1]).toContain('Третий');
   });
 });
+
+describe('моменты хода', () => {
+  it('яд срабатывает в начале хода того, на ком висит, и пишет строку журнала', async () => {
+    const token = (await http().post('/auth/login').send({ name: 'Ведущий яда' })).body.token as string;
+    const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
+
+    const system = {
+      id: 'яд', name: 'С ядом',
+      fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } }],
+      constants: { к20: { label: 'Кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
+      initiative: { die: { constant: 'к20' } },
+      effects: {
+        отравление: {
+          label: 'Отравление', activation: 'triggered',
+          trigger: { on: 'moment:turn-start' },
+          duration: { kind: 'permanent' },
+          steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { const: 3 } }],
+        },
+      },
+    };
+    const sheet = (id: string, worn: string[]) => ({
+      id, systemId: 'яд', kind: 'pc', name: id, values: { хиты: 20 },
+      equipped: [], actions: [], effects: worn.map(effectId => ({ effectId })),
+    });
+
+    const systemId = (await as(http().post('/systems')).send({ title: 'С ядом', system })).body.id;
+    const bookId = (await as(http().post('/compendiums')).send({ title: 'Пусто', systemId, compendium: { items: [], actions: [] } })).body.id;
+    await as(http().post(`/systems/${systemId}/publish`)).send({}).expect(201);
+    await as(http().post(`/compendiums/${bookId}/publish`)).send({}).expect(201);
+    const worldId = (await as(http().post('/worlds')).send({
+      title: 'Мир яда', systemId, compendiumIds: [bookId],
+      sheets: [sheet('травленый', ['отравление']), sheet('здоровый', [])],
+    })).body.id;
+    const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол яда' })).body.id as string;
+
+    const started = await as(http().post(`/rooms/${roomId}/turn`)).send({ roomId, op: 'start', order: ['травленый', 'здоровый'] }).expect(201);
+    const first = started.body.sheets.find((s: { id: string }) => s.id === 'травленый');
+    expect(first.values.хиты, 'в начале своего хода яд сработал').toBe(17);
+    expect(started.body.log.map((e: { text: string }) => e.text).join(' ')).toContain('Отравление');
+
+    const next = await as(http().post(`/rooms/${roomId}/turn`)).send({ roomId, op: 'next' }).expect(201);
+    const healthy = next.body.sheets.find((s: { id: string }) => s.id === 'здоровый');
+    expect(healthy?.values.хиты ?? 20, 'чужой ход яда не трогает').toBe(20);
+
+    const again = await as(http().post(`/rooms/${roomId}/turn`)).send({ roomId, op: 'next' }).expect(201);
+    const poisoned = again.body.sheets.find((s: { id: string }) => s.id === 'травленый');
+    expect(poisoned.values.хиты, 'на следующем своём ходу — ещё раз').toBe(14);
+  });
+});

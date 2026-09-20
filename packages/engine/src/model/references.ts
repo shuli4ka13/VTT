@@ -173,10 +173,15 @@ function modifierRefs(list: Modifier[] | undefined, from: Where, out: Reference[
   }
 }
 
-export function listenerOf(on: string | undefined): { kind: 'any' | 'event' | 'effect' | 'empty'; key?: string } {
+export const MOMENT_PREFIX = 'moment:';
+
+export function listenerOf(
+  on: string | undefined,
+): { kind: 'any' | 'event' | 'effect' | 'moment' | 'empty'; key?: string } {
   if (!on) return { kind: 'empty' };
   if (on === '*') return { kind: 'any' };
   if (on.startsWith(EVENT_PREFIX)) return { kind: 'event', key: on.slice(EVENT_PREFIX.length) };
+  if (on.startsWith(MOMENT_PREFIX)) return { kind: 'moment', key: on.slice(MOMENT_PREFIX.length) };
   return { kind: 'effect', key: on };
 }
 

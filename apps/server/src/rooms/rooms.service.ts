@@ -17,6 +17,8 @@ import { tapeDie, replayDie } from '@vtt/engine/engine/dice';
 import type { Envelope, Offer, ReactionWindow } from '@vtt/engine/events/envelope';
 import { findEffect, usesMax } from '@vtt/engine/engine/effects';
 import { asksOf, checkInputs, normalizeInputs } from '@vtt/engine/model/asks';
+import { fireMoments, describeMoment } from '@vtt/engine/events/moments';
+import type { MomentEvent } from '@vtt/engine/events/moments';
 import { resolveRoll } from '@vtt/engine/engine/modifiers';
 import { newPass, calc } from '@vtt/engine/engine/calc';
 import { rollLead, dieConstant } from '@vtt/engine/engine/lead-die';
@@ -189,6 +191,15 @@ export class RoomsService {
       }
     } catch (err) {
       if (err instanceof BadRequestException) throw err;
+      throw new BadRequestException((err as Error).message);
+    }
+
+    try {
+      const world = { system, compendium, die: this.die, clock: next };
+      const fired = fireMoments(momentsOf(intent.op, clock, next, after), after, world);
+      after = fired.sheets;
+      for (const entry of fired.reports) lines.push(describeMoment(world, entry, after));
+    } catch (err) {
       throw new BadRequestException((err as Error).message);
     }
 
@@ -669,3 +680,26 @@ export class RoomsService {
   }
 
 }
+
+const momentsOf = (
+  op: TurnIntent['op'], before: ClockState, after: ClockState, sheets: Sheet[],
+): MomentEvent[] => {
+  const everyone = (moment: MomentEvent['moment']): MomentEvent[] =>
+    sheets.map(sheet => ({ moment, sheetId: sheet.id }));
+
+  if (op === 'start') {
+    return [
+      ...everyone('combat-start'),
+      ...everyone('round-start'),
+      ...(after.active ? [{ moment: 'turn-start' as const, sheetId: String(after.active) }] : []),
+    ];
+  }
+  if (op === 'next') {
+    const ended = before.active ? [{ moment: 'turn-end' as const, sheetId: String(before.active) }] : [];
+    const round = after.round !== before.round ? everyone('round-start') : [];
+    const started = after.active ? [{ moment: 'turn-start' as const, sheetId: String(after.active) }] : [];
+    return [...ended, ...round, ...started];
+  }
+  if (op === 'stop') return everyone('combat-end');
+  return everyone('scene-end');
+};

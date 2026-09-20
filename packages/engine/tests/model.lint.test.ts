@@ -214,3 +214,17 @@ group('ссылки и слушатели', () => {
     eq(listenerOf(undefined).kind, 'empty');
   });
 });
+
+group('линт: моменты хода', () => {
+  test('известный момент — законный слушатель', () => {
+    const system = withEffect('яд', { activation: 'triggered', trigger: { on: 'moment:turn-start' }, steps: [] });
+    eq(errorsOf(lintSystem(system)).map(p => p.text).join(''), '');
+  });
+
+  test('выдуманный момент назван, и список известных показан', () => {
+    const system = withEffect('яд', { activation: 'triggered', trigger: { on: 'moment:когда-нибудь' }, steps: [] });
+    const [problem] = errorsOf(lintSystem(system));
+    ok(problem?.text.includes('«когда-нибудь»'), problem?.text);
+    ok(problem?.text.includes('turn-start'), problem?.text);
+  });
+});
