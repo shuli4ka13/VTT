@@ -19,6 +19,12 @@ const PROP_KINDS = [
   ['text', 'текст'],
   ['expr', 'формула'],
   ['effect', 'ссылка на эффект'],
+  ['record', 'ссылка на запись'],
+] as const;
+
+const ON_SHEET = [
+  ['sheet', 'на лист — игрок видит'],
+  ['service', 'служебное — только движку'],
 ] as const;
 
 const PARAM_TO_PROP_KIND: Record<string, string> = {
@@ -208,6 +214,17 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
                     onChange={next => edit(draft => {
                       const target = draft.props?.find(p => p.key === prop.key);
                       if (target) target.kind = next;
+                    })}
+                  />
+                </Field>
+                <Field label="Где показывать">
+                  <Select
+                    value={prop.onSheet === false ? 'service' : 'sheet'}
+                    options={ON_SHEET}
+                    onChange={next => edit(draft => {
+                      const target = draft.props?.find(p => p.key === prop.key);
+                      if (!target) return;
+                      if (next === 'service') target.onSheet = false; else delete target.onSheet;
                     })}
                   />
                 </Field>

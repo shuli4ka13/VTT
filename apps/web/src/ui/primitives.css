@@ -494,3 +494,12 @@
 .control--bar input.input, .control--stepper input.input { width: 4.5rem; min-width: 0; text-align: center; }
 .control--bar .inline, .control--stepper { flex-wrap: nowrap; }
 .control--pips { flex-wrap: nowrap; }
+
+.record-view { display: grid; gap: var(--s-3); }
+.record-view__head { display: flex; align-items: center; gap: var(--s-3); }
+.record-view__name { font-weight: 600; }
+.record-view__text { margin: 0; color: var(--text-muted); }
+.record-view__props { display: flex; flex-wrap: wrap; gap: var(--s-3) var(--s-5); margin: 0; }
+.record-view__prop { display: grid; gap: var(--s-1); }
+.record-view__prop dt { font-size: var(--fs-2); color: var(--text-faint); }
+.record-view__prop dd { margin: 0; }

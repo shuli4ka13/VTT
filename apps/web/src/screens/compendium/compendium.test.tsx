@@ -151,3 +151,53 @@ describe('CompendiumScreen: id новой записи не завязан то�
     expect(second).not.toBe(first);
   });
 });
+
+describe('CompendiumScreen: превью «как увидит игрок»', () => {
+  beforeEach(() => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...state.system,
+        effects: { hit: { label: 'Удар', activation: 'manual', params: [], steps: [] } },
+        records: {
+          weapon: {
+            kind: 'item', label: 'Оружие', group: 'Снаряжение',
+            props: [
+              { key: 'dmg', label: 'Кость урона', kind: 'dice' },
+              { key: 'cost', label: 'Цена', kind: 'number', onSheet: false },
+              { key: 'ammo', label: 'Патроны', kind: 'record' },
+            ],
+            bindings: [{ label: 'Выстрел', effect: 'hit', args: {} }],
+          },
+          ammo: { kind: 'item', label: 'Боеприпасы', props: [] },
+        },
+      },
+      compendium: {
+        items: [
+          { id: 'gun', rk: 'weapon', label: 'Пистолет', description: 'Тяжёлый.', props: { dmg: '3d6', cost: 500, ammo: 'nine' } },
+          { id: 'nine', rk: 'ammo', label: 'Патроны 9 мм', props: {} },
+        ],
+        actions: [],
+      },
+      activeRecordId: 'gun',
+    }));
+  });
+
+  it('показывает подпись, описание, циферки «на лист» и кнопки; служебное скрыто, ссылка на запись подписана', () => {
+    render(<CompendiumScreen />);
+    expect(screen.getByText('Как увидит игрок')).toBeTruthy();
+    const view = document.querySelector('.record-view')!;
+    expect(view.textContent).toContain('Пистолет');
+    expect(view.textContent).toContain('Тяжёлый.');
+    expect(view.textContent).toContain('3к6');
+    expect(view.textContent).toContain('Патроны 9 мм');
+    expect(view.textContent).toContain('Выстрел');
+    expect(view.textContent).not.toContain('Цена');
+  });
+
+  it('свойство «ссылка на запись» выбирается из записей компендиума, без самой себя', () => {
+    render(<CompendiumScreen />);
+    const select = [...document.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'nine'))!;
+    expect([...select.options].map(o => o.value)).toEqual(['', 'nine']);
+  });
+});

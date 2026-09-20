@@ -149,3 +149,34 @@ describe('RecordsTab: свойство знает свою судьбу', () => 
     expect(screen.queryByDisplayValue('damage_dice')).toBeNull();
   });
 });
+
+describe('RecordsTab: свойство на лист или служебное', () => {
+  beforeEach(() => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...state.system,
+        effects: {},
+        records: {
+          weapon: { kind: 'item', label: 'Оружие', props: [{ key: 'вес', label: 'Вес', kind: 'number' }], bindings: [] },
+        },
+      },
+      activeRecordKind: 'weapon',
+    }));
+  });
+
+  it('по умолчанию свойство на листе; «служебное» пишет onSheet: false, обратно — убирает ключ', () => {
+    render(<RecordsTab />);
+    const where = screen.getByDisplayValue('на лист — игрок видит') as HTMLSelectElement;
+    fireEvent.change(where, { target: { value: 'service' } });
+    expect(useWorld.getState().system.records!.weapon!.props![0]!.onSheet).toBe(false);
+    fireEvent.change(where, { target: { value: 'sheet' } });
+    expect('onSheet' in useWorld.getState().system.records!.weapon!.props![0]!).toBe(false);
+  });
+
+  it('среди видов свойства есть «ссылка на запись»', () => {
+    render(<RecordsTab />);
+    const kind = screen.getByDisplayValue('число') as HTMLSelectElement;
+    expect([...kind.options].map(o => o.textContent)).toContain('ссылка на запись');
+  });
+});

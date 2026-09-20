@@ -5,6 +5,8 @@ import { useReader } from '../../engine/use-calc.ts';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
 import { Card, Empty, Fold, Chip, Input, Button } from '../../ui/primitives.tsx';
 import { SheetView } from '../../sheet/sheet-view.tsx';
+import { recordDetails } from '../../sheet/record-view.tsx';
+import { useSession } from '../../store/session.ts';
 import { Lobby } from './lobby.tsx';
 import type { Sheet, System, RoomState } from '@vtt/schema';
 import { availableActions } from '@vtt/engine/events/envelope';
@@ -71,14 +73,43 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   const reader = useReader(room.system as System, sheet, room.compendium);
 
   return (
-    <SheetView
-      system={room.system as System}
-      sheet={sheet}
-      reader={reader}
-      badge={sheet.kind === 'npc' ? 'НПС' : 'игрок'}
-      onChange={(tag, value) => tableSocket.setValue(room.id, sheet.id, tag, value)}
-      onRoll={tag => tableSocket.rollField(room.id, sheet.id, tag)}
-    />
+    <>
+      <ClaimRow room={room} sheet={sheet} />
+      <SheetView
+        system={room.system as System}
+        sheet={sheet}
+        reader={reader}
+        badge={sheet.kind === 'npc' ? 'НПС' : 'игрок'}
+        onChange={(tag, value) => tableSocket.setValue(room.id, sheet.id, tag, value)}
+        onRoll={tag => tableSocket.rollField(room.id, sheet.id, tag)}
+      />
+    </>
+  );
+}
+
+function ClaimRow({ room, sheet }: { room: RoomState; sheet: Sheet }) {
+  const userId = useSession(s => s.userId);
+  const me = room.members.find(m => m.userId === userId);
+  const holder = room.members.find(m => m.sheetId === sheet.id);
+  if (me?.role === 'gm') {
+    return holder
+      ? <span className="faint">играет: {holder.name}</span>
+      : <span className="faint">лист никем не закреплён — ведущий правит любой</span>;
+  }
+  if (holder && holder.userId === userId) {
+    return (
+      <div className="inline inline--tight">
+        <Chip active>мой лист</Chip>
+        <Button size="sm" variant="ghost" onClick={() => tableSocket.claimSheet(room.id, null)}>отпустить</Button>
+      </div>
+    );
+  }
+  if (holder) return <span className="faint">играет: {holder.name} — правит только он и ведущий</span>;
+  return (
+    <div className="inline inline--tight">
+      <span className="faint">лист свободен</span>
+      <Button size="sm" onClick={() => tableSocket.claimSheet(room.id, sheet.id)}>играю этим листом</Button>
+    </div>
   );
 }
 
@@ -102,16 +133,8 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
 
   const items = room.compendium.items ?? [];
   const actions = room.compendium.actions ?? [];
-  const itemDetails = (item: (typeof items)[number]): string[] => {
-    const kind = room.system.records?.[String(item.rk)];
-    return (kind?.props ?? [])
-      .filter(prop => item.props?.[prop.key] !== undefined && item.props[prop.key] !== '')
-      .map(prop => {
-        const value = String(item.props?.[prop.key]);
-        const shown = String(prop.kind) === 'dice' ? value.replace(/d/gi, 'к') : value;
-        return `${prop.label ?? prop.key}: ${shown}`;
-      });
-  };
+  const itemDetails = (item: (typeof items)[number]): string[] =>
+    recordDetails(item, room.system as System, room.compendium).map(line => `${line.label}: ${line.value}`);
 
   const hangable = Object.entries(room.system.effects)
     .filter(([, effect]) => (effect.activation ?? 'manual') !== 'manual');

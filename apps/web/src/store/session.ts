@@ -4,6 +4,7 @@ import { login, setToken, currentToken } from '../api/client.ts';
 
 export interface SessionState {
   name: string;
+  userId: string;
   signed: boolean;
   enter: (name: string) => Promise<void>;
   leave: () => void;
@@ -11,12 +12,13 @@ export interface SessionState {
 
 export const useSession = create<SessionState>()(persist(set => ({
   name: '',
+  userId: '',
   signed: Boolean(currentToken()),
 
   enter: async name => {
     const session = await login(name.trim() || 'Гость');
     setToken(session.token);
-    set({ name: session.name, signed: true });
+    set({ name: session.name, userId: session.userId, signed: true });
   },
 
   leave: () => {
@@ -26,10 +28,11 @@ export const useSession = create<SessionState>()(persist(set => ({
 }), {
   name: 'vtt.session',
   storage: createJSONStorage(() => localStorage),
-  partialize: state => ({ name: state.name }),
+  partialize: state => ({ name: state.name, userId: state.userId }),
   merge: (saved, current) => ({
     ...current,
     name: typeof (saved as { name?: unknown })?.name === 'string' ? (saved as { name: string }).name : '',
+    userId: typeof (saved as { userId?: unknown })?.userId === 'string' ? (saved as { userId: string }).userId : '',
     signed: Boolean(currentToken()),
   }),
 }));

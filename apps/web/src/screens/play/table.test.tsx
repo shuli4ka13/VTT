@@ -2,7 +2,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { useRoom } from '../../store/room.ts';
-import { TableScreen } from './table.tsx';
+import { useSession } from '../../store/session.ts';
+import { TableScreen, mayAnswer } from './table.tsx';
 import type { RoomState } from '@vtt/schema';
 
 const room = (clock: object | null): RoomState => ({
@@ -92,5 +93,44 @@ describe('выбор целей на столе', () => {
     expect(token('Арвен').className).not.toContain('token--from');
     expect(token('Мирра').className).not.toContain('token--to');
     expect(screen.getByText('Кто действует?')).toBeTruthy();
+  });
+});
+
+describe('вопрос стола: отвечает владелец листа или ведущий', () => {
+  const asked = (): RoomState => ({
+    ...room(null),
+    members: [
+      { userId: 'gm', name: 'Ведущий', role: 'gm', sheetId: null },
+      { userId: 'p1', name: 'Первый', role: 'player', sheetId: 'а' },
+      { userId: 'p2', name: 'Второй', role: 'player', sheetId: null },
+    ],
+    pending: { id: 'q', sheetId: 'а', stage: 'target', question: 'Арвен: ответить?', options: [{ id: 'shield', label: 'Щит' }], preview: [] },
+  }) as unknown as RoomState;
+  afterEach(() => { cleanup(); });
+
+  it('право отвечать: ведущий — всегда, владелец — за свой лист, чужой — нет, свободный лист — любой без своего', () => {
+    const state = asked();
+    expect(mayAnswer(state, 'gm', 'а')).toBe(true);
+    expect(mayAnswer(state, 'p1', 'а')).toBe(true);
+    expect(mayAnswer(state, 'p2', 'а')).toBe(false);
+    expect(mayAnswer(state, 'p2', 'б')).toBe(true);
+    expect(mayAnswer(state, 'нет', 'а')).toBe(false);
+  });
+
+  it('чужому кнопки выключены и объяснено, кто отвечает', () => {
+    useSession.setState({ userId: 'p2' });
+    useRoom.setState(state => ({ ...state, room: asked(), log: [], error: null }));
+    render(<TableScreen />);
+    const skip = screen.getByText('Пропустить').closest('button') as HTMLButtonElement;
+    expect(skip.disabled).toBe(true);
+    expect(screen.getByText('отвечает владелец листа или ведущий')).toBeTruthy();
+  });
+
+  it('владельцу кнопки доступны', () => {
+    useSession.setState({ userId: 'p1' });
+    useRoom.setState(state => ({ ...state, room: asked(), log: [], error: null }));
+    render(<TableScreen />);
+    const skip = screen.getByText('Пропустить').closest('button') as HTMLButtonElement;
+    expect(skip.disabled).toBe(false);
   });
 });

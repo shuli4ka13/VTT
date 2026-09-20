@@ -80,6 +80,13 @@ export const roomSummary = z.object({
   memberCount: z.number().int().nonnegative(),
 });
 
+export const member = z.object({
+  userId: z.string(),
+  name: z.string(),
+  role: z.enum(['gm', 'player']).optional(),
+  sheetId: z.string().nullable().optional(),
+});
+
 export const pendingState = z.object({
   id: z.string(),
   sheetId: z.string(),
@@ -108,7 +115,7 @@ export const roomState = z.object({
   system,
   compendium,
   sheets: z.array(sheet),
-  members: z.array(z.object({ userId: z.string(), name: z.string() })),
+  members: z.array(member),
   log: z.array(z.object({
     id: z.string(),
     at: z.string(),
@@ -155,9 +162,7 @@ export const roomDelta = z.object({
 export const serverMessage = z.discriminatedUnion('type', [
   z.object({ type: z.literal('room:state'), state: roomState }),
   z.object({ type: z.literal('room:delta'), delta: roomDelta }),
-  z.object({ type: z.literal('room:members'), members: z.array(z.object({
-    userId: z.string(), name: z.string(),
-  })) }),
+  z.object({ type: z.literal('room:members'), members: z.array(member) }),
   z.object({ type: z.literal('error'), message: z.string() }),
 ]);
 
@@ -199,6 +204,7 @@ export type WorldSummary = z.infer<typeof worldSummary>;
 export type CreateRoomRequest = z.infer<typeof createRoomRequest>;
 export type RoomSummary = z.infer<typeof roomSummary>;
 export type RoomState = z.infer<typeof roomState>;
+export type Member = z.infer<typeof member>;
 export type ActIntent = z.infer<typeof actIntent>;
 export type ClockState = z.infer<typeof clockState>;
 export type PendingState = z.infer<typeof pendingState>;

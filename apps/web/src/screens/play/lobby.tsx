@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRoom } from '../../store/room.ts';
-import { Card, CardHead, Button, Input, Verdict, Empty } from '../../ui/primitives.tsx';
+import { Card, CardHead, Button, Verdict, Empty } from '../../ui/primitives.tsx';
 import { Columns } from '../../ui/layout.tsx';
-import { login, setToken, currentToken, listRooms, listWorlds, createRoom } from '../../api/client.ts';
+import { listRooms, listWorlds, createRoom } from '../../api/client.ts';
 import { BuildWorld } from './build-world.tsx';
 import type { RoomSummary, WorldSummary } from '@vtt/schema';
 
@@ -11,46 +11,24 @@ export function Lobby() {
   const error = useRoom(s => s.error);
   const setError = useRoom(s => s.setError);
 
-  const [name, setName] = useState('');
-  const [signed, setSigned] = useState(Boolean(currentToken()));
   const [rooms, setRooms] = useState<RoomSummary[]>([]);
   const [worlds, setWorlds] = useState<WorldSummary[]>([]);
 
   const refresh = useCallback(() => Promise
-    .all([listWorlds(), currentToken() ? listRooms() : Promise.resolve(null)])
+    .all([listWorlds(), listRooms()])
     .then(([nextWorlds, nextRooms]) => {
       setWorlds(nextWorlds);
-      if (nextRooms) setRooms(nextRooms);
+      setRooms(nextRooms);
     })
-    .catch(err => setError((err as Error).message))
-    .finally(() => setSigned(Boolean(currentToken()))), [setError]);
+    .catch(err => setError((err as Error).message)), [setError]);
 
-  useEffect(() => { void refresh(); }, [refresh, signed]);
+  useEffect(() => { void refresh(); }, [refresh]);
 
   return (
     <Columns main={{
       body: (
         <>
           {error ? <Verdict tone="bad">{error}</Verdict> : null}
-
-          {signed ? null : (
-            <Card>
-              <CardHead title="Кто вы" />
-              <div className="inline">
-                <div style={{ width: 220 }}>
-                  <Input value={name} onChange={setName} placeholder="ваше имя" />
-                </div>
-                <Button variant="primary" onClick={async () => {
-                  try {
-                    const session = await login(name.trim() || 'Гость');
-                    setToken(session.token);
-                    setSigned(true);
-                    setError(null);
-                  } catch (err) { setError((err as Error).message); }
-                }}>Войти</Button>
-              </div>
-            </Card>
-          )}
 
           <Card>
             <CardHead
@@ -73,7 +51,7 @@ export function Lobby() {
               )}
           </Card>
 
-          {signed ? <BuildWorld onBuilt={() => void refresh()} /> : null}
+          <BuildWorld onBuilt={() => void refresh()} />
 
           <Card>
             <CardHead title="Собранные миры" />
@@ -89,7 +67,7 @@ export function Lobby() {
                         {world.title}
                         <span className="faint"> · {world.systemName} · {world.authorName}</span>
                       </span>
-                      <Button size="sm" disabled={!signed} onClick={async () => {
+                      <Button size="sm" onClick={async () => {
                         try {
                           const room = await createRoom(world.id, `Стол «${world.title}»`);
                           setRooms(current => [...current, room]);

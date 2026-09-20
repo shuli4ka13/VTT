@@ -5,6 +5,7 @@ import { ActionForm } from './action-form.tsx';
 import { Columns } from '../../ui/layout.tsx';
 import { Card, CardHead, Button, Empty, Verdict, Chip } from '../../ui/primitives.tsx';
 import { Lobby } from './lobby.tsx';
+import { useSession } from '../../store/session.ts';
 import type { RoomState, Sheet, System } from '@vtt/schema';
 import { availableActions } from '@vtt/engine/events/envelope';
 import './table.css';
@@ -184,8 +185,19 @@ function Budget({ room, sheetId }: { room: RoomState; sheetId: string }) {
   );
 }
 
+export function mayAnswer(room: RoomState, userId: string, sheetId: string): boolean {
+  const me = room.members.find(m => m.userId === userId);
+  if (!me) return false;
+  if (me.role === 'gm') return true;
+  if (me.sheetId) return me.sheetId === sheetId;
+  return !room.members.some(m => m.userId !== userId && m.sheetId === sheetId);
+}
+
 function Prompt({ room, onError }: { room: RoomState; onError: (message: string | null) => void }) {
   const pending = room.pending!;
+  const userId = useSession(s => s.userId);
+  const may = mayAnswer(room, userId, pending.sheetId);
+  const why = may ? undefined : 'отвечает владелец листа или ведущий';
   const [chosen, setChosen] = useState<string[]>([]);
   const reply = (ids: string[]) => {
     onError(null);
@@ -209,8 +221,9 @@ function Prompt({ room, onError }: { room: RoomState; onError: (message: string 
         ))}
       </div>
       <div className="inline inline--tight">
-        <Button size="sm" variant="primary" disabled={!chosen.length} onClick={() => reply(chosen)}>Применить</Button>
-        <Button size="sm" onClick={() => reply([])}>Пропустить</Button>
+        <Button size="sm" variant="primary" disabled={!chosen.length || !may} title={why} onClick={() => reply(chosen)}>Применить</Button>
+        <Button size="sm" disabled={!may} title={why} onClick={() => reply([])}>Пропустить</Button>
+        {may ? null : <span className="faint">{why}</span>}
       </div>
     </Card>
   );

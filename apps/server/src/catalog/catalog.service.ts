@@ -4,7 +4,7 @@ import {
 } from '@nestjs/common';
 import { and, desc, eq, or } from 'drizzle-orm';
 import { world as schemas } from '@vtt/schema';
-import { lintSystem, errorsOf, describeWhere } from '@vtt/engine/model/lint';
+import { lintSystem, lintCompendium, errorsOf, describeWhere } from '@vtt/engine/model/lint';
 import type { Compendium, System } from '@vtt/schema';
 import { DB, CLOCK, IDS } from '../common/tokens.ts';
 import type { Db } from '../db/db.ts';
@@ -160,6 +160,13 @@ export class CatalogService {
     const compendium = JSON.parse(row.data) as Compendium;
     const system = await this.system(row.systemId);
     this.assertRecordsFilled(system.system, compendium);
+    const problems = errorsOf(lintCompendium(system.system, compendium));
+    if (problems.length) {
+      throw new BadRequestException({
+        message: `компендиум не готов к публикации: ${countErrors(problems.length)} — ${problems[0]!.text}`,
+        issues: problems.slice(0, 5).map(p => `${describeWhere(p.where, system.system, compendium)}: ${p.text}`),
+      });
+    }
     const updatedAt = this.now();
     await this.db.update(publishedCompendiums)
       .set({ publishedData: row.data, status: 'published', updatedAt })

@@ -232,6 +232,7 @@ export const recordKind = z.object({
     key: z.string().min(1),
     label: z.string().optional(),
     kind: z.string().optional(),
+    onSheet: z.boolean().optional(),
   }).passthrough()).optional(),
   bindings: z.array(binding).optional(),
 

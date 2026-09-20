@@ -109,10 +109,13 @@ export class RoomsService {
     const memberRows = await this.db.select().from(members)
       .where(eq(members.roomId, roomId));
 
-    const people: { userId: string; name: string }[] = [];
+    const people: { userId: string; name: string; role: Role; sheetId: string | null }[] = [];
     for (const m of memberRows) {
       const found = await this.db.select().from(users).where(eq(users.id, m.userId));
-      people.push({ userId: m.userId, name: found[0]?.name ?? 'неизвестен' });
+      people.push({
+        userId: m.userId, name: found[0]?.name ?? 'неизвестен',
+        role: m.role === 'gm' ? 'gm' : 'player', sheetId: m.sheetId ?? null,
+      });
     }
 
     return {

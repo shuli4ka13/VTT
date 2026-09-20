@@ -427,6 +427,33 @@ describe('сквозной прогон стенда', () => {
   });
 });
 
+describe('публикация компендиума проверяется линтом', () => {
+  it('вещь с правкой броска, которой нет в словаре, не публикуется — с адресом записи', async () => {
+    const token = (await http().post('/auth/login').send({ name: 'Автор книги' })).body.token as string;
+    const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
+    const sys = await as(http().post('/systems')).send({
+      title: 'Для линта книги',
+      system: {
+        name: 'Для линта книги', fields: [], effects: {},
+        rolls: [{ tag: 'attack_roll', label: 'Бросок атаки' }],
+        records: { gear: { kind: 'item', label: 'Снаряжение', props: [], bindings: [] } },
+      },
+    }).expect(201);
+    await as(http().post(`/systems/${sys.body.id}/publish`)).send({}).expect(201);
+    const book = await as(http().post('/compendiums')).send({
+      title: 'Книга с дыркой', systemId: sys.body.id,
+      compendium: {
+        items: [{ id: 'ring', rk: 'gear', label: 'Кольцо', props: {}, modifiers: [{ kind: 'roll', target: 'attack_roll', edit: 'нет_такой', condition: null }] }],
+        actions: [],
+      },
+    }).expect(201);
+    const rejected = await as(http().post(`/compendiums/${book.body.id}/publish`)).send({}).expect(400);
+    expect(rejected.body.message).toContain('не готов к публикации');
+    expect(rejected.body.issues.join(' ')).toContain('Кольцо');
+    expect(rejected.body.issues.join(' ')).toContain('нет_такой');
+  });
+});
+
 describe('права на лист', () => {
   it('игрок правит свой лист, чужой — нет; ведущий правит любой', async () => {
     const gm = (await http().post('/auth/login').send({ name: 'Ведущий прав' })).body;

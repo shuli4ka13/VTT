@@ -290,7 +290,7 @@ export const errorsOf = (problems: Problem[]): Problem[] => problems.filter(p =>
 
 const quoted = (label: string | undefined, key: string): string => `«${label || key}»`;
 
-export function describeWhere(where: Where, system: System): string {
+export function describeWhere(where: Where, system: System, compendium?: Compendium): string {
   const parts: string[] = [];
   if (where.tab === 'sheet') {
     parts.push(TABS.sheet);
@@ -316,7 +316,10 @@ export function describeWhere(where: Where, system: System): string {
     else if (where.part === 'modifiers') parts.push('модификаторы');
   } else if (where.tab === 'book') {
     parts.push('Компендиум');
-    if (where.record) parts.push(`запись «${where.record}»`);
+    if (where.record) {
+      const found = [...(compendium?.items ?? []), ...(compendium?.actions ?? [])].find(r => r.id === where.record);
+      parts.push(`запись ${quoted(found?.label, where.record)}`);
+    }
   }
   return parts.join(' · ');
 }

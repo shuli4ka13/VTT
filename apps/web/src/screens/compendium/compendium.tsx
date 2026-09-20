@@ -6,7 +6,8 @@ import {
   Card, CardHead, Field, Input, Select, Empty, Verdict, DangerButton, NumInput,
 } from '../../ui/primitives.tsx';
 import { ModifiersEditor } from '../constructor/modifiers.tsx';
-import type { CompendiumRecord, RecordKind, System } from '@vtt/schema';
+import { RecordView } from '../../sheet/record-view.tsx';
+import type { CompendiumRecord, RecordKind, System, Compendium } from '@vtt/schema';
 
 export function CompendiumScreen() {
   const system = useWorld(s => s.system);
@@ -70,7 +71,7 @@ export function CompendiumScreen() {
       main={{
         head: active ? 'Запись' : undefined,
         body: active
-          ? <RecordEditor record={active.record} system={system} />
+          ? <RecordEditor record={active.record} system={system} compendium={compendium} />
           : <Empty
               title="Выберите запись слева"
               hint="Запись — это циферки по форме её типа: у меча спросят кость урона, у заклинания — чем спасаются."
@@ -102,7 +103,7 @@ export function CompendiumScreen() {
   );
 }
 
-function RecordEditor({ record, system }: { record: CompendiumRecord; system: System }) {
+function RecordEditor({ record, system, compendium }: { record: CompendiumRecord; system: System; compendium: Compendium }) {
   const editCompendium = useWorld(s => s.editCompendium);
   const pick = useWorld(s => s.pick);
 
@@ -174,6 +175,15 @@ function RecordEditor({ record, system }: { record: CompendiumRecord; system: Sy
                         .map(([key, e]) => [key, e.label ?? key] as const)] as never}
                     onChange={next => edit(draft => { (draft.props ??= {})[prop.key] = next; })}
                   />
+                ) : String(prop.kind) === 'record' ? (
+                  <Select
+                    value={String(record.props?.[prop.key] ?? '')}
+                    options={[['', '— нет —'],
+                      ...[...(compendium.items ?? []), ...(compendium.actions ?? [])]
+                        .filter(other => other.id !== record.id)
+                        .map(other => [other.id, other.label ?? other.id] as const)] as never}
+                    onChange={next => edit(draft => { (draft.props ??= {})[prop.key] = next; })}
+                  />
                 ) : String(prop.kind) === 'dice' ? (
                   <DiceProp
                     value={String(record.props?.[prop.key] ?? '')}
@@ -195,6 +205,13 @@ function RecordEditor({ record, system }: { record: CompendiumRecord; system: Sy
               </Field>
             ))}
           </div>
+        </Card>
+      ) : null}
+
+      {kind ? (
+        <Card>
+          <CardHead title="Как увидит игрок" sub="Так запись выглядит на листе персонажа: подпись, описание, циферки «на лист» и кнопки." />
+          <RecordView record={record} system={system} compendium={compendium} />
         </Card>
       ) : null}
 
