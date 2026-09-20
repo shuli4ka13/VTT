@@ -109,8 +109,8 @@ export const STEP_WORDS = {
       },
     ],
     outputs: [
-      { path: '.amount', label: 'применено' },
-      { path: '.overkill', label: 'перебор' },
+      { path: '.amount', label: 'применено', kind: 'number' },
+      { path: '.overkill', label: 'перебор', kind: 'number' },
     ],
     reasons: {},
     breakLines: {},

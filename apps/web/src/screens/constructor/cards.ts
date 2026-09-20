@@ -1,3 +1,4 @@
+import { compile } from '@vtt/engine/formula';
 import type { Step } from '@vtt/schema';
 
 export type CardKind = 'check' | 'change' | 'number' | 'unknown';
@@ -16,17 +17,37 @@ const KIND_OF: Record<string, CardKind> = {
   threshold: 'check', compare: 'check', apply: 'change', status: 'change', emit: 'change', amount: 'number',
 };
 
-const mentions = (step: Step, id: string): boolean => {
-  const text = JSON.stringify(step);
-  if (text.includes(`"ref":"${id}"`) || text.includes(`"ref":"${id}.`)) return true;
-  return names(step, id);
+const depsOf = (source: string): readonly string[] => {
+  try { return compile(source).deps; } catch { return []; }
 };
+
+const refHead = (value: unknown): string | null => {
+  if (!value || typeof value !== 'object' || !('ref' in value)) return null;
+  return String((value as { ref: unknown }).ref).split('.')[0] ?? null;
+};
+
+const walk = (node: unknown, seen: (value: object) => boolean): boolean => {
+  if (!node || typeof node !== 'object') return false;
+  if (seen(node)) return true;
+  const values = Array.isArray(node) ? node : Object.values(node as Record<string, unknown>);
+  return values.some(value => walk(value, seen));
+};
+
+export const mentions = (step: Step, id: string): boolean =>
+  walk(step, node => {
+    if (refHead(node) === id) return true;
+    const expr = (node as { expr?: unknown }).expr;
+    return typeof expr === 'string' && depsOf(expr).includes(id);
+  });
 
 const takesWhole = (value: unknown, id: string): boolean =>
   !!value && typeof value === 'object' && (value as Record<string, unknown>).ref === id;
 
 const names = (step: Step, id: string): boolean =>
-  new RegExp(`#${id}(?![\\p{L}\\p{N}_])`, 'u').test(JSON.stringify(step));
+  walk(step, node => {
+    const expr = (node as { expr?: unknown }).expr;
+    return typeof expr === 'string' && depsOf(expr).includes(id);
+  });
 
 export function groupSteps(list: Step[]): CardGroup[] {
   const out: CardGroup[] = [];

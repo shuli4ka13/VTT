@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import type { System, Effect, Step } from '@vtt/schema';
-import { Card, CardHead, Verdict, Button, Input } from '../../../../ui/primitives.tsx';
+import { Card, CardHead, Verdict, Button } from '../../../../ui/primitives.tsx';
 import type { CardGroup } from '../../cards.ts';
 import {
   checkReadback, changeReadback, numberReadback, type Segment,
@@ -91,17 +91,6 @@ export function GroupCard({
         <CardHead
           title={`${position} · ${CARD_TITLES[group.kind]}`}
 
-          badge={group.kind === 'change' ? null : (
-            <Input
-              value={step.id ?? ''}
-              mono
-              placeholder="имя"
-              onChange={next => edit(0, draft => {
-                const id = next.trim();
-                if (id) (draft as any).id = id; else delete (draft as any).id;
-              })}
-            />
-          )}
           actions={actions}
         />
         {problem ? <Verdict tone="bad" action={problemAction}>{problem.text}</Verdict> : null}

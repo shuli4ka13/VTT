@@ -55,9 +55,13 @@ describe('BRICKS', () => {
     }
   });
 
-  it('имя нового числа не сталкивается с занятыми', () => {
-    const number = BRICKS.find(b => b.key === 'number')!;
-    expect(number.make(system, ['n'])[0]!.id).toBe('n_2');
+  it('каждый шаг палитры получает имя сам, и оно не сталкивается с занятыми', () => {
+    for (const brick of BRICKS) {
+      const [made] = brick.make(system, []);
+      expect(made!.id, brick.key).toBeTruthy();
+      const again = brick.make(system, [String(made!.id)])[0]!;
+      expect(again.id, brick.key).not.toBe(made!.id);
+    }
   });
 });
 
@@ -140,5 +144,36 @@ describe('удаление шага чистит ссылки на него', ()
     const removal = removeSteps(list, [0]);
     expect(removal.steps).toHaveLength(1);
     expect(removal.cleared).toEqual([]);
+  });
+});
+
+describe('склейка «число + изменение» смотрит на ссылки, а не на текст', () => {
+  it('имя шага внутри слова в чужой формуле склейку не делает', () => {
+    const list = steps([
+      { id: 'n', type: 'amount', source: 'roll', dice: { const: '1к6' } },
+      { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { ref: 'n' } },
+      { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '#nn + 1' } },
+    ]);
+    const cards = groupSteps(list);
+    expect(cards).toHaveLength(2);
+    expect(cards[0]!.indices).toEqual([0, 1]);
+  });
+
+  it('имя шага в подписи или теге за ссылку не считается', () => {
+    const list = steps([
+      { id: 'n', type: 'amount', source: 'roll', dice: { const: '1к6' } },
+      { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { ref: 'n' } },
+      { type: 'emit', event: 'damage', amount: { const: 1 }, tags: ['#n', 'n'] },
+    ]);
+    expect(groupSteps(list)[0]!.indices).toEqual([0, 1]);
+  });
+
+  it('настоящее упоминание в формуле дальше по цепочке склейку отменяет', () => {
+    const list = steps([
+      { id: 'n', type: 'amount', source: 'roll', dice: { const: '1к6' } },
+      { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { ref: 'n' } },
+      { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '#n + 1' } },
+    ]);
+    expect(groupSteps(list).map(c => c.indices)).toEqual([[0], [1], [2]]);
   });
 });

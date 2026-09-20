@@ -186,7 +186,7 @@ export function sendReadback(step: Step, system: System, effect: Effect): Segmen
 
 export function numberReadback(step: Step, system: System, effect: Effect): Segment[] {
   const out: Segment[] = [seg('Считается число:'), ...amountValueSegments(step, system, effect)];
-  out.push(step.id ? seg(`— дальше это «${step.id}».`) : seg('.'));
+  out.push(seg('.'));
   return out;
 }
 

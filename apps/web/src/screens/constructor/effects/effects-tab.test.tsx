@@ -133,9 +133,15 @@ describe('ссылка на результат шага', () => {
     }));
   });
 
-  it('у проверки есть поле имени — без него на неё не сослаться', () => {
+  it('машинного имени шага на экране нет, а сослаться на шаг всё равно можно', () => {
     render(<EffectsTab />);
-    expect(screen.getAllByPlaceholderText('имя').length).toBeGreaterThan(1);
+    expect(screen.queryAllByPlaceholderText('имя')).toHaveLength(0);
+    fireEvent.click(screen.getByText('+ проверка'));
+    const steps = useWorld.getState().system.effects.strike!.steps!;
+    const id = String(steps.at(-1)!.id);
+    expect(id).toBeTruthy();
+    const shown = [...document.querySelectorAll('input')].map(i => i.value);
+    expect(shown).not.toContain(id);
   });
 
   it('слот «какое превышение» предлагает выходы проверки поимённо', () => {

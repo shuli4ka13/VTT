@@ -28,14 +28,10 @@ const STACKING = [
 
 export function EffectEditor({ id, effect, system }: { id: string; effect: Effect; system: System }) {
   const editSystem = useWorld(s => s.editSystem);
+  const editEffect = useWorld(s => s.editEffect);
   const pick = useWorld(s => s.pick);
 
-  const edit = (change: (draft: Effect) => void) => {
-    editSystem(draft => {
-      const target = draft.effects[id];
-      if (target) change(target);
-    });
-  };
+  const edit = (change: (draft: Effect) => void) => editEffect(id, change);
 
   const launch = launchOf(effect);
   const pipeline = launch.kind !== 'passive';

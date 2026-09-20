@@ -121,16 +121,18 @@ export const BRICKS: StepTemplate[] = [
   {
     key: 'check', label: '+ проверка',
     hint: 'Бросок или сравнение против поля цели. Может оборвать эффект.',
-    make: system => [blankCheck(system)],
+    make: (system, taken) => [{ ...blankCheck(system), id: freeId(taken, 'проверка') } as unknown as Step],
   },
   {
     key: 'change', label: '+ изменение',
     hint: 'Изменить поле цели или повесить состояние. Единственное, что меняет мир.',
-    make: () => [{ type: 'apply', direction: 'subtract', targetModifiers: true } as unknown as Step],
+    make: (_system, taken) => [{
+      id: freeId(taken, 'изменение'), type: 'apply', direction: 'subtract', targetModifiers: true,
+    } as unknown as Step],
   },
   {
     key: 'number', label: '+ число',
     hint: 'Отдельное число: превышение проверки или одно число на несколько изменений.',
-    make: (_system, taken) => [{ id: freeId(taken, 'n'), type: 'amount', source: 'roll' } as unknown as Step],
+    make: (_system, taken) => [{ id: freeId(taken, 'число'), type: 'amount', source: 'roll' } as unknown as Step],
   },
 ];

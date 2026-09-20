@@ -6,6 +6,7 @@ import { parseRollExpr } from '../../roll-expr.ts';
 import { FormulaChips } from '../../../../ui/formula-chips.tsx';
 import { labelOfTag } from '../../../../ui/formula.tsx';
 import { SlotInput, chipOf, type SlotOption } from '../../slot-input.tsx';
+import { outputRefs } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn, WithNumber } from '../words.ts';
 import { badFormula, exprText } from './roll-expr-input.tsx';
@@ -185,6 +186,23 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
       group: 'из записи',
       label: 'новая потребность…',
       onPick: (insert: (piece: string) => string) => putIntoAmount(onCreateFromRecord(), insert),
+    });
+  }
+
+  for (const output of outputRefs(context.earlier)) {
+    if (output.kind !== 'number') continue;
+    needs.push({
+      group: 'результат шага',
+      label: output.label,
+      onPick: () => {
+        edit(applyIndex, apply => {
+          const target = apply as Record<string, unknown>;
+          target.direction = 'subtract';
+          target.value = { ref: output.ref };
+        });
+        setDraft(null);
+        setTrouble(null);
+      },
     });
   }
 

@@ -54,10 +54,9 @@ describe('changeReadback', () => {
 });
 
 describe('numberReadback', () => {
-  it('одиночное число с именем', () => {
+  it('одиночное число: машинное имя в пересказ не попадает', () => {
     const step = { id: 'dmg', type: 'amount', source: 'roll', dice: { const: '2d6' } } as unknown as Step;
-    expect(joinReadback(numberReadback(step, system, effect)))
-      .toBe('Считается число: 2к6 — дальше это «dmg».');
+    expect(joinReadback(numberReadback(step, system, effect))).toBe('Считается число: 2к6.');
   });
 });
 
