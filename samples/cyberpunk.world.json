@@ -1,8 +1,384 @@
 {
-  "title": "Киберпанк",
+  "title": "Киберпанк RED",
   "system": {
     "id": "cp-slice",
-    "name": "Киберпанк",
+    "name": "Киберпанк RED",
+    "fields": [
+      {
+        "tag": "handle",
+        "label": "Псевдоним",
+        "group": "Личное дело",
+        "value": {
+          "kind": "stored",
+          "type": "text",
+          "default": "Без имени"
+        }
+      },
+      {
+        "tag": "role",
+        "label": "Роль",
+        "group": "Личное дело",
+        "value": {
+          "kind": "stored",
+          "type": "text",
+          "default": "Соло"
+        }
+      },
+      {
+        "tag": "int",
+        "label": "Интеллект",
+        "group": "Характеристики",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 6,
+          "min": 1,
+          "max": 10
+        }
+      },
+      {
+        "tag": "ref",
+        "label": "Рефлексы",
+        "group": "Характеристики",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 7,
+          "min": 1,
+          "max": 10
+        }
+      },
+      {
+        "tag": "dex",
+        "label": "Ловкость",
+        "group": "Характеристики",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 6,
+          "min": 1,
+          "max": 10
+        }
+      },
+      {
+        "tag": "tech",
+        "label": "Техника",
+        "group": "Характеристики",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 5,
+          "min": 1,
+          "max": 10
+        }
+      },
+      {
+        "tag": "cool",
+        "label": "Хладнокровие",
+        "group": "Характеристики",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 7,
+          "min": 1,
+          "max": 10
+        }
+      },
+      {
+        "tag": "will",
+        "label": "Воля",
+        "group": "Характеристики",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 6,
+          "min": 1,
+          "max": 10
+        }
+      },
+      {
+        "tag": "luck",
+        "label": "Удача",
+        "group": "Характеристики",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 6,
+          "min": 1,
+          "max": 10
+        }
+      },
+      {
+        "tag": "move",
+        "label": "Движение",
+        "group": "Характеристики",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 6,
+          "min": 1,
+          "max": 10
+        }
+      },
+      {
+        "tag": "body",
+        "label": "Телосложение",
+        "group": "Характеристики",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 7,
+          "min": 1,
+          "max": 10
+        }
+      },
+      {
+        "tag": "humanity",
+        "label": "Гуманность",
+        "group": "Характеристики",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 60,
+          "min": 0,
+          "max": 80
+        }
+      },
+      {
+        "tag": "emp",
+        "label": "Эмпатия",
+        "group": "Характеристики",
+        "value": {
+          "kind": "formula",
+          "expr": "floor(#humanity / 10)"
+        }
+      },
+      {
+        "tag": "hp_max",
+        "label": "Максимум хитов",
+        "group": "Состояние",
+        "value": {
+          "kind": "formula",
+          "expr": "10 + 5 * ceil((#body + #will) / 2)"
+        }
+      },
+      {
+        "tag": "hp",
+        "label": "Хиты",
+        "group": "Состояние",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 45,
+          "min": 0,
+          "max": "#hp_max"
+        }
+      },
+      {
+        "tag": "wound_at",
+        "label": "Порог серьёзной раны",
+        "group": "Состояние",
+        "value": {
+          "kind": "formula",
+          "expr": "ceil(#hp_max / 2)"
+        }
+      },
+      {
+        "tag": "luck_left",
+        "label": "Удача в запасе",
+        "group": "Состояние",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 6,
+          "min": 0,
+          "max": "#luck"
+        }
+      },
+      {
+        "tag": "injury",
+        "label": "Травма",
+        "group": "Состояние",
+        "value": {
+          "kind": "stored",
+          "type": "text",
+          "default": ""
+        }
+      },
+      {
+        "tag": "sp_head",
+        "label": "Броня головы",
+        "group": "Броня",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 11,
+          "min": 0
+        }
+      },
+      {
+        "tag": "sp_body",
+        "label": "Броня тела",
+        "group": "Броня",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 11,
+          "min": 0
+        }
+      },
+      {
+        "tag": "handgun",
+        "label": "Пистолеты",
+        "group": "Навыки",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 4,
+          "min": 0,
+          "max": 10
+        }
+      },
+      {
+        "tag": "handgun_total",
+        "label": "Пистолеты — всего",
+        "group": "Навыки",
+        "roll": {
+          "label": "Проверка: Пистолеты"
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "#ref + #handgun"
+        }
+      },
+      {
+        "tag": "brawling",
+        "label": "Рукопашный бой",
+        "group": "Навыки",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 3,
+          "min": 0,
+          "max": 10
+        }
+      },
+      {
+        "tag": "brawling_total",
+        "label": "Рукопашный бой — всего",
+        "group": "Навыки",
+        "roll": {
+          "label": "Проверка: Рукопашный бой"
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "#dex + #brawling"
+        }
+      },
+      {
+        "tag": "evasion",
+        "label": "Уклонение",
+        "group": "Навыки",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 4,
+          "min": 0,
+          "max": 10
+        }
+      },
+      {
+        "tag": "evasion_total",
+        "label": "Уклонение — всего",
+        "group": "Навыки",
+        "roll": {
+          "label": "Проверка: Уклонение"
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "#dex + #evasion"
+        }
+      },
+      {
+        "tag": "perception",
+        "label": "Внимательность",
+        "group": "Навыки",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 3,
+          "min": 0,
+          "max": 10
+        }
+      },
+      {
+        "tag": "perception_total",
+        "label": "Внимательность — всего",
+        "group": "Навыки",
+        "roll": {
+          "label": "Проверка: Внимательность"
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "#int + #perception"
+        }
+      },
+      {
+        "tag": "stealth",
+        "label": "Скрытность",
+        "group": "Навыки",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 2,
+          "min": 0,
+          "max": 10
+        }
+      },
+      {
+        "tag": "stealth_total",
+        "label": "Скрытность — всего",
+        "group": "Навыки",
+        "roll": {
+          "label": "Проверка: Скрытность"
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "#dex + #stealth"
+        }
+      },
+      {
+        "tag": "persuasion",
+        "label": "Убеждение",
+        "group": "Навыки",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 3,
+          "min": 0,
+          "max": 10
+        }
+      },
+      {
+        "tag": "persuasion_total",
+        "label": "Убеждение — всего",
+        "group": "Навыки",
+        "roll": {
+          "label": "Проверка: Убеждение"
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "#cool + #persuasion"
+        }
+      }
+    ],
+    "groups": {
+      "Личное дело": {},
+      "Характеристики": {},
+      "Состояние": {},
+      "Броня": {},
+      "Навыки": {}
+    },
     "constants": {
       "lead_die": {
         "label": "Ведущая кость",
@@ -15,95 +391,264 @@
         ]
       }
     },
-    "action_types": {
-      "action": {
-        "label": "Действие",
-        "icon": "◆"
-      },
-      "reaction": {
-        "label": "Реакция",
-        "icon": "↩"
-      }
-    },
     "rolls": [
       {
         "tag": "attack_roll",
         "label": "Бросок атаки"
+      },
+      {
+        "tag": "skill_roll",
+        "label": "Проверка навыка"
       }
     ],
-    "records": {
-      "weapon": {
-        "kind": "item",
-        "label": "Оружие",
-        "icon": "⚔",
-        "group": "Хром",
-        "hint": "Хромированная сталь: урон числом или костью.",
-        "props": [
+    "roll_edits": {
+      "crit_up": {
+        "label": "Критический успех",
+        "ops": [
           {
-            "key": "damage_dice",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "damage_flat",
-            "label": "Урон (число)",
-            "kind": "number"
+            "op": "explode",
+            "at": "max"
           }
         ]
       },
+      "crit_down": {
+        "label": "Критический провал",
+        "ops": [
+          {
+            "op": "explode",
+            "at": "min"
+          }
+        ]
+      },
+      "advantage": {
+        "label": "Преимущество",
+        "ops": [
+          {
+            "op": "addDie"
+          },
+          {
+            "op": "keepBest",
+            "n": 1
+          }
+        ],
+        "canceledBy": "disadvantage"
+      },
+      "disadvantage": {
+        "label": "Помеха",
+        "ops": [
+          {
+            "op": "addDie"
+          },
+          {
+            "op": "keepWorst",
+            "n": 1
+          }
+        ],
+        "canceledBy": "advantage"
+      }
+    },
+    "tables": {
+      "dv_range": {
+        "label": "Сложность по дистанции",
+        "ranges": [
+          {
+            "from": 0,
+            "to": 6,
+            "value": 13
+          },
+          {
+            "from": 7,
+            "to": 12,
+            "value": 15
+          },
+          {
+            "from": 13,
+            "to": 25,
+            "value": 20
+          },
+          {
+            "from": 26,
+            "to": 50,
+            "value": 25
+          },
+          {
+            "from": 51,
+            "to": 100,
+            "value": 30
+          }
+        ]
+      },
+      "injuries": {
+        "label": "Травмы",
+        "ranges": [
+          {
+            "from": 1,
+            "to": 2,
+            "value": "Сломанные рёбра"
+          },
+          {
+            "from": 3,
+            "to": 4,
+            "value": "Разорванная рука"
+          },
+          {
+            "from": 5,
+            "to": 6,
+            "value": "Пробитое лёгкое"
+          },
+          {
+            "from": 7,
+            "to": 8,
+            "value": "Раздробленное колено"
+          },
+          {
+            "from": 9,
+            "to": 10,
+            "value": "Потеря глаза"
+          }
+        ]
+      }
+    },
+    "action_types": {
       "action": {
-        "kind": "action",
         "label": "Действие",
-        "icon": "✊",
-        "group": "Приёмы",
-        "hint": "Приём без предмета."
+        "perTurn": 1
+      },
+      "move": {
+        "label": "Движение",
+        "perTurn": 1
+      }
+    },
+    "initiative": {
+      "die": {
+        "constant": "lead_die"
+      },
+      "bonus": {
+        "expr": "#ref"
+      },
+      "check": "skill_roll"
+    },
+    "events": {
+      "damage": {
+        "label": "Урон",
+        "tags": [
+          "пуля",
+          "холодное",
+          "огонь",
+          "яд",
+          "по голове"
+        ],
+        "receive": [
+          {
+            "id": "сквозь_броню",
+            "type": "compare",
+            "value": {
+              "ref": "event.amount"
+            },
+            "versus": {
+              "tag": "sp_body"
+            },
+            "breakIf": "less"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "hp"
+            },
+            "direction": "subtract",
+            "value": {
+              "ref": "сквозь_броню.margin"
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "sp_body"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          }
+        ]
       }
     },
     "effects": {
-      "strike": {
-        "label": "Удар",
-        "icon": "⚔",
+      "shoot": {
+        "label": "Выстрел",
+        "icon": "🔫",
         "category": "Атака",
+        "description": "Дистанцию называет ведущий: она задаёт сложность по таблице. Удачу можно потратить перед броском.",
         "activation": "manual",
         "cost": "action",
         "params": [
           {
-            "key": "bonus",
-            "label": "Модификатор проверки",
-            "kind": "expr"
+            "key": "distance",
+            "label": "Дистанция, метров",
+            "kind": "number",
+            "ask": {
+              "by": "gm",
+              "kind": "number",
+              "min": 0,
+              "max": 100,
+              "hint": "Сколько метров до цели — по ней считается сложность."
+            }
           },
           {
-            "key": "difficulty",
-            "label": "Сложность",
-            "kind": "number"
+            "key": "luck",
+            "label": "Сколько удачи тратишь",
+            "kind": "number",
+            "ask": {
+              "by": "actor",
+              "kind": "number",
+              "min": 0,
+              "max": 6,
+              "hint": "Каждое очко удачи — плюс один к броску. Тратится сразу."
+            }
           },
           {
-            "key": "source",
-            "label": "Откуда величина",
-            "kind": "choice"
-          },
-          {
-            "key": "dice",
-            "label": "Кости урона",
+            "key": "damage_dice",
+            "label": "Кость урона",
             "kind": "dice"
-          },
+          }
+        ],
+        "self": [
           {
-            "key": "hp",
-            "label": "Куда наносится",
-            "kind": "tag"
-          },
-          {
-            "key": "armor",
-            "label": "Броня цели",
-            "kind": "tag"
-          },
-          {
-            "key": "damage_flat",
-            "label": "Урон (число)",
-            "kind": "number"
+            "type": "apply",
+            "target": {
+              "tag": "luck_left"
+            },
+            "direction": "subtract",
+            "value": {
+              "param": "luck"
+            },
+            "targetModifiers": false
           }
         ],
         "steps": [
+          {
+            "id": "dv",
+            "type": "table",
+            "table": {
+              "const": "dv_range"
+            },
+            "value": {
+              "param": "distance"
+            }
+          },
+          {
+            "id": "прицел",
+            "type": "amount",
+            "source": "item",
+            "fixed": {
+              "expr": "#handgun_total"
+            },
+            "bonus": {
+              "param": "luck"
+            }
+          },
           {
             "id": "hit",
             "type": "threshold",
@@ -112,59 +657,86 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "param": "bonus"
+                "ref": "прицел"
               },
               "check": "attack_roll"
             },
             "versus": {
-              "param": "difficulty"
+              "ref": "dv"
             }
           },
           {
             "id": "dmg",
             "type": "amount",
-            "source": {
-              "param": "source"
-            },
+            "source": "roll",
             "dice": {
-              "param": "dice",
-              "optional": true
-            },
-            "fixed": {
-              "param": "damage_flat",
-              "optional": true
+              "param": "damage_dice"
             }
           },
           {
-            "id": "pen",
-            "type": "compare",
-            "value": {
+            "id": "boom",
+            "type": "amount",
+            "source": "item",
+            "fixed": {
+              "const": 5
+            },
+            "when": {
+              "ref": "dmg.atMax",
+              "atLeast": 2
+            }
+          },
+          {
+            "type": "emit",
+            "event": "damage",
+            "amount": {
               "ref": "dmg"
             },
-            "versus": {
-              "param": "armor"
+            "tags": [
+              "пуля"
+            ]
+          },
+          {
+            "type": "emit",
+            "event": "damage",
+            "amount": {
+              "ref": "boom"
             },
-            "breakIf": "less"
+            "tags": [
+              "пуля"
+            ],
+            "when": {
+              "ref": "dmg.atMax",
+              "atLeast": 2
+            }
+          }
+        ]
+      },
+      "injury_roll": {
+        "label": "Травма",
+        "icon": "🩸",
+        "category": "Состояния",
+        "description": "Две шестёрки на костях урона — травма по таблице.",
+        "activation": "manual",
+        "params": [],
+        "steps": [
+          {
+            "id": "что",
+            "type": "table",
+            "table": {
+              "const": "injuries"
+            },
+            "dice": {
+              "const": "1d10"
+            }
           },
           {
             "type": "apply",
             "target": {
-              "param": "hp"
+              "tag": "injury"
             },
-            "direction": "subtract",
+            "direction": "set",
             "value": {
-              "ref": "pen.margin"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "param": "armor"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
+              "ref": "что"
             },
             "targetModifiers": false
           }
@@ -176,123 +748,137 @@
         "category": "Состояния",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
-        "description": "Ускоритель нервов: преимущество на атаку, пока не сгорел.",
+        "description": "Имплант: преимущество на броски атаки.",
         "modifiers": [
           {
             "kind": "roll",
             "target": "attack_roll",
-            "condition": null,
-            "edit": "advantage"
+            "edit": "advantage",
+            "condition": null
           }
-        ],
-        "steps": []
-      }
-    },
-    "room_rules": [],
-    "fields": [
-      {
-        "tag": "handle",
-        "label": "Псевдоним",
-        "group": "Личное дело",
-        "value": {
-          "kind": "stored",
-          "type": "text",
-          "default": ""
-        }
+        ]
       },
-      {
-        "tag": "combat",
-        "label": "Навык боя",
-        "group": "Навыки",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 4
-        }
-      },
-      {
-        "tag": "hp",
-        "label": "Хиты",
-        "group": "Здоровье",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 20,
-          "min": 0
-        }
-      },
-      {
-        "tag": "armor",
-        "label": "Прочность брони",
-        "group": "Защита",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        }
-      }
-    ],
-    "roll_edits": {
-      "advantage": {
-        "label": "Преимущество",
-        "ops": [
+      "bleeding": {
+        "label": "Кровотечение",
+        "icon": "🩸",
+        "category": "Состояния",
+        "activation": "triggered",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "В начале своего хода теряешь 2 хита, пока рану не заткнут.",
+        "trigger": {
+          "on": "moment:turn-start"
+        },
+        "params": [],
+        "steps": [
           {
-            "op": "addDie"
-          },
-          {
-            "op": "keepBest",
-            "n": 1
+            "type": "apply",
+            "target": {
+              "tag": "hp"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 2
+            },
+            "targetModifiers": false
           }
         ]
       }
-    }
+    },
+    "records": {
+      "weapon": {
+        "kind": "item",
+        "label": "Оружие",
+        "icon": "🔫",
+        "group": "Снаряжение",
+        "hint": "Ствол или клинок: кость урона своя у каждого.",
+        "props": [
+          {
+            "key": "damage_dice",
+            "label": "Кость урона",
+            "kind": "dice"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Выстрелить",
+            "effect": "shoot",
+            "args": {
+              "damage_dice": {
+                "prop": "damage_dice"
+              }
+            }
+          }
+        ]
+      },
+      "armor": {
+        "kind": "item",
+        "label": "Броня",
+        "icon": "🛡",
+        "group": "Снаряжение",
+        "hint": "Прочность брони: её съедает каждое попадание.",
+        "props": [
+          {
+            "key": "sp",
+            "label": "Прочность",
+            "kind": "number"
+          }
+        ],
+        "bindings": [],
+        "modifiers": []
+      },
+      "action": {
+        "kind": "action",
+        "label": "Приём",
+        "icon": "🎯",
+        "group": "Приёмы",
+        "hint": "То, что персонаж умеет и без снаряжения.",
+        "props": [],
+        "bindings": []
+      }
+    },
+    "room_rules": []
   },
   "compendium": {
     "items": [
       {
+        "id": "heavy-pistol",
+        "rk": "weapon",
+        "label": "Тяжёлый пистолет",
+        "description": "Обычный ствол улиц: 3к6.",
+        "props": {
+          "damage_dice": "3d6"
+        }
+      },
+      {
         "id": "mono-knife",
         "rk": "weapon",
-        "label": "Мономолекулярный нож",
-        "description": "Урон — константа записи, костей нет.",
+        "label": "Моноклинок",
+        "description": "Режет броню на раз: 2к6.",
         "props": {
-          "damage_flat": 8
-        },
-        "activities": [
-          {
-            "label": "Удар",
-            "effect": "strike",
-            "args": {
-              "bonus": "#combat",
-              "difficulty": 12,
-              "source": "item",
-              "hp": "hp",
-              "armor": "armor",
-              "damage_flat": {
-                "prop": "damage_flat"
-              }
-            }
-          }
-        ],
-        "modifiers": []
+          "damage_dice": "2d6"
+        }
+      },
+      {
+        "id": "kevlar",
+        "rk": "armor",
+        "label": "Кевларовая куртка",
+        "description": "Прочность 11.",
+        "props": {
+          "sp": 11
+        }
       }
     ],
     "actions": [
       {
-        "id": "gun",
+        "id": "injury",
         "rk": "action",
-        "label": "Пистолет",
-        "effect": "strike",
-        "args": {
-          "bonus": "#combat",
-          "difficulty": 12,
-          "source": "roll",
-          "dice": "2d8",
-          "hp": "hp",
-          "armor": "armor"
-        }
+        "label": "Бросить травму",
+        "description": "Две шестёрки на уроне — бросок по таблице травм.",
+        "props": {}
       }
     ]
   },
@@ -304,34 +890,76 @@
       "name": "Сильвер",
       "values": {
         "handle": "Сильвер",
-        "combat": 6,
-        "hp": 20,
-        "armor": 2
+        "role": "Соло",
+        "humanity": 60,
+        "luck_left": 6,
+        "sp_head": 11,
+        "sp_body": 11,
+        "injury": "",
+        "int": 6,
+        "ref": 8,
+        "dex": 6,
+        "tech": 5,
+        "cool": 7,
+        "will": 6,
+        "luck": 6,
+        "move": 6,
+        "body": 7,
+        "handgun": 6,
+        "brawling": 3,
+        "evasion": 4,
+        "perception": 3,
+        "stealth": 2,
+        "persuasion": 3,
+        "hp": 45
       },
       "equipped": [
-        "mono-knife"
+        "heavy-pistol",
+        "kevlar"
       ],
       "effects": [],
       "actions": [
-        "gun"
+        "injury"
       ]
     },
     {
       "id": "raze",
       "systemId": "cp-slice",
-      "kind": "npc",
+      "kind": "pc",
       "name": "Рейз",
       "values": {
         "handle": "Рейз",
-        "combat": 4,
-        "hp": 18,
-        "armor": 4
+        "role": "Нетраннер",
+        "humanity": 60,
+        "luck_left": 6,
+        "sp_head": 11,
+        "sp_body": 11,
+        "injury": "",
+        "int": 8,
+        "ref": 6,
+        "dex": 6,
+        "tech": 5,
+        "cool": 7,
+        "will": 7,
+        "luck": 6,
+        "move": 6,
+        "body": 5,
+        "handgun": 3,
+        "brawling": 3,
+        "evasion": 4,
+        "perception": 3,
+        "stealth": 2,
+        "persuasion": 3,
+        "hp": 40
       },
       "equipped": [
-        "mono-knife"
+        "mono-knife",
+        "kevlar"
       ],
       "effects": [],
-      "actions": []
+      "actions": [
+        "injury"
+      ]
     }
   ]
 }

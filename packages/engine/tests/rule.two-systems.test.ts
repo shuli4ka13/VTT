@@ -1,5 +1,6 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.ts';
 import { send, receive, bindingsOf } from '../src/events/envelope.ts';
+import { exchange } from '../src/events/exchange.ts';
 import { serializeSheet } from '../src/model/serialize.ts';
 import { system, arven, mirra, compendium, cyberpunk, cpCompendium, silver, raze } from './fixtures.ts';
 import { AMOUNT_SOURCES } from '../src/model/amount-sources.ts';
@@ -14,7 +15,6 @@ const queue = (...values) => {
 };
 
 const ctx5 = (sheet, die) => ({ system, sheet, compendium, die });
-const ctxB = (sheet, die, book = cpCompendium) => ({ system: cyberpunk, sheet, compendium: book, die });
 
 group('две системы одними слотами', () => {
   group('A: срез 5e', () => {
@@ -87,48 +87,51 @@ group('две системы одними слотами', () => {
   });
 
   group('B: срез киберпанка', () => {
-    test('клинок: фикс предмета, пробитие брони, ДВА применить в два поля', () => {
-      const env = send('mono-knife:0', ctxB(silver, queue(7)));
-      const { sheet, report } = receive(env, ctxB(raze, queue()));
+    const shoot = (rolls: number[], inputs: Record<string, number>, sheets = [silver, raze]) => {
+      let at = 0;
+      return exchange({
+        system: cyberpunk, compendium: cpCompendium, die: () => rolls[at++] ?? 1,
+        sheets, actionId: 'heavy-pistol:0', fromId: 'silver', toId: 'raze', inputs,
+      });
+    };
 
-      eq(report.stopped, null);
-      eq(report.trace.length, 5, 'порог, величина, сравнение, два применить');
-      eq(report.trace[0].total, 13, 'к10=7 плюс навык 6');
-      deepEq(report.trace[0].versus, { value: 12 }, 'сложность — число из эффекта');
-      eq(report.trace[1].total, 8, 'урон ножа — число из записи, костей не бросали');
-      deepEq(report.trace[1].rolls, []);
-      eq(report.trace[2].margin, 4, 'величина 8 против брони 4');
-      deepEq(report.changes, [
-        { tag: 'hp', from: 18, to: 14 },
-        { tag: 'armor', from: 4, to: 3 },
-      ], 'хиты минус разница, броня минус единица — одно правило, два поля');
-      eq(sheet.values.hp, 14);
-      eq(sheet.values.armor, 3);
+    test('дистанция даёт сложность по таблице, удача прибавляется к броску и тратится', () => {
+      const out = shoot([4, 3, 3, 3], { distance: 30, luck: 2 });
+      const main = out.reports.find(entry => entry.report.kind === 'effect')!.report;
+      const dv = main.trace.find(line => line.step === 'dv') as { result: number };
+      eq(dv.result, 25, '30 метров — сложность 25');
+
+      const hit = main.trace.find(line => line.step === 'hit') as { bonus: number; total: number };
+      eq(hit.bonus, 16, 'навык с рефлексами 14 плюс два очка удачи');
+      eq(hit.total, 20, 'кость 4 плюс 16');
+
+      eq(out.sheets.find(s => s.id === 'silver')!.values.luck_left, 4, 'удача списана дорожкой «со мной»');
     });
 
-    test('выстрел: тот же эффект-механизм, но величина — 2d8', () => {
-      const env = send('gun', ctxB(silver, queue(7, 5, 6)));
-      const { sheet, report } = receive(env, ctxB(raze, queue()));
-      eq(report.trace[1].total, 11, '2d8: 5 и 6');
-      eq(sheet.values.hp, 11, '18 минус (11 − броня 4)');
-      eq(sheet.values.armor, 3);
+    test('урон идёт через общий эффект: броня режет и сама изнашивается', () => {
+      const out = shoot([15, 6, 6, 6], { distance: 3, luck: 0 });
+      const target = out.sheets.find(s => s.id === 'raze')!;
+      eq(target.values.sp_body, 10, 'броня изношена на единицу');
+      eq(target.values.hp, 33, '45 минус (18 − броня 11)');
     });
 
-    test('броня держит: обрыв на сравнении — ДРУГАЯ запись журнала, чем промах', () => {
-      const env = send('gun', ctxB(silver, queue(7, 1, 1)));
-      const { sheet, report } = receive(env, ctxB(raze, queue()));
-      eq(report.stopped.reason, 'compare-short', 'не «мимо», а «попал, но не пробил»');
-      eq(report.stopped.step, 'pen');
-      eq(report.trace.length, 3, 'оба «применить» не исполнялись');
-      eq(sheet.values.hp, 18, 'хиты целы');
-      eq(sheet.values.armor, 4, 'и броня цела: не пробита — не изнашивается');
+    test('броня держит: слабый урон не проходит и брони не портит', () => {
+      const out = shoot([15, 1, 1, 1], { distance: 3, luck: 0 });
+      const target = out.sheets.find(s => s.id === 'raze')!;
+      eq(target.values.hp, 40, 'хиты целы');
+      eq(target.values.sp_body, 11, 'и броня цела');
     });
 
-    test('лист получателя после удара — по-прежнему законный DTO', () => {
-      const env = send('mono-knife:0', ctxB(silver, queue(7)));
-      const { sheet } = receive(env, ctxB(raze, queue()));
-      serializeSheet(sheet);
-      deepEq(JSON.parse(JSON.stringify(env)), env, 'и конверт — чистые данные');
+    test('две шестёрки на костях урона добавляют пятёрку отдельным вызовом', () => {
+      const boom = shoot([15, 6, 6, 1], { distance: 3, luck: 0 });
+      const plain = shoot([15, 6, 1, 1], { distance: 3, luck: 0 });
+      const hp = (out: typeof boom) => Number(out.sheets.find(s => s.id === 'raze')!.values.hp);
+      ok(hp(boom) < hp(plain), `${hp(boom)} должно быть меньше ${hp(plain)}`);
+    });
+
+    test('лист получателя после выстрела — по-прежнему законный DTO', () => {
+      const out = shoot([15, 6, 6, 6], { distance: 3, luck: 0 });
+      serializeSheet(out.sheets.find(s => s.id === 'raze')!);
     });
   });
 

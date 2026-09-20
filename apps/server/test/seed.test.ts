@@ -32,8 +32,7 @@ describe('сид стенда', () => {
 
     const worlds = await fetch(`${url}/worlds`).then(r => r.json());
     const titles = worlds.map((w: { title: string }) => w.title);
-    expect(titles).toContain('D&D 5e');
-    expect(titles).toContain('Киберпанк');
+    for (const { title } of sampleWorlds()) expect(titles).toContain(title);
 
     for (const w of worlds) expect(w.sheetCount).toBe(2);
   });

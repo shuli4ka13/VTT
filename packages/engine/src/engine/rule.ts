@@ -34,20 +34,37 @@ export const packGuardRef = (guard: unknown, ctx: StepContext): unknown => packG
 
 const packGuard = (guard: unknown, ctx: StepContext): unknown => {
   if (guard === null || guard === undefined) return undefined;
-  if (typeof guard === 'object' && 'ref' in (guard as object)) return guard;
+  if (typeof guard === 'object' && 'ref' in (guard as object)) {
+    const decided = decideNow(guard as Record<string, unknown>, ctx);
+    return decided ?? guard;
+  }
   return packRef(guard, ctx);
 };
+
+const walkPath = (from: unknown, path: string[]): unknown =>
+  path.reduce<unknown>((node, key) =>
+    (node == null || typeof node !== 'object' ? undefined : (node as Record<string, unknown>)[key]), from);
+
+function decideNow(guard: Record<string, unknown>, ctx: StepContext): { const: boolean } | null {
+  const [head, ...path] = String(guard.ref).split('.');
+  const known = ctx.sender?.[String(head)];
+  if (known === undefined) return null;
+  const value = path.length ? walkPath(known, path) : known;
+  if (value === undefined) return null;
+  return { const: guardHolds({ ...guard, ref: undefined, const: undefined, at: value }, ctx, value) };
+}
 
 export function packSteps(steps: Step[], ctx: StepContext): StepData[] {
   const packed: StepData[] = [];
   for (const step of steps) {
     const mod = stepModule(step.type);
-    const when = packGuard((step as StepData).when, ctx);
     const sender = rolledSoFar(packed as unknown as Record<string, unknown>[]);
+    const inner = { ...ctx, sender };
+    const when = packGuard((step as StepData).when, inner);
     packed.push({
       type: step.type, id: step.id ?? null,
       ...(when !== undefined ? { when } : {}),
-      ...mod.pack(step as StepData, { ...ctx, sender }),
+      ...mod.pack(step as StepData, inner),
     } as StepData);
   }
   return packed;
@@ -57,12 +74,12 @@ export function packRule(rule: Effect, ctx: StepContext): StepData[] {
   return packSteps(rule.steps || [], { ...ctx, paramDefs: rule.params || [] });
 }
 
-export function guardHolds(guard: unknown, ctx: StepContext): boolean {
+export function guardHolds(guard: unknown, ctx: StepContext, known?: unknown): boolean {
   if (guard === null || guard === undefined) return true;
   const g = guard as Record<string, unknown>;
-  if ('const' in g) return Boolean(g.const);
-  if ('ref' in g) {
-    const value = resolveRef({ ref: g.ref }, ctx);
+  if (known === undefined && 'const' in g) return Boolean(g.const);
+  if (known !== undefined || 'ref' in g) {
+    const value = known !== undefined ? known : resolveRef({ ref: g.ref }, ctx);
     let holds: boolean;
     if (g.is !== undefined) holds = value === g.is;
     else if (g.atLeast !== undefined || g.atMost !== undefined) {

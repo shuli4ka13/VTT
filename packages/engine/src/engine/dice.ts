@@ -4,6 +4,8 @@ export interface NotationRoll {
   notation: unknown;
   rolls: number[];
   total: number;
+
+  tally: { dice: number; atMax: number; atMin: number };
 }
 
 export const randomDie: Die = sides => 1 + Math.floor(Math.random() * sides);
@@ -26,7 +28,16 @@ export function rollNotation(notation: unknown, die: Die): NotationRoll {
   const rolls: number[] = [];
   for (let i = 0; i < count; i++) rolls.push(die(sides));
 
-  return { notation, rolls, total: rolls.reduce((a, b) => a + b, 0) };
+  return {
+    notation,
+    rolls,
+    total: rolls.reduce((sum, value) => sum + value, 0),
+    tally: {
+      dice: rolls.length,
+      atMax: rolls.filter(value => value === sides).length,
+      atMin: rolls.filter(value => value === 1).length,
+    },
+  };
 }
 
 
