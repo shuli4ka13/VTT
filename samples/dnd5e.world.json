@@ -683,6 +683,84 @@
             ]
           }
         ]
+      },
+      "dying": {
+        "label": "При смерти",
+        "icon": "💀",
+        "category": "Состояния",
+        "description": "На нуле хитов: в начале своего хода бросок к20. 10 и выше — успех, иначе провал. Три провала — смерть, три успеха — стабилизация; считает стол.",
+        "activation": "triggered",
+        "duration": {
+          "kind": "permanent"
+        },
+        "trigger": {
+          "on": "moment:turn-start",
+          "condition": {
+            "expr": "#hp_current <= 0"
+          }
+        },
+        "params": [],
+        "steps": [
+          {
+            "id": "спас",
+            "type": "threshold",
+            "roll": {
+              "die": {
+                "constant": "lead_die"
+              },
+              "check": "save_roll"
+            },
+            "versus": {
+              "const": 10
+            },
+            "successWhen": "atLeast",
+            "continueOn": "always"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "death_ok"
+            },
+            "direction": "add",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "ref": "спас.success"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "death_fail"
+            },
+            "direction": "add",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "ref": "спас.success",
+              "not": true
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "death_fail"
+            },
+            "direction": "add",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "ref": "спас.natural",
+              "atMost": 1
+            }
+          }
+        ]
       }
     },
     "room_rules": [
@@ -1370,6 +1448,30 @@
         }
       },
       {
+        "tag": "death_ok",
+        "label": "Успехи спасбросков от смерти",
+        "group": "Здоровье",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 3
+        }
+      },
+      {
+        "tag": "death_fail",
+        "label": "Провалы спасбросков от смерти",
+        "group": "Здоровье",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 3
+        }
+      },
+      {
         "tag": "attack_bonus",
         "label": "Бонус атаки",
         "group": "Атака",
@@ -1632,7 +1734,9 @@
         "hp_max": 44,
         "hp_current": 44,
         "slots_1": 2,
-        "hp_temp": 0
+        "hp_temp": 0,
+        "death_ok": 0,
+        "death_fail": 0
       },
       "equipped": [
         "chain-mail",
@@ -1664,7 +1768,9 @@
         "hp_max": 21,
         "hp_current": 21,
         "slots_1": 2,
-        "hp_temp": 0
+        "hp_temp": 0,
+        "death_ok": 0,
+        "death_fail": 0
       },
       "equipped": [],
       "effects": [],

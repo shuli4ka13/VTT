@@ -1,6 +1,7 @@
 import { group, test, eq, ok, throws } from './harness.ts';
 import { fireMoments, momentOf, MOMENTS } from '../src/events/moments.ts';
-import type { System, Sheet, Effect } from '../src/model/types.ts';
+import { SAMPLE_WORLDS } from '../src/model/systems.ts';
+import type { System, Sheet, Effect, Compendium } from '../src/model/types.ts';
 
 const system = {
   id: 'x', name: 'x',
@@ -86,5 +87,38 @@ group('шина моментов', () => {
     const out = fireMoments([{ moment: 'turn-start', sheetId: 'а' }], [sheet(['кнопка'])],
       { ...world, system: manual } as never);
     eq(out.reports.length, 0);
+  });
+});
+
+group('образец D&D: спасброски от смерти', () => {
+  const dnd = SAMPLE_WORLDS[0]!.system as System;
+  const book = SAMPLE_WORLDS[0]!.compendium as Compendium;
+
+  const dying = (hp: number, roll: number) => {
+    const base = (SAMPLE_WORLDS[0]!.sheets as Sheet[]).find(s => s.id === 'arven')!;
+    const sheet = {
+      ...base,
+      values: { ...base.values, hp_current: hp, death_ok: 0, death_fail: 0 },
+      effects: [{ effectId: 'dying' }],
+    } as Sheet;
+    const out = fireMoments([{ moment: 'turn-start', sheetId: 'arven' }], [sheet],
+      { system: dnd, compendium: book, die: () => roll } as never);
+    return out.sheets[0]!.values;
+  };
+
+  test('на нуле хитов бросок идёт: десятка — успех, тройка — провал', () => {
+    eq(dying(0, 15).death_ok, 1);
+    eq(dying(0, 15).death_fail, 0);
+    eq(dying(0, 3).death_fail, 1);
+    eq(dying(0, 3).death_ok, 0);
+  });
+
+  test('единица на кости — сразу два провала', () => {
+    eq(dying(0, 1).death_fail, 2);
+  });
+
+  test('пока хиты есть, никто не бросает', () => {
+    eq(dying(5, 1).death_fail, 0);
+    eq(dying(5, 1).death_ok, 0);
   });
 });
