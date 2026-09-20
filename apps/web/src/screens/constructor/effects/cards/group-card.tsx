@@ -11,8 +11,8 @@ import { CheckBody } from './check-body.tsx';
 import { ChangeBody } from './change-body.tsx';
 import { NumberBody } from './number-body.tsx';
 import { ConditionFold, whenSegments, breakLine } from './condition-fold.tsx';
+import { CARD_TITLES } from '../words.ts';
 
-const TITLES: Record<string, string> = { check: 'Проверка', change: 'Изменение', number: 'Число' };
 
 export function Readback({ segments }: { segments: Segment[] }) {
   return (
@@ -89,7 +89,7 @@ export function GroupCard({
     <>
       <Card tone={problem ? 'bad' : undefined}>
         <CardHead
-          title={`${position} · ${TITLES[group.kind]}`}
+          title={`${position} · ${CARD_TITLES[group.kind]}`}
 
           badge={group.kind === 'change' ? null : (
             <Input

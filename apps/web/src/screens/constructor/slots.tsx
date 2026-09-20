@@ -4,9 +4,12 @@ import { Input, Select } from '../../ui/primitives.tsx';
 import { FormulaInput, labelOfTag } from '../../ui/formula.tsx';
 import { countWord } from './readback.ts';
 import { stepModule } from '@vtt/engine/engine/steps/index';
-import { dice as diceText } from '../../words.ts';
+import { dice as diceText, STEP } from '../../words.ts';
 
-export interface EarlierStep { id: string; type: string }
+export interface EarlierStep { id: string; type: string; at?: number; title?: string }
+
+export const stepName = (step: EarlierStep): string =>
+  (step.at ? `${STEP.one} ${step.at}${step.title ? ` · ${step.title}` : ''}` : `${STEP.one} «${step.id}»`);
 
 function outputsOf(type: string): { path: string; label: string; kind?: string }[] {
   try {
@@ -20,12 +23,13 @@ export function outputRefs(earlier: EarlierStep[]): { ref: string; label: string
   const out: { ref: string; label: string; kind?: string }[] = [];
   for (const step of earlier) {
     const outputs = outputsOf(step.type);
+    const name = stepName(step);
     if (!outputs.length) {
-      out.push({ ref: step.id, label: `«${step.id}» — результат` });
+      out.push({ ref: step.id, label: `${name} — результат` });
       continue;
     }
     for (const o of outputs) {
-      out.push({ ref: `${step.id}${o.path}`, label: `«${step.id}» — ${o.label}`, ...(o.kind ? { kind: o.kind } : {}) });
+      out.push({ ref: `${step.id}${o.path}`, label: `${name} — ${o.label}`, ...(o.kind ? { kind: o.kind } : {}) });
     }
   }
   return out;
@@ -35,7 +39,9 @@ export function outputLabel(ref: string, earlier: EarlierStep[]): string {
   const found = outputRefs(earlier).find(o => o.ref === ref);
   if (found) return found.label;
   const [head, ...path] = ref.split('.');
-  return path.length ? `«${head}» — ${path.join('.')}` : `шаг «${head}»`;
+  const step = earlier.find(s => s.id === head);
+  const name = step ? stepName(step) : `${STEP.one} «${head}»`;
+  return path.length ? `${name} — ${path.join('.')}` : name;
 }
 
 export type SlotKind = 'const' | 'expr' | 'tag' | 'constant' | 'prop' | 'param' | 'ref' | 'empty';

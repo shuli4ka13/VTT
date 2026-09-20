@@ -5,6 +5,7 @@ import type { System, Effect } from '@vtt/schema';
 import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
 import { compile } from '@vtt/engine/formula';
 import { groupChain, subtreeNames } from './groups.ts';
+import { launchOf, LAUNCHES } from '@vtt/engine/model/effect-kinds';
 
 const DONORS = SAMPLE_SYSTEMS as System[];
 
@@ -238,7 +239,5 @@ function Effects({ donor }: { donor: System }) {
   );
 }
 
-const activationWord = (effect: Effect) =>
-  effect.activation === 'passive' ? 'пассивный'
-    : effect.activation === 'triggered' ? 'триггерный' : 'активируемый';
+const activationWord = (effect: Effect) => LAUNCHES[launchOf(effect).kind].label.toLowerCase();
 

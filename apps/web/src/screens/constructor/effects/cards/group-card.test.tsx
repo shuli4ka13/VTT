@@ -150,7 +150,7 @@ describe('GroupCard', () => {
 });
 
 describe('GroupCard: условие выполнения шага', () => {
-  const earlier = [{ id: 'hit', type: 'threshold' }];
+  const earlier = [{ id: 'hit', type: 'threshold', at: 1, title: 'Проверка' }];
 
   it('когда выше есть проверка с исходом да/нет, у шага появляется «Когда выполнять»', () => {
     const steps = [{ type: 'apply', direction: 'subtract', targetModifiers: true, value: { const: 4 } }] as unknown as Step[];
@@ -171,7 +171,7 @@ describe('GroupCard: условие выполнения шага', () => {
     const group = groupSteps(steps)[0]!;
     render(<GroupCard group={group} position={2} system={system} effect={effect}
       earlier={earlier} problem={null} edit={() => {}} onDelete={() => {}} />);
-    expect(screen.getByText('Только если «hit» — не вышло.')).toBeTruthy();
+    expect(screen.getByText('Только если шаг 1 · Проверка — не вышло.')).toBeTruthy();
   });
 
   it('без проверок выше секции условия нет', () => {

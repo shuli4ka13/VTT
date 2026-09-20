@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useWorld, freeId } from '../../../store/world.ts';
 import { STEP } from '../../../words.ts';
+import { CARD_TITLES } from './words.ts';
 import { Button, Verdict } from '../../../ui/primitives.tsx';
 import { problemOf } from '../step-card.tsx';
 import { groupSteps, moveGroup, removeSteps, BRICKS } from '../cards.ts';
@@ -28,12 +29,18 @@ export function Chain({ effect, system, edit }: {
 
   const steps = effect.steps ?? [];
 
+  const cards = groupSteps(steps);
+
+  const cardAt = (index: number) => cards.findIndex(card => card.indices.includes(index)) + 1;
+
   const earlierOf = (index: number) =>
     steps.slice(0, index)
-      .filter(step => step.id)
-      .map(step => ({ id: String(step.id), type: step.type }));
+      .map((step, at) => ({ step, at }))
+      .filter(({ step }) => step.id)
+      .map(({ step, at }) => ({
+        id: String(step.id), type: step.type, at: cardAt(at), title: cardTitle(cards, at),
+      }));
 
-  const cards = groupSteps(steps);
   const problems = steps.map((step, index) => problemOf(step, system, effect, earlierOf(index)));
 
   const broken = cards.filter(card => card.indices.some(i => problems[i])).length;
@@ -44,9 +51,9 @@ export function Chain({ effect, system, edit }: {
         <span className="screen-title" style={{ fontSize: 'var(--fs-5)' }}>Цепочка шагов</span>
         <span className="spacer" />
         {broken
-          ? <Verdict tone="bad">карточек со сломанными ссылками: {broken}</Verdict>
+          ? <Verdict tone="bad">{STEP.manyGen} со сломанными ссылками: {broken}</Verdict>
           : steps.length
-            ? <Verdict tone="ok">эффект верный · карточек {cards.length}</Verdict>
+            ? <Verdict tone="ok">эффект верный · {STEP.manyGen} {cards.length}</Verdict>
             : <Verdict tone="warn">шагов ещё нет — эффект ничего не делает</Verdict>}
       </div>
 
@@ -122,3 +129,8 @@ export function Chain({ effect, system, edit }: {
     </>
   );
 }
+
+const cardTitle = (cards: ReturnType<typeof groupSteps>, index: number): string | undefined => {
+  const card = cards.find(c => c.indices.includes(index));
+  return card ? CARD_TITLES[card.kind] : undefined;
+};

@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { EffectsTab } from './effects-tab.tsx';
 import { useWorld } from '../../../store/world.ts';
+import { LAUNCH_KINDS } from './words.ts';
 
 describe('EffectsTab: палитра трёх понятий', () => {
   beforeEach(() => {
@@ -41,8 +42,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
     const palette = screen.getAllByRole('button')
       .filter(b => (b.textContent ?? '').trimStart().startsWith('+ '))
       .map(b => b.textContent!.trim())
-      .filter(t => !t.startsWith('+ актив') && !t.startsWith('+ триггер')
-        && !t.startsWith('+ пассив') && !t.startsWith('+ реакц') && !t.startsWith('+ брать'));
+      .filter(t => !LAUNCH_KINDS.some(kind => t === `+ ${kind.label.toLowerCase()}`) && !t.startsWith('+ брать'));
     expect(palette).toEqual(['+ проверка', '+ изменение', '+ число']);
     fireEvent.click(screen.getByText('+ проверка'));
     expect(screen.getByText('1 · Проверка')).toBeTruthy();
@@ -144,8 +144,49 @@ describe('ссылка на результат шага', () => {
     fireEvent.focus(input);
 
     const options = [...document.querySelectorAll('.slot__option')].map(o => o.textContent?.trim());
-    expect(options).toContain('Результаты шагов«бросок» — превышение');
-    expect(options).toContain('Результаты шагов«бросок» — костей на максимуме');
-    expect(options).toContain('Результаты шагов«бросок» — костей на единице');
+    expect(options).toContain('Результаты шаговшаг 1 · Проверка — превышение');
+    expect(options).toContain('Результаты шаговшаг 1 · Проверка — костей на максимуме');
+    expect(options).toContain('Результаты шаговшаг 1 · Проверка — костей на единице');
+  });
+});
+
+describe('три вида запуска вместо четырёх', () => {
+  beforeEach(() => {
+    useWorld.setState(state => ({
+      ...state,
+      system: { ...state.system, effects: { strike: { label: 'Атака', activation: 'manual', params: [], steps: [] } } },
+      activeEffectId: 'strike',
+    }));
+  });
+  afterEach(() => { cleanup(); });
+
+  it('палитра создания предлагает ровно три вида и не знает слов «реакция» и «триггерный»', () => {
+    render(<EffectsTab />);
+    const made = screen.getAllByRole('button')
+      .map(b => b.textContent!.trim())
+      .filter(t => LAUNCH_KINDS.some(kind => t === `+ ${kind.label.toLowerCase()}`));
+    expect(made).toEqual(['+ кнопкой', '+ срабатывает сам', '+ висит и правит']);
+    const all = document.body.textContent ?? '';
+    expect(/реакци|триггерн/i.test(all.replace(/Реакции/g, ''))).toBe(false);
+  });
+
+  it('у «срабатывает сам» момент собран в один список: после молча или до с вопросом', () => {
+    render(<EffectsTab />);
+    fireEvent.click(screen.getByText('+ срабатывает сам'));
+    const moment = [...document.querySelectorAll('select')]
+      .find(el => [...el.options].some(o => o.value === 'ask-target'))!;
+    expect([...moment.options].map(o => o.value))
+      .toEqual(['after-in', 'after-out', 'ask-target', 'ask-sender']);
+
+    fireEvent.change(moment, { target: { value: 'ask-sender' } });
+    const effect = Object.values(useWorld.getState().system.effects).at(-1)!;
+    expect(effect.activation).toBe('reaction');
+    expect(effect.trigger?.window).toBe('sender');
+
+    fireEvent.change(moment, { target: { value: 'after-out' } });
+    const again = Object.values(useWorld.getState().system.effects).at(-1)!;
+    expect(again.activation).toBe('triggered');
+    expect(again.trigger?.direction).toBe('out');
+    expect(again.trigger?.window).toBeUndefined();
   });
 });

@@ -75,7 +75,8 @@ describe('одно слово на одно понятие', () => {
   });
 
   it('негативный контроль: проверки ловят нарушение, а не совпадение', () => {
-    expect('Карточка шага'.toLowerCase().includes('карточк')).toBe(true);
+    expect(FORBIDDEN_STEMS.some(stem => 'Карточка шага'.toLowerCase().includes(stem))).toBe(true);
+    expect(FORBIDDEN_STEMS.some(stem => 'карточек: 2'.toLowerCase().includes(stem))).toBe(true);
     expect(LATIN_DICE.test('бросьте 1d20')).toBe(true);
     expect(LATIN_DICE.test('бросьте 1к20')).toBe(false);
     expect(LATIN_DICE.test('`${count}d${sides}`')).toBe(false);

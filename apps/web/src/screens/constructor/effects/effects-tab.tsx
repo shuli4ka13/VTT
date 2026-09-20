@@ -4,10 +4,13 @@ import { Columns, List, ListItem, ListGroup } from '../../../ui/layout.tsx';
 import { Button, Empty } from '../../../ui/primitives.tsx';
 import { groupSteps } from '../cards.ts';
 import { DonorPalette } from '../donors.tsx';
-import { ACTIVATIONS } from './words.ts';
+import { LAUNCH_KINDS } from './words.ts';
+import { STEP } from '../../../words.ts';
 import { EffectEditor } from './effect-editor.tsx';
 import { RoomRules } from './room-rules.tsx';
-import type { Effect, Activation } from '@vtt/schema';
+import { launchOf, activationFor, LAUNCHES } from '@vtt/engine/model/effect-kinds';
+import type { LaunchKind } from '@vtt/engine/model/effect-kinds';
+import type { Effect } from '@vtt/schema';
 
 export function EffectsTab() {
   const system = useWorld(s => s.system);
@@ -18,8 +21,8 @@ export function EffectsTab() {
   const groups = effectsByCategory(system);
   const active = activeId ? system.effects[activeId] : undefined;
 
-  const add = (activation: Activation) => {
-    const made = newEffect(system, activation);
+  const add = (kind: LaunchKind) => {
+    const made = newEffect(system, activationFor({ kind, moment: 'after', ask: false }));
     editSystem(draft => { draft.effects[made.key] = made.value; });
     pick({ activeEffectId: made.key });
   };
@@ -53,7 +56,7 @@ export function EffectsTab() {
 
             <div className="stack stack--tight">
               <span className="field__label">Создать с нуля</span>
-              {ACTIVATIONS.map(kind => (
+              {LAUNCH_KINDS.map(kind => (
                 <Button key={kind.key} size="sm" wide onClick={() => add(kind.key)} title={kind.title}>
                   + {kind.label.toLowerCase()}
                 </Button>
@@ -79,9 +82,9 @@ export function EffectsTab() {
 }
 
 const metaOf = (effect: Effect) => {
-  const kind = ACTIVATIONS.find(a => a.key === (effect.activation ?? 'manual'))?.label ?? '';
-  const payload = (effect.activation ?? 'manual') === 'passive'
+  const kind = LAUNCHES[launchOf(effect).kind].label;
+  const payload = launchOf(effect).kind === 'passive'
     ? `модификаторов: ${effect.modifiers?.length ?? 0}`
-    : `карточек: ${groupSteps(effect.steps ?? []).length}`;
+    : `${STEP.manyGen}: ${groupSteps(effect.steps ?? []).length}`;
   return `${kind.toLowerCase()} · ${payload}`;
 };

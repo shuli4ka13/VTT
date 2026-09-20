@@ -1,30 +1,59 @@
-import { Field, Fold, Select } from '../../../../ui/primitives.tsx';
+import { Field, Fold, Select, Input } from '../../../../ui/primitives.tsx';
 import type { CardGroup } from '../../cards.ts';
 import type { Segment } from '../../readback.ts';
 import { outputRefs, outputLabel } from '../../slots.tsx';
 import type { EarlierStep } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 
-export function whenSegments(step: any, earlier: EarlierStep[]): Segment[] {
-  const when = step?.when as { ref?: string; not?: boolean } | undefined;
-  if (!when?.ref) return [];
+interface When { ref?: string; not?: boolean; atLeast?: number; atMost?: number; has?: string }
+
+type WhenStep = { when?: When };
+
+const numberWords = (when: When): string => {
+  if (when.atLeast !== undefined && when.atMost !== undefined) return `от ${when.atLeast} до ${when.atMost}`;
+  if (when.atLeast !== undefined) return `не меньше ${when.atLeast}`;
+  if (when.atMost !== undefined) return `не больше ${when.atMost}`;
+  return 'любое число';
+};
+
+export const whenWords = (when: When | undefined, earlier: EarlierStep[]): string | null => {
+  if (!when?.ref) return null;
   const label = outputLabel(when.ref, earlier);
-  return [{ text: `Только если ${when.not ? label.replace(' — ', ' — не ') : label}.` }];
+  if (when.has !== undefined) return `${label} ${when.not ? 'не' : ''} «${when.has}»`.replace('  ', ' ');
+  if (when.atLeast !== undefined || when.atMost !== undefined) return `${label} ${numberWords(when)}`;
+  return when.not ? label.replace(' — ', ' — не ') : label;
+};
+
+export function whenSegments(step: unknown, earlier: EarlierStep[]): Segment[] {
+  const words = whenWords((step as WhenStep | null)?.when, earlier);
+  return words ? [{ text: `Только если ${words}.` }] : [];
 }
+
+const KIND_OF = (ref: string | undefined, earlier: EarlierStep[]): string =>
+  outputRefs(earlier).find(o => o.ref === ref)?.kind ?? 'boolean';
+
+const numberOr = (text: string): number | undefined => (text.trim() === '' ? undefined : Number(text));
 
 export function ConditionFold({ group, earlier, edit }: {
   group: CardGroup;
   earlier: EarlierStep[];
   edit: EditFn;
 }) {
-  const step = group.step as any;
-  const when = step.when as { ref?: string; not?: boolean } | undefined;
-  const flags = outputRefs(earlier).filter(o => o.kind === 'boolean');
-  if (!flags.length && !when?.ref) return null;
-  const setAll = (change: (draft: any) => void) => group.indices.forEach((_, k) => edit(k, change));
-  const summary = when?.ref
-    ? `${when.not ? 'если не' : 'если'} ${outputLabel(when.ref, earlier)}`
-    : 'всегда';
+  const when = (group.step as WhenStep).when;
+  const outputs = outputRefs(earlier).filter(o => o.kind === 'boolean' || o.kind === 'number' || o.kind === 'text');
+  if (!outputs.length && !when?.ref) return null;
+  const setAll = (change: (draft: WhenStep) => void) =>
+    group.indices.forEach((_, k) => edit(k, draft => change(draft as WhenStep)));
+  const kind = KIND_OF(when?.ref, earlier);
+  const summary = whenWords(when, earlier) ? `если ${whenWords(when, earlier)}` : 'всегда';
+
+  const keep = (draft: WhenStep, next: Partial<When>) => {
+    const made: When = { ref: draft.when?.ref, ...next };
+    for (const key of ['atLeast', 'atMost', 'has', 'not'] as const) {
+      if (made[key] === undefined) delete made[key];
+    }
+    draft.when = made;
+  };
 
   return (
     <Fold title="Когда выполнять" summary={summary}>
@@ -32,23 +61,65 @@ export function ConditionFold({ group, earlier, edit }: {
         <Field label="выполнять" hint="Исход шага выше по цепочке. Не сошлось — шаг пропускается, цепочка идёт дальше.">
           <Select
             value={when?.ref ?? ''}
-            options={[['', 'всегда'], ...flags.map(f => [f.ref, `если ${f.label}`] as const)] as never}
+            options={[['', 'всегда'], ...outputs.map(o => [o.ref, `если ${o.label}`] as const)] as never}
             onChange={next => setAll(draft => {
               if (!next) { delete draft.when; return; }
-              draft.when = { ref: next, ...(draft.when?.not ? { not: true } : {}) };
+              draft.when = { ref: next };
             })}
           />
         </Field>
-        {when?.ref ? (
+
+        {when?.ref && kind === 'boolean' ? (
           <Field label="исход">
             <Select
               value={when.not ? 'no' : 'yes'}
               options={[['yes', 'да'], ['no', 'нет']] as const}
-              onChange={next => setAll(draft => {
-                draft.when = { ref: draft.when?.ref, ...(next === 'no' ? { not: true } : {}) };
-              })}
+              onChange={next => setAll(draft => { keep(draft, next === 'no' ? { not: true } : {}); })}
             />
           </Field>
+        ) : null}
+
+        {when?.ref && kind === 'number' ? (
+          <>
+            <Field label="не меньше" hint="Пусто — нижней границы нет.">
+              <Input
+                type="number"
+                value={when.atLeast ?? ''}
+                onChange={next => setAll(draft => {
+                  keep(draft, { atLeast: numberOr(next), atMost: draft.when?.atMost });
+                })}
+              />
+            </Field>
+            <Field label="не больше" hint="Пусто — верхней границы нет.">
+              <Input
+                type="number"
+                value={when.atMost ?? ''}
+                onChange={next => setAll(draft => {
+                  keep(draft, { atLeast: draft.when?.atLeast, atMost: numberOr(next) });
+                })}
+              />
+            </Field>
+          </>
+        ) : null}
+
+        {when?.ref && kind === 'text' ? (
+          <>
+            <Field label="ступень" hint="Как она названа в таблице степеней.">
+              <Input
+                value={when.has ?? ''}
+                onChange={next => setAll(draft => { keep(draft, { has: next, not: draft.when?.not }); })}
+              />
+            </Field>
+            <Field label="исход">
+              <Select
+                value={when.not ? 'no' : 'yes'}
+                options={[['yes', 'она и есть'], ['no', 'любая другая']] as const}
+                onChange={next => setAll(draft => {
+                  keep(draft, { has: draft.when?.has ?? '', ...(next === 'no' ? { not: true } : {}) });
+                })}
+              />
+            </Field>
+          </>
         ) : null}
       </div>
     </Fold>

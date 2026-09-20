@@ -2,18 +2,12 @@ import { useWorld } from '../../../store/world.ts';
 import { newTrigger } from '../factory.ts';
 import { Card, CardHead, Field, Input, Select, Segmented, Fold, DangerButton } from '../../../ui/primitives.tsx';
 import { ModifiersEditor } from '../modifiers.tsx';
-import { ACTIVATIONS } from './words.ts';
+import { LAUNCH_KINDS, launchHint } from './words.ts';
 import { LaunchCard } from './launch-card.tsx';
 import { Chain } from './chain.tsx';
 import { ParamsEditor } from './params-editor.tsx';
-import type { System, Effect, Activation } from '@vtt/schema';
-
-const ACTIVATION_ANSWERS: Record<Activation, string> = {
-  manual: 'Когда игрок нажал кнопку на листе. Кнопку даёт запись компендиума или сам эффект.',
-  triggered: 'Сам, без вопросов: когда случилось то, что он слушает. Что слушать — выберете ниже.',
-  reaction: 'Стол останавливается и спрашивает игрока: применить? Когда именно — выберете ниже.',
-  passive: 'Никогда: не срабатывает, а висит и правит цифры, пока не снят.',
-};
+import { launchOf, activationFor } from '@vtt/engine/model/effect-kinds';
+import type { System, Effect } from '@vtt/schema';
 
 const DURATIONS = [
   ['permanent', 'постоянно'],
@@ -43,8 +37,8 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
     });
   };
 
-  const activation = (effect.activation ?? 'manual') as Activation;
-  const pipeline = activation !== 'passive';
+  const launch = launchOf(effect);
+  const pipeline = launch.kind !== 'passive';
 
   return (
     <>
@@ -64,16 +58,16 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
           }
         />
 
-        <Field label="Когда срабатывает" hint={ACTIVATION_ANSWERS[activation]}>
+        <Field label="Как запускается" hint={launchHint(launch.kind)}>
           <Segmented
-            value={activation}
-            options={ACTIVATIONS}
+            value={launch.kind}
+            options={LAUNCH_KINDS}
             onChange={next => edit(draft => {
-              draft.activation = next;
-
+              const activation = activationFor({ ...launchOf(draft), kind: next });
+              draft.activation = activation;
               if (next === 'passive') draft.modifiers ??= [];
               else draft.steps ??= [];
-              draft.trigger ??= newTrigger(system, next);
+              if (next === 'auto') draft.trigger ??= newTrigger(system, activation);
             })}
           />
         </Field>
@@ -82,7 +76,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
           <Field label="Категория">
             <Input value={effect.category ?? ''} onChange={next => edit(draft => { draft.category = next; })} />
           </Field>
-          {activation === 'manual' || activation === 'reaction' ? (
+          {launch.kind === 'manual' || launch.ask ? (
             <Field label="Чего стоит">
               <Select
                 value={effect.cost ?? ''}
@@ -95,7 +89,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
         </div>
 
         {}
-        {activation !== 'manual' ? (
+        {launch.kind !== 'manual' ? (
           <Fold
             title="Сколько держится"
             summary={durationSummary(effect)}
@@ -133,7 +127,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
         ) : null}
       </Card>
 
-      <LaunchCard id={id} effect={effect} system={system} activation={activation} edit={edit} />
+      {launch.kind === 'auto' ? <LaunchCard id={id} effect={effect} system={system} edit={edit} /> : null}
 
       {pipeline ? (
         <>

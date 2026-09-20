@@ -13,7 +13,7 @@ const ctx: SlotContext = {
   } as unknown as System,
   effect: { params: [{ key: 'p_1', label: 'кость урона', kind: 'dice' }] } as unknown as Effect,
 
-  earlier: [{ id: 'hit', type: 'threshold' }],
+  earlier: [{ id: 'hit', type: 'threshold', at: 1, title: 'Проверка' }],
 };
 
 describe('parseTyped', () => {
@@ -40,7 +40,7 @@ describe('displayOf', () => {
   it('структурные ссылки показываются словами', () => {
     expect(displayOf({ tag: 'armor' }, ctx)).toBe('поле: Класс брони');
     expect(displayOf({ param: 'p_1' }, ctx)).toBe('из записи: кость урона');
-    expect(displayOf({ ref: 'hit.margin' }, ctx)).toBe('«hit» — превышение');
+    expect(displayOf({ ref: 'hit.margin' }, ctx)).toBe('шаг 1 · Проверка — превышение');
     expect(displayOf({ const: 5 }, ctx)).toBe('5');
   });
 });
@@ -53,15 +53,15 @@ describe('optionsFor', () => {
   it('allow сужает список', () => {
 
     expect(optionsFor(ctx, ['ref']).map(o => o.label)).toEqual([
-      '«hit» — вышло',
-      '«hit» — превышение',
-      '«hit» — итог броска',
-      '«hit» — выпало на костях, без прибавок',
-      '«hit» — степень успеха',
-      '«hit» — сколько костей кинуто',
-      '«hit» — костей на максимуме',
-      '«hit» — костей на единице',
-      '«hit» — бросок был с правкой',
+      'шаг 1 · Проверка — вышло',
+      'шаг 1 · Проверка — превышение',
+      'шаг 1 · Проверка — итог броска',
+      'шаг 1 · Проверка — выпало на костях, без прибавок',
+      'шаг 1 · Проверка — степень успеха',
+      'шаг 1 · Проверка — сколько костей кинуто',
+      'шаг 1 · Проверка — костей на максимуме',
+      'шаг 1 · Проверка — костей на единице',
+      'шаг 1 · Проверка — бросок был с правкой',
     ]);
   });
 });
