@@ -55,12 +55,17 @@ export function startCombat(_clock: Clock, order: string[]): Clock {
 
 export const stopCombat = (): Clock => idleClock();
 
-export function nextTurn(clock: Clock, sheets: Sheet[]): Tick {
+export type TurnEdge = 'turn-end' | 'turn-start';
+
+export const endsAtOf = (effect: Effect | null | undefined): TurnEdge =>
+  (effect?.duration?.ends === 'turn-start' ? 'turn-start' : 'turn-end');
+
+export function nextTurn(clock: Clock, sheets: Sheet[], endsAt: (effectId: string) => TurnEdge = () => 'turn-end'): Tick {
   if (!inCombat(clock)) throw new EngineError('бой не идёт — сначала порядок ходов');
   const expired: Expired[] = [];
   const ended = clock.active;
 
-  let next = sheets.map(sheet => (sheet.id !== ended ? sheet : endOwnTurn(sheet, expired)));
+  let next = sheets.map(sheet => (sheet.id !== ended ? sheet : countOwnTurn(sheet, 'turn-end', endsAt, expired)));
 
   const at = clock.order.indexOf(String(ended));
   const nextAt = (at + 1) % clock.order.length;
@@ -71,17 +76,20 @@ export function nextTurn(clock: Clock, sheets: Sheet[]): Tick {
   if (roundStarted) {
     next = next.map(sheet => shed(sheet, entry => typeof entry.until !== 'number' || entry.until > round, expired));
   }
+  next = next.map(sheet => (sheet.id !== active ? sheet : countOwnTurn(sheet, 'turn-start', endsAt, expired)));
 
   const spent = { ...clock.spent, [active]: {} };
   return { clock: { ...clock, round, active, spent }, sheets: next, expired };
 }
 
-function endOwnTurn(sheet: Sheet, expired: Expired[]): Sheet {
+function countOwnTurn(
+  sheet: Sheet, edge: TurnEdge, endsAt: (effectId: string) => TurnEdge, expired: Expired[],
+): Sheet {
   const worn = sheet.effects ?? [];
   let changed = false;
   const left: WornEffect[] = [];
   for (const entry of worn) {
-    if (typeof entry.turnsLeft !== 'number') { left.push(entry); continue; }
+    if (typeof entry.turnsLeft !== 'number' || endsAt(entry.effectId) !== edge) { left.push(entry); continue; }
     changed = true;
     const turnsLeft = entry.turnsLeft - 1;
     if (turnsLeft > 0) left.push({ ...entry, turnsLeft });

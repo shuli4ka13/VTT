@@ -25,7 +25,7 @@ import { resolveRoll } from '@vtt/engine/engine/modifiers';
 import { newPass, calc } from '@vtt/engine/engine/calc';
 import { rollLead, dieConstant } from '@vtt/engine/engine/lead-die';
 import {
-  idleClock, startCombat, stopCombat, nextTurn, endScene, spendAction, rollInitiative, expiryOf,
+  idleClock, startCombat, stopCombat, nextTurn, endScene, spendAction, rollInitiative, expiryOf, endsAtOf,
 } from '@vtt/engine/engine/clock';
 
 export type Role = 'gm' | 'player';
@@ -153,8 +153,12 @@ export class RoomsService {
     let next: ClockState = clock;
     let after: Sheet[] = sheets;
     const lines: string[] = [];
+    const gone: MomentEvent[] = [];
     const tell = (expired: { sheetId: string; effectId: string }[]) => {
-      for (const e of expired) lines.push(`«${effectLabelOf(system, e.effectId)}» спало с ${nameOf(e.sheetId)}`);
+      for (const e of expired) {
+        lines.push(`«${effectLabelOf(system, e.effectId)}» спало с ${nameOf(e.sheetId)}`);
+        gone.push({ moment: 'expired', sheetId: e.sheetId, about: e.effectId });
+      }
     };
 
     try {
@@ -175,7 +179,7 @@ export class RoomsService {
         next = startCombat(clock, order);
         lines.push(`Раунд 1. Ход: ${nameOf(String(next.active))}`);
       } else if (intent.op === 'next') {
-        const tick = nextTurn(clock, sheets);
+        const tick = nextTurn(clock, sheets, id => endsAtOf(findEffect(system, id)));
         next = tick.clock;
         after = tick.sheets;
         tell(tick.expired);
@@ -198,16 +202,10 @@ export class RoomsService {
 
     try {
       const world = { system, compendium, die: this.die, clock: next };
-      const fired = fireMoments(momentsOf(intent.op, clock, next, after), after, world);
+      const fired = fireMoments([...momentsOf(intent.op, clock, next, after), ...gone], after, world);
       after = fired.sheets;
       for (const entry of fired.reports) lines.push(describeMoment(world, entry, after));
-
-      const swept = sweepBonds(system, after);
-      after = swept.sheets;
-      for (const broken of swept.broken) {
-        const who = after.find(s => s.id === broken.sheetId)?.name ?? broken.sheetId;
-        lines.push(`«${effectLabelOf(system, broken.effectId)}» спало с ${who}: держать стало нечем`);
-      }
+      after = this.settle(world, after, lines);
     } catch (err) {
       throw new BadRequestException((err as Error).message);
     }
@@ -350,11 +348,10 @@ export class RoomsService {
     }
 
     const lines = reports.map(entry => describeEntry(entry, system, sheets));
-    const swept = sweepBonds(system, sheets);
-    sheets = swept.sheets;
-    for (const broken of swept.broken) {
-      const who = sheets.find(s => s.id === broken.sheetId)?.name ?? broken.sheetId;
-      lines.push(`«${effectLabelOf(system, broken.effectId)}» спало с ${who}: держать стало нечем`);
+    try {
+      sheets = this.settle(ctx, sheets, lines);
+    } catch (err) {
+      throw new BadRequestException((err as Error).message);
     }
 
     if (world.clockDirty) await this.saveClock(state.roomId, state.clock);
@@ -422,9 +419,12 @@ export class RoomsService {
       if (record.stage === 'sender' && reacted.claims.length) {
         claims = [...new Set([...claims, ...reacted.claims])];
         const from = sheets.find(s => s.id === record.intent.fromId)!;
-        const to = sheets.find(s => s.id === record.intent.toId)!;
+        const to = sheets.find(s => s.id === targetsOf(record.intent)[0])!;
+        const asked = asksOf(record.intent.actionId, { system, compendium });
+        const inputs = normalizeInputs(asked, record.intent.inputs);
         envelope = send(record.intent.actionId, {
           system, compendium, die: this.die, clock, sheet: from, against: to, claims,
+          ...(Object.keys(inputs).length ? { inputs } : {}),
         });
         lines.push(`${from.name}: бросок собран заново`);
       }
@@ -625,19 +625,47 @@ export class RoomsService {
     await this.db.update(roomSheets).set({ data: JSON.stringify(next) })
       .where(and(eq(roomSheets.roomId, roomId), eq(roomSheets.sheetId, sheetId)));
 
-    if (list !== 'effects') return { roomId, sheets: [next], log: [] };
+    if (list === 'actions') return { roomId, sheets: [next], log: [] };
 
     const all = (await this.db.select().from(roomSheets).where(eq(roomSheets.roomId, roomId)))
       .map(entry => (entry.sheetId === sheetId ? next : JSON.parse(entry.data) as Sheet));
-    const swept = sweepBonds(system, all);
+    const moment: MomentEvent['moment'] | null = list === 'equipped'
+      ? (on ? 'equipped' : null)
+      : (on ? 'attached' : 'expired');
     const lines: string[] = [];
+    let settled = all;
+    try {
+      const world = { system, compendium, die: this.die, clock: await this.clockOf(roomId) };
+      if (moment) {
+        const fired = fireMoments([{ moment, sheetId, about: id }], all, world);
+        settled = fired.sheets;
+        for (const entry of fired.reports) lines.push(describeMoment(world, entry, settled));
+      }
+      settled = this.settle(world, settled, lines);
+    } catch (err) {
+      throw new BadRequestException((err as Error).message);
+    }
+    const touched = await this.persistSheets(roomId, all, settled, [next]);
+    const log = lines.length ? await this.appendLog(roomId, lines) : [];
+    return { roomId, sheets: touched, log };
+  }
+
+  private settle(
+    world: { system: System; compendium: Compendium; die: (sides: number) => number; clock?: ClockState | null },
+    sheets: Sheet[], lines: string[],
+  ): Sheet[] {
+    const { system } = world;
+    const swept = sweepBonds(system, sheets);
+    if (!swept.broken.length) return swept.sheets;
+    const gone: MomentEvent[] = [];
     for (const broken of swept.broken) {
       const who = swept.sheets.find(s => s.id === broken.sheetId)?.name ?? broken.sheetId;
       lines.push(`«${effectLabelOf(system, broken.effectId)}» спало с ${who}: держать стало нечем`);
+      gone.push({ moment: 'expired', sheetId: broken.sheetId, about: broken.effectId });
     }
-    const touched = await this.persistSheets(roomId, all, swept.sheets, [next]);
-    const log = lines.length ? await this.appendLog(roomId, lines) : [];
-    return { roomId, sheets: touched, log };
+    const fired = fireMoments(gone, swept.sheets, world);
+    for (const entry of fired.reports) lines.push(describeMoment(world, entry, fired.sheets));
+    return fired.sheets;
   }
 
   async listFor(userId: string): Promise<RoomSummary[]> {

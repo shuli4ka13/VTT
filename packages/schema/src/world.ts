@@ -199,6 +199,7 @@ export const effect = z.object({
   duration: z.object({
     kind: durationKind,
     max: z.number().int().positive().optional(),
+    ends: z.enum(['turn-end', 'turn-start']).optional(),
   }).optional(),
   stacking: stacking.optional(),
   params: z.array(param).optional(),

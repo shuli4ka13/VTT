@@ -319,3 +319,110 @@ describe('ячейка тратится один раз на действие', 
     expect(done.body.log.map((e: { text: string }) => e.text).join(' ')).toContain('Ячейки');
   });
 });
+
+describe('моменты вещей и эффектов', () => {
+  it('надели вещь, повесили и сняли эффект — слушатели срабатывают и пишут в журнал', async () => {
+    const token = (await http().post('/auth/login').send({ name: 'Ведущий вещей' })).body.token as string;
+    const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
+    const me = (await as(http().get('/auth/me'))).body.userId as string;
+
+    const system = {
+      id: 'вещи', name: 'С вещами',
+      fields: [
+        { tag: 'надето', label: 'Надето', value: { kind: 'stored', type: 'number', default: 0 } },
+        { tag: 'снято', label: 'Снято', value: { kind: 'stored', type: 'number', default: 0 } },
+      ],
+      effects: {
+        при_надевании: {
+          label: 'При надевании', activation: 'triggered', trigger: { on: 'moment:equipped' },
+          steps: [{ type: 'apply', target: { tag: 'надето' }, direction: 'add', value: { const: 1 } }],
+        },
+        при_спадении: {
+          label: 'При спадении', activation: 'triggered', trigger: { on: 'moment:expired' },
+          steps: [{ type: 'apply', target: { tag: 'снято' }, direction: 'add', value: { const: 1 } }],
+        },
+        бафф: { label: 'Бафф', activation: 'passive', duration: { kind: 'temporary' }, modifiers: [] },
+      },
+      room_rules: ['при_надевании', 'при_спадении'],
+      records: { оружие: { kind: 'item', label: 'Оружие', props: [], bindings: [] } },
+    };
+    const book = { items: [{ id: 'меч', rk: 'оружие', label: 'Меч', props: {} }], actions: [] };
+    const sheet = { id: 'воин', systemId: 'вещи', kind: 'pc', name: 'Воин', values: {}, equipped: [], actions: [], effects: [] };
+
+    const systemId = (await as(http().post('/systems')).send({ title: 'С вещами', system })).body.id;
+    const bookId = (await as(http().post('/compendiums')).send({ title: 'Книга вещей', systemId, compendium: book })).body.id;
+    await as(http().post(`/systems/${systemId}/publish`)).send({}).expect(201);
+    await as(http().post(`/compendiums/${bookId}/publish`)).send({}).expect(201);
+    const worldId = (await as(http().post('/worlds')).send({
+      title: 'Мир вещей', systemId, compendiumIds: [bookId], sheets: [sheet],
+    })).body.id;
+    const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол вещей' })).body.id as string;
+    const rooms = app.get(RoomsService);
+
+    const worn = await rooms.setBelonging(me, roomId, 'воин', 'equipped', 'меч', true);
+    expect(worn.sheets[0]!.values.надето, 'слушатель «когда вещь надели» сработал').toBe(1);
+    expect(worn.log.map(e => e.text).join(' ')).toContain('При надевании');
+
+    await rooms.setBelonging(me, roomId, 'воин', 'effects', 'бафф', true);
+    const shed = await rooms.setBelonging(me, roomId, 'воин', 'effects', 'бафф', false);
+    expect(shed.sheets[0]!.values.снято, 'слушатель «когда эффект спал» сработал').toBe(1);
+    expect(shed.log.map(e => e.text).join(' ')).toContain('При спадении');
+  });
+});
+
+describe('вопросы к человеку переживают пересборку броска', () => {
+  it('реакция отправителя собирает конверт заново, и названное игроком число не теряется', async () => {
+    const token = (await http().post('/auth/login').send({ name: 'Ведущий вопросов' })).body.token as string;
+    const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
+
+    const system = {
+      id: 'вопросы', name: 'С вопросами',
+      fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } }],
+      constants: { к20: { label: 'Кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
+      roll_edits: { плюс: { label: 'Плюс', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }] } },
+      effects: {
+        удар: {
+          label: 'Удар', activation: 'manual',
+          params: [{ key: 'сила', label: 'Сила', kind: 'number', ask: { by: 'actor', kind: 'number', min: 1, max: 10 } }],
+          steps: [
+            { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' } }, versus: { const: 0 }, continueOn: 'success' },
+            { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { param: 'сила' } },
+          ],
+        },
+        вдохновение: {
+          label: 'Вдохновение', activation: 'reaction',
+          trigger: { on: '*', window: 'sender', claims: ['плюс'] }, steps: [],
+        },
+      },
+      records: { приём: { kind: 'action', label: 'Приём', props: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
+    };
+    const book = { items: [], actions: [{ id: 'приём', rk: 'приём', label: 'Удар', props: {} }] };
+    const sheet = (id: string, worn: string[]) => ({
+      id, systemId: 'вопросы', kind: 'pc', name: id, values: { хиты: 20 },
+      equipped: [], actions: ['приём'], effects: worn.map(effectId => ({ effectId })),
+    });
+
+    const systemId = (await as(http().post('/systems')).send({ title: 'С вопросами', system })).body.id;
+    const bookId = (await as(http().post('/compendiums')).send({ title: 'Книга вопросов', systemId, compendium: book })).body.id;
+    await as(http().post(`/systems/${systemId}/publish`)).send({}).expect(201);
+    await as(http().post(`/compendiums/${bookId}/publish`)).send({}).expect(201);
+    const worldId = (await as(http().post('/worlds')).send({
+      title: 'Мир вопросов', systemId, compendiumIds: [bookId],
+      sheets: [sheet('боец', ['вдохновение']), sheet('цель', [])],
+    })).body.id;
+    const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол вопросов' })).body.id as string;
+
+    const paused = await as(http().post(`/rooms/${roomId}/act`)).send({
+      roomId, actionId: 'приём:0', fromId: 'боец', toId: 'цель', inputs: { сила: 7 },
+    }).expect(201);
+    expect(paused.body.pending?.options.map((o: { id: string }) => o.id)).toEqual(['вдохновение']);
+
+    const answered = await as(http().post(`/rooms/${roomId}/answer`)).send({
+      roomId, pendingId: paused.body.pending.id, chosen: ['вдохновение'],
+    }).expect(201);
+    expect(answered.body.log.map((e: { text: string }) => e.text).join(' ')).toContain('собран заново');
+
+    const after = (await as(http().get(`/rooms/${roomId}`))).body.sheets;
+    expect(after.find((s: { id: string }) => s.id === 'цель').values.хиты, 'названная сила дошла до цели').toBe(13);
+  });
+});

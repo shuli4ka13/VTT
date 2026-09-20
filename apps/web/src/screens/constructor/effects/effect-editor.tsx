@@ -20,6 +20,11 @@ const DURATIONS = [
 
 const COUNTED = new Set(['uses', 'rounds', 'turns']);
 
+const ENDS = [
+  ['turn-end', 'в конце своего хода'],
+  ['turn-start', 'в начале своего хода'],
+] as const;
+
 const STACKING = [
   ['ignore', 'второй раз ничего не делает'],
   ['refresh', 'обновляется'],
@@ -119,6 +124,18 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
                   />
                 </Field>
               ) : null}
+              {effect.duration?.kind === 'turns' ? (
+                <Field label="Спадает" hint="«В начале своего хода» — как «до начала вашего следующего хода»: щит, уклонение.">
+                  <Select
+                    value={effect.duration?.ends ?? 'turn-end'}
+                    options={ENDS}
+                    onChange={next => edit(draft => {
+                      if (!draft.duration) return;
+                      if (next === 'turn-start') draft.duration.ends = next; else delete draft.duration.ends;
+                    })}
+                  />
+                </Field>
+              ) : null}
               <Field label="Если наложить второй раз">
                 <Select
                   value={effect.stacking ?? 'ignore'}
@@ -154,8 +171,9 @@ const durationSummary = (effect: Effect) => {
   const kind = effect.duration?.kind ?? 'permanent';
   const word = DURATIONS.find(([key]) => key === kind)?.[1] ?? kind;
   const uses = kind === 'uses' ? ` (${effect.duration?.max ?? 1})` : '';
+  const edge = kind === 'turns' && effect.duration?.ends === 'turn-start' ? ', спадает в начале своего хода' : '';
   const stack = STACKING.find(([key]) => key === (effect.stacking ?? 'ignore'))?.[1];
-  return `${word}${uses} · ${stack}`;
+  return `${word}${uses}${edge} · ${stack}`;
 };
 
 function SelfTrack({ effect, system, edit }: {

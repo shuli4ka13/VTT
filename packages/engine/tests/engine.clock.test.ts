@@ -83,6 +83,17 @@ group('часы боя: раунды, ходы, истечение', () => {
     deepEq(one.sheets[1]!.effects, [{ effectId: 'y', turnsLeft: 1 }], 'у b ход ещё не был');
   });
 
+  test('эффект «до начала своего хода» спадает, когда ход владельца снова наступил', () => {
+    const endsAt = (id: string) => (id === 'щит' ? 'turn-start' as const : 'turn-end' as const);
+    const sheets = [sheet('a', [{ effectId: 'щит', turnsLeft: 1 }]), sheet('b')];
+    const one = nextTurn(fighting(), sheets, endsAt);
+    deepEq(one.expired, [], 'конец хода a щит не трогает');
+    deepEq(one.sheets[0]!.effects, [{ effectId: 'щит', turnsLeft: 1 }]);
+    const two = nextTurn(one.clock, one.sheets, endsAt);
+    deepEq(two.expired, [{ sheetId: 'a', effectId: 'щит' }], 'начался новый ход a — щит спал');
+    deepEq(two.sheets[0]!.effects, []);
+  });
+
   test('листы без изменений возвращаются теми же объектами — дельта только по делу', () => {
     const untouched = sheet('b');
     const one = nextTurn(fighting(), [sheet('a'), untouched]);
