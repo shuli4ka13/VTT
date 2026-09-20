@@ -426,3 +426,108 @@ describe('вопросы к человеку переживают пересбо
     expect(after.find((s: { id: string }) => s.id === 'цель').values.хиты, 'названная сила дошла до цели').toBe(13);
   });
 });
+
+describe('поле стало верным', () => {
+  it('ведущий вписал ноль хитов — слушатель поля вешает состояние и пишет в журнал', async () => {
+    const token = (await http().post('/auth/login').send({ name: 'Ведущий порога' })).body.token as string;
+    const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
+    const me = (await as(http().get('/auth/me'))).body.userId as string;
+
+    const system = {
+      id: 'порог', name: 'С порогом',
+      fields: [
+        { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
+        { tag: 'без_сил', label: 'Без сил', value: { kind: 'formula', expr: '#хиты <= 0' } },
+      ],
+      effects: {
+        без_сознания: { label: 'Без сознания', activation: 'passive', duration: { kind: 'temporary' }, modifiers: [] },
+        падение: {
+          label: 'Падение', activation: 'triggered', trigger: { on: 'field:без_сил' },
+          steps: [{ type: 'status', mode: 'apply', effect: { const: 'без_сознания' } }],
+        },
+      },
+      room_rules: ['падение'],
+    };
+    const sheet = { id: 'воин', systemId: 'порог', kind: 'pc', name: 'Воин', values: { хиты: 5 }, equipped: [], actions: [], effects: [] };
+
+    const systemId = (await as(http().post('/systems')).send({ title: 'С порогом', system })).body.id;
+    const bookId = (await as(http().post('/compendiums')).send({ title: 'Пусто', systemId, compendium: { items: [], actions: [] } })).body.id;
+    await as(http().post(`/systems/${systemId}/publish`)).send({}).expect(201);
+    await as(http().post(`/compendiums/${bookId}/publish`)).send({}).expect(201);
+    const worldId = (await as(http().post('/worlds')).send({ title: 'Мир порога', systemId, compendiumIds: [bookId], sheets: [sheet] })).body.id;
+    const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол порога' })).body.id as string;
+    const rooms = app.get(RoomsService);
+
+    const still = await rooms.setValue(me, roomId, 'воин', 'хиты', 3);
+    expect(still.sheets[0]!.effects).toEqual([]);
+    expect(still.log).toEqual([]);
+
+    const down = await rooms.setValue(me, roomId, 'воин', 'хиты', 0);
+    expect(down.sheets[0]!.effects.map(e => e.effectId)).toEqual(['без_сознания']);
+    expect(down.log.map(e => e.text).join(' ')).toContain('Падение');
+
+    const lower = await rooms.setValue(me, roomId, 'воин', 'хиты', -2);
+    expect(lower.log, 'порог уже был перейдён — второй раз не срабатывает').toEqual([]);
+  });
+});
+
+describe('права за столом', () => {
+  it('чужим закреплённым листом нельзя ходить, отвечать за него и менять его снаряжение', async () => {
+    const { as, roomId, arven, mirra, rooms } = await table();
+    const other = (await http().post('/auth/login').send({ name: 'Игрок-сосед' })).body;
+    await http().post(`/rooms/${roomId}/join`).set('Authorization', `Bearer ${other.token}`).expect(201);
+    await rooms.claimSheet(other.userId, roomId, mirra.id);
+    const gm = (await as(http().get('/auth/me'))).body.userId as string;
+    const owner = (await http().post('/auth/login').send({ name: 'Хозяйка Арвен' })).body;
+    await http().post(`/rooms/${roomId}/join`).set('Authorization', `Bearer ${owner.token}`).expect(201);
+    await rooms.claimSheet(owner.userId, roomId, arven.id);
+
+    await expect(rooms.act(other.userId, { roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id }))
+      .rejects.toThrow('чужой лист');
+    await expect(rooms.setBelonging(other.userId, roomId, arven.id, 'equipped', 'chain-mail', false))
+      .rejects.toThrow('чужой лист');
+
+    await rooms.setValue(gm, roomId, arven.id, 'inspiration', 1);
+    await rooms.setBelonging(gm, roomId, arven.id, 'effects', 'inspire', true);
+    const paused = await rooms.act(owner.userId, { roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id });
+    expect(paused.pending?.sheetId).toBe(arven.id);
+    await expect(rooms.answer(other.userId, { roomId, pendingId: paused.pending!.id, chosen: [] }))
+      .rejects.toThrow('чужой лист');
+    const answered = await rooms.answer(gm, { roomId, pendingId: paused.pending!.id, chosen: [] });
+    expect(answered.pending).toBeNull();
+  });
+});
+
+describe('два сообщения стола сразу', () => {
+  it('одновременные действия по одной цели не теряют друг друга', async () => {
+    const token = (await http().post('/auth/login').send({ name: 'Ведущий гонки' })).body.token as string;
+    const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
+    const me = (await as(http().get('/auth/me'))).body.userId as string;
+
+    const system = {
+      id: 'гонка', name: 'Гонка',
+      fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } }],
+      effects: { удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { const: 5 } }] } },
+      records: { приём: { kind: 'action', label: 'Приём', props: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
+    };
+    const book = { items: [], actions: [{ id: 'приём', rk: 'приём', label: 'Удар', props: {} }] };
+    const sheet = (id: string) => ({ id, systemId: 'гонка', kind: 'pc', name: id, values: { хиты: 20 }, equipped: [], actions: ['приём'], effects: [] });
+
+    const systemId = (await as(http().post('/systems')).send({ title: 'Гонка', system })).body.id;
+    const bookId = (await as(http().post('/compendiums')).send({ title: 'Книга гонки', systemId, compendium: book })).body.id;
+    await as(http().post(`/systems/${systemId}/publish`)).send({}).expect(201);
+    await as(http().post(`/compendiums/${bookId}/publish`)).send({}).expect(201);
+    const worldId = (await as(http().post('/worlds')).send({ title: 'Мир гонки', systemId, compendiumIds: [bookId], sheets: [sheet('а'), sheet('б')] })).body.id;
+    const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол гонки' })).body.id as string;
+    const rooms = app.get(RoomsService);
+
+    await Promise.all([
+      rooms.act(me, { roomId, actionId: 'приём:0', fromId: 'а', toId: 'б' }),
+      rooms.act(me, { roomId, actionId: 'приём:0', fromId: 'а', toId: 'б' }),
+      rooms.setValue(me, roomId, 'а', 'хиты', 11),
+    ]);
+    const after = (await as(http().get(`/rooms/${roomId}`))).body.sheets;
+    expect(after.find((s: { id: string }) => s.id === 'б').values.хиты, 'оба удара дошли').toBe(10);
+    expect(after.find((s: { id: string }) => s.id === 'а').values.хиты).toBe(11);
+  });
+});

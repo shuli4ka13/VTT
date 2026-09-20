@@ -17,7 +17,7 @@ import { tapeDie, replayDie } from '@vtt/engine/engine/dice';
 import type { Envelope, Offer, ReactionWindow } from '@vtt/engine/events/envelope';
 import { findEffect, usesMax } from '@vtt/engine/engine/effects';
 import { asksOf, checkInputs, normalizeInputs } from '@vtt/engine/model/asks';
-import { fireMoments, describeMoment } from '@vtt/engine/events/moments';
+import { fireMoments, fireCrossings, describeMoment } from '@vtt/engine/events/moments';
 import { sweepBonds } from '@vtt/engine/events/bonds';
 import { runSelfTrack } from '@vtt/engine/events/self';
 import type { MomentEvent } from '@vtt/engine/events/moments';
@@ -132,7 +132,42 @@ export class RoomsService {
     await this.db.insert(roomClocks).values({ roomId, data: JSON.stringify(clock) });
   }
 
-  async turn(userId: string, intent: TurnIntent): Promise<RoomDelta> {
+  turn(userId: string, intent: TurnIntent): Promise<RoomDelta> {
+    return this.inTurn(intent.roomId, () => this.runTurn(userId, intent));
+  }
+
+  act(userId: string, intent: ActIntent): Promise<RoomDelta> {
+    return this.inTurn(intent.roomId, () => this.runAct(userId, intent));
+  }
+
+  answer(userId: string, intent: AnswerIntent): Promise<RoomDelta> {
+    return this.inTurn(intent.roomId, () => this.runAnswer(userId, intent));
+  }
+
+  setValue(userId: string, roomId: string, sheetId: string, tag: string, value: StoredValue): Promise<RoomDelta> {
+    return this.inTurn(roomId, () => this.runSetValue(userId, roomId, sheetId, tag, value));
+  }
+
+  rollField(userId: string, roomId: string, sheetId: string, tag: string): Promise<RoomDelta> {
+    return this.inTurn(roomId, () => this.runRollField(userId, roomId, sheetId, tag));
+  }
+
+  createSheet(userId: string, roomId: string, name: string, kind: 'pc' | 'npc' = 'pc'): Promise<RoomDelta> {
+    return this.inTurn(roomId, () => this.runCreateSheet(userId, roomId, name, kind));
+  }
+
+  setBelonging(
+    userId: string, roomId: string, sheetId: string,
+    list: 'equipped' | 'actions' | 'effects', id: string, on: boolean,
+  ): Promise<RoomDelta> {
+    return this.inTurn(roomId, () => this.runSetBelonging(userId, roomId, sheetId, list, id, on));
+  }
+
+  claimSheet(userId: string, roomId: string, sheetId: string | null): Promise<RoomDelta> {
+    return this.inTurn(roomId, () => this.runClaimSheet(userId, roomId, sheetId));
+  }
+
+  private async runTurn(userId: string, intent: TurnIntent): Promise<RoomDelta> {
     const room = await this.requireRoom(intent.roomId);
     if (!await this.memberOf(intent.roomId, userId)) {
       throw new ForbiddenException('вы не в этой комнате');
@@ -205,7 +240,7 @@ export class RoomsService {
       const fired = fireMoments([...momentsOf(intent.op, clock, next, after), ...gone], after, world);
       after = fired.sheets;
       for (const entry of fired.reports) lines.push(describeMoment(world, entry, after));
-      after = this.settle(world, after, lines);
+      after = this.settle(world, sheets, after, lines);
     } catch (err) {
       throw new BadRequestException((err as Error).message);
     }
@@ -222,7 +257,7 @@ export class RoomsService {
     return { roomId: intent.roomId, sheets: touched, log, clock: next };
   }
 
-  async act(userId: string, intent: ActIntent): Promise<RoomDelta> {
+  private async runAct(userId: string, intent: ActIntent): Promise<RoomDelta> {
     const room = await this.requireRoom(intent.roomId);
     if (!await this.memberOf(intent.roomId, userId)) {
       throw new ForbiddenException('вы не в этой комнате');
@@ -232,6 +267,7 @@ export class RoomsService {
     const rows = await this.db.select().from(roomSheets)
       .where(eq(roomSheets.roomId, intent.roomId));
     const sheets = rows.map(r => JSON.parse(r.data) as Sheet);
+    await this.assertMaySheet(intent.roomId, userId, intent.fromId);
 
     const waiting = await this.pendingOf(intent.roomId);
     if (waiting) {
@@ -279,6 +315,7 @@ export class RoomsService {
       system, compendium, sheets: started, log: ownLines,
       touched: own?.report ? [own.sheet] : [],
       clockDirty: nextClock !== clock,
+      origin: sheets,
     });
   }
 
@@ -286,7 +323,7 @@ export class RoomsService {
     state: PendingRecord,
     world: {
       system: System; compendium: Compendium; sheets: Sheet[]; log: string[]; touched: Sheet[];
-      clockDirty: boolean;
+      clockDirty: boolean; origin?: Sheet[];
     },
   ): Promise<RoomDelta> {
     const { system, compendium } = world;
@@ -349,7 +386,7 @@ export class RoomsService {
 
     const lines = reports.map(entry => describeEntry(entry, system, sheets));
     try {
-      sheets = this.settle(ctx, sheets, lines);
+      sheets = this.settle(ctx, world.origin ?? world.sheets, sheets, lines);
     } catch (err) {
       throw new BadRequestException((err as Error).message);
     }
@@ -381,7 +418,7 @@ export class RoomsService {
     return { roomId: state.roomId, sheets: touched, log, clock: state.clock, pending };
   }
 
-  async answer(userId: string, intent: AnswerIntent): Promise<RoomDelta> {
+  private async runAnswer(userId: string, intent: AnswerIntent): Promise<RoomDelta> {
     const room = await this.requireRoom(intent.roomId);
     if (!await this.memberOf(intent.roomId, userId)) {
       throw new ForbiddenException('вы не в этой комнате');
@@ -394,8 +431,10 @@ export class RoomsService {
     const rows = await this.db.select().from(roomSheets)
       .where(eq(roomSheets.roomId, intent.roomId));
     let sheets = rows.map(r => JSON.parse(r.data) as Sheet);
+    const origin = sheets;
     const asked = sheets.find(s => s.id === record.sheetId);
     if (!asked) throw new NotFoundException(`в комнате нет листа «${record.sheetId}»`);
+    await this.assertMaySheet(intent.roomId, userId, asked.id);
 
     let clock = record.clock;
     const lines: string[] = [];
@@ -437,7 +476,7 @@ export class RoomsService {
       stage: record.stage === 'sender' || more ? 'target' : 'deliver',
       ...(record.stage === 'target' ? { at: (record.at ?? 0) + 1 } : {}),
       results: {},
-    }, { system, compendium, sheets, log: lines, touched: changed, clockDirty: clock !== record.clock });
+    }, { system, compendium, sheets, log: lines, touched: changed, clockDirty: clock !== record.clock, origin });
   }
 
   private async persistSheets(roomId: string, before: Sheet[], after: Sheet[], already: Sheet[]): Promise<Sheet[]> {
@@ -483,7 +522,7 @@ export class RoomsService {
     };
   }
 
-  async setValue(
+  private async runSetValue(
     userId: string, roomId: string, sheetId: string, tag: string, value: StoredValue,
   ): Promise<RoomDelta> {
     const room = await this.requireRoom(roomId);
@@ -504,13 +543,23 @@ export class RoomsService {
 
     const sheet = JSON.parse(row.data) as Sheet;
     const next: Sheet = { ...sheet, values: { ...sheet.values, [tag]: value } };
-    await this.db.update(roomSheets).set({ data: JSON.stringify(next) })
-      .where(and(eq(roomSheets.roomId, roomId), eq(roomSheets.sheetId, sheetId)));
 
-    return { roomId, sheets: [next], log: [] };
+    const before = (await this.db.select().from(roomSheets).where(eq(roomSheets.roomId, roomId)))
+      .map(entry => (entry.sheetId === sheetId ? sheet : JSON.parse(entry.data) as Sheet));
+    const lines: string[] = [];
+    let settled = before.map(entry => (entry.id === sheetId ? next : entry));
+    try {
+      const world = { system, compendium: this.worldOf(room).compendium, die: this.die, clock: await this.clockOf(roomId) };
+      settled = this.settle(world, before, settled, lines);
+    } catch (err) {
+      throw new BadRequestException((err as Error).message);
+    }
+    const touched = await this.persistSheets(roomId, before, settled, [next]);
+    const log = lines.length ? await this.appendLog(roomId, lines) : [];
+    return { roomId, sheets: touched, log };
   }
 
-  async rollField(userId: string, roomId: string, sheetId: string, tag: string): Promise<RoomDelta> {
+  private async runRollField(userId: string, roomId: string, sheetId: string, tag: string): Promise<RoomDelta> {
     const room = await this.requireRoom(roomId);
     await this.assertMaySheet(roomId, userId, sheetId);
 
@@ -547,7 +596,7 @@ export class RoomsService {
     return { roomId, sheets: [], log };
   }
 
-  async createSheet(
+  private async runCreateSheet(
     userId: string, roomId: string, name: string, kind: 'pc' | 'npc' = 'pc',
   ): Promise<RoomDelta> {
     const room = await this.requireRoom(roomId);
@@ -573,12 +622,12 @@ export class RoomsService {
     return { roomId, sheets: [sheet], log };
   }
 
-  async setBelonging(
+  private async runSetBelonging(
     userId: string, roomId: string, sheetId: string,
     list: 'equipped' | 'actions' | 'effects', id: string, on: boolean,
   ): Promise<RoomDelta> {
     const room = await this.requireRoom(roomId);
-    if (!await this.memberOf(roomId, userId)) throw new ForbiddenException('вы не в этой комнате');
+    await this.assertMaySheet(roomId, userId, sheetId);
 
     const { system, compendium } = this.worldOf(room);
 
@@ -627,8 +676,9 @@ export class RoomsService {
 
     if (list === 'actions') return { roomId, sheets: [next], log: [] };
 
-    const all = (await this.db.select().from(roomSheets).where(eq(roomSheets.roomId, roomId)))
-      .map(entry => (entry.sheetId === sheetId ? next : JSON.parse(entry.data) as Sheet));
+    const before = (await this.db.select().from(roomSheets).where(eq(roomSheets.roomId, roomId)))
+      .map(entry => (entry.sheetId === sheetId ? sheet : JSON.parse(entry.data) as Sheet));
+    const all = before.map(entry => (entry.id === sheetId ? next : entry));
     const moment: MomentEvent['moment'] | null = list === 'equipped'
       ? (on ? 'equipped' : null)
       : (on ? 'attached' : 'expired');
@@ -641,21 +691,23 @@ export class RoomsService {
         settled = fired.sheets;
         for (const entry of fired.reports) lines.push(describeMoment(world, entry, settled));
       }
-      settled = this.settle(world, settled, lines);
+      settled = this.settle(world, before, settled, lines);
     } catch (err) {
       throw new BadRequestException((err as Error).message);
     }
-    const touched = await this.persistSheets(roomId, all, settled, [next]);
+    const touched = await this.persistSheets(roomId, before, settled, [next]);
     const log = lines.length ? await this.appendLog(roomId, lines) : [];
     return { roomId, sheets: touched, log };
   }
 
   private settle(
     world: { system: System; compendium: Compendium; die: (sides: number) => number; clock?: ClockState | null },
-    sheets: Sheet[], lines: string[],
+    before: Sheet[], after: Sheet[], lines: string[],
   ): Sheet[] {
     const { system } = world;
-    const swept = sweepBonds(system, sheets);
+    const crossed = fireCrossings(before, after, world);
+    for (const entry of crossed.reports) lines.push(describeMoment(world, entry, crossed.sheets));
+    const swept = sweepBonds(system, crossed.sheets);
     if (!swept.broken.length) return swept.sheets;
     const gone: MomentEvent[] = [];
     for (const broken of swept.broken) {
@@ -666,6 +718,16 @@ export class RoomsService {
     const fired = fireMoments(gone, swept.sheets, world);
     for (const entry of fired.reports) lines.push(describeMoment(world, entry, fired.sheets));
     return fired.sheets;
+  }
+
+  private readonly queues = new Map<string, Promise<unknown>>();
+
+  private inTurn<T>(roomId: string, work: () => Promise<T>): Promise<T> {
+    const previous = this.queues.get(roomId) ?? Promise.resolve();
+    const next = previous.catch(() => undefined).then(work);
+    this.queues.set(roomId, next);
+    next.finally(() => { if (this.queues.get(roomId) === next) this.queues.delete(roomId); }).catch(() => undefined);
+    return next;
   }
 
   async listFor(userId: string): Promise<RoomSummary[]> {
@@ -688,7 +750,7 @@ export class RoomsService {
     return room;
   }
 
-  async claimSheet(userId: string, roomId: string, sheetId: string | null): Promise<RoomDelta> {
+  private async runClaimSheet(userId: string, roomId: string, sheetId: string | null): Promise<RoomDelta> {
     await this.requireRoom(roomId);
     const me = await this.memberOf(roomId, userId);
     if (!me) throw new ForbiddenException('вы не в этой комнате');

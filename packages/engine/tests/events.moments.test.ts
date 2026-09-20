@@ -1,5 +1,5 @@
 import { group, test, eq, ok, throws } from './harness.ts';
-import { fireMoments, momentOf, MOMENTS } from '../src/events/moments.ts';
+import { fireMoments, fireCrossings, fieldOf, momentOf, MOMENTS } from '../src/events/moments.ts';
 import { SAMPLE_WORLDS } from '../src/model/systems.ts';
 import type { System, Sheet, Effect, Compendium } from '../src/model/types.ts';
 
@@ -120,5 +120,50 @@ group('образец D&D: спасброски от смерти', () => {
   test('пока хиты есть, никто не бросает', () => {
     eq(dying(5, 1).death_fail, 0);
     eq(dying(5, 1).death_ok, 0);
+  });
+});
+
+group('поле стало верным', () => {
+  const watched = {
+    id: 'п', name: 'п',
+    fields: [
+      { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
+      { tag: 'без_сил', label: 'Без сил', value: { kind: 'formula', expr: '#хиты <= 0' } },
+    ],
+    effects: {
+      без_сознания: { label: 'Без сознания', activation: 'passive', duration: { kind: 'temporary' }, modifiers: [] },
+      падение: {
+        label: 'Падение', activation: 'triggered', trigger: { on: 'field:без_сил' },
+        steps: [{ type: 'status', mode: 'apply', effect: { const: 'без_сознания' } }],
+      },
+    },
+    room_rules: ['падение'],
+  } as unknown as System;
+  const ctx = { system: watched, compendium: { items: [], actions: [] }, die: () => 3 };
+  const with_ = (hp: number, worn: string[] = []): Sheet => ({
+    id: 'а', systemId: 'п', kind: 'pc', name: 'Арвен', values: { хиты: hp },
+    equipped: [], actions: [], effects: worn.map(effectId => ({ effectId })),
+  } as unknown as Sheet);
+
+  test('было ложно, стало истинно — слушатель срабатывает один раз', () => {
+    const out = fireCrossings([with_(5)], [with_(0)], ctx as never);
+    eq(out.reports.length, 1);
+    eq(out.sheets[0]!.effects.map(e => e.effectId).join(), 'без_сознания');
+    eq(out.reports[0]!.report.kind, 'moment');
+  });
+
+  test('было истинно и осталось — не срабатывает; стало ложно — тоже', () => {
+    eq(fireCrossings([with_(0)], [with_(-3)], ctx as never).reports.length, 0);
+    eq(fireCrossings([with_(0)], [with_(7)], ctx as never).reports.length, 0);
+  });
+
+  test('лист, которого раньше не было, не считается пересёкшим порог', () => {
+    eq(fireCrossings([], [with_(0)], ctx as never).reports.length, 0);
+  });
+
+  test('ссылка на поле в слушателе разбирается', () => {
+    eq(fieldOf('field:без_сил'), 'без_сил');
+    eq(fieldOf('moment:turn-start'), null);
+    eq(fieldOf(undefined), null);
   });
 });

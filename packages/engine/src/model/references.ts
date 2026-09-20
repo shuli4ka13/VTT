@@ -174,14 +174,16 @@ function modifierRefs(list: Modifier[] | undefined, from: Where, out: Reference[
 }
 
 export const MOMENT_PREFIX = 'moment:';
+export const FIELD_PREFIX = 'field:';
 
 export function listenerOf(
   on: string | undefined,
-): { kind: 'any' | 'event' | 'effect' | 'moment' | 'empty'; key?: string } {
+): { kind: 'any' | 'event' | 'effect' | 'moment' | 'field' | 'empty'; key?: string } {
   if (!on) return { kind: 'empty' };
   if (on === '*') return { kind: 'any' };
   if (on.startsWith(EVENT_PREFIX)) return { kind: 'event', key: on.slice(EVENT_PREFIX.length) };
   if (on.startsWith(MOMENT_PREFIX)) return { kind: 'moment', key: on.slice(MOMENT_PREFIX.length) };
+  if (on.startsWith(FIELD_PREFIX)) return { kind: 'field', key: on.slice(FIELD_PREFIX.length) };
   return { kind: 'effect', key: on };
 }
 
@@ -192,6 +194,7 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
   const heard = listenerOf(effect.trigger?.on);
   if (heard.kind === 'event') out.push({ kind: 'event', key: heard.key!, from: head });
   if (heard.kind === 'effect') out.push({ kind: 'effect', key: heard.key!, from: head });
+  if (heard.kind === 'field') out.push({ kind: 'field', key: heard.key!, from: head });
   const condition = effect.trigger?.condition;
   if (condition && typeof condition === 'object' && 'ref' in condition) {
     const listened = heard.kind === 'effect' ? system.effects[heard.key!] : undefined;

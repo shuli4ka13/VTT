@@ -263,7 +263,7 @@ describe('эффект слушает время', () => {
     fireEvent.change(listens, { target: { value: 'moment:turn-start' } });
     const effect = Object.values(useWorld.getState().system.effects).at(-1)!;
     expect(effect.trigger?.on).toBe('moment:turn-start');
-    expect(screen.getByText(/У времени нет исходов/)).toBeTruthy();
+    expect(screen.getByText(/У времени и поля нет исходов/)).toBeTruthy();
   });
 });
 

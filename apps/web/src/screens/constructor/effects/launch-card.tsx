@@ -1,6 +1,6 @@
 import { Card, CardHead, Field, Select, Chip } from '../../../ui/primitives.tsx';
 import { registry } from '@vtt/engine/engine/steps/index';
-import { MOMENTS as TIMES, MOMENT_PREFIX } from '@vtt/engine/events/moments';
+import { MOMENTS as TIMES, MOMENT_PREFIX, FIELD_PREFIX, fieldOf } from '@vtt/engine/events/moments';
 import type { MomentKey } from '@vtt/engine/events/moments';
 
 import { MOMENTS } from './words.ts';
@@ -58,8 +58,9 @@ export function LaunchCard({ id, effect, system, edit }: {
   const asks = moment === 'ask-target' || moment === 'ask-sender';
   const listened = effect.trigger?.on;
   const anyAction = !listened || listened === '*';
-  const isMoment = Boolean(listened?.startsWith(MOMENT_PREFIX));
+  const isMoment = Boolean(listened?.startsWith(MOMENT_PREFIX)) || Boolean(fieldOf(listened));
   const conditions = isMoment ? [] : anyAction ? conditionsOfAny(system) : conditionsOf(system, listened);
+  const watchable = system.fields.filter(f => f.value.kind !== 'stored' || f.value.type === 'boolean');
 
   return (
     <Card>
@@ -86,6 +87,8 @@ export function LaunchCard({ id, effect, system, edit }: {
                 .map(([key, e]) => [key, e.label ?? key] as const),
               ...(asks ? [] : (Object.keys(TIMES) as MomentKey[])
                 .map(key => [`${MOMENT_PREFIX}${key}`, `время: ${TIMES[key]}`] as const)),
+              ...(asks ? [] : watchable
+                .map(f => [`${FIELD_PREFIX}${f.tag}`, `поле «${f.label}» стало верным`] as const)),
             ] as never}
             onChange={next => edit(draft => {
               draft.trigger = { ...(draft.trigger ?? {}), on: next || (asks ? '*' : '') };
@@ -96,7 +99,7 @@ export function LaunchCard({ id, effect, system, edit }: {
         <Field
           label="Только если"
           hint={isMoment
-            ? 'У времени нет исходов — сработает всегда.'
+            ? 'У времени и поля нет исходов — сработает всегда.'
             : conditions.length ? undefined : 'У того, кого слушаем, нет шагов с исходом «да/нет» — сработает всегда.'}
         >
           <Select

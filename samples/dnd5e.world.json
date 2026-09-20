@@ -761,11 +761,92 @@
             }
           }
         ]
+      },
+      "unconscious": {
+        "label": "Без сознания",
+        "icon": "😵",
+        "category": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "temporary"
+        },
+        "description": "Хиты на нуле: лежит, пока не поднимут.",
+        "modifiers": []
+      },
+      "fall": {
+        "label": "Падение",
+        "icon": "⬇",
+        "category": "Состояния",
+        "activation": "triggered",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Как только хиты опустились до нуля — вешает «Без сознания».",
+        "trigger": {
+          "on": "field:down"
+        },
+        "params": [],
+        "steps": [
+          {
+            "type": "status",
+            "mode": "apply",
+            "effect": {
+              "const": "unconscious"
+            }
+          }
+        ]
+      },
+      "wake": {
+        "label": "Подъём",
+        "icon": "⬆",
+        "category": "Состояния",
+        "activation": "triggered",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Хиты снова выше нуля — снимает «Без сознания» и сбрасывает спасброски от смерти.",
+        "trigger": {
+          "on": "field:up"
+        },
+        "params": [],
+        "steps": [
+          {
+            "type": "status",
+            "mode": "remove",
+            "effect": {
+              "const": "unconscious"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "death_ok"
+            },
+            "direction": "set",
+            "value": {
+              "const": 0
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "death_fail"
+            },
+            "direction": "set",
+            "value": {
+              "const": 0
+            },
+            "targetModifiers": false
+          }
+        ]
       }
     },
     "room_rules": [
       "heavy_armor_rule",
-      "mastery_rule"
+      "mastery_rule",
+      "fall",
+      "wake"
     ],
     "records": {
       "weapon": {
@@ -1477,6 +1558,24 @@
           "max": 3
         },
         "control": "pips"
+      },
+      {
+        "tag": "down",
+        "label": "Без сил",
+        "group": "Здоровье",
+        "value": {
+          "kind": "formula",
+          "expr": "#hp_current <= 0"
+        }
+      },
+      {
+        "tag": "up",
+        "label": "На ногах",
+        "group": "Здоровье",
+        "value": {
+          "kind": "formula",
+          "expr": "#hp_current > 0"
+        }
       },
       {
         "tag": "attack_bonus",

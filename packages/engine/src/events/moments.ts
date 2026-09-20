@@ -1,4 +1,4 @@
-import { newPass } from '../engine/calc.ts';
+import { newPass, calc } from '../engine/calc.ts';
 import { packCall, runCall } from './call.ts';
 import { resolveRef } from '../engine/refs.ts';
 import { activationOf, durationOf, wornEffects, findEffect } from '../engine/effects.ts';
@@ -84,17 +84,82 @@ export function fireMoments(events: MomentEvent[], sheets: Sheet[], world: World
   return { sheets: updated, reports };
 }
 
-function listeners(sheet: Sheet, event: MomentEvent, world: WorldContext): { id: string; effect: Effect }[] {
+function triggeredOn(sheet: Sheet, world: WorldContext): { id: string; effect: Effect }[] {
   const worn = wornEffects(world.system, sheet, { strict: false });
   const roomWorn = new Set(worn.map(w => w.id));
   const room = (world.system.room_rules ?? [])
     .filter(id => !roomWorn.has(id))
     .map(id => ({ id, effect: findEffect(world.system, id) }))
     .filter((entry): entry is { id: string; effect: Effect } => Boolean(entry.effect));
+  return [...worn, ...room].filter(({ effect }) => activationOf(effect) === 'triggered');
+}
 
-  return [...worn, ...room]
-    .filter(({ effect }) => activationOf(effect) === 'triggered')
-    .filter(({ effect }) => momentOf(effect.trigger?.on) === event.moment);
+function listeners(sheet: Sheet, event: MomentEvent, world: WorldContext): { id: string; effect: Effect }[] {
+  return triggeredOn(sheet, world).filter(({ effect }) => momentOf(effect.trigger?.on) === event.moment);
+}
+
+export const FIELD_PREFIX = 'field:';
+
+export const fieldOf = (on: string | undefined): string | null =>
+  (on && on.startsWith(FIELD_PREFIX) ? on.slice(FIELD_PREFIX.length) : null);
+
+const truthy = (value: unknown): boolean =>
+  value === true || (typeof value === 'number' && value !== 0) || (typeof value === 'string' && value !== '');
+
+const valueOn = (sheet: Sheet, tag: string, world: WorldContext): unknown =>
+  calc(world.system, sheet, tag, newPass(world.system, sheet, { compendium: world.compendium }));
+
+export function fireCrossings(before: Sheet[], after: Sheet[], world: WorldContext): MomentRun {
+  let updated = after;
+  let previous = before;
+  const reports: { sheetId: string; report: Report }[] = [];
+  let fired = 0;
+
+  for (;;) {
+    const wave: { sheetId: string; id: string; effect: Effect; tag: string; value: unknown }[] = [];
+    for (const sheet of updated) {
+      const was = previous.find(s => s.id === sheet.id);
+      if (!was || was === sheet) continue;
+      for (const { id, effect } of triggeredOn(sheet, world)) {
+        const tag = fieldOf(effect.trigger?.on);
+        if (!tag) continue;
+        const value = valueOn(sheet, tag, world);
+        if (!truthy(value) || truthy(valueOn(was, tag, world))) continue;
+        wave.push({ sheetId: sheet.id, id, effect, tag, value });
+      }
+    }
+    if (!wave.length) break;
+    previous = updated;
+
+    for (const { sheetId, id, effect, tag, value } of wave) {
+      if (fired++ >= MAX_FIRES) {
+        throw new EngineError(`поля будят эффекты без остановки: больше ${MAX_FIRES} срабатываний за раз`);
+      }
+      const live = updated.find(s => s.id === sheetId)!;
+      const label = world.system.fields.find(f => f.tag === tag)?.label ?? tag;
+      const owner = `поле «${label}» стало верным у «${effect.label ?? id}»`;
+      const seed = { field: { tag, value } };
+      if (!holds(effect, live, seed, owner, world)) continue;
+
+      const call = { effectId: id, effect, sheet: live, owner, args: {}, props: null, seed };
+      const done = runCall(packCall(call, world), { sheet: live, owner, seed }, world);
+      let next = done.sheet;
+      if (durationOf(effect) === 'uses') next = spendUse(next, id);
+      updated = updated.map(s => (s.id === next.id ? next : s));
+
+      reports.push({
+        sheetId,
+        report: {
+          kind: 'moment', effect: id, from: sheetId, label: effect.label ?? id,
+          reply: false, trace: done.trace, stopped: done.stopped,
+          changes: done.changes, effects: done.effects, removed: done.removed, spent: [],
+          emitted: done.emitted,
+        },
+      });
+    }
+  }
+
+  return { sheets: updated, reports };
 }
 
 function holds(
