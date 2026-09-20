@@ -38,6 +38,8 @@ export interface StepContext extends RefContext {
   bond?: { from: string; by: string };
 
   sender?: Record<string, unknown>;
+
+  kept?: Record<string, StepData>;
   [k: string]: unknown;
 }
 

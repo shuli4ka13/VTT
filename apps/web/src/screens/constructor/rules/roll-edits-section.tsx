@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { editPalette, paletteKeyOf } from '@vtt/engine/engine/roll-edits';
-import { ADVANTAGE_METHODS, findMethod } from '@vtt/engine/model/advantage-methods';
+import { ADVANTAGE_METHODS, installMethod } from '@vtt/engine/model/advantage-methods';
 import { Readback } from '../effects/cards/group-card.tsx';
 import { editReadback } from '../readback.ts';
 import { Card, CardHead, Input, Button, Fold, Select } from '../../../ui/primitives.tsx';
@@ -21,17 +21,7 @@ const addRollEdit = (editSystem: EditSystem) => editSystem(draft => {
 });
 
 const addFromCatalog = (editSystem: EditSystem, methodId: string) => editSystem(draft => {
-  const method = findMethod(methodId);
-  if (!method) return;
-  draft.roll_edits ??= {};
-  for (const recipe of method.recipes) {
-    if (draft.roll_edits[recipe.key]) continue;
-    draft.roll_edits[recipe.key] = {
-      label: recipe.label,
-      ops: JSON.parse(JSON.stringify(recipe.ops)),
-      ...(recipe.canceledBy ? { canceledBy: recipe.canceledBy } : {}),
-    };
-  }
+  installMethod(draft, methodId);
 });
 
 function opWord(op: { op: string; [k: string]: unknown }): string {

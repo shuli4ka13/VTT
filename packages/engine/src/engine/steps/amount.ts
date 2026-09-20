@@ -1,4 +1,5 @@
 import { rollNotation, multiplyNotation } from '../dice.ts';
+import type { NotationRoll } from '../dice.ts';
 import { dieConstant } from '../lead-die.ts';
 import { packRef, resolveOptionalNumber } from '../refs.ts';
 import { EngineError } from '../errors.ts';
@@ -78,9 +79,10 @@ export function pack(step: StepData, ctx: StepContext) {
       `${who(ctx)}: источнику «превышение» нужен слот margin — превышение какого шага брать?`);
   }
 
+  const held = ctx.kept?.[String(step.id ?? '')]?.rolled as NotationRoll | undefined;
   return {
     source,
-    rolled: notation ? rollNotation(notation, ctx.die) : { notation: null, rolls: [], total: 0 },
+    rolled: notation ? rollNotation(notation, ctx.die, held) : { notation: null, rolls: [], total: 0 },
     ...(doubled ? { doubled: true } : {}),
     ...(step.scale ? { scale: { times: step.scale.times, ...(step.scale.when ? { when: packGuardRef(step.scale.when, ctx) } : {}) } } : {}),
     fixed, bonus, margin,

@@ -159,6 +159,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
       ) : (
         <ModifiersEditor
           system={system}
+          editSystem={editSystem}
           modifiers={effect.modifiers ?? []}
           onEdit={change => edit(draft => { change(draft.modifiers ??= []); })}
         />

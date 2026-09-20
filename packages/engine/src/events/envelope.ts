@@ -131,11 +131,13 @@ export interface SendOptions {
   inputs?: Record<string, number | string>;
   against?: Sheet | null;
   claims?: string[];
+
+  kept?: StepData[];
 }
 
 export function send(
   actionId: string,
-  { system, sheet, compendium, die, against, claims, inputs }: WorldContext & { sheet: Sheet } & SendOptions,
+  { system, sheet, compendium, die, against, claims, inputs, kept }: WorldContext & { sheet: Sheet } & SendOptions,
 ): Envelope {
   const action = actionOf(actionId, { system, compendium });
 
@@ -155,6 +157,7 @@ export function send(
     ...(inputs ? { inputs } : {}),
     ...(targetPass ? { against: (rollTag: string | null) => incomingRollModifiers(rollTag, targetPass) } : {}),
     ...(claims?.length ? { claims } : {}),
+    ...(kept?.length ? { kept } : {}),
   }, { system, compendium, die });
 
   return {

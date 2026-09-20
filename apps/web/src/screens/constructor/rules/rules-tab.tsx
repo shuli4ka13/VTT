@@ -9,9 +9,11 @@ import { RollsSection } from './rolls-section.tsx';
 import { TablesSection } from './tables-section.tsx';
 import { InitiativeSection } from './initiative-section.tsx';
 import { ActionTypesSection } from './action-types-section.tsx';
+import { TogglesSection } from './toggles-section.tsx';
+import { critOf, armorOf } from '@vtt/engine/model/toggles';
 import type { System } from '@vtt/schema';
 
-type SectionKey = 'dice' | 'edits' | 'rolls' | 'tables' | 'initiative' | 'action_types';
+type SectionKey = 'dice' | 'edits' | 'rolls' | 'tables' | 'initiative' | 'action_types' | 'toggles';
 
 interface Section {
   key: SectionKey;
@@ -27,6 +29,13 @@ const SECTIONS: Section[] = [
   { key: 'tables', label: 'Таблицы', count: system => Object.keys(system.tables ?? {}).length },
   { key: 'initiative', label: 'Инициатива', lint: 'initiative', count: system => (system.initiative ? 1 : 0) },
   { key: 'action_types', label: 'Чего стоит действие', count: system => Object.keys(system.action_types ?? {}).length },
+  {
+    key: 'toggles', label: 'Тоглы',
+    count: system => [
+      critOf(system) !== 'off',
+      Object.keys(system.events ?? {}).some(event => armorOf(system, event).choice !== 'none'),
+    ].filter(Boolean).length,
+  },
 ];
 
 export function RulesTab() {
@@ -71,6 +80,7 @@ export function RulesTab() {
             {section === 'action_types'
               ? <ActionTypesSection system={system} editSystem={editSystem} usage={usage} />
               : null}
+            {section === 'toggles' ? <TogglesSection system={system} editSystem={editSystem} /> : null}
           </>
         ),
       }}

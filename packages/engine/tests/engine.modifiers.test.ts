@@ -74,6 +74,28 @@ group('модификаторы', () => {
     });
   });
 
+  group('пол и потолок значения', () => {
+    const bound = (id, op, value) => ({
+      id, label: id, slot: 'ring',
+      modifiers: [{ kind: 'value', target: 'ac', op, value, stacking: 'sum', condition: null }],
+    });
+    const bare = { ...arven, equipped: [] };
+
+    test('«не меньше» поднимает малое значение до пола, большое не трогает', () => {
+      eq(ac({ ...bare, equipped: ['floor'] }, book([bound('floor', 'floor', 15)])), 15);
+      eq(ac({ ...bare, equipped: ['floor'] }, book([bound('floor', 'floor', 5)])), 11);
+    });
+
+    test('«не больше» режет значение потолком', () => {
+      eq(ac({ ...bare, equipped: ['cap'] }, book([bound('cap', 'cap', 8)])), 8);
+    });
+
+    test('пол считается после прибавок и множителей, два пола — берётся выше', () => {
+      const items = [plus('ring', 'Кольцо', 'ac', 2), bound('a', 'floor', 20), bound('b', 'floor', 16)];
+      eq(ac({ ...bare, equipped: ['ring', 'a', 'b'] }, book(items)), 20);
+    });
+  });
+
   group('правила стакинга', () => {
     const two = [plus('a', 'A', 'ac', 1), plus('b', 'B', 'ac', 2)];
     const sheet = () => ({

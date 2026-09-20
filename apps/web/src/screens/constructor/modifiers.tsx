@@ -3,12 +3,17 @@ import { useState } from 'react';
 import { Card, CardHead, Field, Input, Select, Button, Empty } from '../../ui/primitives.tsx';
 import { FormulaInput } from '../../ui/formula.tsx';
 import { targets } from '@vtt/engine/engine/targets';
+import { installMethod, recipesToInstall } from '@vtt/engine/model/advantage-methods';
 
 const OPS = [
   ['add', 'прибавить'],
   ['mul', 'умножить'],
   ['set', 'задать'],
+  ['floor', 'не меньше'],
+  ['cap', 'не больше'],
 ] as const;
+
+const RECIPE = 'recipe:';
 
 const STACKING = [
   ['sum', 'складываются'],
@@ -16,7 +21,7 @@ const STACKING = [
   ['override', 'последний перебивает'],
 ] as const;
 
-export function ModifiersEditor({ system, modifiers, onEdit, title, empty }: {
+export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editSystem }: {
   system: System;
   modifiers: Modifier[];
   onEdit: (change: (draft: Modifier[]) => void) => void;
@@ -24,6 +29,8 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty }: {
   title?: string;
 
   empty?: { title: string; hint: string };
+
+  editSystem?: (change: (draft: System) => void) => void;
 }) {
   const all = targets(system) as { tag: string; label: string; kind: string; group?: string }[];
   const valueTargets = all.filter(t => t.kind === 'value' || t.kind === 'incoming' || t.kind === 'event');
@@ -32,6 +39,16 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty }: {
   const parseList = (text: string) => text.split(',').map(s => s.trim()).filter(Boolean);
   const rollTargets = all.filter(t => t.kind === 'roll');
   const edits = Object.entries(system.roll_edits ?? {});
+  const recipes = editSystem ? recipesToInstall(system) : [];
+  const pickEdit = (index: number, value: string) => {
+    if (value.startsWith(RECIPE) && editSystem) {
+      const [methodId, key] = value.slice(RECIPE.length).split(':');
+      editSystem(draft => { installMethod(draft, String(methodId)); });
+      onEdit(draft => { (draft[index] as { edit: string }).edit = String(key); });
+      return;
+    }
+    onEdit(draft => { (draft[index] as { edit: string }).edit = value; });
+  };
 
   return (
     <>
@@ -54,8 +71,8 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty }: {
               edit: edits[0]?.[0] ?? '', condition: null,
             });
           })}
-          disabled={rollTargets.length === 0 || edits.length === 0}
-          title={edits.length === 0 ? 'Сначала заведите правку в словаре «Правки броска»' : undefined}
+          disabled={rollTargets.length === 0 || (edits.length === 0 && !editSystem)}
+          title={edits.length === 0 && !editSystem ? 'Сначала заведите правку в словаре «Правки броска»' : undefined}
         >
           + правит бросок
         </Button>
@@ -146,12 +163,19 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty }: {
                   onChange={target => onEdit(draft => { (draft[index] as Modifier).target = target; })}
                 />
               </Field>
-              <Field label="Какая правка" needed={!modifier.edit}>
+              <Field
+                label="Какая правка"
+                needed={!modifier.edit}
+                hint={recipes.length ? 'Готовые механизмы приедут в словарь «Правки броска» со всеми словами.' : undefined}
+              >
                 <Select
                   value={String(modifier.edit ?? '')}
                   options={[['', '— выберите правку —'],
-                    ...edits.map(([key, e]) => [key, e.label || key] as const)] as never}
-                  onChange={edit => onEdit(draft => { (draft[index] as { edit: string }).edit = edit; })}
+                    ...edits.map(([key, e]) => [key, e.label || key] as const),
+                    ...recipes.map(({ method, recipe }) =>
+                      [`${RECIPE}${method.id}:${recipe.key}`, `+ ${recipe.label} · ${method.label}`] as const),
+                  ] as never}
+                  onChange={edit => pickEdit(index, edit)}
                 />
               </Field>
             </div>

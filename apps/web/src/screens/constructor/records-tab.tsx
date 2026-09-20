@@ -235,6 +235,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
               hint: 'Пассивная половина типа: бонус к полю или правка броска, пока надета любая вещь этого типа. «Тяжёлый доспех мешает красться» пишется здесь один раз — кольчуга и латы получат его без единой строчки на себе.',
             }}
             system={system}
+            editSystem={editSystem}
             title=""
             modifiers={kind.modifiers ?? []}
             onEdit={change => edit(draft => { change(draft.modifiers ??= []); })}

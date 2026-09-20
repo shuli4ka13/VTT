@@ -122,3 +122,26 @@ group('цель видна отправителю: состояния цели �
     deepEq((r.reports[0]!.report.trace[0] as any).rolls, [4, 18]);
   });
 });
+
+group('правка после того, как бросок увиден: выпавшее остаётся', () => {
+  test('преимущество, заявленное после броска, добавляет кость, а не перебрасывает старую', () => {
+    const first = send('longsword-item:0', { system, sheet: arven, compendium, die: queue(7, 3) });
+    const before = first.steps[0]!.rolled;
+    deepEq(before.rolls, [7]);
+
+    const again = send('longsword-item:0', {
+      system, sheet: arven, compendium, die: queue(18), claims: ['advantage'], kept: first.steps,
+    });
+    const after = again.steps[0]!.rolled;
+    deepEq(after.rolls, [7, 18], 'старая семёрка на месте, новая кость добавлена');
+    eq(after.kept, 18);
+    deepEq(again.steps.find(s => s.type === 'amount')!.rolled.rolls, [3], 'кости урона не перебрасывались');
+  });
+
+  test('без сохранённых костей та же заявка бросает всё заново', () => {
+    const again = send('longsword-item:0', {
+      system, sheet: arven, compendium, die: queue(2, 18, 5), claims: ['advantage'],
+    });
+    deepEq(again.steps[0]!.rolled.rolls, [2, 18]);
+  });
+});

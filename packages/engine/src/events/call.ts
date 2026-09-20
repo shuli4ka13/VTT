@@ -20,7 +20,15 @@ export interface Call {
   seed?: Record<string, unknown>;
   against?: (rollTag: string | null) => SourcedModifier[];
   claims?: string[];
+
+  kept?: StepData[];
 }
+
+const keptById = (steps: StepData[]): Record<string, StepData> => {
+  const out: Record<string, StepData> = {};
+  steps.forEach((step, index) => { out[String(step.id ?? index)] = step; });
+  return out;
+};
 
 export function packCall(call: Call, world: WorldContext): StepData[] {
   const pass = newPass(world.system, call.sheet, { compendium: world.compendium });
@@ -33,6 +41,7 @@ export function packCall(call: Call, world: WorldContext): StepData[] {
     ...(call.seed ? { results: call.seed } : {}),
     ...(call.against ? { against: call.against } : {}),
     ...(call.claims?.length ? { claims: call.claims } : {}),
+    ...(call.kept?.length ? { kept: keptById(call.kept) } : {}),
   });
 }
 

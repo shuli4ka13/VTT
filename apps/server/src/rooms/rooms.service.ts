@@ -501,8 +501,9 @@ export class RoomsService {
         envelope = send(record.intent.actionId, {
           system, compendium, die: this.die, clock, sheet: from, against: to, claims,
           ...(Object.keys(inputs).length ? { inputs } : {}),
+          kept: envelope.steps,
         });
-        lines.push(`${from.name}: бросок собран заново`);
+        lines.push(`${from.name}: бросок собран заново — выпавшее остаётся, новые кости добавлены`);
       }
     } catch (err) {
       throw new BadRequestException((err as Error).message);

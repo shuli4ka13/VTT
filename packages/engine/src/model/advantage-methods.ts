@@ -106,3 +106,27 @@ export const findMethod = (id: string) => ADVANTAGE_METHODS.find(m => m.id === i
 
 export const enabledMethods = (system: System) =>
   ADVANTAGE_METHODS.filter(m => ((system.advantage || {}).methods || {})[m.id]);
+
+export function installMethod(system: System, methodId: string): string[] {
+  const method = findMethod(methodId);
+  if (!method) return [];
+  const edits = (system.roll_edits ??= {});
+  const added: string[] = [];
+  for (const recipe of method.recipes) {
+    if (edits[recipe.key]) continue;
+    edits[recipe.key] = {
+      label: recipe.label,
+      ops: JSON.parse(JSON.stringify(recipe.ops)),
+      ...(recipe.canceledBy ? { canceledBy: recipe.canceledBy } : {}),
+    };
+    added.push(recipe.key);
+  }
+  return added;
+}
+
+export const recipesToInstall = (system: System): { method: AdvantageMethod; recipe: EditRecipe }[] =>
+  ADVANTAGE_METHODS
+    .filter(method => method.implemented)
+    .flatMap(method => method.recipes
+      .filter(recipe => !system.roll_edits?.[recipe.key])
+      .map(recipe => ({ method, recipe })));

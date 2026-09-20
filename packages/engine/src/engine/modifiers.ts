@@ -108,11 +108,19 @@ export function applyValueModifiers(
   const muls = active.filter(m => m.op === 'mul');
   if (muls.length) value = (value as number) * totalOf(muls, pass, tag, 1);
 
-  const unknown = active.find(m => !['set', 'add', 'mul'].includes(String(m.op)));
+  const floors = active.filter(m => m.op === 'floor').map(m => Number(valueOf(m, pass)));
+  if (floors.length) value = Math.max(value as number, ...floors);
+
+  const caps = active.filter(m => m.op === 'cap').map(m => Number(valueOf(m, pass)));
+  if (caps.length) value = Math.min(value as number, ...caps);
+
+  const unknown = active.find(m => !VALUE_OPS.includes(String(m.op)));
   if (unknown) throw new EngineError(`неизвестная операция модификатора «${unknown.op}» на мишени «${tag}»`);
 
   return value;
 }
+
+export const VALUE_OPS = ['set', 'add', 'mul', 'floor', 'cap'];
 
 export function resolveRoll(
   system: System, _sheet: Sheet, rollTag: string | null, pass: Pass,
