@@ -5,7 +5,7 @@ export function sampleWorlds() {
   return structuredClone(SAMPLE_WORLDS.map(({ title, ...world }) => ({ title, world })));
 }
 
-export async function seed(url: string, owner: string): Promise<string[]> {
+export async function seed(url: string, owner: string, mark = ''): Promise<string[]> {
   const login = await call(`${url}/auth/login`, 'POST', null, { name: owner }) as { token: string };
   const token = login.token;
 
@@ -13,7 +13,8 @@ export async function seed(url: string, owner: string): Promise<string[]> {
   const taken = new Set(existing.map(w => w.title));
 
   const published: string[] = [];
-  for (const { title, world } of sampleWorlds()) {
+  for (const { title: name, world } of sampleWorlds()) {
+    const title = mark ? `${name} · ${mark}` : name;
     if (taken.has(title)) {
       console.log(`· «${title}» уже на стенде — пропущен`);
       continue;
