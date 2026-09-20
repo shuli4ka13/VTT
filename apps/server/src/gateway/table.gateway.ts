@@ -137,6 +137,24 @@ export class TableGateway {
     }
   }
 
+  @SubscribeMessage('sheet:claim')
+  async claimSheet(@MessageBody() raw: unknown, @ConnectedSocket() socket: WebSocket) {
+    const guest = this.guestOf(socket);
+    if (!guest) return this.fail(socket, 'сначала войдите в комнату');
+
+    const parsed = api.clientMessage.safeParse({ type: 'sheet:claim', ...(raw as object) });
+    if (!parsed.success || parsed.data.type !== 'sheet:claim') {
+      return this.fail(socket, 'выбор листа не проходит схему');
+    }
+    const { roomId, sheetId } = parsed.data;
+    try {
+      await this.roomsService.claimSheet(guest.userId, roomId, sheetId);
+      await this.announceMembers(roomId);
+    } catch (err) {
+      this.fail(socket, (err as Error).message);
+    }
+  }
+
   @SubscribeMessage('sheet:roll')
   async rollField(@MessageBody() raw: unknown, @ConnectedSocket() socket: WebSocket) {
     const guest = this.guestOf(socket);

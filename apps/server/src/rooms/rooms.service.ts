@@ -433,7 +433,7 @@ export class RoomsService {
     userId: string, roomId: string, sheetId: string, tag: string, value: StoredValue,
   ): Promise<RoomDelta> {
     const room = await this.requireRoom(roomId);
-    if (!await this.memberOf(roomId, userId)) throw new ForbiddenException('вы не в этой комнате');
+    await this.assertMaySheet(roomId, userId, sheetId);
 
     const { system } = this.worldOf(room);
     const field = system.fields.find(f => f.tag === tag);
@@ -458,7 +458,7 @@ export class RoomsService {
 
   async rollField(userId: string, roomId: string, sheetId: string, tag: string): Promise<RoomDelta> {
     const room = await this.requireRoom(roomId);
-    if (!await this.memberOf(roomId, userId)) throw new ForbiddenException('вы не в этой комнате');
+    await this.assertMaySheet(roomId, userId, sheetId);
 
     const { system, compendium } = this.worldOf(room);
     const field = system.fields.find(f => f.tag === tag);
@@ -591,6 +591,41 @@ export class RoomsService {
     const room = found[0];
     if (!room) throw new NotFoundException(`комнаты «${roomId}» нет`);
     return room;
+  }
+
+  async claimSheet(userId: string, roomId: string, sheetId: string | null): Promise<RoomDelta> {
+    await this.requireRoom(roomId);
+    const me = await this.memberOf(roomId, userId);
+    if (!me) throw new ForbiddenException('вы не в этой комнате');
+
+    if (sheetId) {
+      const rows = await this.db.select().from(roomSheets)
+        .where(and(eq(roomSheets.roomId, roomId), eq(roomSheets.sheetId, sheetId)));
+      if (!rows[0]) throw new NotFoundException(`в комнате нет листа «${sheetId}»`);
+
+      const taken = (await this.db.select().from(members).where(eq(members.roomId, roomId)))
+        .find(row => row.sheetId === sheetId && row.userId !== userId);
+      if (taken) throw new BadRequestException('этим листом уже играет кто-то другой');
+    }
+
+    await this.db.update(members).set({ sheetId })
+      .where(and(eq(members.roomId, roomId), eq(members.userId, userId)));
+    return { roomId, sheets: [], log: [] };
+  }
+
+  private async assertMaySheet(roomId: string, userId: string, sheetId: string): Promise<void> {
+    const me = await this.memberOf(roomId, userId);
+    if (!me) throw new ForbiddenException('вы не в этой комнате');
+    if (me.role === 'gm') return;
+    if (me.sheetId) {
+      if (me.sheetId === sheetId) return;
+      throw new ForbiddenException('это чужой лист — правит его владелец или ведущий');
+    }
+    const others = (await this.db.select().from(members).where(eq(members.roomId, roomId)))
+      .filter(row => row.userId !== userId);
+    if (others.some(row => row.sheetId === sheetId)) {
+      throw new ForbiddenException('это чужой лист — правит его владелец или ведущий');
+    }
   }
 
   private async memberOf(roomId: string, userId: string) {

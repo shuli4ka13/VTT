@@ -426,3 +426,39 @@ describe('сквозной прогон стенда', () => {
       .set('Authorization', `Bearer ${token}`).send({}).expect(201);
   });
 });
+
+describe('права на лист', () => {
+  it('игрок правит свой лист, чужой — нет; ведущий правит любой', async () => {
+    const gm = (await http().post('/auth/login').send({ name: 'Ведущий прав' })).body;
+    const first = (await http().post('/auth/login').send({ name: 'Игрок первый' })).body;
+    const second = (await http().post('/auth/login').send({ name: 'Игрок второй' })).body;
+    const as = (token: string) => (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
+
+    const systemId = (await as(gm.token)(http().post('/systems')).send({ title: 'Права', system: dnd })).body.id;
+    const bookId = (await as(gm.token)(http().post('/compendiums')).send({ title: 'Книга прав', systemId, compendium })).body.id;
+    await as(gm.token)(http().post(`/systems/${systemId}/publish`)).send({});
+    await as(gm.token)(http().post(`/compendiums/${bookId}/publish`)).send({});
+    const worldId = (await as(gm.token)(http().post('/worlds')).send({
+      title: 'Мир прав', systemId, compendiumIds: [bookId],
+      sheets: sheets.filter((s: { systemId: string }) => s.systemId === dnd.id),
+    })).body.id;
+    const roomId = (await as(gm.token)(http().post('/rooms')).send({ worldId, title: 'Стол прав' })).body.id as string;
+    await as(first.token)(http().post(`/rooms/${roomId}/join`)).send({});
+    await as(second.token)(http().post(`/rooms/${roomId}/join`)).send({});
+
+    const rooms = await import('../src/rooms/rooms.service.ts').then(m => app.get(m.RoomsService));
+    const state = (await as(gm.token)(http().get(`/rooms/${roomId}`))).body;
+    const [mine, foreign] = state.sheets;
+
+    await rooms.claimSheet(first.body?.userId ?? (await as(first.token)(http().get('/auth/me'))).body.userId, roomId, mine.id);
+    const me = (await as(first.token)(http().get('/auth/me'))).body.userId;
+    const other = (await as(second.token)(http().get('/auth/me'))).body.userId;
+    const gmId = (await as(gm.token)(http().get('/auth/me'))).body.userId;
+
+    await expect(rooms.setValue(me, roomId, mine.id, 'hp_current', 7)).resolves.toBeTruthy();
+    await expect(rooms.setValue(other, roomId, mine.id, 'hp_current', 1)).rejects.toThrow(/чужой лист/);
+    await expect(rooms.setValue(gmId, roomId, mine.id, 'hp_current', 9)).resolves.toBeTruthy();
+    await expect(rooms.claimSheet(other, roomId, mine.id)).rejects.toThrow(/уже играет/);
+    await expect(rooms.setValue(other, roomId, foreign.id, 'hp_current', 5)).resolves.toBeTruthy();
+  });
+});
