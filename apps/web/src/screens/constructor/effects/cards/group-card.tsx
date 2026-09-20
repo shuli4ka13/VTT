@@ -97,7 +97,9 @@ export function GroupCard({
         <Readback segments={segments} />
         {group.kind === 'check' ? <CheckBody step={step} context={context} edit={edit} system={system} /> : null}
         {group.kind === 'change' ? <ChangeBody group={group} context={context} edit={edit} withNumber={withNumber} system={system} onAddParam={onAddParam} /> : null}
-        {group.kind === 'number' ? <NumberBody step={step} context={context} edit={edit} onAddParam={onAddParam} /> : null}
+        {group.kind === 'number'
+          ? <NumberBody step={step} context={context} edit={edit} onAddParam={onAddParam} earlier={earlier} />
+          : null}
         <ConditionFold group={group} earlier={earlier} edit={edit} />
       </Card>
       {breakLine(group)}

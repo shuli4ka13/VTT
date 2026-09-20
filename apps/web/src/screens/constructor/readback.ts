@@ -186,6 +186,10 @@ export function sendReadback(step: Step, system: System, effect: Effect): Segmen
 
 export function numberReadback(step: Step, system: System, effect: Effect): Segment[] {
   const out: Segment[] = [seg('Считается число:'), ...amountValueSegments(step, system, effect)];
+  const double = (step as { double?: { ref?: string; atLeast?: number } }).double;
+  if (double?.ref) {
+    out.push(seg(`— и вдвое, если ${outputWords(double.ref)} не меньше ${double.atLeast ?? 20}`));
+  }
   out.push(seg('.'));
   return out;
 }
@@ -301,3 +305,17 @@ export const joinReadback = (segments: Segment[]): string =>
     .join(' ')
     .replace(/\s+([.,])/g, '$1')
     .replace(/\.\s*\./g, '.');
+
+const outputWords = (ref: string): string => {
+  const [, path] = ref.split('.');
+  return path ? OUTPUT_WORDS[path] ?? path : 'результат шага';
+};
+
+const OUTPUT_WORDS: Record<string, string> = {
+  natural: 'выпавшее на костях',
+  total: 'итог броска',
+  margin: 'превышение',
+  rolled: 'сколько костей кинуто',
+  atMax: 'костей на максимуме',
+  atMin: 'костей на единице',
+};

@@ -140,3 +140,19 @@ describe('dieReadback — кость словами', () => {
       .toBe('Кинуть к6 по числу «Пул костей» и взять лучшую.');
   });
 });
+
+describe('крит в пересказе', () => {
+  it('удвоение костей названо словами и порогом', () => {
+    const step = {
+      id: 'dmg', type: 'amount', source: 'roll', dice: { const: '2d6' },
+      double: { ref: 'hit.natural', atLeast: 20 },
+    } as unknown as Step;
+    expect(joinReadback(numberReadback(step, system, effect)))
+      .toBe('Считается число: 2к6 — и вдвое, если выпавшее на костях не меньше 20.');
+  });
+
+  it('без удвоения фраза прежняя', () => {
+    const step = { id: 'dmg', type: 'amount', source: 'roll', dice: { const: '2d6' } } as unknown as Step;
+    expect(joinReadback(numberReadback(step, system, effect))).toBe('Считается число: 2к6.');
+  });
+});

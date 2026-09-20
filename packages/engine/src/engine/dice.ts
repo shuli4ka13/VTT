@@ -10,6 +10,13 @@ export const randomDie: Die = sides => 1 + Math.floor(Math.random() * sides);
 
 const NOTATION = /^(\d+)?\s*[dдк]\s*(\d+)$/iu;
 
+export function multiplyNotation(notation: unknown, times: number): string {
+  const match = NOTATION.exec(String(notation).trim());
+  if (!match) throw new Error(`не понимаю запись кубиков «${notation}»; ожидается вид «2к6»`);
+  const count = Number(match[1] ?? 1) * Math.max(1, Math.floor(times));
+  return `${count}d${Number(match[2])}`;
+}
+
 export function rollNotation(notation: unknown, die: Die): NotationRoll {
   const match = NOTATION.exec(String(notation).trim());
   if (!match) throw new Error(`не понимаю запись кубиков «${notation}»; ожидается вид «2к6»`);

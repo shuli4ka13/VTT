@@ -1,8 +1,9 @@
-import { rollNotation } from '../dice.ts';
+import { rollNotation, multiplyNotation } from '../dice.ts';
 import { dieConstant } from '../lead-die.ts';
 import { packRef, resolveOptionalNumber } from '../refs.ts';
 import { EngineError } from '../errors.ts';
 import type { StepData, StepContext } from './index.ts';
+import { guardHolds } from '../rule.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 
 export const type = 'amount';
@@ -59,7 +60,9 @@ export function pack(step: StepData, ctx: StepContext) {
       `${who(ctx)}: неизвестный источник величины «${source}» — умею: ${SOURCES.join(', ')}`);
   }
 
-  const notation = step.dice ? constant(packRef(diceRef(step.dice, ctx), ctx), ctx, 'кости величины') : null;
+  const plain = step.dice ? constant(packRef(diceRef(step.dice, ctx), ctx), ctx, 'кости величины') : null;
+  const doubled = plain !== null && doublesNow(step, ctx);
+  const notation = doubled ? multiplyNotation(plain, 2) : plain;
   const fixed = step.fixed !== undefined ? packRef(step.fixed, ctx) : null;
   const bonus = step.bonus !== undefined ? packRef(step.bonus, ctx) : null;
   const margin = step.margin !== undefined ? packRef(step.margin, ctx) : null;
@@ -78,8 +81,14 @@ export function pack(step: StepData, ctx: StepContext) {
   return {
     source,
     rolled: notation ? rollNotation(notation, ctx.die) : { notation: null, rolls: [], total: 0 },
+    ...(doubled ? { doubled: true } : {}),
     fixed, bonus, margin,
   };
+}
+
+function doublesNow(step: StepData, ctx: StepContext): boolean {
+  if (step.double === undefined || step.double === null) return false;
+  return guardHolds(step.double, { ...ctx, results: ctx.sender ?? {} });
 }
 
 export function resolve(step: StepData, ctx: StepContext) {
@@ -93,6 +102,7 @@ export function resolve(step: StepData, ctx: StepContext) {
     trace: {
       source: step.source,
       notation: step.rolled.notation, rolls: step.rolled.rolls,
+      ...(step.doubled ? { doubled: true } : {}),
       flat, bonus, margin, total,
     },
     break: null,

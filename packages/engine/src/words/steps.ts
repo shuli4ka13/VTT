@@ -87,6 +87,7 @@ export const STEP_WORDS = {
       { key: 'bonus', label: 'Прибавка', kind: 'ref', main: true, allow: ['expr', 'const', 'param', 'empty'] },
       { key: 'fixed', label: 'Фикс записи', kind: 'ref', allow: ['prop', 'const', 'param', 'empty'] },
       { key: 'margin', label: 'Превышение шага', kind: 'ref', allow: ['ref', 'empty'] },
+      { key: 'double', label: 'Удвоить кости, если', kind: 'guard' },
     ],
     outputs: [{ path: '', label: 'число', kind: 'number' }],
     reasons: {},

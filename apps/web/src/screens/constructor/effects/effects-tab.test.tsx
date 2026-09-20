@@ -265,3 +265,43 @@ describe('эффект слушает время', () => {
     expect(screen.getByText(/У времени нет исходов/)).toBeTruthy();
   });
 });
+
+describe('крит собирается в шаге «число»', () => {
+  beforeEach(() => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 10 } }],
+        constants: { к20: { label: 'Кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
+        effects: {
+          удар: {
+            label: 'Удар', activation: 'manual', params: [],
+            steps: [
+              { id: 'проверка', type: 'threshold', roll: { die: { constant: 'к20' } }, versus: { const: 10 } },
+              { id: 'урон', type: 'amount', source: 'roll', dice: { const: '2d6' } },
+            ],
+          },
+        },
+      },
+      activeEffectId: 'удар',
+    }));
+  });
+  afterEach(() => { cleanup(); });
+
+  it('«удвоить кости, если» предлагает числовые выходы проверки и пишет порог', () => {
+    render(<EffectsTab />);
+    const picker = [...document.querySelectorAll('select')]
+      .find(el => [...el.options].some(o => o.value === 'проверка.natural'))!;
+    expect(picker).toBeTruthy();
+
+    fireEvent.change(picker, { target: { value: 'проверка.natural' } });
+    const steps = useWorld.getState().system.effects.удар!.steps!;
+    expect(steps[1]!.double).toEqual({ ref: 'проверка.natural', atLeast: 20 });
+
+    const least = screen.getByText('не меньше').closest('label')!.querySelector('input')!;
+    fireEvent.change(least, { target: { value: '19' } });
+    expect(useWorld.getState().system.effects.удар!.steps![1]!.double)
+      .toEqual({ ref: 'проверка.natural', atLeast: 19 });
+  });
+});

@@ -1,4 +1,5 @@
 import { newPass } from '../engine/calc.ts';
+import { rolledSoFar } from '../engine/rolled.ts';
 import { packCall, runCall } from './call.ts';
 import { packRef, resolveRef } from '../engine/refs.ts';
 import {
@@ -205,21 +206,7 @@ export function receive(
 }
 
 export function senderResults(envelope: Envelope): Record<string, unknown> {
-  const results: Record<string, unknown> = {};
-  for (const step of envelope.steps as Record<string, any>[]) {
-    if (!step.rolled || step.id == null) continue;
-    const rolled = step.rolled;
-    const bonus = (typeof step.bonus?.const === 'number' ? step.bonus.const : 0) + (step.modBonus ?? 0);
-    results[String(step.id)] = {
-      total: rolled.total + bonus,
-      rolled: rolled.tally?.dice ?? rolled.rolls.length,
-      atMax: rolled.tally?.atMax ?? 0,
-      atMin: rolled.tally?.atMin ?? 0,
-      edited: (rolled.edits?.length ?? 0) > 0,
-      dice: { rolls: rolled.rolls, kept: rolled.kept },
-    };
-  }
-  return results;
+  return rolledSoFar(envelope.steps as unknown as Record<string, unknown>[]);
 }
 
 export const EVENT_PREFIX = 'event:';

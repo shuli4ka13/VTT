@@ -1,4 +1,5 @@
 import { stepModule } from './steps/index.ts';
+import { rolledSoFar } from './rolled.ts';
 import { findField } from './calc.ts';
 import { requireEffect, stackingOf, usesMax } from './effects.ts';
 import { packRef, resolveRef } from './refs.ts';
@@ -40,10 +41,11 @@ export function packSteps(steps: Step[], ctx: StepContext): StepData[] {
   for (const step of steps) {
     const mod = stepModule(step.type);
     const when = packGuard((step as StepData).when, ctx);
+    const sender = rolledSoFar(packed as unknown as Record<string, unknown>[]);
     packed.push({
       type: step.type, id: step.id ?? null,
       ...(when !== undefined ? { when } : {}),
-      ...mod.pack(step as StepData, ctx),
+      ...mod.pack(step as StepData, { ...ctx, sender }),
     } as StepData);
   }
   return packed;

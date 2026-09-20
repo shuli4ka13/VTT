@@ -36,6 +36,8 @@ export interface StepContext extends RefContext {
   expiry?: (effect: Effect) => Partial<WornEffect>;
 
   bond?: { from: string; by: string };
+
+  sender?: Record<string, unknown>;
   [k: string]: unknown;
 }
 
