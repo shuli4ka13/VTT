@@ -79,4 +79,18 @@ describe('выбор целей на столе', () => {
     fireEvent.click(token('Арвен'));
     expect(token('Арвен').className).not.toContain('token--from');
   });
+
+  it('«сбросить выбор» снимает и действующего, и цели разом', () => {
+    render(<TableScreen />);
+    const token = (name: string) => screen.getAllByText(name)[0]!.closest('button')!;
+
+    fireEvent.click(token('Арвен'));
+    fireEvent.click(token('Мирра'));
+    expect(token('Мирра').className).toContain('token--to');
+
+    fireEvent.click(screen.getByText('сбросить выбор'));
+    expect(token('Арвен').className).not.toContain('token--from');
+    expect(token('Мирра').className).not.toContain('token--to');
+    expect(screen.getByText('Кто действует?')).toBeTruthy();
+  });
 });

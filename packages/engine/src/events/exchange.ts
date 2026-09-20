@@ -59,6 +59,14 @@ export function deliver({
     reports.push({ fromId: reply.from, toId: String(reply.to), report: back.report });
   }
 
+  const holder = system.effects[envelope.effect];
+  if (holder?.bond && !envelope.reply) {
+    const caster = live(fromId);
+    if (caster && !(caster.effects ?? []).some(entry => entry.effectId === envelope.effect)) {
+      put({ ...caster, effects: [...(caster.effects ?? []), { effectId: envelope.effect }] });
+    }
+  }
+
   const sender = live(fromId);
   if (sender && !envelope.reply) {
     const out = fireOutgoing(envelope, { results: main.results, emitted: main.report.emitted }, { sheet: sender, targetId: toId }, ctx);

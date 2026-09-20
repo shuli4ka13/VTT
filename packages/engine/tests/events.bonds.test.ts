@@ -40,6 +40,16 @@ group('эффект, который держится другим эффекто
     eq(worn[0]!.by, 'благословение');
   });
 
+  test('заклинатель сам получает пометку концентрации — иначе связанное спало бы сразу', () => {
+    const out = exchange({
+      system, compendium, die: () => 1, sheets: [sheet('жрец'), sheet('воин')],
+      actionId: 'молитва:0', fromId: 'жрец', toId: 'воин',
+    });
+    const caster = out.sheets.find(s => s.id === 'жрец')!;
+    eq((caster.effects ?? []).map(e => e.effectId).join(','), 'благословение');
+    eq(sweepBonds(system, out.sheets).broken.length, 0, 'пока держит — ничего не спадает');
+  });
+
   test('пока жрец носит источник — связанное держится на всех', () => {
     const bonded = { effectId: 'благословлён', from: 'жрец', by: 'благословение' };
     const sheets = [

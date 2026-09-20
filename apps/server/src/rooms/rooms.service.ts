@@ -576,7 +576,7 @@ export class RoomsService {
     const effect = list === 'effects' ? findEffect(system, id) : null;
     if (list === 'effects') {
       if (!effect) throw new BadRequestException(`система не объявляет эффекта «${id}»`);
-      if ((effect.activation ?? 'manual') === 'manual') {
+      if (on && (effect.activation ?? 'manual') === 'manual') {
         throw new BadRequestException('активируемый эффект не вешают — его применяют действием');
       }
     }
@@ -609,7 +609,20 @@ export class RoomsService {
 
     await this.db.update(roomSheets).set({ data: JSON.stringify(next) })
       .where(and(eq(roomSheets.roomId, roomId), eq(roomSheets.sheetId, sheetId)));
-    return { roomId, sheets: [next], log: [] };
+
+    if (list !== 'effects') return { roomId, sheets: [next], log: [] };
+
+    const all = (await this.db.select().from(roomSheets).where(eq(roomSheets.roomId, roomId)))
+      .map(entry => (entry.sheetId === sheetId ? next : JSON.parse(entry.data) as Sheet));
+    const swept = sweepBonds(system, all);
+    const lines: string[] = [];
+    for (const broken of swept.broken) {
+      const who = swept.sheets.find(s => s.id === broken.sheetId)?.name ?? broken.sheetId;
+      lines.push(`«${effectLabelOf(system, broken.effectId)}» спало с ${who}: держать стало нечем`);
+    }
+    const touched = await this.persistSheets(roomId, all, swept.sheets, [next]);
+    const log = lines.length ? await this.appendLog(roomId, lines) : [];
+    return { roomId, sheets: touched, log };
   }
 
   async listFor(userId: string): Promise<RoomSummary[]> {

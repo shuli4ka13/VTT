@@ -116,6 +116,13 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   const hangable = Object.entries(room.system.effects)
     .filter(([, effect]) => (effect.activation ?? 'manual') !== 'manual');
 
+  const heldIds = (sheet.effects ?? [])
+    .map(entry => entry.effectId)
+    .filter(id => !hangable.some(([key]) => key === id));
+  const held = [...new Set(heldIds)]
+    .map(id => [id, room.system.effects[id]] as const)
+    .filter((entry): entry is [string, NonNullable<typeof entry[1]>] => Boolean(entry[1]));
+
   return (
     <>
       <Fold title="Что применить" count={available.length} open>
@@ -170,6 +177,24 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
       </Fold>
 
       <Fold title="Висящие эффекты" count={(sheet.effects ?? []).length}>
+        {held.length ? (
+          <div className="stack stack--tight">
+            <span className="field__label">Держится этим листом</span>
+            <div className="inline inline--tight">
+              {held.map(([id, effect]) => (
+                <Chip
+                  key={id}
+                  active
+                  title="снять — связанное спадёт со всех"
+                  onClick={() => toggle('effects', id, false)}
+                >
+                  {effect.label ?? id}
+                </Chip>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         {hangable.length === 0
           ? <span className="faint">В системе нет эффектов, которые можно повесить.</span>
           : (

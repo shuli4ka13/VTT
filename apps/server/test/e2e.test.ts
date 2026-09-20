@@ -462,3 +462,50 @@ describe('права на лист', () => {
     await expect(rooms.setValue(other, roomId, foreign.id, 'hp_current', 5)).resolves.toBeTruthy();
   });
 });
+
+describe('концентрация снимается с листа', () => {
+  it('держащий эффект можно снять, и связанное спадает со всех', async () => {
+    const gm = (await http().post('/auth/login').send({ name: 'Ведущий связей' })).body;
+    const as = (r: request.Test) => r.set('Authorization', `Bearer ${gm.token}`);
+    const me = (await as(http().get('/auth/me'))).body.userId as string;
+
+    const system = {
+      id: 'связи', name: 'Со связями',
+      fields: [{ tag: 'бонус', label: 'Бонус', value: { kind: 'stored', type: 'number', default: 0 } }],
+      effects: {
+        держу: {
+          label: 'Держу', activation: 'manual', bond: true,
+          steps: [{ type: 'status', mode: 'apply', effect: { const: 'связан' } }],
+        },
+        связан: { label: 'Связан', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [] },
+      },
+      records: { жест: { kind: 'action', label: 'Жест', props: [], bindings: [{ label: 'Держу', effect: 'держу', args: {} }] } },
+    };
+    const book = { items: [], actions: [{ id: 'жест', rk: 'жест', label: 'Жест', props: {} }] };
+    const sheet = (id: string) => ({
+      id, systemId: 'связи', kind: 'pc', name: id, values: {}, equipped: [], actions: ['жест'], effects: [],
+    });
+
+    const systemId = (await as(http().post('/systems')).send({ title: 'Со связями', system })).body.id;
+    const bookId = (await as(http().post('/compendiums')).send({ title: 'Книга связей', systemId, compendium: book })).body.id;
+    await as(http().post(`/systems/${systemId}/publish`)).send({}).expect(201);
+    await as(http().post(`/compendiums/${bookId}/publish`)).send({}).expect(201);
+    const worldId = (await as(http().post('/worlds')).send({
+      title: 'Мир связей', systemId, compendiumIds: [bookId], sheets: [sheet('жрец'), sheet('воин')],
+    })).body.id;
+    const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол связей' })).body.id as string;
+
+    await as(http().post(`/rooms/${roomId}/act`))
+      .send({ roomId, actionId: 'жест:0', fromId: 'жрец', toId: 'воин' }).expect(201);
+
+    const rooms = await import('../src/rooms/rooms.service.ts').then(m => app.get(m.RoomsService));
+    const after = (await as(http().get(`/rooms/${roomId}`))).body.sheets;
+    expect(after.find((s: { id: string }) => s.id === 'воин').effects).toHaveLength(1);
+    expect(after.find((s: { id: string }) => s.id === 'жрец').effects[0].effectId).toBe('держу');
+
+    const dropped = await rooms.setBelonging(me, roomId, 'жрец', 'effects', 'держу', false);
+    expect(dropped.log.map((e: { text: string }) => e.text).join(' ')).toContain('держать стало нечем');
+    const cleared = (await as(http().get(`/rooms/${roomId}`))).body.sheets;
+    expect(cleared.find((s: { id: string }) => s.id === 'воин').effects).toHaveLength(0);
+  });
+});

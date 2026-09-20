@@ -105,7 +105,13 @@ export function TableScreen() {
 
             <Combat room={room} onError={setError} />
             {room.pending ? <Prompt room={room} onError={setError} /> : null}
-            <Actions room={room} sender={sender} targets={targets} onError={setError} />
+            <Actions
+              room={room}
+              sender={sender}
+              targets={targets}
+              onError={setError}
+              onClear={() => { setFrom(null); setTo([]); }}
+            />
           </>
         ),
       }}
@@ -228,10 +234,11 @@ function ClaimRow({ label, edits, picked, onToggle }: {
   );
 }
 
-function Actions({ room, sender, targets, onError }: {
+function Actions({ room, sender, targets, onError, onClear }: {
   room: RoomState;
   sender: Sheet | null;
   targets: Sheet[];
+  onClear: () => void;
   onError: (message: string | null) => void;
 }) {
   const [mine, setMine] = useState<string[]>([]);
@@ -258,6 +265,7 @@ function Actions({ room, sender, targets, onError }: {
         badge={targets.length
           ? <span className="inline inline--tight">{targets.map(sheet => <Chip key={sheet.id}>по {sheet.name}</Chip>)}</span>
           : <span className="faint">выберите цель — можно несколько</span>}
+        actions={<Button size="sm" variant="ghost" onClick={onClear}>сбросить выбор</Button>}
       />
       {edits.length && available.length ? (
         <div className="stack stack--tight">
