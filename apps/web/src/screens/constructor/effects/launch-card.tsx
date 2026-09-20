@@ -1,5 +1,8 @@
 import { Card, CardHead, Field, Select, Chip } from '../../../ui/primitives.tsx';
 import { registry } from '@vtt/engine/engine/steps/index';
+import { MOMENTS as TIMES, MOMENT_PREFIX } from '@vtt/engine/events/moments';
+import type { MomentKey } from '@vtt/engine/events/moments';
+
 import { MOMENTS } from './words.ts';
 import type { Moment } from './words.ts';
 import type { System, Effect } from '@vtt/schema';
@@ -55,7 +58,8 @@ export function LaunchCard({ id, effect, system, edit }: {
   const asks = moment === 'ask-target' || moment === 'ask-sender';
   const listened = effect.trigger?.on;
   const anyAction = !listened || listened === '*';
-  const conditions = anyAction ? conditionsOfAny(system) : conditionsOf(system, listened);
+  const isMoment = Boolean(listened?.startsWith(MOMENT_PREFIX));
+  const conditions = isMoment ? [] : anyAction ? conditionsOfAny(system) : conditionsOf(system, listened);
 
   return (
     <Card>
@@ -80,6 +84,8 @@ export function LaunchCard({ id, effect, system, edit }: {
               ...Object.entries(system.effects)
                 .filter(([key, e]) => key !== id && (e.activation ?? 'manual') === 'manual')
                 .map(([key, e]) => [key, e.label ?? key] as const),
+              ...(asks ? [] : (Object.keys(TIMES) as MomentKey[])
+                .map(key => [`${MOMENT_PREFIX}${key}`, `время: ${TIMES[key]}`] as const)),
             ] as never}
             onChange={next => edit(draft => {
               draft.trigger = { ...(draft.trigger ?? {}), on: next || (asks ? '*' : '') };
@@ -89,7 +95,9 @@ export function LaunchCard({ id, effect, system, edit }: {
 
         <Field
           label="Только если"
-          hint={conditions.length ? undefined : 'У того, кого слушаем, нет шагов с исходом «да/нет» — сработает всегда.'}
+          hint={isMoment
+            ? 'У времени нет исходов — сработает всегда.'
+            : conditions.length ? undefined : 'У того, кого слушаем, нет шагов с исходом «да/нет» — сработает всегда.'}
         >
           <Select
             value={String((effect.trigger?.condition as { ref?: string })?.ref ?? '')}
@@ -100,7 +108,7 @@ export function LaunchCard({ id, effect, system, edit }: {
           />
         </Field>
 
-        {asks ? null : (
+        {asks || isMoment ? null : (
           <Field label="Кому" hint="Куда уходит цепочка шагов этого эффекта.">
             <Select
               value={String(effect.trigger?.to ?? (moment === 'after-out' ? 'self' : 'sender'))}

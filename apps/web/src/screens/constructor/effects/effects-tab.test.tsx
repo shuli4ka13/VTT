@@ -236,3 +236,32 @@ describe('общий эффект вместо «события»', () => {
     expect(useWorld.getState().system.events![key]!.tags).toEqual(['огонь', 'яд']);
   });
 });
+
+describe('эффект слушает время', () => {
+  beforeEach(() => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 10 } }],
+      },
+      activeEffectId: null,
+    }));
+  });
+  afterEach(() => { cleanup(); });
+
+  it('в списке «Слушает» есть моменты хода, и выбор сохраняется', () => {
+    render(<EffectsTab />);
+    fireEvent.click(screen.getByText('+ срабатывает сам'));
+
+    const listens = [...document.querySelectorAll('select')]
+      .find(el => [...el.options].some(o => o.value.startsWith('moment:')))!;
+    const options = [...listens.options].map(o => o.textContent ?? '');
+    expect(options.some(text => text.includes('в начале своего хода'))).toBe(true);
+
+    fireEvent.change(listens, { target: { value: 'moment:turn-start' } });
+    const effect = Object.values(useWorld.getState().system.effects).at(-1)!;
+    expect(effect.trigger?.on).toBe('moment:turn-start');
+    expect(screen.getByText(/У времени нет исходов/)).toBeTruthy();
+  });
+});
