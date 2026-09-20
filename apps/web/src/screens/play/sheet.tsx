@@ -77,6 +77,7 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
       reader={reader}
       badge={sheet.kind === 'npc' ? 'НПС' : 'игрок'}
       onChange={(tag, value) => tableSocket.setValue(room.id, sheet.id, tag, value)}
+      onRoll={tag => tableSocket.rollField(room.id, sheet.id, tag)}
     />
   );
 }

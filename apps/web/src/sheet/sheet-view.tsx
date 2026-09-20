@@ -14,11 +14,12 @@ export const groupsOf = (system: System): [string, FieldModel[]][] => {
   return [...groups];
 };
 
-export function SheetView({ system, sheet, reader, onChange, badge, only }: {
+export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only }: {
   system: System;
   sheet: Sheet;
   reader: Reader;
   onChange?: (tag: string, value: StoredValue) => void;
+  onRoll?: (tag: string) => void;
   badge?: string;
   only?: string[];
 }) {
@@ -38,7 +39,14 @@ export function SheetView({ system, sheet, reader, onChange, badge, only }: {
           <CardHead title={group} />
           <div className="row">
             {fields.map(field => (
-              <FieldCell key={field.tag} field={field} sheet={sheet} reader={reader} onChange={onChange} />
+              <FieldCell
+                key={field.tag}
+                field={field}
+                sheet={sheet}
+                reader={reader}
+                onChange={onChange}
+                onRoll={onRoll}
+              />
             ))}
           </div>
         </Card>

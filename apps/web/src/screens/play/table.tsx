@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useRoom } from '../../store/room.ts';
 import { tableSocket } from '../../api/socket.ts';
+import { ActionForm } from './action-form.tsx';
 import { Columns } from '../../ui/layout.tsx';
 import { Card, CardHead, Button, Empty, Verdict, Chip } from '../../ui/primitives.tsx';
 import { Lobby } from './lobby.tsx';
-import type { RoomState, Sheet } from '@vtt/schema';
+import type { RoomState, Sheet, System } from '@vtt/schema';
 import { availableActions } from '@vtt/engine/events/envelope';
 import './table.css';
 
@@ -235,24 +236,26 @@ function Actions({ room, sender, target, onError }: {
         : (
           <div className="inline inline--tight">
             {available.map(action => (
-              <Button
+              <ActionForm
                 key={action.id}
-                variant="primary"
+                system={room.system as System}
+                compendium={room.compendium}
+                actionId={action.id}
+                label={action.label}
                 disabled={!target || Boolean(room.pending)}
-                onClick={() => {
+                onAct={request => {
                   onError(null);
                   tableSocket.act({
-                    roomId: room.id, actionId: action.id,
+                    roomId: room.id, actionId: request.actionId,
                     fromId: sender.id, toId: target!.id,
+                    ...(request.inputs ? { inputs: request.inputs } : {}),
                     ...(mine.length ? { edits: mine } : {}),
                     ...(theirs.length ? { targetEdits: theirs } : {}),
                   });
                   setMine([]);
                   setTheirs([]);
                 }}
-              >
-                {action.label}
-              </Button>
+              />
             ))}
           </div>
         )}
