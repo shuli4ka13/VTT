@@ -68,6 +68,14 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
           />
         </Field>
 
+        <Field label="Описание для игрока" hint="Текст, который игрок видит на листе. На расчёт не влияет.">
+          <Input
+            value={effect.description ?? ''}
+            placeholder="например: бьёшь оружием ближнего боя"
+            onChange={next => edit(draft => { draft.description = next || undefined; })}
+          />
+        </Field>
+
         <div className="row">
           <Field label="Категория">
             <Input value={effect.category ?? ''} onChange={next => edit(draft => { draft.category = next; })} />
