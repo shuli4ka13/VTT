@@ -1,6 +1,7 @@
 import { useWorld, freeId, slugOf } from '../../store/world.ts';
 import { useUsage, usersOf } from './usage.ts';
 import { LiveValue } from './live-value.tsx';
+import { Starters } from './starters.tsx';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
   Card, CardHead, Field, Input, Select, Button, Empty, Fold, Verdict, Chip, DangerButton, NumInput,
@@ -56,6 +57,7 @@ export function SheetTab() {
       {node.fields.map(field => (
         <ListItem
           key={field.tag}
+          icon={field.value.kind === 'stored' ? undefined : '='}
           name={field.label}
           meta={metaOf(system, field.value)}
           active={field.tag === activeTag}
@@ -77,7 +79,8 @@ export function SheetTab() {
         body: tree.length === 0
           ? <Empty
               title="Лист пуст"
-              hint="Заведите первое поле кнопкой выше — или возьмите готовый блок из образцовой системы справа."
+              hint="Начните с готового блока — его поля и формулы приедут целиком. Или заведите поле сами кнопкой выше."
+              action={<Starters />}
             />
           : <List>{tree.map(node => branch(node, 0))}</List>,
       }}
@@ -306,10 +309,12 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
   );
 }
 
+const TYPE_WORDS: Record<string, string> = { number: 'число', text: 'текст', boolean: 'да / нет' };
+
 const metaOf = (system: System, value: FieldValue) =>
-  value.kind === 'stored' ? `вводит игрок · ${value.type}`
-    : value.kind === 'formula' ? (value.expr ? formulaAsLabels(system, value.expr) : 'формула не дописана')
-      : `таблица «${value.table || '—'}»`;
+  value.kind === 'stored' ? `вводит игрок · ${TYPE_WORDS[value.type] ?? value.type}`
+    : value.kind === 'formula' ? (value.expr ? `= ${formulaAsLabels(system, value.expr)}` : '= формула не дописана')
+      : `= таблица «${system.tables?.[value.table]?.label || value.table || '—'}»`;
 
 export function boundProblem(bound: number | string | undefined, system: System): string | undefined {
   if (bound === undefined || typeof bound === 'number') return undefined;
