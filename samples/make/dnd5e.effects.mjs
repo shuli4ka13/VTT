@@ -1,4 +1,4 @@
-import { RESOURCES } from './dnd5e.system.mjs';
+import { RESOURCES, TAKEN } from './dnd5e.system.mjs';
 
 const DIE = { constant: 'lead_die' };
 
@@ -121,6 +121,17 @@ function attacks() {
 function spells() {
   const infoParams = [P.level, P.slot];
   return {
+    taken_rule: {
+      label: 'Что доходит до меня',
+      category: 'Правила комнаты',
+      description: 'Один раз на все типы урона: сколько доходит — сказано на листе. Иммунитет, сопротивление, уязвимость выставляются там же.',
+      activation: 'passive',
+      duration: { kind: 'permanent' },
+      modifiers: TAKEN.map(([tag, damage]) => ({
+        kind: 'value', target: 'event:damage', op: 'mul',
+        value: { expr: `#${tag}` }, stacking: 'sum', condition: null, tags: [damage],
+      })),
+    },
     spell: {
       label: 'Заклинание',
       category: 'Заклинания',
@@ -580,5 +591,5 @@ export function effects() {
 }
 
 export const ROOM_RULES = [
-  'exhaustion_rule', 'fall', 'wake', 'death_now', 'stabilize', 'long_rest', 'short_rest',
+  'taken_rule', 'exhaustion_rule', 'fall', 'wake', 'death_now', 'stabilize', 'long_rest', 'short_rest',
 ];

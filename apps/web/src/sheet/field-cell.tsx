@@ -36,6 +36,7 @@ export function FieldCell({ field, sheet, reader, onChange, onRoll }: {
               label={field.label}
               min={typeof bounds?.min === 'number' ? bounds.min : undefined}
               max={typeof bounds?.max === 'number' ? bounds.max : boundOf(bounds?.max, reader)}
+              options={field.options}
               onChange={next => onChange(field.tag, next)}
             />
             {roll}

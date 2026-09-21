@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react';
 import { Button, Input, NumInput } from '../../ui/primitives.tsx';
-import type { Control, StoredValue } from '@vtt/schema';
+import type { Control, StoredValue, FieldOption } from '@vtt/schema';
 
 export interface ControlProps {
   value: StoredValue;
   min?: number;
   max?: number;
   label: string;
+  options?: FieldOption[];
   onChange: (value: StoredValue) => void;
 }
 
@@ -17,6 +18,7 @@ export const CONTROLS: Record<Control, string> = {
   ring: 'Кружок владения',
   bar: 'Полоса запаса',
   die: 'Кость',
+  choice: 'Выбор из вариантов',
 };
 
 const clamp = (value: number, min?: number, max?: number): number => {
@@ -68,18 +70,42 @@ export function Toggle({ value, label, onChange }: ControlProps) {
   );
 }
 
-export function Ring({ value, label, onChange }: ControlProps) {
-  const now = Number(value ?? 0);
-  const next = (now + 1) % 3;
-  const words = ['нет', 'владение', 'мастерство'];
+const STEPS: FieldOption[] = [
+  { value: 0, label: 'нет' }, { value: 1, label: 'владение' }, { value: 2, label: 'мастерство' },
+];
+
+export function Ring({ value, label, options, onChange }: ControlProps) {
+  const steps = options?.length ? options : STEPS;
+  const at = Math.max(0, steps.findIndex(step => step.value === (value ?? 0)));
+  const next = steps[(at + 1) % steps.length]!;
+  const marks = ['○', '◑', '●', '◉'];
   return (
     <Button
-      title={`${label}: ${words[now] ?? now}. Клик — следующая ступень.`}
-      variant={now ? 'primary' : undefined}
-      onClick={() => onChange(next)}
+      title={`${label}: ${steps[at]?.label ?? ''}. Клик — следующая ступень.`}
+      variant={at ? 'primary' : undefined}
+      onClick={() => onChange(next.value)}
     >
-      {now === 0 ? '○' : now === 1 ? '◑' : '●'} {words[now] ?? now}
+      {marks[Math.min(at, marks.length - 1)]} {steps[at]?.label ?? ''}
     </Button>
+  );
+}
+
+export function Choice({ value, label, options, onChange }: ControlProps) {
+  const list = options ?? [];
+  if (!list.length) return <span className="faint">вариантов ещё нет</span>;
+  return (
+    <div className="inline inline--tight control control--choice" role="radiogroup" aria-label={label}>
+      {list.map(option => (
+        <Button
+          key={String(option.value)}
+          size="sm"
+          variant={option.value === value ? 'primary' : undefined}
+          onClick={() => onChange(option.value)}
+        >
+          {option.label}
+        </Button>
+      ))}
+    </div>
   );
 }
 
@@ -113,4 +139,5 @@ export const CONTROL_VIEWS: Record<Control, (props: ControlProps) => ReactNode> 
   ring: Ring,
   bar: Bar,
   die: Die,
+  choice: Choice,
 };

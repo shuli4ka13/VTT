@@ -33,13 +33,23 @@ export const RESOURCES = [
   ['relentless', 'Непоколебимая стойкость', 'long'],
 ];
 
+export const DAMAGE_TAGS = [
+  'рубящий', 'колющий', 'дробящий', 'огонь', 'холод', 'молния', 'гром', 'кислота', 'яд',
+  'некротический', 'излучение', 'психический', 'силовой', 'магический',
+];
+
+export const TAKEN = DAMAGE_TAGS
+  .filter(tag => tag !== 'магический')
+  .map((tag, at) => [`taken_${at}`, tag]);
+
 const stored = (tag, label, group, type, def, extra = {}) => {
-  const { control, roll, ...bounds } = extra;
+  const { control, roll, options, ...bounds } = extra;
   return {
     tag, label, group,
     ...(roll ? { roll } : {}),
     value: { kind: 'stored', type, default: def, ...bounds },
     ...(control ? { control } : {}),
+    ...(options ? { options } : {}),
   };
 };
 const formula = (tag, label, group, expr, roll) => ({
@@ -136,8 +146,19 @@ export function fields() {
   for (const [tag, label] of [['gp', 'Золотые'], ['sp', 'Серебряные'], ['cp', 'Медные']]) {
     out.push(stored(tag, label, 'Богатство', 'number', 0, { min: 0 }));
   }
+
+  for (const [tag, damage] of TAKEN) {
+    out.push(stored(tag, `${damage[0].toUpperCase()}${damage.slice(1)}`, 'Что доходит', 'number', 1, {
+      control: 'choice',
+      options: [
+        { value: 0, label: 'иммунитет' }, { value: 0.5, label: 'сопротивление' },
+        { value: 1, label: 'как есть' }, { value: 2, label: 'уязвимость' },
+      ],
+    }));
+  }
   return out;
 }
+
 
 export const groups = () => ({
   'Личное дело': {},
@@ -223,10 +244,7 @@ export const actionTypes = () => ({
   movement: { label: 'Передвижение', icon: '→' },
 });
 
-export const DAMAGE_TAGS = [
-  'рубящий', 'колющий', 'дробящий', 'огонь', 'холод', 'молния', 'гром', 'кислота', 'яд',
-  'некротический', 'излучение', 'психический', 'силовой', 'магический',
-];
+
 
 export function calledEffects() {
   const slotSteps = [];

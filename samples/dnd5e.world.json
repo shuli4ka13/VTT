@@ -1788,6 +1788,383 @@
           "default": 0,
           "min": 0
         }
+      },
+      {
+        "tag": "taken_0",
+        "label": "Рубящий",
+        "group": "Что доходит",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1
+        },
+        "control": "choice",
+        "options": [
+          {
+            "value": 0,
+            "label": "иммунитет"
+          },
+          {
+            "value": 0.5,
+            "label": "сопротивление"
+          },
+          {
+            "value": 1,
+            "label": "как есть"
+          },
+          {
+            "value": 2,
+            "label": "уязвимость"
+          }
+        ]
+      },
+      {
+        "tag": "taken_1",
+        "label": "Колющий",
+        "group": "Что доходит",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1
+        },
+        "control": "choice",
+        "options": [
+          {
+            "value": 0,
+            "label": "иммунитет"
+          },
+          {
+            "value": 0.5,
+            "label": "сопротивление"
+          },
+          {
+            "value": 1,
+            "label": "как есть"
+          },
+          {
+            "value": 2,
+            "label": "уязвимость"
+          }
+        ]
+      },
+      {
+        "tag": "taken_2",
+        "label": "Дробящий",
+        "group": "Что доходит",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1
+        },
+        "control": "choice",
+        "options": [
+          {
+            "value": 0,
+            "label": "иммунитет"
+          },
+          {
+            "value": 0.5,
+            "label": "сопротивление"
+          },
+          {
+            "value": 1,
+            "label": "как есть"
+          },
+          {
+            "value": 2,
+            "label": "уязвимость"
+          }
+        ]
+      },
+      {
+        "tag": "taken_3",
+        "label": "Огонь",
+        "group": "Что доходит",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1
+        },
+        "control": "choice",
+        "options": [
+          {
+            "value": 0,
+            "label": "иммунитет"
+          },
+          {
+            "value": 0.5,
+            "label": "сопротивление"
+          },
+          {
+            "value": 1,
+            "label": "как есть"
+          },
+          {
+            "value": 2,
+            "label": "уязвимость"
+          }
+        ]
+      },
+      {
+        "tag": "taken_4",
+        "label": "Холод",
+        "group": "Что доходит",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1
+        },
+        "control": "choice",
+        "options": [
+          {
+            "value": 0,
+            "label": "иммунитет"
+          },
+          {
+            "value": 0.5,
+            "label": "сопротивление"
+          },
+          {
+            "value": 1,
+            "label": "как есть"
+          },
+          {
+            "value": 2,
+            "label": "уязвимость"
+          }
+        ]
+      },
+      {
+        "tag": "taken_5",
+        "label": "Молния",
+        "group": "Что доходит",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1
+        },
+        "control": "choice",
+        "options": [
+          {
+            "value": 0,
+            "label": "иммунитет"
+          },
+          {
+            "value": 0.5,
+            "label": "сопротивление"
+          },
+          {
+            "value": 1,
+            "label": "как есть"
+          },
+          {
+            "value": 2,
+            "label": "уязвимость"
+          }
+        ]
+      },
+      {
+        "tag": "taken_6",
+        "label": "Гром",
+        "group": "Что доходит",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1
+        },
+        "control": "choice",
+        "options": [
+          {
+            "value": 0,
+            "label": "иммунитет"
+          },
+          {
+            "value": 0.5,
+            "label": "сопротивление"
+          },
+          {
+            "value": 1,
+            "label": "как есть"
+          },
+          {
+            "value": 2,
+            "label": "уязвимость"
+          }
+        ]
+      },
+      {
+        "tag": "taken_7",
+        "label": "Кислота",
+        "group": "Что доходит",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1
+        },
+        "control": "choice",
+        "options": [
+          {
+            "value": 0,
+            "label": "иммунитет"
+          },
+          {
+            "value": 0.5,
+            "label": "сопротивление"
+          },
+          {
+            "value": 1,
+            "label": "как есть"
+          },
+          {
+            "value": 2,
+            "label": "уязвимость"
+          }
+        ]
+      },
+      {
+        "tag": "taken_8",
+        "label": "Яд",
+        "group": "Что доходит",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1
+        },
+        "control": "choice",
+        "options": [
+          {
+            "value": 0,
+            "label": "иммунитет"
+          },
+          {
+            "value": 0.5,
+            "label": "сопротивление"
+          },
+          {
+            "value": 1,
+            "label": "как есть"
+          },
+          {
+            "value": 2,
+            "label": "уязвимость"
+          }
+        ]
+      },
+      {
+        "tag": "taken_9",
+        "label": "Некротический",
+        "group": "Что доходит",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1
+        },
+        "control": "choice",
+        "options": [
+          {
+            "value": 0,
+            "label": "иммунитет"
+          },
+          {
+            "value": 0.5,
+            "label": "сопротивление"
+          },
+          {
+            "value": 1,
+            "label": "как есть"
+          },
+          {
+            "value": 2,
+            "label": "уязвимость"
+          }
+        ]
+      },
+      {
+        "tag": "taken_10",
+        "label": "Излучение",
+        "group": "Что доходит",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1
+        },
+        "control": "choice",
+        "options": [
+          {
+            "value": 0,
+            "label": "иммунитет"
+          },
+          {
+            "value": 0.5,
+            "label": "сопротивление"
+          },
+          {
+            "value": 1,
+            "label": "как есть"
+          },
+          {
+            "value": 2,
+            "label": "уязвимость"
+          }
+        ]
+      },
+      {
+        "tag": "taken_11",
+        "label": "Психический",
+        "group": "Что доходит",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1
+        },
+        "control": "choice",
+        "options": [
+          {
+            "value": 0,
+            "label": "иммунитет"
+          },
+          {
+            "value": 0.5,
+            "label": "сопротивление"
+          },
+          {
+            "value": 1,
+            "label": "как есть"
+          },
+          {
+            "value": 2,
+            "label": "уязвимость"
+          }
+        ]
+      },
+      {
+        "tag": "taken_12",
+        "label": "Силовой",
+        "group": "Что доходит",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1
+        },
+        "control": "choice",
+        "options": [
+          {
+            "value": 0,
+            "label": "иммунитет"
+          },
+          {
+            "value": 0.5,
+            "label": "сопротивление"
+          },
+          {
+            "value": 1,
+            "label": "как есть"
+          },
+          {
+            "value": 2,
+            "label": "уязвимость"
+          }
+        ]
       }
     ],
     "groups": {
@@ -3323,6 +3700,186 @@
               "param": "slot"
             },
             "strict": true
+          }
+        ]
+      },
+      "taken_rule": {
+        "label": "Что доходит до меня",
+        "category": "Правила комнаты",
+        "description": "Один раз на все типы урона: сколько доходит — сказано на листе. Иммунитет, сопротивление, уязвимость выставляются там же.",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "event:damage",
+            "op": "mul",
+            "value": {
+              "expr": "#taken_0"
+            },
+            "stacking": "sum",
+            "condition": null,
+            "tags": [
+              "рубящий"
+            ]
+          },
+          {
+            "kind": "value",
+            "target": "event:damage",
+            "op": "mul",
+            "value": {
+              "expr": "#taken_1"
+            },
+            "stacking": "sum",
+            "condition": null,
+            "tags": [
+              "колющий"
+            ]
+          },
+          {
+            "kind": "value",
+            "target": "event:damage",
+            "op": "mul",
+            "value": {
+              "expr": "#taken_2"
+            },
+            "stacking": "sum",
+            "condition": null,
+            "tags": [
+              "дробящий"
+            ]
+          },
+          {
+            "kind": "value",
+            "target": "event:damage",
+            "op": "mul",
+            "value": {
+              "expr": "#taken_3"
+            },
+            "stacking": "sum",
+            "condition": null,
+            "tags": [
+              "огонь"
+            ]
+          },
+          {
+            "kind": "value",
+            "target": "event:damage",
+            "op": "mul",
+            "value": {
+              "expr": "#taken_4"
+            },
+            "stacking": "sum",
+            "condition": null,
+            "tags": [
+              "холод"
+            ]
+          },
+          {
+            "kind": "value",
+            "target": "event:damage",
+            "op": "mul",
+            "value": {
+              "expr": "#taken_5"
+            },
+            "stacking": "sum",
+            "condition": null,
+            "tags": [
+              "молния"
+            ]
+          },
+          {
+            "kind": "value",
+            "target": "event:damage",
+            "op": "mul",
+            "value": {
+              "expr": "#taken_6"
+            },
+            "stacking": "sum",
+            "condition": null,
+            "tags": [
+              "гром"
+            ]
+          },
+          {
+            "kind": "value",
+            "target": "event:damage",
+            "op": "mul",
+            "value": {
+              "expr": "#taken_7"
+            },
+            "stacking": "sum",
+            "condition": null,
+            "tags": [
+              "кислота"
+            ]
+          },
+          {
+            "kind": "value",
+            "target": "event:damage",
+            "op": "mul",
+            "value": {
+              "expr": "#taken_8"
+            },
+            "stacking": "sum",
+            "condition": null,
+            "tags": [
+              "яд"
+            ]
+          },
+          {
+            "kind": "value",
+            "target": "event:damage",
+            "op": "mul",
+            "value": {
+              "expr": "#taken_9"
+            },
+            "stacking": "sum",
+            "condition": null,
+            "tags": [
+              "некротический"
+            ]
+          },
+          {
+            "kind": "value",
+            "target": "event:damage",
+            "op": "mul",
+            "value": {
+              "expr": "#taken_10"
+            },
+            "stacking": "sum",
+            "condition": null,
+            "tags": [
+              "излучение"
+            ]
+          },
+          {
+            "kind": "value",
+            "target": "event:damage",
+            "op": "mul",
+            "value": {
+              "expr": "#taken_11"
+            },
+            "stacking": "sum",
+            "condition": null,
+            "tags": [
+              "психический"
+            ]
+          },
+          {
+            "kind": "value",
+            "target": "event:damage",
+            "op": "mul",
+            "value": {
+              "expr": "#taken_12"
+            },
+            "stacking": "sum",
+            "condition": null,
+            "tags": [
+              "силовой"
+            ]
           }
         ]
       },
@@ -8407,6 +8964,7 @@
       }
     },
     "room_rules": [
+      "taken_rule",
       "exhaustion_rule",
       "fall",
       "wake",
