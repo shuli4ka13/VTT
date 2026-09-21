@@ -49,10 +49,10 @@ const payResource = (key, note, amount = { const: 1 }) => [
 ];
 
 const manual = (label, category, description, cost, rest) => ({
-  label, category, description, activation: 'manual', ...(cost ? { cost } : {}), params: [], steps: [], ...rest,
+  label, group: category, description, activation: 'manual', ...(cost ? { cost } : {}), params: [], steps: [], ...rest,
 });
 const passive = (label, description, modifiers, duration = { kind: 'temporary' }, extra = {}) => ({
-  label, category: 'Состояния', description, activation: 'passive', duration, stacking: 'refresh', modifiers, ...extra,
+  label, group: 'Состояния', description, activation: 'passive', duration, stacking: 'refresh', modifiers, ...extra,
 });
 const roll = (target, edit, condition = null) => ({ kind: 'roll', target, edit, condition });
 const value = (target, op, amount, extra = {}) => ({
@@ -123,7 +123,7 @@ function spells() {
   return {
     taken_rule: {
       label: 'Что доходит до меня',
-      category: 'Правила комнаты',
+      group: 'Правила комнаты',
       description: 'Один раз на все типы урона: сколько доходит — сказано на листе. Иммунитет, сопротивление, уязвимость выставляются там же.',
       activation: 'passive',
       duration: { kind: 'permanent' },
@@ -134,7 +134,7 @@ function spells() {
     },
     spell: {
       label: 'Заклинание',
-      category: 'Заклинания',
+      group: 'Заклинания',
       description: 'Основа всех заклинаний: спрашивает круг ячейки и тратит её. Сама по себе не применяется.',
       cost: 'action',
       params: infoParams,
@@ -345,7 +345,7 @@ function features() {
 
 function reactions() {
   const reaction = (label, description, trigger, rest) => ({
-    label, category: 'Реакции', description, activation: 'reaction', cost: 'reaction',
+    label, group: 'Реакции', description, activation: 'reaction', cost: 'reaction',
     duration: { kind: 'permanent' }, trigger, params: [], steps: [], ...rest,
   });
   return {
@@ -459,7 +459,7 @@ function conditions() {
 }
 
 function traits() {
-  const trait = (label, description, modifiers) => passive(label, description, modifiers, { kind: 'permanent' }, { category: 'Черты' });
+  const trait = (label, description, modifiers) => passive(label, description, modifiers, { kind: 'permanent' }, { group: 'Черты' });
   return {
     extra_attack: trait('Дополнительная атака', 'Действием «Атака» бьёшь дважды.', [value('attacks_per_action', 'add', 1)]),
     improved_critical: trait('Улучшенный критический удар', 'Крит на 19 и 20.', [value('crit_from', 'set', 19)]),
@@ -489,7 +489,7 @@ function traits() {
 
 function lifecycle() {
   const auto = (label, description, trigger, steps, rest = {}) => ({
-    label, category: 'Отдых и смерть', description, activation: 'triggered', duration: { kind: 'permanent' },
+    label, group: 'Отдых и смерть', description, activation: 'triggered', duration: { kind: 'permanent' },
     trigger, params: [], steps, ...rest,
   });
   const reset = (tag, expr) => change(tag, 'set', { expr, of: 'target' });
@@ -514,7 +514,7 @@ function lifecycle() {
         versus: { ref: 'worn.carry' }, successWhen: 'atLeast', continueOn: 'success',
       },
       ...ends.map(drop),
-    ], { category: 'Состояния', duration: { kind: 'temporary' } });
+    ], { group: 'Состояния', duration: { kind: 'temporary' } });
 
   return {
     concentration: auto('Концентрация',
@@ -526,10 +526,10 @@ function lifecycle() {
           versus: { expr: 'max(10, floor(#event_amount / 2))' }, successWhen: 'atLeast', continueOn: 'fail',
         },
         drop('concentration'),
-      ], { category: 'Заклинания', duration: { kind: 'temporary' } }),
+      ], { group: 'Заклинания', duration: { kind: 'temporary' } }),
     uncanny_off: auto('Невероятное уклонение: конец', 'Снимает уполовинивание сразу после удара.',
       { on: 'event:damage', to: 'self' }, [drop('uncanny_up'), drop('uncanny_off')],
-      { category: 'Реакции', duration: { kind: 'temporary' } }),
+      { group: 'Реакции', duration: { kind: 'temporary' } }),
     dying: auto('При смерти',
       'На нуле хитов: в начале своего хода к20. Десять и выше — успех, иначе провал; единица — два провала, двадцатка — один хит и на ноги.',
       { on: 'moment:turn-start', condition: { expr: '#hp_current <= 0' } },
@@ -539,7 +539,7 @@ function lifecycle() {
         change('death_fail', 'add', { const: 1 }, { when: { ref: 'спас.success', not: true } }),
         change('death_fail', 'add', { const: 1 }, { when: { ref: 'спас.natural', atMost: 1 } }),
         change('hp_current', 'set', { const: 1 }, { when: { ref: 'спас.natural', atLeast: 20 } }),
-      ], { category: 'Состояния', duration: { kind: 'temporary' } }),
+      ], { group: 'Состояния', duration: { kind: 'temporary' } }),
     fall: auto('Падение', 'Хиты опустились до нуля — «Без сознания» и «При смерти».',
       { on: 'field:down' }, [hang({ const: 'unconscious' }), hang({ const: 'dying' })]),
     wake: auto('Подъём', 'Хиты снова выше нуля — встаёт, спасброски от смерти сброшены.',
@@ -553,7 +553,7 @@ function lifecycle() {
         { type: 'compare', value: { tag: 'relentless_left' }, versus: { const: 1 }, breakIf: 'less' },
         change('hp_current', 'set', { const: 1 }),
         change('relentless_left', 'subtract', { const: 1 }),
-      ], { category: 'Черты' }),
+      ], { group: 'Черты' }),
     long_rest: auto('Долгий отдых', 'Хиты и ячейки полные, половина костей хитов, минус уровень истощения, ресурсы долгого отдыха.',
       { on: 'moment:long-rest' }, longRest),
     short_rest: auto('Короткий отдых', 'Возвращает ресурсы короткого отдыха. Кости хитов тратятся отдельной кнопкой.',
@@ -570,7 +570,7 @@ function roomRules() {
   const when = (level, modifier) => ({ ...modifier, condition: `#exhaustion >= ${level}` });
   return {
     exhaustion_rule: {
-      label: 'Истощение', category: 'Правила комнаты', activation: 'passive', duration: { kind: 'permanent' },
+      label: 'Истощение', group: 'Правила комнаты', activation: 'passive', duration: { kind: 'permanent' },
       description: 'Шесть ступеней: помеха на проверки, скорость вдвое меньше, помеха на атаки и спасброски, максимум хитов вдвое меньше, скорость ноль. Шестая — смерть, её объявляет ведущий.',
       modifiers: [
         when(1, roll('skill_roll', 'disadvantage')),

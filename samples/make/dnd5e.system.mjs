@@ -184,6 +184,23 @@ export function fields() {
 
 export const groups = () => ({
   'Личное дело': {},
+  'Механика': {},
+  'Атака': { parent: 'Механика' },
+  'Заклинания': { parent: 'Механика' },
+  'Умения класса': { parent: 'Механика' },
+  'Черты': { parent: 'Механика' },
+  'Состояния': { parent: 'Механика' },
+  'Реакции': { parent: 'Механика' },
+  'Действия в бою': { parent: 'Механика' },
+  'Отдых и смерть': { parent: 'Механика' },
+  'Лечение': { parent: 'Механика' },
+  'Правила комнаты': { parent: 'Механика' },
+  'Вызываемые': { parent: 'Механика' },
+  'Книга': {},
+  'Снаряжение': { parent: 'Книга' },
+  'Расходники': { parent: 'Книга' },
+  'Умения и черты': { parent: 'Книга' },
+  'Бестиарий': { parent: 'Книга' },
   'Характеристики': { default: { kind: 'stored', type: 'number', default: 10 } },
   'Модификаторы': {},
   'Прогрессия': {},
@@ -297,7 +314,7 @@ export function calledEffects() {
   return {
     damage: {
       label: 'Урон',
-      category: 'Вызываемые',
+      group: 'Вызываемые',
       tagsFrom: 'damage_types',
       steps: [
         {
@@ -311,7 +328,7 @@ export function calledEffects() {
     },
     spell_slot: {
       label: 'Ячейка заклинания',
-      category: 'Вызываемые',
+      group: 'Вызываемые',
       steps: slotSteps,
     },
   };

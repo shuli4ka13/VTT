@@ -3,7 +3,7 @@ import { useUsage, usersOf } from './usage.ts';
 import { LiveValue } from './live-value.tsx';
 import { Starters } from './starters.tsx';
 import { CONTROLS } from '../../sheet/controls/index.tsx';
-import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
+import { Columns, List, ListItem } from '../../ui/layout.tsx';
 import {
   Card, CardHead, Field, Input, Select, Button, Empty, Fold, Verdict, Chip, DangerButton, NumInput,
 } from '../../ui/primitives.tsx';
@@ -13,8 +13,8 @@ import { DonorPalette } from './donors.tsx';
 import { newField } from './factory.ts';
 import { GroupEditor } from './group-editor.tsx';
 import { BlockPick } from './block-pick.tsx';
-import { groupTree, effectiveDefault, sameValue } from './groups.ts';
-import type { GroupNode } from './groups.ts';
+import { effectiveDefault, sameValue } from './groups.ts';
+import { blockTree, BlockBranches } from './block-tree.tsx';
 import type { Field as FieldModel, FieldValue, System } from '@vtt/schema';
 
 const KINDS = [
@@ -37,7 +37,7 @@ export function SheetTab() {
 
   const activeGroup = useWorld(s => s.activeGroupName);
 
-  const tree = groupTree(system);
+  const tree = blockTree<FieldModel>(system, system.fields, field => field.group);
   const active = system.fields.find(f => f.tag === activeTag) ?? null;
 
   const addField = (group: string) => {
@@ -46,32 +46,6 @@ export function SheetTab() {
     pick({ activeFieldTag: made.key, activeGroupName: null });
   };
 
-  const branch = (node: GroupNode, depth: number) => (
-    <div key={node.name} className={depth ? 'list__nest' : undefined}>
-      <ListGroup>
-        <button
-          type="button"
-          className={`list__group-pick${node.name === activeGroup && !active ? ' list__group-pick--active' : ''}`}
-          title="настройки блока: значение по умолчанию и подгруппы"
-          onClick={() => pick({ activeGroupName: node.name, activeFieldTag: null })}
-        >{node.name}</button>
-      </ListGroup>
-      {node.fields.map(field => (
-        <ListItem
-          key={field.tag}
-          icon={field.value.kind === 'stored' ? undefined : '='}
-          name={field.label}
-          meta={metaOf(system, field.value)}
-          active={field.tag === activeTag}
-          onClick={() => pick({ activeFieldTag: field.tag, activeGroupName: null })}
-        />
-      ))}
-      <Button size="sm" variant="ghost" wide onClick={() => addField(node.name)}>
-        + поле в «{node.name}»
-      </Button>
-      {node.children.map(child => branch(child, depth + 1))}
-    </div>
-  );
 
   return (
     <Columns
@@ -84,7 +58,26 @@ export function SheetTab() {
               hint="Начните с готового блока — его поля и формулы приедут целиком. Или заведите поле сами кнопкой выше."
               action={<Starters />}
             />
-          : <List>{tree.map(node => branch(node, 0))}</List>,
+          : (
+            <List>
+              <BlockBranches
+                nodes={tree}
+                activeBlock={active ? null : activeGroup}
+                onPickBlock={name => pick({ activeGroupName: name, activeFieldTag: null })}
+                addTo={addField}
+                render={field => (
+                  <ListItem
+                    key={field.tag}
+                    icon={field.value.kind === 'stored' ? undefined : '='}
+                    name={field.label}
+                    meta={metaOf(system, field.value)}
+                    active={field.tag === activeTag}
+                    onClick={() => pick({ activeFieldTag: field.tag, activeGroupName: null })}
+                  />
+                )}
+              />
+            </List>
+          ),
       }}
       main={{
         head: active ? 'Поле' : activeGroup ? 'Блок' : undefined,

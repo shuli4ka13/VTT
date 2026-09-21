@@ -1,6 +1,8 @@
-import { useWorld, effectsByCategory } from '../../../store/world.ts';
+import { useWorld } from '../../../store/world.ts';
+import { blockTree, BlockBranches } from '../block-tree.tsx';
+import { blockOf } from '@vtt/engine/model/blocks';
 import { newEffect } from '../factory.ts';
-import { Columns, List, ListItem, ListGroup } from '../../../ui/layout.tsx';
+import { Columns, List, ListItem } from '../../../ui/layout.tsx';
 import { Button, Empty } from '../../../ui/primitives.tsx';
 import { PreviewPanel } from './preview-panel.tsx';
 import { LAUNCH_KINDS } from './words.ts';
@@ -18,7 +20,7 @@ export function EffectsTab() {
   const pick = useWorld(s => s.pick);
   const editSystem = useWorld(s => s.editSystem);
 
-  const groups = effectsByCategory(system);
+  const tree = blockTree<[string, Effect]>(system, Object.entries(system.effects), ([, effect]) => blockOf(system, effect));
   const active = activeId ? system.effects[activeId] : undefined;
   const called = new Set(calledOf(system).map(([key]) => key));
 
@@ -40,7 +42,7 @@ export function EffectsTab() {
         head: 'Библиотека эффектов',
         body: (
           <>
-            {groups.length === 0
+            {tree.length === 0
               ? <Empty
                   title="Эффектов ещё нет"
                   hint="Заведите первый или возьмите готовый из образца справа."
@@ -48,20 +50,18 @@ export function EffectsTab() {
                 />
               : (
                 <List>
-                  {groups.map(([category, effects]) => (
-                    <div key={category}>
-                      <ListGroup>{category}</ListGroup>
-                      {effects.map(([id, effect]) => (
-                        <ListItem
-                          key={id}
-                          name={effect.label ?? id}
-                          meta={metaOf(effect, called.has(id))}
-                          active={id === activeId}
-                          onClick={() => pick({ activeEffectId: id })}
-                        />
-                      ))}
-                    </div>
-                  ))}
+                  <BlockBranches
+                    nodes={tree}
+                    render={([id, effect]) => (
+                      <ListItem
+                        key={id}
+                        name={effect.label ?? id}
+                        meta={metaOf(effect, called.has(id))}
+                        active={id === activeId}
+                        onClick={() => pick({ activeEffectId: id })}
+                      />
+                    )}
+                  />
                 </List>
               )}
 

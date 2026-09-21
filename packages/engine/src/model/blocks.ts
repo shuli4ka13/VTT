@@ -1,6 +1,6 @@
 import type { System } from './types.ts';
 
-type Loose = Record<string, any>;
+type Loose = Record<string, unknown>;
 
 export const NO_BLOCK = 'Без блока';
 
@@ -39,19 +39,21 @@ export function blockUse(system: System, name: string): BlockUse {
   return { fields, effects, records };
 }
 
+type Blocks = Record<string, Record<string, unknown>>;
+
 export function unifyBlocks(system: System): System {
-  const source = system as unknown as Loose;
-  const strays = blockNames(system).filter(name => !source.groups?.[name]);
-  const named = (Object.values(source.effects ?? {}) as Loose[]).some(effect => effect.category);
+  const known = (system.groups ?? {}) as Blocks;
+  const strays = blockNames(system).filter(name => !known[name]);
+  const named = (Object.values(system.effects ?? {}) as Loose[]).some(effect => effect.category);
   if (!strays.length && !named) return system;
 
-  const next: Loose = JSON.parse(JSON.stringify(source));
+  const next = JSON.parse(JSON.stringify(system)) as System & { groups: Blocks };
   next.groups ??= {};
   for (const effect of Object.values(next.effects ?? {}) as Loose[]) {
     if (effect.category === undefined) continue;
     effect.group ??= effect.category;
     delete effect.category;
   }
-  for (const name of blockNames(next as unknown as System)) next.groups[name] ??= {};
-  return next as unknown as System;
+  for (const name of blockNames(next)) next.groups[name] ??= {};
+  return next;
 }

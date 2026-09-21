@@ -1,7 +1,7 @@
 import { useWorld, freeId } from '../../store/world.ts';
 import { ModifiersEditor } from './modifiers.tsx';
 import { newRecordKind, newBinding, newProp } from './factory.ts';
-import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
+import { Columns, List, ListItem } from '../../ui/layout.tsx';
 import {
   Card, CardHead, Field, Input, Select, Button, Empty, Verdict, Chip, DangerButton, LabelInput,
 } from '../../ui/primitives.tsx';
@@ -9,6 +9,7 @@ import type { SlotRef } from '@vtt/schema';
 import type { System, RecordKind, Binding, Param } from '@vtt/schema';
 import { BlockPick } from './block-pick.tsx';
 import { blockOf } from '@vtt/engine/model/blocks';
+import { blockTree, BlockBranches } from './block-tree.tsx';
 
 const BASIS = [
   ['item', 'вещь — надевают и снимают'],
@@ -52,13 +53,7 @@ export function RecordsTab() {
     pick({ activeRecordKind: made.key });
   };
 
-  const groups = new Map<string, [string, RecordKind][]>();
-  for (const [key, kind] of kinds) {
-    const group = blockOf(system, kind) ?? 'Без блока';
-    const list = groups.get(group);
-    if (list) list.push([key, kind]);
-    else groups.set(group, [[key, kind]]);
-  }
+  const tree = blockTree<[string, RecordKind]>(system, kinds, ([, kind]) => blockOf(system, kind));
 
   return (
     <Columns
@@ -73,20 +68,18 @@ export function RecordsTab() {
             />
           : (
             <List>
-              {[...groups].map(([group, list]) => (
-                <div key={group}>
-                  <ListGroup>{group}</ListGroup>
-                  {list.map(([key, kind]) => (
-                    <ListItem
-                      key={key}
-                      name={kind.label ?? key}
-                      meta={`свойств: ${kind.props?.length ?? 0} · действий: ${kind.bindings?.length ?? 0}`}
-                      active={key === activeKind}
-                      onClick={() => pick({ activeRecordKind: key })}
-                    />
-                  ))}
-                </div>
-              ))}
+              <BlockBranches
+                nodes={tree}
+                render={([key, kind]) => (
+                  <ListItem
+                    key={key}
+                    name={kind.label ?? key}
+                    meta={`свойств: ${kind.props?.length ?? 0} · действий: ${kind.bindings?.length ?? 0}`}
+                    active={key === activeKind}
+                    onClick={() => pick({ activeRecordKind: key })}
+                  />
+                )}
+              />
             </List>
           ),
       }}
