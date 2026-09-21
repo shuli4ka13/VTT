@@ -65,10 +65,15 @@ export function SendBody({ step, at, context, edit, system }: {
           add: () => edit(at, draft => { loose(draft).tags = []; }),
           drop: () => edit(at, draft => { delete loose(draft).tags; }),
           node: (
-      <Field label="Метки" hint="Чем помечена посылка. Цель по ним решает, что с ней делать.">
+      <Field
+        label="Метки"
+        hint={called?.tags?.length
+          ? `Чем помечено то, что уходит. «${called.label ?? step.event}» знает такие: ${called.tags.join(', ')}.`
+          : 'Чем помечено то, что уходит. Цель по ним решает, что с этим делать.'}
+      >
         <TagPick
           value={all as Tag[]}
-          known={[...new Set(Object.values(system.effects).flatMap(e => e.tags ?? []))]}
+          known={called?.tags ?? []}
           fromRecord={(context.effect.params ?? []).map(p => ({ key: p.key, label: p.label ?? p.key }))}
           onChange={next => edit(at, draft => {
             if (next.length) loose(draft).tags = next; else delete loose(draft).tags;

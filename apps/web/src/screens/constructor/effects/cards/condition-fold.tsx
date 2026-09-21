@@ -1,18 +1,33 @@
 import { Field, Fold, Select, Input } from '../../../../ui/primitives.tsx';
+import { SlotInput } from '../../slot-input.tsx';
+import type { SlotContext } from '../../slots.tsx';
 import type { CardGroup } from '../../cards.ts';
 import type { Segment } from '../../readback.ts';
 import { outputRefs, outputLabel } from '../../slots.tsx';
 import type { EarlierStep } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 
-interface When { ref?: string; not?: boolean; atLeast?: number; atMost?: number; has?: string }
+type Bound = number | { tag: string } | { expr: string } | { param: string };
+
+interface When { ref?: string; not?: boolean; atLeast?: Bound; atMost?: Bound; has?: string }
 
 type WhenStep = { when?: When };
 
+const boundWords = (bound: Bound | undefined): string => {
+  if (bound === undefined || bound === null) return '';
+  if (typeof bound !== 'object') return String(bound);
+  if ('tag' in bound) return `«${bound.tag}»`;
+  if ('param' in bound) return `«${bound.param}»`;
+  if ('expr' in bound) return String(bound.expr);
+  return '';
+};
+
 const numberWords = (when: When): string => {
-  if (when.atLeast !== undefined && when.atMost !== undefined) return `от ${when.atLeast} до ${when.atMost}`;
-  if (when.atLeast !== undefined) return `не меньше ${when.atLeast}`;
-  if (when.atMost !== undefined) return `не больше ${when.atMost}`;
+  const low = boundWords(when.atLeast);
+  const high = boundWords(when.atMost);
+  if (low && high) return `от ${low} до ${high}`;
+  if (low) return `не меньше ${low}`;
+  if (high) return `не больше ${high}`;
   return 'любое число';
 };
 
@@ -32,12 +47,11 @@ export function whenSegments(step: unknown, earlier: EarlierStep[]): Segment[] {
 const KIND_OF = (ref: string | undefined, earlier: EarlierStep[]): string =>
   outputRefs(earlier).find(o => o.ref === ref)?.kind ?? 'boolean';
 
-const numberOr = (text: string): number | undefined => (text.trim() === '' ? undefined : Number(text));
-
-export function ConditionFold({ group, earlier, edit }: {
+export function ConditionFold({ group, earlier, edit, context }: {
   group: CardGroup;
   earlier: EarlierStep[];
   edit: EditFn;
+  context: SlotContext;
 }) {
   const when = (group.step as WhenStep).when;
   const outputs = outputRefs(earlier).filter(o => o.kind === 'boolean' || o.kind === 'number' || o.kind === 'text');
@@ -82,20 +96,18 @@ export function ConditionFold({ group, earlier, edit }: {
         {when?.ref && kind === 'number' ? (
           <>
             <Field label="не меньше" hint="Пусто — нижней границы нет.">
-              <Input
-                type="number"
-                value={when.atLeast ?? ''}
+              <SlotInput
+                value={when.atLeast as never} context={context} allow={['const', 'tag', 'expr', 'param']}
                 onChange={next => setAll(draft => {
-                  keep(draft, { atLeast: numberOr(next), atMost: draft.when?.atMost });
+                  keep(draft, { atLeast: next as Bound | undefined, atMost: draft.when?.atMost });
                 })}
               />
             </Field>
             <Field label="не больше" hint="Пусто — верхней границы нет.">
-              <Input
-                type="number"
-                value={when.atMost ?? ''}
+              <SlotInput
+                value={when.atMost as never} context={context} allow={['const', 'tag', 'expr', 'param']}
                 onChange={next => setAll(draft => {
-                  keep(draft, { atLeast: draft.when?.atLeast, atMost: numberOr(next) });
+                  keep(draft, { atLeast: draft.when?.atLeast, atMost: next as Bound | undefined });
                 })}
               />
             </Field>

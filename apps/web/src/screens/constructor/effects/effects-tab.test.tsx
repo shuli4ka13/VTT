@@ -45,7 +45,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
       .map(b => b.textContent!.trim())
       .filter(t => !LAUNCH_KINDS.some(kind => t === `+ ${kind.label.toLowerCase()}`)
         && t !== '+ вызываемый' && t !== '+ новый' && !t.startsWith('+ брать')
-        && !['+ блок', '+ метки', '+ описание для игрока', '+ занимает', '+ сколько висит', '+ на основе'].includes(t));
+        && !['+ блок', '+ метки', '+ описание для игрока', '+ занимает', '+ какие метки бывают', '+ сколько висит', '+ на основе'].includes(t));
     expect(palette).toEqual(['+ проверка', '+ изменение', '+ таблица', '+ число']);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     expect(screen.getByText('1 · Проверка')).toBeTruthy();
@@ -233,7 +233,7 @@ describe('вызываемый эффект — обычный эффект', ()
     const key = useWorld.getState().activeEffectId!;
     expect(useWorld.getState().system.effects[key]!.steps).toHaveLength(2);
 
-    fireEvent.click(screen.getByText('+ метки'));
+    fireEvent.click(screen.getByText('+ какие метки бывают'));
     fireEvent.change(screen.getByPlaceholderText('новая метка'), { target: { value: 'огонь' } });
     fireEvent.keyDown(screen.getByPlaceholderText('новая метка'), { key: 'Enter' });
     expect(useWorld.getState().system.effects[key]!.tags).toEqual(['огонь']);

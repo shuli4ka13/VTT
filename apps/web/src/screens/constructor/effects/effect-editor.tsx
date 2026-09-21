@@ -117,10 +117,13 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
               ),
             },
             {
-              key: 'tags', label: 'метки', on: !!effect.tags?.length,
+              key: 'tags', label: 'какие метки бывают', on: !!effect.tags?.length,
               add: () => {}, drop: () => edit(draft => { delete draft.tags; }),
               node: (
-                <Field label="Метки" hint="Чем помечено то, что уходит к цели. Цель по ним решает, что с этим делать.">
+                <Field
+                  label="Какие метки бывают"
+                  hint="Список на выбор для тех, кто зовёт этот эффект. Например у «Урона» — виды урона."
+                >
                   <WordList
                     value={effect.tags ?? []} known={knownTags(system)} placeholder="новая метка"
                     onChange={next => edit(draft => {

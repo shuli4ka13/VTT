@@ -92,7 +92,7 @@ export function GroupCard({
         {group.kind === 'number'
           ? <NumberBody step={step} context={context} edit={edit} onAddParam={onAddParam} earlier={earlier} />
           : null}
-        <ConditionFold group={group} earlier={earlier} edit={edit} />
+        <ConditionFold group={group} earlier={earlier} edit={edit} context={context} />
       </Card>
       {breakLine(group)}
     </>
