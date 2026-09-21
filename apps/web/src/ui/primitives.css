@@ -327,6 +327,14 @@
 }
 .chips__x:hover { color: var(--danger); }
 
+.extra { position: relative; }
+.extra__x {
+  position: absolute; top: 0; right: 0;
+  border: none; background: none; color: var(--text-faint); cursor: pointer;
+  font-size: var(--fs-2); line-height: 1; padding: var(--s-1);
+}
+.extra__x:hover { color: var(--danger); }
+
 .need-list__head, .need {
   display: grid;
   grid-template-columns: minmax(120px, 1fr) minmax(140px, 180px) minmax(150px, 190px) auto;

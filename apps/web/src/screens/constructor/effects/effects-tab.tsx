@@ -2,10 +2,8 @@ import { useWorld, effectsByCategory } from '../../../store/world.ts';
 import { newEffect } from '../factory.ts';
 import { Columns, List, ListItem, ListGroup } from '../../../ui/layout.tsx';
 import { Button, Empty } from '../../../ui/primitives.tsx';
-import { groupSteps } from '../cards.ts';
 import { PreviewPanel } from './preview-panel.tsx';
 import { LAUNCH_KINDS } from './words.ts';
-import { STEP } from '../../../words.ts';
 import { EffectEditor } from './effect-editor.tsx';
 import { RoomRules } from './room-rules.tsx';
 import { newCalled } from '../factory.ts';
@@ -99,8 +97,6 @@ export function EffectsTab() {
 
 const metaOf = (effect: Effect, called: boolean) => {
   const kind = called ? 'вызывают другие' : LAUNCHES[launchOf(effect).kind].label;
-  const payload = launchOf(effect).kind === 'passive'
-    ? `модификаторов: ${effect.modifiers?.length ?? 0}`
-    : `${STEP.manyGen}: ${groupSteps(effect.steps ?? []).length}`;
-  return `${kind.toLowerCase()} · ${payload}`;
+  const idle = !effect.steps?.length && !effect.self?.length && !effect.modifiers?.length;
+  return idle ? `${kind.toLowerCase()} · ничего не делает` : kind.toLowerCase();
 };

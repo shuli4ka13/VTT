@@ -4,6 +4,7 @@ import { SlotInput } from '../../slot-input.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 import { calledOf } from '@vtt/engine/engine/effects';
+import { Extras } from './extras.tsx';
 
 const loose = (draft: unknown): Record<string, unknown> => draft as Record<string, unknown>;
 
@@ -20,9 +21,10 @@ export function SendBody({ step, at, context, edit, system }: {
   const fromRecord = all.filter((t): t is { param: string } => Boolean(t) && typeof t === 'object' && 'param' in (t as object));
   const needs = (context.effect.params ?? []).filter(p => !fromRecord.some(t => t.param === p.key));
   return (
+    <>
     <div className="row">
       <Field label="какой эффект вызываем" needed={!step.event}
-        hint={commons.length ? undefined : 'Общих эффектов пока нет — заведите кнопкой «+ общий» слева.'}>
+        hint={commons.length ? undefined : 'Вызываемых эффектов пока нет — заведите кнопкой «+ вызываемый» слева.'}>
         <Select
           value={String(step.event ?? '')}
           options={[['', '— какой эффект зовём —'],
@@ -36,7 +38,16 @@ export function SendBody({ step, at, context, edit, system }: {
           onChange={next => edit(at, draft => { loose(draft).amount = next ?? undefined; })}
         />
       </Field>
-      <Field label="теги" hint="Через запятую: огонь, магический. По ним цель узнаёт своё сопротивление.">
+    </div>
+
+    <Extras
+      items={[
+        {
+          key: 'tags', label: 'метки', on: all.length > 0,
+          add: () => edit(at, draft => { loose(draft).tags = []; }),
+          drop: () => edit(at, draft => { delete loose(draft).tags; }),
+          node: (
+      <Field label="метки" hint="Через запятую: огонь, магический. По ним цель узнаёт своё сопротивление.">
         <Input
           value={tags.join(', ')}
           onChange={text => edit(at, draft => {
@@ -64,15 +75,26 @@ export function SendBody({ step, at, context, edit, system }: {
           ) : null}
         </div>
       </Field>
-      <Field label="если вызванный оборвался" hint="«Оборваться тоже» — для платы: нет ячейки, значит и заклинания нет.">
-        <Select
-          value={step.strict ? 'true' : 'false'}
-          options={[['false', 'идти дальше'], ['true', 'оборваться тоже']] as const}
-          onChange={next => edit(at, draft => {
-            if (next === 'true') loose(draft).strict = true; else delete loose(draft).strict;
-          })}
-        />
-      </Field>
-    </div>
+          ),
+        },
+        {
+          key: 'strict', label: 'обрывать всё, если вызванный оборвался', on: !!step.strict,
+          add: () => edit(at, draft => { loose(draft).strict = true; }),
+          drop: () => edit(at, draft => { delete loose(draft).strict; }),
+          node: (
+            <Field label="если вызванный оборвался" hint="«Оборваться тоже» — для платы: нет ячейки, значит и заклинания нет.">
+              <Select
+                value={step.strict ? 'true' : 'false'}
+                options={[['false', 'идти дальше'], ['true', 'оборваться тоже']] as const}
+                onChange={next => edit(at, draft => {
+                  if (next === 'true') loose(draft).strict = true; else delete loose(draft).strict;
+                })}
+              />
+            </Field>
+          ),
+        },
+      ]}
+    />
+    </>
   );
 }

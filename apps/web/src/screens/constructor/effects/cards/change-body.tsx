@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import type { System, Step, SlotRef } from '@vtt/schema';
-import { Field, Fold, Segmented, Select } from '../../../../ui/primitives.tsx';
+import { Field, Segmented, Select } from '../../../../ui/primitives.tsx';
 import type { CardGroup } from '../../cards.ts';
 import { parseRollExpr } from '../../roll-expr.ts';
 import { FormulaChips } from '../../../../ui/formula-chips.tsx';
@@ -11,6 +11,7 @@ import type { SlotContext } from '../../slots.tsx';
 import type { EditFn, WithNumber } from '../words.ts';
 import { badFormula, exprText } from './roll-expr-input.tsx';
 import { SendBody } from './send-body.tsx';
+import { Extras } from './extras.tsx';
 import { calledOf } from '@vtt/engine/engine/effects';
 
 function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onCreateFromRecord }: {
@@ -325,18 +326,27 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
             context={context} edit={edit} withNumber={withNumber}
             onCreateFromRecord={fromRecord('сколько — кости', 'dice')} />
 
-          <Fold title="Тонкости">
-            {}
-            <Field label="сопротивления цели">
-              <Select
-                value={String(step.targetModifiers ?? true)}
-                options={[['true', 'учитываются'], ['false', 'не учитываются']] as const}
-                onChange={next => edit(applyIndex, draft => { (draft as any).targetModifiers = next === 'true'; })}
-              />
-            </Field>
-          </Fold>
+          <Extras
+            items={[{
+              key: 'targetModifiers', label: 'не учитывать сопротивления цели',
+              on: step.targetModifiers === false,
+              add: () => edit(applyIndex, draft => { (draft as any).targetModifiers = false; }),
+              drop: () => edit(applyIndex, draft => { (draft as any).targetModifiers = true; }),
+              node: (
+                <Field label="сопротивления цели">
+                  <Select
+                    value={String(step.targetModifiers ?? true)}
+                    options={[['true', 'учитываются'], ['false', 'не учитываются']] as const}
+                    onChange={next => edit(applyIndex, draft => { (draft as any).targetModifiers = next === 'true'; })}
+                  />
+                </Field>
+              ),
+            }]}
+          />
         </>
-      ) : (
+      ) : null}
+
+      {mode === 'status' ? (
         <>
           {}
           {group.amount ? (
@@ -359,7 +369,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
             />
           </Field>
         </>
-      )}
+      ) : null}
     </>
   );
 }
