@@ -237,6 +237,12 @@ export function exactFieldOf(ref: unknown, ctx: RefContext): string | null {
 
 function namedValue(name: string, ctx: RefContext): unknown {
   if (ctx.inputs && name in ctx.inputs) return ctx.inputs[name];
+
+  if (ctx.props && name in ctx.props) {
+    const own = ctx.props[name];
+    if (own !== null && typeof own !== 'object') return own;
+  }
+
   if (!(ctx.paramDefs || []).some(p => p.key === name)) return undefined;
   if (!ctx.params || !(name in ctx.params)) return undefined;
   const value = fromArgs(name, ctx);

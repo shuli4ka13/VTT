@@ -21,6 +21,28 @@ const WORD_OF: Record<SlotKind, string> = {
   empty: 'пусто',
 };
 
+export function asText(value: unknown, ctx: SlotContext): string | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value !== 'object') return String(value);
+  const r = value as Record<string, unknown>;
+  if ('tag' in r) return `#${String(r.tag)}`;
+  if ('prop' in r || 'item' in r) return `#${String(r.prop ?? r.item)}`;
+  if ('param' in r) return `#${String(r.param)}`;
+  if ('ref' in r) return `#${String(r.ref)}`;
+  if ('const' in r) return String(r.const);
+  if ('expr' in r) return String(r.expr);
+  void ctx;
+  return null;
+}
+
+export function grownFrom(value: unknown, typed: string, ctx: SlotContext): SlotRef | null {
+  const added = typed.trim();
+  if (!added || !/^[+\-*/]/.test(added)) return null;
+  const already = asText(value, ctx);
+  if (!already) return null;
+  return { expr: `${already} ${added}`.replace(/\s+/g, ' ').trim() } as SlotRef;
+}
+
 export function parseTyped(text: string): SlotRef | null {
   const t = text.trim();
   if (!t) return null;
@@ -143,6 +165,15 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
 
   const commitTyped = () => {
     if (draft !== null) {
+      const grown = grownFrom(value, draft, context);
+      if (grown) {
+        onChange(grown);
+        setDraft(null);
+        setTrouble(null);
+        setOpen(false);
+        return;
+      }
+
       const diced = dice ? normalizeDice(draft) : null;
       const tagged = singleTag(draft, context.system);
       const candidate: SlotRef | null = tagged

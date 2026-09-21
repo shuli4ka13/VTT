@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
 import { render, fireEvent, screen } from '@testing-library/react';
-import { parseTyped, displayOf, optionsFor, SlotInput, normalizeDice } from './slot-input.tsx';
+import { parseTyped, displayOf, optionsFor, SlotInput, normalizeDice, asText, grownFrom } from './slot-input.tsx';
 import type { SlotContext } from './slots.tsx';
 import type { System, Effect } from '@vtt/schema';
 
@@ -142,5 +142,34 @@ describe('SlotInput: дописывание после фишки', () => {
     const tail = screen.getAllByRole('textbox').at(-1) as HTMLInputElement;
     fireEvent.keyDown(tail, { key: 'Enter' });
     expect(value).toEqual({ expr: '#сила + 2' });
+  });
+});
+
+describe('фишка дорастает до формулы', () => {
+  const ctx = {
+    system: {
+      fields: [{ tag: 'сила', label: 'Сила', value: { kind: 'stored', type: 'number', default: 10 } }],
+      effects: {}, records: {},
+    },
+    effect: { label: 'Удар' },
+    earlier: [],
+  } as never;
+
+  it('поле листа превращается в текст формулы', () => {
+    expect(asText({ tag: 'сила' }, ctx)).toBe('#сила');
+  });
+
+  it('свойство записи тоже, чтобы к нему можно было дописать', () => {
+    expect(asText({ prop: 'кость_урона' }, ctx)).toBe('#кость_урона');
+  });
+
+  it('набранное со знака дописывается к тому, что уже стоит', () => {
+    expect(grownFrom({ prop: 'кость_урона' }, ' + 2', ctx)).toEqual({ expr: '#кость_урона + 2' });
+    expect(grownFrom({ tag: 'сила' }, '* 2', ctx)).toEqual({ expr: '#сила * 2' });
+  });
+
+  it('набранное без знака заменяет, а не дописывает', () => {
+    expect(grownFrom({ prop: 'кость_урона' }, '7', ctx)).toBeNull();
+    expect(grownFrom(null, '+ 2', ctx)).toBeNull();
   });
 });
