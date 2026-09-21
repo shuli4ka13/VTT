@@ -20,6 +20,17 @@ const SYS = {
   constants: { lead_die: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
 };
 
+const TOUGH = {
+  ...SYS,
+  effects: {
+    ...SYS.effects,
+    tough: {
+      label: 'Толстая кожа', activation: 'passive', duration: { kind: 'permanent' },
+      modifiers: [{ kind: 'value', target: 'incoming:hp_current', op: 'mul', value: 0.5, stacking: 'max', condition: null }],
+    },
+  },
+};
+
 const run = (steps, opts = {}) => {
   const {
     sys = SYS, sender = arven, die = queue(),
@@ -223,18 +234,18 @@ group('шаг «применить»', () => {
   });
 
   test('модификаторы цели: сопротивление половинит входящее, округляя вниз', () => {
-    const stony = { ...mirra, effects: [{ effectId: 'stoneskin' }] };
+    const stony = { ...mirra, effects: [{ effectId: 'tough' }] };
     const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { const: 9 }, targetModifiers: true }],
-      { targetSheet: stony });
+      { sys: TOUGH, targetSys: TOUGH, targetSheet: stony });
     eq(out.sheet.values.hp_current, 17, '21 минус floor(9/2)');
     eq(out.trace[0].incoming, 9, 'в трассе видно, что пришло…');
     eq(out.trace[0].amount, 4, '…и что осталось после сопротивлений');
   });
 
   test('без targetModifiers сопротивление не участвует — лечение и износ идут мимо него', () => {
-    const stony = { ...mirra, effects: [{ effectId: 'stoneskin' }] };
+    const stony = { ...mirra, effects: [{ effectId: 'tough' }] };
     const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { const: 9 }, targetModifiers: false }],
-      { targetSheet: stony });
+      { sys: TOUGH, targetSys: TOUGH, targetSheet: stony });
     eq(out.sheet.values.hp_current, 12, '21 минус все 9');
   });
 

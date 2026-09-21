@@ -75,6 +75,11 @@
             "key": "damage_dice",
             "label": "Кость урона",
             "kind": "dice"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "text"
           }
         ],
         "steps": [
@@ -110,18 +115,19 @@
             }
           },
           {
-            "type": "apply",
-            "target": {
-              "tag": "hp_current"
-            },
-            "direction": "subtract",
-            "value": {
+            "type": "emit",
+            "event": "damage",
+            "amount": {
               "ref": "dmg"
             },
-            "targetModifiers": true
+            "tags": [
+              {
+                "param": "damage_type"
+              }
+            ]
           }
         ],
-        "description": "Удар оружием: попадание против класса брони, урон костью оружия и модификатором Силы. На двадцатке кости урона удваиваются."
+        "description": "Удар оружием: попадание против класса брони, урон костью оружия и модификатором Силы. На двадцатке кости урона удваиваются. Посчитанное уходит в общий эффект «Урон»."
       },
       "save": {
         "label": "Спасбросок",
@@ -145,6 +151,11 @@
             "key": "status",
             "label": "Состояние при провале",
             "kind": "effect"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "text"
           }
         ],
         "steps": [
@@ -175,15 +186,16 @@
             }
           },
           {
-            "type": "apply",
-            "target": {
-              "tag": "hp_current"
-            },
-            "direction": "subtract",
-            "value": {
+            "type": "emit",
+            "event": "damage",
+            "amount": {
               "ref": "dmg"
             },
-            "targetModifiers": true
+            "tags": [
+              {
+                "param": "damage_type"
+              }
+            ]
           },
           {
             "type": "status",
@@ -332,15 +344,18 @@
         "duration": {
           "kind": "temporary"
         },
-        "description": "Сопротивление урону: входящее в хиты половинится.",
+        "description": "Немагический урон вдвое меньше.",
         "modifiers": [
           {
             "kind": "value",
-            "target": "incoming:hp_current",
+            "target": "event:damage",
             "op": "mul",
             "value": 0.5,
-            "stacking": "sum",
-            "condition": null
+            "stacking": "max",
+            "condition": null,
+            "notTags": [
+              "магический"
+            ]
           }
         ],
         "steps": []
@@ -562,15 +577,15 @@
             }
           },
           {
-            "type": "apply",
-            "target": {
-              "tag": "hp_current"
-            },
-            "direction": "subtract",
-            "value": {
+            "type": "emit",
+            "event": "damage",
+            "amount": {
               "ref": "back"
             },
-            "targetModifiers": true
+            "tags": [
+              "колющий",
+              "магический"
+            ]
           }
         ]
       },
@@ -635,6 +650,11 @@
             "key": "damage_dice",
             "label": "Кость урона",
             "kind": "dice"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "text"
           }
         ],
         "steps": [
@@ -678,7 +698,9 @@
               "ref": "dmg"
             },
             "tags": [
-              "огонь",
+              {
+                "param": "damage_type"
+              },
               "магический"
             ]
           }
@@ -937,6 +959,11 @@
             "key": "damage_dice",
             "label": "Кость урона",
             "kind": "dice"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "text"
           }
         ],
         "bindings": [
@@ -946,6 +973,9 @@
             "args": {
               "damage_dice": {
                 "prop": "damage_dice"
+              },
+              "damage_type": {
+                "prop": "damage_type"
               }
             }
           }
@@ -986,6 +1016,11 @@
             "key": "status",
             "label": "Состояние при провале",
             "kind": "effect"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "text"
           }
         ],
         "bindings": [
@@ -1001,6 +1036,9 @@
               },
               "status": {
                 "prop": "status"
+              },
+              "damage_type": {
+                "prop": "damage_type"
               }
             }
           }
@@ -1077,6 +1115,11 @@
             "key": "damage_dice",
             "label": "Кость урона",
             "kind": "dice"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "text"
           }
         ],
         "bindings": [
@@ -1089,6 +1132,9 @@
               },
               "damage_dice": {
                 "prop": "damage_dice"
+              },
+              "damage_type": {
+                "prop": "damage_type"
               }
             }
           }
@@ -2083,7 +2129,8 @@
         "label": "Длинный меч",
         "description": "Клинок в четыре ладони.",
         "props": {
-          "damage_dice": "1d8"
+          "damage_dice": "1d8",
+          "damage_type": "рубящий"
         },
         "modifiers": []
       }
@@ -2097,7 +2144,8 @@
         "props": {
           "damage_dice": "2d6",
           "save_by": "#dex_save",
-          "status": "poisoned"
+          "status": "poisoned",
+          "damage_type": "яд"
         }
       },
       {
@@ -2137,7 +2185,8 @@
         "description": "Взрыв по области: спасбросок Ловкости, при успехе — половина урона.",
         "props": {
           "save_by": "#dex_save",
-          "damage_dice": "6d6"
+          "damage_dice": "6d6",
+          "damage_type": "огонь"
         }
       }
     ]

@@ -23,14 +23,19 @@ group('две системы одними слотами', () => {
       const { sheet, report } = receive(env, ctx5(mirra, queue()));
 
       eq(report.stopped, null);
-      eq(report.trace.length, 3, 'три шага — три записи');
+      eq(report.trace.length, 5, 'три шага удара и два шага общего эффекта «Урон»');
       deepEq(report.trace[0].versus, { tag: 'ac', value: 14 }, 'КД посчитан получателем');
       eq(report.trace[0].total, 16, 'бросок 10 плюс бонус атаки 6');
       eq(report.trace[0].margin, 2);
       eq(report.trace[1].total, 8, 'кость меча 5 плюс Сила 3');
-      eq(report.trace[2].from, 21);
-      eq(report.trace[2].to, 13);
-      deepEq(report.changes, [{ tag: 'hp_current', from: 21, to: 13 }]);
+      eq(report.trace[2].event, 'damage', 'удар не трогает хиты сам — отправляет посчитанное');
+      deepEq(report.trace[2].tags, ['рубящий'], 'тип урона приехал из записи оружия');
+      eq(report.trace[2].amount, 8);
+      eq(report.trace[4].within, 'damage', 'хиты снимает общий эффект');
+      eq(report.trace[4].from, 21);
+      eq(report.trace[4].to, 13);
+      deepEq(report.changes, [{ tag: 'hp_current', from: 21, to: 13 }],
+        'временные хиты были нулём и нулём остались — в изменениях их нет');
       eq(sheet.values.hp_current, 13);
     });
 
@@ -164,9 +169,11 @@ group('две системы одними слотами', () => {
       const book = {
         ...compendium,
         items: [...compendium.items,
-          { id: 'axe-item', rk: 'weapon', label: 'Топор', props: { damage_dice: '1d12' }, modifiers: [],
+          { id: 'axe-item', rk: 'weapon', label: 'Топор',
+            props: { damage_dice: '1d12', damage_type: 'рубящий' }, modifiers: [],
 
-            activities: [{ label: 'Удар', effect: 'strike', args: { damage_dice: { prop: 'damage_dice' } } }] }],
+            activities: [{ label: 'Удар', effect: 'strike',
+              args: { damage_dice: { prop: 'damage_dice' }, damage_type: { prop: 'damage_type' } } }] }],
       };
       const margined = {
         ...system,

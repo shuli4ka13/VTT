@@ -122,7 +122,9 @@ export function resolveRule(steps: StepData[], ctx: StepContext): RuleReport {
   };
 
   const write = (tag: string, to: StoredValue): void => {
-    changes.push({ tag, from: read(tag), to });
+    const from = read(tag);
+    if (Object.is(from, to)) return;
+    changes.push({ tag, from, to });
     values[tag] = to;
   };
 

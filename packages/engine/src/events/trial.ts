@@ -27,6 +27,7 @@ export function sampleArg(kind: string | undefined, system: System, effect?: Eff
   if (kind === 'dice') return '1к6';
   if (kind === 'number') return 1;
   if (kind === 'expr') return '0';
+  if (kind === 'text') return 'проба';
   if (kind === 'effect') return Object.keys(system.effects)[0] ?? '';
   if (kind === 'tag') return (system.fields.find(f => f.value.kind === 'stored' && f.value.type === 'number') ?? system.fields[0])?.tag ?? '';
   if (kind === 'choice' && effect && key) return firstChoice(effect, key) ?? '';

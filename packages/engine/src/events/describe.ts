@@ -108,8 +108,10 @@ export function describeEntry(
     return null;
   };
   const eventLabel = (id: string) => system.events?.[id]?.label ?? id;
+  const idle = (trace: Record<string, unknown>): boolean =>
+    trace.type === 'apply' && trace.from === trace.to;
   const calculation = (entry.report.trace ?? []).flatMap((trace: Record<string, unknown>) => {
-    if (trace.skipped) return [`шаг «${trace.step}» пропущен`];
+    if (trace.skipped || idle(trace)) return [];
     const named = trace.within ? null : namedTrace(trace);
     if (named) return [named];
     const line = stepRegistry.get(String(trace.type))?.traceLine;

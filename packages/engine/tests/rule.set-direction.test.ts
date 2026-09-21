@@ -3,18 +3,29 @@ import { packRule, resolveRule } from '../src/engine/rule.ts';
 import { newPass } from '../src/engine/calc.ts';
 import { system, arven, mirra, compendium } from './fixtures.ts';
 
-const run = (steps: any[], target: any) => {
+const TOUGH = {
+  ...system,
+  effects: {
+    ...system.effects,
+    tough: {
+      label: 'Толстая кожа', activation: 'passive', duration: { kind: 'permanent' },
+      modifiers: [{ kind: 'value', target: 'incoming:hp_current', op: 'mul', value: 0.5, stacking: 'max', condition: null }],
+    },
+  },
+} as any;
+
+const run = (steps: any[], target: any, sys: any = TOUGH) => {
   const packed = packRule({ params: [], steps } as any, {
-    system, sheet: arven, pass: newPass(system, arven, { compendium }),
+    system: sys, sheet: arven, pass: newPass(sys, arven, { compendium }),
     die: () => 1, params: {}, props: null, owner: 'тест',
   });
   return resolveRule(packed, {
-    system, sheet: target, pass: newPass(system, target, { compendium }),
+    system: sys, sheet: target, pass: newPass(sys, target, { compendium }),
     die: () => 1, owner: 'тест',
   });
 };
 
-const stony = { ...mirra, values: { ...mirra.values, hp_current: 22 }, effects: [{ effectId: 'stoneskin' }] };
+const stony = { ...mirra, values: { ...mirra.values, hp_current: 22 }, effects: [{ effectId: 'tough' }] };
 const eight = { id: 'dmg', type: 'amount', source: 'item', fixed: { const: 8 } };
 
 group('направление «задать» и сопротивления цели', () => {

@@ -37,7 +37,7 @@ group('один путь вызова', () => {
   test('packCall и runCall дают тот же результат, что прямой путь конверта', () => {
     const effect = system.effects.strike!;
     const world = { system, compendium, die };
-    const packed = packCall({ effectId: 'strike', effect, sheet: arven, owner: 'тест', args: { damage_dice: '1d8' }, props: null }, world);
+    const packed = packCall({ effectId: 'strike', effect, sheet: arven, owner: 'тест', args: { damage_dice: '1d8', damage_type: 'рубящий' }, props: null }, world);
     ok(packed.length > 0);
     const done = runCall(packed, { sheet: mirra, owner: 'тест' }, world);
     eq(typeof done.trace.length, 'number');

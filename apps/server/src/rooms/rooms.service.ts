@@ -16,7 +16,7 @@ import { previewLines, describeEntry } from '@vtt/engine/events/describe';
 import { unifyWorld } from '@vtt/engine/model/unify';
 import { effectLabelOf, actionOf, send, receive, offers, react, senderResults } from '@vtt/engine/events/envelope';
 import { tapeDie, replayDie } from '@vtt/engine/engine/dice';
-import type { Envelope, Offer, ReactionWindow } from '@vtt/engine/events/envelope';
+import type { Envelope, Offer, ReactionWindow, Report } from '@vtt/engine/events/envelope';
 import { findEffect, usesMax } from '@vtt/engine/engine/effects';
 import { asksOf, checkInputs, normalizeInputs } from '@vtt/engine/model/asks';
 import { fireMoments, fireCrossings, describeMoment } from '@vtt/engine/events/moments';
@@ -287,7 +287,7 @@ export class RoomsService {
     const clock = await this.clockOf(intent.roomId);
     let nextClock: ClockState = clock;
     let envelope: Envelope;
-    let own: { sheet: Sheet; report: unknown } | null = null;
+    let own: { sheet: Sheet; report: Report | null } | null = null;
     try {
       const action = actionOf(intent.actionId, { system, compendium });
       const effect = findEffect(system, action.effect);
@@ -313,8 +313,10 @@ export class RoomsService {
       throw new BadRequestException((err as Error).message);
     }
     const started = own?.report ? sheets.map(s => (s.id === own!.sheet.id ? own!.sheet : s)) : sheets;
-    const ownLines = own?.report
-      ? [describeEntry({ fromId: intent.fromId, toId: intent.fromId, report: own.report }, system, started)]
+    const ownTold = own?.report
+      && (own.report.changes.length || own.report.effects.length || own.report.removed.length);
+    const ownLines = ownTold
+      ? [describeEntry({ fromId: intent.fromId, toId: intent.fromId, report: own!.report }, system, started)]
       : [];
 
     return this.proceed({

@@ -90,7 +90,11 @@ describe('часы и бюджет действий не портятся', () =
     const state = (await as(http().get(`/rooms/${roomId}`))).body;
     expect(state.clock.spent[mirra.id]?.action ?? 0).toBe(0);
 
-    await as(http().post(`/rooms/${roomId}/act`)).send(spray).expect(201);
+    const done = await as(http().post(`/rooms/${roomId}/act`)).send(spray).expect(201);
+    if (done.body.pending) {
+      await as(http().post(`/rooms/${roomId}/answer`))
+        .send({ roomId, pendingId: done.body.pending.id, chosen: [] }).expect(201);
+    }
     const denied = await as(http().post(`/rooms/${roomId}/act`)).send(spray).expect(400);
     expect(denied.body.message).toContain('потрачено');
   });

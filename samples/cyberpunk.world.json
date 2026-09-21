@@ -2166,7 +2166,8 @@
           "огонь",
           "яд",
           "по телу",
-          "по голове"
+          "по голове",
+          "мимо брони"
         ],
         "receive": [
           {
@@ -2181,8 +2182,7 @@
             "breakIf": "less",
             "when": {
               "ref": "event.tags",
-              "has": "по голове",
-              "not": true
+              "has": "по телу"
             }
           },
           {
@@ -2197,8 +2197,7 @@
             "targetModifiers": false,
             "when": {
               "ref": "event.tags",
-              "has": "по голове",
-              "not": true
+              "has": "по телу"
             }
           },
           {
@@ -2213,8 +2212,7 @@
             "targetModifiers": false,
             "when": {
               "ref": "event.tags",
-              "has": "по голове",
-              "not": true
+              "has": "по телу"
             }
           },
           {
@@ -2276,6 +2274,21 @@
               "ref": "event.tags",
               "has": "по голове"
             }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "hp"
+            },
+            "direction": "subtract",
+            "value": {
+              "ref": "event.amount"
+            },
+            "targetModifiers": false,
+            "when": {
+              "ref": "event.tags",
+              "has": "мимо брони"
+            }
           }
         ]
       }
@@ -2289,6 +2302,11 @@
         "activation": "manual",
         "cost": "action",
         "params": [
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "text"
+          },
           {
             "key": "distance",
             "label": "Дистанция, метров",
@@ -2411,7 +2429,9 @@
               "ref": "dmg"
             },
             "tags": [
-              "пуля",
+              {
+                "param": "damage_type"
+              },
               {
                 "param": "aim"
               }
@@ -2424,7 +2444,9 @@
               "ref": "boom"
             },
             "tags": [
-              "пуля",
+              {
+                "param": "damage_type"
+              },
               {
                 "param": "aim"
               }
@@ -2493,22 +2515,21 @@
         "duration": {
           "kind": "permanent"
         },
-        "description": "В начале своего хода теряешь 2 хита, пока рану не заткнут.",
+        "description": "В начале своего хода теряешь 2 хита мимо брони, пока рану не заткнут.",
         "trigger": {
           "on": "moment:turn-start"
         },
         "params": [],
         "steps": [
           {
-            "type": "apply",
-            "target": {
-              "tag": "hp"
-            },
-            "direction": "subtract",
-            "value": {
+            "type": "emit",
+            "event": "damage",
+            "amount": {
               "const": 2
             },
-            "targetModifiers": false
+            "tags": [
+              "мимо брони"
+            ]
           }
         ]
       },
@@ -2589,6 +2610,11 @@
             "key": "damage_dice",
             "label": "Кость урона",
             "kind": "dice"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "text"
           }
         ],
         "bindings": [
@@ -2598,6 +2624,9 @@
             "args": {
               "damage_dice": {
                 "prop": "damage_dice"
+              },
+              "damage_type": {
+                "prop": "damage_type"
               }
             }
           }
@@ -2642,7 +2671,8 @@
         "label": "Тяжёлый пистолет",
         "description": "Обычный ствол улиц: 3к6.",
         "props": {
-          "damage_dice": "3d6"
+          "damage_dice": "3d6",
+          "damage_type": "пуля"
         }
       },
       {
@@ -2651,7 +2681,8 @@
         "label": "Моноклинок",
         "description": "Режет броню на раз: 2к6.",
         "props": {
-          "damage_dice": "2d6"
+          "damage_dice": "2d6",
+          "damage_type": "холодное"
         }
       },
       {
