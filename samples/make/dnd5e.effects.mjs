@@ -8,7 +8,7 @@ const P = {
     ask: { by: 'actor', kind: 'number', min: 1, max: 9, hint: 'Круг ячейки, которую тратишь. Не ниже круга заклинания.' },
   },
   level: { key: 'spell_level', label: 'Круг заклинания', kind: 'number' },
-  saveBy: { key: 'save_by', label: 'Чем спасается цель', kind: 'expr', of: 'target' },
+  saveBy: { key: 'save_by', label: 'Бонус спасброска', kind: 'expr', of: 'target' },
   die: { key: 'damage_die', label: 'Кость урона', kind: 'dice' },
   count: { key: 'dice_count', label: 'Сколько костей', kind: 'number' },
   up: { key: 'dice_up', label: 'Костей за каждый круг выше', kind: 'number' },

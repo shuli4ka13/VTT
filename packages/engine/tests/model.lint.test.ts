@@ -40,7 +40,7 @@ group('линт: висячие ссылки называются словами
 
   test('слушатель события, которого нет', () => {
     const system = withEffect('t', { activation: 'triggered', trigger: { on: 'event:нету' } });
-    ok(errorTexts(system).some(t => t.includes('события «нету»')), errorTexts(system).join('|'));
+    ok(errorTexts(system).some(t => t.includes('общего эффекта «нету»')), errorTexts(system).join('|'));
   });
 
   test('слушатель эффекта, которого нет', () => {

@@ -14,7 +14,7 @@ export function asksOf(actionId: string, { system, compendium }: { system: Syste
   const bound = action.binding.args ?? {};
   return (effect.params ?? [])
     .filter((param): param is Param & { ask: Ask } => Boolean(param.ask))
-    .filter(param => bound[param.key] === undefined)
+    .filter(param => bound[param.key] === undefined || bound[param.key] === null)
     .map(param => ({ ...param, effect: action.effect, effectLabel: effect.label ?? action.effect }));
 }
 

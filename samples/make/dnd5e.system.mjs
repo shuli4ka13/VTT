@@ -195,9 +195,9 @@ export const constants = () => ({
 });
 
 export const rolls = () => [
-  { tag: 'attack_roll', label: 'Бросок атаки' },
-  { tag: 'save_roll', label: 'Спасбросок' },
-  { tag: 'skill_roll', label: 'Проверка характеристики или навыка' },
+  { tag: 'attack_roll', label: 'Бросок атаки', words: { success: 'попадание', fail: 'промах' } },
+  { tag: 'save_roll', label: 'Спасбросок', words: { success: 'спасся', fail: 'не спасся' } },
+  { tag: 'skill_roll', label: 'Проверка характеристики или навыка', words: { success: 'успех', fail: 'провал' } },
 ];
 
 export const rollEdits = () => ({

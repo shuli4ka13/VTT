@@ -47,7 +47,7 @@ export function requireEvent(system: System, id: string, who: string): SystemEve
   const event = (system.events || {})[id];
   if (!event) {
     throw new EngineError(
-      `${who}: система не объявляет события «${id}» — словарь знает: ${
+      `${who}: система не объявляет общий эффект «${id}» — известны: ${
         eventsOf(system).map(([key]) => key).join(', ') || '(пусто)'}`);
   }
   return event;

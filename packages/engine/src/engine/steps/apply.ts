@@ -127,7 +127,7 @@ function assertWritable(system: System, tag: string) {
   if (!field) throw new EngineError(`система не объявляет поля «${tag}» — применять некуда`);
   if (field.value.kind !== 'stored') {
     throw new EngineError(
-      `в поле «${tag}» нельзя писать: его считает движок по формуле, а не событие`);
+      `в поле «${tag}» нельзя писать: его считает движок по формуле, а не эффект`);
   }
   return field;
 }

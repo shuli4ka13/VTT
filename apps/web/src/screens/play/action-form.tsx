@@ -25,6 +25,7 @@ export function ActionForm({ system, compendium, actionId, label, disabled, onAc
 
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [trouble, setTrouble] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
 
   const send = () => {
     const given: Record<string, number | string> = {};
@@ -37,15 +38,31 @@ export function ActionForm({ system, compendium, actionId, label, disabled, onAc
     setTrouble(null);
     onAct({ actionId, ...(asked.length ? { inputs: normalizeInputs(asked, given) } : {}) });
     setAnswers({});
+    setOpen(false);
   };
 
   if (!asked.length) {
     return <Button variant="primary" disabled={disabled} onClick={send}>{label}</Button>;
   }
 
+  if (!open) {
+    return (
+      <Button
+        variant="primary" disabled={disabled}
+        title={`спросит перед броском: ${asked.map(p => p.label ?? p.key).join(', ')}`}
+        onClick={() => setOpen(true)}
+      >
+        {label}…
+      </Button>
+    );
+  }
+
   return (
     <div className="stack stack--tight action-form">
-      <span className="field__label">{label} · перед броском</span>
+      <div className="inline inline--tight">
+        <span className="field__label spacer">{label} · перед броском</span>
+        <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>свернуть</Button>
+      </div>
       {asked.map(param => (
         <Field
           key={param.key}

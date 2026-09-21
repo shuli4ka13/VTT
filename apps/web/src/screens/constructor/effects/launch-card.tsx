@@ -80,7 +80,7 @@ export function LaunchCard({ id, effect, system, edit }: {
 
   return (
     <Card>
-      <CardHead title="Когда срабатывает" sub="Эффект ждёт чужого действия или события и запускается сам." />
+      <CardHead title="Когда срабатывает" sub="Эффект ждёт чужого действия или момента и запускается сам." />
 
       <Field label="Момент">
         <Select

@@ -22,7 +22,7 @@ export function reasonWord(reason: string): string | null {
 export const icon = '➤';
 
 export function lint(step: StepData) {
-  if (!step.event) return 'отправке нужно событие — заведите его в «Словарях»';
+  if (!step.event) return 'вызову нужен общий эффект — они живут среди эффектов, в группе «Общие»';
   return null;
 }
 
@@ -32,7 +32,7 @@ export function traceLine(t: any, h: any) {
   const mods = t.incoming !== t.amount
     ? ` (отправлено ${t.incoming}, после модификаторов цели ${t.amount})`
     : '';
-  return `событие «${name}»${tags}: ${t.amount}${mods}`;
+  return `общий эффект «${name}»${tags}: ${t.amount}${mods}`;
 }
 
 export function pack(step: StepData, ctx: StepContext) {
@@ -51,7 +51,7 @@ export function pack(step: StepData, ctx: StepContext) {
 export function resolve(step: StepData, ctx: StepContext) {
   const id = String(step.event);
   const spec = requireEvent(ctx.system, id, who(ctx));
-  const incoming = resolveOptionalNumber(step.amount, ctx, 'величина события') ?? 0;
+  const incoming = resolveOptionalNumber(step.amount, ctx, 'величина общего эффекта') ?? 0;
   const tags = tagsOf(step.tags, ctx);
   const amount = Math.floor(Number(applyValueModifiers(incoming, eventTagOf(id), ctx.pass, { tags })));
   const payload = { event: id, amount, incoming, tags };

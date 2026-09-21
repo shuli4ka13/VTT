@@ -3,7 +3,7 @@ import { useRoom } from '../../store/room.ts';
 import { tableSocket } from '../../api/socket.ts';
 import { ActionForm } from './action-form.tsx';
 import { Columns } from '../../ui/layout.tsx';
-import { Card, CardHead, Button, Empty, Verdict, Chip } from '../../ui/primitives.tsx';
+import { Card, CardHead, Button, Empty, Verdict, Chip, Fold } from '../../ui/primitives.tsx';
 import { Lobby } from './lobby.tsx';
 import { useSession } from '../../store/session.ts';
 import type { RoomState, Sheet, System } from '@vtt/schema';
@@ -46,7 +46,7 @@ export function TableScreen() {
             <div className="stack stack--tight">
               <span className="field__label">Журнал</span>
               {log.length === 0
-                ? <span className="faint">Броски и события появятся здесь.</span>
+                ? <span className="faint">Здесь появится всё, что происходит за столом.</span>
                 : (
                   <div className="log">
                     {log.slice(-80).map(entry => (
@@ -295,10 +295,18 @@ function Actions({ room, sender, targets, onError, onClear }: {
         actions={<Button size="sm" variant="ghost" onClick={onClear}>сбросить выбор</Button>}
       />
       {edits.length && available.length ? (
-        <div className="stack stack--tight">
-          <ClaimRow label="мой бросок" edits={edits} picked={mine} onToggle={key => setMine(flip(mine, key))} />
-          <ClaimRow label="бросок цели" edits={edits} picked={theirs} onToggle={key => setTheirs(flip(theirs, key))} />
-        </div>
+        <Fold
+          title="Правки броска"
+          summary={[...mine, ...theirs].length
+            ? [...mine.map(k => `мой: ${edits.find(([key]) => key === k)?.[1].label ?? k}`),
+              ...theirs.map(k => `цели: ${edits.find(([key]) => key === k)?.[1].label ?? k}`)].join(', ')
+            : 'ничего не заявлено'}
+        >
+          <div className="stack stack--tight">
+            <ClaimRow label="мой бросок" edits={edits} picked={mine} onToggle={key => setMine(flip(mine, key))} />
+            <ClaimRow label="бросок цели" edits={edits} picked={theirs} onToggle={key => setTheirs(flip(theirs, key))} />
+          </div>
+        </Fold>
       ) : null}
       {available.length === 0
         ? <span className="faint">

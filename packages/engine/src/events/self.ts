@@ -23,7 +23,7 @@ export function runSelfTrack(
   const track = effect.self ?? [];
   if (!track.length) return { sheet, report: null };
 
-  const owner = `дорожка «со мной» эффекта «${effect.label || action.effect}»`;
+  const owner = `дорожка «со мной» действия «${action.label}»`;
   const call = {
     effectId: action.effect,
     effect: { ...effect, steps: track },
@@ -38,7 +38,7 @@ export function runSelfTrack(
   return {
     sheet: done.sheet,
     report: {
-      kind: 'self', effect: action.effect, from: sheet.id, label: effect.label || action.effect,
+      kind: 'self', effect: action.effect, from: sheet.id, label: action.label,
       reply: false, trace: done.trace, stopped: done.stopped,
       changes: done.changes, effects: done.effects, removed: done.removed, spent: [],
       emitted: done.emitted,

@@ -58,7 +58,7 @@ export function targets(system: System): Target[] {
 
     ...Object.entries(system.events || {}).map(([id, event]): Target => ({
       tag: eventTagOf(id),
-      label: `Входящее событие: ${event.label || id}`,
+      label: `Входящий общий эффект: ${event.label || id}`,
       group: 'События',
       kind: 'event',
       from: id,

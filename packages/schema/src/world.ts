@@ -254,7 +254,10 @@ export const system = z.object({
   records: z.record(z.string(), recordKind).optional(),
   constants: z.record(z.string(), systemConstant).optional(),
   tables: z.record(z.string(), rangeTable).optional(),
-  rolls: z.array(z.object({ tag: z.string(), label: z.string() })).optional(),
+  rolls: z.array(z.object({
+    tag: z.string(), label: z.string(),
+    words: z.object({ success: z.string(), fail: z.string() }).optional(),
+  })).optional(),
 
   roll_edits: z.record(z.string(), rollEdit).optional(),
   action_types: z.record(z.string(), z.object({

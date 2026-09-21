@@ -13,7 +13,7 @@ const UP = prop('dice_up', 'Костей за круг выше', 'number');
 const SPELL_DIE = prop('damage_die', 'Кость урона', 'dice');
 
 const spellArgs = extra => ({
-  spell_level: ref('spell_level'), slot: null, ...extra,
+  spell_level: ref('spell_level'), ...extra,
 });
 
 export function records() {

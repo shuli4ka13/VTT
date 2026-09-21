@@ -174,7 +174,7 @@ export function sendReadback(step: Step, system: System, effect: Effect): Segmen
   const s = step as Record<string, unknown>;
   const id = String(s.event ?? '');
   const event = system.events?.[id];
-  const name = id ? seg(`«${event?.label || id}»:`) : hole('какое событие?');
+  const name = id ? seg(`«${event?.label || id}»:`) : hole('какой общий эффект?');
   const amount = s.amount === undefined ? seg('без величины') : refSegment(s.amount, system, effect, 'сколько?');
   const tags = Array.isArray(s.tags) ? s.tags.map(t => (typeof t === 'string' ? t : '…')).filter(Boolean) : [];
   return [

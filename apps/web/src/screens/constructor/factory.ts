@@ -87,7 +87,7 @@ export const simpleReceive = (tag: string, direction: 'subtract' | 'add', target
 export const newEvent = (system: System): Made<SystemEvent> => {
   const field = system.fields.find(f => f.value.kind === 'stored' && f.value.type === 'number');
   return {
-    key: freeId(Object.keys(system.events ?? {}), 'событие'),
+    key: freeId(Object.keys(system.events ?? {}), 'общий'),
     value: {
       label: '',
       tags: [],

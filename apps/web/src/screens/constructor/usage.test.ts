@@ -7,7 +7,7 @@ const dnd = SAMPLE_SYSTEMS[0] as System;
 const book = SAMPLE_WORLDS[0]!.compendium as Compendium;
 
 describe('индекс использования вместо поиска подстроки', () => {
-  it('кость инициативы, событие урона и тип действия — в ходу', () => {
+  it('кость инициативы, общий эффект урона и тип действия — в ходу', () => {
     const index = usageIndex(dnd, book);
     expect(inUse(index, 'constant', 'lead_die')).toBe(true);
     expect(inUse(index, 'event', 'damage')).toBe(true);

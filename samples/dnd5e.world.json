@@ -2911,15 +2911,27 @@
     "rolls": [
       {
         "tag": "attack_roll",
-        "label": "Бросок атаки"
+        "label": "Бросок атаки",
+        "words": {
+          "success": "попадание",
+          "fail": "промах"
+        }
       },
       {
         "tag": "save_roll",
-        "label": "Спасбросок"
+        "label": "Спасбросок",
+        "words": {
+          "success": "спасся",
+          "fail": "не спасся"
+        }
       },
       {
         "tag": "skill_roll",
-        "label": "Проверка характеристики или навыка"
+        "label": "Проверка характеристики или навыка",
+        "words": {
+          "success": "успех",
+          "fail": "провал"
+        }
       }
     ],
     "roll_edits": {
@@ -3750,7 +3762,7 @@
         "params": [
           {
             "key": "save_by",
-            "label": "Чем спасается цель",
+            "label": "Бонус спасброска",
             "kind": "expr",
             "of": "target"
           },
@@ -3987,7 +3999,7 @@
           },
           {
             "key": "save_by",
-            "label": "Чем спасается цель",
+            "label": "Бонус спасброска",
             "kind": "expr",
             "of": "target"
           },
@@ -4111,7 +4123,7 @@
           },
           {
             "key": "save_by",
-            "label": "Чем спасается цель",
+            "label": "Бонус спасброска",
             "kind": "expr",
             "of": "target"
           },
@@ -4343,7 +4355,7 @@
           },
           {
             "key": "save_by",
-            "label": "Чем спасается цель",
+            "label": "Бонус спасброска",
             "kind": "expr",
             "of": "target"
           },
@@ -4448,7 +4460,7 @@
           },
           {
             "key": "save_by",
-            "label": "Чем спасается цель",
+            "label": "Бонус спасброска",
             "kind": "expr",
             "of": "target"
           },
@@ -8217,7 +8229,6 @@
               "spell_level": {
                 "prop": "spell_level"
               },
-              "slot": null,
               "damage_die": {
                 "prop": "damage_die"
               },
@@ -8284,7 +8295,6 @@
               "spell_level": {
                 "prop": "spell_level"
               },
-              "slot": null,
               "save_by": {
                 "prop": "save_by"
               },
@@ -8355,7 +8365,6 @@
               "spell_level": {
                 "prop": "spell_level"
               },
-              "slot": null,
               "save_by": {
                 "prop": "save_by"
               },
@@ -8425,7 +8434,6 @@
               "spell_level": {
                 "prop": "spell_level"
               },
-              "slot": null,
               "damage_die": {
                 "prop": "damage_die"
               },
@@ -8487,7 +8495,6 @@
               "spell_level": {
                 "prop": "spell_level"
               },
-              "slot": null,
               "save_by": {
                 "prop": "save_by"
               },
@@ -8535,7 +8542,6 @@
               "spell_level": {
                 "prop": "spell_level"
               },
-              "slot": null,
               "status": {
                 "prop": "status",
                 "optional": true
@@ -8570,7 +8576,6 @@
               "spell_level": {
                 "prop": "spell_level"
               },
-              "slot": null,
               "status": {
                 "prop": "status",
                 "optional": true
@@ -8620,7 +8625,6 @@
               "spell_level": {
                 "prop": "spell_level"
               },
-              "slot": null,
               "heal_die": {
                 "prop": "heal_die"
               },
@@ -8664,7 +8668,6 @@
               "spell_level": {
                 "prop": "spell_level"
               },
-              "slot": null,
               "cure": {
                 "prop": "cure",
                 "optional": true
@@ -8693,8 +8696,7 @@
             "args": {
               "spell_level": {
                 "prop": "spell_level"
-              },
-              "slot": null
+              }
             }
           }
         ]

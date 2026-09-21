@@ -8,7 +8,7 @@ export const ACTIVATIONS = {
   triggered: {
     label: 'Триггерный',
     icon: '⚡',
-    hint: 'Срабатывает сам на чужое событие. Конвейер шагов.',
+    hint: 'Срабатывает сам на чужое действие или момент. Конвейер шагов.',
     payload: 'steps',
   },
   passive: {
@@ -36,7 +36,7 @@ export interface Launch {
 export const LAUNCHES: Record<LaunchKind, { label: string; hint: string }> = {
   manual: { label: 'Кнопкой', hint: 'Игрок нажимает сам: кнопка на листе из записи или самого эффекта.' },
   passive: { label: 'Висит и правит', hint: 'Ничего не делает сам — пока надет или наложен, правит цифры и броски.' },
-  auto: { label: 'Срабатывает сам', hint: 'Слушает чужое действие или событие и запускается: молча или спросив игрока.' },
+  auto: { label: 'Срабатывает сам', hint: 'Слушает чужое действие или момент и запускается: молча или спросив игрока.' },
 };
 
 export function launchOf(effect: { activation?: string | null; trigger?: { when?: string; window?: string } | null } | null | undefined): Launch {

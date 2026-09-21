@@ -32,7 +32,7 @@ export function pickFor(where: Where): Pick {
 const LEAF: Record<string, string> = {
   on: 'что слушает', effect: 'эффект', target: 'какое поле меняем', value: 'сколько', edit: 'правка броска',
   expr: 'формула', tag: 'поле', label: 'название', default: 'по умолчанию', die: 'кость', constant: 'кость',
-  event: 'событие', dice: 'кости', bonus: 'прибавка', versus: 'против чего', roll: 'бросок', type: 'тип',
+  event: 'общий эффект', dice: 'кости', bonus: 'прибавка', versus: 'против чего', roll: 'бросок', type: 'тип',
   kind: 'вид', args: 'что берёт из записи', props: 'свойства', ops: 'операции', ranges: 'строки таблицы',
 };
 
@@ -58,7 +58,7 @@ export function pathWords(issue: string, system: System): string {
     const index = next !== undefined && /^\d+$/.test(next) ? Number(next) : null;
     const named = next !== undefined && index === null ? next : null;
     if (key === 'effects' && named) { words.push(`эффект ${labelOf(system.effects, named)}`); i++; continue; }
-    if (key === 'events' && named) { words.push(`событие ${labelOf(system.events, named)}`); i++; continue; }
+    if (key === 'events' && named) { words.push(`общий эффект ${labelOf(system.events, named)}`); i++; continue; }
     if (key === 'records' && named) { words.push(`тип записи ${labelOf(system.records, named)}`); i++; continue; }
     if (key === 'constants' && named) { words.push(`кость ${labelOf(system.constants, named)}`); i++; continue; }
     if (key === 'roll_edits' && named) { words.push(`правка броска ${labelOf(system.roll_edits, named)}`); i++; continue; }

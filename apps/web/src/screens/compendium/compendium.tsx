@@ -125,6 +125,8 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
   };
 
   const bindings = kind?.bindings ?? [];
+  const hangable = Object.entries(system.effects)
+    .filter(([id, effect]) => (effect.activation ?? 'manual') !== 'manual' && !(record.grants ?? []).includes(id));
 
   return (
     <>
@@ -215,25 +217,26 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
             sub="Пока запись надета или выучена, эти эффекты действуют сами: черта даёт сопротивление, заклинание-реакция ждёт своего часа."
           />
           <div className="inline inline--tight">
-            {Object.entries(system.effects)
-              .filter(([, effect]) => (effect.activation ?? 'manual') !== 'manual')
-              .map(([id, effect]) => {
-                const on = (record.grants ?? []).includes(id);
-                return (
-                  <Chip
-                    key={id}
-                    active={on}
-                    onClick={() => edit(draft => {
-                      const next = on ? (draft.grants ?? []).filter(x => x !== id) : [...(draft.grants ?? []), id];
-                      if (next.length) draft.grants = next; else delete draft.grants;
-                    })}
-                  >
-                    {effect.label ?? id}
-                  </Chip>
-                );
-              })}
-            {Object.values(system.effects).some(effect => (effect.activation ?? 'manual') !== 'manual')
-              ? null : <span className="faint">В системе нет эффектов, которые висят или срабатывают сами.</span>}
+            {(record.grants ?? []).map(id => (
+              <Chip
+                key={id}
+                active
+                onRemove={() => edit(draft => {
+                  const left = (draft.grants ?? []).filter(x => x !== id);
+                  if (left.length) draft.grants = left; else delete draft.grants;
+                })}
+              >
+                {system.effects[id]?.label ?? id}
+              </Chip>
+            ))}
+            {hangable.length ? (
+              <Select
+                value=""
+                options={[['', (record.grants?.length ? '+ ещё эффект…' : '+ повесить эффект…')],
+                  ...hangable.map(([id, effect]) => [id, effect.label ?? id] as const)] as never}
+                onChange={next => { if (next) edit(draft => { draft.grants = [...(draft.grants ?? []), next]; }); }}
+              />
+            ) : <span className="faint">В системе нет эффектов, которые висят или срабатывают сами.</span>}
           </div>
         </Card>
       ) : null}

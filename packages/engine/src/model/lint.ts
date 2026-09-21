@@ -24,7 +24,7 @@ const NAMES: Record<Exclude<RefKind, 'param' | 'step'>, (key: string) => string>
   constant: key => `кости «${key}» в системе нет`,
   table: key => `таблицы «${key}» в системе нет`,
   rollEdit: key => `правки броска «${key}» в системе нет`,
-  event: key => `события «${key}» в системе нет`,
+  event: key => `общего эффекта «${key}» в системе нет`,
   roll: key => `вида броска «${key}» в системе нет`,
   actionType: key => `типа действия «${key}» в системе нет`,
   prop: key => `свойство «${key}» не объявлено ни одним типом записей — заведите его на вкладке «${TABS.records}»`,
@@ -213,7 +213,7 @@ function orphanProblems(system: System, compendium?: Compendium): Problem[] {
     if (!(event.receive?.length) && !heardEvents.has(key)) {
       out.push({
         where: { tab: 'rules', section: 'events', key }, level: 'warn',
-        text: `событие «${event.label || key}» никто не принимает: ни правила приёма, ни слушателей`,
+        text: `общий эффект «${event.label || key}» никто не принимает: ни правила приёма, ни слушателей`,
       });
     }
   }
@@ -323,7 +323,7 @@ export function describeWhere(where: Where, system: System, compendium?: Compend
     if (where.part === 'cost') parts.push('чего стоит');
   } else if (where.tab === 'rules') {
     parts.push(TABS.rules);
-    if (where.section === 'events' && where.key) parts.push(`событие ${quoted(system.events?.[where.key]?.label, where.key)}`);
+    if (where.section === 'events' && where.key) parts.push(`общий эффект ${quoted(system.events?.[where.key]?.label, where.key)}`);
     else if (where.section === 'room_rules') parts.push('правила комнаты');
     else if (where.section === 'initiative') parts.push('инициатива');
     else if (where.section) parts.push(where.section);

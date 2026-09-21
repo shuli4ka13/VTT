@@ -46,6 +46,9 @@ describe('форма действия спрашивает то, что объя
     const sent: unknown[] = [];
     render(<ActionForm system={system} compendium={compendium} actionId="ствол:0" label="Выстрел" onAct={r => sent.push(r)} />);
 
+    expect(screen.queryByText('Дистанция')).toBeNull();
+    fireEvent.click(screen.getByText('Выстрел…'));
+
     expect(screen.getByText('Дистанция')).toBeTruthy();
     expect(screen.getByText('Куда целишься · говорит ведущий')).toBeTruthy();
 

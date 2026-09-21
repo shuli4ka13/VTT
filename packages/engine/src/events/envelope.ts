@@ -288,7 +288,7 @@ function withEvent(results: Record<string, unknown>, heard: EmittedEvent | undef
 
 function runOnSelf(
   id: string, effect: Effect, sheet: Sheet, results: Record<string, unknown>, owner: string,
-  { system, compendium, die, clock }: WorldContext,
+  { system, compendium, die, clock }: WorldContext, label?: string,
 ): { sheet: Sheet; report: Report } {
   const world = { system, compendium, die, clock };
   const call = { effectId: id, effect, sheet, owner, args: (effect.args || {}) as Record<string, unknown>, props: null, seed: results };
@@ -297,7 +297,7 @@ function runOnSelf(
   return {
     sheet: done.sheet,
     report: {
-      kind: 'effect', effect: id, from: sheet.id, label: effect.label || id,
+      kind: 'effect', effect: id, from: sheet.id, label: label || effect.label || id,
       reply: false, trace: done.trace, stopped: done.stopped,
       changes: done.changes, effects: done.effects, removed: done.removed, spent: [],
       emitted: done.emitted,
@@ -461,7 +461,7 @@ export function react(
     const effect = requireEffect(ctx.system, id, 'реакция');
     const owner = `реакция «${offer.label}»`;
     if (effect.self?.length) {
-      const paid = runOnSelf(id, { ...effect, steps: effect.self }, sheet, results, `плата за «${offer.label}»`, ctx);
+      const paid = runOnSelf(id, { ...effect, steps: effect.self }, sheet, results, `плата за «${offer.label}»`, ctx, offer.label);
       const why = refusalWords(paid.report, ctx.system);
       if (why) throw new EngineError(`«${offer.label}» не состоялось: ${why}`);
       sheet = paid.sheet;

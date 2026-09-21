@@ -42,7 +42,7 @@ describe('адрес проблемы открывает нужное место
 
   it('подпись места — словами системы', () => {
     expect(whereLabel({ tab: 'effects', effect: 'hit', step: 0 }, system)).toBe('Эффекты · эффект «Удар» · шаг 1');
-    expect(whereLabel({ tab: 'rules', section: 'events', key: 'damage', step: 1 }, system)).toBe('Правила · событие «Урон» · шаг 2');
+    expect(whereLabel({ tab: 'rules', section: 'events', key: 'damage', step: 1 }, system)).toBe('Правила · общий эффект «Урон» · шаг 2');
     expect(whereLabel({ tab: 'records', kind: 'weapon', binding: 0 }, system)).toBe('Типы записей · «Оружие» · привязка 1');
   });
 });

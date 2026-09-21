@@ -3,9 +3,15 @@ import { breakReasonWord, registry as stepRegistry } from '../engine/steps/index
 import type { Envelope } from './envelope.ts';
 import type { System, Sheet } from '../model/types.ts';
 
+function verdictWords(system: System, tag: unknown): { success: string; fail: string } {
+  const words = system.rolls?.find(r => r.tag === tag)?.words;
+  return { success: words?.success ?? 'успех', fail: words?.fail ?? 'промах' };
+}
+
 export function previewLines(envelope: Envelope, system: System, dry: { report: { trace: Record<string, any>[] } } | null): string[] {
   const lines: string[] = [];
-  for (const step of envelope.steps as Record<string, any>[]) {
+  const steps = envelope.steps as Record<string, any>[];
+  for (const step of steps) {
     if (step.type !== 'threshold' || !step.rolled) continue;
     const tag = step.check ?? step.roll?.check;
     const check = system.rolls?.find(r => r.tag === tag)?.label ?? 'Бросок';
@@ -14,14 +20,16 @@ export function previewLines(envelope: Envelope, system: System, dry: { report: 
       ? `[${step.rolled.rolls.join(', ')}] → ${step.rolled.kept}` : `[${step.rolled.rolls.join(', ')}]`;
     lines.push(`${check}: ${rolls}${bonus ? ` + ${bonus}` : ''} = ${step.rolled.total + bonus}`);
   }
-  const packed = new Set((envelope.steps as Record<string, any>[]).filter(s => s.type === 'threshold' && s.rolled).map(s => String(s.id ?? '')));
+  const packed = new Set(steps.filter(s => s.type === 'threshold' && s.rolled).map(s => String(s.id ?? '')));
   for (const trace of dry?.report.trace ?? []) {
     if (trace.type !== 'threshold' || trace.skipped) continue;
     const versus = trace.versus?.tag
       ? system.fields.find(f => f.tag === trace.versus.tag)?.label ?? trace.versus.tag : 'порог';
     const own = !packed.has(String(trace.step ?? '')) && Array.isArray(trace.rolls)
       ? `бросок цели [${trace.rolls.join(', ')}] + ${trace.bonus ?? 0} = ${trace.total} ` : '';
-    lines.push(`${own}против ${versus} ${trace.versus?.value}: ${trace.success ? 'попадание' : 'промах'}`);
+    const step = steps.find(s => String(s.id ?? '') === String(trace.step ?? ''));
+    const words = verdictWords(system, step?.check ?? step?.roll?.check);
+    lines.push(`${own}против ${versus} ${trace.versus?.value}: ${trace.success ? words.success : words.fail}`);
   }
   return lines;
 }
@@ -31,7 +39,7 @@ export function describeEntry(
   system: System, sheets: Sheet[],
 ): string {
   const nameOf = (id: string) => sheets.find(s => s.id === id)?.name ?? id;
-  const label = effectLabelOf(system, entry.report.effect);
+  const label = String(entry.report.label ?? '') || effectLabelOf(system, entry.report.effect);
   const head = entry.fromId === entry.toId
     ? `${nameOf(entry.fromId)} применяет «${label}»`
     : entry.report.reply
@@ -94,7 +102,8 @@ export function describeEntry(
       const versus = trace.versus?.tag ? labelOf(String(trace.versus.tag))
         : (refLabel(step?.versus) ?? 'порог');
       const degree = trace.degree !== undefined && trace.degree !== null ? `, степень ${trace.degree}` : '';
-      const verdict = (trace.success ? 'успех' : 'промах') + degree;
+      const words = verdictWords(system, step?.roll?.check);
+      const verdict = (trace.success ? words.success : words.fail) + degree;
       return `${check}: ${rolls}${edits}${bonus} = ${trace.total} против ${versus}: ${trace.versus?.value} — ${verdict}`;
     }
     if (trace.type === 'amount') {
@@ -106,7 +115,13 @@ export function describeEntry(
       if (step?.fixed !== undefined) terms.push(`${refLabel(step.fixed) ?? 'Значение'}: ${trace.flat}`);
       if (step?.bonus !== undefined) terms.push(`${refLabel(step.bonus) ?? 'Бонус'}: ${trace.bonus}`);
       if (step?.margin !== undefined) terms.push(`${refLabel(step.margin) ?? 'Запас'}: ${trace.margin}`);
-      return `${terms.join(' + ') || '0'} = ${trace.total}`;
+      const sum = terms.join(' + ') || '0';
+      if (trace.share === undefined || trace.share === null) {
+        return terms.length === 1 && trace.total === trace.rolls?.reduce?.((a: number, b: number) => a + b, 0)
+          ? sum : `${sum} = ${trace.total}`;
+      }
+      const share = trace.share === 0.5 ? 'половина' : `доля ${trace.share}`;
+      return `${sum} = ${trace.full} → ${share}: ${trace.total}`;
     }
     return null;
   };
