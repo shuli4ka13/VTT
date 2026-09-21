@@ -3,8 +3,8 @@ import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
 import { matchTagQuery } from './tag-suggest.tsx';
 
-const labelOfTag = (system: System, tag: string): string =>
-  system.fields.find(f => f.tag === tag)?.label ?? tag;
+const labelOfTag = (system: System, tag: string, extra?: Map<string, string>): string =>
+  system.fields.find(f => f.tag === tag)?.label ?? extra?.get(tag) ?? tag;
 
 export type Part = { text: string } | { tag: string };
 
@@ -42,11 +42,23 @@ export function partsOf(value: string, known?: (tag: string) => boolean): Part[]
   return out;
 }
 
+const rankOf = (f: { tag: string; label: string }, needle: string): number => {
+  if (!needle) return 0;
+  const label = f.label.toLowerCase();
+  const tag = f.tag.toLowerCase();
+  if (label.startsWith(needle) || tag.startsWith(needle)) return 0;
+  if (new RegExp(`\\b${needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'u').test(label)) return 1;
+  if (label.includes(needle) || tag.includes(needle)) return 2;
+  return 3;
+};
+
+export const shortLabel = (label: string): string => label.split(',')[0]!.trim();
+
 export function joinParts(parts: Part[]): string {
   return parts.map(p => ('tag' in p ? `@${p.tag}` : p.text)).join('');
 }
 
-export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, side, extraOptions, fromSender, onFlipSide, calculator }: {
+export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraNames, side, extraOptions, fromSender, onFlipSide, calculator }: {
   value: string;
   onChange: (next: string) => void;
   system: System;
@@ -64,6 +76,8 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
 
   names?: Record<string, ReactNode>;
 
+  extraNames?: Map<string, string>;
+
   side?: 'self' | 'target';
 
   extraOptions?: { group: string; label: string; onPick: (insert: (piece: string) => string) => void }[];
@@ -75,8 +89,9 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
   calculator?: boolean;
 }) {
   const parts = useMemo(
-    () => partsOf(value, tag => (system.fields ?? []).some(field => field.tag === tag) || Boolean(names?.[tag])),
-    [value, system, names],
+    () => partsOf(value, tag => (system.fields ?? []).some(field => field.tag === tag)
+      || Boolean(names?.[tag]) || Boolean(extraNames?.has(tag))),
+    [value, system, names, extraNames],
   );
   const host = useRef<HTMLDivElement>(null);
   const inputs = useRef(new Map<number, HTMLInputElement>());
@@ -84,8 +99,11 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
   const [caret, setCaret] = useState(0);
 
   const fields = useMemo(
-    () => system.fields.map(f => ({ tag: f.tag, label: f.label ?? f.tag })),
-    [system],
+    () => [
+      ...[...(extraNames ?? [])].map(([tag, label]) => ({ tag, label, group: 'здесь же' })),
+      ...system.fields.map(f => ({ tag: f.tag, label: f.label ?? f.tag, group: 'поле' })),
+    ],
+    [system, extraNames],
   );
 
   const commitParts = (next: Part[], focusAt?: { index: number; caret: number }) => {
@@ -103,9 +121,9 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
     ? matchTagQuery((parts[active] as { text: string }).text, caret)
     : null;
   const matches = query
-    ? fields.filter(f => !query.needle
-      || f.label.toLowerCase().includes(query.needle)
-      || f.tag.toLowerCase().includes(query.needle))
+    ? fields.filter(f => !query.needle || rankOf(f, query.needle) < 3)
+      .sort((a, b) => rankOf(a, query.needle) - rankOf(b, query.needle))
+      .slice(0, 12)
     : [];
   const extras = query
     ? (extraOptions ?? []).filter(o => !query.needle || o.label.toLowerCase().includes(query.needle))
@@ -202,7 +220,9 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
             <span key={index} className="chips__group">{names[part.tag]}</span>
           ) : (
           <span key={index} className="chips__chip">
-            {labelOfTag(system, part.tag)}
+            <span title={labelOfTag(system, part.tag, extraNames)}>
+              {shortLabel(labelOfTag(system, part.tag, extraNames))}
+            </span>
             {side && onFlipSide ? (
 
               <button
@@ -272,7 +292,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
               key={f.tag} type="button" className="slot__option"
               onMouseDown={e => { e.preventDefault(); pick(f.tag); }}
             >
-              <span className="slot__group">поле</span>
+              <span className="slot__group">{f.group}</span>
               {f.label}
             </button>
           ))}

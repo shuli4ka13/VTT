@@ -1,5 +1,7 @@
+import { useMemo, useState } from 'react';
 import type { Step } from '@vtt/schema';
-import { Field, Input, Select, Button } from '../../../../ui/primitives.tsx';
+import { Field, Select, Button } from '../../../../ui/primitives.tsx';
+import { FormulaChips } from '../../../../ui/formula-chips.tsx';
 import { formulaAsLabels } from '../../../../ui/formula.tsx';
 import { SlotInput } from '../../slot-input.tsx';
 import { asOneFormula } from '@vtt/engine/model/amounts';
@@ -24,14 +26,31 @@ export function NumberBody({ step, context, edit, onAddParam }: {
   edit: EditFn;
   onAddParam?: (label: string, kind: string, want?: string) => string;
 }) {
+  const [draft, setDraft] = useState<string | null>(null);
   const read = loose(step);
   const source = typeof read.source === 'object' ? 'roll' : (read.source ?? 'roll');
-  const line = textOf(read) || asOneFormula(step) || '';
-  const names = namesOf(context);
-  const words = line ? formulaAsLabels(context.system, line, names) : '';
+  const line = draft ?? textOf(read) ?? '';
+  const shown = line || (draft === null ? asOneFormula(step) ?? '' : '');
+  const names = useMemo(() => namesOf(context), [context]);
+  const words = shown ? formulaAsLabels(context.system, shown, names) : '';
 
-  const unknown = [...new Set([...line.matchAll(/@([\p{L}\p{N}_]+)/gu)].map(m => m[1]!))]
+  const unknown = [...new Set([...shown.matchAll(/@([\p{L}\p{N}_]+)/gu)].map(m => m[1]!))]
     .filter(name => !names.has(name) && !context.system.fields.some(f => f.tag === name));
+
+  const commit = () => {
+    if (draft === null) return;
+    edit(0, target => {
+      const it = loose(target);
+      delete it.dice;
+      delete it.bonus;
+      delete it.count;
+      delete it.double;
+      it.source = 'item';
+      if (draft.trim()) it.fixed = { expr: draft };
+      else delete it.fixed;
+    });
+    setDraft(null);
+  };
 
   if (source === 'margin') {
     return (
@@ -48,27 +67,25 @@ export function NumberBody({ step, context, edit, onAddParam }: {
     <>
       <Field
         label="Сколько"
-        hint="Обычная математика. Кость бросается так: кинуть(@кость_урона) — вторым числом сколько раз."
-        needed={!line}
+        hint="Обычная математика. Наберите @ — подскажет названия. Кость бросается так: кинуть(@кость урона), вторым числом — сколько раз."
+        needed={!shown}
       >
-        <Input
-          value={line}
-          mono
-          placeholder="кинуть(@кость_урона) + @прибавка"
-          onChange={next => edit(0, draft => {
-            const target = loose(draft);
-            delete target.dice;
-            delete target.bonus;
-            delete target.count;
-            delete target.double;
-            target.source = 'item';
-            if (next.trim()) target.fixed = { expr: next };
-            else delete target.fixed;
-          })}
+        <FormulaChips
+          value={shown}
+          system={context.system}
+          extraNames={names}
+          calculator
+          placeholder="кинуть(@ и название) + @"
+          onChange={setDraft}
+          onBlur={commit}
+          onKeyDown={e => {
+            if (e.key === 'Enter') commit();
+            if (e.key === 'Escape') setDraft(null);
+          }}
         />
       </Field>
 
-      {words && words !== line ? <span className="faint">{words}</span> : null}
+      {words && words !== shown ? <span className="faint">{words}</span> : null}
 
       {onAddParam ? unknown.map(name => (
         <Button

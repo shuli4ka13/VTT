@@ -43,6 +43,40 @@ describe('FormulaChips', () => {
     expect(value).toBe('1d20 + @бонус_атаки');
   });
 
+  it('незнакомое имя остаётся текстом — подсказка успевает открыться', () => {
+    render(<FormulaChips value="@сил" system={system} onChange={() => {}} />);
+    expect(screen.queryByText('Сила'), 'фишки ещё нет').toBeNull();
+    expect(screen.getByDisplayValue('@сил')).toBeTruthy();
+  });
+
+  it('имена «здесь же» стоят выше полей листа, а совпавшие с начала — выше вложенных', () => {
+    const рядом = new Map([['damage_dice', 'Кость урона']]);
+    const большая = {
+      ...system,
+      fields: [
+        ...system.fields,
+        { tag: 'ловкость', label: 'Ловкость', value: { kind: 'stored', type: 'number', default: 10 } },
+        { tag: 'hit_die', label: 'Кость хитов', value: { kind: 'stored', type: 'number', default: 8 } },
+      ],
+    } as unknown as System;
+
+    render(<FormulaChips value="@кость" system={большая} extraNames={рядом} onChange={() => {}} />);
+    const input = screen.getByDisplayValue('@кость') as HTMLInputElement;
+    input.focus();
+    input.setSelectionRange(6, 6);
+    fireEvent.click(input);
+
+    const предложено = [...document.querySelectorAll('.slot__option')].map(o => o.textContent?.trim());
+    expect(предложено).toEqual(['здесь жеКость урона', 'полеКость хитов', 'полеЛовкость']);
+  });
+
+  it('фишка с длинной подписью укорачивается, полное имя — в подсказке', () => {
+    const рядом = new Map([['бросок', 'шаг 1 · Проверка — что выпало, без прибавок']]);
+    render(<FormulaChips value="@бросок" system={system} extraNames={рядом} onChange={() => {}} />);
+    const фишка = screen.getByText('шаг 1 · Проверка — что выпало');
+    expect(фишка.getAttribute('title')).toBe('шаг 1 · Проверка — что выпало, без прибавок');
+  });
+
   it('крестик на фишке убирает тег целиком', () => {
     let value = '1d20 + @бонус_атаки + 2';
     render(<FormulaChips value={value} system={system} onChange={next => { value = next; }} />);

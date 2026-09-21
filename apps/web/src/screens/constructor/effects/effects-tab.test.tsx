@@ -293,6 +293,14 @@ describe('крит — обычная формула, а не особый сл�
   });
   afterEach(() => { cleanup(); });
 
+  const строка = () => screen.getByDisplayValue("кинуть('2d6')") as HTMLInputElement;
+
+  const набрать = (текст: string) => {
+    const поле = строка();
+    fireEvent.change(поле, { target: { value: текст } });
+    fireEvent.keyDown(поле, { key: 'Enter' });
+  };
+
   it('старый шаг сразу показан одной строкой, трёх полей больше нет', () => {
     render(<EffectsTab />);
     expect(screen.queryByText('удвоить кости, если')).toBeNull();
@@ -301,26 +309,31 @@ describe('крит — обычная формула, а не особый сл�
     expect(screen.queryByText('прибавка')).toBeNull();
 
     expect(screen.getByText('Сколько')).toBeTruthy();
-    expect(screen.getByDisplayValue("кинуть('2d6')")).toBeTruthy();
+    expect(строка()).toBeTruthy();
   });
 
   it('правка строки переносит старые поля в формулу', () => {
     render(<EffectsTab />);
-    fireEvent.change(screen.getByDisplayValue("кинуть('2d6')"), {
-      target: { value: "кинуть('2d6') + @сила" },
-    });
+    набрать("кинуть('2d6') + @хиты");
 
     const шаг = useWorld.getState().system.effects.удар!.steps![1]! as Record<string, unknown>;
     expect(шаг.dice, 'старые поля ушли').toBeUndefined();
     expect(шаг.source).toBe('item');
-    expect((шаг.fixed as { expr: string }).expr).toBe("кинуть('2d6') + @сила");
+    expect((шаг.fixed as { expr: string }).expr).toBe("кинуть('2d6') + @хиты");
+  });
+
+  it('набор не пишется в систему, пока строку не отпустили', () => {
+    render(<EffectsTab />);
+    fireEvent.change(строка(), { target: { value: 'кинуть(@кос' } });
+
+    const шаг = useWorld.getState().system.effects.удар!.steps![1]! as Record<string, unknown>;
+    expect(шаг.fixed, 'недобранное имя в систему не попало').toBeUndefined();
+    expect(шаг.dice).toEqual({ const: '2d6' });
   });
 
   it('незнакомое имя в строке предлагается взять из записи под тем же ключом', () => {
     render(<EffectsTab />);
-    fireEvent.change(screen.getByDisplayValue("кинуть('2d6')"), {
-      target: { value: 'кинуть(@кость_врага)' },
-    });
+    набрать('кинуть(@кость_врага)');
     fireEvent.click(screen.getByText('взять «кость_врага» из записи'));
 
     const effect = useWorld.getState().system.effects.удар!;
