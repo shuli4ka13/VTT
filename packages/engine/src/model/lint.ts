@@ -248,6 +248,26 @@ function paramProblems(system: System): Problem[] {
       });
     }
   }
+  for (const [id, effect] of Object.entries(system.effects)) {
+    const chains: [Step[], 'steps' | 'self'][] = [[effect.steps ?? [], 'steps'], [effect.self ?? [], 'self']];
+    for (const [steps, part] of chains) {
+      steps.forEach((step, index) => {
+        const raw = step as unknown as Record<string, unknown>;
+        if (step.type !== 'emit' || !raw.event) return;
+        const called = system.effects[String(raw.event)];
+        if (!called) return;
+        const args = (raw.args ?? {}) as Record<string, unknown>;
+        for (const param of called.params ?? []) {
+          if (args[param.key] !== undefined || param.optional || param.ask) continue;
+          out.push({
+            where: { tab: 'effects', effect: id, step: index, ...(part === 'self' ? { part: 'self' as const } : {}) },
+            level: 'error',
+            text: `вызов «${called.label ?? raw.event}» не заполняет его потребность «${param.label ?? param.key}»`,
+          });
+        }
+      });
+    }
+  }
   for (const [kind, spec] of Object.entries(system.records ?? {})) {
     (spec.bindings ?? []).forEach((binding, index) => {
       const effect = system.effects[binding.effect];

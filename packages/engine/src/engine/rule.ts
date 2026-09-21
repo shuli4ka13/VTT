@@ -5,7 +5,7 @@ import { requireEffect, stackingOf, usesMax } from './effects.ts';
 import { packRef, resolveRef } from './refs.ts';
 import { EngineError } from './errors.ts';
 import type { StepContext, StepData } from './steps/index.ts';
-import type { Effect, Sheet, Step, WornEffect, StoredValue } from '../model/types.ts';
+import type { Effect, Sheet, Step, WornEffect, StoredValue, Param } from '../model/types.ts';
 
 export interface Change { tag: string; from: unknown; to: unknown }
 
@@ -187,7 +187,10 @@ export function resolveRule(steps: StepData[], ctx: StepContext): RuleReport {
   }
 
   const chain: string[] = [];
-  const run = (list: Step[], seed: Record<string, unknown>, within?: string): NestedRun => {
+  const run = (
+    list: Step[], seed: Record<string, unknown>, within?: string,
+    params?: Record<string, unknown>, paramDefs?: Param[],
+  ): NestedRun => {
     if (within) {
       if (chain.length >= MAX_CALL_DEPTH) {
         throw new EngineError(
@@ -196,7 +199,11 @@ export function resolveRule(steps: StepData[], ctx: StepContext): RuleReport {
       chain.push(within);
     }
     try {
-      const packed = packSteps(list, { ...ctx, results: seed });
+      const packed = packSteps(list, {
+        ...ctx, results: seed,
+        ...(params ? { params } : {}),
+        ...(paramDefs ? { paramDefs } : {}),
+      });
       return runSteps(packed, seed, within);
     } finally {
       if (within) chain.pop();

@@ -40,10 +40,15 @@ export function pack(step: StepData, ctx: StepContext) {
   requireCalled(ctx.system, id, who(ctx));
   const tags = (Array.isArray(step.tags) ? step.tags : [])
     .map((t: unknown) => (typeof t === 'string' ? t : packRef(t, ctx)));
+  const args = step.args && typeof step.args === 'object'
+    ? Object.fromEntries(Object.entries(step.args as Record<string, unknown>)
+      .map(([key, ref]) => [key, packRef(ref, ctx)]))
+    : undefined;
   return {
     event: id,
     amount: step.amount === undefined ? null : packRef(step.amount, ctx),
     tags,
+    ...(args ? { args } : {}),
     ...(step.strict ? { strict: true } : {}),
   };
 }
@@ -61,7 +66,7 @@ export function resolve(step: StepData, ctx: StepContext) {
   let received: string | null = null;
   let note: string | null = null;
   if (ctx.run && spec.steps?.length) {
-    const out = ctx.run(spec.steps, { event: payload }, id);
+    const out = ctx.run(spec.steps, { event: payload }, id, argsOf(step.args, ctx), spec.params ?? []);
     if (out.stopped) {
       received = String(out.stopped.reason ?? 'оборвано');
       note = out.stopped.note ?? null;
@@ -73,6 +78,16 @@ export function resolve(step: StepData, ctx: StepContext) {
     trace: { event: id, incoming, amount, tags, ...(received ? { received } : {}) },
     break: step.strict && received ? { reason: 'emit-stopped', ...(note ? { note } : {}) } : null,
   };
+}
+
+function argsOf(raw: unknown, ctx: StepContext): Record<string, unknown> | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const out: Record<string, unknown> = {};
+  for (const [key, ref] of Object.entries(raw as Record<string, unknown>)) {
+    const value = resolveRef(ref, ctx);
+    if (value !== null && value !== undefined) out[key] = value;
+  }
+  return Object.keys(out).length ? out : undefined;
 }
 
 function tagsOf(raw: unknown, ctx: StepContext): string[] {

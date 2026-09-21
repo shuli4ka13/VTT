@@ -20,6 +20,9 @@ export function SendBody({ step, at, context, edit, system }: {
   const tags: string[] = all.filter((t): t is string => typeof t === 'string');
   const fromRecord = all.filter((t): t is { param: string } => Boolean(t) && typeof t === 'object' && 'param' in (t as object));
   const needs = (context.effect.params ?? []).filter(p => !fromRecord.some(t => t.param === p.key));
+  const called = system.effects?.[String(step.event ?? '')];
+  const asks = called?.params ?? [];
+  const args = (step.args ?? {}) as Record<string, unknown>;
   return (
     <>
     <div className="row">
@@ -39,6 +42,23 @@ export function SendBody({ step, at, context, edit, system }: {
         />
       </Field>
     </div>
+
+    {asks.length ? (
+      <div className="row">
+        {asks.map(need => (
+          <Field key={need.key} label={`${need.label ?? need.key} — для «${called?.label ?? step.event}»`} needed={args[need.key] === undefined}>
+            <SlotInput
+              value={args[need.key] as never} context={context}
+              onChange={next => edit(at, draft => {
+                const all = { ...((loose(draft).args ?? {}) as Record<string, unknown>) };
+                if (next === undefined || next === null) delete all[need.key]; else all[need.key] = next;
+                if (Object.keys(all).length) loose(draft).args = all; else delete loose(draft).args;
+              })}
+            />
+          </Field>
+        ))}
+      </div>
+    ) : null}
 
     <Extras
       items={[

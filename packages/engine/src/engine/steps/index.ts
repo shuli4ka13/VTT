@@ -6,7 +6,7 @@ import * as apply from './apply.ts';
 import * as status from './status.ts';
 import * as emit from './emit.ts';
 import * as table from './table.ts';
-import type { Step, System, Sheet, Die, StoredValue, Effect, WornEffect } from '../../model/types.ts';
+import type { Step, System, Sheet, Die, StoredValue, Effect, WornEffect, Param } from '../../model/types.ts';
 import type { RefContext } from '../refs.ts';
 import type { SourcedModifier } from '../modifiers.ts';
 import type { EmittedEvent, NestedRun } from '../rule.ts';
@@ -31,7 +31,10 @@ export interface StepContext extends RefContext {
 
   emit?: (event: EmittedEvent) => void;
 
-  run?: (steps: Step[], seed: Record<string, unknown>, within?: string) => NestedRun;
+  run?: (
+    steps: Step[], seed: Record<string, unknown>, within?: string,
+    params?: Record<string, unknown>, paramDefs?: Param[],
+  ) => NestedRun;
 
   expiry?: (effect: Effect) => Partial<WornEffect>;
 
