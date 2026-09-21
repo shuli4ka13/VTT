@@ -201,3 +201,86 @@ describe('CompendiumScreen: превью «как увидит игрок»', ()
     expect([...select.options].map(o => o.value)).toEqual(['', 'nine']);
   });
 });
+
+describe('свойство из словаря — выбор, а не ввод', () => {
+  beforeEach(() => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...state.system,
+        lists: {
+          damage_types: {
+            label: 'Типы урона', of: 'text',
+            values: [{ value: 'рубящий', label: 'рубящий' }, { value: 'огонь', label: 'огонь' }],
+          },
+        },
+        effects: {},
+        records: {
+          weapon: {
+            kind: 'item', label: 'Оружие',
+            props: [
+              { key: 'damage_type', label: 'Тип урона', kind: 'choice', from: 'damage_types' },
+              { key: 'ничей', label: 'Без словаря', kind: 'choice' },
+            ],
+            bindings: [],
+          },
+        },
+      },
+      compendium: {
+        items: [{ id: 'sword', rk: 'weapon', label: 'Меч', props: { damage_type: 'рубящий' } }],
+        actions: [],
+      },
+      activeRecordId: 'sword',
+    }));
+  });
+
+  const полеУ = (подпись: string) =>
+    [...document.querySelectorAll('label')].find(l => l.textContent?.includes(подпись))!;
+
+  it('вместо строки ввода — список значений словаря', () => {
+    render(<CompendiumScreen />);
+    const select = полеУ('Тип урона').querySelector('select') as HTMLSelectElement;
+
+    expect(select, 'это список, а не ввод').toBeTruthy();
+    expect(select.value).toBe('рубящий');
+    expect([...select.options].map(o => o.value)).toEqual(['', 'рубящий', 'огонь']);
+  });
+
+  it('выбранное уходит в запись', () => {
+    render(<CompendiumScreen />);
+    fireEvent.change(полеУ('Тип урона').querySelector('select')!, { target: { value: 'огонь' } });
+    expect(useWorld.getState().compendium.items[0]!.props!.damage_type).toBe('огонь');
+  });
+
+  it('словарь не выбран — так и сказано, а не пустой список', () => {
+    render(<CompendiumScreen />);
+    const select = полеУ('Без словаря').querySelector('select') as HTMLSelectElement;
+    expect(select.options[0]!.textContent).toBe('— словарь не выбран —');
+  });
+
+  it('игроку показывается подпись значения, а не машинное значение', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...state.system,
+        lists: {
+          wield: { label: 'Чем бьют', of: 'text', values: [{ value: 'melee', label: 'силой — ближний бой' }] },
+        },
+        records: {
+          weapon: {
+            kind: 'item', label: 'Оружие',
+            props: [{ key: 'wield', label: 'Чем бьют', kind: 'choice', from: 'wield' }],
+            bindings: [],
+          },
+        },
+      },
+      compendium: { items: [{ id: 'sword', rk: 'weapon', label: 'Меч', props: { wield: 'melee' } }], actions: [] },
+      activeRecordId: 'sword',
+    }));
+    render(<CompendiumScreen />);
+
+    const превью = document.querySelector('.record-view')!;
+    expect(превью.textContent).toContain('силой — ближний бой');
+    expect(превью.textContent).not.toContain('melee');
+  });
+});

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { TABS } from '../../words.ts';
+import { listOf } from '@vtt/engine/model/lists';
 import { useWorld, freeId, randomTag } from '../../store/world.ts';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
@@ -184,6 +185,15 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
                       ...[...(compendium.items ?? []), ...(compendium.actions ?? [])]
                         .filter(other => other.id !== record.id)
                         .map(other => [other.id, other.label ?? other.id] as const)] as never}
+                    onChange={next => edit(draft => { (draft.props ??= {})[prop.key] = next; })}
+                  />
+                ) : String(prop.kind) === 'choice' ? (
+                  <Select
+                    value={String(record.props?.[prop.key] ?? '')}
+                    options={[['', listOf(system, prop.from) ? '— выберите —' : '— словарь не выбран —'],
+                      ...(listOf(system, prop.from) ?? [])
+                        .map(option => [String(option.value), option.label ?? String(option.value)] as const),
+                    ] as never}
                     onChange={next => edit(draft => { (draft.props ??= {})[prop.key] = next; })}
                   />
                 ) : String(prop.kind) === 'dice' ? (

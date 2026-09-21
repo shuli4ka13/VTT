@@ -12,7 +12,7 @@ const P = {
   die: { key: 'damage_die', label: 'Кость урона', kind: 'dice' },
   count: { key: 'dice_count', label: 'Сколько костей', kind: 'number' },
   up: { key: 'dice_up', label: 'Костей за каждый круг выше', kind: 'number' },
-  type: { key: 'damage_type', label: 'Тип урона', kind: 'text' },
+  type: { key: 'damage_type', label: 'Тип урона', kind: 'choice', from: 'damage_types' },
   status: { key: 'status', label: 'Состояние', kind: 'effect' },
   repeat: { key: 'repeat', label: 'Повторный спасбросок', kind: 'effect' },
 };

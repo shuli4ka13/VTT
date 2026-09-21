@@ -21,6 +21,7 @@ const PROP_KINDS = [
   ['dice', 'кость'],
   ['number', 'число'],
   ['text', 'текст'],
+  ['choice', 'выбор из словаря'],
   ['expr', 'формула'],
   ['effect', 'ссылка на эффект'],
   ['record', 'ссылка на запись'],
@@ -246,6 +247,21 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
                     })}
                   />
                 </Field>
+                {String(prop.kind) === 'choice' ? (
+                  <Field label="Из какого словаря" needed={!prop.from}>
+                    <Select
+                      value={String(prop.from ?? '')}
+                      options={[['', '— какой словарь —'],
+                        ...Object.entries(system.lists ?? {})
+                          .map(([key, list]) => [key, list.label || key] as const)] as never}
+                      onChange={next => edit(draft => {
+                        const target = draft.props?.find(p => p.key === prop.key);
+                        if (!target) return;
+                        if (next) target.from = next; else delete target.from;
+                      })}
+                    />
+                  </Field>
+                ) : null}
                 <Field label="Где показывать">
                   <Select
                     value={prop.onSheet === false ? 'service' : 'sheet'}

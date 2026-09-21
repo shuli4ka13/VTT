@@ -205,7 +205,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
             empty={idleWords(effect)}
           />
           <SelfTrack effect={effect} system={system} edit={edit} />
-          <ParamsEditor effect={effect} onEdit={edit} />
+          <ParamsEditor effect={effect} system={system} onEdit={edit} />
         </>
       ) : (
         <ModifiersEditor

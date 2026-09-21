@@ -133,9 +133,13 @@ export function Select<T extends string>({ value, options, onChange, disabled, t
   disabled?: boolean;
   title?: string;
 }) {
+
+  const all = options.some(([key]) => key === value)
+    ? options
+    : [[value, value ? `${value} — такого в списке нет` : '— не выбрано —'] as const, ...options];
   return (
     <select className="select" value={value} disabled={disabled} title={title} onChange={e => onChange(e.target.value as T)}>
-      {options.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+      {all.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
     </select>
   );
 }

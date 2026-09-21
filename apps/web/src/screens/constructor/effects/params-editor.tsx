@@ -1,15 +1,17 @@
 import { freeId } from '../../../store/world.ts';
 import { Card, CardHead, Input, Select, Button, Empty } from '../../../ui/primitives.tsx';
-import type { Effect } from '@vtt/schema';
+import type { Effect, System } from '@vtt/schema';
 
 const PARAM_KINDS = [
   ['dice', 'кости'],
   ['number', 'число'],
+  ['text', 'слово'],
   ['expr', 'формула'],
   ['effect', 'эффект-состояние'],
   ['choice', 'выбор'],
   ['tag', 'поле листа'],
 ] as const;
+
 
 const PARAM_SIDES = [
   ['source', 'отправителя'],
@@ -19,9 +21,15 @@ const PARAM_SIDES = [
 const FIXED_SIDE: Record<string, string> = {
   dice: 'бросает отправитель',
   tag: 'лист цели',
+  text: 'просто слово из записи',
+  choice: 'выбирают в записи',
 };
 
-export function ParamsEditor({ effect, onEdit }: { effect: Effect; onEdit: (change: (draft: Effect) => void) => void }) {
+export function ParamsEditor({ effect, system, onEdit }: {
+  effect: Effect;
+  system: System;
+  onEdit: (change: (draft: Effect) => void) => void;
+}) {
   const params = effect.params ?? [];
   const addParam = () => onEdit(draft => {
     draft.params ??= [];
@@ -63,7 +71,19 @@ export function ParamsEditor({ effect, onEdit }: { effect: Effect; onEdit: (chan
                   if (target) target.kind = next;
                 })}
               />
-              {String(param.kind ?? 'expr') === 'expr' ? (
+              {String(param.kind) === 'choice' ? (
+                <Select
+                  value={String(param.from ?? '')}
+                  options={[['', '— какой словарь —'],
+                    ...Object.entries(system.lists ?? {})
+                      .map(([key, list]) => [key, list.label || key] as const)] as never}
+                  onChange={next => onEdit(draft => {
+                    const target = draft.params?.find(p => p.key === param.key);
+                    if (!target) return;
+                    if (next) target.from = next; else delete target.from;
+                  })}
+                />
+              ) : String(param.kind ?? 'expr') === 'expr' ? (
                 <Select
                   value={param.of ?? 'source'}
                   options={PARAM_SIDES}

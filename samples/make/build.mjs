@@ -5,6 +5,7 @@ import { effects, ROOM_RULES } from './dnd5e.effects.mjs';
 import { records } from './dnd5e.records.mjs';
 import { compendium } from './dnd5e.book.mjs';
 import { sheets, mannequins } from './dnd5e.sheets.mjs';
+import { unifyAmounts } from '../../packages/engine/dist/model/amounts.js';
 
 const world = {
   title: 'D&D 5e',
@@ -28,6 +29,8 @@ const world = {
   compendium: compendium(),
   sheets: sheets(),
 };
+
+world.system = unifyAmounts(world.system);
 
 const out = fileURLToPath(new URL('../dnd5e.world.json', import.meta.url));
 writeFileSync(out, `${JSON.stringify(world, null, 2)}\n`);

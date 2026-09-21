@@ -4,6 +4,7 @@ import { describeEntry } from './describe.ts';
 import { activationOf, isPipeline } from '../engine/effects.ts';
 import { EngineError } from '../engine/errors.ts';
 import { registry } from '../engine/steps/index.ts';
+import { listOf } from '../model/lists.ts';
 import type { System, Compendium, Sheet, Die, Effect } from '../model/types.ts';
 
 export type DiceMode = 'min' | 'avg' | 'max' | 'random';
@@ -22,8 +23,13 @@ export function dieOf(mode: DiceMode, random: () => number = Math.random): Die {
   return sides => 1 + Math.floor(random() * sides);
 }
 
-export function sampleArg(kind: string | undefined, system: System, effect?: Effect, key?: string, options?: string[]): unknown {
+export function sampleArg(
+  kind: string | undefined, system: System, effect?: Effect, key?: string,
+  options?: string[], from?: string,
+): unknown {
   if (options?.length) return options[0];
+  const list = listOf(system, from);
+  if (list?.length) return list[0]!.value;
   if (kind === 'dice') return '1к6';
   if (kind === 'number') return 1;
   if (kind === 'expr') return '0';
@@ -81,7 +87,8 @@ export function trial({ system, compendium, effectId, from, to, args, dice = 'av
   const filled: Record<string, unknown> = {};
   for (const param of effect.params ?? []) {
     filled[param.key] = args?.[param.key] !== undefined
-      ? args[param.key] : sampleArg(param.kind, system, effect, param.key, param.ask?.options);
+      ? args[param.key]
+      : sampleArg(param.kind, system, effect, param.key, param.ask?.options, param.from);
   }
   const probe: System = {
     ...system,

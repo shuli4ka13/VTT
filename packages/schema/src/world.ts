@@ -172,6 +172,8 @@ export const param = z.object({
   label: z.string().optional(),
   kind: z.string().optional(),
 
+  from: z.string().optional(),
+
   of: refSide.optional(),
 
   ask: ask.optional(),
@@ -268,6 +270,8 @@ export const recordKind = z.object({
     key: z.string().min(1),
     label: z.string().optional(),
     kind: z.string().optional(),
+
+    from: z.string().optional(),
     onSheet: z.boolean().optional(),
   }).passthrough()).optional(),
   bindings: z.array(binding).optional(),

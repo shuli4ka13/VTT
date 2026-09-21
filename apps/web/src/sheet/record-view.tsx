@@ -1,5 +1,6 @@
 import { Card, Chip } from '../ui/primitives.tsx';
 import { asDice } from '../words.ts';
+import { listOf } from '@vtt/engine/model/lists';
 import type { CompendiumRecord, Compendium, System } from '@vtt/schema';
 
 export interface RecordLine { label: string; value: string }
@@ -20,7 +21,9 @@ export function recordDetails(record: CompendiumRecord, system: System, compendi
       const value = kindOf === 'dice' ? asDice(raw)
         : kindOf === 'effect' ? (system.effects[raw]?.label ?? raw)
           : kindOf === 'record' ? recordLabel(compendium, raw)
-            : raw;
+            : kindOf === 'choice'
+              ? (listOf(system, prop.from)?.find(option => String(option.value) === raw)?.label ?? raw)
+              : raw;
       return { label: prop.label ?? prop.key, value };
     });
 }

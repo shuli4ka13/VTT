@@ -3,7 +3,7 @@ const bind = (label, effect, args) => ({ label, effect, args });
 const ref = key => ({ prop: key });
 const maybe = key => ({ prop: key, optional: true });
 
-const DAMAGE = prop('damage_type', 'Тип урона', 'text');
+const DAMAGE = prop('damage_type', 'Тип урона', 'choice', { from: 'damage_types' });
 const DICE = prop('damage_dice', 'Кость урона', 'dice');
 const LEVEL = prop('spell_level', 'Круг', 'number');
 const SAVE_BY = prop('save_by', 'Чем спасаются', 'expr');
