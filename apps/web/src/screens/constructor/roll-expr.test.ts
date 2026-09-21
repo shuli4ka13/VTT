@@ -65,14 +65,23 @@ describe('formatRollExpr', () => {
     expect(formatRollExpr({ die: { const: '2d6' } }, system)).toBe('2к6');
   });
 
-  it('потребность и результат шага названы словами, а не ключом', () => {
-    const names = new Map([['attack_with', 'Бонус атаки'], ['hit', 'шаг 1 · Проверка']]);
-    expect(formatRollExpr({ die: { const: '1d20' }, bonus: { param: 'attack_with' } }, system, names))
-      .toBe('1к20 + из записи: Бонус атаки');
-    expect(formatRollExpr({ die: { const: '1d20' }, bonus: { ref: 'hit' } }, system, names))
-      .toBe('1к20 + результат «шаг 1 · Проверка»');
-    expect(formatRollExpr({ die: { const: '1d20' }, bonus: { param: 'нет_в_списке' } }, system))
-      .toBe('1к20 + из записи: нет_в_списке');
+  it('любая ссылка пишется через собаку — одинаково с формулой числа', () => {
+    const как = (bonus: unknown) => formatRollExpr({ die: { const: '1d20' }, bonus }, system);
+    expect(как({ param: 'attack_with' })).toBe('1к20 + @attack_with');
+    expect(как({ prop: 'вес' })).toBe('1к20 + @вес');
+    expect(как({ ref: 'hit' })).toBe('1к20 + @hit');
+    expect(как({ tag: 'сила' })).toBe('1к20 + @сила');
+    expect(как({ expr: '@сила + 2' })).toBe('1к20 + @сила + 2');
+  });
+
+  it('собака возвращается в ту же ссылку, а не в текст формулы', () => {
+    const asName = (name: string) => (name === 'attack_with' ? { param: name } : null);
+    expect(parseRollExpr('1к20 + @attack_with', system, null, asName).bonus)
+      .toEqual({ param: 'attack_with' });
+    expect(parseRollExpr('1к20 + @сила', system, null, asName).bonus)
+      .toEqual({ expr: '@сила' }, 'поле листа остаётся формулой');
+    expect(parseRollExpr('1к20 + @attack_with + 2', system, null, asName).bonus)
+      .toEqual({ expr: '@attack_with + 2' }, 'с математикой — формула целиком');
   });
 });
 

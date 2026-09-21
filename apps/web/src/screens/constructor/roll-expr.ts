@@ -25,7 +25,16 @@ function dieRef(count: number, sides: number, system: System, picked?: string | 
   return (known ? { constant: known[0] } : { const: `${count}d${sides}` }) as SlotRef;
 }
 
-export function parseRollExpr(text: string, system: System, picked?: string | null): ParsedRoll {
+export type NameRef = (name: string) => SlotRef | null;
+
+const tailRef = (rest: string, asName?: NameRef): SlotRef => {
+  if (/^-?\d+(\.\d+)?$/.test(rest)) return { const: Number(rest) } as SlotRef;
+  const alone = /^@([\p{L}\p{N}_.]+)$/u.exec(rest);
+  const known = alone && asName ? asName(alone[1]!) : null;
+  return known ?? ({ expr: rest } as SlotRef);
+};
+
+export function parseRollExpr(text: string, system: System, picked?: string | null, asName?: NameRef): ParsedRoll {
   const t = text.trim();
   if (!t) return { die: undefined, bonus: null };
 
@@ -37,14 +46,10 @@ export function parseRollExpr(text: string, system: System, picked?: string | nu
   const die = dieRef(count, sides, system, picked);
 
   const rest = (m[3] ?? '').trim();
-  const bonus = !rest ? null
-    : /^-?\d+(\.\d+)?$/.test(rest) ? { const: Number(rest) } as SlotRef
-      : { expr: rest } as SlotRef;
-
-  return { die, bonus };
+  return { die, bonus: rest ? tailRef(rest, asName) : null };
 }
 
-export function formatRollExpr(roll: unknown, system: System, names?: Map<string, string>): string {
+export function formatRollExpr(roll: unknown, system: System): string {
   const r = (roll ?? {}) as { die?: unknown; bonus?: unknown };
   let head = '';
   if (r.die && typeof r.die === 'object') {
@@ -56,21 +61,20 @@ export function formatRollExpr(roll: unknown, system: System, names?: Map<string
     const b = r.bonus as Record<string, unknown>;
     if ('expr' in b) tail = String(b.expr);
     else if ('const' in b) tail = String(b.const);
-    else if ('param' in b) tail = `из записи: ${names?.get(String(b.param)) ?? String(b.param)}`;
-    else if ('ref' in b) tail = `результат «${names?.get(String(b.ref)) ?? String(b.ref)}»`;
+    else if ('param' in b) tail = `@${String(b.param)}`;
+    else if ('prop' in b || 'item' in b) tail = `@${String(b.prop ?? b.item)}`;
+    else if ('tag' in b) tail = `@${String(b.tag)}`;
+    else if ('ref' in b) tail = `@${String(b.ref)}`;
+    else if ('constant' in b) tail = `@${String(b.constant)}`;
   }
   return [head, tail].filter(Boolean).join(' + ');
 }
 
-export function parseAmountExpr(text: string, system: System, picked?: string | null): ParsedRoll {
+export function parseAmountExpr(text: string, system: System, picked?: string | null, asName?: NameRef): ParsedRoll {
   const t = text.trim();
   if (!t) return { die: undefined, bonus: null };
-  if (HEAD.test(t)) return parseRollExpr(t, system, picked);
-
-  const bonus = /^-?\d+(\.\d+)?$/.test(t)
-    ? { const: Number(t) } as SlotRef
-    : { expr: t } as SlotRef;
-  return { die: undefined, bonus };
+  if (HEAD.test(t)) return parseRollExpr(t, system, picked, asName);
+  return { die: undefined, bonus: tailRef(t, asName) };
 }
 
 export function formatAmountExpr(amount: unknown, system: System): string {

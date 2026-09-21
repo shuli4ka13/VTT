@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import type { System, Step, SlotRef } from '@vtt/schema';
 import { Field, Segmented, Select } from '../../../../ui/primitives.tsx';
 import type { CardGroup } from '../../cards.ts';
@@ -6,7 +6,7 @@ import { parseRollExpr } from '../../roll-expr.ts';
 import { FormulaChips } from '../../../../ui/formula-chips.tsx';
 import { labelOfTag } from '../../../../ui/formula.tsx';
 import { SlotInput, chipOf, type SlotOption } from '../../slot-input.tsx';
-import { outputRefs } from '../../slots.tsx';
+import { outputRefs, stepNames } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn, WithNumber } from '../words.ts';
 import { badFormula, exprText } from './roll-expr-input.tsx';
@@ -28,6 +28,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
 }) {
   const [draft, setDraft] = useState<string | null>(null);
   const [trouble, setTrouble] = useState<string | null>(null);
+  const рядом = useMemo(() => stepNames(context), [context]);
   const target = (apply as Record<string, any>).target;
 
   const amountId = String((amount as Record<string, any> | undefined)?.id ?? '');
@@ -249,6 +250,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
           value={shown}
           system={context.system}
           names={names}
+          extraNames={рядом}
           side="target"
           placeholder="например: @хп − @урон"
           calculator

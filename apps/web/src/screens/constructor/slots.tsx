@@ -291,16 +291,32 @@ export function declaredProps(system: System): Map<string, string> {
   return out;
 }
 
-export function namesOf(ctx: SlotContext): Map<string, string> {
+export function stepNames(ctx: SlotContext): Map<string, string> {
   const out = new Map<string, string>();
   for (const [key, constant] of Object.entries(ctx.system.constants ?? {})) {
     out.set(key, (constant as { label?: string }).label ?? key);
   }
-  for (const [key, label] of propsFor(ctx)) out.set(key, label);
-  for (const param of ctx.effect.params ?? []) out.set(param.key, param.label ?? param.key);
   for (const step of ctx.earlier) out.set(step.id, stepName(step));
   for (const output of outputRefs(ctx.earlier)) out.set(output.ref, output.label);
   return out;
+}
+
+export function namesOf(ctx: SlotContext): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const [key, label] of propsFor(ctx)) out.set(key, label);
+  for (const param of ctx.effect.params ?? []) out.set(param.key, param.label ?? param.key);
+  for (const [key, label] of stepNames(ctx)) out.set(key, label);
+  return out;
+}
+
+export function refForName(ctx: SlotContext, name: string): SlotRef | null {
+  if (ctx.system.fields.some(field => field.tag === name)) return null;
+  if ((ctx.effect.params ?? []).some(param => param.key === name)) return { param: name } as SlotRef;
+  if (propsFor(ctx).has(name)) return { prop: name } as SlotRef;
+  if (outputRefs(ctx.earlier).some(output => output.ref === name)) return { ref: name } as SlotRef;
+  if (ctx.earlier.some(step => step.id === name)) return { ref: name } as SlotRef;
+  if (ctx.system.constants?.[name]) return { constant: name } as SlotRef;
+  return null;
 }
 
 const byKeyOf = (by: unknown): string => {

@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Field } from '../../../../ui/primitives.tsx';
 import { parseRollExpr, formatRollExpr, notationOf } from '../../roll-expr.ts';
 import { compile } from '@vtt/engine/formula';
 import { FormulaChips } from '../../../../ui/formula-chips.tsx';
-import { namesOf } from '../../slots.tsx';
+import { namesOf, refForName } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 
@@ -16,7 +16,8 @@ export function RollExprInput({ step, context, edit }: {
   const [trouble, setTrouble] = useState<string | null>(null);
 
   const [picked, setPicked] = useState<string | null>(null);
-  const shown = draft ?? formatRollExpr(step.roll, context.system, namesOf(context));
+  const names = useMemo(() => namesOf(context), [context]);
+  const shown = draft ?? formatRollExpr(step.roll, context.system);
 
   const commit = () => {
     if (draft === null) return;
@@ -25,7 +26,7 @@ export function RollExprInput({ step, context, edit }: {
       setDraft(null); setTrouble(null); setPicked(null);
       return;
     }
-    const parsed = parseRollExpr(draft, context.system, picked);
+    const parsed = parseRollExpr(draft, context.system, picked, name => refForName(context, name));
     if (parsed.error) { setTrouble(parsed.error); return; }
     const bad = badFormula(parsed.bonus);
     if (bad) { setTrouble(bad); return; }
@@ -44,6 +45,7 @@ export function RollExprInput({ step, context, edit }: {
       <FormulaChips
         value={shown}
         system={context.system}
+        extraNames={names}
         side={step.side === 'target' ? 'target' : 'self'}
         placeholder="1к20 + @поле"
         calculator
