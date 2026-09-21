@@ -46,7 +46,7 @@ export function outputLabel(ref: string, earlier: EarlierStep[]): string {
   return path.length ? `${name} — ${path.join('.')}` : name;
 }
 
-export type SlotKind = 'const' | 'expr' | 'tag' | 'constant' | 'prop' | 'param' | 'ref' | 'empty';
+export type SlotKind = 'const' | 'expr' | 'tag' | 'constant' | 'prop' | 'param' | 'ref' | 'table' | 'empty';
 
 export interface SlotContext {
   system: System;
@@ -176,6 +176,41 @@ export const SLOT_KINDS: SlotKindModule[] = [
     ),
   },
   {
+    kind: 'table',
+    label: 'По таблице',
+    hint: 'Взять из таблицы соответствий: «чем бьют = ловкость» → своя формула.',
+    matches: ref => has(ref, 'table'),
+    blank: () => ({ table: '', by: null }),
+    summary: (ref, ctx) => {
+      const table = ctx.system.tables?.[String(ref.table)];
+      return table ? `по таблице «${table.label || ref.table}»` : `таблицы «${ref.table}» нет`;
+    },
+    editor: (ref, onChange, ctx) => (
+      <div className="stack stack--tight">
+        <Select
+          value={String(ref.table ?? '')}
+          options={[['', '— какая таблица —'],
+            ...Object.entries(ctx.system.tables ?? {})
+              .map(([key, table]) => [key, table.label || key] as const)] as never}
+          onChange={table => onChange({ ...ref, table })}
+        />
+        <Select
+          value={byKeyOf(ref.by)}
+          options={[['', '— по чему смотрим —'],
+            ...[...propsFor(ctx)].map(([key, label]) => [`prop:${key}`, `${label} — из записи`] as const),
+            ...ctx.system.fields.map(field => [`tag:${field.tag}`, `${field.label} — с листа`] as const),
+          ] as never}
+          onChange={picked => onChange({
+            ...ref,
+            by: picked.startsWith('prop:')
+              ? { prop: picked.slice(5) }
+              : picked ? { tag: picked.slice(4) } : null,
+          })}
+        />
+      </div>
+    ),
+  },
+  {
     kind: 'prop',
     label: 'Свойство записи',
     hint: 'То, что разное у каждой записи: кость урона меча против кинжала.',
@@ -255,6 +290,14 @@ export function declaredProps(system: System): Map<string, string> {
   }
   return out;
 }
+
+const byKeyOf = (by: unknown): string => {
+  if (!by || typeof by !== 'object') return '';
+  const r = by as Record<string, unknown>;
+  if ('prop' in r) return `prop:${String(r.prop)}`;
+  if ('tag' in r) return `tag:${String(r.tag)}`;
+  return '';
+};
 
 function propsFor(ctx: SlotContext): Map<string, string> {
   if (!ctx.recordKind) return declaredProps(ctx.system);

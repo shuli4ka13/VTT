@@ -5,7 +5,7 @@ import { labelOfTag } from '../../ui/formula.tsx';
 import { dieWord, readingWord } from './readback.ts';
 import { FormulaChips } from '../../ui/formula-chips.tsx';
 import { matchTagQuery } from '../../ui/tag-suggest.tsx';
-import { outputRefs, outputLabel } from './slots.tsx';
+import { outputRefs, outputLabel, declaredProps } from './slots.tsx';
 import type { SlotContext, SlotKind } from './slots.tsx';
 import { asDice } from '../../words.ts';
 
@@ -17,6 +17,7 @@ const WORD_OF: Record<SlotKind, string> = {
   prop: 'свойство записи',
   param: 'значение из записи',
   ref: 'результат шага',
+  table: 'значение по таблице',
   empty: 'пусто',
 };
 
@@ -67,8 +68,16 @@ export function chipOf(ref: unknown, ctx: SlotContext): { label: string; record:
     const declared = ctx.effect.params?.find(p => p.key === r.param);
     return { label: declared?.label ?? String(r.param), record: true };
   }
-  if ('prop' in r || 'item' in r) return { label: String(r.prop ?? r.item), record: true };
+  if ('prop' in r || 'item' in r) {
+    const key = String(r.prop ?? r.item);
+    const own = ctx.recordKind?.props?.find(p => p.key === key);
+    return { label: own?.label ?? declaredProps(ctx.system).get(key) ?? key, record: true };
+  }
   if ('ref' in r) return { label: outputLabel(String(r.ref), ctx.earlier), record: false };
+  if ('table' in r) {
+    const table = ctx.system.tables?.[String(r.table)];
+    return { label: `по таблице «${table?.label || String(r.table)}»`, record: false };
+  }
   if ('constant' in r) {
     const name = String(r.constant);
     const reading = readingWord(ctx.system, name);

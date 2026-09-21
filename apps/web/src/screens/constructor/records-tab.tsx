@@ -5,8 +5,8 @@ import { Columns, List, ListItem } from '../../ui/layout.tsx';
 import {
   Card, CardHead, Field, Input, Select, Button, Empty, Verdict, Chip, DangerButton, LabelInput,
 } from '../../ui/primitives.tsx';
-import type { SlotRef } from '@vtt/schema';
-import type { System, RecordKind, Binding, Param } from '@vtt/schema';
+import type { System, RecordKind, Binding, Param, Effect } from '@vtt/schema';
+import { SlotInput } from './slot-input.tsx';
 import { BlockPick } from './block-pick.tsx';
 import { blockOf } from '@vtt/engine/model/blocks';
 import { blockTree, BlockBranches } from './block-tree.tsx';
@@ -338,12 +338,13 @@ function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWi
           {params.map(param => (
             <div key={param.key} className={`need-fill ${isClosed(param.key) ? 'need-fill--ok' : ''}`}>
               <Field label={param.label ?? param.key}>
-                <ArgEditor
-                  value={binding.args?.[param.key]}
-                  recordKind={recordKind}
+                <SlotInput
+                  value={binding.args?.[param.key] as never}
+                  context={{ system, effect: effect ?? ({ label: '' } as Effect), earlier: [], recordKind }}
+                  allow={['prop', 'expr', 'const', 'tag', 'table', 'empty']}
                   onChange={next => onEdit(draft => {
                     draft.args ??= {};
-                    if (next) draft.args[param.key] = next;
+                    if (next) draft.args[param.key] = next as never;
                     else delete draft.args[param.key];
                   })}
                 />
@@ -365,63 +366,6 @@ function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWi
         <Chip>эффект ничего не берёт из записи</Chip>
       ) : null}
     </Card>
-  );
-}
-
-function ArgEditor({ value, recordKind, onChange }: {
-  value: unknown;
-  recordKind: RecordKind;
-  onChange: (next: SlotRef | null) => void;
-}) {
-  const plain = value !== null && value !== undefined && typeof value !== 'object';
-  const text = plain ? String(value) : '';
-  const r = (plain || value === undefined ? null : value ?? null) as Record<string, unknown> | null;
-  const mode = plain ? (text.startsWith('#') ? 'expr' : 'const')
-    : r === null ? ''
-      : 'prop' in r || 'item' in r ? `prop:${String(r.prop ?? r.item)}`
-        : 'expr' in r ? 'expr'
-          : 'const';
-  const props = recordKind.props ?? [];
-  const shown = (key: 'const' | 'expr'): string => {
-    if (plain) return key === 'expr' ? text.replace(/^#/, '#') : text;
-    return String((r as Record<string, unknown> | null)?.[key] ?? '');
-  };
-
-  return (
-    <div className="stack stack--tight">
-      <Select
-        value={mode}
-        options={[
-          ['', '— не заполнять —'],
-
-          ...props.map(p => [`prop:${p.key}`, `спросить у записи: «${p.label ?? p.key}»`] as const),
-          ['const', 'одно значение на все записи…'],
-          ['expr', 'формула…'],
-        ] as never}
-        onChange={next => {
-          if (!next) return onChange(null);
-          if (next.startsWith('prop:')) return onChange({ prop: next.slice(5) } as SlotRef);
-          onChange((next === 'expr' ? { expr: '' } : { const: '' }) as SlotRef);
-        }}
-      />
-      {mode === 'const' ? (
-        <Input
-          value={shown('const')}
-          placeholder="число или текст — одно на все записи"
-          onChange={next => onChange({
-            const: /^-?\d+(\.\d+)?$/.test(next.trim()) ? Number(next) : next,
-          } as SlotRef)}
-        />
-      ) : null}
-      {mode === 'expr' ? (
-        <Input
-          value={shown('expr')}
-          mono
-          placeholder="формула"
-          onChange={next => onChange({ expr: next } as SlotRef)}
-        />
-      ) : null}
-    </div>
   );
 }
 

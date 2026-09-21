@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { RecordsTab } from './records-tab.tsx';
 import { useWorld } from '../../store/world.ts';
+import { optionsFor } from './slot-input.tsx';
 
 describe('RecordsTab: тип видит потребности эффекта', () => {
   beforeEach(() => {
@@ -69,13 +70,18 @@ describe('RecordsTab: тип видит потребности эффекта', 
     }));
 
     const { container } = render(<RecordsTab />);
-    const need = container.querySelector('.need-fill') as HTMLElement;
+    expect(container.querySelector('.need-fill'), 'незакрытая потребность нарисована').toBeTruthy();
 
-    const select = need.querySelector('select') as HTMLSelectElement;
-    const options = Array.from(select.options).map(o => o.textContent);
+    const system = useWorld.getState().system;
+    const предложат = optionsFor({
+      system,
+      effect: system.effects.hit!,
+      earlier: [],
+      recordKind: system.records!.weapon!,
+    }).map(option => option.label);
 
-    expect(options).toContain('спросить у записи: «Кость урона»');
-    expect(options.some(o => o?.includes('Класс защиты'))).toBe(false);
+    expect(предложат.some(label => label.includes('Кость урона')), предложат.join(' | ')).toBe(true);
+    expect(предложат.some(label => label.includes('Класс защиты'))).toBe(false);
   });
 });
 
