@@ -1,7 +1,7 @@
 import { rollNotation, multiplyNotation } from '../dice.ts';
 import type { NotationRoll } from '../dice.ts';
 import { dieConstant } from '../lead-die.ts';
-import { packRef, resolveOptionalNumber } from '../refs.ts';
+import { packRef, resolveRef, resolveOptionalNumber } from '../refs.ts';
 import { EngineError } from '../errors.ts';
 import type { StepData, StepContext } from './index.ts';
 import { guardHolds, packGuardRef } from '../rule.ts';
@@ -87,7 +87,12 @@ export function pack(step: StepData, ctx: StepContext) {
     rolled: notation ? rollNotation(notation, ctx.die, held) : { notation: null, rolls: [], total: 0 },
     ...(doubled ? { doubled: true } : {}),
     ...(times !== null ? { times } : {}),
-    ...(step.scale ? { scale: { times: step.scale.times, ...(step.scale.when ? { when: packGuardRef(step.scale.when, ctx) } : {}) } } : {}),
+    ...(step.scale ? {
+      scale: {
+        times: packRef(step.scale.times, ctx),
+        ...(step.scale.when ? { when: packGuardRef(step.scale.when, ctx) } : {}),
+      },
+    } : {}),
     fixed, bonus, margin,
   };
 }
@@ -140,7 +145,7 @@ export function resolve(step: StepData, ctx: StepContext) {
 function shareOf(step: StepData, ctx: StepContext): number | null {
   const scale = step.scale as { times?: unknown; when?: unknown } | undefined;
   if (!scale) return null;
-  const times = Number(scale.times);
+  const times = Number(resolveRef(scale.times, ctx));
   if (!Number.isFinite(times) || times <= 0) {
     throw new EngineError(`${who(ctx)}: доля величины должна быть положительным числом, а пришло ${JSON.stringify(scale.times)}`);
   }
