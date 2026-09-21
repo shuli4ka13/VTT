@@ -27,6 +27,7 @@ const save = continueOn => ({
   roll: { die: DIE, bonus: { param: 'save_by' }, check: 'save_roll' },
   versus: { expr: '#spell_dc' }, successWhen: 'atLeast', continueOn,
 });
+const CRIT = '#hit.natural >= #crit_from ? 2 : 1';
 const crit = { ref: 'hit.natural', atLeast: { tag: 'crit_from' } };
 const damage = (amount, tags) => ({ type: 'emit', event: 'damage', amount, tags });
 const hang = (effect, extra = {}) => ({ type: 'status', mode: 'apply', effect, ...extra });
@@ -78,7 +79,7 @@ function attacks() {
         ],
         steps: [
           hit({ param: 'attack_with' }),
-          { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'damage_dice' }, bonus: { param: 'damage_with' }, double: crit },
+          { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'damage_dice' }, bonus: { param: 'damage_with' }, count: { expr: CRIT } },
           damage({ ref: 'dmg' }, [{ param: 'damage_type' }]),
         ],
       }),
@@ -92,7 +93,7 @@ function attacks() {
         ],
         steps: [
           hit({ param: 'to_hit' }),
-          { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'damage_dice' }, bonus: { param: 'damage_bonus' }, double: { ref: 'hit.natural', atLeast: 20 } },
+          { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'damage_dice' }, bonus: { param: 'damage_bonus' }, count: { expr: '#hit.natural >= 20 ? 2 : 1' } },
           damage({ ref: 'dmg' }, [{ param: 'damage_type' }]),
         ],
       }),
@@ -146,7 +147,7 @@ function spells() {
         params: [P.die, P.type],
         steps: [
           hit({ expr: '#spell_attack' }),
-          { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'damage_die' }, count: { tag: 'cantrip_dice' }, double: crit },
+          { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'damage_die' }, count: { expr: `(#cantrip_dice) * (${CRIT})` } },
           damage({ ref: 'dmg' }, [{ param: 'damage_type' }, 'магический']),
         ],
       }),
@@ -168,7 +169,7 @@ function spells() {
         params: [P.die, P.count, P.up, P.type, { ...P.status, label: 'Состояние при попадании' }],
         steps: [
           hit({ expr: '#spell_attack' }),
-          { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'damage_die' }, count: { expr: LEVELED }, double: crit },
+          { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'damage_die' }, count: { expr: `(${LEVELED}) * (${CRIT})` } },
           damage({ ref: 'dmg' }, [{ param: 'damage_type' }, 'магический']),
           hang({ param: 'status', optional: true }),
         ],

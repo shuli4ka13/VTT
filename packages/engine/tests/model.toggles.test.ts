@@ -36,9 +36,10 @@ group('тогл крита пишет данные, а не код', () => {
     setCrit(system, 'off');
     setCrit(system, 'double');
     const strike = system.effects.strike!.steps!.find(s => s.type === 'amount') as Record<string, unknown>;
-    deepEq(strike.double, { ref: 'hit.atMax', atLeast: 1 });
+    deepEq(strike.count, { expr: '#hit.atMax >= 1 ? 2 : 1' });
     const fireball = system.effects.spell_save_half!.steps!.find(s => s.type === 'amount') as Record<string, unknown>;
-    eq(fireball.double, undefined, 'после спасброска цели удвоения нет — это не атака');
+    ok(!String((fireball.count as { expr?: string } | undefined)?.expr ?? '').includes('? 2 : 1'),
+      'после спасброска цели удвоения нет — это не атака');
     eq(errorsOf(lintSystem(system)).length, 0);
   });
 });

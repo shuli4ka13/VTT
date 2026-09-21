@@ -90,7 +90,7 @@ export function GroupCard({
         {group.kind === 'check' ? <CheckBody step={step} context={context} edit={edit} system={system} /> : null}
         {group.kind === 'change' ? <ChangeBody group={group} context={context} edit={edit} withNumber={withNumber} system={system} onAddParam={onAddParam} /> : null}
         {group.kind === 'number'
-          ? <NumberBody step={step} context={context} edit={edit} onAddParam={onAddParam} earlier={earlier} />
+          ? <NumberBody step={step} context={context} edit={edit} onAddParam={onAddParam} />
           : null}
         <ConditionFold group={group} earlier={earlier} edit={edit} context={context} />
       </Card>

@@ -1,5 +1,6 @@
 import { group, test, eq, ok, throws } from './harness.ts';
 import { lookupTable, lookupDegree, isCases } from '../src/engine/tables.ts';
+import { send, receive } from '../src/events/envelope.ts';
 import type { System } from '../src/model/types.ts';
 
 const system = {
@@ -53,5 +54,47 @@ group('таблица умеет и диапазоны, и соответств�
 
   test('степени по таблице соответствий читаются как обычный поиск', () => {
     eq(lookupDegree(system, 'ступени', 0), 'нет');
+  });
+});
+
+group('формула видит результат шага выше', () => {
+  test('крит пишется формулой, порог берётся с листа', () => {
+    const система = {
+      id: 'к', name: 'к',
+      fields: [
+        { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 100, min: 0 } },
+        { tag: 'порог', label: 'Крит от', value: { kind: 'stored', type: 'number', default: 20 } },
+      ],
+      constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
+      effects: {
+        удар: {
+          label: 'Удар', activation: 'manual',
+          steps: [
+            { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' } }, versus: { const: 0 } },
+            { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d6' },
+              count: { expr: '#бросок.natural >= #порог ? 2 : 1' } },
+            { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { ref: 'урон' } },
+          ],
+        },
+      },
+      records: { приём: { kind: 'action', label: 'Приём', bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
+    } as unknown as System;
+    const книга = { items: [], actions: [{ id: 'приём', rk: 'приём', label: 'Удар', props: {} }] } as never;
+    const лист = (порог: number) => ({
+      id: 'я', systemId: 'к', kind: 'pc', name: 'я',
+      values: { порог }, equipped: [], effects: [], actions: ['приём'],
+    } as never);
+
+    const кости = (порог: number, выпало: number): string => {
+      const мир = { system: система, compendium: книга, die: () => выпало };
+      const конверт = send('приём:0', { ...мир, sheet: лист(порог) });
+      const итог = receive(конверт, { ...мир, sheet: лист(порог) });
+      return String(итог.report.trace.find((t: Record<string, unknown>) => t.type === 'amount')?.notation);
+    };
+
+    eq(кости(20, 10), '1d6', 'обычный бросок — одна кость');
+    eq(кости(20, 20), '2d6', 'двадцатка при пороге 20 — две');
+    eq(кости(19, 19), '2d6', 'у кого крит от 19 — девятнадцать тоже крит');
+    eq(кости(20, 19), '1d6', 'у остальных девятнадцать — обычный');
   });
 });

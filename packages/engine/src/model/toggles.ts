@@ -51,13 +51,23 @@ const amountsAfterCheck = (steps: Step[]): { check: Step; amount: Step }[] => {
 export function critOf(system: System): CritChoice {
   if ((system.room_rules ?? []).includes(CRIT_RULE) && system.effects[CRIT_RULE]) return 'explode';
   const doubled = Object.values(system.effects).some(effect =>
-    (effect.steps ?? []).some(step => (step as Record<string, unknown>).double !== undefined));
+    (effect.steps ?? []).some(step => isDoubling(step as Record<string, unknown>)));
   return doubled ? 'double' : 'off';
 }
 
+const isDoubling = (step: Record<string, unknown>): boolean => {
+  if (step.double !== undefined) return true;
+  const count = step.count as { expr?: unknown } | undefined;
+  return typeof count?.expr === 'string' && count.expr.includes('? 2 : 1');
+};
+
 export function setCrit(draft: System, choice: CritChoice): void {
   for (const effect of Object.values(draft.effects)) {
-    for (const step of effect.steps ?? []) delete (step as Record<string, unknown>).double;
+    for (const step of effect.steps ?? []) {
+      const loose = step as Record<string, unknown>;
+      delete loose.double;
+      if (isDoubling(loose)) delete loose.count;
+    }
   }
   delete draft.effects[CRIT_RULE];
   draft.room_rules = (draft.room_rules ?? []).filter(id => id !== CRIT_RULE);
@@ -66,7 +76,7 @@ export function setCrit(draft: System, choice: CritChoice): void {
   if (choice === 'double') {
     for (const effect of Object.values(draft.effects)) {
       for (const { check, amount } of amountsAfterCheck(effect.steps ?? [])) {
-        (amount as Record<string, unknown>).double = { ref: `${check.id}.atMax`, atLeast: 1 };
+        (amount as Record<string, unknown>).count = { expr: `#${check.id}.atMax >= 1 ? 2 : 1` };
       }
     }
   }

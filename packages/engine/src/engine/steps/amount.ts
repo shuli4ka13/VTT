@@ -155,7 +155,7 @@ function shareOf(step: StepData, ctx: StepContext): number | null {
 function constant(packed: unknown, ctx: StepContext, what: string): any {
   if (packed === null || typeof packed !== 'object') return packed;
   if ('const' in packed) return packed.const;
-  if ('table' in packed || 'ref' in packed) {
+  if ('table' in packed || 'ref' in packed || ('expr' in packed && (packed as Record<string, unknown>).later)) {
     return resolveRef(packed, {
       ...ctx,
       results: { ...(ctx.sender ?? {}), ...(ctx.results ?? {}) },

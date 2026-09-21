@@ -130,6 +130,14 @@ function exprRefs(source: string, from: Where, scope: ChainScope, out: Reference
   for (const dep of deps) {
     if (scope.earlier.has(dep) || scope.params.has(dep)) continue;
     if (scope.eventChain && (EVENT_RESULTS as readonly string[]).includes(dep)) continue;
+
+    const dot = dep.indexOf('.');
+    if (dot > 0) {
+      const head = dep.slice(0, dot);
+      if (scope.earlier.has(head)) continue;
+      out.push({ kind: 'step', key: head, from });
+      continue;
+    }
     out.push({ kind: 'field', key: dep, from });
   }
 }

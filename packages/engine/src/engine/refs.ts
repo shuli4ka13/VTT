@@ -42,6 +42,7 @@ export function packRef(ref: unknown, ctx: RefContext): unknown {
       for (const name of names) sent[String(name)] = evaluate(`#${name}`, ctx);
       return { expr: r.expr, of: 'target', sent };
     }
+    if (waitsForStep(String(r.expr), ctx)) return { expr: r.expr, later: true };
     return { const: evaluate(r.expr, ctx) };
   }
 
@@ -121,6 +122,7 @@ export function resolveRef(ref: unknown, ctx: RefContext): unknown {
   if ('const' in r) return r.const;
 
   if ('expr' in r) {
+    if (r.later) return evaluate(r.expr, ctx);
     if ((r.of || 'sender') !== 'target') {
       throw new EngineError(
         `${who(ctx)}: выражение «${r.expr}» стороны отправителя пришло неразрешённым — конверт бит`);
@@ -132,6 +134,7 @@ export function resolveRef(ref: unknown, ctx: RefContext): unknown {
     const by = resolveRef((r as { by?: unknown }).by, ctx);
     return lookupTable(ctx.pass.system, String(r.table), by, who(ctx));
   }
+
 
   if ('param' in r) {
     throw new EngineError(
@@ -185,12 +188,32 @@ export function resolveOptionalNumber(ref: unknown, ctx: RefContext, what: strin
   return value;
 }
 
+function waitsForStep(expr: string, ctx: RefContext): boolean {
+  const fields = ctx.pass.system.fields;
+  return compile(expr).deps.some(name => {
+    const dot = name.indexOf('.');
+    if (dot <= 0) return false;
+    if (fields.some(field => field.tag === name)) return false;
+    const held = (ctx.results ?? {})[name.slice(0, dot)];
+    return held === undefined || typeof held !== 'object';
+  });
+}
+
 function evaluate(expr: unknown, ctx: RefContext, sent?: Record<string, unknown>): unknown {
   const results = ctx.results;
   const isField = (name: string) => ctx.pass.system.fields.some(f => f.tag === name);
   const resolve = (name: string) => {
     if (sent && name in sent) return sent[name];
     if (results && name in results && !isField(name)) return (results as Record<string, unknown>)[name];
+    const dot = name.indexOf('.');
+    if (dot > 0 && results) {
+      const head = name.slice(0, dot);
+      const held = (results as Record<string, unknown>)[head];
+      if (held && typeof held === 'object') {
+        const value = (held as Record<string, unknown>)[name.slice(dot + 1)];
+        if (value !== undefined) return value;
+      }
+    }
     if (!isField(name)) {
       const named = namedValue(name, ctx);
       if (named !== undefined) return named;

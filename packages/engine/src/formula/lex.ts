@@ -22,7 +22,7 @@ const PUNCT: Record<string, TokenType> = {
 const isDigit = (ch: string) => ch >= '0' && ch <= '9';
 
 const isNameStart = (ch: string) => /[\p{L}_]/u.test(ch);
-const isNamePart = (ch: string) => /[\p{L}\p{N}_]/u.test(ch);
+const isNamePart = (ch: string) => /[\p{L}\p{N}_.]/u.test(ch);
 
 export function lex(source: unknown): Token[] {
   const src = String(source ?? '');

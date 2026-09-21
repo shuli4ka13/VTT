@@ -1,18 +1,15 @@
-import { Field, Select, Input } from '../../../../ui/primitives.tsx';
+import { Field, Select } from '../../../../ui/primitives.tsx';
 import { SlotInput } from '../../slot-input.tsx';
-import { outputRefs } from '../../slots.tsx';
-import type { SlotContext, EarlierStep } from '../../slots.tsx';
+import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
-import { Extras } from './extras.tsx';
 
 const loose = (draft: unknown): Record<string, unknown> => draft as Record<string, unknown>;
 
-export function NumberBody({ step, context, edit, onAddParam, earlier }: {
+export function NumberBody({ step, context, edit, onAddParam }: {
   step: any;
   context: SlotContext;
   edit: EditFn;
   onAddParam?: (label: string, kind: string) => string;
-  earlier: EarlierStep[];
 }) {
   const source = typeof step.source === 'object' ? 'roll' : (step.source ?? 'roll');
   const fromRecord = (label: string, kind: string) =>
@@ -47,7 +44,7 @@ export function NumberBody({ step, context, edit, onAddParam, earlier }: {
           </Field>
           <Field
             label="сколько раз кинуть"
-            hint="Пусто — один раз. Число, формула, поле — или таблица: «выпало 20 → две кости»."
+            hint="Пусто — один раз. Можно формулой по броску выше: «выпало не меньше порога крита → две»."
           >
             <SlotInput
               value={step.count} context={context} allow={['expr', 'const', 'param', 'tag', 'table', 'ref']}
@@ -58,17 +55,6 @@ export function NumberBody({ step, context, edit, onAddParam, earlier }: {
             />
           </Field>
 
-          <Extras
-            items={[{
-              key: 'double', label: 'удвоить кости по порогу', on: !!step.double,
-              add: () => edit(0, draft => {
-                const first = outputRefs(earlier).find(output => output.kind === 'number');
-                if (first) loose(draft).double = { ref: first.ref, atLeast: 20 };
-              }),
-              drop: () => edit(0, draft => { delete loose(draft).double; }),
-              node: <DoubleField step={step} earlier={earlier} edit={edit} />,
-            }]}
-          />
         </>
       ) : null}
 
@@ -91,44 +77,5 @@ export function NumberBody({ step, context, edit, onAddParam, earlier }: {
         </Field>
       ) : null}
     </>
-  );
-}
-
-function DoubleField({ step, earlier, edit }: {
-  step: any;
-  earlier: EarlierStep[];
-  edit: EditFn;
-}) {
-  const numbers = outputRefs(earlier).filter(output => output.kind === 'number');
-  const double = step.double as { ref?: string; atLeast?: number } | undefined;
-
-  return (
-    <div className="row">
-      <Field
-        label="удвоить кости, если"
-        hint="Крит: кости кидаются вдвое. Смотрит на бросок выше по цепочке — например «выпало на костях»."
-      >
-        <Select
-          value={double?.ref ?? ''}
-          options={[['', 'никогда'], ...numbers.map(output => [output.ref, output.label] as const)] as never}
-          onChange={next => edit(0, draft => {
-            const target = loose(draft);
-            if (!next) { delete target.double; return; }
-            target.double = { ref: next, atLeast: double?.atLeast ?? 20 };
-          })}
-        />
-      </Field>
-      {double?.ref ? (
-        <Field label="не меньше">
-          <Input
-            type="number"
-            value={double.atLeast ?? 20}
-            onChange={next => edit(0, draft => {
-              loose(draft).double = { ref: double.ref, atLeast: Number(next) || 0 };
-            })}
-          />
-        </Field>
-      ) : null}
-    </div>
   );
 }

@@ -270,7 +270,7 @@ describe('эффект слушает время', () => {
   });
 });
 
-describe('крит собирается в шаге «число»', () => {
+describe('крит — обычная формула, а не особый слот', () => {
   beforeEach(() => {
     useWorld.setState(state => ({
       ...state,
@@ -293,22 +293,11 @@ describe('крит собирается в шаге «число»', () => {
   });
   afterEach(() => { cleanup(); });
 
-  it('«удвоить кости, если» предлагает числовые выходы проверки и пишет порог', () => {
+  it('особого слота под крит больше нет — крит пишется в «сколько раз кинуть»', () => {
     render(<EffectsTab />);
-    fireEvent.click(screen.getByText('+ удвоить кости по порогу'));
-
-    const picker = [...document.querySelectorAll('select')]
-      .find(el => [...el.options].some(o => o.value === 'проверка.natural'))!;
-    expect(picker, 'выбор выхода проверки появился').toBeTruthy();
-
-    fireEvent.change(picker, { target: { value: 'проверка.natural' } });
-    const steps = useWorld.getState().system.effects.удар!.steps!;
-    expect(steps[1]!.double).toEqual({ ref: 'проверка.natural', atLeast: 20 });
-
-    const least = screen.getByText('не меньше').closest('label')!.querySelector('input')!;
-    fireEvent.change(least, { target: { value: '19' } });
-    expect(useWorld.getState().system.effects.удар!.steps![1]!.double)
-      .toEqual({ ref: 'проверка.natural', atLeast: 19 });
+    expect(screen.queryByText('удвоить кости, если')).toBeNull();
+    expect(screen.queryByText('+ удвоить кости по порогу')).toBeNull();
+    expect(screen.getByText('сколько раз кинуть')).toBeTruthy();
   });
 });
 

@@ -3475,11 +3475,8 @@
             "bonus": {
               "param": "damage_with"
             },
-            "double": {
-              "ref": "hit.natural",
-              "atLeast": {
-                "tag": "crit_from"
-              }
+            "count": {
+              "expr": "#hit.natural >= #crit_from ? 2 : 1"
             }
           },
           {
@@ -3551,9 +3548,8 @@
             "bonus": {
               "param": "damage_bonus"
             },
-            "double": {
-              "ref": "hit.natural",
-              "atLeast": 20
+            "count": {
+              "expr": "#hit.natural >= 20 ? 2 : 1"
             }
           },
           {
@@ -3933,13 +3929,7 @@
               "param": "damage_die"
             },
             "count": {
-              "tag": "cantrip_dice"
-            },
-            "double": {
-              "ref": "hit.natural",
-              "atLeast": {
-                "tag": "crit_from"
-              }
+              "expr": "(#cantrip_dice) * (#hit.natural >= #crit_from ? 2 : 1)"
             }
           },
           {
@@ -4107,13 +4097,7 @@
               "param": "damage_die"
             },
             "count": {
-              "expr": "#dice_count + (#slot - #spell_level) * #dice_up"
-            },
-            "double": {
-              "ref": "hit.natural",
-              "atLeast": {
-                "tag": "crit_from"
-              }
+              "expr": "(#dice_count + (#slot - #spell_level) * #dice_up) * (#hit.natural >= #crit_from ? 2 : 1)"
             }
           },
           {
