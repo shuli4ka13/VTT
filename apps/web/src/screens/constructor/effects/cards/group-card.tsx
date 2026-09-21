@@ -2,15 +2,13 @@ import { useState, type ReactNode } from 'react';
 import type { System, Effect, Step } from '@vtt/schema';
 import { Card, CardHead, Verdict, Button } from '../../../../ui/primitives.tsx';
 import type { CardGroup } from '../../cards.ts';
-import {
-  checkReadback, changeReadback, numberReadback, type Segment,
-} from '../../readback.ts';
+import type { Segment } from '../../readback.ts';
 import type { SlotContext, EarlierStep } from '../../slots.tsx';
 import type { Problem } from '../../step-card.tsx';
 import { CheckBody } from './check-body.tsx';
 import { ChangeBody } from './change-body.tsx';
 import { NumberBody } from './number-body.tsx';
-import { ConditionFold, whenSegments, breakLine } from './condition-fold.tsx';
+import { ConditionFold, breakLine } from './condition-fold.tsx';
 import { CARD_TITLES } from '../words.ts';
 
 
@@ -80,11 +78,6 @@ export function GroupCard({
     );
   }
 
-  const body = group.kind === 'check' ? checkReadback(group.step, system, effect)
-    : group.kind === 'change' ? changeReadback(group.step, group.amount, system, effect)
-      : numberReadback(group.step, system, effect);
-  const segments = [...whenSegments(step, earlier), ...body];
-
   return (
     <>
       <Card tone={problem ? 'bad' : undefined}>
@@ -94,7 +87,6 @@ export function GroupCard({
           actions={actions}
         />
         {problem ? <Verdict tone="bad" action={problemAction}>{problem.text}</Verdict> : null}
-        <Readback segments={segments} />
         {group.kind === 'check' ? <CheckBody step={step} context={context} edit={edit} system={system} /> : null}
         {group.kind === 'change' ? <ChangeBody group={group} context={context} edit={edit} withNumber={withNumber} system={system} onAddParam={onAddParam} /> : null}
         {group.kind === 'number'

@@ -11,7 +11,7 @@ export interface Extra {
   drop?: () => void;
 }
 
-export function Extras({ items, title = 'Тонкости' }: { items: Extra[]; title?: string }) {
+export function Extras({ items }: { items: Extra[] }) {
   const [opened, setOpened] = useState<string[]>([]);
   const shown = items.filter(item => item.on || opened.includes(item.key));
   const rest = items.filter(item => !shown.includes(item));
@@ -23,8 +23,6 @@ export function Extras({ items, title = 'Тонкости' }: { items: Extra[]; 
 
   return (
     <div className="stack stack--tight">
-      {shown.length ? <span className="field__label">{title}</span> : null}
-
       {shown.map(item => (
         <div className="extra" key={item.key}>
           {item.node}

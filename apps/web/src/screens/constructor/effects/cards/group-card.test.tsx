@@ -22,13 +22,6 @@ const attackSteps = () => [
 ] as unknown as Step[];
 
 describe('GroupCard', () => {
-  it('проверка показывает пересказ с пропуском мишени', () => {
-    const group = groupSteps(attackSteps())[0]!;
-    render(<GroupCard group={group} position={1} system={system} effect={effect}
-      earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
-    expect(screen.getByText('какого поля цели?')).toBeTruthy();
-  });
-
   it('переключение «без броска» меняет тип на compare, не стирая roll', () => {
     const steps = attackSteps();
     const group = groupSteps(steps)[0]!;
@@ -140,13 +133,6 @@ describe('GroupCard', () => {
     expect(screen.getByText(/оборвано/)).toBeTruthy();
   });
 
-  it('пересказ не отрывает точку от слова', () => {
-    const group = groupSteps(attackSteps())[0]!;
-    const { container } = render(<GroupCard group={group} position={1} system={system} effect={effect}
-      earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
-    const text = container.querySelector('.readback')!.textContent!;
-    expect(text).not.toMatch(/\s[.,]/);
-  });
 });
 
 describe('GroupCard: условие выполнения шага', () => {
@@ -163,15 +149,6 @@ describe('GroupCard: условие выполнения шага', () => {
     const picker = selects.find(el => [...el.options].some(o => o.value === 'hit.success'))!;
     fireEvent.change(picker, { target: { value: 'hit.success' } });
     expect(apply.when).toEqual({ ref: 'hit.success' });
-  });
-
-  it('условие читается фразой, отрицание — словом «не»', () => {
-    const steps = [{ type: 'apply', direction: 'subtract', targetModifiers: true, value: { const: 4 },
-      when: { ref: 'hit.success', not: true } }] as unknown as Step[];
-    const group = groupSteps(steps)[0]!;
-    render(<GroupCard group={group} position={2} system={system} effect={effect}
-      earlier={earlier} problem={null} edit={() => {}} onDelete={() => {}} />);
-    expect(screen.getByText('Только если шаг 1 · Проверка — не вышло.')).toBeTruthy();
   });
 
   it('без проверок выше секции условия нет', () => {
@@ -204,7 +181,7 @@ describe('GroupCard: изменение как вызов', () => {
     expect(apply.amount).toEqual({ ref: 'n' });
   });
 
-  it('шаг «отправить» читается фразой: цель получает вызов', () => {
+  it('шаг «отправить» открывается редактором вызова', () => {
     const steps = [
       { id: 'n', type: 'amount', source: 'roll' },
       { type: 'emit', event: 'damage', amount: { ref: 'n' }, tags: ['огонь'] },
@@ -214,8 +191,8 @@ describe('GroupCard: изменение как вызов', () => {
     expect(group.amount?.id).toBe('n');
     render(<GroupCard group={group} position={1} system={eventful} effect={effect}
       earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
-    expect(screen.getByText('«Урон»:')).toBeTruthy();
-    expect(screen.getByText('[огонь]')).toBeTruthy();
+    expect(screen.getByText('какой эффект вызываем')).toBeTruthy();
+    expect(screen.getByText('Урон')).toBeTruthy();
   });
 
   it('без вызываемых эффектов режима «вызов» нет', () => {
