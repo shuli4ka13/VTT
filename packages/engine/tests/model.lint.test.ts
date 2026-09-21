@@ -1,7 +1,7 @@
 import { group, test, eq, ok } from './harness.ts';
 import { lintSystem, lintStep, errorsOf } from '../src/model/lint.ts';
 import { referencesOf, listenerOf } from '../src/model/references.ts';
-import { SAMPLE_SYSTEMS, SAMPLE_WORLDS } from '../src/model/systems.ts';
+import { PLAYABLE_SYSTEMS as SAMPLE_SYSTEMS, PLAYABLE_WORLDS as SAMPLE_WORLDS } from '../src/model/systems.ts';
 import type { System, Effect, Step } from '../src/model/types.ts';
 
 const bare = (): System => ({

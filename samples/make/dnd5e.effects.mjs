@@ -121,6 +121,14 @@ function attacks() {
 function spells() {
   const infoParams = [P.level, P.slot];
   return {
+    spell: {
+      label: 'Заклинание',
+      category: 'Заклинания',
+      description: 'Основа всех заклинаний: спрашивает круг ячейки и тратит её. Сама по себе не применяется.',
+      cost: 'action',
+      params: infoParams,
+      self: paySlot,
+    },
     cantrip_attack: manual('Заговор: бросок атаки', 'Заклинания',
       'Атака заклинанием против класса брони. Костей столько, сколько даёт уровень персонажа: одна, с 5-го две, с 11-го три, с 17-го четыре.',
       'action', {
@@ -145,8 +153,8 @@ function spells() {
       'Заговор, который стол не считает: свет, волшебная рука, фокусы. В журнал ложится строка — остальное решает ведущий.', 'action', {}),
     spell_attack: manual('Заклинание: бросок атаки', 'Заклинания',
       'Тратит ячейку. Атака заклинанием против класса брони; ячейка выше круга заклинания добавляет кости.', 'action', {
-        params: [...infoParams, P.die, P.count, P.up, P.type, { ...P.status, label: 'Состояние при попадании' }],
-        self: paySlot,
+        extends: 'spell',
+        params: [P.die, P.count, P.up, P.type, { ...P.status, label: 'Состояние при попадании' }],
         steps: [
           hit({ expr: '#spell_attack' }),
           { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'damage_die' }, count: { expr: LEVELED }, double: crit },
@@ -156,8 +164,8 @@ function spells() {
       }),
     spell_save_half: manual('Заклинание: спасбросок, при успехе половина', 'Заклинания',
       'Тратит ячейку один раз на всех. Кости бросаются один раз, спасбросок у каждой цели свой; успех — половина урона.', 'action', {
-        params: [...infoParams, P.saveBy, P.die, P.count, P.up, P.type],
-        self: paySlot,
+        extends: 'spell',
+        params: [P.saveBy, P.die, P.count, P.up, P.type],
         steps: [
           save('always'),
           {
@@ -169,8 +177,8 @@ function spells() {
       }),
     spell_save_none: manual('Заклинание: спасбросок, при успехе ничего', 'Заклинания',
       'Тратит ячейку. Провал спасброска — урон и, если задано, состояние; успех — ничего.', 'action', {
-        params: [...infoParams, P.saveBy, P.die, P.count, P.up, P.type, { ...P.status, label: 'Состояние при провале' }],
-        self: paySlot,
+        extends: 'spell',
+        params: [P.saveBy, P.die, P.count, P.up, P.type, { ...P.status, label: 'Состояние при провале' }],
         steps: [
           save('fail'),
           { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'damage_die' }, count: { expr: LEVELED } },
@@ -180,8 +188,8 @@ function spells() {
       }),
     spell_auto: manual('Заклинание: урон без броска', 'Заклинания',
       'Тратит ячейку. Попадает всегда: волшебная стрела. К каждой кости идёт прибавка, ячейка выше круга добавляет кости.', 'action', {
-        params: [...infoParams, P.die, P.count, P.up, { key: 'per_die', label: 'Прибавка к каждой кости', kind: 'number' }, P.type],
-        self: paySlot,
+        extends: 'spell',
+        params: [P.die, P.count, P.up, { key: 'per_die', label: 'Прибавка к каждой кости', kind: 'number' }, P.type],
         steps: [
           {
             id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'damage_die' }, count: { expr: LEVELED },
@@ -192,8 +200,8 @@ function spells() {
       }),
     spell_condition: manual('Заклинание: спасбросок или состояние', 'Заклинания',
       'Тратит ячейку. Провал спасброска вешает состояние, оно запоминает твою сложность для повторных спасбросков. Без концентрации.', 'action', {
-        params: [...infoParams, P.saveBy, P.status, { ...P.repeat }],
-        self: paySlot,
+        extends: 'spell',
+        params: [P.saveBy, P.status, { ...P.repeat }],
         steps: [
           save('fail'),
           hang({ param: 'status' }, { carry: { expr: '#spell_dc' } }),
@@ -202,9 +210,9 @@ function spells() {
       }),
     spell_condition_held: manual('Заклинание: спасбросок или состояние, с концентрацией', 'Заклинания',
       'То же, но держится твоей концентрацией: сорвалась или взялся за другое — состояние спало со всех целей.', 'action', {
+        extends: 'spell',
         bond: 'concentration',
-        params: [...infoParams, P.saveBy, P.status, { ...P.repeat }],
-        self: paySlot,
+        params: [P.saveBy, P.status, { ...P.repeat }],
         steps: [
           save('fail'),
           hang({ param: 'status' }, { carry: { expr: '#spell_dc' } }),
@@ -213,21 +221,21 @@ function spells() {
       }),
     spell_buff: manual('Заклинание: усиление', 'Заклинания',
       'Тратит ячейку и вешает на цели эффект. Без концентрации: висит, пока не истечёт срок самого эффекта.', 'action', {
-        params: [...infoParams, P.status],
-        self: paySlot,
+        extends: 'spell',
+        params: [P.status],
         steps: [hang({ param: 'status' })],
       }),
     spell_buff_held: manual('Заклинание: усиление с концентрацией', 'Заклинания',
       'Тратит ячейку и вешает на цели эффект, пока держишь концентрацию. Целей может быть несколько — ячейка одна.', 'action', {
+        extends: 'spell',
         bond: 'concentration',
-        params: [...infoParams, P.status],
-        self: paySlot,
+        params: [P.status],
         steps: [hang({ param: 'status' })],
       }),
     spell_heal: manual('Заклинание: лечение', 'Заклинания',
       'Тратит ячейку. Кости лечения плюс заклинательный модификатор; ячейка выше круга добавляет кости. Снимает состояние, если задано.', 'action', {
-        params: [...infoParams, { key: 'heal_die', label: 'Кость лечения', kind: 'dice' }, P.count, P.up, { key: 'cure', label: 'Что снимает', kind: 'effect' }],
-        self: paySlot,
+        extends: 'spell',
+        params: [{ key: 'heal_die', label: 'Кость лечения', kind: 'dice' }, P.count, P.up, { key: 'cure', label: 'Что снимает', kind: 'effect' }],
         steps: [
           { id: 'amt', type: 'amount', source: 'roll', dice: { param: 'heal_die' }, count: { expr: LEVELED }, bonus: { expr: '#spell_mod' } },
           change('hp_current', 'add', { ref: 'amt' }),
@@ -236,14 +244,13 @@ function spells() {
       }),
     spell_cleanse: manual('Заклинание: снять состояние', 'Заклинания',
       'Тратит ячейку и снимает с цели одно состояние: малое восстановление, снятие проклятия.', 'action', {
-        params: [...infoParams, { key: 'cure', label: 'Что снимает', kind: 'effect' }],
-        self: paySlot,
+        extends: 'spell',
+        params: [{ key: 'cure', label: 'Что снимает', kind: 'effect' }],
         steps: [{ type: 'status', mode: 'remove', effect: { param: 'cure' } }],
       }),
     spell_note: manual('Заклинание: без броска', 'Заклинания',
       'Тратит ячейку и пишет строку в журнал. Для заклинаний, которые стол не считает: обнаружение магии, туманный шаг, полёт.', 'action', {
-        params: infoParams,
-        self: paySlot,
+        extends: 'spell',
       }),
     potion_heal: manual('Выпить зелье лечения', 'Лечение',
       'Кости зелья плюс прибавка. Цель — тот, кто пьёт.', 'action', {

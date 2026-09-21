@@ -1,6 +1,7 @@
 import type { System, Compendium, Effect, Step } from './types.ts';
 import { registry } from '../engine/steps/index.ts';
 import { activationOf, calledOf } from '../engine/effects.ts';
+import { basedOn } from './inherit.ts';
 import { TABS, STEP } from '../words/glossary.ts';
 import {
   referencesOf, declaredOf, chainRefs, listenerOf,
@@ -226,7 +227,7 @@ function orphanProblems(system: System, compendium?: Compendium): Problem[] {
   if (compendium) {
     const called = new Set(calledOf(system).map(([key]) => key));
     for (const [id, effect] of Object.entries(system.effects)) {
-      if (activationOf(effect) !== 'manual' || bound.has(id) || called.has(id)) continue;
+      if (effect.activation !== 'manual' || bound.has(id) || called.has(id)) continue;
       out.push({
         where: { tab: 'effects', effect: id }, level: 'warn',
         text: `эффект «${effect.label ?? id}» никак не запускается: ни одна запись компендиума его не даёт`,
@@ -268,7 +269,10 @@ function paramProblems(system: System): Problem[] {
       });
     }
   }
+  const kindBases = new Set(Object.values(system.records ?? {})
+    .map(kind => basedOn(kind)).filter((key): key is string => Boolean(key)));
   for (const [kind, spec] of Object.entries(system.records ?? {})) {
+    if (kindBases.has(kind)) continue;
     (spec.bindings ?? []).forEach((binding, index) => {
       const effect = system.effects[binding.effect];
       if (!effect) return;

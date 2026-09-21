@@ -4,7 +4,7 @@ import { calc, calcAll, newPass } from '../src/engine/calc.ts';
 import { CycleError } from '../src/engine/errors.ts';
 import { send, receive } from '../src/events/envelope.ts';
 import { system, arven, mirra, sheets, compendium } from './fixtures.ts';
-import { SAMPLE_SYSTEMS, SAMPLE_WORLDS } from '../src/model/systems.ts';
+import { PLAYABLE_SYSTEMS as SAMPLE_SYSTEMS, PLAYABLE_WORLDS as SAMPLE_WORLDS } from '../src/model/systems.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const all = (sys, sheet, book = compendium) =>

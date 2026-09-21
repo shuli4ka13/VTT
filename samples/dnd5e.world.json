@@ -3326,6 +3326,52 @@
           }
         ]
       },
+      "spell": {
+        "label": "Заклинание",
+        "category": "Заклинания",
+        "description": "Основа всех заклинаний: спрашивает круг ячейки и тратит её. Сама по себе не применяется.",
+        "cost": "action",
+        "params": [
+          {
+            "key": "spell_level",
+            "label": "Круг заклинания",
+            "kind": "number"
+          },
+          {
+            "key": "slot",
+            "label": "Каким кругом",
+            "kind": "number",
+            "ask": {
+              "by": "actor",
+              "kind": "number",
+              "min": 1,
+              "max": 9,
+              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
+            }
+          }
+        ],
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "param": "slot"
+            },
+            "versus": {
+              "param": "spell_level"
+            },
+            "breakIf": "less",
+            "note": "круг ячейки ниже круга заклинания"
+          },
+          {
+            "type": "emit",
+            "event": "spell_slot",
+            "amount": {
+              "param": "slot"
+            },
+            "strict": true
+          }
+        ]
+      },
       "cantrip_attack": {
         "label": "Заговор: бросок атаки",
         "category": "Заклинания",
@@ -3493,23 +3539,6 @@
         "cost": "action",
         "params": [
           {
-            "key": "spell_level",
-            "label": "Круг заклинания",
-            "kind": "number"
-          },
-          {
-            "key": "slot",
-            "label": "Каким кругом",
-            "kind": "number",
-            "ask": {
-              "by": "actor",
-              "kind": "number",
-              "min": 1,
-              "max": 9,
-              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
-            }
-          },
-          {
             "key": "damage_die",
             "label": "Кость урона",
             "kind": "dice"
@@ -3591,27 +3620,7 @@
             }
           }
         ],
-        "self": [
-          {
-            "type": "compare",
-            "value": {
-              "param": "slot"
-            },
-            "versus": {
-              "param": "spell_level"
-            },
-            "breakIf": "less",
-            "note": "круг ячейки ниже круга заклинания"
-          },
-          {
-            "type": "emit",
-            "event": "spell_slot",
-            "amount": {
-              "param": "slot"
-            },
-            "strict": true
-          }
-        ]
+        "extends": "spell"
       },
       "spell_save_half": {
         "label": "Заклинание: спасбросок, при успехе половина",
@@ -3620,23 +3629,6 @@
         "activation": "manual",
         "cost": "action",
         "params": [
-          {
-            "key": "spell_level",
-            "label": "Круг заклинания",
-            "kind": "number"
-          },
-          {
-            "key": "slot",
-            "label": "Каким кругом",
-            "kind": "number",
-            "ask": {
-              "by": "actor",
-              "kind": "number",
-              "min": 1,
-              "max": 9,
-              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
-            }
-          },
           {
             "key": "save_by",
             "label": "Бонус спасброска",
@@ -3715,27 +3707,7 @@
             ]
           }
         ],
-        "self": [
-          {
-            "type": "compare",
-            "value": {
-              "param": "slot"
-            },
-            "versus": {
-              "param": "spell_level"
-            },
-            "breakIf": "less",
-            "note": "круг ячейки ниже круга заклинания"
-          },
-          {
-            "type": "emit",
-            "event": "spell_slot",
-            "amount": {
-              "param": "slot"
-            },
-            "strict": true
-          }
-        ]
+        "extends": "spell"
       },
       "spell_save_none": {
         "label": "Заклинание: спасбросок, при успехе ничего",
@@ -3744,23 +3716,6 @@
         "activation": "manual",
         "cost": "action",
         "params": [
-          {
-            "key": "spell_level",
-            "label": "Круг заклинания",
-            "kind": "number"
-          },
-          {
-            "key": "slot",
-            "label": "Каким кругом",
-            "kind": "number",
-            "ask": {
-              "by": "actor",
-              "kind": "number",
-              "min": 1,
-              "max": 9,
-              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
-            }
-          },
           {
             "key": "save_by",
             "label": "Бонус спасброска",
@@ -3846,27 +3801,7 @@
             }
           }
         ],
-        "self": [
-          {
-            "type": "compare",
-            "value": {
-              "param": "slot"
-            },
-            "versus": {
-              "param": "spell_level"
-            },
-            "breakIf": "less",
-            "note": "круг ячейки ниже круга заклинания"
-          },
-          {
-            "type": "emit",
-            "event": "spell_slot",
-            "amount": {
-              "param": "slot"
-            },
-            "strict": true
-          }
-        ]
+        "extends": "spell"
       },
       "spell_auto": {
         "label": "Заклинание: урон без броска",
@@ -3875,23 +3810,6 @@
         "activation": "manual",
         "cost": "action",
         "params": [
-          {
-            "key": "spell_level",
-            "label": "Круг заклинания",
-            "kind": "number"
-          },
-          {
-            "key": "slot",
-            "label": "Каким кругом",
-            "kind": "number",
-            "ask": {
-              "by": "actor",
-              "kind": "number",
-              "min": 1,
-              "max": 9,
-              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
-            }
-          },
           {
             "key": "damage_die",
             "label": "Кость урона",
@@ -3947,27 +3865,7 @@
             ]
           }
         ],
-        "self": [
-          {
-            "type": "compare",
-            "value": {
-              "param": "slot"
-            },
-            "versus": {
-              "param": "spell_level"
-            },
-            "breakIf": "less",
-            "note": "круг ячейки ниже круга заклинания"
-          },
-          {
-            "type": "emit",
-            "event": "spell_slot",
-            "amount": {
-              "param": "slot"
-            },
-            "strict": true
-          }
-        ]
+        "extends": "spell"
       },
       "spell_condition": {
         "label": "Заклинание: спасбросок или состояние",
@@ -3977,23 +3875,6 @@
         "cost": "action",
         "params": [
           {
-            "key": "spell_level",
-            "label": "Круг заклинания",
-            "kind": "number"
-          },
-          {
-            "key": "slot",
-            "label": "Каким кругом",
-            "kind": "number",
-            "ask": {
-              "by": "actor",
-              "kind": "number",
-              "min": 1,
-              "max": 9,
-              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
-            }
-          },
-          {
             "key": "save_by",
             "label": "Бонус спасброска",
             "kind": "expr",
@@ -4052,27 +3933,7 @@
             }
           }
         ],
-        "self": [
-          {
-            "type": "compare",
-            "value": {
-              "param": "slot"
-            },
-            "versus": {
-              "param": "spell_level"
-            },
-            "breakIf": "less",
-            "note": "круг ячейки ниже круга заклинания"
-          },
-          {
-            "type": "emit",
-            "event": "spell_slot",
-            "amount": {
-              "param": "slot"
-            },
-            "strict": true
-          }
-        ]
+        "extends": "spell"
       },
       "spell_condition_held": {
         "label": "Заклинание: спасбросок или состояние, с концентрацией",
@@ -4082,23 +3943,6 @@
         "cost": "action",
         "params": [
           {
-            "key": "spell_level",
-            "label": "Круг заклинания",
-            "kind": "number"
-          },
-          {
-            "key": "slot",
-            "label": "Каким кругом",
-            "kind": "number",
-            "ask": {
-              "by": "actor",
-              "kind": "number",
-              "min": 1,
-              "max": 9,
-              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
-            }
-          },
-          {
             "key": "save_by",
             "label": "Бонус спасброска",
             "kind": "expr",
@@ -4157,28 +4001,8 @@
             }
           }
         ],
-        "bond": "concentration",
-        "self": [
-          {
-            "type": "compare",
-            "value": {
-              "param": "slot"
-            },
-            "versus": {
-              "param": "spell_level"
-            },
-            "breakIf": "less",
-            "note": "круг ячейки ниже круга заклинания"
-          },
-          {
-            "type": "emit",
-            "event": "spell_slot",
-            "amount": {
-              "param": "slot"
-            },
-            "strict": true
-          }
-        ]
+        "extends": "spell",
+        "bond": "concentration"
       },
       "spell_buff": {
         "label": "Заклинание: усиление",
@@ -4188,23 +4012,6 @@
         "cost": "action",
         "params": [
           {
-            "key": "spell_level",
-            "label": "Круг заклинания",
-            "kind": "number"
-          },
-          {
-            "key": "slot",
-            "label": "Каким кругом",
-            "kind": "number",
-            "ask": {
-              "by": "actor",
-              "kind": "number",
-              "min": 1,
-              "max": 9,
-              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
-            }
-          },
-          {
             "key": "status",
             "label": "Состояние",
             "kind": "effect"
@@ -4219,27 +4026,7 @@
             }
           }
         ],
-        "self": [
-          {
-            "type": "compare",
-            "value": {
-              "param": "slot"
-            },
-            "versus": {
-              "param": "spell_level"
-            },
-            "breakIf": "less",
-            "note": "круг ячейки ниже круга заклинания"
-          },
-          {
-            "type": "emit",
-            "event": "spell_slot",
-            "amount": {
-              "param": "slot"
-            },
-            "strict": true
-          }
-        ]
+        "extends": "spell"
       },
       "spell_buff_held": {
         "label": "Заклинание: усиление с концентрацией",
@@ -4249,23 +4036,6 @@
         "cost": "action",
         "params": [
           {
-            "key": "spell_level",
-            "label": "Круг заклинания",
-            "kind": "number"
-          },
-          {
-            "key": "slot",
-            "label": "Каким кругом",
-            "kind": "number",
-            "ask": {
-              "by": "actor",
-              "kind": "number",
-              "min": 1,
-              "max": 9,
-              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
-            }
-          },
-          {
             "key": "status",
             "label": "Состояние",
             "kind": "effect"
@@ -4280,28 +4050,8 @@
             }
           }
         ],
-        "bond": "concentration",
-        "self": [
-          {
-            "type": "compare",
-            "value": {
-              "param": "slot"
-            },
-            "versus": {
-              "param": "spell_level"
-            },
-            "breakIf": "less",
-            "note": "круг ячейки ниже круга заклинания"
-          },
-          {
-            "type": "emit",
-            "event": "spell_slot",
-            "amount": {
-              "param": "slot"
-            },
-            "strict": true
-          }
-        ]
+        "extends": "spell",
+        "bond": "concentration"
       },
       "spell_heal": {
         "label": "Заклинание: лечение",
@@ -4310,23 +4060,6 @@
         "activation": "manual",
         "cost": "action",
         "params": [
-          {
-            "key": "spell_level",
-            "label": "Круг заклинания",
-            "kind": "number"
-          },
-          {
-            "key": "slot",
-            "label": "Каким кругом",
-            "kind": "number",
-            "ask": {
-              "by": "actor",
-              "kind": "number",
-              "min": 1,
-              "max": 9,
-              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
-            }
-          },
           {
             "key": "heal_die",
             "label": "Кость лечения",
@@ -4383,27 +4116,7 @@
             }
           }
         ],
-        "self": [
-          {
-            "type": "compare",
-            "value": {
-              "param": "slot"
-            },
-            "versus": {
-              "param": "spell_level"
-            },
-            "breakIf": "less",
-            "note": "круг ячейки ниже круга заклинания"
-          },
-          {
-            "type": "emit",
-            "event": "spell_slot",
-            "amount": {
-              "param": "slot"
-            },
-            "strict": true
-          }
-        ]
+        "extends": "spell"
       },
       "spell_cleanse": {
         "label": "Заклинание: снять состояние",
@@ -4412,23 +4125,6 @@
         "activation": "manual",
         "cost": "action",
         "params": [
-          {
-            "key": "spell_level",
-            "label": "Круг заклинания",
-            "kind": "number"
-          },
-          {
-            "key": "slot",
-            "label": "Каким кругом",
-            "kind": "number",
-            "ask": {
-              "by": "actor",
-              "kind": "number",
-              "min": 1,
-              "max": 9,
-              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
-            }
-          },
           {
             "key": "cure",
             "label": "Что снимает",
@@ -4444,27 +4140,7 @@
             }
           }
         ],
-        "self": [
-          {
-            "type": "compare",
-            "value": {
-              "param": "slot"
-            },
-            "versus": {
-              "param": "spell_level"
-            },
-            "breakIf": "less",
-            "note": "круг ячейки ниже круга заклинания"
-          },
-          {
-            "type": "emit",
-            "event": "spell_slot",
-            "amount": {
-              "param": "slot"
-            },
-            "strict": true
-          }
-        ]
+        "extends": "spell"
       },
       "spell_note": {
         "label": "Заклинание: без броска",
@@ -4472,47 +4148,9 @@
         "description": "Тратит ячейку и пишет строку в журнал. Для заклинаний, которые стол не считает: обнаружение магии, туманный шаг, полёт.",
         "activation": "manual",
         "cost": "action",
-        "params": [
-          {
-            "key": "spell_level",
-            "label": "Круг заклинания",
-            "kind": "number"
-          },
-          {
-            "key": "slot",
-            "label": "Каким кругом",
-            "kind": "number",
-            "ask": {
-              "by": "actor",
-              "kind": "number",
-              "min": 1,
-              "max": 9,
-              "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
-            }
-          }
-        ],
+        "params": [],
         "steps": [],
-        "self": [
-          {
-            "type": "compare",
-            "value": {
-              "param": "slot"
-            },
-            "versus": {
-              "param": "spell_level"
-            },
-            "breakIf": "less",
-            "note": "круг ячейки ниже круга заклинания"
-          },
-          {
-            "type": "emit",
-            "event": "spell_slot",
-            "amount": {
-              "param": "slot"
-            },
-            "strict": true
-          }
-        ]
+        "extends": "spell"
       },
       "potion_heal": {
         "label": "Выпить зелье лечения",
@@ -7868,12 +7506,12 @@
       }
     },
     "records": {
-      "weapon_melee": {
+      "weapon": {
         "kind": "item",
-        "label": "Оружие ближнего боя",
+        "label": "Оружие",
         "icon": "⚔",
         "group": "Снаряжение",
-        "hint": "Меч, топор, копьё. Бьёт от Силы; у фехтовального выбирают лучшее из Силы и Ловкости.",
+        "hint": "Основа всякого оружия: кость и тип урона, кнопка «Удар». Чем именно бьют, говорят наследники.",
         "props": [
           {
             "key": "damage_dice",
@@ -7884,7 +7522,29 @@
             "key": "damage_type",
             "label": "Тип урона",
             "kind": "text"
-          },
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Удар",
+            "effect": "strike",
+            "args": {
+              "damage_dice": {
+                "prop": "damage_dice"
+              },
+              "damage_type": {
+                "prop": "damage_type"
+              }
+            }
+          }
+        ]
+      },
+      "weapon_melee": {
+        "extends": "weapon",
+        "kind": "item",
+        "label": "Оружие ближнего боя",
+        "hint": "Меч, топор, копьё. Бьёт от Силы; у фехтовального выбирают лучшее из Силы и Ловкости.",
+        "props": [
           {
             "key": "finesse",
             "label": "Фехтовальное",
@@ -7898,69 +7558,35 @@
             "effect": "strike",
             "args": {
               "attack_with": "#melee_attack",
-              "damage_with": "#melee_damage",
-              "damage_dice": {
-                "prop": "damage_dice"
-              },
-              "damage_type": {
-                "prop": "damage_type"
-              }
+              "damage_with": "#melee_damage"
             }
           }
         ]
       },
       "weapon_finesse": {
+        "extends": "weapon",
         "kind": "item",
         "label": "Оружие фехтовальное",
         "icon": "🗡",
-        "group": "Снаряжение",
         "hint": "Рапира, кинжал, короткий меч: бьют лучшим из Силы и Ловкости.",
-        "props": [
-          {
-            "key": "damage_dice",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "damage_type",
-            "label": "Тип урона",
-            "kind": "text"
-          }
-        ],
         "bindings": [
           {
             "label": "Удар",
             "effect": "strike",
             "args": {
               "attack_with": "#finesse_attack",
-              "damage_with": "#finesse_damage",
-              "damage_dice": {
-                "prop": "damage_dice"
-              },
-              "damage_type": {
-                "prop": "damage_type"
-              }
+              "damage_with": "#finesse_damage"
             }
           }
         ]
       },
       "weapon_ranged": {
+        "extends": "weapon",
         "kind": "item",
         "label": "Оружие дальнобойное",
         "icon": "🏹",
-        "group": "Снаряжение",
         "hint": "Лук, арбалет, праща. Бьёт от Ловкости.",
         "props": [
-          {
-            "key": "damage_dice",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "damage_type",
-            "label": "Тип урона",
-            "kind": "text"
-          },
           {
             "key": "range",
             "label": "Дистанция",
@@ -7973,13 +7599,7 @@
             "effect": "strike",
             "args": {
               "attack_with": "#ranged_attack",
-              "damage_with": "#ranged_damage",
-              "damage_dice": {
-                "prop": "damage_dice"
-              },
-              "damage_type": {
-                "prop": "damage_type"
-              }
+              "damage_with": "#ranged_damage"
             }
           }
         ]

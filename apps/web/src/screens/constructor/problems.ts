@@ -6,6 +6,7 @@ import type { System } from '@vtt/schema';
 import { useWorld } from '../../store/world.ts';
 import type { WorldState } from '../../store/world.ts';
 import { STEP } from '../../words.ts';
+import { flattenSystem } from '@vtt/engine/model/inherit';
 
 export type { Problem };
 
@@ -15,7 +16,7 @@ export function useProblems(): Problem[] {
   const mode = useWorld(s => s.origin.mode);
   const book = mode === 'compendium' || compendium.items?.length || compendium.actions?.length
     ? compendium : undefined;
-  return useMemo(() => lintSystem(system, book), [system, book]);
+  return useMemo(() => lintSystem(flattenSystem(system), book), [system, book]);
 }
 
 export const whereLabel = (where: Where, system: System): string => describeWhere(where, system);

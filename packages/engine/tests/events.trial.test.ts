@@ -1,6 +1,6 @@
 import { group, test, eq, ok, throws } from './harness.ts';
 import { trial, dieOf, mannequin, sampleArg } from '../src/events/trial.ts';
-import { SAMPLE_WORLDS } from '../src/model/systems.ts';
+import { PLAYABLE_WORLDS as SAMPLE_WORLDS } from '../src/model/systems.ts';
 import { activationOf, isPipeline, calledOf } from '../src/engine/effects.ts';
 import type { System, Compendium, Sheet } from '../src/model/types.ts';
 

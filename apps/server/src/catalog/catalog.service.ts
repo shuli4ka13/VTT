@@ -5,6 +5,7 @@ import {
 import { and, desc, eq, or } from 'drizzle-orm';
 import { world as schemas } from '@vtt/schema';
 import { lintSystem, lintCompendium, errorsOf, describeWhere } from '@vtt/engine/model/lint';
+import { flattenSystem } from '@vtt/engine/model/inherit';
 import type { Compendium, System } from '@vtt/schema';
 import { DB, CLOCK, IDS } from '../common/tokens.ts';
 import type { Db } from '../db/db.ts';
@@ -54,7 +55,7 @@ export class CatalogService {
         issues: parsed.error.issues.slice(0, 5).map(i => `${i.path.join('.')}: ${i.message}`),
       });
     }
-    const problems = errorsOf(lintSystem(parsed.data as System));
+    const problems = errorsOf(lintSystem(flattenSystem(parsed.data as System)));
     if (problems.length) {
       throw new BadRequestException({
         message: `система не готова к публикации: ${countErrors(problems.length)} — смотрите «Проблемы»`,

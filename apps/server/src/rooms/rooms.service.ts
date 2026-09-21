@@ -14,6 +14,7 @@ import type { Seen } from '@vtt/engine/events/exchange';
 import type { EmittedEvent } from '@vtt/engine/engine/rule';
 import { previewLines, describeEntry } from '@vtt/engine/events/describe';
 import { unifyWorld } from '@vtt/engine/model/unify';
+import { flattenSystem } from '@vtt/engine/model/inherit';
 import { effectLabelOf, actionOf, send, receive, offers, react, senderResults } from '@vtt/engine/events/envelope';
 import { tapeDie, replayDie } from '@vtt/engine/engine/dice';
 import type { Envelope, Offer, ReactionWindow, Report } from '@vtt/engine/events/envelope';
@@ -73,7 +74,7 @@ export class RoomsService {
       system: JSON.parse(room.system) as System,
       compendium: JSON.parse(room.compendium) as Compendium,
     });
-    return { system: world.system, compendium: world.compendium as Compendium };
+    return { system: flattenSystem(world.system), compendium: world.compendium as Compendium };
   }
 
   async create(userId: string, worldId: string, title: string): Promise<RoomSummary> {

@@ -193,6 +193,7 @@ export const trigger = z.object({
 }).passthrough();
 
 export const effect = z.object({
+  extends: z.string().min(1).optional(),
   bond: z.union([z.boolean(), z.string().min(1)]).optional(),
   label: z.string().optional(),
   tags: z.array(z.string().min(1)).optional(),
@@ -227,6 +228,7 @@ export const binding = z.object({
 }).passthrough();
 
 export const recordKind = z.object({
+  extends: z.string().min(1).optional(),
 
   kind: z.enum(['item', 'action']),
   label: z.string().optional(),
