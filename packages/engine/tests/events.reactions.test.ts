@@ -133,7 +133,7 @@ group('подписка на исходящее: вампиризм и метк�
   };
   const caster = { ...arven, values: { ...arven.values, hp_current: 10 }, actions: ['fire-bolt'] };
 
-  test('нанёс урон событием — сам подлечился на половину', () => {
+  test('нанёс урон вызовом — сам подлечился на половину', () => {
     const r = exchange({
       system: vampWorld, compendium, die: queue(15, 8, 6), sheets: [{ ...caster, effects: [{ effectId: 'vampiric' }] }, mirra],
       actionId: 'fire-bolt:0', fromId: 'arven', toId: 'mirra',
@@ -144,7 +144,7 @@ group('подписка на исходящее: вампиризм и метк�
     eq(r.reports.length, 2, 'вторая запись журнала — реакция отправителя на самого себя');
   });
 
-  test('промах — вампиризм молчит: события урона не было', () => {
+  test('промах — вампиризм молчит: вызова урона не было', () => {
     const r = exchange({
       system: vampWorld, compendium, die: queue(1, 8), sheets: [{ ...caster, effects: [{ effectId: 'vampiric' }] }, mirra],
       actionId: 'fire-bolt:0', fromId: 'arven', toId: 'mirra',

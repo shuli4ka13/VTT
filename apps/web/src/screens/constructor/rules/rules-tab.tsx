@@ -12,6 +12,7 @@ import { ActionTypesSection } from './action-types-section.tsx';
 import { TogglesSection } from './toggles-section.tsx';
 import { critOf, armorOf } from '@vtt/engine/model/toggles';
 import type { System } from '@vtt/schema';
+import { calledOf } from '@vtt/engine/engine/effects';
 
 type SectionKey = 'dice' | 'edits' | 'rolls' | 'tables' | 'initiative' | 'action_types' | 'toggles';
 
@@ -33,7 +34,7 @@ const SECTIONS: Section[] = [
     key: 'toggles', label: 'Тоглы',
     count: system => [
       critOf(system) !== 'off',
-      Object.keys(system.events ?? {}).some(event => armorOf(system, event).choice !== 'none'),
+      calledOf(system).some(([key]) => armorOf(system, key).choice !== 'none'),
     ].filter(Boolean).length,
   },
 ];

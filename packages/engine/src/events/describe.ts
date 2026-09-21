@@ -125,7 +125,7 @@ export function describeEntry(
     }
     return null;
   };
-  const eventLabel = (id: string) => system.events?.[id]?.label ?? id;
+  const eventLabel = (id: string) => system.effects?.[id]?.label ?? id;
   const idle = (trace: Record<string, unknown>): boolean =>
     trace.type === 'apply' && trace.from === trace.to;
   const calculation = (entry.report.trace ?? []).flatMap((trace: Record<string, unknown>) => {

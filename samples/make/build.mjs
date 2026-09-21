@@ -1,6 +1,6 @@
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { fields, groups, tables, constants, rolls, rollEdits, actionTypes, events } from './dnd5e.system.mjs';
+import { fields, groups, tables, constants, rolls, rollEdits, actionTypes, calledEffects } from './dnd5e.system.mjs';
 import { effects, ROOM_RULES } from './dnd5e.effects.mjs';
 import { records } from './dnd5e.records.mjs';
 import { compendium } from './dnd5e.book.mjs';
@@ -19,8 +19,7 @@ const world = {
     roll_edits: rollEdits(),
     action_types: actionTypes(),
     initiative: { die: { constant: 'lead_die' }, bonus: { expr: '#initiative' }, check: 'skill_roll' },
-    events: events(),
-    effects: effects(),
+    effects: { ...effects(), ...calledEffects() },
     records: records(),
     room_rules: ROOM_RULES,
     mannequins: mannequins(),

@@ -2,7 +2,7 @@ import { freeId } from '../../store/world.ts';
 import { dice } from '../../words.ts';
 import { effectiveDefault } from './groups.ts';
 import type {
-  System, Effect, Activation, Field, RecordKind, Binding, Step, SystemConstant, RollEdit, RangeTable, SystemEvent,
+  System, Effect, Activation, Field, RecordKind, Binding, Step, SystemConstant, RollEdit, RangeTable,
 } from '@vtt/schema';
 
 export interface Made<T> { key: string; value: T }
@@ -84,15 +84,16 @@ export const simpleReceive = (tag: string, direction: 'subtract' | 'add', target
   type: 'apply', target: { tag }, direction, value: { ref: 'event.amount' }, targetModifiers,
 } as unknown as Step);
 
-export const newEvent = (system: System): Made<SystemEvent> => {
+export const newCalled = (system: System): Made<Effect> => {
   const field = system.fields.find(f => f.value.kind === 'stored' && f.value.type === 'number');
   return {
-    key: freeId(Object.keys(system.events ?? {}), 'общий'),
+    key: freeId(Object.keys(system.effects ?? {}), 'вызываемый'),
     value: {
       label: '',
+      category: 'Вызываемые',
       tags: [],
-      ...(field ? { receive: [simpleReceive(field.tag, 'subtract', true)] } : {}),
-    },
+      steps: field ? [simpleReceive(field.tag, 'subtract', true)] : [],
+    } as Effect,
   };
 };
 

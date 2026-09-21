@@ -314,10 +314,34 @@ export function unifyBounds(
   };
 }
 
+export function unifyEvents(system: System): System {
+  const source = system as unknown as Loose;
+  if (!source.events || !Object.keys(source.events).length) return system;
+
+  const next: Loose = JSON.parse(JSON.stringify(source));
+  next.effects ??= {};
+  for (const [id, event] of Object.entries(next.events as Record<string, Loose>)) {
+    const key = next.effects[id] ? `${id}-общий` : id;
+    next.effects[key] = {
+      label: event.label ?? id,
+      ...(event.tags?.length ? { tags: event.tags } : {}),
+      steps: event.receive ?? [],
+    };
+    if (key === id) continue;
+    for (const effect of Object.values(next.effects as Record<string, Loose>)) {
+      for (const step of [...(effect.steps ?? []), ...(effect.self ?? [])] as Loose[]) {
+        if (step.type === 'emit' && step.event === id) step.event = key;
+      }
+    }
+  }
+  delete next.events;
+  return next as unknown as System;
+}
+
 export function unifyWorld(
   world: { system: System; compendium: Compendium },
 ): { system: System; compendium: Compendium } {
-  const { system, renames } = unifySystem(world.system);
+  const { system, renames } = unifySystem(unifyEvents(world.system));
   const withRefs = unifyCompendium(world.compendium, renames);
   const edited = convertRollEdits(system, withRefs);
   const bounded = unifyBounds({ system: edited.system, compendium: edited.compendium ?? withRefs });

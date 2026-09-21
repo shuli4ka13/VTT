@@ -6,6 +6,7 @@ import type { MomentKey } from '@vtt/engine/events/moments';
 import { MOMENTS } from './words.ts';
 import type { Moment } from './words.ts';
 import type { System, Effect } from '@vtt/schema';
+import { calledOf } from '@vtt/engine/engine/effects';
 
 function conditionsOf(system: System, listened: string | undefined): (readonly [string, string])[] {
   const source = listened ? system.effects[listened] : undefined;
@@ -96,7 +97,7 @@ export function LaunchCard({ id, effect, system, edit }: {
             value={listened ?? (asks ? '*' : '')}
             options={[
               ...(asks ? [['*', 'любое действие'] as const] : [['', '— кого слушать —'] as const]),
-              ...Object.entries(system.events ?? {})
+              ...calledOf(system)
                 .map(([key, e]) => [`event:${key}`, `общий эффект «${e.label || key}»`] as const),
               ...Object.entries(system.effects)
                 .filter(([key, e]) => key !== id && (e.activation ?? 'manual') === 'manual')

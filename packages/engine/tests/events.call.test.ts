@@ -10,13 +10,11 @@ const die = () => 4;
 group('один путь вызова', () => {
   test('хвост, вызывающий сам себя, обрывается внятной ошибкой, а не переполнением стека', () => {
     const looped = structuredClone(system) as System;
-    looped.events = {
-      ...(looped.events ?? {}),
-      damage: {
-        label: 'Урон',
-        receive: [{ type: 'emit', event: 'damage', amount: { ref: 'event.amount' } }],
-      },
-    } as never;
+    looped.effects.damage = {
+      label: 'Урон',
+      tags: ['рубящий'],
+      steps: [{ type: 'emit', event: 'damage', amount: { ref: 'event.amount' } }],
+    } as unknown as Effect;
     looped.effects.echo = {
       label: 'Эхо', activation: 'manual',
       steps: [{ type: 'emit', event: 'damage', amount: { const: 3 } }],

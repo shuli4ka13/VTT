@@ -27,7 +27,7 @@ group('кубики', () => {
   });
 });
 
-group('событийный конверт', () => {
+group('конверт вызова', () => {
   group('отправитель', () => {
     test('собирает конверт, ничего не зная о получателе', () => {
       const env = send('longsword-item:0', ctx(arven, queue(15, 5)));
@@ -185,7 +185,7 @@ group('событийный конверт', () => {
   });
 
   group('критерий приёмки №5', () => {
-    test('событие от одного листа меняет значение у второго, расчёт — у получателя', () => {
+    test('вызов с одного листа меняет значение у второго, расчёт — у получателя', () => {
       const before = calc(system, mirra, 'hp_current', newPass(system, mirra, { compendium }));
       const env = send('longsword-item:0', ctx(arven, queue(15, 5)));
       const { sheet, report } = receive(env, ctx(mirra, queue()));
@@ -234,7 +234,7 @@ group('конверт не даёт целиться в бессмыслицу',
     throws(() => receive(env, { system: paramSys, sheet: mirra, compendium: book, die: die() }), 'race');
   });
 
-  test('урон нельзя лить в вычисляемое поле — его считает движок, а не событие', () => {
+  test('урон нельзя лить в вычисляемое поле — его считает движок, а не эффект', () => {
     const book = withStrike({ bonus: '#attack_bonus', versus: 'ac', damage_bonus: '0', apply_to: 'ac' });
     const env = send('bogus:0', { system: paramSys, sheet: arven, compendium: book, die: die(20, 5) });
     throws(() => receive(env, { system: paramSys, sheet: mirra, compendium: book, die: die() }), 'ac');

@@ -610,16 +610,14 @@ describe('отдых и плата ячейкой', () => {
         { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
         { tag: 'ячейки', label: 'Ячейки', value: { kind: 'stored', type: 'number', default: 1, min: 0 } },
       ],
-      events: {
+      effects: {
         ячейка: {
           label: 'Ячейка',
-          receive: [
+          steps: [
             { id: 'есть', type: 'compare', value: { tag: 'ячейки' }, versus: { const: 1 }, breakIf: 'less' },
             { type: 'apply', target: { tag: 'ячейки' }, direction: 'subtract', value: { const: 1 } },
           ],
         },
-      },
-      effects: {
         стрела: {
           label: 'Стрела', activation: 'manual',
           self: [{ type: 'emit', event: 'ячейка', amount: { const: 1 }, strict: true }],

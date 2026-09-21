@@ -182,13 +182,13 @@ describe('GroupCard: условие выполнения шага', () => {
   });
 });
 
-describe('GroupCard: изменение как событие', () => {
+describe('GroupCard: изменение как вызов', () => {
   const eventful = {
     ...system,
-    events: { damage: { label: 'Урон', tags: ['огонь'], receive: [] } },
+    effects: { ...system.effects, damage: { label: 'Урон', tags: ['огонь'], steps: [] } },
   } as unknown as System;
 
-  it('в мире с событиями у изменения есть третий режим — «событие», и он переводит шаг в emit', () => {
+  it('где есть вызываемый эффект, у изменения появляется третий режим, переводящий шаг в emit', () => {
     const steps = [
       { id: 'n', type: 'amount', source: 'roll' },
       { type: 'apply', direction: 'subtract', targetModifiers: true, value: { ref: 'n' } },
@@ -198,13 +198,13 @@ describe('GroupCard: изменение как событие', () => {
     render(<GroupCard group={group} position={1} system={eventful} effect={effect}
       earlier={[]} problem={null} edit={(at, change) => change((at === 1 ? apply : steps[0]) as never)}
       onDelete={() => {}} />);
-    fireEvent.click(screen.getByText('событие'));
+    fireEvent.click(screen.getByText('вызов'));
     expect(apply.type).toBe('emit');
     expect(apply.event).toBe('damage');
     expect(apply.amount).toEqual({ ref: 'n' });
   });
 
-  it('шаг «отправить» читается фразой: цель получает событие', () => {
+  it('шаг «отправить» читается фразой: цель получает вызов', () => {
     const steps = [
       { id: 'n', type: 'amount', source: 'roll' },
       { type: 'emit', event: 'damage', amount: { ref: 'n' }, tags: ['огонь'] },
@@ -218,11 +218,11 @@ describe('GroupCard: изменение как событие', () => {
     expect(screen.getByText('[огонь]')).toBeTruthy();
   });
 
-  it('без событий в словаре режима «событие» нет', () => {
+  it('без вызываемых эффектов режима «вызов» нет', () => {
     const group = groupSteps(attackSteps())[1]!;
     render(<GroupCard group={group} position={2} system={system} effect={effect}
       earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
-    expect(screen.queryByText('событие')).toBeNull();
+    expect(screen.queryByText('вызов')).toBeNull();
   });
 });
 

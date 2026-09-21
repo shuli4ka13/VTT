@@ -2,6 +2,7 @@ import { group, test, eq, ok, deepEq, throws } from './harness.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
 import { resolveRoll } from '../src/engine/modifiers.ts';
 import { targets, assertTarget } from '../src/engine/targets.ts';
+import { calledOf } from '../src/engine/effects.ts';
 import { UnknownTagError } from '../src/engine/errors.ts';
 import { system, arven, mirra, compendium } from './fixtures.ts';
 
@@ -342,9 +343,9 @@ group('модификаторы', () => {
       const derived = system.fields.filter(f => f.roll).length;
       const incoming = system.fields.filter(f => f.value.kind === 'stored').length;
       const rolls = 1 + system.rolls.length + derived;
-      const events = Object.keys(system.events ?? {}).length;
+      const events = calledOf(system).length;
       eq(all.length, rolls * 2 + system.fields.length + incoming + events,
-        'общая мишень, поля, объявленные броски, броски из полей, входящее хранимых, «против меня» на каждый бросок и входящие события');
+        'общая мишень, поля, объявленные броски, броски из полей, входящее хранимых, «против меня» на каждый бросок и входящие вызовы');
       ok(all.some(t => t.tag === 'incoming:attack_roll' && t.kind === 'roll'),
         'состояние цели может править чужой бросок по ней');
       ok(all.some(t => t.tag === 'ac' && t.kind === 'value'));

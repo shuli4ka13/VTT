@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useWorld, emptySystem } from '../../../store/world.ts';
 import { BRICKS } from '../cards.ts';
-import { newEffect, newEvent } from '../factory.ts';
+import { newEffect, newCalled } from '../factory.ts';
 import { trial, mannequin } from '@vtt/engine/events/trial';
 import { lintSystem, errorsOf } from '@vtt/engine/model/lint';
 import type { System, Sheet, Step } from '@vtt/schema';
@@ -93,9 +93,9 @@ describe('собранное шагами конструктора работа�
     expect(played(system, id, { хиты: 20, броня: 1 }, 'min').sheets.find(s => s.id === 'б')!.values.хиты).toBe(20);
   });
 
-  it('общий эффект «Урон» принимает вызов и списывает хиты', () => {
-    const made = newEvent(useWorld.getState().system);
-    useWorld.getState().editSystem(draft => { (draft.events ??= {})[made.key] = made.value; });
+  it('вызываемый эффект «Урон» принимает вызов и списывает хиты', () => {
+    const made = newCalled(useWorld.getState().system);
+    useWorld.getState().editSystem(draft => { draft.effects[made.key] = made.value; });
 
     const id = newManual();
     addStep(id, 'change');

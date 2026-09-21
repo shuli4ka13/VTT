@@ -101,7 +101,7 @@ export function armorTail(choice: ArmorChoice, armor: string, hp: string): Step[
 export interface ArmorReading { choice: ArmorChoice; armor: string | null; hp: string | null }
 
 export function armorOf(system: System, event: string): ArmorReading {
-  const steps = (system.events?.[event]?.receive ?? []) as Record<string, unknown>[];
+  const steps = (system.effects?.[event]?.steps ?? []) as Record<string, unknown>[];
   const first = steps[0];
   const versus = first?.versus as { tag?: string } | undefined;
   if (!first || first.type !== 'compare' || !versus?.tag) return { choice: 'none', armor: null, hp: null };
@@ -115,7 +115,7 @@ export function armorOf(system: System, event: string): ArmorReading {
 }
 
 export function setArmor(draft: System, choice: ArmorChoice, at: { event: string; armor: string; hp: string }): void {
-  const event = draft.events?.[at.event];
-  if (!event) return;
-  event.receive = armorTail(choice, at.armor, at.hp);
+  const called = draft.effects?.[at.event];
+  if (!called) return;
+  called.steps = armorTail(choice, at.armor, at.hp);
 }

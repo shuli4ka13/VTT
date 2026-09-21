@@ -16,18 +16,16 @@ const system = {
     { tag: 'атак', label: 'Атак за действие', value: { kind: 'formula', expr: '#уровень >= 5 ? 2 : 1' } },
   ],
   action_types: { атака: { label: 'Атака', perTurnField: 'атак' }, действие: { label: 'Действие', perTurn: 1 } },
-  events: {
+  effects: {
     ячейка: {
       label: 'Ячейка заклинания',
-      receive: [
+      steps: [
         { id: 'есть_1', type: 'compare', value: { tag: 'ячейки_1' }, versus: { const: 1 }, breakIf: 'less', when: { ref: 'event.amount', is: 1 } },
         { type: 'apply', target: { tag: 'ячейки_1' }, direction: 'subtract', value: { const: 1 }, when: { ref: 'event.amount', is: 1 } },
         { id: 'есть_2', type: 'compare', value: { tag: 'ячейки_2' }, versus: { const: 1 }, breakIf: 'less', when: { ref: 'event.amount', is: 2 } },
         { type: 'apply', target: { tag: 'ячейки_2' }, direction: 'subtract', value: { const: 1 }, when: { ref: 'event.amount', is: 2 } },
       ],
     },
-  },
-  effects: {
     стрела: {
       label: 'Волшебная стрела', activation: 'manual', cost: 'действие',
       params: [{ key: 'круг', label: 'Каким кругом', kind: 'number', ask: { by: 'actor', kind: 'number', min: 1, max: 2 } }],

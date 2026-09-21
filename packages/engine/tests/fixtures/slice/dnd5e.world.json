@@ -939,6 +939,43 @@
             ]
           }
         ]
+      },
+      "damage": {
+        "label": "Урон",
+        "tags": [
+          "рубящий",
+          "колющий",
+          "дробящий",
+          "огонь",
+          "холод",
+          "яд",
+          "магический"
+        ],
+        "steps": [
+          {
+            "id": "по_временным",
+            "type": "apply",
+            "target": {
+              "tag": "hp_temp"
+            },
+            "direction": "subtract",
+            "value": {
+              "ref": "event.amount"
+            },
+            "targetModifiers": true
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "hp_current"
+            },
+            "direction": "subtract",
+            "value": {
+              "ref": "по_временным.overkill"
+            },
+            "targetModifiers": false
+          }
+        ]
       }
     },
     "room_rules": [
@@ -2044,45 +2081,6 @@
           {
             "op": "bonusDie",
             "sides": 4
-          }
-        ]
-      }
-    },
-    "events": {
-      "damage": {
-        "label": "Урон",
-        "tags": [
-          "рубящий",
-          "колющий",
-          "дробящий",
-          "огонь",
-          "холод",
-          "яд",
-          "магический"
-        ],
-        "receive": [
-          {
-            "id": "по_временным",
-            "type": "apply",
-            "target": {
-              "tag": "hp_temp"
-            },
-            "direction": "subtract",
-            "value": {
-              "ref": "event.amount"
-            },
-            "targetModifiers": true
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "hp_current"
-            },
-            "direction": "subtract",
-            "value": {
-              "ref": "по_временным.overkill"
-            },
-            "targetModifiers": false
           }
         ]
       }

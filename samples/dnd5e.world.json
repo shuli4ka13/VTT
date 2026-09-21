@@ -3081,366 +3081,6 @@
       },
       "check": "skill_roll"
     },
-    "events": {
-      "damage": {
-        "label": "Урон",
-        "tags": [
-          "рубящий",
-          "колющий",
-          "дробящий",
-          "огонь",
-          "холод",
-          "молния",
-          "гром",
-          "кислота",
-          "яд",
-          "некротический",
-          "излучение",
-          "психический",
-          "силовой",
-          "магический"
-        ],
-        "receive": [
-          {
-            "type": "apply",
-            "target": {
-              "tag": "death_fail"
-            },
-            "direction": "add",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "#hp_current <= 0",
-              "of": "target"
-            }
-          },
-          {
-            "id": "по_временным",
-            "type": "apply",
-            "target": {
-              "tag": "hp_temp"
-            },
-            "direction": "subtract",
-            "value": {
-              "ref": "event.amount"
-            },
-            "targetModifiers": false
-          },
-          {
-            "id": "по_хитам",
-            "type": "apply",
-            "target": {
-              "tag": "hp_current"
-            },
-            "direction": "subtract",
-            "value": {
-              "ref": "по_временным.overkill"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "status",
-            "mode": "apply",
-            "effect": {
-              "const": "dead"
-            },
-            "when": {
-              "ref": "по_хитам.overkill",
-              "atLeast": {
-                "tag": "hp_max"
-              }
-            }
-          }
-        ]
-      },
-      "spell_slot": {
-        "label": "Ячейка заклинания",
-        "tags": [],
-        "receive": [
-          {
-            "id": "есть_1",
-            "type": "compare",
-            "value": {
-              "tag": "slots_1"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "нет ячейки 1-го круга",
-            "when": {
-              "ref": "event.amount",
-              "is": 1
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "slots_1"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "ref": "event.amount",
-              "is": 1
-            }
-          },
-          {
-            "id": "есть_2",
-            "type": "compare",
-            "value": {
-              "tag": "slots_2"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "нет ячейки 2-го круга",
-            "when": {
-              "ref": "event.amount",
-              "is": 2
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "slots_2"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "ref": "event.amount",
-              "is": 2
-            }
-          },
-          {
-            "id": "есть_3",
-            "type": "compare",
-            "value": {
-              "tag": "slots_3"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "нет ячейки 3-го круга",
-            "when": {
-              "ref": "event.amount",
-              "is": 3
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "slots_3"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "ref": "event.amount",
-              "is": 3
-            }
-          },
-          {
-            "id": "есть_4",
-            "type": "compare",
-            "value": {
-              "tag": "slots_4"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "нет ячейки 4-го круга",
-            "when": {
-              "ref": "event.amount",
-              "is": 4
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "slots_4"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "ref": "event.amount",
-              "is": 4
-            }
-          },
-          {
-            "id": "есть_5",
-            "type": "compare",
-            "value": {
-              "tag": "slots_5"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "нет ячейки 5-го круга",
-            "when": {
-              "ref": "event.amount",
-              "is": 5
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "slots_5"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "ref": "event.amount",
-              "is": 5
-            }
-          },
-          {
-            "id": "есть_6",
-            "type": "compare",
-            "value": {
-              "tag": "slots_6"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "нет ячейки 6-го круга",
-            "when": {
-              "ref": "event.amount",
-              "is": 6
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "slots_6"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "ref": "event.amount",
-              "is": 6
-            }
-          },
-          {
-            "id": "есть_7",
-            "type": "compare",
-            "value": {
-              "tag": "slots_7"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "нет ячейки 7-го круга",
-            "when": {
-              "ref": "event.amount",
-              "is": 7
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "slots_7"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "ref": "event.amount",
-              "is": 7
-            }
-          },
-          {
-            "id": "есть_8",
-            "type": "compare",
-            "value": {
-              "tag": "slots_8"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "нет ячейки 8-го круга",
-            "when": {
-              "ref": "event.amount",
-              "is": 8
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "slots_8"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "ref": "event.amount",
-              "is": 8
-            }
-          },
-          {
-            "id": "есть_9",
-            "type": "compare",
-            "value": {
-              "tag": "slots_9"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "нет ячейки 9-го круга",
-            "when": {
-              "ref": "event.amount",
-              "is": 9
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "slots_9"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "ref": "event.amount",
-              "is": 9
-            }
-          }
-        ]
-      }
-    },
     "effects": {
       "strike": {
         "label": "Атака оружием",
@@ -7864,6 +7504,365 @@
             "value": 0,
             "stacking": "override",
             "condition": "#exhaustion >= 5"
+          }
+        ]
+      },
+      "damage": {
+        "label": "Урон",
+        "category": "Вызываемые",
+        "tags": [
+          "рубящий",
+          "колющий",
+          "дробящий",
+          "огонь",
+          "холод",
+          "молния",
+          "гром",
+          "кислота",
+          "яд",
+          "некротический",
+          "излучение",
+          "психический",
+          "силовой",
+          "магический"
+        ],
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "death_fail"
+            },
+            "direction": "add",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "#hp_current <= 0",
+              "of": "target"
+            }
+          },
+          {
+            "id": "по_временным",
+            "type": "apply",
+            "target": {
+              "tag": "hp_temp"
+            },
+            "direction": "subtract",
+            "value": {
+              "ref": "event.amount"
+            },
+            "targetModifiers": false
+          },
+          {
+            "id": "по_хитам",
+            "type": "apply",
+            "target": {
+              "tag": "hp_current"
+            },
+            "direction": "subtract",
+            "value": {
+              "ref": "по_временным.overkill"
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "status",
+            "mode": "apply",
+            "effect": {
+              "const": "dead"
+            },
+            "when": {
+              "ref": "по_хитам.overkill",
+              "atLeast": {
+                "tag": "hp_max"
+              }
+            }
+          }
+        ]
+      },
+      "spell_slot": {
+        "label": "Ячейка заклинания",
+        "category": "Вызываемые",
+        "steps": [
+          {
+            "id": "есть_1",
+            "type": "compare",
+            "value": {
+              "tag": "slots_1"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "нет ячейки 1-го круга",
+            "when": {
+              "ref": "event.amount",
+              "is": 1
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "slots_1"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "ref": "event.amount",
+              "is": 1
+            }
+          },
+          {
+            "id": "есть_2",
+            "type": "compare",
+            "value": {
+              "tag": "slots_2"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "нет ячейки 2-го круга",
+            "when": {
+              "ref": "event.amount",
+              "is": 2
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "slots_2"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "ref": "event.amount",
+              "is": 2
+            }
+          },
+          {
+            "id": "есть_3",
+            "type": "compare",
+            "value": {
+              "tag": "slots_3"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "нет ячейки 3-го круга",
+            "when": {
+              "ref": "event.amount",
+              "is": 3
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "slots_3"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "ref": "event.amount",
+              "is": 3
+            }
+          },
+          {
+            "id": "есть_4",
+            "type": "compare",
+            "value": {
+              "tag": "slots_4"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "нет ячейки 4-го круга",
+            "when": {
+              "ref": "event.amount",
+              "is": 4
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "slots_4"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "ref": "event.amount",
+              "is": 4
+            }
+          },
+          {
+            "id": "есть_5",
+            "type": "compare",
+            "value": {
+              "tag": "slots_5"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "нет ячейки 5-го круга",
+            "when": {
+              "ref": "event.amount",
+              "is": 5
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "slots_5"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "ref": "event.amount",
+              "is": 5
+            }
+          },
+          {
+            "id": "есть_6",
+            "type": "compare",
+            "value": {
+              "tag": "slots_6"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "нет ячейки 6-го круга",
+            "when": {
+              "ref": "event.amount",
+              "is": 6
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "slots_6"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "ref": "event.amount",
+              "is": 6
+            }
+          },
+          {
+            "id": "есть_7",
+            "type": "compare",
+            "value": {
+              "tag": "slots_7"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "нет ячейки 7-го круга",
+            "when": {
+              "ref": "event.amount",
+              "is": 7
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "slots_7"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "ref": "event.amount",
+              "is": 7
+            }
+          },
+          {
+            "id": "есть_8",
+            "type": "compare",
+            "value": {
+              "tag": "slots_8"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "нет ячейки 8-го круга",
+            "when": {
+              "ref": "event.amount",
+              "is": 8
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "slots_8"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "ref": "event.amount",
+              "is": 8
+            }
+          },
+          {
+            "id": "есть_9",
+            "type": "compare",
+            "value": {
+              "tag": "slots_9"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "нет ячейки 9-го круга",
+            "when": {
+              "ref": "event.amount",
+              "is": 9
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "slots_9"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "ref": "event.amount",
+              "is": 9
+            }
           }
         ]
       }

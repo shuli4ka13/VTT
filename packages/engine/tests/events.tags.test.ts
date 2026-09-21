@@ -25,17 +25,15 @@ const strike = (id: string, label: string, amount: number, tags: unknown[]) => (
 const world = (extraEffects: Record<string, unknown> = {}, receive: unknown[] | undefined = [
   { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { ref: 'event.amount' }, targetModifiers: false },
 ]) => ({
-  id: 'события',
+  id: 'вызовы',
   fields: [{ tag: 'хп', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20, min: 0 } }],
   effects: {
     удар: strike('удар', 'Удар', 8, ['рубящий']),
     огонь: strike('огонь', 'Огненный шар', 8, ['огонь', 'магический']),
-    тревога: { label: 'Тревога', activation: 'manual', steps: [{ type: 'emit', event: 'тревога' }] },
+    сигнал: { label: 'Тревога', activation: 'manual', steps: [{ type: 'emit', event: 'тревога' }] },
+    урон: { label: 'Урон', tags: ['рубящий', 'огонь', 'магический'], ...(receive ? { steps: receive } : {}) },
+    тревога: { label: 'Тревога', tags: ['сигнал'] },
     ...extraEffects,
-  },
-  events: {
-    урон: { label: 'Урон', tags: ['рубящий', 'огонь', 'магический'], ...(receive ? { receive } : {}) },
-    тревога: { label: 'Тревога' },
   },
   records: { приём: { kind: 'action', label: 'Приём' } },
 });
@@ -45,7 +43,7 @@ const book = {
   actions: [
     { id: 'удар', rk: 'приём', label: 'Удар', effect: 'удар' },
     { id: 'огонь', rk: 'приём', label: 'Огненный шар', effect: 'огонь' },
-    { id: 'тревога', rk: 'приём', label: 'Тревога', effect: 'тревога' },
+    { id: 'тревога', rk: 'приём', label: 'Тревога', effect: 'сигнал' },
   ],
 };
 
@@ -59,31 +57,31 @@ const hit = (sys: any, action: string, target: any, ...dice: number[]) => {
   return receive(env, { system: sys, sheet: target, compendium: book, die: queue() });
 };
 
-group('событие как провод: отправитель не лезет в чужое поле', () => {
+group('вызываемый эффект как провод: отправитель не лезет в чужое поле', () => {
   test('урон доезжает по правилу приёма из словаря', () => {
     const out = hit(world(), 'удар', foe());
     eq(out.sheet.values.хп, 12);
     deepEq(out.report.emitted, [{ event: 'урон', amount: 8, incoming: 8, tags: ['рубящий'] }]);
   });
 
-  test('в трассе сначала событие, потом шаги приёма с пометкой, откуда они', () => {
+  test('в трассе сначала вызов, потом его шаги с пометкой, откуда они', () => {
     const t = hit(world(), 'удар', foe()).report.trace;
     eq(t[1]!.type, 'emit');
     eq(t[2]!.type, 'apply');
     eq(t[2]!.within, 'урон');
   });
 
-  test('мишень «Входящее событие» выводится из словаря', () => {
+  test('мишень «Входящий эффект» выводится из вызываемых', () => {
     ok(targets(world() as any).some(t => t.tag === 'event:урон' && t.kind === 'event'));
   });
 
-  test('необъявленное событие — ошибка перечисляет словарь', () => {
+  test('необъявленный вызов — ошибка перечисляет известные эффекты', () => {
     const sys: any = world({ чужое: { label: 'Чужое', activation: 'manual', steps: [{ type: 'emit', event: 'котик' }] } });
     const withAction = { ...book, actions: [...book.actions, { id: 'чужое', rk: 'приём', label: 'Чужое', effect: 'чужое' }] };
     throws(() => send('чужое:0', { system: sys, sheet: { ...hero(), actions: ['чужое'] }, compendium: withAction, die: queue() }), 'котик');
   });
 
-  test('событие без правила приёма — просто сигнал: поля не тронуты, но оно отправлено', () => {
+  test('вызов без шагов — просто сигнал: поля не тронуты, но он отправлен', () => {
     const out = hit(world(), 'тревога', foe());
     eq(out.sheet.values.хп, 20);
     deepEq(out.report.changes, []);
@@ -145,7 +143,7 @@ group('реакции слушают слово, а не имя эффекта',
     eq(hit(spiky, 'тревога', foe(['шипы'])).replies.length, 0, 'тревога — не урон');
   });
 
-  test('ответка несёт величину события константой: отправитель не знает чужих результатов', () => {
+  test('ответка несёт величину вызова константой: отправитель не знает чужих результатов', () => {
     const out = hit(spiky, 'удар', foe(['шипы']));
     deepEq(out.replies[0]!.steps[0]!.amount, { const: 8 });
   });

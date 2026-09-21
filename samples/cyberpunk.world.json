@@ -2157,142 +2157,6 @@
       },
       "check": "skill_roll"
     },
-    "events": {
-      "damage": {
-        "label": "Урон",
-        "tags": [
-          "пуля",
-          "холодное",
-          "огонь",
-          "яд",
-          "по телу",
-          "по голове",
-          "мимо брони"
-        ],
-        "receive": [
-          {
-            "id": "сквозь_броню",
-            "type": "compare",
-            "value": {
-              "ref": "event.amount"
-            },
-            "versus": {
-              "tag": "sp_body"
-            },
-            "breakIf": "less",
-            "when": {
-              "ref": "event.tags",
-              "has": "по телу"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "hp"
-            },
-            "direction": "subtract",
-            "value": {
-              "ref": "сквозь_броню.margin"
-            },
-            "targetModifiers": false,
-            "when": {
-              "ref": "event.tags",
-              "has": "по телу"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "sp_body"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "ref": "event.tags",
-              "has": "по телу"
-            }
-          },
-          {
-            "id": "сквозь_шлем",
-            "type": "compare",
-            "value": {
-              "ref": "event.amount"
-            },
-            "versus": {
-              "tag": "sp_head"
-            },
-            "breakIf": "less",
-            "when": {
-              "ref": "event.tags",
-              "has": "по голове"
-            }
-          },
-          {
-            "id": "в_голову",
-            "type": "amount",
-            "source": "margin",
-            "margin": {
-              "ref": "сквозь_шлем.margin"
-            },
-            "scale": {
-              "times": 2
-            },
-            "when": {
-              "ref": "event.tags",
-              "has": "по голове"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "hp"
-            },
-            "direction": "subtract",
-            "value": {
-              "ref": "в_голову"
-            },
-            "targetModifiers": false,
-            "when": {
-              "ref": "event.tags",
-              "has": "по голове"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "sp_head"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "ref": "event.tags",
-              "has": "по голове"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "hp"
-            },
-            "direction": "subtract",
-            "value": {
-              "ref": "event.amount"
-            },
-            "targetModifiers": false,
-            "when": {
-              "ref": "event.tags",
-              "has": "мимо брони"
-            }
-          }
-        ]
-      }
-    },
     "effects": {
       "shoot": {
         "label": "Выстрел",
@@ -2594,6 +2458,140 @@
               "const": true
             },
             "targetModifiers": false
+          }
+        ]
+      },
+      "damage": {
+        "label": "Урон",
+        "tags": [
+          "пуля",
+          "холодное",
+          "огонь",
+          "яд",
+          "по телу",
+          "по голове",
+          "мимо брони"
+        ],
+        "steps": [
+          {
+            "id": "сквозь_броню",
+            "type": "compare",
+            "value": {
+              "ref": "event.amount"
+            },
+            "versus": {
+              "tag": "sp_body"
+            },
+            "breakIf": "less",
+            "when": {
+              "ref": "event.tags",
+              "has": "по телу"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "hp"
+            },
+            "direction": "subtract",
+            "value": {
+              "ref": "сквозь_броню.margin"
+            },
+            "targetModifiers": false,
+            "when": {
+              "ref": "event.tags",
+              "has": "по телу"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "sp_body"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "ref": "event.tags",
+              "has": "по телу"
+            }
+          },
+          {
+            "id": "сквозь_шлем",
+            "type": "compare",
+            "value": {
+              "ref": "event.amount"
+            },
+            "versus": {
+              "tag": "sp_head"
+            },
+            "breakIf": "less",
+            "when": {
+              "ref": "event.tags",
+              "has": "по голове"
+            }
+          },
+          {
+            "id": "в_голову",
+            "type": "amount",
+            "source": "margin",
+            "margin": {
+              "ref": "сквозь_шлем.margin"
+            },
+            "scale": {
+              "times": 2
+            },
+            "when": {
+              "ref": "event.tags",
+              "has": "по голове"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "hp"
+            },
+            "direction": "subtract",
+            "value": {
+              "ref": "в_голову"
+            },
+            "targetModifiers": false,
+            "when": {
+              "ref": "event.tags",
+              "has": "по голове"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "sp_head"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "ref": "event.tags",
+              "has": "по голове"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "hp"
+            },
+            "direction": "subtract",
+            "value": {
+              "ref": "event.amount"
+            },
+            "targetModifiers": false,
+            "when": {
+              "ref": "event.tags",
+              "has": "мимо брони"
+            }
           }
         ]
       }

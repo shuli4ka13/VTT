@@ -11,6 +11,7 @@ import type { SlotContext } from '../../slots.tsx';
 import type { EditFn, WithNumber } from '../words.ts';
 import { badFormula, exprText } from './roll-expr-input.tsx';
 import { SendBody } from './send-body.tsx';
+import { calledOf } from '@vtt/engine/engine/effects';
 
 function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onCreateFromRecord }: {
 
@@ -276,7 +277,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
   const step = group.step as any;
   const mode = step.type === 'status' ? 'status' : step.type === 'emit' ? 'emit' : 'apply';
   const applyIndex = group.amount ? 1 : 0;
-  const firstEvent = Object.keys(system.events ?? {})[0];
+  const firstEvent = calledOf(system)[0]?.[0];
 
   const fromRecord = (label: string, kind: string) =>
     onAddParam ? () => ({ param: onAddParam(label, kind) }) : undefined;
@@ -292,7 +293,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
         value={mode}
         options={[
           { key: 'apply', label: 'поле' }, { key: 'status', label: 'состояние' },
-          ...(firstEvent || mode === 'emit' ? [{ key: 'emit', label: 'событие' }] : []),
+          ...(firstEvent || mode === 'emit' ? [{ key: 'emit', label: 'вызов' }] : []),
         ]}
         onChange={next => edit(applyIndex, draft => {
           const d = draft as any;

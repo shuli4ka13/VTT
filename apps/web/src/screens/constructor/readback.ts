@@ -173,8 +173,8 @@ export function changeReadback(step: Step, amount: Step | null, system: System, 
 export function sendReadback(step: Step, system: System, effect: Effect): Segment[] {
   const s = step as Record<string, unknown>;
   const id = String(s.event ?? '');
-  const event = system.events?.[id];
-  const name = id ? seg(`«${event?.label || id}»:`) : hole('какой общий эффект?');
+  const event = system.effects?.[id];
+  const name = id ? seg(`«${event?.label || id}»:`) : hole('какой эффект зовём?');
   const amount = s.amount === undefined ? seg('без величины') : refSegment(s.amount, system, effect, 'сколько?');
   const tags = Array.isArray(s.tags) ? s.tags.map(t => (typeof t === 'string' ? t : '…')).filter(Boolean) : [];
   return [

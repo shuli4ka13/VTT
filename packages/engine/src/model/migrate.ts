@@ -1,4 +1,4 @@
-import { unifyRollEditsWorld } from './unify.ts';
+import { unifyRollEditsWorld, unifyEvents } from './unify.ts';
 import type { World, Effect, RecordKind, Binding, Modifier } from './types.ts';
 
 type Legacy = Record<string, any>;
@@ -90,7 +90,7 @@ export function migrateWorld(world: Legacy): World {
   delete compendium.effects;
 
   return unifyRollEditsWorld(
-    { ...world, system, compendium, sheets: world.sheets } as World);
+    { ...world, system: unifyEvents(system as unknown as World['system']), compendium, sheets: world.sheets } as World);
 }
 
 function resolveCall(activity: Legacy, calls: Map<string, Legacy>): Binding {

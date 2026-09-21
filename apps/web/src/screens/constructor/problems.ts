@@ -12,7 +12,10 @@ export type { Problem };
 export function useProblems(): Problem[] {
   const system = useWorld(s => s.system);
   const compendium = useWorld(s => s.compendium);
-  return useMemo(() => lintSystem(system, compendium), [system, compendium]);
+  const mode = useWorld(s => s.origin.mode);
+  const book = mode === 'compendium' || compendium.items?.length || compendium.actions?.length
+    ? compendium : undefined;
+  return useMemo(() => lintSystem(system, book), [system, book]);
 }
 
 export const whereLabel = (where: Where, system: System): string => describeWhere(where, system);
@@ -58,7 +61,6 @@ export function pathWords(issue: string, system: System): string {
     const index = next !== undefined && /^\d+$/.test(next) ? Number(next) : null;
     const named = next !== undefined && index === null ? next : null;
     if (key === 'effects' && named) { words.push(`эффект ${labelOf(system.effects, named)}`); i++; continue; }
-    if (key === 'events' && named) { words.push(`общий эффект ${labelOf(system.events, named)}`); i++; continue; }
     if (key === 'records' && named) { words.push(`тип записи ${labelOf(system.records, named)}`); i++; continue; }
     if (key === 'constants' && named) { words.push(`кость ${labelOf(system.constants, named)}`); i++; continue; }
     if (key === 'roll_edits' && named) { words.push(`правка броска ${labelOf(system.roll_edits, named)}`); i++; continue; }

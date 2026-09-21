@@ -1,7 +1,7 @@
 import { packRef, resolveRef, resolveOptionalNumber } from '../refs.ts';
 import { applyValueModifiers } from '../modifiers.ts';
 import { eventTagOf } from '../targets.ts';
-import { requireEvent } from '../effects.ts';
+import { requireCalled } from '../effects.ts';
 import type { StepData, StepContext } from './index.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 
@@ -32,12 +32,12 @@ export function traceLine(t: any, h: any) {
   const mods = t.incoming !== t.amount
     ? ` (отправлено ${t.incoming}, после модификаторов цели ${t.amount})`
     : '';
-  return `общий эффект «${name}»${tags}: ${t.amount}${mods}`;
+  return `зовёт «${name}»${tags}: ${t.amount}${mods}`;
 }
 
 export function pack(step: StepData, ctx: StepContext) {
   const id = String(step.event ?? '');
-  requireEvent(ctx.system, id, who(ctx));
+  requireCalled(ctx.system, id, who(ctx));
   const tags = (Array.isArray(step.tags) ? step.tags : [])
     .map((t: unknown) => (typeof t === 'string' ? t : packRef(t, ctx)));
   return {
@@ -50,7 +50,7 @@ export function pack(step: StepData, ctx: StepContext) {
 
 export function resolve(step: StepData, ctx: StepContext) {
   const id = String(step.event);
-  const spec = requireEvent(ctx.system, id, who(ctx));
+  const spec = requireCalled(ctx.system, id, who(ctx));
   const incoming = resolveOptionalNumber(step.amount, ctx, 'величина общего эффекта') ?? 0;
   const tags = tagsOf(step.tags, ctx);
   const amount = Math.floor(Number(applyValueModifiers(incoming, eventTagOf(id), ctx.pass, { tags })));
@@ -60,8 +60,8 @@ export function resolve(step: StepData, ctx: StepContext) {
 
   let received: string | null = null;
   let note: string | null = null;
-  if (ctx.run && spec.receive?.length) {
-    const out = ctx.run(spec.receive, { event: payload }, id);
+  if (ctx.run && spec.steps?.length) {
+    const out = ctx.run(spec.steps, { event: payload }, id);
     if (out.stopped) {
       received = String(out.stopped.reason ?? 'оборвано');
       note = out.stopped.note ?? null;

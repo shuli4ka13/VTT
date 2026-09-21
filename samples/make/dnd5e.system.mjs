@@ -228,7 +228,7 @@ export const DAMAGE_TAGS = [
   'некротический', 'излучение', 'психический', 'силовой', 'магический',
 ];
 
-export function events() {
+export function calledEffects() {
   const slotSteps = [];
   for (let n = 1; n <= 9; n++) {
     const when = { ref: 'event.amount', is: n };
@@ -241,8 +241,9 @@ export function events() {
   return {
     damage: {
       label: 'Урон',
+      category: 'Вызываемые',
       tags: DAMAGE_TAGS,
-      receive: [
+      steps: [
         {
           type: 'apply', target: { tag: 'death_fail' }, direction: 'add', value: { const: 1 }, targetModifiers: false,
           when: { expr: '#hp_current <= 0', of: 'target' },
@@ -254,8 +255,8 @@ export function events() {
     },
     spell_slot: {
       label: 'Ячейка заклинания',
-      tags: [],
-      receive: slotSteps,
+      category: 'Вызываемые',
+      steps: slotSteps,
     },
   };
 }

@@ -6,7 +6,7 @@ const system = {
   name: 'x',
   fields: [{ tag: 'hp', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 1 } }],
   effects: { hit: { label: 'Удар', activation: 'manual', steps: [] } },
-  events: { damage: { label: 'Урон' } },
+
   records: { weapon: { kind: 'item', label: 'Оружие' } },
 } as unknown as System;
 
@@ -37,12 +37,12 @@ describe('адрес проблемы открывает нужное место
 
   it('тип записи и правила', () => {
     expect(pickFor({ tab: 'records', kind: 'weapon' })).toMatchObject({ activeTab: 'records', activeRecordKind: 'weapon' });
-    expect(pickFor({ tab: 'rules', section: 'events', key: 'damage', step: 0 })).toMatchObject({ activeTab: 'dictionaries', activeStepIndex: 0 });
+    expect(pickFor({ tab: 'rules', section: 'room_rules' })).toMatchObject({ activeTab: 'dictionaries' });
   });
 
   it('подпись места — словами системы', () => {
     expect(whereLabel({ tab: 'effects', effect: 'hit', step: 0 }, system)).toBe('Эффекты · эффект «Удар» · шаг 1');
-    expect(whereLabel({ tab: 'rules', section: 'events', key: 'damage', step: 1 }, system)).toBe('Правила · общий эффект «Урон» · шаг 2');
+    expect(whereLabel({ tab: 'rules', section: 'room_rules' }, system)).toBe('Правила · правила комнаты');
     expect(whereLabel({ tab: 'records', kind: 'weapon', binding: 0 }, system)).toBe('Типы записей · «Оружие» · привязка 1');
   });
 });

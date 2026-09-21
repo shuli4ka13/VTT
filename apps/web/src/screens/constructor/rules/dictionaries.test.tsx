@@ -462,7 +462,7 @@ describe('Тоглы: крит и броня пишутся данными', () 
           { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
           { tag: 'броня', label: 'Броня', value: { kind: 'stored', type: 'number', default: 5 } },
         ],
-        events: { урон: { label: 'Урон', tags: [], receive: [] } },
+        effects: { урон: { label: 'Урон', tags: ['рубящий'], steps: [] } },
       },
       activeEffectId: null,
     }));
@@ -478,7 +478,7 @@ describe('Тоглы: крит и броня пишутся данными', () 
     expect(useWorld.getState().system.room_rules ?? []).not.toContain('crit_explode_rule');
   });
 
-  it('броня «порог» ложится в общий эффект урона после подтверждения', () => {
+  it('броня «порог» ложится в вызываемый эффект урона после подтверждения', () => {
     render(<RulesTab />);
     открыть('Тоглы');
     const armor = [...document.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'броня'))!;
@@ -487,7 +487,7 @@ describe('Тоглы: крит и броня пишутся данными', () 
     fireEvent.change(hp, { target: { value: 'хиты' } });
     fireEvent.click(screen.getByText('порог'));
     fireEvent.click(screen.getByText('Записать'));
-    const tail = useWorld.getState().system.events?.урон?.receive ?? [];
+    const tail = useWorld.getState().system.effects?.урон?.steps ?? [];
     expect(tail.map(s => s.type)).toEqual(['compare', 'apply']);
     expect((tail[0] as { breakIf?: string }).breakIf).toBe('atMost');
     expect((tail[0] as { versus?: { tag?: string } }).versus?.tag).toBe('броня');

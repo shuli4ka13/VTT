@@ -1,6 +1,6 @@
 import { EngineError } from './errors.ts';
 import type {
-  System, Sheet, Compendium, Effect, Modifier, Step, SystemEvent,
+  System, Sheet, Compendium, Effect, Modifier, Step,
   Activation, DurationKind, Stacking, WornEffect,
 } from '../model/types.ts';
 
@@ -40,17 +40,25 @@ export function requireEffect(system: System, id: string, who: string): Effect {
   return effect;
 }
 
-export const eventsOf = (system: System): [string, SystemEvent][] =>
-  Object.entries(system.events || {});
-
-export function requireEvent(system: System, id: string, who: string): SystemEvent {
-  const event = (system.events || {})[id];
-  if (!event) {
-    throw new EngineError(
-      `${who}: система не объявляет общий эффект «${id}» — известны: ${
-        eventsOf(system).map(([key]) => key).join(', ') || '(пусто)'}`);
+export const calledOf = (system: System): [string, Effect][] => {
+  const called = new Set<string>();
+  for (const effect of Object.values(system.effects || {})) {
+    if (effect.tags?.length) continue;
+    for (const step of [...(effect.steps ?? []), ...(effect.self ?? [])] as Record<string, unknown>[]) {
+      if (step.type === 'emit' && step.event) called.add(String(step.event));
+    }
   }
-  return event;
+  return Object.entries(system.effects || {}).filter(([id, effect]) => effect.tags?.length || called.has(id));
+};
+
+export function requireCalled(system: System, id: string, who: string): Effect {
+  const effect = (system.effects || {})[id];
+  if (!effect) {
+    throw new EngineError(
+      `${who}: система не объявляет эффект «${id}» — известны: ${
+        Object.keys(system.effects || {}).join(', ') || '(пусто)'}`);
+  }
+  return effect;
 }
 
 export function usesMax(effect: Effect): number | null {

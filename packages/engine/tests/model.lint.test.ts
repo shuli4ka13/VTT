@@ -38,7 +38,7 @@ group('линт: висячие ссылки называются словами
     eq(problem?.where.step, 0);
   });
 
-  test('слушатель события, которого нет', () => {
+  test('слушатель эффекта, которого нет', () => {
     const system = withEffect('t', { activation: 'triggered', trigger: { on: 'event:нету' } });
     ok(errorTexts(system).some(t => t.includes('общего эффекта «нету»')), errorTexts(system).join('|'));
   });
@@ -107,9 +107,9 @@ group('линт: висячие ссылки называются словами
     eq(errorTexts(system).join(''), '');
   });
 
-  test('в цепочке приёма события «event.amount» — не висячая ссылка', () => {
+  test('в шагах вызываемого эффекта «event.amount» — не висячая ссылка', () => {
     const system = bare();
-    system.events = { damage: { label: 'Урон', receive: [{ type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { ref: 'event.amount' } }] } } as never;
+    system.effects.damage = { label: 'Урон', tags: ['рубящий'], steps: [{ type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { ref: 'event.amount' } }] } as never;
     eq(errorTexts(system).join(''), '');
   });
 });
@@ -124,12 +124,12 @@ group('линт: слушатели, круги, потребности', () => 
     ok(errorTexts(noTrigger).some(t => t.includes('не сказано на что')));
   });
 
-  test('вызовы по кругу: эффект шлёт событие, на которое сам и срабатывает', () => {
+  test('вызовы по кругу: эффект зовёт тот, на который сам и срабатывает', () => {
     const system = withEffect('loop', {
       activation: 'triggered', trigger: { on: 'event:damage' },
       steps: [{ type: 'emit', event: 'damage', amount: { const: 1 } }] as Step[],
     });
-    system.events = { damage: { label: 'Урон', receive: [] } } as never;
+    system.effects.damage = { label: 'Урон', tags: ['рубящий'], steps: [] } as never;
     const found = errorTexts(system).find(t => t.includes('по кругу'));
     ok(found, errorTexts(system).join('|'));
     ok(found!.includes('«loop»') && found!.includes('«Урон»'), found);
@@ -137,14 +137,14 @@ group('линт: слушатели, круги, потребности', () => 
 
   test('без круга — тишина', () => {
     const system = withEffect('a', { steps: [{ type: 'emit', event: 'damage', amount: { const: 1 } }] as Step[] });
-    system.events = { damage: { label: 'Урон', receive: [{ type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { ref: 'event.amount' } }] } } as never;
+    system.effects.damage = { label: 'Урон', tags: ['рубящий'], steps: [{ type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { ref: 'event.amount' } }] } as never;
     ok(!texts(system).some(t => t.includes('по кругу')));
   });
 
-  test('событие шлют, а принимать некому — предупреждение', () => {
+  test('эффект зовут, а он ничего не делает — предупреждение', () => {
     const system = withEffect('a', { steps: [{ type: 'emit', event: 'ping', amount: { const: 1 } }] as Step[] });
-    system.events = { ping: { label: 'Пинг' } } as never;
-    ok(texts(system).some(t => t.startsWith('warn') && t.includes('«Пинг» никто не принимает')), texts(system).join('|'));
+    system.effects.ping = { label: 'Пинг', tags: ['сигнал'] } as never;
+    ok(texts(system).some(t => t.startsWith('warn') && t.includes('«Пинг» вызывают, но он ничего не делает')), texts(system).join('|'));
     eq(errorTexts(system).length, 0);
   });
 

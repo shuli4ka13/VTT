@@ -3,6 +3,7 @@ import { Field, Select, Input, Chip } from '../../../../ui/primitives.tsx';
 import { SlotInput } from '../../slot-input.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
+import { calledOf } from '@vtt/engine/engine/effects';
 
 const loose = (draft: unknown): Record<string, unknown> => draft as Record<string, unknown>;
 
@@ -13,7 +14,7 @@ export function SendBody({ step, at, context, edit, system }: {
   edit: EditFn;
   system: System;
 }) {
-  const commons = Object.entries(system.events ?? {});
+  const commons = calledOf(system);
   const all: unknown[] = Array.isArray(step.tags) ? step.tags : [];
   const tags: string[] = all.filter((t): t is string => typeof t === 'string');
   const fromRecord = all.filter((t): t is { param: string } => Boolean(t) && typeof t === 'object' && 'param' in (t as object));
@@ -24,7 +25,7 @@ export function SendBody({ step, at, context, edit, system }: {
         hint={commons.length ? undefined : 'Общих эффектов пока нет — заведите кнопкой «+ общий» слева.'}>
         <Select
           value={String(step.event ?? '')}
-          options={[['', '— какой общий эффект —'],
+          options={[['', '— какой эффект зовём —'],
             ...commons.map(([id, e]) => [id, e.label || id] as const)] as never}
           onChange={next => edit(at, draft => { loose(draft).event = next; })}
         />
@@ -63,7 +64,7 @@ export function SendBody({ step, at, context, edit, system }: {
           ) : null}
         </div>
       </Field>
-      <Field label="если общий эффект оборвался" hint="«Оборваться тоже» — для платы: нет ячейки, значит и заклинания нет.">
+      <Field label="если вызванный оборвался" hint="«Оборваться тоже» — для платы: нет ячейки, значит и заклинания нет.">
         <Select
           value={step.strict ? 'true' : 'false'}
           options={[['false', 'идти дальше'], ['true', 'оборваться тоже']] as const}

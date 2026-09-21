@@ -1,4 +1,5 @@
 import { UnknownTagError } from './errors.ts';
+import { calledOf } from './effects.ts';
 import type { System } from '../model/types.ts';
 
 export type TargetKind = 'value' | 'roll' | 'incoming' | 'event';
@@ -56,10 +57,10 @@ export function targets(system: System): Target[] {
       from: f.tag,
     })),
 
-    ...Object.entries(system.events || {}).map(([id, event]): Target => ({
+    ...calledOf(system).map(([id, effect]): Target => ({
       tag: eventTagOf(id),
-      label: `Входящий общий эффект: ${event.label || id}`,
-      group: 'События',
+      label: `Входящий эффект: ${effect.label || id}`,
+      group: 'Вызываемые эффекты',
       kind: 'event',
       from: id,
     })),

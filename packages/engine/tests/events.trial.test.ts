@@ -1,7 +1,7 @@
 import { group, test, eq, ok, throws } from './harness.ts';
 import { trial, dieOf, mannequin, sampleArg } from '../src/events/trial.ts';
 import { SAMPLE_WORLDS } from '../src/model/systems.ts';
-import { activationOf, isPipeline } from '../src/engine/effects.ts';
+import { activationOf, isPipeline, calledOf } from '../src/engine/effects.ts';
 import type { System, Compendium, Sheet } from '../src/model/types.ts';
 
 group('пробный прогон эффекта на манекенах', () => {
@@ -17,7 +17,9 @@ group('пробный прогон эффекта на манекенах', () =
   for (const world of SAMPLE_WORLDS) {
     const system = world.system as System;
     const compendium = world.compendium as Compendium;
-    const manual = Object.entries(system.effects).filter(([, e]) => isPipeline(e) && activationOf(e) === 'manual');
+    const called = new Set(calledOf(system).map(([key]) => key));
+    const manual = Object.entries(system.effects)
+      .filter(([key, e]) => isPipeline(e) && activationOf(e) === 'manual' && !called.has(key));
 
     test(`${system.name}: каждый активируемый эффект (${manual.length}) проходит пробу без ошибок движка`, () => {
       const dolls = (system.mannequins ?? []) as Sheet[];

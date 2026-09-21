@@ -6,6 +6,7 @@ import type { ArmorChoice } from '@vtt/engine/model/toggles';
 import { Card, CardHead, Field, Segmented, Select, Verdict, Button, DangerButton } from '../../../ui/primitives.tsx';
 import type { System } from '@vtt/schema';
 import type { WorldState } from '../../../store/world.ts';
+import { calledOf } from '@vtt/engine/engine/effects';
 
 type EditSystem = WorldState['editSystem'];
 interface Props { system: System; editSystem: EditSystem }
@@ -15,7 +16,7 @@ const numberFields = (system: System) =>
 
 export function TogglesSection({ system, editSystem }: Props) {
   const crit = critOf(system);
-  const events = Object.entries(system.events ?? {});
+  const events = calledOf(system);
   const [event, setEvent] = useState<string>(events[0]?.[0] ?? '');
   const reading = event ? armorOf(system, event) : { choice: 'none' as const, armor: null, hp: null };
   const numbers = numberFields(system);
@@ -27,7 +28,7 @@ export function TogglesSection({ system, editSystem }: Props) {
   const hpTag = hp || reading.hp || numbers.find(f => f.tag !== armorTag)?.tag || '';
   const wanted = choice ?? reading.choice;
   const changed = wanted !== reading.choice || (reading.armor && armorTag !== reading.armor) || (reading.hp && hpTag !== reading.hp);
-  const tail = system.events?.[event]?.receive ?? [];
+  const tail = system.effects?.[event]?.steps ?? [];
 
   const write = () => {
     if (!event || !hpTag) return;
@@ -94,8 +95,8 @@ export function TogglesSection({ system, editSystem }: Props) {
                 : <Button size="sm" variant="primary" onClick={write}>Записать</Button>}
             >
               {tail.length
-                ? `Общий эффект «${system.events?.[event]?.label || event}» будет переписан: ${tail.length} ${tail.length === 1 ? 'шаг' : 'шага'} заменятся готовыми.`
-                : `В общий эффект «${system.events?.[event]?.label || event}» лягут готовые шаги.`}
+                ? `Эффект «${system.effects?.[event]?.label || event}» будет переписан: ${tail.length} ${tail.length === 1 ? 'шаг' : 'шага'} заменятся готовыми.`
+                : `В эффект «${system.effects?.[event]?.label || event}» лягут готовые шаги.`}
             </Verdict>
           ) : null}
         </>

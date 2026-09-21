@@ -63,10 +63,10 @@ group('тогл брони переписывает общий эффект ур
 
   test('«вычитание и износ» даёт те же шаги, что собраны в образце RED руками для тела', () => {
     const system = red();
-    const bodyBranch = clone(system.events!.damage!.receive!.slice(0, 3))
+    const bodyBranch = clone(system.effects.damage!.steps!.slice(0, 3))
       .map(step => { delete (step as Record<string, unknown>).when; return step; });
     setArmor(system, 'ablation', { event: 'damage', armor: 'sp_body', hp: 'hp' });
-    deepEq(system.events!.damage!.receive, bodyBranch);
+    deepEq(system.effects.damage!.steps, bodyBranch);
   });
 
   test('переписанный хвост работает за столом: урон 7 сквозь броню 11 по порогу не проходит', () => {

@@ -95,6 +95,20 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
           </Field>
         ) : null}
 
+        <Field
+          label="Метки"
+          hint="Через запятую: огонь, холод, яд. По ним цель узнаёт своё сопротивление, когда этот эффект до неё доходит. Пусто — меток нет."
+        >
+          <Input
+            value={(effect.tags ?? []).join(', ')}
+            placeholder="огонь, холод, яд — через запятую"
+            onChange={text => edit(draft => {
+              const list = text.split(',').map(s => s.trim()).filter(Boolean);
+              if (list.length) draft.tags = list; else delete draft.tags;
+            })}
+          />
+        </Field>
+
         <Field label="Описание для игрока" hint="Текст, который игрок видит на листе. На расчёт не влияет.">
           <Input
             value={effect.description ?? ''}

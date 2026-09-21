@@ -1,6 +1,7 @@
 import type { System, Compendium, Effect, Step, Modifier, Guard } from './types.ts';
 import { compile } from '../formula/index.ts';
 import { registry } from '../engine/steps/index.ts';
+import { calledOf } from '../engine/effects.ts';
 
 export const EVENT_PREFIX = 'event:';
 
@@ -54,7 +55,7 @@ export function declaredOf(system: System): Declared {
     constant: new Set(Object.keys(system.constants ?? {})),
     table: new Set(Object.keys(system.tables ?? {})),
     rollEdit: new Set(Object.keys(system.roll_edits ?? {})),
-    event: new Set(Object.keys(system.events ?? {})),
+    event: new Set(Object.keys(system.effects ?? {})),
     roll: new Set((system.rolls ?? []).map(r => r.tag)),
     actionType: new Set(Object.keys(system.action_types ?? {})),
     prop: new Set(Object.values(system.records ?? {}).flatMap(k => (k.props ?? []).map(p => p.key))),
@@ -198,7 +199,8 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
   const params = new Set((effect.params ?? []).map(p => p.key));
   const head: Where = { tab: 'effects', effect: id, part: 'trigger' };
   const heard = listenerOf(effect.trigger?.on);
-  out.push(...chainRefs(effect.steps ?? [], step => ({ tab: 'effects', effect: id, step }), params, heard.kind === 'event'));
+  const inChain = heard.kind === 'event' || calledOf(system).some(([key]) => key === id);
+  out.push(...chainRefs(effect.steps ?? [], step => ({ tab: 'effects', effect: id, step }), params, inChain));
   out.push(...chainRefs(effect.self ?? [], step => ({ tab: 'effects', effect: id, step, part: 'self' }), params, false));
   if (heard.kind === 'event') out.push({ kind: 'event', key: heard.key!, from: head });
   if (heard.kind === 'effect') out.push({ kind: 'effect', key: heard.key!, from: head });
@@ -234,10 +236,6 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
   }
 
   for (const [id, effect] of Object.entries(system.effects ?? {})) effectRefs(system, id, effect, out);
-
-  for (const [key, event] of Object.entries(system.events ?? {})) {
-    out.push(...chainRefs(event.receive ?? [], step => ({ tab: 'rules', section: 'events', key, step }), new Set(), true));
-  }
 
   for (const [kind, spec] of Object.entries(system.records ?? {})) {
     const own = new Set((spec.props ?? []).map(p => p.key));

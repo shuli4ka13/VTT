@@ -40,7 +40,7 @@ group('триггерные эффекты: ответка получателя'
     eq(reply.effect, 'thorns');
   });
 
-  test('промахнулись — триггер молчит: условие смотрит в трассу события', () => {
+  test('промахнулись — триггер молчит: условие смотрит в трассу вызова', () => {
     const sys = thorny();
 
     const env = send('longsword-item:0', { system: sys, sheet: arven, compendium, die: queue(2, 5) });
@@ -74,7 +74,7 @@ group('триггерные эффекты: ответка получателя'
     eq(reports.length, 2, 'удар и одна ответка — и всё');
   });
 
-  test('триггер слушает КОНКРЕТНЫЙ эффект, а не любое событие', () => {
+  test('триггер слушает КОНКРЕТНЫЙ эффект, а не любой вызов', () => {
     const sys = thorny();
 
     const healer = { ...arven, actions: [...arven.actions, 'healing-word'] };

@@ -44,7 +44,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
       .filter(b => (b.textContent ?? '').trimStart().startsWith('+ '))
       .map(b => b.textContent!.trim())
       .filter(t => !LAUNCH_KINDS.some(kind => t === `+ ${kind.label.toLowerCase()}`)
-        && t !== '+ общий' && !t.startsWith('+ брать'));
+        && t !== '+ вызываемый' && !t.startsWith('+ брать'));
     expect(palette).toEqual(['+ проверка', '+ изменение', '+ таблица', '+ число']);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     expect(screen.getByText('1 · Проверка')).toBeTruthy();
@@ -199,7 +199,7 @@ describe('три вида запуска вместо четырёх', () => {
   });
 });
 
-describe('общий эффект вместо старого слова', () => {
+describe('вызываемый эффект — обычный эффект', () => {
   beforeEach(() => {
     useWorld.setState(state => ({
       ...state,
@@ -212,29 +212,28 @@ describe('общий эффект вместо старого слова', () =>
   });
   afterEach(() => { cleanup(); });
 
-  it('«+ общий» заводит его с приёмом в первое числовое поле и открывает редактор', () => {
+  it('«+ вызываемый» заводит обычный эффект с шагом в первое числовое поле', () => {
     render(<EffectsTab />);
-    fireEvent.click(screen.getByText('+ общий'));
-    const commons = Object.values(useWorld.getState().system.events ?? {});
-    expect(commons).toHaveLength(1);
-    expect(commons[0]!.receive).toEqual([
+    fireEvent.click(screen.getByText('+ вызываемый'));
+    const key = useWorld.getState().activeEffectId!;
+    const made = useWorld.getState().system.effects[key]!;
+    expect(made.steps).toEqual([
       { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { ref: 'event.amount' }, targetModifiers: true },
     ]);
-    expect(useWorld.getState().activeEffectId!.startsWith('event:')).toBe(true);
-    expect(screen.getByText(/Общий эффект: его вызывают другие/)).toBeTruthy();
+    expect(key.startsWith('event:')).toBe(false);
   });
 
-  it('правится обычной цепочкой шагов и обычными тегами', () => {
+  it('правится тем же редактором: те же шаги, те же метки', () => {
     render(<EffectsTab />);
-    fireEvent.click(screen.getByText('+ общий'));
+    fireEvent.click(screen.getByText('+ вызываемый'));
     expect(screen.getByText('Цепочка шагов')).toBeTruthy();
 
-    fireEvent.click(screen.getByText('+ проверка'));
-    const key = useWorld.getState().activeEffectId!.slice('event:'.length);
-    expect(useWorld.getState().system.events![key]!.receive).toHaveLength(2);
+    fireEvent.click(screen.getAllByText('+ проверка')[0]!);
+    const key = useWorld.getState().activeEffectId!;
+    expect(useWorld.getState().system.effects[key]!.steps).toHaveLength(2);
 
     fireEvent.change(screen.getByPlaceholderText('огонь, холод, яд — через запятую'), { target: { value: 'огонь, яд' } });
-    expect(useWorld.getState().system.events![key]!.tags).toEqual(['огонь', 'яд']);
+    expect(useWorld.getState().system.effects[key]!.tags).toEqual(['огонь', 'яд']);
   });
 });
 

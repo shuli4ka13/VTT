@@ -1,6 +1,6 @@
 import type { System, Compendium, Effect, Step } from './types.ts';
 import { registry } from '../engine/steps/index.ts';
-import { activationOf } from '../engine/effects.ts';
+import { activationOf, calledOf } from '../engine/effects.ts';
 import { TABS, STEP } from '../words/glossary.ts';
 import {
   referencesOf, declaredOf, chainRefs, listenerOf,
@@ -100,12 +100,14 @@ export interface EarlierStep { id: string; type: string }
 
 export function lintStep(step: Step, system: System, effect: Effect, earlier: EarlierStep[]): Problem | null {
   const where: Where = { tab: 'effects', effect: effect.label ?? '', step: 0 };
-  const [structural] = stepProblems([step], () => where, new Set(), false);
+  const inChain = listenerOf(effect.trigger?.on).kind === 'event' || calledOf(system).some(([key, other]) =>
+    other === effect || system.effects[key] === effect || (!!effect.label && other.label === effect.label));
+  const [structural] = stepProblems([step], () => where, new Set(), inChain);
   if (structural) return structural;
   const declared = declaredOf(system);
   const params = new Set((effect.params ?? []).map(p => p.key));
   const known = new Set(earlier.map(e => e.id));
-  const refs = chainRefs([step], () => where, params, false)
+  const refs = chainRefs([step], () => where, params, inChain)
     .filter(ref => !(ref.kind === 'step' && known.has(ref.key)))
     .filter(ref => !(ref.kind === 'field' && known.has(ref.key)));
   const [first] = refProblems(refs, declared, () => false);
@@ -117,19 +119,16 @@ function cycleProblems(system: System): Problem[] {
   const labels = new Map<string, string>();
   const link = (a: string, b: string) => { (edges.get(a) ?? edges.set(a, new Set()).get(a)!).add(b); };
   const effectNode = (id: string): string => { labels.set(`effect:${id}`, system.effects[id]?.label ?? id); return `effect:${id}`; };
-  const eventNode = (id: string): string => { labels.set(`event:${id}`, system.events?.[id]?.label || id); return `event:${id}`; };
+
 
   const emitsOf = (steps: Step[] | undefined): string[] => emittedBy(steps);
 
   for (const [id, effect] of Object.entries(system.effects)) {
-    for (const event of emitsOf(effect.steps)) link(effectNode(id), eventNode(event));
+    for (const called of emitsOf(effect.steps)) link(effectNode(id), effectNode(called));
     if (activationOf(effect) === 'reaction') continue;
     const heard = listenerOf(effect.trigger?.on);
-    if (heard.kind === 'event') link(eventNode(heard.key!), effectNode(id));
+    if (heard.kind === 'event') link(effectNode(heard.key!), effectNode(id));
     if (heard.kind === 'effect') link(effectNode(heard.key!), effectNode(id));
-  }
-  for (const [key, event] of Object.entries(system.events ?? {})) {
-    for (const emitted of emitsOf(event.receive)) link(eventNode(key), eventNode(emitted));
   }
 
   const out: Problem[] = [];
@@ -208,14 +207,13 @@ function orphanProblems(system: System, compendium?: Compendium): Problem[] {
     const heard = listenerOf(effect.trigger?.on);
     if (heard.kind === 'event') heardEvents.add(heard.key!);
   }
-  for (const [key, event] of Object.entries(system.events ?? {})) {
-    if (!emitted.has(key)) continue;
-    if (!(event.receive?.length) && !heardEvents.has(key)) {
-      out.push({
-        where: { tab: 'rules', section: 'events', key }, level: 'warn',
-        text: `общий эффект «${event.label || key}» никто не принимает: ни правила приёма, ни слушателей`,
-      });
-    }
+  for (const key of emitted) {
+    const called = system.effects[key];
+    if (!called || called.steps?.length || heardEvents.has(key)) continue;
+    out.push({
+      where: { tab: 'effects', effect: key }, level: 'warn',
+      text: `эффект «${called.label || key}» вызывают, но он ничего не делает: ни шагов, ни слушателей`,
+    });
   }
   const bound = new Set<string>();
   for (const kind of Object.values(system.records ?? {})) for (const b of kind.bindings ?? []) bound.add(b.effect);
@@ -226,8 +224,9 @@ function orphanProblems(system: System, compendium?: Compendium): Problem[] {
     for (const id of record.grants ?? []) bound.add(id);
   }
   if (compendium) {
+    const called = new Set(calledOf(system).map(([key]) => key));
     for (const [id, effect] of Object.entries(system.effects)) {
-      if (activationOf(effect) !== 'manual' || bound.has(id)) continue;
+      if (activationOf(effect) !== 'manual' || bound.has(id) || called.has(id)) continue;
       out.push({
         where: { tab: 'effects', effect: id }, level: 'warn',
         text: `эффект «${effect.label ?? id}» никак не запускается: ни одна запись компендиума его не даёт`,
@@ -268,22 +267,19 @@ function paramProblems(system: System): Problem[] {
 
 export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   const declared = declaredOf(system);
+  const called = new Set(calledOf(system).map(([key]) => key));
   const out: Problem[] = [];
 
   for (const [id, effect] of Object.entries(system.effects)) {
     const params = new Set((effect.params ?? []).map(p => p.key));
-    out.push(...stepProblems(effect.steps ?? [], step => ({ tab: 'effects', effect: id, step }), params, false));
+    out.push(...stepProblems(effect.steps ?? [], step => ({ tab: 'effects', effect: id, step }), params, called.has(id)));
     out.push(...stepProblems(effect.self ?? [], step => ({ tab: 'effects', effect: id, step, part: 'self' }), params, false));
-  }
-  for (const [key, event] of Object.entries(system.events ?? {})) {
-    out.push(...stepProblems(event.receive ?? [], step => ({ tab: 'rules', section: 'events', key, step }), new Set(), true));
   }
 
   const chainOf = (where: Where): Step[] | undefined =>
     where.tab === 'effects' && where.effect
       ? (where.part === 'self' ? system.effects[where.effect]?.self : system.effects[where.effect]?.steps)
-      : where.section === 'events' && where.key ? system.events?.[where.key]?.receive
-        : undefined;
+      : undefined;
   const refs = referencesOf(system, compendium).filter(ref => {
     if (ref.kind !== 'field' || ref.from.step === undefined) return true;
     const steps = chainOf(ref.from);
@@ -323,8 +319,7 @@ export function describeWhere(where: Where, system: System, compendium?: Compend
     if (where.part === 'cost') parts.push('чего стоит');
   } else if (where.tab === 'rules') {
     parts.push(TABS.rules);
-    if (where.section === 'events' && where.key) parts.push(`общий эффект ${quoted(system.events?.[where.key]?.label, where.key)}`);
-    else if (where.section === 'room_rules') parts.push('правила комнаты');
+    if (where.section === 'room_rules') parts.push('правила комнаты');
     else if (where.section === 'initiative') parts.push('инициатива');
     else if (where.section) parts.push(where.section);
     if (where.step !== undefined) parts.push(`${STEP.one} ${where.step + 1}`);
