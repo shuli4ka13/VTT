@@ -1,4 +1,4 @@
-import { Card, CardHead, Input, NumInput, Button, Fold, Verdict } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Field, Input, NumInput, Button, Fold, Segmented, Verdict } from '../../../ui/primitives.tsx';
 import { newTable } from '../factory.ts';
 import { inUse as isUsed } from '../usage.ts';
 import type { UsageIndex } from '../usage.ts';
@@ -32,7 +32,7 @@ export function TablesSection({ system, editSystem, usage }: Props) {
     <Card>
       <CardHead
         title="Таблицы"
-        sub="Ступеньки, которые формулой не сказать: бонус мастерства по уровню, исход хода по итогу броска."
+        sub="По числу — ступеньки вроде бонуса мастерства. По значению — что на что менять: чем бьют → какая формула."
         actions={<Button size="sm" onClick={() => addTable(editSystem)}>+ таблица</Button>}
       />
       <div className="stack stack--tight">
@@ -48,20 +48,23 @@ export function TablesSection({ system, editSystem, usage }: Props) {
 
 function TableRow({ id, table, editSystem, usage }: Omit<Props, 'system'> & { id: string; table: RangeTable }) {
   const ranges = table.ranges ?? [];
+  const cases = table.cases ?? [];
+  const byCases = cases.length > 0 || !ranges.length;
   const inUse = isUsed(usage, 'table', id);
-  const broken = rangesBroken(ranges);
+  const broken = !byCases && rangesBroken(ranges);
+
+  const edit = (change: (draft: RangeTable) => void) => editSystem(draft => {
+    const target = draft.tables?.[id];
+    if (target) change(target);
+  });
 
   return (
-    <Fold title={table.label || id} count={ranges.length}>
+    <Fold title={table.label || id} count={byCases ? cases.length : ranges.length}>
       <div className="dict-row">
         <Input
           value={table.label ?? ''}
           placeholder="таблица"
-          onChange={label => editSystem(draft => {
-            draft.tables ??= {};
-            const cur = draft.tables?.[id];
-            if (cur) cur.label = label;
-          })}
+          onChange={label => edit(draft => { draft.label = label; })}
         />
         <Button
           size="sm" variant="danger" disabled={inUse}
@@ -72,51 +75,99 @@ function TableRow({ id, table, editSystem, usage }: Omit<Props, 'system'> & { id
         </Button>
       </div>
 
+      <Segmented
+        value={byCases ? 'cases' : 'ranges'}
+        options={[
+          { key: 'ranges', label: 'по числу — от и до' },
+          { key: 'cases', label: 'по значению — что на что' },
+        ]}
+        onChange={next => edit(draft => {
+          if (next === 'cases') {
+            draft.cases ??= [{ when: '', value: '' }];
+            delete draft.ranges;
+          } else {
+            draft.ranges ??= [{ from: 1, to: 1, value: 0 }];
+            delete draft.cases;
+            delete draft.otherwise;
+          }
+        })}
+      />
+
       {broken ? <Verdict tone="warn">диапазоны перекрываются или дырявы</Verdict> : null}
 
-      {ranges.map((range, i) => (
-        <div key={i} className="range-row">
-          <NumInput
-            value={range.from}
-            onCommit={n => editSystem(draft => {
-              const r = draft.tables?.[id]?.ranges[i];
-              if (r) r.from = n;
-            })}
-          />
-          <NumInput
-            value={range.to}
-            onCommit={n => editSystem(draft => {
-              const r = draft.tables?.[id]?.ranges[i];
-              if (r) r.to = n;
-            })}
-          />
-          <Input
-            value={String(range.value)}
-            onChange={next => editSystem(draft => {
-              const r = draft.tables?.[id]?.ranges[i];
-              if (r) r.value = parseFree(next);
-            })}
-          />
-          <Button
-            size="sm" variant="danger"
-            onClick={() => editSystem(draft => { draft.tables?.[id]?.ranges.splice(i, 1); })}
-          >
-            ×
-          </Button>
-        </div>
-      ))}
+      {byCases ? (
+        <>
+          {cases.map((one, i) => (
+            <div key={i} className="pair">
+              <Input
+                value={String(one.when)}
+                placeholder="если это"
+                mono
+                onChange={next => edit(draft => {
+                  const row = draft.cases?.[i];
+                  if (row) row.when = parseFree(next);
+                })}
+              />
+              <Input
+                value={String(one.value)}
+                placeholder="то вот это"
+                mono
+                onChange={next => edit(draft => {
+                  const row = draft.cases?.[i];
+                  if (row) row.value = parseFree(next);
+                })}
+              />
+              <Button
+                size="sm" variant="danger"
+                onClick={() => edit(draft => { draft.cases?.splice(i, 1); })}
+              >×</Button>
+            </div>
+          ))}
 
-      <Button
-        size="sm"
-        onClick={() => editSystem(draft => {
-          const list = draft.tables?.[id]?.ranges;
-          if (!list) return;
-          const from = list.length ? list[list.length - 1]!.to + 1 : 1;
-          list.push({ from, to: from, value: 0 });
-        })}
-      >
-        + диапазон
-      </Button>
+          <Button size="sm" onClick={() => edit(draft => {
+            (draft.cases ??= []).push({ when: '', value: '' });
+          })}>+ пара</Button>
+
+          <Field label="Если ничего не совпало" hint="Пусто — движок скажет, что значения не знает.">
+            <Input
+              value={table.otherwise === undefined ? '' : String(table.otherwise)}
+              placeholder="оставить пустым"
+              mono
+              onChange={next => edit(draft => {
+                if (next === '') delete draft.otherwise; else draft.otherwise = parseFree(next);
+              })}
+            />
+          </Field>
+        </>
+      ) : (
+        <>
+          {ranges.map((range, i) => (
+            <div key={i} className="range-row">
+              <NumInput value={range.from} onCommit={n => edit(draft => {
+                const row = draft.ranges?.[i];
+                if (row) row.from = n;
+              })} />
+              <NumInput value={range.to} onCommit={n => edit(draft => {
+                const row = draft.ranges?.[i];
+                if (row) row.to = n;
+              })} />
+              <Input value={String(range.value)} onChange={next => edit(draft => {
+                const row = draft.ranges?.[i];
+                if (row) row.value = parseFree(next);
+              })} />
+              <Button size="sm" variant="danger" onClick={() => edit(draft => {
+                draft.ranges?.splice(i, 1);
+              })}>×</Button>
+            </div>
+          ))}
+
+          <Button size="sm" onClick={() => edit(draft => {
+            const list = (draft.ranges ??= []);
+            const from = list.length ? list[list.length - 1]!.to + 1 : 1;
+            list.push({ from, to: from, value: 0 });
+          })}>+ ступень</Button>
+        </>
+      )}
     </Fold>
   );
 }

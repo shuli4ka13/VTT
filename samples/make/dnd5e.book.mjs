@@ -3,9 +3,9 @@ const set = (target, amount, stacking = 'override') => ({ kind: 'value', target,
 const add = (target, amount) => ({ kind: 'value', target, op: 'add', value: amount, stacking: 'sum', condition: null });
 
 function weapons() {
-  const melee = (id, label, dice, type, text) => item(id, 'weapon_melee', label, text, { damage_dice: dice, damage_type: type });
-  const finesse = (id, label, dice, type, text) => item(id, 'weapon_finesse', label, text, { damage_dice: dice, damage_type: type });
-  const ranged = (id, label, dice, type, range, text) => item(id, 'weapon_ranged', label, text, { damage_dice: dice, damage_type: type, range });
+  const melee = (id, label, dice, type, text) => item(id, 'weapon', label, text, { damage_dice: dice, damage_type: type, wield: 'melee' });
+  const finesse = (id, label, dice, type, text) => item(id, 'weapon', label, text, { damage_dice: dice, damage_type: type, wield: 'finesse' });
+  const ranged = (id, label, dice, type, range, text) => item(id, 'weapon', label, text, { damage_dice: dice, damage_type: type, wield: 'ranged', range });
   return [
     melee('club', 'Дубинка', '1d4', 'дробящий', 'Простое оружие, лёгкое.'),
     melee('greatclub', 'Палица', '1d8', 'дробящий', 'Простое оружие, двуручное.'),

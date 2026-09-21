@@ -2073,6 +2073,40 @@
           }
         ]
       },
+      "wield_attack": {
+        "label": "Бонус атаки по тому, чем бьют",
+        "cases": [
+          {
+            "when": "melee",
+            "value": "#melee_attack"
+          },
+          {
+            "when": "finesse",
+            "value": "#finesse_attack"
+          },
+          {
+            "when": "ranged",
+            "value": "#ranged_attack"
+          }
+        ]
+      },
+      "wield_damage": {
+        "label": "Прибавка к урону по тому, чем бьют",
+        "cases": [
+          {
+            "when": "melee",
+            "value": "#melee_damage"
+          },
+          {
+            "when": "finesse",
+            "value": "#finesse_damage"
+          },
+          {
+            "when": "ranged",
+            "value": "#ranged_damage"
+          }
+        ]
+      },
       "slots_1": {
         "label": "Ячейки 1-го круга по уровню заклинателя",
         "ranges": [
@@ -3251,6 +3285,24 @@
           {
             "value": "магический",
             "label": "магический"
+          }
+        ]
+      },
+      "wield": {
+        "label": "Чем бьют",
+        "of": "text",
+        "values": [
+          {
+            "value": "melee",
+            "label": "силой — ближний бой"
+          },
+          {
+            "value": "finesse",
+            "label": "лучшим из силы и ловкости"
+          },
+          {
+            "value": "ranged",
+            "label": "ловкостью — дальний бой"
           }
         ]
       },
@@ -7918,7 +7970,7 @@
         "label": "Оружие",
         "icon": "⚔",
         "group": "Снаряжение",
-        "hint": "Основа всякого оружия: кость и тип урона, кнопка «Удар». Чем именно бьют, говорят наследники.",
+        "hint": "Меч, рапира, лук — всё сразу. Кость и тип урона свои, а чем бьют выбирается свойством.",
         "props": [
           {
             "key": "damage_dice",
@@ -7929,6 +7981,18 @@
             "key": "damage_type",
             "label": "Тип урона",
             "kind": "text"
+          },
+          {
+            "key": "wield",
+            "label": "Чем бьют",
+            "kind": "choice",
+            "from": "wield"
+          },
+          {
+            "key": "range",
+            "label": "Дистанция",
+            "kind": "text",
+            "optional": true
           }
         ],
         "bindings": [
@@ -7941,72 +8005,19 @@
               },
               "damage_type": {
                 "prop": "damage_type"
+              },
+              "attack_with": {
+                "table": "wield_attack",
+                "by": {
+                  "prop": "wield"
+                }
+              },
+              "damage_with": {
+                "table": "wield_damage",
+                "by": {
+                  "prop": "wield"
+                }
               }
-            }
-          }
-        ]
-      },
-      "weapon_melee": {
-        "extends": "weapon",
-        "kind": "item",
-        "label": "Оружие ближнего боя",
-        "hint": "Меч, топор, копьё. Бьёт от Силы; у фехтовального выбирают лучшее из Силы и Ловкости.",
-        "props": [
-          {
-            "key": "finesse",
-            "label": "Фехтовальное",
-            "kind": "text",
-            "onSheet": false
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Удар",
-            "effect": "strike",
-            "args": {
-              "attack_with": "#melee_attack",
-              "damage_with": "#melee_damage"
-            }
-          }
-        ]
-      },
-      "weapon_finesse": {
-        "extends": "weapon",
-        "kind": "item",
-        "label": "Оружие фехтовальное",
-        "icon": "🗡",
-        "hint": "Рапира, кинжал, короткий меч: бьют лучшим из Силы и Ловкости.",
-        "bindings": [
-          {
-            "label": "Удар",
-            "effect": "strike",
-            "args": {
-              "attack_with": "#finesse_attack",
-              "damage_with": "#finesse_damage"
-            }
-          }
-        ]
-      },
-      "weapon_ranged": {
-        "extends": "weapon",
-        "kind": "item",
-        "label": "Оружие дальнобойное",
-        "icon": "🏹",
-        "hint": "Лук, арбалет, праща. Бьёт от Ловкости.",
-        "props": [
-          {
-            "key": "range",
-            "label": "Дистанция",
-            "kind": "text"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Выстрел",
-            "effect": "strike",
-            "args": {
-              "attack_with": "#ranged_attack",
-              "damage_with": "#ranged_damage"
             }
           }
         ]
@@ -8900,279 +8911,306 @@
     "items": [
       {
         "id": "club",
-        "rk": "weapon_melee",
+        "rk": "weapon",
         "label": "Дубинка",
         "description": "Простое оружие, лёгкое.",
         "props": {
           "damage_dice": "1d4",
-          "damage_type": "дробящий"
+          "damage_type": "дробящий",
+          "wield": "melee"
         }
       },
       {
         "id": "greatclub",
-        "rk": "weapon_melee",
+        "rk": "weapon",
         "label": "Палица",
         "description": "Простое оружие, двуручное.",
         "props": {
           "damage_dice": "1d8",
-          "damage_type": "дробящий"
+          "damage_type": "дробящий",
+          "wield": "melee"
         }
       },
       {
         "id": "handaxe",
-        "rk": "weapon_melee",
+        "rk": "weapon",
         "label": "Ручной топор",
         "description": "Простое оружие, лёгкое, метательное.",
         "props": {
           "damage_dice": "1d6",
-          "damage_type": "рубящий"
+          "damage_type": "рубящий",
+          "wield": "melee"
         }
       },
       {
         "id": "spear",
-        "rk": "weapon_melee",
+        "rk": "weapon",
         "label": "Копьё",
         "description": "Простое оружие, универсальное: двумя руками 1к8.",
         "props": {
           "damage_dice": "1d6",
-          "damage_type": "колющий"
+          "damage_type": "колющий",
+          "wield": "melee"
         }
       },
       {
         "id": "mace",
-        "rk": "weapon_melee",
+        "rk": "weapon",
         "label": "Булава",
         "description": "Простое оружие.",
         "props": {
           "damage_dice": "1d6",
-          "damage_type": "дробящий"
+          "damage_type": "дробящий",
+          "wield": "melee"
         }
       },
       {
         "id": "quarterstaff",
-        "rk": "weapon_melee",
+        "rk": "weapon",
         "label": "Боевой посох",
         "description": "Простое оружие, универсальное: двумя руками 1к8.",
         "props": {
           "damage_dice": "1d6",
-          "damage_type": "дробящий"
+          "damage_type": "дробящий",
+          "wield": "melee"
         }
       },
       {
         "id": "longsword",
-        "rk": "weapon_melee",
+        "rk": "weapon",
         "label": "Длинный меч",
         "description": "Воинское оружие, универсальное: двумя руками 1к10.",
         "props": {
           "damage_dice": "1d8",
-          "damage_type": "рубящий"
+          "damage_type": "рубящий",
+          "wield": "melee"
         }
       },
       {
         "id": "battleaxe",
-        "rk": "weapon_melee",
+        "rk": "weapon",
         "label": "Боевой топор",
         "description": "Воинское оружие, универсальное.",
         "props": {
           "damage_dice": "1d8",
-          "damage_type": "рубящий"
+          "damage_type": "рубящий",
+          "wield": "melee"
         }
       },
       {
         "id": "warhammer",
-        "rk": "weapon_melee",
+        "rk": "weapon",
         "label": "Боевой молот",
         "description": "Воинское оружие, универсальное.",
         "props": {
           "damage_dice": "1d8",
-          "damage_type": "дробящий"
+          "damage_type": "дробящий",
+          "wield": "melee"
         }
       },
       {
         "id": "greatsword",
-        "rk": "weapon_melee",
+        "rk": "weapon",
         "label": "Двуручный меч",
         "description": "Воинское оружие, двуручное, тяжёлое.",
         "props": {
           "damage_dice": "2d6",
-          "damage_type": "рубящий"
+          "damage_type": "рубящий",
+          "wield": "melee"
         }
       },
       {
         "id": "greataxe",
-        "rk": "weapon_melee",
+        "rk": "weapon",
         "label": "Секира",
         "description": "Воинское оружие, двуручное, тяжёлое.",
         "props": {
           "damage_dice": "1d12",
-          "damage_type": "рубящий"
+          "damage_type": "рубящий",
+          "wield": "melee"
         }
       },
       {
         "id": "maul",
-        "rk": "weapon_melee",
+        "rk": "weapon",
         "label": "Молот",
         "description": "Воинское оружие, двуручное, тяжёлое.",
         "props": {
           "damage_dice": "2d6",
-          "damage_type": "дробящий"
+          "damage_type": "дробящий",
+          "wield": "melee"
         }
       },
       {
         "id": "halberd",
-        "rk": "weapon_melee",
+        "rk": "weapon",
         "label": "Алебарда",
         "description": "Воинское оружие, досягаемость, тяжёлое.",
         "props": {
           "damage_dice": "1d10",
-          "damage_type": "рубящий"
+          "damage_type": "рубящий",
+          "wield": "melee"
         }
       },
       {
         "id": "glaive",
-        "rk": "weapon_melee",
+        "rk": "weapon",
         "label": "Глефа",
         "description": "Воинское оружие, досягаемость, тяжёлое.",
         "props": {
           "damage_dice": "1d10",
-          "damage_type": "рубящий"
+          "damage_type": "рубящий",
+          "wield": "melee"
         }
       },
       {
         "id": "dagger",
-        "rk": "weapon_finesse",
+        "rk": "weapon",
         "label": "Кинжал",
         "description": "Простое оружие, фехтовальное, лёгкое, метательное.",
         "props": {
           "damage_dice": "1d4",
-          "damage_type": "колющий"
+          "damage_type": "колющий",
+          "wield": "finesse"
         }
       },
       {
         "id": "shortsword",
-        "rk": "weapon_finesse",
+        "rk": "weapon",
         "label": "Короткий меч",
         "description": "Воинское оружие, фехтовальное, лёгкое.",
         "props": {
           "damage_dice": "1d6",
-          "damage_type": "колющий"
+          "damage_type": "колющий",
+          "wield": "finesse"
         }
       },
       {
         "id": "rapier",
-        "rk": "weapon_finesse",
+        "rk": "weapon",
         "label": "Рапира",
         "description": "Воинское оружие, фехтовальное.",
         "props": {
           "damage_dice": "1d8",
-          "damage_type": "колющий"
+          "damage_type": "колющий",
+          "wield": "finesse"
         }
       },
       {
         "id": "scimitar",
-        "rk": "weapon_finesse",
+        "rk": "weapon",
         "label": "Скимитар",
         "description": "Воинское оружие, фехтовальное, лёгкое.",
         "props": {
           "damage_dice": "1d6",
-          "damage_type": "рубящий"
+          "damage_type": "рубящий",
+          "wield": "finesse"
         }
       },
       {
         "id": "whip",
-        "rk": "weapon_finesse",
+        "rk": "weapon",
         "label": "Кнут",
         "description": "Воинское оружие, фехтовальное, досягаемость.",
         "props": {
           "damage_dice": "1d4",
-          "damage_type": "рубящий"
+          "damage_type": "рубящий",
+          "wield": "finesse"
         }
       },
       {
         "id": "shortbow",
-        "rk": "weapon_ranged",
+        "rk": "weapon",
         "label": "Короткий лук",
         "description": "Простое оружие, двуручное.",
         "props": {
           "damage_dice": "1d6",
           "damage_type": "колющий",
+          "wield": "ranged",
           "range": "80/320"
         }
       },
       {
         "id": "longbow",
-        "rk": "weapon_ranged",
+        "rk": "weapon",
         "label": "Длинный лук",
         "description": "Воинское оружие, двуручное, тяжёлое.",
         "props": {
           "damage_dice": "1d8",
           "damage_type": "колющий",
+          "wield": "ranged",
           "range": "150/600"
         }
       },
       {
         "id": "light_crossbow",
-        "rk": "weapon_ranged",
+        "rk": "weapon",
         "label": "Лёгкий арбалет",
         "description": "Простое оружие, перезарядка.",
         "props": {
           "damage_dice": "1d8",
           "damage_type": "колющий",
+          "wield": "ranged",
           "range": "80/320"
         }
       },
       {
         "id": "heavy_crossbow",
-        "rk": "weapon_ranged",
+        "rk": "weapon",
         "label": "Тяжёлый арбалет",
         "description": "Воинское оружие, тяжёлое, перезарядка.",
         "props": {
           "damage_dice": "1d10",
           "damage_type": "колющий",
+          "wield": "ranged",
           "range": "100/400"
         }
       },
       {
         "id": "hand_crossbow",
-        "rk": "weapon_ranged",
+        "rk": "weapon",
         "label": "Ручной арбалет",
         "description": "Воинское оружие, лёгкое, перезарядка.",
         "props": {
           "damage_dice": "1d6",
           "damage_type": "колющий",
+          "wield": "ranged",
           "range": "30/120"
         }
       },
       {
         "id": "sling",
-        "rk": "weapon_ranged",
+        "rk": "weapon",
         "label": "Праща",
         "description": "Простое оружие.",
         "props": {
           "damage_dice": "1d4",
           "damage_type": "дробящий",
+          "wield": "ranged",
           "range": "30/120"
         }
       },
       {
         "id": "dart",
-        "rk": "weapon_ranged",
+        "rk": "weapon",
         "label": "Дротик",
         "description": "Простое оружие, фехтовальное, метательное.",
         "props": {
           "damage_dice": "1d4",
           "damage_type": "колющий",
+          "wield": "ranged",
           "range": "20/60"
         }
       },
       {
         "id": "flame_tongue",
-        "rk": "weapon_melee",
+        "rk": "weapon",
         "label": "Огненный язык",
         "description": "Длинный меч: пока горит, добавляет 2к6 огнём. Здесь — прибавка к урону ближнего боя.",
         "props": {
           "damage_dice": "1d8",
-          "damage_type": "рубящий"
+          "damage_type": "рубящий",
+          "wield": "melee"
         },
         "modifiers": [
           {
@@ -9187,12 +9225,13 @@
       },
       {
         "id": "magic_sword_1",
-        "rk": "weapon_melee",
+        "rk": "weapon",
         "label": "Длинный меч +1",
         "description": "Оружие с бонусом к атаке и урону.",
         "props": {
           "damage_dice": "1d8",
-          "damage_type": "рубящий"
+          "damage_type": "рубящий",
+          "wield": "melee"
         },
         "modifiers": [
           {

@@ -44,6 +44,15 @@ export const lists = () => ({
     of: 'text',
     values: DAMAGE_TAGS.map(tag => ({ value: tag, label: tag })),
   },
+  wield: {
+    label: 'Чем бьют',
+    of: 'text',
+    values: [
+      { value: 'melee', label: 'силой — ближний бой' },
+      { value: 'finesse', label: 'лучшим из силы и ловкости' },
+      { value: 'ranged', label: 'ловкостью — дальний бой' },
+    ],
+  },
   taken: {
     label: 'Сколько доходит',
     of: 'number',
@@ -214,6 +223,22 @@ export function tables() {
       label: 'Урон ярости по уровню',
       ranges: [range(1, 8, 2), range(9, 15, 3), range(16, 20, 4)],
     },
+  };
+  out.wield_attack = {
+    label: 'Бонус атаки по тому, чем бьют',
+    cases: [
+      { when: 'melee', value: '#melee_attack' },
+      { when: 'finesse', value: '#finesse_attack' },
+      { when: 'ranged', value: '#ranged_attack' },
+    ],
+  };
+  out.wield_damage = {
+    label: 'Прибавка к урону по тому, чем бьют',
+    cases: [
+      { when: 'melee', value: '#melee_damage' },
+      { when: 'finesse', value: '#finesse_damage' },
+      { when: 'ranged', value: '#ranged_damage' },
+    ],
   };
   for (let n = 1; n <= 9; n++) {
     out[`slots_${n}`] = {

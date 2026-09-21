@@ -1,5 +1,6 @@
 import { compile } from '../formula/index.ts';
 import { EngineError } from './errors.ts';
+import { lookupTable } from './tables.ts';
 import type { Param } from '../model/types.ts';
 import type { Pass } from './calc.ts';
 
@@ -19,7 +20,7 @@ export interface RefContext {
   results?: Record<string, unknown>;
 }
 
-const FORMS = ['const', 'expr', 'param', 'prop', 'item', 'tag', 'ref'];
+const FORMS = ['const', 'expr', 'param', 'prop', 'item', 'tag', 'ref', 'table'];
 
 type AnyRef = Record<string, unknown>;
 
@@ -61,6 +62,11 @@ export function packRef(ref: unknown, ctx: RefContext): unknown {
     return { const: ctx.props[key] };
   }
 
+  if ('table' in r) {
+    const by = resolveRef((r as { by?: unknown }).by, ctx);
+    return { const: lookupTable(ctx.pass.system, String(r.table), by, who(ctx)) };
+  }
+
   if ('tag' in r) return { tag: r.tag };
   if ('ref' in r) {
     const head = String(r.ref).split('.')[0] ?? '';
@@ -93,6 +99,13 @@ function fromArgs(key: string, ctx: RefContext): unknown {
   const arg = (ctx.params || {})[key];
   if (arg === null || typeof arg !== 'object') return arg;
   if ('prop' in arg) return (ctx.props || {})[String((arg as AnyRef).prop)];
+  if ('table' in arg) {
+    const by = (arg as AnyRef).by;
+    const input = by && typeof by === 'object' && 'prop' in (by as AnyRef)
+      ? (ctx.props || {})[String((by as AnyRef).prop)]
+      : resolveRef(by, ctx);
+    return lookupTable(ctx.pass.system, String((arg as AnyRef).table), input, who(ctx));
+  }
   throw new EngineError(
     `${who(ctx)}: аргумент «${key}» неизвестной формы ${JSON.stringify(arg)} — умею значение или { prop }`);
 }
@@ -110,6 +123,11 @@ export function resolveRef(ref: unknown, ctx: RefContext): unknown {
         `${who(ctx)}: выражение «${r.expr}» стороны отправителя пришло неразрешённым — конверт бит`);
     }
     return evaluate(r.expr, ctx, r.sent as Record<string, unknown> | undefined);
+  }
+
+  if ('table' in r) {
+    const by = resolveRef((r as { by?: unknown }).by, ctx);
+    return lookupTable(ctx.pass.system, String(r.table), by, who(ctx));
   }
 
   if ('param' in r) {

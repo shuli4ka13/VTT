@@ -15,6 +15,11 @@ export const slotRef = z.union([
   z.object({ item: z.string(), optional: z.boolean().optional() }),
   z.object({ ref: z.string(), optional: z.boolean().optional() }),
   z.object({ constant: z.string(), optional: z.boolean().optional() }),
+  z.object({
+    table: z.string().min(1),
+    by: z.lazy((): z.ZodTypeAny => slotRef),
+    optional: z.boolean().optional(),
+  }),
   z.object({ const: z.unknown(), optional: z.boolean().optional() })
     .refine(value => 'const' in value, { message: 'ссылка неизвестной формы' }),
 ]);
@@ -99,14 +104,23 @@ export const dieConstant = z.object({
   read: diceReading.optional(),
 }).passthrough();
 
+export const tableValue = z.union([z.number(), z.string(), z.boolean()]);
+
 export const rangeTable = z.object({
   label: z.string().optional(),
   ranges: z.array(z.object({
     from: z.number(),
     to: z.number(),
-    value: z.union([z.number(), z.string(), z.boolean()]),
-  })),
-});
+    value: tableValue,
+  })).optional(),
+
+  cases: z.array(z.object({
+    when: tableValue,
+    value: tableValue,
+  })).optional(),
+  otherwise: tableValue.optional(),
+  from: z.string().min(1).optional(),
+}).passthrough();
 
 export const rollEditOp = z.object({ op: z.string().min(1) }).passthrough();
 

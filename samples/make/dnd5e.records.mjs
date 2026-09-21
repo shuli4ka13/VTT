@@ -20,28 +20,17 @@ export function records() {
   return {
     weapon: {
       kind: 'item', label: 'Оружие', icon: '⚔', group: 'Снаряжение',
-      hint: 'Основа всякого оружия: кость и тип урона, кнопка «Удар». Чем именно бьют, говорят наследники.',
-      props: [DICE, DAMAGE],
+      hint: 'Меч, рапира, лук — всё сразу. Кость и тип урона свои, а чем бьют выбирается свойством.',
+      props: [
+        DICE, DAMAGE,
+        prop('wield', 'Чем бьют', 'choice', { from: 'wield' }),
+        prop('range', 'Дистанция', 'text', { optional: true }),
+      ],
       bindings: [bind('Удар', 'strike', {
         damage_dice: ref('damage_dice'), damage_type: ref('damage_type'),
+        attack_with: { table: 'wield_attack', by: { prop: 'wield' } },
+        damage_with: { table: 'wield_damage', by: { prop: 'wield' } },
       })],
-    },
-    weapon_melee: {
-      extends: 'weapon', kind: 'item', label: 'Оружие ближнего боя',
-      hint: 'Меч, топор, копьё. Бьёт от Силы; у фехтовального выбирают лучшее из Силы и Ловкости.',
-      props: [prop('finesse', 'Фехтовальное', 'text', { onSheet: false })],
-      bindings: [bind('Удар', 'strike', { attack_with: '#melee_attack', damage_with: '#melee_damage' })],
-    },
-    weapon_finesse: {
-      extends: 'weapon', kind: 'item', label: 'Оружие фехтовальное', icon: '🗡',
-      hint: 'Рапира, кинжал, короткий меч: бьют лучшим из Силы и Ловкости.',
-      bindings: [bind('Удар', 'strike', { attack_with: '#finesse_attack', damage_with: '#finesse_damage' })],
-    },
-    weapon_ranged: {
-      extends: 'weapon', kind: 'item', label: 'Оружие дальнобойное', icon: '🏹',
-      hint: 'Лук, арбалет, праща. Бьёт от Ловкости.',
-      props: [prop('range', 'Дистанция', 'text')],
-      bindings: [bind('Выстрел', 'strike', { attack_with: '#ranged_attack', damage_with: '#ranged_damage' })],
     },
     armor: {
       kind: 'item', label: 'Доспех', icon: '🛡', group: 'Снаряжение',
