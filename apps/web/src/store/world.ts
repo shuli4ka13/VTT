@@ -197,7 +197,7 @@ export const fieldsByGroup = (system: System): [string, Field[]][] => {
 export const effectsByCategory = (system: System): [string, [string, Effect][]][] => {
   const groups = new Map<string, [string, Effect][]>();
   for (const [id, effect] of Object.entries(system.effects)) {
-    const key = effect.category ?? 'Механики';
+    const key = effect.group ?? 'Без блока';
     const list = groups.get(key);
     if (list) list.push([id, effect]);
     else groups.set(key, [[id, effect]]);

@@ -5,6 +5,9 @@ import { ModifiersEditor } from '../modifiers.tsx';
 import { LAUNCH_KINDS, launchHint } from './words.ts';
 import { LaunchCard } from './launch-card.tsx';
 import { Chain } from './chain.tsx';
+import { WordList } from '../word-list.tsx';
+import { BlockPick } from '../block-pick.tsx';
+import { Extras } from './cards/extras.tsx';
 import { ParamsEditor } from './params-editor.tsx';
 import { launchOf, activationFor } from '@vtt/engine/model/effect-kinds';
 import type { System, Effect } from '@vtt/schema';
@@ -70,28 +73,6 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
           }
         />
 
-        <Field
-          label="На основе"
-          hint="Возьмёт у основы её потребности, дорожку «со мной» и шаги — они пойдут первыми. Своё дописывается следом."
-        >
-          <Select
-            value={effect.extends ?? ''}
-            options={[['', '— сам по себе —'],
-              ...Object.entries(system.effects)
-                .filter(([key]) => key !== id)
-                .map(([key, other]) => [key, other.label ?? key] as const)] as never}
-            onChange={next => edit(draft => {
-              if (next) draft.extends = next; else delete draft.extends;
-            })}
-          />
-        </Field>
-
-        {effect.extends && system.effects[effect.extends] ? (
-          <span className="faint">
-            {fromBase(system.effects[effect.extends]!)}
-          </span>
-        ) : null}
-
         <Field label="Как запускается" hint={launchHint(launch.kind)}>
           <Segmented
             value={launch.kind}
@@ -106,122 +87,104 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
           />
         </Field>
 
-        {launch.kind === 'manual' ? (
-          <Field
-            label="Кто держит наложенное"
-            hint="«Держит применивший» — концентрация: снял держателя, и наложенное спало со всех. Общий держатель — один на все такие эффекты: взялся за новый, старое спало."
-          >
-            <Select
-              value={effect.bond === true ? '*' : typeof effect.bond === 'string' ? effect.bond : ''}
-              options={[
-                ['', 'никто — висит само по себе'],
-                ['*', 'держит применивший, у каждого эффекта свой держатель'],
-                ...Object.entries(system.effects)
-                  .filter(([key, other]) => key !== id && (other.activation ?? 'manual') !== 'manual')
-                  .map(([key, other]) => [key, `общий держатель: «${other.label ?? key}»`] as const),
-              ] as never}
-              onChange={next => edit(draft => {
-                if (!next) delete draft.bond;
-                else draft.bond = next === '*' ? true : next;
-              })}
-            />
-          </Field>
-        ) : null}
-
-        <Field
-          label="Метки"
-          hint="Через запятую: огонь, холод, яд. По ним цель узнаёт своё сопротивление, когда этот эффект до неё доходит. Пусто — меток нет."
-        >
-          <Input
-            value={(effect.tags ?? []).join(', ')}
-            placeholder="огонь, холод, яд — через запятую"
-            onChange={text => edit(draft => {
-              const list = text.split(',').map(s => s.trim()).filter(Boolean);
-              if (list.length) draft.tags = list; else delete draft.tags;
-            })}
-          />
-        </Field>
-
-        <Field label="Описание для игрока" hint="Текст, который игрок видит на листе. На расчёт не влияет.">
-          <Input
-            value={effect.description ?? ''}
-            placeholder="например: бьёшь оружием ближнего боя"
-            onChange={next => edit(draft => { draft.description = next || undefined; })}
-          />
-        </Field>
-
-        <div className="row">
-          <Field label="Категория">
-            <Input value={effect.category ?? ''} onChange={next => edit(draft => { draft.category = next; })} />
-          </Field>
-          {launch.kind === 'manual' || launch.ask ? (
-            <Field label="Чего стоит">
-              <Select
-                value={effect.cost ?? ''}
-                options={[['', '— не задано —'],
-                  ...Object.entries(system.action_types ?? {}).map(([key, t]) => [key, t.label] as const)] as never}
-                onChange={next => edit(draft => { draft.cost = next || undefined; })}
-              />
-            </Field>
-          ) : null}
-        </div>
-
-        {}
-        {launch.kind !== 'manual' ? (
-          <Fold
-            title="Сколько держится"
-            summary={durationSummary(effect)}
-          >
-            <div className="row">
-              <Field label="Длительность">
-                <Select
-                  value={effect.duration?.kind ?? 'permanent'}
-                  options={DURATIONS}
-                  onChange={kind => edit(draft => {
-                    draft.duration = COUNTED.has(kind) ? { kind, max: draft.duration?.max ?? 1 } : { kind };
-                  })}
-                />
-              </Field>
-              {COUNTED.has(effect.duration?.kind ?? '') ? (
-                <Field label="Сколько">
+        <Extras
+          items={[
+            {
+              key: 'group', label: 'блок', on: !!effect.group,
+              add: () => {}, drop: () => edit(draft => { delete draft.group; }),
+              node: (
+                <Field label="Блок" hint="Тот же, что у полей листа и типов записей.">
+                  <BlockPick
+                    system={system} value={effect.group}
+                    onChange={next => edit(draft => {
+                      if (next) draft.group = next; else delete draft.group;
+                    })}
+                  />
+                </Field>
+              ),
+            },
+            {
+              key: 'description', label: 'описание для игрока', on: !!effect.description,
+              add: () => {}, drop: () => edit(draft => { delete draft.description; }),
+              node: (
+                <Field label="Описание для игрока" hint="Текст на листе. На расчёт не влияет.">
                   <Input
-                    type="number"
-                    value={effect.duration?.max ?? 1}
+                    value={effect.description ?? ''}
+                    placeholder="например: бьёшь оружием ближнего боя"
+                    onChange={next => edit(draft => { draft.description = next || undefined; })}
+                  />
+                </Field>
+              ),
+            },
+            {
+              key: 'tags', label: 'метки', on: !!effect.tags?.length,
+              add: () => {}, drop: () => edit(draft => { delete draft.tags; }),
+              node: (
+                <Field label="Метки" hint="По ним цель узнаёт своё сопротивление, когда этот эффект до неё доходит.">
+                  <WordList
+                    value={effect.tags ?? []} known={knownTags(system)} placeholder="новая метка"
                     onChange={next => edit(draft => {
-                      if (draft.duration && COUNTED.has(draft.duration.kind)) draft.duration.max = Math.max(1, Number(next) || 1);
+                      if (next.length) draft.tags = next; else delete draft.tags;
                     })}
                   />
                 </Field>
-              ) : null}
-              {effect.duration?.kind === 'turns' ? (
-                <Field label="Спадает" hint="«В начале своего хода» — как «до начала вашего следующего хода»: щит, уклонение.">
+              ),
+            },
+            ...(launch.kind === 'manual' || launch.ask ? [{
+              key: 'cost', label: 'чего стоит', on: !!effect.cost,
+              add: () => {}, drop: () => edit(draft => { delete draft.cost; }),
+              node: (
+                <Field label="Чего стоит">
                   <Select
-                    value={effect.duration?.ends ?? 'turn-end'}
-                    options={ENDS}
+                    value={effect.cost ?? ''}
+                    options={[['', '— не задано —'],
+                      ...Object.entries(system.action_types ?? {}).map(([key, t]) => [key, t.label] as const)] as never}
+                    onChange={next => edit(draft => { draft.cost = next || undefined; })}
+                  />
+                </Field>
+              ),
+            }] : []),
+            ...(launch.kind !== 'manual' ? [{
+              key: 'duration', label: 'сколько висит', on: !!effect.duration || !!effect.bond,
+              add: () => edit(draft => { draft.duration = { kind: 'temporary' }; }),
+              drop: () => edit(draft => { delete draft.duration; delete draft.bond; delete draft.stacking; }),
+              node: <Lifetime effect={effect} system={system} id={id} edit={edit} />,
+            }] : []),
+            {
+              key: 'extends', label: 'на основе', on: !!effect.extends,
+              add: () => {}, drop: () => edit(draft => { delete draft.extends; }),
+              node: (
+                <Field
+                  label="На основе"
+                  hint={effect.extends && system.effects[effect.extends]
+                    ? fromBase(system.effects[effect.extends]!)
+                    : 'Возьмёт у основы потребности, плату и шаги — они пойдут первыми.'}
+                >
+                  <Select
+                    value={effect.extends ?? ''}
+                    options={[['', '— сам по себе —'],
+                      ...Object.entries(system.effects)
+                        .filter(([key]) => key !== id)
+                        .map(([key, other]) => [key, other.label ?? key] as const)] as never}
                     onChange={next => edit(draft => {
-                      if (!draft.duration) return;
-                      if (next === 'turn-start') draft.duration.ends = next; else delete draft.duration.ends;
+                      if (next) draft.extends = next; else delete draft.extends;
                     })}
                   />
                 </Field>
-              ) : null}
-              <Field label="Если наложить второй раз">
-                <Select
-                  value={effect.stacking ?? 'ignore'}
-                  options={STACKING}
-                  onChange={next => edit(draft => { draft.stacking = next; })}
-                />
-              </Field>
-            </div>
-          </Fold>
-        ) : null}
+              ),
+            },
+          ]}
+        />
       </Card>
 
       {launch.kind === 'auto' ? <LaunchCard id={id} effect={effect} system={system} edit={edit} /> : null}
 
       {pipeline ? (
         <>
-          <Chain effect={effect} system={system} edit={edit} />
+          <Chain
+            effect={effect} system={system} edit={edit}
+            empty={idleWords(effect)}
+          />
           <SelfTrack effect={effect} system={system} edit={edit} />
           <ParamsEditor effect={effect} onEdit={edit} />
         </>
@@ -237,14 +200,89 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
   );
 }
 
-const durationSummary = (effect: Effect) => {
-  const kind = effect.duration?.kind ?? 'permanent';
-  const word = DURATIONS.find(([key]) => key === kind)?.[1] ?? kind;
-  const uses = kind === 'uses' ? ` (${effect.duration?.max ?? 1})` : '';
-  const edge = kind === 'turns' && effect.duration?.ends === 'turn-start' ? ', спадает в начале своего хода' : '';
-  const stack = STACKING.find(([key]) => key === (effect.stacking ?? 'ignore'))?.[1];
-  return `${word}${uses}${edge} · ${stack}`;
+const knownTags = (system: System): string[] => [...new Set(
+  Object.values(system.effects).flatMap(effect => effect.tags ?? []),
+)];
+
+const idleWords = (effect: Effect): string => {
+  const also: string[] = [];
+  if (effect.self?.length) also.push('плата за применение');
+  if (effect.modifiers?.length) also.push('правки');
+  return also.length
+    ? `шагов нет — работает только ${also.join(' и ')}`
+    : 'шагов ещё нет — эффект ничего не делает';
 };
+
+function Lifetime({ effect, system, id, edit }: {
+  effect: Effect; system: System; id: string; edit: (change: (draft: Effect) => void) => void;
+}) {
+  const kind = effect.duration?.kind ?? 'permanent';
+  const held = effect.bond !== undefined;
+  const shared = typeof effect.bond === 'string';
+  const holders = Object.entries(system.effects)
+    .filter(([key, other]) => key !== id && (other.activation ?? 'manual') !== 'manual');
+
+  return (
+    <div className="stack stack--tight">
+      <Field label="Сколько висит">
+        <Select
+          value={held ? 'held' : kind}
+          options={[...DURATIONS, ['held', 'пока я держу']] as never}
+          onChange={next => edit(draft => {
+            if (next === 'held') { draft.bond = true; draft.duration = { kind: 'temporary' }; return; }
+            delete draft.bond;
+            draft.duration = COUNTED.has(next) ? { kind: next, max: draft.duration?.max ?? 1 } : { kind: next };
+          })}
+        />
+      </Field>
+
+      {held ? (
+        <Field label="Держится вместе с чем-то ещё?" hint="Концентрация: взялся за новое — старое спало.">
+          <Select
+            value={shared ? String(effect.bond) : ''}
+            options={[['', 'нет — только этот эффект'],
+              ...holders.map(([key, other]) => [key, `вместе с «${other.label ?? key}»`] as const)] as never}
+            onChange={next => edit(draft => { draft.bond = next || true; })}
+          />
+        </Field>
+      ) : null}
+
+      {!held && COUNTED.has(kind) ? (
+        <Field label="Сколько">
+          <Input
+            type="number" value={effect.duration?.max ?? 1}
+            onChange={next => edit(draft => {
+              if (draft.duration && COUNTED.has(draft.duration.kind)) draft.duration.max = Math.max(1, Number(next) || 1);
+            })}
+          />
+        </Field>
+      ) : null}
+
+      {!held && kind === 'turns' ? (
+        <Field label="Спадает" hint="«В начале своего хода» — как «до начала вашего следующего хода»: щит, уклонение.">
+          <Select
+            value={effect.duration?.ends ?? 'turn-end'}
+            options={ENDS}
+            onChange={next => edit(draft => {
+              if (!draft.duration) return;
+              if (next === 'turn-start') draft.duration.ends = next; else delete draft.duration.ends;
+            })}
+          />
+        </Field>
+      ) : null}
+
+      <Field label="Если наложить второй раз">
+        <Select
+          value={effect.stacking ?? 'ignore'}
+          options={STACKING}
+          onChange={next => edit(draft => { draft.stacking = next; })}
+        />
+      </Field>
+    </div>
+  );
+}
+
+
 
 function SelfTrack({ effect, system, edit }: {
   effect: Effect;
@@ -263,20 +301,16 @@ function SelfTrack({ effect, system, edit }: {
 
   return (
     <Fold
-      title="Со мной — один раз за действие"
+      title="Плата за применение"
       count={track.length}
-      summary={track.length ? undefined : 'ничего: ни ячейка, ни заряд не тратятся'}
+      summary={track.length ? 'списывается один раз, даже если целей несколько' : 'бесплатно'}
     >
-      <span className="faint">
-        Эта дорожка идёт по листу того, кто действует, и ровно один раз — даже если целей несколько.
-        Сюда кладут трату ячейки, заряда или ресурса.
-      </span>
       <Chain
         effect={carrier}
         system={system}
         edit={editTrack}
-        title="Шаги дорожки"
-        empty="пусто — ничего с собой не делается"
+        title="Что списывается"
+        empty="ничего не списывается"
       />
     </Fold>
   );

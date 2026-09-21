@@ -7,6 +7,7 @@ import {
 } from '../../ui/primitives.tsx';
 import type { SlotRef } from '@vtt/schema';
 import type { System, RecordKind, Binding, Param } from '@vtt/schema';
+import { BlockPick } from './block-pick.tsx';
 
 const BASIS = [
   ['item', 'вещь — надевают и снимают'],
@@ -132,8 +133,14 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
           <Field label="Чем является">
             <Select value={kind.kind} options={BASIS} onChange={next => edit(draft => { draft.kind = next; })} />
           </Field>
-          <Field label="Раздел">
-            <Input value={kind.group ?? ''} onChange={next => edit(draft => { draft.group = next; })} />
+          <Field label="Блок">
+            <BlockPick
+              system={system}
+              value={kind.group}
+              onChange={next => edit(draft => {
+                if (next) draft.group = next; else delete draft.group;
+              })}
+            />
           </Field>
           <Field
             label="На основе"

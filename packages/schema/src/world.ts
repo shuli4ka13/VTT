@@ -200,6 +200,7 @@ export const trigger = z.object({
 
 export const effect = z.object({
   extends: z.string().min(1).optional(),
+  group: z.string().optional(),
   bond: z.union([z.boolean(), z.string().min(1)]).optional(),
   label: z.string().optional(),
   tags: z.array(z.string().min(1)).optional(),

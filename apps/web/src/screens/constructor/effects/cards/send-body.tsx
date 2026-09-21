@@ -1,10 +1,11 @@
 import type { System } from '@vtt/schema';
-import { Field, Select, Input, Chip } from '../../../../ui/primitives.tsx';
+import { Field, Select, Chip } from '../../../../ui/primitives.tsx';
 import { SlotInput } from '../../slot-input.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 import { calledOf } from '@vtt/engine/engine/effects';
 import { Extras } from './extras.tsx';
+import { WordList } from '../../word-list.tsx';
 
 const loose = (draft: unknown): Record<string, unknown> => draft as Record<string, unknown>;
 
@@ -67,12 +68,12 @@ export function SendBody({ step, at, context, edit, system }: {
           add: () => edit(at, draft => { loose(draft).tags = []; }),
           drop: () => edit(at, draft => { delete loose(draft).tags; }),
           node: (
-      <Field label="метки" hint="Через запятую: огонь, магический. По ним цель узнаёт своё сопротивление.">
-        <Input
-          value={tags.join(', ')}
-          onChange={text => edit(at, draft => {
-            loose(draft).tags = [...fromRecord, ...text.split(',').map(s => s.trim()).filter(Boolean)];
-          })}
+      <Field label="метки" hint="По ним цель узнаёт своё сопротивление.">
+        <WordList
+          value={tags}
+          known={[...new Set(Object.values(system.effects).flatMap(e => e.tags ?? []))]}
+          placeholder="новая метка"
+          onChange={next => edit(at, draft => { loose(draft).tags = [...fromRecord, ...next]; })}
         />
         <div className="inline inline--tight">
           {fromRecord.map(tag => (

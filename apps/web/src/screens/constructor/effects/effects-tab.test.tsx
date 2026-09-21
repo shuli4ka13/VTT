@@ -17,13 +17,13 @@ describe('EffectsTab: палитра трёх понятий', () => {
     }));
   });
 
-  it('у активируемого нет «Сколько держится» и есть «Чего стоит»', () => {
+  it('активируемому предлагают «чего стоит», но не «сколько висит»', () => {
     render(<EffectsTab />);
-    expect(screen.queryByText('Сколько держится')).toBeNull();
-    expect(screen.getByText('Чего стоит')).toBeTruthy();
+    expect(screen.queryByText('+ сколько висит')).toBeNull();
+    expect(screen.getByText('+ чего стоит')).toBeTruthy();
   });
 
-  it('у пассивного — наоборот: длительность есть, стоимости нет', () => {
+  it('висящему — наоборот: «сколько висит» есть, стоимости нет', () => {
     useWorld.setState(state => ({
       ...state,
       system: {
@@ -33,8 +33,8 @@ describe('EffectsTab: палитра трёх понятий', () => {
       activeEffectId: 'poison',
     }));
     render(<EffectsTab />);
-    expect(screen.getByText('Сколько держится')).toBeTruthy();
-    expect(screen.queryByText('Чего стоит')).toBeNull();
+    expect(screen.getByText('+ сколько висит')).toBeTruthy();
+    expect(screen.queryByText('+ чего стоит')).toBeNull();
   });
 
   it('палитра шагов — только виды движка, клик кладёт шаг', () => {
@@ -44,7 +44,8 @@ describe('EffectsTab: палитра трёх понятий', () => {
       .filter(b => (b.textContent ?? '').trimStart().startsWith('+ '))
       .map(b => b.textContent!.trim())
       .filter(t => !LAUNCH_KINDS.some(kind => t === `+ ${kind.label.toLowerCase()}`)
-        && t !== '+ вызываемый' && !t.startsWith('+ брать'));
+        && t !== '+ вызываемый' && t !== '+ новый' && !t.startsWith('+ брать')
+        && !['+ блок', '+ метки', '+ описание для игрока', '+ чего стоит', '+ сколько висит', '+ на основе'].includes(t));
     expect(palette).toEqual(['+ проверка', '+ изменение', '+ таблица', '+ число']);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     expect(screen.getByText('1 · Проверка')).toBeTruthy();
@@ -232,8 +233,10 @@ describe('вызываемый эффект — обычный эффект', ()
     const key = useWorld.getState().activeEffectId!;
     expect(useWorld.getState().system.effects[key]!.steps).toHaveLength(2);
 
-    fireEvent.change(screen.getByPlaceholderText('огонь, холод, яд — через запятую'), { target: { value: 'огонь, яд' } });
-    expect(useWorld.getState().system.effects[key]!.tags).toEqual(['огонь', 'яд']);
+    fireEvent.click(screen.getByText('+ метки'));
+    fireEvent.change(screen.getByPlaceholderText('новая метка'), { target: { value: 'огонь' } });
+    fireEvent.keyDown(screen.getByPlaceholderText('новая метка'), { key: 'Enter' });
+    expect(useWorld.getState().system.effects[key]!.tags).toEqual(['огонь']);
   });
 });
 
@@ -322,7 +325,7 @@ describe('дорожка «со мной» собирается отдельно
 
   it('шаг, добавленный в дорожку, ложится в self, а не в steps', () => {
     render(<EffectsTab />);
-    fireEvent.click(screen.getByText('Со мной — один раз за действие'));
+    fireEvent.click(screen.getByText('Плата за применение'));
 
     const adders = screen.getAllByText('+ изменение');
     fireEvent.click(adders[adders.length - 1]!);

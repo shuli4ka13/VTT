@@ -12,6 +12,7 @@ import { compile } from '@vtt/engine/formula';
 import { DonorPalette } from './donors.tsx';
 import { newField } from './factory.ts';
 import { GroupEditor } from './group-editor.tsx';
+import { BlockPick } from './block-pick.tsx';
 import { groupTree, effectiveDefault, sameValue } from './groups.ts';
 import type { GroupNode } from './groups.ts';
 import type { Field as FieldModel, FieldValue, System } from '@vtt/schema';
@@ -162,7 +163,13 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
             />
           </Field>
           <Field label="Блок">
-            <Input value={field.group ?? ''} onChange={next => edit(draft => { draft.group = next; })} />
+            <BlockPick
+              system={system}
+              value={field.group}
+              onChange={next => edit(draft => {
+                if (next) draft.group = next; else delete draft.group;
+              })}
+            />
           </Field>
           {field.value.kind === 'stored' ? (
             <Field label="Как выглядит на листе" hint="Обычное поле подойдёт всегда; остальное — для счётчиков и запасов.">
