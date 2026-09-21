@@ -225,12 +225,14 @@ function orphanProblems(system: System, compendium?: Compendium): Problem[] {
     for (const activity of record.activities ?? []) bound.add(activity.effect);
     for (const id of record.grants ?? []) bound.add(id);
   }
-  for (const [id, effect] of Object.entries(system.effects)) {
-    if (activationOf(effect) !== 'manual' || bound.has(id)) continue;
-    out.push({
-      where: { tab: 'effects', effect: id }, level: 'warn',
-      text: `эффект «${effect.label ?? id}» никак не запускается: ни одна запись его не даёт`,
-    });
+  if (compendium) {
+    for (const [id, effect] of Object.entries(system.effects)) {
+      if (activationOf(effect) !== 'manual' || bound.has(id)) continue;
+      out.push({
+        where: { tab: 'effects', effect: id }, level: 'warn',
+        text: `эффект «${effect.label ?? id}» никак не запускается: ни одна запись компендиума его не даёт`,
+      });
+    }
   }
   return out;
 }

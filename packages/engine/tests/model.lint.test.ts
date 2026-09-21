@@ -173,8 +173,15 @@ group('линт: слушатели, круги, потребности', () => 
 
   test('активируемый эффект, который никто не даёт — предупреждение, не ошибка', () => {
     const system = withEffect('lonely', { steps: [] });
-    ok(texts(system).some(t => t.startsWith('warn') && t.includes('никак не запускается')));
+    const withBook = lintSystem(system, { items: [], actions: [] } as never)
+      .map(p => `${p.level}: ${p.text}`);
+    ok(withBook.some(t => t.startsWith('warn') && t.includes('никак не запускается')), withBook.join('|'));
     eq(errorTexts(system).length, 0);
+  });
+
+  test('без компендиума о ненайденных запусках не предупреждают: книгу автор системы не видит', () => {
+    const system = withEffect('lonely', { steps: [] });
+    eq(texts(system).filter(t => t.includes('никак не запускается')).length, 0);
   });
 });
 
