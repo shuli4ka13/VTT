@@ -31,6 +31,17 @@ const STACKING = [
   ['stack', 'копится'],
 ] as const;
 
+const fromBase = (base: Effect): string => {
+  const parts: string[] = [];
+  if (base.params?.length) parts.push(`потребностей: ${base.params.length}`);
+  if (base.self?.length) parts.push(`дорожка «со мной»: ${base.self.length}`);
+  if (base.steps?.length) parts.push(`шагов впереди: ${base.steps.length}`);
+  if (base.modifiers?.length) parts.push(`правок: ${base.modifiers.length}`);
+  return parts.length
+    ? `От основы «${base.label ?? ''}» достаётся — ${parts.join(', ')}.`
+    : `Основа «${base.label ?? ''}» пока ничего не даёт.`;
+};
+
 export function EffectEditor({ id, effect, system }: { id: string; effect: Effect; system: System }) {
   const editSystem = useWorld(s => s.editSystem);
   const editEffect = useWorld(s => s.editEffect);
@@ -58,6 +69,28 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
             </DangerButton>
           }
         />
+
+        <Field
+          label="На основе"
+          hint="Возьмёт у основы её потребности, дорожку «со мной» и шаги — они пойдут первыми. Своё дописывается следом."
+        >
+          <Select
+            value={effect.extends ?? ''}
+            options={[['', '— сам по себе —'],
+              ...Object.entries(system.effects)
+                .filter(([key]) => key !== id)
+                .map(([key, other]) => [key, other.label ?? key] as const)] as never}
+            onChange={next => edit(draft => {
+              if (next) draft.extends = next; else delete draft.extends;
+            })}
+          />
+        </Field>
+
+        {effect.extends && system.effects[effect.extends] ? (
+          <span className="faint">
+            {fromBase(system.effects[effect.extends]!)}
+          </span>
+        ) : null}
 
         <Field label="Как запускается" hint={launchHint(launch.kind)}>
           <Segmented

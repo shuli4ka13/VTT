@@ -1,7 +1,7 @@
 import type { System, Compendium, Effect, Step } from './types.ts';
 import { registry } from '../engine/steps/index.ts';
 import { activationOf, calledOf } from '../engine/effects.ts';
-import { basedOn } from './inherit.ts';
+import { basedOn, paramsOf } from './inherit.ts';
 import { TABS, STEP } from '../words/glossary.ts';
 import {
   referencesOf, declaredOf, chainRefs, listenerOf,
@@ -106,7 +106,7 @@ export function lintStep(step: Step, system: System, effect: Effect, earlier: Ea
   const [structural] = stepProblems([step], () => where, new Set(), inChain);
   if (structural) return structural;
   const declared = declaredOf(system);
-  const params = new Set((effect.params ?? []).map(p => p.key));
+  const params = new Set(paramsOf(system, effect).map(p => p.key));
   const known = new Set(earlier.map(e => e.id));
   const refs = chainRefs([step], () => where, params, inChain)
     .filter(ref => !(ref.kind === 'step' && known.has(ref.key)))

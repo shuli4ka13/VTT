@@ -135,6 +135,21 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
           <Field label="Раздел">
             <Input value={kind.group ?? ''} onChange={next => edit(draft => { draft.group = next; })} />
           </Field>
+          <Field
+            label="На основе"
+            hint="Свойства и кнопки основы достанутся этому типу; своя первая кнопка правит первую кнопку основы."
+          >
+            <Select
+              value={kind.extends ?? ''}
+              options={[['', '— сам по себе —'],
+                ...Object.entries(system.records ?? {})
+                  .filter(([key]) => key !== id)
+                  .map(([key, other]) => [key, other.label ?? key] as const)] as never}
+              onChange={next => edit(draft => {
+                if (next) draft.extends = next; else delete draft.extends;
+              })}
+            />
+          </Field>
         </div>
         <Field label="Подсказка заполняющему">
           <Input value={kind.hint ?? ''} onChange={next => edit(draft => { draft.hint = next; })} />

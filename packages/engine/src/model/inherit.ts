@@ -70,6 +70,18 @@ export const basedOn = (thing: unknown): string | undefined => {
   return typeof at === 'string' && at ? at : undefined;
 };
 
+export function paramsOf(system: System, effect: Effect): Param[] {
+  const line: Effect[] = [];
+  let at: Effect | undefined = effect;
+  while (at && line.length <= MAX_CHAIN) {
+    line.unshift(at);
+    const base = basedOn(at);
+    at = base ? system.effects?.[base] : undefined;
+    if (at && line.includes(at)) break;
+  }
+  return line.reduce<Param[]>((done, one) => byKey(done, (one.params ?? []) as Param[]), []);
+}
+
 export function hasBases(system: System): boolean {
   for (const effect of Object.values(system.effects ?? {})) if (basedOn(effect)) return true;
   for (const kind of Object.values(system.records ?? {})) if (basedOn(kind)) return true;
