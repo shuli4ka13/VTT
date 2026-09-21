@@ -63,8 +63,11 @@ export function packRef(ref: unknown, ctx: RefContext): unknown {
   }
 
   if ('table' in r) {
-    const by = resolveRef((r as { by?: unknown }).by, ctx);
-    return { const: lookupTable(ctx.pass.system, String(r.table), by, who(ctx)) };
+    const packed = packRef((r as { by?: unknown }).by, ctx);
+    const ready = packed && typeof packed === 'object' && 'const' in (packed as AnyRef);
+    return ready
+      ? { const: lookupTable(ctx.pass.system, String(r.table), (packed as AnyRef).const, who(ctx)) }
+      : { table: r.table, by: packed };
   }
 
   if ('tag' in r) return { tag: r.tag };

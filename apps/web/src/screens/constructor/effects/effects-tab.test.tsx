@@ -295,9 +295,11 @@ describe('крит собирается в шаге «число»', () => {
 
   it('«удвоить кости, если» предлагает числовые выходы проверки и пишет порог', () => {
     render(<EffectsTab />);
+    fireEvent.click(screen.getByText('+ удвоить кости по порогу'));
+
     const picker = [...document.querySelectorAll('select')]
       .find(el => [...el.options].some(o => o.value === 'проверка.natural'))!;
-    expect(picker).toBeTruthy();
+    expect(picker, 'выбор выхода проверки появился').toBeTruthy();
 
     fireEvent.change(picker, { target: { value: 'проверка.natural' } });
     const steps = useWorld.getState().system.effects.удар!.steps!;

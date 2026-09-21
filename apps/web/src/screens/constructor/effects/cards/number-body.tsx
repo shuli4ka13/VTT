@@ -3,6 +3,7 @@ import { SlotInput } from '../../slot-input.tsx';
 import { outputRefs } from '../../slots.tsx';
 import type { SlotContext, EarlierStep } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
+import { Extras } from './extras.tsx';
 
 const loose = (draft: unknown): Record<string, unknown> => draft as Record<string, unknown>;
 
@@ -44,16 +45,30 @@ export function NumberBody({ step, context, edit, onAddParam, earlier }: {
               onChange={next => edit(0, draft => { loose(draft).bonus = next ?? undefined; })}
             />
           </Field>
-          <Field label="сколько раз кинуть" hint="Пусто — один раз. Формула или поле: «половина уровня» для скрытой атаки, «круг − 3» для усиленного заклинания.">
+          <Field
+            label="сколько раз кинуть"
+            hint="Пусто — один раз. Число, формула, поле — или таблица: «выпало 20 → две кости»."
+          >
             <SlotInput
-              value={step.count} context={context} allow={['expr', 'const', 'param', 'tag']}
+              value={step.count} context={context} allow={['expr', 'const', 'param', 'tag', 'table', 'ref']}
               onChange={next => edit(0, draft => {
                 if (next === null || next === undefined) delete loose(draft).count;
                 else loose(draft).count = next;
               })}
             />
           </Field>
-          <DoubleField step={step} earlier={earlier} edit={edit} />
+
+          <Extras
+            items={[{
+              key: 'double', label: 'удвоить кости по порогу', on: !!step.double,
+              add: () => edit(0, draft => {
+                const first = outputRefs(earlier).find(output => output.kind === 'number');
+                if (first) loose(draft).double = { ref: first.ref, atLeast: 20 };
+              }),
+              drop: () => edit(0, draft => { delete loose(draft).double; }),
+              node: <DoubleField step={step} earlier={earlier} edit={edit} />,
+            }]}
+          />
         </>
       ) : null}
 
@@ -86,7 +101,6 @@ function DoubleField({ step, earlier, edit }: {
 }) {
   const numbers = outputRefs(earlier).filter(output => output.kind === 'number');
   const double = step.double as { ref?: string; atLeast?: number } | undefined;
-  if (!numbers.length && !double?.ref) return null;
 
   return (
     <div className="row">
