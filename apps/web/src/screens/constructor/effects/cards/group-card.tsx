@@ -49,7 +49,7 @@ export function GroupCard({
   onMoveUp?: () => void;
   onMoveDown?: () => void;
 
-  onAddParam?: (label: string, kind: string) => string;
+  onAddParam?: (label: string, kind: string, want?: string) => string;
 }) {
   const context: SlotContext = { system, effect, earlier };
   const step = group.step as any;

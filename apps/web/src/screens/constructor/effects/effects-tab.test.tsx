@@ -293,17 +293,38 @@ describe('крит — обычная формула, а не особый сл�
   });
   afterEach(() => { cleanup(); });
 
-  it('старый шаг переписывается одной строкой и дальше правится как формула', () => {
+  it('старый шаг сразу показан одной строкой, трёх полей больше нет', () => {
     render(<EffectsTab />);
     expect(screen.queryByText('удвоить кости, если')).toBeNull();
-    expect(screen.queryByText('+ удвоить кости по порогу')).toBeNull();
-    expect(screen.getByText('переписать одной строкой')).toBeTruthy();
+    expect(screen.queryByText('переписать одной строкой')).toBeNull();
+    expect(screen.queryByText('сколько раз кинуть')).toBeNull();
+    expect(screen.queryByText('прибавка')).toBeNull();
 
-    fireEvent.click(screen.getByText('переписать одной строкой'));
+    expect(screen.getByText('Сколько')).toBeTruthy();
+    expect(screen.getByDisplayValue("кинуть('2d6')")).toBeTruthy();
+  });
+
+  it('правка строки переносит старые поля в формулу', () => {
+    render(<EffectsTab />);
+    fireEvent.change(screen.getByDisplayValue("кинуть('2d6')"), {
+      target: { value: "кинуть('2d6') + @сила" },
+    });
+
     const шаг = useWorld.getState().system.effects.удар!.steps![1]! as Record<string, unknown>;
     expect(шаг.dice, 'старые поля ушли').toBeUndefined();
-    expect((шаг.fixed as { expr: string }).expr).toContain('кинуть');
-    expect(screen.getByText('Сколько')).toBeTruthy();
+    expect(шаг.source).toBe('item');
+    expect((шаг.fixed as { expr: string }).expr).toBe("кинуть('2d6') + @сила");
+  });
+
+  it('незнакомое имя в строке предлагается взять из записи под тем же ключом', () => {
+    render(<EffectsTab />);
+    fireEvent.change(screen.getByDisplayValue("кинуть('2d6')"), {
+      target: { value: 'кинуть(@кость_врага)' },
+    });
+    fireEvent.click(screen.getByText('взять «кость_врага» из записи'));
+
+    const effect = useWorld.getState().system.effects.удар!;
+    expect(effect.params!.map(p => p.key)).toContain('кость_врага');
   });
 });
 

@@ -3468,15 +3468,9 @@
           {
             "id": "dmg",
             "type": "amount",
-            "source": "roll",
-            "dice": {
-              "param": "damage_dice"
-            },
-            "bonus": {
-              "param": "damage_with"
-            },
-            "count": {
-              "expr": "@hit.natural >= @crit_from ? 2 : 1"
+            "source": "item",
+            "fixed": {
+              "expr": "кинуть(@damage_dice, (@hit.natural >= @crit_from ? 2 : 1)) + @damage_with"
             }
           },
           {
@@ -3541,15 +3535,9 @@
           {
             "id": "dmg",
             "type": "amount",
-            "source": "roll",
-            "dice": {
-              "param": "damage_dice"
-            },
-            "bonus": {
-              "param": "damage_bonus"
-            },
-            "count": {
-              "expr": "@hit.natural >= 20 ? 2 : 1"
+            "source": "item",
+            "fixed": {
+              "expr": "кинуть(@damage_dice, (@hit.natural >= 20 ? 2 : 1)) + @damage_bonus"
             }
           },
           {
@@ -3583,12 +3571,9 @@
           {
             "id": "dmg",
             "type": "amount",
-            "source": "roll",
-            "dice": {
-              "const": "1d6"
-            },
-            "count": {
-              "tag": "sneak_dice"
+            "source": "item",
+            "fixed": {
+              "expr": "кинуть('1d6', @sneak_dice)"
             }
           },
           {
@@ -3629,12 +3614,9 @@
           {
             "id": "dmg",
             "type": "amount",
-            "source": "roll",
-            "dice": {
-              "const": "1d8"
-            },
-            "count": {
-              "expr": "min(5, 1 + @slot)"
+            "source": "item",
+            "fixed": {
+              "expr": "кинуть('1d8', (min(5, 1 + @slot)))"
             }
           },
           {
@@ -3924,12 +3906,9 @@
           {
             "id": "dmg",
             "type": "amount",
-            "source": "roll",
-            "dice": {
-              "param": "damage_die"
-            },
-            "count": {
-              "expr": "(@cantrip_dice) * (@hit.natural >= @crit_from ? 2 : 1)"
+            "source": "item",
+            "fixed": {
+              "expr": "кинуть(@damage_die, ((@cantrip_dice) * (@hit.natural >= @crit_from ? 2 : 1)))"
             }
           },
           {
@@ -3999,12 +3978,9 @@
           {
             "id": "dmg",
             "type": "amount",
-            "source": "roll",
-            "dice": {
-              "param": "damage_die"
-            },
-            "count": {
-              "tag": "cantrip_dice"
+            "source": "item",
+            "fixed": {
+              "expr": "кинуть(@damage_die, @cantrip_dice)"
             }
           },
           {
@@ -4092,12 +4068,9 @@
           {
             "id": "dmg",
             "type": "amount",
-            "source": "roll",
-            "dice": {
-              "param": "damage_die"
-            },
-            "count": {
-              "expr": "(@dice_count + (@slot - @spell_level) * @dice_up) * (@hit.natural >= @crit_from ? 2 : 1)"
+            "source": "item",
+            "fixed": {
+              "expr": "кинуть(@damage_die, ((@dice_count + (@slot - @spell_level) * @dice_up) * (@hit.natural >= @crit_from ? 2 : 1)))"
             }
           },
           {
@@ -4181,18 +4154,15 @@
           {
             "id": "dmg",
             "type": "amount",
-            "source": "roll",
-            "dice": {
-              "param": "damage_die"
-            },
-            "count": {
-              "expr": "@dice_count + (@slot - @spell_level) * @dice_up"
-            },
+            "source": "item",
             "scale": {
               "times": 0.5,
               "when": {
                 "ref": "save.success"
               }
+            },
+            "fixed": {
+              "expr": "кинуть(@damage_die, (@dice_count + (@slot - @spell_level) * @dice_up))"
             }
           },
           {
@@ -4273,12 +4243,9 @@
           {
             "id": "dmg",
             "type": "amount",
-            "source": "roll",
-            "dice": {
-              "param": "damage_die"
-            },
-            "count": {
-              "expr": "@dice_count + (@slot - @spell_level) * @dice_up"
+            "source": "item",
+            "fixed": {
+              "expr": "кинуть(@damage_die, (@dice_count + (@slot - @spell_level) * @dice_up))"
             }
           },
           {
@@ -4342,15 +4309,9 @@
           {
             "id": "dmg",
             "type": "amount",
-            "source": "roll",
-            "dice": {
-              "param": "damage_die"
-            },
-            "count": {
-              "expr": "@dice_count + (@slot - @spell_level) * @dice_up"
-            },
-            "bonus": {
-              "expr": "(@dice_count + (@slot - @spell_level) * @dice_up) * @per_die"
+            "source": "item",
+            "fixed": {
+              "expr": "кинуть(@damage_die, (@dice_count + (@slot - @spell_level) * @dice_up)) + ((@dice_count + (@slot - @spell_level) * @dice_up) * @per_die)"
             }
           },
           {
@@ -4587,15 +4548,9 @@
           {
             "id": "amt",
             "type": "amount",
-            "source": "roll",
-            "dice": {
-              "param": "heal_die"
-            },
-            "count": {
-              "expr": "@dice_count + (@slot - @spell_level) * @dice_up"
-            },
-            "bonus": {
-              "expr": "@spell_mod"
+            "source": "item",
+            "fixed": {
+              "expr": "кинуть(@heal_die, (@dice_count + (@slot - @spell_level) * @dice_up)) + (@spell_mod)"
             }
           },
           {
@@ -4676,12 +4631,9 @@
           {
             "id": "amt",
             "type": "amount",
-            "source": "roll",
-            "dice": {
-              "param": "heal_die"
-            },
-            "bonus": {
-              "param": "heal_bonus"
+            "source": "item",
+            "fixed": {
+              "expr": "кинуть(@heal_die) + @heal_bonus"
             }
           },
           {
@@ -4731,12 +4683,9 @@
           {
             "id": "amt",
             "type": "amount",
-            "source": "roll",
-            "dice": {
-              "const": "1d10"
-            },
-            "bonus": {
-              "expr": "@level"
+            "source": "item",
+            "fixed": {
+              "expr": "кинуть('1d10') + (@level)"
             }
           },
           {
@@ -5202,12 +5151,9 @@
           {
             "id": "amt",
             "type": "amount",
-            "source": "roll",
-            "dice": {
-              "expr": "@hit_die"
-            },
-            "bonus": {
-              "expr": "@con_mod"
+            "source": "item",
+            "fixed": {
+              "expr": "кинуть((@hit_die)) + (@con_mod)"
             }
           },
           {
@@ -5298,15 +5244,15 @@
           {
             "id": "dmg",
             "type": "amount",
-            "source": "roll",
-            "dice": {
-              "const": "2d10"
-            },
+            "source": "item",
             "scale": {
               "times": 0.5,
               "when": {
                 "ref": "save.success"
               }
+            },
+            "fixed": {
+              "expr": "кинуть('2d10')"
             }
           },
           {

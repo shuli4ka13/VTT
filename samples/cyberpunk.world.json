@@ -2269,9 +2269,9 @@
           {
             "id": "dmg",
             "type": "amount",
-            "source": "roll",
-            "dice": {
-              "param": "damage_dice"
+            "source": "item",
+            "fixed": {
+              "expr": "кинуть(@damage_dice)"
             }
           },
           {

@@ -1,5 +1,5 @@
 import type { Step } from '@vtt/schema';
-import { Field, Input, Button, Select } from '../../../../ui/primitives.tsx';
+import { Field, Input, Select, Button } from '../../../../ui/primitives.tsx';
 import { formulaAsLabels } from '../../../../ui/formula.tsx';
 import { SlotInput } from '../../slot-input.tsx';
 import { asOneFormula } from '@vtt/engine/model/amounts';
@@ -22,13 +22,16 @@ export function NumberBody({ step, context, edit, onAddParam }: {
   step: Step;
   context: SlotContext;
   edit: EditFn;
-  onAddParam?: (label: string, kind: string) => string;
+  onAddParam?: (label: string, kind: string, want?: string) => string;
 }) {
   const read = loose(step);
   const source = typeof read.source === 'object' ? 'roll' : (read.source ?? 'roll');
-  const written = textOf(read);
-  const words = written ? formulaAsLabels(context.system, written, namesOf(context)) : '';
-  const oldWay = asOneFormula(step);
+  const line = textOf(read) || asOneFormula(step) || '';
+  const names = namesOf(context);
+  const words = line ? formulaAsLabels(context.system, line, names) : '';
+
+  const unknown = [...new Set([...line.matchAll(/@([\p{L}\p{N}_]+)/gu)].map(m => m[1]!))]
+    .filter(name => !names.has(name) && !context.system.fields.some(f => f.tag === name));
 
   if (source === 'margin') {
     return (
@@ -41,61 +44,23 @@ export function NumberBody({ step, context, edit, onAddParam }: {
     );
   }
 
-  if (oldWay) {
-    return (
-      <div className="stack stack--tight">
-        <div className="row">
-          <Field label="кости">
-            <SlotInput
-              value={slotOf(read, 'dice')} context={context} dice placeholder="кости или из записи"
-              onChange={next => edit(0, draft => { loose(draft).dice = next ?? undefined; })}
-              onCreateFromRecord={onAddParam ? () => ({ param: onAddParam('кости', 'dice') }) : undefined}
-            />
-          </Field>
-          <Field label="прибавка">
-            <SlotInput
-              value={slotOf(read, 'bonus')} context={context}
-              onChange={next => edit(0, draft => { loose(draft).bonus = next ?? undefined; })}
-            />
-          </Field>
-          <Field label="сколько раз кинуть">
-            <SlotInput
-              value={slotOf(read, 'count')} context={context} allow={['expr', 'const', 'param', 'tag', 'table', 'ref']}
-              onChange={next => edit(0, draft => {
-                if (next === null || next === undefined) delete loose(draft).count;
-                else loose(draft).count = next;
-              })}
-            />
-          </Field>
-        </div>
-
-        <span className="faint">Это старая запись, из трёх полей. Одной строкой она читается так:</span>
-        <span className="faint mono">{oldWay}</span>
-        <Button size="sm" variant="ghost" onClick={() => edit(0, draft => {
-          const target = loose(draft);
-          delete target.dice;
-          delete target.bonus;
-          delete target.count;
-          target.source = 'item';
-          target.fixed = { expr: oldWay };
-        })}>переписать одной строкой</Button>
-      </div>
-    );
-  }
-
   return (
     <>
       <Field
         label="Сколько"
         hint="Обычная математика. Кость бросается так: кинуть(@кость_урона) — вторым числом сколько раз."
-        needed={!written}
+        needed={!line}
       >
         <Input
-          value={written}
+          value={line}
           mono
           placeholder="кинуть(@кость_урона) + @прибавка"
           onChange={next => edit(0, draft => {
             const target = loose(draft);
+            delete target.dice;
+            delete target.bonus;
+            delete target.count;
+            delete target.double;
             target.source = 'item';
             if (next.trim()) target.fixed = { expr: next };
             else delete target.fixed;
@@ -103,7 +68,14 @@ export function NumberBody({ step, context, edit, onAddParam }: {
         />
       </Field>
 
-      {words && words !== written ? <span className="faint">{words}</span> : null}
+      {words && words !== line ? <span className="faint">{words}</span> : null}
+
+      {onAddParam ? unknown.map(name => (
+        <Button
+          key={name} size="sm" variant="ghost"
+          onClick={() => { onAddParam(name, name, name); }}
+        >{`взять «${name}» из записи`}</Button>
+      )) : null}
 
       {source !== 'item' ? (
         <Field label="откуда">

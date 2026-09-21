@@ -19,11 +19,12 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
   const editSystem = useWorld(s => s.editSystem);
   const [removed, setRemoved] = useState<string | null>(null);
 
-  const addParam = (label: string, kind: string): string => {
+  const addParam = (label: string, kind: string, want?: string): string => {
     let key = '';
     edit(draft => {
       draft.params ??= [];
-      key = freeId(draft.params.map(p => p.key), 'из_записи');
+      const taken = draft.params.map(p => p.key);
+      key = want && !taken.includes(want) ? want : freeId(taken, 'из_записи');
       draft.params.push({ key, label, kind });
     });
     return key;

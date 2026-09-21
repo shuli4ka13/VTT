@@ -35,12 +35,32 @@ group('тогл крита пишет данные, а не код', () => {
     const system = dnd();
     setCrit(system, 'off');
     setCrit(system, 'double');
-    const strike = system.effects.strike!.steps!.find(s => s.type === 'amount') as Record<string, unknown>;
-    deepEq(strike.count, { expr: '@hit.atMax >= 1 ? 2 : 1' });
-    const fireball = system.effects.spell_save_half!.steps!.find(s => s.type === 'amount') as Record<string, unknown>;
-    ok(!String((fireball.count as { expr?: string } | undefined)?.expr ?? '').includes('? 2 : 1'),
+    const lineOf = (effect: string): string => {
+      const step = system.effects[effect]!.steps!.find(s => s.type === 'amount') as Record<string, unknown>;
+      return String((step.fixed as { expr?: unknown } | undefined)?.expr ?? '');
+    };
+    eq(lineOf('strike'), 'кинуть(@damage_dice, (@hit.atMax >= 1 ? 2 : 1)) + @damage_with');
+    ok(!lineOf('spell_save_half').includes('? 2 : 1'),
       'после спасброска цели удвоения нет — это не атака');
     eq(errorsOf(lintSystem(system)).length, 0);
+  });
+
+  test('удвоение снимается из той же строки, не оставляя мусора', () => {
+    const system = dnd();
+    const lineOf = (effect: string): string => {
+      const step = system.effects[effect]!.steps!.find(s => s.type === 'amount') as Record<string, unknown>;
+      return String((step.fixed as { expr?: unknown } | undefined)?.expr ?? '');
+    };
+    setCrit(system, 'off');
+    const голые = ['strike', 'cantrip_attack', 'spell_attack'].map(lineOf);
+    deepEq(голые, [
+      'кинуть(@damage_dice) + @damage_with',
+      'кинуть(@damage_die, @cantrip_dice)',
+      'кинуть(@damage_die, (@dice_count + (@slot - @spell_level) * @dice_up))',
+    ]);
+    setCrit(system, 'double');
+    setCrit(system, 'off');
+    deepEq(['strike', 'cantrip_attack', 'spell_attack'].map(lineOf), голые, 'круг туда-обратно ничего не копит');
   });
 });
 

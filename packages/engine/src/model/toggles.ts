@@ -1,4 +1,5 @@
 import { ANY_ROLL } from '../engine/targets.ts';
+import { findRoll, writeRoll, factorsOf, bare, tight } from './amounts.ts';
 import type { System, Step } from './types.ts';
 
 export type CritChoice = 'off' | 'double' | 'explode';
@@ -43,10 +44,14 @@ const amountsAfterCheck = (steps: Step[]): { check: Step; amount: Step }[] => {
       check = (s.side ?? 'source') === 'source' && step.id ? step : null;
       continue;
     }
-    if (step.type === 'amount' && check && s.dice !== undefined) out.push({ check, amount: step });
+    if (step.type !== 'amount' || !check) continue;
+    const rolls = s.dice !== undefined || findRoll((s.fixed as { expr?: unknown } | undefined)?.expr) !== null;
+    if (rolls) out.push({ check, amount: step });
   }
   return out;
 };
+
+const DOUBLER = /\?\s*2\s*:\s*1\s*$/;
 
 export function critOf(system: System): CritChoice {
   if ((system.room_rules ?? []).includes(CRIT_RULE) && system.effects[CRIT_RULE]) return 'explode';
@@ -58,7 +63,32 @@ export function critOf(system: System): CritChoice {
 const isDoubling = (step: Record<string, unknown>): boolean => {
   if (step.double !== undefined) return true;
   const count = step.count as { expr?: unknown } | undefined;
-  return typeof count?.expr === 'string' && count.expr.includes('? 2 : 1');
+  if (typeof count?.expr === 'string' && DOUBLER.test(count.expr)) return true;
+  const call = findRoll((step.fixed as { expr?: unknown } | undefined)?.expr);
+  return call?.times !== null && call?.times !== undefined
+    && factorsOf(bare(call.times)).some(part => DOUBLER.test(bare(part)));
+};
+
+const withoutDoubler = (step: Record<string, unknown>): void => {
+  const fixed = step.fixed as { expr?: unknown } | undefined;
+  const call = findRoll(fixed?.expr);
+  if (!call || !call.times) return;
+  const kept = factorsOf(bare(call.times))
+    .filter(part => !DOUBLER.test(bare(part)))
+    .map(tight);
+  step.fixed = { ...fixed, expr: writeRoll({ ...call, times: kept.length ? kept.join(' * ') : null }) };
+};
+
+const withDoubler = (step: Record<string, unknown>, check: string): void => {
+  const crit = `@${check}.atMax >= 1 ? 2 : 1`;
+  const fixed = step.fixed as { expr?: unknown } | undefined;
+  const call = findRoll(fixed?.expr);
+  if (!call) {
+    step.count = { expr: crit };
+    return;
+  }
+  const times = call.times ? `${tight(call.times)} * (${crit})` : `(${crit})`;
+  step.fixed = { ...fixed, expr: writeRoll({ ...call, times }) };
 };
 
 export function setCrit(draft: System, choice: CritChoice): void {
@@ -66,7 +96,9 @@ export function setCrit(draft: System, choice: CritChoice): void {
     for (const step of effect.steps ?? []) {
       const loose = step as Record<string, unknown>;
       delete loose.double;
-      if (isDoubling(loose)) delete loose.count;
+      if (!isDoubling(loose)) continue;
+      delete loose.count;
+      withoutDoubler(loose);
     }
   }
   delete draft.effects[CRIT_RULE];
@@ -76,7 +108,7 @@ export function setCrit(draft: System, choice: CritChoice): void {
   if (choice === 'double') {
     for (const effect of Object.values(draft.effects)) {
       for (const { check, amount } of amountsAfterCheck(effect.steps ?? [])) {
-        (amount as Record<string, unknown>).count = { expr: `@${check.id}.atMax >= 1 ? 2 : 1` };
+        withDoubler(amount as Record<string, unknown>, String(check.id));
       }
     }
   }
