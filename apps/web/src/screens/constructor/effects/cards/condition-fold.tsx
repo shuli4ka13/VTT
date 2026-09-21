@@ -70,9 +70,9 @@ export function ConditionFold({ group, earlier, edit, context }: {
   };
 
   return (
-    <Fold title="Когда выполнять" summary={summary}>
+    <Fold title="Делать этот шаг" summary={summary}>
       <div className="row">
-        <Field label="выполнять" hint="Исход шага выше по цепочке. Не сошлось — шаг пропускается, цепочка идёт дальше.">
+        <Field label="делать" hint="Смотрит на исход шага выше. Не сошлось — этот шаг пропускается, цепочка идёт дальше.">
           <Select
             value={when?.ref ?? ''}
             options={[['', 'всегда'], ...outputs.map(o => [o.ref, `если ${o.label}`] as const)] as never}

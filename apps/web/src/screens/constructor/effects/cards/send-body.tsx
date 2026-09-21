@@ -24,9 +24,10 @@ export function SendBody({ step, at, context, edit, system }: {
   const args = (step.args ?? {}) as Record<string, unknown>;
   return (
     <>
-    <div className="row">
-      <Field label="какой эффект вызываем" needed={!step.event}
-        hint={commons.length ? undefined : 'Вызываемых эффектов пока нет — заведите кнопкой «+ вызываемый» слева.'}>
+      <Field
+        label="Зовём эффект" needed={!step.event}
+        hint={commons.length ? undefined : 'Вызываемых эффектов пока нет — заведите кнопкой «+ вызываемый» слева.'}
+      >
         <Select
           value={String(step.event ?? '')}
           options={[['', '— какой эффект зовём —'],
@@ -34,76 +35,74 @@ export function SendBody({ step, at, context, edit, system }: {
           onChange={next => edit(at, draft => { loose(draft).event = next; })}
         />
       </Field>
-      <Field
-        label="Какое число уходит"
-        hint={called ? `«${called.label ?? step.event}» получит его и решит, что делать.` : undefined}
-      >
-        <SlotInput
-          value={step.amount} context={context} allow={['ref', 'expr', 'const', 'param']}
-          onChange={next => edit(at, draft => { loose(draft).amount = next ?? undefined; })}
-        />
-      </Field>
-    </div>
 
-    {asks.length ? (
-      <div className="row">
-        {asks.map(need => (
-          <Field key={need.key} label={`${need.label ?? need.key} — для «${called?.label ?? step.event}»`} needed={args[need.key] === undefined}>
+      {step.event ? (
+        <div className="stack stack--tight call-args">
+          <span className="field__label">
+            Что ему отправляем
+          </span>
+
+          <div className="pair">
+            <span className="call-args__name">число</span>
             <SlotInput
-              value={args[need.key] as never} context={context}
-              onChange={next => edit(at, draft => {
-                const all = { ...((loose(draft).args ?? {}) as Record<string, unknown>) };
-                if (next === undefined || next === null) delete all[need.key]; else all[need.key] = next;
-                if (Object.keys(all).length) loose(draft).args = all; else delete loose(draft).args;
-              })}
+              value={step.amount} context={context} allow={['ref', 'expr', 'const', 'param']}
+              onChange={next => edit(at, draft => { loose(draft).amount = next ?? undefined; })}
             />
-          </Field>
-        ))}
-      </div>
-    ) : null}
+            <span />
+          </div>
 
-    <Extras
-      items={[
-        {
-          key: 'tags', label: 'метки', on: all.length > 0,
-          add: () => edit(at, draft => { loose(draft).tags = []; }),
-          drop: () => edit(at, draft => { delete loose(draft).tags; }),
-          node: (
-      <Field
-        label="Метки"
-        hint={called && tagsOf(system, called).length
-          ? `Чем помечено то, что уходит. «${called.label ?? step.event}» знает такие: ${tagsOf(system, called).join(', ')}.`
-          : 'Чем помечено то, что уходит. Цель по ним решает, что с этим делать.'}
-      >
-        <TagPick
-          value={all as Tag[]}
-          known={called ? tagsOf(system, called) : []}
-          fromRecord={(context.effect.params ?? []).map(p => ({ key: p.key, label: p.label ?? p.key }))}
-          onChange={next => edit(at, draft => {
-            if (next.length) loose(draft).tags = next; else delete loose(draft).tags;
-          })}
-        />
-      </Field>
-          ),
-        },
-        {
-          key: 'strict', label: 'обрывать всё, если вызванный оборвался', on: !!step.strict,
-          add: () => edit(at, draft => { loose(draft).strict = true; }),
-          drop: () => edit(at, draft => { delete loose(draft).strict; }),
-          node: (
-            <Field label="если вызванный оборвался" hint="«Оборваться тоже» — для платы: нет ячейки, значит и заклинания нет.">
-              <Select
-                value={step.strict ? 'true' : 'false'}
-                options={[['false', 'идти дальше'], ['true', 'оборваться тоже']] as const}
+          {asks.map(need => (
+            <div className="pair" key={need.key}>
+              <span className="call-args__name">{need.label ?? need.key}</span>
+              <SlotInput
+                value={args[need.key] as never} context={context}
                 onChange={next => edit(at, draft => {
-                  if (next === 'true') loose(draft).strict = true; else delete loose(draft).strict;
+                  const all = { ...((loose(draft).args ?? {}) as Record<string, unknown>) };
+                  if (next === undefined || next === null) delete all[need.key]; else all[need.key] = next;
+                  if (Object.keys(all).length) loose(draft).args = all; else delete loose(draft).args;
                 })}
               />
-            </Field>
-          ),
-        },
-      ]}
-    />
+              <span className={args[need.key] === undefined ? 'need' : undefined}>
+                {args[need.key] === undefined ? 'не заполнено' : ''}
+              </span>
+            </div>
+          ))}
+
+          <div className="pair">
+            <span className="call-args__name">метки</span>
+            <TagPick
+              value={all as Tag[]}
+              known={called ? tagsOf(system, called) : []}
+              fromRecord={(context.effect.params ?? []).map(p => ({ key: p.key, label: p.label ?? p.key }))}
+              onChange={next => edit(at, draft => {
+                if (next.length) loose(draft).tags = next; else delete loose(draft).tags;
+              })}
+            />
+            <span />
+          </div>
+        </div>
+      ) : null}
+
+      <Extras
+        items={[
+          {
+            key: 'strict', label: 'обрывать всё, если вызванный оборвался', on: !!step.strict,
+            add: () => edit(at, draft => { loose(draft).strict = true; }),
+            drop: () => edit(at, draft => { delete loose(draft).strict; }),
+            node: (
+              <Field label="если вызванный оборвался" hint="«Оборваться тоже» — для платы: нет ячейки, значит и заклинания нет.">
+                <Select
+                  value={step.strict ? 'true' : 'false'}
+                  options={[['false', 'идти дальше'], ['true', 'оборваться тоже']] as const}
+                  onChange={next => edit(at, draft => {
+                    if (next === 'true') loose(draft).strict = true; else delete loose(draft).strict;
+                  })}
+                />
+              </Field>
+            ),
+          },
+        ]}
+      />
     </>
   );
 }

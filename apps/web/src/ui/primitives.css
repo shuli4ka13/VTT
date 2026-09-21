@@ -339,6 +339,9 @@
 }
 .chips__x:hover { color: var(--danger); }
 
+.call-args { border-left: 2px solid var(--border-strong); padding-left: var(--s-4); }
+.call-args__name { color: var(--text-muted); font-size: var(--fs-2); align-self: center; }
+
 .extra { position: relative; }
 .extra__x {
   position: absolute; top: 0; right: 0;

@@ -138,13 +138,13 @@ describe('GroupCard', () => {
 describe('GroupCard: условие выполнения шага', () => {
   const earlier = [{ id: 'hit', type: 'threshold', at: 1, title: 'Проверка' }];
 
-  it('когда выше есть проверка с исходом да/нет, у шага появляется «Когда выполнять»', () => {
+  it('когда выше есть проверка с исходом да/нет, у шага появляется «Делать этот шаг»', () => {
     const steps = [{ type: 'apply', direction: 'subtract', targetModifiers: true, value: { const: 4 } }] as unknown as Step[];
     const group = groupSteps(steps)[0]!;
     const apply = steps[0] as any;
     render(<GroupCard group={group} position={2} system={system} effect={effect}
       earlier={earlier} problem={null} edit={(_, change) => change(apply as never)} onDelete={() => {}} />);
-    expect(screen.getByText('Когда выполнять')).toBeTruthy();
+    expect(screen.getByText('Делать этот шаг')).toBeTruthy();
     const selects = [...document.querySelectorAll('select')] as HTMLSelectElement[];
     const picker = selects.find(el => [...el.options].some(o => o.value === 'hit.success'))!;
     fireEvent.change(picker, { target: { value: 'hit.success' } });
@@ -181,18 +181,20 @@ describe('GroupCard: изменение как вызов', () => {
     expect(apply.amount).toEqual({ ref: 'n' });
   });
 
-  it('шаг «отправить» открывается редактором вызова', () => {
+  it('счёт и вызов — два шага, у вызова видно, что уходит', () => {
     const steps = [
       { id: 'n', type: 'amount', source: 'roll' },
       { type: 'emit', event: 'damage', amount: { ref: 'n' }, tags: ['огонь'] },
     ] as unknown as Step[];
-    const group = groupSteps(steps)[0]!;
-    expect(group.kind).toBe('change');
-    expect(group.amount?.id).toBe('n');
-    render(<GroupCard group={group} position={1} system={eventful} effect={effect}
+    const cards = groupSteps(steps);
+    expect(cards.map(c => c.kind), 'число больше не прячется внутри вызова').toEqual(['number', 'change']);
+
+    render(<GroupCard group={cards[1]!} position={2} system={eventful} effect={effect}
       earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
-    expect(screen.getByText('какой эффект вызываем')).toBeTruthy();
-    expect(screen.getByText('Урон')).toBeTruthy();
+    expect(screen.getByText('Зовём эффект')).toBeTruthy();
+    expect(screen.getByText('Что ему отправляем')).toBeTruthy();
+    expect(screen.getByText('число')).toBeTruthy();
+    expect(screen.getByText('метки')).toBeTruthy();
   });
 
   it('без вызываемых эффектов режима «вызов» нет', () => {
