@@ -327,10 +327,27 @@ function features() {
       'До начала твоего следующего хода по тебе бьют с помехой, а спасброски Ловкости идут с преимуществом.', 'action', {
         self: [hang({ const: 'dodging' })],
       }),
-    dash: manual('Рывок', 'Действия в бою', 'Скорость на этот ход удваивается. Передвижение считает ведущий.', 'action', {}),
+    dash: manual('Рывок', 'Действия в бою', 'Скорость до конца хода удваивается.', 'action', {
+      steps: [hang({ const: 'dashing' })],
+    }),
+    dashing: passive('В рывке', 'Скорость удвоена до конца хода.', [value('speed', 'mul', 2)],
+      { kind: 'turns', max: 1, ends: 'turn-end' }),
     disengage: manual('Отход', 'Действия в бою', 'Твоё передвижение до конца хода не провоцирует атак.', 'action', {}),
-    hide: manual('Засада', 'Действия в бою', 'Проверка Скрытности против пассивной внимательности — бросок делается с листа.', 'action', {}),
-    help: manual('Помощь', 'Действия в бою', 'Союзник получает преимущество на следующую проверку или атаку. Преимущество заявляется за столом.', 'action', {}),
+    hide: manual('Засада', 'Действия в бою', 'Скрытность против пассивной внимательности цели. Вышло — прячешься.', 'action', {
+      steps: [
+        { id: 'sneak', type: 'threshold', roll: { die: DIE, bonus: { expr: '#stealth' }, check: 'skill_roll' },
+          versus: { tag: 'passive_perception' }, successWhen: 'atLeast', continueOn: 'success' },
+        { type: 'status', mode: 'apply', effect: { const: 'hidden' }, side: 'source' },
+      ],
+    }),
+    hidden: passive('Прячется', 'Тебя не видят: атаки по цели, которая тебя не видит, идут с преимуществом.',
+      [roll('attack_roll', 'advantage')], { kind: 'turns', max: 1, ends: 'turn-start' }),
+    help: manual('Помощь', 'Действия в бою', 'Союзник бросает следующую проверку или атаку с преимуществом.', 'action', {
+      steps: [hang({ const: 'helped' })],
+    }),
+    helped: passive('Ему помогают', 'Следующая проверка или атака — с преимуществом.',
+      [roll('attack_roll', 'advantage'), roll('skill_roll', 'advantage')],
+      { kind: 'turns', max: 1, ends: 'turn-start' }),
     spend_hit_die: manual('Потратить кость хитов', 'Отдых и смерть',
       'На коротком отдыхе: бросаешь кость хитов, прибавляешь Телосложение, восполняешь столько хитов.', 'free', {
         self: [
@@ -414,7 +431,8 @@ function conditions() {
       [incomingAdvantage, ...autoFailBody]),
     unconscious: passive('Без сознания', 'Лежит без чувств: как паралич, и роняет всё, что держал.',
       [incomingAdvantage, ...autoFailBody, value('speed', 'set', 0)]),
-    stable: passive('Стабилен', 'Ноль хитов, но спасброски от смерти больше не нужны.', []),
+    stable: passive('Стабилен', 'Ноль хитов, но спасброски от смерти больше не нужны.',
+      [value('death_ok', 'set', 3)], { kind: 'permanent' }),
     dead: passive('Мёртв', 'Три провала или урон, перекрывший максимум хитов.', [value('speed', 'set', 0)], { kind: 'permanent' }),
 
     dodging: passive('Уклоняется', 'По тебе бьют с помехой, спасброски Ловкости с преимуществом.',

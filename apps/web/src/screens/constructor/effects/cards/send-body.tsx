@@ -34,7 +34,10 @@ export function SendBody({ step, at, context, edit, system }: {
           onChange={next => edit(at, draft => { loose(draft).event = next; })}
         />
       </Field>
-      <Field label="сколько">
+      <Field
+        label="Какое число уходит"
+        hint={called ? `«${called.label ?? step.event}» получит его и решит, что делать.` : undefined}
+      >
         <SlotInput
           value={step.amount} context={context} allow={['ref', 'expr', 'const', 'param']}
           onChange={next => edit(at, draft => { loose(draft).amount = next ?? undefined; })}

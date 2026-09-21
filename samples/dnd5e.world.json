@@ -5040,11 +5040,41 @@
       "dash": {
         "label": "Рывок",
         "group": "Действия в бою",
-        "description": "Скорость на этот ход удваивается. Передвижение считает ведущий.",
+        "description": "Скорость до конца хода удваивается.",
         "activation": "manual",
         "cost": "action",
         "params": [],
-        "steps": []
+        "steps": [
+          {
+            "type": "status",
+            "mode": "apply",
+            "effect": {
+              "const": "dashing"
+            }
+          }
+        ]
+      },
+      "dashing": {
+        "label": "В рывке",
+        "group": "Состояния",
+        "description": "Скорость удвоена до конца хода.",
+        "activation": "passive",
+        "duration": {
+          "kind": "turns",
+          "max": 1,
+          "ends": "turn-end"
+        },
+        "stacking": "refresh",
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "speed",
+            "op": "mul",
+            "value": 2,
+            "stacking": "sum",
+            "condition": null
+          }
+        ]
       },
       "disengage": {
         "label": "Отход",
@@ -5058,20 +5088,101 @@
       "hide": {
         "label": "Засада",
         "group": "Действия в бою",
-        "description": "Проверка Скрытности против пассивной внимательности — бросок делается с листа.",
+        "description": "Скрытность против пассивной внимательности цели. Вышло — прячешься.",
         "activation": "manual",
         "cost": "action",
         "params": [],
-        "steps": []
+        "steps": [
+          {
+            "id": "sneak",
+            "type": "threshold",
+            "roll": {
+              "die": {
+                "constant": "lead_die"
+              },
+              "bonus": {
+                "expr": "#stealth"
+              },
+              "check": "skill_roll"
+            },
+            "versus": {
+              "tag": "passive_perception"
+            },
+            "successWhen": "atLeast",
+            "continueOn": "success"
+          },
+          {
+            "type": "status",
+            "mode": "apply",
+            "effect": {
+              "const": "hidden"
+            },
+            "side": "source"
+          }
+        ]
+      },
+      "hidden": {
+        "label": "Прячется",
+        "group": "Состояния",
+        "description": "Тебя не видят: атаки по цели, которая тебя не видит, идут с преимуществом.",
+        "activation": "passive",
+        "duration": {
+          "kind": "turns",
+          "max": 1,
+          "ends": "turn-start"
+        },
+        "stacking": "refresh",
+        "modifiers": [
+          {
+            "kind": "roll",
+            "target": "attack_roll",
+            "edit": "advantage",
+            "condition": null
+          }
+        ]
       },
       "help": {
         "label": "Помощь",
         "group": "Действия в бою",
-        "description": "Союзник получает преимущество на следующую проверку или атаку. Преимущество заявляется за столом.",
+        "description": "Союзник бросает следующую проверку или атаку с преимуществом.",
         "activation": "manual",
         "cost": "action",
         "params": [],
-        "steps": []
+        "steps": [
+          {
+            "type": "status",
+            "mode": "apply",
+            "effect": {
+              "const": "helped"
+            }
+          }
+        ]
+      },
+      "helped": {
+        "label": "Ему помогают",
+        "group": "Состояния",
+        "description": "Следующая проверка или атака — с преимуществом.",
+        "activation": "passive",
+        "duration": {
+          "kind": "turns",
+          "max": 1,
+          "ends": "turn-start"
+        },
+        "stacking": "refresh",
+        "modifiers": [
+          {
+            "kind": "roll",
+            "target": "attack_roll",
+            "edit": "advantage",
+            "condition": null
+          },
+          {
+            "kind": "roll",
+            "target": "skill_roll",
+            "edit": "advantage",
+            "condition": null
+          }
+        ]
       },
       "spend_hit_die": {
         "label": "Потратить кость хитов",
@@ -5743,10 +5854,19 @@
         "description": "Ноль хитов, но спасброски от смерти больше не нужны.",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
         "stacking": "refresh",
-        "modifiers": []
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "death_ok",
+            "op": "set",
+            "value": 3,
+            "stacking": "override",
+            "condition": null
+          }
+        ]
       },
       "dead": {
         "label": "Мёртв",
