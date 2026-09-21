@@ -154,9 +154,9 @@ describe('ссылка на результат шага', () => {
     fireEvent.focus(input);
 
     const options = [...document.querySelectorAll('.slot__option')].map(o => o.textContent?.trim());
-    expect(options).toContain('Результаты шаговшаг 1 · Проверка — превышение');
-    expect(options).toContain('Результаты шаговшаг 1 · Проверка — костей на максимуме');
-    expect(options).toContain('Результаты шаговшаг 1 · Проверка — костей на единице');
+    expect(options).toContain('Результаты шаговшаг 1 · Проверка — на сколько перебил порог');
+    expect(options).toContain('Результаты шаговшаг 1 · Проверка — сколько костей легло максимумом');
+    expect(options).toContain('Результаты шаговшаг 1 · Проверка — сколько костей легло единицей');
   });
 });
 

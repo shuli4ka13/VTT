@@ -73,7 +73,12 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
             position={at + 1}
             system={system}
             effect={effect}
-            earlier={earlierOf(group.indices[0]!)}
+            earlier={[
+              ...earlierOf(group.indices[0]!),
+              ...(group.amount?.id
+                ? [{ id: String(group.amount.id), type: 'amount', at: 0, title: 'здесь же' }]
+                : []),
+            ]}
             problem={problem}
             problemAction={donorFix ? (
               <Button size="sm" onClick={() => copyDonorBlock(editSystem, donorFix.donor, donorFix.group)}>

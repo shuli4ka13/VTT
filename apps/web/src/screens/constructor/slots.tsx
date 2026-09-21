@@ -9,7 +9,9 @@ import { dice as diceText, STEP } from '../../words.ts';
 export interface EarlierStep { id: string; type: string; at?: number; title?: string }
 
 export const stepName = (step: EarlierStep): string =>
-  (step.at ? `${STEP.one} ${step.at}${step.title ? ` · ${step.title}` : ''}` : `${STEP.one} «${step.id}»`);
+  (step.at
+    ? `${STEP.one} ${step.at}${step.title ? ` · ${step.title}` : ''}`
+    : step.title || `${STEP.one} «${step.id}»`);
 
 function outputsOf(type: string): { path: string; label: string; kind?: string }[] {
   try {
