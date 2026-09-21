@@ -9,6 +9,11 @@
 }
 .card--flat { background: transparent; }
 .card--bad { border-color: var(--danger); }
+
+.card--check { border-left: 3px solid var(--kind-check); }
+.card--change { border-left: 3px solid var(--kind-change); }
+.card--number { border-left: 3px solid var(--kind-number); }
+.card--table { border-left: 3px solid var(--kind-table); }
 .card--pick { cursor: pointer; text-align: left; width: 100%; }
 .card--pick:hover { border-color: var(--border-strong); background: var(--surface-2); }
 .card--on { border-color: var(--accent); background: var(--accent-soft); }

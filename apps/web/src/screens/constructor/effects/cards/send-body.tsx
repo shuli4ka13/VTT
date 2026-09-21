@@ -1,11 +1,11 @@
 import type { System } from '@vtt/schema';
-import { Field, Select, Chip } from '../../../../ui/primitives.tsx';
+import { Field, Select } from '../../../../ui/primitives.tsx';
 import { SlotInput } from '../../slot-input.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 import { calledOf } from '@vtt/engine/engine/effects';
 import { Extras } from './extras.tsx';
-import { WordList } from '../../word-list.tsx';
+import { TagPick, type Tag } from '../../tag-pick.tsx';
 
 const loose = (draft: unknown): Record<string, unknown> => draft as Record<string, unknown>;
 
@@ -18,9 +18,6 @@ export function SendBody({ step, at, context, edit, system }: {
 }) {
   const commons = calledOf(system);
   const all: unknown[] = Array.isArray(step.tags) ? step.tags : [];
-  const tags: string[] = all.filter((t): t is string => typeof t === 'string');
-  const fromRecord = all.filter((t): t is { param: string } => Boolean(t) && typeof t === 'object' && 'param' in (t as object));
-  const needs = (context.effect.params ?? []).filter(p => !fromRecord.some(t => t.param === p.key));
   const called = system.effects?.[String(step.event ?? '')];
   const asks = called?.params ?? [];
   const args = (step.args ?? {}) as Record<string, unknown>;
@@ -68,33 +65,15 @@ export function SendBody({ step, at, context, edit, system }: {
           add: () => edit(at, draft => { loose(draft).tags = []; }),
           drop: () => edit(at, draft => { delete loose(draft).tags; }),
           node: (
-      <Field label="метки" hint="По ним цель узнаёт своё сопротивление.">
-        <WordList
-          value={tags}
+      <Field label="Метки" hint="Чем помечена посылка. Цель по ним решает, что с ней делать.">
+        <TagPick
+          value={all as Tag[]}
           known={[...new Set(Object.values(system.effects).flatMap(e => e.tags ?? []))]}
-          placeholder="новая метка"
-          onChange={next => edit(at, draft => { loose(draft).tags = [...fromRecord, ...next]; })}
+          fromRecord={(context.effect.params ?? []).map(p => ({ key: p.key, label: p.label ?? p.key }))}
+          onChange={next => edit(at, draft => {
+            if (next.length) loose(draft).tags = next; else delete loose(draft).tags;
+          })}
         />
-        <div className="inline inline--tight">
-          {fromRecord.map(tag => (
-            <Chip
-              key={tag.param}
-              active
-              onRemove={() => edit(at, draft => {
-                loose(draft).tags = all.filter(t => t !== tag);
-              })}
-            >
-              {context.effect.params?.find(p => p.key === tag.param)?.label ?? tag.param} — из записи
-            </Chip>
-          ))}
-          {needs.length ? (
-            <Select
-              value=""
-              options={[['', '+ тег из записи…'], ...needs.map(p => [p.key, p.label ?? p.key] as const)] as never}
-              onChange={next => { if (next) edit(at, draft => { loose(draft).tags = [...all, { param: next }]; }); }}
-            />
-          ) : null}
-        </div>
       </Field>
           ),
         },

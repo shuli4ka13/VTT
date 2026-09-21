@@ -17,10 +17,10 @@ describe('EffectsTab: палитра трёх понятий', () => {
     }));
   });
 
-  it('активируемому предлагают «чего стоит», но не «сколько висит»', () => {
+  it('активируемому предлагают «занимает», но не «сколько висит»', () => {
     render(<EffectsTab />);
     expect(screen.queryByText('+ сколько висит')).toBeNull();
-    expect(screen.getByText('+ чего стоит')).toBeTruthy();
+    expect(screen.getByText('+ занимает')).toBeTruthy();
   });
 
   it('висящему — наоборот: «сколько висит» есть, стоимости нет', () => {
@@ -34,7 +34,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
     }));
     render(<EffectsTab />);
     expect(screen.getByText('+ сколько висит')).toBeTruthy();
-    expect(screen.queryByText('+ чего стоит')).toBeNull();
+    expect(screen.queryByText('+ занимает')).toBeNull();
   });
 
   it('палитра шагов — только виды движка, клик кладёт шаг', () => {
@@ -45,7 +45,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
       .map(b => b.textContent!.trim())
       .filter(t => !LAUNCH_KINDS.some(kind => t === `+ ${kind.label.toLowerCase()}`)
         && t !== '+ вызываемый' && t !== '+ новый' && !t.startsWith('+ брать')
-        && !['+ блок', '+ метки', '+ описание для игрока', '+ чего стоит', '+ сколько висит', '+ на основе'].includes(t));
+        && !['+ блок', '+ метки', '+ описание для игрока', '+ занимает', '+ сколько висит', '+ на основе'].includes(t));
     expect(palette).toEqual(['+ проверка', '+ изменение', '+ таблица', '+ число']);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     expect(screen.getByText('1 · Проверка')).toBeTruthy();
@@ -309,7 +309,7 @@ describe('крит собирается в шаге «число»', () => {
   });
 });
 
-describe('дорожка «со мной» собирается отдельно от цепочки', () => {
+describe('стоимость собирается отдельно от цепочки', () => {
   beforeEach(() => {
     useWorld.setState(state => ({
       ...state,
@@ -325,7 +325,7 @@ describe('дорожка «со мной» собирается отдельно
 
   it('шаг, добавленный в дорожку, ложится в self, а не в steps', () => {
     render(<EffectsTab />);
-    fireEvent.click(screen.getByText('Плата за применение'));
+    fireEvent.click(screen.getByText('Стоимость'));
 
     const adders = screen.getAllByText('+ изменение');
     fireEvent.click(adders[adders.length - 1]!);

@@ -37,7 +37,7 @@ const STACKING = [
 const fromBase = (base: Effect): string => {
   const parts: string[] = [];
   if (base.params?.length) parts.push(`потребностей: ${base.params.length}`);
-  if (base.self?.length) parts.push(`дорожка «со мной»: ${base.self.length}`);
+  if (base.self?.length) parts.push(`стоимость: ${base.self.length}`);
   if (base.steps?.length) parts.push(`шагов впереди: ${base.steps.length}`);
   if (base.modifiers?.length) parts.push(`правок: ${base.modifiers.length}`);
   return parts.length
@@ -120,7 +120,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
               key: 'tags', label: 'метки', on: !!effect.tags?.length,
               add: () => {}, drop: () => edit(draft => { delete draft.tags; }),
               node: (
-                <Field label="Метки" hint="По ним цель узнаёт своё сопротивление, когда этот эффект до неё доходит.">
+                <Field label="Метки" hint="Чем помечено то, что уходит к цели. Цель по ним решает, что с этим делать.">
                   <WordList
                     value={effect.tags ?? []} known={knownTags(system)} placeholder="новая метка"
                     onChange={next => edit(draft => {
@@ -131,10 +131,10 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
               ),
             },
             ...(launch.kind === 'manual' || launch.ask ? [{
-              key: 'cost', label: 'чего стоит', on: !!effect.cost,
+              key: 'cost', label: 'занимает', on: !!effect.cost,
               add: () => {}, drop: () => edit(draft => { delete draft.cost; }),
               node: (
-                <Field label="Чего стоит">
+                <Field label="Занимает" hint="Действие, бонусное, реакция — чем это оплачивается в свой ход.">
                   <Select
                     value={effect.cost ?? ''}
                     options={[['', '— не задано —'],
@@ -158,7 +158,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
                   label="На основе"
                   hint={effect.extends && system.effects[effect.extends]
                     ? fromBase(system.effects[effect.extends]!)
-                    : 'Возьмёт у основы потребности, плату и шаги — они пойдут первыми.'}
+                    : 'Возьмёт у основы её потребности, стоимость и шаги — они пойдут первыми.'}
                 >
                   <Select
                     value={effect.extends ?? ''}
@@ -206,7 +206,7 @@ const knownTags = (system: System): string[] => [...new Set(
 
 const idleWords = (effect: Effect): string => {
   const also: string[] = [];
-  if (effect.self?.length) also.push('плата за применение');
+  if (effect.self?.length) also.push('стоимость');
   if (effect.modifiers?.length) also.push('правки');
   return also.length
     ? `шагов нет — работает только ${also.join(' и ')}`
@@ -301,9 +301,9 @@ function SelfTrack({ effect, system, edit }: {
 
   return (
     <Fold
-      title="Плата за применение"
+      title="Стоимость"
       count={track.length}
-      summary={track.length ? 'списывается один раз, даже если целей несколько' : 'бесплатно'}
+      summary={track.length ? 'списывается один раз, даже если целей несколько' : 'ничего не стоит'}
     >
       <Chain
         effect={carrier}

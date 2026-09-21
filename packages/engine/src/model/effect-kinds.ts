@@ -14,7 +14,7 @@ export const ACTIVATIONS = {
   passive: {
     label: 'Пассивный',
     icon: '✦',
-    hint: 'Висит и правит цифры: бонусы, помеха, сопротивление.',
+    hint: 'Висит и правит цифры: прибавки, помеха, множители.',
     payload: 'modifiers',
   },
   reaction: {

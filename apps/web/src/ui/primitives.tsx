@@ -3,7 +3,7 @@ import type { ReactNode, ChangeEvent, FocusEvent, KeyboardEvent } from 'react';
 
 export function Card({ children, tone, className = '' }: {
   children: ReactNode;
-  tone?: 'bad' | 'flat';
+  tone?: 'bad' | 'flat' | 'check' | 'change' | 'number' | 'table';
   className?: string;
 }) {
   return <div className={`card ${tone ? `card--${tone}` : ''} ${className}`}>{children}</div>;

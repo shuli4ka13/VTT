@@ -328,15 +328,15 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
 
           <Extras
             items={[{
-              key: 'targetModifiers', label: 'не учитывать сопротивления цели',
+              key: 'targetModifiers', label: 'не слушать правки цели',
               on: step.targetModifiers === false,
               add: () => edit(applyIndex, draft => { (draft as any).targetModifiers = false; }),
               drop: () => edit(applyIndex, draft => { (draft as any).targetModifiers = true; }),
               node: (
-                <Field label="сопротивления цели">
+                <Field label="правки цели" hint="Всё, что у цели правит приходящее число: её состояния, черты, поля.">
                   <Select
                     value={String(step.targetModifiers ?? true)}
-                    options={[['true', 'учитываются'], ['false', 'не учитываются']] as const}
+                    options={[['true', 'слушаются'], ['false', 'не слушаются']] as const}
                     onChange={next => edit(applyIndex, draft => { (draft as any).targetModifiers = next === 'true'; })}
                   />
                 </Field>

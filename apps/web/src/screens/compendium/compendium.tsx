@@ -214,7 +214,7 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
         <Card>
           <CardHead
             title="Что висит на владельце"
-            sub="Пока запись надета или выучена, эти эффекты действуют сами: черта даёт сопротивление, заклинание-реакция ждёт своего часа."
+            sub="Пока запись надета или выучена, эти эффекты действуют сами."
           />
           <div className="inline inline--tight">
             {(record.grants ?? []).map(id => (

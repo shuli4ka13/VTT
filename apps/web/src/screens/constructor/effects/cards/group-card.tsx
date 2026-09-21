@@ -80,7 +80,7 @@ export function GroupCard({
 
   return (
     <>
-      <Card tone={problem ? 'bad' : undefined}>
+      <Card tone={problem ? 'bad' : (group.kind as 'check' | 'change' | 'number' | 'table')}>
         <CardHead
           title={`${position} · ${CARD_TITLES[group.kind]}`}
 
