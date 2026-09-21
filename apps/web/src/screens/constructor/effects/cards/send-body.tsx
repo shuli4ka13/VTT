@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import type { System } from '@vtt/schema';
-import { Field, Select } from '../../../../ui/primitives.tsx';
+import { Field, Select, Button } from '../../../../ui/primitives.tsx';
 import { SlotInput } from '../../slot-input.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
@@ -7,16 +8,19 @@ import { calledOf } from '@vtt/engine/engine/effects';
 import { Extras } from './extras.tsx';
 import { TagPick, type Tag } from '../../tag-pick.tsx';
 import { tagsOf } from '@vtt/engine/model/lists';
+import { WhatNext, meddlersOf } from '../what-next.tsx';
 
 const loose = (draft: unknown): Record<string, unknown> => draft as Record<string, unknown>;
 
-export function SendBody({ step, at, context, edit, system }: {
+export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
   step: any;
   at: number;
   context: SlotContext;
   edit: EditFn;
   system: System;
+  onOpenEffect?: (id: string) => void;
 }) {
+  const [peek, setPeek] = useState(false);
   const commons = calledOf(system);
   const all: unknown[] = Array.isArray(step.tags) ? step.tags : [];
   const called = system.effects?.[String(step.event ?? '')];
@@ -38,9 +42,12 @@ export function SendBody({ step, at, context, edit, system }: {
 
       {step.event ? (
         <div className="stack stack--tight call-args">
-          <span className="field__label">
-            Что ему отправляем
-          </span>
+          <div className="call-args__head">
+            <span className="field__label">Что ему отправляем</span>
+            <Button size="sm" variant="ghost" onClick={() => setPeek(true)}>
+              {`что будет дальше${meddlersOf(system, String(step.event)).length ? ' · цель может урезать' : ''} →`}
+            </Button>
+          </div>
 
           <div className="pair">
             <span className="call-args__name">число</span>
@@ -82,6 +89,14 @@ export function SendBody({ step, at, context, edit, system }: {
           </div>
         </div>
       ) : null}
+
+      <WhatNext
+        open={peek}
+        onClose={() => setPeek(false)}
+        system={system}
+        eventId={String(step.event ?? '')}
+        onEdit={id => onOpenEffect?.(id)}
+      />
 
       <Extras
         items={[

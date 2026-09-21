@@ -17,6 +17,8 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
   empty?: string;
 }) {
   const editSystem = useWorld(s => s.editSystem);
+  const pick = useWorld(s => s.pick);
+  const onOpenEffect = (id: string) => pick({ activeEffectId: id });
   const [removed, setRemoved] = useState<string | null>(null);
 
   const addParam = (label: string, kind: string, want?: string): string => {
@@ -87,6 +89,7 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
               </Button>
             ) : undefined}
             onAddParam={addParam}
+            onOpenEffect={onOpenEffect}
             edit={(k, change) => edit(draft => {
               const index = group.indices[k] ?? group.indices[0]!;
               change(draft.steps![index]!);

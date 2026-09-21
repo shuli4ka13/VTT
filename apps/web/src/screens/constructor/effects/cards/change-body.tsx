@@ -269,13 +269,14 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   );
 }
 
-export function ChangeBody({ group, context, edit, withNumber, system, onAddParam }: {
+export function ChangeBody({ group, context, edit, withNumber, system, onAddParam, onOpenEffect }: {
   group: CardGroup;
   context: SlotContext;
   edit: EditFn;
   withNumber?: WithNumber;
   system: System;
   onAddParam?: (label: string, kind: string) => string;
+  onOpenEffect?: (id: string) => void;
 }) {
   const step = group.step as any;
   const mode = step.type === 'status' ? 'status' : step.type === 'emit' ? 'emit' : 'apply';
@@ -317,7 +318,8 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
       />
 
       {mode === 'emit' ? (
-        <SendBody step={step} at={applyIndex} context={context} edit={edit} system={system} />
+        <SendBody step={step} at={applyIndex} context={context} edit={edit} system={system}
+          onOpenEffect={onOpenEffect} />
       ) : null}
 
       {mode === 'apply' ? (

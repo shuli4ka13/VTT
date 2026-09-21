@@ -37,7 +37,9 @@ export function readingWord(system: System, name: string): string | null {
   return String(kind);
 }
 
-export function refSegment(ref: unknown, system: System, effect: Effect, emptyAs: string): Segment {
+export type Names = Map<string, string>;
+
+export function refSegment(ref: unknown, system: System, effect: Effect, emptyAs: string, names?: Names): Segment {
   if (ref === null || ref === undefined || ref === '') return hole(emptyAs);
   if (typeof ref !== 'object') return seg(String(ref));
   const r = ref as Record<string, unknown>;
@@ -53,7 +55,13 @@ export function refSegment(ref: unknown, system: System, effect: Effect, emptyAs
     return hole(`${declared?.label ?? String(r.param)} — из записи`);
   }
   if ('prop' in r || 'item' in r) return hole(`${String(r.prop ?? r.item)} — из записи`);
-  if ('ref' in r) return seg(`результат «${String(r.ref).split('.')[0]}»`);
+  if ('ref' in r) {
+    const path = String(r.ref);
+    const head = path.split('.')[0]!;
+    if (head === 'event') return seg(EVENT_WORDS[path] ?? 'присланное');
+    const named = names?.get(path) ?? names?.get(head);
+    return seg(named ? `«${named}»` : `результат «${head}»`);
+  }
   if ('constant' in r) {
     const name = String(r.constant);
     const reading = readingWord(system, name);
@@ -61,6 +69,13 @@ export function refSegment(ref: unknown, system: System, effect: Effect, emptyAs
   }
   return hole(emptyAs);
 }
+
+const EVENT_WORDS: Record<string, string> = {
+  'event.amount': 'присланное число',
+  'event.incoming': 'присланное число до правок',
+  'event.tags': 'присланные метки',
+  event: 'присланное',
+};
 
 const SUCCESS_WORDS: Record<string, [string, string]> = {
   atLeast: ['Не добросил', 'Добросил'],
@@ -70,7 +85,7 @@ const SUCCESS_WORDS: Record<string, [string, string]> = {
   equals: ['Не попал точно', 'Попал точно'],
 };
 
-export function checkReadback(step: Step, system: System, effect: Effect): Segment[] {
+export function checkReadback(step: Step, system: System, effect: Effect, names?: Names): Segment[] {
   const s = step as any;
   if (step.type === 'compare') {
     const breakIf = s.breakIf ?? 'less';
@@ -78,42 +93,42 @@ export function checkReadback(step: Step, system: System, effect: Effect): Segme
       : breakIf === 'atMost' ? 'не превысило, эффект кончается'
         : 'меньше — эффект кончается';
     return [
-      refSegment(s.value, system, effect, 'что сравниваем?'), seg('против'),
-      refSegment(s.versus, system, effect, 'с чем?'), seg(`у цели — ${tail}.`),
+      refSegment(s.value, system, effect, 'что сравниваем?', names), seg('против'),
+      refSegment(s.versus, system, effect, 'с чем?', names), seg(`у цели — ${tail}.`),
     ];
   }
   const roll = s.roll ?? {};
 
   const out: Segment[] = [seg(s.side === 'target' ? 'Цель бросает' : 'Ты бросаешь')];
-  out.push(roll.die ? refSegment(roll.die, system, effect, 'какой костью?') : hole('какой костью?'));
+  out.push(roll.die ? refSegment(roll.die, system, effect, 'какой костью?', names) : hole('какой костью?'));
   if (roll.bonus !== undefined && roll.bonus !== null) {
-    const bonus = refSegment(roll.bonus, system, effect, 'прибавка?');
+    const bonus = refSegment(roll.bonus, system, effect, 'прибавка?', names);
     if (!('text' in bonus) || (bonus.text !== '0' && bonus.text !== '')) out.push(seg('+'), bonus);
   }
-  out.push(seg('против'), refSegment(s.versus, system, effect, 'какого поля цели?'));
+  out.push(seg('против'), refSegment(s.versus, system, effect, 'какого поля цели?', names));
   const words = SUCCESS_WORDS[s.successWhen ?? 'atLeast'] ?? SUCCESS_WORDS.atLeast!;
   const broken = (s.continueOn ?? 'success') === 'success' ? words[0] : words[1];
   out.push(seg(`. ${broken} — эффект кончается.`));
   return out;
 }
 
-export function amountValueSegments(step: Step, system: System, effect: Effect): Segment[] {
+export function amountValueSegments(step: Step, system: System, effect: Effect, names?: Names): Segment[] {
   const s = step as any;
   const source = typeof s.source === 'object' ? null : (s.source ?? 'roll');
   const out: Segment[] = [];
-  if (source === 'item') out.push(refSegment(s.fixed, system, effect, 'фикс записи?'));
+  if (source === 'item') out.push(refSegment(s.fixed, system, effect, 'фикс записи?', names));
   else if (source === 'margin') {
     out.push(seg('превышение проверки'));
-    if (s.margin) out.push(refSegment(s.margin, system, effect, 'какой?'));
-  } else out.push(refSegment(s.dice, system, effect, 'какие кости?'));
+    if (s.margin) out.push(refSegment(s.margin, system, effect, 'какой?', names));
+  } else out.push(refSegment(s.dice, system, effect, 'какие кости?', names));
   if (s.bonus !== undefined && s.bonus !== null) {
-    const bonus = refSegment(s.bonus, system, effect, '');
+    const bonus = refSegment(s.bonus, system, effect, '', names);
     if (!('text' in bonus) || (bonus.text !== '0' && bonus.text !== '')) out.push(seg('+'), bonus);
   }
   return out;
 }
 
-function exprSegments(expr: string, amount: Step | null, system: System, effect: Effect, sender: string[] = []): Segment[] {
+function exprSegments(expr: string, amount: Step | null, system: System, effect: Effect, sender: string[] = [], names?: Names): Segment[] {
   const id = String((amount as any)?.id ?? '');
   const out: Segment[] = [];
   let rest = expr.trim();
@@ -124,7 +139,7 @@ function exprSegments(expr: string, amount: Step | null, system: System, effect:
     const before = rest.slice(0, m.index).trim();
     if (before) out.push(seg(before));
     if (id && m[1] === id && amount) {
-      const inner = amountValueSegments(amount, system, effect);
+      const inner = amountValueSegments(amount, system, effect, names);
       out.push(seg('('), ...inner, seg(')'));
     } else {
       const known = system.fields.some(f => f.tag === m[1]);
@@ -139,7 +154,7 @@ function exprSegments(expr: string, amount: Step | null, system: System, effect:
   return out;
 }
 
-export function changeReadback(step: Step, amount: Step | null, system: System, effect: Effect): Segment[] {
+export function changeReadback(step: Step, amount: Step | null, system: System, effect: Effect, names?: Names): Segment[] {
   if (step.type === 'emit') return sendReadback(step, system, effect);
   const s = step as any;
   if (step.type === 'status') {
@@ -149,33 +164,33 @@ export function changeReadback(step: Step, amount: Step | null, system: System, 
       const id = String((ref as any).const ?? '');
       const known = id ? system.effects?.[id] : undefined;
       what = known ? seg(`«${known.label ?? id}».`) : hole(`«${id || '?'}» — в системе нет`);
-    } else what = refSegment(ref, system, effect, 'какое состояние?');
+    } else what = refSegment(ref, system, effect, 'какое состояние?', names);
     return (s.mode ?? 'apply') === 'remove'
       ? [seg('С цели снимается состояние'), what]
       : [seg('На цель вешается состояние'), what];
   }
-  const field = refSegment(s.target, system, effect, 'какое поле?');
+  const field = refSegment(s.target, system, effect, 'какое поле?', names);
 
   const expr = s.value && typeof s.value === 'object' && 'expr' in s.value
     ? String(s.value.expr ?? '') : null;
   const sender: string[] = expr !== null && Array.isArray(s.value.sender) ? s.value.sender : [];
   const what = expr !== null
-    ? exprSegments(expr, amount, system, effect, sender)
+    ? exprSegments(expr, amount, system, effect, sender, names)
     : amount
-      ? amountValueSegments(amount, system, effect)
-      : [refSegment(s.value, system, effect, 'сколько?')];
+      ? amountValueSegments(amount, system, effect, names)
+      : [refSegment(s.value, system, effect, 'сколько?', names)];
   const direction = s.direction ?? 'subtract';
   if (direction === 'set') return [seg('У цели'), field, seg('становится'), ...what, seg('.')];
   if (direction === 'add') return [seg('Цель получает'), ...what, seg('в'), field, seg('.')];
   return [seg('Цель теряет'), ...what, seg('из'), field, seg('.')];
 }
 
-export function sendReadback(step: Step, system: System, effect: Effect): Segment[] {
+export function sendReadback(step: Step, system: System, effect: Effect, names?: Names): Segment[] {
   const s = step as Record<string, unknown>;
   const id = String(s.event ?? '');
   const event = system.effects?.[id];
   const name = id ? seg(`«${event?.label || id}»:`) : hole('какой эффект зовём?');
-  const amount = s.amount === undefined ? seg('без величины') : refSegment(s.amount, system, effect, 'сколько?');
+  const amount = s.amount === undefined ? seg('без величины') : refSegment(s.amount, system, effect, 'сколько?', names);
   const tags = Array.isArray(s.tags) ? s.tags.map(t => (typeof t === 'string' ? t : '…')).filter(Boolean) : [];
   return [
     seg('Цель получает'), name, amount,
@@ -184,8 +199,8 @@ export function sendReadback(step: Step, system: System, effect: Effect): Segmen
   ];
 }
 
-export function numberReadback(step: Step, system: System, effect: Effect): Segment[] {
-  const out: Segment[] = [seg('Считается число:'), ...amountValueSegments(step, system, effect)];
+export function numberReadback(step: Step, system: System, effect: Effect, names?: Names): Segment[] {
+  const out: Segment[] = [seg('Считается число:'), ...amountValueSegments(step, system, effect, names)];
   const double = (step as { double?: { ref?: string; atLeast?: number } }).double;
   if (double?.ref) {
     out.push(seg(`— и вдвое, если ${outputWords(double.ref)} не меньше ${double.atLeast ?? 20}`));

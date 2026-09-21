@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { ReactNode, ChangeEvent, FocusEvent, KeyboardEvent } from 'react';
 
 export function Card({ children, tone, className = '' }: {
@@ -259,6 +260,54 @@ export function Fold({ title, count, summary, open, children }: {
       </summary>
       <div className="fold__body">{children}</div>
     </details>
+  );
+}
+
+export const DRAWER_LEAVE_MS = 200;
+
+export function Drawer({ open, title, sub, onClose, children, footer }: {
+  open: boolean;
+  title: ReactNode;
+  sub?: ReactNode;
+  onClose: () => void;
+  children: ReactNode;
+  footer?: ReactNode;
+}) {
+  const [leaving, setLeaving] = useState(false);
+
+  const leave = useCallback(() => {
+    setLeaving(gone => {
+      if (gone) return gone;
+      window.setTimeout(() => { setLeaving(false); onClose(); }, DRAWER_LEAVE_MS);
+      return true;
+    });
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = (e: globalThis.KeyboardEvent) => { if (e.key === 'Escape') leave(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, leave]);
+
+  if (!open) return null;
+
+  return createPortal(
+    <div className={`drawer${leaving ? ' drawer--leaving' : ''}`}>
+      <div className="drawer__veil" onClick={leave} />
+      <aside className="drawer__panel" role="dialog" aria-modal="true" aria-label={String(title)}>
+        <header className="drawer__head">
+          <div className="stack stack--tight">
+            <span className="drawer__title">{title}</span>
+            {sub ? <span className="faint">{sub}</span> : null}
+          </div>
+          <button type="button" className="drawer__x" aria-label="закрыть" onClick={leave}>×</button>
+        </header>
+        <div className="drawer__body">{children}</div>
+        {footer ? <footer className="drawer__foot">{footer}</footer> : null}
+      </aside>
+    </div>,
+    document.body,
   );
 }
 
