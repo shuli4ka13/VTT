@@ -166,15 +166,25 @@ export function resolveOptionalNumber(ref: unknown, ctx: RefContext, what: strin
 
 function evaluate(expr: unknown, ctx: RefContext, sent?: Record<string, unknown>): unknown {
   const results = ctx.results;
+  const isField = (name: string) => ctx.pass.system.fields.some(f => f.tag === name);
   const resolve = (name: string) => {
     if (sent && name in sent) return sent[name];
-    if (results && name in results) {
-      const known = ctx.pass.system.fields.some(f => f.tag === name);
-      if (!known) return (results as Record<string, unknown>)[name];
+    if (results && name in results && !isField(name)) return (results as Record<string, unknown>)[name];
+    if (!isField(name)) {
+      const named = namedValue(name, ctx);
+      if (named !== undefined) return named;
     }
     return ctx.pass.resolve(name);
   };
   return compile(String(expr)).evaluate(resolve);
+}
+
+function namedValue(name: string, ctx: RefContext): unknown {
+  if (ctx.inputs && name in ctx.inputs) return ctx.inputs[name];
+  if (!(ctx.paramDefs || []).some(p => p.key === name)) return undefined;
+  if (!ctx.params || !(name in ctx.params)) return undefined;
+  const value = fromArgs(name, ctx);
+  return value === null || typeof value === 'object' ? undefined : value;
 }
 
 function who(ctx: RefContext): string {

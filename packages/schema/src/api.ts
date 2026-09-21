@@ -128,7 +128,7 @@ export const roomState = z.object({
 
 export const turnIntent = z.object({
   roomId: z.string(),
-  op: z.enum(['start', 'next', 'stop', 'scene']),
+  op: z.enum(['start', 'next', 'stop', 'scene', 'short-rest', 'long-rest']),
   order: z.array(z.string().min(1)).optional(),
 });
 

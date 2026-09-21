@@ -597,3 +597,64 @@ describe('реакция после разрешения', () => {
     expect(after.find((s: { id: string }) => s.id === 'цель').values.хиты, 'удар второй раз не прошёл').toBe(15);
   });
 });
+
+describe('отдых и плата ячейкой', () => {
+  it('нет ячейки — действие отклонено словами; долгий отдых возвращает ячейки; в бою не отдыхают', async () => {
+    const token = (await http().post('/auth/login').send({ name: 'Ведущий отдыха' })).body.token as string;
+    const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
+
+    const system = {
+      id: 'отдых', name: 'С отдыхом',
+      fields: [
+        { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
+        { tag: 'ячейки', label: 'Ячейки', value: { kind: 'stored', type: 'number', default: 1, min: 0 } },
+      ],
+      events: {
+        ячейка: {
+          label: 'Ячейка',
+          receive: [
+            { id: 'есть', type: 'compare', value: { tag: 'ячейки' }, versus: { const: 1 }, breakIf: 'less' },
+            { type: 'apply', target: { tag: 'ячейки' }, direction: 'subtract', value: { const: 1 } },
+          ],
+        },
+      },
+      effects: {
+        стрела: {
+          label: 'Стрела', activation: 'manual',
+          self: [{ type: 'emit', event: 'ячейка', amount: { const: 1 }, strict: true }],
+          steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { const: 4 } }],
+        },
+        сон: {
+          label: 'Сон', activation: 'triggered', trigger: { on: 'moment:long-rest' },
+          steps: [{ type: 'apply', target: { tag: 'ячейки' }, direction: 'set', value: { const: 1 } }],
+        },
+      },
+      room_rules: ['сон'],
+      records: { чары: { kind: 'action', label: 'Чары', props: [], bindings: [{ label: 'Стрела', effect: 'стрела', args: {} }] } },
+    };
+    const book = { items: [], actions: [{ id: 'стрела', rk: 'чары', label: 'Стрела', props: {} }] };
+    const sheet = (id: string) => ({ id, systemId: 'отдых', kind: 'pc', name: id, values: {}, equipped: [], actions: ['стрела'], effects: [] });
+
+    const systemId = (await as(http().post('/systems')).send({ title: 'С отдыхом', system })).body.id;
+    const bookId = (await as(http().post('/compendiums')).send({ title: 'Книга отдыха', systemId, compendium: book })).body.id;
+    await as(http().post(`/systems/${systemId}/publish`)).send({}).expect(201);
+    await as(http().post(`/compendiums/${bookId}/publish`)).send({}).expect(201);
+    const worldId = (await as(http().post('/worlds')).send({ title: 'Мир отдыха', systemId, compendiumIds: [bookId], sheets: [sheet('маг'), sheet('цель')] })).body.id;
+    const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол отдыха' })).body.id as string;
+    const shot = { roomId, actionId: 'стрела:0', fromId: 'маг', toId: 'цель' };
+
+    await as(http().post(`/rooms/${roomId}/act`)).send(shot).expect(201);
+    const refused = await as(http().post(`/rooms/${roomId}/act`)).send(shot).expect(400);
+    expect(refused.body.message).toContain('не хватает «Ячейки»');
+    const between = (await as(http().get(`/rooms/${roomId}`))).body.sheets;
+    expect(between.find((s: { id: string }) => s.id === 'цель').values.хиты, 'отклонённое действие цель не тронуло').toBe(16);
+
+    const rested = await as(http().post(`/rooms/${roomId}/turn`)).send({ roomId, op: 'long-rest' }).expect(201);
+    expect(rested.body.log.map((e: { text: string }) => e.text).join(' ')).toContain('Долгий отдых');
+    await as(http().post(`/rooms/${roomId}/act`)).send(shot).expect(201);
+
+    await as(http().post(`/rooms/${roomId}/turn`)).send({ roomId, op: 'start', order: ['маг', 'цель'] }).expect(201);
+    const denied = await as(http().post(`/rooms/${roomId}/turn`)).send({ roomId, op: 'short-rest' }).expect(400);
+    expect(denied.body.message).toContain('в бою не отдыхают');
+  });
+});

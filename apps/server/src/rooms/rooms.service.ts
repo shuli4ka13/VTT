@@ -21,13 +21,13 @@ import { findEffect, usesMax } from '@vtt/engine/engine/effects';
 import { asksOf, checkInputs, normalizeInputs } from '@vtt/engine/model/asks';
 import { fireMoments, fireCrossings, describeMoment } from '@vtt/engine/events/moments';
 import { sweepBonds } from '@vtt/engine/events/bonds';
-import { runSelfTrack } from '@vtt/engine/events/self';
+import { runSelfTrack, selfRefusal } from '@vtt/engine/events/self';
 import type { MomentEvent } from '@vtt/engine/events/moments';
 import { resolveRoll } from '@vtt/engine/engine/modifiers';
 import { newPass, calc } from '@vtt/engine/engine/calc';
 import { rollLead, dieConstant } from '@vtt/engine/engine/lead-die';
 import {
-  idleClock, startCombat, stopCombat, nextTurn, endScene, spendAction, rollInitiative, expiryOf, endsAtOf,
+  idleClock, startCombat, stopCombat, nextTurn, endScene, spendAction, rollInitiative, expiryOf, endsAtOf, inCombat,
 } from '@vtt/engine/engine/clock';
 
 export type Role = 'gm' | 'player';
@@ -233,6 +233,9 @@ export class RoomsService {
       } else if (intent.op === 'stop') {
         next = stopCombat();
         lines.push('Бой окончен');
+      } else if (intent.op === 'short-rest' || intent.op === 'long-rest') {
+        if (inCombat(clock)) throw new BadRequestException('в бою не отдыхают — сначала закончите бой');
+        lines.push(intent.op === 'long-rest' ? 'Долгий отдых' : 'Короткий отдых');
       } else {
         const closed = endScene(sheets);
         after = closed.sheets;
@@ -291,8 +294,8 @@ export class RoomsService {
     try {
       const action = actionOf(intent.actionId, { system, compendium });
       const effect = findEffect(system, action.effect);
-      if (effect) nextClock = spendAction(system, clock, intent.fromId, effect);
       const from = sheets.find(s => s.id === intent.fromId);
+      if (effect && from) nextClock = spendAction(system, clock, intent.fromId, effect, this.reader(system, compendium, from));
       const to = sheets.find(s => s.id === intent.toId);
       if (!from) throw new NotFoundException(`в комнате нет листа «${intent.fromId}»`);
       if (!to) throw new NotFoundException(`в комнате нет листа «${intent.toId}»`);
@@ -308,6 +311,8 @@ export class RoomsService {
         system, compendium, die: this.die, clock: nextClock,
         ...(Object.keys(inputs).length ? { inputs } : {}),
       });
+      const refused = selfRefusal(own, { system }, envelope.label);
+      if (refused) throw new BadRequestException(refused);
     } catch (err) {
       if (err instanceof NotFoundException) throw err;
       throw new BadRequestException((err as Error).message);
@@ -480,7 +485,7 @@ export class RoomsService {
         { system, compendium, die: this.die, clock, sheet: asked }, record.results, record.emitted ?? []);
       for (const id of intent.chosen) {
         const effect = findEffect(system, id);
-        if (effect) clock = spendAction(system, clock, asked.id, effect);
+        if (effect) clock = spendAction(system, clock, asked.id, effect, this.reader(system, compendium, asked));
       }
       sheets = sheets.map(s => (s.id === asked.id ? reacted.sheet : s));
       if (reacted.sheet !== asked) changed.push(reacted.sheet);
@@ -766,6 +771,11 @@ export class RoomsService {
     return fired.sheets;
   }
 
+  private reader(system: System, compendium: Compendium, sheet: Sheet): (tag: string) => unknown {
+    const pass = newPass(system, sheet, { compendium });
+    return tag => calc(system, sheet, tag, pass);
+  }
+
   private readonly queues = new Map<string, Promise<unknown>>();
 
   private inTurn<T>(roomId: string, work: () => Promise<T>): Promise<T> {
@@ -877,5 +887,7 @@ const momentsOf = (
     return [...ended, ...round, ...started];
   }
   if (op === 'stop') return everyone('combat-end');
+  if (op === 'short-rest') return everyone('short-rest');
+  if (op === 'long-rest') return [...everyone('short-rest'), ...everyone('long-rest')];
   return everyone('scene-end');
 };

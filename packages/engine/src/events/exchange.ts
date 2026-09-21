@@ -1,5 +1,6 @@
 import { send, receive, fireOutgoing } from './envelope.ts';
-import { runSelfTrack } from './self.ts';
+import { runSelfTrack, selfRefusal } from './self.ts';
+import { EngineError } from '../engine/errors.ts';
 import type { Report, Envelope } from './envelope.ts';
 import type { System, Sheet, Compendium, Die } from '../model/types.ts';
 import type { Clock } from '../engine/clock.ts';
@@ -133,6 +134,8 @@ export function exchange({
   const envelope = send(actionId, { system, compendium, die, clock, sheet: from, against: to, claims: claims?.source, ...(inputs ? { inputs } : {}) });
 
   const own = runSelfTrack(actionId, from, { system, compendium, die, clock, ...(inputs ? { inputs } : {}) });
+  const refused = selfRefusal(own, { system }, envelope.label);
+  if (refused) throw new EngineError(refused);
   const started = own.report ? sheets.map(s => (s.id === own.sheet.id ? own.sheet : s)) : sheets;
 
   const out = deliver({

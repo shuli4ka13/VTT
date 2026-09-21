@@ -87,6 +87,7 @@ export const STEP_WORDS = {
       { key: 'bonus', label: 'Прибавка', kind: 'ref', main: true, allow: ['expr', 'const', 'param', 'empty'] },
       { key: 'fixed', label: 'Фикс записи', kind: 'ref', allow: ['prop', 'const', 'param', 'empty'] },
       { key: 'margin', label: 'Превышение шага', kind: 'ref', allow: ['ref', 'empty'] },
+      { key: 'count', label: 'Сколько раз кинуть кости', kind: 'ref', allow: ['expr', 'const', 'param', 'tag', 'empty'] },
       { key: 'double', label: 'Удвоить кости, если', kind: 'guard' },
       { key: 'scale', label: 'Взять долю, если', kind: 'scale' },
     ],
@@ -153,13 +154,17 @@ export const STEP_WORDS = {
       { key: 'event', label: 'Событие', kind: 'event', main: true, required: true, allow: [] },
       { key: 'amount', label: 'Сколько', kind: 'ref', main: true, allow: ['ref', 'expr', 'const', 'param', 'empty'] },
       { key: 'tags', label: 'Теги', kind: 'tags', allow: [] },
+      {
+        key: 'strict', label: 'Если общий эффект оборвался', kind: 'flag', fallback: 'false',
+        choice: [['false', 'идти дальше'], ['true', 'оборваться тоже']],
+      },
     ],
     outputs: [
       { path: '.incoming', label: 'отправлено', kind: 'number' },
       { path: '.amount', label: 'дошло до цели', kind: 'number' },
     ],
-    reasons: {},
-    breakLines: {},
+    reasons: { 'emit-stopped': 'общий эффект оборвался' },
+    breakLines: { strict: 'если общий эффект оборвался — обрыв и здесь' },
   },
 } as const satisfies Record<string, StepWords>;
 

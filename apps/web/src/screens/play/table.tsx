@@ -8,6 +8,8 @@ import { Lobby } from './lobby.tsx';
 import { useSession } from '../../store/session.ts';
 import type { RoomState, Sheet, System } from '@vtt/schema';
 import { availableActions } from '@vtt/engine/events/envelope';
+import { limitOf } from '@vtt/engine/engine/clock';
+import { newPass, calc } from '@vtt/engine/engine/calc';
 import './table.css';
 
 export function TableScreen() {
@@ -123,7 +125,7 @@ export function TableScreen() {
 function Combat({ room, onError }: { room: RoomState; onError: (message: string | null) => void }) {
   const clock = room.clock;
   const nameOf = (id: string) => room.sheets.find(s => s.id === id)?.name ?? id;
-  const send = (op: 'start' | 'next' | 'stop' | 'scene') => {
+  const send = (op: 'start' | 'next' | 'stop' | 'scene' | 'short-rest' | 'long-rest') => {
     onError(null);
     tableSocket.turn({ roomId: room.id, op });
   };
@@ -143,6 +145,12 @@ function Combat({ room, onError }: { room: RoomState; onError: (message: string 
                   <Button size="sm" disabled={waiting} title={why} onClick={() => send('stop')}>Конец боя</Button>
                 </>
               : <Button size="sm" variant="primary" disabled={waiting} title={why} onClick={() => send('start')}>Инициатива</Button>}
+            {fighting ? null : (
+              <>
+                <Button size="sm" variant="ghost" disabled={waiting} title={why ?? 'Будит эффекты «на коротком отдыхе»'} onClick={() => send('short-rest')}>Короткий отдых</Button>
+                <Button size="sm" variant="ghost" disabled={waiting} title={why ?? 'Будит эффекты короткого и долгого отдыха'} onClick={() => send('long-rest')}>Долгий отдых</Button>
+              </>
+            )}
             <Button size="sm" variant="ghost" disabled={waiting} title={why} onClick={() => send('scene')}>Закрыть сцену</Button>
           </>
         }
@@ -165,13 +173,19 @@ function Budget({ room, sheetId }: { room: RoomState; sheetId: string }) {
   const types = Object.entries(room.system.action_types ?? {});
   if (!types.length) return null;
   const spent = room.clock?.spent[sheetId] ?? {};
+  const sheet = room.sheets.find(s => s.id === sheetId);
+  const valueOf = (tag: string): unknown => {
+    if (!sheet) return undefined;
+    try { return calc(room.system as System, sheet, tag, newPass(room.system as System, sheet, { compendium: room.compendium })); }
+    catch { return undefined; }
+  };
 
   return (
     <div className="stack stack--tight">
       <span className="field__label">Бюджет хода</span>
       <div className="inline inline--tight">
         {types.map(([key, type]) => {
-          const perTurn = type.perTurn ?? 0;
+          const perTurn = limitOf(type, valueOf) ?? 0;
           const used = spent[key] ?? 0;
           const left = perTurn ? Math.max(0, perTurn - used) : null;
           return (

@@ -124,7 +124,7 @@ function exprRefs(source: string, from: Where, scope: ChainScope, out: Reference
   const deps = formulaDeps(text);
   if (!deps) return;
   for (const dep of deps) {
-    if (scope.earlier.has(dep)) continue;
+    if (scope.earlier.has(dep) || scope.params.has(dep)) continue;
     if (scope.eventChain && (EVENT_RESULTS as readonly string[]).includes(dep)) continue;
     out.push({ kind: 'field', key: dep, from });
   }
@@ -245,6 +245,10 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
       }
     });
     modifierRefs(spec.modifiers, { tab: 'records', kind, part: 'modifiers' }, out);
+  }
+
+  for (const [key, type] of Object.entries(system.action_types ?? {})) {
+    if (type.perTurnField) out.push({ kind: 'field', key: type.perTurnField, from: { tab: 'rules', section: 'action_types', key } });
   }
 
   for (const id of system.room_rules ?? []) out.push({ kind: 'effect', key: id, from: { tab: 'rules', section: 'room_rules', key: id } });

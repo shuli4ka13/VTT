@@ -4,6 +4,8 @@ import { outputRefs } from '../../slots.tsx';
 import type { SlotContext, EarlierStep } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 
+const loose = (draft: unknown): Record<string, unknown> => draft as Record<string, unknown>;
+
 export function NumberBody({ step, context, edit, onAddParam, earlier }: {
   step: any;
   context: SlotContext;
@@ -23,7 +25,7 @@ export function NumberBody({ step, context, edit, onAddParam, earlier }: {
           options={[
             ['roll', 'свой бросок'], ['margin', 'превышение проверки'], ['item', 'фикс записи'],
           ] as const}
-          onChange={next => edit(0, draft => { (draft as any).source = next; })}
+          onChange={next => edit(0, draft => { loose(draft).source = next; })}
         />
       </Field>
 
@@ -32,14 +34,23 @@ export function NumberBody({ step, context, edit, onAddParam, earlier }: {
           <Field label="кости">
             <SlotInput
               value={step.dice} context={context} dice placeholder="кости или из записи"
-              onChange={next => edit(0, draft => { (draft as any).dice = next ?? undefined; })}
+              onChange={next => edit(0, draft => { loose(draft).dice = next ?? undefined; })}
               onCreateFromRecord={fromRecord('кости', 'dice')}
             />
           </Field>
           <Field label="прибавка">
             <SlotInput
               value={step.bonus} context={context}
-              onChange={next => edit(0, draft => { (draft as any).bonus = next ?? undefined; })}
+              onChange={next => edit(0, draft => { loose(draft).bonus = next ?? undefined; })}
+            />
+          </Field>
+          <Field label="сколько раз кинуть" hint="Пусто — один раз. Формула или поле: «половина уровня» для скрытой атаки, «круг − 3» для усиленного заклинания.">
+            <SlotInput
+              value={step.count} context={context} allow={['expr', 'const', 'param', 'tag']}
+              onChange={next => edit(0, draft => {
+                if (next === null || next === undefined) delete loose(draft).count;
+                else loose(draft).count = next;
+              })}
             />
           </Field>
           <DoubleField step={step} earlier={earlier} edit={edit} />
@@ -50,7 +61,7 @@ export function NumberBody({ step, context, edit, onAddParam, earlier }: {
         <Field label="какое превышение">
           <SlotInput
             value={step.margin} context={context} allow={['ref']}
-            onChange={next => edit(0, draft => { (draft as any).margin = next ?? undefined; })}
+            onChange={next => edit(0, draft => { loose(draft).margin = next ?? undefined; })}
           />
         </Field>
       ) : null}
@@ -59,7 +70,7 @@ export function NumberBody({ step, context, edit, onAddParam, earlier }: {
         <Field label="фикс записи">
           <SlotInput
             value={step.fixed} context={context}
-            onChange={next => edit(0, draft => { (draft as any).fixed = next ?? undefined; })}
+            onChange={next => edit(0, draft => { loose(draft).fixed = next ?? undefined; })}
             onCreateFromRecord={fromRecord('фикс записи', 'expr')}
           />
         </Field>
@@ -87,7 +98,7 @@ function DoubleField({ step, earlier, edit }: {
           value={double?.ref ?? ''}
           options={[['', 'никогда'], ...numbers.map(output => [output.ref, output.label] as const)] as never}
           onChange={next => edit(0, draft => {
-            const target = draft as any;
+            const target = loose(draft);
             if (!next) { delete target.double; return; }
             target.double = { ref: next, atLeast: double?.atLeast ?? 20 };
           })}
@@ -99,7 +110,7 @@ function DoubleField({ step, earlier, edit }: {
             type="number"
             value={double.atLeast ?? 20}
             onChange={next => edit(0, draft => {
-              (draft as any).double = { ref: double.ref, atLeast: Number(next) || 0 };
+              loose(draft).double = { ref: double.ref, atLeast: Number(next) || 0 };
             })}
           />
         </Field>

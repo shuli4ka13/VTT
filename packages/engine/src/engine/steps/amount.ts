@@ -61,14 +61,16 @@ export function pack(step: StepData, ctx: StepContext) {
       `${who(ctx)}: неизвестный источник величины «${source}» — умею: ${SOURCES.join(', ')}`);
   }
 
-  const plain = step.dice ? constant(packRef(diceRef(step.dice, ctx), ctx), ctx, 'кости величины') : null;
+  const written = step.dice ? constant(packRef(diceRef(step.dice, ctx), ctx), ctx, 'кости величины') : null;
+  const times = timesNow(step, ctx);
+  const plain = written !== null && times !== null ? countedNotation(written, times) : written;
   const doubled = plain !== null && doublesNow(step, ctx);
   const notation = doubled ? multiplyNotation(plain, 2) : plain;
   const fixed = step.fixed !== undefined ? packRef(step.fixed, ctx) : null;
   const bonus = step.bonus !== undefined ? packRef(step.bonus, ctx) : null;
   const margin = step.margin !== undefined ? packRef(step.margin, ctx) : null;
 
-  if (source === 'roll' && !notation) {
+  if (source === 'roll' && !written) {
     throw new EngineError(`${who(ctx)}: источнику «свой бросок» нужны кости — слот dice пуст`);
   }
   if (source === 'item' && (fixed === null || (typeof fixed === 'object' && (fixed as any).const == null))) {
@@ -84,9 +86,28 @@ export function pack(step: StepData, ctx: StepContext) {
     source,
     rolled: notation ? rollNotation(notation, ctx.die, held) : { notation: null, rolls: [], total: 0 },
     ...(doubled ? { doubled: true } : {}),
+    ...(times !== null ? { times } : {}),
     ...(step.scale ? { scale: { times: step.scale.times, ...(step.scale.when ? { when: packGuardRef(step.scale.when, ctx) } : {}) } } : {}),
     fixed, bonus, margin,
   };
+}
+
+function timesNow(step: StepData, ctx: StepContext): number | null {
+  if (step.count === undefined || step.count === null) return null;
+  const ref = step.count as Record<string, unknown>;
+  const raw = ref && typeof ref === 'object' && 'tag' in ref
+    ? ctx.pass.resolve(String(ref.tag))
+    : constant(packRef(step.count, ctx), ctx, 'сколько раз кинуть кости');
+  const times = Number(raw);
+  if (!Number.isFinite(times)) {
+    throw new EngineError(`${who(ctx)}: «сколько раз кинуть кости» должно быть числом, а пришло ${JSON.stringify(raw)}`);
+  }
+  return Math.max(0, Math.floor(times));
+}
+
+function countedNotation(notation: unknown, times: number): string | null {
+  if (times <= 0) return null;
+  return multiplyNotation(notation, times);
 }
 
 function doublesNow(step: StepData, ctx: StepContext): boolean {
@@ -108,6 +129,7 @@ export function resolve(step: StepData, ctx: StepContext) {
       source: step.source,
       notation: step.rolled.notation, rolls: step.rolled.rolls,
       ...(step.doubled ? { doubled: true } : {}),
+      ...(step.times !== undefined ? { times: step.times } : {}),
       ...(share === null ? {} : { share, full }),
       flat, bonus, margin, total,
     },

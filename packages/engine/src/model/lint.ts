@@ -160,7 +160,7 @@ function cycleProblems(system: System): Problem[] {
 }
 
 const MOMENT_KEYS = new Set([
-  'turn-start', 'turn-end', 'round-start', 'combat-start', 'combat-end', 'scene-end',
+  'turn-start', 'turn-end', 'round-start', 'combat-start', 'combat-end', 'scene-end', 'short-rest', 'long-rest',
   'equipped', 'attached', 'expired',
 ]);
 

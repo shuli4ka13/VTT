@@ -1,4 +1,4 @@
-import { Card, CardHead, Input, NumInput, Button } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Input, NumInput, Button, Select } from '../../../ui/primitives.tsx';
 import { newActionType } from '../factory.ts';
 import { inUse as isUsed } from '../usage.ts';
 import type { UsageIndex } from '../usage.ts';
@@ -48,6 +48,19 @@ export function ActionTypesSection({ system, editSystem, usage }: Props) {
                   const cur = draft.action_types?.[key];
                   if (!cur) return;
                   if (n > 0) cur.perTurn = n; else delete cur.perTurn;
+                })}
+              />
+              <span className="dict-row__label">или из поля</span>
+              <Select
+                value={type.perTurnField ?? ''}
+                title="Лимит берётся с листа действующего: «Атак за действие» у воина выше, чем у мага"
+                options={[['', 'нет — число слева'],
+                  ...system.fields.filter(f => f.value.kind !== 'stored' || f.value.type === 'number')
+                    .map(f => [f.tag, f.label] as const)] as never}
+                onChange={next => editSystem(draft => {
+                  const cur = draft.action_types?.[key];
+                  if (!cur) return;
+                  if (next) cur.perTurnField = next; else delete cur.perTurnField;
                 })}
               />
               <Button

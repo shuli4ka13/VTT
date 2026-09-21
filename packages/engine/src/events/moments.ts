@@ -16,6 +16,8 @@ export const MOMENTS = {
   'combat-start': 'когда начался бой',
   'combat-end': 'когда бой кончился',
   'scene-end': 'когда закрыли сцену',
+  'short-rest': 'на коротком отдыхе',
+  'long-rest': 'на долгом отдыхе',
   'equipped': 'когда вещь надели',
   'attached': 'когда эффект повесили',
   'expired': 'когда эффект спал',

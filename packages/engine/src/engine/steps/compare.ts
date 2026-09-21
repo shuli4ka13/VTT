@@ -54,6 +54,7 @@ export function resolve(step: StepData, ctx: StepContext) {
     value: { margin, value, versus },
     trace: {
       value,
+      ...(step.value && typeof step.value === 'object' && 'tag' in step.value ? { of: step.value.tag } : {}),
       versus: step.versus && typeof step.versus === 'object' && 'tag' in step.versus
         ? { tag: step.versus.tag, value: versus }
         : { value: versus },

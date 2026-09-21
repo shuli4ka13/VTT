@@ -258,6 +258,7 @@ export const system = z.object({
     icon: z.string().optional(),
 
     perTurn: z.number().int().positive().optional(),
+    perTurnField: z.string().optional(),
   }).passthrough()).optional(),
   advantage: z.object({ methods: z.record(z.string(), z.boolean()).optional() }).passthrough().optional(),
 

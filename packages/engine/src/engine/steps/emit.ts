@@ -9,7 +9,15 @@ export const type = 'emit';
 const words: StepWords = STEP_WORDS.emit;
 export const { label, hint, slots, outputs } = words;
 
-export const mayBreak = false;
+export const mayBreak = true;
+
+export function breakLine(step: StepData) {
+  return step.strict ? words.breakLines.strict ?? null : null;
+}
+
+export function reasonWord(reason: string): string | null {
+  return words.reasons[reason] ?? null;
+}
 
 export const icon = '➤';
 
@@ -36,6 +44,7 @@ export function pack(step: StepData, ctx: StepContext) {
     event: id,
     amount: step.amount === undefined ? null : packRef(step.amount, ctx),
     tags,
+    ...(step.strict ? { strict: true } : {}),
   };
 }
 
@@ -58,7 +67,7 @@ export function resolve(step: StepData, ctx: StepContext) {
   return {
     value: payload,
     trace: { event: id, incoming, amount, tags, ...(received ? { received } : {}) },
-    break: null,
+    break: step.strict && received ? { reason: 'emit-stopped' } : null,
   };
 }
 

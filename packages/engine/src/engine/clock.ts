@@ -103,10 +103,23 @@ export function endScene(sheets: Sheet[]): { sheets: Sheet[]; expired: Expired[]
   return { sheets: sheets.map(sheet => shed(sheet, entry => entry.scene !== true, expired)), expired };
 }
 
-export function spendAction(system: System, clock: Clock, sheetId: string, effect: Effect): Clock {
+export const limitOf = (
+  type: { perTurn?: number; perTurnField?: string } | undefined, valueOf?: (tag: string) => unknown,
+): number | null => {
+  if (!type) return null;
+  if (type.perTurnField && valueOf) {
+    const fromSheet = Number(valueOf(type.perTurnField));
+    if (Number.isFinite(fromSheet) && fromSheet > 0) return Math.floor(fromSheet);
+  }
+  return type.perTurn ?? null;
+};
+
+export function spendAction(
+  system: System, clock: Clock, sheetId: string, effect: Effect, valueOf?: (tag: string) => unknown,
+): Clock {
   if (!inCombat(clock) || !effect.cost) return clock;
   const type = (system.action_types ?? {})[effect.cost];
-  const limit = type?.perTurn;
+  const limit = limitOf(type, valueOf);
   if (!limit) return clock;
   const used = clock.spent[sheetId]?.[effect.cost] ?? 0;
   if (used >= limit) {
