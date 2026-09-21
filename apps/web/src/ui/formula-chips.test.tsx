@@ -14,7 +14,7 @@ const system = {
 
 describe('partsOf / joinParts', () => {
   it('раскладывает текст и теги и собирает обратно без потерь', () => {
-    const value = '1d20 + #бонус_атаки + 2';
+    const value = '1d20 + @бонус_атаки + 2';
     const parts = partsOf(value);
     expect(parts).toEqual([{ text: '1d20 + ' }, { tag: 'бонус_атаки' }, { text: ' + 2' }]);
     expect(joinParts(parts)).toBe(value);
@@ -27,7 +27,7 @@ describe('partsOf / joinParts', () => {
 
 describe('FormulaChips', () => {
   it('тег рисуется фишкой с человеческим названием, латиница не видна', () => {
-    render(<FormulaChips value="1d20 + #бонус_атаки" system={system} onChange={() => {}} />);
+    render(<FormulaChips value="1d20 + @бонус_атаки" system={system} onChange={() => {}} />);
     expect(screen.getByText('Бонус атаки')).toBeTruthy();
     expect(screen.queryByDisplayValue(/бонус_атаки/)).toBeNull();
   });
@@ -40,11 +40,11 @@ describe('FormulaChips', () => {
     input.setSelectionRange(value.length, value.length);
     fireEvent.click(input);
     fireEvent.mouseDown(screen.getByText('Бонус атаки'));
-    expect(value).toBe('1d20 + #бонус_атаки');
+    expect(value).toBe('1d20 + @бонус_атаки');
   });
 
   it('крестик на фишке убирает тег целиком', () => {
-    let value = '1d20 + #бонус_атаки + 2';
+    let value = '1d20 + @бонус_атаки + 2';
     render(<FormulaChips value={value} system={system} onChange={next => { value = next; }} />);
     fireEvent.mouseDown(screen.getByLabelText('убрать поле'));
     expect(value).toBe('1d20 +  + 2');
@@ -71,7 +71,7 @@ describe('FormulaChips', () => {
   });
 
   it('backspace в начале куска съедает фишку слева', () => {
-    let value = '#сила + 2';
+    let value = '@сила + 2';
     render(<FormulaChips value={value} system={system} onChange={next => { value = next; }} />);
     const tail = screen.getAllByRole('textbox')[1] as HTMLInputElement;
     expect(tail.value).toBe(' + 2');

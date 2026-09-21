@@ -6,6 +6,6 @@ export function matchTagQuery(text: string, caret: number): { at: number; needle
 }
 
 export function applyTag(text: string, at: number, caret: number, tag: string): { next: string; caretTo: number } {
-  const inserted = `#${tag}`;
+  const inserted = `@${tag}`;
   return { next: text.slice(0, at) + inserted + text.slice(caret), caretTo: at + inserted.length };
 }

@@ -136,7 +136,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "floor((#str - 10) / 2)"
+          "expr": "floor((@str - 10) / 2)"
         }
       },
       {
@@ -149,7 +149,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "floor((#dex - 10) / 2)"
+          "expr": "floor((@dex - 10) / 2)"
         }
       },
       {
@@ -162,7 +162,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "floor((#con - 10) / 2)"
+          "expr": "floor((@con - 10) / 2)"
         }
       },
       {
@@ -175,7 +175,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "floor((#int - 10) / 2)"
+          "expr": "floor((@int - 10) / 2)"
         }
       },
       {
@@ -188,7 +188,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "floor((#wis - 10) / 2)"
+          "expr": "floor((@wis - 10) / 2)"
         }
       },
       {
@@ -201,7 +201,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "floor((#cha - 10) / 2)"
+          "expr": "floor((@cha - 10) / 2)"
         }
       },
       {
@@ -224,7 +224,7 @@
         "value": {
           "kind": "table",
           "table": "proficiency",
-          "arg": "#level"
+          "arg": "@level"
         }
       },
       {
@@ -274,7 +274,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#str_mod + #str_save_prof * #prof_bonus"
+          "expr": "@str_mod + @str_save_prof * @prof_bonus"
         }
       },
       {
@@ -300,7 +300,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#dex_mod + #dex_save_prof * #prof_bonus"
+          "expr": "@dex_mod + @dex_save_prof * @prof_bonus"
         }
       },
       {
@@ -326,7 +326,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#con_mod + #con_save_prof * #prof_bonus"
+          "expr": "@con_mod + @con_save_prof * @prof_bonus"
         }
       },
       {
@@ -352,7 +352,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int_mod + #int_save_prof * #prof_bonus"
+          "expr": "@int_mod + @int_save_prof * @prof_bonus"
         }
       },
       {
@@ -378,7 +378,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#wis_mod + #wis_save_prof * #prof_bonus"
+          "expr": "@wis_mod + @wis_save_prof * @prof_bonus"
         }
       },
       {
@@ -404,7 +404,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#cha_mod + #cha_save_prof * #prof_bonus"
+          "expr": "@cha_mod + @cha_save_prof * @prof_bonus"
         }
       },
       {
@@ -430,7 +430,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#str_mod + #athletics_prof * #prof_bonus"
+          "expr": "@str_mod + @athletics_prof * @prof_bonus"
         }
       },
       {
@@ -456,7 +456,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#dex_mod + #acrobatics_prof * #prof_bonus"
+          "expr": "@dex_mod + @acrobatics_prof * @prof_bonus"
         }
       },
       {
@@ -482,7 +482,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#dex_mod + #sleight_of_hand_prof * #prof_bonus"
+          "expr": "@dex_mod + @sleight_of_hand_prof * @prof_bonus"
         }
       },
       {
@@ -508,7 +508,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#dex_mod + #stealth_prof * #prof_bonus"
+          "expr": "@dex_mod + @stealth_prof * @prof_bonus"
         }
       },
       {
@@ -534,7 +534,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int_mod + #arcana_prof * #prof_bonus"
+          "expr": "@int_mod + @arcana_prof * @prof_bonus"
         }
       },
       {
@@ -560,7 +560,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int_mod + #history_prof * #prof_bonus"
+          "expr": "@int_mod + @history_prof * @prof_bonus"
         }
       },
       {
@@ -586,7 +586,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int_mod + #investigation_prof * #prof_bonus"
+          "expr": "@int_mod + @investigation_prof * @prof_bonus"
         }
       },
       {
@@ -612,7 +612,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int_mod + #nature_prof * #prof_bonus"
+          "expr": "@int_mod + @nature_prof * @prof_bonus"
         }
       },
       {
@@ -638,7 +638,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int_mod + #religion_prof * #prof_bonus"
+          "expr": "@int_mod + @religion_prof * @prof_bonus"
         }
       },
       {
@@ -664,7 +664,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#wis_mod + #animal_handling_prof * #prof_bonus"
+          "expr": "@wis_mod + @animal_handling_prof * @prof_bonus"
         }
       },
       {
@@ -690,7 +690,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#wis_mod + #insight_prof * #prof_bonus"
+          "expr": "@wis_mod + @insight_prof * @prof_bonus"
         }
       },
       {
@@ -716,7 +716,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#wis_mod + #medicine_prof * #prof_bonus"
+          "expr": "@wis_mod + @medicine_prof * @prof_bonus"
         }
       },
       {
@@ -742,7 +742,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#wis_mod + #perception_prof * #prof_bonus"
+          "expr": "@wis_mod + @perception_prof * @prof_bonus"
         }
       },
       {
@@ -768,7 +768,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#wis_mod + #survival_prof * #prof_bonus"
+          "expr": "@wis_mod + @survival_prof * @prof_bonus"
         }
       },
       {
@@ -794,7 +794,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#cha_mod + #deception_prof * #prof_bonus"
+          "expr": "@cha_mod + @deception_prof * @prof_bonus"
         }
       },
       {
@@ -820,7 +820,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#cha_mod + #intimidation_prof * #prof_bonus"
+          "expr": "@cha_mod + @intimidation_prof * @prof_bonus"
         }
       },
       {
@@ -846,7 +846,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#cha_mod + #performance_prof * #prof_bonus"
+          "expr": "@cha_mod + @performance_prof * @prof_bonus"
         }
       },
       {
@@ -872,7 +872,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#cha_mod + #persuasion_prof * #prof_bonus"
+          "expr": "@cha_mod + @persuasion_prof * @prof_bonus"
         }
       },
       {
@@ -885,7 +885,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#dex_mod"
+          "expr": "@dex_mod"
         }
       },
       {
@@ -894,7 +894,7 @@
         "group": "Чувства и движение",
         "value": {
           "kind": "formula",
-          "expr": "10 + #perception"
+          "expr": "10 + @perception"
         }
       },
       {
@@ -957,7 +957,7 @@
         "group": "Защита",
         "value": {
           "kind": "formula",
-          "expr": "#dex_mod"
+          "expr": "@dex_mod"
         }
       },
       {
@@ -966,7 +966,7 @@
         "group": "Защита",
         "value": {
           "kind": "formula",
-          "expr": "#ac_base + (#armor_heavy ? 0 : #ac_dex)"
+          "expr": "@ac_base + (@armor_heavy ? 0 : @ac_dex)"
         }
       },
       {
@@ -989,7 +989,7 @@
           "type": "number",
           "default": 8,
           "min": 0,
-          "max": "#hp_max"
+          "max": "@hp_max"
         },
         "control": "bar"
       },
@@ -1025,7 +1025,7 @@
           "type": "number",
           "default": 1,
           "min": 0,
-          "max": "#level"
+          "max": "@level"
         },
         "control": "stepper"
       },
@@ -1074,7 +1074,7 @@
         "group": "Здоровье",
         "value": {
           "kind": "formula",
-          "expr": "#hp_current <= 0"
+          "expr": "@hp_current <= 0"
         }
       },
       {
@@ -1083,7 +1083,7 @@
         "group": "Здоровье",
         "value": {
           "kind": "formula",
-          "expr": "#hp_current > 0"
+          "expr": "@hp_current > 0"
         }
       },
       {
@@ -1092,7 +1092,7 @@
         "group": "Здоровье",
         "value": {
           "kind": "formula",
-          "expr": "#death_fail >= 3"
+          "expr": "@death_fail >= 3"
         }
       },
       {
@@ -1101,7 +1101,7 @@
         "group": "Здоровье",
         "value": {
           "kind": "formula",
-          "expr": "#death_ok >= 3"
+          "expr": "@death_ok >= 3"
         }
       },
       {
@@ -1110,7 +1110,7 @@
         "group": "Атака",
         "value": {
           "kind": "formula",
-          "expr": "#str_mod + #prof_bonus"
+          "expr": "@str_mod + @prof_bonus"
         }
       },
       {
@@ -1119,7 +1119,7 @@
         "group": "Атака",
         "value": {
           "kind": "formula",
-          "expr": "#dex_mod + #prof_bonus"
+          "expr": "@dex_mod + @prof_bonus"
         }
       },
       {
@@ -1128,7 +1128,7 @@
         "group": "Атака",
         "value": {
           "kind": "formula",
-          "expr": "max(#str_mod, #dex_mod) + #prof_bonus"
+          "expr": "max(@str_mod, @dex_mod) + @prof_bonus"
         }
       },
       {
@@ -1137,7 +1137,7 @@
         "group": "Атака",
         "value": {
           "kind": "formula",
-          "expr": "#str_mod"
+          "expr": "@str_mod"
         }
       },
       {
@@ -1146,7 +1146,7 @@
         "group": "Атака",
         "value": {
           "kind": "formula",
-          "expr": "#dex_mod"
+          "expr": "@dex_mod"
         }
       },
       {
@@ -1155,7 +1155,7 @@
         "group": "Атака",
         "value": {
           "kind": "formula",
-          "expr": "max(#str_mod, #dex_mod)"
+          "expr": "max(@str_mod, @dex_mod)"
         }
       },
       {
@@ -1189,7 +1189,7 @@
         "group": "Атака",
         "value": {
           "kind": "formula",
-          "expr": "ceil(#level / 2)"
+          "expr": "ceil(@level / 2)"
         }
       },
       {
@@ -1220,7 +1220,7 @@
         "group": "Магия",
         "value": {
           "kind": "formula",
-          "expr": "#casts_int ? #int_mod : (#casts_wis ? #wis_mod : #cha_mod)"
+          "expr": "@casts_int ? @int_mod : (@casts_wis ? @wis_mod : @cha_mod)"
         }
       },
       {
@@ -1229,7 +1229,7 @@
         "group": "Магия",
         "value": {
           "kind": "formula",
-          "expr": "8 + #prof_bonus + #spell_mod"
+          "expr": "8 + @prof_bonus + @spell_mod"
         }
       },
       {
@@ -1238,7 +1238,7 @@
         "group": "Магия",
         "value": {
           "kind": "formula",
-          "expr": "#prof_bonus + #spell_mod"
+          "expr": "@prof_bonus + @spell_mod"
         }
       },
       {
@@ -1261,7 +1261,7 @@
         "value": {
           "kind": "table",
           "table": "cantrip_dice",
-          "arg": "#level"
+          "arg": "@level"
         }
       },
       {
@@ -1271,7 +1271,7 @@
         "value": {
           "kind": "table",
           "table": "slots_1",
-          "arg": "#caster_level"
+          "arg": "@caster_level"
         }
       },
       {
@@ -1283,7 +1283,7 @@
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "#slots_1_max"
+          "max": "@slots_1_max"
         },
         "control": "pips"
       },
@@ -1294,7 +1294,7 @@
         "value": {
           "kind": "table",
           "table": "slots_2",
-          "arg": "#caster_level"
+          "arg": "@caster_level"
         }
       },
       {
@@ -1306,7 +1306,7 @@
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "#slots_2_max"
+          "max": "@slots_2_max"
         },
         "control": "pips"
       },
@@ -1317,7 +1317,7 @@
         "value": {
           "kind": "table",
           "table": "slots_3",
-          "arg": "#caster_level"
+          "arg": "@caster_level"
         }
       },
       {
@@ -1329,7 +1329,7 @@
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "#slots_3_max"
+          "max": "@slots_3_max"
         },
         "control": "pips"
       },
@@ -1340,7 +1340,7 @@
         "value": {
           "kind": "table",
           "table": "slots_4",
-          "arg": "#caster_level"
+          "arg": "@caster_level"
         }
       },
       {
@@ -1352,7 +1352,7 @@
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "#slots_4_max"
+          "max": "@slots_4_max"
         },
         "control": "pips"
       },
@@ -1363,7 +1363,7 @@
         "value": {
           "kind": "table",
           "table": "slots_5",
-          "arg": "#caster_level"
+          "arg": "@caster_level"
         }
       },
       {
@@ -1375,7 +1375,7 @@
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "#slots_5_max"
+          "max": "@slots_5_max"
         },
         "control": "pips"
       },
@@ -1386,7 +1386,7 @@
         "value": {
           "kind": "table",
           "table": "slots_6",
-          "arg": "#caster_level"
+          "arg": "@caster_level"
         }
       },
       {
@@ -1398,7 +1398,7 @@
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "#slots_6_max"
+          "max": "@slots_6_max"
         },
         "control": "pips"
       },
@@ -1409,7 +1409,7 @@
         "value": {
           "kind": "table",
           "table": "slots_7",
-          "arg": "#caster_level"
+          "arg": "@caster_level"
         }
       },
       {
@@ -1421,7 +1421,7 @@
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "#slots_7_max"
+          "max": "@slots_7_max"
         },
         "control": "pips"
       },
@@ -1432,7 +1432,7 @@
         "value": {
           "kind": "table",
           "table": "slots_8",
-          "arg": "#caster_level"
+          "arg": "@caster_level"
         }
       },
       {
@@ -1444,7 +1444,7 @@
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "#slots_8_max"
+          "max": "@slots_8_max"
         },
         "control": "pips"
       },
@@ -1455,7 +1455,7 @@
         "value": {
           "kind": "table",
           "table": "slots_9",
-          "arg": "#caster_level"
+          "arg": "@caster_level"
         }
       },
       {
@@ -1467,7 +1467,7 @@
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "#slots_9_max"
+          "max": "@slots_9_max"
         },
         "control": "pips"
       },
@@ -1491,7 +1491,7 @@
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "#rages_max"
+          "max": "@rages_max"
         },
         "control": "stepper"
       },
@@ -1515,7 +1515,7 @@
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "#ki_max"
+          "max": "@ki_max"
         },
         "control": "stepper"
       },
@@ -1539,7 +1539,7 @@
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "#bardic_max"
+          "max": "@bardic_max"
         },
         "control": "stepper"
       },
@@ -1563,7 +1563,7 @@
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "#channel_max"
+          "max": "@channel_max"
         },
         "control": "stepper"
       },
@@ -1587,7 +1587,7 @@
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "#second_wind_max"
+          "max": "@second_wind_max"
         },
         "control": "stepper"
       },
@@ -1611,7 +1611,7 @@
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "#action_surge_max"
+          "max": "@action_surge_max"
         },
         "control": "stepper"
       },
@@ -1635,7 +1635,7 @@
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "#lay_on_hands_max"
+          "max": "@lay_on_hands_max"
         },
         "control": "stepper"
       },
@@ -1659,7 +1659,7 @@
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "#sorcery_max"
+          "max": "@sorcery_max"
         },
         "control": "stepper"
       },
@@ -1683,7 +1683,7 @@
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "#superiority_max"
+          "max": "@superiority_max"
         },
         "control": "stepper"
       },
@@ -1707,7 +1707,7 @@
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "#luck_max"
+          "max": "@luck_max"
         },
         "control": "stepper"
       },
@@ -1731,7 +1731,7 @@
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "#relentless_max"
+          "max": "@relentless_max"
         },
         "control": "stepper"
       },
@@ -1742,7 +1742,7 @@
         "value": {
           "kind": "table",
           "table": "rage_damage",
-          "arg": "#level"
+          "arg": "@level"
         }
       },
       {
@@ -2122,15 +2122,15 @@
         "cases": [
           {
             "when": "melee",
-            "value": "#melee_attack"
+            "value": "@melee_attack"
           },
           {
             "when": "finesse",
-            "value": "#finesse_attack"
+            "value": "@finesse_attack"
           },
           {
             "when": "ranged",
-            "value": "#ranged_attack"
+            "value": "@ranged_attack"
           }
         ]
       },
@@ -2139,15 +2139,15 @@
         "cases": [
           {
             "when": "melee",
-            "value": "#melee_damage"
+            "value": "@melee_damage"
           },
           {
             "when": "finesse",
-            "value": "#finesse_damage"
+            "value": "@finesse_damage"
           },
           {
             "when": "ranged",
-            "value": "#ranged_damage"
+            "value": "@ranged_damage"
           }
         ]
       },
@@ -3415,7 +3415,7 @@
         "constant": "lead_die"
       },
       "bonus": {
-        "expr": "#initiative"
+        "expr": "@initiative"
       },
       "check": "skill_roll"
     },
@@ -3476,7 +3476,7 @@
               "param": "damage_with"
             },
             "count": {
-              "expr": "#hit.natural >= #crit_from ? 2 : 1"
+              "expr": "@hit.natural >= @crit_from ? 2 : 1"
             }
           },
           {
@@ -3549,7 +3549,7 @@
               "param": "damage_bonus"
             },
             "count": {
-              "expr": "#hit.natural >= 20 ? 2 : 1"
+              "expr": "@hit.natural >= 20 ? 2 : 1"
             }
           },
           {
@@ -3634,7 +3634,7 @@
               "const": "1d8"
             },
             "count": {
-              "expr": "min(5, 1 + #slot)"
+              "expr": "min(5, 1 + @slot)"
             }
           },
           {
@@ -3674,7 +3674,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "#taken_0"
+              "expr": "@taken_0"
             },
             "stacking": "sum",
             "condition": null,
@@ -3687,7 +3687,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "#taken_1"
+              "expr": "@taken_1"
             },
             "stacking": "sum",
             "condition": null,
@@ -3700,7 +3700,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "#taken_2"
+              "expr": "@taken_2"
             },
             "stacking": "sum",
             "condition": null,
@@ -3713,7 +3713,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "#taken_3"
+              "expr": "@taken_3"
             },
             "stacking": "sum",
             "condition": null,
@@ -3726,7 +3726,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "#taken_4"
+              "expr": "@taken_4"
             },
             "stacking": "sum",
             "condition": null,
@@ -3739,7 +3739,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "#taken_5"
+              "expr": "@taken_5"
             },
             "stacking": "sum",
             "condition": null,
@@ -3752,7 +3752,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "#taken_6"
+              "expr": "@taken_6"
             },
             "stacking": "sum",
             "condition": null,
@@ -3765,7 +3765,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "#taken_7"
+              "expr": "@taken_7"
             },
             "stacking": "sum",
             "condition": null,
@@ -3778,7 +3778,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "#taken_8"
+              "expr": "@taken_8"
             },
             "stacking": "sum",
             "condition": null,
@@ -3791,7 +3791,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "#taken_9"
+              "expr": "@taken_9"
             },
             "stacking": "sum",
             "condition": null,
@@ -3804,7 +3804,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "#taken_10"
+              "expr": "@taken_10"
             },
             "stacking": "sum",
             "condition": null,
@@ -3817,7 +3817,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "#taken_11"
+              "expr": "@taken_11"
             },
             "stacking": "sum",
             "condition": null,
@@ -3830,7 +3830,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "#taken_12"
+              "expr": "@taken_12"
             },
             "stacking": "sum",
             "condition": null,
@@ -3913,7 +3913,7 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "#spell_attack"
+                "expr": "@spell_attack"
               },
               "check": "attack_roll"
             },
@@ -3929,7 +3929,7 @@
               "param": "damage_die"
             },
             "count": {
-              "expr": "(#cantrip_dice) * (#hit.natural >= #crit_from ? 2 : 1)"
+              "expr": "(@cantrip_dice) * (@hit.natural >= @crit_from ? 2 : 1)"
             }
           },
           {
@@ -3991,7 +3991,7 @@
               "check": "save_roll"
             },
             "versus": {
-              "expr": "#spell_dc"
+              "expr": "@spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -4081,7 +4081,7 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "#spell_attack"
+                "expr": "@spell_attack"
               },
               "check": "attack_roll"
             },
@@ -4097,7 +4097,7 @@
               "param": "damage_die"
             },
             "count": {
-              "expr": "(#dice_count + (#slot - #spell_level) * #dice_up) * (#hit.natural >= #crit_from ? 2 : 1)"
+              "expr": "(@dice_count + (@slot - @spell_level) * @dice_up) * (@hit.natural >= @crit_from ? 2 : 1)"
             }
           },
           {
@@ -4173,7 +4173,7 @@
               "check": "save_roll"
             },
             "versus": {
-              "expr": "#spell_dc"
+              "expr": "@spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "always"
@@ -4186,7 +4186,7 @@
               "param": "damage_die"
             },
             "count": {
-              "expr": "#dice_count + (#slot - #spell_level) * #dice_up"
+              "expr": "@dice_count + (@slot - @spell_level) * @dice_up"
             },
             "scale": {
               "times": 0.5,
@@ -4265,7 +4265,7 @@
               "check": "save_roll"
             },
             "versus": {
-              "expr": "#spell_dc"
+              "expr": "@spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -4278,7 +4278,7 @@
               "param": "damage_die"
             },
             "count": {
-              "expr": "#dice_count + (#slot - #spell_level) * #dice_up"
+              "expr": "@dice_count + (@slot - @spell_level) * @dice_up"
             }
           },
           {
@@ -4347,10 +4347,10 @@
               "param": "damage_die"
             },
             "count": {
-              "expr": "#dice_count + (#slot - #spell_level) * #dice_up"
+              "expr": "@dice_count + (@slot - @spell_level) * @dice_up"
             },
             "bonus": {
-              "expr": "(#dice_count + (#slot - #spell_level) * #dice_up) * #per_die"
+              "expr": "(@dice_count + (@slot - @spell_level) * @dice_up) * @per_die"
             }
           },
           {
@@ -4408,7 +4408,7 @@
               "check": "save_roll"
             },
             "versus": {
-              "expr": "#spell_dc"
+              "expr": "@spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -4420,7 +4420,7 @@
               "param": "status"
             },
             "carry": {
-              "expr": "#spell_dc"
+              "expr": "@spell_dc"
             }
           },
           {
@@ -4431,7 +4431,7 @@
               "optional": true
             },
             "carry": {
-              "expr": "#spell_dc"
+              "expr": "@spell_dc"
             }
           }
         ],
@@ -4476,7 +4476,7 @@
               "check": "save_roll"
             },
             "versus": {
-              "expr": "#spell_dc"
+              "expr": "@spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -4488,7 +4488,7 @@
               "param": "status"
             },
             "carry": {
-              "expr": "#spell_dc"
+              "expr": "@spell_dc"
             }
           },
           {
@@ -4499,7 +4499,7 @@
               "optional": true
             },
             "carry": {
-              "expr": "#spell_dc"
+              "expr": "@spell_dc"
             }
           }
         ],
@@ -4592,10 +4592,10 @@
               "param": "heal_die"
             },
             "count": {
-              "expr": "#dice_count + (#slot - #spell_level) * #dice_up"
+              "expr": "@dice_count + (@slot - @spell_level) * @dice_up"
             },
             "bonus": {
-              "expr": "#spell_mod"
+              "expr": "@spell_mod"
             }
           },
           {
@@ -4736,7 +4736,7 @@
               "const": "1d10"
             },
             "bonus": {
-              "expr": "#level"
+              "expr": "@level"
             }
           },
           {
@@ -4959,13 +4959,13 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "#wis_save",
+                "expr": "@wis_save",
                 "of": "target"
               },
               "check": "save_roll"
             },
             "versus": {
-              "expr": "#spell_dc"
+              "expr": "@spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -5085,7 +5085,7 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "#stealth"
+                "expr": "@stealth"
               },
               "check": "skill_roll"
             },
@@ -5204,10 +5204,10 @@
             "type": "amount",
             "source": "roll",
             "dice": {
-              "expr": "#hit_die"
+              "expr": "@hit_die"
             },
             "bonus": {
-              "expr": "#con_mod"
+              "expr": "@con_mod"
             }
           },
           {
@@ -5284,13 +5284,13 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "#dex_save",
+                "expr": "@dex_save",
                 "of": "target"
               },
               "check": "save_roll"
             },
             "versus": {
-              "expr": "#spell_dc"
+              "expr": "@spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "always"
@@ -5940,7 +5940,7 @@
             "target": "melee_damage",
             "op": "add",
             "value": {
-              "expr": "#rage_damage"
+              "expr": "@rage_damage"
             },
             "stacking": "sum",
             "condition": null
@@ -6492,7 +6492,7 @@
             "target": "ac_base",
             "op": "set",
             "value": {
-              "expr": "10 + #con_mod"
+              "expr": "10 + @con_mod"
             },
             "stacking": "max",
             "condition": null
@@ -6514,7 +6514,7 @@
             "target": "ac_base",
             "op": "set",
             "value": {
-              "expr": "10 + #wis_mod"
+              "expr": "10 + @wis_mod"
             },
             "stacking": "max",
             "condition": null
@@ -6694,7 +6694,7 @@
             "target": "hp_max",
             "op": "add",
             "value": {
-              "expr": "2 * #level"
+              "expr": "2 * @level"
             },
             "stacking": "sum",
             "condition": null
@@ -6808,12 +6808,12 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "#con_save"
+                "expr": "@con_save"
               },
               "check": "save_roll"
             },
             "versus": {
-              "expr": "max(10, floor(#event_amount / 2))"
+              "expr": "max(10, floor(@event_amount / 2))"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -6868,7 +6868,7 @@
         "trigger": {
           "on": "moment:turn-start",
           "condition": {
-            "expr": "#hp_current <= 0"
+            "expr": "@hp_current <= 0"
           }
         },
         "params": [],
@@ -7161,7 +7161,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "#hp_max",
+              "expr": "@hp_max",
               "of": "target"
             },
             "targetModifiers": false
@@ -7195,7 +7195,7 @@
             },
             "direction": "add",
             "value": {
-              "expr": "max(1, floor(#level / 2))",
+              "expr": "max(1, floor(@level / 2))",
               "of": "target"
             },
             "targetModifiers": false
@@ -7229,7 +7229,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "#slots_1_max",
+              "expr": "@slots_1_max",
               "of": "target"
             },
             "targetModifiers": false
@@ -7241,7 +7241,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "#slots_2_max",
+              "expr": "@slots_2_max",
               "of": "target"
             },
             "targetModifiers": false
@@ -7253,7 +7253,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "#slots_3_max",
+              "expr": "@slots_3_max",
               "of": "target"
             },
             "targetModifiers": false
@@ -7265,7 +7265,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "#slots_4_max",
+              "expr": "@slots_4_max",
               "of": "target"
             },
             "targetModifiers": false
@@ -7277,7 +7277,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "#slots_5_max",
+              "expr": "@slots_5_max",
               "of": "target"
             },
             "targetModifiers": false
@@ -7289,7 +7289,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "#slots_6_max",
+              "expr": "@slots_6_max",
               "of": "target"
             },
             "targetModifiers": false
@@ -7301,7 +7301,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "#slots_7_max",
+              "expr": "@slots_7_max",
               "of": "target"
             },
             "targetModifiers": false
@@ -7313,7 +7313,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "#slots_8_max",
+              "expr": "@slots_8_max",
               "of": "target"
             },
             "targetModifiers": false
@@ -7325,7 +7325,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "#slots_9_max",
+              "expr": "@slots_9_max",
               "of": "target"
             },
             "targetModifiers": false
@@ -7337,7 +7337,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "#rages_max",
+              "expr": "@rages_max",
               "of": "target"
             },
             "targetModifiers": false
@@ -7349,7 +7349,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "#bardic_max",
+              "expr": "@bardic_max",
               "of": "target"
             },
             "targetModifiers": false
@@ -7361,7 +7361,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "#lay_on_hands_max",
+              "expr": "@lay_on_hands_max",
               "of": "target"
             },
             "targetModifiers": false
@@ -7373,7 +7373,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "#sorcery_max",
+              "expr": "@sorcery_max",
               "of": "target"
             },
             "targetModifiers": false
@@ -7385,7 +7385,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "#luck_max",
+              "expr": "@luck_max",
               "of": "target"
             },
             "targetModifiers": false
@@ -7397,7 +7397,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "#relentless_max",
+              "expr": "@relentless_max",
               "of": "target"
             },
             "targetModifiers": false
@@ -7424,7 +7424,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "#ki_max",
+              "expr": "@ki_max",
               "of": "target"
             },
             "targetModifiers": false
@@ -7436,7 +7436,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "#channel_max",
+              "expr": "@channel_max",
               "of": "target"
             },
             "targetModifiers": false
@@ -7448,7 +7448,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "#second_wind_max",
+              "expr": "@second_wind_max",
               "of": "target"
             },
             "targetModifiers": false
@@ -7460,7 +7460,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "#action_surge_max",
+              "expr": "@action_surge_max",
               "of": "target"
             },
             "targetModifiers": false
@@ -7472,7 +7472,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "#superiority_max",
+              "expr": "@superiority_max",
               "of": "target"
             },
             "targetModifiers": false
@@ -7500,7 +7500,7 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "#wis_save"
+                "expr": "@wis_save"
               },
               "check": "save_roll"
             },
@@ -7547,7 +7547,7 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "#wis_save"
+                "expr": "@wis_save"
               },
               "check": "save_roll"
             },
@@ -7594,7 +7594,7 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "#wis_save"
+                "expr": "@wis_save"
               },
               "check": "save_roll"
             },
@@ -7641,7 +7641,7 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "#con_save"
+                "expr": "@con_save"
               },
               "check": "save_roll"
             },
@@ -7688,7 +7688,7 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "#str_save"
+                "expr": "@str_save"
               },
               "check": "save_roll"
             },
@@ -7727,7 +7727,7 @@
             "kind": "roll",
             "target": "skill_roll",
             "edit": "disadvantage",
-            "condition": "#exhaustion >= 1"
+            "condition": "@exhaustion >= 1"
           },
           {
             "kind": "value",
@@ -7735,19 +7735,19 @@
             "op": "mul",
             "value": 0.5,
             "stacking": "sum",
-            "condition": "#exhaustion >= 2"
+            "condition": "@exhaustion >= 2"
           },
           {
             "kind": "roll",
             "target": "attack_roll",
             "edit": "disadvantage",
-            "condition": "#exhaustion >= 3"
+            "condition": "@exhaustion >= 3"
           },
           {
             "kind": "roll",
             "target": "save_roll",
             "edit": "disadvantage",
-            "condition": "#exhaustion >= 3"
+            "condition": "@exhaustion >= 3"
           },
           {
             "kind": "value",
@@ -7755,7 +7755,7 @@
             "op": "mul",
             "value": 0.5,
             "stacking": "sum",
-            "condition": "#exhaustion >= 4"
+            "condition": "@exhaustion >= 4"
           },
           {
             "kind": "value",
@@ -7763,7 +7763,7 @@
             "op": "set",
             "value": 0,
             "stacking": "override",
-            "condition": "#exhaustion >= 5"
+            "condition": "@exhaustion >= 5"
           }
         ]
       },
@@ -7783,7 +7783,7 @@
             },
             "targetModifiers": false,
             "when": {
-              "expr": "#hp_current <= 0",
+              "expr": "@hp_current <= 0",
               "of": "target"
             }
           },
@@ -9999,7 +9999,7 @@
         "props": {
           "damage_die": "1d8",
           "damage_type": "излучение",
-          "save_by": "#dex_save",
+          "save_by": "@dex_save",
           "status": ""
         }
       },
@@ -10011,7 +10011,7 @@
         "props": {
           "damage_die": "1d12",
           "damage_type": "яд",
-          "save_by": "#con_save",
+          "save_by": "@con_save",
           "status": ""
         }
       },
@@ -10023,7 +10023,7 @@
         "props": {
           "damage_die": "1d8",
           "damage_type": "некротический",
-          "save_by": "#wis_save",
+          "save_by": "@wis_save",
           "status": ""
         }
       },
@@ -10079,7 +10079,7 @@
         "description": "Конус огня: спасбросок Ловкости, 3к6, при успехе половина. Круг выше — ещё 1к6.",
         "props": {
           "spell_level": 1,
-          "save_by": "#dex_save",
+          "save_by": "@dex_save",
           "damage_die": "1d6",
           "dice_count": 3,
           "dice_up": 1,
@@ -10093,7 +10093,7 @@
         "description": "Волна вокруг себя: спасбросок Телосложения, 2к8 громом, при успехе половина.",
         "props": {
           "spell_level": 1,
-          "save_by": "#con_save",
+          "save_by": "@con_save",
           "damage_die": "1d8",
           "dice_count": 2,
           "dice_up": 1,
@@ -10163,7 +10163,7 @@
         "description": "Шар в 20 футов: спасбросок Ловкости, 8к6 огнём, при успехе половина. Круг выше — ещё 1к6.",
         "props": {
           "spell_level": 3,
-          "save_by": "#dex_save",
+          "save_by": "@dex_save",
           "damage_die": "1d6",
           "dice_count": 8,
           "dice_up": 1,
@@ -10177,7 +10177,7 @@
         "description": "Линия в 100 футов: спасбросок Ловкости, 8к6 молнией, при успехе половина.",
         "props": {
           "spell_level": 3,
-          "save_by": "#dex_save",
+          "save_by": "@dex_save",
           "damage_die": "1d6",
           "dice_count": 8,
           "dice_up": 1,
@@ -10191,7 +10191,7 @@
         "description": "Конус в 60 футов: спасбросок Телосложения, 8к8 холодом, при успехе половина.",
         "props": {
           "spell_level": 5,
-          "save_by": "#con_save",
+          "save_by": "@con_save",
           "damage_die": "1d8",
           "dice_count": 8,
           "dice_up": 1,
@@ -10205,7 +10205,7 @@
         "description": "Спасбросок Ловкости: провал — 10к6+40 силовым уроном, успех — ничего.",
         "props": {
           "spell_level": 6,
-          "save_by": "#dex_save",
+          "save_by": "@dex_save",
           "damage_die": "1d6",
           "dice_count": 10,
           "dice_up": 3,
@@ -10220,7 +10220,7 @@
         "description": "Спасбросок Мудрости: провал — паралич. В конце своего хода цель пробует снова.",
         "props": {
           "spell_level": 2,
-          "save_by": "#wis_save",
+          "save_by": "@wis_save",
           "status": "paralyzed",
           "repeat": "repeat_wis_paralyzed",
           "holds": "да"
@@ -10233,7 +10233,7 @@
         "description": "Спасбросок Мудрости: провал — испуг и бегство. В конце хода цель пробует снова.",
         "props": {
           "spell_level": 3,
-          "save_by": "#wis_save",
+          "save_by": "@wis_save",
           "status": "frightened",
           "repeat": "repeat_wis_frightened",
           "holds": "да"
@@ -10246,7 +10246,7 @@
         "description": "Спасбросок Мудрости: провал — замедление. В конце хода цель пробует снова.",
         "props": {
           "spell_level": 3,
-          "save_by": "#wis_save",
+          "save_by": "@wis_save",
           "status": "slowed",
           "repeat": "repeat_wis_slowed",
           "holds": "да"
@@ -10259,7 +10259,7 @@
         "description": "Спасбросок Телосложения: провал — слепота на минуту.",
         "props": {
           "spell_level": 2,
-          "save_by": "#con_save",
+          "save_by": "@con_save",
           "status": "blinded",
           "repeat": "repeat_con_blinded",
           "holds": "нет"
@@ -10272,7 +10272,7 @@
         "description": "Спасбросок Силы: провал — цель опутана.",
         "props": {
           "spell_level": 1,
-          "save_by": "#str_save",
+          "save_by": "@str_save",
           "status": "restrained",
           "repeat": "repeat_str_restrained",
           "holds": "да"

@@ -22,12 +22,18 @@ const OPS: { label: string; hint: string; open: string; close?: string; word?: b
   { label: 'меньшее из', hint: 'самое маленькое из перечисленного через запятую', open: 'min(', close: ', )', word: true },
 ];
 
-export function partsOf(value: string): Part[] {
+export function partsOf(value: string, known?: (tag: string) => boolean): Part[] {
   const out: Part[] = [];
   let rest = value;
   for (;;) {
-    const m = rest.match(/#([\p{L}\p{N}_]+)/u);
+    const m = rest.match(/[@#]([\p{L}\p{N}_.]+)/u);
     if (!m || m.index === undefined) break;
+    if (known && !known(m[1]!)) {
+      const cut = m.index + m[0].length;
+      out.push({ text: rest.slice(0, cut) });
+      rest = rest.slice(cut);
+      continue;
+    }
     out.push({ text: rest.slice(0, m.index) });
     out.push({ tag: m[1]! });
     rest = rest.slice(m.index + m[0].length);
@@ -37,7 +43,7 @@ export function partsOf(value: string): Part[] {
 }
 
 export function joinParts(parts: Part[]): string {
-  return parts.map(p => ('tag' in p ? `#${p.tag}` : p.text)).join('');
+  return parts.map(p => ('tag' in p ? `@${p.tag}` : p.text)).join('');
 }
 
 export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, side, extraOptions, fromSender, onFlipSide, calculator }: {
@@ -68,7 +74,10 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
 
   calculator?: boolean;
 }) {
-  const parts = useMemo(() => partsOf(value), [value]);
+  const parts = useMemo(
+    () => partsOf(value, tag => (system.fields ?? []).some(field => field.tag === tag) || Boolean(names?.[tag])),
+    [value, system, names],
+  );
   const host = useRef<HTMLDivElement>(null);
   const inputs = useRef(new Map<number, HTMLInputElement>());
   const [active, setActive] = useState<number | null>(null);

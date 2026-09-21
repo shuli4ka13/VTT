@@ -38,6 +38,7 @@ const all = ROOTS.flatMap(dir => filesOf(join(root, dir)))
 const sources = all.filter(f => !/\.test\.tsx?$/.test(f.path) && !/\/tests?\//.test(f.path));
 
 const LATIN_DICE = /\b\d+d\d+\b/;
+const HASH_NAME = /(`#\$\{|['"]#[\p{L}])/u;
 const MACHINE_KEY = /«(trigger\.on|successWhen|continueOn|targetModifiers|effectId|fromId|toId|activation|rk|steps\.\d+)»/;
 
 describe('одно слово на одно понятие', () => {
@@ -61,6 +62,12 @@ describe('одно слово на одно понятие', () => {
     expect(found, found.join('\n')).toEqual([]);
   });
 
+  it('имя поля пишется через собаку: решётку код больше не сочиняет', () => {
+    const found = sources.filter(f => HASH_NAME.test(f.code))
+      .map(f => `${f.path}: ${f.code.match(HASH_NAME)![0]}`);
+    expect(found, found.join('\n')).toEqual([]);
+  });
+
   it('машинные ключи не печатаются в подписях интерфейса', () => {
     const web = sources.filter(f => f.path.startsWith('apps/web/'));
     const found = web.filter(f => MACHINE_KEY.test(f.code)).map(f => `${f.path}: ${f.code.match(MACHINE_KEY)![0]}`);
@@ -81,6 +88,9 @@ describe('одно слово на одно понятие', () => {
     expect(LATIN_DICE.test('бросьте 1к20')).toBe(false);
     expect(LATIN_DICE.test('`${count}d${sides}`')).toBe(false);
     expect(MACHINE_KEY.test('не заполнено «trigger.on»')).toBe(true);
+    expect(HASH_NAME.test('const name = `#${tag}`;')).toBe(true);
+    expect(HASH_NAME.test("if (text === '#сила') return;")).toBe(true);
+    expect(HASH_NAME.test('/^[@#]([\\p{L}]+)$/u')).toBe(false);
     expect(sources.length).toBeGreaterThan(50);
   });
 });

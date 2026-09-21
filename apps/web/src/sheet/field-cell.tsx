@@ -91,7 +91,7 @@ function Shown({ label, text, title, bad, roll }: {
 
 function boundOf(bound: unknown, reader: Reader): number | undefined {
   if (typeof bound !== 'string') return undefined;
-  const tag = /^#([\p{L}\p{N}_-]+)$/u.exec(bound.trim())?.[1];
+  const tag = /^[@#]([\p{L}\p{N}_-]+)$/u.exec(bound.trim())?.[1];
   if (!tag) return undefined;
   const value = reader.valueOf(tag);
   return value.ok && typeof value.value === 'number' ? value.value : undefined;

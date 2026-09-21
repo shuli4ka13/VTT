@@ -150,7 +150,7 @@
         "group": "Характеристики",
         "value": {
           "kind": "formula",
-          "expr": "floor(#humanity / 10)"
+          "expr": "floor(@humanity / 10)"
         }
       },
       {
@@ -159,7 +159,7 @@
         "group": "Состояние",
         "value": {
           "kind": "formula",
-          "expr": "10 + 5 * ceil((#body + #will) / 2)"
+          "expr": "10 + 5 * ceil((@body + @will) / 2)"
         }
       },
       {
@@ -171,7 +171,7 @@
           "type": "number",
           "default": 45,
           "min": 0,
-          "max": "#hp_max"
+          "max": "@hp_max"
         },
         "control": "bar"
       },
@@ -181,7 +181,7 @@
         "group": "Состояние",
         "value": {
           "kind": "formula",
-          "expr": "ceil(#hp_max / 2)"
+          "expr": "ceil(@hp_max / 2)"
         }
       },
       {
@@ -193,7 +193,7 @@
           "type": "number",
           "default": 6,
           "min": 0,
-          "max": "#luck"
+          "max": "@luck"
         },
         "control": "pips"
       },
@@ -213,7 +213,7 @@
         "group": "Состояние",
         "value": {
           "kind": "formula",
-          "expr": "#hp <= #wound_at"
+          "expr": "@hp <= @wound_at"
         }
       },
       {
@@ -222,7 +222,7 @@
         "group": "Состояние",
         "value": {
           "kind": "formula",
-          "expr": "#hp <= 0"
+          "expr": "@hp <= 0"
         }
       },
       {
@@ -282,7 +282,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#will + #concentration"
+          "expr": "@will + @concentration"
         }
       },
       {
@@ -307,7 +307,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int + #conceal_reveal"
+          "expr": "@int + @conceal_reveal"
         }
       },
       {
@@ -332,7 +332,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int + #lip_reading"
+          "expr": "@int + @lip_reading"
         }
       },
       {
@@ -357,7 +357,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int + #perception"
+          "expr": "@int + @perception"
         }
       },
       {
@@ -382,7 +382,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int + #tracking"
+          "expr": "@int + @tracking"
         }
       },
       {
@@ -407,7 +407,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#dex + #athletics"
+          "expr": "@dex + @athletics"
         }
       },
       {
@@ -432,7 +432,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#dex + #contortionist"
+          "expr": "@dex + @contortionist"
         }
       },
       {
@@ -457,7 +457,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#dex + #dance"
+          "expr": "@dex + @dance"
         }
       },
       {
@@ -482,7 +482,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#will + #endurance"
+          "expr": "@will + @endurance"
         }
       },
       {
@@ -507,7 +507,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#will + #resist_torture"
+          "expr": "@will + @resist_torture"
         }
       },
       {
@@ -532,7 +532,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#dex + #stealth"
+          "expr": "@dex + @stealth"
         }
       },
       {
@@ -557,7 +557,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#ref + #drive_land"
+          "expr": "@ref + @drive_land"
         }
       },
       {
@@ -582,7 +582,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#ref + #pilot_air"
+          "expr": "@ref + @pilot_air"
         }
       },
       {
@@ -607,7 +607,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#ref + #pilot_sea"
+          "expr": "@ref + @pilot_sea"
         }
       },
       {
@@ -632,7 +632,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#ref + #riding"
+          "expr": "@ref + @riding"
         }
       },
       {
@@ -657,7 +657,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int + #accounting"
+          "expr": "@int + @accounting"
         }
       },
       {
@@ -682,7 +682,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int + #animal_handling"
+          "expr": "@int + @animal_handling"
         }
       },
       {
@@ -707,7 +707,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int + #bureaucracy"
+          "expr": "@int + @bureaucracy"
         }
       },
       {
@@ -732,7 +732,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int + #business"
+          "expr": "@int + @business"
         }
       },
       {
@@ -757,7 +757,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int + #composition"
+          "expr": "@int + @composition"
         }
       },
       {
@@ -782,7 +782,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int + #criminology"
+          "expr": "@int + @criminology"
         }
       },
       {
@@ -807,7 +807,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int + #cryptography"
+          "expr": "@int + @cryptography"
         }
       },
       {
@@ -832,7 +832,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int + #deduction"
+          "expr": "@int + @deduction"
         }
       },
       {
@@ -857,7 +857,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int + #education"
+          "expr": "@int + @education"
         }
       },
       {
@@ -882,7 +882,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int + #gamble"
+          "expr": "@int + @gamble"
         }
       },
       {
@@ -907,7 +907,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int + #language"
+          "expr": "@int + @language"
         }
       },
       {
@@ -932,7 +932,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int + #library_search"
+          "expr": "@int + @library_search"
         }
       },
       {
@@ -957,7 +957,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int + #local_expert"
+          "expr": "@int + @local_expert"
         }
       },
       {
@@ -982,7 +982,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int + #science"
+          "expr": "@int + @science"
         }
       },
       {
@@ -1007,7 +1007,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int + #tactics"
+          "expr": "@int + @tactics"
         }
       },
       {
@@ -1032,7 +1032,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#int + #wilderness_survival"
+          "expr": "@int + @wilderness_survival"
         }
       },
       {
@@ -1057,7 +1057,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#dex + #brawling"
+          "expr": "@dex + @brawling"
         }
       },
       {
@@ -1082,7 +1082,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#dex + #evasion"
+          "expr": "@dex + @evasion"
         }
       },
       {
@@ -1107,7 +1107,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#dex + #martial_arts"
+          "expr": "@dex + @martial_arts"
         }
       },
       {
@@ -1132,7 +1132,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#dex + #melee_weapon"
+          "expr": "@dex + @melee_weapon"
         }
       },
       {
@@ -1157,7 +1157,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#cool + #acting"
+          "expr": "@cool + @acting"
         }
       },
       {
@@ -1182,7 +1182,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#tech + #play_instrument"
+          "expr": "@tech + @play_instrument"
         }
       },
       {
@@ -1207,7 +1207,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#ref + #archery"
+          "expr": "@ref + @archery"
         }
       },
       {
@@ -1232,7 +1232,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#ref + #autofire"
+          "expr": "@ref + @autofire"
         }
       },
       {
@@ -1257,7 +1257,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#ref + #handgun"
+          "expr": "@ref + @handgun"
         }
       },
       {
@@ -1282,7 +1282,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#ref + #heavy_weapons"
+          "expr": "@ref + @heavy_weapons"
         }
       },
       {
@@ -1307,7 +1307,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#ref + #shoulder_arms"
+          "expr": "@ref + @shoulder_arms"
         }
       },
       {
@@ -1332,7 +1332,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#cool + #bribery"
+          "expr": "@cool + @bribery"
         }
       },
       {
@@ -1357,7 +1357,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#emp + #conversation"
+          "expr": "@emp + @conversation"
         }
       },
       {
@@ -1382,7 +1382,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#emp + #human_perception"
+          "expr": "@emp + @human_perception"
         }
       },
       {
@@ -1407,7 +1407,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#cool + #interrogation"
+          "expr": "@cool + @interrogation"
         }
       },
       {
@@ -1432,7 +1432,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#cool + #persuasion"
+          "expr": "@cool + @persuasion"
         }
       },
       {
@@ -1457,7 +1457,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#cool + #personal_grooming"
+          "expr": "@cool + @personal_grooming"
         }
       },
       {
@@ -1482,7 +1482,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#cool + #streetwise"
+          "expr": "@cool + @streetwise"
         }
       },
       {
@@ -1507,7 +1507,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#cool + #trading"
+          "expr": "@cool + @trading"
         }
       },
       {
@@ -1532,7 +1532,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#cool + #wardrobe"
+          "expr": "@cool + @wardrobe"
         }
       },
       {
@@ -1557,7 +1557,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#tech + #air_vehicle_tech"
+          "expr": "@tech + @air_vehicle_tech"
         }
       },
       {
@@ -1582,7 +1582,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#tech + #basic_tech"
+          "expr": "@tech + @basic_tech"
         }
       },
       {
@@ -1607,7 +1607,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#tech + #cybertech"
+          "expr": "@tech + @cybertech"
         }
       },
       {
@@ -1632,7 +1632,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#tech + #demolitions"
+          "expr": "@tech + @demolitions"
         }
       },
       {
@@ -1657,7 +1657,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#tech + #electronics"
+          "expr": "@tech + @electronics"
         }
       },
       {
@@ -1682,7 +1682,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#tech + #first_aid"
+          "expr": "@tech + @first_aid"
         }
       },
       {
@@ -1707,7 +1707,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#tech + #forgery"
+          "expr": "@tech + @forgery"
         }
       },
       {
@@ -1732,7 +1732,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#tech + #land_vehicle_tech"
+          "expr": "@tech + @land_vehicle_tech"
         }
       },
       {
@@ -1757,7 +1757,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#tech + #paint_draw"
+          "expr": "@tech + @paint_draw"
         }
       },
       {
@@ -1782,7 +1782,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#tech + #paramedic"
+          "expr": "@tech + @paramedic"
         }
       },
       {
@@ -1807,7 +1807,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#tech + #photography"
+          "expr": "@tech + @photography"
         }
       },
       {
@@ -1832,7 +1832,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#tech + #pick_lock"
+          "expr": "@tech + @pick_lock"
         }
       },
       {
@@ -1857,7 +1857,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#tech + #pick_pocket"
+          "expr": "@tech + @pick_pocket"
         }
       },
       {
@@ -1882,7 +1882,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#tech + #sea_vehicle_tech"
+          "expr": "@tech + @sea_vehicle_tech"
         }
       },
       {
@@ -1907,7 +1907,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "#tech + #weaponstech"
+          "expr": "@tech + @weaponstech"
         }
       }
     ],
@@ -2153,7 +2153,7 @@
         "constant": "lead_die"
       },
       "bonus": {
-        "expr": "#ref"
+        "expr": "@ref"
       },
       "check": "skill_roll"
     },
@@ -2244,7 +2244,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "#handgun_total"
+              "expr": "@handgun_total"
             },
             "bonus": {
               "param": "spend_luck"
@@ -2412,7 +2412,7 @@
             "target": "roll:any",
             "op": "add",
             "value": -2,
-            "condition": "#seriously"
+            "condition": "@seriously"
           }
         ]
       },
@@ -2428,7 +2428,7 @@
         "trigger": {
           "on": "moment:turn-start",
           "condition": {
-            "expr": "#mortal"
+            "expr": "@mortal"
           }
         },
         "params": [],
@@ -2443,7 +2443,7 @@
               "check": "skill_roll"
             },
             "versus": {
-              "expr": "#body"
+              "expr": "@body"
             },
             "successWhen": "notOver",
             "continueOn": "fail"

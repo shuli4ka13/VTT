@@ -28,8 +28,16 @@ export function labelOfTag(system: System, tag: string): string {
   return field?.label ?? tag;
 }
 
-export function formulaAsLabels(system: System, source: string): string {
-  return source.replace(/#([\p{L}\p{N}_]+)/gu, (_, tag: string) => labelOfTag(system, tag));
+export function formulaAsLabels(
+  system: System,
+  source: string,
+  names?: Map<string, string>,
+): string {
+  return source.replace(/[@#]([\p{L}\p{N}_.]+)/gu, (_, name: string) => {
+    const field = system.fields.find(f => f.tag === name);
+    if (field) return field.label ?? name;
+    return names?.get(name) ?? name;
+  });
 }
 
 export function FormulaInput({ system, value, onChange, placeholder }: {

@@ -97,68 +97,68 @@ export function fields() {
   }
 
   out.push(stored('level', 'Уровень', 'Прогрессия', 'number', 1, { min: 1, max: 20, control: 'stepper' }));
-  out.push(lookup('prof_bonus', 'Бонус мастерства', 'Прогрессия', 'proficiency', '#level'));
+  out.push(lookup('prof_bonus', 'Бонус мастерства', 'Прогрессия', 'proficiency', '@level'));
   out.push(stored('inspiration', 'Вдохновение', 'Прогрессия', 'number', 0, { min: 0, max: 1, control: 'pips' }));
   out.push(stored('xp', 'Опыт', 'Прогрессия', 'number', 0, { min: 0 }));
 
   for (const [a, label] of ABILITIES) {
     out.push(stored(`${a}_save_prof`, `Владение: спасбросок ${label}`, 'Спасброски', 'number', 0, { min: 0, max: 1, control: 'ring' }));
-    out.push(formula(`${a}_save`, `Спасбросок: ${label}`, 'Спасброски', `#${a}_mod + #${a}_save_prof * #prof_bonus`,
+    out.push(formula(`${a}_save`, `Спасбросок: ${label}`, 'Спасброски', `#${a}_mod + #${a}_save_prof * @prof_bonus`,
       { label: `Спасбросок: ${label}`, check: 'save_roll' }));
   }
 
   for (const [tag, label, a] of SKILLS) {
     out.push(stored(`${tag}_prof`, `Владение: ${label}`, SKILL_GROUP[a], 'number', 0, { min: 0, max: 2, control: 'ring' }));
-    out.push(formula(tag, label, SKILL_GROUP[a], `#${a}_mod + #${tag}_prof * #prof_bonus`,
+    out.push(formula(tag, label, SKILL_GROUP[a], `#${a}_mod + #${tag}_prof * @prof_bonus`,
       { label: `Проверка: ${label}`, check: 'skill_roll' }));
   }
 
-  out.push(formula('initiative', 'Инициатива', 'Чувства и движение', '#dex_mod', { label: 'Инициатива', check: 'skill_roll' }));
-  out.push(formula('passive_perception', 'Пассивная внимательность', 'Чувства и движение', '10 + #perception'));
+  out.push(formula('initiative', 'Инициатива', 'Чувства и движение', '@dex_mod', { label: 'Инициатива', check: 'skill_roll' }));
+  out.push(formula('passive_perception', 'Пассивная внимательность', 'Чувства и движение', '10 + @perception'));
   out.push(stored('speed', 'Скорость, футов', 'Чувства и движение', 'number', 30, { min: 0 }));
   out.push(stored('darkvision', 'Тёмное зрение, футов', 'Чувства и движение', 'number', 0, { min: 0 }));
   out.push(stored('languages', 'Языки', 'Чувства и движение', 'text', 'Общий'));
 
   out.push(stored('ac_base', 'База доспеха', 'Защита', 'number', 10, { min: 0 }));
   out.push(stored('armor_heavy', 'Доспех тяжёлый', 'Защита', 'boolean', false, { control: 'toggle' }));
-  out.push(formula('ac_dex', 'Ловкость в классе брони', 'Защита', '#dex_mod'));
-  out.push(formula('ac', 'Класс брони', 'Защита', '#ac_base + (#armor_heavy ? 0 : #ac_dex)'));
+  out.push(formula('ac_dex', 'Ловкость в классе брони', 'Защита', '@dex_mod'));
+  out.push(formula('ac', 'Класс брони', 'Защита', '@ac_base + (@armor_heavy ? 0 : @ac_dex)'));
 
   out.push(stored('hp_max', 'Максимум хитов', 'Здоровье', 'number', 8, { min: 1 }));
-  out.push(stored('hp_current', 'Хиты', 'Здоровье', 'number', 8, { min: 0, max: '#hp_max', control: 'bar' }));
+  out.push(stored('hp_current', 'Хиты', 'Здоровье', 'number', 8, { min: 0, max: '@hp_max', control: 'bar' }));
   out.push(stored('hp_temp', 'Временные хиты', 'Здоровье', 'number', 0, { min: 0, control: 'stepper' }));
   out.push(stored('hit_die', 'Кость хитов', 'Здоровье', 'text', '1к8', { control: 'die' }));
-  out.push(stored('hit_dice_left', 'Костей хитов осталось', 'Здоровье', 'number', 1, { min: 0, max: '#level', control: 'stepper' }));
+  out.push(stored('hit_dice_left', 'Костей хитов осталось', 'Здоровье', 'number', 1, { min: 0, max: '@level', control: 'stepper' }));
   out.push(stored('death_ok', 'Спасброски от смерти: успехи', 'Здоровье', 'number', 0, { min: 0, max: 3, control: 'pips' }));
   out.push(stored('death_fail', 'Спасброски от смерти: провалы', 'Здоровье', 'number', 0, { min: 0, max: 3, control: 'pips' }));
   out.push(stored('exhaustion', 'Истощение', 'Здоровье', 'number', 0, { min: 0, max: 6, control: 'stepper' }));
-  out.push(formula('down', 'Без сил', 'Здоровье', '#hp_current <= 0'));
-  out.push(formula('up', 'На ногах', 'Здоровье', '#hp_current > 0'));
-  out.push(formula('is_dead', 'Три провала', 'Здоровье', '#death_fail >= 3'));
-  out.push(formula('is_stable', 'Три успеха', 'Здоровье', '#death_ok >= 3'));
+  out.push(formula('down', 'Без сил', 'Здоровье', '@hp_current <= 0'));
+  out.push(formula('up', 'На ногах', 'Здоровье', '@hp_current > 0'));
+  out.push(formula('is_dead', 'Три провала', 'Здоровье', '@death_fail >= 3'));
+  out.push(formula('is_stable', 'Три успеха', 'Здоровье', '@death_ok >= 3'));
 
-  out.push(formula('melee_attack', 'Атака ближним оружием', 'Атака', '#str_mod + #prof_bonus'));
-  out.push(formula('ranged_attack', 'Атака дальнобойным оружием', 'Атака', '#dex_mod + #prof_bonus'));
-  out.push(formula('finesse_attack', 'Атака фехтовальным оружием', 'Атака', 'max(#str_mod, #dex_mod) + #prof_bonus'));
-  out.push(formula('melee_damage', 'Прибавка к урону: ближний бой', 'Атака', '#str_mod'));
-  out.push(formula('ranged_damage', 'Прибавка к урону: дальний бой', 'Атака', '#dex_mod'));
-  out.push(formula('finesse_damage', 'Прибавка к урону: фехтовальное', 'Атака', 'max(#str_mod, #dex_mod)'));
+  out.push(formula('melee_attack', 'Атака ближним оружием', 'Атака', '@str_mod + @prof_bonus'));
+  out.push(formula('ranged_attack', 'Атака дальнобойным оружием', 'Атака', '@dex_mod + @prof_bonus'));
+  out.push(formula('finesse_attack', 'Атака фехтовальным оружием', 'Атака', 'max(@str_mod, @dex_mod) + @prof_bonus'));
+  out.push(formula('melee_damage', 'Прибавка к урону: ближний бой', 'Атака', '@str_mod'));
+  out.push(formula('ranged_damage', 'Прибавка к урону: дальний бой', 'Атака', '@dex_mod'));
+  out.push(formula('finesse_damage', 'Прибавка к урону: фехтовальное', 'Атака', 'max(@str_mod, @dex_mod)'));
   out.push(stored('attacks_per_action', 'Атак за действие', 'Атака', 'number', 1, { min: 1, max: 4, control: 'stepper' }));
   out.push(stored('crit_from', 'Крит на костях от', 'Атака', 'number', 20, { min: 18, max: 20 }));
-  out.push(formula('sneak_dice', 'Костей скрытой атаки', 'Атака', 'ceil(#level / 2)'));
+  out.push(formula('sneak_dice', 'Костей скрытой атаки', 'Атака', 'ceil(@level / 2)'));
 
   out.push(stored('casts_int', 'Колдует от Интеллекта', 'Магия', 'boolean', false, { control: 'toggle' }));
   out.push(stored('casts_wis', 'Колдует от Мудрости', 'Магия', 'boolean', false, { control: 'toggle' }));
-  out.push(formula('spell_mod', 'Заклинательный модификатор', 'Магия', '#casts_int ? #int_mod : (#casts_wis ? #wis_mod : #cha_mod)'));
-  out.push(formula('spell_dc', 'Сложность заклинаний', 'Магия', '8 + #prof_bonus + #spell_mod'));
-  out.push(formula('spell_attack', 'Атака заклинанием', 'Магия', '#prof_bonus + #spell_mod'));
+  out.push(formula('spell_mod', 'Заклинательный модификатор', 'Магия', '@casts_int ? @int_mod : (@casts_wis ? @wis_mod : @cha_mod)'));
+  out.push(formula('spell_dc', 'Сложность заклинаний', 'Магия', '8 + @prof_bonus + @spell_mod'));
+  out.push(formula('spell_attack', 'Атака заклинанием', 'Магия', '@prof_bonus + @spell_mod'));
   out.push(stored('caster_level', 'Уровень заклинателя', 'Магия', 'number', 0, { min: 0, max: 20, control: 'stepper' }));
-  out.push(lookup('cantrip_dice', 'Костей заговора', 'Магия', 'cantrip_dice', '#level'));
+  out.push(lookup('cantrip_dice', 'Костей заговора', 'Магия', 'cantrip_dice', '@level'));
 
   for (let n = 1; n <= 9; n++) {
-    out.push(lookup(`slots_${n}_max`, `Всего ячеек ${n}-го круга`, 'Ячейки заклинаний', `slots_${n}`, '#caster_level'));
+    out.push(lookup(`slots_${n}_max`, `Всего ячеек ${n}-го круга`, 'Ячейки заклинаний', `slots_${n}`, '@caster_level'));
     out.push(stored(`slots_${n}`, `Ячейки ${n}-го круга`, 'Ячейки заклинаний', 'number', 0,
-      { min: 0, max: `#slots_${n}_max`, control: 'pips' }));
+      { min: 0, max: `@slots_${n}_max`, control: 'pips' }));
   }
 
   for (const [key, label] of RESOURCES) {
@@ -166,7 +166,7 @@ export function fields() {
     out.push(stored(`${key}_left`, `${label}: осталось`, 'Ресурсы класса', 'number', 0,
       { min: 0, max: `#${key}_max`, control: 'stepper' }));
   }
-  out.push(lookup('rage_damage', 'Урон ярости', 'Ресурсы класса', 'rage_damage', '#level'));
+  out.push(lookup('rage_damage', 'Урон ярости', 'Ресурсы класса', 'rage_damage', '@level'));
   out.push(stored('superiority_die', 'Кость превосходства', 'Ресурсы класса', 'text', '1к8', { control: 'die' }));
 
   for (const [tag, label] of [['gp', 'Золотые'], ['sp', 'Серебряные'], ['cp', 'Медные']]) {
@@ -244,17 +244,17 @@ export function tables() {
   out.wield_attack = {
     label: 'Бонус атаки по тому, чем бьют',
     cases: [
-      { when: 'melee', value: '#melee_attack' },
-      { when: 'finesse', value: '#finesse_attack' },
-      { when: 'ranged', value: '#ranged_attack' },
+      { when: 'melee', value: '@melee_attack' },
+      { when: 'finesse', value: '@finesse_attack' },
+      { when: 'ranged', value: '@ranged_attack' },
     ],
   };
   out.wield_damage = {
     label: 'Прибавка к урону по тому, чем бьют',
     cases: [
-      { when: 'melee', value: '#melee_damage' },
-      { when: 'finesse', value: '#finesse_damage' },
-      { when: 'ranged', value: '#ranged_damage' },
+      { when: 'melee', value: '@melee_damage' },
+      { when: 'finesse', value: '@finesse_damage' },
+      { when: 'ranged', value: '@ranged_damage' },
     ],
   };
   for (let n = 1; n <= 9; n++) {
@@ -319,7 +319,7 @@ export function calledEffects() {
       steps: [
         {
           type: 'apply', target: { tag: 'death_fail' }, direction: 'add', value: { const: 1 }, targetModifiers: false,
-          when: { expr: '#hp_current <= 0', of: 'target' },
+          when: { expr: '@hp_current <= 0', of: 'target' },
         },
         { id: 'по_временным', type: 'apply', target: { tag: 'hp_temp' }, direction: 'subtract', value: { ref: 'event.amount' }, targetModifiers: false },
         { id: 'по_хитам', type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { ref: 'по_временным.overkill' }, targetModifiers: false },

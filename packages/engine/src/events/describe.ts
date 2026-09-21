@@ -79,11 +79,11 @@ export function describeEntry(
       return found?.label ?? String(ref.ref);
     }
     if ('expr' in ref) {
-      const exact = /^#([\p{L}\p{N}_-]+)$/u.exec(String(ref.expr).trim());
+      const exact = /^[@#]([\p{L}\p{N}_-]+)$/u.exec(String(ref.expr).trim());
       if (exact) return labelOf(exact[1]!);
       const needs = new Map<string, string>(
         ((effect?.params ?? []) as { key: string; label?: string }[]).map(p => [String(p.key), String(p.label ?? p.key)]));
-      const named = String(ref.expr).replace(/#([\p{L}\p{N}_-]+)/gu, (_, tag: string) => labelOf(String(tag)));
+      const named = String(ref.expr).replace(/[@#]([\p{L}\p{N}_-]+)/gu, (_, tag: string) => labelOf(String(tag)));
       return named.replace(/[\p{L}\p{N}_-]+/gu, (word: string) => needs.get(word) ?? word);
     }
     return null;

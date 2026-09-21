@@ -15,6 +15,6 @@ describe('matchTagQuery', () => {
 describe('applyTag', () => {
   it('заменяет запрос тегом и ставит каретку за ним', () => {
     expect(applyTag('1d20 + @бонус ат', 7, 16, 'бонус_атаки'))
-      .toEqual({ next: '1d20 + #бонус_атаки', caretTo: 19 });
+      .toEqual({ next: '1d20 + @бонус_атаки', caretTo: 19 });
   });
 });

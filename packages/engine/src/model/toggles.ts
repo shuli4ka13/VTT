@@ -76,7 +76,7 @@ export function setCrit(draft: System, choice: CritChoice): void {
   if (choice === 'double') {
     for (const effect of Object.values(draft.effects)) {
       for (const { check, amount } of amountsAfterCheck(effect.steps ?? [])) {
-        (amount as Record<string, unknown>).count = { expr: `#${check.id}.atMax >= 1 ? 2 : 1` };
+        (amount as Record<string, unknown>).count = { expr: `@${check.id}.atMax >= 1 ? 2 : 1` };
       }
     }
   }

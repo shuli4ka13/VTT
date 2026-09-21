@@ -17,7 +17,7 @@ const P = {
   repeat: { key: 'repeat', label: 'Повторный спасбросок', kind: 'effect' },
 };
 
-const LEVELED = '#dice_count + (#slot - #spell_level) * #dice_up';
+const LEVELED = '@dice_count + (@slot - @spell_level) * @dice_up';
 
 const hit = bonus => ({
   id: 'hit', type: 'threshold', roll: { die: DIE, bonus, check: 'attack_roll' }, versus: { tag: 'ac' },
@@ -25,9 +25,9 @@ const hit = bonus => ({
 const save = continueOn => ({
   id: 'save', type: 'threshold', side: 'target',
   roll: { die: DIE, bonus: { param: 'save_by' }, check: 'save_roll' },
-  versus: { expr: '#spell_dc' }, successWhen: 'atLeast', continueOn,
+  versus: { expr: '@spell_dc' }, successWhen: 'atLeast', continueOn,
 });
-const CRIT = '#hit.natural >= #crit_from ? 2 : 1';
+const CRIT = '@hit.natural >= @crit_from ? 2 : 1';
 const crit = { ref: 'hit.natural', atLeast: { tag: 'crit_from' } };
 const damage = (amount, tags) => ({ type: 'emit', event: 'damage', amount, tags });
 const hang = (effect, extra = {}) => ({ type: 'status', mode: 'apply', effect, ...extra });
@@ -93,7 +93,7 @@ function attacks() {
         ],
         steps: [
           hit({ param: 'to_hit' }),
-          { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'damage_dice' }, bonus: { param: 'damage_bonus' }, count: { expr: '#hit.natural >= 20 ? 2 : 1' } },
+          { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'damage_dice' }, bonus: { param: 'damage_bonus' }, count: { expr: '@hit.natural >= 20 ? 2 : 1' } },
           damage({ ref: 'dmg' }, [{ param: 'damage_type' }]),
         ],
       }),
@@ -112,7 +112,7 @@ function attacks() {
         params: [P.slot],
         self: [{ type: 'emit', event: 'spell_slot', amount: { param: 'slot' }, strict: true }],
         steps: [
-          { id: 'dmg', type: 'amount', source: 'roll', dice: { const: '1d8' }, count: { expr: 'min(5, 1 + #slot)' } },
+          { id: 'dmg', type: 'amount', source: 'roll', dice: { const: '1d8' }, count: { expr: 'min(5, 1 + @slot)' } },
           damage({ ref: 'dmg' }, ['излучение', 'магический']),
         ],
       }),
@@ -146,8 +146,8 @@ function spells() {
       'action', {
         params: [P.die, P.type],
         steps: [
-          hit({ expr: '#spell_attack' }),
-          { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'damage_die' }, count: { expr: `(#cantrip_dice) * (${CRIT})` } },
+          hit({ expr: '@spell_attack' }),
+          { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'damage_die' }, count: { expr: `(@cantrip_dice) * (${CRIT})` } },
           damage({ ref: 'dmg' }, [{ param: 'damage_type' }, 'магический']),
         ],
       }),
@@ -168,7 +168,7 @@ function spells() {
         extends: 'spell',
         params: [P.die, P.count, P.up, P.type, { ...P.status, label: 'Состояние при попадании' }],
         steps: [
-          hit({ expr: '#spell_attack' }),
+          hit({ expr: '@spell_attack' }),
           { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'damage_die' }, count: { expr: `(${LEVELED}) * (${CRIT})` } },
           damage({ ref: 'dmg' }, [{ param: 'damage_type' }, 'магический']),
           hang({ param: 'status', optional: true }),
@@ -205,7 +205,7 @@ function spells() {
         steps: [
           {
             id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'damage_die' }, count: { expr: LEVELED },
-            bonus: { expr: `(${LEVELED}) * #per_die` },
+            bonus: { expr: `(${LEVELED}) * @per_die` },
           },
           damage({ ref: 'dmg' }, [{ param: 'damage_type' }, 'магический']),
         ],
@@ -216,8 +216,8 @@ function spells() {
         params: [P.saveBy, P.status, { ...P.repeat }],
         steps: [
           save('fail'),
-          hang({ param: 'status' }, { carry: { expr: '#spell_dc' } }),
-          hang({ param: 'repeat', optional: true }, { carry: { expr: '#spell_dc' } }),
+          hang({ param: 'status' }, { carry: { expr: '@spell_dc' } }),
+          hang({ param: 'repeat', optional: true }, { carry: { expr: '@spell_dc' } }),
         ],
       }),
     spell_condition_held: manual('Заклинание: спасбросок или состояние, с концентрацией', 'Заклинания',
@@ -227,8 +227,8 @@ function spells() {
         params: [P.saveBy, P.status, { ...P.repeat }],
         steps: [
           save('fail'),
-          hang({ param: 'status' }, { carry: { expr: '#spell_dc' } }),
-          hang({ param: 'repeat', optional: true }, { carry: { expr: '#spell_dc' } }),
+          hang({ param: 'status' }, { carry: { expr: '@spell_dc' } }),
+          hang({ param: 'repeat', optional: true }, { carry: { expr: '@spell_dc' } }),
         ],
       }),
     spell_buff: manual('Заклинание: усиление', 'Заклинания',
@@ -249,7 +249,7 @@ function spells() {
         extends: 'spell',
         params: [{ key: 'heal_die', label: 'Кость лечения', kind: 'dice' }, P.count, P.up, { key: 'cure', label: 'Что снимает', kind: 'effect' }],
         steps: [
-          { id: 'amt', type: 'amount', source: 'roll', dice: { param: 'heal_die' }, count: { expr: LEVELED }, bonus: { expr: '#spell_mod' } },
+          { id: 'amt', type: 'amount', source: 'roll', dice: { param: 'heal_die' }, count: { expr: LEVELED }, bonus: { expr: '@spell_mod' } },
           change('hp_current', 'add', { ref: 'amt' }),
           { type: 'status', mode: 'remove', effect: { param: 'cure', optional: true } },
         ],
@@ -281,7 +281,7 @@ function features() {
       'Бонусным действием восполняешь 1к10 + уровень хитов. Раз до короткого отдыха.', 'bonus', {
         self: [
           ...payResource('second_wind', 'второе дыхание уже потрачено'),
-          { id: 'amt', type: 'amount', source: 'roll', dice: { const: '1d10' }, bonus: { expr: '#level' } },
+          { id: 'amt', type: 'amount', source: 'roll', dice: { const: '1d10' }, bonus: { expr: '@level' } },
           change('hp_current', 'add', { ref: 'amt' }),
         ],
       }),
@@ -318,8 +318,8 @@ function features() {
         self: payResource('channel', 'божественный канал уже потрачен'),
         steps: [
           {
-            id: 'save', type: 'threshold', side: 'target', roll: { die: DIE, bonus: { expr: '#wis_save', of: 'target' }, check: 'save_roll' },
-            versus: { expr: '#spell_dc' }, successWhen: 'atLeast', continueOn: 'fail',
+            id: 'save', type: 'threshold', side: 'target', roll: { die: DIE, bonus: { expr: '@wis_save', of: 'target' }, check: 'save_roll' },
+            versus: { expr: '@spell_dc' }, successWhen: 'atLeast', continueOn: 'fail',
           },
           hang({ const: 'frightened' }),
         ],
@@ -336,7 +336,7 @@ function features() {
     disengage: manual('Отход', 'Действия в бою', 'Твоё передвижение до конца хода не провоцирует атак.', 'action', {}),
     hide: manual('Засада', 'Действия в бою', 'Скрытность против пассивной внимательности цели. Вышло — прячешься.', 'action', {
       steps: [
-        { id: 'sneak', type: 'threshold', roll: { die: DIE, bonus: { expr: '#stealth' }, check: 'skill_roll' },
+        { id: 'sneak', type: 'threshold', roll: { die: DIE, bonus: { expr: '@stealth' }, check: 'skill_roll' },
           versus: { tag: 'passive_perception' }, successWhen: 'atLeast', continueOn: 'success' },
         { type: 'status', mode: 'apply', effect: { const: 'hidden' }, side: 'source' },
       ],
@@ -354,7 +354,7 @@ function features() {
         self: [
           { type: 'compare', value: { tag: 'hit_dice_left' }, versus: { const: 1 }, breakIf: 'less', note: 'костей хитов не осталось' },
           change('hit_dice_left', 'subtract', { const: 1 }),
-          { id: 'amt', type: 'amount', source: 'roll', dice: { expr: '#hit_die' }, bonus: { expr: '#con_mod' } },
+          { id: 'amt', type: 'amount', source: 'roll', dice: { expr: '@hit_die' }, bonus: { expr: '@con_mod' } },
           change('hp_current', 'add', { ref: 'amt' }),
         ],
       }),
@@ -376,8 +376,8 @@ function reactions() {
         self: payFirstSlot,
         steps: [
           {
-            id: 'save', type: 'threshold', side: 'target', roll: { die: DIE, bonus: { expr: '#dex_save', of: 'target' }, check: 'save_roll' },
-            versus: { expr: '#spell_dc' }, successWhen: 'atLeast', continueOn: 'always',
+            id: 'save', type: 'threshold', side: 'target', roll: { die: DIE, bonus: { expr: '@dex_save', of: 'target' }, check: 'save_roll' },
+            versus: { expr: '@spell_dc' }, successWhen: 'atLeast', continueOn: 'always',
           },
           { id: 'dmg', type: 'amount', source: 'roll', dice: { const: '2d10' }, scale: { times: 0.5, when: { ref: 'save.success' } } },
           damage({ ref: 'dmg' }, ['огонь', 'магический']),
@@ -442,7 +442,7 @@ function conditions() {
       [roll('attack_roll', 'advantage'), incomingAdvantage], UNTIL_MY_TURN),
     raging: passive('В ярости', 'Урон рукопашным оружием выше, сопротивление рубящему, колющему и дробящему, преимущество на Силу.',
       [
-        value('melee_damage', 'add', { expr: '#rage_damage' }),
+        value('melee_damage', 'add', { expr: '@rage_damage' }),
         resist(['рубящий', 'колющий', 'дробящий']),
         roll('check:athletics', 'advantage'), roll('check:str_save', 'advantage'), roll('check:str_mod', 'advantage'),
       ], { kind: 'rounds', max: 10 }),
@@ -486,9 +486,9 @@ function traits() {
     style_dueling: trait('Боевой стиль: дуэлянт', '+2 к урону одноручным оружием.', [value('melee_damage', 'add', 2), value('finesse_damage', 'add', 2)]),
     style_archery: trait('Боевой стиль: стрельба', '+2 к атаке дальнобойным оружием.', [value('ranged_attack', 'add', 2)]),
     unarmored_barbarian: trait('Защита без доспехов: варвар', 'Без доспеха база 10 + Телосложение.',
-      [{ ...value('ac_base', 'set', { expr: '10 + #con_mod' }), stacking: 'max' }]),
+      [{ ...value('ac_base', 'set', { expr: '10 + @con_mod' }), stacking: 'max' }]),
     unarmored_monk: trait('Защита без доспехов: монах', 'Без доспеха и щита база 10 + Мудрость.',
-      [{ ...value('ac_base', 'set', { expr: '10 + #wis_mod' }), stacking: 'max' }]),
+      [{ ...value('ac_base', 'set', { expr: '10 + @wis_mod' }), stacking: 'max' }]),
     danger_sense: trait('Чувство опасности', 'Преимущество на спасброски Ловкости.', [roll('check:dex_save', 'advantage')]),
     feral_instinct: trait('Дикий инстинкт', 'Преимущество на инициативу.', [roll('check:initiative', 'advantage')]),
     reliable_talent: trait('Надёжный талант', 'На проверках навыков кость считается не меньше десяти.', [roll('skill_roll', 'reliable')]),
@@ -497,7 +497,7 @@ function traits() {
     dwarven_resilience: trait('Дварфская стойкость', 'Сопротивление урону ядом.', [resist(['яд'])]),
     infernal_legacy: trait('Дьявольское наследие', 'Сопротивление урону огнём.', [resist(['огонь'])]),
     feat_alert: trait('Черта: бдительный', '+5 к инициативе.', [value('initiative', 'add', 5)]),
-    feat_tough: trait('Черта: крепкий', 'Максимум хитов выше на два за уровень.', [value('hp_max', 'add', { expr: '2 * #level' })]),
+    feat_tough: trait('Черта: крепкий', 'Максимум хитов выше на два за уровень.', [value('hp_max', 'add', { expr: '2 * @level' })]),
     feat_mobile: trait('Черта: подвижный', 'Скорость выше на 10 футов.', [value('speed', 'add', 10)]),
     feat_observant: trait('Черта: наблюдательный', '+5 к пассивной внимательности.', [value('passive_perception', 'add', 5)]),
     feat_war_caster: trait('Черта: боевой заклинатель', 'Преимущество на спасброски Телосложения — ими держат концентрацию.', [roll('check:con_save', 'advantage')]),
@@ -513,14 +513,14 @@ function lifecycle() {
   });
   const reset = (tag, expr) => change(tag, 'set', { expr, of: 'target' });
   const longRest = [
-    reset('hp_current', '#hp_max'),
+    reset('hp_current', '@hp_max'),
     change('hp_temp', 'set', { const: 0 }),
     change('exhaustion', 'subtract', { const: 1 }),
-    change('hit_dice_left', 'add', { expr: 'max(1, floor(#level / 2))', of: 'target' }),
+    change('hit_dice_left', 'add', { expr: 'max(1, floor(@level / 2))', of: 'target' }),
     change('death_ok', 'set', { const: 0 }),
     change('death_fail', 'set', { const: 0 }),
   ];
-  for (let n = 1; n <= 9; n++) longRest.push(reset(`slots_${n}`, `#slots_${n}_max`));
+  for (let n = 1; n <= 9; n++) longRest.push(reset(`slots_${n}`, `@slots_${n}_max`));
   for (const [key, , rest] of RESOURCES) if (rest === 'long') longRest.push(reset(`${key}_left`, `#${key}_max`));
   const shortRest = RESOURCES.filter(([, , rest]) => rest === 'short').map(([key]) => reset(`${key}_left`, `#${key}_max`));
 
@@ -541,8 +541,8 @@ function lifecycle() {
       { on: 'event:damage', to: 'self' },
       [
         {
-          id: 'save', type: 'threshold', roll: { die: DIE, bonus: { expr: '#con_save' }, check: 'save_roll' },
-          versus: { expr: 'max(10, floor(#event_amount / 2))' }, successWhen: 'atLeast', continueOn: 'fail',
+          id: 'save', type: 'threshold', roll: { die: DIE, bonus: { expr: '@con_save' }, check: 'save_roll' },
+          versus: { expr: 'max(10, floor(@event_amount / 2))' }, successWhen: 'atLeast', continueOn: 'fail',
         },
         drop('concentration'),
       ], { group: 'Заклинания', duration: { kind: 'temporary' } }),
@@ -551,7 +551,7 @@ function lifecycle() {
       { group: 'Реакции', duration: { kind: 'temporary' } }),
     dying: auto('При смерти',
       'На нуле хитов: в начале своего хода к20. Десять и выше — успех, иначе провал; единица — два провала, двадцатка — один хит и на ноги.',
-      { on: 'moment:turn-start', condition: { expr: '#hp_current <= 0' } },
+      { on: 'moment:turn-start', condition: { expr: '@hp_current <= 0' } },
       [
         { id: 'спас', type: 'threshold', roll: { die: DIE, check: 'save_roll' }, versus: { const: 10 }, successWhen: 'atLeast', continueOn: 'always' },
         change('death_ok', 'add', { const: 1 }, { when: { ref: 'спас.success' } }),
@@ -586,7 +586,7 @@ function lifecycle() {
 }
 
 function roomRules() {
-  const when = (level, modifier) => ({ ...modifier, condition: `#exhaustion >= ${level}` });
+  const when = (level, modifier) => ({ ...modifier, condition: `@exhaustion >= ${level}` });
   return {
     exhaustion_rule: {
       label: 'Истощение', group: 'Правила комнаты', activation: 'passive', duration: { kind: 'permanent' },

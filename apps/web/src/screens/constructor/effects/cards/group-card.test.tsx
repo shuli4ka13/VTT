@@ -55,7 +55,7 @@ describe('GroupCard', () => {
 
     expect(amount.dice).toEqual({ const: '1d8' });
 
-    expect(apply.value).toEqual({ expr: '#n', of: 'target' });
+    expect(apply.value).toEqual({ expr: '@n', of: 'target' });
     expect(apply.direction).toBe('set');
   });
 
@@ -98,12 +98,12 @@ describe('GroupCard', () => {
       earlier={[]} problem={null} edit={(_, change) => edits.push(change)} onDelete={() => {}} />);
 
     const versus = screen.getByPlaceholderText('число или формула');
-    fireEvent.change(versus, { target: { value: '#что-то' } });
+    fireEvent.change(versus, { target: { value: '@что-то' } });
     fireEvent.keyDown(versus, { key: 'Enter' });
 
     const draft = structuredClone(steps[0]!);
     edits.forEach(change => change(draft));
-    expect((draft as any).versus).toEqual({ expr: '#что-то' });
+    expect((draft as any).versus).toEqual({ expr: '@что-то' });
   });
 
   it('в тонкостях изменения нет ни «не ниже», ни «не выше»', () => {
@@ -117,7 +117,7 @@ describe('GroupCard', () => {
 
   it('оборванная строка «станет» получает приговор, данные не тронуты', () => {
     const steps = [
-      { type: 'apply', target: { tag: 'armor' }, direction: 'set', value: { expr: '#armor', of: 'target' } },
+      { type: 'apply', target: { tag: 'armor' }, direction: 'set', value: { expr: '@armor', of: 'target' } },
     ] as unknown as Step[];
     const group = groupSteps(steps)[0]!;
     render(<GroupCard group={group} position={1} system={system} effect={effect}
@@ -129,7 +129,7 @@ describe('GroupCard', () => {
     fireEvent.change(value, { target: { value: ' + ' } });
     fireEvent.keyDown(value, { key: 'Enter' });
 
-    expect((steps[0] as any).value).toEqual({ expr: '#armor', of: 'target' }, 'мусор не записан');
+    expect((steps[0] as any).value).toEqual({ expr: '@armor', of: 'target' }, 'мусор не записан');
     expect(screen.getByText(/оборвано/)).toBeTruthy();
   });
 
@@ -220,7 +220,7 @@ describe('GroupCard: величина из записи', () => {
     const line = screen.getByText('станет').closest('label')!;
     expect(line.textContent).toContain('Класс брони');
     expect(line.textContent).toContain('Кость урона');
-    expect(line.textContent).not.toContain('#n');
+    expect(line.textContent).not.toContain('@n');
   });
 
   it('правка выражения кладёт его в «применить» и не трогает величину', () => {
@@ -237,7 +237,7 @@ describe('GroupCard: величина из записи', () => {
     fireEvent.change(tail, { target: { value: ' - 2' } });
     fireEvent.keyDown(tail, { key: 'Enter' });
 
-    expect(apply.value).toEqual({ expr: '#armor - #n - 2', of: 'target' });
+    expect(apply.value).toEqual({ expr: '@armor - @n - 2', of: 'target' });
     expect(apply.direction).toBe('set');
     expect(amount.dice).toEqual({ param: 'кость_урона' }, 'величина осталась своей');
   });
@@ -246,7 +246,7 @@ describe('GroupCard: величина из записи', () => {
 describe('GroupCard: строка броска', () => {
   const rollSteps = () => [{
     type: 'threshold', successWhen: 'atLeast', continueOn: 'success',
-    roll: { die: { constant: 'lead' }, bonus: { expr: '#armor' }, check: null },
+    roll: { die: { constant: 'lead' }, bonus: { expr: '@armor' }, check: null },
   }] as unknown as Step[];
 
   it('кость стоит в строке текстом, поле — фишкой', () => {
@@ -291,14 +291,14 @@ describe('GroupCard: строка броска', () => {
     const tail = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;
     fireEvent.change(tail, { target: { value: '@ерунда' } });
     fireEvent.keyDown(tail, { key: 'Enter' });
-    expect(step.roll.bonus).toEqual({ expr: '#armor' });
+    expect(step.roll.bonus).toEqual({ expr: '@armor' });
     expect(line.querySelector('.field__error')).toBeTruthy();
   });
 });
 
 describe('GroupCard: присланное число по слагаемым', () => {
   const steps = () => [
-    { id: 'n', type: 'amount', source: 'roll', dice: { param: 'кость_урона' }, bonus: { expr: '#armor' } },
+    { id: 'n', type: 'amount', source: 'roll', dice: { param: 'кость_урона' }, bonus: { expr: '@armor' } },
     { type: 'apply', target: { tag: 'armor' }, direction: 'subtract', value: { ref: 'n' } },
   ] as unknown as Step[];
   const withParam = { params: [{ key: 'кость_урона', label: 'Кость урона', kind: 'dice' }] } as unknown as Effect;
@@ -330,7 +330,7 @@ describe('GroupCard: присланное число по слагаемым', (
     fireEvent.mouseDown(diceX!);
 
     expect(amount.dice).toBeUndefined();
-    expect(amount.bonus).toEqual({ expr: '#armor' }, 'прибавка не тронута');
+    expect(amount.bonus).toEqual({ expr: '@armor' }, 'прибавка не тронута');
   });
 });
 
@@ -366,12 +366,12 @@ describe('GroupCard: изменение само заводит число', () 
 
     expect(steps).toHaveLength(2);
     expect(steps[0]).toMatchObject({ type: 'amount', dice: { const: '1d8' } });
-    expect((steps[1] as any).value).toEqual({ expr: '#n', of: 'target' });
+    expect((steps[1] as any).value).toEqual({ expr: '@n', of: 'target' });
   });
 
   it('«из записи» больше не проваливается в пустоту', () => {
     const steps = [
-      { type: 'apply', target: { tag: 'armor' }, direction: 'set', value: { expr: '#armor - ', of: 'target' } },
+      { type: 'apply', target: { tag: 'armor' }, direction: 'set', value: { expr: '@armor - ', of: 'target' } },
     ] as unknown as Step[];
     const withParam = { params: [{ key: 'урон', label: 'Кость урона', kind: 'dice' }] } as unknown as Effect;
     const { value } = mount(steps, withParam);
@@ -383,27 +383,27 @@ describe('GroupCard: изменение само заводит число', () 
     fireEvent.mouseDown(screen.getByText('Кость урона'));
 
     expect(steps[0]).toMatchObject({ type: 'amount', dice: { param: 'урон' } });
-    expect((steps[1] as any).value).toEqual({ expr: '#armor - #n', of: 'target' });
+    expect((steps[1] as any).value).toEqual({ expr: '@armor - @n', of: 'target' });
   });
 
   it('щелчок по подписи помечает имя «у отправителя», не трогая формулу', () => {
     const steps = [
       { type: 'apply', target: { tag: 'armor' }, direction: 'set',
-        value: { expr: '#armor - #armor / 2', of: 'target' } },
+        value: { expr: '@armor - @armor / 2', of: 'target' } },
     ] as unknown as Step[];
     const { line } = mount(steps);
 
     fireEvent.mouseDown([...line.querySelectorAll('.chips__side--pick')].at(-1)!);
 
     expect((steps[0] as any).value).toEqual({
-      expr: '#armor - #armor / 2', of: 'target', sender: ['armor'],
+      expr: '@armor - @armor / 2', of: 'target', sender: ['armor'],
     });
   });
 
   it('и обратно: второй щелчок снимает пометку', () => {
     const steps = [
       { type: 'apply', target: { tag: 'armor' }, direction: 'set',
-        value: { expr: '#armor - 1', of: 'target', sender: ['armor'] } },
+        value: { expr: '@armor - 1', of: 'target', sender: ['armor'] } },
     ] as unknown as Step[];
     const { line } = mount(steps);
 
@@ -411,13 +411,13 @@ describe('GroupCard: изменение само заводит число', () 
     expect(badge.textContent).toContain('у отправителя');
     fireEvent.mouseDown(badge);
 
-    expect((steps[0] as any).value).toEqual({ expr: '#armor - 1', of: 'target', sender: undefined });
+    expect((steps[0] as any).value).toEqual({ expr: '@armor - 1', of: 'target', sender: undefined });
   });
 
   it('правка текста не теряет пометку, пока имя стоит в выражении', () => {
     const steps = [
       { type: 'apply', target: { tag: 'armor' }, direction: 'set',
-        value: { expr: '#armor - 1', of: 'target', sender: ['armor'] } },
+        value: { expr: '@armor - 1', of: 'target', sender: ['armor'] } },
     ] as unknown as Step[];
     const { line } = mount(steps);
     const value = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;
@@ -426,7 +426,7 @@ describe('GroupCard: изменение само заводит число', () 
     fireEvent.keyDown(value, { key: 'Enter' });
 
     expect((steps[0] as any).value).toEqual({
-      expr: '#armor - 2', of: 'target', sender: ['armor'],
+      expr: '@armor - 2', of: 'target', sender: ['armor'],
     });
   });
 });

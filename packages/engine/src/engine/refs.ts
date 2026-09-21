@@ -42,7 +42,7 @@ export function packRef(ref: unknown, ctx: RefContext): unknown {
       const names = Array.isArray(r.sender) ? r.sender : [];
       if (!names.length) return { expr: r.expr, of: 'target' };
       const sent: Record<string, unknown> = {};
-      for (const name of names) sent[String(name)] = evaluate(`#${name}`, ctx);
+      for (const name of names) sent[String(name)] = evaluate(`@${name}`, ctx);
       return { expr: r.expr, of: 'target', sent };
     }
     if (waitsForStep(String(r.expr), ctx)) {
@@ -246,11 +246,11 @@ export function exactFieldOf(ref: unknown, ctx: RefContext): string | null {
   if (!ref || typeof ref !== 'object') return null;
   const r = ref as AnyRef;
   let text: unknown = null;
-  if ('tag' in r) text = `#${String(r.tag)}`;
+  if ('tag' in r) text = `@${String(r.tag)}`;
   else if ('expr' in r) text = r.expr;
   else if ('param' in r && ctx.params && String(r.param) in ctx.params) text = fromArgs(String(r.param), ctx);
   if (typeof text !== 'string') return null;
-  const exact = /^\s*#([\p{L}\p{N}_-]+)\s*$/u.exec(text);
+  const exact = /^\s*[@#]([\p{L}\p{N}_-]+)\s*$/u.exec(text);
   return exact ? exact[1]! : null;
 }
 
@@ -264,7 +264,7 @@ function senderValue(name: string, ctx: RefContext): unknown {
     } catch { /* потребность посчитает получатель */ }
   }
   try {
-    return evaluate(`#${name}`, ctx);
+    return evaluate(`@${name}`, ctx);
   } catch {
     return undefined;
   }

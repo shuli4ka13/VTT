@@ -1,33 +1,40 @@
+import type { Step } from '@vtt/schema';
 import { Field, Input, Button, Select } from '../../../../ui/primitives.tsx';
 import { formulaAsLabels } from '../../../../ui/formula.tsx';
 import { SlotInput } from '../../slot-input.tsx';
 import { asOneFormula } from '@vtt/engine/model/amounts';
+import { namesOf } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 
-const loose = (draft: unknown): Record<string, unknown> => draft as Record<string, unknown>;
+type Loose = Record<string, unknown>;
 
-const textOf = (step: Record<string, any>): string => {
+const loose = (draft: unknown): Loose => draft as Loose;
+
+const slotOf = (step: Loose, key: string) => step[key] as never;
+
+const textOf = (step: Loose): string => {
   const fixed = step.fixed as { expr?: unknown } | undefined;
   return typeof fixed?.expr === 'string' ? fixed.expr : '';
 };
 
 export function NumberBody({ step, context, edit, onAddParam }: {
-  step: any;
+  step: Step;
   context: SlotContext;
   edit: EditFn;
   onAddParam?: (label: string, kind: string) => string;
 }) {
-  const source = typeof step.source === 'object' ? 'roll' : (step.source ?? 'roll');
-  const written = textOf(step);
-  const words = written ? formulaAsLabels(context.system, written) : '';
+  const read = loose(step);
+  const source = typeof read.source === 'object' ? 'roll' : (read.source ?? 'roll');
+  const written = textOf(read);
+  const words = written ? formulaAsLabels(context.system, written, namesOf(context)) : '';
   const oldWay = asOneFormula(step);
 
   if (source === 'margin') {
     return (
       <Field label="какое превышение">
         <SlotInput
-          value={step.margin} context={context} allow={['ref']}
+          value={slotOf(read, 'margin')} context={context} allow={['ref']}
           onChange={next => edit(0, draft => { loose(draft).margin = next ?? undefined; })}
         />
       </Field>
@@ -40,20 +47,20 @@ export function NumberBody({ step, context, edit, onAddParam }: {
         <div className="row">
           <Field label="кости">
             <SlotInput
-              value={step.dice} context={context} dice placeholder="кости или из записи"
+              value={slotOf(read, 'dice')} context={context} dice placeholder="кости или из записи"
               onChange={next => edit(0, draft => { loose(draft).dice = next ?? undefined; })}
               onCreateFromRecord={onAddParam ? () => ({ param: onAddParam('кости', 'dice') }) : undefined}
             />
           </Field>
           <Field label="прибавка">
             <SlotInput
-              value={step.bonus} context={context}
+              value={slotOf(read, 'bonus')} context={context}
               onChange={next => edit(0, draft => { loose(draft).bonus = next ?? undefined; })}
             />
           </Field>
           <Field label="сколько раз кинуть">
             <SlotInput
-              value={step.count} context={context} allow={['expr', 'const', 'param', 'tag', 'table', 'ref']}
+              value={slotOf(read, 'count')} context={context} allow={['expr', 'const', 'param', 'tag', 'table', 'ref']}
               onChange={next => edit(0, draft => {
                 if (next === null || next === undefined) delete loose(draft).count;
                 else loose(draft).count = next;
@@ -80,13 +87,13 @@ export function NumberBody({ step, context, edit, onAddParam }: {
     <>
       <Field
         label="Сколько"
-        hint="Обычная математика. Кость бросается так: кинуть(#кость_урона) — вторым числом сколько раз."
+        hint="Обычная математика. Кость бросается так: кинуть(@кость_урона) — вторым числом сколько раз."
         needed={!written}
       >
         <Input
           value={written}
           mono
-          placeholder="кинуть(#кость_урона) + #прибавка"
+          placeholder="кинуть(@кость_урона) + @прибавка"
           onChange={next => edit(0, draft => {
             const target = loose(draft);
             target.source = 'item';

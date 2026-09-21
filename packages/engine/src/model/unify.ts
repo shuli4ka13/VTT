@@ -255,7 +255,7 @@ export function unifyBounds(
     if (!ref || typeof ref !== 'object') return null;
     const r = ref as Loose;
     if ('const' in r && typeof r.const === 'number') return r.const;
-    if ('tag' in r) return `#${String(r.tag)}`;
+    if ('tag' in r) return `@${String(r.tag)}`;
     if ('expr' in r) return String(r.expr);
     return null;
   };

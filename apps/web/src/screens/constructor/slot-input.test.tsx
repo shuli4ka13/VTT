@@ -20,7 +20,7 @@ describe('parseTyped', () => {
   it('пусто → null, число → const, текст → expr', () => {
     expect(parseTyped('')).toBeNull();
     expect(parseTyped('3')).toEqual({ const: 3 });
-    expect(parseTyped('#armor + 2')).toEqual({ expr: '#armor + 2' });
+    expect(parseTyped('@armor + 2')).toEqual({ expr: '@armor + 2' });
   });
 });
 
@@ -32,7 +32,7 @@ describe('normalizeDice', () => {
     expect(normalizeDice('2 к 6')).toBe('2d6');
   });
   it('не кости → null', () => {
-    expect(normalizeDice('#str')).toBeNull();
+    expect(normalizeDice('@str')).toBeNull();
   });
 });
 
@@ -124,7 +124,7 @@ describe('SlotInput', () => {
 
 describe('SlotInput: дописывание после фишки', () => {
   it('набранное после фишки не приклеивается к тегу', () => {
-    let value: unknown = { expr: '#сила' };
+    let value: unknown = { expr: '@сила' };
     const onChange = (next: unknown) => { value = next; };
     const ctxWithField: SlotContext = {
       ...ctx,
@@ -141,7 +141,7 @@ describe('SlotInput: дописывание после фишки', () => {
     }
     const tail = screen.getAllByRole('textbox').at(-1) as HTMLInputElement;
     fireEvent.keyDown(tail, { key: 'Enter' });
-    expect(value).toEqual({ expr: '#сила + 2' });
+    expect(value).toEqual({ expr: '@сила + 2' });
   });
 });
 
@@ -156,16 +156,16 @@ describe('фишка дорастает до формулы', () => {
   } as never;
 
   it('поле листа превращается в текст формулы', () => {
-    expect(asText({ tag: 'сила' }, ctx)).toBe('#сила');
+    expect(asText({ tag: 'сила' }, ctx)).toBe('@сила');
   });
 
   it('свойство записи тоже, чтобы к нему можно было дописать', () => {
-    expect(asText({ prop: 'кость_урона' }, ctx)).toBe('#кость_урона');
+    expect(asText({ prop: 'кость_урона' }, ctx)).toBe('@кость_урона');
   });
 
   it('набранное со знака дописывается к тому, что уже стоит', () => {
-    expect(grownFrom({ prop: 'кость_урона' }, ' + 2', ctx)).toEqual({ expr: '#кость_урона + 2' });
-    expect(grownFrom({ tag: 'сила' }, '* 2', ctx)).toEqual({ expr: '#сила * 2' });
+    expect(grownFrom({ prop: 'кость_урона' }, ' + 2', ctx)).toEqual({ expr: '@кость_урона + 2' });
+    expect(grownFrom({ tag: 'сила' }, '* 2', ctx)).toEqual({ expr: '@сила * 2' });
   });
 
   it('набранное без знака заменяет, а не дописывает', () => {

@@ -37,8 +37,8 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
     const value = a.value;
     if (value && typeof value === 'object' && 'expr' in value) return String(value.expr);
 
-    const amountName = amountId ? `#${amountId}` : '';
-    const targetName = target && typeof target === 'object' && 'tag' in target ? `#${target.tag}` : '';
+    const amountName = amountId ? `@${amountId}` : '';
+    const targetName = target && typeof target === 'object' && 'tag' in target ? `@${target.tag}` : '';
     const direction = String(a.direction ?? 'subtract');
     if (direction === 'set') return amountName;
     if (!targetName) return amountName;
@@ -80,7 +80,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
         ) : null}
         {both ? <span className="chips__plus" aria-hidden>+</span> : null}
         {bonusText ? sentChip(
-          bonusText.replace(/#([\p{L}\p{N}_]+)/gu, (_, tag: string) => labelOfTag(context.system, tag)),
+          bonusText.replace(/[@#]([\p{L}\p{N}_]+)/gu, (_, tag: string) => labelOfTag(context.system, tag)),
           () => edit(0, step => { delete (step as Record<string, unknown>).bonus; }),
           'bonus',
         ) : null}
@@ -92,7 +92,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   const DICE = /(\d+)?\s*[dдк]\s*(\d+)/iu;
 
   const mentions = (text: string, id: string) =>
-    new RegExp(`#${id}(?![\\p{L}\\p{N}_])`, 'u').test(text);
+    new RegExp(`[@#]${id}(?![\\p{L}\\p{N}_])`, 'u').test(text);
 
   const sendThrough = (
     fill: (amount: Record<string, any>) => void,
@@ -102,7 +102,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
     const line = (draft ?? asExpr()).trim();
     const put = (a: Step, apply: Step, id: string) => {
       fill(a as Record<string, any>);
-      const name = `#${id}`;
+      const name = `@${id}`;
       const next = (place ? place(name) : (mentions(line, id) ? line : (line ? `${line} + ${name}` : name)))
         .replace(/\s+/g, ' ').trim();
       const target = apply as Record<string, any>;
@@ -139,7 +139,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
         ? text.replace(DICE, '').replace(/\+\s*\+/g, '+').replace(/[-+*/]\s*$/, '').replace(/\s+/g, ' ').trim()
         : text.replace(DICE, name));
 
-      const bad = badFormula({ expr: next('#x') });
+      const bad = badFormula({ expr: next('@x') });
       if (bad) { setTrouble(bad); return; }
       sendThrough(a => { a.dice = picked; }, next);
       return;

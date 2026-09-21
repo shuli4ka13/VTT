@@ -11,10 +11,10 @@ const nameOf = (ref: unknown): string | null => {
     const value = r.const;
     return typeof value === 'number' ? String(value) : `'${String(value)}'`;
   }
-  if ('tag' in r) return `#${String(r.tag)}`;
-  if ('param' in r) return `#${String(r.param)}`;
-  if ('prop' in r || 'item' in r) return `#${String(r.prop ?? r.item)}`;
-  if ('ref' in r) return `#${String(r.ref)}`;
+  if ('tag' in r) return `@${String(r.tag)}`;
+  if ('param' in r) return `@${String(r.param)}`;
+  if ('prop' in r || 'item' in r) return `@${String(r.prop ?? r.item)}`;
+  if ('ref' in r) return `@${String(r.ref)}`;
   if ('expr' in r) return `(${String(r.expr)})`;
   return null;
 };

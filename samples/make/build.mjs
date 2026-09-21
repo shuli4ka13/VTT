@@ -19,7 +19,7 @@ const world = {
     roll_edits: rollEdits(),
     lists: lists(),
     action_types: actionTypes(),
-    initiative: { die: { constant: 'lead_die' }, bonus: { expr: '#initiative' }, check: 'skill_roll' },
+    initiative: { die: { constant: 'lead_die' }, bonus: { expr: '@initiative' }, check: 'skill_roll' },
     effects: { ...effects(), ...calledEffects() },
     records: records(),
     room_rules: ROOM_RULES,

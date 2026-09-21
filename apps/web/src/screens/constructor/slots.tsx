@@ -109,7 +109,7 @@ export const SLOT_KINDS: SlotKindModule[] = [
     matches: ref => has(ref, 'expr'),
     blank: () => ({ expr: '' }),
     summary: (ref, ctx) => ref.expr
-      ? ref.expr.replace(/#([\p{L}\p{N}_]+)/gu, (_: string, tag: string) => labelOfTag(ctx.system, tag))
+      ? ref.expr.replace(/[@#]([\p{L}\p{N}_]+)/gu, (_: string, tag: string) => labelOfTag(ctx.system, tag))
       : 'формула не дописана',
     editor: (ref, onChange, ctx) => (
       <div className="stack stack--tight">
@@ -288,6 +288,18 @@ export function declaredProps(system: System): Map<string, string> {
       out.set(prop.key, `${prop.label ?? prop.key} · ${kind.label ?? 'род'}`);
     }
   }
+  return out;
+}
+
+export function namesOf(ctx: SlotContext): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const [key, constant] of Object.entries(ctx.system.constants ?? {})) {
+    out.set(key, (constant as { label?: string }).label ?? key);
+  }
+  for (const [key, label] of propsFor(ctx)) out.set(key, label);
+  for (const param of ctx.effect.params ?? []) out.set(param.key, param.label ?? param.key);
+  for (const step of ctx.earlier) out.set(step.id, stepName(step));
+  for (const output of outputRefs(ctx.earlier)) out.set(output.ref, output.label);
   return out;
 }
 

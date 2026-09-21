@@ -25,10 +25,10 @@ export function asText(value: unknown, ctx: SlotContext): string | null {
   if (value === null || value === undefined) return null;
   if (typeof value !== 'object') return String(value);
   const r = value as Record<string, unknown>;
-  if ('tag' in r) return `#${String(r.tag)}`;
-  if ('prop' in r || 'item' in r) return `#${String(r.prop ?? r.item)}`;
-  if ('param' in r) return `#${String(r.param)}`;
-  if ('ref' in r) return `#${String(r.ref)}`;
+  if ('tag' in r) return `@${String(r.tag)}`;
+  if ('prop' in r || 'item' in r) return `@${String(r.prop ?? r.item)}`;
+  if ('param' in r) return `@${String(r.param)}`;
+  if ('ref' in r) return `@${String(r.ref)}`;
   if ('const' in r) return String(r.const);
   if ('expr' in r) return String(r.expr);
   void ctx;

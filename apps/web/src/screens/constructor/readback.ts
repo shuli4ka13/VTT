@@ -45,7 +45,7 @@ export function refSegment(ref: unknown, system: System, effect: Effect, emptyAs
   if ('expr' in r) {
     const text = String(r.expr ?? '').trim();
     if (!text) return hole(emptyAs);
-    return seg(text.replace(/#([\p{L}\p{N}_]+)/gu, (_, tag: string) => labelOfTag(system, tag)));
+    return seg(text.replace(/[@#]([\p{L}\p{N}_]+)/gu, (_, tag: string) => labelOfTag(system, tag)));
   }
   if ('tag' in r) return seg(`«${labelOfTag(system, String(r.tag))}»`);
   if ('param' in r) {
@@ -119,7 +119,7 @@ function exprSegments(expr: string, amount: Step | null, system: System, effect:
   let rest = expr.trim();
   if (!rest) return [hole('чем станет?')];
   for (;;) {
-    const m = rest.match(/#([\p{L}\p{N}_]+)/u);
+    const m = rest.match(/[@#]([\p{L}\p{N}_]+)/u);
     if (!m || m.index === undefined) break;
     const before = rest.slice(0, m.index).trim();
     if (before) out.push(seg(before));

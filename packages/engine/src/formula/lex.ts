@@ -58,12 +58,12 @@ export function lex(source: unknown): Token[] {
       continue;
     }
 
-    if (ch === '#') {
+    if (ch === '@' || ch === '#') {
       const start = i;
       i++;
       const nameStart = i;
       while (i < src.length && isNamePart(src[i]!)) i++;
-      if (i === nameStart) throw new FormulaSyntaxError('после «#» ожидается имя тега', start);
+      if (i === nameStart) throw new FormulaSyntaxError('после «@» ожидается имя', start);
       tokens.push({ type: 'ref', value: src.slice(nameStart, i), text: src.slice(start, i), pos: start });
       continue;
     }

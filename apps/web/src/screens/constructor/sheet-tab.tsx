@@ -140,7 +140,7 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
                 const world = JSON.stringify({ s: state.system, c: state.compendium, sh: state.sheets });
                 const virgin = (/^field(_\d+)?$/.test(field.tag) || field.tag === slugOf(field.label))
                   && world.split(`"${field.tag}"`).length - 1 <= 1
-                  && !new RegExp(`#${field.tag}(?![\\p{L}\\p{N}_])`, 'u').test(world);
+                  && !new RegExp(`[@#]${field.tag}(?![\\p{L}\\p{N}_])`, 'u').test(world);
                 if (virgin && slugOf(next)) {
                   const fresh = freeId(
                     state.system.fields.filter(f => f.tag !== field.tag).map(f => f.tag), next);
