@@ -67,7 +67,7 @@ export function NumberBody({ step, context, edit, onAddParam }: {
     <>
       <Field
         label="Сколько"
-        hint="Обычная математика. Наберите @ — подскажет названия. Кость бросается так: кинуть(@кость урона), вторым числом — сколько раз."
+        hint="Обычная математика. Наберите @ и часть названия — подскажет. Кость кидается так: кинуть(название кости), вторым числом — сколько раз кидать."
         needed={!shown}
       >
         <FormulaChips
@@ -75,7 +75,7 @@ export function NumberBody({ step, context, edit, onAddParam }: {
           system={context.system}
           extraNames={names}
           calculator
-          placeholder="кинуть(@ и название) + @"
+          placeholder="наберите @ и выберите название"
           onChange={setDraft}
           onBlur={commit}
           onKeyDown={e => {
