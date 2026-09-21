@@ -92,7 +92,7 @@ export function fields() {
 
   for (const [a, label] of ABILITIES) out.push(stored(a, label, 'Характеристики', 'number', 10, { min: 1, max: 30 }));
   for (const [a, label] of ABILITIES) {
-    out.push(formula(`${a}_mod`, `Модификатор: ${label}`, 'Модификаторы', `floor((#${a} - 10) / 2)`,
+    out.push(formula(`${a}_mod`, `Модификатор: ${label}`, 'Модификаторы', `floor((@${a} - 10) / 2)`,
       { label: `Проверка: ${label}`, check: 'skill_roll' }));
   }
 
@@ -103,13 +103,13 @@ export function fields() {
 
   for (const [a, label] of ABILITIES) {
     out.push(stored(`${a}_save_prof`, `Владение: спасбросок ${label}`, 'Спасброски', 'number', 0, { min: 0, max: 1, control: 'ring' }));
-    out.push(formula(`${a}_save`, `Спасбросок: ${label}`, 'Спасброски', `#${a}_mod + #${a}_save_prof * @prof_bonus`,
+    out.push(formula(`${a}_save`, `Спасбросок: ${label}`, 'Спасброски', `@${a}_mod + @${a}_save_prof * @prof_bonus`,
       { label: `Спасбросок: ${label}`, check: 'save_roll' }));
   }
 
   for (const [tag, label, a] of SKILLS) {
     out.push(stored(`${tag}_prof`, `Владение: ${label}`, SKILL_GROUP[a], 'number', 0, { min: 0, max: 2, control: 'ring' }));
-    out.push(formula(tag, label, SKILL_GROUP[a], `#${a}_mod + #${tag}_prof * @prof_bonus`,
+    out.push(formula(tag, label, SKILL_GROUP[a], `@${a}_mod + @${tag}_prof * @prof_bonus`,
       { label: `Проверка: ${label}`, check: 'skill_roll' }));
   }
 
@@ -164,7 +164,7 @@ export function fields() {
   for (const [key, label] of RESOURCES) {
     out.push(stored(`${key}_max`, `${label}: всего`, 'Ресурсы класса', 'number', 0, { min: 0 }));
     out.push(stored(`${key}_left`, `${label}: осталось`, 'Ресурсы класса', 'number', 0,
-      { min: 0, max: `#${key}_max`, control: 'stepper' }));
+      { min: 0, max: `@${key}_max`, control: 'stepper' }));
   }
   out.push(lookup('rage_damage', 'Урон ярости', 'Ресурсы класса', 'rage_damage', '@level'));
   out.push(stored('superiority_die', 'Кость превосходства', 'Ресурсы класса', 'text', '1к8', { control: 'die' }));

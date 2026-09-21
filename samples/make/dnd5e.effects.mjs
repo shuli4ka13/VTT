@@ -130,7 +130,7 @@ function spells() {
       duration: { kind: 'permanent' },
       modifiers: TAKEN.map(([tag, damage]) => ({
         kind: 'value', target: 'event:damage', op: 'mul',
-        value: { expr: `#${tag}` }, stacking: 'sum', condition: null, tags: [damage],
+        value: { expr: `@${tag}` }, stacking: 'sum', condition: null, tags: [damage],
       })),
     },
     spell: {
@@ -521,15 +521,15 @@ function lifecycle() {
     change('death_fail', 'set', { const: 0 }),
   ];
   for (let n = 1; n <= 9; n++) longRest.push(reset(`slots_${n}`, `@slots_${n}_max`));
-  for (const [key, , rest] of RESOURCES) if (rest === 'long') longRest.push(reset(`${key}_left`, `#${key}_max`));
-  const shortRest = RESOURCES.filter(([, , rest]) => rest === 'short').map(([key]) => reset(`${key}_left`, `#${key}_max`));
+  for (const [key, , rest] of RESOURCES) if (rest === 'long') longRest.push(reset(`${key}_left`, `@${key}_max`));
+  const shortRest = RESOURCES.filter(([, , rest]) => rest === 'short').map(([key]) => reset(`${key}_left`, `@${key}_max`));
 
   const repeatSave = (label, ability, ends) => auto(label,
     'В конце своего хода цель повторяет спасбросок против запомненной сложности; успех снимает состояние.',
     { on: 'moment:turn-end' },
     [
       {
-        id: 'save', type: 'threshold', roll: { die: DIE, bonus: { expr: `#${ability}_save` }, check: 'save_roll' },
+        id: 'save', type: 'threshold', roll: { die: DIE, bonus: { expr: `@${ability}_save` }, check: 'save_roll' },
         versus: { ref: 'worn.carry' }, successWhen: 'atLeast', continueOn: 'success',
       },
       ...ends.map(drop),
