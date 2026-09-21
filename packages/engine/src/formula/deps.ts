@@ -8,6 +8,7 @@ export function dependencies(ast: Node): string[] {
   function walk(node: Node): void {
     switch (node.kind) {
       case 'Number':
+      case 'Text':
         return;
       case 'Ref':
         if (!found.includes(node.tag)) found.push(node.tag);

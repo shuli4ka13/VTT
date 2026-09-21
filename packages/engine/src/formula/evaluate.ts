@@ -2,7 +2,7 @@ import { FormulaRuntimeError } from './errors.ts';
 import type { Node, BinaryNode, CallNode } from './ast.ts';
 import type { Resolve } from '../model/types.ts';
 
-export type Value = number | boolean;
+export type Value = number | boolean | string;
 
 export interface Tools {
   roll?: (notation: string, times: number) => number;
@@ -46,6 +46,9 @@ export function evaluate(ast: Node, resolve: Resolve, tools: Tools = {}): Value 
   function visit(node: Node): Value {
     switch (node.kind) {
       case 'Number':
+        return node.value;
+
+      case 'Text':
         return node.value;
 
       case 'Ref':

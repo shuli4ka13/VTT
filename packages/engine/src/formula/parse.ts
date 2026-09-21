@@ -74,6 +74,11 @@ export function parse(source: unknown): Node {
       return { kind: 'Number', value: Number(t.value) };
     }
 
+    if (t.type === 'text') {
+      advance();
+      return { kind: 'Text', value: String(t.value) };
+    }
+
     if (t.type === 'ref') {
       advance();
       return { kind: 'Ref', tag: String(t.value) };

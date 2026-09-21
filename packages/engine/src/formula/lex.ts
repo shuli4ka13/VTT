@@ -1,7 +1,7 @@
 import { FormulaSyntaxError } from './errors.ts';
 
 export type TokenType =
-  | 'number' | 'ref' | 'ident' | 'op'
+  | 'number' | 'text' | 'ref' | 'ident' | 'op'
   | 'lparen' | 'rparen' | 'comma' | 'question' | 'colon'
   | 'eof';
 
@@ -33,6 +33,18 @@ export function lex(source: unknown): Token[] {
     const ch = src[i]!;
 
     if (/\s/.test(ch)) { i++; continue; }
+
+    if (ch === '"' || ch === "'") {
+      const start = i;
+      i++;
+      const from = i;
+      while (i < src.length && src[i] !== ch) i++;
+      if (i >= src.length) throw new FormulaSyntaxError('не закрыта кавычка', start);
+      const text = src.slice(from, i);
+      i++;
+      tokens.push({ type: 'text', value: text, text: src.slice(start, i), pos: start });
+      continue;
+    }
 
     if (isDigit(ch) || (ch === '.' && isDigit(src[i + 1] || ''))) {
       const start = i;

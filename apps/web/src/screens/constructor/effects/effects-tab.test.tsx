@@ -293,11 +293,17 @@ describe('крит — обычная формула, а не особый сл�
   });
   afterEach(() => { cleanup(); });
 
-  it('особого слота под крит больше нет — крит пишется в «сколько раз кинуть»', () => {
+  it('старый шаг переписывается одной строкой и дальше правится как формула', () => {
     render(<EffectsTab />);
     expect(screen.queryByText('удвоить кости, если')).toBeNull();
     expect(screen.queryByText('+ удвоить кости по порогу')).toBeNull();
-    expect(screen.getByText('сколько раз кинуть')).toBeTruthy();
+    expect(screen.getByText('переписать одной строкой')).toBeTruthy();
+
+    fireEvent.click(screen.getByText('переписать одной строкой'));
+    const шаг = useWorld.getState().system.effects.удар!.steps![1]! as Record<string, unknown>;
+    expect(шаг.dice, 'старые поля ушли').toBeUndefined();
+    expect((шаг.fixed as { expr: string }).expr).toContain('кинуть');
+    expect(screen.getByText('Сколько')).toBeTruthy();
   });
 });
 
