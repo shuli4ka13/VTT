@@ -44,7 +44,7 @@ export function parseRollExpr(text: string, system: System, picked?: string | nu
   return { die, bonus };
 }
 
-export function formatRollExpr(roll: unknown, system: System): string {
+export function formatRollExpr(roll: unknown, system: System, names?: Map<string, string>): string {
   const r = (roll ?? {}) as { die?: unknown; bonus?: unknown };
   let head = '';
   if (r.die && typeof r.die === 'object') {
@@ -56,8 +56,8 @@ export function formatRollExpr(roll: unknown, system: System): string {
     const b = r.bonus as Record<string, unknown>;
     if ('expr' in b) tail = String(b.expr);
     else if ('const' in b) tail = String(b.const);
-    else if ('param' in b) tail = `из записи: ${String(b.param)}`;
-    else if ('ref' in b) tail = `результат «${String(b.ref)}»`;
+    else if ('param' in b) tail = `из записи: ${names?.get(String(b.param)) ?? String(b.param)}`;
+    else if ('ref' in b) tail = `результат «${names?.get(String(b.ref)) ?? String(b.ref)}»`;
   }
   return [head, tail].filter(Boolean).join(' + ');
 }

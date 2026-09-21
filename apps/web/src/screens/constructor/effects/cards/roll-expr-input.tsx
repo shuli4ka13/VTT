@@ -3,6 +3,7 @@ import { Field } from '../../../../ui/primitives.tsx';
 import { parseRollExpr, formatRollExpr, notationOf } from '../../roll-expr.ts';
 import { compile } from '@vtt/engine/formula';
 import { FormulaChips } from '../../../../ui/formula-chips.tsx';
+import { namesOf } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 
@@ -15,7 +16,7 @@ export function RollExprInput({ step, context, edit }: {
   const [trouble, setTrouble] = useState<string | null>(null);
 
   const [picked, setPicked] = useState<string | null>(null);
-  const shown = draft ?? formatRollExpr(step.roll, context.system);
+  const shown = draft ?? formatRollExpr(step.roll, context.system, namesOf(context));
 
   const commit = () => {
     if (draft === null) return;

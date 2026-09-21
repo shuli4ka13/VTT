@@ -64,6 +64,16 @@ describe('formatRollExpr', () => {
   it('литерал остаётся латиницей', () => {
     expect(formatRollExpr({ die: { const: '2d6' } }, system)).toBe('2к6');
   });
+
+  it('потребность и результат шага названы словами, а не ключом', () => {
+    const names = new Map([['attack_with', 'Бонус атаки'], ['hit', 'шаг 1 · Проверка']]);
+    expect(formatRollExpr({ die: { const: '1d20' }, bonus: { param: 'attack_with' } }, system, names))
+      .toBe('1к20 + из записи: Бонус атаки');
+    expect(formatRollExpr({ die: { const: '1d20' }, bonus: { ref: 'hit' } }, system, names))
+      .toBe('1к20 + результат «шаг 1 · Проверка»');
+    expect(formatRollExpr({ die: { const: '1d20' }, bonus: { param: 'нет_в_списке' } }, system))
+      .toBe('1к20 + из записи: нет_в_списке');
+  });
 });
 
 describe('parseAmountExpr', () => {
