@@ -2320,7 +2320,7 @@
             }
           },
           {
-            "key": "luck",
+            "key": "spend_luck",
             "label": "Сколько удачи тратишь",
             "kind": "number",
             "ask": {
@@ -2359,7 +2359,7 @@
             },
             "direction": "subtract",
             "value": {
-              "param": "luck"
+              "param": "spend_luck"
             },
             "targetModifiers": false
           }
@@ -2383,7 +2383,7 @@
               "expr": "#handgun_total"
             },
             "bonus": {
-              "param": "luck"
+              "param": "spend_luck"
             }
           },
           {

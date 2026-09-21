@@ -101,7 +101,7 @@ group('две системы одними слотами', () => {
     };
 
     test('дистанция даёт сложность по таблице, удача прибавляется к броску и тратится', () => {
-      const out = shoot([4, 3, 3, 3], { distance: 30, luck: 2 });
+      const out = shoot([4, 3, 3, 3], { distance: 30, spend_luck: 2 });
       const main = out.reports.find(entry => entry.report.kind === 'effect')!.report;
       const dv = main.trace.find(line => line.step === 'dv') as { result: number };
       eq(dv.result, 25, '30 метров — сложность 25');
@@ -114,28 +114,28 @@ group('две системы одними слотами', () => {
     });
 
     test('урон идёт через общий эффект: броня режет и сама изнашивается', () => {
-      const out = shoot([15, 6, 6, 6], { distance: 3, luck: 0 });
+      const out = shoot([15, 6, 6, 6], { distance: 3, spend_luck: 0 });
       const target = out.sheets.find(s => s.id === 'raze')!;
       eq(target.values.sp_body, 10, 'броня изношена на единицу');
       eq(target.values.hp, 33, '45 минус (18 − броня 11)');
     });
 
     test('броня держит: слабый урон не проходит и брони не портит', () => {
-      const out = shoot([15, 1, 1, 1], { distance: 3, luck: 0 });
+      const out = shoot([15, 1, 1, 1], { distance: 3, spend_luck: 0 });
       const target = out.sheets.find(s => s.id === 'raze')!;
       eq(target.values.hp, 40, 'хиты целы');
       eq(target.values.sp_body, 11, 'и броня цела');
     });
 
     test('две шестёрки на костях урона добавляют пятёрку отдельным вызовом', () => {
-      const boom = shoot([15, 6, 6, 1], { distance: 3, luck: 0 });
-      const plain = shoot([15, 6, 1, 1], { distance: 3, luck: 0 });
+      const boom = shoot([15, 6, 6, 1], { distance: 3, spend_luck: 0 });
+      const plain = shoot([15, 6, 1, 1], { distance: 3, spend_luck: 0 });
       const hp = (out: typeof boom) => Number(out.sheets.find(s => s.id === 'raze')!.values.hp);
       ok(hp(boom) < hp(plain), `${hp(boom)} должно быть меньше ${hp(plain)}`);
     });
 
     test('лист получателя после выстрела — по-прежнему законный DTO', () => {
-      const out = shoot([15, 6, 6, 6], { distance: 3, luck: 0 });
+      const out = shoot([15, 6, 6, 6], { distance: 3, spend_luck: 0 });
       serializeSheet(out.sheets.find(s => s.id === 'raze')!);
     });
   });

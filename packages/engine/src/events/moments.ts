@@ -62,7 +62,10 @@ export function fireMoments(events: MomentEvent[], sheets: Sheet[], world: World
       }
       const live = updated.find(s => s.id === event.sheetId)!;
       const owner = `момент «${MOMENTS[event.moment]}» у «${effect.label ?? id}»`;
-      const seed = { moment: { moment: event.moment, sheet: event.sheetId, about: event.about ?? null } };
+      const seed = {
+        moment: { moment: event.moment, sheet: event.sheetId, about: event.about ?? null },
+        worn: wornEntry(live, id),
+      };
       if (!holds(effect, live, seed, owner, world)) continue;
 
       const call = { effectId: id, effect, sheet: live, owner, args: {}, props: null, seed };
@@ -86,8 +89,11 @@ export function fireMoments(events: MomentEvent[], sheets: Sheet[], world: World
   return { sheets: updated, reports };
 }
 
+const wornEntry = (sheet: Sheet, effectId: string): Record<string, unknown> =>
+  ({ ...((sheet.effects ?? []).find(entry => entry.effectId === effectId) ?? {}) });
+
 function triggeredOn(sheet: Sheet, world: WorldContext): { id: string; effect: Effect }[] {
-  const worn = wornEffects(world.system, sheet, { strict: false });
+  const worn = wornEffects(world.system, sheet, { strict: false, compendium: world.compendium });
   const roomWorn = new Set(worn.map(w => w.id));
   const room = (world.system.room_rules ?? [])
     .filter(id => !roomWorn.has(id))
@@ -140,7 +146,7 @@ export function fireCrossings(before: Sheet[], after: Sheet[], world: WorldConte
       const live = updated.find(s => s.id === sheetId)!;
       const label = world.system.fields.find(f => f.tag === tag)?.label ?? tag;
       const owner = `поле «${label}» стало верным у «${effect.label ?? id}»`;
-      const seed = { field: { tag, value } };
+      const seed = { field: { tag, value }, worn: wornEntry(live, id) };
       if (!holds(effect, live, seed, owner, world)) continue;
 
       const call = { effectId: id, effect, sheet: live, owner, args: {}, props: null, seed };

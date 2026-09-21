@@ -345,12 +345,19 @@ function ArgEditor({ value, recordKind, onChange }: {
   recordKind: RecordKind;
   onChange: (next: SlotRef | null) => void;
 }) {
-  const r = (value ?? null) as Record<string, unknown> | null;
-  const mode = r === null ? ''
-    : 'prop' in r || 'item' in r ? `prop:${String(r.prop ?? r.item)}`
-      : 'expr' in r ? 'expr'
-        : 'const';
+  const plain = value !== null && value !== undefined && typeof value !== 'object';
+  const text = plain ? String(value) : '';
+  const r = (plain || value === undefined ? null : value ?? null) as Record<string, unknown> | null;
+  const mode = plain ? (text.startsWith('#') ? 'expr' : 'const')
+    : r === null ? ''
+      : 'prop' in r || 'item' in r ? `prop:${String(r.prop ?? r.item)}`
+        : 'expr' in r ? 'expr'
+          : 'const';
   const props = recordKind.props ?? [];
+  const shown = (key: 'const' | 'expr'): string => {
+    if (plain) return key === 'expr' ? text.replace(/^#/, '#') : text;
+    return String((r as Record<string, unknown> | null)?.[key] ?? '');
+  };
 
   return (
     <div className="stack stack--tight">
@@ -371,7 +378,7 @@ function ArgEditor({ value, recordKind, onChange }: {
       />
       {mode === 'const' ? (
         <Input
-          value={String((r as { const?: unknown })?.const ?? '')}
+          value={shown('const')}
           placeholder="число или текст — одно на все записи"
           onChange={next => onChange({
             const: /^-?\d+(\.\d+)?$/.test(next.trim()) ? Number(next) : next,
@@ -380,7 +387,7 @@ function ArgEditor({ value, recordKind, onChange }: {
       ) : null}
       {mode === 'expr' ? (
         <Input
-          value={String((r as { expr?: unknown })?.expr ?? '')}
+          value={shown('expr')}
           mono
           placeholder="формула"
           onChange={next => onChange({ expr: next } as SlotRef)}

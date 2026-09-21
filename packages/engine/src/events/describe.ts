@@ -72,8 +72,11 @@ export function describeEntry(
     }
     if ('expr' in ref) {
       const exact = /^#([\p{L}\p{N}_-]+)$/u.exec(String(ref.expr).trim());
-      return exact ? labelOf(exact[1]!) : String(ref.expr).replace(
-        /#([\p{L}\p{N}_-]+)/gu, (_: string, tag: string) => labelOf(tag));
+      if (exact) return labelOf(exact[1]!);
+      const needs = new Map<string, string>(
+        ((effect?.params ?? []) as { key: string; label?: string }[]).map(p => [String(p.key), String(p.label ?? p.key)]));
+      const named = String(ref.expr).replace(/#([\p{L}\p{N}_-]+)/gu, (_, tag: string) => labelOf(String(tag)));
+      return named.replace(/[\p{L}\p{N}_-]+/gu, (word: string) => needs.get(word) ?? word);
     }
     return null;
   };
@@ -135,8 +138,8 @@ export function describeEntry(
       return hung ? `${r.label}: ${hung}` : r.label;
     });
 
-  const stopped = entry.report.stopped as { type: string; reason: string } | null;
-  const stop = stopped ? breakReasonWord(stopped.type, stopped.reason) : '';
+  const stopped = entry.report.stopped as { type: string; reason: string; note?: string } | null;
+  const stop = stopped ? (stopped.note || breakReasonWord(stopped.type, stopped.reason)) : '';
 
   const tail = [calculation.join(' · '), shown.join(', '), told.join('; '), stop]
     .filter(Boolean).join(' · ');

@@ -20,8 +20,9 @@ group('пробный прогон эффекта на манекенах', () =
     const manual = Object.entries(system.effects).filter(([, e]) => isPipeline(e) && activationOf(e) === 'manual');
 
     test(`${system.name}: каждый активируемый эффект (${manual.length}) проходит пробу без ошибок движка`, () => {
-      const a = mannequin(system, 'проба-а', 'А');
-      const b = mannequin(system, 'проба-б', 'Б');
+      const dolls = (system.mannequins ?? []) as Sheet[];
+      const a = dolls[0] ?? mannequin(system, 'проба-а', 'А');
+      const b = dolls[1] ?? mannequin(system, 'проба-б', 'Б');
       for (const [id] of manual) {
         for (const dice of ['min', 'avg', 'max'] as const) {
           const out = trial({ system, compendium, effectId: id, from: a, to: b, dice });
@@ -45,8 +46,8 @@ group('пробный прогон эффекта на манекенах', () =
   test('пассивный и срабатывающий сам — отказ словами', () => {
     const system = SAMPLE_WORLDS[0]!.system as System;
     const a = mannequin(system, 'а', 'А');
-    throws(() => trial({ system, effectId: 'shield_up', from: a, to: a }), 'пассивный');
-    throws(() => trial({ system, effectId: 'thorns', from: a, to: a }), 'срабатывает сам');
+    throws(() => trial({ system, effectId: 'blessed', from: a, to: a }), 'пассивный');
+    throws(() => trial({ system, effectId: 'dying', from: a, to: a }), 'срабатывает сам');
     throws(() => trial({ system, effectId: 'нету', from: a, to: a }), 'нету');
   });
 

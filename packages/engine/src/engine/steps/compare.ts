@@ -41,6 +41,7 @@ export function pack(step: StepData, ctx: StepContext) {
     value: packRef(step.value, ctx),
     versus: packRef(step.versus, ctx),
     breakIf,
+    ...(typeof step.note === 'string' && step.note.trim() ? { note: step.note.trim() } : {}),
   };
 }
 
@@ -60,6 +61,6 @@ export function resolve(step: StepData, ctx: StepContext) {
         : { value: versus },
       margin, passed: !broke,
     },
-    break: broke ? { reason: 'compare-short' } : null,
+    break: broke ? { reason: 'compare-short', ...(step.note ? { note: String(step.note) } : {}) } : null,
   };
 }

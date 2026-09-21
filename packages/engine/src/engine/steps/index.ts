@@ -22,7 +22,7 @@ export interface StepContext extends RefContext {
 
   write?: (tag: string, value: StoredValue) => void;
 
-  attach?: (id: string) => void;
+  attach?: (id: string, extra?: Record<string, number>) => void;
   detach?: (id: string) => void;
 
   against?: (rollTag: string | null) => SourcedModifier[];
@@ -48,7 +48,7 @@ export interface StepResult {
 
   trace?: Record<string, unknown>;
 
-  break?: { reason?: string } | null;
+  break?: { reason?: string; note?: string } | null;
   [k: string]: unknown;
 }
 

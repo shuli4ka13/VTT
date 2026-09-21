@@ -12,7 +12,7 @@ describe('доноры-образцы', () => {
   it('эффект с правкой броска привозит и саму правку, и ту, которой она гасится', () => {
     render(<DonorPalette kind="effects" />);
 
-    fireEvent.click(screen.getByText(/Тяжёлый доспех/));
+    fireEvent.click(screen.getByText(/^Отравлен$/));
 
     const system = useWorld.getState().system;
     const mods = Object.values(system.effects).flatMap(e => e.modifiers ?? []);
@@ -39,7 +39,7 @@ describe('доноры-образцы', () => {
       activeEffectId: null,
     }));
     render(<DonorPalette kind="effects" />);
-    fireEvent.click(screen.getByText(/Тяжёлый доспех/));
+    fireEvent.click(screen.getByText(/^Отравлен$/));
 
     expect(useWorld.getState().system.roll_edits!.disadvantage!.label).toBe('Моя помеха');
   });

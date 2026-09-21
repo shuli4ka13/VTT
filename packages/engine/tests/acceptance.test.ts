@@ -3,7 +3,6 @@ import { serializeSheet, deserializeSheet } from '../src/model/serialize.ts';
 import { calc, calcAll, newPass } from '../src/engine/calc.ts';
 import { CycleError } from '../src/engine/errors.ts';
 import { send, receive } from '../src/events/envelope.ts';
-import { exchange } from '../src/events/exchange.ts';
 import { system, arven, mirra, sheets, compendium } from './fixtures.ts';
 import { SAMPLE_SYSTEMS, SAMPLE_WORLDS } from '../src/model/systems.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
@@ -198,15 +197,17 @@ group('образец D&D: урон сперва съедает временны
   const dnd = world.system as System;
 
   const hurt = (values: Record<string, number>, amount: number) => {
-    const target = { ...(world.sheets as Sheet[]).find(s => s.id === 'mirra')!, values: { ...(world.sheets as Sheet[]).find(s => s.id === 'mirra')!.values, ...values } };
+    const mirra = (world.sheets as Sheet[]).find(s => s.id === 'mirra')!;
+    const target = { ...mirra, values: { ...mirra.values, ...values } };
     const sender = (world.sheets as Sheet[]).find(s => s.id === 'arven')!;
-    const rolls = [20, amount];
-    let at = 0;
-    const out = exchange({
-      system: dnd, compendium: world.compendium as Compendium, die: () => rolls[at++] ?? 1,
-      sheets: [sender, target], actionId: 'fire-bolt:0', fromId: 'arven', toId: 'mirra',
-    });
-    return out.sheets.find(s => s.id === 'mirra')!.values;
+    const out = receive(
+      {
+        kind: 'effect', effect: 'урон', from: sender.id, action: 'проба', label: 'Урон',
+        steps: [{ type: 'emit', event: 'damage', amount: { const: amount }, tags: ['рубящий'] }],
+      } as never,
+      { system: dnd, compendium: world.compendium as Compendium, die: () => 1, sheet: target },
+    );
+    return out.sheet.values;
   };
 
   test('временные хиты уходят первыми, остаток бьёт по текущим', () => {
@@ -219,7 +220,7 @@ group('образец D&D: урон сперва съедает временны
     eq(big.hp_current, 13, 'перебор 7 ушёл в текущие');
   });
 
-  test('без временных хитов всё как раньше', () => {
+  test('без временных хитов урон идёт прямо в текущие', () => {
     const plain = hurt({ hp_temp: 0, hp_current: 20 }, 6);
     eq(plain.hp_current, 14);
   });

@@ -80,7 +80,7 @@ const PRIMITIVES: Record<string, ClaimPrimitive | ResultPrimitive> = {
       if (!first) throw new EngineError('«добавить кость сверх» нечего добавлять: в броске нет костей');
       const count = num(op.count, 1);
       const sides = num(op.sides, first.sides);
-      return { ...claim, dice: [...claim.dice, { count, sides, bonus: true }] };
+      return { ...claim, dice: [...claim.dice, { count, sides, bonus: true, ...(op.minus ? { minus: true } : {}) }] };
     },
   },
 
@@ -212,6 +212,7 @@ function flipDigits(value: number, sides: number): number | null {
 export const editPalette = (): { key: string; label: string; op: RollEditOp }[] => [
   { key: 'addDie', label: 'добавить кость', op: { op: 'addDie' } },
   { key: 'bonusDie', label: 'добавить кость сверх — её не отбрасывают', op: { op: 'bonusDie', sides: 4 } },
+  { key: 'penaltyDie', label: 'вычесть кость сверх', op: { op: 'bonusDie', sides: 4, minus: true } },
   { key: 'floorDie', label: 'считать не меньше…', op: { op: 'floorDie', least: 10 } },
   { key: 'keepBest', label: 'оставить лучшую', op: { op: 'keepBest', n: 1 } },
   { key: 'keepWorst', label: 'оставить худшую', op: { op: 'keepWorst', n: 1 } },
@@ -226,7 +227,8 @@ export const editPalette = (): { key: string; label: string; op: RollEditOp }[] 
 ];
 
 export const paletteKeyOf = (op: RollEditOp): string =>
-  op.op === 'explode' ? (String(op.at ?? 'max') === 'min' ? 'explodeDown' : 'explodeUp')
+  op.op === 'bonusDie' && op.minus ? 'penaltyDie'
+    : op.op === 'explode' ? (String(op.at ?? 'max') === 'min' ? 'explodeDown' : 'explodeUp')
     : op.op === 'flip' ? (String(op.prefer ?? 'low') === 'high' ? 'flipHigh' : 'flipLow')
       : op.op === 'reroll' ? 'rerollLow'
         : String(op.op);

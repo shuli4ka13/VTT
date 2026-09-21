@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { allowBigWorlds } from '../src/common/body-limit.ts';
 import request from 'supertest';
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
@@ -7,10 +8,9 @@ import { AppModule } from '../src/app.module.ts';
 import { openDatabase } from '../src/db/db.ts';
 import type { Database } from '../src/db/db.ts';
 import { RoomsService } from '../src/rooms/rooms.service.ts';
-// @ts-expect-error — образцы движка без деклараций.
-import { SAMPLE_WORLDS } from '@vtt/engine/model/systems';
+import { sliceWorld } from './slice.ts';
 
-const { system: dnd, compendium, sheets } = SAMPLE_WORLDS[0];
+const { system: dnd, compendium, sheets } = sliceWorld();
 
 let app: INestApplication;
 let db: Database;
@@ -28,7 +28,8 @@ beforeAll(async () => {
       die: () => rolls[rollAt++ % rolls.length]!,
     })],
   }).compile();
-  app = moduleRef.createNestApplication();
+  app = moduleRef.createNestApplication({ bodyParser: false });
+  allowBigWorlds(app);
   app.useWebSocketAdapter(new WsAdapter(app));
   await app.init();
 });

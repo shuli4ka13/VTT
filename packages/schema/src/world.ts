@@ -63,6 +63,8 @@ export const diceTerm = z.object({
   label: z.string().optional(),
 
   bonus: z.boolean().optional(),
+
+  minus: z.boolean().optional(),
 });
 
 export const diceReading = z.union([
@@ -151,7 +153,9 @@ export const param = z.object({
 export const guard = z.union([
   z.object({
     ref: z.string().min(1), is: z.unknown().optional(), not: z.boolean().optional(),
-    atLeast: z.number().optional(), atMost: z.number().optional(), has: z.string().optional(),
+    atLeast: z.union([z.number(), z.object({ tag: z.string().min(1) })]).optional(),
+    atMost: z.union([z.number(), z.object({ tag: z.string().min(1) })]).optional(),
+    has: z.string().optional(),
   }),
   z.object({ expr: z.string(), of: refSide.optional() }),
 ]);
@@ -189,7 +193,7 @@ export const trigger = z.object({
 }).passthrough();
 
 export const effect = z.object({
-  bond: z.boolean().optional(),
+  bond: z.union([z.boolean(), z.string().min(1)]).optional(),
   label: z.string().optional(),
   icon: z.string().optional(),
   category: z.string().optional(),
@@ -259,6 +263,7 @@ export const system = z.object({
 
     perTurn: z.number().int().positive().optional(),
     perTurnField: z.string().optional(),
+    within: z.string().optional(),
   }).passthrough()).optional(),
   advantage: z.object({ methods: z.record(z.string(), z.boolean()).optional() }).passthrough().optional(),
 
@@ -303,6 +308,8 @@ export const compendiumRecord = z.object({
   modifiers: z.array(modifier).optional(),
 
   activities: z.array(binding).optional(),
+
+  grants: z.array(z.string().min(1)).optional(),
 }).passthrough();
 
 export const compendium = z.object({

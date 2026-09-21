@@ -80,8 +80,18 @@ export const allModifiers = (system: System, compendium: Compendium = {}): Modif
 export const allSteps = (system: System): Step[] =>
   effectsOf(system).flatMap(([, effect]) => effect.steps || []);
 
+export function grantedTo(sheet: Sheet, compendium: Compendium | null | undefined): string[] {
+  if (!compendium) return [];
+  const owned = [
+    ...(sheet.equipped || []).map(id => (compendium.items || []).find(record => record.id === id)),
+    ...((sheet.actions as string[] | undefined) || []).map(id => (compendium.actions || []).find(record => record.id === id)),
+  ];
+  return [...new Set(owned.flatMap(record => record?.grants ?? []))];
+}
+
 export function wornEffects(
-  system: System, sheet: Sheet, { strict = true }: { strict?: boolean } = {},
+  system: System, sheet: Sheet,
+  { strict = true, compendium }: { strict?: boolean; compendium?: Compendium | null } = {},
 ): WornEntry[] {
   const out: WornEntry[] = [];
   for (const entry of sheet.effects || []) {
@@ -92,6 +102,12 @@ export function wornEffects(
         `на листе «${sheet.id}» висит эффект «${entry.effectId}», которого система не объявляет`);
     }
     out.push({ id: entry.effectId, effect, entry });
+  }
+  for (const id of grantedTo(sheet, compendium)) {
+    if (out.some(worn => worn.id === id)) continue;
+    const effect = findEffect(system, id);
+    if (!effect) continue;
+    out.push({ id, effect, entry: { effectId: id } });
   }
   return out;
 }

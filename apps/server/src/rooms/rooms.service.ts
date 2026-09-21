@@ -9,7 +9,7 @@ import type {
   RoomState, RoomSummary, RoomDelta, ActIntent, TurnIntent, AnswerIntent, ClockState, PendingState,
   Sheet, System, Compendium, StoredValue,
 } from '@vtt/schema';
-import { deliver } from '@vtt/engine/events/exchange';
+import { deliver, sharedHolderOf } from '@vtt/engine/events/exchange';
 import type { Seen } from '@vtt/engine/events/exchange';
 import type { EmittedEvent } from '@vtt/engine/engine/rule';
 import { previewLines, describeEntry } from '@vtt/engine/events/describe';
@@ -20,10 +20,11 @@ import type { Envelope, Offer, ReactionWindow, Report } from '@vtt/engine/events
 import { findEffect, usesMax } from '@vtt/engine/engine/effects';
 import { asksOf, checkInputs, normalizeInputs } from '@vtt/engine/model/asks';
 import { fireMoments, fireCrossings, describeMoment } from '@vtt/engine/events/moments';
-import { sweepBonds } from '@vtt/engine/events/bonds';
+import { sweepBonds, releaseHolder } from '@vtt/engine/events/bonds';
 import { runSelfTrack, selfRefusal } from '@vtt/engine/events/self';
 import type { MomentEvent } from '@vtt/engine/events/moments';
 import { resolveRoll } from '@vtt/engine/engine/modifiers';
+import { rollTagOf } from '@vtt/engine/engine/targets';
 import { newPass, calc } from '@vtt/engine/engine/calc';
 import { rollLead, dieConstant } from '@vtt/engine/engine/lead-die';
 import {
@@ -317,7 +318,14 @@ export class RoomsService {
       if (err instanceof NotFoundException) throw err;
       throw new BadRequestException((err as Error).message);
     }
-    const started = own?.report ? sheets.map(s => (s.id === own!.sheet.id ? own!.sheet : s)) : sheets;
+    const afterOwn = own?.report ? sheets.map(s => (s.id === own!.sheet.id ? own!.sheet : s)) : sheets;
+    const shared = sharedHolderOf(system, envelope.effect);
+    const released = shared ? releaseHolder(system, afterOwn, intent.fromId, shared) : { sheets: afterOwn, broken: [] };
+    const started = released.sheets;
+    const releasedLines = released.broken.map(broken => {
+      const who = started.find(s => s.id === broken.sheetId)?.name ?? broken.sheetId;
+      return `«${effectLabelOf(system, broken.effectId)}» спало с ${who}: наложивший взялся за новое`;
+    });
     const ownTold = own?.report
       && (own.report.changes.length || own.report.effects.length || own.report.removed.length);
     const ownLines = ownTold
@@ -328,8 +336,8 @@ export class RoomsService {
       roomId: intent.roomId, intent, envelope, clock: nextClock, stage: 'sender',
       claims: intent.edits ?? [], results: {},
     }, {
-      system, compendium, sheets: started, log: ownLines,
-      touched: own?.report ? [own.sheet] : [],
+      system, compendium, sheets: started, log: [...ownLines, ...releasedLines],
+      touched: started.filter((sheet, at) => sheet !== sheets[at]),
       clockDirty: nextClock !== clock,
       origin: sheets,
     });
@@ -631,7 +639,8 @@ export class RoomsService {
     let line: string;
     try {
       const pass = newPass(system, sheet, { compendium });
-      const resolution = resolveRoll(system, sheet, null, pass);
+      const kind = typeof field.roll.check === 'string' && field.roll.check ? field.roll.check : null;
+      const resolution = resolveRoll(system, sheet, [rollTagOf(tag), kind], pass);
       const bonus = Number(calc(system, sheet, tag, pass) ?? 0);
       const rolled = rollLead(dieConstant(system, system.initiative.die.constant), this.die, resolution.edits);
       const total = rolled.total + bonus + resolution.bonus;

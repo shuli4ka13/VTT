@@ -75,8 +75,9 @@ export function rollLead(def: DieConstant, die: Die, edits: RollEdit[] = [], kee
     }
     for (let i = 0; i < count; i++) {
       const same = pool.findIndex(e => e.sides === term.sides
-        && (e.name ?? '') === String(term.name ?? '') && Boolean(e.bonus) === Boolean(term.bonus));
-      const value = same >= 0 ? pool.splice(same, 1)[0]!.value : die(term.sides);
+        && (e.name ?? '') === String(term.name ?? '') && Boolean(e.bonus) === Boolean(term.bonus)
+        && (e.value < 0) === Boolean(term.minus));
+      const value = same >= 0 ? pool.splice(same, 1)[0]!.value : (term.minus ? -die(term.sides) : die(term.sides));
       entries.push({
         value, sides: term.sides,
         ...(term.name ? { name: String(term.name) } : {}),

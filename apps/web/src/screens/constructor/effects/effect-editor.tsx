@@ -73,6 +73,28 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
           />
         </Field>
 
+        {launch.kind === 'manual' ? (
+          <Field
+            label="Кто держит наложенное"
+            hint="«Держит применивший» — концентрация: снял держателя, и наложенное спало со всех. Общий держатель — один на все такие эффекты: взялся за новый, старое спало."
+          >
+            <Select
+              value={effect.bond === true ? '*' : typeof effect.bond === 'string' ? effect.bond : ''}
+              options={[
+                ['', 'никто — висит само по себе'],
+                ['*', 'держит применивший, у каждого эффекта свой держатель'],
+                ...Object.entries(system.effects)
+                  .filter(([key, other]) => key !== id && (other.activation ?? 'manual') !== 'manual')
+                  .map(([key, other]) => [key, `общий держатель: «${other.label ?? key}»`] as const),
+              ] as never}
+              onChange={next => edit(draft => {
+                if (!next) delete draft.bond;
+                else draft.bond = next === '*' ? true : next;
+              })}
+            />
+          </Field>
+        ) : null}
+
         <Field label="Описание для игрока" hint="Текст, который игрок видит на листе. На расчёт не влияет.">
           <Input
             value={effect.description ?? ''}

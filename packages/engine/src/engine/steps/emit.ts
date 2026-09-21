@@ -59,15 +59,19 @@ export function resolve(step: StepData, ctx: StepContext) {
   ctx.emit?.(payload);
 
   let received: string | null = null;
+  let note: string | null = null;
   if (ctx.run && spec.receive?.length) {
     const out = ctx.run(spec.receive, { event: payload }, id);
-    if (out.stopped) received = String(out.stopped.reason ?? 'оборвано');
+    if (out.stopped) {
+      received = String(out.stopped.reason ?? 'оборвано');
+      note = out.stopped.note ?? null;
+    }
   }
 
   return {
     value: payload,
     trace: { event: id, incoming, amount, tags, ...(received ? { received } : {}) },
-    break: step.strict && received ? { reason: 'emit-stopped' } : null,
+    break: step.strict && received ? { reason: 'emit-stopped', ...(note ? { note } : {}) } : null,
   };
 }
 

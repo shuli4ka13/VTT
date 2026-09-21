@@ -1,4 +1,4 @@
-import { packRef, resolveRef } from '../refs.ts';
+import { packRef, resolveRef, resolveOptionalNumber } from '../refs.ts';
 import { EngineError } from '../errors.ts';
 import type { StepData, StepContext } from './index.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
@@ -24,7 +24,10 @@ export function traceLine(t: any, h: any) {
 }
 
 export function pack(step: StepData, ctx: StepContext) {
-  return { mode: modeOf(step, ctx), effect: packRef(step.effect, ctx) };
+  return {
+    mode: modeOf(step, ctx), effect: packRef(step.effect, ctx),
+    ...(step.carry !== undefined && step.carry !== null ? { carry: packRef(step.carry, ctx) } : {}),
+  };
 }
 
 export function resolve(step: StepData, ctx: StepContext) {
@@ -39,10 +42,11 @@ export function resolve(step: StepData, ctx: StepContext) {
       `${ctx.owner || 'правило'}: состоянию нужен id эффекта, а пришло ${JSON.stringify(id)}`);
   }
 
+  const carry = mode === 'apply' ? resolveOptionalNumber(step.carry, ctx, 'число, которое запомнит наложенное') : null;
   if (mode === 'remove') ctx.detach!(id);
-  else ctx.attach!(id);
+  else ctx.attach!(id, carry === null ? undefined : { carry });
 
-  return { value: id, trace: { mode, effect: id }, break: null };
+  return { value: id, trace: { mode, effect: id, ...(carry === null ? {} : { carry }) }, break: null };
 }
 
 function modeOf(step: StepData, ctx: StepContext): string {

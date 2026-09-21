@@ -10,9 +10,11 @@ const DONORS = SAMPLE_SYSTEMS as System[];
 export interface Starter { label: string; donor: string; group: string }
 
 export const STARTERS: Starter[] = [
-  { label: 'Характеристики к20', donor: 'dnd5e-slice', group: 'Характеристики' },
-  { label: 'Хиты', donor: 'dnd5e-slice', group: 'Здоровье' },
-  { label: 'Защита', donor: 'dnd5e-slice', group: 'Защита' },
+  { label: 'Характеристики к20', donor: 'dnd5e', group: 'Характеристики' },
+  { label: 'Навыки D&D', donor: 'dnd5e', group: 'Навыки' },
+  { label: 'Здоровье', donor: 'dnd5e', group: 'Здоровье' },
+  { label: 'Защита', donor: 'dnd5e', group: 'Защита' },
+  { label: 'Ячейки заклинаний', donor: 'dnd5e', group: 'Ячейки заклинаний' },
   { label: 'Навыки RED', donor: 'cp-slice', group: 'Навыки' },
 ];
 

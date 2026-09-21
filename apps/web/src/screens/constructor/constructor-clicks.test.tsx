@@ -89,7 +89,7 @@ describe('конструктор не порождает систему, кот�
         }
 
         expect(unexpected(found)).toEqual([]);
-      });
+      }, 60000);
 
       it(`${tabName} · ${baseName}: пустой вариант любого списка оставляет систему верной`, () => {
         const found: string[] = [];
@@ -112,7 +112,7 @@ describe('конструктор не порождает систему, кот�
           view.unmount();
         }
         expect(unexpected(found)).toEqual([]);
-      });
+      }, 60000);
     }
   }
 

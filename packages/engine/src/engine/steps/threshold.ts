@@ -1,7 +1,8 @@
 import { resolveRoll, claimedModifiers } from '../modifiers.ts';
 import { lookupDegree } from '../tables.ts';
 import { dieConstant, rollLead, unfoldDice } from '../lead-die.ts';
-import { packRef, resolveNumber, resolveOptionalNumber } from '../refs.ts';
+import { packRef, resolveNumber, resolveOptionalNumber, exactFieldOf } from '../refs.ts';
+import { rollTagOf } from '../targets.ts';
 import { EngineError } from '../errors.ts';
 import type { StepData, StepContext } from './index.ts';
 import type { RolledDie } from '../readings.ts';
@@ -32,6 +33,12 @@ function dieOf(system: Parameters<typeof dieConstant>[0], die: unknown) {
     return { label: text, kind: 'die' as const, dice: [{ count: Number(m[1] ?? 1), sides: Number(m[2]) }] };
   }
   return dieConstant(system, (die as { constant: string }).constant);
+}
+
+function ownCheckOf(bonus: unknown, ctx: StepContext): string | null {
+  const tag = exactFieldOf(bonus, ctx);
+  if (!tag) return null;
+  return ctx.system.fields.some(f => f.tag === tag && f.roll) ? rollTagOf(tag) : null;
 }
 
 function unfold(die: unknown, ctx: StepContext) {
@@ -106,7 +113,7 @@ export function pack(step: StepData, ctx: StepContext) {
     ...(ctx.against ? ctx.against(check) : []),
     ...claimedModifiers(ctx.system, ctx.claims ?? [], check),
   ];
-  const mods = resolveRoll(ctx.system, ctx.sheet, check, ctx.pass, extra);
+  const mods = resolveRoll(ctx.system, ctx.sheet, [check, ownCheckOf(roll.bonus, ctx)], ctx.pass, extra);
   const held = ctx.kept?.[String(step.id ?? '')]?.rolled?.entries as RolledDie[] | undefined;
   const rolled = rollLead(unfold(roll.die, ctx), ctx.die, mods.edits, held ?? []);
   return { ...base, check, rolled, bonus: packRef(roll.bonus, ctx), modBonus: mods.bonus };
@@ -120,7 +127,8 @@ export function resolve(step: StepData, ctx: StepContext) {
 
     const check = step.roll.check || null;
     const mods = resolveRoll(
-      ctx.system, ctx.sheet, check, ctx.pass, claimedModifiers(ctx.system, ctx.claims ?? [], check));
+      ctx.system, ctx.sheet, [check, ownCheckOf(step.roll.bonus, ctx)], ctx.pass,
+      claimedModifiers(ctx.system, ctx.claims ?? [], check));
     rolled = rollLead(unfold(step.roll.die, ctx), ctx.die, mods.edits);
     modBonus = mods.bonus;
   }

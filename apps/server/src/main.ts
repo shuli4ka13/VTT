@@ -5,13 +5,15 @@ import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { WsAdapter } from '@nestjs/platform-ws';
 import { AppModule } from './app.module.ts';
+import { allowBigWorlds } from './common/body-limit.ts';
 
 const PORT = Number(process.env.VTT_PORT ?? 8200);
 
 const STATIC = process.env.VTT_STATIC;
 const AUTH = process.env.VTT_AUTH;
 
-const app = await NestFactory.create<NestExpressApplication>(AppModule.create());
+const app = await NestFactory.create<NestExpressApplication>(AppModule.create(), { bodyParser: false });
+allowBigWorlds(app);
 app.useWebSocketAdapter(new WsAdapter(app));
 app.enableCors({ origin: true });
 

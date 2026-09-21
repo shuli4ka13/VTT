@@ -179,6 +179,18 @@ function evaluate(expr: unknown, ctx: RefContext, sent?: Record<string, unknown>
   return compile(String(expr)).evaluate(resolve);
 }
 
+export function exactFieldOf(ref: unknown, ctx: RefContext): string | null {
+  if (!ref || typeof ref !== 'object') return null;
+  const r = ref as AnyRef;
+  let text: unknown = null;
+  if ('tag' in r) text = `#${String(r.tag)}`;
+  else if ('expr' in r) text = r.expr;
+  else if ('param' in r && ctx.params && String(r.param) in ctx.params) text = fromArgs(String(r.param), ctx);
+  if (typeof text !== 'string') return null;
+  const exact = /^\s*#([\p{L}\p{N}_-]+)\s*$/u.exec(text);
+  return exact ? exact[1]! : null;
+}
+
 function namedValue(name: string, ctx: RefContext): unknown {
   if (ctx.inputs && name in ctx.inputs) return ctx.inputs[name];
   if (!(ctx.paramDefs || []).some(p => p.key === name)) return undefined;

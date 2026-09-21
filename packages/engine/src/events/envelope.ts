@@ -7,6 +7,8 @@ import {
 } from '../engine/effects.ts';
 import { EngineError } from '../engine/errors.ts';
 import { incomingRollModifiers } from '../engine/modifiers.ts';
+import { holderOf } from './bonds.ts';
+import { refusalWords } from './refusal.ts';
 import type { Clock } from '../engine/clock.ts';
 import type {
   System, Sheet, Compendium, CompendiumRecord, Binding, Die, Effect, Activation,
@@ -181,7 +183,7 @@ export function receive(
   const out = runCall(envelope.steps || [], {
     sheet: early.sheet, owner: `конверт «${envelope.label}»`,
     ...(claims?.length ? { claims } : {}),
-    ...(holder?.bond ? { bond: { from: envelope.from, by: envelope.effect } } : {}),
+    ...(holder?.bond ? { bond: { from: envelope.from, by: holderOf(envelope.effect, holder)! } } : {}),
   }, { system, compendium, die, clock });
 
   const fired = envelope.reply
@@ -219,7 +221,7 @@ function fireBefore(
   const spent: string[] = [];
   let current = sheet;
 
-  for (const { id, effect } of candidatesOf(ctx.system, sheet, 'triggered', true)) {
+  for (const { id, effect } of candidatesOf(ctx.system, sheet, 'triggered', true, ctx.compendium)) {
     const trigger = effect.trigger;
     if (!trigger || (trigger.direction ?? 'in') !== 'in' || trigger.when !== 'before') continue;
     if (heardBy(trigger.on, envelope.effect, []) === null) continue;
@@ -259,8 +261,10 @@ export type ReactionWindow = 'sender' | 'target' | 'after';
 
 interface Candidate { id: string; effect: Effect }
 
-function candidatesOf(system: System, sheet: Sheet, activation: Activation, withRoom: boolean): Candidate[] {
-  const worn = wornEffects(system, sheet, { strict: false });
+function candidatesOf(
+  system: System, sheet: Sheet, activation: Activation, withRoom: boolean, compendium?: Compendium | null,
+): Candidate[] {
+  const worn = wornEffects(system, sheet, { strict: false, compendium });
   const wornIds = new Set(worn.map(w => w.id));
   const room = withRoom
     ? (system.room_rules ?? [])
@@ -329,7 +333,7 @@ function fireTriggers(
   const reactions: Report[] = [];
   let sheet = out.sheet;
 
-  for (const { id, effect } of candidatesOf(ctx.system, sheet, 'triggered', true)) {
+  for (const { id, effect } of candidatesOf(ctx.system, sheet, 'triggered', true, ctx.compendium)) {
     const trigger = effect.trigger;
     if (!trigger || (trigger.direction ?? 'in') !== 'in') continue;
     const heard = heardBy(trigger.on, envelope.effect, out.emitted);
@@ -368,7 +372,7 @@ export function fireOutgoing(
   const reactions: Report[] = [];
   let sheet = sender;
 
-  for (const { id, effect } of candidatesOf(ctx.system, sheet, 'triggered', true)) {
+  for (const { id, effect } of candidatesOf(ctx.system, sheet, 'triggered', true, ctx.compendium)) {
     const trigger = effect.trigger;
     if (!trigger || trigger.direction !== 'out') continue;
     const heard = heardBy(trigger.on, envelope.effect, outcome.emitted);
@@ -404,7 +408,7 @@ export function offers(
   emitted: EmittedEvent[] = [],
 ): Offer[] {
   const out: Offer[] = [];
-  for (const { id, effect } of candidatesOf(system, sheet, 'reaction', false)) {
+  for (const { id, effect } of candidatesOf(system, sheet, 'reaction', false, compendium)) {
     const trigger = effect.trigger;
     if (!trigger || (trigger.window ?? 'target') !== window) continue;
     const heard = heardBy(trigger.on, envelope.effect, emitted);
@@ -456,6 +460,13 @@ export function react(
     }
     const effect = requireEffect(ctx.system, id, 'реакция');
     const owner = `реакция «${offer.label}»`;
+    if (effect.self?.length) {
+      const paid = runOnSelf(id, { ...effect, steps: effect.self }, sheet, results, `плата за «${offer.label}»`, ctx);
+      const why = refusalWords(paid.report, ctx.system);
+      if (why) throw new EngineError(`«${offer.label}» не состоялось: ${why}`);
+      sheet = paid.sheet;
+      if (paid.report.changes.length) reports.push(paid.report);
+    }
     const seed = withEvent(results, heardBy(effect.trigger?.on ?? '*', envelope.effect, emitted) ?? undefined);
     if (window === 'after' && (effect.trigger?.to ?? 'sender') !== 'self') {
       replies.push(replyFrom(id, effect, sheet, envelope.from, seed, owner, ctx));

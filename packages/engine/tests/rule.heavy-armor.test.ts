@@ -86,7 +86,7 @@ group('тяжёлый доспех мешает красться', () => {
       effects: {
         sneak: {
           ...sys.effects.sneak,
-          steps: [{ ...sys.effects.sneak.steps[0], roll: { ...sys.effects.sneak.steps[0].roll, check: null } }],
+          steps: [{ ...sys.effects.sneak.steps[0], roll: { ...sys.effects.sneak.steps[0].roll, check: null, bonus: { const: 3 } } }],
         },
       },
     };

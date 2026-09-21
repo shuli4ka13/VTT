@@ -63,6 +63,12 @@ export function RecordView({ record, system, compendium }: {
             {buttons.map(label => <Chip key={label} active>{label}</Chip>)}
           </div>
         ) : null}
+        {record.grants?.length ? (
+          <div className="inline inline--tight">
+            <span className="faint">даёт:</span>
+            {record.grants.map(id => <Chip key={id}>{system.effects[id]?.label ?? id}</Chip>)}
+          </div>
+        ) : null}
       </div>
     </Card>
   );

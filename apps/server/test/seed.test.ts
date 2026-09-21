@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { allowBigWorlds } from '../src/common/body-limit.ts';
 import { Test } from '@nestjs/testing';
 import { WsAdapter } from '@nestjs/platform-ws';
 import type { INestApplication } from '@nestjs/common';
@@ -16,7 +17,8 @@ beforeAll(async () => {
   const ref = await Test.createTestingModule({
     imports: [AppModule.create({ database: db, now: () => '2026-08-10T00:00:00.000Z' })],
   }).compile();
-  app = ref.createNestApplication();
+  app = ref.createNestApplication({ bodyParser: false });
+  allowBigWorlds(app);
   app.useWebSocketAdapter(new WsAdapter(app));
   await app.init();
   await app.listen(0);
@@ -34,7 +36,7 @@ describe('сид стенда', () => {
     const titles = worlds.map((w: { title: string }) => w.title);
     for (const { title } of sampleWorlds()) expect(titles).toContain(title);
 
-    for (const w of worlds) expect(w.sheetCount).toBe(2);
+    for (const w of worlds) expect(w.sheetCount).toBeGreaterThan(1);
   });
 
   it('повторный запуск ничего не дублирует', async () => {

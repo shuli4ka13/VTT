@@ -125,9 +125,12 @@ export function spendAction(
   if (used >= limit) {
     throw new EngineError(`«${type!.label}» на этом ходу уже потрачено: ${used} из ${limit}`);
   }
+  const outer = used === 0 && type!.within && type!.within !== effect.cost
+    ? spendAction(system, clock, sheetId, { ...effect, cost: type!.within }, valueOf)
+    : clock;
   return {
-    ...clock,
-    spent: { ...clock.spent, [sheetId]: { ...(clock.spent[sheetId] ?? {}), [effect.cost]: used + 1 } },
+    ...outer,
+    spent: { ...outer.spent, [sheetId]: { ...(outer.spent[sheetId] ?? {}), [effect.cost]: used + 1 } },
   };
 }
 

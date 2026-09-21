@@ -1,5 +1,6 @@
 import { send, receive, fireOutgoing } from './envelope.ts';
 import { runSelfTrack, selfRefusal } from './self.ts';
+import { holderOf, releaseHolder } from './bonds.ts';
 import { EngineError } from '../engine/errors.ts';
 import type { Report, Envelope } from './envelope.ts';
 import type { System, Sheet, Compendium, Die } from '../model/types.ts';
@@ -44,6 +45,11 @@ export interface ExchangeResult {
   seen?: Record<string, Seen>;
 }
 
+export const sharedHolderOf = (system: System, effectId: string): string | null => {
+  const bond = system.effects[effectId]?.bond;
+  return typeof bond === 'string' ? bond : null;
+};
+
 const finder = (sheets: Sheet[]) => (id: string): Sheet | null => sheets.find(s => s.id === id) || null;
 
 export function deliver({
@@ -70,11 +76,11 @@ export function deliver({
     reports.push({ fromId: reply.from, toId: String(reply.to), report: back.report });
   }
 
-  const holder = system.effects[envelope.effect];
-  if (holder?.bond && !envelope.reply) {
+  const holder = holderOf(envelope.effect, system.effects[envelope.effect]);
+  if (holder && !envelope.reply) {
     const caster = live(fromId);
-    if (caster && !(caster.effects ?? []).some(entry => entry.effectId === envelope.effect)) {
-      put({ ...caster, effects: [...(caster.effects ?? []), { effectId: envelope.effect }] });
+    if (caster && !(caster.effects ?? []).some(entry => entry.effectId === holder)) {
+      put({ ...caster, effects: [...(caster.effects ?? []), { effectId: holder }] });
     }
   }
 
@@ -136,7 +142,9 @@ export function exchange({
   const own = runSelfTrack(actionId, from, { system, compendium, die, clock, ...(inputs ? { inputs } : {}) });
   const refused = selfRefusal(own, { system }, envelope.label);
   if (refused) throw new EngineError(refused);
-  const started = own.report ? sheets.map(s => (s.id === own.sheet.id ? own.sheet : s)) : sheets;
+  const afterOwn = own.report ? sheets.map(s => (s.id === own.sheet.id ? own.sheet : s)) : sheets;
+  const shared = sharedHolderOf(system, envelope.effect);
+  const started = shared ? releaseHolder(system, afterOwn, fromId, shared).sheets : afterOwn;
 
   const out = deliver({
     system, compendium, die, clock, sheets: started, envelope, fromId, toId,

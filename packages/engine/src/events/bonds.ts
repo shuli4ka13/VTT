@@ -3,7 +3,23 @@ import type { System, Sheet, WornEffect } from '../model/types.ts';
 
 export interface BondBreak { sheetId: string; effectId: string; by: string; from: string }
 
-export const holdsBond = (effect: { bond?: boolean } | null | undefined): boolean => Boolean(effect?.bond);
+export const holdsBond = (effect: { bond?: boolean | string } | null | undefined): boolean => Boolean(effect?.bond);
+
+export const holderOf = (effectId: string, effect: { bond?: boolean | string } | null | undefined): string | null => {
+  if (!effect?.bond) return null;
+  return typeof effect.bond === 'string' ? effect.bond : effectId;
+};
+
+export function releaseHolder(
+  system: System, sheets: Sheet[], casterId: string, holder: string,
+): { sheets: Sheet[]; broken: BondBreak[] } {
+  const caster = sheets.find(s => s.id === casterId);
+  if (!caster || !(caster.effects ?? []).some(entry => entry.effectId === holder)) return { sheets, broken: [] };
+  const freed = sheets.map(sheet => (sheet.id === casterId
+    ? { ...sheet, effects: (sheet.effects ?? []).filter(entry => entry.effectId !== holder) }
+    : sheet));
+  return sweepBonds(system, freed);
+}
 
 const held = (entry: WornEffect): { from: string; by: string } | null => {
   const from = entry.from;

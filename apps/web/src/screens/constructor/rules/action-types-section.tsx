@@ -63,6 +63,18 @@ export function ActionTypesSection({ system, editSystem, usage }: Props) {
                   if (next) cur.perTurnField = next; else delete cur.perTurnField;
                 })}
               />
+              <span className="dict-row__label">входит в</span>
+              <Select
+                value={type.within ?? ''}
+                title="Первая трата за ход списывает и внешний тип: «Атака» входит в «Действие»"
+                options={[['', 'ни во что'],
+                  ...entries.filter(([other]) => other !== key).map(([other, t]) => [other, t.label] as const)] as never}
+                onChange={next => editSystem(draft => {
+                  const cur = draft.action_types?.[key];
+                  if (!cur) return;
+                  if (next) cur.within = next; else delete cur.within;
+                })}
+              />
               <Button
                 size="sm" variant="danger" disabled={inUse}
                 title={inUse ? 'тип используется' : undefined}

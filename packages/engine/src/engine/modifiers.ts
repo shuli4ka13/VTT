@@ -74,7 +74,7 @@ function sourcesOf(system: System, sheet: Sheet, compendium: Compendium): Modifi
     sources.push({ type: 'item', id: item.id, label: item.label, modifiers: item.modifiers || [] });
   }
 
-  for (const { id, effect } of wornEffects(system, sheet)) {
+  for (const { id, effect } of wornEffects(system, sheet, { compendium })) {
     if (activationOf(effect) !== 'passive') continue;
     sources.push({ type: 'effect', id, label: effect.label || id, modifiers: effect.modifiers || [] });
   }
@@ -123,14 +123,15 @@ export function applyValueModifiers(
 export const VALUE_OPS = ['set', 'add', 'mul', 'floor', 'cap'];
 
 export function resolveRoll(
-  system: System, _sheet: Sheet, rollTag: string | null, pass: Pass,
+  system: System, _sheet: Sheet, rollTag: string | (string | null)[] | null, pass: Pass,
   extra: SourcedModifier[] = [],
 ): RollResolution {
-  if (rollTag) assertTarget(system, rollTag);
+  const tags = [...new Set((Array.isArray(rollTag) ? rollTag : [rollTag]).filter((t): t is string => Boolean(t)))];
+  for (const tag of tags) assertTarget(system, tag);
 
   const bucket = (tag: string) => (pass?.modifiers ? pass.modifiers.roll.get(tag) || [] : []);
   const mods = [
-    ...[...(rollTag ? bucket(rollTag) : []), ...bucket(ANY_ROLL)].filter(m => conditionHolds(m, pass)),
+    ...[...tags.flatMap(bucket), ...bucket(ANY_ROLL)].filter(m => conditionHolds(m, pass)),
     ...extra,
   ];
 
@@ -149,10 +150,10 @@ export function resolveRoll(
   });
 
   const adds = mods.filter(m => m.op === 'add');
-  const bonus = adds.length ? totalOf(adds, pass, rollTag ?? ANY_ROLL) : 0;
+  const bonus = adds.length ? totalOf(adds, pass, tags[0] ?? ANY_ROLL) : 0;
 
   return {
-    tag: rollTag ?? ANY_ROLL,
+    tag: tags[0] ?? ANY_ROLL,
     edits: surviving.map(key => ({ ...dictionary[key]!, label: dictionary[key]!.label || key })),
     bonus,
     sources: mods.map(m => ({ ...m.source, edit: m.edit })),

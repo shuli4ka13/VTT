@@ -9,7 +9,7 @@ import type { Effect, Sheet, Step, WornEffect, StoredValue } from '../model/type
 
 export interface Change { tag: string; from: unknown; to: unknown }
 
-export interface StopReason { step: string | number; type: string; reason?: string }
+export interface StopReason { step: string | number; type: string; reason?: string; note?: string }
 
 export interface EmittedEvent { event: string; amount: number; incoming: number; tags: string[] }
 
@@ -87,7 +87,10 @@ export function guardHolds(guard: unknown, ctx: StepContext, known?: unknown): b
         throw new EngineError(
           `${who(ctx)}: условие шага «${g.ref}» сравнивает с числом, а там ${JSON.stringify(value)}`);
       }
-      holds = (g.atLeast === undefined || value >= Number(g.atLeast)) && (g.atMost === undefined || value <= Number(g.atMost));
+      const limit = (raw: unknown): number => (raw && typeof raw === 'object' && 'tag' in raw
+        ? Number(ctx.pass.resolve(String((raw as { tag: unknown }).tag)))
+        : Number(raw));
+      holds = (g.atLeast === undefined || value >= limit(g.atLeast)) && (g.atMost === undefined || value <= limit(g.atMost));
     } else if (g.has !== undefined) {
       holds = Array.isArray(value) ? value.map(String).includes(String(g.has)) : String(value ?? '') === String(g.has);
     } else if (typeof value === 'boolean') holds = value;
@@ -128,11 +131,12 @@ export function resolveRule(steps: StepData[], ctx: StepContext): RuleReport {
     values[tag] = to;
   };
 
-  const attach = (effectId: string): void => {
+  const attach = (effectId: string, extra?: Record<string, number>): void => {
     const effect = requireEffect(ctx.system, effectId, who(ctx));
     const at = worn.findIndex(e => e.effectId === effectId);
     const fresh: WornEffect = {
       effectId,
+      ...(extra ?? {}),
       ...(ctx.expiry ? ctx.expiry(effect) : {}),
       ...(ctx.bond ? { from: ctx.bond.from, by: ctx.bond.by } : {}),
     };
@@ -175,7 +179,7 @@ export function resolveRule(steps: StepData[], ctx: StepContext): RuleReport {
       trace.splice(at, 0, { step: name, type: step.type, ...mark, ...out.trace });
       if (step.id != null) results[step.id] = out.value;
       if (out.break) {
-        stopped = { step: name, type: step.type, reason: out.break.reason };
+        stopped = { step: name, type: step.type, reason: out.break.reason, ...(out.break.note ? { note: out.break.note } : {}) };
         break;
       }
     }

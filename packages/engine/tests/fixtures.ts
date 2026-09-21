@@ -1,6 +1,8 @@
 import { SAMPLE_WORLDS } from '../src/model/systems.ts';
+import type { SampleWorld } from '../src/model/systems.ts';
+import slice from './fixtures/slice/dnd5e.world.json' with { type: 'json' };
 
-const dnd5eWorld = SAMPLE_WORLDS.find(w => w.system.id === 'dnd5e-slice')!;
+const dnd5eWorld = slice as unknown as SampleWorld;
 const cyberpunkWorld = SAMPLE_WORLDS.find(w => w.system.id === 'cp-slice')!;
 
 export const system = dnd5eWorld.system;

@@ -6,6 +6,8 @@ export const EVENT_PREFIX = 'event:';
 
 export const EVENT_RESULTS = ['event', 'event_amount', 'event_incoming'] as const;
 
+export const SEED_RESULTS = ['worn', 'moment', 'field'] as const;
+
 export type Tab = 'sheet' | 'rules' | 'effects' | 'records' | 'book';
 
 export interface Where {
@@ -106,6 +108,7 @@ function slotRefs(value: unknown, slotKind: string | undefined, from: Where, sco
   if ('ref' in r) {
     const head = String(r.ref).split('.')[0] ?? '';
     if (scope.eventChain && (EVENT_RESULTS as readonly string[]).includes(head)) return;
+    if ((SEED_RESULTS as readonly string[]).includes(head)) return;
     if (head) out.push({ kind: 'step', key: head, from, scope: 'chain' });
     return;
   }
@@ -134,6 +137,9 @@ function guardRefs(guard: Guard | undefined, from: Where, scope: ChainScope, out
   if (!guard) return;
   if ('ref' in guard) {
     const head = String(guard.ref).split('.')[0] ?? '';
+    for (const bound of [guard.atLeast, guard.atMost]) {
+      if (bound && typeof bound === 'object') out.push({ kind: 'field', key: bound.tag, from });
+    }
     if (scope.eventChain && (EVENT_RESULTS as readonly string[]).includes(head)) return;
     if (head) out.push({ kind: 'step', key: head, from, scope: 'chain' });
     return;
@@ -190,9 +196,10 @@ export function listenerOf(
 
 function effectRefs(system: System, id: string, effect: Effect, out: Reference[]): void {
   const params = new Set((effect.params ?? []).map(p => p.key));
-  out.push(...chainRefs(effect.steps ?? [], step => ({ tab: 'effects', effect: id, step }), params, false));
   const head: Where = { tab: 'effects', effect: id, part: 'trigger' };
   const heard = listenerOf(effect.trigger?.on);
+  out.push(...chainRefs(effect.steps ?? [], step => ({ tab: 'effects', effect: id, step }), params, heard.kind === 'event'));
+  out.push(...chainRefs(effect.self ?? [], step => ({ tab: 'effects', effect: id, step, part: 'self' }), params, false));
   if (heard.kind === 'event') out.push({ kind: 'event', key: heard.key!, from: head });
   if (heard.kind === 'effect') out.push({ kind: 'effect', key: heard.key!, from: head });
   if (heard.kind === 'field') out.push({ kind: 'field', key: heard.key!, from: head });
@@ -217,6 +224,8 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
 
   for (const field of system.fields) {
     const from: Where = { tab: 'sheet', field: field.tag };
+    const rollKind = (field.roll as { check?: unknown } | undefined)?.check;
+    if (typeof rollKind === 'string' && rollKind) out.push({ kind: 'roll', key: rollKind, from });
     if (field.value.kind === 'formula') exprRefs(field.value.expr, from, noScope, out);
     if (field.value.kind === 'table') {
       if (field.value.table) out.push({ kind: 'table', key: field.value.table, from });
@@ -249,6 +258,7 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
 
   for (const [key, type] of Object.entries(system.action_types ?? {})) {
     if (type.perTurnField) out.push({ kind: 'field', key: type.perTurnField, from: { tab: 'rules', section: 'action_types', key } });
+    if (type.within) out.push({ kind: 'actionType', key: type.within, from: { tab: 'rules', section: 'action_types', key } });
   }
 
   for (const id of system.room_rules ?? []) out.push({ kind: 'effect', key: id, from: { tab: 'rules', section: 'room_rules', key: id } });
@@ -264,6 +274,7 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
     for (const record of list) {
       const from: Where = { tab: 'book', record: record.id };
       if (record.rk) out.push({ kind: 'recordKind', key: String(record.rk), from });
+      for (const id of record.grants ?? []) out.push({ kind: 'effect', key: id, from });
       modifierRefs(record.modifiers, from, out);
     }
   }

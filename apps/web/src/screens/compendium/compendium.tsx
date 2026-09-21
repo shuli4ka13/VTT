@@ -3,7 +3,7 @@ import { TABS } from '../../words.ts';
 import { useWorld, freeId, randomTag } from '../../store/world.ts';
 import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
 import {
-  Card, CardHead, Field, Input, Select, Empty, Verdict, DangerButton, NumInput, LabelInput,
+  Card, CardHead, Field, Input, Select, Empty, Verdict, DangerButton, NumInput, LabelInput, Chip,
 } from '../../ui/primitives.tsx';
 import { ModifiersEditor } from '../constructor/modifiers.tsx';
 import { RecordView } from '../../sheet/record-view.tsx';
@@ -204,6 +204,36 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
                 )}
               </Field>
             ))}
+          </div>
+        </Card>
+      ) : null}
+
+      {kind ? (
+        <Card>
+          <CardHead
+            title="Что висит на владельце"
+            sub="Пока запись надета или выучена, эти эффекты действуют сами: черта даёт сопротивление, заклинание-реакция ждёт своего часа."
+          />
+          <div className="inline inline--tight">
+            {Object.entries(system.effects)
+              .filter(([, effect]) => (effect.activation ?? 'manual') !== 'manual')
+              .map(([id, effect]) => {
+                const on = (record.grants ?? []).includes(id);
+                return (
+                  <Chip
+                    key={id}
+                    active={on}
+                    onClick={() => edit(draft => {
+                      const next = on ? (draft.grants ?? []).filter(x => x !== id) : [...(draft.grants ?? []), id];
+                      if (next.length) draft.grants = next; else delete draft.grants;
+                    })}
+                  >
+                    {effect.label ?? id}
+                  </Chip>
+                );
+              })}
+            {Object.values(system.effects).some(effect => (effect.activation ?? 'manual') !== 'manual')
+              ? null : <span className="faint">В системе нет эффектов, которые висят или срабатывают сами.</span>}
           </div>
         </Card>
       ) : null}

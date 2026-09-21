@@ -10,7 +10,7 @@ const dnd = () => clone(SAMPLE_WORLDS[0]!.system as System);
 const red = () => clone(SAMPLE_WORLDS[1]!.system as System);
 
 group('тогл крита пишет данные, а не код', () => {
-  test('образец D&D читается как «кости урона вдвое», образец RED — как «взрывная кость» не читается: там она правкой словаря без правила комнаты', () => {
+  test('образец D&D читается как «кости урона вдвое», у RED крит правкой словаря без правила комнаты', () => {
     eq(critOf(dnd()), 'double');
     eq(critOf(red()), 'off');
   });
@@ -37,7 +37,7 @@ group('тогл крита пишет данные, а не код', () => {
     setCrit(system, 'double');
     const strike = system.effects.strike!.steps!.find(s => s.type === 'amount') as Record<string, unknown>;
     deepEq(strike.double, { ref: 'hit.atMax', atLeast: 1 });
-    const fireball = system.effects.fireball!.steps!.find(s => s.type === 'amount') as Record<string, unknown>;
+    const fireball = system.effects.spell_save_half!.steps!.find(s => s.type === 'amount') as Record<string, unknown>;
     eq(fireball.double, undefined, 'после спасброска цели удвоения нет — это не атака');
     eq(errorsOf(lintSystem(system)).length, 0);
   });
@@ -78,7 +78,7 @@ group('тогл брони переписывает общий эффект ур
     const hpBefore = Number(to!.values.hp);
     const out = exchange({
       system, compendium: world.compendium as Compendium, die: () => 3, sheets,
-      actionId: 'heavy-pistol:0', fromId: from!.id, toId: to!.id, inputs: { distance: 5, luck: 0, aim: 'по телу' },
+      actionId: 'heavy-pistol:0', fromId: from!.id, toId: to!.id, inputs: { distance: 5, spend_luck: 0, aim: 'по телу' },
     });
     const after = out.sheets.find(s => s.id === to!.id)!;
     eq(Number(after.values.hp), hpBefore, 'по порогу малый урон не прошёл');

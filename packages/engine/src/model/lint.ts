@@ -199,7 +199,7 @@ function emittedBy(steps: Step[] | undefined): string[] {
   return out;
 }
 
-function orphanProblems(system: System): Problem[] {
+function orphanProblems(system: System, compendium?: Compendium): Problem[] {
   const out: Problem[] = [];
   const emitted = new Set<string>();
   const heardEvents = new Set<string>();
@@ -220,6 +220,11 @@ function orphanProblems(system: System): Problem[] {
   const bound = new Set<string>();
   for (const kind of Object.values(system.records ?? {})) for (const b of kind.bindings ?? []) bound.add(b.effect);
   for (const id of system.room_rules ?? []) bound.add(id);
+  for (const record of [...(compendium?.items ?? []), ...(compendium?.actions ?? [])]) {
+    if (record.effect) bound.add(String(record.effect));
+    for (const activity of record.activities ?? []) bound.add(activity.effect);
+    for (const id of record.grants ?? []) bound.add(id);
+  }
   for (const [id, effect] of Object.entries(system.effects)) {
     if (activationOf(effect) !== 'manual' || bound.has(id)) continue;
     out.push({
@@ -232,6 +237,16 @@ function orphanProblems(system: System): Problem[] {
 
 function paramProblems(system: System): Problem[] {
   const out: Problem[] = [];
+  const fields = new Set(system.fields.map(f => f.tag));
+  for (const [id, effect] of Object.entries(system.effects)) {
+    for (const param of effect.params ?? []) {
+      if (!fields.has(param.key)) continue;
+      out.push({
+        where: { tab: 'effects', effect: id }, level: 'error',
+        text: `потребность «${param.label ?? param.key}» названа как поле «${param.key}» — в формулах шага победит поле; переименуйте потребность`,
+      });
+    }
+  }
   for (const [kind, spec] of Object.entries(system.records ?? {})) {
     (spec.bindings ?? []).forEach((binding, index) => {
       const effect = system.effects[binding.effect];
@@ -256,13 +271,15 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   for (const [id, effect] of Object.entries(system.effects)) {
     const params = new Set((effect.params ?? []).map(p => p.key));
     out.push(...stepProblems(effect.steps ?? [], step => ({ tab: 'effects', effect: id, step }), params, false));
+    out.push(...stepProblems(effect.self ?? [], step => ({ tab: 'effects', effect: id, step, part: 'self' }), params, false));
   }
   for (const [key, event] of Object.entries(system.events ?? {})) {
     out.push(...stepProblems(event.receive ?? [], step => ({ tab: 'rules', section: 'events', key, step }), new Set(), true));
   }
 
   const chainOf = (where: Where): Step[] | undefined =>
-    where.tab === 'effects' && where.effect ? system.effects[where.effect]?.steps
+    where.tab === 'effects' && where.effect
+      ? (where.part === 'self' ? system.effects[where.effect]?.self : system.effects[where.effect]?.steps)
       : where.section === 'events' && where.key ? system.events?.[where.key]?.receive
         : undefined;
   const refs = referencesOf(system, compendium).filter(ref => {
@@ -278,7 +295,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...listenerProblems(system));
   out.push(...cycleProblems(system));
   out.push(...paramProblems(system));
-  out.push(...orphanProblems(system));
+  out.push(...orphanProblems(system, compendium));
   return out;
 }
 
