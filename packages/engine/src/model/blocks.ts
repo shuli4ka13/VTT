@@ -15,6 +15,30 @@ export function blockNames(system: System): string[] {
   return [...out];
 }
 
+export function blockOf(system: System, thing: { group?: string; extends?: string } | undefined): string | undefined {
+  let at = thing;
+  const seen = new Set<unknown>();
+  while (at && !seen.has(at)) {
+    if (at.group) return at.group;
+    seen.add(at);
+    const base = (at as Loose).extends;
+    at = base
+      ? (system.effects?.[String(base)] ?? system.records?.[String(base)]) as typeof at
+      : undefined;
+  }
+  return undefined;
+}
+
+export interface BlockUse { fields: number; effects: number; records: number }
+
+export function blockUse(system: System, name: string): BlockUse {
+  let fields = 0; let effects = 0; let records = 0;
+  for (const field of system.fields ?? []) if (field.group === name) fields += 1;
+  for (const effect of Object.values(system.effects ?? {})) if (blockOf(system, effect) === name) effects += 1;
+  for (const kind of Object.values(system.records ?? {})) if (blockOf(system, kind) === name) records += 1;
+  return { fields, effects, records };
+}
+
 export function unifyBlocks(system: System): System {
   const source = system as unknown as Loose;
   const strays = blockNames(system).filter(name => !source.groups?.[name]);

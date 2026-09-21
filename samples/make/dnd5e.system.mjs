@@ -41,10 +41,12 @@ export const DAMAGE_TAGS = [
 export const lists = () => ({
   damage_types: {
     label: 'Типы урона',
+    of: 'text',
     values: DAMAGE_TAGS.map(tag => ({ value: tag, label: tag })),
   },
   taken: {
     label: 'Сколько доходит',
+    of: 'number',
     values: [
       { value: 0, label: 'иммунитет' }, { value: 0.5, label: 'сопротивление' },
       { value: 1, label: 'как есть' }, { value: 2, label: 'уязвимость' },

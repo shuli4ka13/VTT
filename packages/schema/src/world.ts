@@ -51,6 +51,7 @@ export const fieldOption = z.object({
 
 export const wordList = z.object({
   label: z.string().min(1),
+  of: z.enum(['number', 'text']).optional(),
   values: z.array(fieldOption).min(1),
 }).passthrough();
 

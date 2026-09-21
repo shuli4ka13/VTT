@@ -1,5 +1,5 @@
 import { useWorld } from '../../../store/world.ts';
-import { Card, CardHead, Field, Input, Button, DangerButton, Empty, Chip } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Field, Input, Select, Button, DangerButton, Empty, Chip } from '../../../ui/primitives.tsx';
 import { listUsers } from '@vtt/engine/model/lists';
 import { freeId } from '../../../store/world.ts';
 import type { System } from '@vtt/schema';
@@ -27,7 +27,8 @@ export function ListsSection({ system }: { system: System }) {
     <div className="stack">
       {lists.map(([key, list]) => {
         const users = listUsers(system, key);
-        const edit = (change: (draft: { label: string; values: { value: unknown; label: string }[] }) => void) =>
+        const numeric = (list.of ?? 'text') === 'number';
+        const edit = (change: (draft: { label: string; of?: string; values: { value: unknown; label: string }[] }) => void) =>
           editSystem(draft => {
             const target = draft.lists?.[key];
             if (target) change(target as never);
@@ -51,17 +52,35 @@ export function ListsSection({ system }: { system: System }) {
               }
             />
 
+            <Field label="Что за значения">
+              <Select
+                value={list.of ?? 'text'}
+                options={[['text', 'слова — огонь, холод, яд'], ['number', 'числа — 0, 0.5, 1, 2']] as const}
+                onChange={next => editSystem(draft => {
+                  const target = draft.lists?.[key];
+                  if (!target) return;
+                  target.of = next;
+                  for (const option of target.values) {
+                    const num = Number(option.value);
+                    option.value = next === 'number' && Number.isFinite(num) ? num : String(option.value);
+                  }
+                })}
+              />
+            </Field>
+
             <Field label="Значения" hint="Слева то, что ложится в поле; справа — что видит человек.">
               <div className="stack stack--tight">
                 {list.values.map((option, at) => (
                   <div className="pair" key={at}>
                     <Input
                       value={String(option.value)}
-                      placeholder="огонь или 0.5"
+                      placeholder={numeric ? '0.5' : 'огонь'}
+                      type={numeric ? 'number' : 'text'}
                       mono
+                      invalid={numeric && option.value !== '' && !Number.isFinite(Number(option.value))}
                       onChange={next => edit(draft => {
                         const num = Number(next);
-                        draft.values[at]!.value = next !== '' && Number.isFinite(num) ? num : next;
+                        draft.values[at]!.value = numeric && Number.isFinite(num) && next !== '' ? num : next;
                       })}
                     />
                     <Input
@@ -77,7 +96,7 @@ export function ListsSection({ system }: { system: System }) {
                   </div>
                 ))}
                 <Button size="sm" variant="ghost" onClick={() => edit(draft => {
-                  draft.values.push({ value: '', label: '' });
+                  draft.values.push({ value: numeric ? draft.values.length : '', label: '' });
                 })}>+ значение</Button>
               </div>
             </Field>

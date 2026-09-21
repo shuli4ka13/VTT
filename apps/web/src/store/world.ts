@@ -5,6 +5,7 @@ import type { System, Compendium, Sheet, Effect, Field } from '@vtt/schema';
 import { unifyWorld } from '@vtt/engine/model/unify';
 import { healLegacySides } from '@vtt/engine/model/migrate';
 import { lazyStorage } from './lazy-storage.ts';
+import { blockOf } from '@vtt/engine/model/blocks';
 
 export type WorkMode = 'system' | 'compendium';
 
@@ -197,7 +198,7 @@ export const fieldsByGroup = (system: System): [string, Field[]][] => {
 export const effectsByCategory = (system: System): [string, [string, Effect][]][] => {
   const groups = new Map<string, [string, Effect][]>();
   for (const [id, effect] of Object.entries(system.effects)) {
-    const key = effect.group ?? 'Без блока';
+    const key = blockOf(system, effect) ?? 'Без блока';
     const list = groups.get(key);
     if (list) list.push([id, effect]);
     else groups.set(key, [[id, effect]]);

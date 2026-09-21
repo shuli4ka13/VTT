@@ -8,6 +8,7 @@ import {
 import type { SlotRef } from '@vtt/schema';
 import type { System, RecordKind, Binding, Param } from '@vtt/schema';
 import { BlockPick } from './block-pick.tsx';
+import { blockOf } from '@vtt/engine/model/blocks';
 
 const BASIS = [
   ['item', 'вещь — надевают и снимают'],
@@ -53,7 +54,7 @@ export function RecordsTab() {
 
   const groups = new Map<string, [string, RecordKind][]>();
   for (const [key, kind] of kinds) {
-    const group = kind.group ?? 'Прочее';
+    const group = blockOf(system, kind) ?? 'Без блока';
     const list = groups.get(group);
     if (list) list.push([key, kind]);
     else groups.set(group, [[key, kind]]);

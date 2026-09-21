@@ -3194,6 +3194,7 @@
     "lists": {
       "damage_types": {
         "label": "Типы урона",
+        "of": "text",
         "values": [
           {
             "value": "рубящий",
@@ -3255,6 +3256,7 @@
       },
       "taken": {
         "label": "Сколько доходит",
+        "of": "number",
         "values": [
           {
             "value": 0,
