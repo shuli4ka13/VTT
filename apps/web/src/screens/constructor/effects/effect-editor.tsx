@@ -6,6 +6,7 @@ import { LAUNCH_KINDS, launchHint } from './words.ts';
 import { LaunchCard } from './launch-card.tsx';
 import { Chain } from './chain.tsx';
 import { WordList } from '../word-list.tsx';
+import { tagsOf } from '@vtt/engine/model/lists';
 import { BlockPick } from '../block-pick.tsx';
 import { Extras } from './cards/extras.tsx';
 import { ParamsEditor } from './params-editor.tsx';
@@ -117,19 +118,34 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
               ),
             },
             {
-              key: 'tags', label: 'какие метки бывают', on: !!effect.tags?.length,
-              add: () => {}, drop: () => edit(draft => { delete draft.tags; }),
+              key: 'tags', label: 'какие метки бывают', on: !!effect.tags?.length || !!effect.tagsFrom,
+              add: () => {}, drop: () => edit(draft => { delete draft.tags; delete draft.tagsFrom; }),
               node: (
                 <Field
                   label="Какие метки бывают"
                   hint="Список на выбор для тех, кто зовёт этот эффект. Например у «Урона» — виды урона."
                 >
-                  <WordList
-                    value={effect.tags ?? []} known={knownTags(system)} placeholder="новая метка"
-                    onChange={next => edit(draft => {
-                      if (next.length) draft.tags = next; else delete draft.tags;
-                    })}
-                  />
+                  <div className="stack stack--tight">
+                    <Select
+                      value={effect.tagsFrom ?? ''}
+                      options={[['', '— свой список —'],
+                        ...Object.entries(system.lists ?? {}).map(([key, list]) => [key, list.label || key] as const)] as never}
+                      onChange={next => edit(draft => {
+                        if (next) { draft.tagsFrom = next; delete draft.tags; }
+                        else delete draft.tagsFrom;
+                      })}
+                    />
+                    {effect.tagsFrom ? (
+                      <span className="faint">{tagsOf(system, effect).join(', ')}</span>
+                    ) : (
+                      <WordList
+                        value={effect.tags ?? []} known={knownTags(system)} placeholder="новая метка"
+                        onChange={next => edit(draft => {
+                          if (next.length) draft.tags = next; else delete draft.tags;
+                        })}
+                      />
+                    )}
+                  </div>
                 </Field>
               ),
             },

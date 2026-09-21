@@ -186,37 +186,43 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
           ) : null}
 
           {field.control === 'choice' || field.control === 'ring' ? (
-            <Field
-              label="Варианты"
-              hint="Что предлагает кнопка и какое число ложится в поле: «половина» → 0.5, «мастерство» → 2."
-              needed={!field.options?.length}
-            >
+            <Field label="Варианты" hint="Готовый словарь или свой список." needed={!field.optionsFrom && !field.options?.length}>
               <div className="stack stack--tight">
-                {(field.options ?? []).map((option, at) => (
-                  <div className="inline inline--tight" key={at}>
-                    <Input
-                      value={String(option.value)}
-                      placeholder="0.5"
-                      mono
-                      onChange={next => edit(draft => {
-                        const num = Number(next);
-                        draft.options![at]!.value = next !== '' && Number.isFinite(num) ? num : next;
-                      })}
-                    />
-                    <Input
-                      value={option.label}
-                      placeholder="как назвать"
-                      onChange={next => edit(draft => { draft.options![at]!.label = next; })}
-                    />
-                    <Button size="sm" variant="ghost" title="убрать вариант" onClick={() => edit(draft => {
-                      draft.options!.splice(at, 1);
-                      if (!draft.options!.length) delete draft.options;
-                    })}>×</Button>
-                  </div>
-                ))}
-                <Button size="sm" variant="ghost" onClick={() => edit(draft => {
-                  (draft.options ??= []).push({ value: draft.options.length, label: '' });
-                })}>+ вариант</Button>
+                <Select
+                  value={field.optionsFrom ?? ''}
+                  options={[['', '— свой список —'],
+                    ...Object.entries(system.lists ?? {}).map(([key, list]) => [key, list.label || key] as const)] as never}
+                  onChange={next => edit(draft => {
+                    if (next) { draft.optionsFrom = next; delete draft.options; }
+                    else delete draft.optionsFrom;
+                  })}
+                />
+                {field.optionsFrom ? null : (
+                  <>
+                    {(field.options ?? []).map((option, at) => (
+                      <div className="pair" key={at}>
+                        <Input
+                          value={String(option.value)} placeholder="0.5" mono
+                          onChange={next => edit(draft => {
+                            const num = Number(next);
+                            draft.options![at]!.value = next !== '' && Number.isFinite(num) ? num : next;
+                          })}
+                        />
+                        <Input
+                          value={option.label} placeholder="как назвать"
+                          onChange={next => edit(draft => { draft.options![at]!.label = next; })}
+                        />
+                        <Button size="sm" variant="ghost" title="убрать вариант" onClick={() => edit(draft => {
+                          draft.options!.splice(at, 1);
+                          if (!draft.options!.length) delete draft.options;
+                        })}>×</Button>
+                      </div>
+                    ))}
+                    <Button size="sm" variant="ghost" onClick={() => edit(draft => {
+                      (draft.options ??= []).push({ value: draft.options.length, label: '' });
+                    })}>+ вариант</Button>
+                  </>
+                )}
               </div>
             </Field>
           ) : null}

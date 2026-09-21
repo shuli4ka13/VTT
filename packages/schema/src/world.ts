@@ -49,6 +49,11 @@ export const fieldOption = z.object({
   label: z.string().min(1),
 });
 
+export const wordList = z.object({
+  label: z.string().min(1),
+  values: z.array(fieldOption).min(1),
+}).passthrough();
+
 export const field = z.object({
   tag,
   label: z.string(),
@@ -58,6 +63,7 @@ export const field = z.object({
 
   control: control.optional(),
   options: z.array(fieldOption).optional(),
+  optionsFrom: z.string().min(1).optional(),
 }).passthrough();
 
 export const diceTerm = z.object({
@@ -201,6 +207,7 @@ export const trigger = z.object({
 export const effect = z.object({
   extends: z.string().min(1).optional(),
   group: z.string().optional(),
+  tagsFrom: z.string().min(1).optional(),
   bond: z.union([z.boolean(), z.string().min(1)]).optional(),
   label: z.string().optional(),
   tags: z.array(z.string().min(1)).optional(),
@@ -270,6 +277,7 @@ export const system = z.object({
   })).optional(),
 
   roll_edits: z.record(z.string(), rollEdit).optional(),
+  lists: z.record(z.string(), wordList).optional(),
   action_types: z.record(z.string(), z.object({
     label: z.string(),
     icon: z.string().optional(),
@@ -358,6 +366,7 @@ export type Param = z.infer<typeof param>;
 export type Step = z.infer<typeof step>;
 export type Ask = z.infer<typeof ask>;
 export type Control = z.infer<typeof control>;
+export type WordList = z.infer<typeof wordList>;
 export type FieldOption = z.infer<typeof fieldOption>;
 export type Guard = z.infer<typeof guard>;
 export type Scale = z.infer<typeof scale>;

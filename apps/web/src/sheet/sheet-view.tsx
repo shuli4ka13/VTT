@@ -42,6 +42,7 @@ export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only
               <FieldCell
                 key={field.tag}
                 field={field}
+                system={system}
                 sheet={sheet}
                 reader={reader}
                 onChange={onChange}

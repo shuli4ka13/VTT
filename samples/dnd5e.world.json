@@ -1799,24 +1799,7 @@
           "default": 1
         },
         "control": "choice",
-        "options": [
-          {
-            "value": 0,
-            "label": "иммунитет"
-          },
-          {
-            "value": 0.5,
-            "label": "сопротивление"
-          },
-          {
-            "value": 1,
-            "label": "как есть"
-          },
-          {
-            "value": 2,
-            "label": "уязвимость"
-          }
-        ]
+        "optionsFrom": "taken"
       },
       {
         "tag": "taken_1",
@@ -1828,24 +1811,7 @@
           "default": 1
         },
         "control": "choice",
-        "options": [
-          {
-            "value": 0,
-            "label": "иммунитет"
-          },
-          {
-            "value": 0.5,
-            "label": "сопротивление"
-          },
-          {
-            "value": 1,
-            "label": "как есть"
-          },
-          {
-            "value": 2,
-            "label": "уязвимость"
-          }
-        ]
+        "optionsFrom": "taken"
       },
       {
         "tag": "taken_2",
@@ -1857,24 +1823,7 @@
           "default": 1
         },
         "control": "choice",
-        "options": [
-          {
-            "value": 0,
-            "label": "иммунитет"
-          },
-          {
-            "value": 0.5,
-            "label": "сопротивление"
-          },
-          {
-            "value": 1,
-            "label": "как есть"
-          },
-          {
-            "value": 2,
-            "label": "уязвимость"
-          }
-        ]
+        "optionsFrom": "taken"
       },
       {
         "tag": "taken_3",
@@ -1886,24 +1835,7 @@
           "default": 1
         },
         "control": "choice",
-        "options": [
-          {
-            "value": 0,
-            "label": "иммунитет"
-          },
-          {
-            "value": 0.5,
-            "label": "сопротивление"
-          },
-          {
-            "value": 1,
-            "label": "как есть"
-          },
-          {
-            "value": 2,
-            "label": "уязвимость"
-          }
-        ]
+        "optionsFrom": "taken"
       },
       {
         "tag": "taken_4",
@@ -1915,24 +1847,7 @@
           "default": 1
         },
         "control": "choice",
-        "options": [
-          {
-            "value": 0,
-            "label": "иммунитет"
-          },
-          {
-            "value": 0.5,
-            "label": "сопротивление"
-          },
-          {
-            "value": 1,
-            "label": "как есть"
-          },
-          {
-            "value": 2,
-            "label": "уязвимость"
-          }
-        ]
+        "optionsFrom": "taken"
       },
       {
         "tag": "taken_5",
@@ -1944,24 +1859,7 @@
           "default": 1
         },
         "control": "choice",
-        "options": [
-          {
-            "value": 0,
-            "label": "иммунитет"
-          },
-          {
-            "value": 0.5,
-            "label": "сопротивление"
-          },
-          {
-            "value": 1,
-            "label": "как есть"
-          },
-          {
-            "value": 2,
-            "label": "уязвимость"
-          }
-        ]
+        "optionsFrom": "taken"
       },
       {
         "tag": "taken_6",
@@ -1973,24 +1871,7 @@
           "default": 1
         },
         "control": "choice",
-        "options": [
-          {
-            "value": 0,
-            "label": "иммунитет"
-          },
-          {
-            "value": 0.5,
-            "label": "сопротивление"
-          },
-          {
-            "value": 1,
-            "label": "как есть"
-          },
-          {
-            "value": 2,
-            "label": "уязвимость"
-          }
-        ]
+        "optionsFrom": "taken"
       },
       {
         "tag": "taken_7",
@@ -2002,24 +1883,7 @@
           "default": 1
         },
         "control": "choice",
-        "options": [
-          {
-            "value": 0,
-            "label": "иммунитет"
-          },
-          {
-            "value": 0.5,
-            "label": "сопротивление"
-          },
-          {
-            "value": 1,
-            "label": "как есть"
-          },
-          {
-            "value": 2,
-            "label": "уязвимость"
-          }
-        ]
+        "optionsFrom": "taken"
       },
       {
         "tag": "taken_8",
@@ -2031,24 +1895,7 @@
           "default": 1
         },
         "control": "choice",
-        "options": [
-          {
-            "value": 0,
-            "label": "иммунитет"
-          },
-          {
-            "value": 0.5,
-            "label": "сопротивление"
-          },
-          {
-            "value": 1,
-            "label": "как есть"
-          },
-          {
-            "value": 2,
-            "label": "уязвимость"
-          }
-        ]
+        "optionsFrom": "taken"
       },
       {
         "tag": "taken_9",
@@ -2060,24 +1907,7 @@
           "default": 1
         },
         "control": "choice",
-        "options": [
-          {
-            "value": 0,
-            "label": "иммунитет"
-          },
-          {
-            "value": 0.5,
-            "label": "сопротивление"
-          },
-          {
-            "value": 1,
-            "label": "как есть"
-          },
-          {
-            "value": 2,
-            "label": "уязвимость"
-          }
-        ]
+        "optionsFrom": "taken"
       },
       {
         "tag": "taken_10",
@@ -2089,24 +1919,7 @@
           "default": 1
         },
         "control": "choice",
-        "options": [
-          {
-            "value": 0,
-            "label": "иммунитет"
-          },
-          {
-            "value": 0.5,
-            "label": "сопротивление"
-          },
-          {
-            "value": 1,
-            "label": "как есть"
-          },
-          {
-            "value": 2,
-            "label": "уязвимость"
-          }
-        ]
+        "optionsFrom": "taken"
       },
       {
         "tag": "taken_11",
@@ -2118,24 +1931,7 @@
           "default": 1
         },
         "control": "choice",
-        "options": [
-          {
-            "value": 0,
-            "label": "иммунитет"
-          },
-          {
-            "value": 0.5,
-            "label": "сопротивление"
-          },
-          {
-            "value": 1,
-            "label": "как есть"
-          },
-          {
-            "value": 2,
-            "label": "уязвимость"
-          }
-        ]
+        "optionsFrom": "taken"
       },
       {
         "tag": "taken_12",
@@ -2147,24 +1943,7 @@
           "default": 1
         },
         "control": "choice",
-        "options": [
-          {
-            "value": 0,
-            "label": "иммунитет"
-          },
-          {
-            "value": 0.5,
-            "label": "сопротивление"
-          },
-          {
-            "value": 1,
-            "label": "как есть"
-          },
-          {
-            "value": 2,
-            "label": "уязвимость"
-          }
-        ]
+        "optionsFrom": "taken"
       }
     ],
     "groups": {
@@ -3408,6 +3187,90 @@
           {
             "op": "shiftVersus",
             "by": 99
+          }
+        ]
+      }
+    },
+    "lists": {
+      "damage_types": {
+        "label": "Типы урона",
+        "values": [
+          {
+            "value": "рубящий",
+            "label": "рубящий"
+          },
+          {
+            "value": "колющий",
+            "label": "колющий"
+          },
+          {
+            "value": "дробящий",
+            "label": "дробящий"
+          },
+          {
+            "value": "огонь",
+            "label": "огонь"
+          },
+          {
+            "value": "холод",
+            "label": "холод"
+          },
+          {
+            "value": "молния",
+            "label": "молния"
+          },
+          {
+            "value": "гром",
+            "label": "гром"
+          },
+          {
+            "value": "кислота",
+            "label": "кислота"
+          },
+          {
+            "value": "яд",
+            "label": "яд"
+          },
+          {
+            "value": "некротический",
+            "label": "некротический"
+          },
+          {
+            "value": "излучение",
+            "label": "излучение"
+          },
+          {
+            "value": "психический",
+            "label": "психический"
+          },
+          {
+            "value": "силовой",
+            "label": "силовой"
+          },
+          {
+            "value": "магический",
+            "label": "магический"
+          }
+        ]
+      },
+      "taken": {
+        "label": "Сколько доходит",
+        "values": [
+          {
+            "value": 0,
+            "label": "иммунитет"
+          },
+          {
+            "value": 0.5,
+            "label": "сопротивление"
+          },
+          {
+            "value": 1,
+            "label": "как есть"
+          },
+          {
+            "value": 2,
+            "label": "уязвимость"
           }
         ]
       }
@@ -7705,22 +7568,7 @@
       "damage": {
         "label": "Урон",
         "category": "Вызываемые",
-        "tags": [
-          "рубящий",
-          "колющий",
-          "дробящий",
-          "огонь",
-          "холод",
-          "молния",
-          "гром",
-          "кислота",
-          "яд",
-          "некротический",
-          "излучение",
-          "психический",
-          "силовой",
-          "магический"
-        ],
+        "tagsFrom": "damage_types",
         "steps": [
           {
             "type": "apply",

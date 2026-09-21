@@ -38,18 +38,33 @@ export const DAMAGE_TAGS = [
   'некротический', 'излучение', 'психический', 'силовой', 'магический',
 ];
 
+export const lists = () => ({
+  damage_types: {
+    label: 'Типы урона',
+    values: DAMAGE_TAGS.map(tag => ({ value: tag, label: tag })),
+  },
+  taken: {
+    label: 'Сколько доходит',
+    values: [
+      { value: 0, label: 'иммунитет' }, { value: 0.5, label: 'сопротивление' },
+      { value: 1, label: 'как есть' }, { value: 2, label: 'уязвимость' },
+    ],
+  },
+});
+
 export const TAKEN = DAMAGE_TAGS
   .filter(tag => tag !== 'магический')
   .map((tag, at) => [`taken_${at}`, tag]);
 
 const stored = (tag, label, group, type, def, extra = {}) => {
-  const { control, roll, options, ...bounds } = extra;
+  const { control, roll, options, optionsFrom, ...bounds } = extra;
   return {
     tag, label, group,
     ...(roll ? { roll } : {}),
     value: { kind: 'stored', type, default: def, ...bounds },
     ...(control ? { control } : {}),
     ...(options ? { options } : {}),
+    ...(optionsFrom ? { optionsFrom } : {}),
   };
 };
 const formula = (tag, label, group, expr, roll) => ({
@@ -149,11 +164,7 @@ export function fields() {
 
   for (const [tag, damage] of TAKEN) {
     out.push(stored(tag, `${damage[0].toUpperCase()}${damage.slice(1)}`, 'Что доходит', 'number', 1, {
-      control: 'choice',
-      options: [
-        { value: 0, label: 'иммунитет' }, { value: 0.5, label: 'сопротивление' },
-        { value: 1, label: 'как есть' }, { value: 2, label: 'уязвимость' },
-      ],
+      control: 'choice', optionsFrom: 'taken',
     }));
   }
   return out;
@@ -260,7 +271,7 @@ export function calledEffects() {
     damage: {
       label: 'Урон',
       category: 'Вызываемые',
-      tags: DAMAGE_TAGS,
+      tagsFrom: 'damage_types',
       steps: [
         {
           type: 'apply', target: { tag: 'death_fail' }, direction: 'add', value: { const: 1 }, targetModifiers: false,

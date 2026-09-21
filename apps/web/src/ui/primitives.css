@@ -77,6 +77,13 @@
 }
 .row--2 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 
+.pair {
+  display: grid;
+  grid-template-columns: minmax(80px, 1fr) minmax(120px, 2fr) auto;
+  gap: var(--s-2);
+  align-items: center;
+}
+
 .input, .select, .textarea {
   background: var(--bg-sunken);
   border: 1px solid var(--border);

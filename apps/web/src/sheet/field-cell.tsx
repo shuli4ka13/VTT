@@ -3,10 +3,12 @@ import { Field, Input, Button, NumInput } from '../ui/primitives.tsx';
 import { show } from '../engine/use-calc.ts';
 import { CONTROL_VIEWS } from './controls/index.tsx';
 import type { Reader } from '../engine/use-calc.ts';
-import type { Sheet, Field as FieldModel, StoredValue } from '@vtt/schema';
+import type { Sheet, System, Field as FieldModel, StoredValue } from '@vtt/schema';
+import { optionsOf } from '@vtt/engine/model/lists';
 
-export function FieldCell({ field, sheet, reader, onChange, onRoll }: {
+export function FieldCell({ field, system, sheet, reader, onChange, onRoll }: {
   field: FieldModel;
+  system: System;
   sheet: Sheet;
   reader: Reader;
   onChange?: (tag: string, value: StoredValue) => void;
@@ -36,7 +38,7 @@ export function FieldCell({ field, sheet, reader, onChange, onRoll }: {
               label={field.label}
               min={typeof bounds?.min === 'number' ? bounds.min : undefined}
               max={typeof bounds?.max === 'number' ? bounds.max : boundOf(bounds?.max, reader)}
-              options={field.options}
+              options={optionsOf(system, field)}
               onChange={next => onChange(field.tag, next)}
             />
             {roll}
