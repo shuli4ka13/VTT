@@ -46,13 +46,41 @@ export function blockTree<T>(system: System, items: T[], blockOfItem: (item: T) 
   return keep(roots);
 }
 
-export function BlockBranches<T>({ nodes, depth = 0, onPickBlock, activeBlock, render, addTo }: {
+export interface Lineage<T> {
+  keyOf: (item: T) => string;
+  baseOf: (item: T) => string | undefined;
+}
+
+function byLineage<T>(items: T[], line: Lineage<T>): { item: T; depth: number }[] {
+  const mine = new Set(items.map(line.keyOf));
+  const kids = new Map<string, T[]>();
+  const roots: T[] = [];
+
+  for (const item of items) {
+    const base = line.baseOf(item);
+    if (base && mine.has(base) && base !== line.keyOf(item)) {
+      const list = kids.get(base);
+      if (list) list.push(item); else kids.set(base, [item]);
+    } else roots.push(item);
+  }
+
+  const out: { item: T; depth: number }[] = [];
+  const walk = (item: T, depth: number) => {
+    out.push({ item, depth });
+    for (const kid of kids.get(line.keyOf(item)) ?? []) walk(kid, depth + 1);
+  };
+  for (const root of roots) walk(root, 0);
+  return out;
+}
+
+export function BlockBranches<T>({ nodes, depth = 0, onPickBlock, activeBlock, render, addTo, lineage }: {
   nodes: BlockNode<T>[];
   depth?: number;
   activeBlock?: string | null;
   onPickBlock?: (name: string) => void;
   render: (item: T) => ReactNode;
   addTo?: (name: string) => void;
+  lineage?: Lineage<T>;
 }) {
   return (
     <>
@@ -69,7 +97,13 @@ export function BlockBranches<T>({ nodes, depth = 0, onPickBlock, activeBlock, r
             ) : node.name}
           </ListGroup>
 
-          {node.items.map(render)}
+          {lineage
+            ? byLineage(node.items, lineage).map(({ item, depth: at }) => (
+              at
+                ? <div key={lineage.keyOf(item)} className="list__nest">{render(item)}</div>
+                : render(item)
+            ))
+            : node.items.map(render)}
 
           {addTo ? (
             <Button size="sm" variant="ghost" wide onClick={() => addTo(node.name)}>
@@ -79,7 +113,7 @@ export function BlockBranches<T>({ nodes, depth = 0, onPickBlock, activeBlock, r
 
           <BlockBranches
             nodes={node.children} depth={depth + 1} activeBlock={activeBlock}
-            onPickBlock={onPickBlock} render={render} addTo={addTo}
+            onPickBlock={onPickBlock} render={render} addTo={addTo} lineage={lineage}
           />
         </div>
       ))}

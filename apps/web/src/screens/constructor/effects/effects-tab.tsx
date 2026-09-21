@@ -13,6 +13,7 @@ import { launchOf, activationFor, LAUNCHES } from '@vtt/engine/model/effect-kind
 import type { LaunchKind } from '@vtt/engine/model/effect-kinds';
 import { calledOf } from '@vtt/engine/engine/effects';
 import type { Effect } from '@vtt/schema';
+import { freeGroupName } from '../groups.ts';
 
 export function EffectsTab() {
   const system = useWorld(s => s.system);
@@ -30,6 +31,12 @@ export function EffectsTab() {
     pick({ activeEffectId: made.key });
   };
 
+  const addTo = (block: string) => {
+    const made = newEffect(system, activationFor({ kind: 'manual', moment: 'after', ask: false }));
+    editSystem(draft => { draft.effects[made.key] = { ...made.value, group: block }; });
+    pick({ activeEffectId: made.key });
+  };
+
   const add = (kind: LaunchKind) => {
     const made = newEffect(system, activationFor({ kind, moment: 'after', ask: false }));
     editSystem(draft => { draft.effects[made.key] = made.value; });
@@ -40,6 +47,7 @@ export function EffectsTab() {
     <Columns
       left={{
         head: 'Библиотека эффектов',
+        tools: <Button size="sm" onClick={() => addTo(freeGroupName(system, 'Новый блок'))}>+ блок</Button>,
         body: (
           <>
             {tree.length === 0
@@ -52,6 +60,11 @@ export function EffectsTab() {
                 <List>
                   <BlockBranches
                     nodes={tree}
+                    addTo={addTo}
+                    lineage={{
+                      keyOf: ([id]) => id,
+                      baseOf: ([, effect]) => effect.extends,
+                    }}
                     render={([id, effect]) => (
                       <ListItem
                         key={id}

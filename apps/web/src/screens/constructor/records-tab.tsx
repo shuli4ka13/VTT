@@ -10,6 +10,7 @@ import type { System, RecordKind, Binding, Param } from '@vtt/schema';
 import { BlockPick } from './block-pick.tsx';
 import { blockOf } from '@vtt/engine/model/blocks';
 import { blockTree, BlockBranches } from './block-tree.tsx';
+import { freeGroupName } from './groups.ts';
 
 const BASIS = [
   ['item', 'вещь — надевают и снимают'],
@@ -53,13 +54,19 @@ export function RecordsTab() {
     pick({ activeRecordKind: made.key });
   };
 
+  const addTo = (block: string) => {
+    const made = newRecordKind(system);
+    editSystem(draft => { (draft.records ??= {})[made.key] = { ...made.value, group: block }; });
+    pick({ activeRecordKind: made.key });
+  };
+
   const tree = blockTree<[string, RecordKind]>(system, kinds, ([, kind]) => blockOf(system, kind));
 
   return (
     <Columns
       left={{
         head: 'типы записей',
-        tools: <Button size="sm" onClick={add}>+ тип</Button>,
+        tools: <Button size="sm" onClick={() => addTo(freeGroupName(system, 'Новый блок'))}>+ блок</Button>,
         body: kinds.length === 0
           ? <Empty
               title="типов ещё нет"
@@ -70,6 +77,11 @@ export function RecordsTab() {
             <List>
               <BlockBranches
                 nodes={tree}
+                addTo={addTo}
+                lineage={{
+                  keyOf: ([key]) => key,
+                  baseOf: ([, kind]) => kind.extends,
+                }}
                 render={([key, kind]) => (
                   <ListItem
                     key={key}
