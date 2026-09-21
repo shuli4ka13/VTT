@@ -50,6 +50,7 @@ interface PendingRecord {
 
   at?: number;
   tapes?: Record<string, number[]>;
+  targetClaims?: Record<string, string[]>;
 
   emitted?: EmittedEvent[];
   afterAt?: number;
@@ -363,6 +364,9 @@ export class RoomsService {
 
     let stage: ReactionWindow | 'deliver' = state.stage;
     const targets = targetsOf(intent);
+    const takenByTarget = state.targetClaims ?? {};
+    const claimsFor = (id: string): string[] =>
+      [...new Set([...(intent.targetEdits ?? []), ...(takenByTarget[id] ?? [])])];
     const tapes: Record<string, number[]> = { ...(state.tapes ?? {}) };
     try {
       if (stage === 'sender') {
@@ -379,7 +383,9 @@ export class RoomsService {
         for (let at = state.at ?? 0; at < targets.length; at++) {
           const target = sheetOf(targets[at]!);
           const taped = tapeDie(this.die);
-          const dry = receive(state.envelope, { ...ctx, die: taped.die, sheet: target, claims: intent.targetEdits ?? [] });
+          const dry = receive(state.envelope, {
+            ...ctx, die: taped.die, sheet: target, claims: claimsFor(target.id),
+          });
           const results = dry.results;
           tapes[target.id] = taped.tape;
           const offered = offers(state.envelope, 'target', { ...ctx, sheet: target }, results, dry.report.emitted);
@@ -403,7 +409,7 @@ export class RoomsService {
           const out = deliver({
             ...ctx, die: replayDie(tapes[toId] ?? [], this.die), sheets, envelope: state.envelope,
             fromId: intent.fromId, toId,
-            claims: { target: intent.targetEdits ?? [] },
+            claims: { target: claimsFor(toId) },
           });
           sheets = out.sheets;
           reports.push(...out.reports);
@@ -488,6 +494,8 @@ export class RoomsService {
     const lines: string[] = [];
     let envelope = record.envelope;
     let claims = record.claims;
+    let targetClaims = record.targetClaims ?? {};
+    const tapes = { ...(record.tapes ?? {}) };
     const changed: Sheet[] = [];
     try {
       const reacted = react(intent.chosen, envelope, record.stage as ReactionWindow,
@@ -511,6 +519,15 @@ export class RoomsService {
       }
       if (!intent.chosen.length) lines.push(`${asked.name} пропускает реакцию`);
 
+      if (record.stage === 'target' && reacted.claims.length) {
+        targetClaims = {
+          ...targetClaims,
+          [asked.id]: [...new Set([...(targetClaims[asked.id] ?? []), ...reacted.claims])],
+        };
+        delete tapes[asked.id];
+        lines.push(`${asked.name}: бросок пересчитан с заявленной правкой`);
+      }
+
       if (record.stage === 'sender' && reacted.claims.length) {
         claims = [...new Set([...claims, ...reacted.claims])];
         const from = sheets.find(s => s.id === record.intent.fromId)!;
@@ -529,7 +546,7 @@ export class RoomsService {
     }
     const more = record.stage === 'target' && (record.at ?? 0) + 1 < targetsOf(record.intent).length;
     return this.proceed({
-      ...record, envelope, clock, claims,
+      ...record, envelope, clock, claims, targetClaims, tapes,
       stage: record.stage === 'sender' || more ? 'target' : record.stage === 'after' ? 'after' : 'deliver',
       ...(record.stage === 'target' ? { at: (record.at ?? 0) + 1 } : {}),
       ...(record.stage === 'after' ? { afterAt: (record.afterAt ?? 0) + 1 } : {}),

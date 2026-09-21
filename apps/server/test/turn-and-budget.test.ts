@@ -432,6 +432,61 @@ describe('вопросы к человеку переживают пересбо
   });
 });
 
+describe('цель правит свой бросок, увидев его', () => {
+  it('заявленная целью правка меняет её спасбросок, а не только журнал', async () => {
+    const token = (await http().post('/auth/login').send({ name: 'Ведущий спасбросков' })).body.token as string;
+    const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
+
+    const system = {
+      id: 'спасение', name: 'Со спасброском',
+      fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } }],
+      constants: { к20: { label: 'Кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
+      roll_edits: { удача: { label: 'Удача', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }] } },
+      effects: {
+        залп: {
+          label: 'Залп', activation: 'manual',
+          steps: [
+            { id: 'спас', type: 'threshold', side: 'target', roll: { die: { constant: 'к20' } }, versus: { const: 11 }, continueOn: 'fail' },
+            { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { const: 6 } },
+          ],
+        },
+        везение: {
+          label: 'Везение', activation: 'reaction',
+          trigger: { on: '*', window: 'target', claims: ['удача'] }, steps: [],
+        },
+      },
+      records: { приём: { kind: 'action', label: 'Приём', props: [], bindings: [{ label: 'Залп', effect: 'залп', args: {} }] } },
+    };
+    const book = { items: [], actions: [{ id: 'приём', rk: 'приём', label: 'Залп', props: {} }] };
+    const sheet = (id: string, worn: string[]) => ({
+      id, systemId: 'спасение', kind: 'pc', name: id, values: { хиты: 20 },
+      equipped: [], actions: ['приём'], effects: worn.map(effectId => ({ effectId })),
+    });
+
+    const systemId = (await as(http().post('/systems')).send({ title: 'Со спасброском', system })).body.id;
+    const bookId = (await as(http().post('/compendiums')).send({ title: 'Книга спасбросков', systemId, compendium: book })).body.id;
+    await as(http().post(`/systems/${systemId}/publish`)).send({}).expect(201);
+    await as(http().post(`/compendiums/${bookId}/publish`)).send({}).expect(201);
+    const worldId = (await as(http().post('/worlds')).send({
+      title: 'Мир спасбросков', systemId, compendiumIds: [bookId],
+      sheets: [sheet('стрелок', []), sheet('цель', ['везение'])],
+    })).body.id;
+    const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол спасбросков' })).body.id as string;
+
+    const paused = await as(http().post(`/rooms/${roomId}/act`)).send({
+      roomId, actionId: 'приём:0', fromId: 'стрелок', toId: 'цель',
+    }).expect(201);
+    expect(paused.body.pending?.options.map((o: { id: string }) => o.id)).toEqual(['везение']);
+
+    const answered = await as(http().post(`/rooms/${roomId}/answer`)).send({
+      roomId, pendingId: paused.body.pending.id, chosen: ['везение'],
+    }).expect(201);
+    const сказано = answered.body.log.map((e: { text: string }) => e.text).join(' ');
+    expect(сказано, сказано).toContain('пересчитан с заявленной правкой');
+    expect(сказано, 'бросок сделан двумя костями').toMatch(/\[\d+, \d+\]/);
+  });
+});
+
 describe('поле стало верным', () => {
   it('ведущий вписал ноль хитов — слушатель поля вешает состояние и пишет в журнал', async () => {
     const token = (await http().post('/auth/login').send({ name: 'Ведущий порога' })).body.token as string;
