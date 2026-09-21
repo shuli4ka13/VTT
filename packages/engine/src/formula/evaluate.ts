@@ -4,7 +4,15 @@ import type { Resolve } from '../model/types.ts';
 
 export type Value = number | boolean;
 
-interface Fn { arity: number | '1+'; apply: (args: number[]) => number }
+export interface Tools {
+  roll?: (notation: string, times: number) => number;
+}
+
+interface Fn {
+  arity: number | '1+';
+  apply: (args: number[]) => number;
+  raw?: (args: Value[], tools: Tools) => Value;
+}
 
 const FUNCTIONS: Record<string, Fn> = {
   floor: { arity: 1, apply: args => Math.floor(args[0]!) },
@@ -13,11 +21,26 @@ const FUNCTIONS: Record<string, Fn> = {
   abs: { arity: 1, apply: args => Math.abs(args[0]!) },
   min: { arity: '1+', apply: args => Math.min(...args) },
   max: { arity: '1+', apply: args => Math.max(...args) },
+  кинуть: {
+    arity: '1+',
+    apply: args => args[0]!,
+    raw: (args, tools) => {
+      if (!tools.roll) {
+        throw new FormulaRuntimeError('«кинуть» здесь нельзя: кости бросает только шаг эффекта');
+      }
+      const notation = String(args[0]);
+      const times = args.length > 1 ? Number(args[1]) : 1;
+      if (!Number.isFinite(times)) {
+        throw new FormulaRuntimeError('второй аргумент «кинуть» — сколько раз, должен быть числом');
+      }
+      return tools.roll(notation, times);
+    },
+  },
 };
 
 export const FUNCTION_NAMES = Object.keys(FUNCTIONS);
 
-export function evaluate(ast: Node, resolve: Resolve): Value {
+export function evaluate(ast: Node, resolve: Resolve, tools: Tools = {}): Value {
   return visit(ast);
 
   function visit(node: Node): Value {
@@ -90,6 +113,7 @@ export function evaluate(ast: Node, resolve: Resolve): Value {
       throw new FormulaRuntimeError(
         `«${node.name}» требует аргументов: ${fn.arity}, передано ${node.args.length}`);
     }
+    if (fn.raw) return fn.raw(node.args.map(arg => visit(arg)), tools);
     const args = node.args.map((arg, n) => number(visit(arg), `аргумент ${n + 1} функции «${node.name}»`));
     return fn.apply(args);
   }

@@ -1,11 +1,14 @@
 import { compile } from '../formula/index.ts';
 import { EngineError } from './errors.ts';
 import { lookupTable } from './tables.ts';
-import type { Param } from '../model/types.ts';
+import { rollNotation, multiplyNotation } from './dice.ts';
+import type { Param, Die } from '../model/types.ts';
 import type { Pass } from './calc.ts';
 
 export interface RefContext {
   pass: Pass;
+
+  die?: Die;
 
   owner?: string;
 
@@ -42,7 +45,15 @@ export function packRef(ref: unknown, ctx: RefContext): unknown {
       for (const name of names) sent[String(name)] = evaluate(`#${name}`, ctx);
       return { expr: r.expr, of: 'target', sent };
     }
-    if (waitsForStep(String(r.expr), ctx)) return { expr: r.expr, later: true };
+    if (waitsForStep(String(r.expr), ctx)) {
+      const sent: Record<string, unknown> = {};
+      for (const name of compile(String(r.expr)).deps) {
+        if (name.includes('.')) continue;
+        const known = senderValue(name, ctx);
+        if (known !== undefined) sent[name] = known;
+      }
+      return { expr: r.expr, later: true, ...(Object.keys(sent).length ? { sent } : {}) };
+    }
     return { const: evaluate(r.expr, ctx) };
   }
 
@@ -122,7 +133,7 @@ export function resolveRef(ref: unknown, ctx: RefContext): unknown {
   if ('const' in r) return r.const;
 
   if ('expr' in r) {
-    if (r.later) return evaluate(r.expr, ctx);
+    if (r.later) return evaluate(r.expr, ctx, r.sent as Record<string, unknown> | undefined);
     if ((r.of || 'sender') !== 'target') {
       throw new EngineError(
         `${who(ctx)}: выражение «${r.expr}» стороны отправителя пришло неразрешённым — конверт бит`);
@@ -220,7 +231,15 @@ function evaluate(expr: unknown, ctx: RefContext, sent?: Record<string, unknown>
     }
     return ctx.pass.resolve(name);
   };
-  return compile(String(expr)).evaluate(resolve);
+  return compile(String(expr)).evaluate(resolve, {
+    roll: (notation, times) => {
+      if (!ctx.die) {
+        throw new EngineError(`${who(ctx)}: «кинуть» здесь нельзя — кости бросает только шаг эффекта`);
+      }
+      const written = times > 1 ? multiplyNotation(notation, times) : notation;
+      return rollNotation(written, ctx.die).total;
+    },
+  });
 }
 
 export function exactFieldOf(ref: unknown, ctx: RefContext): string | null {
@@ -233,6 +252,22 @@ export function exactFieldOf(ref: unknown, ctx: RefContext): string | null {
   if (typeof text !== 'string') return null;
   const exact = /^\s*#([\p{L}\p{N}_-]+)\s*$/u.exec(text);
   return exact ? exact[1]! : null;
+}
+
+function senderValue(name: string, ctx: RefContext): unknown {
+  if ((ctx.paramDefs || []).some(p => p.key === name)) {
+    try {
+      const packed = packParam(name, true, ctx);
+      if (packed && typeof packed === 'object' && 'const' in (packed as AnyRef)) {
+        return (packed as AnyRef).const;
+      }
+    } catch { /* потребность посчитает получатель */ }
+  }
+  try {
+    return evaluate(`#${name}`, ctx);
+  } catch {
+    return undefined;
+  }
 }
 
 function namedValue(name: string, ctx: RefContext): unknown {

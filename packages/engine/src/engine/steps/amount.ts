@@ -73,7 +73,10 @@ export function pack(step: StepData, ctx: StepContext) {
   if (source === 'roll' && !written) {
     throw new EngineError(`${who(ctx)}: источнику «свой бросок» нужны кости — слот dice пуст`);
   }
-  if (source === 'item' && (fixed === null || (typeof fixed === 'object' && (fixed as any).const == null))) {
+  const deferred = typeof fixed === 'object' && fixed !== null
+    && ('later' in (fixed as Record<string, unknown>) || 'table' in (fixed as Record<string, unknown>));
+  if (source === 'item' && !deferred
+    && (fixed === null || (typeof fixed === 'object' && (fixed as any).const == null))) {
     throw new EngineError(`${who(ctx)}: источнику «фикс предмета» нужен заполненный слот fixed`);
   }
   if (source === 'margin' && !margin) {

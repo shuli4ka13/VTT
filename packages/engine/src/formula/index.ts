@@ -2,8 +2,10 @@ import { parse } from './parse.ts';
 import { dependencies } from './deps.ts';
 import { evaluate } from './evaluate.ts';
 import type { Node } from './ast.ts';
-import type { Value } from './evaluate.ts';
+import type { Value, Tools } from './evaluate.ts';
 import type { Resolve } from '../model/types.ts';
+
+export type { Tools } from './evaluate.ts';
 
 export { FormulaError, FormulaSyntaxError, FormulaRuntimeError } from './errors.ts';
 export { FUNCTION_NAMES } from './evaluate.ts';
@@ -16,7 +18,7 @@ export interface Formula {
   readonly source: string;
   readonly ast: Node;
   readonly deps: readonly string[];
-  evaluate(resolve: Resolve): Value;
+  evaluate(resolve: Resolve, tools?: Tools): Value;
 }
 
 const cache = new Map<string, Formula>();
@@ -31,7 +33,7 @@ export function compile(source: unknown): Formula {
     source: key,
     ast,
     deps: Object.freeze(dependencies(ast)),
-    evaluate: (resolve: Resolve) => evaluate(ast, resolve),
+    evaluate: (resolve: Resolve, tools?: Tools) => evaluate(ast, resolve, tools),
   });
 
   cache.set(key, formula);
