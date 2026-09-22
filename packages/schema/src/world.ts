@@ -212,6 +212,8 @@ export const guard = z.union([
     atLeast: z.union([z.number(), z.object({ tag: z.string().min(1) })]).optional(),
     atMost: z.union([z.number(), z.object({ tag: z.string().min(1) })]).optional(),
     has: z.string().optional(),
+
+    where: z.object({ table: z.string().min(1), column: z.string().min(1), is: tableValue }).optional(),
   }),
   z.object({ expr: z.string(), of: refSide.optional() }),
 ]);

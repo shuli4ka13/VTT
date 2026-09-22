@@ -1,3 +1,4 @@
+import { anyRowSays } from './tables.ts';
 import { stepModule } from './steps/index.ts';
 import { rolledSoFar } from './rolled.ts';
 import { findField } from './calc.ts';
@@ -91,8 +92,11 @@ export function guardHolds(guard: unknown, ctx: StepContext, known?: unknown): b
         ? Number(ctx.pass.resolve(String((raw as { tag: unknown }).tag)))
         : Number(raw));
       holds = (g.atLeast === undefined || value >= limit(g.atLeast)) && (g.atMost === undefined || value <= limit(g.atMost));
-    } else if (g.has !== undefined) {
-      holds = Array.isArray(value) ? value.map(String).includes(String(g.has)) : String(value ?? '') === String(g.has);
+    } else if (g.has !== undefined || g.where !== undefined) {
+      const hasIt = g.has === undefined
+        || (Array.isArray(value) ? value.map(String).includes(String(g.has)) : String(value ?? '') === String(g.has));
+      const where = g.where as { table: string; column: string; is: unknown } | undefined;
+      holds = hasIt && (!where || anyRowSays(ctx.pass.system, value, where));
     } else if (typeof value === 'boolean') holds = value;
     else {
       throw new EngineError(

@@ -49,6 +49,40 @@ function tagSteps(system: System): { where: Where; step: Loose; tags: unknown[] 
   return out;
 }
 
+function stepConditions(system: System): { where: Where; cond: Loose }[] {
+  const out: { where: Where; cond: Loose }[] = [];
+  const visit = (steps: unknown, id: string) => {
+    if (!Array.isArray(steps)) return;
+    for (const [at, step] of steps.entries()) {
+      const s = step as Loose;
+      const cond = s.when as Loose | undefined;
+      if (cond && typeof cond === 'object' && cond.where) out.push({ where: { tab: 'effects', effect: id, step: at }, cond: cond.where as Loose });
+      visit(s.steps, id);
+    }
+  };
+  for (const [id, effect] of Object.entries(system.effects ?? {})) {
+    visit(effect.steps, id);
+    visit(effect.self, id);
+  }
+  return out;
+}
+
+const pointsAt = (system: System, cond: Loose, table: string): boolean =>
+  typeof cond.table === 'string'
+  && !!system.tables?.[cond.table]?.columns?.some(c => c.key === cond.column && c.kind === 'choice' && c.from === table);
+
+function badCondition(system: System, cond: Loose, what: string): string | undefined {
+  const tables = system.tables ?? {};
+  const table = typeof cond.table === 'string' ? tables[cond.table] : undefined;
+  if (!table) return `${what} смотрит в таблицу «${String(cond.table ?? '')}», которой нет`;
+  const column = table.columns?.find(c => c.key === cond.column);
+  if (!column) return `у таблицы «${table.label || String(cond.table)}» нет колонки «${String(cond.column ?? '')}» из ${what === 'условие правки' ? 'условия правки' : 'условия шага'}`;
+  if (column.kind === 'choice' && column.from && !hasRow(system, column.from, cond.is)) {
+    return `${what} ждёт «${String(cond.is)}», а в «${tables[column.from]?.label || column.from}» такой строки нет`;
+  }
+  return undefined;
+}
+
 export function rowUsers(system: System, table: string, key: unknown, compendium?: Compendium): RowUse[] {
   const out: RowUse[] = [];
   for (const [id, other] of Object.entries(system.tables ?? {})) {
@@ -73,6 +107,9 @@ export function rowUsers(system: System, table: string, key: unknown, compendium
         && [...((m.tags ?? []) as unknown[]), ...((m.notTags ?? []) as unknown[])].some(t => same(t, key));
       if (byWhere || byTags) out.push({ where, text: 'правка значения' });
     }
+  }
+  for (const { where, cond } of stepConditions(system)) {
+    if (pointsAt(system, cond, table) && same(cond.is, key)) out.push({ where, text: 'условие шага' });
   }
   for (const { where, step, tags } of tagSteps(system)) {
     if (system.effects[String(step.event)]?.tagsFrom === table && tags.some(t => same(t, key))) {
@@ -125,16 +162,14 @@ export function danglingRows(system: System, compendium?: Compendium): Dangling[
   }
   for (const { where, modifiers } of modifierLists(system)) {
     for (const m of modifiers) {
-      const w = m.where as { table?: string; column?: string; is?: unknown } | undefined;
-      if (!w) continue;
-      const table = w.table ? tables[w.table] : undefined;
-      const column = table?.columns?.find(c => c.key === w.column);
-      if (!table) { out.push({ where, text: `условие правки смотрит в таблицу «${w.table ?? ''}», которой нет` }); continue; }
-      if (!column) { out.push({ where, text: `у таблицы «${table.label || w.table}» нет колонки «${w.column ?? ''}» из условия правки` }); continue; }
-      if (column.kind === 'choice' && column.from && !hasRow(system, column.from, w.is)) {
-        out.push({ where, text: `условие правки ждёт «${String(w.is)}», а в «${tables[column.from]?.label || column.from}» такой строки нет` });
-      }
+      if (!m.where) continue;
+      const text = badCondition(system, m.where as Loose, 'условие правки');
+      if (text) out.push({ where, text });
     }
+  }
+  for (const { where, cond } of stepConditions(system)) {
+    const text = badCondition(system, cond, 'условие шага');
+    if (text) out.push({ where, text });
   }
   for (const [rk, kind] of Object.entries(system.records ?? {})) {
     for (const prop of (kind.props ?? [])) {
@@ -181,6 +216,9 @@ export function renameRow(system: System, table: string, from: unknown, to: unkn
   }
   for (const { step } of tagSteps(system)) {
     if (system.effects[String(step.event)]?.tagsFrom === table) step.tags = retag(step.tags);
+  }
+  for (const { cond } of stepConditions(system)) {
+    if (pointsAt(system, cond, table) && same(cond.is, from)) cond.is = to;
   }
   for (const field of system.fields ?? []) {
     if (field.optionsFrom !== table) continue;

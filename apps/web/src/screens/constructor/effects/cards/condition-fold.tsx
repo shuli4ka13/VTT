@@ -1,3 +1,5 @@
+import type { System } from '@vtt/schema';
+import { tagsOf, listOf } from '@vtt/engine/model/lists';
 import { Field, Fold, Select, Input } from '../../../../ui/primitives.tsx';
 import { SlotInput } from '../../slot-input.tsx';
 import type { SlotContext } from '../../slots.tsx';
@@ -9,7 +11,13 @@ import type { EditFn } from '../words.ts';
 
 type Bound = number | { tag: string } | { expr: string } | { param: string };
 
-interface When { ref?: string; not?: boolean; atLeast?: Bound; atMost?: Bound; has?: string }
+interface RowIs { table: string; column: string; is: unknown }
+
+interface When { ref?: string; not?: boolean; atLeast?: Bound; atMost?: Bound; has?: string; where?: RowIs }
+
+const EVENT_TAGS = 'event.tags';
+
+const EVENT_TAGS_LABEL = 'метки вызова';
 
 type WhenStep = { when?: When };
 
@@ -31,21 +39,36 @@ const numberWords = (when: When): string => {
   return 'любое число';
 };
 
-export const whenWords = (when: When | undefined, earlier: EarlierStep[]): string | null => {
+const rowIsWords = (where: RowIs, system?: System): string => {
+  const table = system?.tables?.[where.table];
+  const column = table?.columns?.find(c => c.key === where.column);
+  return `у метки «${column?.label || where.column}» = «${String(where.is)}»`;
+};
+
+export const whenWords = (when: When | undefined, earlier: EarlierStep[], system?: System): string | null => {
   if (!when?.ref) return null;
-  const label = outputLabel(when.ref, earlier);
+  const label = when.ref === EVENT_TAGS ? EVENT_TAGS_LABEL : outputLabel(when.ref, earlier);
+  if (when.where) {
+    const parts = [when.has !== undefined ? `есть «${when.has}»` : '', rowIsWords(when.where, system)].filter(Boolean).join(' и ');
+    return `${when.not ? 'не так, что ' : ''}${label}: ${parts}`;
+  }
   if (when.has !== undefined) return `${label} ${when.not ? 'не' : ''} «${when.has}»`.replace('  ', ' ');
   if (when.atLeast !== undefined || when.atMost !== undefined) return `${label} ${numberWords(when)}`;
   return when.not ? label.replace(' — ', ' — не ') : label;
 };
 
-export function whenSegments(step: unknown, earlier: EarlierStep[]): Segment[] {
-  const words = whenWords((step as WhenStep | null)?.when, earlier);
+export function whenSegments(step: unknown, earlier: EarlierStep[], system?: System): Segment[] {
+  const words = whenWords((step as WhenStep | null)?.when, earlier, system);
   return words ? [{ text: `Только если ${words}.` }] : [];
 }
 
 const KIND_OF = (ref: string | undefined, earlier: EarlierStep[]): string =>
-  outputRefs(earlier).find(o => o.ref === ref)?.kind ?? 'boolean';
+  (ref === EVENT_TAGS ? 'tags' : outputRefs(earlier).find(o => o.ref === ref)?.kind ?? 'boolean');
+
+const tablesOfTags = (system: System, tags: string[]) =>
+  Object.entries(system.tables ?? {})
+    .filter(([, t]) => (t.columns ?? []).length && (t.rows ?? []).some(r => tags.includes(String(r.value))))
+    .map(([id, t]) => [id, t.label || id] as const);
 
 export function ConditionFold({ group, earlier, edit, context }: {
   group: CardGroup;
@@ -54,16 +77,24 @@ export function ConditionFold({ group, earlier, edit, context }: {
   context: SlotContext;
 }) {
   const when = (group.step as WhenStep).when;
-  const outputs = outputRefs(earlier).filter(o => o.kind === 'boolean' || o.kind === 'number' || o.kind === 'text');
+  const system = context.system;
+  const tagged = tagsOf(system, context.effect);
+  const outputs = [
+    ...(tagged.length ? [{ ref: EVENT_TAGS, label: EVENT_TAGS_LABEL }] : []),
+    ...outputRefs(earlier).filter(o => o.kind === 'boolean' || o.kind === 'number' || o.kind === 'text'),
+  ];
   if (!outputs.length && !when?.ref) return null;
   const setAll = (change: (draft: WhenStep) => void) =>
     group.indices.forEach((_, k) => edit(k, draft => change(draft as WhenStep)));
   const kind = KIND_OF(when?.ref, earlier);
-  const summary = whenWords(when, earlier) ? `если ${whenWords(when, earlier)}` : 'всегда';
+  const summary = whenWords(when, earlier, system) ? `если ${whenWords(when, earlier, system)}` : 'всегда';
+  const whereTable = when?.where ? system.tables?.[when.where.table] : undefined;
+  const whereColumn = whereTable?.columns?.find(c => c.key === when?.where?.column);
+  const whereValues = whereColumn?.kind === 'choice' ? (listOf(system, whereColumn.from) ?? []) : [];
 
   const keep = (draft: WhenStep, next: Partial<When>) => {
     const made: When = { ref: draft.when?.ref, ...next };
-    for (const key of ['atLeast', 'atMost', 'has', 'not'] as const) {
+    for (const key of ['atLeast', 'atMost', 'has', 'not', 'where'] as const) {
       if (made[key] === undefined) delete made[key];
     }
     draft.when = made;
@@ -91,6 +122,66 @@ export function ConditionFold({ group, earlier, edit, context }: {
               onChange={next => setAll(draft => { keep(draft, next === 'no' ? { not: true } : {}); })}
             />
           </Field>
+        ) : null}
+
+        {when?.ref && kind === 'tags' ? (
+          <>
+            <Field label="есть метка" hint="Пусто — любая.">
+              <Select
+                value={when.has ?? ''}
+                options={[['', '— любая —'], ...tagged.map(t => [t, t] as const)] as never}
+                onChange={next => setAll(draft => {
+                  keep(draft, { ...(next ? { has: next } : {}), where: draft.when?.where, not: draft.when?.not });
+                })}
+              />
+            </Field>
+            <Field label="где у метки" hint="Смотрит в строку метки в таблице: один факт вместо перечня меток.">
+              <div className="inline inline--tight">
+                <Select
+                  value={when.where?.table ?? ''}
+                  options={[['', '— без условия —'], ...tablesOfTags(system, tagged)] as never}
+                  onChange={next => setAll(draft => {
+                    const column = next ? system.tables?.[next]?.columns?.[0]?.key : undefined;
+                    keep(draft, {
+                      has: draft.when?.has, not: draft.when?.not,
+                      ...(next && column ? { where: { table: next, column, is: '' } } : {}),
+                    });
+                  })}
+                />
+                {when.where ? (
+                  <>
+                    <Select
+                      value={when.where.column}
+                      options={(whereTable?.columns ?? []).map(c => [c.key, c.label || c.key] as const) as never}
+                      onChange={next => setAll(draft => { keep(draft, { ...draft.when, where: { ...draft.when!.where!, column: next, is: '' } }); })}
+                    />
+                    <span className="faint">=</span>
+                    {whereValues.length ? (
+                      <Select
+                        value={String(when.where.is ?? '')}
+                        options={[['', '— что —'], ...whereValues.map(o => [String(o.value), o.label] as const)] as never}
+                        onChange={next => setAll(draft => { keep(draft, { ...draft.when, where: { ...draft.when!.where!, is: next } }); })}
+                      />
+                    ) : (
+                      <Input
+                        value={String(when.where.is ?? '')}
+                        onChange={next => setAll(draft => { keep(draft, { ...draft.when, where: { ...draft.when!.where!, is: next } }); })}
+                      />
+                    )}
+                  </>
+                ) : null}
+              </div>
+            </Field>
+            <Field label="исход">
+              <Select
+                value={when.not ? 'no' : 'yes'}
+                options={[['yes', 'так и есть'], ['no', 'не так']] as const}
+                onChange={next => setAll(draft => {
+                  keep(draft, { has: draft.when?.has, where: draft.when?.where, ...(next === 'no' ? { not: true } : {}) });
+                })}
+              />
+            </Field>
+          </>
         ) : null}
 
         {when?.ref && kind === 'number' ? (

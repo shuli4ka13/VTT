@@ -2,7 +2,7 @@ import { compile } from '../formula/index.ts';
 import { assertTarget, incomingTagOf, ANY_ROLL } from './targets.ts';
 import { roomEffects, wornEffects, activationOf } from './effects.ts';
 import { EngineError } from './errors.ts';
-import { rowOf } from './tables.ts';
+import { anyRowSays } from './tables.ts';
 import type { System, Sheet, Compendium, Modifier, RollEdit } from '../model/types.ts';
 import type { Pass } from './calc.ts';
 
@@ -190,16 +190,10 @@ function tagsMatch(mod: SourcedModifier, tags: string[], system: System): boolea
   const where = (mod as { where?: { table: string; column: string; is: unknown } }).where;
   if (want?.length && !want.some(t => tags.includes(t))) return false;
   if (avoid?.length && avoid.some(t => tags.includes(t))) return false;
-  if (where && !tags.some(t => rowSays(system, where.table, t, where.column, where.is))) return false;
+  if (where && !anyRowSays(system, tags, where)) return false;
   return true;
 }
 
-function rowSays(system: System, table: string, key: string, column: string, is: unknown): boolean {
-  const row = rowOf(system, table, key);
-  if (!row) return false;
-  const cell = (row.cells ?? {})[column];
-  return cell === is || (cell !== undefined && cell !== null && String(cell) === String(is));
-}
 
 function conditionHolds(mod: SourcedModifier, pass: Pass): boolean {
   if (!mod.condition) return true;

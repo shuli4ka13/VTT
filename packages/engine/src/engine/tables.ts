@@ -27,6 +27,18 @@ export function rowOf(system: System, tableName: string, input: unknown, forTag?
   return rowsOf(table).find(r => same(r.value, input));
 }
 
+export function rowSays(system: System, table: string, key: unknown, column: string, is: unknown): boolean {
+  const row = rowOf(system, table, key);
+  if (!row) return false;
+  const cell = (row.cells ?? {})[column];
+  return same(cell, is);
+}
+
+export function anyRowSays(system: System, value: unknown, where: { table: string; column: string; is: unknown }): boolean {
+  const keys = Array.isArray(value) ? value : [value];
+  return keys.some(key => rowSays(system, where.table, key, where.column, where.is));
+}
+
 export function lookupCell(
   system: System, tableName: string, input: unknown, column: string, forTag?: string,
 ): unknown {

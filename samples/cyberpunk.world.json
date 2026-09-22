@@ -2179,19 +2179,46 @@
         "rows": [
           {
             "value": "пуля",
-            "label": "пуля"
+            "label": "пуля",
+            "cells": {
+              "armor": "через броню"
+            }
           },
           {
             "value": "холодное",
-            "label": "холодное"
+            "label": "холодное",
+            "cells": {
+              "armor": "через броню"
+            }
           },
           {
             "value": "огонь",
-            "label": "огонь"
+            "label": "огонь",
+            "cells": {
+              "armor": "мимо брони"
+            }
           },
           {
             "value": "яд",
-            "label": "яд"
+            "label": "яд",
+            "cells": {
+              "armor": "мимо брони"
+            }
+          },
+          {
+            "value": "кровотечение",
+            "label": "кровотечение",
+            "cells": {
+              "armor": "мимо брони"
+            }
+          }
+        ],
+        "columns": [
+          {
+            "key": "armor",
+            "label": "Броня",
+            "kind": "choice",
+            "from": "armor_pass"
           }
         ]
       },
@@ -2206,6 +2233,20 @@
           {
             "value": "по голове",
             "label": "по голове"
+          }
+        ]
+      },
+      "armor_pass": {
+        "label": "Как проходит броню",
+        "key": "word",
+        "rows": [
+          {
+            "value": "через броню",
+            "label": "через броню"
+          },
+          {
+            "value": "мимо брони",
+            "label": "мимо брони"
           }
         ]
       }
@@ -2462,7 +2503,7 @@
               "const": 2
             },
             "tags": [
-              "мимо брони"
+              "кровотечение"
             ]
           }
         ]
@@ -2538,9 +2579,9 @@
           "холодное",
           "огонь",
           "яд",
+          "кровотечение",
           "по телу",
-          "по голове",
-          "мимо брони"
+          "по голове"
         ],
         "steps": [
           {
@@ -2555,7 +2596,12 @@
             "breakIf": "less",
             "when": {
               "ref": "event.tags",
-              "has": "по телу"
+              "has": "по телу",
+              "where": {
+                "table": "damage_types",
+                "column": "armor",
+                "is": "через броню"
+              }
             }
           },
           {
@@ -2570,7 +2616,12 @@
             "targetModifiers": false,
             "when": {
               "ref": "event.tags",
-              "has": "по телу"
+              "has": "по телу",
+              "where": {
+                "table": "damage_types",
+                "column": "armor",
+                "is": "через броню"
+              }
             }
           },
           {
@@ -2585,7 +2636,12 @@
             "targetModifiers": false,
             "when": {
               "ref": "event.tags",
-              "has": "по телу"
+              "has": "по телу",
+              "where": {
+                "table": "damage_types",
+                "column": "armor",
+                "is": "через броню"
+              }
             }
           },
           {
@@ -2600,7 +2656,12 @@
             "breakIf": "less",
             "when": {
               "ref": "event.tags",
-              "has": "по голове"
+              "has": "по голове",
+              "where": {
+                "table": "damage_types",
+                "column": "armor",
+                "is": "через броню"
+              }
             }
           },
           {
@@ -2615,7 +2676,12 @@
             },
             "when": {
               "ref": "event.tags",
-              "has": "по голове"
+              "has": "по голове",
+              "where": {
+                "table": "damage_types",
+                "column": "armor",
+                "is": "через броню"
+              }
             }
           },
           {
@@ -2630,7 +2696,12 @@
             "targetModifiers": false,
             "when": {
               "ref": "event.tags",
-              "has": "по голове"
+              "has": "по голове",
+              "where": {
+                "table": "damage_types",
+                "column": "armor",
+                "is": "через броню"
+              }
             }
           },
           {
@@ -2645,7 +2716,12 @@
             "targetModifiers": false,
             "when": {
               "ref": "event.tags",
-              "has": "по голове"
+              "has": "по голове",
+              "where": {
+                "table": "damage_types",
+                "column": "armor",
+                "is": "через броню"
+              }
             }
           },
           {
@@ -2660,7 +2736,11 @@
             "targetModifiers": false,
             "when": {
               "ref": "event.tags",
-              "has": "мимо брони"
+              "where": {
+                "table": "damage_types",
+                "column": "armor",
+                "is": "мимо брони"
+              }
             }
           }
         ]
