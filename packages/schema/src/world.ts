@@ -108,10 +108,12 @@ export const dieConstant = z.object({
 
 export const tableValue = z.union([z.number(), z.string(), z.boolean()]);
 
+export const columnKind = z.enum(['number', 'text', 'expr', 'dice', 'choice', 'effect', 'record', 'tag']);
+
 export const tableColumn = z.object({
   key: z.string().min(1),
   label: z.string().optional(),
-  kind: z.enum(['number', 'text', 'expr', 'dice', 'choice']).optional(),
+  kind: columnKind.optional(),
 
   from: z.string().min(1).optional(),
 });

@@ -1,17 +1,10 @@
+import { kindsFor } from '@vtt/engine/words/kinds';
 import { choiceTables } from '@vtt/engine/model/tables';
 import { freeId } from '../../../store/world.ts';
 import { Card, CardHead, Input, Select, Button, Empty } from '../../../ui/primitives.tsx';
 import type { Effect, System } from '@vtt/schema';
 
-const PARAM_KINDS = [
-  ['dice', 'кости'],
-  ['number', 'число'],
-  ['text', 'слово'],
-  ['expr', 'формула'],
-  ['effect', 'эффект-состояние'],
-  ['choice', 'выбор'],
-  ['tag', 'поле листа'],
-] as const;
+const PARAM_KINDS = kindsFor('param');
 
 
 const PARAM_SIDES = [
@@ -75,7 +68,7 @@ export function ParamsEditor({ effect, system, onEdit }: {
               {String(param.kind) === 'choice' ? (
                 <Select
                   value={String(param.from ?? '')}
-                  options={[['', '— какой словарь —'],
+                  options={[['', '— какая таблица —'],
                     ...choiceTables(system)
                       .map(([key, list]) => [key, list.label || key] as const)] as never}
                   onChange={next => onEdit(draft => {

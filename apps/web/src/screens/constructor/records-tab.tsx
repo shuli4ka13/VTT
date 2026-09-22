@@ -1,3 +1,4 @@
+import { kindsFor } from '@vtt/engine/words/kinds';
 import { choiceTables } from '@vtt/engine/model/tables';
 import { useWorld, freeId } from '../../store/world.ts';
 import { ModifiersEditor } from './modifiers.tsx';
@@ -19,15 +20,7 @@ const BASIS = [
   ['action', 'действие — учат и применяют'],
 ] as const;
 
-const PROP_KINDS = [
-  ['dice', 'кость'],
-  ['number', 'число'],
-  ['text', 'текст'],
-  ['choice', 'выбор из словаря'],
-  ['expr', 'формула'],
-  ['effect', 'ссылка на эффект'],
-  ['record', 'ссылка на запись'],
-] as const;
+const PROP_KINDS = kindsFor('prop');
 
 const ON_SHEET = [
   ['sheet', 'на лист — игрок видит'],
@@ -256,10 +249,10 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
                   />
                 </Field>
                 {String(prop.kind) === 'choice' ? (
-                  <Field label="Из какого словаря" needed={!prop.from}>
+                  <Field label="Из какой таблицы" needed={!prop.from}>
                     <Select
                       value={String(prop.from ?? '')}
-                      options={[['', '— какой словарь —'],
+                      options={[['', '— какая таблица —'],
                         ...choiceTables(system)
                           .map(([key, list]) => [key, list.label || key] as const)] as never}
                       onChange={next => edit(draft => {

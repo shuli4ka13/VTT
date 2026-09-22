@@ -1,3 +1,4 @@
+import { kindsFor } from '@vtt/engine/words/kinds';
 import { Card, CardHead, Field, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Chip, Empty } from '../../../ui/primitives.tsx';
 import { FormulaChips } from '../../../ui/formula-chips.tsx';
 import { DiceProp } from '../../../ui/dice-prop.tsx';
@@ -24,13 +25,7 @@ const blankRow = (key: TableKey): TableRow =>
     : key === 'number' ? { value: 0, label: '', cells: {} }
       : { value: '', label: '', cells: {} });
 
-const COLUMN_KINDS = [
-  ['number', 'число'],
-  ['text', 'слово'],
-  ['expr', 'формула'],
-  ['dice', 'кость'],
-  ['choice', 'выбор из таблицы'],
-] as const;
+const COLUMN_KINDS = kindsFor('table');
 
 const parseFree = (text: string): number | string | boolean =>
   /^-?\d+(\.\d+)?$/.test(text) ? Number(text)
@@ -322,6 +317,25 @@ function Cell({ column, value, system, onChange }: {
   }
   if (kind === 'dice') {
     return <DiceProp value={String(value ?? '')} onChange={onChange} />;
+  }
+  if (kind === 'effect') {
+    return (
+      <Select
+        value={String(value ?? '')}
+        options={[['', '— какой эффект —'],
+          ...Object.entries(system.effects ?? {}).map(([key, e]) => [key, e.label || key] as const)] as never}
+        onChange={next => onChange(next)}
+      />
+    );
+  }
+  if (kind === 'tag') {
+    return (
+      <Select
+        value={String(value ?? '')}
+        options={[['', '— какое поле —'], ...system.fields.map(f => [f.tag, f.label] as const)] as never}
+        onChange={next => onChange(next)}
+      />
+    );
   }
   if (kind === 'choice') {
     const options = listOf(system, column.from) ?? [];
