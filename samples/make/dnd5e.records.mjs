@@ -20,10 +20,10 @@ export function records() {
   return {
     weapon: {
       kind: 'item', label: 'Оружие', icon: '⚔', group: 'Снаряжение',
-      hint: 'Меч, рапира, лук — всё сразу. Кость и тип урона свои, а чем бьют выбирается свойством.',
+      hint: 'Меч, рапира, лук — всё сразу. Кость и тип урона свои, а способ атаки выбирается свойством.',
       props: [
         DICE, DAMAGE,
-        prop('wield', 'Чем бьют', 'choice', { from: 'wield' }),
+        prop('wield', 'Способ атаки', 'choice', { from: 'wield' }),
         prop('range', 'Дистанция', 'text', { optional: true }),
       ],
       bindings: [bind('Удар', 'strike', {

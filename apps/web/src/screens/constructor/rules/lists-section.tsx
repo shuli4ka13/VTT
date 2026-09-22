@@ -44,7 +44,11 @@ export function ListsSection({ system }: { system: System }) {
                   onChange={next => edit(draft => { draft.label = next; })}
                 />
               }
-              sub={users.length ? `берут отсюда: ${users.join(', ')}` : 'пока никто не берёт'}
+              sub={users.length
+                ? (users.length > 3
+                  ? `берут отсюда: ${users.slice(0, 3).join(', ')} и ещё ${users.length - 3}`
+                  : `берут отсюда: ${users.join(', ')}`)
+                : 'пока никто не берёт'}
               actions={
                 <DangerButton size="sm" onConfirm={() => editSystem(draft => { delete draft.lists?.[key]; })}>
                   Удалить

@@ -17,11 +17,20 @@ export function tagsOf(system: System, effect: Effect): string[] {
 
 export function listUsers(system: System, key: string): string[] {
   const out: string[] = [];
+  const from = (thing: unknown): string | undefined => (thing as { from?: string }).from;
   for (const field of system.fields ?? []) {
     if (field.optionsFrom === key) out.push(`поле «${field.label}»`);
   }
-  for (const effect of Object.values(system.effects ?? {})) {
-    if (effect.tagsFrom === key) out.push(`эффект «${effect.label ?? ''}»`);
+  for (const [id, effect] of Object.entries(system.effects ?? {})) {
+    if (effect.tagsFrom === key) out.push(`эффект «${effect.label ?? id}»`);
+    for (const param of (effect.params ?? [])) {
+      if (from(param) === key) out.push(`«${param.label ?? param.key}» у эффекта «${effect.label ?? id}»`);
+    }
+  }
+  for (const [rk, kind] of Object.entries(system.records ?? {})) {
+    for (const prop of (kind.props ?? [])) {
+      if (from(prop) === key) out.push(`свойство «${prop.label ?? prop.key}» у типа «${kind.label ?? rk}»`);
+    }
   }
   return out;
 }

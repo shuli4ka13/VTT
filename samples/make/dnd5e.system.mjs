@@ -45,16 +45,16 @@ export const lists = () => ({
     values: DAMAGE_TAGS.map(tag => ({ value: tag, label: tag })),
   },
   wield: {
-    label: 'Чем бьют',
+    label: 'Способ атаки',
     of: 'text',
     values: [
-      { value: 'melee', label: 'силой — ближний бой' },
-      { value: 'finesse', label: 'лучшим из силы и ловкости' },
-      { value: 'ranged', label: 'ловкостью — дальний бой' },
+      { value: 'melee', label: 'ближний бой — Сила' },
+      { value: 'finesse', label: 'фехтовальное — Сила или Ловкость' },
+      { value: 'ranged', label: 'дальний бой — Ловкость' },
     ],
   },
   taken: {
-    label: 'Сколько доходит',
+    label: 'Стойкость к урону',
     of: 'number',
     values: [
       { value: 0, label: 'иммунитет' }, { value: 0.5, label: 'сопротивление' },
@@ -174,7 +174,7 @@ export function fields() {
   }
 
   for (const [tag, damage] of TAKEN) {
-    out.push(stored(tag, `${damage[0].toUpperCase()}${damage.slice(1)}`, 'Что доходит', 'number', 1, {
+    out.push(stored(tag, `${damage[0].toUpperCase()}${damage.slice(1)}`, 'Стойкость к урону', 'number', 1, {
       control: 'choice', optionsFrom: 'taken',
     }));
   }
@@ -242,7 +242,7 @@ export function tables() {
     },
   };
   out.wield_attack = {
-    label: 'Бонус атаки по тому, чем бьют',
+    label: 'Бонус атаки по способу атаки',
     cases: [
       { when: 'melee', value: '@melee_attack' },
       { when: 'finesse', value: '@finesse_attack' },
@@ -250,7 +250,7 @@ export function tables() {
     ],
   };
   out.wield_damage = {
-    label: 'Прибавка к урону по тому, чем бьют',
+    label: 'Прибавка к урону по способу атаки',
     cases: [
       { when: 'melee', value: '@melee_damage' },
       { when: 'finesse', value: '@finesse_damage' },

@@ -1,5 +1,6 @@
-import { group, test, eq } from './harness.ts';
+import { group, test, eq, ok } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
+import { listUsers } from '../src/model/lists.ts';
 import type { System, Compendium } from '../src/model/types.ts';
 
 type Loose = Record<string, unknown>;
@@ -102,5 +103,25 @@ group('словарь — одно место правды', () => {
       lists: {},
     } as unknown as System;
     eq(troublesOf(кривая).length, 2, troublesOf(кривая).join(' | '));
+  });
+});
+
+group('словарь знает, кто им пользуется', () => {
+  const dnd = PLAYABLE_WORLDS[0]!.system as System;
+
+  test('словарь, который берёт свойство записи, не считается ничейным', () => {
+    const кто = listUsers(dnd, 'wield');
+    ok(кто.length > 0, 'у «Способа атаки» должны быть потребители');
+    ok(кто.some(с => с.includes('Оружие')), кто.join(' | '));
+  });
+
+  test('видны и метки эффекта, и потребности, и свойства', () => {
+    const кто = listUsers(dnd, 'damage_types');
+    ok(кто.some(с => с.includes('Урон')), `метки эффекта: ${кто.join(' | ')}`);
+    ok(кто.some(с => с.includes('Тип урона')), `потребности и свойства: ${кто.join(' | ')}`);
+  });
+
+  test('ничейный словарь так и остаётся ничейным', () => {
+    eq(listUsers(dnd, 'нет_такого').length, 0);
   });
 });

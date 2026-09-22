@@ -1792,7 +1792,7 @@
       {
         "tag": "taken_0",
         "label": "Рубящий",
-        "group": "Что доходит",
+        "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -1804,7 +1804,7 @@
       {
         "tag": "taken_1",
         "label": "Колющий",
-        "group": "Что доходит",
+        "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -1816,7 +1816,7 @@
       {
         "tag": "taken_2",
         "label": "Дробящий",
-        "group": "Что доходит",
+        "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -1828,7 +1828,7 @@
       {
         "tag": "taken_3",
         "label": "Огонь",
-        "group": "Что доходит",
+        "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -1840,7 +1840,7 @@
       {
         "tag": "taken_4",
         "label": "Холод",
-        "group": "Что доходит",
+        "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -1852,7 +1852,7 @@
       {
         "tag": "taken_5",
         "label": "Молния",
-        "group": "Что доходит",
+        "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -1864,7 +1864,7 @@
       {
         "tag": "taken_6",
         "label": "Гром",
-        "group": "Что доходит",
+        "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -1876,7 +1876,7 @@
       {
         "tag": "taken_7",
         "label": "Кислота",
-        "group": "Что доходит",
+        "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -1888,7 +1888,7 @@
       {
         "tag": "taken_8",
         "label": "Яд",
-        "group": "Что доходит",
+        "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -1900,7 +1900,7 @@
       {
         "tag": "taken_9",
         "label": "Некротический",
-        "group": "Что доходит",
+        "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -1912,7 +1912,7 @@
       {
         "tag": "taken_10",
         "label": "Излучение",
-        "group": "Что доходит",
+        "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -1924,7 +1924,7 @@
       {
         "tag": "taken_11",
         "label": "Психический",
-        "group": "Что доходит",
+        "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -1936,7 +1936,7 @@
       {
         "tag": "taken_12",
         "label": "Силовой",
-        "group": "Что доходит",
+        "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -2118,7 +2118,7 @@
         ]
       },
       "wield_attack": {
-        "label": "Бонус атаки по тому, чем бьют",
+        "label": "Бонус атаки по способу атаки",
         "cases": [
           {
             "when": "melee",
@@ -2135,7 +2135,7 @@
         ]
       },
       "wield_damage": {
-        "label": "Прибавка к урону по тому, чем бьют",
+        "label": "Прибавка к урону по способу атаки",
         "cases": [
           {
             "when": "melee",
@@ -3333,25 +3333,25 @@
         ]
       },
       "wield": {
-        "label": "Чем бьют",
+        "label": "Способ атаки",
         "of": "text",
         "values": [
           {
             "value": "melee",
-            "label": "силой — ближний бой"
+            "label": "ближний бой — Сила"
           },
           {
             "value": "finesse",
-            "label": "лучшим из силы и ловкости"
+            "label": "фехтовальное — Сила или Ловкость"
           },
           {
             "value": "ranged",
-            "label": "ловкостью — дальний бой"
+            "label": "дальний бой — Ловкость"
           }
         ]
       },
       "taken": {
-        "label": "Сколько доходит",
+        "label": "Стойкость к урону",
         "of": "number",
         "values": [
           {
@@ -8107,7 +8107,7 @@
         "label": "Оружие",
         "icon": "⚔",
         "group": "Снаряжение",
-        "hint": "Меч, рапира, лук — всё сразу. Кость и тип урона свои, а чем бьют выбирается свойством.",
+        "hint": "Меч, рапира, лук — всё сразу. Кость и тип урона свои, а способ атаки выбирается свойством.",
         "props": [
           {
             "key": "damage_dice",
@@ -8122,7 +8122,7 @@
           },
           {
             "key": "wield",
-            "label": "Чем бьют",
+            "label": "Способ атаки",
             "kind": "choice",
             "from": "wield"
           },
