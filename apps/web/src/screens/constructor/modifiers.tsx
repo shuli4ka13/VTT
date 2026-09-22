@@ -4,6 +4,8 @@ import { Card, CardHead, Field, Input, Select, Button, Empty } from '../../ui/pr
 import { FormulaInput } from '../../ui/formula.tsx';
 import { targets } from '@vtt/engine/engine/targets';
 import { installMethod, recipesToInstall } from '@vtt/engine/model/advantage-methods';
+import { tagsOf, listOf as rowsFrom } from '@vtt/engine/model/lists';
+import { TagPick, type Tag } from './tag-pick.tsx';
 
 const OPS = [
   ['add', 'прибавить'],
@@ -14,6 +16,8 @@ const OPS = [
 ] as const;
 
 const RECIPE = 'recipe:';
+
+type Loose = Record<string, unknown>;
 
 const STACKING = [
   ['sum', 'складываются'],
@@ -33,10 +37,8 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
   editSystem?: (change: (draft: System) => void) => void;
 }) {
   const all = targets(system) as { tag: string; label: string; kind: string; group?: string }[];
-  const valueTargets = all.filter(t => t.kind === 'value' || t.kind === 'incoming' || t.kind === 'event');
+  const valueTargets = all.filter(t => t.kind === 'value' || t.kind === 'incoming' || t.kind === 'event' || t.kind === 'cell');
   const isEvent = (tag: string) => all.find(t => t.tag === tag)?.kind === 'event';
-  const listOf = (raw: unknown) => (Array.isArray(raw) ? raw.map(String).join(', ') : '');
-  const parseList = (text: string) => text.split(',').map(s => s.trim()).filter(Boolean);
   const rollTargets = all.filter(t => t.kind === 'roll');
   const edits = Object.entries(system.roll_edits ?? {});
   const recipes = editSystem ? recipesToInstall(system) : [];
@@ -129,28 +131,11 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
                 />
               </Field>
               {isEvent(modifier.target) ? (
-                <>
-                  <Field label="Если тег" hint="Через запятую. Пусто — любой.">
-                    <Input
-                      value={listOf((modifier as { tags?: unknown }).tags)}
-                      onChange={text => onEdit(draft => {
-                        const m = draft[index] as { tags?: string[] };
-                        const list = parseList(text);
-                        if (list.length) m.tags = list; else delete m.tags;
-                      })}
-                    />
-                  </Field>
-                  <Field label="Кроме тега">
-                    <Input
-                      value={listOf((modifier as { notTags?: unknown }).notTags)}
-                      onChange={text => onEdit(draft => {
-                        const m = draft[index] as { notTags?: string[] };
-                        const list = parseList(text);
-                        if (list.length) m.notTags = list; else delete m.notTags;
-                      })}
-                    />
-                  </Field>
-                </>
+                <EventCondition
+                  system={system}
+                  modifier={modifier}
+                  onChange={change => onEdit(draft => { change(draft[index] as Loose); })}
+                />
               ) : null}
             </div>
           ) : (
@@ -213,5 +198,67 @@ function DraftValue({ value, onCommit }: { value: unknown; onCommit: (next: unkn
       }}
       onBlur={() => setDraft(null)}
     />
+  );
+}
+
+function EventCondition({ system, modifier, onChange }: {
+  system: System;
+  modifier: Modifier;
+  onChange: (change: (draft: Loose) => void) => void;
+}) {
+  const m = modifier as Loose;
+  const eventId = String(m.target).slice('event:'.length);
+  const effect = system.effects[eventId];
+  const known = effect ? tagsOf(system, effect) : [];
+  const tagsTable = effect?.tagsFrom ? system.tables?.[effect.tagsFrom] : undefined;
+  const columns = tagsTable?.columns ?? [];
+  const where = m.where as { table: string; column: string; is: unknown } | undefined;
+  const column = columns.find(c => c.key === where?.column);
+  const values = column?.kind === 'choice' ? (rowsFrom(system, column.from) ?? []) : [];
+  const words = (raw: unknown): Tag[] => (Array.isArray(raw) ? raw.map(String) : []);
+
+  return (
+    <>
+      <Field label="По меткам" hint="Пусто — по любой метке.">
+        <TagPick
+          value={words(m.tags)} known={known} fromRecord={[]}
+          onChange={next => onChange(d => { const list = next.map(String); if (list.length) d.tags = list; else delete d.tags; })}
+        />
+      </Field>
+      <Field label="Кроме меток">
+        <TagPick
+          value={words(m.notTags)} known={known} fromRecord={[]}
+          onChange={next => onChange(d => { const list = next.map(String); if (list.length) d.notTags = list; else delete d.notTags; })}
+        />
+      </Field>
+      {columns.length ? (
+        <Field label="Где у метки" hint={`Смотрит в «${tagsTable?.label || effect?.tagsFrom}»: один факт вместо перечня меток.`}>
+          <div className="inline inline--tight">
+            <Select
+              value={where?.column ?? ''}
+              options={[['', '— без условия —'], ...columns.map(c => [c.key, c.label || c.key] as const)] as never}
+              onChange={next => onChange(d => {
+                if (!next) { delete d.where; return; }
+                d.where = { table: String(effect?.tagsFrom), column: next, is: '' };
+              })}
+            />
+            {where ? (
+              <>
+                <span className="faint">=</span>
+                {values.length ? (
+                  <Select
+                    value={String(where.is ?? '')}
+                    options={[['', '— что —'], ...values.map(o => [String(o.value), o.label] as const)] as never}
+                    onChange={next => onChange(d => { (d.where as Loose).is = next; })}
+                  />
+                ) : (
+                  <Input value={String(where.is ?? '')} onChange={next => onChange(d => { (d.where as Loose).is = next; })} />
+                )}
+              </>
+            ) : null}
+          </div>
+        </Field>
+      ) : null}
+    </>
   );
 }

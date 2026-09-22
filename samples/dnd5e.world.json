@@ -3551,65 +3551,133 @@
           }
         ]
       },
-      "damage_types": {
-        "label": "Типы урона",
+      "damage_nature": {
+        "label": "Природа урона",
         "key": "word",
         "rows": [
           {
+            "value": "физический",
+            "label": "физический"
+          },
+          {
+            "value": "стихийный",
+            "label": "стихийный"
+          },
+          {
+            "value": "прочий",
+            "label": "прочий"
+          }
+        ]
+      },
+      "damage_types": {
+        "label": "Типы урона",
+        "key": "word",
+        "columns": [
+          {
+            "key": "nature",
+            "label": "Природа",
+            "kind": "choice",
+            "from": "damage_nature"
+          }
+        ],
+        "rows": [
+          {
             "value": "рубящий",
-            "label": "рубящий"
+            "label": "рубящий",
+            "cells": {
+              "nature": "физический"
+            }
           },
           {
             "value": "колющий",
-            "label": "колющий"
+            "label": "колющий",
+            "cells": {
+              "nature": "физический"
+            }
           },
           {
             "value": "дробящий",
-            "label": "дробящий"
+            "label": "дробящий",
+            "cells": {
+              "nature": "физический"
+            }
           },
           {
             "value": "огонь",
-            "label": "огонь"
+            "label": "огонь",
+            "cells": {
+              "nature": "стихийный"
+            }
           },
           {
             "value": "холод",
-            "label": "холод"
+            "label": "холод",
+            "cells": {
+              "nature": "стихийный"
+            }
           },
           {
             "value": "молния",
-            "label": "молния"
+            "label": "молния",
+            "cells": {
+              "nature": "стихийный"
+            }
           },
           {
             "value": "гром",
-            "label": "гром"
+            "label": "гром",
+            "cells": {
+              "nature": "стихийный"
+            }
           },
           {
             "value": "кислота",
-            "label": "кислота"
+            "label": "кислота",
+            "cells": {
+              "nature": "стихийный"
+            }
           },
           {
             "value": "яд",
-            "label": "яд"
+            "label": "яд",
+            "cells": {
+              "nature": "прочий"
+            }
           },
           {
             "value": "некротический",
-            "label": "некротический"
+            "label": "некротический",
+            "cells": {
+              "nature": "прочий"
+            }
           },
           {
             "value": "излучение",
-            "label": "излучение"
+            "label": "излучение",
+            "cells": {
+              "nature": "прочий"
+            }
           },
           {
             "value": "психический",
-            "label": "психический"
+            "label": "психический",
+            "cells": {
+              "nature": "прочий"
+            }
           },
           {
             "value": "силовой",
-            "label": "силовой"
+            "label": "силовой",
+            "cells": {
+              "nature": "прочий"
+            }
           },
           {
             "value": "магический",
-            "label": "магический"
+            "label": "магический",
+            "cells": {
+              "nature": "прочий"
+            }
           }
         ]
       },
@@ -6373,11 +6441,11 @@
             "value": 0.5,
             "stacking": "max",
             "condition": null,
-            "tags": [
-              "рубящий",
-              "колющий",
-              "дробящий"
-            ]
+            "where": {
+              "table": "damage_types",
+              "column": "nature",
+              "is": "физический"
+            }
           },
           {
             "kind": "roll",
@@ -6733,11 +6801,11 @@
             "value": 0.5,
             "stacking": "max",
             "condition": null,
-            "tags": [
-              "рубящий",
-              "колющий",
-              "дробящий"
-            ],
+            "where": {
+              "table": "damage_types",
+              "column": "nature",
+              "is": "физический"
+            },
             "notTags": [
               "магический"
             ]

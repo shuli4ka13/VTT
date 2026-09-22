@@ -40,8 +40,23 @@ export const DAMAGE_TAGS = [
 
 const words = (label, key, rows) => ({ label, key, rows });
 
+const NATURE = {
+  рубящий: 'физический', колющий: 'физический', дробящий: 'физический',
+  огонь: 'стихийный', холод: 'стихийный', молния: 'стихийный', гром: 'стихийный', кислота: 'стихийный',
+  яд: 'прочий', некротический: 'прочий', излучение: 'прочий', психический: 'прочий', силовой: 'прочий', магический: 'прочий',
+};
+
 export const lists = () => ({
-  damage_types: words('Типы урона', 'word', DAMAGE_TAGS.map(tag => ({ value: tag, label: tag }))),
+  damage_nature: words('Природа урона', 'word', [
+    { value: 'физический', label: 'физический' },
+    { value: 'стихийный', label: 'стихийный' },
+    { value: 'прочий', label: 'прочий' },
+  ]),
+  damage_types: {
+    label: 'Типы урона', key: 'word',
+    columns: [{ key: 'nature', label: 'Природа', kind: 'choice', from: 'damage_nature' }],
+    rows: DAMAGE_TAGS.map(tag => ({ value: tag, label: tag, cells: { nature: NATURE[tag] } })),
+  },
   wield: {
     label: 'Способ атаки', key: 'word',
     columns: [

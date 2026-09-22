@@ -159,6 +159,12 @@ export const valueModifier = z.object({
 
   tags: z.array(z.string().min(1)).optional(),
   notTags: z.array(z.string().min(1)).optional(),
+
+  where: z.object({
+    table: z.string().min(1),
+    column: z.string().min(1),
+    is: tableValue,
+  }).optional(),
 }).passthrough();
 
 export const rollModifier = z.object({

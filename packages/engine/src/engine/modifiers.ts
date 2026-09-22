@@ -2,6 +2,7 @@ import { compile } from '../formula/index.ts';
 import { assertTarget, incomingTagOf, ANY_ROLL } from './targets.ts';
 import { roomEffects, wornEffects, activationOf } from './effects.ts';
 import { EngineError } from './errors.ts';
+import { rowOf } from './tables.ts';
 import type { System, Sheet, Compendium, Modifier, RollEdit } from '../model/types.ts';
 import type { Pass } from './calc.ts';
 
@@ -91,7 +92,7 @@ export function applyValueModifiers(
   const mods = pass.modifiers.value.get(tag);
   if (!mods || mods.length === 0) return base;
 
-  const active = mods.filter(m => conditionHolds(m, pass) && tagsMatch(m, context.tags ?? []));
+  const active = mods.filter(m => conditionHolds(m, pass) && tagsMatch(m, context.tags ?? [], pass.system));
   if (active.length === 0) return base;
 
   let value = base;
@@ -183,12 +184,21 @@ export function claimedModifiers(system: System, keys: string[], rollTag: string
   });
 }
 
-function tagsMatch(mod: SourcedModifier, tags: string[]): boolean {
+function tagsMatch(mod: SourcedModifier, tags: string[], system: System): boolean {
   const want = (mod as { tags?: string[] }).tags;
   const avoid = (mod as { notTags?: string[] }).notTags;
+  const where = (mod as { where?: { table: string; column: string; is: unknown } }).where;
   if (want?.length && !want.some(t => tags.includes(t))) return false;
   if (avoid?.length && avoid.some(t => tags.includes(t))) return false;
+  if (where && !tags.some(t => rowSays(system, where.table, t, where.column, where.is))) return false;
   return true;
+}
+
+function rowSays(system: System, table: string, key: string, column: string, is: unknown): boolean {
+  const row = rowOf(system, table, key);
+  if (!row) return false;
+  const cell = (row.cells ?? {})[column];
+  return cell === is || (cell !== undefined && cell !== null && String(cell) === String(is));
 }
 
 function conditionHolds(mod: SourcedModifier, pass: Pass): boolean {

@@ -62,6 +62,12 @@ const value = (target, op, amount, extra = {}) => ({
 const resist = (tags, notTags) => ({
   ...value('event:damage', 'mul', 0.5, { ...(tags ? { tags } : {}), ...(notTags ? { notTags } : {}) }), stacking: 'max',
 });
+const resistNature = (nature, notTags) => ({
+  ...value('event:damage', 'mul', 0.5, {
+    where: { table: 'damage_types', column: 'nature', is: nature }, ...(notTags ? { notTags } : {}),
+  }),
+  stacking: 'max',
+});
 
 const autoFailBody = [roll('check:str_save', 'auto_fail'), roll('check:dex_save', 'auto_fail')];
 const UNTIL_MY_TURN = { kind: 'turns', max: 1, ends: 'turn-start' };
@@ -453,7 +459,7 @@ function conditions() {
     raging: passive('В ярости', 'Урон рукопашным оружием выше, сопротивление рубящему, колющему и дробящему, преимущество на Силу.',
       [
         value('cell:wield.melee.damage', 'add', { expr: '@rage_damage' }),
-        resist(['рубящий', 'колющий', 'дробящий']),
+        resistNature('физический'),
         roll('check:athletics', 'advantage'), roll('check:str_save', 'advantage'), roll('check:str_mod', 'advantage'),
       ], { kind: 'rounds', max: 10 }),
     shield_up: passive('Под щитом', '+5 к классу брони.', [value('ac', 'add', 5)], UNTIL_MY_TURN),
@@ -479,7 +485,7 @@ function conditions() {
     poison_resistance: passive('Сопротивление яду', 'Урон ядом вдвое меньше.',
       [resist(['яд'])], { kind: 'permanent' }),
     stoneskin: passive('Каменная кожа', 'Немагический рубящий, колющий и дробящий урон вдвое меньше.',
-      [resist(['рубящий', 'колющий', 'дробящий'], ['магический'])], { kind: 'permanent' }),
+      [resistNature('физический', ['магический'])], { kind: 'permanent' }),
     fire_vulnerable: passive('Уязвимость к огню', 'Урон огнём вдвое больше.',
       [value('event:damage', 'mul', 2, { tags: ['огонь'] })], { kind: 'permanent' }),
     poison_immune: passive('Иммунитет к яду', 'Урон ядом не проходит вовсе.',

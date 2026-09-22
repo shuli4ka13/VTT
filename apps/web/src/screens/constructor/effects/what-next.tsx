@@ -32,9 +32,17 @@ function namesInside(system: System, effect: Effect): Map<string, string> {
   return stepNames({ system, effect, earlier });
 }
 
-interface Meddler { by: string; how: string; tags: string[]; each: boolean }
+interface Meddler { by: string; how: string; tags: string[]; each: boolean; where?: string }
 
 const HOW: Record<string, string> = { mul: 'умножает на', set: 'делает равным', add: 'прибавляет' };
+
+function whereText(system: System, raw: unknown): string | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const w = raw as { table?: string; column?: string; is?: unknown };
+  const table = w.table ? system.tables?.[w.table] : undefined;
+  const column = (table?.columns ?? []).find(c => c.key === w.column);
+  return `где ${(column?.label || w.column || '').toLowerCase()} — ${String(w.is ?? '')}`;
+}
 
 export function meddlersOf(system: System, eventId: string): Meddler[] {
   const mark = eventTagOf(eventId);
@@ -47,8 +55,11 @@ export function meddlersOf(system: System, eventId: string): Meddler[] {
       const value = raw ? String(raw.expr ?? raw.const ?? '') : String(m.value ?? '');
       const op = String(m.op ?? 'add');
       const by = effect.label ?? 'правило';
-      const key = `${by}\u0000${op}`;
-      const found = seen.get(key) ?? { by, how: HOW[op] ?? op, tags: [], each: false, values: new Set<string>() };
+      const where = whereText(system, m.where);
+      const key = `${by}\u0000${op}\u0000${where ?? ''}`;
+      const found = seen.get(key) ?? {
+        by, how: HOW[op] ?? op, tags: [], each: false, values: new Set<string>(), ...(where ? { where } : {}),
+      };
       found.values.add(value);
       for (const tag of (Array.isArray(m.tags) ? m.tags : [])) {
         if (!found.tags.includes(String(tag))) found.tags.push(String(tag));
@@ -63,6 +74,7 @@ export function meddlersOf(system: System, eventId: string): Meddler[] {
       how: found.how,
       tags: found.tags,
       each: found.values.size > 1,
+      ...(found.where ? { where: found.where } : {}),
       ...(alone ? { how: `${found.how} ${formulaAsLabels(system, alone)}` } : {}),
     };
   });
@@ -101,13 +113,14 @@ export function WhatNext({ open, onClose, system, eventId, onEdit }: {
               <div key={i} className="inline inline--tight">
                 <Chip>{m.by}</Chip>
                 <span className="faint">{m.each ? `${m.how} своё поле листа` : m.how}</span>
+                {m.where ? <span className="faint">· {m.where}</span> : null}
                 {m.tags.length ? (
                   <span className="faint">
                     {m.tags.length > 6
                       ? `· по меткам: ${m.tags.slice(0, 6).join(', ')} и ещё ${m.tags.length - 6}`
                       : `· по меткам: ${m.tags.join(', ')}`}
                   </span>
-                ) : <span className="faint">· всегда</span>}
+                ) : m.where ? null : <span className="faint">· всегда</span>}
               </div>
             )) : (
               <span className="faint">
