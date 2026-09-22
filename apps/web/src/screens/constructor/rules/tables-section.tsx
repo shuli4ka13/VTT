@@ -8,6 +8,9 @@ import type { UsageIndex } from '../usage.ts';
 import { freeId } from '../../../store/world.ts';
 import { listUsers, listOf } from '@vtt/engine/model/lists';
 import { isRange, keyOf } from '@vtt/engine/model/tables';
+import { rowUsers, renameRow, renameRowInBook } from '@vtt/engine/model/integrity';
+import { useWorld } from '../../../store/world.ts';
+import { useState } from 'react';
 import type { System, Table, TableColumn, TableRow, TableKey } from '@vtt/schema';
 import type { WorldState } from '../../../store/world.ts';
 
@@ -124,7 +127,7 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
 
       <Columns id={id} table={table} system={system} edit={edit} />
 
-      <Rows table={table} system={system} edit={edit} />
+      <Rows id={id} table={table} system={system} edit={edit} editSystem={editSystem} />
 
       {columns.length ? (
         <Field label="Если ничего не совпало" hint="Пусто — движок скажет, что значения не знает.">
@@ -199,11 +202,21 @@ function Columns({ id, table, system, edit }: {
   );
 }
 
-function Rows({ table, system, edit }: {
+function Rows({ id, table, system, edit, editSystem }: {
+  id: string;
   table: Table;
   system: System;
   edit: (change: (draft: Table) => void) => void;
+  editSystem: EditSystem;
 }) {
+  const compendium = useWorld(s => s.compendium);
+  const editCompendium = useWorld(s => s.editCompendium);
+  const rename = (from: unknown, to: unknown) => {
+    editSystem(draft => renameRow(draft, id, from, to));
+    editCompendium(draft => renameRowInBook(system, draft, id, from, to));
+  };
+  const taken = (next: unknown, self: number) =>
+    (table.rows ?? []).some((row, at) => at !== self && String(row.value) === String(next));
   const key = keyOf(table);
   const byRange = key === 'range';
   const rows = table.rows ?? [];
@@ -228,6 +241,8 @@ function Rows({ table, system, edit }: {
         {rows.map((row, i) => (
           <RowCells
             key={i} row={row} at={i} rowKey={key} columns={columns} system={system}
+            users={key === 'range' ? [] : rowUsers(system, id, row.value, compendium).map(u => u.text)}
+            onRename={to => rename(row.value, to)} taken={next => taken(next, i)}
             edit={edit} setCell={setCell}
           />
         ))}
@@ -253,10 +268,13 @@ function Rows({ table, system, edit }: {
   );
 }
 
-function RowCells({ row, at, rowKey, columns, system, edit, setCell }: {
+function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRename, taken }: {
   row: TableRow;
   at: number;
   rowKey: TableKey;
+  users: string[];
+  onRename: (to: unknown) => void;
+  taken: (next: unknown) => boolean;
   columns: TableColumn[];
   system: System;
   edit: (change: (draft: Table) => void) => void;
@@ -273,16 +291,7 @@ function RowCells({ row, at, rowKey, columns, system, edit, setCell }: {
         </>
       ) : (
         <>
-          {rowKey === 'number' ? (
-            <NumInput value={Number(row.value ?? 0)} onCommit={n => set(r => { r.value = n; })} />
-          ) : (
-            <Input
-              value={row.value === undefined ? '' : String(row.value)}
-              placeholder="слово"
-              mono
-              onChange={next => set(r => { r.value = next; })}
-            />
-          )}
+          <KeyInput value={row.value} numeric={rowKey === 'number'} taken={taken} onRename={onRename} />
           <Input
             value={row.label ?? ''}
             placeholder="что видит человек"
@@ -294,8 +303,49 @@ function RowCells({ row, at, rowKey, columns, system, edit, setCell }: {
         <Cell key={column.key} column={column} value={cells[column.key]} system={system}
           onChange={value => setCell(at, column.key, value)} />
       ))}
-      <Button size="sm" variant="danger" onClick={() => edit(draft => { draft.rows?.splice(at, 1); })}>×</Button>
+      {users.length ? (
+        <Button size="sm" variant="danger" disabled title={`строку используют: ${users.slice(0, 4).join('; ')}${users.length > 4 ? ` и ещё ${users.length - 4}` : ''}`}>×</Button>
+      ) : (
+        <Button size="sm" variant="danger" onClick={() => edit(draft => { draft.rows?.splice(at, 1); })}>×</Button>
+      )}
     </>
+  );
+}
+
+function KeyInput({ value, numeric, taken, onRename }: {
+  value: unknown;
+  numeric: boolean;
+  taken: (next: unknown) => boolean;
+  onRename: (next: unknown) => void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const [trouble, setTrouble] = useState<string | null>(null);
+  const shown = draft ?? (value === undefined ? '' : String(value));
+
+  const commit = () => {
+    if (draft === null) return;
+    const next = numeric ? Number(draft) : draft.trim();
+    setDraft(null);
+    if (numeric && (draft.trim() === '' || !Number.isFinite(next as number))) { setTrouble('нужно число'); return; }
+    if (String(next) === String(value ?? '')) { setTrouble(null); return; }
+    if (taken(next)) { setTrouble(`«${String(next)}» уже есть`); return; }
+    setTrouble(null);
+    onRename(next);
+  };
+
+  return (
+    <div className="stack stack--tight">
+      <Input
+        value={shown}
+        mono
+        invalid={Boolean(trouble)}
+        placeholder={numeric ? '0' : 'слово'}
+        onChange={setDraft}
+        onBlur={commit}
+        onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+      />
+      {trouble ? <span className="field__error">{trouble}</span> : null}
+    </div>
   );
 }
 

@@ -2,6 +2,7 @@ import type { System, Compendium, Effect, Step } from './types.ts';
 import { registry } from '../engine/steps/index.ts';
 import { activationOf, calledOf } from '../engine/effects.ts';
 import { basedOn, paramsOf } from './inherit.ts';
+import { danglingRows } from './integrity.ts';
 import { TABS, STEP } from '../words/glossary.ts';
 import {
   referencesOf, declaredOf, chainRefs, listenerOf,
@@ -318,6 +319,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...cycleProblems(system));
   out.push(...paramProblems(system));
   out.push(...orphanProblems(system, compendium));
+  out.push(...danglingRows(system, compendium).map(d => ({ where: d.where, level: 'error' as const, text: d.text })));
   return out;
 }
 
