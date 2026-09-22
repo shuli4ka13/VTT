@@ -4,7 +4,7 @@ import { Card, CardHead, Field, Input, NumInput, Button, DangerButton, Fold, Sel
 import { FormulaChips } from '../../../ui/formula-chips.tsx';
 import { DiceProp } from '../../../ui/dice-prop.tsx';
 import { newTable } from '../factory.ts';
-import { inUse } from '../usage.ts';
+import { inUse, usersOf } from '../usage.ts';
 import type { UsageIndex } from '../usage.ts';
 import { freeId } from '../../../store/world.ts';
 import { listUsers, listOf } from '@vtt/engine/model/lists';
@@ -77,7 +77,7 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
   const byRange = isRange(table);
   const rows = table.rows ?? [];
   const columns = table.columns ?? [];
-  const users = listUsers(system, id);
+  const users = [...new Set([...listUsers(system, id), ...usersOf(usage, 'table', id, system)])];
   const held = users.length > 0 || inUse(usage, 'table', id);
   const broken = byRange && rangesBroken(rows);
 
