@@ -1,3 +1,4 @@
+import { MultiChoice } from '../../ui/multi-choice.tsx';
 import { TABS } from '../../words.ts';
 import { listOf } from '@vtt/engine/model/lists';
 import { useWorld, freeId, randomTag } from '../../store/world.ts';
@@ -180,7 +181,8 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
                 key={prop.key}
                 label={prop.label ?? prop.key}
                 needed={mustFill.has(prop.key)
-                  && (record.props?.[prop.key] === undefined || record.props[prop.key] === '')}
+                  && (record.props?.[prop.key] === undefined || record.props[prop.key] === ''
+                    || (Array.isArray(record.props[prop.key]) && !(record.props[prop.key] as unknown[]).length))}
               >
                 {String(prop.kind) === 'effect' ? (
                   <Select
@@ -198,6 +200,12 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
                       ...[...(compendium.items ?? []), ...(compendium.actions ?? [])]
                         .filter(other => other.id !== record.id)
                         .map(other => [other.id, other.label ?? other.id] as const)] as never}
+                    onChange={next => edit(draft => { (draft.props ??= {})[prop.key] = next; })}
+                  />
+                ) : String(prop.kind) === 'choice' && prop.many ? (
+                  <MultiChoice
+                    value={record.props?.[prop.key]}
+                    options={listOf(system, prop.from) ?? []}
                     onChange={next => edit(draft => { (draft.props ??= {})[prop.key] = next; })}
                   />
                 ) : String(prop.kind) === 'choice' ? (

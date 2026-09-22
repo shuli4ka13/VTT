@@ -12,6 +12,16 @@ const same = (a: unknown, b: unknown): boolean =>
 const hasRow = (system: System, table: string, key: unknown): boolean =>
   rowsOf(system.tables?.[table]).some(row => same(row.value, key));
 
+const holds = (value: unknown, key: unknown): boolean =>
+  (Array.isArray(value) ? value.some(item => same(item, key)) : same(value, key));
+
+const missing = (system: System, table: string, value: unknown): unknown[] =>
+  (Array.isArray(value) ? value : [value])
+    .filter(item => item !== undefined && item !== '' && !hasRow(system, table, item));
+
+const swap = (value: unknown, from: unknown, to: unknown): unknown =>
+  (Array.isArray(value) ? value.map(item => (same(item, from) ? to : item)) : (same(value, from) ? to : value));
+
 const tagsTableOf = (system: System, target: unknown): string | undefined => {
   if (typeof target !== 'string' || !target.startsWith('event:')) return undefined;
   return system.effects[target.slice('event:'.length)]?.tagsFrom;
@@ -45,7 +55,7 @@ export function rowUsers(system: System, table: string, key: unknown, compendium
     for (const column of (other.columns ?? [])) {
       if (column.kind !== 'choice' || column.from !== table) continue;
       for (const row of rowsOf(other)) {
-        if (same((row.cells ?? {})[column.key], key)) {
+        if (holds((row.cells ?? {})[column.key], key)) {
           out.push({
             where: { tab: 'rules', section: 'tables', key: id },
             text: `таблица «${other.label || id}», строка «${row.label || String(row.value ?? `${row.from}–${row.to}`)}»`,
@@ -74,7 +84,7 @@ export function rowUsers(system: System, table: string, key: unknown, compendium
     for (const record of [...(compendium?.items ?? []), ...(compendium?.actions ?? [])]) {
       if (record.rk !== rk) continue;
       for (const prop of props) {
-        if (same((record.props ?? {})[prop.key], key)) {
+        if (holds((record.props ?? {})[prop.key], key)) {
           out.push({ where: { tab: 'book', record: record.id }, text: `запись «${record.label || record.id}»` });
         }
       }
@@ -104,11 +114,11 @@ export function danglingRows(system: System, compendium?: Compendium): Dangling[
         continue;
       }
       for (const row of rowsOf(table)) {
-        const cell = (row.cells ?? {})[column.key];
-        if (cell === undefined || cell === '' || hasRow(system, column.from, cell)) continue;
+        const lost = missing(system, column.from, (row.cells ?? {})[column.key]);
+        if (!lost.length) continue;
         out.push({
           where,
-          text: `в строке «${row.label || String(row.value)}» колонка «${column.label || column.key}» указывает на «${String(cell)}», а в «${tables[column.from]!.label || column.from}» такой строки нет`,
+          text: `в строке «${row.label || String(row.value)}» колонка «${column.label || column.key}» указывает на «${lost.map(String).join('», «')}», а в «${tables[column.from]!.label || column.from}» такой строки нет`,
         });
       }
     }
@@ -132,11 +142,11 @@ export function danglingRows(system: System, compendium?: Compendium): Dangling[
       if (p.kind !== 'choice' || typeof p.from !== 'string') continue;
       for (const record of [...(compendium?.items ?? []), ...(compendium?.actions ?? [])]) {
         if (record.rk !== rk) continue;
-        const value = (record.props ?? {})[prop.key];
-        if (value === undefined || value === '' || hasRow(system, p.from, value)) continue;
+        const lost = missing(system, p.from, (record.props ?? {})[prop.key]);
+        if (!lost.length) continue;
         out.push({
           where: { tab: 'book', record: record.id },
-          text: `у «${record.label || record.id}» в «${prop.label || prop.key}» стоит «${String(value)}», а в «${tables[p.from]?.label || p.from}» такой строки нет`,
+          text: `у «${record.label || record.id}» в «${prop.label || prop.key}» стоит «${lost.map(String).join('», «')}», а в «${tables[p.from]?.label || p.from}» такой строки нет`,
         });
       }
     }
@@ -155,7 +165,7 @@ export function renameRow(system: System, table: string, from: unknown, to: unkn
     for (const column of (other.columns ?? [])) {
       if (column.kind !== 'choice' || column.from !== table) continue;
       for (const row of rowsOf(other)) {
-        if (row.cells && same(row.cells[column.key], from)) row.cells[column.key] = to;
+        if (row.cells && holds(row.cells[column.key], from)) row.cells[column.key] = swap(row.cells[column.key], from, to);
       }
     }
   }
@@ -186,7 +196,7 @@ export function renameRowInBook(system: System, book: Compendium, table: string,
     for (const record of [...(book.items ?? []), ...(book.actions ?? [])]) {
       if (record.rk !== rk || !record.props) continue;
       for (const prop of props) {
-        if (same(record.props[prop.key], from)) record.props[prop.key] = to;
+        if (holds(record.props[prop.key], from)) record.props[prop.key] = swap(record.props[prop.key], from, to);
       }
     }
   }

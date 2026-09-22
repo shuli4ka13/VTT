@@ -3551,6 +3551,48 @@
           }
         ]
       },
+      "weapon_properties": {
+        "label": "Свойства оружия",
+        "key": "word",
+        "rows": [
+          {
+            "value": "лёгкое",
+            "label": "лёгкое"
+          },
+          {
+            "value": "фехтовальное",
+            "label": "фехтовальное"
+          },
+          {
+            "value": "метательное",
+            "label": "метательное"
+          },
+          {
+            "value": "двуручное",
+            "label": "двуручное"
+          },
+          {
+            "value": "тяжёлое",
+            "label": "тяжёлое"
+          },
+          {
+            "value": "досягаемость",
+            "label": "досягаемость"
+          },
+          {
+            "value": "универсальное",
+            "label": "универсальное"
+          },
+          {
+            "value": "перезарядка",
+            "label": "перезарядка"
+          },
+          {
+            "value": "боеприпасы",
+            "label": "боеприпасы"
+          }
+        ]
+      },
       "damage_nature": {
         "label": "Природа урона",
         "key": "word",
@@ -8627,6 +8669,13 @@
             "from": "wield"
           },
           {
+            "key": "properties",
+            "label": "Свойства",
+            "kind": "choice",
+            "from": "weapon_properties",
+            "many": true
+          },
+          {
             "key": "range",
             "label": "Дистанция",
             "kind": "text",
@@ -9564,7 +9613,10 @@
         "props": {
           "damage_dice": "1d4",
           "damage_type": "дробящий",
-          "wield": "melee"
+          "wield": "melee",
+          "properties": [
+            "лёгкое"
+          ]
         }
       },
       {
@@ -9575,7 +9627,10 @@
         "props": {
           "damage_dice": "1d8",
           "damage_type": "дробящий",
-          "wield": "melee"
+          "wield": "melee",
+          "properties": [
+            "двуручное"
+          ]
         }
       },
       {
@@ -9586,7 +9641,11 @@
         "props": {
           "damage_dice": "1d6",
           "damage_type": "рубящий",
-          "wield": "melee"
+          "wield": "melee",
+          "properties": [
+            "лёгкое",
+            "метательное"
+          ]
         }
       },
       {
@@ -9597,7 +9656,10 @@
         "props": {
           "damage_dice": "1d6",
           "damage_type": "колющий",
-          "wield": "melee"
+          "wield": "melee",
+          "properties": [
+            "универсальное"
+          ]
         }
       },
       {
@@ -9608,7 +9670,8 @@
         "props": {
           "damage_dice": "1d6",
           "damage_type": "дробящий",
-          "wield": "melee"
+          "wield": "melee",
+          "properties": []
         }
       },
       {
@@ -9619,7 +9682,10 @@
         "props": {
           "damage_dice": "1d6",
           "damage_type": "дробящий",
-          "wield": "melee"
+          "wield": "melee",
+          "properties": [
+            "универсальное"
+          ]
         }
       },
       {
@@ -9630,7 +9696,10 @@
         "props": {
           "damage_dice": "1d8",
           "damage_type": "рубящий",
-          "wield": "melee"
+          "wield": "melee",
+          "properties": [
+            "универсальное"
+          ]
         }
       },
       {
@@ -9641,7 +9710,10 @@
         "props": {
           "damage_dice": "1d8",
           "damage_type": "рубящий",
-          "wield": "melee"
+          "wield": "melee",
+          "properties": [
+            "универсальное"
+          ]
         }
       },
       {
@@ -9652,7 +9724,10 @@
         "props": {
           "damage_dice": "1d8",
           "damage_type": "дробящий",
-          "wield": "melee"
+          "wield": "melee",
+          "properties": [
+            "универсальное"
+          ]
         }
       },
       {
@@ -9663,7 +9738,11 @@
         "props": {
           "damage_dice": "2d6",
           "damage_type": "рубящий",
-          "wield": "melee"
+          "wield": "melee",
+          "properties": [
+            "двуручное",
+            "тяжёлое"
+          ]
         }
       },
       {
@@ -9674,7 +9753,11 @@
         "props": {
           "damage_dice": "1d12",
           "damage_type": "рубящий",
-          "wield": "melee"
+          "wield": "melee",
+          "properties": [
+            "двуручное",
+            "тяжёлое"
+          ]
         }
       },
       {
@@ -9685,7 +9768,11 @@
         "props": {
           "damage_dice": "2d6",
           "damage_type": "дробящий",
-          "wield": "melee"
+          "wield": "melee",
+          "properties": [
+            "двуручное",
+            "тяжёлое"
+          ]
         }
       },
       {
@@ -9696,7 +9783,11 @@
         "props": {
           "damage_dice": "1d10",
           "damage_type": "рубящий",
-          "wield": "melee"
+          "wield": "melee",
+          "properties": [
+            "тяжёлое",
+            "досягаемость"
+          ]
         }
       },
       {
@@ -9707,7 +9798,11 @@
         "props": {
           "damage_dice": "1d10",
           "damage_type": "рубящий",
-          "wield": "melee"
+          "wield": "melee",
+          "properties": [
+            "тяжёлое",
+            "досягаемость"
+          ]
         }
       },
       {
@@ -9718,7 +9813,12 @@
         "props": {
           "damage_dice": "1d4",
           "damage_type": "колющий",
-          "wield": "finesse"
+          "wield": "finesse",
+          "properties": [
+            "лёгкое",
+            "фехтовальное",
+            "метательное"
+          ]
         }
       },
       {
@@ -9729,7 +9829,11 @@
         "props": {
           "damage_dice": "1d6",
           "damage_type": "колющий",
-          "wield": "finesse"
+          "wield": "finesse",
+          "properties": [
+            "лёгкое",
+            "фехтовальное"
+          ]
         }
       },
       {
@@ -9740,7 +9844,10 @@
         "props": {
           "damage_dice": "1d8",
           "damage_type": "колющий",
-          "wield": "finesse"
+          "wield": "finesse",
+          "properties": [
+            "фехтовальное"
+          ]
         }
       },
       {
@@ -9751,7 +9858,11 @@
         "props": {
           "damage_dice": "1d6",
           "damage_type": "рубящий",
-          "wield": "finesse"
+          "wield": "finesse",
+          "properties": [
+            "лёгкое",
+            "фехтовальное"
+          ]
         }
       },
       {
@@ -9762,7 +9873,11 @@
         "props": {
           "damage_dice": "1d4",
           "damage_type": "рубящий",
-          "wield": "finesse"
+          "wield": "finesse",
+          "properties": [
+            "фехтовальное",
+            "досягаемость"
+          ]
         }
       },
       {
@@ -9774,7 +9889,11 @@
           "damage_dice": "1d6",
           "damage_type": "колющий",
           "wield": "ranged",
-          "range": "80/320"
+          "range": "80/320",
+          "properties": [
+            "двуручное",
+            "боеприпасы"
+          ]
         }
       },
       {
@@ -9786,7 +9905,12 @@
           "damage_dice": "1d8",
           "damage_type": "колющий",
           "wield": "ranged",
-          "range": "150/600"
+          "range": "150/600",
+          "properties": [
+            "двуручное",
+            "тяжёлое",
+            "боеприпасы"
+          ]
         }
       },
       {
@@ -9798,7 +9922,11 @@
           "damage_dice": "1d8",
           "damage_type": "колющий",
           "wield": "ranged",
-          "range": "80/320"
+          "range": "80/320",
+          "properties": [
+            "перезарядка",
+            "боеприпасы"
+          ]
         }
       },
       {
@@ -9810,7 +9938,12 @@
           "damage_dice": "1d10",
           "damage_type": "колющий",
           "wield": "ranged",
-          "range": "100/400"
+          "range": "100/400",
+          "properties": [
+            "тяжёлое",
+            "перезарядка",
+            "боеприпасы"
+          ]
         }
       },
       {
@@ -9822,7 +9955,12 @@
           "damage_dice": "1d6",
           "damage_type": "колющий",
           "wield": "ranged",
-          "range": "30/120"
+          "range": "30/120",
+          "properties": [
+            "лёгкое",
+            "перезарядка",
+            "боеприпасы"
+          ]
         }
       },
       {
@@ -9834,7 +9972,10 @@
           "damage_dice": "1d4",
           "damage_type": "дробящий",
           "wield": "ranged",
-          "range": "30/120"
+          "range": "30/120",
+          "properties": [
+            "боеприпасы"
+          ]
         }
       },
       {
@@ -9846,7 +9987,11 @@
           "damage_dice": "1d4",
           "damage_type": "колющий",
           "wield": "ranged",
-          "range": "20/60"
+          "range": "20/60",
+          "properties": [
+            "фехтовальное",
+            "метательное"
+          ]
         }
       },
       {
@@ -9857,7 +10002,8 @@
         "props": {
           "damage_dice": "1d8",
           "damage_type": "рубящий",
-          "wield": "melee"
+          "wield": "melee",
+          "properties": []
         },
         "grants": [
           "flame_blade"
@@ -9871,7 +10017,8 @@
         "props": {
           "damage_dice": "1d8",
           "damage_type": "рубящий",
-          "wield": "melee"
+          "wield": "melee",
+          "properties": []
         },
         "modifiers": [
           {

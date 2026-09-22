@@ -5,6 +5,12 @@ import type { CompendiumRecord, Compendium, System } from '@vtt/schema';
 
 export interface RecordLine { label: string; value: string }
 
+function labelsOf(system: System, from: string | undefined, value: unknown): string {
+  const options = listOf(system, from) ?? [];
+  const one = (key: unknown) => options.find(option => String(option.value) === String(key))?.label ?? String(key);
+  return Array.isArray(value) ? value.map(one).join(', ') : one(value);
+}
+
 const recordLabel = (compendium: Compendium | undefined, id: string): string => {
   const found = [...(compendium?.items ?? []), ...(compendium?.actions ?? [])].find(r => r.id === id);
   return found?.label ?? id;
@@ -22,7 +28,7 @@ export function recordDetails(record: CompendiumRecord, system: System, compendi
         : kindOf === 'effect' ? (system.effects[raw]?.label ?? raw)
           : kindOf === 'record' ? recordLabel(compendium, raw)
             : kindOf === 'choice'
-              ? (listOf(system, prop.from)?.find(option => String(option.value) === raw)?.label ?? raw)
+              ? labelsOf(system, prop.from, record.props?.[prop.key])
               : raw;
       return { label: prop.label ?? prop.key, value };
     });

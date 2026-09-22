@@ -1,3 +1,4 @@
+import { MultiChoice } from '../../../ui/multi-choice.tsx';
 import { kindsFor } from '@vtt/engine/words/kinds';
 import { Card, CardHead, Field, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Chip, Empty } from '../../../ui/primitives.tsx';
 import { FormulaChips } from '../../../ui/formula-chips.tsx';
@@ -175,6 +176,17 @@ function Columns({ id, table, system, edit }: {
                 if (next !== 'choice') delete c.from;
               })}
             />
+            {column.kind === 'choice' ? (
+              <Select
+                value={column.many ? 'many' : 'one'}
+                options={[['one', 'одно'], ['many', 'несколько']] as const}
+                onChange={next => edit(draft => {
+                  const c = draft.columns?.[i];
+                  if (!c) return;
+                  if (next === 'many') c.many = true; else delete c.many;
+                })}
+              />
+            ) : null}
             {column.kind === 'choice' ? (
               <Select
                 value={column.from ?? ''}
@@ -386,6 +398,9 @@ function Cell({ column, value, system, onChange }: {
         onChange={next => onChange(next)}
       />
     );
+  }
+  if (kind === 'choice' && column.many) {
+    return <MultiChoice value={value} options={listOf(system, column.from) ?? []} onChange={onChange} />;
   }
   if (kind === 'choice') {
     const options = listOf(system, column.from) ?? [];

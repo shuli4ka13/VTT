@@ -24,6 +24,7 @@ export function records() {
       props: [
         DICE, DAMAGE,
         prop('wield', 'Способ атаки', 'choice', { from: 'wield' }),
+        prop('properties', 'Свойства', 'choice', { from: 'weapon_properties', many: true }),
         prop('range', 'Дистанция', 'text', { optional: true }),
       ],
       bindings: [bind('Удар', 'strike', {

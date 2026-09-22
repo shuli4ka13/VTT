@@ -249,6 +249,19 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
                   />
                 </Field>
                 {String(prop.kind) === 'choice' ? (
+                  <Field label="Сколько значений">
+                    <Select
+                      value={prop.many ? 'many' : 'one'}
+                      options={[['one', 'одно'], ['many', 'несколько']] as const}
+                      onChange={next => edit(draft => {
+                        const target = draft.props?.find(p => p.key === prop.key);
+                        if (!target) return;
+                        if (next === 'many') target.many = true; else delete target.many;
+                      })}
+                    />
+                  </Field>
+                ) : null}
+                {String(prop.kind) === 'choice' ? (
                   <Field label="Из какой таблицы" needed={!prop.from}>
                     <Select
                       value={String(prop.from ?? '')}

@@ -116,6 +116,8 @@ export const tableColumn = z.object({
   kind: columnKind.optional(),
 
   from: z.string().min(1).optional(),
+
+  many: z.boolean().optional(),
 });
 
 export const tableRow = z.object({
@@ -297,6 +299,8 @@ export const recordKind = z.object({
     kind: z.string().optional(),
 
     from: z.string().optional(),
+
+    many: z.boolean().optional(),
     onSheet: z.boolean().optional(),
   }).passthrough()).optional(),
   bindings: z.array(binding).optional(),

@@ -284,6 +284,7 @@ function namedValue(name: string, ctx: RefContext): unknown {
 
   if (ctx.props && name in ctx.props) {
     const own = ctx.props[name];
+    if (Array.isArray(own)) return own;
     if (own !== null && typeof own !== 'object') return own;
   }
 

@@ -2,10 +2,24 @@ const item = (id, rk, label, description, props, extra = {}) => ({ id, rk, label
 const set = (target, amount, stacking = 'override') => ({ kind: 'value', target, op: 'set', value: amount, stacking, condition: null });
 const add = (target, amount) => ({ kind: 'value', target, op: 'add', value: amount, stacking: 'sum', condition: null });
 
+const PROPERTY_WORDS = [
+  ['лёгкое', /лёгк/], ['фехтовальное', /фехтов/], ['метательное', /метател/], ['двуручное', /двуручн/],
+  ['тяжёлое', /тяжёл/], ['досягаемость', /досягаем/], ['универсальное', /универсальн/], ['перезарядка', /перезаряд/],
+];
+
+const propertiesOf = (text, ranged) => {
+  const found = PROPERTY_WORDS.filter(([, rx]) => rx.test(text)).map(([word]) => word);
+  if (ranged && !found.includes('метательное')) found.push('боеприпасы');
+  return found;
+};
+
 function weapons() {
-  const melee = (id, label, dice, type, text) => item(id, 'weapon', label, text, { damage_dice: dice, damage_type: type, wield: 'melee' });
-  const finesse = (id, label, dice, type, text) => item(id, 'weapon', label, text, { damage_dice: dice, damage_type: type, wield: 'finesse' });
-  const ranged = (id, label, dice, type, range, text) => item(id, 'weapon', label, text, { damage_dice: dice, damage_type: type, wield: 'ranged', range });
+  const melee = (id, label, dice, type, text) =>
+    item(id, 'weapon', label, text, { damage_dice: dice, damage_type: type, wield: 'melee', properties: propertiesOf(text, false) });
+  const finesse = (id, label, dice, type, text) =>
+    item(id, 'weapon', label, text, { damage_dice: dice, damage_type: type, wield: 'finesse', properties: propertiesOf(text, false) });
+  const ranged = (id, label, dice, type, range, text) =>
+    item(id, 'weapon', label, text, { damage_dice: dice, damage_type: type, wield: 'ranged', range, properties: propertiesOf(text, true) });
   return [
     melee('club', 'Дубинка', '1d4', 'дробящий', 'Простое оружие, лёгкое.'),
     melee('greatclub', 'Палица', '1d8', 'дробящий', 'Простое оружие, двуручное.'),

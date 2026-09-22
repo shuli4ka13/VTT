@@ -21,6 +21,15 @@ const FUNCTIONS: Record<string, Fn> = {
   abs: { arity: 1, apply: args => Math.abs(args[0]!) },
   min: { arity: '1+', apply: args => Math.min(...args) },
   max: { arity: '1+', apply: args => Math.max(...args) },
+  есть: {
+    arity: 2,
+    apply: () => 0,
+    raw: args => {
+      const list = args[0] as unknown;
+      const wanted = String(args[1]);
+      return Array.isArray(list) ? list.some(item => String(item) === wanted) : String(list) === wanted;
+    },
+  },
   кинуть: {
     arity: '1+',
     apply: args => args[0]!,

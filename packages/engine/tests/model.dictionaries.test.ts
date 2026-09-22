@@ -1,6 +1,7 @@
 import { group, test, eq, ok } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { listUsers } from '../src/model/lists.ts';
+import { danglingRows } from '../src/model/integrity.ts';
 import type { System, Compendium } from '../src/model/types.ts';
 
 type Loose = Record<string, unknown>;
@@ -57,23 +58,8 @@ const unfilledOf = (system: System, book: Compendium): string[] => {
   return out;
 };
 
-const listValuesOf = (system: System, book: Compendium): string[] => {
-  const out: string[] = [];
-  for (const record of [...(book.items ?? []), ...(book.actions ?? [])]) {
-    const kind = system.records?.[String(record.rk)];
-    for (const prop of (kind?.props ?? [])) {
-      const from = (prop as Loose).from as string | undefined;
-      if (prop.kind !== 'choice' || !from) continue;
-      const value = (record.props ?? {})[prop.key];
-      if (value === undefined || value === '') continue;
-      const known = (system.tables?.[from]?.rows ?? []).map(o => String(o.value));
-      if (!known.includes(String(value))) {
-        out.push(`«${record.label}» · ${prop.label}: «${String(value)}» не из словаря «${from}»`);
-      }
-    }
-  }
-  return out;
-};
+const listValuesOf = (system: System, book: Compendium): string[] =>
+  danglingRows(system, book).map(d => d.text);
 
 group('словарь — одно место правды', () => {
   for (const world of PLAYABLE_WORLDS) {

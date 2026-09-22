@@ -284,3 +284,35 @@ describe('свойство из словаря — выбор, а не ввод'
     expect(превью.textContent).not.toContain('melee');
   });
 });
+
+describe('свойство «несколько значений» — фишки, а не одно поле', () => {
+  beforeEach(() => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...state.system,
+        tables: {
+          props: { label: 'Свойства оружия', key: 'word', rows: [{ value: 'лёгкое', label: 'лёгкое' }, { value: 'тяжёлое', label: 'тяжёлое' }] },
+        },
+        effects: {},
+        records: {
+          weapon: {
+            kind: 'item', label: 'Оружие',
+            props: [{ key: 'properties', label: 'Свойства', kind: 'choice', from: 'props', many: true }],
+            bindings: [],
+          },
+        },
+      },
+      compendium: { items: [{ id: 'sword', rk: 'weapon', label: 'Меч', props: { properties: ['лёгкое'] } }], actions: [] },
+      activeRecordId: 'sword',
+    }));
+  });
+
+  it('выбранное стоит фишкой, добавление дописывает в список', () => {
+    render(<CompendiumScreen />);
+    const поле = [...document.querySelectorAll('label')].find(l => l.textContent?.includes('Свойства'))!;
+    expect(поле.textContent).toContain('лёгкое');
+    fireEvent.change(поле.querySelector('select')!, { target: { value: 'тяжёлое' } });
+    expect(useWorld.getState().compendium.items[0]!.props!.properties).toEqual(['лёгкое', 'тяжёлое']);
+  });
+});
