@@ -186,3 +186,81 @@ describe('RecordsTab: свойство на лист или служебное',
     expect([...kind.options].map(o => o.textContent)).toContain('ссылка на запись');
   });
 });
+
+describe('слот привязки подсказывает то, чем его закрывают', () => {
+  const система = () => ({
+    fields: [
+      { tag: 'atl', label: 'Атлетика', value: { kind: 'stored', type: 'number', default: 0 } },
+      { tag: 'atl_prof', label: 'Владение: Атлетика', value: { kind: 'stored', type: 'number', default: 0 } },
+    ],
+    constants: {},
+    lists: {
+      damage_types: {
+        label: 'Типы урона', of: 'text',
+        values: [{ value: 'рубящий', label: 'рубящий' }, { value: 'некротический', label: 'некротический' }],
+      },
+    },
+    tables: { wield_attack: { label: 'Бонус атаки по тому, чем бьют', cases: [] } },
+    effects: {
+      hit: {
+        label: 'Удар', activation: 'manual', steps: [],
+        params: [
+          { key: 'damage_type', label: 'Тип урона', kind: 'choice', from: 'damage_types' },
+          { key: 'attack_with', label: 'Бонус атаки', kind: 'expr' },
+        ],
+      },
+    },
+    records: {
+      weapon: {
+        kind: 'item', label: 'Оружие',
+        props: [{ key: 'wield', label: 'Чем бьют', kind: 'text' }],
+        bindings: [{ label: 'Удар', effect: 'hit', args: {} }],
+      },
+    },
+  });
+
+  beforeEach(() => {
+    useWorld.setState(state => ({ ...state, system: { ...state.system, ...система() }, activeRecordKind: 'weapon' }));
+  });
+
+  const набрать = (подпись: string, текст: string) => {
+    const строка = [...document.querySelectorAll('.need-fill')]
+      .find(el => el.textContent?.includes(подпись))!;
+    const поле = [...строка.querySelectorAll('input.chips__text')].at(-1) as HTMLInputElement;
+    fireEvent.focus(поле);
+    fireEvent.change(поле, { target: { value: текст } });
+    return [...document.querySelectorAll('.slot__option')].map(o => o.textContent?.trim() ?? '');
+  };
+
+  it('свойства записи и таблицы предлагаются, а не только поля', () => {
+    render(<RecordsTab />);
+    const видно = набрать('Бонус атаки', 'чем');
+    expect(видно.some(t => t.includes('Чем бьют')), видно.join(' | ')).toBe(true);
+    expect(видно.some(t => t.includes('Бонус атаки по тому, чем бьют'))).toBe(true);
+  });
+
+  it('совпавшее с начала стоит выше спрятанного в середине слова', () => {
+    render(<RecordsTab />);
+    const видно = набрать('Тип урона', 'Ти');
+    expect(видно[0], видно.join(' | ')).toContain('Тип урона');
+    const свой = видно.findIndex(t => t.includes('Тип урона'));
+    const чужой = видно.findIndex(t => t.includes('Атлетика'));
+    expect(свой).toBeLessThan(чужой === -1 ? Number.MAX_SAFE_INTEGER : чужой);
+  });
+
+  it('пустая потребность первым делом предлагает завести свойство — с видом и словарём', () => {
+    render(<RecordsTab />);
+    const видно = набрать('Тип урона', '');
+    expect(видно.some(t => t.includes('новое свойство «Тип урона»')), видно.join(' | ')).toBe(true);
+
+    const кнопка = [...document.querySelectorAll('.slot__option')]
+      .find(o => o.textContent?.includes('новое свойство'))!;
+    fireEvent.mouseDown(кнопка);
+
+    const kind = useWorld.getState().system.records!.weapon!;
+    const свойство = kind.props!.find(p => p.label === 'Тип урона')!;
+    expect(свойство.kind).toBe('choice');
+    expect(свойство.from).toBe('damage_types');
+    expect((kind.bindings![0] as any).args.damage_type).toEqual({ prop: свойство.key });
+  });
+});

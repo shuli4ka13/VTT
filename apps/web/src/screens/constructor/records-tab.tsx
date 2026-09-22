@@ -366,11 +366,20 @@ function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWi
                   context={{ system, effect: effect ?? ({ label: '' } as Effect), earlier: [], recordKind }}
                   allow={['prop', 'expr', 'const', 'tag', 'table', 'empty']}
                   placeholder={param.from ? 'значение словаря или свойство записи' : undefined}
-                  extraOptions={(listOf(system, param.from) ?? []).map(option => ({
-                    group: (system.lists?.[String(param.from)]?.label) || 'из словаря',
-                    label: option.label ?? String(option.value),
-                    ref: { const: String(option.value) } as never,
-                  }))}
+                  extraOptions={[
+                    ...(isClosed(param.key) ? [] : [{
+                      group: 'Завести',
+                      label: `новое свойство «${param.label ?? param.key}»`,
+                      ref: { prop: '' } as never,
+                      synthetic: true,
+                      onPick: () => onFillWithProp(param),
+                    }]),
+                    ...(listOf(system, param.from) ?? []).map(option => ({
+                      group: (system.lists?.[String(param.from)]?.label) || 'из словаря',
+                      label: option.label ?? String(option.value),
+                      ref: { const: String(option.value) } as never,
+                    })),
+                  ]}
                   onChange={next => onEdit(draft => {
                     draft.args ??= {};
                     if (next) draft.args[param.key] = next as never;

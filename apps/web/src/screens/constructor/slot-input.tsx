@@ -109,13 +109,37 @@ export function chipOf(ref: unknown, ctx: SlotContext): { label: string; record:
   return null;
 }
 
-export interface SlotOption { group: string; label: string; ref: SlotRef; synthetic?: boolean }
+export interface SlotOption {
+  group: string;
+  label: string;
+  ref: SlotRef;
+  synthetic?: boolean;
+
+  onPick?: () => void;
+}
 
 export function optionsFor(ctx: SlotContext, allow?: SlotKind[]): SlotOption[] {
   const ok = (kind: SlotKind) => !allow || allow.includes(kind);
   const out: SlotOption[] = [];
+  if (ok('prop')) {
+    const own = ctx.recordKind?.props ?? [];
+    for (const p of own) out.push({ group: 'Свойства записи', label: p.label ?? p.key, ref: { prop: p.key } });
+    if (!ctx.recordKind) {
+      for (const [key, label] of declaredProps(ctx.system)) out.push({ group: 'Свойства записи', label, ref: { prop: key } });
+    }
+  }
   if (ok('param')) {
     for (const p of ctx.effect.params ?? []) out.push({ group: 'Из записи', label: p.label ?? p.key, ref: { param: p.key } });
+  }
+  if (ok('table')) {
+    for (const [key, table] of Object.entries(ctx.system.tables ?? {})) {
+      const by = (ctx.recordKind?.props ?? [])[0];
+      out.push({
+        group: 'По таблице',
+        label: table.label || key,
+        ref: { table: key, ...(by ? { by: { prop: by.key } } : {}) } as SlotRef,
+      });
+    }
   }
   if (ok('ref')) {
     for (const o of outputRefs(ctx.earlier)) {
@@ -128,6 +152,15 @@ export function optionsFor(ctx: SlotContext, allow?: SlotKind[]): SlotOption[] {
   }
   return out;
 }
+
+const rankOf = (label: string, needle: string): number => {
+  const text = label.toLowerCase();
+  if (!needle) return 0;
+  if (text.startsWith(needle)) return 0;
+  if (new RegExp(`\\b${needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'u').test(text)) return 1;
+  if (text.includes(needle)) return 2;
+  return 3;
+};
 
 export function SlotInput({ value, onChange, context, allow, placeholder, extraOptions, dice, side, onCreateFromRecord }: {
   value: unknown;
@@ -159,7 +192,10 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
   const chip = draft === null ? chipOf(value, context) : null;
   const shown = chip ? '' : (draft ?? displayOf(value, context));
   const needle = (draft ?? '').toLowerCase();
-  const filtered = needle ? options.filter(o => o.label.toLowerCase().includes(needle)) : options;
+  const filtered = needle
+    ? options.filter(o => o.synthetic || rankOf(o.label, needle) < 3)
+      .sort((a, b) => rankOf(a.label, needle) - rankOf(b.label, needle))
+    : options;
 
   const typingTag = matchTagQuery(draft ?? '', (draft ?? '').length) !== null;
 
@@ -227,7 +263,8 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
               key={i} type="button" className="slot__option"
               onMouseDown={e => {
                 e.preventDefault();
-                onChange(option.synthetic && onCreateFromRecord ? onCreateFromRecord() : option.ref);
+                if (option.onPick) option.onPick();
+                else onChange(option.synthetic && onCreateFromRecord ? onCreateFromRecord() : option.ref);
                 setDraft(null); setOpen(false);
               }}
             >
