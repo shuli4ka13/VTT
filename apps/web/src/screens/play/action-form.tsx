@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Button, Field, Input, Select, Verdict } from '../../ui/primitives.tsx';
-import { asksOf, checkInputs, normalizeInputs } from '@vtt/engine/model/asks';
+import { asksOf, checkInputs, choicesOf, normalizeInputs } from '@vtt/engine/model/asks';
 import type { AskedParam } from '@vtt/engine/model/asks';
 import type { System, Compendium } from '@vtt/schema';
 
@@ -33,7 +33,7 @@ export function ActionForm({ system, compendium, actionId, label, disabled, onAc
       const value = answers[param.key];
       if (value !== undefined && value !== '') given[param.key] = value;
     }
-    const problem = checkInputs(asked, given);
+    const problem = checkInputs(asked, given, system);
     if (problem) { setTrouble(problem); return; }
     setTrouble(null);
     onAct({ actionId, ...(asked.length ? { inputs: normalizeInputs(asked, given) } : {}) });
@@ -73,7 +73,8 @@ export function ActionForm({ system, compendium, actionId, label, disabled, onAc
             ? (
               <Select
                 value={answers[param.key] ?? ''}
-                options={[['', '— какой вариант —'], ...(param.ask.options ?? []).map(option => [option, option] as const)] as never}
+                options={[['', '— какой вариант —'],
+                  ...choicesOf(system, param).map((option: string) => [option, option] as const)] as never}
                 onChange={next => setAnswers(all => ({ ...all, [param.key]: next }))}
               />
             )

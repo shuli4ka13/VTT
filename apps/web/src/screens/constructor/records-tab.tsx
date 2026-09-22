@@ -9,6 +9,7 @@ import type { System, RecordKind, Binding, Param, Effect } from '@vtt/schema';
 import { SlotInput } from './slot-input.tsx';
 import { BlockPick } from './block-pick.tsx';
 import { blockOf } from '@vtt/engine/model/blocks';
+import { listOf } from '@vtt/engine/model/lists';
 import { blockTree, BlockBranches } from './block-tree.tsx';
 import { freeGroupName } from './groups.ts';
 
@@ -37,6 +38,9 @@ const PARAM_TO_PROP_KIND: Record<string, string> = {
   number: 'number',
   effect: 'effect',
   tag: 'text',
+  text: 'text',
+  choice: 'choice',
+  record: 'record',
 };
 const propKindFor = (paramKind?: string) => PARAM_TO_PROP_KIND[paramKind ?? ''] ?? 'expr';
 
@@ -203,7 +207,10 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
                 draft.props ??= [];
                 const label = param.label ?? param.key;
                 const newKey = freeId(draft.props.map(p => p.key), label);
-                draft.props.push({ key: newKey, label, kind: propKindFor(param.kind) });
+                draft.props.push({
+                  key: newKey, label, kind: propKindFor(param.kind),
+                  ...(param.from ? { from: param.from } : {}),
+                });
                 const target = draft.bindings![index]!;
                 target.args ??= {};
                 target.args[param.key] = { prop: newKey };
@@ -358,6 +365,12 @@ function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWi
                   value={binding.args?.[param.key] as never}
                   context={{ system, effect: effect ?? ({ label: '' } as Effect), earlier: [], recordKind }}
                   allow={['prop', 'expr', 'const', 'tag', 'table', 'empty']}
+                  placeholder={param.from ? 'значение словаря или свойство записи' : undefined}
+                  extraOptions={(listOf(system, param.from) ?? []).map(option => ({
+                    group: (system.lists?.[String(param.from)]?.label) || 'из словаря',
+                    label: option.label ?? String(option.value),
+                    ref: { const: String(option.value) } as never,
+                  }))}
                   onChange={next => onEdit(draft => {
                     draft.args ??= {};
                     if (next) draft.args[param.key] = next as never;

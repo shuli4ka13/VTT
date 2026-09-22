@@ -1,4 +1,5 @@
 import { actionOf } from '../events/envelope.ts';
+import { listOf } from './lists.ts';
 import type { System, Compendium, Ask, Param } from './types.ts';
 
 export interface AskedParam extends Param {
@@ -18,7 +19,15 @@ export function asksOf(actionId: string, { system, compendium }: { system: Syste
     .map(param => ({ ...param, effect: action.effect, effectLabel: effect.label ?? action.effect }));
 }
 
-export function checkInputs(asked: AskedParam[], inputs: Record<string, number | string> | undefined): string | null {
+export function choicesOf(system: System, param: Param & { ask?: Ask }): string[] {
+  const list = listOf(system, param.from);
+  if (list?.length) return list.map(option => String(option.value));
+  return param.ask?.options ?? [];
+}
+
+export function checkInputs(
+  asked: AskedParam[], inputs: Record<string, number | string> | undefined, system?: System,
+): string | null {
   const given = inputs ?? {};
   for (const key of Object.keys(given)) {
     if (!asked.some(param => param.key === key)) return `лишнее значение «${key}» — действие о нём не спрашивает`;
@@ -35,7 +44,7 @@ export function checkInputs(asked: AskedParam[], inputs: Record<string, number |
       if (param.ask.max !== undefined && number > param.ask.max) return `${name}: не больше ${param.ask.max}`;
     }
     if (kind === 'choice') {
-      const options = param.ask.options ?? [];
+      const options = system ? choicesOf(system, param) : (param.ask.options ?? []);
       if (!options.includes(String(value))) {
         return `${name}: можно только ${options.map((option: string) => `«${option}»`).join(', ') || '(список пуст)'}`;
       }

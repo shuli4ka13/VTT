@@ -126,6 +126,18 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
   };
 
   const bindings = kind?.bindings ?? [];
+
+  const mustFill = new Set<string>();
+  for (const binding of bindings) {
+    for (const [key, arg] of Object.entries(binding.args ?? {})) {
+      const ref = arg as { prop?: string; optional?: boolean; by?: { prop?: string } };
+      if (ref?.optional) continue;
+      const need = (system.effects[binding.effect]?.params ?? []).find(p => p.key === key);
+      if (need?.optional) continue;
+      if (ref?.prop) mustFill.add(ref.prop);
+      if (ref?.by?.prop) mustFill.add(ref.by.prop);
+    }
+  }
   const hangable = Object.entries(system.effects)
     .filter(([id, effect]) => (effect.activation ?? 'manual') !== 'manual' && !(record.grants ?? []).includes(id));
 
@@ -167,7 +179,8 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
               <Field
                 key={prop.key}
                 label={prop.label ?? prop.key}
-                needed={record.props?.[prop.key] === undefined || record.props[prop.key] === ''}
+                needed={mustFill.has(prop.key)
+                  && (record.props?.[prop.key] === undefined || record.props[prop.key] === '')}
               >
                 {String(prop.kind) === 'effect' ? (
                   <Select

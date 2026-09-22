@@ -303,7 +303,7 @@ export class RoomsService {
       if (!from) throw new NotFoundException(`в комнате нет листа «${intent.fromId}»`);
       if (!to) throw new NotFoundException(`в комнате нет листа «${intent.toId}»`);
       const asked = asksOf(intent.actionId, { system, compendium });
-      const trouble = checkInputs(asked, intent.inputs);
+      const trouble = checkInputs(asked, intent.inputs, system);
       if (trouble) throw new BadRequestException(trouble);
       const inputs = normalizeInputs(asked, intent.inputs);
       envelope = send(intent.actionId, {

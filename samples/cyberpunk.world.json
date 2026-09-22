@@ -2169,7 +2169,8 @@
           {
             "key": "damage_type",
             "label": "Тип урона",
-            "kind": "text"
+            "kind": "choice",
+            "from": "damage_types"
           },
           {
             "key": "distance",
@@ -2203,16 +2204,13 @@
           {
             "key": "aim",
             "label": "Куда целишь",
-            "kind": "text",
+            "kind": "choice",
             "ask": {
               "by": "actor",
               "kind": "choice",
-              "options": [
-                "по телу",
-                "по голове"
-              ],
               "hint": "В голову: броня головы, а урон после брони вдвое."
-            }
+            },
+            "from": "aim_places"
           }
         ],
         "self": [
@@ -2612,7 +2610,8 @@
           {
             "key": "damage_type",
             "label": "Тип урона",
-            "kind": "text"
+            "kind": "choice",
+            "from": "damage_types"
           }
         ],
         "bindings": [
@@ -2659,7 +2658,45 @@
     "room_rules": [
       "serious_wound_rule",
       "death_save"
-    ]
+    ],
+    "lists": {
+      "damage_types": {
+        "label": "Типы урона",
+        "of": "text",
+        "values": [
+          {
+            "value": "пуля",
+            "label": "пуля"
+          },
+          {
+            "value": "холодное",
+            "label": "холодное"
+          },
+          {
+            "value": "огонь",
+            "label": "огонь"
+          },
+          {
+            "value": "яд",
+            "label": "яд"
+          }
+        ]
+      },
+      "aim_places": {
+        "label": "Куда целятся",
+        "of": "text",
+        "values": [
+          {
+            "value": "по телу",
+            "label": "по телу"
+          },
+          {
+            "value": "по голове",
+            "label": "по голове"
+          }
+        ]
+      }
+    }
   },
   "compendium": {
     "items": [
