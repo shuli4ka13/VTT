@@ -1,3 +1,4 @@
+import { choiceTables } from '@vtt/engine/model/tables';
 import { useWorld, freeId } from '../../store/world.ts';
 import { ModifiersEditor } from './modifiers.tsx';
 import { newRecordKind, newBinding, newProp } from './factory.ts';
@@ -259,7 +260,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
                     <Select
                       value={String(prop.from ?? '')}
                       options={[['', '— какой словарь —'],
-                        ...Object.entries(system.lists ?? {})
+                        ...choiceTables(system)
                           .map(([key, list]) => [key, list.label || key] as const)] as never}
                       onChange={next => edit(draft => {
                         const target = draft.props?.find(p => p.key === prop.key);
@@ -375,7 +376,7 @@ function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWi
                       onPick: () => onFillWithProp(param),
                     }]),
                     ...(listOf(system, param.from) ?? []).map(option => ({
-                      group: (system.lists?.[String(param.from)]?.label) || 'из словаря',
+                      group: (system.tables?.[String(param.from)]?.label) || 'из словаря',
                       label: option.label ?? String(option.value),
                       ref: { const: String(option.value) } as never,
                     })),

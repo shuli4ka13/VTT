@@ -194,13 +194,16 @@ describe('слот привязки подсказывает то, чем его
       { tag: 'atl_prof', label: 'Владение: Атлетика', value: { kind: 'stored', type: 'number', default: 0 } },
     ],
     constants: {},
-    lists: {
+    tables: {
       damage_types: {
-        label: 'Типы урона', of: 'text',
-        values: [{ value: 'рубящий', label: 'рубящий' }, { value: 'некротический', label: 'некротический' }],
+        label: 'Типы урона', key: 'word', of: 'text',
+        rows: [{ value: 'рубящий', label: 'рубящий' }, { value: 'некротический', label: 'некротический' }],
+      },
+      wield_attack: {
+        label: 'Бонус атаки по тому, чем бьют', key: 'word',
+        columns: [{ key: 'value', label: 'формула', kind: 'expr' }], rows: [],
       },
     },
-    tables: { wield_attack: { label: 'Бонус атаки по тому, чем бьют', cases: [] } },
     effects: {
       hit: {
         label: 'Удар', activation: 'manual', steps: [],

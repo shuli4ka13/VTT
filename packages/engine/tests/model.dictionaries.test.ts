@@ -6,7 +6,7 @@ import type { System, Compendium } from '../src/model/types.ts';
 type Loose = Record<string, unknown>;
 
 const troublesOf = (system: System): string[] => {
-  const lists = system.lists ?? {};
+  const lists = system.tables ?? {};
   const out: string[] = [];
   const look = (where: string, p: Loose) => {
     const ask = p.ask as Loose | undefined;
@@ -66,7 +66,7 @@ const listValuesOf = (system: System, book: Compendium): string[] => {
       if (prop.kind !== 'choice' || !from) continue;
       const value = (record.props ?? {})[prop.key];
       if (value === undefined || value === '') continue;
-      const known = (system.lists?.[from]?.values ?? []).map(o => String(o.value));
+      const known = (system.tables?.[from]?.rows ?? []).map(o => String(o.value));
       if (!known.includes(String(value))) {
         out.push(`«${record.label}» · ${prop.label}: «${String(value)}» не из словаря «${from}»`);
       }
@@ -100,7 +100,7 @@ group('словарь — одно место правды', () => {
     const кривая = {
       fields: [], effects: { бой: { label: 'Бой', params: [{ key: 'тип', label: 'Тип', kind: 'choice' }] } },
       records: { меч: { label: 'Меч', props: [{ key: 'тип', label: 'Тип', kind: 'choice', from: 'нетути' }] } },
-      lists: {},
+      tables: {},
     } as unknown as System;
     eq(troublesOf(кривая).length, 2, troublesOf(кривая).join(' | '));
   });

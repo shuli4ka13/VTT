@@ -583,3 +583,6 @@
 .drawer__step-name { font-weight: 600; font-size: var(--fs-3); }
 
 .call-args__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-4); }
+
+.table-grid { display: grid; gap: var(--s-2); align-items: center; }
+.table-grid > .faint { font-size: var(--fs-2); text-transform: uppercase; letter-spacing: 0.04em; }

@@ -12,16 +12,16 @@ const system = {
   effects: {},
   tables: {
     травмы: {
-      label: 'Травмы',
-      ranges: [
-        { from: 2, to: 4, value: 'синяк' },
-        { from: 5, to: 9, value: 'перелом' },
-        { from: 10, to: 12, value: 'потеря глаза' },
+      label: 'Травмы', key: 'range', columns: [{ key: 'value', label: 'травма', kind: 'text' }],
+      rows: [
+        { from: 2, to: 4, cells: { value: 'синяк' } },
+        { from: 5, to: 9, cells: { value: 'перелом' } },
+        { from: 10, to: 12, cells: { value: 'потеря глаза' } },
       ],
     },
     сложность: {
-      label: 'Сложность по дистанции',
-      ranges: [{ from: 0, to: 6, value: 13 }, { from: 7, to: 12, value: 15 }, { from: 13, to: 50, value: 20 }],
+      label: 'Сложность по дистанции', key: 'range', columns: [{ key: 'value', label: 'значение', kind: 'number' }],
+      rows: [{ from: 0, to: 6, cells: { value: 13 } }, { from: 7, to: 12, cells: { value: 15 } }, { from: 13, to: 50, cells: { value: 20 } }],
     },
   },
 } as unknown as System;

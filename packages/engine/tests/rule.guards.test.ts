@@ -18,8 +18,9 @@ const sys: any = {
   ],
   rolls: [{ tag: 'спас', label: 'Спасбросок' }],
   constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
-  tables: { исход: { label: 'Исход', ranges: [
-    { from: -100, to: 9, value: 'провал' }, { from: 10, to: 14, value: 'частичный' }, { from: 15, to: 100, value: 'полный' },
+  tables: { исход: { label: 'Исход', key: 'range', columns: [{ key: 'value', label: 'исход', kind: 'text' }], rows: [
+    { from: -100, to: 9, cells: { value: 'провал' } }, { from: 10, to: 14, cells: { value: 'частичный' } },
+    { from: 15, to: 100, cells: { value: 'полный' } },
   ] } },
   effects: {},
 };

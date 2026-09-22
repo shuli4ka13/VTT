@@ -38,29 +38,19 @@ export const DAMAGE_TAGS = [
   'некротический', 'излучение', 'психический', 'силовой', 'магический',
 ];
 
+const words = (label, of, rows) => ({ label, key: 'word', of, rows });
+
 export const lists = () => ({
-  damage_types: {
-    label: 'Типы урона',
-    of: 'text',
-    values: DAMAGE_TAGS.map(tag => ({ value: tag, label: tag })),
-  },
-  wield: {
-    label: 'Способ атаки',
-    of: 'text',
-    values: [
-      { value: 'melee', label: 'ближний бой — Сила' },
-      { value: 'finesse', label: 'фехтовальное — Сила или Ловкость' },
-      { value: 'ranged', label: 'дальний бой — Ловкость' },
-    ],
-  },
-  taken: {
-    label: 'Стойкость к урону',
-    of: 'number',
-    values: [
-      { value: 0, label: 'иммунитет' }, { value: 0.5, label: 'сопротивление' },
-      { value: 1, label: 'как есть' }, { value: 2, label: 'уязвимость' },
-    ],
-  },
+  damage_types: words('Типы урона', 'text', DAMAGE_TAGS.map(tag => ({ value: tag, label: tag }))),
+  wield: words('Способ атаки', 'text', [
+    { value: 'melee', label: 'ближний бой — Сила' },
+    { value: 'finesse', label: 'фехтовальное — Сила или Ловкость' },
+    { value: 'ranged', label: 'дальний бой — Ловкость' },
+  ]),
+  taken: words('Стойкость к урону', 'number', [
+    { value: 0, label: 'иммунитет' }, { value: 0.5, label: 'сопротивление' },
+    { value: 1, label: 'как есть' }, { value: 2, label: 'уязвимость' },
+  ]),
 });
 
 export const TAKEN = DAMAGE_TAGS
@@ -217,7 +207,12 @@ export const groups = () => ({
   'Богатство': {},
 });
 
-const range = (from, to, value) => ({ from, to, value });
+const range = (from, to, value) => ({ from, to, cells: { value } });
+const steps = (label, rows) => ({ label, key: 'range', columns: [{ key: 'value', label: 'значение', kind: 'number' }], rows });
+const cases = (label, kind, rows) => ({
+  label, key: 'word', columns: [{ key: 'value', label: 'значение', kind }],
+  rows: rows.map(([when, value]) => ({ value: when, cells: { value } })),
+});
 
 const FULL_CASTER = [
   [2], [3], [4, 2], [4, 3], [4, 3, 2], [4, 3, 3], [4, 3, 3, 1], [4, 3, 3, 2], [4, 3, 3, 3, 1], [4, 3, 3, 3, 2],
@@ -228,40 +223,22 @@ const FULL_CASTER = [
 
 export function tables() {
   const out = {
-    proficiency: {
-      label: 'Бонус мастерства по уровню',
-      ranges: [range(1, 4, 2), range(5, 8, 3), range(9, 12, 4), range(13, 16, 5), range(17, 20, 6)],
-    },
-    cantrip_dice: {
-      label: 'Костей заговора по уровню',
-      ranges: [range(1, 4, 1), range(5, 10, 2), range(11, 16, 3), range(17, 20, 4)],
-    },
-    rage_damage: {
-      label: 'Урон ярости по уровню',
-      ranges: [range(1, 8, 2), range(9, 15, 3), range(16, 20, 4)],
-    },
-  };
-  out.wield_attack = {
-    label: 'Бонус атаки по способу атаки',
-    cases: [
-      { when: 'melee', value: '@melee_attack' },
-      { when: 'finesse', value: '@finesse_attack' },
-      { when: 'ranged', value: '@ranged_attack' },
-    ],
-  };
-  out.wield_damage = {
-    label: 'Прибавка к урону по способу атаки',
-    cases: [
-      { when: 'melee', value: '@melee_damage' },
-      { when: 'finesse', value: '@finesse_damage' },
-      { when: 'ranged', value: '@ranged_damage' },
-    ],
+    proficiency: steps('Бонус мастерства по уровню',
+      [range(1, 4, 2), range(5, 8, 3), range(9, 12, 4), range(13, 16, 5), range(17, 20, 6)]),
+    cantrip_dice: steps('Костей заговора по уровню',
+      [range(1, 4, 1), range(5, 10, 2), range(11, 16, 3), range(17, 20, 4)]),
+    rage_damage: steps('Урон ярости по уровню',
+      [range(1, 8, 2), range(9, 15, 3), range(16, 20, 4)]),
+    wield_attack: cases('Бонус атаки по способу атаки', 'expr', [
+      ['melee', '@melee_attack'], ['finesse', '@finesse_attack'], ['ranged', '@ranged_attack'],
+    ]),
+    wield_damage: cases('Прибавка к урону по способу атаки', 'expr', [
+      ['melee', '@melee_damage'], ['finesse', '@finesse_damage'], ['ranged', '@ranged_damage'],
+    ]),
   };
   for (let n = 1; n <= 9; n++) {
-    out[`slots_${n}`] = {
-      label: `Ячейки ${n}-го круга по уровню заклинателя`,
-      ranges: [range(0, 0, 0), ...FULL_CASTER.map((row, at) => range(at + 1, at + 1, row[n - 1] ?? 0))],
-    };
+    out[`slots_${n}`] = steps(`Ячейки ${n}-го круга по уровню заклинателя`,
+      [range(0, 0, 0), ...FULL_CASTER.map((row, at) => range(at + 1, at + 1, row[n - 1] ?? 0))]);
   }
   return out;
 }

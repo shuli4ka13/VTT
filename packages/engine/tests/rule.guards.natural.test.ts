@@ -9,7 +9,8 @@ const system = {
   fields: [{ tag: 'hp', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 10 } }],
   effects: {},
   constants: { d20: { kind: 'die', dice: [{ count: 1, sides: 20 }] } },
-  tables: { levels: { label: 'Ступени', ranges: [{ from: 0, to: 9, value: 'провал' }, { from: 10, to: 99, value: 'успех' }] } },
+  tables: { levels: { label: 'Ступени', key: 'range', columns: [{ key: 'value', label: 'ступень', kind: 'text' }],
+    rows: [{ from: 0, to: 9, cells: { value: 'провал' } }, { from: 10, to: 99, cells: { value: 'успех' } }] } },
 } as unknown as System;
 const sheet = { id: 'a', systemId: 'x', name: 'А', values: { hp: 10 }, equipped: [], actions: [], effects: [] } as unknown as Sheet;
 const compendium = { items: [], actions: [] };

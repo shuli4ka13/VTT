@@ -10,14 +10,13 @@ import { TablesSection } from './tables-section.tsx';
 import { InitiativeSection } from './initiative-section.tsx';
 import { ActionTypesSection } from './action-types-section.tsx';
 import { TogglesSection } from './toggles-section.tsx';
-import { ListsSection } from './lists-section.tsx';
 import { BlocksSection } from './blocks-section.tsx';
 import { critOf, armorOf } from '@vtt/engine/model/toggles';
 import type { System } from '@vtt/schema';
 import { calledOf } from '@vtt/engine/engine/effects';
 import { blockNames } from '@vtt/engine/model/blocks';
 
-type SectionKey = 'dice' | 'edits' | 'rolls' | 'tables' | 'lists' | 'blocks' | 'initiative' | 'action_types' | 'toggles';
+type SectionKey = 'dice' | 'edits' | 'rolls' | 'tables' | 'blocks' | 'initiative' | 'action_types' | 'toggles';
 
 interface Section {
   key: SectionKey;
@@ -31,7 +30,6 @@ const SECTIONS: Section[] = [
   { key: 'edits', label: 'Правки броска', count: system => Object.keys(system.roll_edits ?? {}).length },
   { key: 'rolls', label: 'Виды бросков', count: system => (system.rolls ?? []).length },
   { key: 'tables', label: 'Таблицы', count: system => Object.keys(system.tables ?? {}).length },
-  { key: 'lists', label: 'Словари', count: system => Object.keys(system.lists ?? {}).length },
   { key: 'blocks', label: 'Блоки', count: system => blockNames(system).length },
   { key: 'initiative', label: 'Инициатива', lint: 'initiative', count: system => (system.initiative ? 1 : 0) },
   { key: 'action_types', label: 'Чего стоит действие', count: system => Object.keys(system.action_types ?? {}).length },
@@ -82,7 +80,6 @@ export function RulesTab() {
             {section === 'edits' ? <RollEditsSection system={system} editSystem={editSystem} usage={usage} /> : null}
             {section === 'rolls' ? <RollsSection system={system} editSystem={editSystem} usage={usage} /> : null}
             {section === 'tables' ? <TablesSection system={system} editSystem={editSystem} usage={usage} /> : null}
-            {section === 'lists' ? <ListsSection system={system} /> : null}
             {section === 'blocks' ? <BlocksSection system={system} /> : null}
             {section === 'initiative' ? <InitiativeSection system={system} editSystem={editSystem} /> : null}
             {section === 'action_types'

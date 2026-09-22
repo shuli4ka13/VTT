@@ -6,18 +6,21 @@ import type { System } from '../src/model/types.ts';
 const system = {
   id: 'т', name: 'т', fields: [], effects: {},
   tables: {
-    по_уровню: { label: 'По уровню', ranges: [{ from: 1, to: 4, value: 2 }, { from: 5, to: 8, value: 3 }] },
+    по_уровню: {
+      label: 'По уровню', key: 'range', columns: [{ key: 'value', label: 'значение', kind: 'number' }],
+      rows: [{ from: 1, to: 4, cells: { value: 2 } }, { from: 5, to: 8, cells: { value: 3 } }],
+    },
     чем_бьёт: {
-      label: 'Чем бьёт',
-      cases: [
-        { when: 'сила', value: '#melee_attack' },
-        { when: 'ловкость', value: '#ranged_attack' },
-        { when: 'лучшее', value: 'max(#melee_attack, #ranged_attack)' },
+      label: 'Чем бьёт', key: 'word', columns: [{ key: 'value', label: 'формула', kind: 'expr' }],
+      rows: [
+        { value: 'сила', cells: { value: '@melee_attack' } },
+        { value: 'ловкость', cells: { value: '@ranged_attack' } },
+        { value: 'лучшее', cells: { value: 'max(@melee_attack, @ranged_attack)' } },
       ],
     },
     ступени: {
-      label: 'Ступени',
-      cases: [{ when: 0, value: 'нет' }, { when: 1, value: 'владение' }],
+      label: 'Ступени', key: 'word', columns: [{ key: 'value', label: 'ступень', kind: 'text' }],
+      rows: [{ value: 0, cells: { value: 'нет' } }, { value: 1, cells: { value: 'владение' } }],
       otherwise: 'мастерство',
     },
   },
@@ -31,8 +34,8 @@ group('таблица умеет и диапазоны, и соответств�
   });
 
   test('соответствие по слову даёт свою формулу', () => {
-    eq(lookupTable(system, 'чем_бьёт', 'сила'), '#melee_attack');
-    eq(lookupTable(system, 'чем_бьёт', 'ловкость'), '#ranged_attack');
+    eq(lookupTable(system, 'чем_бьёт', 'сила'), '@melee_attack');
+    eq(lookupTable(system, 'чем_бьёт', 'ловкость'), '@ranged_attack');
     ok(isCases(system.tables!.чем_бьёт!));
   });
 

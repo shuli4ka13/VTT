@@ -416,7 +416,8 @@ describe('Словари: кости, виды бросков, таблицы, �
       ...state,
       system: {
         ...emptySystem(),
-        tables: { proficiency: { label: 'Бонус мастерства', ranges: [{ from: 1, to: 4, value: 2 }] } },
+        tables: { proficiency: { label: 'Бонус мастерства', key: 'range',
+          columns: [{ key: 'value', label: 'значение', kind: 'number' }], rows: [{ from: 1, to: 4, cells: { value: 2 } }] } },
         fields: [{ tag: 'pb', label: 'Бонус мастерства', value: { kind: 'table', table: 'proficiency', arg: '#level' } }],
       },
       activeEffectId: null,

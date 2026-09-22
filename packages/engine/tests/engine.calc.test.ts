@@ -40,7 +40,8 @@ group('движок вычислений', () => {
     test('аргумент таблицы — тоже формула, а не только прямая ссылка', () => {
       const sys = tinySystem(
         [stored('n', 4), { tag: 'grade', label: 'grade', group: 'g', value: { kind: 'table', table: 't', arg: '#n * 2' } }],
-        { t: { label: 't', ranges: [{ from: 1, to: 7, value: 'мало' }, { from: 8, to: 20, value: 'много' }] } });
+        { t: { label: 't', key: 'range', columns: [{ key: 'value', label: 'сколько', kind: 'text' }],
+          rows: [{ from: 1, to: 7, cells: { value: 'мало' } }, { from: 8, to: 20, cells: { value: 'много' } }] } });
       eq(calc(sys, tinySheet({ n: 4 }), 'grade'), 'много');
     });
 

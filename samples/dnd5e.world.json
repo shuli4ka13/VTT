@@ -2044,1100 +2044,1731 @@
     "tables": {
       "proficiency": {
         "label": "Бонус мастерства по уровню",
-        "ranges": [
+        "key": "range",
+        "columns": [
+          {
+            "key": "value",
+            "label": "значение",
+            "kind": "number"
+          }
+        ],
+        "rows": [
           {
             "from": 1,
             "to": 4,
-            "value": 2
+            "cells": {
+              "value": 2
+            }
           },
           {
             "from": 5,
             "to": 8,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 9,
             "to": 12,
-            "value": 4
+            "cells": {
+              "value": 4
+            }
           },
           {
             "from": 13,
             "to": 16,
-            "value": 5
+            "cells": {
+              "value": 5
+            }
           },
           {
             "from": 17,
             "to": 20,
-            "value": 6
+            "cells": {
+              "value": 6
+            }
           }
         ]
       },
       "cantrip_dice": {
         "label": "Костей заговора по уровню",
-        "ranges": [
+        "key": "range",
+        "columns": [
+          {
+            "key": "value",
+            "label": "значение",
+            "kind": "number"
+          }
+        ],
+        "rows": [
           {
             "from": 1,
             "to": 4,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 5,
             "to": 10,
-            "value": 2
+            "cells": {
+              "value": 2
+            }
           },
           {
             "from": 11,
             "to": 16,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 17,
             "to": 20,
-            "value": 4
+            "cells": {
+              "value": 4
+            }
           }
         ]
       },
       "rage_damage": {
         "label": "Урон ярости по уровню",
-        "ranges": [
+        "key": "range",
+        "columns": [
+          {
+            "key": "value",
+            "label": "значение",
+            "kind": "number"
+          }
+        ],
+        "rows": [
           {
             "from": 1,
             "to": 8,
-            "value": 2
+            "cells": {
+              "value": 2
+            }
           },
           {
             "from": 9,
             "to": 15,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 16,
             "to": 20,
-            "value": 4
+            "cells": {
+              "value": 4
+            }
           }
         ]
       },
       "wield_attack": {
         "label": "Бонус атаки по способу атаки",
-        "cases": [
+        "key": "word",
+        "columns": [
           {
-            "when": "melee",
-            "value": "@melee_attack"
+            "key": "value",
+            "label": "значение",
+            "kind": "expr"
+          }
+        ],
+        "rows": [
+          {
+            "value": "melee",
+            "cells": {
+              "value": "@melee_attack"
+            }
           },
           {
-            "when": "finesse",
-            "value": "@finesse_attack"
+            "value": "finesse",
+            "cells": {
+              "value": "@finesse_attack"
+            }
           },
           {
-            "when": "ranged",
-            "value": "@ranged_attack"
+            "value": "ranged",
+            "cells": {
+              "value": "@ranged_attack"
+            }
           }
         ]
       },
       "wield_damage": {
         "label": "Прибавка к урону по способу атаки",
-        "cases": [
+        "key": "word",
+        "columns": [
           {
-            "when": "melee",
-            "value": "@melee_damage"
+            "key": "value",
+            "label": "значение",
+            "kind": "expr"
+          }
+        ],
+        "rows": [
+          {
+            "value": "melee",
+            "cells": {
+              "value": "@melee_damage"
+            }
           },
           {
-            "when": "finesse",
-            "value": "@finesse_damage"
+            "value": "finesse",
+            "cells": {
+              "value": "@finesse_damage"
+            }
           },
           {
-            "when": "ranged",
-            "value": "@ranged_damage"
+            "value": "ranged",
+            "cells": {
+              "value": "@ranged_damage"
+            }
           }
         ]
       },
       "slots_1": {
         "label": "Ячейки 1-го круга по уровню заклинателя",
-        "ranges": [
+        "key": "range",
+        "columns": [
+          {
+            "key": "value",
+            "label": "значение",
+            "kind": "number"
+          }
+        ],
+        "rows": [
           {
             "from": 0,
             "to": 0,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 1,
             "to": 1,
-            "value": 2
+            "cells": {
+              "value": 2
+            }
           },
           {
             "from": 2,
             "to": 2,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 3,
             "to": 3,
-            "value": 4
+            "cells": {
+              "value": 4
+            }
           },
           {
             "from": 4,
             "to": 4,
-            "value": 4
+            "cells": {
+              "value": 4
+            }
           },
           {
             "from": 5,
             "to": 5,
-            "value": 4
+            "cells": {
+              "value": 4
+            }
           },
           {
             "from": 6,
             "to": 6,
-            "value": 4
+            "cells": {
+              "value": 4
+            }
           },
           {
             "from": 7,
             "to": 7,
-            "value": 4
+            "cells": {
+              "value": 4
+            }
           },
           {
             "from": 8,
             "to": 8,
-            "value": 4
+            "cells": {
+              "value": 4
+            }
           },
           {
             "from": 9,
             "to": 9,
-            "value": 4
+            "cells": {
+              "value": 4
+            }
           },
           {
             "from": 10,
             "to": 10,
-            "value": 4
+            "cells": {
+              "value": 4
+            }
           },
           {
             "from": 11,
             "to": 11,
-            "value": 4
+            "cells": {
+              "value": 4
+            }
           },
           {
             "from": 12,
             "to": 12,
-            "value": 4
+            "cells": {
+              "value": 4
+            }
           },
           {
             "from": 13,
             "to": 13,
-            "value": 4
+            "cells": {
+              "value": 4
+            }
           },
           {
             "from": 14,
             "to": 14,
-            "value": 4
+            "cells": {
+              "value": 4
+            }
           },
           {
             "from": 15,
             "to": 15,
-            "value": 4
+            "cells": {
+              "value": 4
+            }
           },
           {
             "from": 16,
             "to": 16,
-            "value": 4
+            "cells": {
+              "value": 4
+            }
           },
           {
             "from": 17,
             "to": 17,
-            "value": 4
+            "cells": {
+              "value": 4
+            }
           },
           {
             "from": 18,
             "to": 18,
-            "value": 4
+            "cells": {
+              "value": 4
+            }
           },
           {
             "from": 19,
             "to": 19,
-            "value": 4
+            "cells": {
+              "value": 4
+            }
           },
           {
             "from": 20,
             "to": 20,
-            "value": 4
+            "cells": {
+              "value": 4
+            }
           }
         ]
       },
       "slots_2": {
         "label": "Ячейки 2-го круга по уровню заклинателя",
-        "ranges": [
+        "key": "range",
+        "columns": [
+          {
+            "key": "value",
+            "label": "значение",
+            "kind": "number"
+          }
+        ],
+        "rows": [
           {
             "from": 0,
             "to": 0,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 1,
             "to": 1,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 2,
             "to": 2,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 3,
             "to": 3,
-            "value": 2
+            "cells": {
+              "value": 2
+            }
           },
           {
             "from": 4,
             "to": 4,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 5,
             "to": 5,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 6,
             "to": 6,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 7,
             "to": 7,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 8,
             "to": 8,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 9,
             "to": 9,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 10,
             "to": 10,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 11,
             "to": 11,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 12,
             "to": 12,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 13,
             "to": 13,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 14,
             "to": 14,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 15,
             "to": 15,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 16,
             "to": 16,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 17,
             "to": 17,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 18,
             "to": 18,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 19,
             "to": 19,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 20,
             "to": 20,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           }
         ]
       },
       "slots_3": {
         "label": "Ячейки 3-го круга по уровню заклинателя",
-        "ranges": [
+        "key": "range",
+        "columns": [
+          {
+            "key": "value",
+            "label": "значение",
+            "kind": "number"
+          }
+        ],
+        "rows": [
           {
             "from": 0,
             "to": 0,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 1,
             "to": 1,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 2,
             "to": 2,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 3,
             "to": 3,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 4,
             "to": 4,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 5,
             "to": 5,
-            "value": 2
+            "cells": {
+              "value": 2
+            }
           },
           {
             "from": 6,
             "to": 6,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 7,
             "to": 7,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 8,
             "to": 8,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 9,
             "to": 9,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 10,
             "to": 10,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 11,
             "to": 11,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 12,
             "to": 12,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 13,
             "to": 13,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 14,
             "to": 14,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 15,
             "to": 15,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 16,
             "to": 16,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 17,
             "to": 17,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 18,
             "to": 18,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 19,
             "to": 19,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 20,
             "to": 20,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           }
         ]
       },
       "slots_4": {
         "label": "Ячейки 4-го круга по уровню заклинателя",
-        "ranges": [
+        "key": "range",
+        "columns": [
+          {
+            "key": "value",
+            "label": "значение",
+            "kind": "number"
+          }
+        ],
+        "rows": [
           {
             "from": 0,
             "to": 0,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 1,
             "to": 1,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 2,
             "to": 2,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 3,
             "to": 3,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 4,
             "to": 4,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 5,
             "to": 5,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 6,
             "to": 6,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 7,
             "to": 7,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 8,
             "to": 8,
-            "value": 2
+            "cells": {
+              "value": 2
+            }
           },
           {
             "from": 9,
             "to": 9,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 10,
             "to": 10,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 11,
             "to": 11,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 12,
             "to": 12,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 13,
             "to": 13,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 14,
             "to": 14,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 15,
             "to": 15,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 16,
             "to": 16,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 17,
             "to": 17,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 18,
             "to": 18,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 19,
             "to": 19,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 20,
             "to": 20,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           }
         ]
       },
       "slots_5": {
         "label": "Ячейки 5-го круга по уровню заклинателя",
-        "ranges": [
+        "key": "range",
+        "columns": [
+          {
+            "key": "value",
+            "label": "значение",
+            "kind": "number"
+          }
+        ],
+        "rows": [
           {
             "from": 0,
             "to": 0,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 1,
             "to": 1,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 2,
             "to": 2,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 3,
             "to": 3,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 4,
             "to": 4,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 5,
             "to": 5,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 6,
             "to": 6,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 7,
             "to": 7,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 8,
             "to": 8,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 9,
             "to": 9,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 10,
             "to": 10,
-            "value": 2
+            "cells": {
+              "value": 2
+            }
           },
           {
             "from": 11,
             "to": 11,
-            "value": 2
+            "cells": {
+              "value": 2
+            }
           },
           {
             "from": 12,
             "to": 12,
-            "value": 2
+            "cells": {
+              "value": 2
+            }
           },
           {
             "from": 13,
             "to": 13,
-            "value": 2
+            "cells": {
+              "value": 2
+            }
           },
           {
             "from": 14,
             "to": 14,
-            "value": 2
+            "cells": {
+              "value": 2
+            }
           },
           {
             "from": 15,
             "to": 15,
-            "value": 2
+            "cells": {
+              "value": 2
+            }
           },
           {
             "from": 16,
             "to": 16,
-            "value": 2
+            "cells": {
+              "value": 2
+            }
           },
           {
             "from": 17,
             "to": 17,
-            "value": 2
+            "cells": {
+              "value": 2
+            }
           },
           {
             "from": 18,
             "to": 18,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 19,
             "to": 19,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 20,
             "to": 20,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           }
         ]
       },
       "slots_6": {
         "label": "Ячейки 6-го круга по уровню заклинателя",
-        "ranges": [
+        "key": "range",
+        "columns": [
+          {
+            "key": "value",
+            "label": "значение",
+            "kind": "number"
+          }
+        ],
+        "rows": [
           {
             "from": 0,
             "to": 0,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 1,
             "to": 1,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 2,
             "to": 2,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 3,
             "to": 3,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 4,
             "to": 4,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 5,
             "to": 5,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 6,
             "to": 6,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 7,
             "to": 7,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 8,
             "to": 8,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 9,
             "to": 9,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 10,
             "to": 10,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 11,
             "to": 11,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 12,
             "to": 12,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 13,
             "to": 13,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 14,
             "to": 14,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 15,
             "to": 15,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 16,
             "to": 16,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 17,
             "to": 17,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 18,
             "to": 18,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 19,
             "to": 19,
-            "value": 2
+            "cells": {
+              "value": 2
+            }
           },
           {
             "from": 20,
             "to": 20,
-            "value": 2
+            "cells": {
+              "value": 2
+            }
           }
         ]
       },
       "slots_7": {
         "label": "Ячейки 7-го круга по уровню заклинателя",
-        "ranges": [
+        "key": "range",
+        "columns": [
+          {
+            "key": "value",
+            "label": "значение",
+            "kind": "number"
+          }
+        ],
+        "rows": [
           {
             "from": 0,
             "to": 0,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 1,
             "to": 1,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 2,
             "to": 2,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 3,
             "to": 3,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 4,
             "to": 4,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 5,
             "to": 5,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 6,
             "to": 6,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 7,
             "to": 7,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 8,
             "to": 8,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 9,
             "to": 9,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 10,
             "to": 10,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 11,
             "to": 11,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 12,
             "to": 12,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 13,
             "to": 13,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 14,
             "to": 14,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 15,
             "to": 15,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 16,
             "to": 16,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 17,
             "to": 17,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 18,
             "to": 18,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 19,
             "to": 19,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 20,
             "to": 20,
-            "value": 2
+            "cells": {
+              "value": 2
+            }
           }
         ]
       },
       "slots_8": {
         "label": "Ячейки 8-го круга по уровню заклинателя",
-        "ranges": [
+        "key": "range",
+        "columns": [
+          {
+            "key": "value",
+            "label": "значение",
+            "kind": "number"
+          }
+        ],
+        "rows": [
           {
             "from": 0,
             "to": 0,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 1,
             "to": 1,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 2,
             "to": 2,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 3,
             "to": 3,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 4,
             "to": 4,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 5,
             "to": 5,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 6,
             "to": 6,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 7,
             "to": 7,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 8,
             "to": 8,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 9,
             "to": 9,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 10,
             "to": 10,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 11,
             "to": 11,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 12,
             "to": 12,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 13,
             "to": 13,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 14,
             "to": 14,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 15,
             "to": 15,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 16,
             "to": 16,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 17,
             "to": 17,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 18,
             "to": 18,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 19,
             "to": 19,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 20,
             "to": 20,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           }
         ]
       },
       "slots_9": {
         "label": "Ячейки 9-го круга по уровню заклинателя",
-        "ranges": [
+        "key": "range",
+        "columns": [
+          {
+            "key": "value",
+            "label": "значение",
+            "kind": "number"
+          }
+        ],
+        "rows": [
           {
             "from": 0,
             "to": 0,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 1,
             "to": 1,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 2,
             "to": 2,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 3,
             "to": 3,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 4,
             "to": 4,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 5,
             "to": 5,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 6,
             "to": 6,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 7,
             "to": 7,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 8,
             "to": 8,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 9,
             "to": 9,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 10,
             "to": 10,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 11,
             "to": 11,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 12,
             "to": 12,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 13,
             "to": 13,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 14,
             "to": 14,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 15,
             "to": 15,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 16,
             "to": 16,
-            "value": 0
+            "cells": {
+              "value": 0
+            }
           },
           {
             "from": 17,
             "to": 17,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 18,
             "to": 18,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 19,
             "to": 19,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
           },
           {
             "from": 20,
             "to": 20,
-            "value": 1
+            "cells": {
+              "value": 1
+            }
+          }
+        ]
+      },
+      "damage_types": {
+        "label": "Типы урона",
+        "key": "word",
+        "of": "text",
+        "rows": [
+          {
+            "value": "рубящий",
+            "label": "рубящий"
+          },
+          {
+            "value": "колющий",
+            "label": "колющий"
+          },
+          {
+            "value": "дробящий",
+            "label": "дробящий"
+          },
+          {
+            "value": "огонь",
+            "label": "огонь"
+          },
+          {
+            "value": "холод",
+            "label": "холод"
+          },
+          {
+            "value": "молния",
+            "label": "молния"
+          },
+          {
+            "value": "гром",
+            "label": "гром"
+          },
+          {
+            "value": "кислота",
+            "label": "кислота"
+          },
+          {
+            "value": "яд",
+            "label": "яд"
+          },
+          {
+            "value": "некротический",
+            "label": "некротический"
+          },
+          {
+            "value": "излучение",
+            "label": "излучение"
+          },
+          {
+            "value": "психический",
+            "label": "психический"
+          },
+          {
+            "value": "силовой",
+            "label": "силовой"
+          },
+          {
+            "value": "магический",
+            "label": "магический"
+          }
+        ]
+      },
+      "wield": {
+        "label": "Способ атаки",
+        "key": "word",
+        "of": "text",
+        "rows": [
+          {
+            "value": "melee",
+            "label": "ближний бой — Сила"
+          },
+          {
+            "value": "finesse",
+            "label": "фехтовальное — Сила или Ловкость"
+          },
+          {
+            "value": "ranged",
+            "label": "дальний бой — Ловкость"
+          }
+        ]
+      },
+      "taken": {
+        "label": "Стойкость к урону",
+        "key": "word",
+        "of": "number",
+        "rows": [
+          {
+            "value": 0,
+            "label": "иммунитет"
+          },
+          {
+            "value": 0.5,
+            "label": "сопротивление"
+          },
+          {
+            "value": 1,
+            "label": "как есть"
+          },
+          {
+            "value": 2,
+            "label": "уязвимость"
           }
         ]
       }
@@ -3265,110 +3896,6 @@
           {
             "op": "shiftVersus",
             "by": 99
-          }
-        ]
-      }
-    },
-    "lists": {
-      "damage_types": {
-        "label": "Типы урона",
-        "of": "text",
-        "values": [
-          {
-            "value": "рубящий",
-            "label": "рубящий"
-          },
-          {
-            "value": "колющий",
-            "label": "колющий"
-          },
-          {
-            "value": "дробящий",
-            "label": "дробящий"
-          },
-          {
-            "value": "огонь",
-            "label": "огонь"
-          },
-          {
-            "value": "холод",
-            "label": "холод"
-          },
-          {
-            "value": "молния",
-            "label": "молния"
-          },
-          {
-            "value": "гром",
-            "label": "гром"
-          },
-          {
-            "value": "кислота",
-            "label": "кислота"
-          },
-          {
-            "value": "яд",
-            "label": "яд"
-          },
-          {
-            "value": "некротический",
-            "label": "некротический"
-          },
-          {
-            "value": "излучение",
-            "label": "излучение"
-          },
-          {
-            "value": "психический",
-            "label": "психический"
-          },
-          {
-            "value": "силовой",
-            "label": "силовой"
-          },
-          {
-            "value": "магический",
-            "label": "магический"
-          }
-        ]
-      },
-      "wield": {
-        "label": "Способ атаки",
-        "of": "text",
-        "values": [
-          {
-            "value": "melee",
-            "label": "ближний бой — Сила"
-          },
-          {
-            "value": "finesse",
-            "label": "фехтовальное — Сила или Ловкость"
-          },
-          {
-            "value": "ranged",
-            "label": "дальний бой — Ловкость"
-          }
-        ]
-      },
-      "taken": {
-        "label": "Стойкость к урону",
-        "of": "number",
-        "values": [
-          {
-            "value": 0,
-            "label": "иммунитет"
-          },
-          {
-            "value": 0.5,
-            "label": "сопротивление"
-          },
-          {
-            "value": 1,
-            "label": "как есть"
-          },
-          {
-            "value": 2,
-            "label": "уязвимость"
           }
         ]
       }

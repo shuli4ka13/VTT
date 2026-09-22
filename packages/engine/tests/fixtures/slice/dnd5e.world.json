@@ -6,31 +6,49 @@
     "tables": {
       "proficiency": {
         "label": "Бонус мастерства по уровню",
-        "ranges": [
+        "key": "range",
+        "columns": [
+          {
+            "key": "value",
+            "label": "значение",
+            "kind": "number"
+          }
+        ],
+        "rows": [
           {
             "from": 1,
             "to": 4,
-            "value": 2
+            "cells": {
+              "value": 2
+            }
           },
           {
             "from": 5,
             "to": 8,
-            "value": 3
+            "cells": {
+              "value": 3
+            }
           },
           {
             "from": 9,
             "to": 12,
-            "value": 4
+            "cells": {
+              "value": 4
+            }
           },
           {
             "from": 13,
             "to": 16,
-            "value": 5
+            "cells": {
+              "value": 5
+            }
           },
           {
             "from": 17,
             "to": 20,
-            "value": 6
+            "cells": {
+              "value": 6
+            }
           }
         ]
       }

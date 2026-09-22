@@ -1,3 +1,4 @@
+import { unifyTables } from './tables.ts';
 import { unifyBlocks } from './blocks.ts';
 import type { System, Compendium, CompendiumRecord } from './types.ts';
 
@@ -342,7 +343,7 @@ export function unifyEvents(system: System): System {
 export function unifyWorld(
   world: { system: System; compendium: Compendium },
 ): { system: System; compendium: Compendium } {
-  const { system, renames } = unifySystem(unifyBlocks(unifyEvents(world.system)));
+  const { system, renames } = unifySystem(unifyBlocks(unifyEvents(unifyTables(world.system))));
   const withRefs = unifyCompendium(world.compendium, renames);
   const edited = convertRollEdits(system, withRefs);
   const bounded = unifyBounds({ system: edited.system, compendium: edited.compendium ?? withRefs });

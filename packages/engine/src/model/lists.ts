@@ -1,8 +1,13 @@
 import type { System, FieldOption, Field, Effect } from './types.ts';
+import { rowsOf, tableOf } from './tables.ts';
 
 export function listOf(system: System, key: string | undefined): FieldOption[] | undefined {
   if (!key) return undefined;
-  return system.lists?.[key]?.values;
+  const table = tableOf(system, key);
+  if (!table) return undefined;
+  return rowsOf(table)
+    .filter(row => row.value !== undefined)
+    .map(row => ({ value: row.value as FieldOption['value'], label: row.label ?? String(row.value) }));
 }
 
 export function optionsOf(system: System, field: Field): FieldOption[] {
@@ -30,6 +35,11 @@ export function listUsers(system: System, key: string): string[] {
   for (const [rk, kind] of Object.entries(system.records ?? {})) {
     for (const prop of (kind.props ?? [])) {
       if (from(prop) === key) out.push(`свойство «${prop.label ?? prop.key}» у типа «${kind.label ?? rk}»`);
+    }
+  }
+  for (const [id, table] of Object.entries(system.tables ?? {})) {
+    for (const column of (table.columns ?? [])) {
+      if (column.from === key) out.push(`колонка «${column.label ?? column.key}» таблицы «${table.label ?? id}»`);
     }
   }
   return out;

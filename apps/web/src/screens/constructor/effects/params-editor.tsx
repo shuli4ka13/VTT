@@ -1,3 +1,4 @@
+import { choiceTables } from '@vtt/engine/model/tables';
 import { freeId } from '../../../store/world.ts';
 import { Card, CardHead, Input, Select, Button, Empty } from '../../../ui/primitives.tsx';
 import type { Effect, System } from '@vtt/schema';
@@ -75,7 +76,7 @@ export function ParamsEditor({ effect, system, onEdit }: {
                 <Select
                   value={String(param.from ?? '')}
                   options={[['', '— какой словарь —'],
-                    ...Object.entries(system.lists ?? {})
+                    ...choiceTables(system)
                       .map(([key, list]) => [key, list.label || key] as const)] as never}
                   onChange={next => onEdit(draft => {
                     const target = draft.params?.find(p => p.key === param.key);

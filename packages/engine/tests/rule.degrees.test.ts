@@ -20,11 +20,11 @@ group('степени успеха', () => {
     constants: { пара: { label: 'Две шестёрки', kind: 'die', dice: [{ count: 2, sides: 6 }] } },
     tables: {
       исходы: {
-        label: 'Исход хода',
-        ranges: [
-          { from: -99, to: 6, value: 'провал' },
-          { from: 7, to: 9, value: 'успех с ценой' },
-          { from: 10, to: 99, value: 'полный успех' },
+        label: 'Исход хода', key: 'range', columns: [{ key: 'value', label: 'исход', kind: 'text' }],
+        rows: [
+          { from: -99, to: 6, cells: { value: 'провал' } },
+          { from: 7, to: 9, cells: { value: 'успех с ценой' } },
+          { from: 10, to: 99, cells: { value: 'полный успех' } },
         ],
       },
     },

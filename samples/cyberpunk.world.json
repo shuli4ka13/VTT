@@ -2079,61 +2079,135 @@
     "tables": {
       "dv_range": {
         "label": "Сложность по дистанции",
-        "ranges": [
+        "key": "range",
+        "columns": [
+          {
+            "key": "value",
+            "label": "значение",
+            "kind": "number"
+          }
+        ],
+        "rows": [
           {
             "from": 0,
             "to": 6,
-            "value": 13
+            "cells": {
+              "value": 13
+            }
           },
           {
             "from": 7,
             "to": 12,
-            "value": 15
+            "cells": {
+              "value": 15
+            }
           },
           {
             "from": 13,
             "to": 25,
-            "value": 20
+            "cells": {
+              "value": 20
+            }
           },
           {
             "from": 26,
             "to": 50,
-            "value": 25
+            "cells": {
+              "value": 25
+            }
           },
           {
             "from": 51,
             "to": 100,
-            "value": 30
+            "cells": {
+              "value": 30
+            }
           }
         ]
       },
       "injuries": {
         "label": "Травмы",
-        "ranges": [
+        "key": "range",
+        "columns": [
+          {
+            "key": "value",
+            "label": "значение",
+            "kind": "number"
+          }
+        ],
+        "rows": [
           {
             "from": 1,
             "to": 2,
-            "value": "Сломанные рёбра"
+            "cells": {
+              "value": "Сломанные рёбра"
+            }
           },
           {
             "from": 3,
             "to": 4,
-            "value": "Разорванная рука"
+            "cells": {
+              "value": "Разорванная рука"
+            }
           },
           {
             "from": 5,
             "to": 6,
-            "value": "Пробитое лёгкое"
+            "cells": {
+              "value": "Пробитое лёгкое"
+            }
           },
           {
             "from": 7,
             "to": 8,
-            "value": "Раздробленное колено"
+            "cells": {
+              "value": "Раздробленное колено"
+            }
           },
           {
             "from": 9,
             "to": 10,
-            "value": "Потеря глаза"
+            "cells": {
+              "value": "Потеря глаза"
+            }
+          }
+        ]
+      },
+      "damage_types": {
+        "label": "Типы урона",
+        "key": "word",
+        "of": "text",
+        "rows": [
+          {
+            "value": "пуля",
+            "label": "пуля"
+          },
+          {
+            "value": "холодное",
+            "label": "холодное"
+          },
+          {
+            "value": "огонь",
+            "label": "огонь"
+          },
+          {
+            "value": "яд",
+            "label": "яд"
+          }
+        ]
+      },
+      "aim_places": {
+        "label": "Куда целятся",
+        "key": "word",
+        "of": "text",
+        "rows": [
+          {
+            "value": "по телу",
+            "label": "по телу"
+          },
+          {
+            "value": "по голове",
+            "label": "по голове"
           }
         ]
       }
@@ -2658,45 +2732,7 @@
     "room_rules": [
       "serious_wound_rule",
       "death_save"
-    ],
-    "lists": {
-      "damage_types": {
-        "label": "Типы урона",
-        "of": "text",
-        "values": [
-          {
-            "value": "пуля",
-            "label": "пуля"
-          },
-          {
-            "value": "холодное",
-            "label": "холодное"
-          },
-          {
-            "value": "огонь",
-            "label": "огонь"
-          },
-          {
-            "value": "яд",
-            "label": "яд"
-          }
-        ]
-      },
-      "aim_places": {
-        "label": "Куда целятся",
-        "of": "text",
-        "values": [
-          {
-            "value": "по телу",
-            "label": "по телу"
-          },
-          {
-            "value": "по голове",
-            "label": "по голове"
-          }
-        ]
-      }
-    }
+    ]
   },
   "compendium": {
     "items": [

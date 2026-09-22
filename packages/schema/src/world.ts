@@ -106,21 +106,36 @@ export const dieConstant = z.object({
 
 export const tableValue = z.union([z.number(), z.string(), z.boolean()]);
 
-export const rangeTable = z.object({
+export const tableColumn = z.object({
+  key: z.string().min(1),
   label: z.string().optional(),
-  ranges: z.array(z.object({
-    from: z.number(),
-    to: z.number(),
-    value: tableValue,
-  })).optional(),
+  kind: z.enum(['number', 'text', 'expr', 'dice', 'choice']).optional(),
 
-  cases: z.array(z.object({
-    when: tableValue,
-    value: tableValue,
-  })).optional(),
-  otherwise: tableValue.optional(),
   from: z.string().min(1).optional(),
+});
+
+export const tableRow = z.object({
+  value: tableValue.optional(),
+  label: z.string().optional(),
+
+  from: z.number().optional(),
+  to: z.number().optional(),
+
+  cells: z.record(z.string(), z.unknown()).optional(),
+});
+
+export const table = z.object({
+  label: z.string().optional(),
+
+  key: z.enum(['word', 'range']).optional(),
+
+  of: z.enum(['number', 'text']).optional(),
+  columns: z.array(tableColumn).optional(),
+  rows: z.array(tableRow).optional(),
+  otherwise: tableValue.optional(),
 }).passthrough();
+
+export const rangeTable = table;
 
 export const rollEditOp = z.object({ op: z.string().min(1) }).passthrough();
 
@@ -289,7 +304,7 @@ export const system = z.object({
   room_rules: z.array(z.string()).optional(),
   records: z.record(z.string(), recordKind).optional(),
   constants: z.record(z.string(), systemConstant).optional(),
-  tables: z.record(z.string(), rangeTable).optional(),
+  tables: z.record(z.string(), table).optional(),
   rolls: z.array(z.object({
     tag: z.string(), label: z.string(),
     words: z.object({ success: z.string(), fail: z.string() }).optional(),
@@ -372,7 +387,10 @@ export type DieConstant = z.infer<typeof dieConstant>;
 export type SystemConstant = z.infer<typeof systemConstant>;
 export type RollEditOp = z.infer<typeof rollEditOp>;
 export type RollEdit = z.infer<typeof rollEdit>;
-export type RangeTable = z.infer<typeof rangeTable>;
+export type RangeTable = z.infer<typeof table>;
+export type Table = z.infer<typeof table>;
+export type TableColumn = z.infer<typeof tableColumn>;
+export type TableRow = z.infer<typeof tableRow>;
 export type Activation = z.infer<typeof activation>;
 export type DurationKind = z.infer<typeof durationKind>;
 export type Stacking = z.infer<typeof stacking>;

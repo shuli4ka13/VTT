@@ -77,7 +77,7 @@ export const newRoll = (system: System): RollKind => ({
 
 export const newTable = (system: System): Made<RangeTable> => ({
   key: freeId(Object.keys(system.tables ?? {}), 'таблица'),
-  value: { label: '', ranges: [] },
+  value: { label: '', key: 'word', rows: [{ value: '', label: '' }] },
 });
 
 export const simpleReceive = (tag: string, direction: 'subtract' | 'add', targetModifiers: boolean): Step => ({

@@ -1,3 +1,4 @@
+import { choiceTables } from '@vtt/engine/model/tables';
 import { useWorld, freeId, slugOf } from '../../store/world.ts';
 import { useUsage, usersOf } from './usage.ts';
 import { LiveValue } from './live-value.tsx';
@@ -184,7 +185,7 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
                 <Select
                   value={field.optionsFrom ?? ''}
                   options={[['', '— свой список —'],
-                    ...Object.entries(system.lists ?? {}).map(([key, list]) => [key, list.label || key] as const)] as never}
+                    ...choiceTables(system).map(([key, list]) => [key, list.label || key] as const)] as never}
                   onChange={next => edit(draft => {
                     if (next) { draft.optionsFrom = next; delete draft.options; }
                     else delete draft.optionsFrom;

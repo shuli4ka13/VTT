@@ -1,3 +1,4 @@
+import { choiceTables } from '@vtt/engine/model/tables';
 import { useWorld } from '../../../store/world.ts';
 import { newTrigger } from '../factory.ts';
 import { Card, CardHead, Field, Input, Select, Segmented, Fold, DangerButton, LabelInput } from '../../../ui/primitives.tsx';
@@ -129,7 +130,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
                     <Select
                       value={effect.tagsFrom ?? ''}
                       options={[['', '— свой список —'],
-                        ...Object.entries(system.lists ?? {}).map(([key, list]) => [key, list.label || key] as const)] as never}
+                        ...choiceTables(system).map(([key, list]) => [key, list.label || key] as const)] as never}
                       onChange={next => edit(draft => {
                         if (next) { draft.tagsFrom = next; delete draft.tags; }
                         else delete draft.tagsFrom;

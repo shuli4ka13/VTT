@@ -133,6 +133,7 @@ export function optionsFor(ctx: SlotContext, allow?: SlotKind[]): SlotOption[] {
   }
   if (ok('table')) {
     for (const [key, table] of Object.entries(ctx.system.tables ?? {})) {
+      if (!(table.columns ?? []).length) continue;
       const by = (ctx.recordKind?.props ?? [])[0];
       out.push({
         group: 'По таблице',
