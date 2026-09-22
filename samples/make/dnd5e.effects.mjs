@@ -13,6 +13,7 @@ const P = {
   count: { key: 'dice_count', label: 'Сколько костей', kind: 'number' },
   up: { key: 'dice_up', label: 'Костей за каждый круг выше', kind: 'number' },
   type: { key: 'damage_type', label: 'Тип урона', kind: 'choice', from: 'damage_types' },
+  source: { key: 'damage_source', label: 'Источник урона', kind: 'choice', from: 'damage_source' },
   status: { key: 'status', label: 'Состояние', kind: 'effect' },
   repeat: { key: 'repeat', label: 'Повторный спасбросок', kind: 'effect' },
 };
@@ -82,11 +83,12 @@ function attacks() {
           { key: 'damage_with', label: 'Прибавка к урону', kind: 'expr' },
           { key: 'damage_dice', label: 'Кость урона', kind: 'dice' },
           P.type,
+          P.source,
         ],
         steps: [
           hit({ param: 'attack_with' }),
           { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'damage_dice' }, bonus: { param: 'damage_with' }, count: { expr: CRIT } },
-          damage({ ref: 'dmg' }, [{ param: 'damage_type' }]),
+          damage({ ref: 'dmg' }, [{ param: 'damage_type' }, { param: 'damage_source' }]),
         ],
       }),
     monster_attack: manual('Атака существа', 'Атака',
@@ -100,7 +102,7 @@ function attacks() {
         steps: [
           hit({ param: 'to_hit' }),
           { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'damage_dice' }, bonus: { param: 'damage_bonus' }, count: { expr: '@hit.natural >= 20 ? 2 : 1' } },
-          damage({ ref: 'dmg' }, [{ param: 'damage_type' }]),
+          damage({ ref: 'dmg' }, [{ param: 'damage_type' }, 'немагический']),
         ],
       }),
     flame_blade: {
@@ -110,7 +112,7 @@ function attacks() {
       trigger: { on: 'strike', direction: 'out', to: 'target' },
       steps: [
         { id: 'жар', type: 'amount', source: 'item', fixed: { expr: "кинуть('2к6')" } },
-        damage({ ref: 'жар' }, ['огонь']),
+        damage({ ref: 'жар' }, ['огонь', 'магический']),
       ],
     },
     sneak_attack: manual('Скрытая атака', 'Умения класса',

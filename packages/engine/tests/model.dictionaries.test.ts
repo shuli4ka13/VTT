@@ -1,3 +1,4 @@
+import { tagTablesOf } from '../src/model/lists.ts';
 import { group, test, eq, ok } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { listUsers } from '../src/model/lists.ts';
@@ -21,8 +22,9 @@ const troublesOf = (system: System): string[] => {
   };
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
     for (const p of (effect.params ?? [])) look(`эффект «${effect.label ?? id}» · ${p.label ?? p.key}`, p as Loose);
-    const tagsFrom = (effect as Loose).tagsFrom as string | undefined;
-    if (tagsFrom && !lists[tagsFrom]) out.push(`эффект «${effect.label ?? id}»: словаря меток «${tagsFrom}» нет`);
+    for (const tagsFrom of tagTablesOf(effect)) {
+      if (!lists[tagsFrom]) out.push(`эффект «${effect.label ?? id}»: словаря меток «${tagsFrom}» нет`);
+    }
   }
   for (const [rk, kind] of Object.entries(system.records ?? {})) {
     for (const p of (kind.props ?? [])) look(`тип «${kind.label ?? rk}» · ${p.label ?? p.key}`, p as Loose);

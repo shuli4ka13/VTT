@@ -4,7 +4,7 @@ import { Card, CardHead, Field, Input, Select, Button, Empty } from '../../ui/pr
 import { FormulaInput } from '../../ui/formula.tsx';
 import { targets } from '@vtt/engine/engine/targets';
 import { installMethod, recipesToInstall } from '@vtt/engine/model/advantage-methods';
-import { tagsOf, listOf as rowsFrom } from '@vtt/engine/model/lists';
+import { tagsOf, tagTablesOf, listOf as rowsFrom } from '@vtt/engine/model/lists';
 import { TagPick, type Tag } from './tag-pick.tsx';
 
 const OPS = [
@@ -210,10 +210,11 @@ function EventCondition({ system, modifier, onChange }: {
   const eventId = String(m.target).slice('event:'.length);
   const effect = system.effects[eventId];
   const known = effect ? tagsOf(system, effect) : [];
-  const tagsTable = effect?.tagsFrom ? system.tables?.[effect.tagsFrom] : undefined;
-  const columns = tagsTable?.columns ?? [];
+  const tagTables = tagTablesOf(effect);
+  const columns = tagTables.flatMap(table => (system.tables?.[table]?.columns ?? [])
+    .map(c => ({ ...c, table, pick: `${table}\u0000${c.key}`, name: tagTables.length > 1 ? `${system.tables?.[table]?.label || table} → ${c.label || c.key}` : (c.label || c.key) })));
   const where = m.where as { table: string; column: string; is: unknown } | undefined;
-  const column = columns.find(c => c.key === where?.column);
+  const column = columns.find(c => c.table === where?.table && c.key === where?.column);
   const values = column?.kind === 'choice' ? (rowsFrom(system, column.from) ?? []) : [];
   const words = (raw: unknown): Tag[] => (Array.isArray(raw) ? raw.map(String) : []);
 
@@ -232,14 +233,15 @@ function EventCondition({ system, modifier, onChange }: {
         />
       </Field>
       {columns.length ? (
-        <Field label="Где у метки" hint={`Смотрит в «${tagsTable?.label || effect?.tagsFrom}»: один факт вместо перечня меток.`}>
+        <Field label="Где у метки" hint="Смотрит в строку метки в таблице: один факт вместо перечня меток.">
           <div className="inline inline--tight">
             <Select
-              value={where?.column ?? ''}
-              options={[['', '— без условия —'], ...columns.map(c => [c.key, c.label || c.key] as const)] as never}
+              value={column?.pick ?? ''}
+              options={[['', '— без условия —'], ...columns.map(c => [c.pick, c.name] as const)] as never}
               onChange={next => onChange(d => {
-                if (!next) { delete d.where; return; }
-                d.where = { table: String(effect?.tagsFrom), column: next, is: '' };
+                const picked = columns.find(c => c.pick === next);
+                if (!picked) { delete d.where; return; }
+                d.where = { table: picked.table, column: picked.key, is: '' };
               })}
             />
             {where ? (

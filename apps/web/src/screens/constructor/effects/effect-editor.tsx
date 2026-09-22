@@ -7,7 +7,10 @@ import { LAUNCH_KINDS, launchHint } from './words.ts';
 import { LaunchCard } from './launch-card.tsx';
 import { Chain } from './chain.tsx';
 import { WordList } from '../word-list.tsx';
-import { tagsOf } from '@vtt/engine/model/lists';
+import { tagsOf, tagTablesOf } from '@vtt/engine/model/lists';
+import { calledOf } from '@vtt/engine/engine/effects';
+import { EVENT_NAMES } from '../slots.tsx';
+import { MultiChoice } from '../../../ui/multi-choice.tsx';
 import { BlockPick } from '../block-pick.tsx';
 import { Extras } from './cards/extras.tsx';
 import { ParamsEditor } from './params-editor.tsx';
@@ -46,6 +49,35 @@ const fromBase = (base: Effect): string => {
     ? `От основы «${base.label ?? ''}» достаётся — ${parts.join(', ')}.`
     : `Основа «${base.label ?? ''}» пока ничего не даёт.`;
 };
+
+const isCalledEffect = (system: System, effect: Effect): boolean =>
+  tagTablesOf(effect).length > 0 || !!effect.tags?.length || calledOf(system).some(([, other]) => other === effect);
+
+function Incoming({ effect, system }: { effect: Effect; system: System }) {
+  const tables = tagTablesOf(effect).map(table => system.tables?.[table]?.label || table);
+  return (
+    <Card>
+      <CardHead title="Что приходит" />
+      <p className="faint">Это входы эффекта, как у функции. В формулах шагов их берут через @.</p>
+      <dl className="incoming">
+        {EVENT_NAMES.map(([key, label]) => (
+          <div key={key} className="incoming__row">
+            <dt>{label}</dt>
+            <dd>{key === 'event.amount'
+              ? 'число от зовущего, уже после правок цели: сопротивлений, уязвимостей'
+              : 'то же число, каким его отправили, до правок цели'}</dd>
+          </div>
+        ))}
+        <div className="incoming__row">
+          <dt>метки вызова</dt>
+          <dd>{tables.length
+            ? `по одной из каждой таблицы: ${tables.join(', ')}`
+            : (effect.tags?.length ? `из своего списка: ${effect.tags.join(', ')}` : 'меток не ждёт')}</dd>
+        </div>
+      </dl>
+    </Card>
+  );
+}
 
 export function EffectEditor({ id, effect, system }: { id: string; effect: Effect; system: System }) {
   const editSystem = useWorld(s => s.editSystem);
@@ -124,20 +156,23 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
               node: (
                 <Field
                   label="Какие метки бывают"
-                  hint="Список на выбор для тех, кто зовёт этот эффект. Например у «Урона» — виды урона."
+                  hint="Из каких таблиц зовущий берёт метки — по одной из каждой. У «Урона»: тип урона и источник урона."
                 >
                   <div className="stack stack--tight">
-                    <Select
-                      value={effect.tagsFrom ?? ''}
-                      options={[['', '— свой список —'],
-                        ...choiceTables(system).map(([key, list]) => [key, list.label || key] as const)] as never}
+                    <MultiChoice
+                      value={tagTablesOf(effect)}
+                      options={choiceTables(system).map(([key, list]) => ({ value: key, label: list.label || key }))}
                       onChange={next => edit(draft => {
-                        if (next) { draft.tagsFrom = next; delete draft.tags; }
+                        if (next.length) { draft.tagsFrom = next; delete draft.tags; }
                         else delete draft.tagsFrom;
                       })}
                     />
-                    {effect.tagsFrom ? (
-                      <span className="faint">{tagsOf(system, effect).join(', ')}</span>
+                    {tagTablesOf(effect).length ? (
+                      tagTablesOf(effect).map(table => (
+                        <span key={table} className="faint">
+                          {system.tables?.[table]?.label || table}: {tagsOf(system, { ...effect, tagsFrom: [table] }).join(', ')}
+                        </span>
+                      ))
                     ) : (
                       <WordList
                         value={effect.tags ?? []} known={knownTags(system)} placeholder="новая метка"
@@ -198,6 +233,8 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
       </Card>
 
       {launch.kind === 'auto' ? <LaunchCard id={id} effect={effect} system={system} edit={edit} /> : null}
+
+      {pipeline && isCalledEffect(system, effect) ? <Incoming effect={effect} system={system} /> : null}
 
       {pipeline ? (
         <>

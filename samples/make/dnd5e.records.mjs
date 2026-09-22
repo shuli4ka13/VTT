@@ -4,6 +4,7 @@ const ref = key => ({ prop: key });
 const maybe = key => ({ prop: key, optional: true });
 
 const DAMAGE = prop('damage_type', 'Тип урона', 'choice', { from: 'damage_types' });
+const SOURCE = prop('damage_source', 'Источник урона', 'choice', { from: 'damage_source' });
 const DICE = prop('damage_dice', 'Кость урона', 'dice');
 const LEVEL = prop('spell_level', 'Круг', 'number');
 const SAVE_BY = prop('save_by', 'Чем спасаются', 'expr');
@@ -22,13 +23,13 @@ export function records() {
       kind: 'item', label: 'Оружие', icon: '⚔', group: 'Снаряжение',
       hint: 'Меч, рапира, лук — всё сразу. Кость и тип урона свои, а способ атаки выбирается свойством.',
       props: [
-        DICE, DAMAGE,
+        DICE, DAMAGE, SOURCE,
         prop('wield', 'Способ атаки', 'choice', { from: 'wield' }),
         prop('properties', 'Свойства', 'choice', { from: 'weapon_properties', many: true }),
         prop('range', 'Дистанция', 'text', { optional: true }),
       ],
       bindings: [bind('Удар', 'strike', {
-        damage_dice: ref('damage_dice'), damage_type: ref('damage_type'),
+        damage_dice: ref('damage_dice'), damage_type: ref('damage_type'), damage_source: ref('damage_source'),
         attack_with: { table: 'wield', by: { prop: 'wield' }, column: 'attack' },
         damage_with: { table: 'wield', by: { prop: 'wield' }, column: 'damage' },
       })],

@@ -13,13 +13,15 @@ const propertiesOf = (text, ranged) => {
   return found;
 };
 
+const magical = weapon => ({ ...weapon, props: { ...weapon.props, damage_source: 'магический' } });
+
 function weapons() {
   const melee = (id, label, dice, type, text) =>
-    item(id, 'weapon', label, text, { damage_dice: dice, damage_type: type, wield: 'melee', properties: propertiesOf(text, false) });
+    item(id, 'weapon', label, text, { damage_dice: dice, damage_type: type, damage_source: 'немагический', wield: 'melee', properties: propertiesOf(text, false) });
   const finesse = (id, label, dice, type, text) =>
-    item(id, 'weapon', label, text, { damage_dice: dice, damage_type: type, wield: 'finesse', properties: propertiesOf(text, false) });
+    item(id, 'weapon', label, text, { damage_dice: dice, damage_type: type, damage_source: 'немагический', wield: 'finesse', properties: propertiesOf(text, false) });
   const ranged = (id, label, dice, type, range, text) =>
-    item(id, 'weapon', label, text, { damage_dice: dice, damage_type: type, wield: 'ranged', range, properties: propertiesOf(text, true) });
+    item(id, 'weapon', label, text, { damage_dice: dice, damage_type: type, damage_source: 'немагический', wield: 'ranged', range, properties: propertiesOf(text, true) });
   return [
     melee('club', 'Дубинка', '1d4', 'дробящий', 'Простое оружие, лёгкое.'),
     melee('greatclub', 'Палица', '1d8', 'дробящий', 'Простое оружие, двуручное.'),
@@ -48,10 +50,10 @@ function weapons() {
     ranged('sling', 'Праща', '1d4', 'дробящий', '30/120', 'Простое оружие.'),
     ranged('dart', 'Дротик', '1d4', 'колющий', '20/60', 'Простое оружие, фехтовальное, метательное.'),
     {
-      ...melee('flame_tongue', 'Огненный язык', '1d8', 'рубящий', 'Длинный меч: пока горит, каждый удар добавляет 2к6 огнём.'),
+      ...magical(melee('flame_tongue', 'Огненный язык', '1d8', 'рубящий', 'Длинный меч: пока горит, каждый удар добавляет 2к6 огнём.')),
       grants: ['flame_blade'],
     },
-    { ...melee('magic_sword_1', 'Длинный меч +1', '1d8', 'рубящий', 'Оружие с бонусом к атаке и урону.'),
+    { ...magical(melee('magic_sword_1', 'Длинный меч +1', '1d8', 'рубящий', 'Оружие с бонусом к атаке и урону.')),
       modifiers: [add('cell:wield.*.attack', 1), add('cell:wield.*.damage', 1)] },
   ];
 }

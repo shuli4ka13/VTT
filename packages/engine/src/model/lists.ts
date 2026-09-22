@@ -14,10 +14,16 @@ export function optionsOf(system: System, field: Field): FieldOption[] {
   return listOf(system, field.optionsFrom) ?? field.options ?? [];
 }
 
+export function tagTablesOf(effect: Effect | undefined): string[] {
+  const from = effect?.tagsFrom;
+  if (!from) return [];
+  return Array.isArray(from) ? from : [from];
+}
+
 export function tagsOf(system: System, effect: Effect): string[] {
-  const fromList = listOf(system, effect.tagsFrom);
-  if (fromList) return fromList.map(option => String(option.value));
-  return effect.tags ?? [];
+  const tables = tagTablesOf(effect);
+  if (!tables.length) return effect.tags ?? [];
+  return tables.flatMap(table => (listOf(system, table) ?? []).map(option => String(option.value)));
 }
 
 export function listUsers(system: System, key: string): string[] {
@@ -27,7 +33,7 @@ export function listUsers(system: System, key: string): string[] {
     if (field.optionsFrom === key) out.push(`поле «${field.label}»`);
   }
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
-    if (effect.tagsFrom === key) out.push(`эффект «${effect.label ?? id}»`);
+    if (tagTablesOf(effect).includes(key)) out.push(`эффект «${effect.label ?? id}»`);
     for (const param of (effect.params ?? [])) {
       if (from(param) === key) out.push(`«${param.label ?? param.key}» у эффекта «${effect.label ?? id}»`);
     }

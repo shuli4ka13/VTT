@@ -300,7 +300,7 @@ export const EVENT_NAMES: [string, string][] = [
 ];
 
 export const isCalled = (ctx: SlotContext): boolean =>
-  Boolean(ctx.effect.tagsFrom || ctx.effect.tags?.length)
+  Boolean(ctx.effect.tagsFrom?.length || ctx.effect.tags?.length)
   || calledOf(ctx.system).some(([, effect]) => effect === ctx.effect);
 
 export function stepNames(ctx: SlotContext): Map<string, string> {

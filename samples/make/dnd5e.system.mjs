@@ -35,7 +35,7 @@ export const RESOURCES = [
 
 export const DAMAGE_TAGS = [
   'рубящий', 'колющий', 'дробящий', 'огонь', 'холод', 'молния', 'гром', 'кислота', 'яд',
-  'некротический', 'излучение', 'психический', 'силовой', 'магический',
+  'некротический', 'излучение', 'психический', 'силовой',
 ];
 
 const words = (label, key, rows) => ({ label, key, rows });
@@ -43,7 +43,7 @@ const words = (label, key, rows) => ({ label, key, rows });
 const NATURE = {
   рубящий: 'физический', колющий: 'физический', дробящий: 'физический',
   огонь: 'стихийный', холод: 'стихийный', молния: 'стихийный', гром: 'стихийный', кислота: 'стихийный',
-  яд: 'прочий', некротический: 'прочий', излучение: 'прочий', психический: 'прочий', силовой: 'прочий', магический: 'прочий',
+  яд: 'прочий', некротический: 'прочий', излучение: 'прочий', психический: 'прочий', силовой: 'прочий',
 };
 
 export const WEAPON_PROPERTIES = [
@@ -57,6 +57,10 @@ export const lists = () => ({
     { value: 'физический', label: 'физический' },
     { value: 'стихийный', label: 'стихийный' },
     { value: 'прочий', label: 'прочий' },
+  ]),
+  damage_source: words('Источник урона', 'word', [
+    { value: 'немагический', label: 'немагический' },
+    { value: 'магический', label: 'магический' },
   ]),
   damage_types: {
     label: 'Типы урона', key: 'word',
@@ -143,7 +147,6 @@ const RACES = [
 ];
 
 export const TAKEN = DAMAGE_TAGS
-  .filter(tag => tag !== 'магический')
   .map((tag, at) => [`taken_${at}`, tag]);
 
 const stored = (tag, label, group, type, def, extra = {}) => {
@@ -382,7 +385,7 @@ export function calledEffects() {
     damage: {
       label: 'Урон',
       group: 'Вызываемые',
-      tagsFrom: 'damage_types',
+      tagsFrom: ['damage_types', 'damage_source'],
       steps: [
         {
           type: 'apply', target: { tag: 'death_fail' }, direction: 'add', value: { const: 1 }, targetModifiers: false,

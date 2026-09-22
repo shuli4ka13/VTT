@@ -586,3 +586,9 @@
 
 .table-grid { display: grid; gap: var(--s-2); align-items: center; }
 .table-grid > .faint { font-size: var(--fs-2); text-transform: uppercase; letter-spacing: 0.04em; }
+
+.incoming { display: grid; gap: 6px; margin: 8px 0 0; }
+.incoming__row { display: grid; grid-template-columns: minmax(140px, 220px) 1fr; gap: 12px; align-items: baseline; }
+.incoming__row dt { font-weight: 600; }
+.incoming__row dd { margin: 0; color: var(--text-faint); }
+@media (max-width: 560px) { .incoming__row { grid-template-columns: 1fr; gap: 2px; } }
