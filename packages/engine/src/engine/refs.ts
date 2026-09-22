@@ -1,6 +1,7 @@
 import { compile } from '../formula/index.ts';
 import { EngineError } from './errors.ts';
 import { readCell } from './cells.ts';
+import { referencedTable, splitPath, walk } from './navigate.ts';
 import { VALUE_COLUMN } from '../model/tables.ts';
 import { rollNotation, multiplyNotation } from './dice.ts';
 import type { Param, Die } from '../model/types.ts';
@@ -117,6 +118,7 @@ function fromArgs(key: string, ctx: RefContext): unknown {
   const arg = (ctx.params || {})[key];
   if (arg === null || typeof arg !== 'object') return arg;
   if ('prop' in arg) return (ctx.props || {})[String((arg as AnyRef).prop)];
+  if ('const' in arg) return (arg as AnyRef).const;
   if ('table' in arg) {
     const by = (arg as AnyRef).by;
     const input = by && typeof by === 'object' && 'prop' in (by as AnyRef)
@@ -125,7 +127,7 @@ function fromArgs(key: string, ctx: RefContext): unknown {
     return readCell(ctx.pass.system, ctx.pass, String((arg as AnyRef).table), input, columnOf(arg as AnyRef), who(ctx));
   }
   throw new EngineError(
-    `${who(ctx)}: аргумент «${key}» неизвестной формы ${JSON.stringify(arg)} — умею значение или { prop }`);
+    `${who(ctx)}: аргумент «${key}» неизвестной формы ${JSON.stringify(arg)} — умею значение, { const }, { prop } или { table }`);
 }
 
 export function resolveRef(ref: unknown, ctx: RefContext): unknown {
@@ -208,6 +210,7 @@ function waitsForStep(expr: string, ctx: RefContext): boolean {
     const dot = name.indexOf('.');
     if (dot <= 0) return false;
     if (fields.some(field => field.tag === name)) return false;
+    if (referencedTable(ctx.pass.system, name.slice(0, dot), ctx.paramDefs)) return false;
     const held = (ctx.results ?? {})[name.slice(0, dot)];
     return held === undefined || typeof held !== 'object';
   });
@@ -216,7 +219,7 @@ function waitsForStep(expr: string, ctx: RefContext): boolean {
 function evaluate(expr: unknown, ctx: RefContext, sent?: Record<string, unknown>): unknown {
   const results = ctx.results;
   const isField = (name: string) => ctx.pass.system.fields.some(f => f.tag === name);
-  const resolve = (name: string) => {
+  const resolve = (name: string): unknown => {
     if (sent && name in sent) return sent[name];
     if (results && name in results && !isField(name)) return (results as Record<string, unknown>)[name];
     const dot = name.indexOf('.');
@@ -231,6 +234,9 @@ function evaluate(expr: unknown, ctx: RefContext, sent?: Record<string, unknown>
     if (!isField(name)) {
       const named = namedValue(name, ctx);
       if (named !== undefined) return named;
+      const split = splitPath(name);
+      const table = split ? referencedTable(ctx.pass.system, split.head, ctx.paramDefs) : undefined;
+      if (split && table) return walk(ctx.pass.system, ctx.pass, table, resolve(split.head), split.path, who(ctx));
     }
     return ctx.pass.resolve(name);
   };

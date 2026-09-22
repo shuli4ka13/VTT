@@ -2,9 +2,10 @@ import { useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
 import { matchTagQuery } from './tag-suggest.tsx';
+import { fieldPaths } from './paths.ts';
 
 const labelOfTag = (system: System, tag: string, extra?: Map<string, string>): string =>
-  system.fields.find(f => f.tag === tag)?.label ?? extra?.get(tag) ?? tag;
+  system.fields.find(f => f.tag === tag)?.label ?? extra?.get(tag) ?? fieldPaths(system).get(tag) ?? tag;
 
 export type Part = { text: string } | { tag: string };
 
@@ -88,10 +89,11 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
 
   calculator?: boolean;
 }) {
+  const paths = useMemo(() => fieldPaths(system), [system]);
   const parts = useMemo(
     () => partsOf(value, tag => (system.fields ?? []).some(field => field.tag === tag)
-      || Boolean(names?.[tag]) || Boolean(extraNames?.has(tag))),
-    [value, system, names, extraNames],
+      || Boolean(names?.[tag]) || Boolean(extraNames?.has(tag)) || paths.has(tag)),
+    [value, system, names, extraNames, paths],
   );
   const host = useRef<HTMLDivElement>(null);
   const inputs = useRef(new Map<number, HTMLInputElement>());
@@ -102,8 +104,9 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
     () => [
       ...[...(extraNames ?? [])].map(([tag, label]) => ({ tag, label, group: 'здесь же' })),
       ...system.fields.map(f => ({ tag: f.tag, label: f.label ?? f.tag, group: 'поле' })),
+      ...[...paths].map(([tag, label]) => ({ tag, label, group: 'по ссылке' })),
     ],
-    [system, extraNames],
+    [system, extraNames, paths],
   );
 
   const commitParts = (next: Part[], focusAt?: { index: number; caret: number }) => {

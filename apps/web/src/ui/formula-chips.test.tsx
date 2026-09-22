@@ -115,3 +115,32 @@ describe('FormulaChips', () => {
     expect(value).toBe(' + 2');
   });
 });
+
+describe('ссылка на таблицу видна в формуле через точку', () => {
+  const сКлассом = {
+    fields: [
+      { tag: 'класс', label: 'Класс', optionsFrom: 'классы', value: { kind: 'stored', type: 'text', default: 'воин' } },
+      { tag: 'сила', label: 'Сила', value: { kind: 'stored', type: 'number', default: 10 } },
+    ],
+    tables: {
+      классы: { label: 'Классы', key: 'word', columns: [{ key: 'кость', label: 'Кость хитов', kind: 'number' }], rows: [] },
+    },
+    constants: {}, effects: {},
+  } as unknown as System;
+
+  it('колонка таблицы стоит фишкой «Класс → Кость хитов»', () => {
+    render(<FormulaChips value="@класс.кость + 1" system={сКлассом} onChange={() => {}} />);
+    expect(screen.getByText('Класс → Кость хитов')).toBeTruthy();
+  });
+
+  it('набрал «@кость» — предлагается и колонка по ссылке', () => {
+    let value = '@кость';
+    render(<FormulaChips value={value} system={сКлассом} onChange={next => { value = next; }} />);
+    const input = screen.getByDisplayValue('@кость') as HTMLInputElement;
+    input.focus();
+    input.setSelectionRange(value.length, value.length);
+    fireEvent.click(input);
+    fireEvent.mouseDown(screen.getByText('Класс → Кость хитов'));
+    expect(value).toBe('@класс.кость');
+  });
+});

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { System, Effect, RecordKind, SlotRef } from '@vtt/schema';
 import { Input, Select } from '../../ui/primitives.tsx';
-import { FormulaInput, labelOfTag } from '../../ui/formula.tsx';
+import { FormulaInput, labelOfTag, columnPaths } from '../../ui/formula.tsx';
 import { countWord } from './readback.ts';
 import { stepModule } from '@vtt/engine/engine/steps/index';
 import { dice as diceText, STEP } from '../../words.ts';
@@ -307,6 +307,10 @@ export function namesOf(ctx: SlotContext): Map<string, string> {
   const out = new Map<string, string>();
   for (const [key, label] of propsFor(ctx)) out.set(key, label);
   for (const param of ctx.effect.params ?? []) out.set(param.key, param.label ?? param.key);
+  const heads = (ctx.effect.params ?? [])
+    .filter(p => p.kind === 'choice' && p.from)
+    .map(p => ({ key: p.key, label: p.label ?? p.key, from: p.from }));
+  for (const [key, label] of columnPaths(ctx.system, heads)) out.set(key, label);
   for (const [key, label] of stepNames(ctx)) out.set(key, label);
   return out;
 }

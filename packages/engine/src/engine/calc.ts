@@ -1,6 +1,7 @@
 import { compile } from '../formula/index.ts';
 import { UnknownTagError, CycleError, EngineError } from './errors.ts';
 import { readCell } from './cells.ts';
+import { referencedTable, splitPath, walk } from './navigate.ts';
 import { VALUE_COLUMN } from '../model/tables.ts';
 import { collectModifiers, applyValueModifiers } from './modifiers.ts';
 import type { CollectedModifiers } from './modifiers.ts';
@@ -39,7 +40,14 @@ export function newPass(system: System, sheet: Sheet, options: PassOptions = {})
     resolve: () => undefined,
   };
 
-  pass.resolve = tag => calc(system, sheet, tag, pass);
+  pass.resolve = tag => {
+    const split = findField(system, tag) ? null : splitPath(tag);
+    const table = split ? referencedTable(system, split.head) : undefined;
+    if (split && table) {
+      return walk(system, pass, table, calc(system, sheet, split.head, pass), split.path, `поле «${split.head}»`);
+    }
+    return calc(system, sheet, tag, pass);
+  };
 
   if (options.compendium) pass.modifiers = collectModifiers(system, sheet, options.compendium);
   else if (options.modifiers) pass.modifiers = options.modifiers;
@@ -84,7 +92,7 @@ export function dependenciesOf(system: System, tag: string): string[] {
 
 function computeBase(field: Field, pass: Pass): unknown {
   const source = field.value;
-  const resolve: Resolve = tag => calc(pass.system, pass.sheet, tag, pass);
+  const resolve: Resolve = tag => pass.resolve(tag);
 
   switch (source.kind) {
     case 'stored':

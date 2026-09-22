@@ -3,6 +3,9 @@ import type { System } from '@vtt/schema';
 import { compile } from '@vtt/engine/formula';
 import { Verdict } from './primitives.tsx';
 import { FormulaChips } from './formula-chips.tsx';
+import { fieldPaths } from './paths.ts';
+
+export { columnPaths, fieldPaths } from './paths.ts';
 
 export interface Parsed {
   ok: boolean;
@@ -25,7 +28,8 @@ export function parseFormula(source: string): Parsed {
 
 export function labelOfTag(system: System, tag: string): string {
   const field = system.fields.find(f => f.tag === tag);
-  return field?.label ?? tag;
+  if (field) return field.label ?? tag;
+  return fieldPaths(system).get(tag) ?? tag;
 }
 
 export function formulaAsLabels(
@@ -36,7 +40,7 @@ export function formulaAsLabels(
   return source.replace(/[@#]([\p{L}\p{N}_.]+)/gu, (_, name: string) => {
     const field = system.fields.find(f => f.tag === name);
     if (field) return field.label ?? name;
-    return names?.get(name) ?? name;
+    return names?.get(name) ?? fieldPaths(system).get(name) ?? name;
   });
 }
 
