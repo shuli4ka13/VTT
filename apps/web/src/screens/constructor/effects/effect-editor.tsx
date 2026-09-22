@@ -1,4 +1,3 @@
-import { choiceTables } from '@vtt/engine/model/tables';
 import { useWorld } from '../../../store/world.ts';
 import { newTrigger } from '../factory.ts';
 import { Card, CardHead, Field, Input, Select, Segmented, Fold, DangerButton, LabelInput } from '../../../ui/primitives.tsx';
@@ -7,10 +6,8 @@ import { LAUNCH_KINDS, launchHint } from './words.ts';
 import { LaunchCard } from './launch-card.tsx';
 import { Chain } from './chain.tsx';
 import { WordList } from '../word-list.tsx';
-import { tagsOf, tagTablesOf } from '@vtt/engine/model/lists';
+import { amountParamOf } from '@vtt/engine/model/lists';
 import { calledOf } from '@vtt/engine/engine/effects';
-import { EVENT_NAMES } from '../slots.tsx';
-import { MultiChoice } from '../../../ui/multi-choice.tsx';
 import { BlockPick } from '../block-pick.tsx';
 import { Extras } from './cards/extras.tsx';
 import { ParamsEditor } from './params-editor.tsx';
@@ -51,33 +48,7 @@ const fromBase = (base: Effect): string => {
 };
 
 const isCalledEffect = (system: System, effect: Effect): boolean =>
-  tagTablesOf(effect).length > 0 || !!effect.tags?.length || calledOf(system).some(([, other]) => other === effect);
-
-function Incoming({ effect, system }: { effect: Effect; system: System }) {
-  const tables = tagTablesOf(effect).map(table => system.tables?.[table]?.label || table);
-  return (
-    <Card>
-      <CardHead title="Что приходит" />
-      <p className="faint">Это входы эффекта, как у функции. В формулах шагов их берут через @.</p>
-      <dl className="incoming">
-        {EVENT_NAMES.map(([key, label]) => (
-          <div key={key} className="incoming__row">
-            <dt>{label}</dt>
-            <dd>{key === 'event.amount'
-              ? 'число от зовущего, уже после правок цели: сопротивлений, уязвимостей'
-              : 'то же число, каким его отправили, до правок цели'}</dd>
-          </div>
-        ))}
-        <div className="incoming__row">
-          <dt>метки вызова</dt>
-          <dd>{tables.length
-            ? `по одной из каждой таблицы: ${tables.join(', ')}`
-            : (effect.tags?.length ? `из своего списка: ${effect.tags.join(', ')}` : 'меток не ждёт')}</dd>
-        </div>
-      </dl>
-    </Card>
-  );
-}
+  !!amountParamOf(effect) || !!effect.tags?.length || calledOf(system).some(([, other]) => other === effect);
 
 export function EffectEditor({ id, effect, system }: { id: string; effect: Effect; system: System }) {
   const editSystem = useWorld(s => s.editSystem);
@@ -150,41 +121,23 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
                 </Field>
               ),
             },
-            {
-              key: 'tags', label: 'какие метки бывают', on: !!effect.tags?.length || !!effect.tagsFrom,
-              add: () => {}, drop: () => edit(draft => { delete draft.tags; delete draft.tagsFrom; }),
+            ...(effect.tags?.length ? [{
+              key: 'tags', label: 'свои метки', on: true,
+              add: () => {}, drop: () => edit(draft => { delete draft.tags; }),
               node: (
                 <Field
-                  label="Какие метки бывают"
-                  hint="Из каких таблиц зовущий берёт метки — по одной из каждой. У «Урона»: тип урона и источник урона."
+                  label="Свои метки"
+                  hint="Слова без таблицы. Надёжнее завести таблицу и вход-выбор из неё в «Что приходит»."
                 >
-                  <div className="stack stack--tight">
-                    <MultiChoice
-                      value={tagTablesOf(effect)}
-                      options={choiceTables(system).map(([key, list]) => ({ value: key, label: list.label || key }))}
-                      onChange={next => edit(draft => {
-                        if (next.length) { draft.tagsFrom = next; delete draft.tags; }
-                        else delete draft.tagsFrom;
-                      })}
-                    />
-                    {tagTablesOf(effect).length ? (
-                      tagTablesOf(effect).map(table => (
-                        <span key={table} className="faint">
-                          {system.tables?.[table]?.label || table}: {tagsOf(system, { ...effect, tagsFrom: [table] }).join(', ')}
-                        </span>
-                      ))
-                    ) : (
-                      <WordList
-                        value={effect.tags ?? []} known={knownTags(system)} placeholder="новая метка"
-                        onChange={next => edit(draft => {
-                          if (next.length) draft.tags = next; else delete draft.tags;
-                        })}
-                      />
-                    )}
-                  </div>
+                  <WordList
+                    value={effect.tags ?? []} known={knownTags(system)} placeholder="новая метка"
+                    onChange={next => edit(draft => {
+                      if (next.length) draft.tags = next; else delete draft.tags;
+                    })}
+                  />
                 </Field>
               ),
-            },
+            }] : []),
             ...(launch.kind === 'manual' || launch.ask ? [{
               key: 'cost', label: 'занимает', on: !!effect.cost,
               add: () => {}, drop: () => edit(draft => { delete draft.cost; }),
@@ -234,7 +187,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
 
       {launch.kind === 'auto' ? <LaunchCard id={id} effect={effect} system={system} edit={edit} /> : null}
 
-      {pipeline && isCalledEffect(system, effect) ? <Incoming effect={effect} system={system} /> : null}
+      {pipeline && isCalledEffect(system, effect) ? <ParamsEditor effect={effect} system={system} onEdit={edit} called /> : null}
 
       {pipeline ? (
         <>
@@ -243,7 +196,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
             empty={idleWords(effect)}
           />
           <SelfTrack effect={effect} system={system} edit={edit} />
-          <ParamsEditor effect={effect} system={system} onEdit={edit} />
+          {isCalledEffect(system, effect) ? null : <ParamsEditor effect={effect} system={system} onEdit={edit} />}
         </>
       ) : (
         <ModifiersEditor

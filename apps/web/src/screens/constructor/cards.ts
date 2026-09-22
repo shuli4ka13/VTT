@@ -57,7 +57,10 @@ export function groupSteps(list: Step[]): CardGroup[] {
     const next = list[i + 1];
     const source = (step as any).source;
 
-    const carried = next?.type === 'emit' ? (next as any).amount : (next as any)?.value;
+    const call = next as { amount?: unknown; args?: Record<string, unknown>; value?: unknown } | undefined;
+    const carried = next?.type === 'emit'
+      ? (call?.amount ?? Object.values(call?.args ?? {}).find(arg => takesWhole(arg, step.id ?? '')))
+      : call?.value;
     const glue = step.type === 'amount' && step.id
       && (next?.type === 'apply' || next?.type === 'status')
       && (source === 'roll' || source === undefined)

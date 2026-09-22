@@ -1,16 +1,22 @@
 import { useState } from 'react';
-import type { System } from '@vtt/schema';
+import type { System, SlotRef } from '@vtt/schema';
 import { Field, Select, Button } from '../../../../ui/primitives.tsx';
-import { SlotInput } from '../../slot-input.tsx';
+import { SlotInput, type SlotOption } from '../../slot-input.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 import { calledOf } from '@vtt/engine/engine/effects';
 import { Extras } from './extras.tsx';
 import { TagPick, type Tag } from '../../tag-pick.tsx';
-import { tagsOf } from '@vtt/engine/model/lists';
+import { tagsOf, listOf, amountParamOf } from '@vtt/engine/model/lists';
 import { WhatNext, meddlersOf } from '../what-next.tsx';
 
 const loose = (draft: unknown): Record<string, unknown> => draft as Record<string, unknown>;
+
+function rowsAsOptions(system: System, need: { kind?: string; from?: string }): SlotOption[] | undefined {
+  if (need.kind !== 'choice' || !need.from) return undefined;
+  const group = `«${system.tables?.[need.from]?.label || need.from}»`;
+  return (listOf(system, need.from) ?? []).map(row => ({ group, label: row.label, ref: { const: row.value } as SlotRef }));
+}
 
 export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
   step: any;
@@ -49,6 +55,7 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
             </Button>
           </div>
 
+          {step.amount !== undefined || !amountParamOf(called) ? (
           <div className="pair">
             <span className="call-args__name">число</span>
             <SlotInput
@@ -57,24 +64,27 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
             />
             <span />
           </div>
+          ) : null}
 
           {asks.map(need => (
             <div className="pair" key={need.key}>
               <span className="call-args__name">{need.label ?? need.key}</span>
               <SlotInput
                 value={args[need.key] as never} context={context}
+                extraOptions={rowsAsOptions(system, need)}
                 onChange={next => edit(at, draft => {
                   const all = { ...((loose(draft).args ?? {}) as Record<string, unknown>) };
                   if (next === undefined || next === null) delete all[need.key]; else all[need.key] = next;
                   if (Object.keys(all).length) loose(draft).args = all; else delete loose(draft).args;
                 })}
               />
-              <span className={args[need.key] === undefined ? 'need' : undefined}>
-                {args[need.key] === undefined ? 'не заполнено' : ''}
+              <span className={args[need.key] === undefined && !need.optional ? 'need' : 'faint'}>
+                {args[need.key] !== undefined ? '' : need.optional ? 'можно не заполнять' : 'не заполнено'}
               </span>
             </div>
           ))}
 
+          {all.length || called?.tags?.length ? (
           <div className="pair">
             <span className="call-args__name">метки</span>
             <TagPick
@@ -87,6 +97,7 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
             />
             <span />
           </div>
+          ) : null}
         </div>
       ) : null}
 

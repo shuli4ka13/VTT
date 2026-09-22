@@ -1,4 +1,4 @@
-import { RESOURCES, TAKEN } from './dnd5e.system.mjs';
+import { RESOURCES, TAKEN, DAMAGE_TAGS } from './dnd5e.system.mjs';
 
 const DIE = { constant: 'lead_die' };
 
@@ -30,7 +30,17 @@ const save = continueOn => ({
 });
 const CRIT = '@hit.natural >= @crit_from ? 2 : 1';
 const crit = { ref: 'hit.natural', atLeast: { tag: 'crit_from' } };
-const damage = (amount, tags) => ({ type: 'emit', event: 'damage', amount, tags });
+const SOURCES = ['магический', 'немагический'];
+const damageArg = tag => {
+  if (typeof tag !== 'string') return [tag.param === 'damage_source' ? 'damage_source' : 'damage_type', tag];
+  if (SOURCES.includes(tag)) return ['damage_source', { const: tag }];
+  if (DAMAGE_TAGS.includes(tag)) return ['damage_type', { const: tag }];
+  throw new Error(`метка «${tag}» не из «Типов урона» и не из «Источника урона»`);
+};
+const damage = (amount, tags) => ({
+  type: 'emit', event: 'damage', args: { amount, ...Object.fromEntries(tags.map(damageArg)) },
+});
+const spendSlot = circle => ({ type: 'emit', event: 'spell_slot', args: { circle }, strict: true });
 const hang = (effect, extra = {}) => ({ type: 'status', mode: 'apply', effect, ...extra });
 const drop = effect => ({ type: 'status', mode: 'remove', effect: { const: effect } });
 const change = (tag, direction, value, extra = {}) => ({
@@ -42,9 +52,9 @@ const paySlot = [
     type: 'compare', value: { param: 'slot' }, versus: { param: 'spell_level' }, breakIf: 'less',
     note: 'круг ячейки ниже круга заклинания',
   },
-  { type: 'emit', event: 'spell_slot', amount: { param: 'slot' }, strict: true },
+  spendSlot({ param: 'slot' }),
 ];
-const payFirstSlot = [{ type: 'emit', event: 'spell_slot', amount: { const: 1 }, strict: true }];
+const payFirstSlot = [spendSlot({ const: 1 })];
 const payResource = (key, note, amount = { const: 1 }) => [
   { type: 'compare', value: { tag: `${key}_left` }, versus: amount, breakIf: 'less', note },
   change(`${key}_left`, 'subtract', amount),
@@ -128,7 +138,7 @@ function attacks() {
       'После попадания оружием: тратишь ячейку, 2к8 излучением и ещё 1к8 за каждый круг выше первого, не больше 5к8.',
       'free', {
         params: [P.slot],
-        self: [{ type: 'emit', event: 'spell_slot', amount: { param: 'slot' }, strict: true }],
+        self: [spendSlot({ param: 'slot' })],
         steps: [
           { id: 'dmg', type: 'amount', source: 'roll', dice: { const: '1d8' }, count: { expr: 'min(5, 1 + @slot)' } },
           damage({ ref: 'dmg' }, ['излучение', 'магический']),

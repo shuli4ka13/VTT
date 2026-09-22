@@ -2400,35 +2400,35 @@
           {
             "type": "emit",
             "event": "damage",
-            "amount": {
-              "ref": "dmg"
-            },
-            "tags": [
-              {
+            "args": {
+              "amount": {
+                "ref": "dmg"
+              },
+              "damage_type": {
                 "param": "damage_type"
               },
-              {
+              "aim": {
                 "param": "aim"
               }
-            ]
+            }
           },
           {
             "type": "emit",
             "event": "damage",
-            "amount": {
-              "ref": "boom"
-            },
-            "tags": [
-              {
-                "param": "damage_type"
-              },
-              {
-                "param": "aim"
-              }
-            ],
             "when": {
               "ref": "dmg.atMax",
               "atLeast": 2
+            },
+            "args": {
+              "amount": {
+                "ref": "boom"
+              },
+              "damage_type": {
+                "param": "damage_type"
+              },
+              "aim": {
+                "param": "aim"
+              }
             }
           }
         ]
@@ -2499,12 +2499,14 @@
           {
             "type": "emit",
             "event": "damage",
-            "amount": {
-              "const": 2
-            },
-            "tags": [
-              "кровотечение"
-            ]
+            "args": {
+              "amount": {
+                "const": 2
+              },
+              "damage_type": {
+                "const": "кровотечение"
+              }
+            }
           }
         ]
       },
@@ -2574,15 +2576,6 @@
       },
       "damage": {
         "label": "Урон",
-        "tags": [
-          "пуля",
-          "холодное",
-          "огонь",
-          "яд",
-          "кровотечение",
-          "по телу",
-          "по голове"
-        ],
         "steps": [
           {
             "id": "сквозь_броню",
@@ -2742,6 +2735,27 @@
                 "is": "мимо брони"
               }
             }
+          }
+        ],
+        "params": [
+          {
+            "key": "amount",
+            "label": "Сколько урона",
+            "kind": "number",
+            "role": "amount"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "choice",
+            "from": "damage_types"
+          },
+          {
+            "key": "aim",
+            "label": "Куда попали",
+            "kind": "choice",
+            "from": "aim_places",
+            "optional": true
           }
         ]
       }

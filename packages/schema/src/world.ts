@@ -204,6 +204,9 @@ export const param = z.object({
   of: refSide.optional(),
 
   ask: ask.optional(),
+
+  role: z.enum(['amount']).optional(),
+  optional: z.boolean().optional(),
 }).passthrough();
 
 export const guard = z.union([

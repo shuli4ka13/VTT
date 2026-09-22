@@ -1,3 +1,4 @@
+import { amountParamOf } from '@vtt/engine/model/lists';
 import type { System, Effect, Step, SystemConstant } from '@vtt/schema';
 import { labelOfTag } from '../../ui/formula.tsx';
 import { dice as diceText, asDice, DIE_LETTER } from '../../words.ts';
@@ -190,8 +191,19 @@ export function sendReadback(step: Step, system: System, effect: Effect, names?:
   const id = String(s.event ?? '');
   const event = system.effects?.[id];
   const name = id ? seg(`«${event?.label || id}»:`) : hole('какой эффект зовём?');
-  const amount = s.amount === undefined ? seg('без величины') : refSegment(s.amount, system, effect, 'сколько?', names);
-  const tags = Array.isArray(s.tags) ? s.tags.map(t => (typeof t === 'string' ? t : '…')).filter(Boolean) : [];
+  const args = (s.args ?? {}) as Record<string, unknown>;
+  const main = amountParamOf(event);
+  const sent = main ? args[main.key] : s.amount;
+  const amount = sent === undefined ? seg('без величины') : refSegment(sent, system, effect, 'сколько?', names);
+  const word = (t: unknown): string => {
+    if (typeof t === 'string') return t;
+    const r = (t ?? {}) as Record<string, unknown>;
+    if ('const' in r) return String(r.const);
+    const param = typeof r.param === 'string' ? effect.params?.find(p => p.key === r.param) : undefined;
+    return param ? String(param.label ?? param.key) : '…';
+  };
+  const chosen = (event?.params ?? []).filter(p => p.kind === 'choice' && args[p.key] !== undefined).map(p => word(args[p.key]));
+  const tags = [...chosen, ...(Array.isArray(s.tags) ? s.tags.map(word) : [])].filter(Boolean);
   return [
     seg('Цель получает'), name, amount,
     ...(tags.length ? [seg(`[${tags.join(', ')}]`)] : []),

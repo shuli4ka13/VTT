@@ -385,7 +385,11 @@ export function calledEffects() {
     damage: {
       label: 'Урон',
       group: 'Вызываемые',
-      tagsFrom: ['damage_types', 'damage_source'],
+      params: [
+        { key: 'amount', label: 'Сколько урона', kind: 'number', role: 'amount' },
+        { key: 'damage_type', label: 'Тип урона', kind: 'choice', from: 'damage_types' },
+        { key: 'damage_source', label: 'Источник урона', kind: 'choice', from: 'damage_source', optional: true },
+      ],
       steps: [
         {
           type: 'apply', target: { tag: 'death_fail' }, direction: 'add', value: { const: 1 }, targetModifiers: false,
@@ -399,6 +403,7 @@ export function calledEffects() {
     spell_slot: {
       label: 'Ячейка заклинания',
       group: 'Вызываемые',
+      params: [{ key: 'circle', label: 'Круг ячейки', kind: 'number', role: 'amount' }],
       steps: slotSteps,
     },
   };

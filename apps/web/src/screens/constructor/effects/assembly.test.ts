@@ -102,7 +102,7 @@ describe('собранное шагами конструктора работа�
     fill(id, 0, step => {
       step.type = 'emit';
       step.event = made.key;
-      step.amount = { const: 7 };
+      step.args = { amount: { const: 7 } };
       delete step.target;
       delete step.direction;
     });

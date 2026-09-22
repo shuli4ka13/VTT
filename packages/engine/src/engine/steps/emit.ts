@@ -2,6 +2,8 @@ import { packRef, resolveRef, resolveOptionalNumber } from '../refs.ts';
 import { applyValueModifiers } from '../modifiers.ts';
 import { eventTagOf } from '../targets.ts';
 import { requireCalled } from '../effects.ts';
+import { amountParamOf } from '../../model/lists.ts';
+import { EngineError } from '../errors.ts';
 import type { StepData, StepContext } from './index.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
 
@@ -56,17 +58,22 @@ export function pack(step: StepData, ctx: StepContext) {
 export function resolve(step: StepData, ctx: StepContext) {
   const id = String(step.event);
   const spec = requireCalled(ctx.system, id, who(ctx));
-  const incoming = resolveOptionalNumber(step.amount, ctx, 'величина общего эффекта') ?? 0;
-  const tags = tagsOf(step.tags, ctx);
+  const args = argsOf(step.args, ctx) ?? {};
+  const main = amountParamOf(spec);
+  const incoming = main && args[main.key] !== undefined
+    ? number(args[main.key], `«${main.label ?? main.key}» вызова «${spec.label ?? id}»`)
+    : (resolveOptionalNumber(step.amount, ctx, 'величина общего эффекта') ?? 0);
+  const tags = [...new Set([...tagsOf(step.tags, ctx), ...chosenTags(spec, args)])];
   const amount = Math.floor(Number(applyValueModifiers(incoming, eventTagOf(id), ctx.pass, { tags })));
   const payload = { event: id, amount, incoming, tags };
+  if (main) args[main.key] = amount;
 
   ctx.emit?.(payload);
 
   let received: string | null = null;
   let note: string | null = null;
   if (ctx.run && spec.steps?.length) {
-    const out = ctx.run(spec.steps, { event: payload }, id, argsOf(step.args, ctx), spec.params ?? []);
+    const out = ctx.run(spec.steps, { event: payload }, id, Object.keys(args).length ? args : undefined, spec.params ?? []);
     if (out.stopped) {
       received = String(out.stopped.reason ?? 'оборвано');
       note = out.stopped.note ?? null;
@@ -102,3 +109,21 @@ function tagsOf(raw: unknown, ctx: StepContext): string[] {
 }
 
 const who = (ctx: StepContext): string => ctx.owner || 'правило';
+
+function number(value: unknown, what: string): number {
+  const n = Number(value);
+  if (!Number.isFinite(n)) throw new EngineError(`${what}: ждали число, пришло «${String(value)}»`);
+  return n;
+}
+
+function chosenTags(spec: { params?: { key: string; kind?: string; from?: string }[] }, args: Record<string, unknown>): string[] {
+  const out: string[] = [];
+  for (const param of spec.params ?? []) {
+    if (param.kind !== 'choice' || !param.from) continue;
+    const value = args[param.key];
+    if (value === undefined || value === null || value === '') continue;
+    if (Array.isArray(value)) out.push(...value.map(String));
+    else out.push(String(value));
+  }
+  return out;
+}

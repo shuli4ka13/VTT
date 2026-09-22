@@ -19,26 +19,52 @@ const FIXED_SIDE: Record<string, string> = {
   choice: 'выбирают в записи',
 };
 
-export function ParamsEditor({ effect, system, onEdit }: {
+const MAIN_HINT = 'главное число — его правят сопротивления и уязвимости цели';
+
+export function ParamsEditor({ effect, system, onEdit, called = false }: {
   effect: Effect;
   system: System;
   onEdit: (change: (draft: Effect) => void) => void;
+  called?: boolean;
 }) {
   const params = effect.params ?? [];
+  const addWord = called ? '+ вход' : '+ брать из записи';
   const addParam = () => onEdit(draft => {
     draft.params ??= [];
-    const key = freeId(draft.params.map(p => p.key), 'из_записи');
-    draft.params.push({ key, label: 'Новая потребность', kind: 'expr' });
+    const key = freeId(draft.params.map(p => p.key), called ? 'вход' : 'из_записи');
+    draft.params.push(called
+      ? { key, label: 'Новый вход', kind: 'choice' }
+      : { key, label: 'Новая потребность', kind: 'expr' });
+  });
+  const setMain = (key: string, on: boolean) => onEdit(draft => {
+    for (const p of draft.params ?? []) {
+      const loose = p as { role?: string; key: string };
+      if (loose.key === key && on) loose.role = 'amount';
+      else if (loose.key === key || on) delete loose.role;
+    }
+  });
+  const setOptional = (key: string, on: boolean) => onEdit(draft => {
+    const target = draft.params?.find(p => p.key === key) as { optional?: boolean } | undefined;
+    if (!target) return;
+    if (on) target.optional = true; else delete target.optional;
   });
 
   return (
     <Card>
-      <CardHead title="Что эффект берёт из записи" />
+      <CardHead title={called ? 'Что приходит' : 'Что эффект берёт из записи'} />
+      {called ? (
+        <p className="faint">
+          Входы эффекта, как у функции: зовущий заполняет каждый. Выбор из таблицы — это метка вызова: по ней правки цели
+          узнают, что за урон. В шагах входы берут через @.
+        </p>
+      ) : null}
       {params.length === 0 ? (
         <Empty
-          title="Потребностей нет"
-          hint="Значения шагов заполняются прямо на шагах. Заведите потребность, когда значение должно приходить от записи."
-          action={<Button size="sm" onClick={addParam}>+ брать из записи</Button>}
+          title={called ? 'Входов нет' : 'Потребностей нет'}
+          hint={called
+            ? 'Заведите число, которое приходит, и выборы из таблиц — например «Тип урона».'
+            : 'Значения шагов заполняются прямо на шагах. Заведите потребность, когда значение должно приходить от записи.'}
+          action={<Button size="sm" onClick={addParam}>{addWord}</Button>}
         />
       ) : (
         <div className="stack stack--tight">
@@ -95,12 +121,32 @@ export function ParamsEditor({ effect, system, onEdit }: {
               })}>
                 Убрать
               </Button>
+              {called ? (
+                <div className="need__extra">
+                  {['number', 'expr'].includes(String(param.kind ?? 'expr')) ? (
+                    <label className="inline inline--tight" title={MAIN_HINT}>
+                      <input
+                        type="checkbox" checked={(param as { role?: string }).role === 'amount'}
+                        onChange={e => setMain(param.key, e.target.checked)}
+                      />
+                      <span>{MAIN_HINT}</span>
+                    </label>
+                  ) : null}
+                  <label className="inline inline--tight">
+                    <input
+                      type="checkbox" checked={!(param as { optional?: boolean }).optional}
+                      onChange={e => setOptional(param.key, !e.target.checked)}
+                    />
+                    <span>обязателен</span>
+                  </label>
+                </div>
+              ) : null}
             </div>
           ))}
         </div>
       )}
 
-      {params.length ? <Button size="sm" onClick={addParam}>+ брать из записи</Button> : null}
+      {params.length ? <Button size="sm" onClick={addParam}>{addWord}</Button> : null}
     </Card>
   );
 }

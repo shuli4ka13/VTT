@@ -3432,17 +3432,17 @@
           {
             "type": "emit",
             "event": "damage",
-            "amount": {
-              "ref": "dmg"
-            },
-            "tags": [
-              {
+            "args": {
+              "amount": {
+                "ref": "dmg"
+              },
+              "damage_type": {
                 "param": "damage_type"
               },
-              {
+              "damage_source": {
                 "param": "damage_source"
               }
-            ]
+            }
           }
         ]
       },
@@ -3503,15 +3503,17 @@
           {
             "type": "emit",
             "event": "damage",
-            "amount": {
-              "ref": "dmg"
-            },
-            "tags": [
-              {
+            "args": {
+              "amount": {
+                "ref": "dmg"
+              },
+              "damage_type": {
                 "param": "damage_type"
               },
-              "немагический"
-            ]
+              "damage_source": {
+                "const": "немагический"
+              }
+            }
           }
         ]
       },
@@ -3540,13 +3542,17 @@
           {
             "type": "emit",
             "event": "damage",
-            "amount": {
-              "ref": "жар"
-            },
-            "tags": [
-              "огонь",
-              "магический"
-            ]
+            "args": {
+              "amount": {
+                "ref": "жар"
+              },
+              "damage_type": {
+                "const": "огонь"
+              },
+              "damage_source": {
+                "const": "магический"
+              }
+            }
           }
         ]
       },
@@ -3576,14 +3582,14 @@
           {
             "type": "emit",
             "event": "damage",
-            "amount": {
-              "ref": "dmg"
-            },
-            "tags": [
-              {
+            "args": {
+              "amount": {
+                "ref": "dmg"
+              },
+              "damage_type": {
                 "param": "damage_type"
               }
-            ]
+            }
           }
         ]
       },
@@ -3619,21 +3625,27 @@
           {
             "type": "emit",
             "event": "damage",
-            "amount": {
-              "ref": "dmg"
-            },
-            "tags": [
-              "излучение",
-              "магический"
-            ]
+            "args": {
+              "amount": {
+                "ref": "dmg"
+              },
+              "damage_type": {
+                "const": "излучение"
+              },
+              "damage_source": {
+                "const": "магический"
+              }
+            }
           }
         ],
         "self": [
           {
             "type": "emit",
             "event": "spell_slot",
-            "amount": {
-              "param": "slot"
+            "args": {
+              "circle": {
+                "param": "slot"
+              }
             },
             "strict": true
           }
@@ -3858,8 +3870,10 @@
           {
             "type": "emit",
             "event": "spell_slot",
-            "amount": {
-              "param": "slot"
+            "args": {
+              "circle": {
+                "param": "slot"
+              }
             },
             "strict": true
           }
@@ -3912,15 +3926,17 @@
           {
             "type": "emit",
             "event": "damage",
-            "amount": {
-              "ref": "dmg"
-            },
-            "tags": [
-              {
+            "args": {
+              "amount": {
+                "ref": "dmg"
+              },
+              "damage_type": {
                 "param": "damage_type"
               },
-              "магический"
-            ]
+              "damage_source": {
+                "const": "магический"
+              }
+            }
           }
         ]
       },
@@ -3985,15 +4001,17 @@
           {
             "type": "emit",
             "event": "damage",
-            "amount": {
-              "ref": "dmg"
-            },
-            "tags": [
-              {
+            "args": {
+              "amount": {
+                "ref": "dmg"
+              },
+              "damage_type": {
                 "param": "damage_type"
               },
-              "магический"
-            ]
+              "damage_source": {
+                "const": "магический"
+              }
+            }
           },
           {
             "type": "status",
@@ -4076,15 +4094,17 @@
           {
             "type": "emit",
             "event": "damage",
-            "amount": {
-              "ref": "dmg"
-            },
-            "tags": [
-              {
+            "args": {
+              "amount": {
+                "ref": "dmg"
+              },
+              "damage_type": {
                 "param": "damage_type"
               },
-              "магический"
-            ]
+              "damage_source": {
+                "const": "магический"
+              }
+            }
           },
           {
             "type": "status",
@@ -4169,15 +4189,17 @@
           {
             "type": "emit",
             "event": "damage",
-            "amount": {
-              "ref": "dmg"
-            },
-            "tags": [
-              {
+            "args": {
+              "amount": {
+                "ref": "dmg"
+              },
+              "damage_type": {
                 "param": "damage_type"
               },
-              "магический"
-            ]
+              "damage_source": {
+                "const": "магический"
+              }
+            }
           }
         ],
         "extends": "spell"
@@ -4253,15 +4275,17 @@
           {
             "type": "emit",
             "event": "damage",
-            "amount": {
-              "ref": "dmg"
-            },
-            "tags": [
-              {
+            "args": {
+              "amount": {
+                "ref": "dmg"
+              },
+              "damage_type": {
                 "param": "damage_type"
               },
-              "магический"
-            ]
+              "damage_source": {
+                "const": "магический"
+              }
+            }
           },
           {
             "type": "status",
@@ -4320,15 +4344,17 @@
           {
             "type": "emit",
             "event": "damage",
-            "amount": {
-              "ref": "dmg"
-            },
-            "tags": [
-              {
+            "args": {
+              "amount": {
+                "ref": "dmg"
+              },
+              "damage_type": {
                 "param": "damage_type"
               },
-              "магический"
-            ]
+              "damage_source": {
+                "const": "магический"
+              }
+            }
           }
         ],
         "extends": "spell"
@@ -5202,8 +5228,10 @@
           {
             "type": "emit",
             "event": "spell_slot",
-            "amount": {
-              "const": 1
+            "args": {
+              "circle": {
+                "const": 1
+              }
             },
             "strict": true
           }
@@ -5261,21 +5289,27 @@
           {
             "type": "emit",
             "event": "damage",
-            "amount": {
-              "ref": "dmg"
-            },
-            "tags": [
-              "огонь",
-              "магический"
-            ]
+            "args": {
+              "amount": {
+                "ref": "dmg"
+              },
+              "damage_type": {
+                "const": "огонь"
+              },
+              "damage_source": {
+                "const": "магический"
+              }
+            }
           }
         ],
         "self": [
           {
             "type": "emit",
             "event": "spell_slot",
-            "amount": {
-              "const": 1
+            "args": {
+              "circle": {
+                "const": 1
+              }
             },
             "strict": true
           }
@@ -7719,9 +7753,26 @@
       "damage": {
         "label": "Урон",
         "group": "Вызываемые",
-        "tagsFrom": [
-          "damage_types",
-          "damage_source"
+        "params": [
+          {
+            "key": "amount",
+            "label": "Сколько урона",
+            "kind": "number",
+            "role": "amount"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "choice",
+            "from": "damage_types"
+          },
+          {
+            "key": "damage_source",
+            "label": "Источник урона",
+            "kind": "choice",
+            "from": "damage_source",
+            "optional": true
+          }
         ],
         "steps": [
           {
@@ -7781,6 +7832,14 @@
       "spell_slot": {
         "label": "Ячейка заклинания",
         "group": "Вызываемые",
+        "params": [
+          {
+            "key": "circle",
+            "label": "Круг ячейки",
+            "kind": "number",
+            "role": "amount"
+          }
+        ],
         "steps": [
           {
             "id": "есть_1",

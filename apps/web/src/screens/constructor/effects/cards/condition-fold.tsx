@@ -5,7 +5,7 @@ import { SlotInput } from '../../slot-input.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { CardGroup } from '../../cards.ts';
 import type { Segment } from '../../readback.ts';
-import { outputRefs, outputLabel } from '../../slots.tsx';
+import { outputRefs, outputLabel, isCalled } from '../../slots.tsx';
 import type { EarlierStep } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 
@@ -78,7 +78,7 @@ export function ConditionFold({ group, earlier, edit, context }: {
 }) {
   const when = (group.step as WhenStep).when;
   const system = context.system;
-  const tagged = tagsOf(system, context.effect);
+  const tagged = isCalled(context) ? tagsOf(system, context.effect) : [];
   const outputs = [
     ...(tagged.length ? [{ ref: EVENT_TAGS, label: EVENT_TAGS_LABEL }] : []),
     ...outputRefs(earlier).filter(o => o.kind === 'boolean' || o.kind === 'number' || o.kind === 'text'),

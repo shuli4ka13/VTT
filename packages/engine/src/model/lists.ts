@@ -16,9 +16,15 @@ export function optionsOf(system: System, field: Field): FieldOption[] {
 
 export function tagTablesOf(effect: Effect | undefined): string[] {
   const from = effect?.tagsFrom;
-  if (!from) return [];
-  return Array.isArray(from) ? from : [from];
+  const legacy = !from ? [] : Array.isArray(from) ? from : [from];
+  const chosen = (effect?.params ?? [])
+    .filter(p => p.kind === 'choice' && typeof p.from === 'string' && p.from)
+    .map(p => String(p.from));
+  return [...new Set([...legacy, ...chosen])];
 }
+
+export const amountParamOf = (effect: Effect | undefined) =>
+  (effect?.params ?? []).find(p => (p as { role?: string }).role === 'amount');
 
 export function tagsOf(system: System, effect: Effect): string[] {
   const tables = tagTablesOf(effect);

@@ -91,7 +91,7 @@ export const newCalled = (system: System): Made<Effect> => {
     value: {
       label: '',
       category: 'Вызываемые',
-      tags: [],
+      params: [{ key: 'amount', label: 'Сколько', kind: 'number', role: 'amount' }],
       steps: field ? [simpleReceive(field.tag, 'subtract', true)] : [],
     } as Effect,
   };

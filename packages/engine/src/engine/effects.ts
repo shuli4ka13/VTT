@@ -48,7 +48,8 @@ export const calledOf = (system: System): [string, Effect][] => {
       if (step.type === 'emit' && step.event) called.add(String(step.event));
     }
   }
-  return Object.entries(system.effects || {}).filter(([id, effect]) => effect.tags?.length || called.has(id));
+  const takesAmount = (effect: Effect) => (effect.params ?? []).some(p => (p as { role?: string }).role === 'amount');
+  return Object.entries(system.effects || {}).filter(([id, effect]) => effect.tags?.length || takesAmount(effect) || called.has(id));
 };
 
 export function requireCalled(system: System, id: string, who: string): Effect {

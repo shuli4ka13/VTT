@@ -225,19 +225,19 @@ describe('вызываемый эффект — обычный эффект', ()
     expect(key.startsWith('event:')).toBe(false);
   });
 
-  it('правится тем же редактором: те же шаги, те же метки', () => {
+  it('правится тем же редактором: те же шаги, а входы заводит автор', () => {
     render(<EffectsTab />);
     fireEvent.click(screen.getByText('+ вызываемый'));
     expect(screen.getByText('Цепочка шагов')).toBeTruthy();
+    expect(screen.getByText('Что приходит')).toBeTruthy();
 
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     const key = useWorld.getState().activeEffectId!;
     expect(useWorld.getState().system.effects[key]!.steps).toHaveLength(2);
 
-    fireEvent.click(screen.getByText('+ какие метки бывают'));
-    fireEvent.change(screen.getByPlaceholderText('новая метка'), { target: { value: 'огонь' } });
-    fireEvent.keyDown(screen.getByPlaceholderText('новая метка'), { key: 'Enter' });
-    expect(useWorld.getState().system.effects[key]!.tags).toEqual(['огонь']);
+    fireEvent.click(screen.getByText('+ вход'));
+    const params = useWorld.getState().system.effects[key]!.params ?? [];
+    expect(params.map(p => [p.kind, (p as { role?: string }).role ?? null])).toEqual([['number', 'amount'], ['choice', null]]);
   });
 });
 
