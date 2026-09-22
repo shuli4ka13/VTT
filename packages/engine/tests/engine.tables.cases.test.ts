@@ -1,6 +1,8 @@
 import { group, test, eq, ok, throws } from './harness.ts';
 import { lookupTable, lookupDegree, isCases } from '../src/engine/tables.ts';
 import { send, receive } from '../src/events/envelope.ts';
+import { listOf } from '../src/model/lists.ts';
+import { unifyTables } from '../src/model/tables.ts';
 import type { System } from '../src/model/types.ts';
 
 const system = {
@@ -99,5 +101,45 @@ group('формула видит результат шага выше', () => {
     eq(кости(20, 20), '2d6', 'двадцатка при пороге 20 — две');
     eq(кости(19, 19), '2d6', 'у кого крит от 19 — девятнадцать тоже крит');
     eq(кости(20, 19), '1d6', 'у остальных девятнадцать — обычный');
+  });
+});
+
+group('ключ строки — одно из четырёх', () => {
+  const система = {
+    id: 'к', name: 'к', fields: [], effects: {},
+    tables: {
+      типы: { label: 'Типы урона', key: 'word', rows: [{ value: 'огонь', label: 'огонь' }, { value: 'холод', label: 'холод' }] },
+      ступени: {
+        label: 'Ступени', key: 'number', columns: [{ key: 'value', label: 'множитель', kind: 'number' }],
+        rows: [{ value: 0, cells: { value: 1 } }, { value: 1, cells: { value: 2 } }],
+      },
+      по_типу: {
+        label: 'Прибавка по типу', key: 'choice', from: 'типы',
+        columns: [{ key: 'value', label: 'прибавка', kind: 'number' }],
+        rows: [{ value: 'огонь', cells: { value: 3 } }],
+      },
+    },
+  } as unknown as System;
+
+  test('число-ключ находит строку и по числу, и по строке «1»', () => {
+    eq(lookupTable(система, 'ступени', 1), 2);
+    eq(lookupTable(система, 'ступени', '1'), 2);
+  });
+
+  test('ключ из другой таблицы ищется по её значениям', () => {
+    eq(lookupTable(система, 'по_типу', 'огонь'), 3);
+  });
+
+  test('подпись строки с ключом из другой таблицы берётся у источника', () => {
+    eq(listOf(система, 'по_типу')?.[0]?.label, 'огонь');
+  });
+
+  test('старый словарь с числами получает ключ «число», а не «слово»', () => {
+    const старая = unifyTables({
+      id: 'с', name: 'с', fields: [], effects: {},
+      lists: { стойкость: { label: 'Стойкость', of: 'number', values: [{ value: 0.5, label: 'сопротивление' }] } },
+    } as unknown as System);
+    eq(старая.tables?.стойкость?.key, 'number');
+    ok(!('of' in (старая.tables?.стойкость ?? {})), 'старое поле «of» ушло');
   });
 });

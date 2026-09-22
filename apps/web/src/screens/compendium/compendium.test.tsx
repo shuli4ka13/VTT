@@ -210,7 +210,7 @@ describe('свойство из словаря — выбор, а не ввод'
         ...state.system,
         tables: {
           damage_types: {
-            label: 'Типы урона', key: 'word', of: 'text',
+            label: 'Типы урона', key: 'word',
             rows: [{ value: 'рубящий', label: 'рубящий' }, { value: 'огонь', label: 'огонь' }],
           },
         },
@@ -264,7 +264,7 @@ describe('свойство из словаря — выбор, а не ввод'
       system: {
         ...state.system,
         tables: {
-          wield: { label: 'Способ атаки', key: 'word', of: 'text', rows: [{ value: 'melee', label: 'силой — ближний бой' }] },
+          wield: { label: 'Способ атаки', key: 'word', rows: [{ value: 'melee', label: 'силой — ближний бой' }] },
         },
         records: {
           weapon: {

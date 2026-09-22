@@ -1,4 +1,4 @@
-import { Card, CardHead, Field, Input, NumInput, Button, DangerButton, Fold, Segmented, Select, Verdict, Chip, Empty } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Field, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Chip, Empty } from '../../../ui/primitives.tsx';
 import { FormulaChips } from '../../../ui/formula-chips.tsx';
 import { DiceProp } from '../../../ui/dice-prop.tsx';
 import { newTable } from '../factory.ts';
@@ -6,12 +6,24 @@ import { inUse } from '../usage.ts';
 import type { UsageIndex } from '../usage.ts';
 import { freeId } from '../../../store/world.ts';
 import { listUsers, listOf } from '@vtt/engine/model/lists';
-import { isRange } from '@vtt/engine/model/tables';
-import type { System, Table, TableColumn, TableRow } from '@vtt/schema';
+import { isRange, keyOf } from '@vtt/engine/model/tables';
+import type { System, Table, TableColumn, TableRow, TableKey } from '@vtt/schema';
 import type { WorldState } from '../../../store/world.ts';
 
 type EditSystem = WorldState['editSystem'];
 interface Props { system: System; editSystem: EditSystem; usage: UsageIndex }
+
+const ROW_KEYS = [
+  ['word', 'слово — «ближний бой», «огонь»'],
+  ['number', 'число — 0, 1, 2'],
+  ['range', 'диапазон чисел — уровень 1–4'],
+  ['choice', 'строка другой таблицы'],
+] as const;
+
+const blankRow = (key: TableKey): TableRow =>
+  (key === 'range' ? { from: 1, to: 1, cells: {} }
+    : key === 'number' ? { value: 0, label: '', cells: {} }
+      : { value: '', label: '', cells: {} });
 
 const COLUMN_KINDS = [
   ['number', 'число'],
@@ -99,20 +111,36 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
         )}
       </div>
 
-      <Field label="Чем помечены строки">
-        <Segmented
-          value={byRange ? 'range' : 'word'}
-          options={[
-            { key: 'word', label: 'значением — слово или число' },
-            { key: 'range', label: 'диапазоном чисел — от и до' },
-          ] as const}
-          onChange={next => edit(draft => {
-            draft.key = next;
-            draft.rows = next === 'range'
-              ? [{ from: 1, to: 1, cells: {} }]
-              : [{ value: '', label: '', cells: {} }];
-          })}
-        />
+      <Field label="Ключ строки" hint="По чему таблица находит строку: меч говорит «ближний бой», уровень — «7».">
+        <div className="inline inline--tight">
+          <Select
+            value={keyOf(table)}
+            options={ROW_KEYS}
+            onChange={next => edit(draft => {
+              const was = keyOf(draft);
+              draft.key = next;
+              if (next !== 'choice') delete draft.from;
+              const reshape = (was === 'range') !== (next === 'range') || next === 'choice';
+              if (reshape) draft.rows = [blankRow(next)];
+              if (next === 'number') {
+                for (const row of draft.rows ?? []) row.value = Number(row.value) || 0;
+              }
+            })}
+          />
+          {keyOf(table) === 'choice' ? (
+            <Select
+              value={table.from ?? ''}
+              options={[['', '— какой таблицы —'],
+                ...Object.entries(system.tables ?? {})
+                  .filter(([key, other]) => key !== id && !isRange(other))
+                  .map(([key, other]) => [key, other.label || key] as const)] as never}
+              onChange={next => edit(draft => {
+                if (next) draft.from = next; else delete draft.from;
+                draft.rows = [];
+              })}
+            />
+          ) : null}
+        </div>
       </Field>
 
       {broken ? <Verdict tone="warn">диапазоны перекрываются или дырявы</Verdict> : null}
@@ -199,10 +227,11 @@ function Rows({ table, system, edit }: {
   system: System;
   edit: (change: (draft: Table) => void) => void;
 }) {
-  const byRange = isRange(table);
+  const key = keyOf(table);
+  const byRange = key === 'range';
   const rows = table.rows ?? [];
   const columns = table.columns ?? [];
-  const numeric = table.of === 'number';
+  const source = key === 'choice' ? (listOf(system, table.from) ?? []) : [];
 
   const setCell = (i: number, column: string, value: unknown) => edit(draft => {
     const row = draft.rows?.[i];
@@ -212,39 +241,45 @@ function Rows({ table, system, edit }: {
 
   return (
     <div className="stack stack--tight">
-      <div className="inline">
-        <span className="field__label">Строки</span>
-        {!byRange ? (
-          <Select
-            value={numeric ? 'number' : 'text'}
-            options={[['text', 'значения — слова'], ['number', 'значения — числа']] as const}
-            onChange={next => edit(draft => { draft.of = next; })}
-          />
-        ) : null}
-      </div>
+      <span className="field__label">Строки</span>
 
-      <div className="table-grid" style={{ gridTemplateColumns: `${byRange ? '72px 72px' : 'minmax(90px, 1fr) minmax(120px, 1.4fr)'} ${columns.map(() => 'minmax(120px, 2fr)').join(' ')} auto` }}>
-        {byRange ? <><span className="faint">от</span><span className="faint">до</span></> : <><span className="faint">значение</span><span className="faint">подпись</span></>}
+      {key === 'choice' && !table.from ? (
+        <span className="faint">Выберите таблицу, чьи строки станут ключами.</span>
+      ) : null}
+
+      <div className="table-grid" style={{ gridTemplateColumns: `${lead(key)} ${columns.map(() => 'minmax(120px, 2fr)').join(' ')} auto` }}>
+        {key === 'range' ? <><span className="faint">от</span><span className="faint">до</span></>
+          : key === 'choice' ? <span className="faint">строка</span>
+            : <><span className="faint">{key === 'number' ? 'число' : 'слово'}</span><span className="faint">подпись</span></>}
         {columns.map(c => <span key={c.key} className="faint">{c.label || c.key}</span>)}
         <span />
 
         {rows.map((row, i) => (
           <RowCells
-            key={i} row={row} at={i} byRange={byRange} numeric={numeric} columns={columns} system={system}
+            key={i} row={row} at={i} rowKey={key} source={source} columns={columns} system={system}
             edit={edit} setCell={setCell}
           />
         ))}
       </div>
 
-      <Button size="sm" onClick={() => edit(draft => {
-        const list = (draft.rows ??= []);
-        if (byRange) {
-          const from = list.length ? (list[list.length - 1]!.to ?? 0) + 1 : 1;
-          list.push({ from, to: from, cells: {} });
-        } else {
-          list.push({ value: '', label: '', cells: {} });
-        }
-      })}>{byRange ? '+ ступень' : '+ строка'}</Button>
+      {key === 'choice' && table.from && source.some(o => !rows.some(r => String(r.value) === String(o.value))) ? (
+        <Button size="sm" onClick={() => edit(draft => {
+          const list = (draft.rows ??= []);
+          for (const option of source) {
+            if (!list.some(r => String(r.value) === String(option.value))) list.push({ value: option.value, cells: {} });
+          }
+        })}>+ все строки из «{system.tables?.[table.from]?.label || table.from}»</Button>
+      ) : key !== 'choice' ? (
+        <Button size="sm" onClick={() => edit(draft => {
+          const list = (draft.rows ??= []);
+          if (byRange) {
+            const from = list.length ? (list[list.length - 1]!.to ?? 0) + 1 : 1;
+            list.push({ from, to: from, cells: {} });
+          } else {
+            list.push(blankRow(key));
+          }
+        })}>{byRange ? '+ ступень' : '+ строка'}</Button>
+      ) : null}
 
       {!columns.length && rows.length ? (
         <div className="inline inline--tight">
@@ -256,39 +291,47 @@ function Rows({ table, system, edit }: {
   );
 }
 
-function RowCells({ row, at, byRange, numeric, columns, system, edit, setCell }: {
+function RowCells({ row, at, rowKey, source, columns, system, edit, setCell }: {
   row: TableRow;
   at: number;
-  byRange: boolean;
-  numeric: boolean;
+  rowKey: TableKey;
+  source: { value: unknown; label: string }[];
   columns: TableColumn[];
   system: System;
   edit: (change: (draft: Table) => void) => void;
   setCell: (i: number, column: string, value: unknown) => void;
 }) {
   const cells = row.cells ?? {};
+  const set = (change: (r: TableRow) => void) => edit(draft => { const r = draft.rows?.[at]; if (r) change(r); });
   return (
     <>
-      {byRange ? (
+      {rowKey === 'range' ? (
         <>
-          <NumInput value={row.from ?? 0} onCommit={n => edit(draft => { const r = draft.rows?.[at]; if (r) r.from = n; })} />
-          <NumInput value={row.to ?? 0} onCommit={n => edit(draft => { const r = draft.rows?.[at]; if (r) r.to = n; })} />
+          <NumInput value={row.from ?? 0} onCommit={n => set(r => { r.from = n; })} />
+          <NumInput value={row.to ?? 0} onCommit={n => set(r => { r.to = n; })} />
         </>
+      ) : rowKey === 'choice' ? (
+        <Select
+          value={String(row.value ?? '')}
+          options={[['', '— какая строка —'], ...source.map(o => [String(o.value), o.label] as const)] as never}
+          onChange={next => set(r => { r.value = next; })}
+        />
       ) : (
         <>
-          <Input
-            value={row.value === undefined ? '' : String(row.value)}
-            placeholder={numeric ? '0' : 'ключ'}
-            mono
-            onChange={next => edit(draft => {
-              const r = draft.rows?.[at];
-              if (r) r.value = numeric ? (Number(next) || 0) : next;
-            })}
-          />
+          {rowKey === 'number' ? (
+            <NumInput value={Number(row.value ?? 0)} onCommit={n => set(r => { r.value = n; })} />
+          ) : (
+            <Input
+              value={row.value === undefined ? '' : String(row.value)}
+              placeholder="слово"
+              mono
+              onChange={next => set(r => { r.value = next; })}
+            />
+          )}
           <Input
             value={row.label ?? ''}
             placeholder="что видит человек"
-            onChange={next => edit(draft => { const r = draft.rows?.[at]; if (r) r.label = next; })}
+            onChange={next => set(r => { r.label = next; })}
           />
         </>
       )}
@@ -300,6 +343,11 @@ function RowCells({ row, at, byRange, numeric, columns, system, edit, setCell }:
     </>
   );
 }
+
+const lead = (key: TableKey): string =>
+  (key === 'range' ? '72px 72px'
+    : key === 'choice' ? 'minmax(140px, 1.4fr)'
+      : 'minmax(90px, 1fr) minmax(120px, 1.4fr)');
 
 function Cell({ column, value, system, onChange }: {
   column: TableColumn;

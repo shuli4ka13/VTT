@@ -3554,7 +3554,6 @@
       "damage_types": {
         "label": "Типы урона",
         "key": "word",
-        "of": "text",
         "rows": [
           {
             "value": "рубящий",
@@ -3617,7 +3616,6 @@
       "wield": {
         "label": "Способ атаки",
         "key": "word",
-        "of": "text",
         "columns": [
           {
             "key": "attack",
@@ -3659,8 +3657,7 @@
       },
       "taken": {
         "label": "Стойкость к урону",
-        "key": "word",
-        "of": "number",
+        "key": "number",
         "rows": [
           {
             "value": 0,

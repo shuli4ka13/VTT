@@ -126,12 +126,14 @@ export const tableRow = z.object({
   cells: z.record(z.string(), z.unknown()).optional(),
 });
 
+export const tableKey = z.enum(['word', 'number', 'range', 'choice']);
+
 export const table = z.object({
   label: z.string().optional(),
 
-  key: z.enum(['word', 'range']).optional(),
+  key: tableKey.optional(),
 
-  of: z.enum(['number', 'text']).optional(),
+  from: z.string().min(1).optional(),
   columns: z.array(tableColumn).optional(),
   rows: z.array(tableRow).optional(),
   otherwise: tableValue.optional(),
@@ -393,6 +395,7 @@ export type RangeTable = z.infer<typeof table>;
 export type Table = z.infer<typeof table>;
 export type TableColumn = z.infer<typeof tableColumn>;
 export type TableRow = z.infer<typeof tableRow>;
+export type TableKey = z.infer<typeof tableKey>;
 export type Activation = z.infer<typeof activation>;
 export type DurationKind = z.infer<typeof durationKind>;
 export type Stacking = z.infer<typeof stacking>;

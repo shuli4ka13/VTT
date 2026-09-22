@@ -196,7 +196,7 @@ describe('слот привязки подсказывает то, чем его
     constants: {},
     tables: {
       damage_types: {
-        label: 'Типы урона', key: 'word', of: 'text',
+        label: 'Типы урона', key: 'word',
         rows: [{ value: 'рубящий', label: 'рубящий' }, { value: 'некротический', label: 'некротический' }],
       },
       wield_attack: {

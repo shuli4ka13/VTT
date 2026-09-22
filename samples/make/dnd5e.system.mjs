@@ -38,12 +38,12 @@ export const DAMAGE_TAGS = [
   'некротический', 'излучение', 'психический', 'силовой', 'магический',
 ];
 
-const words = (label, of, rows) => ({ label, key: 'word', of, rows });
+const words = (label, key, rows) => ({ label, key, rows });
 
 export const lists = () => ({
-  damage_types: words('Типы урона', 'text', DAMAGE_TAGS.map(tag => ({ value: tag, label: tag }))),
+  damage_types: words('Типы урона', 'word', DAMAGE_TAGS.map(tag => ({ value: tag, label: tag }))),
   wield: {
-    label: 'Способ атаки', key: 'word', of: 'text',
+    label: 'Способ атаки', key: 'word',
     columns: [
       { key: 'attack', label: 'Бонус атаки', kind: 'expr' },
       { key: 'damage', label: 'Прибавка к урону', kind: 'expr' },

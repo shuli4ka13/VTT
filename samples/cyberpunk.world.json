@@ -2176,7 +2176,6 @@
       "damage_types": {
         "label": "Типы урона",
         "key": "word",
-        "of": "text",
         "rows": [
           {
             "value": "пуля",
@@ -2199,7 +2198,6 @@
       "aim_places": {
         "label": "Куда целятся",
         "key": "word",
-        "of": "text",
         "rows": [
           {
             "value": "по телу",

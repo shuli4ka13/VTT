@@ -5,7 +5,9 @@ type Loose = Record<string, unknown>;
 export const VALUE_COLUMN = 'value';
 
 const isOld = (table: Loose): boolean =>
-  Array.isArray(table.values) || Array.isArray(table.ranges) || Array.isArray(table.cases);
+  Array.isArray(table.values) || Array.isArray(table.ranges) || Array.isArray(table.cases) || 'of' in table;
+
+const allNumbers = (values: unknown[]): boolean => values.length > 0 && values.every(v => typeof v === 'number');
 
 const kindOfCell = (cell: unknown): 'number' | 'text' | 'expr' =>
   (typeof cell === 'number' ? 'number'
@@ -13,12 +15,17 @@ const kindOfCell = (cell: unknown): 'number' | 'text' | 'expr' =>
 
 function fromOld(old: Loose): Table {
   const label = old.label as string | undefined;
+  if (!Array.isArray(old.values) && !Array.isArray(old.ranges) && !Array.isArray(old.cases)) {
+    const { of, ...rest } = old;
+    return { ...rest, key: rest.key === 'word' && of === 'number' ? 'number' : rest.key } as Table;
+  }
   if (Array.isArray(old.values)) {
+    const values = old.values as Loose[];
+    const numeric = old.of === 'number' || allNumbers(values.map(v => v.value));
     return {
       ...(label ? { label } : {}),
-      key: 'word',
-      ...(old.of ? { of: old.of as 'number' | 'text' } : {}),
-      rows: (old.values as Loose[]).map(v => ({ value: v.value as never, label: String(v.label ?? v.value) })),
+      key: numeric ? 'number' : 'word',
+      rows: values.map(v => ({ value: v.value as never, label: String(v.label ?? v.value) })),
     };
   }
   if (Array.isArray(old.ranges)) {
@@ -35,7 +42,7 @@ function fromOld(old: Loose): Table {
   const kind = kinds.size === 1 ? [...kinds][0]! : 'expr';
   return {
     ...(label ? { label } : {}),
-    key: 'word',
+    key: allNumbers(cases.map(c => c.when)) ? 'number' : 'word',
     columns: [{ key: VALUE_COLUMN, label: 'значение', kind }],
     rows: cases.map(c => ({ value: c.when as never, cells: { [VALUE_COLUMN]: c.value } })),
     ...(old.otherwise !== undefined ? { otherwise: old.otherwise as never } : {}),
@@ -66,6 +73,8 @@ export function tableOf(system: System, key: string | undefined): Table | undefi
 }
 
 export const isRange = (table: Table): boolean => table.key === 'range';
+
+export const keyOf = (table: Table) => table.key ?? 'word';
 
 export const rowsOf = (table: Table | undefined): TableRow[] => table?.rows ?? [];
 
