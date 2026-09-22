@@ -1,8 +1,10 @@
 import { UnknownTagError } from './errors.ts';
 import { calledOf } from './effects.ts';
+import { cellTagOf, columnTagOf } from './cells.ts';
+import { isRange } from '../model/tables.ts';
 import type { System } from '../model/types.ts';
 
-export type TargetKind = 'value' | 'roll' | 'incoming' | 'event';
+export type TargetKind = 'value' | 'roll' | 'incoming' | 'event' | 'cell';
 
 export interface Target {
   tag: string;
@@ -64,7 +66,39 @@ export function targets(system: System): Target[] {
       kind: 'event',
       from: id,
     })),
+
+    ...cellTargets(system),
   ];
+}
+
+function cellTargets(system: System): Target[] {
+  const out: Target[] = [];
+  for (const [id, table] of Object.entries(system.tables ?? {})) {
+    const name = table.label || id;
+    for (const column of (table.columns ?? [])) {
+      if (column.kind !== 'expr' && column.kind !== 'number') continue;
+      const colName = column.label || column.key;
+      out.push({
+        tag: columnTagOf(id, column.key),
+        label: `${name} → ${colName} — любая строка`,
+        group: 'Таблицы',
+        kind: 'cell',
+        from: id,
+      });
+      if (isRange(table)) continue;
+      for (const row of (table.rows ?? [])) {
+        if (row.value === undefined) continue;
+        out.push({
+          tag: cellTagOf(id, String(row.value), column.key),
+          label: `${name} → ${row.label || String(row.value)} → ${colName}`,
+          group: 'Таблицы',
+          kind: 'cell',
+          from: id,
+        });
+      }
+    }
+  }
+  return out;
 }
 
 export function findTarget(system: System, tag: string): Target | null {

@@ -49,9 +49,12 @@ export const lists = () => ({
       { key: 'damage', label: 'Прибавка к урону', kind: 'expr' },
     ],
     rows: [
-      { value: 'melee', label: 'ближний бой — Сила', cells: { attack: '@melee_attack', damage: '@melee_damage' } },
-      { value: 'finesse', label: 'фехтовальное — Сила или Ловкость', cells: { attack: '@finesse_attack', damage: '@finesse_damage' } },
-      { value: 'ranged', label: 'дальний бой — Ловкость', cells: { attack: '@ranged_attack', damage: '@ranged_damage' } },
+      { value: 'melee', label: 'ближний бой — Сила',
+        cells: { attack: '@str_mod + @prof_bonus', damage: '@str_mod' } },
+      { value: 'finesse', label: 'фехтовальное — Сила или Ловкость',
+        cells: { attack: 'max(@str_mod, @dex_mod) + @prof_bonus', damage: 'max(@str_mod, @dex_mod)' } },
+      { value: 'ranged', label: 'дальний бой — Ловкость',
+        cells: { attack: '@dex_mod + @prof_bonus', damage: '@dex_mod' } },
     ],
   },
   taken: words('Стойкость к урону', 'number', [
@@ -134,12 +137,6 @@ export function fields() {
   out.push(formula('is_dead', 'Три провала', 'Здоровье', '@death_fail >= 3'));
   out.push(formula('is_stable', 'Три успеха', 'Здоровье', '@death_ok >= 3'));
 
-  out.push(formula('melee_attack', 'Атака ближним оружием', 'Атака', '@str_mod + @prof_bonus'));
-  out.push(formula('ranged_attack', 'Атака дальнобойным оружием', 'Атака', '@dex_mod + @prof_bonus'));
-  out.push(formula('finesse_attack', 'Атака фехтовальным оружием', 'Атака', 'max(@str_mod, @dex_mod) + @prof_bonus'));
-  out.push(formula('melee_damage', 'Прибавка к урону: ближний бой', 'Атака', '@str_mod'));
-  out.push(formula('ranged_damage', 'Прибавка к урону: дальний бой', 'Атака', '@dex_mod'));
-  out.push(formula('finesse_damage', 'Прибавка к урону: фехтовальное', 'Атака', 'max(@str_mod, @dex_mod)'));
   out.push(stored('attacks_per_action', 'Атак за действие', 'Атака', 'number', 1, { min: 1, max: 4, control: 'stepper' }));
   out.push(stored('crit_from', 'Крит на костях от', 'Атака', 'number', 20, { min: 18, max: 20 }));
   out.push(formula('sneak_dice', 'Костей скрытой атаки', 'Атака', 'ceil(@level / 2)'));

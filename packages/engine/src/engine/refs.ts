@@ -1,6 +1,6 @@
 import { compile } from '../formula/index.ts';
 import { EngineError } from './errors.ts';
-import { lookupCell } from './tables.ts';
+import { readCell } from './cells.ts';
 import { VALUE_COLUMN } from '../model/tables.ts';
 import { rollNotation, multiplyNotation } from './dice.ts';
 import type { Param, Die } from '../model/types.ts';
@@ -79,7 +79,7 @@ export function packRef(ref: unknown, ctx: RefContext): unknown {
     const packed = packRef((r as { by?: unknown }).by, ctx);
     const ready = packed && typeof packed === 'object' && 'const' in (packed as AnyRef);
     return ready
-      ? { const: lookupCell(ctx.pass.system, String(r.table), (packed as AnyRef).const, columnOf(r), who(ctx)) }
+      ? { const: readCell(ctx.pass.system, ctx.pass, String(r.table), (packed as AnyRef).const, columnOf(r), who(ctx)) }
       : { table: r.table, by: packed, ...(r.column ? { column: r.column } : {}) };
   }
 
@@ -104,7 +104,7 @@ function packParam(key: string, optional: boolean, ctx: RefContext): unknown {
     throw new EngineError(`${who(ctx)}: параметр «${key}» не заполнен`);
   }
 
-  if (decl.kind === 'expr') return packRef({ expr: value, of: decl.of }, ctx);
+  if (decl.kind === 'expr') return typeof value === 'number' ? { const: value } : packRef({ expr: value, of: decl.of }, ctx);
   if (decl.kind === 'tag') return { tag: value };
   return { const: value };
 }
@@ -122,7 +122,7 @@ function fromArgs(key: string, ctx: RefContext): unknown {
     const input = by && typeof by === 'object' && 'prop' in (by as AnyRef)
       ? (ctx.props || {})[String((by as AnyRef).prop)]
       : resolveRef(by, ctx);
-    return lookupCell(ctx.pass.system, String((arg as AnyRef).table), input, columnOf(arg as AnyRef), who(ctx));
+    return readCell(ctx.pass.system, ctx.pass, String((arg as AnyRef).table), input, columnOf(arg as AnyRef), who(ctx));
   }
   throw new EngineError(
     `${who(ctx)}: аргумент «${key}» неизвестной формы ${JSON.stringify(arg)} — умею значение или { prop }`);
@@ -146,7 +146,7 @@ export function resolveRef(ref: unknown, ctx: RefContext): unknown {
 
   if ('table' in r) {
     const by = resolveRef((r as { by?: unknown }).by, ctx);
-    return lookupCell(ctx.pass.system, String(r.table), by, columnOf(r), who(ctx));
+    return readCell(ctx.pass.system, ctx.pass, String(r.table), by, columnOf(r), who(ctx));
   }
 
 

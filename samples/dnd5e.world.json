@@ -1105,60 +1105,6 @@
         }
       },
       {
-        "tag": "melee_attack",
-        "label": "Атака ближним оружием",
-        "group": "Атака",
-        "value": {
-          "kind": "formula",
-          "expr": "@str_mod + @prof_bonus"
-        }
-      },
-      {
-        "tag": "ranged_attack",
-        "label": "Атака дальнобойным оружием",
-        "group": "Атака",
-        "value": {
-          "kind": "formula",
-          "expr": "@dex_mod + @prof_bonus"
-        }
-      },
-      {
-        "tag": "finesse_attack",
-        "label": "Атака фехтовальным оружием",
-        "group": "Атака",
-        "value": {
-          "kind": "formula",
-          "expr": "max(@str_mod, @dex_mod) + @prof_bonus"
-        }
-      },
-      {
-        "tag": "melee_damage",
-        "label": "Прибавка к урону: ближний бой",
-        "group": "Атака",
-        "value": {
-          "kind": "formula",
-          "expr": "@str_mod"
-        }
-      },
-      {
-        "tag": "ranged_damage",
-        "label": "Прибавка к урону: дальний бой",
-        "group": "Атака",
-        "value": {
-          "kind": "formula",
-          "expr": "@dex_mod"
-        }
-      },
-      {
-        "tag": "finesse_damage",
-        "label": "Прибавка к урону: фехтовальное",
-        "group": "Атака",
-        "value": {
-          "kind": "formula",
-          "expr": "max(@str_mod, @dex_mod)"
-        }
-      },
-      {
         "tag": "attacks_per_action",
         "label": "Атак за действие",
         "group": "Атака",
@@ -3689,24 +3635,24 @@
             "value": "melee",
             "label": "ближний бой — Сила",
             "cells": {
-              "attack": "@melee_attack",
-              "damage": "@melee_damage"
+              "attack": "@str_mod + @prof_bonus",
+              "damage": "@str_mod"
             }
           },
           {
             "value": "finesse",
             "label": "фехтовальное — Сила или Ловкость",
             "cells": {
-              "attack": "@finesse_attack",
-              "damage": "@finesse_damage"
+              "attack": "max(@str_mod, @dex_mod) + @prof_bonus",
+              "damage": "max(@str_mod, @dex_mod)"
             }
           },
           {
             "value": "ranged",
             "label": "дальний бой — Ловкость",
             "cells": {
-              "attack": "@ranged_attack",
-              "damage": "@ranged_damage"
+              "attack": "@dex_mod + @prof_bonus",
+              "damage": "@dex_mod"
             }
           }
         ]
@@ -6415,7 +6361,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "melee_damage",
+            "target": "cell:wield.melee.damage",
             "op": "add",
             "value": {
               "expr": "@rage_damage"
@@ -6919,7 +6865,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "melee_damage",
+            "target": "cell:wield.melee.damage",
             "op": "add",
             "value": 2,
             "stacking": "sum",
@@ -6927,7 +6873,7 @@
           },
           {
             "kind": "value",
-            "target": "finesse_damage",
+            "target": "cell:wield.finesse.damage",
             "op": "add",
             "value": 2,
             "stacking": "sum",
@@ -6947,7 +6893,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "ranged_attack",
+            "target": "cell:wield.ranged.attack",
             "op": "add",
             "value": 2,
             "stacking": "sum",
@@ -9865,7 +9811,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "melee_attack",
+            "target": "cell:wield.*.attack",
             "op": "add",
             "value": 1,
             "stacking": "sum",
@@ -9873,7 +9819,7 @@
           },
           {
             "kind": "value",
-            "target": "melee_damage",
+            "target": "cell:wield.*.damage",
             "op": "add",
             "value": 1,
             "stacking": "sum",

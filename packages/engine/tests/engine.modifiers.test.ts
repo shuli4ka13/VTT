@@ -344,8 +344,13 @@ group('модификаторы', () => {
       const incoming = system.fields.filter(f => f.value.kind === 'stored').length;
       const rolls = 1 + system.rolls.length + derived;
       const events = calledOf(system).length;
-      eq(all.length, rolls * 2 + system.fields.length + incoming + events,
-        'общая мишень, поля, объявленные броски, броски из полей, входящее хранимых, «против меня» на каждый бросок и входящие вызовы');
+      const cells = Object.values(system.tables ?? {}).reduce((n, table) => {
+        const columns = (table.columns ?? []).filter(c => c.kind === 'expr' || c.kind === 'number').length;
+        const rows = table.key === 'range' ? 0 : (table.rows ?? []).filter(r => r.value !== undefined).length;
+        return n + columns * (1 + rows);
+      }, 0);
+      eq(all.length, rolls * 2 + system.fields.length + incoming + events + cells,
+        'общая мишень, поля, объявленные броски, броски из полей, входящее хранимых, «против меня» на каждый бросок, входящие вызовы и ячейки таблиц');
       ok(all.some(t => t.tag === 'incoming:attack_roll' && t.kind === 'roll'),
         'состояние цели может править чужой бросок по ней');
       ok(all.some(t => t.tag === 'ac' && t.kind === 'value'));

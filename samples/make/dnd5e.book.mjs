@@ -38,7 +38,7 @@ function weapons() {
       grants: ['flame_blade'],
     },
     { ...melee('magic_sword_1', 'Длинный меч +1', '1d8', 'рубящий', 'Оружие с бонусом к атаке и урону.'),
-      modifiers: [add('melee_attack', 1), add('melee_damage', 1)] },
+      modifiers: [add('cell:wield.*.attack', 1), add('cell:wield.*.damage', 1)] },
   ];
 }
 
