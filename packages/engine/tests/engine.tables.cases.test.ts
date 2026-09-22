@@ -1,7 +1,6 @@
 import { group, test, eq, ok, throws } from './harness.ts';
 import { lookupTable, lookupDegree, isCases } from '../src/engine/tables.ts';
 import { send, receive } from '../src/events/envelope.ts';
-import { listOf } from '../src/model/lists.ts';
 import { unifyTables } from '../src/model/tables.ts';
 import type { System } from '../src/model/types.ts';
 
@@ -104,7 +103,7 @@ group('формула видит результат шага выше', () => {
   });
 });
 
-group('ключ строки — одно из четырёх', () => {
+group('ключ строки — одно из трёх', () => {
   const система = {
     id: 'к', name: 'к', fields: [], effects: {},
     tables: {
@@ -113,25 +112,12 @@ group('ключ строки — одно из четырёх', () => {
         label: 'Ступени', key: 'number', columns: [{ key: 'value', label: 'множитель', kind: 'number' }],
         rows: [{ value: 0, cells: { value: 1 } }, { value: 1, cells: { value: 2 } }],
       },
-      по_типу: {
-        label: 'Прибавка по типу', key: 'choice', from: 'типы',
-        columns: [{ key: 'value', label: 'прибавка', kind: 'number' }],
-        rows: [{ value: 'огонь', cells: { value: 3 } }],
-      },
     },
   } as unknown as System;
 
   test('число-ключ находит строку и по числу, и по строке «1»', () => {
     eq(lookupTable(система, 'ступени', 1), 2);
     eq(lookupTable(система, 'ступени', '1'), 2);
-  });
-
-  test('ключ из другой таблицы ищется по её значениям', () => {
-    eq(lookupTable(система, 'по_типу', 'огонь'), 3);
-  });
-
-  test('подпись строки с ключом из другой таблицы берётся у источника', () => {
-    eq(listOf(система, 'по_типу')?.[0]?.label, 'огонь');
   });
 
   test('старый словарь с числами получает ключ «число», а не «слово»', () => {

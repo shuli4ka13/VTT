@@ -17,7 +17,6 @@ const ROW_KEYS = [
   ['word', 'слово — «ближний бой», «огонь»'],
   ['number', 'число — 0, 1, 2'],
   ['range', 'диапазон чисел — уровень 1–4'],
-  ['choice', 'строка другой таблицы'],
 ] as const;
 
 const blankRow = (key: TableKey): TableRow =>
@@ -112,35 +111,18 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
       </div>
 
       <Field label="Ключ строки" hint="По чему таблица находит строку: меч говорит «ближний бой», уровень — «7».">
-        <div className="inline inline--tight">
-          <Select
-            value={keyOf(table)}
-            options={ROW_KEYS}
-            onChange={next => edit(draft => {
-              const was = keyOf(draft);
-              draft.key = next;
-              if (next !== 'choice') delete draft.from;
-              const reshape = (was === 'range') !== (next === 'range') || next === 'choice';
-              if (reshape) draft.rows = [blankRow(next)];
-              if (next === 'number') {
-                for (const row of draft.rows ?? []) row.value = Number(row.value) || 0;
-              }
-            })}
-          />
-          {keyOf(table) === 'choice' ? (
-            <Select
-              value={table.from ?? ''}
-              options={[['', '— какой таблицы —'],
-                ...Object.entries(system.tables ?? {})
-                  .filter(([key, other]) => key !== id && !isRange(other))
-                  .map(([key, other]) => [key, other.label || key] as const)] as never}
-              onChange={next => edit(draft => {
-                if (next) draft.from = next; else delete draft.from;
-                draft.rows = [];
-              })}
-            />
-          ) : null}
-        </div>
+        <Select
+          value={keyOf(table)}
+          options={ROW_KEYS}
+          onChange={next => edit(draft => {
+            const was = keyOf(draft);
+            draft.key = next;
+            if ((was === 'range') !== (next === 'range')) draft.rows = [blankRow(next)];
+            if (next === 'number') {
+              for (const row of draft.rows ?? []) row.value = Number(row.value) || 0;
+            }
+          })}
+        />
       </Field>
 
       {broken ? <Verdict tone="warn">диапазоны перекрываются или дырявы</Verdict> : null}
@@ -231,7 +213,6 @@ function Rows({ table, system, edit }: {
   const byRange = key === 'range';
   const rows = table.rows ?? [];
   const columns = table.columns ?? [];
-  const source = key === 'choice' ? (listOf(system, table.from) ?? []) : [];
 
   const setCell = (i: number, column: string, value: unknown) => edit(draft => {
     const row = draft.rows?.[i];
@@ -243,43 +224,29 @@ function Rows({ table, system, edit }: {
     <div className="stack stack--tight">
       <span className="field__label">Строки</span>
 
-      {key === 'choice' && !table.from ? (
-        <span className="faint">Выберите таблицу, чьи строки станут ключами.</span>
-      ) : null}
-
       <div className="table-grid" style={{ gridTemplateColumns: `${lead(key)} ${columns.map(() => 'minmax(120px, 2fr)').join(' ')} auto` }}>
         {key === 'range' ? <><span className="faint">от</span><span className="faint">до</span></>
-          : key === 'choice' ? <span className="faint">строка</span>
-            : <><span className="faint">{key === 'number' ? 'число' : 'слово'}</span><span className="faint">подпись</span></>}
+          : <><span className="faint">{key === 'number' ? 'число' : 'слово'}</span><span className="faint">подпись</span></>}
         {columns.map(c => <span key={c.key} className="faint">{c.label || c.key}</span>)}
         <span />
 
         {rows.map((row, i) => (
           <RowCells
-            key={i} row={row} at={i} rowKey={key} source={source} columns={columns} system={system}
+            key={i} row={row} at={i} rowKey={key} columns={columns} system={system}
             edit={edit} setCell={setCell}
           />
         ))}
       </div>
 
-      {key === 'choice' && table.from && source.some(o => !rows.some(r => String(r.value) === String(o.value))) ? (
-        <Button size="sm" onClick={() => edit(draft => {
-          const list = (draft.rows ??= []);
-          for (const option of source) {
-            if (!list.some(r => String(r.value) === String(option.value))) list.push({ value: option.value, cells: {} });
-          }
-        })}>+ все строки из «{system.tables?.[table.from]?.label || table.from}»</Button>
-      ) : key !== 'choice' ? (
-        <Button size="sm" onClick={() => edit(draft => {
-          const list = (draft.rows ??= []);
-          if (byRange) {
-            const from = list.length ? (list[list.length - 1]!.to ?? 0) + 1 : 1;
-            list.push({ from, to: from, cells: {} });
-          } else {
-            list.push(blankRow(key));
-          }
-        })}>{byRange ? '+ ступень' : '+ строка'}</Button>
-      ) : null}
+      <Button size="sm" onClick={() => edit(draft => {
+        const list = (draft.rows ??= []);
+        if (byRange) {
+          const from = list.length ? (list[list.length - 1]!.to ?? 0) + 1 : 1;
+          list.push({ from, to: from, cells: {} });
+        } else {
+          list.push(blankRow(key));
+        }
+      })}>{byRange ? '+ ступень' : '+ строка'}</Button>
 
       {!columns.length && rows.length ? (
         <div className="inline inline--tight">
@@ -291,11 +258,10 @@ function Rows({ table, system, edit }: {
   );
 }
 
-function RowCells({ row, at, rowKey, source, columns, system, edit, setCell }: {
+function RowCells({ row, at, rowKey, columns, system, edit, setCell }: {
   row: TableRow;
   at: number;
   rowKey: TableKey;
-  source: { value: unknown; label: string }[];
   columns: TableColumn[];
   system: System;
   edit: (change: (draft: Table) => void) => void;
@@ -310,12 +276,6 @@ function RowCells({ row, at, rowKey, source, columns, system, edit, setCell }: {
           <NumInput value={row.from ?? 0} onCommit={n => set(r => { r.from = n; })} />
           <NumInput value={row.to ?? 0} onCommit={n => set(r => { r.to = n; })} />
         </>
-      ) : rowKey === 'choice' ? (
-        <Select
-          value={String(row.value ?? '')}
-          options={[['', '— какая строка —'], ...source.map(o => [String(o.value), o.label] as const)] as never}
-          onChange={next => set(r => { r.value = next; })}
-        />
       ) : (
         <>
           {rowKey === 'number' ? (
@@ -345,9 +305,7 @@ function RowCells({ row, at, rowKey, source, columns, system, edit, setCell }: {
 }
 
 const lead = (key: TableKey): string =>
-  (key === 'range' ? '72px 72px'
-    : key === 'choice' ? 'minmax(140px, 1.4fr)'
-      : 'minmax(90px, 1fr) minmax(120px, 1.4fr)');
+  (key === 'range' ? '72px 72px' : 'minmax(90px, 1fr) minmax(120px, 1.4fr)');
 
 function Cell({ column, value, system, onChange }: {
   column: TableColumn;

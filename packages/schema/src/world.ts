@@ -126,14 +126,12 @@ export const tableRow = z.object({
   cells: z.record(z.string(), z.unknown()).optional(),
 });
 
-export const tableKey = z.enum(['word', 'number', 'range', 'choice']);
+export const tableKey = z.enum(['word', 'number', 'range']);
 
 export const table = z.object({
   label: z.string().optional(),
 
   key: tableKey.optional(),
-
-  from: z.string().min(1).optional(),
   columns: z.array(tableColumn).optional(),
   rows: z.array(tableRow).optional(),
   otherwise: tableValue.optional(),

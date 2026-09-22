@@ -1,20 +1,13 @@
 import type { System, FieldOption, Field, Effect } from './types.ts';
 import { rowsOf, tableOf } from './tables.ts';
 
-export function listOf(system: System, key: string | undefined, seen: Set<string> = new Set()): FieldOption[] | undefined {
-  if (!key || seen.has(key)) return undefined;
+export function listOf(system: System, key: string | undefined): FieldOption[] | undefined {
+  if (!key) return undefined;
   const table = tableOf(system, key);
   if (!table) return undefined;
-  seen.add(key);
-  const source = table.key === 'choice' ? listOf(system, table.from, seen) : undefined;
-  const labelOf = (value: unknown): string | undefined =>
-    source?.find(option => String(option.value) === String(value))?.label;
   return rowsOf(table)
     .filter(row => row.value !== undefined)
-    .map(row => ({
-      value: row.value as FieldOption['value'],
-      label: row.label || labelOf(row.value) || String(row.value),
-    }));
+    .map(row => ({ value: row.value as FieldOption['value'], label: row.label || String(row.value) }));
 }
 
 export function optionsOf(system: System, field: Field): FieldOption[] {
