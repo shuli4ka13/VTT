@@ -43,6 +43,7 @@ function danglingText(ref: Reference, declared: Declared): string | null {
     if (ref.scope?.startsWith('listened:')) {
       return `в эффекте «${ref.scope.slice('listened:'.length)}» нет ${STEP.gen} «${ref.key}» — условию срабатывания не на что смотреть`;
     }
+    if (ref.scope === 'dotted' && (declared.field.has(ref.key) || declared.prop.has(ref.key))) return null;
     return `${STEP.gen} «${ref.key}» выше по цепочке нет — на его результат не сослаться`;
   }
   if (ref.kind === 'prop' && ref.scope === 'foreign') {

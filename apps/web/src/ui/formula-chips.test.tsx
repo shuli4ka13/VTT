@@ -144,3 +144,19 @@ describe('ссылка на таблицу видна в формуле чере
     expect(value).toBe('@класс.кость');
   });
 });
+
+describe('ссылка через две таблицы', () => {
+  const мир = {
+    fields: [{ tag: 'раса', label: 'Раса', optionsFrom: 'расы', value: { kind: 'stored', type: 'text', default: 'огр' } }],
+    tables: {
+      расы: { label: 'Расы', key: 'word', columns: [{ key: 'размер', label: 'Размер', kind: 'choice', from: 'размеры' }], rows: [] },
+      размеры: { label: 'Размеры', key: 'word', columns: [{ key: 'кость', label: 'Кость хитов', kind: 'dice' }], rows: [] },
+    },
+    constants: {}, effects: {},
+  } as unknown as System;
+
+  it('путь раса → размер → кость читается словами', () => {
+    render(<FormulaChips value="@раса.размер.кость" system={мир} onChange={() => {}} />);
+    expect(screen.getByText('Раса → Размер → Кость хитов')).toBeTruthy();
+  });
+});

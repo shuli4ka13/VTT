@@ -31,6 +31,7 @@ export function walk(
   let value = key;
   for (let i = 0; i < path.length; i++) {
     const columnKey = path[i]!;
+    if (value === null || value === undefined || value === '') return null;
     const table = tableOf(system, current);
     if (!table) throw new EngineError(`${owner}: таблицы «${current}» нет`);
     const column = (table.columns ?? []).find(c => c.key === columnKey);

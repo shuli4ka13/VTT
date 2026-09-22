@@ -21,6 +21,8 @@ const OPS: { label: string; hint: string; open: string; close?: string; word?: b
   { label: 'модуль', hint: 'число без минуса: −3 → 3', open: 'abs(', close: ')', word: true },
   { label: 'большее из', hint: 'самое большое из перечисленного через запятую', open: 'max(', close: ', )', word: true },
   { label: 'меньшее из', hint: 'самое маленькое из перечисленного через запятую', open: 'min(', close: ', )', word: true },
+  { label: 'или', hint: 'первое заданное: если класс не выбран — берётся второе', open: 'или(', close: ', )', word: true },
+  { label: 'есть в списке', hint: 'да, если в списке есть значение: спасброски класса — «сила»', open: 'есть(', close: ', "")', word: true },
 ];
 
 export function partsOf(value: string, known?: (tag: string) => boolean): Part[] {

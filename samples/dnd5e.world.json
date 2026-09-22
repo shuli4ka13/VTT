@@ -12,7 +12,8 @@
           "kind": "stored",
           "type": "text",
           "default": ""
-        }
+        },
+        "optionsFrom": "races"
       },
       {
         "tag": "class_name",
@@ -22,7 +23,8 @@
           "kind": "stored",
           "type": "text",
           "default": ""
-        }
+        },
+        "optionsFrom": "classes"
       },
       {
         "tag": "subclass",
@@ -223,8 +225,9 @@
         "group": "Прогрессия",
         "value": {
           "kind": "table",
-          "table": "proficiency",
-          "arg": "@level"
+          "table": "levels",
+          "arg": "@level",
+          "column": "prof"
         }
       },
       {
@@ -252,8 +255,8 @@
         }
       },
       {
-        "tag": "str_save_prof",
-        "label": "Владение: спасбросок Сила",
+        "tag": "str_save_extra",
+        "label": "Владение сверх класса: спасбросок Сила",
         "group": "Спасброски",
         "value": {
           "kind": "stored",
@@ -263,6 +266,15 @@
           "max": 1
         },
         "control": "ring"
+      },
+      {
+        "tag": "str_save_prof",
+        "label": "Владение: спасбросок Сила",
+        "group": "Спасброски",
+        "value": {
+          "kind": "formula",
+          "expr": "max(@str_save_extra, есть(@class_name.saves, \"сила\") ? 1 : 0)"
+        }
       },
       {
         "tag": "str_save",
@@ -278,8 +290,8 @@
         }
       },
       {
-        "tag": "dex_save_prof",
-        "label": "Владение: спасбросок Ловкость",
+        "tag": "dex_save_extra",
+        "label": "Владение сверх класса: спасбросок Ловкость",
         "group": "Спасброски",
         "value": {
           "kind": "stored",
@@ -289,6 +301,15 @@
           "max": 1
         },
         "control": "ring"
+      },
+      {
+        "tag": "dex_save_prof",
+        "label": "Владение: спасбросок Ловкость",
+        "group": "Спасброски",
+        "value": {
+          "kind": "formula",
+          "expr": "max(@dex_save_extra, есть(@class_name.saves, \"ловкость\") ? 1 : 0)"
+        }
       },
       {
         "tag": "dex_save",
@@ -304,8 +325,8 @@
         }
       },
       {
-        "tag": "con_save_prof",
-        "label": "Владение: спасбросок Телосложение",
+        "tag": "con_save_extra",
+        "label": "Владение сверх класса: спасбросок Телосложение",
         "group": "Спасброски",
         "value": {
           "kind": "stored",
@@ -315,6 +336,15 @@
           "max": 1
         },
         "control": "ring"
+      },
+      {
+        "tag": "con_save_prof",
+        "label": "Владение: спасбросок Телосложение",
+        "group": "Спасброски",
+        "value": {
+          "kind": "formula",
+          "expr": "max(@con_save_extra, есть(@class_name.saves, \"телосложение\") ? 1 : 0)"
+        }
       },
       {
         "tag": "con_save",
@@ -330,8 +360,8 @@
         }
       },
       {
-        "tag": "int_save_prof",
-        "label": "Владение: спасбросок Интеллект",
+        "tag": "int_save_extra",
+        "label": "Владение сверх класса: спасбросок Интеллект",
         "group": "Спасброски",
         "value": {
           "kind": "stored",
@@ -341,6 +371,15 @@
           "max": 1
         },
         "control": "ring"
+      },
+      {
+        "tag": "int_save_prof",
+        "label": "Владение: спасбросок Интеллект",
+        "group": "Спасброски",
+        "value": {
+          "kind": "formula",
+          "expr": "max(@int_save_extra, есть(@class_name.saves, \"интеллект\") ? 1 : 0)"
+        }
       },
       {
         "tag": "int_save",
@@ -356,8 +395,8 @@
         }
       },
       {
-        "tag": "wis_save_prof",
-        "label": "Владение: спасбросок Мудрость",
+        "tag": "wis_save_extra",
+        "label": "Владение сверх класса: спасбросок Мудрость",
         "group": "Спасброски",
         "value": {
           "kind": "stored",
@@ -367,6 +406,15 @@
           "max": 1
         },
         "control": "ring"
+      },
+      {
+        "tag": "wis_save_prof",
+        "label": "Владение: спасбросок Мудрость",
+        "group": "Спасброски",
+        "value": {
+          "kind": "formula",
+          "expr": "max(@wis_save_extra, есть(@class_name.saves, \"мудрость\") ? 1 : 0)"
+        }
       },
       {
         "tag": "wis_save",
@@ -382,8 +430,8 @@
         }
       },
       {
-        "tag": "cha_save_prof",
-        "label": "Владение: спасбросок Харизма",
+        "tag": "cha_save_extra",
+        "label": "Владение сверх класса: спасбросок Харизма",
         "group": "Спасброски",
         "value": {
           "kind": "stored",
@@ -393,6 +441,15 @@
           "max": 1
         },
         "control": "ring"
+      },
+      {
+        "tag": "cha_save_prof",
+        "label": "Владение: спасбросок Харизма",
+        "group": "Спасброски",
+        "value": {
+          "kind": "formula",
+          "expr": "max(@cha_save_extra, есть(@class_name.saves, \"харизма\") ? 1 : 0)"
+        }
       },
       {
         "tag": "cha_save",
@@ -902,10 +959,8 @@
         "label": "Скорость, футов",
         "group": "Чувства и движение",
         "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 30,
-          "min": 0
+          "kind": "formula",
+          "expr": "или(@race.speed, 30)"
         }
       },
       {
@@ -1010,11 +1065,9 @@
         "label": "Кость хитов",
         "group": "Здоровье",
         "value": {
-          "kind": "stored",
-          "type": "text",
-          "default": "1к8"
-        },
-        "control": "die"
+          "kind": "formula",
+          "expr": "или(@class_name.hit_die, @race.size.hit_die, \"1к8\")"
+        }
       },
       {
         "tag": "hit_dice_left",
@@ -1139,34 +1192,12 @@
         }
       },
       {
-        "tag": "casts_int",
-        "label": "Колдует от Интеллекта",
-        "group": "Магия",
-        "value": {
-          "kind": "stored",
-          "type": "boolean",
-          "default": false
-        },
-        "control": "toggle"
-      },
-      {
-        "tag": "casts_wis",
-        "label": "Колдует от Мудрости",
-        "group": "Магия",
-        "value": {
-          "kind": "stored",
-          "type": "boolean",
-          "default": false
-        },
-        "control": "toggle"
-      },
-      {
         "tag": "spell_mod",
         "label": "Заклинательный модификатор",
         "group": "Магия",
         "value": {
           "kind": "formula",
-          "expr": "@casts_int ? @int_mod : (@casts_wis ? @wis_mod : @cha_mod)"
+          "expr": "или(@class_name.spell_ability.mod, @cha_mod)"
         }
       },
       {
@@ -1206,8 +1237,9 @@
         "group": "Магия",
         "value": {
           "kind": "table",
-          "table": "cantrip_dice",
-          "arg": "@level"
+          "table": "levels",
+          "arg": "@level",
+          "column": "cantrips"
         }
       },
       {
@@ -1216,8 +1248,9 @@
         "group": "Ячейки заклинаний",
         "value": {
           "kind": "table",
-          "table": "slots_1",
-          "arg": "@caster_level"
+          "table": "spell_slots",
+          "arg": "@caster_level",
+          "column": "круг_1"
         }
       },
       {
@@ -1239,8 +1272,9 @@
         "group": "Ячейки заклинаний",
         "value": {
           "kind": "table",
-          "table": "slots_2",
-          "arg": "@caster_level"
+          "table": "spell_slots",
+          "arg": "@caster_level",
+          "column": "круг_2"
         }
       },
       {
@@ -1262,8 +1296,9 @@
         "group": "Ячейки заклинаний",
         "value": {
           "kind": "table",
-          "table": "slots_3",
-          "arg": "@caster_level"
+          "table": "spell_slots",
+          "arg": "@caster_level",
+          "column": "круг_3"
         }
       },
       {
@@ -1285,8 +1320,9 @@
         "group": "Ячейки заклинаний",
         "value": {
           "kind": "table",
-          "table": "slots_4",
-          "arg": "@caster_level"
+          "table": "spell_slots",
+          "arg": "@caster_level",
+          "column": "круг_4"
         }
       },
       {
@@ -1308,8 +1344,9 @@
         "group": "Ячейки заклинаний",
         "value": {
           "kind": "table",
-          "table": "slots_5",
-          "arg": "@caster_level"
+          "table": "spell_slots",
+          "arg": "@caster_level",
+          "column": "круг_5"
         }
       },
       {
@@ -1331,8 +1368,9 @@
         "group": "Ячейки заклинаний",
         "value": {
           "kind": "table",
-          "table": "slots_6",
-          "arg": "@caster_level"
+          "table": "spell_slots",
+          "arg": "@caster_level",
+          "column": "круг_6"
         }
       },
       {
@@ -1354,8 +1392,9 @@
         "group": "Ячейки заклинаний",
         "value": {
           "kind": "table",
-          "table": "slots_7",
-          "arg": "@caster_level"
+          "table": "spell_slots",
+          "arg": "@caster_level",
+          "column": "круг_7"
         }
       },
       {
@@ -1377,8 +1416,9 @@
         "group": "Ячейки заклинаний",
         "value": {
           "kind": "table",
-          "table": "slots_8",
-          "arg": "@caster_level"
+          "table": "spell_slots",
+          "arg": "@caster_level",
+          "column": "круг_8"
         }
       },
       {
@@ -1400,8 +1440,9 @@
         "group": "Ячейки заклинаний",
         "value": {
           "kind": "table",
-          "table": "slots_9",
-          "arg": "@caster_level"
+          "table": "spell_slots",
+          "arg": "@caster_level",
+          "column": "круг_9"
         }
       },
       {
@@ -1687,8 +1728,9 @@
         "group": "Ресурсы класса",
         "value": {
           "kind": "table",
-          "table": "rage_damage",
-          "arg": "@level"
+          "table": "levels",
+          "arg": "@level",
+          "column": "rage"
         }
       },
       {
@@ -1988,1565 +2030,532 @@
       }
     },
     "tables": {
-      "proficiency": {
-        "label": "Бонус мастерства по уровню",
-        "key": "range",
+      "levels": {
+        "label": "Уровень персонажа",
+        "key": "number",
         "columns": [
           {
-            "key": "value",
-            "label": "значение",
+            "key": "prof",
+            "label": "Бонус мастерства",
+            "kind": "number"
+          },
+          {
+            "key": "cantrips",
+            "label": "Костей заговора",
+            "kind": "number"
+          },
+          {
+            "key": "rage",
+            "label": "Урон ярости",
             "kind": "number"
           }
         ],
         "rows": [
           {
-            "from": 1,
-            "to": 4,
+            "value": 1,
             "cells": {
-              "value": 2
+              "prof": 2,
+              "cantrips": 1,
+              "rage": 2
             }
           },
           {
-            "from": 5,
-            "to": 8,
+            "value": 2,
             "cells": {
-              "value": 3
+              "prof": 2,
+              "cantrips": 1,
+              "rage": 2
             }
           },
           {
-            "from": 9,
-            "to": 12,
+            "value": 3,
             "cells": {
-              "value": 4
+              "prof": 2,
+              "cantrips": 1,
+              "rage": 2
             }
           },
           {
-            "from": 13,
-            "to": 16,
+            "value": 4,
             "cells": {
-              "value": 5
+              "prof": 2,
+              "cantrips": 1,
+              "rage": 2
             }
           },
           {
-            "from": 17,
-            "to": 20,
+            "value": 5,
             "cells": {
-              "value": 6
+              "prof": 3,
+              "cantrips": 2,
+              "rage": 2
+            }
+          },
+          {
+            "value": 6,
+            "cells": {
+              "prof": 3,
+              "cantrips": 2,
+              "rage": 2
+            }
+          },
+          {
+            "value": 7,
+            "cells": {
+              "prof": 3,
+              "cantrips": 2,
+              "rage": 2
+            }
+          },
+          {
+            "value": 8,
+            "cells": {
+              "prof": 3,
+              "cantrips": 2,
+              "rage": 2
+            }
+          },
+          {
+            "value": 9,
+            "cells": {
+              "prof": 4,
+              "cantrips": 2,
+              "rage": 3
+            }
+          },
+          {
+            "value": 10,
+            "cells": {
+              "prof": 4,
+              "cantrips": 2,
+              "rage": 3
+            }
+          },
+          {
+            "value": 11,
+            "cells": {
+              "prof": 4,
+              "cantrips": 3,
+              "rage": 3
+            }
+          },
+          {
+            "value": 12,
+            "cells": {
+              "prof": 4,
+              "cantrips": 3,
+              "rage": 3
+            }
+          },
+          {
+            "value": 13,
+            "cells": {
+              "prof": 5,
+              "cantrips": 3,
+              "rage": 3
+            }
+          },
+          {
+            "value": 14,
+            "cells": {
+              "prof": 5,
+              "cantrips": 3,
+              "rage": 3
+            }
+          },
+          {
+            "value": 15,
+            "cells": {
+              "prof": 5,
+              "cantrips": 3,
+              "rage": 3
+            }
+          },
+          {
+            "value": 16,
+            "cells": {
+              "prof": 5,
+              "cantrips": 3,
+              "rage": 4
+            }
+          },
+          {
+            "value": 17,
+            "cells": {
+              "prof": 6,
+              "cantrips": 4,
+              "rage": 4
+            }
+          },
+          {
+            "value": 18,
+            "cells": {
+              "prof": 6,
+              "cantrips": 4,
+              "rage": 4
+            }
+          },
+          {
+            "value": 19,
+            "cells": {
+              "prof": 6,
+              "cantrips": 4,
+              "rage": 4
+            }
+          },
+          {
+            "value": 20,
+            "cells": {
+              "prof": 6,
+              "cantrips": 4,
+              "rage": 4
             }
           }
         ]
       },
-      "cantrip_dice": {
-        "label": "Костей заговора по уровню",
-        "key": "range",
+      "spell_slots": {
+        "label": "Ячейки заклинаний",
+        "key": "number",
         "columns": [
           {
-            "key": "value",
-            "label": "значение",
+            "key": "круг_1",
+            "label": "1-й круг",
+            "kind": "number"
+          },
+          {
+            "key": "круг_2",
+            "label": "2-й круг",
+            "kind": "number"
+          },
+          {
+            "key": "круг_3",
+            "label": "3-й круг",
+            "kind": "number"
+          },
+          {
+            "key": "круг_4",
+            "label": "4-й круг",
+            "kind": "number"
+          },
+          {
+            "key": "круг_5",
+            "label": "5-й круг",
+            "kind": "number"
+          },
+          {
+            "key": "круг_6",
+            "label": "6-й круг",
+            "kind": "number"
+          },
+          {
+            "key": "круг_7",
+            "label": "7-й круг",
+            "kind": "number"
+          },
+          {
+            "key": "круг_8",
+            "label": "8-й круг",
+            "kind": "number"
+          },
+          {
+            "key": "круг_9",
+            "label": "9-й круг",
             "kind": "number"
           }
         ],
         "rows": [
           {
-            "from": 1,
-            "to": 4,
+            "value": 0,
             "cells": {
-              "value": 1
+              "круг_1": 0,
+              "круг_2": 0,
+              "круг_3": 0,
+              "круг_4": 0,
+              "круг_5": 0,
+              "круг_6": 0,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
             }
           },
           {
-            "from": 5,
-            "to": 10,
+            "value": 1,
             "cells": {
-              "value": 2
+              "круг_1": 2,
+              "круг_2": 0,
+              "круг_3": 0,
+              "круг_4": 0,
+              "круг_5": 0,
+              "круг_6": 0,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
             }
           },
           {
-            "from": 11,
-            "to": 16,
+            "value": 2,
             "cells": {
-              "value": 3
+              "круг_1": 3,
+              "круг_2": 0,
+              "круг_3": 0,
+              "круг_4": 0,
+              "круг_5": 0,
+              "круг_6": 0,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
             }
           },
           {
-            "from": 17,
-            "to": 20,
+            "value": 3,
             "cells": {
-              "value": 4
+              "круг_1": 4,
+              "круг_2": 2,
+              "круг_3": 0,
+              "круг_4": 0,
+              "круг_5": 0,
+              "круг_6": 0,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
             }
-          }
-        ]
-      },
-      "rage_damage": {
-        "label": "Урон ярости по уровню",
-        "key": "range",
-        "columns": [
-          {
-            "key": "value",
-            "label": "значение",
-            "kind": "number"
-          }
-        ],
-        "rows": [
-          {
-            "from": 1,
-            "to": 8,
-            "cells": {
-              "value": 2
-            }
-          },
-          {
-            "from": 9,
-            "to": 15,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 16,
-            "to": 20,
-            "cells": {
-              "value": 4
-            }
-          }
-        ]
-      },
-      "slots_1": {
-        "label": "Ячейки 1-го круга по уровню заклинателя",
-        "key": "range",
-        "columns": [
-          {
-            "key": "value",
-            "label": "значение",
-            "kind": "number"
-          }
-        ],
-        "rows": [
-          {
-            "from": 0,
-            "to": 0,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 1,
-            "to": 1,
-            "cells": {
-              "value": 2
-            }
-          },
-          {
-            "from": 2,
-            "to": 2,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 3,
-            "to": 3,
-            "cells": {
-              "value": 4
-            }
-          },
-          {
-            "from": 4,
-            "to": 4,
-            "cells": {
-              "value": 4
-            }
-          },
-          {
-            "from": 5,
-            "to": 5,
-            "cells": {
-              "value": 4
-            }
-          },
-          {
-            "from": 6,
-            "to": 6,
-            "cells": {
-              "value": 4
-            }
-          },
-          {
-            "from": 7,
-            "to": 7,
-            "cells": {
-              "value": 4
-            }
-          },
-          {
-            "from": 8,
-            "to": 8,
-            "cells": {
-              "value": 4
-            }
-          },
-          {
-            "from": 9,
-            "to": 9,
-            "cells": {
-              "value": 4
-            }
-          },
-          {
-            "from": 10,
-            "to": 10,
-            "cells": {
-              "value": 4
-            }
-          },
-          {
-            "from": 11,
-            "to": 11,
-            "cells": {
-              "value": 4
-            }
-          },
-          {
-            "from": 12,
-            "to": 12,
-            "cells": {
-              "value": 4
-            }
-          },
-          {
-            "from": 13,
-            "to": 13,
-            "cells": {
-              "value": 4
-            }
-          },
-          {
-            "from": 14,
-            "to": 14,
-            "cells": {
-              "value": 4
-            }
-          },
-          {
-            "from": 15,
-            "to": 15,
-            "cells": {
-              "value": 4
-            }
-          },
-          {
-            "from": 16,
-            "to": 16,
-            "cells": {
-              "value": 4
-            }
-          },
-          {
-            "from": 17,
-            "to": 17,
-            "cells": {
-              "value": 4
-            }
-          },
-          {
-            "from": 18,
-            "to": 18,
-            "cells": {
-              "value": 4
-            }
-          },
-          {
-            "from": 19,
-            "to": 19,
-            "cells": {
-              "value": 4
-            }
-          },
-          {
-            "from": 20,
-            "to": 20,
-            "cells": {
-              "value": 4
-            }
-          }
-        ]
-      },
-      "slots_2": {
-        "label": "Ячейки 2-го круга по уровню заклинателя",
-        "key": "range",
-        "columns": [
-          {
-            "key": "value",
-            "label": "значение",
-            "kind": "number"
-          }
-        ],
-        "rows": [
-          {
-            "from": 0,
-            "to": 0,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 1,
-            "to": 1,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 2,
-            "to": 2,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 3,
-            "to": 3,
-            "cells": {
-              "value": 2
-            }
-          },
-          {
-            "from": 4,
-            "to": 4,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 5,
-            "to": 5,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 6,
-            "to": 6,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 7,
-            "to": 7,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 8,
-            "to": 8,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 9,
-            "to": 9,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 10,
-            "to": 10,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 11,
-            "to": 11,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 12,
-            "to": 12,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 13,
-            "to": 13,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 14,
-            "to": 14,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 15,
-            "to": 15,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 16,
-            "to": 16,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 17,
-            "to": 17,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 18,
-            "to": 18,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 19,
-            "to": 19,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 20,
-            "to": 20,
-            "cells": {
-              "value": 3
-            }
-          }
-        ]
-      },
-      "slots_3": {
-        "label": "Ячейки 3-го круга по уровню заклинателя",
-        "key": "range",
-        "columns": [
-          {
-            "key": "value",
-            "label": "значение",
-            "kind": "number"
-          }
-        ],
-        "rows": [
-          {
-            "from": 0,
-            "to": 0,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 1,
-            "to": 1,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 2,
-            "to": 2,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 3,
-            "to": 3,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 4,
-            "to": 4,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 5,
-            "to": 5,
-            "cells": {
-              "value": 2
-            }
-          },
-          {
-            "from": 6,
-            "to": 6,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 7,
-            "to": 7,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 8,
-            "to": 8,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 9,
-            "to": 9,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 10,
-            "to": 10,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 11,
-            "to": 11,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 12,
-            "to": 12,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 13,
-            "to": 13,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 14,
-            "to": 14,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 15,
-            "to": 15,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 16,
-            "to": 16,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 17,
-            "to": 17,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 18,
-            "to": 18,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 19,
-            "to": 19,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 20,
-            "to": 20,
-            "cells": {
-              "value": 3
-            }
-          }
-        ]
-      },
-      "slots_4": {
-        "label": "Ячейки 4-го круга по уровню заклинателя",
-        "key": "range",
-        "columns": [
-          {
-            "key": "value",
-            "label": "значение",
-            "kind": "number"
-          }
-        ],
-        "rows": [
-          {
-            "from": 0,
-            "to": 0,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 1,
-            "to": 1,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 2,
-            "to": 2,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 3,
-            "to": 3,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 4,
-            "to": 4,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 5,
-            "to": 5,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 6,
-            "to": 6,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 7,
-            "to": 7,
-            "cells": {
-              "value": 1
-            }
-          },
-          {
-            "from": 8,
-            "to": 8,
-            "cells": {
-              "value": 2
-            }
-          },
-          {
-            "from": 9,
-            "to": 9,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 10,
-            "to": 10,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 11,
-            "to": 11,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 12,
-            "to": 12,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 13,
-            "to": 13,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 14,
-            "to": 14,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 15,
-            "to": 15,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 16,
-            "to": 16,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 17,
-            "to": 17,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 18,
-            "to": 18,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 19,
-            "to": 19,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 20,
-            "to": 20,
-            "cells": {
-              "value": 3
-            }
-          }
-        ]
-      },
-      "slots_5": {
-        "label": "Ячейки 5-го круга по уровню заклинателя",
-        "key": "range",
-        "columns": [
-          {
-            "key": "value",
-            "label": "значение",
-            "kind": "number"
-          }
-        ],
-        "rows": [
-          {
-            "from": 0,
-            "to": 0,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 1,
-            "to": 1,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 2,
-            "to": 2,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 3,
-            "to": 3,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 4,
-            "to": 4,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 5,
-            "to": 5,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 6,
-            "to": 6,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 7,
-            "to": 7,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 8,
-            "to": 8,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 9,
-            "to": 9,
-            "cells": {
-              "value": 1
-            }
-          },
-          {
-            "from": 10,
-            "to": 10,
-            "cells": {
-              "value": 2
-            }
-          },
-          {
-            "from": 11,
-            "to": 11,
-            "cells": {
-              "value": 2
-            }
-          },
-          {
-            "from": 12,
-            "to": 12,
-            "cells": {
-              "value": 2
-            }
-          },
-          {
-            "from": 13,
-            "to": 13,
-            "cells": {
-              "value": 2
-            }
-          },
-          {
-            "from": 14,
-            "to": 14,
-            "cells": {
-              "value": 2
-            }
-          },
-          {
-            "from": 15,
-            "to": 15,
-            "cells": {
-              "value": 2
-            }
-          },
-          {
-            "from": 16,
-            "to": 16,
-            "cells": {
-              "value": 2
-            }
-          },
-          {
-            "from": 17,
-            "to": 17,
-            "cells": {
-              "value": 2
-            }
-          },
-          {
-            "from": 18,
-            "to": 18,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 19,
-            "to": 19,
-            "cells": {
-              "value": 3
-            }
-          },
-          {
-            "from": 20,
-            "to": 20,
-            "cells": {
-              "value": 3
-            }
-          }
-        ]
-      },
-      "slots_6": {
-        "label": "Ячейки 6-го круга по уровню заклинателя",
-        "key": "range",
-        "columns": [
-          {
-            "key": "value",
-            "label": "значение",
-            "kind": "number"
-          }
-        ],
-        "rows": [
-          {
-            "from": 0,
-            "to": 0,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 1,
-            "to": 1,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 2,
-            "to": 2,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 3,
-            "to": 3,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 4,
-            "to": 4,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 5,
-            "to": 5,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 6,
-            "to": 6,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 7,
-            "to": 7,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 8,
-            "to": 8,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 9,
-            "to": 9,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 10,
-            "to": 10,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 11,
-            "to": 11,
-            "cells": {
-              "value": 1
-            }
-          },
-          {
-            "from": 12,
-            "to": 12,
-            "cells": {
-              "value": 1
-            }
-          },
-          {
-            "from": 13,
-            "to": 13,
-            "cells": {
-              "value": 1
-            }
-          },
-          {
-            "from": 14,
-            "to": 14,
-            "cells": {
-              "value": 1
-            }
-          },
-          {
-            "from": 15,
-            "to": 15,
-            "cells": {
-              "value": 1
-            }
-          },
-          {
-            "from": 16,
-            "to": 16,
-            "cells": {
-              "value": 1
-            }
-          },
-          {
-            "from": 17,
-            "to": 17,
-            "cells": {
-              "value": 1
-            }
-          },
-          {
-            "from": 18,
-            "to": 18,
-            "cells": {
-              "value": 1
-            }
-          },
-          {
-            "from": 19,
-            "to": 19,
-            "cells": {
-              "value": 2
-            }
-          },
-          {
-            "from": 20,
-            "to": 20,
-            "cells": {
-              "value": 2
-            }
-          }
-        ]
-      },
-      "slots_7": {
-        "label": "Ячейки 7-го круга по уровню заклинателя",
-        "key": "range",
-        "columns": [
-          {
-            "key": "value",
-            "label": "значение",
-            "kind": "number"
-          }
-        ],
-        "rows": [
-          {
-            "from": 0,
-            "to": 0,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 1,
-            "to": 1,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 2,
-            "to": 2,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 3,
-            "to": 3,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 4,
-            "to": 4,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 5,
-            "to": 5,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 6,
-            "to": 6,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 7,
-            "to": 7,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 8,
-            "to": 8,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 9,
-            "to": 9,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 10,
-            "to": 10,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 11,
-            "to": 11,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 12,
-            "to": 12,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 13,
-            "to": 13,
-            "cells": {
-              "value": 1
-            }
-          },
-          {
-            "from": 14,
-            "to": 14,
-            "cells": {
-              "value": 1
-            }
-          },
-          {
-            "from": 15,
-            "to": 15,
-            "cells": {
-              "value": 1
-            }
-          },
-          {
-            "from": 16,
-            "to": 16,
-            "cells": {
-              "value": 1
-            }
-          },
-          {
-            "from": 17,
-            "to": 17,
-            "cells": {
-              "value": 1
-            }
-          },
-          {
-            "from": 18,
-            "to": 18,
-            "cells": {
-              "value": 1
-            }
-          },
-          {
-            "from": 19,
-            "to": 19,
-            "cells": {
-              "value": 1
-            }
-          },
-          {
-            "from": 20,
-            "to": 20,
-            "cells": {
-              "value": 2
-            }
-          }
-        ]
-      },
-      "slots_8": {
-        "label": "Ячейки 8-го круга по уровню заклинателя",
-        "key": "range",
-        "columns": [
-          {
-            "key": "value",
-            "label": "значение",
-            "kind": "number"
-          }
-        ],
-        "rows": [
-          {
-            "from": 0,
-            "to": 0,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 1,
-            "to": 1,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 2,
-            "to": 2,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 3,
-            "to": 3,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 4,
-            "to": 4,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 5,
-            "to": 5,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 6,
-            "to": 6,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 7,
-            "to": 7,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 8,
-            "to": 8,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 9,
-            "to": 9,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 10,
-            "to": 10,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 11,
-            "to": 11,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 12,
-            "to": 12,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 13,
-            "to": 13,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 14,
-            "to": 14,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 15,
-            "to": 15,
-            "cells": {
-              "value": 1
-            }
-          },
-          {
-            "from": 16,
-            "to": 16,
-            "cells": {
-              "value": 1
-            }
-          },
-          {
-            "from": 17,
-            "to": 17,
-            "cells": {
-              "value": 1
-            }
-          },
-          {
-            "from": 18,
-            "to": 18,
-            "cells": {
-              "value": 1
-            }
-          },
-          {
-            "from": 19,
-            "to": 19,
-            "cells": {
-              "value": 1
-            }
-          },
-          {
-            "from": 20,
-            "to": 20,
-            "cells": {
-              "value": 1
-            }
-          }
-        ]
-      },
-      "slots_9": {
-        "label": "Ячейки 9-го круга по уровню заклинателя",
-        "key": "range",
-        "columns": [
-          {
-            "key": "value",
-            "label": "значение",
-            "kind": "number"
-          }
-        ],
-        "rows": [
-          {
-            "from": 0,
-            "to": 0,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 1,
-            "to": 1,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 2,
-            "to": 2,
-            "cells": {
-              "value": 0
-            }
-          },
-          {
-            "from": 3,
-            "to": 3,
-            "cells": {
-              "value": 0
-            }
           },
           {
-            "from": 4,
-            "to": 4,
+            "value": 4,
             "cells": {
-              "value": 0
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 0,
+              "круг_4": 0,
+              "круг_5": 0,
+              "круг_6": 0,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
             }
           },
           {
-            "from": 5,
-            "to": 5,
+            "value": 5,
             "cells": {
-              "value": 0
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 2,
+              "круг_4": 0,
+              "круг_5": 0,
+              "круг_6": 0,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
             }
           },
           {
-            "from": 6,
-            "to": 6,
+            "value": 6,
             "cells": {
-              "value": 0
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 0,
+              "круг_5": 0,
+              "круг_6": 0,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
             }
           },
           {
-            "from": 7,
-            "to": 7,
+            "value": 7,
             "cells": {
-              "value": 0
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 1,
+              "круг_5": 0,
+              "круг_6": 0,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
             }
           },
           {
-            "from": 8,
-            "to": 8,
+            "value": 8,
             "cells": {
-              "value": 0
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 2,
+              "круг_5": 0,
+              "круг_6": 0,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
             }
           },
           {
-            "from": 9,
-            "to": 9,
+            "value": 9,
             "cells": {
-              "value": 0
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 3,
+              "круг_5": 1,
+              "круг_6": 0,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
             }
           },
           {
-            "from": 10,
-            "to": 10,
+            "value": 10,
             "cells": {
-              "value": 0
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 3,
+              "круг_5": 2,
+              "круг_6": 0,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
             }
           },
           {
-            "from": 11,
-            "to": 11,
+            "value": 11,
             "cells": {
-              "value": 0
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 3,
+              "круг_5": 2,
+              "круг_6": 1,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
             }
           },
           {
-            "from": 12,
-            "to": 12,
+            "value": 12,
             "cells": {
-              "value": 0
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 3,
+              "круг_5": 2,
+              "круг_6": 1,
+              "круг_7": 0,
+              "круг_8": 0,
+              "круг_9": 0
             }
           },
           {
-            "from": 13,
-            "to": 13,
+            "value": 13,
             "cells": {
-              "value": 0
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 3,
+              "круг_5": 2,
+              "круг_6": 1,
+              "круг_7": 1,
+              "круг_8": 0,
+              "круг_9": 0
             }
           },
           {
-            "from": 14,
-            "to": 14,
+            "value": 14,
             "cells": {
-              "value": 0
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 3,
+              "круг_5": 2,
+              "круг_6": 1,
+              "круг_7": 1,
+              "круг_8": 0,
+              "круг_9": 0
             }
           },
           {
-            "from": 15,
-            "to": 15,
+            "value": 15,
             "cells": {
-              "value": 0
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 3,
+              "круг_5": 2,
+              "круг_6": 1,
+              "круг_7": 1,
+              "круг_8": 1,
+              "круг_9": 0
             }
           },
           {
-            "from": 16,
-            "to": 16,
+            "value": 16,
             "cells": {
-              "value": 0
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 3,
+              "круг_5": 2,
+              "круг_6": 1,
+              "круг_7": 1,
+              "круг_8": 1,
+              "круг_9": 0
             }
           },
           {
-            "from": 17,
-            "to": 17,
+            "value": 17,
             "cells": {
-              "value": 1
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 3,
+              "круг_5": 2,
+              "круг_6": 1,
+              "круг_7": 1,
+              "круг_8": 1,
+              "круг_9": 1
             }
           },
           {
-            "from": 18,
-            "to": 18,
+            "value": 18,
             "cells": {
-              "value": 1
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 3,
+              "круг_5": 3,
+              "круг_6": 1,
+              "круг_7": 1,
+              "круг_8": 1,
+              "круг_9": 1
             }
           },
           {
-            "from": 19,
-            "to": 19,
+            "value": 19,
             "cells": {
-              "value": 1
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 3,
+              "круг_5": 3,
+              "круг_6": 2,
+              "круг_7": 1,
+              "круг_8": 1,
+              "круг_9": 1
             }
           },
           {
-            "from": 20,
-            "to": 20,
+            "value": 20,
             "cells": {
-              "value": 1
+              "круг_1": 4,
+              "круг_2": 3,
+              "круг_3": 3,
+              "круг_4": 3,
+              "круг_5": 3,
+              "круг_6": 2,
+              "круг_7": 2,
+              "круг_8": 1,
+              "круг_9": 1
             }
           }
         ]
@@ -3761,6 +2770,397 @@
             "cells": {
               "attack": "@dex_mod + @prof_bonus",
               "damage": "@dex_mod"
+            }
+          }
+        ]
+      },
+      "abilities": {
+        "label": "Характеристики",
+        "key": "word",
+        "columns": [
+          {
+            "key": "mod",
+            "label": "Модификатор",
+            "kind": "expr"
+          }
+        ],
+        "rows": [
+          {
+            "value": "сила",
+            "label": "Сила",
+            "cells": {
+              "mod": "@str_mod"
+            }
+          },
+          {
+            "value": "ловкость",
+            "label": "Ловкость",
+            "cells": {
+              "mod": "@dex_mod"
+            }
+          },
+          {
+            "value": "телосложение",
+            "label": "Телосложение",
+            "cells": {
+              "mod": "@con_mod"
+            }
+          },
+          {
+            "value": "интеллект",
+            "label": "Интеллект",
+            "cells": {
+              "mod": "@int_mod"
+            }
+          },
+          {
+            "value": "мудрость",
+            "label": "Мудрость",
+            "cells": {
+              "mod": "@wis_mod"
+            }
+          },
+          {
+            "value": "харизма",
+            "label": "Харизма",
+            "cells": {
+              "mod": "@cha_mod"
+            }
+          }
+        ]
+      },
+      "classes": {
+        "label": "Классы",
+        "key": "word",
+        "columns": [
+          {
+            "key": "hit_die",
+            "label": "Кость хитов",
+            "kind": "dice"
+          },
+          {
+            "key": "saves",
+            "label": "Спасброски",
+            "kind": "choice",
+            "from": "abilities",
+            "many": true
+          },
+          {
+            "key": "spell_ability",
+            "label": "Заклинательная характеристика",
+            "kind": "choice",
+            "from": "abilities"
+          }
+        ],
+        "rows": [
+          {
+            "value": "варвар",
+            "label": "варвар",
+            "cells": {
+              "hit_die": "1к12",
+              "saves": [
+                "сила",
+                "телосложение"
+              ]
+            }
+          },
+          {
+            "value": "бард",
+            "label": "бард",
+            "cells": {
+              "hit_die": "1к8",
+              "saves": [
+                "ловкость",
+                "харизма"
+              ],
+              "spell_ability": "харизма"
+            }
+          },
+          {
+            "value": "жрец",
+            "label": "жрец",
+            "cells": {
+              "hit_die": "1к8",
+              "saves": [
+                "мудрость",
+                "харизма"
+              ],
+              "spell_ability": "мудрость"
+            }
+          },
+          {
+            "value": "друид",
+            "label": "друид",
+            "cells": {
+              "hit_die": "1к8",
+              "saves": [
+                "интеллект",
+                "мудрость"
+              ],
+              "spell_ability": "мудрость"
+            }
+          },
+          {
+            "value": "воин",
+            "label": "воин",
+            "cells": {
+              "hit_die": "1к10",
+              "saves": [
+                "сила",
+                "телосложение"
+              ]
+            }
+          },
+          {
+            "value": "монах",
+            "label": "монах",
+            "cells": {
+              "hit_die": "1к8",
+              "saves": [
+                "сила",
+                "ловкость"
+              ]
+            }
+          },
+          {
+            "value": "паладин",
+            "label": "паладин",
+            "cells": {
+              "hit_die": "1к10",
+              "saves": [
+                "мудрость",
+                "харизма"
+              ],
+              "spell_ability": "харизма"
+            }
+          },
+          {
+            "value": "следопыт",
+            "label": "следопыт",
+            "cells": {
+              "hit_die": "1к10",
+              "saves": [
+                "сила",
+                "ловкость"
+              ],
+              "spell_ability": "мудрость"
+            }
+          },
+          {
+            "value": "плут",
+            "label": "плут",
+            "cells": {
+              "hit_die": "1к8",
+              "saves": [
+                "ловкость",
+                "интеллект"
+              ]
+            }
+          },
+          {
+            "value": "чародей",
+            "label": "чародей",
+            "cells": {
+              "hit_die": "1к6",
+              "saves": [
+                "телосложение",
+                "харизма"
+              ],
+              "spell_ability": "харизма"
+            }
+          },
+          {
+            "value": "колдун",
+            "label": "колдун",
+            "cells": {
+              "hit_die": "1к8",
+              "saves": [
+                "мудрость",
+                "харизма"
+              ],
+              "spell_ability": "харизма"
+            }
+          },
+          {
+            "value": "волшебник",
+            "label": "волшебник",
+            "cells": {
+              "hit_die": "1к6",
+              "saves": [
+                "интеллект",
+                "мудрость"
+              ],
+              "spell_ability": "интеллект"
+            }
+          }
+        ]
+      },
+      "sizes": {
+        "label": "Размеры",
+        "key": "word",
+        "columns": [
+          {
+            "key": "hit_die",
+            "label": "Кость хитов существа",
+            "kind": "dice"
+          }
+        ],
+        "rows": [
+          {
+            "value": "крошечный",
+            "label": "крошечный",
+            "cells": {
+              "hit_die": "1к4"
+            }
+          },
+          {
+            "value": "маленький",
+            "label": "маленький",
+            "cells": {
+              "hit_die": "1к6"
+            }
+          },
+          {
+            "value": "средний",
+            "label": "средний",
+            "cells": {
+              "hit_die": "1к8"
+            }
+          },
+          {
+            "value": "большой",
+            "label": "большой",
+            "cells": {
+              "hit_die": "1к10"
+            }
+          },
+          {
+            "value": "огромный",
+            "label": "огромный",
+            "cells": {
+              "hit_die": "1к12"
+            }
+          },
+          {
+            "value": "громадный",
+            "label": "громадный",
+            "cells": {
+              "hit_die": "1к20"
+            }
+          }
+        ]
+      },
+      "races": {
+        "label": "Расы и виды существ",
+        "key": "word",
+        "columns": [
+          {
+            "key": "size",
+            "label": "Размер",
+            "kind": "choice",
+            "from": "sizes"
+          },
+          {
+            "key": "speed",
+            "label": "Скорость, футов",
+            "kind": "number"
+          }
+        ],
+        "rows": [
+          {
+            "value": "дварф",
+            "label": "дварф",
+            "cells": {
+              "size": "средний",
+              "speed": 25
+            }
+          },
+          {
+            "value": "эльф",
+            "label": "эльф",
+            "cells": {
+              "size": "средний",
+              "speed": 30
+            }
+          },
+          {
+            "value": "полурослик",
+            "label": "полурослик",
+            "cells": {
+              "size": "маленький",
+              "speed": 25
+            }
+          },
+          {
+            "value": "человек",
+            "label": "человек",
+            "cells": {
+              "size": "средний",
+              "speed": 30
+            }
+          },
+          {
+            "value": "драконорождённый",
+            "label": "драконорождённый",
+            "cells": {
+              "size": "средний",
+              "speed": 30
+            }
+          },
+          {
+            "value": "гном",
+            "label": "гном",
+            "cells": {
+              "size": "маленький",
+              "speed": 25
+            }
+          },
+          {
+            "value": "полуэльф",
+            "label": "полуэльф",
+            "cells": {
+              "size": "средний",
+              "speed": 30
+            }
+          },
+          {
+            "value": "полуорк",
+            "label": "полуорк",
+            "cells": {
+              "size": "средний",
+              "speed": 30
+            }
+          },
+          {
+            "value": "тифлинг",
+            "label": "тифлинг",
+            "cells": {
+              "size": "средний",
+              "speed": 30
+            }
+          },
+          {
+            "value": "гоблин",
+            "label": "гоблин",
+            "cells": {
+              "size": "маленький",
+              "speed": 30
+            }
+          },
+          {
+            "value": "орк",
+            "label": "орк",
+            "cells": {
+              "size": "средний",
+              "speed": 30
+            }
+          },
+          {
+            "value": "огр",
+            "label": "огр",
+            "cells": {
+              "size": "большой",
+              "speed": 40
             }
           }
         ]
@@ -9553,7 +8953,7 @@
           "ac_base": 14,
           "athletics_prof": 1,
           "perception_prof": 1,
-          "con_save_prof": 1,
+          "con_save_extra": 1,
           "second_wind_max": 1,
           "second_wind_left": 1,
           "rages_max": 3,
@@ -9571,8 +8971,7 @@
           "relentless_max": 1,
           "relentless_left": 1,
           "inspiration": 1,
-          "hit_dice_left": 5,
-          "hit_die": "1к10"
+          "hit_dice_left": 5
         },
         "equipped": [],
         "effects": [],
@@ -9594,7 +8993,6 @@
           "hp_max": 40,
           "hp_current": 40,
           "ac_base": 13,
-          "hit_die": "1к8",
           "hit_dice_left": 5
         },
         "equipped": [],
@@ -11660,8 +11058,8 @@
       "kind": "pc",
       "name": "Арвен",
       "values": {
-        "race": "Человек",
-        "class_name": "Воительница",
+        "race": "человек",
+        "class_name": "воин",
         "subclass": "Чемпион",
         "background": "Солдат",
         "alignment": "Законно-добрая",
@@ -11674,18 +11072,14 @@
         "level": 5,
         "xp": 6500,
         "inspiration": 1,
-        "str_save_prof": 1,
-        "con_save_prof": 1,
         "athletics_prof": 1,
         "perception_prof": 1,
         "survival_prof": 1,
         "intimidation_prof": 2,
-        "speed": 30,
         "languages": "Общий, Дварфский",
         "hp_max": 44,
         "hp_current": 44,
         "hp_temp": 0,
-        "hit_die": "1к10",
         "hit_dice_left": 5,
         "crit_from": 19,
         "second_wind_max": 1,
@@ -11722,8 +11116,8 @@
       "kind": "pc",
       "name": "Мирра",
       "values": {
-        "race": "Тифлинг",
-        "class_name": "Чародейка",
+        "race": "тифлинг",
+        "class_name": "чародей",
         "subclass": "Драконья кровь",
         "background": "Шарлатанка",
         "alignment": "Хаотично-нейтральная",
@@ -11736,17 +11130,13 @@
         "level": 5,
         "xp": 6500,
         "caster_level": 5,
-        "con_save_prof": 1,
-        "cha_save_prof": 1,
         "arcana_prof": 1,
         "deception_prof": 1,
         "persuasion_prof": 2,
-        "speed": 30,
         "darkvision": 60,
         "languages": "Общий, Инфернальный",
         "hp_max": 33,
         "hp_current": 33,
-        "hit_die": "1к6",
         "hit_dice_left": 5,
         "slots_1": 4,
         "slots_2": 3,
@@ -11787,8 +11177,8 @@
       "kind": "pc",
       "name": "Доран",
       "values": {
-        "race": "Дварф",
-        "class_name": "Жрец",
+        "race": "дварф",
+        "class_name": "жрец",
         "subclass": "Домен жизни",
         "background": "Прислужник",
         "alignment": "Нейтрально-добрый",
@@ -11801,19 +11191,14 @@
         "level": 5,
         "xp": 6500,
         "caster_level": 5,
-        "casts_wis": true,
-        "wis_save_prof": 1,
-        "cha_save_prof": 1,
         "medicine_prof": 1,
         "religion_prof": 1,
         "insight_prof": 1,
         "history_prof": 1,
-        "speed": 25,
         "darkvision": 60,
         "languages": "Общий, Дварфский",
         "hp_max": 38,
         "hp_current": 38,
-        "hit_die": "1к8",
         "hit_dice_left": 5,
         "slots_1": 4,
         "slots_2": 3,
@@ -11851,8 +11236,8 @@
       "kind": "pc",
       "name": "Силь",
       "values": {
-        "race": "Полурослик",
-        "class_name": "Плутовка",
+        "race": "полурослик",
+        "class_name": "плут",
         "subclass": "Вор",
         "background": "Преступница",
         "alignment": "Хаотично-нейтральная",
@@ -11864,18 +11249,14 @@
         "cha": 12,
         "level": 5,
         "xp": 6500,
-        "dex_save_prof": 1,
-        "int_save_prof": 1,
         "acrobatics_prof": 1,
         "investigation_prof": 1,
         "perception_prof": 1,
         "stealth_prof": 2,
         "sleight_of_hand_prof": 2,
-        "speed": 25,
         "languages": "Общий, Воровской жаргон",
         "hp_max": 33,
         "hp_current": 33,
-        "hit_die": "1к8",
         "hit_dice_left": 5,
         "luck_max": 3,
         "luck_left": 3,
@@ -11907,8 +11288,7 @@
       "kind": "npc",
       "name": "Гоблин-налётчик",
       "values": {
-        "race": "Гоблин",
-        "class_name": "Налётчик",
+        "race": "гоблин",
         "alignment": "Нейтрально-злой",
         "str": 8,
         "dex": 14,
@@ -11917,11 +11297,9 @@
         "wis": 8,
         "cha": 8,
         "level": 1,
-        "speed": 30,
         "darkvision": 60,
         "hp_max": 7,
         "hp_current": 7,
-        "hit_die": "1к6",
         "hit_dice_left": 1,
         "ac_base": 15
       },
@@ -11939,8 +11317,7 @@
       "kind": "npc",
       "name": "Орк-воин",
       "values": {
-        "race": "Орк",
-        "class_name": "Воин",
+        "race": "орк",
         "alignment": "Хаотично-злой",
         "str": 16,
         "dex": 12,
@@ -11949,11 +11326,9 @@
         "wis": 11,
         "cha": 10,
         "level": 2,
-        "speed": 30,
         "darkvision": 60,
         "hp_max": 15,
         "hp_current": 15,
-        "hit_die": "1к8",
         "hit_dice_left": 2,
         "ac_base": 13
       },
@@ -11970,8 +11345,7 @@
       "kind": "npc",
       "name": "Огр",
       "values": {
-        "race": "Огр",
-        "class_name": "Великан",
+        "race": "огр",
         "alignment": "Хаотично-злой",
         "str": 19,
         "dex": 8,
@@ -11980,11 +11354,9 @@
         "wis": 7,
         "cha": 7,
         "level": 7,
-        "speed": 40,
         "darkvision": 60,
         "hp_max": 59,
         "hp_current": 59,
-        "hit_die": "1к10",
         "hit_dice_left": 7,
         "ac_base": 11
       },

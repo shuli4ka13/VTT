@@ -30,6 +30,15 @@ const FUNCTIONS: Record<string, Fn> = {
       return Array.isArray(list) ? list.some(item => String(item) === wanted) : String(list) === wanted;
     },
   },
+  или: {
+    arity: '1+',
+    apply: args => args[0]!,
+    raw: args => {
+      const found = args.find(value => value !== null && value !== undefined && value !== '');
+      if (found === undefined) throw new FormulaRuntimeError('«или»: ни одно значение не задано');
+      return found;
+    },
+  },
   кинуть: {
     arity: '1+',
     apply: args => args[0]!,

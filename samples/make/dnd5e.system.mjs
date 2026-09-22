@@ -78,11 +78,69 @@ export const lists = () => ({
         cells: { attack: '@dex_mod + @prof_bonus', damage: '@dex_mod' } },
     ],
   },
+  abilities: {
+    label: 'Характеристики', key: 'word',
+    columns: [{ key: 'mod', label: 'Модификатор', kind: 'expr' }],
+    rows: ABILITIES.map(([tag, label]) => ({ value: ABILITY_WORD[tag], label, cells: { mod: `@${tag}_mod` } })),
+  },
+  classes: {
+    label: 'Классы', key: 'word',
+    columns: [
+      { key: 'hit_die', label: 'Кость хитов', kind: 'dice' },
+      { key: 'saves', label: 'Спасброски', kind: 'choice', from: 'abilities', many: true },
+      { key: 'spell_ability', label: 'Заклинательная характеристика', kind: 'choice', from: 'abilities' },
+    ],
+    rows: CLASSES.map(([value, die, saves, spell]) => ({
+      value, label: value,
+      cells: { hit_die: `1к${die}`, saves, ...(spell ? { spell_ability: spell } : {}) },
+    })),
+  },
+  sizes: {
+    label: 'Размеры', key: 'word',
+    columns: [{ key: 'hit_die', label: 'Кость хитов существа', kind: 'dice' }],
+    rows: SIZES.map(([value, die]) => ({ value, label: value, cells: { hit_die: `1к${die}` } })),
+  },
+  races: {
+    label: 'Расы и виды существ', key: 'word',
+    columns: [
+      { key: 'size', label: 'Размер', kind: 'choice', from: 'sizes' },
+      { key: 'speed', label: 'Скорость, футов', kind: 'number' },
+    ],
+    rows: RACES.map(([value, size, speed]) => ({ value, label: value, cells: { size, speed } })),
+  },
   taken: words('Стойкость к урону', 'number', [
     { value: 0, label: 'иммунитет' }, { value: 0.5, label: 'сопротивление' },
     { value: 1, label: 'как есть' }, { value: 2, label: 'уязвимость' },
   ]),
 });
+
+export const ABILITY_WORD = {
+  str: 'сила', dex: 'ловкость', con: 'телосложение', int: 'интеллект', wis: 'мудрость', cha: 'харизма',
+};
+
+const CLASSES = [
+  ['варвар', 12, ['сила', 'телосложение']],
+  ['бард', 8, ['ловкость', 'харизма'], 'харизма'],
+  ['жрец', 8, ['мудрость', 'харизма'], 'мудрость'],
+  ['друид', 8, ['интеллект', 'мудрость'], 'мудрость'],
+  ['воин', 10, ['сила', 'телосложение']],
+  ['монах', 8, ['сила', 'ловкость']],
+  ['паладин', 10, ['мудрость', 'харизма'], 'харизма'],
+  ['следопыт', 10, ['сила', 'ловкость'], 'мудрость'],
+  ['плут', 8, ['ловкость', 'интеллект']],
+  ['чародей', 6, ['телосложение', 'харизма'], 'харизма'],
+  ['колдун', 8, ['мудрость', 'харизма'], 'харизма'],
+  ['волшебник', 6, ['интеллект', 'мудрость'], 'интеллект'],
+];
+
+const SIZES = [['крошечный', 4], ['маленький', 6], ['средний', 8], ['большой', 10], ['огромный', 12], ['громадный', 20]];
+
+const RACES = [
+  ['дварф', 'средний', 25], ['эльф', 'средний', 30], ['полурослик', 'маленький', 25],
+  ['человек', 'средний', 30], ['драконорождённый', 'средний', 30], ['гном', 'маленький', 25],
+  ['полуэльф', 'средний', 30], ['полуорк', 'средний', 30], ['тифлинг', 'средний', 30],
+  ['гоблин', 'маленький', 30], ['орк', 'средний', 30], ['огр', 'большой', 40],
+];
 
 export const TAKEN = DAMAGE_TAGS
   .filter(tag => tag !== 'магический')
@@ -102,11 +160,14 @@ const stored = (tag, label, group, type, def, extra = {}) => {
 const formula = (tag, label, group, expr, roll) => ({
   tag, label, group, ...(roll ? { roll } : {}), value: { kind: 'formula', expr },
 });
-const lookup = (tag, label, group, table, arg) => ({ tag, label, group, value: { kind: 'table', table, arg } });
+const lookup = (tag, label, group, table, arg, column) =>
+  ({ tag, label, group, value: { kind: 'table', table, arg, ...(column ? { column } : {}) } });
 
 export function fields() {
   const out = [];
-  for (const [tag, label] of [['race', 'Раса'], ['class_name', 'Класс'], ['subclass', 'Подкласс'],
+  out.push(stored('race', 'Раса', 'Личное дело', 'text', '', { optionsFrom: 'races' }));
+  out.push(stored('class_name', 'Класс', 'Личное дело', 'text', '', { optionsFrom: 'classes' }));
+  for (const [tag, label] of [['subclass', 'Подкласс'],
     ['background', 'Предыстория'], ['alignment', 'Мировоззрение']]) {
     out.push(stored(tag, label, 'Личное дело', 'text', ''));
   }
@@ -118,12 +179,14 @@ export function fields() {
   }
 
   out.push(stored('level', 'Уровень', 'Прогрессия', 'number', 1, { min: 1, max: 20, control: 'stepper' }));
-  out.push(lookup('prof_bonus', 'Бонус мастерства', 'Прогрессия', 'proficiency', '@level'));
+  out.push(lookup('prof_bonus', 'Бонус мастерства', 'Прогрессия', 'levels', '@level', 'prof'));
   out.push(stored('inspiration', 'Вдохновение', 'Прогрессия', 'number', 0, { min: 0, max: 1, control: 'pips' }));
   out.push(stored('xp', 'Опыт', 'Прогрессия', 'number', 0, { min: 0 }));
 
   for (const [a, label] of ABILITIES) {
-    out.push(stored(`${a}_save_prof`, `Владение: спасбросок ${label}`, 'Спасброски', 'number', 0, { min: 0, max: 1, control: 'ring' }));
+    out.push(stored(`${a}_save_extra`, `Владение сверх класса: спасбросок ${label}`, 'Спасброски', 'number', 0, { min: 0, max: 1, control: 'ring' }));
+    out.push(formula(`${a}_save_prof`, `Владение: спасбросок ${label}`, 'Спасброски',
+      `max(@${a}_save_extra, есть(@class_name.saves, "${ABILITY_WORD[a]}") ? 1 : 0)`));
     out.push(formula(`${a}_save`, `Спасбросок: ${label}`, 'Спасброски', `@${a}_mod + @${a}_save_prof * @prof_bonus`,
       { label: `Спасбросок: ${label}`, check: 'save_roll' }));
   }
@@ -136,7 +199,7 @@ export function fields() {
 
   out.push(formula('initiative', 'Инициатива', 'Чувства и движение', '@dex_mod', { label: 'Инициатива', check: 'skill_roll' }));
   out.push(formula('passive_perception', 'Пассивная внимательность', 'Чувства и движение', '10 + @perception'));
-  out.push(stored('speed', 'Скорость, футов', 'Чувства и движение', 'number', 30, { min: 0 }));
+  out.push(formula('speed', 'Скорость, футов', 'Чувства и движение', 'или(@race.speed, 30)'));
   out.push(stored('darkvision', 'Тёмное зрение, футов', 'Чувства и движение', 'number', 0, { min: 0 }));
   out.push(stored('languages', 'Языки', 'Чувства и движение', 'text', 'Общий'));
 
@@ -148,7 +211,7 @@ export function fields() {
   out.push(stored('hp_max', 'Максимум хитов', 'Здоровье', 'number', 8, { min: 1 }));
   out.push(stored('hp_current', 'Хиты', 'Здоровье', 'number', 8, { min: 0, max: '@hp_max', control: 'bar' }));
   out.push(stored('hp_temp', 'Временные хиты', 'Здоровье', 'number', 0, { min: 0, control: 'stepper' }));
-  out.push(stored('hit_die', 'Кость хитов', 'Здоровье', 'text', '1к8', { control: 'die' }));
+  out.push(formula('hit_die', 'Кость хитов', 'Здоровье', 'или(@class_name.hit_die, @race.size.hit_die, "1к8")'));
   out.push(stored('hit_dice_left', 'Костей хитов осталось', 'Здоровье', 'number', 1, { min: 0, max: '@level', control: 'stepper' }));
   out.push(stored('death_ok', 'Спасброски от смерти: успехи', 'Здоровье', 'number', 0, { min: 0, max: 3, control: 'pips' }));
   out.push(stored('death_fail', 'Спасброски от смерти: провалы', 'Здоровье', 'number', 0, { min: 0, max: 3, control: 'pips' }));
@@ -162,16 +225,14 @@ export function fields() {
   out.push(stored('crit_from', 'Крит на костях от', 'Атака', 'number', 20, { min: 18, max: 20 }));
   out.push(formula('sneak_dice', 'Костей скрытой атаки', 'Атака', 'ceil(@level / 2)'));
 
-  out.push(stored('casts_int', 'Колдует от Интеллекта', 'Магия', 'boolean', false, { control: 'toggle' }));
-  out.push(stored('casts_wis', 'Колдует от Мудрости', 'Магия', 'boolean', false, { control: 'toggle' }));
-  out.push(formula('spell_mod', 'Заклинательный модификатор', 'Магия', '@casts_int ? @int_mod : (@casts_wis ? @wis_mod : @cha_mod)'));
+  out.push(formula('spell_mod', 'Заклинательный модификатор', 'Магия', 'или(@class_name.spell_ability.mod, @cha_mod)'));
   out.push(formula('spell_dc', 'Сложность заклинаний', 'Магия', '8 + @prof_bonus + @spell_mod'));
   out.push(formula('spell_attack', 'Атака заклинанием', 'Магия', '@prof_bonus + @spell_mod'));
   out.push(stored('caster_level', 'Уровень заклинателя', 'Магия', 'number', 0, { min: 0, max: 20, control: 'stepper' }));
-  out.push(lookup('cantrip_dice', 'Костей заговора', 'Магия', 'cantrip_dice', '@level'));
+  out.push(lookup('cantrip_dice', 'Костей заговора', 'Магия', 'levels', '@level', 'cantrips'));
 
   for (let n = 1; n <= 9; n++) {
-    out.push(lookup(`slots_${n}_max`, `Всего ячеек ${n}-го круга`, 'Ячейки заклинаний', `slots_${n}`, '@caster_level'));
+    out.push(lookup(`slots_${n}_max`, `Всего ячеек ${n}-го круга`, 'Ячейки заклинаний', 'spell_slots', '@caster_level', `круг_${n}`));
     out.push(stored(`slots_${n}`, `Ячейки ${n}-го круга`, 'Ячейки заклинаний', 'number', 0,
       { min: 0, max: `@slots_${n}_max`, control: 'pips' }));
   }
@@ -181,7 +242,7 @@ export function fields() {
     out.push(stored(`${key}_left`, `${label}: осталось`, 'Ресурсы класса', 'number', 0,
       { min: 0, max: `@${key}_max`, control: 'stepper' }));
   }
-  out.push(lookup('rage_damage', 'Урон ярости', 'Ресурсы класса', 'rage_damage', '@level'));
+  out.push(lookup('rage_damage', 'Урон ярости', 'Ресурсы класса', 'levels', '@level', 'rage'));
   out.push(stored('superiority_die', 'Кость превосходства', 'Ресурсы класса', 'text', '1к8', { control: 'die' }));
 
   for (const [tag, label] of [['gp', 'Золотые'], ['sp', 'Серебряные'], ['cp', 'Медные']]) {
@@ -232,8 +293,6 @@ export const groups = () => ({
   'Богатство': {},
 });
 
-const range = (from, to, value) => ({ from, to, cells: { value } });
-const steps = (label, rows) => ({ label, key: 'range', columns: [{ key: 'value', label: 'значение', kind: 'number' }], rows });
 const FULL_CASTER = [
   [2], [3], [4, 2], [4, 3], [4, 3, 2], [4, 3, 3], [4, 3, 3, 1], [4, 3, 3, 2], [4, 3, 3, 3, 1], [4, 3, 3, 3, 2],
   [4, 3, 3, 3, 2, 1], [4, 3, 3, 3, 2, 1], [4, 3, 3, 3, 2, 1, 1], [4, 3, 3, 3, 2, 1, 1],
@@ -241,20 +300,37 @@ const FULL_CASTER = [
   [4, 3, 3, 3, 3, 1, 1, 1, 1], [4, 3, 3, 3, 3, 2, 1, 1, 1], [4, 3, 3, 3, 3, 2, 2, 1, 1],
 ];
 
+const LEVELS = Array.from({ length: 20 }, (_, at) => at + 1);
+const step = (level, bounds) => bounds.find(([upTo]) => level <= upTo)[1];
+const CIRCLES = Array.from({ length: 9 }, (_, at) => at + 1);
+
 export function tables() {
-  const out = {
-    proficiency: steps('Бонус мастерства по уровню',
-      [range(1, 4, 2), range(5, 8, 3), range(9, 12, 4), range(13, 16, 5), range(17, 20, 6)]),
-    cantrip_dice: steps('Костей заговора по уровню',
-      [range(1, 4, 1), range(5, 10, 2), range(11, 16, 3), range(17, 20, 4)]),
-    rage_damage: steps('Урон ярости по уровню',
-      [range(1, 8, 2), range(9, 15, 3), range(16, 20, 4)]),
+  return {
+    levels: {
+      label: 'Уровень персонажа', key: 'number',
+      columns: [
+        { key: 'prof', label: 'Бонус мастерства', kind: 'number' },
+        { key: 'cantrips', label: 'Костей заговора', kind: 'number' },
+        { key: 'rage', label: 'Урон ярости', kind: 'number' },
+      ],
+      rows: LEVELS.map(level => ({
+        value: level,
+        cells: {
+          prof: step(level, [[4, 2], [8, 3], [12, 4], [16, 5], [20, 6]]),
+          cantrips: step(level, [[4, 1], [10, 2], [16, 3], [20, 4]]),
+          rage: step(level, [[8, 2], [15, 3], [20, 4]]),
+        },
+      })),
+    },
+    spell_slots: {
+      label: 'Ячейки заклинаний', key: 'number',
+      columns: CIRCLES.map(n => ({ key: `круг_${n}`, label: `${n}-й круг`, kind: 'number' })),
+      rows: [0, ...LEVELS].map(level => ({
+        value: level,
+        cells: Object.fromEntries(CIRCLES.map(n => [`круг_${n}`, level ? (FULL_CASTER[level - 1][n - 1] ?? 0) : 0])),
+      })),
+    },
   };
-  for (let n = 1; n <= 9; n++) {
-    out[`slots_${n}`] = steps(`Ячейки ${n}-го круга по уровню заклинателя`,
-      [range(0, 0, 0), ...FULL_CASTER.map((row, at) => range(at + 1, at + 1, row[n - 1] ?? 0))]);
-  }
-  return out;
 }
 
 export const constants = () => ({

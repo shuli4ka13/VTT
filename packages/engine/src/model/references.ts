@@ -134,8 +134,8 @@ function exprRefs(source: string, from: Where, scope: ChainScope, out: Reference
     const dot = dep.indexOf('.');
     if (dot > 0) {
       const head = dep.slice(0, dot);
-      if (scope.earlier.has(head)) continue;
-      out.push({ kind: 'step', key: head, from });
+      if (scope.earlier.has(head) || scope.params.has(head)) continue;
+      out.push({ kind: 'step', key: head, from, scope: 'dotted' });
       continue;
     }
     out.push({ kind: 'field', key: dep, from });
