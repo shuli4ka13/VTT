@@ -97,6 +97,16 @@ function attacks() {
           damage({ ref: 'dmg' }, [{ param: 'damage_type' }]),
         ],
       }),
+    flame_blade: {
+      label: 'Пламя клинка', group: 'Умения класса',
+      description: 'Пока клинок горит, каждый удар им добавляет 2к6 огнём — отдельной частью, со своей меткой.',
+      activation: 'triggered', duration: { kind: 'permanent' },
+      trigger: { on: 'strike', direction: 'out', to: 'target' },
+      steps: [
+        { id: 'жар', type: 'amount', source: 'item', fixed: { expr: "кинуть('2к6')" } },
+        damage({ ref: 'жар' }, ['огонь']),
+      ],
+    },
     sneak_attack: manual('Скрытая атака', 'Умения класса',
       'Раз за ход, после попадания с преимуществом или рядом с союзником: дополнительные кости урона — половина уровня, округляя вверх.',
       'once', {

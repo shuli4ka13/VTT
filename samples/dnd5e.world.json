@@ -3556,6 +3556,40 @@
           }
         ]
       },
+      "flame_blade": {
+        "label": "Пламя клинка",
+        "group": "Умения класса",
+        "description": "Пока клинок горит, каждый удар им добавляет 2к6 огнём — отдельной частью, со своей меткой.",
+        "activation": "triggered",
+        "duration": {
+          "kind": "permanent"
+        },
+        "trigger": {
+          "on": "strike",
+          "direction": "out",
+          "to": "target"
+        },
+        "steps": [
+          {
+            "id": "жар",
+            "type": "amount",
+            "source": "item",
+            "fixed": {
+              "expr": "кинуть('2к6')"
+            }
+          },
+          {
+            "type": "emit",
+            "event": "damage",
+            "amount": {
+              "ref": "жар"
+            },
+            "tags": [
+              "огонь"
+            ]
+          }
+        ]
+      },
       "sneak_attack": {
         "label": "Скрытая атака",
         "group": "Умения класса",
@@ -9317,21 +9351,14 @@
         "id": "flame_tongue",
         "rk": "weapon",
         "label": "Огненный язык",
-        "description": "Длинный меч: пока горит, добавляет 2к6 огнём. Здесь — прибавка к урону ближнего боя.",
+        "description": "Длинный меч: пока горит, каждый удар добавляет 2к6 огнём.",
         "props": {
           "damage_dice": "1d8",
           "damage_type": "рубящий",
           "wield": "melee"
         },
-        "modifiers": [
-          {
-            "kind": "value",
-            "target": "melee_damage",
-            "op": "add",
-            "value": 7,
-            "stacking": "sum",
-            "condition": null
-          }
+        "grants": [
+          "flame_blade"
         ]
       },
       {
