@@ -28,8 +28,8 @@ export function records() {
       ],
       bindings: [bind('Удар', 'strike', {
         damage_dice: ref('damage_dice'), damage_type: ref('damage_type'),
-        attack_with: { table: 'wield_attack', by: { prop: 'wield' } },
-        damage_with: { table: 'wield_damage', by: { prop: 'wield' } },
+        attack_with: { table: 'wield', by: { prop: 'wield' }, column: 'attack' },
+        damage_with: { table: 'wield', by: { prop: 'wield' }, column: 'damage' },
       })],
     },
     armor: {

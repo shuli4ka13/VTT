@@ -98,7 +98,9 @@ export function chipOf(ref: unknown, ctx: SlotContext): { label: string; record:
   if ('ref' in r) return { label: outputLabel(String(r.ref), ctx.earlier), record: false };
   if ('table' in r) {
     const table = ctx.system.tables?.[String(r.table)];
-    return { label: `по таблице «${table?.label || String(r.table)}»`, record: false };
+    const column = (table?.columns ?? []).find(c => c.key === String(r.column ?? 'value'));
+    const name = table?.label || String(r.table);
+    return { label: column ? `«${name}» → ${column.label || column.key}` : `по таблице «${name}»`, record: false };
   }
   if ('constant' in r) {
     const name = String(r.constant);
@@ -133,13 +135,18 @@ export function optionsFor(ctx: SlotContext, allow?: SlotKind[]): SlotOption[] {
   }
   if (ok('table')) {
     for (const [key, table] of Object.entries(ctx.system.tables ?? {})) {
-      if (!(table.columns ?? []).length) continue;
-      const by = (ctx.recordKind?.props ?? [])[0];
-      out.push({
-        group: 'По таблице',
-        label: table.label || key,
-        ref: { table: key, ...(by ? { by: { prop: by.key } } : {}) } as SlotRef,
-      });
+      const columns = table.columns ?? [];
+      if (!columns.length) continue;
+      const props = ctx.recordKind?.props ?? [];
+      const by = props.find(p => (p as { from?: string }).from === key) ?? props[0];
+      const name = table.label || key;
+      for (const column of columns) {
+        out.push({
+          group: 'По таблице',
+          label: `«${name}» → ${column.label || column.key}`,
+          ref: { table: key, column: column.key, ...(by ? { by: { prop: by.key } } : {}) } as SlotRef,
+        });
+      }
     }
   }
   if (ok('ref')) {

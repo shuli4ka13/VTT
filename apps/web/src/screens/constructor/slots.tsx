@@ -183,7 +183,9 @@ export const SLOT_KINDS: SlotKindModule[] = [
     blank: () => ({ table: '', by: null }),
     summary: (ref, ctx) => {
       const table = ctx.system.tables?.[String(ref.table)];
-      return table ? `по таблице «${table.label || ref.table}»` : `таблицы «${ref.table}» нет`;
+      const column = (table?.columns ?? []).find(c => c.key === String(ref.column ?? 'value'));
+      if (!table) return `таблицы «${ref.table}» нет`;
+      return column ? `«${table.label || ref.table}» → ${column.label || column.key}` : `по таблице «${table.label || ref.table}»`;
     },
     editor: (ref, onChange, ctx) => (
       <div className="stack stack--tight">

@@ -2165,68 +2165,6 @@
           }
         ]
       },
-      "wield_attack": {
-        "label": "Бонус атаки по способу атаки",
-        "key": "word",
-        "columns": [
-          {
-            "key": "value",
-            "label": "значение",
-            "kind": "expr"
-          }
-        ],
-        "rows": [
-          {
-            "value": "melee",
-            "cells": {
-              "value": "@melee_attack"
-            }
-          },
-          {
-            "value": "finesse",
-            "cells": {
-              "value": "@finesse_attack"
-            }
-          },
-          {
-            "value": "ranged",
-            "cells": {
-              "value": "@ranged_attack"
-            }
-          }
-        ]
-      },
-      "wield_damage": {
-        "label": "Прибавка к урону по способу атаки",
-        "key": "word",
-        "columns": [
-          {
-            "key": "value",
-            "label": "значение",
-            "kind": "expr"
-          }
-        ],
-        "rows": [
-          {
-            "value": "melee",
-            "cells": {
-              "value": "@melee_damage"
-            }
-          },
-          {
-            "value": "finesse",
-            "cells": {
-              "value": "@finesse_damage"
-            }
-          },
-          {
-            "value": "ranged",
-            "cells": {
-              "value": "@ranged_damage"
-            }
-          }
-        ]
-      },
       "slots_1": {
         "label": "Ячейки 1-го круга по уровню заклинателя",
         "key": "range",
@@ -3734,18 +3672,42 @@
         "label": "Способ атаки",
         "key": "word",
         "of": "text",
+        "columns": [
+          {
+            "key": "attack",
+            "label": "Бонус атаки",
+            "kind": "expr"
+          },
+          {
+            "key": "damage",
+            "label": "Прибавка к урону",
+            "kind": "expr"
+          }
+        ],
         "rows": [
           {
             "value": "melee",
-            "label": "ближний бой — Сила"
+            "label": "ближний бой — Сила",
+            "cells": {
+              "attack": "@melee_attack",
+              "damage": "@melee_damage"
+            }
           },
           {
             "value": "finesse",
-            "label": "фехтовальное — Сила или Ловкость"
+            "label": "фехтовальное — Сила или Ловкость",
+            "cells": {
+              "attack": "@finesse_attack",
+              "damage": "@finesse_damage"
+            }
           },
           {
             "value": "ranged",
-            "label": "дальний бой — Ловкость"
+            "label": "дальний бой — Ловкость",
+            "cells": {
+              "attack": "@ranged_attack",
+              "damage": "@ranged_damage"
+            }
           }
         ]
       },
@@ -8672,16 +8634,18 @@
                 "prop": "damage_type"
               },
               "attack_with": {
-                "table": "wield_attack",
+                "table": "wield",
                 "by": {
                   "prop": "wield"
-                }
+                },
+                "column": "attack"
               },
               "damage_with": {
-                "table": "wield_damage",
+                "table": "wield",
                 "by": {
                   "prop": "wield"
-                }
+                },
+                "column": "damage"
               }
             }
           }

@@ -42,11 +42,18 @@ const words = (label, of, rows) => ({ label, key: 'word', of, rows });
 
 export const lists = () => ({
   damage_types: words('Типы урона', 'text', DAMAGE_TAGS.map(tag => ({ value: tag, label: tag }))),
-  wield: words('Способ атаки', 'text', [
-    { value: 'melee', label: 'ближний бой — Сила' },
-    { value: 'finesse', label: 'фехтовальное — Сила или Ловкость' },
-    { value: 'ranged', label: 'дальний бой — Ловкость' },
-  ]),
+  wield: {
+    label: 'Способ атаки', key: 'word', of: 'text',
+    columns: [
+      { key: 'attack', label: 'Бонус атаки', kind: 'expr' },
+      { key: 'damage', label: 'Прибавка к урону', kind: 'expr' },
+    ],
+    rows: [
+      { value: 'melee', label: 'ближний бой — Сила', cells: { attack: '@melee_attack', damage: '@melee_damage' } },
+      { value: 'finesse', label: 'фехтовальное — Сила или Ловкость', cells: { attack: '@finesse_attack', damage: '@finesse_damage' } },
+      { value: 'ranged', label: 'дальний бой — Ловкость', cells: { attack: '@ranged_attack', damage: '@ranged_damage' } },
+    ],
+  },
   taken: words('Стойкость к урону', 'number', [
     { value: 0, label: 'иммунитет' }, { value: 0.5, label: 'сопротивление' },
     { value: 1, label: 'как есть' }, { value: 2, label: 'уязвимость' },
@@ -209,11 +216,6 @@ export const groups = () => ({
 
 const range = (from, to, value) => ({ from, to, cells: { value } });
 const steps = (label, rows) => ({ label, key: 'range', columns: [{ key: 'value', label: 'значение', kind: 'number' }], rows });
-const cases = (label, kind, rows) => ({
-  label, key: 'word', columns: [{ key: 'value', label: 'значение', kind }],
-  rows: rows.map(([when, value]) => ({ value: when, cells: { value } })),
-});
-
 const FULL_CASTER = [
   [2], [3], [4, 2], [4, 3], [4, 3, 2], [4, 3, 3], [4, 3, 3, 1], [4, 3, 3, 2], [4, 3, 3, 3, 1], [4, 3, 3, 3, 2],
   [4, 3, 3, 3, 2, 1], [4, 3, 3, 3, 2, 1], [4, 3, 3, 3, 2, 1, 1], [4, 3, 3, 3, 2, 1, 1],
@@ -229,12 +231,6 @@ export function tables() {
       [range(1, 4, 1), range(5, 10, 2), range(11, 16, 3), range(17, 20, 4)]),
     rage_damage: steps('Урон ярости по уровню',
       [range(1, 8, 2), range(9, 15, 3), range(16, 20, 4)]),
-    wield_attack: cases('Бонус атаки по способу атаки', 'expr', [
-      ['melee', '@melee_attack'], ['finesse', '@finesse_attack'], ['ranged', '@ranged_attack'],
-    ]),
-    wield_damage: cases('Прибавка к урону по способу атаки', 'expr', [
-      ['melee', '@melee_damage'], ['finesse', '@finesse_damage'], ['ranged', '@ranged_damage'],
-    ]),
   };
   for (let n = 1; n <= 9; n++) {
     out[`slots_${n}`] = steps(`Ячейки ${n}-го круга по уровню заклинателя`,

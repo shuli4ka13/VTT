@@ -1,6 +1,7 @@
 import { compile } from '../formula/index.ts';
 import { EngineError } from './errors.ts';
-import { lookupTable } from './tables.ts';
+import { lookupCell } from './tables.ts';
+import { VALUE_COLUMN } from '../model/tables.ts';
 import { rollNotation, multiplyNotation } from './dice.ts';
 import type { Param, Die } from '../model/types.ts';
 import type { Pass } from './calc.ts';
@@ -78,8 +79,8 @@ export function packRef(ref: unknown, ctx: RefContext): unknown {
     const packed = packRef((r as { by?: unknown }).by, ctx);
     const ready = packed && typeof packed === 'object' && 'const' in (packed as AnyRef);
     return ready
-      ? { const: lookupTable(ctx.pass.system, String(r.table), (packed as AnyRef).const, who(ctx)) }
-      : { table: r.table, by: packed };
+      ? { const: lookupCell(ctx.pass.system, String(r.table), (packed as AnyRef).const, columnOf(r), who(ctx)) }
+      : { table: r.table, by: packed, ...(r.column ? { column: r.column } : {}) };
   }
 
   if ('tag' in r) return { tag: r.tag };
@@ -108,6 +109,8 @@ function packParam(key: string, optional: boolean, ctx: RefContext): unknown {
   return { const: value };
 }
 
+const columnOf = (r: AnyRef): string => (typeof r.column === 'string' && r.column ? r.column : VALUE_COLUMN);
+
 function fromArgs(key: string, ctx: RefContext): unknown {
   const asked = (ctx.inputs || {})[key];
   if (asked !== undefined) return asked;
@@ -119,7 +122,7 @@ function fromArgs(key: string, ctx: RefContext): unknown {
     const input = by && typeof by === 'object' && 'prop' in (by as AnyRef)
       ? (ctx.props || {})[String((by as AnyRef).prop)]
       : resolveRef(by, ctx);
-    return lookupTable(ctx.pass.system, String((arg as AnyRef).table), input, who(ctx));
+    return lookupCell(ctx.pass.system, String((arg as AnyRef).table), input, columnOf(arg as AnyRef), who(ctx));
   }
   throw new EngineError(
     `${who(ctx)}: аргумент «${key}» неизвестной формы ${JSON.stringify(arg)} — умею значение или { prop }`);
@@ -143,7 +146,7 @@ export function resolveRef(ref: unknown, ctx: RefContext): unknown {
 
   if ('table' in r) {
     const by = resolveRef((r as { by?: unknown }).by, ctx);
-    return lookupTable(ctx.pass.system, String(r.table), by, who(ctx));
+    return lookupCell(ctx.pass.system, String(r.table), by, columnOf(r), who(ctx));
   }
 
 

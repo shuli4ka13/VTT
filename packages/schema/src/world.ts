@@ -18,6 +18,8 @@ export const slotRef = z.union([
   z.object({
     table: z.string().min(1),
     by: z.lazy((): z.ZodTypeAny => slotRef),
+
+    column: z.string().min(1).optional(),
     optional: z.boolean().optional(),
   }),
   z.object({ const: z.unknown(), optional: z.boolean().optional() })
@@ -35,7 +37,7 @@ export const fieldValue = z.discriminatedUnion('kind', [
     max: bound.optional(),
   }),
   z.object({ kind: z.literal('formula'), expr: z.string() }),
-  z.object({ kind: z.literal('table'), table: z.string(), arg: z.string() }),
+  z.object({ kind: z.literal('table'), table: z.string(), arg: z.string(), column: z.string().min(1).optional() }),
 ]);
 
 export const groupSpec = z.object({

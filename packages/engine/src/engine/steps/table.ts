@@ -1,4 +1,5 @@
-import { lookupTable } from '../tables.ts';
+import { lookupCell } from '../tables.ts';
+import { VALUE_COLUMN } from '../../model/tables.ts';
 import { rollNotation } from '../dice.ts';
 import { packRef, resolveNumber, resolveRef } from '../refs.ts';
 import { EngineError } from '../errors.ts';
@@ -54,7 +55,8 @@ export function resolve(step: StepData, ctx: StepContext) {
     value = resolveNumber(step.value, ctx, 'аргумент таблицы');
   }
 
-  const result = lookupTable(ctx.system, table, value, ctx.owner);
+  const column = typeof step.column === 'string' && step.column ? step.column : VALUE_COLUMN;
+  const result = lookupCell(ctx.system, table, value, column, ctx.owner);
 
   return {
     value: result,

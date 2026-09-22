@@ -1,6 +1,7 @@
 import { compile } from '../formula/index.ts';
 import { UnknownTagError, CycleError, EngineError } from './errors.ts';
-import { lookupTable } from './tables.ts';
+import { lookupCell } from './tables.ts';
+import { VALUE_COLUMN } from '../model/tables.ts';
 import { collectModifiers, applyValueModifiers } from './modifiers.ts';
 import type { CollectedModifiers } from './modifiers.ts';
 import type { System, Sheet, Field, Compendium, Resolve } from '../model/types.ts';
@@ -93,7 +94,7 @@ function computeBase(field: Field, pass: Pass): unknown {
       return compile(source.expr).evaluate(resolve);
 
     case 'table':
-      return lookupTable(pass.system, source.table, compile(source.arg).evaluate(resolve), field.tag);
+      return lookupCell(pass.system, source.table, compile(source.arg).evaluate(resolve), source.column ?? VALUE_COLUMN, field.tag);
 
     default:
       throw new EngineError(
