@@ -4,6 +4,7 @@ import { Input, Select } from '../../ui/primitives.tsx';
 import { FormulaInput, labelOfTag, columnPaths } from '../../ui/formula.tsx';
 import { countWord } from './readback.ts';
 import { stepModule } from '@vtt/engine/engine/steps/index';
+import { calledOf } from '@vtt/engine/engine/effects';
 import { dice as diceText, STEP } from '../../words.ts';
 
 export interface EarlierStep { id: string; type: string; at?: number; title?: string }
@@ -293,8 +294,18 @@ export function declaredProps(system: System): Map<string, string> {
   return out;
 }
 
+export const EVENT_NAMES: [string, string][] = [
+  ['event.amount', 'пришедшее число'],
+  ['event.incoming', 'пришедшее число до правок цели'],
+];
+
+export const isCalled = (ctx: SlotContext): boolean =>
+  Boolean(ctx.effect.tagsFrom || ctx.effect.tags?.length)
+  || calledOf(ctx.system).some(([, effect]) => effect === ctx.effect);
+
 export function stepNames(ctx: SlotContext): Map<string, string> {
   const out = new Map<string, string>();
+  if (isCalled(ctx)) for (const [key, label] of EVENT_NAMES) out.set(key, label);
   for (const [key, constant] of Object.entries(ctx.system.constants ?? {})) {
     out.set(key, (constant as { label?: string }).label ?? key);
   }
@@ -320,6 +331,7 @@ export function refForName(ctx: SlotContext, name: string): SlotRef | null {
   if ((ctx.effect.params ?? []).some(param => param.key === name)) return { param: name } as SlotRef;
   if (propsFor(ctx).has(name)) return { prop: name } as SlotRef;
   if (outputRefs(ctx.earlier).some(output => output.ref === name)) return { ref: name } as SlotRef;
+  if (isCalled(ctx) && EVENT_NAMES.some(([key]) => key === name)) return { ref: name } as SlotRef;
   if (ctx.earlier.some(step => step.id === name)) return { ref: name } as SlotRef;
   if (ctx.system.constants?.[name]) return { constant: name } as SlotRef;
   return null;

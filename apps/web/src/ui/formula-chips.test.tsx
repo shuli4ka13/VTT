@@ -160,3 +160,14 @@ describe('ссылка через две таблицы', () => {
     expect(screen.getByText('Раса → Размер → Кость хитов')).toBeTruthy();
   });
 });
+
+describe('сторона считается только у полей листа', () => {
+  it('у пришедшего числа пометки «у цели» нет, у поля — есть', () => {
+    render(<FormulaChips
+      value="@бонус_атаки - @event.amount" system={system} side="target" onFlipSide={() => {}}
+      extraNames={new Map([['event.amount', 'пришедшее число']])} onChange={() => {}}
+    />);
+    expect(screen.getAllByText(/у цели/).length).toBe(1);
+    expect(screen.getByText('пришедшее число')).toBeTruthy();
+  });
+});

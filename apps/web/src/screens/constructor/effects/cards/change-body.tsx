@@ -38,7 +38,10 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
     const value = a.value;
     if (value && typeof value === 'object' && 'expr' in value) return String(value.expr);
 
-    const amountName = amountId ? `@${amountId}` : '';
+    const named = value && typeof value === 'object'
+      ? ('ref' in value ? `@${value.ref}` : 'tag' in value ? `@${value.tag}` : 'const' in value ? String(value.const) : '')
+      : '';
+    const amountName = amountId ? `@${amountId}` : named;
     const targetName = target && typeof target === 'object' && 'tag' in target ? `@${target.tag}` : '';
     const direction = String(a.direction ?? 'subtract');
     if (direction === 'set') return amountName;

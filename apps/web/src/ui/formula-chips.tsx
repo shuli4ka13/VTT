@@ -61,6 +61,9 @@ export function joinParts(parts: Part[]): string {
   return parts.map(p => ('tag' in p ? `@${p.tag}` : p.text)).join('');
 }
 
+const isSheetField = (system: System, tag: string): boolean =>
+  system.fields.some(field => field.tag === tag) || tag.includes('.') && system.fields.some(field => field.tag === tag.split('.')[0]);
+
 export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraNames, side, extraOptions, fromSender, onFlipSide, calculator }: {
   value: string;
   onChange: (next: string) => void;
@@ -228,7 +231,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
             <span title={labelOfTag(system, part.tag, extraNames)}>
               {shortLabel(labelOfTag(system, part.tag, extraNames))}
             </span>
-            {side && onFlipSide ? (
+            {!isSheetField(system, part.tag) ? null : side && onFlipSide ? (
 
               <button
                 type="button" className="chips__side chips__side--pick"
