@@ -162,7 +162,7 @@ describe('GroupCard: условие выполнения шага', () => {
 describe('GroupCard: изменение как вызов', () => {
   const eventful = {
     ...system,
-    effects: { ...system.effects, damage: { label: 'Урон', tags: ['огонь'], steps: [] } },
+    effects: { ...system.effects, damage: { label: 'Урон', params: [{ key: 'amount', label: 'Сколько', kind: 'number', role: 'amount' }], steps: [] } },
   } as unknown as System;
 
   it('где есть вызываемый эффект, у изменения появляется третий режим, переводящий шаг в emit', () => {
@@ -178,7 +178,7 @@ describe('GroupCard: изменение как вызов', () => {
     fireEvent.click(screen.getByText('вызов'));
     expect(apply.type).toBe('emit');
     expect(apply.event).toBe('damage');
-    expect(apply.amount).toEqual({ ref: 'n' });
+    expect(apply.args).toEqual({ amount: { ref: 'n' } });
   });
 
   it('счёт и вызов — два шага, у вызова видно, что уходит', () => {

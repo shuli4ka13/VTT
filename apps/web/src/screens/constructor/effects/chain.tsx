@@ -9,12 +9,16 @@ import { GroupCard } from './cards/group-card.tsx';
 import { findDonorBlock, copyDonorBlock } from '../donors.tsx';
 import type { System, Effect, Step } from '@vtt/schema';
 
-export function Chain({ effect, system, edit, title = 'Цепочка шагов', empty = 'шагов ещё нет — эффект ничего не делает' }: {
+export type Lane = 'receiver' | 'sender';
+
+export function Chain({ effect, system, edit, title = 'Цепочка шагов', empty = 'шагов ещё нет — эффект ничего не делает', lane = 'receiver', onMoveLane }: {
   effect: Effect;
   system: System;
   edit: (change: (draft: Effect) => void) => void;
   title?: string;
   empty?: string;
+  lane?: Lane;
+  onMoveLane?: (indices: number[], to: Lane) => void;
 }) {
   const editSystem = useWorld(s => s.editSystem);
   const pick = useWorld(s => s.pick);
@@ -97,6 +101,8 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
                 : []),
             ]}
             problem={problem}
+            lane={lane}
+            onMoveLane={onMoveLane ? to => onMoveLane(group.indices, to) : undefined}
             problemAction={donorFix ? (
               <Button size="sm" onClick={() => copyDonorBlock(editSystem, donorFix.donor, donorFix.group)}>
                 {`взять блок «${donorFix.group}» из «${donorFix.donor.name}»`}

@@ -1,10 +1,10 @@
 import { useWorld } from '../../../store/world.ts';
 import { newTrigger } from '../factory.ts';
-import { Card, CardHead, Field, Input, Select, Segmented, Fold, DangerButton, LabelInput } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Field, Input, Select, Segmented, DangerButton, LabelInput } from '../../../ui/primitives.tsx';
 import { ModifiersEditor } from '../modifiers.tsx';
 import { LAUNCH_KINDS, launchHint } from './words.ts';
 import { LaunchCard } from './launch-card.tsx';
-import { Chain } from './chain.tsx';
+import { Chain, type Lane } from './chain.tsx';
 import { WordList } from '../word-list.tsx';
 import { amountParamOf } from '@vtt/engine/model/lists';
 import { calledOf } from '@vtt/engine/engine/effects';
@@ -59,6 +59,19 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
 
   const launch = launchOf(effect);
   const pipeline = launch.kind !== 'passive';
+
+  const moveLane = (indices: number[], to: Lane) => edit(draft => {
+    const fromList = (to === 'sender' ? draft.steps : draft.self) ?? [];
+    const moved = indices.map(i => fromList[i]!).filter(Boolean);
+    const rest = fromList.filter((_, i) => !indices.includes(i));
+    if (to === 'sender') {
+      draft.steps = rest;
+      draft.self = [...(draft.self ?? []), ...moved];
+    } else {
+      if (rest.length) draft.self = rest; else delete draft.self;
+      draft.steps = [...moved, ...(draft.steps ?? [])];
+    }
+  });
 
   return (
     <>
@@ -191,11 +204,12 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
 
       {pipeline ? (
         <>
+          <SelfTrack effect={effect} system={system} edit={edit} onMoveLane={moveLane} />
           <Chain
             effect={effect} system={system} edit={edit}
             empty={idleWords(effect)}
+            onMoveLane={moveLane}
           />
-          <SelfTrack effect={effect} system={system} edit={edit} />
         </>
       ) : (
         <ModifiersEditor
@@ -293,12 +307,14 @@ function Lifetime({ effect, system, id, edit }: {
 
 
 
-function SelfTrack({ effect, system, edit }: {
+function SelfTrack({ effect, system, edit, onMoveLane }: {
   effect: Effect;
   system: System;
   edit: (change: (draft: Effect) => void) => void;
+  onMoveLane: (indices: number[], to: Lane) => void;
 }) {
   const track = effect.self ?? [];
+  if (!track.length) return null;
   const carrier = { ...effect, steps: track } as Effect;
 
   const editTrack = (change: (draft: Effect) => void) => edit(draft => {
@@ -309,18 +325,14 @@ function SelfTrack({ effect, system, edit }: {
   });
 
   return (
-    <Fold
-      title="Стоимость"
-      count={track.length}
-      summary={track.length ? 'списывается один раз, даже если целей несколько' : 'ничего не стоит'}
-    >
-      <Chain
-        effect={carrier}
-        system={system}
-        edit={editTrack}
-        title="Что списывается"
-        empty="ничего не списывается"
-      />
-    </Fold>
+    <Chain
+      effect={carrier}
+      system={system}
+      edit={editTrack}
+      lane="sender"
+      onMoveLane={onMoveLane}
+      title="У отправителя — один раз, до остальных шагов"
+      empty="у отправителя ничего не делается"
+    />
   );
 }

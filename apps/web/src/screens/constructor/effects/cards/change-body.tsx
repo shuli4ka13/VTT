@@ -13,9 +13,11 @@ import { badFormula, exprText } from './roll-expr-input.tsx';
 import { SendBody } from './send-body.tsx';
 import { Extras } from './extras.tsx';
 import { calledOf } from '@vtt/engine/engine/effects';
+import { amountParamOf } from '@vtt/engine/model/lists';
 import { SENDER, RECEIVER } from '@vtt/engine/engine/owners';
 
-function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onCreateFromRecord }: {
+function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onCreateFromRecord, targetOwner }: {
+  targetOwner: string;
 
   amount?: Step;
 
@@ -43,7 +45,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
       ? ('ref' in value ? `@${value.ref}` : 'tag' in value ? `@${value.tag}` : 'const' in value ? String(value.const) : '')
       : '';
     const amountName = amountId ? `@${amountId}` : named;
-    const targetName = target && typeof target === 'object' && 'tag' in target ? `@${RECEIVER}.${target.tag}` : '';
+    const targetName = target && typeof target === 'object' && 'tag' in target ? `@${targetOwner}.${target.tag}` : '';
     const direction = String(a.direction ?? 'subtract');
     if (direction === 'set') return amountName;
     if (!targetName) return amountName;
@@ -208,14 +210,14 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
       <Field
         label="что меняется"
         needed={!target}
-        hint={target ? undefined : 'Поле цели: что этот шаг поменяет.'}
+        hint={target ? undefined : 'Поле листа, которое этот шаг поменяет.'}
       >
         <SlotInput
           value={target}
           context={context}
           allow={['tag', 'param']}
-          side="target"
-          placeholder="поле цели"
+          side={targetOwner === SENDER ? 'self' : 'target'}
+          placeholder={targetOwner === SENDER ? 'поле отправителя' : 'поле получателя'}
           onChange={next => edit(applyIndex, target => {
             const t = target as Record<string, unknown>;
             if (next) t.target = next; else delete t.target;
@@ -251,7 +253,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   );
 }
 
-export function ChangeBody({ group, context, edit, withNumber, system, onAddParam, onOpenEffect }: {
+export function ChangeBody({ group, context, edit, withNumber, system, onAddParam, onOpenEffect, lane = 'receiver', onMoveLane }: {
   group: CardGroup;
   context: SlotContext;
   edit: EditFn;
@@ -259,6 +261,8 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
   system: System;
   onAddParam?: (label: string, kind: string) => string;
   onOpenEffect?: (id: string) => void;
+  lane?: 'receiver' | 'sender';
+  onMoveLane?: (to: 'receiver' | 'sender') => void;
 }) {
   const step = group.step as any;
   const mode = step.type === 'status' ? 'status' : step.type === 'emit' ? 'emit' : 'apply';
@@ -289,8 +293,8 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
           } else if (next === 'emit') {
             draft.type = 'emit';
             d.event ??= firstEvent ?? '';
-            d.tags ??= [];
-            if (group.amount?.id && d.amount === undefined) d.amount = { ref: group.amount.id };
+            const main = amountParamOf(system.effects[String(d.event)]);
+            if (group.amount?.id && main) d.args = { ...(d.args ?? {}), [main.key]: { ref: group.amount.id } };
           } else {
             draft.type = 'apply';
             d.direction ??= 'subtract';
@@ -298,6 +302,18 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
           }
         })}
       />
+
+      {onMoveLane ? (
+        <Field label="чей лист" hint={lane === 'sender'
+          ? 'Шаг выполняется у отправителя один раз за действие и раньше остальных — так платят за действие: ячейка, заряд, удача.'
+          : 'Шаг выполняется у получателя — у каждой цели.'}>
+          <Select
+            value={lane}
+            options={[['receiver', 'получателя — у каждой цели'], ['sender', 'отправителя — один раз, до остальных шагов']] as const}
+            onChange={next => onMoveLane(next)}
+          />
+        </Field>
+      ) : null}
 
       {mode === 'emit' ? (
         <SendBody step={step} at={applyIndex} context={context} edit={edit} system={system}
@@ -308,7 +324,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
         <>
           {}
           <ChangeValue
-            amount={group.amount ?? undefined} apply={step} applyIndex={applyIndex}
+            amount={group.amount ?? undefined} apply={step} applyIndex={applyIndex} targetOwner={lane === 'sender' ? SENDER : RECEIVER}
             context={context} edit={edit} withNumber={withNumber}
             onCreateFromRecord={fromRecord('сколько — кости', 'dice')} />
 

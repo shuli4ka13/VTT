@@ -31,7 +31,7 @@ export function Readback({ segments }: { segments: Segment[] }) {
 
 export function GroupCard({
   group, position, system, effect, earlier, problem, problemAction,
-  edit, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect,
+  edit, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, onMoveLane,
 }: {
   group: CardGroup;
   position: number;
@@ -51,6 +51,8 @@ export function GroupCard({
 
   onAddParam?: (label: string, kind: string, want?: string) => string;
   onOpenEffect?: (id: string) => void;
+  lane?: 'receiver' | 'sender';
+  onMoveLane?: (to: 'receiver' | 'sender') => void;
 }) {
   const context: SlotContext = { system, effect, earlier };
   const step = group.step as any;
@@ -89,7 +91,7 @@ export function GroupCard({
         />
         {problem ? <Verdict tone="bad" action={problemAction}>{problem.text}</Verdict> : null}
         {group.kind === 'check' ? <CheckBody step={step} context={context} edit={edit} system={system} /> : null}
-        {group.kind === 'change' ? <ChangeBody group={group} context={context} edit={edit} withNumber={withNumber} system={system} onAddParam={onAddParam} onOpenEffect={onOpenEffect} /> : null}
+        {group.kind === 'change' ? <ChangeBody group={group} context={context} edit={edit} withNumber={withNumber} system={system} onAddParam={onAddParam} onOpenEffect={onOpenEffect} lane={lane} onMoveLane={onMoveLane} /> : null}
         {group.kind === 'number'
           ? <NumberBody step={step} context={context} edit={edit} onAddParam={onAddParam} />
           : null}

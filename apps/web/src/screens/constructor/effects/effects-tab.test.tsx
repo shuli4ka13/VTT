@@ -349,7 +349,7 @@ describe('крит — обычная формула, а не особый сл�
   });
 });
 
-describe('стоимость собирается отдельно от цепочки', () => {
+describe('шаг отправителя — один раз, до остальных', () => {
   beforeEach(() => {
     useWorld.setState(state => ({
       ...state,
@@ -363,15 +363,21 @@ describe('стоимость собирается отдельно от цепо
   });
   afterEach(() => { cleanup(); });
 
-  it('шаг, добавленный в дорожку, ложится в self, а не в steps', () => {
+  it('«чей лист: отправителя» переносит шаг в верхний блок и обратно', () => {
     render(<EffectsTab />);
-    fireEvent.click(screen.getByText('Стоимость'));
+    fireEvent.click(screen.getAllByText('+ изменение')[0]!);
+    expect(useWorld.getState().system.effects.снаряд!.steps).toHaveLength(1);
 
-    const adders = screen.getAllByText('+ изменение');
-    fireEvent.click(adders[adders.length - 1]!);
+    fireEvent.change(screen.getByDisplayValue('получателя — у каждой цели'), { target: { value: 'sender' } });
+    const moved = useWorld.getState().system.effects.снаряд!;
+    expect(moved.self).toHaveLength(1);
+    expect(moved.steps ?? []).toHaveLength(0);
+    expect(screen.getByText('У отправителя — один раз, до остальных шагов')).toBeTruthy();
 
-    const effect = useWorld.getState().system.effects.снаряд!;
-    expect(effect.self).toHaveLength(1);
-    expect(effect.steps ?? []).toHaveLength(0);
+    fireEvent.change(screen.getByDisplayValue('отправителя — один раз, до остальных шагов'), { target: { value: 'receiver' } });
+    const back = useWorld.getState().system.effects.снаряд!;
+    expect(back.self).toBeUndefined();
+    expect(back.steps).toHaveLength(1);
   });
 });
+
