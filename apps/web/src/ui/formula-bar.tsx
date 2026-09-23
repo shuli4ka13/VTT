@@ -1,13 +1,19 @@
-import type { System } from '@vtt/schema';
+import { useEffect } from 'react';
 import { useFormulaBar } from '../store/formula-bar.ts';
+import type { BarApi } from '../store/formula-bar.ts';
 import { FormulaChips } from './formula-chips.tsx';
 import { Button } from './primitives.tsx';
 
-export function FormulaBar({ system }: { system: System }) {
+export function FormulaBar() {
   const target = useFormulaBar(s => s.target);
   const write = useFormulaBar(s => s.write);
-  const close = useFormulaBar(s => s.close);
+  const commit = useFormulaBar(s => s.commit);
+  const cancel = useFormulaBar(s => s.cancel);
+  const host = useFormulaBar(s => s.host);
+  useEffect(() => host(), [host]);
   if (!target) return null;
+
+  const api: BarApi = { write, dismiss: useFormulaBar.getState().dismiss };
 
   return (
     <div className="formula-bar" role="region" aria-label="строка формул">
@@ -16,13 +22,26 @@ export function FormulaBar({ system }: { system: System }) {
       <FormulaChips
         key={target.id}
         value={target.value}
-        system={system}
-        placeholder="формула — наберите @ и начало названия"
+        system={target.system}
+        {...(target.names ? { names: target.names } : {})}
+        {...(target.extraNames ? { extraNames: target.extraNames } : {})}
+        {...(target.owners ? { owners: true } : {})}
+        placeholder={target.placeholder ?? 'формула — наберите @ и начало названия'}
         calculator
+        autoFocus
+        extraOptions={(target.options ?? []).map(option => ({
+          group: option.group,
+          label: option.label,
+          ...(option.name ? { name: option.name } : {}),
+          onPick: (insert: (piece: string) => string) => option.onPick(insert, api),
+        }))}
         onChange={write}
-        onKeyDown={e => { if (e.key === 'Escape') close(); }}
+        onKeyDown={e => {
+          if (e.key === 'Enter') { e.preventDefault(); commit(); }
+          if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+        }}
       />
-      <Button size="sm" variant="ghost" onClick={close}>готово</Button>
+      <Button size="sm" variant="ghost" onClick={commit}>готово</Button>
     </div>
   );
 }

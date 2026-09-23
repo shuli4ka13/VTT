@@ -367,6 +367,7 @@ function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWi
             <div key={param.key} className={`need-fill ${isClosed(param.key) ? 'need-fill--ok' : ''}`}>
               <Field label={param.label ?? param.key}>
                 <SlotInput
+                  where={`${binding.label || effect?.label || binding.effect} · ${param.label ?? param.key}`}
                   value={binding.args?.[param.key] as never}
                   context={{ system, effect: effect ?? ({ label: '' } as Effect), earlier: [], recordKind }}
                   allow={['prop', 'expr', 'const', 'table', 'empty']}

@@ -347,6 +347,7 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
           <CardHead title="Значение считает движок" />
           <Field label="Правило">
             <FormulaInput
+              where={`${field.label || field.tag} · правило`}
               system={system}
               value={field.value.expr}
               onChange={expr => edit(draft => { if (draft.value.kind === 'formula') draft.value.expr = expr; })}
@@ -371,6 +372,7 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
           </div>
           <Field label="Аргумент" needed={!field.value.arg}>
             <FormulaInput
+              where={`${field.label || field.tag} · аргумент таблицы`}
               system={system}
               value={field.value.arg}
               onChange={arg => edit(draft => { if (draft.value.kind === 'table') draft.value.arg = arg; })}

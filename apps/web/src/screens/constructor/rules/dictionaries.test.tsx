@@ -444,9 +444,8 @@ describe('Словари: кости, виды бросков, таблицы, �
       },
       activeEffectId: null,
     }));
-    useFormulaBar.getState().close();
-    const Bar = () => <FormulaBar system={useWorld(state => state.system)} />;
-    render(<><Bar /><RulesTab /></>);
+    useFormulaBar.getState().dismiss();
+    render(<><FormulaBar /><RulesTab /></>);
     открыть('Таблицы');
     fireEvent.click(screen.getAllByText('Способ атаки').at(-1)!);
     expect(screen.queryByText(/подпись/i)).toBeNull();
@@ -455,7 +454,7 @@ describe('Словари: кости, виды бросков, таблицы, �
     fireEvent.click(screen.getByTitle('@сила + 2'));
     const bar = document.querySelector('.formula-bar')!;
     expect(bar.textContent).toContain('Способ атаки · «ближний бой» · Бонус атаки');
-    expect(document.querySelector('.sheet-cell--spot')).not.toBeNull();
+    expect(document.querySelector('.formula-field--spot')).not.toBeNull();
     const tail = [...bar.querySelectorAll('input.chips__text')].at(-1) as HTMLInputElement;
     fireEvent.change(tail, { target: { value: ' + 3' } });
     expect(useWorld.getState().system.tables!.wield!.rows![0]!.cells!.attack).toBe('@сила + 3');

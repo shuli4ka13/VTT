@@ -1,8 +1,7 @@
 import { MultiChoice } from '../../../ui/multi-choice.tsx';
 import { kindsFor } from '@vtt/engine/words/kinds';
 import { Card, CardHead, Field, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Chip, Empty } from '../../../ui/primitives.tsx';
-import { formulaAsLabels } from '../../../ui/formula.tsx';
-import { useFormulaBar } from '../../../store/formula-bar.ts';
+import { FormulaField } from '../../../ui/formula-field.tsx';
 import { DiceProp } from '../../../ui/dice-prop.tsx';
 import { newTable } from '../factory.ts';
 import { inUse, usersOf } from '../usage.ts';
@@ -279,8 +278,6 @@ function Rows({ id, table, system, edit, editSystem }: {
   const rows = table.rows ?? [];
   const columns = table.columns ?? [];
   const [widths, setWidth] = useWidths(id);
-  const spotId = useFormulaBar(s => s.target?.id ?? null);
-  const openFormula = useFormulaBar(s => s.open);
 
   const setCell = (i: number, column: string, value: unknown) => edit(draft => {
     const row = draft.rows?.[i];
@@ -295,18 +292,6 @@ function Rows({ id, table, system, edit, editSystem }: {
     ...columns.map(c => `${widthOf(c.key, c)}px`),
     '40px',
   ].join(' ');
-
-  const cellId = (row: number, column: string) => `table:${id}:${row}:${column}`;
-  const openCell = (row: number, column: TableColumn) => {
-    const target = rows[row];
-    if (!target) return;
-    openFormula({
-      id: cellId(row, column.key),
-      where: `${table.label || id} · «${String(target.value ?? `${target.from}–${target.to}`)}» · ${column.label || column.key}`,
-      value: String((target.cells ?? {})[column.key] ?? ''),
-      onChange: value => setCell(row, column.key, value),
-    });
-  };
 
   return (
     <div className="stack stack--tight">
@@ -328,9 +313,7 @@ function Rows({ id, table, system, edit, editSystem }: {
               users={key === 'range' ? [] : rowUsers(system, id, row.value, compendium).map(u => u.text)}
               onRename={to => rename(row.value, to)} taken={next => taken(next, i)}
               edit={edit} setCell={setCell}
-              spotId={spotId}
-              cellId={column => cellId(i, column)}
-              onSpot={column => openCell(i, column)}
+              where={column => `${table.label || id} · «${String(row.value ?? `${row.from}–${row.to}`)}» · ${column.label || column.key}`}
             />
           ))}
         </div>
@@ -356,7 +339,7 @@ function Rows({ id, table, system, edit, editSystem }: {
   );
 }
 
-function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRename, taken, spotId, cellId, onSpot }: {
+function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRename, taken, where }: {
   row: TableRow;
   at: number;
   rowKey: TableKey;
@@ -367,9 +350,7 @@ function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRe
   system: System;
   edit: (change: (draft: Table) => void) => void;
   setCell: (i: number, column: string, value: unknown) => void;
-  spotId: string | null;
-  cellId: (column: string) => string;
-  onSpot: (column: TableColumn) => void;
+  where: (column: TableColumn) => string;
 }) {
   const cells = row.cells ?? {};
   const set = (change: (r: TableRow) => void) => edit(draft => { const r = draft.rows?.[at]; if (r) change(r); });
@@ -384,14 +365,14 @@ function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRe
         <KeyInput value={row.value} numeric={rowKey === 'number'} taken={taken} onRename={onRename} />
       )}
       {columns.map(column => (column.kind === 'expr' ? (
-        <button
-          key={column.key} type="button"
-          className={`sheet-cell${spotId === cellId(column.key) ? ' sheet-cell--spot' : ''}`}
-          title={String(cells[column.key] ?? '')}
-          onClick={() => onSpot(column)}
-        >
-          {cells[column.key] ? formulaAsLabels(system, String(cells[column.key])) : <span className="faint">формула</span>}
-        </button>
+        <FormulaField
+          key={column.key}
+          value={String(cells[column.key] ?? '')}
+          system={system}
+          where={where(column)}
+          placeholder="формула"
+          onChange={value => setCell(at, column.key, value)}
+        />
       ) : (
         <Cell key={column.key} column={column} value={cells[column.key]} system={system}
           onChange={value => setCell(at, column.key, value)} />

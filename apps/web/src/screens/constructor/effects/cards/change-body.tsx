@@ -3,7 +3,8 @@ import type { System, Step, SlotRef } from '@vtt/schema';
 import { Field, Segmented, Select } from '../../../../ui/primitives.tsx';
 import type { CardGroup } from '../../cards.ts';
 import { parseRollExpr } from '../../roll-expr.ts';
-import { FormulaChips } from '../../../../ui/formula-chips.tsx';
+import { FormulaField } from '../../../../ui/formula-field.tsx';
+import type { BarApi } from '../../../../store/formula-bar.ts';
 import { labelOfTag } from '../../../../ui/formula.tsx';
 import { SlotInput, chipOf, type SlotOption } from '../../slot-input.tsx';
 import { outputRefs, stepNames } from '../../slots.tsx';
@@ -128,9 +129,8 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
     setTrouble(null);
   };
 
-  const commit = () => {
-    if (draft === null) return;
-    const text = draft.trim();
+  const commit = (typed: string) => {
+    const text = typed.trim();
 
     const rolled = text.match(DICE);
     if (rolled) {
@@ -168,13 +168,13 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   const needs = (context.effect.params ?? []).map(p => ({
     group: 'из записи',
     label: p.label ?? p.key,
-    onPick: (insert: (piece: string) => string) => putIntoAmount({ param: p.key } as SlotRef, insert),
+    onPick: (insert: (piece: string) => string, bar: BarApi) => { bar.dismiss(); putIntoAmount({ param: p.key } as SlotRef, insert); },
   }));
   if (onCreateFromRecord) {
     needs.push({
       group: 'из записи',
       label: 'новая потребность…',
-      onPick: (insert: (piece: string) => string) => putIntoAmount(onCreateFromRecord(), insert),
+      onPick: (insert: (piece: string) => string, bar: BarApi) => { bar.dismiss(); putIntoAmount(onCreateFromRecord(), insert); },
     });
   }
 
@@ -183,7 +183,8 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
     needs.push({
       group: 'результат шага',
       label: output.label,
-      onPick: () => {
+      onPick: (_insert: (piece: string) => string, bar: BarApi) => {
+        bar.dismiss();
         edit(applyIndex, apply => {
           const target = apply as Record<string, unknown>;
           target.direction = 'subtract';
@@ -200,7 +201,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
     needs.push({
       group: 'кость системы',
       label: c.label || key,
-      onPick: (insert: (piece: string) => string) => putIntoAmount({ constant: key } as SlotRef, insert),
+      onPick: (insert: (piece: string) => string, bar: BarApi) => { bar.dismiss(); putIntoAmount({ constant: key } as SlotRef, insert); },
     });
   }
 
@@ -213,6 +214,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
         hint={target ? undefined : 'Поле листа, которое этот шаг поменяет.'}
       >
         <SlotInput
+          where="изменение · что меняется"
           value={target}
           context={context}
           allow={['tag', 'param']}
@@ -232,21 +234,19 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
         error={trouble}
         hint="Обычная математика. У каждого поля подписано, чьё оно: отправителя или получателя. Щелчок по подписи меняет хозяина."
       >
-        <FormulaChips
+        <FormulaField
           value={shown}
           system={context.system}
+          where="изменение · станет"
           names={names}
           extraNames={рядом}
           owners
+          invalid={Boolean(trouble)}
           placeholder="например: @хп − @урон"
-          calculator
-          extraOptions={needs}
-          onChange={setDraft}
-          onBlur={commit}
-          onKeyDown={e => {
-            if (e.key === 'Enter') commit();
-            if (e.key === 'Escape') { setDraft(null); setTrouble(null); }
-          }}
+          options={needs}
+          onChange={next => { setTrouble(null); setDraft(next); }}
+          onCommit={commit}
+          onCancel={() => { setDraft(null); setTrouble(null); }}
         />
       </Field>
     </>
@@ -365,6 +365,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
           </Field>
           <Field label="какое">
             <SlotInput
+              where="изменение · какое"
               value={step.effect} context={context} extraOptions={statusOptions}
               onChange={next => edit(applyIndex, draft => { (draft as any).effect = next ?? undefined; })}
               onCreateFromRecord={fromRecord('какое', 'effect')}

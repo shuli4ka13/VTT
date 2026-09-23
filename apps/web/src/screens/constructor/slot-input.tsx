@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import type { System, SlotRef } from '@vtt/schema';
 import { labelOfTag } from '../../ui/formula.tsx';
 import { dieWord, readingWord } from './readback.ts';
-import { FormulaChips } from '../../ui/formula-chips.tsx';
+import { FormulaField } from '../../ui/formula-field.tsx';
+import type { BarOption } from '../../store/formula-bar.ts';
 import { outputRefs, outputLabel, declaredProps } from './slots.tsx';
 import type { SlotContext, SlotKind } from './slots.tsx';
 import { asDice } from '../../words.ts';
@@ -171,7 +172,7 @@ const nameOf = (ref: SlotRef): string | null => {
   return null;
 };
 
-export function SlotInput({ value, onChange, context, allow, placeholder, extraOptions, dice, side, onCreateFromRecord }: {
+export function SlotInput({ value, onChange, context, allow, placeholder, extraOptions, dice, side, onCreateFromRecord, where = 'значение' }: {
   value: unknown;
   onChange: (next: SlotRef | null) => void;
   context: SlotContext;
@@ -185,6 +186,8 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
   side?: 'self' | 'target';
 
   onCreateFromRecord?: () => SlotRef;
+
+  where?: string;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
   const [trouble, setTrouble] = useState<string | null>(null);
@@ -204,61 +207,60 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
     return out;
   }, [options]);
 
-  const menu = useMemo(() => options.map(option => ({
+  const menu = useMemo((): BarOption[] => options.map(option => ({
     group: option.group,
     label: option.label,
     ...(option.synthetic ? {} : { name: nameOf(option.ref) ?? undefined }),
-    onPick: (insert: (piece: string) => string) => {
+    onPick: (insert, bar) => {
       const rest = insert('').trim();
       const name = option.synthetic ? null : nameOf(option.ref);
       if (!rest || !name) {
         setDraft(null);
         setTrouble(null);
+        bar.dismiss();
         if (option.onPick) option.onPick();
         else onChange(option.synthetic && onCreateFromRecord ? onCreateFromRecord() : option.ref);
         return;
       }
-      setDraft(insert(`@${name}`));
+      bar.write(insert(`@${name}`));
     },
   })), [options, onChange, onCreateFromRecord]);
 
   const chip = draft === null ? chipOf(value, context) : null;
-  const shown = chip ? '' : (draft ?? displayOf(value, context));
+  const initial = chip ? (asText(value, context) ?? '') : displayOf(value, context);
 
-  const commitTyped = () => {
-    if (draft === null) return;
-    const grown = grownFrom(value, draft, context);
+  const commitTyped = (text: string) => {
+    setDraft(null);
+    const grown = grownFrom(value, text, context);
     if (grown) {
       onChange(grown);
-      setDraft(null);
       setTrouble(null);
       return;
     }
-    const diced = dice ? normalizeDice(draft) : null;
-    const tagged = singleTag(draft, context.system);
+    const diced = dice ? normalizeDice(text) : null;
+    const tagged = singleTag(text, context.system);
     const candidate: SlotRef | null = tagged
-      ?? (diced !== null ? { const: diced } : parseTyped(draft));
+      ?? (diced !== null ? { const: diced } : parseTyped(text));
     if (candidate !== null && allow) {
       const kind: SlotKind = tagged ? 'tag' : 'const' in candidate ? 'const' : 'expr';
       if (!allow.includes(kind)) {
         setTrouble(`сюда нельзя ${WORD_OF[kind]} — только ${allow.map(k => WORD_OF[k]).join(', ')}`);
-        setDraft(null);
         return;
       }
     }
     onChange(candidate);
-    setDraft(null);
     setTrouble(null);
   };
 
   return (
     <div className="slot">
-      <FormulaChips
-        value={shown}
+      <FormulaField
+        value={draft ?? (chip ? '' : initial)}
         system={context.system}
+        where={where}
         owners
         extraNames={names}
-        extraOptions={menu}
+        options={menu}
         placeholder={chip ? undefined : (placeholder ?? 'число или формула — @ подскажет')}
         prefix={chip ? (
           <span className={`chips__chip${chip.record ? ' chips__chip--record' : ''}`}>
@@ -266,17 +268,15 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
             {side ? <span className={`chips__side chips__side--${side === 'self' ? 'sender' : 'receiver'}`}>{side === 'self' ? SENDER : RECEIVER}</span> : null}
             <button
               type="button" className="chips__x" aria-label="убрать"
-              onMouseDown={e => { e.preventDefault(); onChange(null); }}
+              onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onChange(null); }}
+              onClick={e => e.stopPropagation()}
             >×</button>
           </span>
         ) : null}
-        onFocus={() => setTrouble(null)}
-        onChange={next => setDraft(next)}
-        onBlur={commitTyped}
-        onKeyDown={e => {
-          if (e.key === 'Enter') commitTyped();
-          if (e.key === 'Escape') setDraft(null);
-        }}
+        barValue={draft ?? initial}
+        onChange={next => { setTrouble(null); setDraft(next); }}
+        onCommit={commitTyped}
+        onCancel={() => setDraft(null)}
       />
       {trouble ? <span className="field__error">{trouble}</span> : null}
     </div>

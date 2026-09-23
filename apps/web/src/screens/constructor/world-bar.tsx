@@ -61,7 +61,7 @@ export function SystemBar() {
       <span className={`worldbar__state${saving.kind === 'failed' ? ' field__error' : ''}`} title={details}>{saved}</span>
       <NavLink className="topbar__link" to="/author/start">сменить</NavLink>
       <span className="appbar__sep" aria-hidden />
-      <Tabs value={tab} options={TAB_LIST} onChange={next => { useFormulaBar.getState().close(); pick({ activeTab: next }); }} />
+      <Tabs value={tab} options={TAB_LIST} onChange={next => { useFormulaBar.getState().commit(); pick({ activeTab: next }); }} />
 
       <span className="spacer" />
 
@@ -71,6 +71,6 @@ export function SystemBar() {
       <Button size="sm" variant="primary" onClick={() => void publish()}
         disabled={!origin.systemId}>Опубликовать</Button>
     </div>
-    <FormulaBar system={system} />
+    <FormulaBar />
   </header>;
 }

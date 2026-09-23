@@ -36,6 +36,7 @@ export function InitiativeSection({ system, editSystem }: Props) {
             <div className="dict-row">
               <span className="dict-row__label">Плюс</span>
               <FormulaInput
+                where="инициатива · прибавка"
                 system={system}
                 value={bonus}
                 placeholder="например: @Модификатор Ловкости"

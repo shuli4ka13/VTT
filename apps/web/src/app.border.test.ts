@@ -206,3 +206,14 @@ describe('граница держится СБОРКОЙ, а не только �
     }
   });
 });
+
+describe('формулу правят одним полем', () => {
+  it('редактор формул напрямую берут только поле и строка формул — остальные зовут FormulaField', () => {
+    const allowed = new Set(['ui/formula-chips.tsx', 'ui/formula-field.tsx', 'ui/formula-bar.tsx']);
+    const direct = [...walk(src)]
+      .map(path => path.slice(src.length))
+      .filter(path => !/\.test\.tsx?$/.test(path) && !allowed.has(path))
+      .filter(path => /from '[^']*formula-chips\.tsx'/.test(read(path)) && /\bFormulaChips\b/.test(read(path)));
+    expect(direct, direct.join('\n')).toEqual([]);
+  });
+});

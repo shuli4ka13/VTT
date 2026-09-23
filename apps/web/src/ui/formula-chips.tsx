@@ -70,7 +70,7 @@ export function joinParts(parts: Part[]): string {
   return parts.map(p => ('tag' in p ? `@${p.tag}` : p.text)).join('');
 }
 
-export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraNames, owners, extraOptions, calculator }: {
+export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraNames, owners, extraOptions, calculator, readOnly, autoFocus }: {
   value: string;
   onChange: (next: string) => void;
   system: System;
@@ -95,6 +95,10 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
   extraOptions?: { group: string; label: string; name?: string; onPick: (insert: (piece: string) => string) => void }[];
 
   calculator?: boolean;
+
+  readOnly?: boolean;
+
+  autoFocus?: boolean;
 }) {
   const paths = useMemo(() => fieldPaths(system), [system]);
   const parts = useMemo(
@@ -241,6 +245,28 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
 
   const empty = parts.length === 1 && !(parts[0] as { text: string }).text;
 
+  if (readOnly) {
+    return (
+      <span className="chips chips--read">
+        {prefix}
+        {empty ? <span className="chips__placeholder">{placeholder}</span> : parts.map((part, index) => ('tag' in part ? (
+          names?.[part.tag] !== undefined ? (
+            <span key={index} className="chips__group">{names[part.tag]}</span>
+          ) : (
+            <span key={index} className="chips__chip">
+              <span>{shortLabel(labelOfTag(system, part.tag, extraNames))}</span>
+              {ownerOf(part.tag) ? (
+                <span className={`chips__side chips__side--${ownerOf(part.tag)!.owner === DESK ? 'desk' : ownerOf(part.tag)!.owner === SENDER ? 'sender' : 'receiver'}`}>
+                  {ownerOf(part.tag)!.owner}
+                </span>
+              ) : null}
+            </span>
+          )
+        ) : <span key={index} className="chips__word">{part.text}</span>))}
+      </span>
+    );
+  }
+
   return (
     <div className="chips" ref={host} onKeyDown={onKeyDown}>
       <div className="chips__row" onMouseDown={e => {
@@ -288,6 +314,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
             ref={el => { if (el) inputs.current.set(index, el); else inputs.current.delete(index); }}
 
             className={`chips__text ${!part.text && index !== parts.length - 1 ? 'chips__text--ghost' : ''}`}
+            autoFocus={autoFocus && index === parts.length - 1}
             value={part.text}
             placeholder={empty ? placeholder : undefined}
             size={Math.max(1, part.text.length || (empty ? (placeholder?.length ?? 8) : 1))}

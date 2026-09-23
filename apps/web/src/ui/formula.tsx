@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import type { System } from '@vtt/schema';
 import { compile } from '@vtt/engine/formula';
 import { Verdict } from './primitives.tsx';
-import { FormulaChips } from './formula-chips.tsx';
+import { FormulaField } from './formula-field.tsx';
 import { fieldPaths } from './paths.ts';
 import { ownerOf, OWNER_WORDS } from '@vtt/engine/engine/owners';
 
@@ -48,22 +48,23 @@ export function formulaAsLabels(
   });
 }
 
-export function FormulaInput({ system, value, onChange, placeholder }: {
+export function FormulaInput({ system, value, onChange, placeholder, where = 'формула' }: {
   system: System;
   value: string;
   onChange: (next: string) => void;
   placeholder?: string;
+  where?: string;
 }) {
   const parsed = useMemo(() => parseFormula(value), [value]);
 
   return (
     <div className="stack stack--tight">
-      <FormulaChips
+      <FormulaField
         value={value}
         system={system}
+        where={where}
         placeholder={placeholder ?? 'наберите @ и выберите поле'}
         onChange={onChange}
-        calculator
       />
 
       {value.trim() ? (

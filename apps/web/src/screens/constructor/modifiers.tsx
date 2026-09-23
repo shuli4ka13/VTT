@@ -171,6 +171,7 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
             hint="Условие на листе владельца. Пусто — всегда."
           >
             <FormulaInput
+              where="модификатор · только когда"
               system={system}
               value={modifier.condition ?? ''}
               onChange={condition => onEdit(draft => {

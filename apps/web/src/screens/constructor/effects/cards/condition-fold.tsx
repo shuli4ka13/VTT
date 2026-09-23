@@ -188,6 +188,7 @@ export function ConditionFold({ group, earlier, edit, context }: {
           <>
             <Field label="не меньше" hint="Пусто — нижней границы нет.">
               <SlotInput
+                where="условие · не меньше"
                 value={when.atLeast as never} context={context} allow={['const', 'tag', 'expr', 'param']}
                 onChange={next => setAll(draft => {
                   keep(draft, { atLeast: next as Bound | undefined, atMost: draft.when?.atMost });
@@ -196,6 +197,7 @@ export function ConditionFold({ group, earlier, edit, context }: {
             </Field>
             <Field label="не больше" hint="Пусто — верхней границы нет.">
               <SlotInput
+                where="условие · не больше"
                 value={when.atMost as never} context={context} allow={['const', 'tag', 'expr', 'param']}
                 onChange={next => setAll(draft => {
                   keep(draft, { atLeast: draft.when?.atLeast, atMost: next as Bound | undefined });

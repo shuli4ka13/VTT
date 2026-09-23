@@ -2,7 +2,7 @@ import { ownerOf } from '@vtt/engine/engine/owners';
 import { useMemo, useState } from 'react';
 import type { Step } from '@vtt/schema';
 import { Field, Select, Button } from '../../../../ui/primitives.tsx';
-import { FormulaChips } from '../../../../ui/formula-chips.tsx';
+import { FormulaField } from '../../../../ui/formula-field.tsx';
 import { formulaAsLabels } from '../../../../ui/formula.tsx';
 import { SlotInput } from '../../slot-input.tsx';
 import { asOneFormula } from '@vtt/engine/model/amounts';
@@ -39,8 +39,7 @@ export function NumberBody({ step, context, edit, onAddParam }: {
     .filter(name => !ownerOf(name) && !name.includes('.'))
     .filter(name => !names.has(name) && !context.system.fields.some(f => f.tag === name));
 
-  const commit = () => {
-    if (draft === null) return;
+  const commit = (typed: string) => {
     edit(0, target => {
       const it = loose(target);
       delete it.dice;
@@ -48,7 +47,7 @@ export function NumberBody({ step, context, edit, onAddParam }: {
       delete it.count;
       delete it.double;
       it.source = 'item';
-      if (draft.trim()) it.fixed = { expr: draft };
+      if (typed.trim()) it.fixed = { expr: typed };
       else delete it.fixed;
     });
     setDraft(null);
@@ -58,6 +57,7 @@ export function NumberBody({ step, context, edit, onAddParam }: {
     return (
       <Field label="какое превышение">
         <SlotInput
+          where="число · какое превышение"
           value={slotOf(read, 'margin')} context={context} allow={['ref']}
           onChange={next => edit(0, draft => { loose(draft).margin = next ?? undefined; })}
         />
@@ -72,19 +72,16 @@ export function NumberBody({ step, context, edit, onAddParam }: {
         hint="Обычная математика. Наберите @ и часть названия — подскажет. Кость кидается так: кинуть(название кости), вторым числом — сколько раз кидать."
         needed={!shown}
       >
-        <FormulaChips
+        <FormulaField
           value={shown}
           system={context.system}
+          where="число · сколько"
           extraNames={names}
           owners
-          calculator
           placeholder="наберите @ и выберите название"
           onChange={setDraft}
-          onBlur={commit}
-          onKeyDown={e => {
-            if (e.key === 'Enter') commit();
-            if (e.key === 'Escape') setDraft(null);
-          }}
+          onCommit={commit}
+          onCancel={() => setDraft(null)}
         />
       </Field>
 

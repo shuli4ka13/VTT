@@ -79,6 +79,7 @@ export function CheckBody({ step, context, edit, system }: {
               </Field>
               <Field label="прибавка второй стороны">
                 <SlotInput
+                  where="проверка · прибавка второй стороны"
                   value={opposed.bonus} context={context} allow={['expr', 'const', 'param']}
                   onChange={next => edit(0, draft => {
                     const roll = loose(draft).versus.roll;
@@ -97,6 +98,7 @@ export function CheckBody({ step, context, edit, system }: {
           ) : (
             <Field label="число">
               <SlotInput
+                where="проверка · число"
                 value={step.versus} context={context} allow={['tag', 'expr', 'const', 'param', 'ref']} side="target"
                 onChange={next => edit(0, draft => { loose(draft).versus = next ?? undefined; })}
               />
@@ -107,6 +109,7 @@ export function CheckBody({ step, context, edit, system }: {
         <div className="row">
           <Field label="что сравниваем">
             <SlotInput
+              where="сравнение · что сравниваем"
               value={step.value} context={context} allow={['ref']}
               onChange={next => edit(0, draft => { loose(draft).value = next ?? undefined; })}
             />
@@ -121,6 +124,7 @@ export function CheckBody({ step, context, edit, system }: {
           </Field>
           <Field label="против">
             <SlotInput
+              where="проверка · против"
               value={step.versus} context={context} allow={['tag', 'expr', 'const', 'param', 'ref']} side="target"
               onChange={next => edit(0, draft => { loose(draft).versus = next ?? undefined; })}
             />

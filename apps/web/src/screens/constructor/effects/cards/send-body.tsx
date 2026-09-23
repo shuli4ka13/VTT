@@ -75,6 +75,7 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect, canAns
             <div className="pair" key={need.key}>
               <span className="call-args__name">{need.label ?? need.key}</span>
               <SlotInput
+                where={`вызов · ${need.label ?? need.key}`}
                 value={args[need.key] as never} context={context}
                 extraOptions={rowsAsOptions(system, need)}
                 onChange={next => edit(at, draft => {

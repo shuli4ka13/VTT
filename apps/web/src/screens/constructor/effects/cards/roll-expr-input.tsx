@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Field } from '../../../../ui/primitives.tsx';
 import { parseRollExpr, formatRollExpr, notationOf } from '../../roll-expr.ts';
 import { compile } from '@vtt/engine/formula';
-import { FormulaChips } from '../../../../ui/formula-chips.tsx';
+import { FormulaField } from '../../../../ui/formula-field.tsx';
 import { namesOf, refForName } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
@@ -19,14 +19,13 @@ export function RollExprInput({ step, context, edit }: {
   const names = useMemo(() => namesOf(context), [context]);
   const shown = draft ?? formatRollExpr(step.roll, context.system);
 
-  const commit = () => {
-    if (draft === null) return;
-    if (!draft.trim()) {
+  const commit = (text: string) => {
+    if (!text.trim()) {
       edit(0, target => { delete ((target as any).roll ??= {}).bonus; });
       setDraft(null); setTrouble(null); setPicked(null);
       return;
     }
-    const parsed = parseRollExpr(draft, context.system, picked, name => refForName(context, name));
+    const parsed = parseRollExpr(text, context.system, picked, name => refForName(context, name));
     if (parsed.error) { setTrouble(parsed.error); return; }
     const bad = badFormula(parsed.bonus);
     if (bad) { setTrouble(bad); return; }
@@ -42,30 +41,27 @@ export function RollExprInput({ step, context, edit }: {
 
   return (
     <Field label="бросок" error={trouble}>
-      <FormulaChips
+      <FormulaField
         value={shown}
         system={context.system}
+        where="проверка · бросок"
         extraNames={names}
         owners
+        invalid={Boolean(trouble)}
         placeholder="1к20 + @поле"
-        calculator
-        extraOptions={Object.entries(context.system.constants ?? {})
+        options={Object.entries(context.system.constants ?? {})
           .filter(([, c]) => c.kind === 'die')
           .map(([key, c]) => ({
             group: 'кость системы',
             label: c.label || key,
-
-            onPick: (insert: (piece: string) => string) => {
+            onPick: (insert, bar) => {
               setPicked(key);
-              setDraft(insert(notationOf(context.system, key)));
+              bar.write(insert(notationOf(context.system, key)));
             },
           }))}
-        onChange={setDraft}
-        onBlur={commit}
-        onKeyDown={e => {
-          if (e.key === 'Enter') commit();
-          if (e.key === 'Escape') { setDraft(null); setTrouble(null); setPicked(null); }
-        }}
+        onChange={next => { setTrouble(null); setDraft(next); }}
+        onCommit={commit}
+        onCancel={() => { setDraft(null); setTrouble(null); setPicked(null); }}
       />
     </Field>
   );

@@ -127,6 +127,7 @@ export function GroupEditor({ name, system }: { name: string; system: System }) 
         {own?.kind === 'formula' ? (
           <Field label="Формула">
             <FormulaInput
+              where="формула блока"
               system={system}
               value={own.expr}
               onChange={expr => setDefault({ kind: 'formula', expr })}
