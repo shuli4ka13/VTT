@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import type { System, Sheet, Compendium } from '@vtt/schema';
 import { newPass, calc } from '@vtt/engine/engine/calc';
+import { hasDesk, blankDesk } from '@vtt/engine/events/desk';
 import { resolveRoll } from '@vtt/engine/engine/modifiers';
 import type { Pass } from '@vtt/engine/engine/calc';
 import type { RollResolution } from '@vtt/engine/engine/modifiers';
@@ -28,7 +29,7 @@ export function useReader(system: System, sheet: Sheet | null, compendium: Compe
 
     let pass: Pass;
     try {
-      const table = desk !== undefined ? desk : system.fields.some(f => f.desk) ? ({ id: 'стол', systemId: system.id, kind: 'desk', name: 'Стол', values: {}, equipped: [], effects: [], actions: [] } as Sheet) : null;
+      const table = desk !== undefined ? desk : hasDesk(system) ? blankDesk(system) : null;
       pass = newPass(system, sheet, { compendium, desk: table });
     } catch (err) {
 

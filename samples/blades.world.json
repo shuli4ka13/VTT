@@ -1,0 +1,560 @@
+{
+  "title": "Blades in the Dark",
+  "system": {
+    "id": "blades",
+    "name": "Blades in the Dark",
+    "fields": [
+      {
+        "tag": "hunt",
+        "label": "Охота",
+        "group": "Действия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 4
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "study",
+        "label": "Изучение",
+        "group": "Действия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 4
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "survey",
+        "label": "Разведка",
+        "group": "Действия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 4
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "tinker",
+        "label": "Механика",
+        "group": "Действия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 4
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "finesse",
+        "label": "Ловкость рук",
+        "group": "Действия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 4
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "prowl",
+        "label": "Скрытность",
+        "group": "Действия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 4
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "skirmish",
+        "label": "Драка",
+        "group": "Действия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 4
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "wreck",
+        "label": "Разрушение",
+        "group": "Действия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 4
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "attune",
+        "label": "Мистика",
+        "group": "Действия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 4
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "command",
+        "label": "Приказ",
+        "group": "Действия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 4
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "consort",
+        "label": "Связи",
+        "group": "Действия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 4
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "sway",
+        "label": "Убеждение",
+        "group": "Действия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 4
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "stress",
+        "label": "Стресс",
+        "group": "Состояние",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 9
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "alarm",
+        "label": "Часы тревоги",
+        "group": "Стол",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 8
+        },
+        "control": "pips",
+        "desk": true
+      },
+      {
+        "tag": "heat",
+        "label": "Жар банды",
+        "group": "Стол",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 9
+        },
+        "control": "stepper",
+        "desk": true
+      }
+    ],
+    "groups": {
+      "Действия": {},
+      "Состояние": {},
+      "Стол": {},
+      "Ремесло": {},
+      "Банда": {},
+      "Приёмы": {}
+    },
+    "constants": {
+      "pool": {
+        "label": "пул к6",
+        "kind": "die",
+        "dice": [
+          {
+            "count": {
+              "expr": "max(1, @rating)"
+            },
+            "sides": 6
+          }
+        ],
+        "read": "best"
+      }
+    },
+    "rolls": [
+      {
+        "tag": "action_roll",
+        "label": "Бросок действия"
+      }
+    ],
+    "roll_edits": {},
+    "tables": {
+      "outcome": {
+        "label": "Исход действия",
+        "key": "range",
+        "columns": [
+          {
+            "key": "value",
+            "label": "исход",
+            "kind": "text"
+          }
+        ],
+        "rows": [
+          {
+            "from": 1,
+            "to": 3,
+            "cells": {
+              "value": "провал"
+            }
+          },
+          {
+            "from": 4,
+            "to": 5,
+            "cells": {
+              "value": "успех с последствием"
+            }
+          },
+          {
+            "from": 6,
+            "to": 6,
+            "cells": {
+              "value": "успех"
+            }
+          }
+        ]
+      }
+    },
+    "action_types": {
+      "action": {
+        "label": "Действие",
+        "perTurn": 1
+      }
+    },
+    "effects": {
+      "risky_action": {
+        "label": "Рискованное действие",
+        "group": "Ремесло",
+        "activation": "manual",
+        "cost": "action",
+        "description": "Пул к6 по рейтингу действия, берётся лучшая кость: 1–3 провал, 4–5 успех с последствием, 6 успех. Последствия крутят часы тревоги на столе. Упрощение: при рейтинге 0 бросается одна кость, а не две худших.",
+        "params": [
+          {
+            "key": "rating",
+            "label": "Рейтинг действия",
+            "kind": "expr"
+          }
+        ],
+        "steps": [
+          {
+            "id": "бросок",
+            "type": "threshold",
+            "roll": {
+              "die": {
+                "constant": "pool"
+              },
+              "check": "action_roll"
+            },
+            "versus": {
+              "const": 4
+            },
+            "successWhen": "atLeast",
+            "continueOn": "always",
+            "degrees": {
+              "table": "outcome",
+              "of": "total"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "alarm"
+            },
+            "direction": "set",
+            "targetModifiers": false,
+            "value": {
+              "expr": "min(8, @стол.alarm + 1)"
+            },
+            "when": {
+              "ref": "бросок.degree",
+              "has": "успех с последствием"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "alarm"
+            },
+            "direction": "set",
+            "targetModifiers": false,
+            "value": {
+              "expr": "min(8, @стол.alarm + 2)"
+            },
+            "when": {
+              "ref": "бросок.degree",
+              "has": "провал"
+            }
+          }
+        ]
+      },
+      "resist": {
+        "label": "Сопротивление",
+        "group": "Ремесло",
+        "activation": "manual",
+        "description": "Отказаться от последствия ценой стресса.",
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "stress"
+            },
+            "direction": "add",
+            "targetModifiers": false,
+            "value": {
+              "const": 2
+            }
+          }
+        ]
+      },
+      "lay_low": {
+        "label": "Залечь на дно",
+        "group": "Банда",
+        "activation": "manual",
+        "description": "Тревога сбрасывается, жар банды растёт.",
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "alarm"
+            },
+            "direction": "set",
+            "targetModifiers": false,
+            "value": {
+              "const": 0
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "heat"
+            },
+            "direction": "set",
+            "targetModifiers": false,
+            "value": {
+              "expr": "min(9, @стол.heat + 1)"
+            }
+          }
+        ]
+      }
+    },
+    "records": {
+      "move": {
+        "kind": "action",
+        "label": "Действие",
+        "icon": "🎲",
+        "group": "Приёмы",
+        "hint": "Какое действие бросается — формула рейтинга по листу.",
+        "props": [
+          {
+            "key": "rating",
+            "label": "Рейтинг действия",
+            "kind": "expr"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Бросить",
+            "effect": "risky_action",
+            "args": {
+              "rating": {
+                "prop": "rating"
+              }
+            }
+          }
+        ]
+      },
+      "crew": {
+        "kind": "action",
+        "label": "Дела банды",
+        "icon": "🏴",
+        "group": "Банда",
+        "hint": "Общие ходы банды.",
+        "props": [],
+        "bindings": []
+      }
+    },
+    "room_rules": []
+  },
+  "compendium": {
+    "items": [],
+    "actions": [
+      {
+        "id": "act_skirmish",
+        "rk": "move",
+        "label": "Драка",
+        "description": "Пул к6 по рейтингу «Драка».",
+        "props": {
+          "rating": "@отправитель.skirmish"
+        }
+      },
+      {
+        "id": "act_prowl",
+        "rk": "move",
+        "label": "Скрытность",
+        "description": "Пул к6 по рейтингу «Скрытность».",
+        "props": {
+          "rating": "@отправитель.prowl"
+        }
+      },
+      {
+        "id": "act_finesse",
+        "rk": "move",
+        "label": "Ловкость рук",
+        "description": "Пул к6 по рейтингу «Ловкость рук».",
+        "props": {
+          "rating": "@отправитель.finesse"
+        }
+      },
+      {
+        "id": "act_sway",
+        "rk": "move",
+        "label": "Убеждение",
+        "description": "Пул к6 по рейтингу «Убеждение».",
+        "props": {
+          "rating": "@отправитель.sway"
+        }
+      },
+      {
+        "id": "act_study",
+        "rk": "move",
+        "label": "Изучение",
+        "description": "Пул к6 по рейтингу «Изучение».",
+        "props": {
+          "rating": "@отправитель.study"
+        }
+      },
+      {
+        "id": "resist",
+        "rk": "crew",
+        "label": "Сопротивление",
+        "effect": "resist",
+        "props": {}
+      },
+      {
+        "id": "lay_low",
+        "rk": "crew",
+        "label": "Залечь на дно",
+        "effect": "lay_low",
+        "props": {}
+      }
+    ]
+  },
+  "sheets": [
+    {
+      "id": "vex",
+      "systemId": "blades",
+      "kind": "pc",
+      "name": "Векс",
+      "values": {
+        "skirmish": 2,
+        "prowl": 1,
+        "finesse": 0,
+        "sway": 0,
+        "study": 1,
+        "stress": 0
+      },
+      "equipped": [],
+      "effects": [],
+      "actions": [
+        "act_skirmish",
+        "act_prowl",
+        "act_finesse",
+        "act_sway",
+        "act_study",
+        "resist",
+        "lay_low"
+      ]
+    },
+    {
+      "id": "mira",
+      "systemId": "blades",
+      "kind": "pc",
+      "name": "Мира",
+      "values": {
+        "skirmish": 0,
+        "prowl": 3,
+        "finesse": 2,
+        "sway": 1,
+        "study": 0,
+        "stress": 2
+      },
+      "equipped": [],
+      "effects": [],
+      "actions": [
+        "act_skirmish",
+        "act_prowl",
+        "act_finesse",
+        "act_sway",
+        "act_study",
+        "resist",
+        "lay_low"
+      ]
+    },
+    {
+      "id": "стол",
+      "systemId": "blades",
+      "kind": "desk",
+      "name": "Стол",
+      "values": {
+        "alarm": 0,
+        "heat": 1
+      },
+      "equipped": [],
+      "effects": [],
+      "actions": []
+    }
+  ]
+}

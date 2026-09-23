@@ -1,0 +1,49 @@
+import { group, test, eq, deepEq } from './harness.ts';
+import { SAMPLE_WORLDS } from '../src/model/systems.ts';
+import { flattenSystem } from '../src/model/inherit.ts';
+import { exchange } from '../src/events/exchange.ts';
+import { lintSystem, errorsOf } from '../src/model/lint.ts';
+import type { Sheet } from '../src/model/types.ts';
+
+const world = SAMPLE_WORLDS.find(w => w.system.id === 'blades')!;
+const system = flattenSystem(world.system);
+const book = world.compendium;
+const fresh = () => JSON.parse(JSON.stringify(world.sheets)) as Sheet[];
+const queue = (...values: number[]) => () => values.shift() ?? 1;
+const act = (sheets: Sheet[], actionId: string, who: string, ...dice: number[]) =>
+  exchange({ system, compendium: book, die: queue(...dice), sheets, actionId, fromId: who, toId: who });
+const desk = (sheets: Sheet[]) => sheets.find(s => s.kind === 'desk')!.values;
+
+group('Blades: эффекты крутят часы на столе', () => {
+  test('образец чист для проверок конструктора', () => {
+    deepEq(errorsOf(lintSystem(system, book)).map(p => p.text), []);
+  });
+
+  test('драка Векса (2 кости): лучшая 6 — успех, часы стоят', () => {
+    const out = act(fresh(), 'act_skirmish:0', 'vex', 2, 6);
+    eq(desk(out.sheets).alarm, 0);
+  });
+
+  test('лучшая 5 — успех с последствием: тревога +1', () => {
+    const out = act(fresh(), 'act_skirmish:0', 'vex', 5, 1);
+    eq(desk(out.sheets).alarm, 1);
+  });
+
+  test('лучшая 3 — провал: тревога +2, и часы не переполняются выше 8', () => {
+    let sheets = fresh();
+    for (let i = 0; i < 5; i++) sheets = act(sheets, 'act_skirmish:0', 'vex', 3, 2).sheets;
+    eq(desk(sheets).alarm, 8);
+  });
+
+  test('«Залечь на дно» сбрасывает тревогу и греет банду', () => {
+    let sheets = act(fresh(), 'act_skirmish:0', 'vex', 3, 1).sheets;
+    sheets = act(sheets, 'lay_low:0', 'mira').sheets;
+    eq(desk(sheets).alarm, 0);
+    eq(desk(sheets).heat, 2);
+  });
+
+  test('пул берётся по рейтингу бросающего: у Миры в скрытности 3 кости', () => {
+    const out = act(fresh(), 'act_prowl:0', 'mira', 1, 2, 6);
+    eq(desk(out.sheets).alarm, 0, 'третья кость — шестёрка, успех');
+  });
+});

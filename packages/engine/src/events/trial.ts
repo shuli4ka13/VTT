@@ -1,3 +1,4 @@
+import { deskOf, hasDesk, blankDesk } from './desk.ts';
 import { exchange } from './exchange.ts';
 import type { ExchangeResult } from './exchange.ts';
 import { describeEntry } from './describe.ts';
@@ -102,7 +103,8 @@ export function trial({ system, compendium, effectId, from, to, args, dice = 'av
     actions: [...(compendium?.actions ?? []), { id: TRIAL_RECORD, rk: TRIAL_KIND, label: effect.label ?? effectId, props: {} }],
   };
   const sender: Sheet = { ...from, actions: [...(from.actions ?? []), TRIAL_RECORD] };
-  const sheets = from.id === to.id ? [sender] : [sender, to];
+  const people = from.id === to.id ? [sender] : [sender, to];
+  const sheets = hasDesk(system) && !deskOf(people) ? [...people, blankDesk(system)] : people;
   const result = exchange({
     system: probe, compendium: book, die: dieOf(dice, random), sheets,
     actionId: `${TRIAL_RECORD}:0`, fromId: sender.id, toId: to.id,

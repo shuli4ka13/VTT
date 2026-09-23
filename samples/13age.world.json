@@ -1,0 +1,773 @@
+{
+  "title": "13th Age",
+  "system": {
+    "id": "13age",
+    "name": "13th Age",
+    "fields": [
+      {
+        "tag": "str",
+        "label": "Сила",
+        "group": "Характеристики",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 10,
+          "min": 3,
+          "max": 24
+        }
+      },
+      {
+        "tag": "con",
+        "label": "Телосложение",
+        "group": "Характеристики",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 10,
+          "min": 3,
+          "max": 24
+        }
+      },
+      {
+        "tag": "dex",
+        "label": "Ловкость",
+        "group": "Характеристики",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 10,
+          "min": 3,
+          "max": 24
+        }
+      },
+      {
+        "tag": "int",
+        "label": "Интеллект",
+        "group": "Характеристики",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 10,
+          "min": 3,
+          "max": 24
+        }
+      },
+      {
+        "tag": "wis",
+        "label": "Мудрость",
+        "group": "Характеристики",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 10,
+          "min": 3,
+          "max": 24
+        }
+      },
+      {
+        "tag": "cha",
+        "label": "Харизма",
+        "group": "Характеристики",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 10,
+          "min": 3,
+          "max": 24
+        }
+      },
+      {
+        "tag": "str_mod",
+        "label": "Модификатор: Сила",
+        "group": "Модификаторы",
+        "value": {
+          "kind": "formula",
+          "expr": "floor((@str - 10) / 2)"
+        }
+      },
+      {
+        "tag": "con_mod",
+        "label": "Модификатор: Телосложение",
+        "group": "Модификаторы",
+        "value": {
+          "kind": "formula",
+          "expr": "floor((@con - 10) / 2)"
+        }
+      },
+      {
+        "tag": "dex_mod",
+        "label": "Модификатор: Ловкость",
+        "group": "Модификаторы",
+        "value": {
+          "kind": "formula",
+          "expr": "floor((@dex - 10) / 2)"
+        }
+      },
+      {
+        "tag": "int_mod",
+        "label": "Модификатор: Интеллект",
+        "group": "Модификаторы",
+        "value": {
+          "kind": "formula",
+          "expr": "floor((@int - 10) / 2)"
+        }
+      },
+      {
+        "tag": "wis_mod",
+        "label": "Модификатор: Мудрость",
+        "group": "Модификаторы",
+        "value": {
+          "kind": "formula",
+          "expr": "floor((@wis - 10) / 2)"
+        }
+      },
+      {
+        "tag": "cha_mod",
+        "label": "Модификатор: Харизма",
+        "group": "Модификаторы",
+        "value": {
+          "kind": "formula",
+          "expr": "floor((@cha - 10) / 2)"
+        }
+      },
+      {
+        "tag": "level",
+        "label": "Уровень",
+        "group": "Характеристики",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1,
+          "min": 1,
+          "max": 10
+        },
+        "control": "stepper"
+      },
+      {
+        "tag": "ac",
+        "label": "Защита от оружия (КЗ)",
+        "group": "Защита",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 12,
+          "min": 0
+        }
+      },
+      {
+        "tag": "pd",
+        "label": "Физическая защита (ФЗ)",
+        "group": "Защита",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 11,
+          "min": 0
+        }
+      },
+      {
+        "tag": "md",
+        "label": "Ментальная защита (МЗ)",
+        "group": "Защита",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 11,
+          "min": 0
+        }
+      },
+      {
+        "tag": "hp_max",
+        "label": "Максимум хитов",
+        "group": "Здоровье",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 20,
+          "min": 1
+        }
+      },
+      {
+        "tag": "hp",
+        "label": "Хиты",
+        "group": "Здоровье",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 20,
+          "min": 0,
+          "max": "@hp_max"
+        },
+        "control": "bar"
+      },
+      {
+        "tag": "escalation",
+        "label": "Кость эскалации",
+        "group": "Стол",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 6
+        },
+        "control": "stepper",
+        "desk": true
+      }
+    ],
+    "groups": {
+      "Характеристики": {},
+      "Модификаторы": {},
+      "Защита": {},
+      "Здоровье": {},
+      "Стол": {},
+      "Атака": {},
+      "Бой": {},
+      "Вызываемые": {},
+      "Снаряжение": {},
+      "Приёмы": {}
+    },
+    "constants": {
+      "lead_die": {
+        "label": "к20",
+        "kind": "die",
+        "dice": [
+          {
+            "count": 1,
+            "sides": 20
+          }
+        ]
+      }
+    },
+    "rolls": [
+      {
+        "tag": "attack_roll",
+        "label": "Бросок атаки"
+      }
+    ],
+    "roll_edits": {},
+    "tables": {
+      "wield": {
+        "label": "Способ атаки",
+        "key": "word",
+        "columns": [
+          {
+            "key": "attack",
+            "label": "Бонус атаки",
+            "kind": "expr"
+          },
+          {
+            "key": "damage",
+            "label": "Прибавка к урону",
+            "kind": "expr"
+          }
+        ],
+        "rows": [
+          {
+            "value": "ближний",
+            "label": "ближний бой — Сила",
+            "cells": {
+              "attack": "@str_mod",
+              "damage": "@str_mod"
+            }
+          },
+          {
+            "value": "дальний",
+            "label": "дальний бой — Ловкость",
+            "cells": {
+              "attack": "@dex_mod",
+              "damage": "@dex_mod"
+            }
+          }
+        ]
+      }
+    },
+    "action_types": {
+      "standard": {
+        "label": "Стандартное",
+        "perTurn": 1
+      },
+      "move": {
+        "label": "Движение",
+        "perTurn": 1
+      },
+      "quick": {
+        "label": "Быстрое",
+        "perTurn": 1
+      }
+    },
+    "initiative": {
+      "die": {
+        "constant": "lead_die"
+      },
+      "bonus": {
+        "expr": "@dex_mod + @level"
+      }
+    },
+    "effects": {
+      "damage": {
+        "label": "Урон",
+        "group": "Вызываемые",
+        "params": [
+          {
+            "key": "amount",
+            "label": "Сколько урона",
+            "kind": "number",
+            "role": "amount"
+          }
+        ],
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "hp"
+            },
+            "direction": "subtract",
+            "targetModifiers": false,
+            "value": {
+              "ref": "event.amount"
+            }
+          }
+        ]
+      },
+      "hero_attack": {
+        "label": "Атака героя",
+        "group": "Атака",
+        "activation": "manual",
+        "cost": "standard",
+        "description": "к20 + модификатор + уровень + кость эскалации против КЗ. Попал — кость оружия за каждый уровень, на 20 вдвое. Промах — урон, равный уровню.",
+        "params": [
+          {
+            "key": "weapon_die",
+            "label": "Кость оружия",
+            "kind": "dice"
+          },
+          {
+            "key": "attack_with",
+            "label": "Бонус атаки",
+            "kind": "expr"
+          },
+          {
+            "key": "damage_with",
+            "label": "Прибавка к урону",
+            "kind": "expr"
+          }
+        ],
+        "steps": [
+          {
+            "id": "hit",
+            "type": "threshold",
+            "roll": {
+              "die": {
+                "constant": "lead_die"
+              },
+              "bonus": {
+                "expr": "@attack_with + @отправитель.level + @стол.escalation"
+              },
+              "check": "attack_roll"
+            },
+            "versus": {
+              "expr": "@получатель.ac"
+            },
+            "successWhen": "atLeast",
+            "continueOn": "always"
+          },
+          {
+            "id": "dmg",
+            "type": "amount",
+            "source": "item",
+            "fixed": {
+              "expr": "кинуть(@weapon_die, @отправитель.level * (@hit.natural >= 20 ? 2 : 1)) + @damage_with"
+            },
+            "when": {
+              "ref": "hit.success"
+            }
+          },
+          {
+            "type": "emit",
+            "event": "damage",
+            "args": {
+              "amount": {
+                "ref": "dmg"
+              }
+            },
+            "when": {
+              "ref": "hit.success"
+            }
+          },
+          {
+            "type": "emit",
+            "event": "damage",
+            "args": {
+              "amount": {
+                "expr": "@отправитель.level"
+              }
+            },
+            "when": {
+              "ref": "hit.success",
+              "not": true
+            }
+          }
+        ]
+      },
+      "monster_attack": {
+        "label": "Атака монстра",
+        "group": "Атака",
+        "activation": "manual",
+        "cost": "standard",
+        "description": "Монстры бьют фиксированным уроном и кость эскалации не получают.",
+        "params": [
+          {
+            "key": "to_hit",
+            "label": "Бонус атаки",
+            "kind": "number"
+          },
+          {
+            "key": "hit_damage",
+            "label": "Урон при попадании",
+            "kind": "number"
+          }
+        ],
+        "steps": [
+          {
+            "id": "hit",
+            "type": "threshold",
+            "roll": {
+              "die": {
+                "constant": "lead_die"
+              },
+              "bonus": {
+                "param": "to_hit"
+              },
+              "check": "attack_roll"
+            },
+            "versus": {
+              "expr": "@получатель.ac"
+            },
+            "successWhen": "atLeast"
+          },
+          {
+            "type": "emit",
+            "event": "damage",
+            "args": {
+              "amount": {
+                "param": "hit_damage"
+              }
+            }
+          }
+        ]
+      },
+      "new_round": {
+        "label": "Новый раунд",
+        "group": "Бой",
+        "activation": "manual",
+        "description": "Кость эскалации растёт на единицу, но не выше 6.",
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "escalation"
+            },
+            "direction": "set",
+            "targetModifiers": false,
+            "value": {
+              "expr": "min(6, @стол.escalation + 1)"
+            }
+          }
+        ]
+      },
+      "end_battle": {
+        "label": "Конец боя",
+        "group": "Бой",
+        "activation": "manual",
+        "description": "Кость эскалации сбрасывается.",
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "escalation"
+            },
+            "direction": "set",
+            "targetModifiers": false,
+            "value": {
+              "const": 0
+            }
+          }
+        ]
+      }
+    },
+    "records": {
+      "weapon": {
+        "kind": "item",
+        "label": "Оружие",
+        "icon": "⚔",
+        "group": "Снаряжение",
+        "hint": "Кость оружия и способ атаки свои у каждого.",
+        "props": [
+          {
+            "key": "weapon_die",
+            "label": "Кость оружия",
+            "kind": "dice"
+          },
+          {
+            "key": "wield",
+            "label": "Способ атаки",
+            "kind": "choice",
+            "from": "wield"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Удар",
+            "effect": "hero_attack",
+            "args": {
+              "weapon_die": {
+                "prop": "weapon_die"
+              },
+              "attack_with": {
+                "table": "wield",
+                "by": {
+                  "prop": "wield"
+                },
+                "column": "attack"
+              },
+              "damage_with": {
+                "table": "wield",
+                "by": {
+                  "prop": "wield"
+                },
+                "column": "damage"
+              }
+            }
+          }
+        ]
+      },
+      "monster_move": {
+        "kind": "action",
+        "label": "Приём монстра",
+        "icon": "👹",
+        "group": "Приёмы",
+        "hint": "Бонус атаки и урон вписаны числами.",
+        "props": [
+          {
+            "key": "to_hit",
+            "label": "Бонус атаки",
+            "kind": "number"
+          },
+          {
+            "key": "hit_damage",
+            "label": "Урон при попадании",
+            "kind": "number"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Атаковать",
+            "effect": "monster_attack",
+            "args": {
+              "to_hit": {
+                "prop": "to_hit"
+              },
+              "hit_damage": {
+                "prop": "hit_damage"
+              }
+            }
+          }
+        ]
+      },
+      "battle": {
+        "kind": "action",
+        "label": "Ход боя",
+        "icon": "⏱",
+        "group": "Приёмы",
+        "hint": "Ведущий двигает кость эскалации.",
+        "props": [],
+        "bindings": []
+      }
+    },
+    "room_rules": []
+  },
+  "compendium": {
+    "items": [
+      {
+        "id": "longsword",
+        "rk": "weapon",
+        "label": "Длинный меч",
+        "description": "к8 за уровень, ближний бой.",
+        "props": {
+          "weapon_die": "1d8",
+          "wield": "ближний"
+        }
+      },
+      {
+        "id": "dagger",
+        "rk": "weapon",
+        "label": "Кинжал",
+        "description": "к4 за уровень, ближний бой.",
+        "props": {
+          "weapon_die": "1d4",
+          "wield": "ближний"
+        }
+      },
+      {
+        "id": "longbow",
+        "rk": "weapon",
+        "label": "Длинный лук",
+        "description": "к8 за уровень, дальний бой.",
+        "props": {
+          "weapon_die": "1d8",
+          "wield": "дальний"
+        }
+      }
+    ],
+    "actions": [
+      {
+        "id": "goblin_spear",
+        "rk": "monster_move",
+        "label": "Копьё гоблина",
+        "description": "+6 против КЗ, 5 урона.",
+        "props": {
+          "to_hit": 6,
+          "hit_damage": 5
+        }
+      },
+      {
+        "id": "orc_axe",
+        "rk": "monster_move",
+        "label": "Топор орка",
+        "description": "+7 против КЗ, 8 урона.",
+        "props": {
+          "to_hit": 7,
+          "hit_damage": 8
+        }
+      },
+      {
+        "id": "new_round",
+        "rk": "battle",
+        "label": "Новый раунд",
+        "effect": "new_round",
+        "props": {}
+      },
+      {
+        "id": "end_battle",
+        "rk": "battle",
+        "label": "Конец боя",
+        "effect": "end_battle",
+        "props": {}
+      }
+    ]
+  },
+  "sheets": [
+    {
+      "id": "kai",
+      "systemId": "13age",
+      "kind": "pc",
+      "name": "Кай",
+      "values": {
+        "str": 18,
+        "con": 14,
+        "dex": 12,
+        "int": 10,
+        "wis": 12,
+        "cha": 10,
+        "level": 2,
+        "ac": 17,
+        "pd": 14,
+        "md": 11,
+        "hp_max": 30,
+        "hp": 30
+      },
+      "equipped": [
+        "longsword"
+      ],
+      "effects": [],
+      "actions": [
+        "new_round",
+        "end_battle"
+      ]
+    },
+    {
+      "id": "leya",
+      "systemId": "13age",
+      "kind": "pc",
+      "name": "Лея",
+      "values": {
+        "str": 10,
+        "con": 12,
+        "dex": 18,
+        "int": 12,
+        "wis": 14,
+        "cha": 10,
+        "level": 2,
+        "ac": 15,
+        "pd": 15,
+        "md": 13,
+        "hp_max": 24,
+        "hp": 24
+      },
+      "equipped": [
+        "longbow",
+        "dagger"
+      ],
+      "effects": [],
+      "actions": [
+        "new_round",
+        "end_battle"
+      ]
+    },
+    {
+      "id": "goblin",
+      "systemId": "13age",
+      "kind": "npc",
+      "name": "Гоблин",
+      "values": {
+        "str": 10,
+        "dex": 14,
+        "level": 1,
+        "ac": 16,
+        "pd": 14,
+        "md": 10,
+        "hp_max": 10,
+        "hp": 10
+      },
+      "equipped": [],
+      "effects": [],
+      "actions": [
+        "goblin_spear"
+      ]
+    },
+    {
+      "id": "orc",
+      "systemId": "13age",
+      "kind": "npc",
+      "name": "Орк-берсерк",
+      "values": {
+        "str": 16,
+        "dex": 10,
+        "level": 2,
+        "ac": 16,
+        "pd": 15,
+        "md": 11,
+        "hp_max": 30,
+        "hp": 30
+      },
+      "equipped": [],
+      "effects": [],
+      "actions": [
+        "orc_axe"
+      ]
+    },
+    {
+      "id": "стол",
+      "systemId": "13age",
+      "kind": "desk",
+      "name": "Стол",
+      "values": {
+        "escalation": 0
+      },
+      "equipped": [],
+      "effects": [],
+      "actions": []
+    }
+  ]
+}

@@ -302,16 +302,20 @@ function senderValue(name: string, ctx: RefContext): unknown {
 function namedValue(name: string, ctx: RefContext): unknown {
   if (ctx.inputs && name in ctx.inputs) return ctx.inputs[name];
 
+  const decl = (ctx.paramDefs || []).find(p => p.key === name);
+  const asFormula = (value: unknown): unknown =>
+    (decl?.kind === 'expr' && typeof value === 'string' ? evaluate(value, ctx) : value);
+
   if (ctx.props && name in ctx.props) {
     const own = ctx.props[name];
     if (Array.isArray(own)) return own;
-    if (own !== null && typeof own !== 'object') return own;
+    if (own !== null && typeof own !== 'object') return asFormula(own);
   }
 
-  if (!(ctx.paramDefs || []).some(p => p.key === name)) return undefined;
+  if (!decl) return undefined;
   if (!ctx.params || !(name in ctx.params)) return undefined;
   const value = fromArgs(name, ctx);
-  return value === null || typeof value === 'object' ? undefined : value;
+  return value === null || typeof value === 'object' ? undefined : asFormula(value);
 }
 
 function who(ctx: RefContext): string {
