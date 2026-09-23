@@ -7,6 +7,8 @@ export interface Pane {
 
   tools?: ReactNode;
   body: ReactNode;
+
+  pinned?: boolean;
 }
 
 const FOLD_KEY = (side: string, head: ReactNode) => `vtt.fold.${side}.${typeof head === 'string' ? head : ''}`;
@@ -27,7 +29,7 @@ export function Columns({ left, main, right }: { left?: Pane; main: { body: Reac
   const [leftFolded, toggleLeft] = useFold('left', left?.head);
   const [rightFolded, toggleRight] = useFold('right', right?.head);
   const shape = left && right ? '' : left ? 'columns--left-only' : right ? 'columns--right-only' : 'columns--one';
-  const folds = `${left && leftFolded ? ' columns--l-folded' : ''}${right && rightFolded ? ' columns--r-folded' : ''}`;
+  const folds = `${left && leftFolded ? ' columns--l-folded' : ''}${right && rightFolded && !right.pinned ? ' columns--r-folded' : ''}`;
 
   return (
     <div className={`columns ${shape}${folds}`}>
@@ -35,7 +37,7 @@ export function Columns({ left, main, right }: { left?: Pane; main: { body: Reac
       <div className="column column--main">
         <div className="column__inner">{main.body}</div>
       </div>
-      {right ? <Column kind="right" pane={right} folded={rightFolded} onFold={toggleRight} /> : null}
+      {right ? <Column kind="right" pane={right} folded={rightFolded && !right.pinned} onFold={toggleRight} /> : null}
     </div>
   );
 }
@@ -43,7 +45,7 @@ export function Columns({ left, main, right }: { left?: Pane; main: { body: Reac
 function Column({ kind, pane, folded, onFold }: { kind: 'side' | 'right'; pane: Pane; folded: boolean; onFold: () => void }) {
   const title = typeof pane.head === 'string' ? pane.head : 'панель';
   const arrow = (kind === 'side') === folded ? '»' : '«';
-  const fold = (
+  const fold = pane.pinned ? null : (
     <button type="button" className="column__fold" onClick={onFold}
       aria-label={folded ? `развернуть «${title}»` : `свернуть «${title}»`} title={folded ? 'развернуть' : 'свернуть'}>
       {arrow}

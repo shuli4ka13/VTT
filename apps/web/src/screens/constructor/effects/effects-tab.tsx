@@ -3,6 +3,7 @@ import { blockTree, BlockBranches } from '../block-tree.tsx';
 import { blockOf } from '@vtt/engine/model/blocks';
 import { newEffect } from '../factory.ts';
 import { Columns, List, ListItem } from '../../../ui/layout.tsx';
+import { useLookupPane } from '../lookup-panel.tsx';
 import { Button, Empty } from '../../../ui/primitives.tsx';
 import { PreviewPanel } from './preview-panel.tsx';
 import { LAUNCH_KINDS } from './words.ts';
@@ -42,6 +43,8 @@ export function EffectsTab() {
     editSystem(draft => { draft.effects[made.key] = made.value; });
     pick({ activeEffectId: made.key });
   };
+
+  const right = useLookupPane({ head: 'Рядом', body: <PreviewPanel effectId={activeId} /> });
 
   return (
     <Columns
@@ -104,7 +107,7 @@ export function EffectsTab() {
               hint="Эффект — единица автоматизации: всё, что мир делает сам. Проверки, изменения полей, состояния — а как их назвать, решаете вы."
             />,
       }}
-      right={{ head: 'Рядом', body: <PreviewPanel effectId={activeId} /> }}
+      right={right}
     />
   );
 }

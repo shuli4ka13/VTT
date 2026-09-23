@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useFormulaBar } from '../store/formula-bar.ts';
 import type { BarApi } from '../store/formula-bar.ts';
 import { FormulaChips } from './formula-chips.tsx';
+import { useLookup } from '../store/lookup.ts';
 import { Button } from './primitives.tsx';
 
 export function FormulaBar() {
@@ -37,6 +38,7 @@ export function FormulaBar() {
           onPick: (insert: (piece: string) => string) => option.onPick(insert, api),
         }))}
         onChange={write}
+        onChipPick={(name, label) => useLookup.getState().show({ name, label, where: target.where })}
         onKeyDown={e => {
           if (e.key === 'Enter') { e.preventDefault(); commit(); }
           if (e.key === 'Escape') { e.preventDefault(); cancel(); }

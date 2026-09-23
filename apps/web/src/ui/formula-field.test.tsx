@@ -4,6 +4,7 @@ import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { FormulaField } from './formula-field.tsx';
 import { FormulaBar } from './formula-bar.tsx';
 import { useFormulaBar } from '../store/formula-bar.ts';
+import { useLookup } from '../store/lookup.ts';
 import type { System } from '@vtt/schema';
 
 const system = {
@@ -86,5 +87,20 @@ describe('одно поле формулы на всё', () => {
     fireEvent.click(field);
     expect(field.textContent).not.toContain('Сила-фишка');
     expect(field.querySelectorAll('.chips__chip')).toHaveLength(1);
+  });
+
+  it('щелчок по фишке открывает справку «откуда это», а не строку формул; в строке формул — тоже', () => {
+    useLookup.getState().close();
+    render(<><FormulaBar /><FormulaField value="@сила + 2" system={system} where="Бонус атаки" /></>);
+    fireEvent.click(document.querySelector('.formula-field .chips__chip')!);
+    expect(useLookup.getState().at).toEqual({ name: 'сила', label: 'Сила', where: 'Бонус атаки' });
+    expect(document.querySelector('.formula-bar')).toBeNull();
+
+    useLookup.getState().close();
+    fireEvent.click(document.querySelector('.formula-field')!);
+    fireEvent.mouseDown(document.querySelector('.formula-bar .chips__name--pick')!);
+    expect(useLookup.getState().at?.name).toBe('сила');
+    expect(document.querySelector('.formula-bar')).not.toBeNull();
+    useLookup.getState().close();
   });
 });

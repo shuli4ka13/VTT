@@ -4,6 +4,7 @@ import { useWorld, freeId } from '../../store/world.ts';
 import { ModifiersEditor } from './modifiers.tsx';
 import { newRecordKind, newBinding, newProp } from './factory.ts';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
+import { useLookupPane } from './lookup-panel.tsx';
 import {
   Card, CardHead, Field, Input, Select, Button, Empty, Verdict, Chip, DangerButton, LabelInput,
 } from '../../ui/primitives.tsx';
@@ -60,8 +61,11 @@ export function RecordsTab() {
 
   const tree = blockTree<[string, RecordKind]>(system, kinds, ([, kind]) => blockOf(system, kind));
 
+  const lookup = useLookupPane();
+
   return (
     <Columns
+      {...(lookup ? { right: lookup } : {})}
       left={{
         head: 'типы записей',
         tools: <Button size="sm" onClick={() => addTo(freeGroupName(system, 'Новый блок'))}>+ блок</Button>,

@@ -72,7 +72,7 @@ export function joinParts(parts: Part[]): string {
   return parts.map(p => ('tag' in p ? `@${p.tag}` : p.text)).join('');
 }
 
-export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraNames, badges, owners, extraOptions, calculator, readOnly, autoFocus }: {
+export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraNames, badges, owners, extraOptions, calculator, readOnly, autoFocus, onChipPick }: {
   value: string;
   onChange: (next: string) => void;
   system: System;
@@ -103,6 +103,8 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
   autoFocus?: boolean;
 
   badges?: Map<string, string>;
+
+  onChipPick?: (tag: string, label: string) => void;
 }) {
   const paths = useMemo(() => fieldPaths(system), [system]);
   const parts = useMemo(
@@ -265,7 +267,12 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
           names?.[part.tag] !== undefined ? (
             <span key={index} className="chips__group">{names[part.tag]}</span>
           ) : (
-            <span key={index} className="chips__chip">
+            <span
+              key={index}
+              className={`chips__chip${onChipPick ? ' chips__chip--pick' : ''}`}
+              title={onChipPick ? 'откуда это и где видно' : undefined}
+              onClick={onChipPick ? e => { e.stopPropagation(); onChipPick(part.tag, labelOfTag(system, part.tag, extraNames)); } : undefined}
+            >
               <span>{shortLabel(labelOfTag(system, part.tag, extraNames))}</span>
               {badge(part.tag)}
               {ownerOf(part.tag) ? (
@@ -295,7 +302,11 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
             <span key={index} className="chips__group">{names[part.tag]}</span>
           ) : (
           <span key={index} className="chips__chip">
-            <span title={labelOfTag(system, part.tag, extraNames)}>
+            <span
+              title={onChipPick ? `${labelOfTag(system, part.tag, extraNames)} — откуда это и где видно` : labelOfTag(system, part.tag, extraNames)}
+              className={onChipPick ? 'chips__name--pick' : undefined}
+              onMouseDown={onChipPick ? e => { e.preventDefault(); onChipPick(part.tag, labelOfTag(system, part.tag, extraNames)); } : undefined}
+            >
               {shortLabel(labelOfTag(system, part.tag, extraNames))}
             </span>
             {badge(part.tag)}

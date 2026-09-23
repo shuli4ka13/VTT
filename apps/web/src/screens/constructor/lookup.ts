@@ -1,0 +1,212 @@
+import { ownerOf, OWNER_WORDS } from '@vtt/engine/engine/owners';
+import { tagWords } from '@vtt/engine/engine/roll-tags';
+import { splitPath } from '@vtt/engine/engine/navigate';
+import type { RefKind } from '@vtt/engine/model/references';
+import type { System, Compendium, Effect } from '@vtt/schema';
+import { fieldPaths } from '../../ui/paths.ts';
+import { formulaAsLabels } from '../../ui/formula.tsx';
+import { asDice } from '../../words.ts';
+import { outputLabel, EVENT_NAMES } from './slots.tsx';
+import type { EarlierStep } from './slots.tsx';
+import { usersOf } from './usage.ts';
+import type { UsageIndex } from './usage.ts';
+import type { WorldState } from '../../store/world.ts';
+
+type Pick = Parameters<WorldState['pick']>[0];
+
+export interface Explained {
+  kind: string;
+  title: string;
+  facts: [string, string][];
+  from: string[];
+  shown: string[];
+  users: string[];
+  field?: string;
+  go?: { label: string; pick: Pick };
+}
+
+const ASK_WORDS: Record<string, string> = { actor: 'спросят игрока', gm: 'спросят ведущего' };
+
+const KIND_WORDS: Record<string, string> = {
+  number: 'число', text: 'текст', dice: 'кости', choice: 'выбор из таблицы', effect: 'эффект',
+};
+
+type Loose = Record<string, any>;
+
+function stepsOf(effect: Effect | undefined): EarlierStep[] {
+  const out: EarlierStep[] = [];
+  const all = [...(effect?.self ?? []), ...(effect?.steps ?? [])] as Loose[];
+  all.forEach((step, index) => { if (step.id) out.push({ id: String(step.id), type: String(step.type), at: index + 1 }); });
+  return out;
+}
+
+const argText = (arg: unknown): string => {
+  if (arg === null || arg === undefined || arg === '') return '';
+  if (typeof arg !== 'object') return String(arg);
+  const a = arg as Loose;
+  if ('prop' in a) return `свойство записи «${a.prop}»`;
+  if ('const' in a) return String(a.const);
+  if ('expr' in a) return String(a.expr);
+  if ('table' in a) return `таблица «${a.table}» → ${a.column ?? 'значение'}`;
+  if ('param' in a) return `вход «${a.param}»`;
+  return JSON.stringify(a);
+};
+
+function callersOf(system: System, effectId: string, key: string): string[] {
+  const out: string[] = [];
+  for (const [kindKey, kind] of Object.entries(system.records ?? {})) {
+    for (const binding of kind.bindings ?? []) {
+      if (binding.effect !== effectId) continue;
+      const text = argText(binding.args?.[key]);
+      out.push(`тип записи «${kind.label ?? kindKey}»${binding.label ? ` · «${binding.label}»` : ''}: ${text || 'не передаёт'}`);
+    }
+  }
+  for (const [id, effect] of Object.entries(system.effects ?? {})) {
+    for (const step of [...(effect.self ?? []), ...(effect.steps ?? [])] as Loose[]) {
+      if (step.type !== 'emit' || step.event !== effectId) continue;
+      const text = argText(step.args?.[key]);
+      out.push(`эффект «${effect.label ?? id}» зовёт: ${text || 'не передаёт'}`);
+    }
+  }
+  return out;
+}
+
+const usersBy = (usage: UsageIndex, kind: RefKind, key: string, system: System) => usersOf(usage, kind, key, system);
+
+export function explainName(
+  system: System, compendium: Compendium | undefined, effectId: string | null, name: string, usage: UsageIndex,
+): Explained {
+  const owned = ownerOf(name);
+  const rest = owned?.rest ?? name;
+  const owner = owned ? `лист ${OWNER_WORDS[owned.owner]}` : null;
+  const effect = effectId ? system.effects?.[effectId] : undefined;
+  const params = effect?.params ?? [];
+  const head = splitPath(rest)?.head ?? rest;
+  const earlier = stepsOf(effect);
+  const ownerFact: [string, string][] = owner ? [['чьё', owner]] : [];
+
+  const event = EVENT_NAMES.find(([key]) => key === rest);
+  if (event) {
+    return {
+      kind: 'пришло в вызов', title: event[1], facts: [], users: [], shown: [],
+      from: ['число, с которым этот эффект позвали; «после правок цели» — уже с сопротивлениями'],
+    };
+  }
+
+  if (earlier.some(step => step.id === head) && !params.some(p => p.key === head)) {
+    return {
+      kind: 'результат шага', title: outputLabel(rest, earlier), facts: [], users: [], shown: [],
+      from: ['считается выше по цепочке этого эффекта'],
+    };
+  }
+
+  const param = params.find(p => p.key === head);
+  if (param && effectId) {
+    const decl = param as Loose;
+    const table = decl.from ? system.tables?.[decl.from] : undefined;
+    if (rest !== head) {
+      const columnKey = rest.slice(head.length + 1);
+      const column = table?.columns?.find(c => c.key === columnKey);
+      return {
+        kind: 'колонка по выбору',
+        title: `${table?.label ?? decl.from} → ${column?.label ?? columnKey}`,
+        facts: [...ownerFact, ['строка', `та, что пришла во входе «${param.label ?? param.key}»`],
+          ...(column?.kind === 'expr' ? [['считается', `${owner ?? 'листом, где читают'} — формулой из ячейки`] as [string, string]] : [])],
+        from: callersOf(system, effectId, param.key),
+        shown: [], users: [],
+        ...(decl.from ? { go: { label: `открыть таблицу «${table?.label ?? decl.from}»`, pick: { activeTab: 'dictionaries', activeTableId: decl.from } } } : {}),
+      };
+    }
+    const asks = decl.ask ? ASK_WORDS[String(decl.ask.by ?? 'actor')] ?? 'спросят за столом' : null;
+    return {
+      kind: 'вход эффекта',
+      title: param.label ?? param.key,
+      facts: [
+        ['тип', KIND_WORDS[String(decl.kind ?? 'number')] ?? String(decl.kind)],
+        ...(table ? [['таблица', table.label ?? String(decl.from)] as [string, string]] : []),
+        ['если не передали', asks ?? (decl.optional ? 'пусто' : 'эффект не сработает')],
+      ],
+      from: callersOf(system, effectId, param.key),
+      shown: asks ? [`за столом: ${asks}${decl.ask?.hint ? ` — «${decl.ask.hint}»` : ''}`] : [],
+      users: [],
+    };
+  }
+
+  const field = system.fields.find(f => f.tag === rest);
+  if (field) {
+    const value = field.value as Loose;
+    const how = value.kind === 'formula' ? `формула ${formulaAsLabels(system, String(value.expr))}`
+      : value.kind === 'table' ? `по таблице «${system.tables?.[value.table]?.label ?? value.table}»`
+        : `хранится, по умолчанию ${String(value.default ?? '—')}`;
+    return {
+      kind: field.desk ? 'поле стола' : 'поле листа',
+      title: field.label ?? field.tag,
+      facts: [...ownerFact, ['как получается', how]],
+      from: [value.kind === 'stored' ? 'вписывают на листе или меняют эффекты' : 'считается само из других полей'],
+      shown: [field.desk ? 'на листе стола' : `на листе, блок «${field.group ?? 'без блока'}»`],
+      users: usersBy(usage, 'field', field.tag, system),
+      field: field.tag,
+      go: { label: 'открыть на вкладке «Лист»', pick: { activeTab: 'sheet', activeFieldTag: field.tag } },
+    };
+  }
+
+  const path = fieldPaths(system).get(rest);
+  if (path) {
+    const base = system.fields.find(f => f.tag === head);
+    return {
+      kind: 'колонка по полю',
+      title: path,
+      facts: [...ownerFact, ['строка', `та, что выбрана в поле «${base?.label ?? head}»`]],
+      from: [`таблица «${system.tables?.[base?.optionsFrom ?? '']?.label ?? base?.optionsFrom}»`],
+      shown: [], users: [],
+      ...(base?.optionsFrom ? { go: { label: 'открыть таблицу', pick: { activeTab: 'dictionaries', activeTableId: base.optionsFrom } } } : {}),
+    };
+  }
+
+  const constant = system.constants?.[rest];
+  if (constant) {
+    const dice = (constant.dice ?? []).map(d => asDice(`${typeof d.count === 'number' ? d.count : 1}d${d.sides}`)).join(' + ');
+    return {
+      kind: 'кость системы',
+      title: constant.label ?? rest,
+      facts: [...ownerFact, ['кости', dice || '—'], ...(owner ? [['кто бросает', owner.replace('лист ', '')] as [string, string]] : [])],
+      from: ['раздел «Кости» на вкладке «Правила»'],
+      shown: [], users: usersBy(usage, 'constant', rest, system),
+      go: { label: 'открыть «Правила»', pick: { activeTab: 'dictionaries' } },
+    };
+  }
+
+  const table = tagWords(system).get(rest);
+  if (table) {
+    const [tableKey, spec] = Object.entries(system.tables ?? {}).find(([, t]) => (t.rows ?? []).some(r => r.value === rest))!;
+    const row = (spec.rows ?? []).find(r => r.value === rest);
+    const cells = (spec.columns ?? []).map(c => [c.label ?? c.key, String((row?.cells ?? {})[c.key] ?? '—')] as [string, string]);
+    return {
+      kind: 'метка броска',
+      title: rest,
+      facts: [['таблица', table], ...cells],
+      from: ['строка таблицы — бросок с этой меткой находят правки «на бросок с меткой»'],
+      shown: [], users: usersBy(usage, 'roll', rest, system),
+      go: { label: `открыть таблицу «${table}»`, pick: { activeTab: 'dictionaries', activeTableId: tableKey } },
+    };
+  }
+
+  for (const [kindKey, kind] of Object.entries(system.records ?? {})) {
+    const prop = (kind.props ?? []).find(p => p.key === head);
+    if (!prop) continue;
+    const records = [...(compendium?.items ?? []), ...(compendium?.actions ?? [])].filter(r => r.rk === kindKey);
+    return {
+      kind: 'свойство записи',
+      title: `${prop.label ?? prop.key} · ${kind.label ?? kindKey}`,
+      facts: [['тип', KIND_WORDS[String(prop.kind ?? 'number')] ?? String(prop.kind)]],
+      from: [`заполняют записи компендиума типа «${kind.label ?? kindKey}»: ${records.length}`],
+      shown: [], users: [],
+      go: { label: 'открыть «Типы записей»', pick: { activeTab: 'records', activeRecordKind: kindKey } },
+    };
+  }
+
+  return {
+    kind: 'не найдено', title: name, facts: [], users: [], shown: [],
+    from: ['такого имени нет ни в листе, ни во входах, ни в таблицах'],
+  };
+}

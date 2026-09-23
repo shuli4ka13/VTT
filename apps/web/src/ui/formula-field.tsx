@@ -4,6 +4,7 @@ import type { System } from '@vtt/schema';
 import { useFormulaBar } from '../store/formula-bar.ts';
 import type { BarOption } from '../store/formula-bar.ts';
 import { FormulaChips } from './formula-chips.tsx';
+import { useLookup } from '../store/lookup.ts';
 
 export interface FormulaFieldProps {
   value: string;
@@ -65,6 +66,7 @@ export function FormulaField(props: FormulaFieldProps) {
           {...(owners ? { owners: true } : {})}
           {...(placeholder ? { placeholder } : {})}
           readOnly
+          onChipPick={(name, label) => useLookup.getState().show({ name, label, where: props.where })}
           onChange={() => {}}
         />
       ) : null}

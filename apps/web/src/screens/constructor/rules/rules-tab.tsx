@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useWorld } from '../../../store/world.ts';
 import { Columns, List, ListItem } from '../../../ui/layout.tsx';
+import { useLookupPane } from '../lookup-panel.tsx';
 import { useUsage } from '../usage.ts';
 import { useProblems } from '../problems.ts';
 import { DiceSection, dieEntries } from './dice-section.tsx';
@@ -50,6 +51,11 @@ export function RulesTab() {
     problems.filter(p => p.where.tab === 'rules' && p.where.section).map(p => p.where.section),
   );
 
+  const right = useLookupPane({
+    head: 'Готовое',
+    body: <AdvantagePalette system={system} editSystem={editSystem} onAdded={() => setSection('edits')} />,
+  });
+
   return (
     <Columns
       left={{
@@ -81,16 +87,7 @@ export function RulesTab() {
           </>
         ),
       }}
-      right={{
-        head: 'Готовое',
-        body: (
-          <AdvantagePalette
-            system={system}
-            editSystem={editSystem}
-            onAdded={() => setSection('edits')}
-          />
-        ),
-      }}
+      right={right}
     />
   );
 }

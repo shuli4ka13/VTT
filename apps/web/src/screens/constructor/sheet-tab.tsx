@@ -7,6 +7,7 @@ import { FieldPreview } from './field-preview.tsx';
 import { Starters } from './starters.tsx';
 import { CONTROLS } from '../../sheet/controls/index.tsx';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
+import { useLookupPane } from './lookup-panel.tsx';
 import {
   Card, CardHead, Field, Input, Select, Button, Empty, Fold, Verdict, Chip, DangerButton, NumInput,
 } from '../../ui/primitives.tsx';
@@ -54,6 +55,8 @@ export function SheetTab() {
   };
 
 
+  const right = useLookupPane({ head: 'Готовое из образцов', body: <DonorPalette kind="blocks" /> });
+
   return (
     <Columns
       left={{
@@ -98,7 +101,7 @@ export function SheetTab() {
                 hint="Или добавьте новое. Поле — это то, что бывает у персонажа: характеристика, навык, ресурс. Клик по заголовку блока откроет его настройки."
               />,
       }}
-      right={{ head: 'Готовое из образцов', body: <DonorPalette kind="blocks" /> }}
+      right={right}
     />
   );
 }
