@@ -33,6 +33,7 @@ export function runSelfTrack(
     args: action.binding.args || {},
     props: propsOf(action.record, world.system),
     ...(world.inputs ? { inputs: world.inputs } : {}),
+    alone: true,
   };
   const done = runCall(packCall(call, world), { sheet, owner }, world);
 

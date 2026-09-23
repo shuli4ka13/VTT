@@ -114,6 +114,18 @@ group('линт: висячие ссылки называются словами
   });
 });
 
+group('линт: чей лист в шагах отправителя', () => {
+  test('@получатель в шагах отправителя — ошибка с подсказкой, как написать', () => {
+    const system = withEffect('a', { self: [{ type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '@получатель.hp' } }] as Step[] });
+    ok(errorTexts(system).some(text => text.includes('в шагах отправителя получателя нет') && text.includes('@отправитель.hp')), errorTexts(system).join('\n'));
+  });
+
+  test('@получатель в шагах получателя — законно', () => {
+    const system = withEffect('a', { steps: [{ type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '@получатель.hp' } }] as Step[] });
+    eq(errorTexts(system).filter(text => text.includes('получателя нет')).length, 0);
+  });
+});
+
 group('линт: слушатели, круги, потребности', () => {
   test('срабатывающий сам эффект без слушателя — ошибка человеческим текстом', () => {
     const system = withEffect('t', { activation: 'triggered', trigger: { on: '' } });

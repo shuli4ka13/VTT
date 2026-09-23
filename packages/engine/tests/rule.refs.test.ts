@@ -51,6 +51,18 @@ group('структурные ссылки', () => {
       deepEq(packRef({ param: 'save' }, ctx), { expr: '@получатель.dex_save', of: 'target' });
     });
 
+    test('вход-формула с полем получателя внутри другой формулы уезжает к получателю вместе с ней', () => {
+      const ctx = { ...sender(), params: { save: '@получатель.dex_save' } };
+      const packed = packRef({ expr: '@save + #str_mod' }, ctx) as { expr: string; of: string; sent?: Record<string, unknown> };
+      eq(packed.of, 'target');
+      eq(packed.expr, '(@получатель.dex_save) + #str_mod');
+      eq(resolveRef(packed, target()), 1 + 3, 'Ловкость цели считает цель, Силу отправитель прислал числом');
+    });
+
+    test('вход-формула без полей получателя в формуле считается у отправителя, как раньше', () => {
+      deepEq(packRef({ expr: '@bonus + 1' }, sender()), { const: 7 });
+    });
+
     test('параметр-число уезжает числом', () => {
       deepEq(packRef({ param: 'flat' }, sender()), { const: 4 });
     });

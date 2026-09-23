@@ -4,7 +4,7 @@ import { activationOf, calledOf } from '../engine/effects.ts';
 import { basedOn, paramsOf } from './inherit.ts';
 import { danglingRows } from './integrity.ts';
 import { TABS, STEP } from '../words/glossary.ts';
-import { DESK, SENDER } from '../engine/owners.ts';
+import { DESK, RECEIVER, SENDER } from '../engine/owners.ts';
 import {
   referencesOf, declaredOf, chainRefs, listenerOf,
   type Where, type Reference, type RefKind, type Declared,
@@ -45,6 +45,9 @@ function ownerText(ref: Reference, system: System): string | null {
   const owner = ref.scope.slice('owner:'.length);
   const field = system.fields.find(f => f.tag === ref.key);
   if (!field) return null;
+  if (owner === RECEIVER && ref.from.part === 'self') {
+    return `в шагах отправителя получателя нет — они идут один раз до всех целей; пишите @отправитель.${field.tag}`;
+  }
   if (field.desk && owner !== DESK) return `поле «${field.label}» лежит на столе, а не на листе ${owner === SENDER ? 'отправителя' : 'получателя'} — пишите @стол.${field.tag}`;
   if (!field.desk && owner === DESK) return `поле «${field.label}» лежит на листе персонажа, а не на столе — пишите @отправитель.${field.tag} или @получатель.${field.tag}`;
   return null;

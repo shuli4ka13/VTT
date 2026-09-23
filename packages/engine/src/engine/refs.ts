@@ -26,6 +26,8 @@ export interface RefContext {
   results?: Record<string, unknown>;
 
   atReceiver?: boolean;
+
+  alone?: boolean;
 }
 
 const FORMS = ['const', 'expr', 'param', 'prop', 'item', 'tag', 'ref', 'table'];
@@ -42,26 +44,31 @@ export function packRef(ref: unknown, ctx: RefContext): unknown {
   if ('const' in r) return { const: r.const };
 
   if ('expr' in r) {
-    const deps = compile(String(r.expr)).deps;
+    const expr = withReceiverInputs(String(r.expr), ctx);
+    const deps = compile(expr).deps;
     if (deps.some(name => ownerOf(name)?.owner === RECEIVER)) {
+      if (ctx.alone) {
+        const name = deps.find(dep => ownerOf(dep)?.owner === RECEIVER)!;
+        throw new EngineError(`${who(ctx)}: «${ownerOf(name)!.rest}» получателя — но в шагах отправителя получателя нет, они идут один раз до всех целей`);
+      }
       const sent: Record<string, unknown> = {};
       for (const name of deps) {
         if (ownerOf(name)?.owner === RECEIVER) continue;
         const known = senderValue(name, ctx);
         if (known !== undefined) sent[name] = known;
       }
-      return { expr: r.expr, of: 'target', ...(Object.keys(sent).length ? { sent } : {}) };
+      return { expr, of: 'target', ...(Object.keys(sent).length ? { sent } : {}) };
     }
-    if (waitsForStep(String(r.expr), ctx)) {
+    if (waitsForStep(expr, ctx)) {
       const sent: Record<string, unknown> = {};
-      for (const name of compile(String(r.expr)).deps) {
+      for (const name of deps) {
         if (name.includes('.') && !ownerOf(name)) continue;
         const known = senderValue(name, ctx);
         if (known !== undefined) sent[name] = known;
       }
-      return { expr: r.expr, later: true, ...(Object.keys(sent).length ? { sent } : {}) };
+      return { expr, later: true, ...(Object.keys(sent).length ? { sent } : {}) };
     }
-    return { const: evaluate(r.expr, ctx) };
+    return { const: evaluate(expr, ctx) };
   }
 
   if ('param' in r) return packParam(String(r.param), Boolean(r.optional), ctx);
@@ -116,6 +123,29 @@ function packParam(key: string, optional: boolean, ctx: RefContext): unknown {
 
 const isFormula = (decl: Param | undefined, value: unknown): value is string =>
   decl?.kind === 'number' && typeof value === 'string';
+
+const MAX_INPUT_DEPTH = 8;
+
+const readsReceiver = (expr: string): boolean =>
+  compile(expr).deps.some(name => ownerOf(name)?.owner === RECEIVER);
+
+function withReceiverInputs(expr: string, ctx: RefContext, depth = 0): string {
+  if (depth > MAX_INPUT_DEPTH) {
+    throw new EngineError(`${who(ctx)}: входы-формулы ссылаются друг на друга по кругу`);
+  }
+  let out = expr;
+  for (const name of compile(expr).deps) {
+    if (ownerOf(name)) continue;
+    const decl = (ctx.paramDefs || []).find(p => p.key === name);
+    if (!decl || !ctx.params || !(name in ctx.params)) continue;
+    const value = fromArgs(name, ctx);
+    if (!isFormula(decl, value) || !readsReceiver(value)) continue;
+    const inner = withReceiverInputs(value, ctx, depth + 1);
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    out = out.replace(new RegExp(`[@#]${escaped}(?![\\p{L}\\p{N}_.])`, 'gu'), `(${inner})`);
+  }
+  return out;
+}
 
 const columnOf = (r: AnyRef): string => (typeof r.column === 'string' && r.column ? r.column : VALUE_COLUMN);
 
@@ -232,6 +262,9 @@ function evaluate(expr: unknown, ctx: RefContext, sent?: Record<string, unknown>
     const owned = ownerOf(name);
     if (owned && (atReceiver || ctx.atReceiver) && owned.owner === SENDER) {
       throw new EngineError(`${who(ctx)}: «${owned.rest}» отправителя не пришло в сообщении — отправитель должен был посчитать его у себя`);
+    }
+    if (owned?.owner === RECEIVER && !(atReceiver || ctx.atReceiver)) {
+      throw new EngineError(`${who(ctx)}: «${owned.rest}» получателя здесь не прочитать — его считает получатель, у себя`);
     }
     if (owned?.owner === DESK) return ctx.pass.resolve(name);
     if (owned) return resolve(owned.rest);

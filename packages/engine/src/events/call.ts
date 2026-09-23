@@ -22,6 +22,8 @@ export interface Call {
   claims?: string[];
 
   kept?: StepData[];
+
+  alone?: boolean;
 }
 
 const keptById = (steps: StepData[]): Record<string, StepData> => {
@@ -42,6 +44,7 @@ export function packCall(call: Call, world: WorldContext): StepData[] {
     ...(call.against ? { against: call.against } : {}),
     ...(call.claims?.length ? { claims: call.claims } : {}),
     ...(call.kept?.length ? { kept: keptById(call.kept) } : {}),
+    ...(call.alone ? { alone: true } : {}),
   });
 }
 

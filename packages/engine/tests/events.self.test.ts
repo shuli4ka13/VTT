@@ -1,4 +1,4 @@
-import { group, test, eq, ok } from './harness.ts';
+import { group, test, eq, ok, throws } from './harness.ts';
 import { exchange } from '../src/events/exchange.ts';
 import { send } from '../src/events/envelope.ts';
 import { runSelfTrack } from '../src/events/self.ts';
@@ -75,5 +75,27 @@ group('дорожка «со мной»', () => {
     const empty = { ...sheet('маг'), values: { хиты: 20, ячейки: 0 } } as Sheet;
     const out = runSelfTrack('снаряд:0', empty, world);
     eq(out.sheet.values.ячейки, 0);
+  });
+});
+
+group('в шагах отправителя получателя нет', () => {
+  const withSelf = (self: unknown[], params: unknown[] = [], args: Record<string, unknown> = {}) => ({
+    ...system,
+    effects: { ...system.effects, снаряд: { ...(system.effects as any).снаряд, self, params } },
+    records: { ...system.records, заклинание: { ...(system.records as any).заклинание, bindings: [{ label: 'Снаряд', effect: 'снаряд', args }] } },
+  }) as unknown as System;
+
+  test('поле получателя прямо в шаге отправителя — ошибка словами, а не свой лист молча', () => {
+    const sys = withSelf([{ type: 'apply', target: { tag: 'ячейки' }, direction: 'set', value: { expr: '@получатель.хиты' } }]);
+    throws(() => runSelfTrack('снаряд:0', sheet('маг'), { system: sys, compendium, die: () => 1 }), 'получателя нет');
+  });
+
+  test('вход-формула с полем получателя, пришедшая из записи в шаг отправителя, — та же ошибка', () => {
+    const sys = withSelf(
+      [{ type: 'apply', target: { tag: 'ячейки' }, direction: 'subtract', value: { expr: '@сколько + 0' } }],
+      [{ key: 'сколько', label: 'Сколько', kind: 'number' }],
+      { сколько: '@получатель.хиты' },
+    );
+    throws(() => runSelfTrack('снаряд:0', sheet('маг'), { system: sys, compendium, die: () => 1 }), 'получателя нет');
   });
 });
