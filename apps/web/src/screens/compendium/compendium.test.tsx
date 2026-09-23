@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
+import { renderOpen } from '../../testing/render-open.tsx';
 import { CompendiumScreen } from './compendium.tsx';
 import { useWorld } from '../../store/world.ts';
 
@@ -37,13 +38,13 @@ describe('CompendiumScreen: запись говорит, что даст вла�
   });
 
   it('показывает «владелец получит: Удар» для рода с привязкой', () => {
-    render(<CompendiumScreen />);
+    renderOpen(<CompendiumScreen />);
     expect(screen.getByText('владелец получит: Удар')).toBeTruthy();
   });
 
   it('ничего не показывает у рода без привязок', () => {
     useWorld.setState({ activeRecordId: 'bauble' });
-    render(<CompendiumScreen />);
+    renderOpen(<CompendiumScreen />);
     expect(screen.queryByText(/владелец получит/)).toBeNull();
   });
 });
@@ -77,7 +78,7 @@ describe('CompendiumScreen: кость записи — формочкой, а �
   });
 
   it('хранимое «1d8» разложено на счёт и грани', () => {
-    const { container } = render(<CompendiumScreen />);
+    const { container } = renderOpen(<CompendiumScreen />);
     const term = container.querySelector('.dice-term')!;
     const [count, sides] = [...term.querySelectorAll('input')] as HTMLInputElement[];
     expect(count!.value).toBe('1');
@@ -85,7 +86,7 @@ describe('CompendiumScreen: кость записи — формочкой, а �
   });
 
   it('правка граней пишет обратно нотацию для движка', () => {
-    const { container } = render(<CompendiumScreen />);
+    const { container } = renderOpen(<CompendiumScreen />);
     const term = container.querySelector('.dice-term')!;
     const [, sides] = [...term.querySelectorAll('input')] as HTMLInputElement[];
     fireEvent.change(sides!, { target: { value: '12' } });
@@ -95,7 +96,7 @@ describe('CompendiumScreen: кость записи — формочкой, а �
   });
 
   it('недописанные грани не портят сохранённое', () => {
-    const { container } = render(<CompendiumScreen />);
+    const { container } = renderOpen(<CompendiumScreen />);
     const term = container.querySelector('.dice-term')!;
     const [, sides] = [...term.querySelectorAll('input')] as HTMLInputElement[];
     fireEvent.change(sides!, { target: { value: '' } });
@@ -105,7 +106,7 @@ describe('CompendiumScreen: кость записи — формочкой, а �
   });
 
   it('стёр грани, набрал «12» — кость стала 1d12', () => {
-    const { container } = render(<CompendiumScreen />);
+    const { container } = renderOpen(<CompendiumScreen />);
     const term = container.querySelector('.dice-term')!;
     const [, sides] = [...term.querySelectorAll('input')] as HTMLInputElement[];
 
@@ -138,7 +139,7 @@ describe('CompendiumScreen: id новой записи не завязан то�
   });
 
   it('первая запись рода в двух разных компендиумах получает разные id', () => {
-    const { container } = render(<CompendiumScreen />);
+    const { container } = renderOpen(<CompendiumScreen />);
     const pick = () => fireEvent.click(container.querySelector('.card--pick')!);
 
     pick();
@@ -184,7 +185,7 @@ describe('CompendiumScreen: превью «как увидит игрок»', ()
   });
 
   it('показывает подпись, описание, циферки «на лист» и кнопки; служебное скрыто, ссылка на запись подписана', () => {
-    render(<CompendiumScreen />);
+    renderOpen(<CompendiumScreen />);
     expect(screen.getByText('Как увидит игрок')).toBeTruthy();
     const view = document.querySelector('.record-view')!;
     expect(view.textContent).toContain('Пистолет');
@@ -196,7 +197,7 @@ describe('CompendiumScreen: превью «как увидит игрок»', ()
   });
 
   it('свойство «ссылка на запись» выбирается из записей компендиума, без самой себя', () => {
-    render(<CompendiumScreen />);
+    renderOpen(<CompendiumScreen />);
     const select = [...document.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'nine'))!;
     expect([...select.options].map(o => o.value)).toEqual(['', 'nine']);
   });
@@ -238,7 +239,7 @@ describe('свойство из словаря — выбор, а не ввод'
     [...document.querySelectorAll('label')].find(l => l.textContent?.includes(подпись))!;
 
   it('вместо строки ввода — список значений словаря', () => {
-    render(<CompendiumScreen />);
+    renderOpen(<CompendiumScreen />);
     const select = полеУ('Тип урона').querySelector('select') as HTMLSelectElement;
 
     expect(select, 'это список, а не ввод').toBeTruthy();
@@ -247,13 +248,13 @@ describe('свойство из словаря — выбор, а не ввод'
   });
 
   it('выбранное уходит в запись', () => {
-    render(<CompendiumScreen />);
+    renderOpen(<CompendiumScreen />);
     fireEvent.change(полеУ('Тип урона').querySelector('select')!, { target: { value: 'огонь' } });
     expect(useWorld.getState().compendium.items[0]!.props!.damage_type).toBe('огонь');
   });
 
   it('словарь не выбран — так и сказано, а не пустой список', () => {
-    render(<CompendiumScreen />);
+    renderOpen(<CompendiumScreen />);
     const select = полеУ('Без словаря').querySelector('select') as HTMLSelectElement;
     expect(select.options[0]!.textContent).toBe('— словарь не выбран —');
   });
@@ -283,7 +284,7 @@ describe('свойство «несколько значений» — фишк�
   });
 
   it('выбранное стоит фишкой, добавление дописывает в список', () => {
-    render(<CompendiumScreen />);
+    renderOpen(<CompendiumScreen />);
     const поле = [...document.querySelectorAll('label')].find(l => l.textContent?.includes('Свойства'))!;
     expect(поле.textContent).toContain('лёгкое');
     fireEvent.change(поле.querySelector('select')!, { target: { value: 'тяжёлое' } });

@@ -14,7 +14,7 @@ const FOLD_KEY = (side: string, head: ReactNode) => `vtt.fold.${side}.${typeof h
 function useFold(side: 'left' | 'right', head: ReactNode) {
   const key = FOLD_KEY(side, head);
   const [folded, setFolded] = useState(() => {
-    try { return localStorage.getItem(key) === '1'; } catch { return false; }
+    try { return localStorage.getItem(key) !== '0'; } catch { return true; }
   });
   const toggle = () => setFolded(was => {
     try { localStorage.setItem(key, was ? '0' : '1'); } catch { return !was; }

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { screen, fireEvent, cleanup } from '@testing-library/react';
+import { renderOpen } from '../../testing/render-open.tsx';
 import { useWorld, emptySystem } from '../../store/world.ts';
 import { SheetTab } from './sheet-tab.tsx';
 import { startersOf } from './starters.tsx';
@@ -17,7 +18,7 @@ describe('стартовые блоки на пустом листе', () => {
   });
 
   it('клик по стартовому блоку кладёт поля и оставляет систему верной', () => {
-    render(<SheetTab />);
+    renderOpen(<SheetTab />);
     expect(screen.getByText('Лист пуст')).toBeTruthy();
 
     fireEvent.click(screen.getByText('Характеристики к20'));
@@ -29,10 +30,10 @@ describe('стартовые блоки на пустом листе', () => {
   });
 
   it('вычисляемое поле в списке помечено и читается формулой словами', () => {
-    render(<SheetTab />);
+    renderOpen(<SheetTab />);
     fireEvent.click(screen.getAllByText('Защита')[0]!);
     cleanup();
-    render(<SheetTab />);
+    renderOpen(<SheetTab />);
     const metas = [...document.querySelectorAll('.list__meta')].map(node => node.textContent ?? '');
     const kinds = useWorld.getState().system.fields.map(f => f.value.kind);
     expect(kinds, metas.join(' | ')).toContain('formula');
@@ -55,7 +56,7 @@ describe('вид поля на листе выбирается в констру
   });
 
   it('выбор «полоса запаса» ложится в поле, а «обычное поле» убирает его', () => {
-    render(<SheetTab />);
+    renderOpen(<SheetTab />);
     const picker = [...document.querySelectorAll('select')]
       .find(el => [...el.options].some(o => o.value === 'bar'))!;
     expect(picker).toBeTruthy();
@@ -76,7 +77,7 @@ describe('вид поля на листе выбирается в констру
       },
       activeFieldTag: 'мод',
     }));
-    render(<SheetTab />);
+    renderOpen(<SheetTab />);
     const picker = [...document.querySelectorAll('select')]
       .find(el => [...el.options].some(o => o.value === 'bar'));
     expect(picker).toBeUndefined();

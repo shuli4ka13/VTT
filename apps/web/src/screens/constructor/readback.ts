@@ -191,11 +191,11 @@ export function sendReadback(step: Step, system: System, effect: Effect, names?:
   const s = step as Record<string, unknown>;
   const id = String(s.event ?? '');
   const event = system.effects?.[id];
-  const name = id ? seg(`«${event?.label || id}»:`) : hole('какой эффект зовём?');
   const args = (s.args ?? {}) as Record<string, unknown>;
   const main = amountParamOf(event);
   const sent = main ? args[main.key] : undefined;
-  const amount = sent === undefined ? seg('без величины') : refSegment(sent, system, effect, 'сколько?', names);
+  const name = id ? seg(`«${event?.label || id}»${main ? ':' : ''}`) : hole('какой эффект зовём?');
+  const amount = !main ? [] : [sent === undefined ? hole('сколько?') : refSegment(sent, system, effect, 'сколько?', names)];
   const word = (t: unknown): string => {
     if (typeof t === 'string') return t;
     const r = (t ?? {}) as Record<string, unknown>;
@@ -206,7 +206,7 @@ export function sendReadback(step: Step, system: System, effect: Effect, names?:
   const chosen = (event?.params ?? []).filter(p => p.kind === 'choice' && args[p.key] !== undefined).map(p => word(args[p.key]));
   const tags = chosen.filter(Boolean);
   return [
-    seg(s.to === 'sender' ? 'Отправитель в ответ получает' : 'Цель получает'), name, amount,
+    seg(s.to === 'sender' ? 'Ответом отправителю зовёт' : 'Зовёт'), name, ...amount,
     ...(tags.length ? [seg(`[${tags.join(', ')}]`)] : []),
     seg('.'),
   ];

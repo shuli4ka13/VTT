@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { renderOpen } from '../../../testing/render-open.tsx';
 import { EffectsTab } from './effects-tab.tsx';
 import { useWorld, emptySystem } from '../../../store/world.ts';
 import { LAUNCH_KINDS } from './words.ts';
@@ -18,7 +19,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
   });
 
   it('свойства эффекта — одной строкой; у активируемого нет «сколько висит»', () => {
-    render(<EffectsTab />);
+    renderOpen(<EffectsTab />);
     const heads = [...document.querySelectorAll('.sheet-grid__title')].map(h => h.textContent);
     expect(heads).toEqual(expect.arrayContaining(['Как запускается', 'Блок', 'На основе', 'Описание для игрока']));
     expect(screen.queryByText('+ сколько висит')).toBeNull();
@@ -33,14 +34,14 @@ describe('EffectsTab: палитра трёх понятий', () => {
       },
       activeEffectId: 'poison',
     }));
-    render(<EffectsTab />);
+    renderOpen(<EffectsTab />);
     expect(screen.getByText('+ сколько висит')).toBeTruthy();
     const heads = [...document.querySelectorAll('.sheet-grid__title')].map(h => h.textContent);
     expect(heads).not.toContain('Занимает');
   });
 
   it('палитра шагов — только виды движка, клик кладёт шаг', () => {
-    render(<EffectsTab />);
+    renderOpen(<EffectsTab />);
     const palette = screen.getAllByRole('button')
       .filter(b => !b.closest('details'))
       .filter(b => (b.textContent ?? '').trimStart().startsWith('+ '))
@@ -57,7 +58,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
 
   it('шаги сворачиваются: одной строкой с пересказом, по одному и все сразу', () => {
     try { localStorage.clear(); } catch { return; }
-    render(<EffectsTab />);
+    renderOpen(<EffectsTab />);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     fireEvent.click(screen.getByText('свернуть все'));
@@ -69,8 +70,21 @@ describe('EffectsTab: палитра трёх понятий', () => {
     expect(document.querySelectorAll('.step-fold__summary')).toHaveLength(0);
   });
 
-  it('убранный шаг можно вернуть', () => {
+  it('изначально шаги свёрнуты, а только что добавленный — открыт', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: { ...state.system, effects: { fresh: { label: 'Свежий эффект', activation: 'manual', params: [], steps: [{ id: 'был', type: 'threshold', roll: { check: null }, versus: { const: 10 } }] } } },
+      activeEffectId: 'fresh',
+    }));
     render(<EffectsTab />);
+    expect(document.querySelectorAll('.step-fold[aria-expanded="false"]')).toHaveLength(1);
+    fireEvent.click(screen.getAllByText('+ проверка').at(-1)!);
+    expect(document.querySelectorAll('.step-fold[aria-expanded="false"]')).toHaveLength(1);
+    expect(document.querySelectorAll('.step-fold[aria-expanded="true"]')).toHaveLength(1);
+  });
+
+  it('убранный шаг можно вернуть', () => {
+    renderOpen(<EffectsTab />);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     fireEvent.click(screen.getByTitle('убрать шаг'));
     fireEvent.click(screen.getByText('убрать'));
@@ -80,7 +94,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
   });
 
   it('кнопки палитры не знают доменных слов', () => {
-    render(<EffectsTab />);
+    renderOpen(<EffectsTab />);
     const palette = screen.getAllByRole('button')
       .filter(b => (b.textContent ?? '').trimStart().startsWith('+ '));
     expect(palette.length).toBeGreaterThan(0);
@@ -90,13 +104,13 @@ describe('EffectsTab: палитра трёх понятий', () => {
   });
 
   it('на экране нет слова «дырка»', () => {
-    render(<EffectsTab />);
+    renderOpen(<EffectsTab />);
     expect(screen.queryByText(/дырк/i)).toBeNull();
     expect(screen.getByText('Что приходит')).toBeTruthy();
   });
 
   it('«Что приходит» — видимая секция с кнопкой', () => {
-    render(<EffectsTab />);
+    renderOpen(<EffectsTab />);
     expect(screen.getByText('Что приходит')).toBeTruthy();
     fireEvent.click(screen.getByText('+ вход'));
     const effect = useWorld.getState().system.effects.strike!;
@@ -104,7 +118,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
   });
 
   it('входы — таблицей: без подсказок в строке, флажки в конце, «правят сопротивления» только у числа', () => {
-    render(<EffectsTab />);
+    renderOpen(<EffectsTab />);
     fireEvent.click(screen.getByText('+ вход'));
     expect(screen.queryByText('Чей лист')).toBeNull();
     expect(screen.queryByText(/можно числом или формулой/)).toBeNull();
@@ -136,7 +150,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
       },
       activeEffectId: 'strike',
     }));
-    render(<EffectsTab />);
+    renderOpen(<EffectsTab />);
     const fix = screen.getByText(/взять блок/);
     fireEvent.click(fix);
     expect(useWorld.getState().system.fields.some(f => f.tag === 'hp_current')).toBe(true);
@@ -169,7 +183,7 @@ describe('ссылка на результат шага', () => {
   });
 
   it('машинного имени шага на экране нет, а сослаться на шаг всё равно можно', () => {
-    render(<EffectsTab />);
+    renderOpen(<EffectsTab />);
     expect(screen.queryAllByPlaceholderText('имя')).toHaveLength(0);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     const steps = useWorld.getState().system.effects.strike!.steps!;
@@ -180,7 +194,7 @@ describe('ссылка на результат шага', () => {
   });
 
   it('слот «какое превышение» предлагает выходы проверки поимённо', () => {
-    render(<EffectsTab />);
+    renderOpen(<EffectsTab />);
     const label = screen.getByText('какое превышение');
     const input = label.parentElement!.querySelector('.chips__text') as HTMLInputElement;
     fireEvent.focus(input);
@@ -204,7 +218,7 @@ describe('три вида запуска вместо четырёх', () => {
   afterEach(() => { cleanup(); });
 
   it('палитра создания предлагает ровно три вида и не знает слов «реакция» и «триггерный»', () => {
-    render(<EffectsTab />);
+    renderOpen(<EffectsTab />);
     const made = screen.getAllByRole('button')
       .map(b => b.textContent!.trim())
       .filter(t => LAUNCH_KINDS.some(kind => t === `+ ${kind.label.toLowerCase()}`));
@@ -217,7 +231,7 @@ describe('три вида запуска вместо четырёх', () => {
   });
 
   it('у «срабатывает сам» момент собран в один список: после молча или до с вопросом', () => {
-    render(<EffectsTab />);
+    renderOpen(<EffectsTab />);
     fireEvent.click(screen.getByText('+ срабатывает сам'));
     const moment = [...document.querySelectorAll('select')]
       .find(el => [...el.options].some(o => o.value === 'ask-target'))!;
@@ -251,7 +265,7 @@ describe('вызываемый эффект — обычный эффект', ()
   afterEach(() => { cleanup(); });
 
   it('«+ вызываемый» заводит обычный эффект с шагом в первое числовое поле', () => {
-    render(<EffectsTab />);
+    renderOpen(<EffectsTab />);
     fireEvent.click(screen.getByText('+ вызываемый'));
     const key = useWorld.getState().activeEffectId!;
     const made = useWorld.getState().system.effects[key]!;
@@ -262,7 +276,7 @@ describe('вызываемый эффект — обычный эффект', ()
   });
 
   it('правится тем же редактором: те же шаги, а входы заводит автор', () => {
-    render(<EffectsTab />);
+    renderOpen(<EffectsTab />);
     fireEvent.click(screen.getByText('+ вызываемый'));
     expect(screen.getByText('Цепочка шагов')).toBeTruthy();
     expect(screen.getByText('Что приходит')).toBeTruthy();
@@ -291,7 +305,7 @@ describe('эффект слушает время', () => {
   afterEach(() => { cleanup(); });
 
   it('в списке «Слушает» есть моменты хода, и выбор сохраняется', () => {
-    render(<EffectsTab />);
+    renderOpen(<EffectsTab />);
     fireEvent.click(screen.getByText('+ срабатывает сам'));
 
     const listens = [...document.querySelectorAll('select')]
@@ -338,7 +352,7 @@ describe('крит — обычная формула, а не особый сл�
   };
 
   it('старый шаг сразу показан одной строкой, трёх полей больше нет', () => {
-    render(<EffectsTab />);
+    renderOpen(<EffectsTab />);
     expect(screen.queryByText('удвоить кости, если')).toBeNull();
     expect(screen.queryByText('переписать одной строкой')).toBeNull();
     expect(screen.queryByText('сколько раз кинуть')).toBeNull();
@@ -349,7 +363,7 @@ describe('крит — обычная формула, а не особый сл�
   });
 
   it('правка строки переносит старые поля в формулу', () => {
-    render(<EffectsTab />);
+    renderOpen(<EffectsTab />);
     набрать("кинуть('2d6') + @хиты");
 
     const шаг = useWorld.getState().system.effects.удар!.steps![1]! as Record<string, unknown>;
@@ -359,7 +373,7 @@ describe('крит — обычная формула, а не особый сл�
   });
 
   it('набор не пишется в систему, пока строку не отпустили', () => {
-    render(<EffectsTab />);
+    renderOpen(<EffectsTab />);
     fireEvent.change(строка(), { target: { value: 'кинуть(@кос' } });
 
     const шаг = useWorld.getState().system.effects.удар!.steps![1]! as Record<string, unknown>;
@@ -368,7 +382,7 @@ describe('крит — обычная формула, а не особый сл�
   });
 
   it('незнакомое имя в строке предлагается взять из записи под тем же ключом', () => {
-    render(<EffectsTab />);
+    renderOpen(<EffectsTab />);
     набрать('кинуть(@кость_врага)');
     fireEvent.click(screen.getByText('взять «кость_врага» из записи'));
 
@@ -392,7 +406,7 @@ describe('шаг отправителя — один раз, до остальн
   afterEach(() => { cleanup(); });
 
   it('«чей лист: отправителя» переносит шаг в верхний блок и обратно', () => {
-    render(<EffectsTab />);
+    renderOpen(<EffectsTab />);
     fireEvent.click(screen.getAllByText('+ изменение')[0]!);
     expect(useWorld.getState().system.effects.снаряд!.steps).toHaveLength(1);
 

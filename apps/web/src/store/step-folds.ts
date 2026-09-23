@@ -1,32 +1,32 @@
 import { create } from 'zustand';
 
-const KEY = 'vtt.step-folds';
+const KEY = 'vtt.step-opened';
 
 const load = (): Record<string, true> => {
   try { return JSON.parse(localStorage.getItem(KEY) ?? '{}') as Record<string, true>; } catch { return {}; }
 };
 
-const save = (folded: Record<string, true>): Record<string, true> => {
-  try { localStorage.setItem(KEY, JSON.stringify(folded)); } catch { return folded; }
-  return folded;
+const save = (opened: Record<string, true>): Record<string, true> => {
+  try { localStorage.setItem(KEY, JSON.stringify(opened)); } catch { return opened; }
+  return opened;
 };
 
 export interface StepFoldsState {
-  folded: Record<string, true>;
+  opened: Record<string, true>;
   toggle: (key: string) => void;
-  setMany: (keys: string[], on: boolean) => void;
+  setOpen: (keys: string[], open: boolean) => void;
 }
 
 export const useStepFolds = create<StepFoldsState>()((set, get) => ({
-  folded: load(),
+  opened: load(),
   toggle: key => {
-    const next = { ...get().folded };
+    const next = { ...get().opened };
     if (next[key]) delete next[key]; else next[key] = true;
-    set({ folded: save(next) });
+    set({ opened: save(next) });
   },
-  setMany: (keys, on) => {
-    const next = { ...get().folded };
-    for (const key of keys) { if (on) next[key] = true; else delete next[key]; }
-    set({ folded: save(next) });
+  setOpen: (keys, open) => {
+    const next = { ...get().opened };
+    for (const key of keys) { if (open) next[key] = true; else delete next[key]; }
+    set({ opened: save(next) });
   },
 }));

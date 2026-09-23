@@ -2,6 +2,7 @@ import { useWorld } from '../../../store/world.ts';
 import { newTrigger } from '../factory.ts';
 import { Card, CardHead, Field, Input, Select, DangerButton, LabelInput } from '../../../ui/primitives.tsx';
 import { FieldRow } from '../../../ui/field-row.tsx';
+import { useStepFolds } from '../../../store/step-folds.ts';
 import { ModifiersEditor } from '../modifiers.tsx';
 import { LAUNCH_KINDS, launchHint } from './words.ts';
 import { LaunchCard } from './launch-card.tsx';
@@ -55,7 +56,15 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
   const launch = launchOf(effect);
   const pipeline = launch.kind !== 'passive';
 
-  const moveLane = (indices: number[], to: Lane) => edit(draft => {
+  const moveLane = (indices: number[], to: Lane) => {
+    const fromList = (to === 'sender' ? effect.steps : effect.self) ?? [];
+    const first = fromList[indices[0] ?? 0];
+    const at = to === 'sender' ? (effect.self?.length ?? 0) : 0;
+    useStepFolds.getState().setOpen([`${effect.label ?? ''}|${to}|${String(first?.id ?? at)}`], true);
+    shiftLane(indices, to);
+  };
+
+  const shiftLane = (indices: number[], to: Lane) => edit(draft => {
     const fromList = (to === 'sender' ? draft.steps : draft.self) ?? [];
     const moved = indices.map(i => fromList[i]!).filter(Boolean);
     const rest = fromList.filter((_, i) => !indices.includes(i));

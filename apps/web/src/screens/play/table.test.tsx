@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, screen, cleanup, fireEvent, act } from '@testing-library/react';
+import { screen, cleanup, fireEvent, act } from '@testing-library/react';
+import { renderOpen } from '../../testing/render-open.tsx';
 import { useRoom } from '../../store/room.ts';
 import { useSession } from '../../store/session.ts';
 import { TableScreen, mayAnswer } from './table.tsx';
@@ -34,7 +35,7 @@ describe('стол: журнал и бой', () => {
   afterEach(() => { cleanup(); });
 
   it('журнал подписан временем, битая отметка не ломает строку', () => {
-    render(<TableScreen />);
+    renderOpen(<TableScreen />);
     const lines = [...document.querySelectorAll('.log-line')].map(node => node.textContent ?? '');
     expect(lines[0]).toMatch(/^\d{2}:\d{2}Арвен бьёт Мирру$/);
     expect(lines[1]).toBe('без отметки');
@@ -42,7 +43,7 @@ describe('стол: журнал и бой', () => {
 
   it('вне боя стол так и говорит', () => {
     useRoom.setState(state => ({ ...state, room: room(null) }));
-    render(<TableScreen />);
+    renderOpen(<TableScreen />);
     expect(screen.getByText('Бой не идёт')).toBeTruthy();
   });
 });
@@ -54,7 +55,7 @@ describe('выбор целей на столе', () => {
   afterEach(() => { cleanup(); });
 
   it('первый клик назначает действующего, следующие набирают цели и снимают их', () => {
-    render(<TableScreen />);
+    renderOpen(<TableScreen />);
     const token = (name: string) => screen.getAllByText(name)[0]!.closest('button')!;
 
     fireEvent.click(token('Арвен'));
@@ -73,7 +74,7 @@ describe('выбор целей на столе', () => {
   });
 
   it('«сбросить выбор» снимает и действующего, и цели разом', () => {
-    render(<TableScreen />);
+    renderOpen(<TableScreen />);
     const token = (name: string) => screen.getAllByText(name)[0]!.closest('button')!;
 
     fireEvent.click(token('Арвен'));
@@ -87,7 +88,7 @@ describe('выбор целей на столе', () => {
   });
 
   it('за другим столом выбор начинается заново', () => {
-    render(<TableScreen />);
+    renderOpen(<TableScreen />);
     const token = (name: string) => screen.getAllByText(name)[0]!.closest('button')!;
     fireEvent.click(token('Арвен'));
     fireEvent.click(token('Мирра'));
@@ -123,7 +124,7 @@ describe('вопрос стола: отвечает владелец листа 
   it('чужому кнопки выключены и объяснено, кто отвечает', () => {
     useSession.setState({ userId: 'p2' });
     useRoom.setState(state => ({ ...state, room: asked(), log: [], error: null }));
-    render(<TableScreen />);
+    renderOpen(<TableScreen />);
     const skip = screen.getByText('Пропустить').closest('button') as HTMLButtonElement;
     expect(skip.disabled).toBe(true);
     expect(screen.getByText('отвечает владелец листа или ведущий')).toBeTruthy();
@@ -132,7 +133,7 @@ describe('вопрос стола: отвечает владелец листа 
   it('владельцу кнопки доступны', () => {
     useSession.setState({ userId: 'p1' });
     useRoom.setState(state => ({ ...state, room: asked(), log: [], error: null }));
-    render(<TableScreen />);
+    renderOpen(<TableScreen />);
     const skip = screen.getByText('Пропустить').closest('button') as HTMLButtonElement;
     expect(skip.disabled).toBe(false);
   });
@@ -157,7 +158,7 @@ describe('панель «Стол»', () => {
 
   it('ведущий правит значение стола, стола нет среди фишек', () => {
     useRoom.setState(state => ({ ...state, room: withDesk('gm'), log: [], error: null }));
-    render(<TableScreen />);
+    renderOpen(<TableScreen />);
     expect(screen.getByText('общий для всех — правите вы')).toBeTruthy();
     expect(screen.getByDisplayValue('3')).toBeTruthy();
     expect([...document.querySelectorAll('.token__name')].map(n => n.textContent)).toEqual(['Арвен']);
@@ -165,7 +166,7 @@ describe('панель «Стол»', () => {
 
   it('игрок видит значение, но не правит', () => {
     useRoom.setState(state => ({ ...state, room: withDesk('player'), log: [], error: null }));
-    render(<TableScreen />);
+    renderOpen(<TableScreen />);
     expect(screen.getByText('общий для всех — правит ведущий')).toBeTruthy();
     expect(screen.queryByDisplayValue('3')).toBeNull();
     expect(screen.getByText('3')).toBeTruthy();

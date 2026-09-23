@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useWorld, freeId } from '../../../store/world.ts';
 import { STEP } from '../../../words.ts';
 import { CARD_TITLES } from './words.ts';
@@ -55,12 +55,23 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
 
   const broken = cards.filter(card => card.indices.some(i => problems[i])).length;
 
-  const folded = useStepFolds(st => st.folded);
+  const opened = useStepFolds(st => st.opened);
   const toggleFold = useStepFolds(st => st.toggle);
-  const setFolds = useStepFolds(st => st.setMany);
+  const setOpen = useStepFolds(st => st.setOpen);
   const foldKey = (group: (typeof cards)[number]) =>
     `${effect.label ?? ''}|${lane}|${String(group.step.id ?? group.indices[0])}`;
   const keys = cards.map(foldKey);
+  const signature = keys.join('\n');
+  const name = effect.label ?? '';
+  const seen = useRef<{ name: string; keys: string[] } | null>(null);
+  useEffect(() => {
+    const now = signature ? signature.split('\n') : [];
+    const before = seen.current;
+    seen.current = { name, keys: now };
+    if (!before || before.name !== name) return;
+    const fresh = now.filter(key => !before.keys.includes(key));
+    if (fresh.length) setOpen(fresh, true);
+  }, [name, signature, setOpen]);
 
   return (
     <>
@@ -69,8 +80,8 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
         <span className="spacer" />
         {cards.length > 1 ? (
           <>
-            <Button size="sm" variant="ghost" onClick={() => setFolds(keys, true)}>свернуть все</Button>
-            <Button size="sm" variant="ghost" onClick={() => setFolds(keys, false)}>развернуть все</Button>
+            <Button size="sm" variant="ghost" onClick={() => setOpen(keys, false)}>свернуть все</Button>
+            <Button size="sm" variant="ghost" onClick={() => setOpen(keys, true)}>развернуть все</Button>
           </>
         ) : null}
         {broken
@@ -116,7 +127,7 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
             ]}
             problem={problem}
             lane={lane}
-            folded={Boolean(folded[foldKey(group)])}
+            folded={!opened[foldKey(group)]}
             onFold={() => toggleFold(foldKey(group))}
             onMoveLane={onMoveLane ? to => onMoveLane(group.indices, to) : undefined}
             problemAction={donorFix ? (
