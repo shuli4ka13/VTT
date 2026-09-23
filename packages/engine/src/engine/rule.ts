@@ -27,6 +27,8 @@ export interface RuleReport {
   emitted: EmittedEvent[];
 
   desk?: Sheet;
+
+  answers?: { event: string; args: Record<string, unknown> }[];
 }
 
 export interface NestedRun { results: Record<string, unknown>; stopped: StopReason | null }
@@ -177,10 +179,12 @@ export function resolveRule(steps: StepData[], ctx: StepContext): RuleReport {
   };
 
   const emit = (event: EmittedEvent): void => { emitted.push(event); };
+  const answers: { event: string; args: Record<string, unknown> }[] = [];
+  const answer = (call: { event: string; args: Record<string, unknown> }): void => { answers.push(call); };
 
   function runSteps(list: StepData[], results: Record<string, unknown>, within?: string): NestedRun {
     let stopped: StopReason | null = null;
-    const stepCtx: StepContext = { ...ctx, results, read, write, attach, detach, emit, run };
+    const stepCtx: StepContext = { ...ctx, results, read, write, attach, detach, emit, run, answer };
 
     for (const [index, step] of list.entries()) {
       const mod = stepModule(step.type);
@@ -234,6 +238,7 @@ export function resolveRule(steps: StepData[], ctx: StepContext): RuleReport {
   return {
     sheet, changes, effects, removed, results, trace, stopped, emitted,
     ...(deskTouched && ctx.desk && deskValues ? { desk: { ...ctx.desk, values: deskValues } } : {}),
+    ...(answers.length ? { answers } : {}),
   };
 }
 

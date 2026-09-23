@@ -44,6 +44,8 @@ export interface StepContext extends RefContext {
 
   desk?: Sheet | null;
 
+  answer?: (call: { event: string; args: Record<string, unknown> }) => void;
+
   kept?: Record<string, StepData>;
   [k: string]: unknown;
 }

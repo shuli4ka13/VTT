@@ -205,7 +205,7 @@ export function sendReadback(step: Step, system: System, effect: Effect, names?:
   const chosen = (event?.params ?? []).filter(p => p.kind === 'choice' && args[p.key] !== undefined).map(p => word(args[p.key]));
   const tags = [...chosen, ...(Array.isArray(s.tags) ? s.tags.map(word) : [])].filter(Boolean);
   return [
-    seg('Цель получает'), name, amount,
+    seg(s.to === 'sender' ? 'Отправитель в ответ получает' : 'Цель получает'), name, amount,
     ...(tags.length ? [seg(`[${tags.join(', ')}]`)] : []),
     seg('.'),
   ];

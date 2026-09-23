@@ -30,6 +30,7 @@ export function lint(step: StepData) {
 
 export function traceLine(t: any, h: any) {
   const name = typeof h?.eventLabel === 'function' ? h.eventLabel(t.event) : t.event;
+  if (t.to === 'sender') return `отвечает отправителю: зовёт «${name}» у него`;
   const tags = t.tags?.length ? ` [${t.tags.join(', ')}]` : '';
   const mods = t.incoming !== t.amount
     ? ` (отправлено ${t.incoming}, после модификаторов цели ${t.amount})`
@@ -52,6 +53,7 @@ export function pack(step: StepData, ctx: StepContext) {
     tags,
     ...(args ? { args } : {}),
     ...(step.strict ? { strict: true } : {}),
+    ...(step.to === 'sender' ? { to: 'sender' } : {}),
   };
 }
 
@@ -59,6 +61,11 @@ export function resolve(step: StepData, ctx: StepContext) {
   const id = String(step.event);
   const spec = requireCalled(ctx.system, id, who(ctx));
   const args = argsOf(step.args, ctx) ?? {};
+  if (step.to === 'sender') {
+    if (!ctx.answer) throw new EngineError(`${who(ctx)}: ответить отправителю здесь некому — шаг должен стоять в цепочке получателя`);
+    ctx.answer({ event: id, args });
+    return { value: { event: id, answered: true, args }, trace: { event: id, to: 'sender', args }, break: null };
+  }
   const main = amountParamOf(spec);
   const incoming = main && args[main.key] !== undefined
     ? number(args[main.key], `«${main.label ?? main.key}» вызова «${spec.label ?? id}»`)
@@ -85,6 +92,13 @@ export function resolve(step: StepData, ctx: StepContext) {
     trace: { event: id, incoming, amount, tags, ...(received ? { received } : {}) },
     break: step.strict && received ? { reason: 'emit-stopped', ...(note ? { note } : {}) } : null,
   };
+}
+
+export function answerSteps(call: { event: string; args: Record<string, unknown> }): StepData[] {
+  return [{
+    type, event: call.event, amount: null, tags: [],
+    args: Object.fromEntries(Object.entries(call.args).map(([key, value]) => [key, { const: value }])),
+  } as StepData];
 }
 
 function argsOf(raw: unknown, ctx: StepContext): Record<string, unknown> | undefined {

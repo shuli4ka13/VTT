@@ -317,7 +317,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
 
       {mode === 'emit' ? (
         <SendBody step={step} at={applyIndex} context={context} edit={edit} system={system}
-          onOpenEffect={onOpenEffect} />
+          onOpenEffect={onOpenEffect} canAnswer={lane === 'receiver'} />
       ) : null}
 
       {mode === 'apply' ? (

@@ -1,3 +1,4 @@
+import { answerSteps } from '../engine/steps/emit.ts';
 import { newPass } from '../engine/calc.ts';
 import { rolledSoFar } from '../engine/rolled.ts';
 import { packCall, runCall } from './call.ts';
@@ -194,10 +195,15 @@ export function receive(
     ? { sheet: out.sheet, replies: [], spent: [], reactions: [] }
     : fireTriggers(envelope, out, { system, compendium, die, clock });
   const reactions = [...early.reactions, ...fired.reactions];
+  const answered: Envelope[] = (out.answers ?? []).map(call => ({
+    kind: 'effect', effect: call.event, from: sheet.id, to: envelope.from, reply: true, action: call.event,
+    label: system.effects[call.event]?.label || call.event,
+    steps: answerSteps(call),
+  }));
 
   return {
     sheet: fired.sheet,
-    replies: fired.replies,
+    replies: [...answered, ...fired.replies],
     results: out.results,
     ...(out.desk ? { desk: out.desk } : {}),
     report: {

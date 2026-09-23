@@ -18,7 +18,8 @@ function rowsAsOptions(system: System, need: { kind?: string; from?: string }): 
   return (listOf(system, need.from) ?? []).map(row => ({ group, label: row.label, ref: { const: row.value } as SlotRef }));
 }
 
-export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
+export function SendBody({ step, at, context, edit, system, onOpenEffect, canAnswer = false }: {
+  canAnswer?: boolean;
   step: any;
   at: number;
   context: SlotContext;
@@ -45,6 +46,21 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
           onChange={next => edit(at, draft => { loose(draft).event = next; })}
         />
       </Field>
+
+      {step.event && canAnswer ? (
+        <Field
+          label="где выполнить"
+          hint={step.to === 'sender'
+            ? 'Получатель отвечает отправителю: вызванный эффект выполнится на листе отправителя. Так «Вампирское касание» лечит атакующего.'
+            : undefined}
+        >
+          <Select
+            value={step.to === 'sender' ? 'sender' : 'here'}
+            options={[['here', 'у получателя — здесь же'], ['sender', 'у отправителя — ответом']] as const}
+            onChange={next => edit(at, draft => { if (next === 'sender') loose(draft).to = 'sender'; else delete loose(draft).to; })}
+          />
+        </Field>
+      ) : null}
 
       {step.event ? (
         <div className="stack stack--tight call-args">
