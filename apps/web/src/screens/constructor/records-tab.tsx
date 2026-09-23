@@ -364,7 +364,7 @@ function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWi
 
       {params.length ? (
         <div className="stack stack--tight">
-          <span className="field__label">Что отправляем в эффект — его «Что приходит»</span>
+          <span className="field__label">Что отправляем в «{effect?.label || binding.effect}» — его «Что приходит»</span>
           {params.map(param => (
             <div key={param.key} className={`need-fill ${isClosed(param.key) ? 'need-fill--ok' : ''}`}>
               <Field label={param.label ?? param.key}>

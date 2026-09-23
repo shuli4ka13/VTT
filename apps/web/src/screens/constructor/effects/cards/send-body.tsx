@@ -49,7 +49,7 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
       {step.event ? (
         <div className="stack stack--tight call-args">
           <div className="call-args__head">
-            <span className="field__label">Что ему отправляем</span>
+            <span className="field__label">Что отправляем в «{called?.label || String(step.event)}» — его «Что приходит»</span>
             <Button size="sm" variant="ghost" onClick={() => setPeek(true)}>
               {`что будет дальше${meddlersOf(system, String(step.event)).length ? ' · цель может урезать' : ''} →`}
             </Button>

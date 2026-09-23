@@ -187,7 +187,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
 
       {launch.kind === 'auto' ? <LaunchCard id={id} effect={effect} system={system} edit={edit} /> : null}
 
-      {pipeline ? <ParamsEditor effect={effect} system={system} onEdit={edit} called={isCalledEffect(system, effect)} /> : null}
+      {pipeline ? <ParamsEditor id={id} effect={effect} system={system} onEdit={edit} called={isCalledEffect(system, effect)} /> : null}
 
       {pipeline ? (
         <>

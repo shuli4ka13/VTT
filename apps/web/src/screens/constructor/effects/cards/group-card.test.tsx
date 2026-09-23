@@ -192,7 +192,7 @@ describe('GroupCard: изменение как вызов', () => {
     render(<GroupCard group={cards[1]!} position={2} system={eventful} effect={effect}
       earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
     expect(screen.getByText('Зовём эффект')).toBeTruthy();
-    expect(screen.getByText('Что ему отправляем')).toBeTruthy();
+    expect(screen.getByText(/^Что отправляем в «/)).toBeTruthy();
     expect(screen.getByText('число')).toBeTruthy();
     expect(screen.getByText('метки')).toBeTruthy();
   });
