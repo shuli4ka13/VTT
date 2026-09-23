@@ -94,7 +94,6 @@ export function RecordsTab() {
           ),
       }}
       main={{
-        head: active ? 'тип записи' : undefined,
         body: active && activeKind
           ? <KindEditor id={activeKind} kind={active} system={system} />
           : <Empty

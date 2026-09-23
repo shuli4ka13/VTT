@@ -8,17 +8,14 @@ export interface Pane {
   body: ReactNode;
 }
 
-export function Columns({ left, main, right }: { left?: Pane; main: Pane; right?: Pane }) {
+export function Columns({ left, main, right }: { left?: Pane; main: { body: ReactNode }; right?: Pane }) {
   const shape = left && right ? '' : left || right ? 'columns--two' : 'columns--one';
 
   return (
     <div className={`columns ${shape}`}>
       {left ? <Column kind="side" pane={left} /> : null}
       <div className="column column--main">
-        <div className="column__inner">
-          {main.head ? <ColumnHead head={main.head} tools={main.tools} /> : null}
-          {main.body}
-        </div>
+        <div className="column__inner">{main.body}</div>
       </div>
       {right ? <Column kind="right" pane={right} /> : null}
     </div>

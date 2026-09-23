@@ -74,7 +74,6 @@ export function RulesTab() {
         ),
       }}
       main={{
-        head: 'Правила системы',
         body: (
           <>
             {section === 'dice' ? <DiceSection system={system} editSystem={editSystem} usage={usage} /> : null}

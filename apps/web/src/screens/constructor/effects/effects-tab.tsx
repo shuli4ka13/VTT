@@ -95,7 +95,6 @@ export function EffectsTab() {
         ),
       }}
       main={{
-        head: active ? 'Эффект' : undefined,
         body: active && activeId
           ? <EffectEditor id={activeId} effect={active} system={system} />
           : <Empty

@@ -71,7 +71,6 @@ export function CompendiumScreen() {
           ),
       }}
       main={{
-        head: active ? 'Запись' : undefined,
         body: active
           ? <RecordEditor record={active.record} system={system} compendium={compendium} />
           : <Empty

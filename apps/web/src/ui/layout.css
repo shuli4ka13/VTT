@@ -123,11 +123,14 @@
 
 .column__inner {
   width: 100%;
-  max-width: 880px;
   display: flex;
   flex-direction: column;
   gap: var(--s-5);
 }
+.column__inner > .card:not(.card--check, .card--change, .card--number, .card--table, .card--pick, .card--on, .card--bad) {
+  background: transparent; border: 0; border-radius: 0; padding: 0;
+}
+.column__inner > .card + .card { border-top: 1px solid var(--border); padding-top: var(--s-5); }
 
 .columns--one .column__inner { margin-inline: auto; }
 

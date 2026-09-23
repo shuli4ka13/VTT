@@ -86,7 +86,6 @@ export function SheetTab() {
           ),
       }}
       main={{
-        head: active ? 'Поле' : activeGroup ? 'Блок' : undefined,
         body: active
           ? <FieldEditor field={active} system={system} />
           : activeGroup
