@@ -74,7 +74,9 @@ export function RecordsTab() {
           : (
             <List>
               <BlockBranches
+                list="records"
                 nodes={tree}
+                isActive={([key]) => key === activeKind}
                 addTo={addTo}
                 lineage={{
                   keyOf: ([key]) => key,

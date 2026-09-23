@@ -2,7 +2,8 @@ import { MultiChoice } from '../../ui/multi-choice.tsx';
 import { TABS } from '../../words.ts';
 import { listOf } from '@vtt/engine/model/lists';
 import { useWorld, freeId, randomTag } from '../../store/world.ts';
-import { Columns, List, ListItem, ListGroup } from '../../ui/layout.tsx';
+import { Columns, List, ListItem } from '../../ui/layout.tsx';
+import { blockTree, BlockBranches } from '../constructor/block-tree.tsx';
 import {
   Card, CardHead, Field, Input, Select, Empty, Verdict, DangerButton, NumInput, LabelInput, Chip,
 } from '../../ui/primitives.tsx';
@@ -36,14 +37,7 @@ export function CompendiumScreen() {
     pick({ activeRecordId: id });
   };
 
-  const groups = new Map<string, typeof all>();
-  for (const entry of all) {
-    const kind = system.records?.[String(entry.record.rk)];
-    const group = kind?.group ?? 'Без типа';
-    const list = groups.get(group);
-    if (list) list.push(entry);
-    else groups.set(group, [entry]);
-  }
+  const tree = blockTree(system, all, entry => system.records?.[String(entry.record.rk)]?.group);
 
   return (
     <Columns
@@ -53,20 +47,20 @@ export function CompendiumScreen() {
           ? <Empty title="Компендиум пуст" hint="Заведите запись, выбрав тип справа." />
           : (
             <List>
-              {[...groups].map(([group, list]) => (
-                <div key={group}>
-                  <ListGroup>{group}</ListGroup>
-                  {list.map(({ record }) => (
-                    <ListItem
-                      key={record.id}
-                      name={record.label ?? record.id}
-                      meta={system.records?.[String(record.rk)]?.label ?? 'тип неизвестен'}
-                      active={record.id === activeId}
-                      onClick={() => pick({ activeRecordId: record.id })}
-                    />
-                  ))}
-                </div>
-              ))}
+              <BlockBranches
+                list="book"
+                nodes={tree}
+                isActive={({ record }) => record.id === activeId}
+                render={({ record }) => (
+                  <ListItem
+                    key={record.id}
+                    name={record.label ?? record.id}
+                    meta={system.records?.[String(record.rk)]?.label ?? 'тип неизвестен'}
+                    active={record.id === activeId}
+                    onClick={() => pick({ activeRecordId: record.id })}
+                  />
+                )}
+              />
             </List>
           ),
       }}

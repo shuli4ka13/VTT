@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { ListGroup } from '../../ui/layout.tsx';
 import { Button } from '../../ui/primitives.tsx';
+import { useOpened } from '../../store/opened.ts';
 import { groupChain } from './groups.ts';
 import { NO_BLOCK, blockNames } from '@vtt/engine/model/blocks';
 import type { System } from '@vtt/schema';
@@ -73,7 +74,14 @@ function byLineage<T>(items: T[], line: Lineage<T>): { item: T; depth: number }[
   return out;
 }
 
-export function BlockBranches<T>({ nodes, depth = 0, onPickBlock, activeBlock, render, addTo, lineage }: {
+const holds = <T,>(node: BlockNode<T>, active: (item: T) => boolean): boolean =>
+  node.items.some(active) || node.children.some(child => holds(child, active));
+
+const count = <T,>(node: BlockNode<T>): number =>
+  node.items.length + node.children.reduce((sum, child) => sum + count(child), 0);
+
+export function BlockBranches<T>({ list, nodes, depth = 0, onPickBlock, activeBlock, render, addTo, lineage, isActive }: {
+  list: string;
   nodes: BlockNode<T>[];
   depth?: number;
   activeBlock?: string | null;
@@ -81,42 +89,62 @@ export function BlockBranches<T>({ nodes, depth = 0, onPickBlock, activeBlock, r
   render: (item: T) => ReactNode;
   addTo?: (name: string) => void;
   lineage?: Lineage<T>;
+  isActive?: (item: T) => boolean;
 }) {
+  const opened = useOpened(s => s.opened);
+  const toggle = useOpened(s => s.toggle);
   return (
     <>
-      {nodes.map(node => (
-        <div key={node.name} className={depth ? 'list__nest' : undefined}>
-          <ListGroup>
-            {onPickBlock ? (
-              <button
-                type="button"
-                className={`list__group-pick${node.name === activeBlock ? ' list__group-pick--active' : ''}`}
-                title="настройки блока"
-                onClick={() => onPickBlock(node.name)}
-              >{node.name}</button>
-            ) : node.name}
-          </ListGroup>
+      {nodes.map(node => {
+        const key = `list|${list}|${node.name}`;
+        const open = Boolean(opened[key]) || (isActive ? holds(node, isActive) : false) || node.name === activeBlock;
+        return (
+          <div key={node.name} className={depth ? 'list__nest' : undefined}>
+            <ListGroup>
+              <span className="list__group-head">
+                <button
+                  type="button" className="list__fold" aria-expanded={open}
+                  aria-label={open ? `свернуть «${node.name}»` : `развернуть «${node.name}»`}
+                  onClick={() => toggle(key)}
+                >{open ? '▾' : '▸'}</button>
+                {onPickBlock ? (
+                  <button
+                    type="button"
+                    className={`list__group-pick${node.name === activeBlock ? ' list__group-pick--active' : ''}`}
+                    title="настройки блока"
+                    onClick={() => onPickBlock(node.name)}
+                  >{node.name}</button>
+                ) : <button type="button" className="list__group-pick" onClick={() => toggle(key)}>{node.name}</button>}
+                {open ? null : <span className="list__group-count">{count(node)}</span>}
+              </span>
+            </ListGroup>
 
-          {lineage
-            ? byLineage(node.items, lineage).map(({ item, depth: at }) => (
-              at
-                ? <div key={lineage.keyOf(item)} className="list__nest">{render(item)}</div>
-                : render(item)
-            ))
-            : node.items.map(render)}
+            {open ? (
+              <>
+                {lineage
+                  ? byLineage(node.items, lineage).map(({ item, depth: at }) => (
+                    at
+                      ? <div key={lineage.keyOf(item)} className="list__nest">{render(item)}</div>
+                      : render(item)
+                  ))
+                  : node.items.map(render)}
 
-          {addTo ? (
-            <Button size="sm" variant="ghost" wide onClick={() => addTo(node.name)}>
-              + в «{node.name}»
-            </Button>
-          ) : null}
+                {addTo ? (
+                  <Button size="sm" variant="ghost" wide onClick={() => addTo(node.name)}>
+                    + в «{node.name}»
+                  </Button>
+                ) : null}
 
-          <BlockBranches
-            nodes={node.children} depth={depth + 1} activeBlock={activeBlock}
-            onPickBlock={onPickBlock} render={render} addTo={addTo} lineage={lineage}
-          />
-        </div>
-      ))}
+                <BlockBranches
+                  list={list} nodes={node.children} depth={depth + 1} activeBlock={activeBlock}
+                  onPickBlock={onPickBlock} render={render} addTo={addTo} lineage={lineage}
+                  {...(isActive ? { isActive } : {})}
+                />
+              </>
+            ) : null}
+          </div>
+        );
+      })}
     </>
   );
 }

@@ -67,7 +67,9 @@ export function SheetTab() {
           : (
             <List>
               <BlockBranches
+                list="sheet"
                 nodes={tree}
+                isActive={field => field.tag === activeTag}
                 activeBlock={active ? null : activeGroup}
                 onPickBlock={name => pick({ activeGroupName: name, activeFieldTag: null })}
                 addTo={addField}

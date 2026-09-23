@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-const KEY = 'vtt.step-opened';
+const KEY = 'vtt.opened';
 
 const load = (): Record<string, true> => {
   try { return JSON.parse(localStorage.getItem(KEY) ?? '{}') as Record<string, true>; } catch { return {}; }
@@ -11,13 +11,13 @@ const save = (opened: Record<string, true>): Record<string, true> => {
   return opened;
 };
 
-export interface StepFoldsState {
+export interface OpenedState {
   opened: Record<string, true>;
   toggle: (key: string) => void;
   setOpen: (keys: string[], open: boolean) => void;
 }
 
-export const useStepFolds = create<StepFoldsState>()((set, get) => ({
+export const useOpened = create<OpenedState>()((set, get) => ({
   opened: load(),
   toggle: key => {
     const next = { ...get().opened };

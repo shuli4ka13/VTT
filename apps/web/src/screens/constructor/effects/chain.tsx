@@ -6,7 +6,7 @@ import { Button, Verdict } from '../../../ui/primitives.tsx';
 import { problemOf } from '../step-card.tsx';
 import { groupSteps, moveGroup, removeSteps, BRICKS } from '../cards.ts';
 import { GroupCard } from './cards/group-card.tsx';
-import { useStepFolds } from '../../../store/step-folds.ts';
+import { useOpened } from '../../../store/opened.ts';
 import { findDonorBlock, copyDonorBlock } from '../donors.tsx';
 import type { System, Effect, Step } from '@vtt/schema';
 
@@ -55,11 +55,11 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
 
   const broken = cards.filter(card => card.indices.some(i => problems[i])).length;
 
-  const opened = useStepFolds(st => st.opened);
-  const toggleFold = useStepFolds(st => st.toggle);
-  const setOpen = useStepFolds(st => st.setOpen);
+  const opened = useOpened(st => st.opened);
+  const toggleFold = useOpened(st => st.toggle);
+  const setOpen = useOpened(st => st.setOpen);
   const foldKey = (group: (typeof cards)[number]) =>
-    `${effect.label ?? ''}|${lane}|${String(group.step.id ?? group.indices[0])}`;
+    `step|${effect.label ?? ''}|${lane}|${String(group.step.id ?? group.indices[0])}`;
   const keys = cards.map(foldKey);
   const signature = keys.join('\n');
   const name = effect.label ?? '';

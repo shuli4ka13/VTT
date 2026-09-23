@@ -59,7 +59,9 @@ export function EffectsTab() {
               : (
                 <List>
                   <BlockBranches
+                    list="effects"
                     nodes={tree}
+                    isActive={([id]) => id === activeId}
                     addTo={addTo}
                     lineage={{
                       keyOf: ([id]) => id,
