@@ -248,17 +248,27 @@ export function Verdict({ tone, action, children }: {
   );
 }
 
-export function Fold({ title, count, summary, open, children }: {
+export function Fold({ title, count, summary, open, children, rename }: {
   title: ReactNode;
   count?: number;
   summary?: ReactNode;
   open?: boolean;
   children: ReactNode;
+  rename?: { value: string; placeholder?: string; onCommit: (next: string) => void };
 }) {
+  const [shown, setShown] = useState(Boolean(open));
   return (
-    <details className="fold" open={open}>
+    <details className="fold" open={open} onToggle={e => setShown((e.currentTarget as HTMLDetailsElement).open)}>
       <summary className="fold__head">
-        <span className="fold__title">{title}</span>
+        {rename && shown ? (
+          <span
+            className="fold__title fold__title--edit"
+            onClick={e => e.preventDefault()}
+            onKeyUp={e => { if (e.key === ' ') e.preventDefault(); }}
+          >
+            <LabelInput value={rename.value} onCommit={rename.onCommit} {...(rename.placeholder ? { placeholder: rename.placeholder } : {})} />
+          </span>
+        ) : <span className="fold__title">{title}</span>}
         {summary ? <span className="summary">{summary}</span> : null}
         {count === undefined ? null : <span className="fold__count num">{count}</span>}
       </summary>

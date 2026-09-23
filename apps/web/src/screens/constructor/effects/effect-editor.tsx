@@ -1,6 +1,7 @@
 import { useWorld } from '../../../store/world.ts';
 import { newTrigger } from '../factory.ts';
-import { Card, CardHead, Field, Input, Select, Segmented, DangerButton, LabelInput } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Field, Input, Select, DangerButton, LabelInput } from '../../../ui/primitives.tsx';
+import { FieldRow } from '../../../ui/field-row.tsx';
 import { ModifiersEditor } from '../modifiers.tsx';
 import { LAUNCH_KINDS, launchHint } from './words.ts';
 import { LaunchCard } from './launch-card.tsx';
@@ -85,94 +86,84 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
           }
         />
 
-        <Field label="Как запускается" hint={launchHint(launch.kind)}>
-          <Segmented
-            value={launch.kind}
-            options={LAUNCH_KINDS}
-            onChange={next => edit(draft => {
-              const activation = activationFor({ ...launchOf(draft), kind: next });
-              draft.activation = activation;
-              if (next === 'passive') draft.modifiers ??= [];
-              else draft.steps ??= [];
-              if (next === 'auto') draft.trigger ??= newTrigger(system, activation);
-            })}
-          />
-        </Field>
-
-        <Extras
-          items={[
+        <FieldRow
+          id="effect-head"
+          fields={[
             {
-              key: 'group', label: 'блок', on: !!effect.group,
-              add: () => {}, drop: () => edit(draft => { delete draft.group; }),
+              key: 'launch', label: 'Как запускается', width: 190, hint: launchHint(launch.kind),
               node: (
-                <Field label="Блок" hint="Тот же, что у полей листа и типов записей.">
-                  <BlockPick
-                    system={system} value={effect.group}
-                    onChange={next => edit(draft => {
-                      if (next) draft.group = next; else delete draft.group;
-                    })}
-                  />
-                </Field>
+                <Select
+                  value={launch.kind}
+                  options={LAUNCH_KINDS.map(k => [k.key, k.label] as const)}
+                  onChange={next => edit(draft => {
+                    const activation = activationFor({ ...launchOf(draft), kind: next });
+                    draft.activation = activation;
+                    if (next === 'passive') draft.modifiers ??= [];
+                    else draft.steps ??= [];
+                    if (next === 'auto') draft.trigger ??= newTrigger(system, activation);
+                  })}
+                />
               ),
             },
             {
-              key: 'description', label: 'описание для игрока', on: !!effect.description,
-              add: () => {}, drop: () => edit(draft => { delete draft.description; }),
+              key: 'group', label: 'Блок', width: 170, hint: 'Тот же, что у полей листа и типов записей',
               node: (
-                <Field label="Описание для игрока" hint="Текст на листе. На расчёт не влияет.">
-                  <Input
-                    value={effect.description ?? ''}
-                    placeholder="например: бьёшь оружием ближнего боя"
-                    onChange={next => edit(draft => { draft.description = next || undefined; })}
-                  />
-                </Field>
+                <BlockPick
+                  system={system} value={effect.group}
+                  onChange={next => edit(draft => { if (next) draft.group = next; else delete draft.group; })}
+                />
               ),
             },
             ...(launch.kind === 'manual' || launch.ask ? [{
-              key: 'cost', label: 'занимает', on: !!effect.cost,
-              add: () => {}, drop: () => edit(draft => { delete draft.cost; }),
+              key: 'cost', label: 'Занимает', width: 150, hint: 'Действие, бонусное, реакция — чем это оплачивается в свой ход',
               node: (
-                <Field label="Занимает" hint="Действие, бонусное, реакция — чем это оплачивается в свой ход.">
-                  <Select
-                    value={effect.cost ?? ''}
-                    options={[['', '— не задано —'],
-                      ...Object.entries(system.action_types ?? {}).map(([key, t]) => [key, t.label] as const)] as never}
-                    onChange={next => edit(draft => { draft.cost = next || undefined; })}
-                  />
-                </Field>
+                <Select
+                  value={effect.cost ?? ''}
+                  options={[['', '—'],
+                    ...Object.entries(system.action_types ?? {}).map(([key, t]) => [key, t.label] as const)] as never}
+                  onChange={next => edit(draft => { draft.cost = next || undefined; })}
+                />
               ),
             }] : []),
-            ...(launch.kind !== 'manual' ? [{
-              key: 'duration', label: 'сколько висит', on: !!effect.duration || !!effect.bond,
-              add: () => edit(draft => { draft.duration = { kind: 'temporary' }; }),
-              drop: () => edit(draft => { delete draft.duration; delete draft.bond; delete draft.stacking; }),
-              node: <Lifetime effect={effect} system={system} id={id} edit={edit} />,
-            }] : []),
             {
-              key: 'extends', label: 'на основе', on: !!effect.extends,
-              add: () => {}, drop: () => edit(draft => { delete draft.extends; }),
+              key: 'extends', label: 'На основе', width: 170,
+              hint: effect.extends && system.effects[effect.extends]
+                ? fromBase(system.effects[effect.extends]!)
+                : 'Возьмёт у основы её входы, стоимость и шаги — они пойдут первыми',
               node: (
-                <Field
-                  label="На основе"
-                  hint={effect.extends && system.effects[effect.extends]
-                    ? fromBase(system.effects[effect.extends]!)
-                    : 'Возьмёт у основы её потребности, стоимость и шаги — они пойдут первыми.'}
-                >
-                  <Select
-                    value={effect.extends ?? ''}
-                    options={[['', '— сам по себе —'],
-                      ...Object.entries(system.effects)
-                        .filter(([key]) => key !== id)
-                        .map(([key, other]) => [key, other.label ?? key] as const)] as never}
-                    onChange={next => edit(draft => {
-                      if (next) draft.extends = next; else delete draft.extends;
-                    })}
-                  />
-                </Field>
+                <Select
+                  value={effect.extends ?? ''}
+                  options={[['', '— сам по себе —'],
+                    ...Object.entries(system.effects)
+                      .filter(([key]) => key !== id)
+                      .map(([key, other]) => [key, other.label ?? key] as const)] as never}
+                  onChange={next => edit(draft => { if (next) draft.extends = next; else delete draft.extends; })}
+                />
+              ),
+            },
+            {
+              key: 'description', label: 'Описание для игрока', width: 320, hint: 'Текст на листе. На расчёт не влияет',
+              node: (
+                <Input
+                  value={effect.description ?? ''}
+                  placeholder="например: бьёшь оружием ближнего боя"
+                  onChange={next => edit(draft => { draft.description = next || undefined; })}
+                />
               ),
             },
           ]}
         />
+
+        {launch.kind !== 'manual' ? (
+          <Extras
+            items={[{
+              key: 'duration', label: 'сколько висит', on: !!effect.duration || !!effect.bond,
+              add: () => edit(draft => { draft.duration = { kind: 'temporary' }; }),
+              drop: () => edit(draft => { delete draft.duration; delete draft.bond; delete draft.stacking; }),
+              node: <Lifetime effect={effect} system={system} id={id} edit={edit} />,
+            }]}
+          />
+        ) : null}
       </Card>
 
       {launch.kind === 'auto' ? <LaunchCard id={id} effect={effect} system={system} edit={edit} /> : null}

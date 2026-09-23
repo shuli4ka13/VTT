@@ -459,7 +459,7 @@ describe('Словари: кости, виды бросков, таблицы, �
     fireEvent.change(tail, { target: { value: ' + 3' } });
     expect(useWorld.getState().system.tables!.wield!.rows![0]!.cells!.attack).toBe('@сила + 3');
 
-    const grid = document.querySelector('.sheet-grid') as HTMLElement;
+    const grid = screen.getByLabelText('ширина колонки «Бонус атаки»').closest('.sheet-grid') as HTMLElement;
     const before = grid.style.gridTemplateColumns;
     act(() => {
       screen.getByLabelText('ширина колонки «Бонус атаки»').dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, clientX: 100 }));

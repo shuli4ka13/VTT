@@ -28,7 +28,8 @@ describe('GroupCard', () => {
     const edits: Array<(draft: Step) => void> = [];
     render(<GroupCard group={group} position={1} system={system} effect={effect}
       earlier={[]} problem={null} edit={(_, change) => edits.push(change)} onDelete={() => {}} />);
-    fireEvent.click(screen.getByText('без броска'));
+    const mode = [...document.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'plain'))!;
+    fireEvent.change(mode, { target: { value: 'plain' } });
     const draft = structuredClone(steps[0]!);
     edits.forEach(change => change(draft));
     expect(draft.type).toBe('compare');
@@ -243,6 +244,11 @@ describe('GroupCard: величина из записи', () => {
   });
 });
 
+const rollCell = (): HTMLElement => {
+  const heads = [...document.querySelectorAll('.sheet-grid__title')].map(h => h.textContent);
+  return document.querySelectorAll('.field-row__cell')[heads.indexOf('Бросок')] as HTMLElement;
+};
+
 describe('GroupCard: строка броска', () => {
   const rollSteps = () => [{
     type: 'threshold', successWhen: 'atLeast', continueOn: 'success',
@@ -253,7 +259,7 @@ describe('GroupCard: строка броска', () => {
     const group = groupSteps(rollSteps())[0]!;
     render(<GroupCard group={group} position={1} system={system} effect={effect}
       earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
-    const line = screen.getByText('бросок').closest('label')!;
+    const line = rollCell();
 
     expect(line.textContent).toContain('Класс брони');
     const head = line.querySelector('.chips__text') as HTMLInputElement;
@@ -273,7 +279,7 @@ describe('GroupCard: строка броска', () => {
     const group = groupSteps(steps)[0]!;
     render(<GroupCard group={group} position={1} system={system} effect={effect}
       earlier={[]} problem={null} edit={(_, change) => change(step as never)} onDelete={() => {}} />);
-    const line = screen.getByText('бросок').closest('label')!;
+    const line = rollCell();
 
     const head = line.querySelector('.chips__text') as HTMLInputElement;
     fireEvent.change(head, { target: { value: '3d15 + ' } });
@@ -287,7 +293,7 @@ describe('GroupCard: строка броска', () => {
     const group = groupSteps(steps)[0]!;
     render(<GroupCard group={group} position={1} system={system} effect={effect}
       earlier={[]} problem={null} edit={(_, change) => change(step as never)} onDelete={() => {}} />);
-    const line = screen.getByText('бросок').closest('label')!;
+    const line = rollCell();
     const tail = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;
     fireEvent.change(tail, { target: { value: '@ерунда' } });
     fireEvent.keyDown(tail, { key: 'Enter' });

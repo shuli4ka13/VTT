@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { Field } from '../../../../ui/primitives.tsx';
 import { parseRollExpr, formatRollExpr, notationOf } from '../../roll-expr.ts';
 import { compile } from '@vtt/engine/formula';
 import { FormulaField } from '../../../../ui/formula-field.tsx';
@@ -41,7 +40,7 @@ export function RollExprInput({ step, context, edit }: {
   };
 
   return (
-    <Field label="бросок" error={trouble}>
+    <>
       <FormulaField
         value={shown}
         system={context.system}
@@ -65,7 +64,8 @@ export function RollExprInput({ step, context, edit }: {
         onCommit={commit}
         onCancel={() => { setDraft(null); setTrouble(null); setPicked(null); }}
       />
-    </Field>
+      {trouble ? <span className="field__error">{trouble}</span> : null}
+    </>
   );
 }
 

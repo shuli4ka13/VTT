@@ -1,6 +1,7 @@
 import type { System } from '@vtt/schema';
-import { Field, Segmented, Select } from '../../../../ui/primitives.tsx';
-import { Extras } from './extras.tsx';
+import { Select } from '../../../../ui/primitives.tsx';
+import { FieldRow } from '../../../../ui/field-row.tsx';
+import type { RowField } from '../../../../ui/field-row.tsx';
 import { SlotInput } from '../../slot-input.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
@@ -25,38 +26,132 @@ export function CheckBody({ step, context, edit, system }: {
   const otherSide = step.side === 'target' ? 'отправителя' : 'получателя';
   const tables = Object.entries(system.tables ?? {});
 
-  return (
-    <>
-      {}
-      <Segmented
-        value={mode}
-        options={[{ key: 'roll', label: 'броском' }, { key: 'plain', label: 'без броска' }]}
-        onChange={next => edit(0, draft => {
-          const d = loose(draft);
-          if (next === 'roll') {
-            draft.type = 'threshold';
-            d.roll ??= { die: firstDie(system) ? { constant: firstDie(system) } : undefined, check: null };
-            d.successWhen ??= 'atLeast'; d.continueOn ??= 'success';
-          } else {
-            draft.type = 'compare';
-            d.breakIf ??= 'less';
-          }
-        })}
-      />
+  const setMode = (next: string) => edit(0, draft => {
+    const d = loose(draft);
+    if (next === 'roll') {
+      draft.type = 'threshold';
+      d.roll ??= { die: firstDie(system) ? { constant: firstDie(system) } : undefined, check: null };
+      d.successWhen ??= 'atLeast'; d.continueOn ??= 'success';
+    } else {
+      draft.type = 'compare';
+      d.breakIf ??= 'less';
+    }
+  });
 
-      {}
-      {mode === 'roll' ? (
-        <div className="row">
-          <RollExprInput step={step} context={context} edit={edit} />
-          <Field label="успех">
+  const modeField: RowField = {
+    key: 'mode', label: 'Проверка', width: 130,
+    node: <Select value={mode} options={[['roll', 'броском'], ['plain', 'без броска']] as const} onChange={setMode} />,
+  };
+
+  if (mode === 'plain') {
+    return (
+      <FieldRow
+        id="check-plain"
+        fields={[
+          modeField,
+          {
+            key: 'value', label: 'Что сравниваем', width: 220,
+            node: (
+              <SlotInput
+                where="сравнение · что сравниваем"
+                value={step.value} context={context} allow={['ref']}
+                onChange={next => edit(0, draft => { loose(draft).value = next ?? undefined; })}
+              />
+            ),
+          },
+          {
+            key: 'breakIf', label: 'Обрыв, если', width: 200,
+            node: (
+              <Select
+                value={String(step.breakIf ?? 'less')}
+                options={[['less', '< меньше правого'], ['atMost', '≤ не больше правого'],
+                  ['never', 'обрыва нет — разница идёт дальше']] as const}
+                onChange={next => edit(0, draft => { loose(draft).breakIf = next; })}
+              />
+            ),
+          },
+          {
+            key: 'versus', label: 'Против', width: 220,
+            node: (
+              <SlotInput
+                where="проверка · против"
+                value={step.versus} context={context} allow={['tag', 'expr', 'const', 'param', 'ref']} side="target"
+                onChange={next => edit(0, draft => { loose(draft).versus = next ?? undefined; })}
+              />
+            ),
+          },
+        ]}
+      />
+    );
+  }
+
+  const versusFields: RowField[] = opposed ? [
+    {
+      key: 'otherDie', label: 'Кость второй стороны', width: 150,
+      node: (
+        <Select
+          value={String(opposed.die?.constant ?? '')}
+          options={dieOptions(system) as never}
+          onChange={next => edit(0, draft => { loose(draft).versus.roll.die = { constant: next }; })}
+        />
+      ),
+    },
+    {
+      key: 'otherBonus', label: 'Прибавка второй стороны', width: 200,
+      node: (
+        <SlotInput
+          where="проверка · прибавка второй стороны"
+          value={opposed.bonus} context={context} allow={['expr', 'const', 'param']}
+          onChange={next => edit(0, draft => {
+            const roll = loose(draft).versus.roll;
+            if (next) roll.bonus = next; else delete roll.bonus;
+          })}
+        />
+      ),
+    },
+    {
+      key: 'otherCheck', label: 'Какой бросок у второй стороны', width: 190,
+      hint: 'Вид броска из словаря — чтобы её правила («преимущество на защиту») знали, куда целиться',
+      node: (
+        <Select
+          value={String(opposed.check ?? '')}
+          options={[['', '— просто бросок —'], ...(system.rolls ?? []).map(r => [r.tag, r.label] as const)] as never}
+          onChange={next => edit(0, draft => { loose(draft).versus.roll.check = next || null; })}
+        />
+      ),
+    },
+  ] : [
+    {
+      key: 'versus', label: 'Число', width: 190,
+      node: (
+        <SlotInput
+          where="проверка · число"
+          value={step.versus} context={context} allow={['tag', 'expr', 'const', 'param', 'ref']} side="target"
+          onChange={next => edit(0, draft => { loose(draft).versus = next ?? undefined; })}
+        />
+      ),
+    },
+  ];
+
+  return (
+    <FieldRow
+      id="check-roll"
+      fields={[
+        modeField,
+        { key: 'roll', label: 'Бросок', width: 220, node: <RollExprInput step={step} context={context} edit={edit} /> },
+        {
+          key: 'successWhen', label: 'Успех', width: 80,
+          node: (
             <Select
               value={String(step.successWhen ?? 'atLeast')}
-              options={[['atLeast', '≥'], ['notOver', '≤'],
-                ['over', '>'], ['under', '<'], ['equals', '=']] as const}
+              options={[['atLeast', '≥'], ['notOver', '≤'], ['over', '>'], ['under', '<'], ['equals', '=']] as const}
               onChange={next => edit(0, draft => { loose(draft).successWhen = next; })}
             />
-          </Field>
-          <Field label="против">
+          ),
+        },
+        {
+          key: 'against', label: 'Против', width: 150,
+          node: (
             <Select
               value={opposed ? 'roll' : 'value'}
               options={[['value', 'числа'], ['roll', `встречного броска ${otherSide}`]] as const}
@@ -67,156 +162,67 @@ export function CheckBody({ step, context, edit, system }: {
                   : undefined;
               })}
             />
-          </Field>
-          {opposed ? (
-            <>
-              <Field label="кость второй стороны">
-                <Select
-                  value={String(opposed.die?.constant ?? '')}
-                  options={dieOptions(system) as never}
-                  onChange={next => edit(0, draft => { loose(draft).versus.roll.die = { constant: next }; })}
-                />
-              </Field>
-              <Field label="прибавка второй стороны">
-                <SlotInput
-                  where="проверка · прибавка второй стороны"
-                  value={opposed.bonus} context={context} allow={['expr', 'const', 'param']}
-                  onChange={next => edit(0, draft => {
-                    const roll = loose(draft).versus.roll;
-                    if (next) roll.bonus = next; else delete roll.bonus;
-                  })}
-                />
-              </Field>
-              <Field label="какой это бросок у второй стороны" hint="Вид броска из словаря — чтобы её правила («преимущество на защиту») знали, куда целиться.">
-                <Select
-                  value={String(opposed.check ?? '')}
-                  options={[['', '— просто бросок —'], ...(system.rolls ?? []).map(r => [r.tag, r.label] as const)] as never}
-                  onChange={next => edit(0, draft => { loose(draft).versus.roll.check = next || null; })}
-                />
-              </Field>
-            </>
-          ) : (
-            <Field label="число">
-              <SlotInput
-                where="проверка · число"
-                value={step.versus} context={context} allow={['tag', 'expr', 'const', 'param', 'ref']} side="target"
-                onChange={next => edit(0, draft => { loose(draft).versus = next ?? undefined; })}
-              />
-            </Field>
-          )}
-        </div>
-      ) : (
-        <div className="row">
-          <Field label="что сравниваем">
-            <SlotInput
-              where="сравнение · что сравниваем"
-              value={step.value} context={context} allow={['ref']}
-              onChange={next => edit(0, draft => { loose(draft).value = next ?? undefined; })}
-            />
-          </Field>
-          <Field label="обрыв, если">
+          ),
+        },
+        ...versusFields,
+        {
+          key: 'side', label: 'Кто бросает', width: 140,
+          node: (
             <Select
-              value={String(step.breakIf ?? 'less')}
-              options={[['less', '< меньше правого'], ['atMost', '≤ не больше правого'],
-                ['never', 'обрыва нет — разница идёт дальше']] as const}
-              onChange={next => edit(0, draft => { loose(draft).breakIf = next; })}
+              value={String(step.side ?? 'source')}
+              options={[['source', 'отправитель'], ['target', 'получатель']] as const}
+              onChange={next => edit(0, draft => { const d = loose(draft); if (next === 'target') d.side = 'target'; else delete d.side; })}
             />
-          </Field>
-          <Field label="против">
-            <SlotInput
-              where="проверка · против"
-              value={step.versus} context={context} allow={['tag', 'expr', 'const', 'param', 'ref']} side="target"
-              onChange={next => edit(0, draft => { loose(draft).versus = next ?? undefined; })}
+          ),
+        },
+        {
+          key: 'continueOn', label: 'Дальше при', width: 140,
+          hint: '«всегда» — дальше решают условия на шагах',
+          node: (
+            <Select
+              value={String(step.continueOn ?? 'success')}
+              options={[['success', 'успехе'], ['fail', 'провале'], ['always', 'всегда']] as const}
+              onChange={next => edit(0, draft => { loose(draft).continueOn = next; })}
             />
-          </Field>
-        </div>
-      )}
-
-      {mode === 'roll' ? (
-        <Extras
-          items={[
-            {
-              key: 'side', label: 'кто бросает', on: step.side !== undefined,
-              add: () => edit(0, draft => { loose(draft).side = 'target'; }),
-              drop: () => edit(0, draft => { delete loose(draft).side; }),
-              node: (
-                <Field label="кто бросает">
-                  <Select
-                    value={String(step.side ?? 'source')}
-                    options={[['source', 'отправитель'], ['target', 'получатель']] as const}
-                    onChange={next => edit(0, draft => {
-                      const d = loose(draft);
-                      if (next === 'target') d.side = 'target'; else delete d.side;
-                    })}
-                  />
-                </Field>
-              ),
-            },
-            {
-              key: 'continueOn', label: 'дальше при', on: (step.continueOn ?? 'success') !== 'success',
-              add: () => edit(0, draft => { loose(draft).continueOn = 'fail'; }),
-              drop: () => edit(0, draft => { loose(draft).continueOn = 'success'; }),
-              node: (
-                <Field label="дальше при">
-                  <Select
-                    value={String(step.continueOn ?? 'success')}
-                    options={[['success', 'успехе'], ['fail', 'провале'],
-                      ['always', 'всегда — дальше решают условия на шагах']] as const}
-                    onChange={next => edit(0, draft => { loose(draft).continueOn = next; })}
-                  />
-                </Field>
-              ),
-            },
-            {
-              key: 'check', label: 'какой это бросок', on: !!step.roll?.check,
-              add: () => edit(0, draft => {
-                const first = (system.rolls ?? [])[0]?.tag;
-                if (first) (loose(draft).roll ??= {}).check = first;
-              }),
-              drop: () => edit(0, draft => { (loose(draft).roll ??= {}).check = null; }),
-              node: (
-                <Field label="какой это бросок" hint="Вид броска из словаря — чтобы правило «преимущество на атаки» знало, куда целиться.">
-                  <Select
-                    value={String(step.roll?.check ?? '')}
-                    options={[['', '— просто бросок: только общие правки —'],
-                      ...(context.system.rolls ?? []).map(r => [r.tag, r.label] as const)] as never}
-                    onChange={next => edit(0, draft => { (loose(draft).roll ??= {}).check = next || null; })}
-                  />
-                </Field>
-              ),
-            },
-            ...(tables.length ? [{
-              key: 'degrees', label: 'степени успеха', on: !!step.degrees?.table,
-              add: () => edit(0, draft => { loose(draft).degrees = { table: tables[0]![0], of: 'total' }; }),
-              drop: () => edit(0, draft => { delete loose(draft).degrees; }),
-              node: (
-                <>
-                  <Field label="степени успеха" hint="Вместо «да/нет» исход читается ступенями по таблице: «провал / успех с ценой / полный успех».">
-                    <Select
-                      value={String(step.degrees?.table ?? '')}
-                      options={tables.map(([key, t]) => [key, t.label || key] as const) as never}
-                      onChange={next => edit(0, draft => {
-                        const d = loose(draft);
-                        d.degrees = { table: next, of: d.degrees?.of ?? 'total' };
-                      })}
-                    />
-                  </Field>
-                  {step.degrees?.table ? (
-                    <Field label="ступень по">
-                      <Select
-                        value={String(step.degrees.of ?? 'total')}
-                        options={[['total', 'итогу броска'], ['margin', 'запасу против порога']] as const}
-                        onChange={next => edit(0, draft => { loose(draft).degrees.of = next; })}
-                      />
-                    </Field>
-                  ) : null}
-                </>
-              ),
-            }] : []),
-          ]}
-        />
-      ) : null}
-
-    </>
+          ),
+        },
+        {
+          key: 'check', label: 'Какой это бросок', width: 180,
+          hint: 'Вид броска из словаря — чтобы правило «преимущество на атаки» знало, куда целиться',
+          node: (
+            <Select
+              value={String(step.roll?.check ?? '')}
+              options={[['', '— просто бросок —'],
+                ...(context.system.rolls ?? []).map(r => [r.tag, r.label] as const)] as never}
+              onChange={next => edit(0, draft => { (loose(draft).roll ??= {}).check = next || null; })}
+            />
+          ),
+        },
+        ...(tables.length ? [{
+          key: 'degrees', label: 'Степени успеха', width: 170,
+          hint: 'Вместо «да/нет» исход читается ступенями по таблице: «провал / успех с ценой / полный успех»',
+          node: (
+            <Select
+              value={String(step.degrees?.table ?? '')}
+              options={[['', '— нет, да/нет —'], ...tables.map(([key, t]) => [key, t.label || key] as const)] as never}
+              onChange={next => edit(0, draft => {
+                const d = loose(draft);
+                if (next) d.degrees = { table: next, of: d.degrees?.of ?? 'total' }; else delete d.degrees;
+              })}
+            />
+          ),
+        }] : []),
+        ...(step.degrees?.table ? [{
+          key: 'degreesOf', label: 'Ступень по', width: 170,
+          node: (
+            <Select
+              value={String(step.degrees.of ?? 'total')}
+              options={[['total', 'итогу броска'], ['margin', 'запасу против порога']] as const}
+              onChange={next => edit(0, draft => { loose(draft).degrees.of = next; })}
+            />
+          ),
+        }] : []),
+      ]}
+    />
   );
 }

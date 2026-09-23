@@ -19,7 +19,8 @@ describe('«открыть таблицу →» из поля листа', () =>
     } as unknown as System;
     useWorld.setState(state => ({ ...state, system, activeTableId: 'расы' }));
     render(<RulesTab />);
-    const opened = [...document.querySelectorAll('details[open] > summary')].map(s => s.textContent ?? '');
+    const opened = [...document.querySelectorAll('details[open] > summary')]
+      .map(s => s.querySelector('input')?.value ?? s.textContent ?? '');
     expect(opened.some(t => t.startsWith('Расы'))).toBe(true);
     expect(opened.some(t => t.startsWith('Классы'))).toBe(false);
     expect(useWorld.getState().activeTableId).toBeNull();

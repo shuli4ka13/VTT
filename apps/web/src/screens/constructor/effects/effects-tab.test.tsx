@@ -17,10 +17,11 @@ describe('EffectsTab: палитра трёх понятий', () => {
     }));
   });
 
-  it('активируемому предлагают «занимает», но не «сколько висит»', () => {
+  it('свойства эффекта — одной строкой; у активируемого есть «Занимает», но нет «сколько висит»', () => {
     render(<EffectsTab />);
+    const heads = [...document.querySelectorAll('.sheet-grid__title')].map(h => h.textContent);
+    expect(heads).toEqual(expect.arrayContaining(['Как запускается', 'Блок', 'Занимает', 'На основе', 'Описание для игрока']));
     expect(screen.queryByText('+ сколько висит')).toBeNull();
-    expect(screen.getByText('+ занимает')).toBeTruthy();
   });
 
   it('висящему — наоборот: «сколько висит» есть, стоимости нет', () => {
@@ -34,7 +35,8 @@ describe('EffectsTab: палитра трёх понятий', () => {
     }));
     render(<EffectsTab />);
     expect(screen.getByText('+ сколько висит')).toBeTruthy();
-    expect(screen.queryByText('+ занимает')).toBeNull();
+    const heads = [...document.querySelectorAll('.sheet-grid__title')].map(h => h.textContent);
+    expect(heads).not.toContain('Занимает');
   });
 
   it('палитра шагов — только виды движка, клик кладёт шаг', () => {
@@ -96,12 +98,13 @@ describe('EffectsTab: палитра трёх понятий', () => {
     expect(heads.slice(-2)).toEqual(['Правят сопротивления', 'Обязателен']);
     expect(screen.getByLabelText('«Новый вход» правят сопротивления')).toBeTruthy();
 
-    const ask = [...document.querySelectorAll('.sheet-grid select')].find(el => [...(el as HTMLSelectElement).options].some(o => o.value === 'gm'))!;
+    const params = screen.getByLabelText('«Новый вход» правят сопротивления').closest('.sheet-grid')!;
+    const ask = [...params.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'gm'))!;
     fireEvent.change(ask, { target: { value: 'gm' } });
     const effect = Object.values(useWorld.getState().system.effects).find(e => e.params?.length)!;
     expect(effect.params![0]!.ask).toEqual({ by: 'gm' });
 
-    fireEvent.change(document.querySelectorAll('.sheet-grid select')[0]!, { target: { value: 'dice' } });
+    fireEvent.change(params.querySelectorAll('select')[0]!, { target: { value: 'dice' } });
     expect(screen.queryByLabelText('«Новый вход» правят сопротивления')).toBeNull();
   });
 

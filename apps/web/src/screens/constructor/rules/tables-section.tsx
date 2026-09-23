@@ -1,8 +1,9 @@
 import { MultiChoice } from '../../../ui/multi-choice.tsx';
 import { kindsFor } from '@vtt/engine/words/kinds';
-import { Card, CardHead, Field, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Chip, Empty } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Empty } from '../../../ui/primitives.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import { SheetGrid } from '../../../ui/sheet-grid.tsx';
+import { FieldRow } from '../../../ui/field-row.tsx';
 import type { GridColumn } from '../../../ui/sheet-grid.tsx';
 import { DiceProp } from '../../../ui/dice-prop.tsx';
 import { newTable } from '../factory.ts';
@@ -104,59 +105,71 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
 
   return (
     <div ref={ref}>
-    <Fold title={table.label || id} count={rows.length} summary={summary} open={openAtStart || undefined}>
-      <div className="inline">
-        <Input
-          value={table.label ?? ''}
-          placeholder="как зовётся таблица"
-          onChange={next => edit(draft => { draft.label = next; })}
-        />
-        {held ? (
+    <Fold
+      title={table.label || id} count={rows.length} summary={summary} open={openAtStart || undefined}
+      rename={{ value: table.label ?? '', placeholder: 'как зовётся таблица', onCommit: next => edit(draft => { draft.label = next; }) }}
+    >
+      <FieldRow
+        id="table-head"
+        fields={[
+          {
+            key: 'key', label: 'Ключ строки', width: 230,
+            hint: 'По чему таблица находит строку: меч говорит «ближний бой», уровень — «7»',
+            node: (
+              <Select
+                value={keyOf(table)}
+                options={ROW_KEYS}
+                onChange={next => edit(draft => {
+                  const was = keyOf(draft);
+                  draft.key = next;
+                  if ((was === 'range') !== (next === 'range')) draft.rows = [blankRow(next)];
+                  if (next === 'number') {
+                    for (const row of draft.rows ?? []) row.value = Number(row.value) || 0;
+                  }
+                })}
+              />
+            ),
+          },
+          ...(columns.length ? [{
+            key: 'otherwise', label: 'Если ничего не совпало', width: 180,
+            hint: 'Пусто — движок скажет, что значения не знает',
+            node: (
+              <Input
+                value={table.otherwise === undefined ? '' : String(table.otherwise)}
+                placeholder="оставить пустым"
+                mono
+                onChange={next => edit(draft => {
+                  if (next === '') delete draft.otherwise; else draft.otherwise = parseFree(next);
+                })}
+              />
+            ),
+          }] : []),
+        ]}
+        tail={held ? (
           <Button size="sm" variant="danger" disabled title="таблица используется">Удалить</Button>
         ) : (
           <DangerButton size="sm" onConfirm={() => editSystem(draft => { delete draft.tables?.[id]; })}>
             Удалить
           </DangerButton>
         )}
-      </div>
-
-      <Field label="Ключ строки" hint="По чему таблица находит строку: меч говорит «ближний бой», уровень — «7».">
-        <Select
-          value={keyOf(table)}
-          options={ROW_KEYS}
-          onChange={next => edit(draft => {
-            const was = keyOf(draft);
-            draft.key = next;
-            if ((was === 'range') !== (next === 'range')) draft.rows = [blankRow(next)];
-            if (next === 'number') {
-              for (const row of draft.rows ?? []) row.value = Number(row.value) || 0;
-            }
-          })}
-        />
-      </Field>
+      />
 
       {broken ? <Verdict tone="warn">диапазоны перекрываются или дырявы</Verdict> : null}
 
       <Columns id={id} table={table} system={system} edit={edit} />
 
       <Rows id={id} table={table} system={system} edit={edit} editSystem={editSystem} />
-
-      {columns.length ? (
-        <Field label="Если ничего не совпало" hint="Пусто — движок скажет, что значения не знает.">
-          <Input
-            value={table.otherwise === undefined ? '' : String(table.otherwise)}
-            placeholder="оставить пустым"
-            mono
-            onChange={next => edit(draft => {
-              if (next === '') delete draft.otherwise; else draft.otherwise = parseFree(next);
-            })}
-          />
-        </Field>
-      ) : null}
     </Fold>
     </div>
   );
 }
+
+const COLUMN_GRID: GridColumn[] = [
+  { key: 'label', label: 'Колонка', width: 170 },
+  { key: 'kind', label: 'Тип', width: 130 },
+  { key: 'many', label: 'Сколько', width: 120, hint: 'для «из таблицы»: одно значение или несколько' },
+  { key: 'from', label: 'Из таблицы', width: 150, hint: 'для «из таблицы»: из какой' },
+];
 
 function Columns({ id, table, system, edit }: {
   id: string;
@@ -166,58 +179,50 @@ function Columns({ id, table, system, edit }: {
 }) {
   const columns = table.columns ?? [];
   const others = Object.entries(system.tables ?? {}).filter(([key]) => key !== id);
+  const set = (i: number, change: (c: TableColumn) => void) => edit(draft => { const c = draft.columns?.[i]; if (c) change(c); });
 
   return (
     <div className="stack stack--tight">
       <span className="field__label">Колонки</span>
-      {columns.length ? columns.map((column, i) => (
-        <div key={column.key} className="pair">
-          <Input
-            value={column.label ?? ''}
-            placeholder="как зовётся колонка"
-            onChange={next => edit(draft => { const c = draft.columns?.[i]; if (c) c.label = next; })}
-          />
-          <div className="inline inline--tight">
+      {columns.length ? (
+        <SheetGrid id="table-columns" columns={COLUMN_GRID}>
+          {columns.map((column, i) => [
+            <Input
+              key={`${column.key}:label`}
+              value={column.label ?? ''}
+              placeholder="как зовётся"
+              onChange={next => set(i, c => { c.label = next; })}
+            />,
             <Select
+              key={`${column.key}:kind`}
               value={column.kind ?? 'text'}
               options={COLUMN_KINDS}
-              onChange={next => edit(draft => {
-                const c = draft.columns?.[i];
-                if (!c) return;
-                c.kind = next;
-                if (next !== 'choice') delete c.from;
-              })}
-            />
-            {column.kind === 'choice' ? (
+              onChange={next => set(i, c => { c.kind = next; if (next !== 'choice') { delete c.from; delete c.many; } })}
+            />,
+            column.kind === 'choice' ? (
               <Select
+                key={`${column.key}:many`}
                 value={column.many ? 'many' : 'one'}
                 options={[['one', 'одно'], ['many', 'несколько']] as const}
-                onChange={next => edit(draft => {
-                  const c = draft.columns?.[i];
-                  if (!c) return;
-                  if (next === 'many') c.many = true; else delete c.many;
-                })}
+                onChange={next => set(i, c => { if (next === 'many') c.many = true; else delete c.many; })}
               />
-            ) : null}
-            {column.kind === 'choice' ? (
+            ) : <span key={`${column.key}:many`} className="faint">—</span>,
+            column.kind === 'choice' ? (
               <Select
+                key={`${column.key}:from`}
                 value={column.from ?? ''}
-                options={[['', '— из какой таблицы —'], ...others.map(([key, t]) => [key, t.label || key] as const)] as never}
-                onChange={next => edit(draft => {
-                  const c = draft.columns?.[i];
-                  if (!c) return;
-                  if (next) c.from = next; else delete c.from;
-                })}
+                options={[['', '— какая —'], ...others.map(([key, t]) => [key, t.label || key] as const)] as never}
+                onChange={next => set(i, c => { if (next) c.from = next; else delete c.from; })}
               />
-            ) : null}
-          </div>
-          <Button size="sm" variant="danger" onClick={() => edit(draft => {
-            const gone = draft.columns?.[i]?.key;
-            draft.columns?.splice(i, 1);
-            if (gone) for (const row of draft.rows ?? []) delete row.cells?.[gone];
-          })}>×</Button>
-        </div>
-      )) : <span className="faint">Колонок нет — таблица служит списком для выбора.</span>}
+            ) : <span key={`${column.key}:from`} className="faint">—</span>,
+            <Button key={`${column.key}:drop`} size="sm" variant="danger" title="убрать колонку" onClick={() => edit(draft => {
+              const gone = draft.columns?.[i]?.key;
+              draft.columns?.splice(i, 1);
+              if (gone) for (const row of draft.rows ?? []) delete row.cells?.[gone];
+            })}>×</Button>,
+          ])}
+        </SheetGrid>
+      ) : null}
       <Button size="sm" onClick={() => edit(draft => {
         const taken = (draft.columns ?? []).map(c => c.key);
         (draft.columns ??= []).push({ key: freeId(taken, 'колонка'), label: '', kind: 'number' });
@@ -287,12 +292,6 @@ function Rows({ id, table, system, edit, editSystem }: {
         }
       })}>{byRange ? '+ ступень' : '+ строка'}</Button>
 
-      {!columns.length && rows.length ? (
-        <div className="inline inline--tight">
-          {rows.slice(0, 8).map((row, i) => <Chip key={i}>{String(row.value ?? '')}</Chip>)}
-          {rows.length > 8 ? <span className="faint">и ещё {rows.length - 8}</span> : null}
-        </div>
-      ) : null}
     </div>
   );
 }
