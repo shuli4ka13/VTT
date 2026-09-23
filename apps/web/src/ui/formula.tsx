@@ -4,7 +4,7 @@ import { compile } from '@vtt/engine/formula';
 import { Verdict } from './primitives.tsx';
 import { FormulaChips } from './formula-chips.tsx';
 import { fieldPaths } from './paths.ts';
-import { ownerOf, SENDER, RECEIVER, DESK } from '@vtt/engine/engine/owners';
+import { ownerOf, OWNER_WORDS } from '@vtt/engine/engine/owners';
 
 export { columnPaths, fieldPaths } from './paths.ts';
 
@@ -27,11 +27,9 @@ export function parseFormula(source: string): Parsed {
   }
 }
 
-const OWNER_WORD: Record<string, string> = { [SENDER]: 'отправителя', [RECEIVER]: 'получателя', [DESK]: 'на столе' };
-
 export function labelOfTag(system: System, tag: string): string {
   const owned = ownerOf(tag);
-  if (owned) return `${labelOfTag(system, owned.rest)} ${OWNER_WORD[owned.owner]}`;
+  if (owned) return `${labelOfTag(system, owned.rest)} ${OWNER_WORDS[owned.owner]}`;
   const field = system.fields.find(f => f.tag === tag);
   if (field) return field.label ?? tag;
   return fieldPaths(system).get(tag) ?? tag;

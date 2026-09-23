@@ -72,3 +72,22 @@ group('журнал говорит словами стола, а не движк
     ok(said.includes('36'));
   });
 });
+
+group('журнал называет чужие и общие поля словами', () => {
+  test('поле отправителя, получателя и стола — подпись с хозяином, выход шага — его подпись', () => {
+    const owned = { ...system,
+      fields: [...system.fields, { tag: 'эскалация', label: 'Кость эскалации', desk: true, value: { kind: 'stored', type: 'number', default: 0 } }],
+      effects: { шаблон: { label: 'Удар', steps: [
+        { id: 'п', type: 'threshold', roll: { check: 'атака', bonus: { expr: '@отправитель.хиты + @стол.эскалация' } }, versus: { expr: '@получатель.броня' } },
+        { id: 'в', type: 'amount', fixed: { expr: '@п.natural >= 20 ? 2 : 1' } },
+      ] } } } as unknown as System;
+    const trace = [
+      { type: 'threshold', step: 'п', rolls: [12], total: 25, bonus: 13, versus: { value: 15 }, success: true },
+      { type: 'amount', step: 'в', rolls: [], flat: 1, total: 1 },
+    ];
+    const said = describeEntry({ fromId: 'мирра', toId: 'орк', report: report({ trace }) }, owned, sheets);
+    ok(said.includes('Хиты отправителя + Кость эскалации на столе: 13'), said);
+    ok(said.includes('против Класс брони получателя: 15'), said);
+    ok(!said.includes('отправитель.') && !said.includes('стол.') && !said.includes('п.natural'), said);
+  });
+});

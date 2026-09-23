@@ -16,6 +16,10 @@ import './table.css';
 
 export function TableScreen() {
   const room = useRoom(s => s.room);
+  return room ? <RoomTable key={room.id} room={room} /> : <Lobby />;
+}
+
+function RoomTable({ room }: { room: RoomState }) {
   const log = useRoom(s => s.log);
   const error = useRoom(s => s.error);
   const setError = useRoom(s => s.setError);
@@ -25,8 +29,6 @@ export function TableScreen() {
   const [to, setTo] = useState<string[]>([]);
 
   const [pinned, setPinned] = useState('');
-
-  if (!room) return <Lobby />;
 
   const sender = room.sheets.find(s => s.id === from) ?? null;
   const targets = room.sheets.filter(s => to.includes(s.id));

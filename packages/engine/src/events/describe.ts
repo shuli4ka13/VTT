@@ -1,5 +1,6 @@
 import { effectLabelOf } from './envelope.ts';
 import { breakReasonWord, registry as stepRegistry } from '../engine/steps/index.ts';
+import { ownerOf, OWNER_WORDS } from '../engine/owners.ts';
 import type { Envelope } from './envelope.ts';
 import type { System, Sheet } from '../model/types.ts';
 
@@ -58,6 +59,14 @@ export function describeEntry(
   const effect = system.effects[String(entry.report.effect)] as any;
   const stepOf = (trace: Record<string, unknown>) => (effect?.steps ?? [])
     .find((step: any, index: number) => String(step.id ?? index) === String(trace.step));
+  const nameLabel = (name: string): string => {
+    const owned = ownerOf(name);
+    if (owned) return `${nameLabel(owned.rest)} ${OWNER_WORDS[owned.owner]}`;
+    if (name.includes('.') && !system.fields.some(f => f.tag === name)) return refLabel({ ref: name }) ?? name;
+    const params: { key: string; label?: string }[] = effect?.params ?? [];
+    const param = params.find(p => p.key === name);
+    return param ? String(param.label ?? name) : labelOf(name);
+  };
   const refLabel = (ref: any): string | null => {
     if (!ref || typeof ref !== 'object') return null;
     if ('param' in ref) return effect?.params?.find((p: any) => p.key === ref.param)?.label ?? String(ref.param);
@@ -79,12 +88,12 @@ export function describeEntry(
       return found?.label ?? String(ref.ref);
     }
     if ('expr' in ref) {
-      const exact = /^[@#]([\p{L}\p{N}_-]+)$/u.exec(String(ref.expr).trim());
-      if (exact) return labelOf(exact[1]!);
+      const exact = /^[@#]([\p{L}\p{N}_.-]+)$/u.exec(String(ref.expr).trim());
+      if (exact) return nameLabel(exact[1]!);
       const needs = new Map<string, string>(
         ((effect?.params ?? []) as { key: string; label?: string }[]).map(p => [String(p.key), String(p.label ?? p.key)]));
-      const named = String(ref.expr).replace(/[@#]([\p{L}\p{N}_-]+)/gu, (_, tag: string) => labelOf(String(tag)));
-      return named.replace(/[\p{L}\p{N}_-]+/gu, (word: string) => needs.get(word) ?? word);
+      return String(ref.expr).replace(/[@#]([\p{L}\p{N}_.-]+)|[\p{L}\p{N}_-]+/gu,
+        (word: string, name?: string) => (name ? nameLabel(name) : needs.get(word) ?? word));
     }
     return null;
   };

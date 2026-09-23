@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, screen, cleanup, fireEvent } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent, act } from '@testing-library/react';
 import { useRoom } from '../../store/room.ts';
 import { useSession } from '../../store/session.ts';
 import { TableScreen, mayAnswer } from './table.tsx';
@@ -90,6 +90,18 @@ describe('выбор целей на столе', () => {
     expect(token('Мирра').className).toContain('token--to');
 
     fireEvent.click(screen.getByText('сбросить выбор'));
+    expect(token('Арвен').className).not.toContain('token--from');
+    expect(token('Мирра').className).not.toContain('token--to');
+    expect(screen.getByText('Кто действует?')).toBeTruthy();
+  });
+
+  it('за другим столом выбор начинается заново', () => {
+    render(<TableScreen />);
+    const token = (name: string) => screen.getAllByText(name)[0]!.closest('button')!;
+    fireEvent.click(token('Арвен'));
+    fireEvent.click(token('Мирра'));
+
+    act(() => { useRoom.setState(state => ({ ...state, room: { ...room(null), id: 'другой' } })); });
     expect(token('Арвен').className).not.toContain('token--from');
     expect(token('Мирра').className).not.toContain('token--to');
     expect(screen.getByText('Кто действует?')).toBeTruthy();
