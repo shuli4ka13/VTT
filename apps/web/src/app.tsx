@@ -13,7 +13,7 @@ export function App() {
 
   return (
     <div className="shell">
-      {pathname === '/' ? null : (
+      {pathname === '/' || pathname.startsWith('/author/system') ? null : (
         <TopBar where={whereOf(pathname)} bare={pathname.endsWith('/start')} />
       )}
       <Suspense fallback={<div className="column column--main"><span className="faint">загрузка…</span></div>}>

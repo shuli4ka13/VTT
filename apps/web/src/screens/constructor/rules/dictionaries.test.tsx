@@ -2,6 +2,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { RulesTab } from './rules-tab.tsx';
+import { FormulaBar } from '../../../ui/formula-bar.tsx';
+import { useFormulaBar } from '../../../store/formula-bar.ts';
 import { useWorld, emptySystem } from '../../../store/world.ts';
 
 const открыть = (раздел: string) => fireEvent.click(screen.getByText(раздел));
@@ -442,15 +444,18 @@ describe('Словари: кости, виды бросков, таблицы, �
       },
       activeEffectId: null,
     }));
-    render(<RulesTab />);
+    useFormulaBar.getState().close();
+    const Bar = () => <FormulaBar system={useWorld(state => state.system)} />;
+    render(<><Bar /><RulesTab /></>);
     открыть('Таблицы');
-    fireEvent.click(screen.getByText('Способ атаки'));
+    fireEvent.click(screen.getAllByText('Способ атаки').at(-1)!);
     expect(screen.queryByText(/подпись/i)).toBeNull();
     expect(document.querySelector('.formula-bar')).toBeNull();
 
     fireEvent.click(screen.getByTitle('@сила + 2'));
     const bar = document.querySelector('.formula-bar')!;
-    expect(bar.textContent).toContain('«ближний бой» · Бонус атаки');
+    expect(bar.textContent).toContain('Способ атаки · «ближний бой» · Бонус атаки');
+    expect(document.querySelector('.sheet-cell--spot')).not.toBeNull();
     const tail = [...bar.querySelectorAll('input.chips__text')].at(-1) as HTMLInputElement;
     fireEvent.change(tail, { target: { value: ' + 3' } });
     expect(useWorld.getState().system.tables!.wield!.rows![0]!.cells!.attack).toBe('@сила + 3');

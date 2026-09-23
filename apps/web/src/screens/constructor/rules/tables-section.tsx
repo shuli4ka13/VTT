@@ -1,8 +1,8 @@
 import { MultiChoice } from '../../../ui/multi-choice.tsx';
 import { kindsFor } from '@vtt/engine/words/kinds';
 import { Card, CardHead, Field, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Chip, Empty } from '../../../ui/primitives.tsx';
-import { FormulaChips } from '../../../ui/formula-chips.tsx';
 import { formulaAsLabels } from '../../../ui/formula.tsx';
+import { useFormulaBar } from '../../../store/formula-bar.ts';
 import { DiceProp } from '../../../ui/dice-prop.tsx';
 import { newTable } from '../factory.ts';
 import { inUse, usersOf } from '../usage.ts';
@@ -225,8 +225,6 @@ function Columns({ id, table, system, edit }: {
   );
 }
 
-interface Spot { row: number; column: string }
-
 const WIDTH_KEY = (id: string) => `vtt.table-widths.${id}`;
 
 const defaultWidth = (column?: TableColumn): number =>
@@ -281,7 +279,8 @@ function Rows({ id, table, system, edit, editSystem }: {
   const rows = table.rows ?? [];
   const columns = table.columns ?? [];
   const [widths, setWidth] = useWidths(id);
-  const [spot, setSpot] = useState<Spot | null>(null);
+  const spotId = useFormulaBar(s => s.target?.id ?? null);
+  const openFormula = useFormulaBar(s => s.open);
 
   const setCell = (i: number, column: string, value: unknown) => edit(draft => {
     const row = draft.rows?.[i];
@@ -297,28 +296,21 @@ function Rows({ id, table, system, edit, editSystem }: {
     '40px',
   ].join(' ');
 
-  const spotColumn = spot ? columns.find(c => c.key === spot.column) : undefined;
-  const spotRow = spot ? rows[spot.row] : undefined;
+  const cellId = (row: number, column: string) => `table:${id}:${row}:${column}`;
+  const openCell = (row: number, column: TableColumn) => {
+    const target = rows[row];
+    if (!target) return;
+    openFormula({
+      id: cellId(row, column.key),
+      where: `${table.label || id} · «${String(target.value ?? `${target.from}–${target.to}`)}» · ${column.label || column.key}`,
+      value: String((target.cells ?? {})[column.key] ?? ''),
+      onChange: value => setCell(row, column.key, value),
+    });
+  };
 
   return (
     <div className="stack stack--tight">
       <span className="field__label">Строки</span>
-
-      {spotColumn && spotRow ? (
-        <div className="formula-bar">
-          <span className="formula-bar__where">
-            {`«${String(spotRow.value ?? `${spotRow.from}–${spotRow.to}`)}» · ${spotColumn.label || spotColumn.key}`}
-          </span>
-          <FormulaChips
-            value={String((spotRow.cells ?? {})[spotColumn.key] ?? '')}
-            system={system}
-            placeholder="формула — наберите @ и начало названия"
-            calculator
-            onChange={value => setCell(spot!.row, spotColumn.key, value)}
-          />
-          <Button size="sm" variant="ghost" onClick={() => setSpot(null)}>готово</Button>
-        </div>
-      ) : null}
 
       <div className="sheet-scroll">
         <div className="sheet-grid" style={{ gridTemplateColumns: template }}>
@@ -336,8 +328,9 @@ function Rows({ id, table, system, edit, editSystem }: {
               users={key === 'range' ? [] : rowUsers(system, id, row.value, compendium).map(u => u.text)}
               onRename={to => rename(row.value, to)} taken={next => taken(next, i)}
               edit={edit} setCell={setCell}
-              spot={spot?.row === i ? spot.column : null}
-              onSpot={column => setSpot({ row: i, column })}
+              spotId={spotId}
+              cellId={column => cellId(i, column)}
+              onSpot={column => openCell(i, column)}
             />
           ))}
         </div>
@@ -363,7 +356,7 @@ function Rows({ id, table, system, edit, editSystem }: {
   );
 }
 
-function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRename, taken, spot, onSpot }: {
+function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRename, taken, spotId, cellId, onSpot }: {
   row: TableRow;
   at: number;
   rowKey: TableKey;
@@ -374,8 +367,9 @@ function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRe
   system: System;
   edit: (change: (draft: Table) => void) => void;
   setCell: (i: number, column: string, value: unknown) => void;
-  spot: string | null;
-  onSpot: (column: string) => void;
+  spotId: string | null;
+  cellId: (column: string) => string;
+  onSpot: (column: TableColumn) => void;
 }) {
   const cells = row.cells ?? {};
   const set = (change: (r: TableRow) => void) => edit(draft => { const r = draft.rows?.[at]; if (r) change(r); });
@@ -392,9 +386,9 @@ function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRe
       {columns.map(column => (column.kind === 'expr' ? (
         <button
           key={column.key} type="button"
-          className={`sheet-cell${spot === column.key ? ' sheet-cell--spot' : ''}`}
+          className={`sheet-cell${spotId === cellId(column.key) ? ' sheet-cell--spot' : ''}`}
           title={String(cells[column.key] ?? '')}
-          onClick={() => onSpot(column.key)}
+          onClick={() => onSpot(column)}
         >
           {cells[column.key] ? formulaAsLabels(system, String(cells[column.key])) : <span className="faint">формула</span>}
         </button>

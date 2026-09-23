@@ -605,11 +605,6 @@
 }
 .sheet-cell:hover { border-color: var(--accent); }
 .sheet-cell--spot { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
-.formula-bar {
-  position: sticky; top: 0; z-index: 2; display: grid; grid-template-columns: auto 1fr auto; gap: var(--s-2); align-items: start;
-  padding: var(--s-2); background: var(--surface); border: 1px solid var(--accent); border-radius: var(--r-1);
-}
-.formula-bar__where { font-size: var(--fs-2); color: var(--text-faint); padding-top: var(--s-2); white-space: nowrap; }
 
 .field-preview { display: grid; gap: var(--s-1); margin-top: var(--s-2); padding: var(--s-2) var(--s-3); border: 1px dashed var(--border); border-radius: var(--r-1); }
 .field-preview__note { font-size: var(--fs-2); }

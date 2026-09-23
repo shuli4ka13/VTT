@@ -75,9 +75,9 @@ describe('одно слово на одно понятие', () => {
   });
 
   it('вкладки конструктора зовутся словами глоссария', () => {
-    const constructor = sources.find(f => f.path.endsWith('screens/constructor/constructor.tsx'))!;
+    const bar = sources.find(f => f.path.endsWith('screens/constructor/world-bar.tsx'))!;
     for (const key of Object.keys(TABS) as (keyof typeof TABS)[]) {
-      expect(constructor.code, `вкладка ${key}`).toContain(`TABS.${key}`);
+      expect(bar.code, `вкладка ${key}`).toContain(`TABS.${key}`);
     }
   });
 
