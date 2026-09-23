@@ -208,4 +208,11 @@ describe('набор формулы не рвётся посреди имени'
       extraNames={new Map([['бонус', 'Бонус атаки']])} badges={new Map([['бонус', 'вход']])} />);
     expect(screen.getByText('вход')).toBeTruthy();
   });
+
+  it('буква сразу после фишки не приклеивается к её имени', () => {
+    let value = '@сила';
+    render(<FormulaChips value={value} system={system} onChange={next => { value = next; }} />);
+    fireEvent.change([...document.querySelectorAll('input.chips__text')].at(-1)!, { target: { value: 'x' } });
+    expect(value).toBe('@сила x');
+  });
 });

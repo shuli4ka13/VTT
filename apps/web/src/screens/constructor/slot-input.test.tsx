@@ -134,7 +134,7 @@ describe('SlotInput', () => {
     render(<SlotInput value={{ tag: 'armor' }} onChange={() => { called = true; }} context={ctx} allow={['constant']} />);
 
     expect(screen.getByText('Класс брони')).toBeTruthy();
-    const input = screen.getByRole('textbox') as HTMLInputElement;
+    const input = screen.getAllByRole('textbox').at(-1) as HTMLInputElement;
     fireEvent.change(input, { target: { value: 'abc' } });
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(called).toBe(false);
@@ -144,8 +144,15 @@ describe('SlotInput', () => {
   it('крестик на фишке очищает слот', () => {
     let got: unknown = 'untouched';
     render(<SlotInput value={{ tag: 'armor' }} onChange={next => { got = next; }} context={ctx} />);
-    fireEvent.mouseDown(screen.getByLabelText('убрать'));
+    fireEvent.mouseDown(screen.getByLabelText('убрать поле'));
+    fireEvent.keyDown(screen.getAllByRole('textbox').at(-1)!, { key: 'Enter' });
     expect(got).toBeNull();
+  });
+
+  it('значение с именем показано той же фишкой, что и в строке формул, — без второй фишки', () => {
+    render(<SlotInput value={{ tag: 'armor' }} onChange={() => {}} context={ctx} />);
+    expect(screen.getAllByText('Класс брони')).toHaveLength(1);
+    expect(screen.queryByLabelText('убрать')).toBeNull();
   });
 
   it('пункт «новая потребность» зовёт колбэк и коммитит его ref', () => {

@@ -77,4 +77,14 @@ describe('одно поле формулы на всё', () => {
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(commits).toEqual(['7']);
   });
+
+  it('значение-фишка во время правки не двоится: поле показывает то, что в строке формул', () => {
+    render(<><FormulaBar /><FormulaField value="" barValue="@сила" system={system} where="А"
+      prefix={<span className="chips__chip">Сила-фишка</span>} onCommit={() => {}} /></>);
+    const field = document.querySelector('.formula-field')!;
+    expect(field.textContent).toContain('Сила-фишка');
+    fireEvent.click(field);
+    expect(field.textContent).not.toContain('Сила-фишка');
+    expect(field.querySelectorAll('.chips__chip')).toHaveLength(1);
+  });
 });

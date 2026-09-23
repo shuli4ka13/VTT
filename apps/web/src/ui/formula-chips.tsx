@@ -221,7 +221,10 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
     >{op.label}</button>
   );
 
-  const editText = (index: number, text: string, at: number) => {
+  const editText = (index: number, typed: string, typedAt: number) => {
+    const glued = index > 0 && 'tag' in (parts[index - 1] ?? {}) && /^[\p{L}\p{N}_.]/u.test(typed);
+    const text = glued ? ` ${typed}` : typed;
+    const at = glued ? typedAt + 1 : typedAt;
     setHighlight(0);
     setClosed(false);
     const next = parts.map((p, i) => (i === index ? { text } : p));

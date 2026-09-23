@@ -232,8 +232,10 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
     },
   })), [options, onChange, onCreateFromRecord, picked]);
 
-  const chip = draft === null ? chipOf(value, context) : null;
-  const initial = chip ? (asText(value, context) ?? '') : displayOf(value, context);
+  const ownName = !side && value && typeof value === 'object' ? nameOf(value as SlotRef) : null;
+  const named = ownName && (names.has(ownName) || context.system.fields.some(f => f.tag === ownName)) ? ownName : null;
+  const chip = draft === null && !named ? chipOf(value, context) : null;
+  const initial = named ? `@${named}` : chip ? (asText(value, context) ?? '') : displayOf(value, context);
 
   const commitTyped = (text: string) => {
     setDraft(null);

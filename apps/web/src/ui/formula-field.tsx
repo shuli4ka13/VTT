@@ -54,8 +54,8 @@ export function FormulaField(props: FormulaFieldProps) {
       onClick={start}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); start(); } }}
     >
-      {prefix}
-      {shown || !prefix ? (
+      {spot ? null : prefix}
+      {shown || spot || !prefix ? (
         <FormulaChips
           value={shown}
           system={system}
