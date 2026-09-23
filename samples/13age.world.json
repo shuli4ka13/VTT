@@ -449,32 +449,9 @@
         ],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_standard"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "стандартное действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_standard"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_standard",
+            "strict": true
           }
         ]
       },
@@ -525,32 +502,9 @@
         ],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_standard"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "стандартное действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_standard"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_standard",
+            "strict": true
           }
         ]
       },
@@ -722,6 +676,43 @@
               "const": 1
             },
             "targetModifiers": false
+          }
+        ]
+      },
+      "spend_standard": {
+        "label": "Трата: стандартное",
+        "group": "Вызываемые",
+        "activation": "manual",
+        "description": "Тратит ход только в бою. Кончилось — действие не состоялось.",
+        "params": [],
+        "steps": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_standard"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "стандартное действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_standard"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
           }
         ]
       }

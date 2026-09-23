@@ -2052,7 +2052,8 @@
       "Снаряжение": {},
       "Приёмы": {},
       "В бою": {},
-      "Правила комнаты": {}
+      "Правила комнаты": {},
+      "Вызываемые": {}
     },
     "constants": {
       "lead_die": {
@@ -2350,32 +2351,9 @@
         ],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_action",
+            "strict": true
           },
           {
             "type": "apply",
@@ -2918,6 +2896,43 @@
               "const": 1
             },
             "targetModifiers": false
+          }
+        ]
+      },
+      "spend_action": {
+        "label": "Трата: действие",
+        "group": "Вызываемые",
+        "activation": "manual",
+        "description": "Тратит ход только в бою. Кончилось — действие не состоялось.",
+        "params": [],
+        "steps": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
           }
         ]
       }

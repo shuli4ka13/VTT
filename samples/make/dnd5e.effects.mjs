@@ -66,18 +66,27 @@ const payTurn = (tag, note) => [
   { type: 'compare', value: { tag }, versus: { const: 1 }, breakIf: 'less', note, when: IN_BATTLE },
   change(tag, 'subtract', { const: 1 }, { when: IN_BATTLE }),
 ];
-const COST = {
-  action: payTurn('turn_action', 'действие на этом ходу уже потрачено'),
-  bonus: payTurn('turn_bonus', 'бонусное действие на этом ходу уже потрачено'),
-  reaction: payTurn('turn_reaction', 'реакция уже потрачена'),
-  once: payTurn('turn_once', 'это бывает раз за ход'),
-  attack: [
+const SPEND = {
+  action: ['spend_action', 'Трата: действие', payTurn('turn_action', 'действие на этом ходу уже потрачено')],
+  bonus: ['spend_bonus', 'Трата: бонусное действие', payTurn('turn_bonus', 'бонусное действие на этом ходу уже потрачено')],
+  reaction: ['spend_reaction', 'Трата: реакция', payTurn('turn_reaction', 'реакция уже потрачена')],
+  once: ['spend_once', 'Трата: раз за ход', payTurn('turn_once', 'это бывает раз за ход')],
+  attack: ['spend_attack', 'Трата: атака', [
     { type: 'compare', value: { tag: 'turn_action' }, versus: { const: 1 }, breakIf: 'less', note: 'действие на этом ходу уже потрачено', when: NEEDS_ACTION },
     change('turn_action', 'subtract', { const: 1 }, { when: NEEDS_ACTION }),
     change('turn_attacks', 'set', { expr: '@attacks_per_action' }, { when: NEEDS_ACTION }),
     change('turn_attacks', 'subtract', { const: 1 }, { when: IN_BATTLE }),
-  ],
+  ]],
 };
+const COST = Object.fromEntries(Object.entries(SPEND).map(([kind, [id]]) => [kind, [{ type: 'emit', event: id, strict: true }]]));
+
+function spends() {
+  return Object.fromEntries(Object.values(SPEND).map(([id, label, steps]) => [id, {
+    label, group: 'Вызываемые', activation: 'manual',
+    description: 'Тратит ход только в бою. Кончилось — действие не состоялось.',
+    params: [], steps,
+  }]));
+}
 const paid = (cost, self = []) => [...(COST[cost] ?? []), ...self];
 
 const manual = (label, category, description, cost, rest = {}) => {
@@ -658,7 +667,7 @@ function roomRules() {
 
 export function effects() {
   return {
-    ...attacks(), ...spells(), ...features(), ...reactions(), ...conditions(), ...traits(), ...lifecycle(), ...roomRules(),
+    ...attacks(), ...spells(), ...features(), ...reactions(), ...conditions(), ...traits(), ...lifecycle(), ...roomRules(), ...spends(),
   };
 }
 

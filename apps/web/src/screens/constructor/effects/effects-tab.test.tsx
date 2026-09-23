@@ -55,6 +55,20 @@ describe('EffectsTab: палитра трёх понятий', () => {
     expect(screen.queryByText(/порог/i)).toBeNull();
   });
 
+  it('шаги сворачиваются: одной строкой с пересказом, по одному и все сразу', () => {
+    try { localStorage.clear(); } catch { return; }
+    render(<EffectsTab />);
+    fireEvent.click(screen.getAllByText('+ проверка')[0]!);
+    fireEvent.click(screen.getAllByText('+ проверка')[0]!);
+    fireEvent.click(screen.getByText('свернуть все'));
+    expect(document.querySelectorAll('.step-fold__summary')).toHaveLength(2);
+    expect(document.querySelectorAll('.step-fold[aria-expanded="false"]')).toHaveLength(2);
+    fireEvent.click(document.querySelector('.step-fold')!);
+    expect(document.querySelectorAll('.step-fold__summary')).toHaveLength(1);
+    fireEvent.click(screen.getByText('развернуть все'));
+    expect(document.querySelectorAll('.step-fold__summary')).toHaveLength(0);
+  });
+
   it('убранный шаг можно вернуть', () => {
     render(<EffectsTab />);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
@@ -195,8 +209,11 @@ describe('три вида запуска вместо четырёх', () => {
       .map(b => b.textContent!.trim())
       .filter(t => LAUNCH_KINDS.some(kind => t === `+ ${kind.label.toLowerCase()}`));
     expect(made).toEqual(['+ кнопкой', '+ срабатывает сам', '+ висит и правит']);
-    const all = document.body.textContent ?? '';
-    expect(/реакци|триггерн/i.test(all.replace(/Реакции/g, ''))).toBe(false);
+    const chrome = document.body.cloneNode(true) as HTMLElement;
+    chrome.querySelectorAll('.column--right').forEach(node => node.remove());
+    const data = useWorld.getState().system.fields.map(field => field.label);
+    const all = data.reduce((text, label) => text.split(label).join(''), chrome.textContent ?? '');
+    expect(all.replace(/Реакции/g, '').match(/.{30}(реакци|триггерн).{30}/i)?.[0] ?? null).toBeNull();
   });
 
   it('у «срабатывает сам» момент собран в один список: после молча или до с вопросом', () => {

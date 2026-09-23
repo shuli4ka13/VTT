@@ -3439,60 +3439,9 @@
         ],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "все(@стол.battle >= 1, @отправитель.turn_attacks < 1)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "все(@стол.battle >= 1, @отправитель.turn_attacks < 1)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_attacks"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@отправитель.attacks_per_action"
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "все(@стол.battle >= 1, @отправитель.turn_attacks < 1)"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_attacks"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_attack",
+            "strict": true
           }
         ]
       },
@@ -3572,32 +3521,9 @@
         ],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_once"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "это бывает раз за ход",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_once"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_once",
+            "strict": true
           }
         ]
       },
@@ -3861,32 +3787,9 @@
         ],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_action",
+            "strict": true
           },
           {
             "type": "compare",
@@ -3972,32 +3875,9 @@
         ],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_action",
+            "strict": true
           }
         ]
       },
@@ -4083,32 +3963,9 @@
         ],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_action",
+            "strict": true
           }
         ]
       },
@@ -4121,32 +3978,9 @@
         "steps": [],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_action",
+            "strict": true
           }
         ]
       },
@@ -4235,32 +4069,9 @@
         "extends": "spell",
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_action",
+            "strict": true
           }
         ]
       },
@@ -4350,32 +4161,9 @@
         "extends": "spell",
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_action",
+            "strict": true
           }
         ]
       },
@@ -4472,32 +4260,9 @@
         "extends": "spell",
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_action",
+            "strict": true
           }
         ]
       },
@@ -4562,32 +4327,9 @@
         "extends": "spell",
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_action",
+            "strict": true
           }
         ]
       },
@@ -4658,32 +4400,9 @@
         "extends": "spell",
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_action",
+            "strict": true
           }
         ]
       },
@@ -4755,32 +4474,9 @@
         "bond": "concentration",
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_action",
+            "strict": true
           }
         ]
       },
@@ -4808,32 +4504,9 @@
         "extends": "spell",
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_action",
+            "strict": true
           }
         ]
       },
@@ -4862,32 +4535,9 @@
         "bond": "concentration",
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_action",
+            "strict": true
           }
         ]
       },
@@ -4950,32 +4600,9 @@
         "extends": "spell",
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_action",
+            "strict": true
           }
         ]
       },
@@ -5003,32 +4630,9 @@
         "extends": "spell",
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_action",
+            "strict": true
           }
         ]
       },
@@ -5042,32 +4646,9 @@
         "extends": "spell",
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_action",
+            "strict": true
           }
         ]
       },
@@ -5111,32 +4692,9 @@
         ],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_action",
+            "strict": true
           }
         ]
       },
@@ -5149,32 +4707,9 @@
         "steps": [],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_bonus"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "бонусное действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_bonus"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_bonus",
+            "strict": true
           },
           {
             "type": "compare",
@@ -5274,32 +4809,9 @@
         "steps": [],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_bonus"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "бонусное действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_bonus"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_bonus",
+            "strict": true
           },
           {
             "type": "compare",
@@ -5366,32 +4878,9 @@
         ],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_bonus"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "бонусное действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_bonus"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_bonus",
+            "strict": true
           },
           {
             "type": "compare",
@@ -5450,32 +4939,9 @@
         ],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_action",
+            "strict": true
           },
           {
             "type": "compare",
@@ -5537,32 +5003,9 @@
         ],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_action",
+            "strict": true
           },
           {
             "type": "compare",
@@ -5597,32 +5040,9 @@
         "steps": [],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_action",
+            "strict": true
           },
           {
             "type": "status",
@@ -5650,32 +5070,9 @@
         ],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_action",
+            "strict": true
           }
         ]
       },
@@ -5710,32 +5107,9 @@
         "steps": [],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_action",
+            "strict": true
           }
         ]
       },
@@ -5775,32 +5149,9 @@
         ],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_action",
+            "strict": true
           }
         ]
       },
@@ -5841,32 +5192,9 @@
         ],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_action"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_action",
+            "strict": true
           }
         ]
       },
@@ -5974,32 +5302,9 @@
         ],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_reaction"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "реакция уже потрачена",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_reaction"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_reaction",
+            "strict": true
           },
           {
             "type": "emit",
@@ -6078,32 +5383,9 @@
         ],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_reaction"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "реакция уже потрачена",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_reaction"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_reaction",
+            "strict": true
           },
           {
             "type": "emit",
@@ -6151,32 +5433,9 @@
         ],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "turn_reaction"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "реакция уже потрачена",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_reaction"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
+            "type": "emit",
+            "event": "spend_reaction",
+            "strict": true
           }
         ]
       },
@@ -8733,6 +7992,219 @@
             "value": 0,
             "stacking": "override",
             "condition": "@exhaustion >= 5"
+          }
+        ]
+      },
+      "spend_action": {
+        "label": "Трата: действие",
+        "group": "Вызываемые",
+        "activation": "manual",
+        "description": "Тратит ход только в бою. Кончилось — действие не состоялось.",
+        "params": [],
+        "steps": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
+        ]
+      },
+      "spend_bonus": {
+        "label": "Трата: бонусное действие",
+        "group": "Вызываемые",
+        "activation": "manual",
+        "description": "Тратит ход только в бою. Кончилось — действие не состоялось.",
+        "params": [],
+        "steps": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_bonus"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "бонусное действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_bonus"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
+        ]
+      },
+      "spend_reaction": {
+        "label": "Трата: реакция",
+        "group": "Вызываемые",
+        "activation": "manual",
+        "description": "Тратит ход только в бою. Кончилось — действие не состоялось.",
+        "params": [],
+        "steps": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_reaction"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "реакция уже потрачена",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_reaction"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
+        ]
+      },
+      "spend_once": {
+        "label": "Трата: раз за ход",
+        "group": "Вызываемые",
+        "activation": "manual",
+        "description": "Тратит ход только в бою. Кончилось — действие не состоялось.",
+        "params": [],
+        "steps": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_once"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "это бывает раз за ход",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_once"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
+        ]
+      },
+      "spend_attack": {
+        "label": "Трата: атака",
+        "group": "Вызываемые",
+        "activation": "manual",
+        "description": "Тратит ход только в бою. Кончилось — действие не состоялось.",
+        "params": [],
+        "steps": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "все(@стол.battle >= 1, @получатель.turn_attacks < 1)"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "все(@стол.battle >= 1, @получатель.turn_attacks < 1)"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_attacks"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "@получатель.attacks_per_action"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "все(@стол.battle >= 1, @получатель.turn_attacks < 1)"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_attacks"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
           }
         ]
       },

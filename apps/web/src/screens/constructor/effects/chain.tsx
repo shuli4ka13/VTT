@@ -6,6 +6,7 @@ import { Button, Verdict } from '../../../ui/primitives.tsx';
 import { problemOf } from '../step-card.tsx';
 import { groupSteps, moveGroup, removeSteps, BRICKS } from '../cards.ts';
 import { GroupCard } from './cards/group-card.tsx';
+import { useStepFolds } from '../../../store/step-folds.ts';
 import { findDonorBlock, copyDonorBlock } from '../donors.tsx';
 import type { System, Effect, Step } from '@vtt/schema';
 
@@ -54,11 +55,24 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
 
   const broken = cards.filter(card => card.indices.some(i => problems[i])).length;
 
+  const folded = useStepFolds(st => st.folded);
+  const toggleFold = useStepFolds(st => st.toggle);
+  const setFolds = useStepFolds(st => st.setMany);
+  const foldKey = (group: (typeof cards)[number]) =>
+    `${effect.label ?? ''}|${lane}|${String(group.step.id ?? group.indices[0])}`;
+  const keys = cards.map(foldKey);
+
   return (
     <>
       <div className="inline">
         <span className="screen-title" style={{ fontSize: 'var(--fs-5)' }}>{title}</span>
         <span className="spacer" />
+        {cards.length > 1 ? (
+          <>
+            <Button size="sm" variant="ghost" onClick={() => setFolds(keys, true)}>свернуть все</Button>
+            <Button size="sm" variant="ghost" onClick={() => setFolds(keys, false)}>развернуть все</Button>
+          </>
+        ) : null}
         {broken
           ? <Verdict tone="bad">{STEP.manyGen} со сломанными ссылками: {broken}</Verdict>
           : steps.length
@@ -102,6 +116,8 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
             ]}
             problem={problem}
             lane={lane}
+            folded={Boolean(folded[foldKey(group)])}
+            onFold={() => toggleFold(foldKey(group))}
             onMoveLane={onMoveLane ? to => onMoveLane(group.indices, to) : undefined}
             problemAction={donorFix ? (
               <Button size="sm" onClick={() => copyDonorBlock(editSystem, donorFix.donor, donorFix.group)}>

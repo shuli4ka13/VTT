@@ -1,6 +1,6 @@
 import { amountParamOf } from '@vtt/engine/model/lists';
 import type { System, Effect, Step, SystemConstant } from '@vtt/schema';
-import { labelOfTag } from '../../ui/formula.tsx';
+import { labelOfTag, formulaAsLabels } from '../../ui/formula.tsx';
 import { ownerOf } from '@vtt/engine/engine/owners';
 import { dice as diceText, asDice, DIE_LETTER } from '../../words.ts';
 
@@ -49,7 +49,7 @@ export function refSegment(ref: unknown, system: System, effect: Effect, emptyAs
   if ('expr' in r) {
     const text = String(r.expr ?? '').trim();
     if (!text) return hole(emptyAs);
-    return seg(text.replace(/[@#]([\p{L}\p{N}_]+)/gu, (_, tag: string) => labelOfTag(system, tag)));
+    return seg(formulaAsLabels(system, text, names));
   }
   if ('tag' in r) return seg(`«${labelOfTag(system, String(r.tag))}»`);
   if ('param' in r) {
