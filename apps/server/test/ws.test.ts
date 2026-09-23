@@ -156,7 +156,7 @@ describe('партия строит себя сама', () => {
     const socket = await open();
     const state = waitFor(socket, 'room:state');
     say(socket, 'room:join', { roomId: room.id, token: gm.token });
-    expect((await state).state.sheets).toHaveLength(0);
+    expect((await state).state.sheets.filter((sheet: { kind?: string }) => sheet.kind !== 'desk')).toHaveLength(0);
 
     const created = waitFor(socket, 'room:delta');
     say(socket, 'sheet:create', { roomId: room.id, name: 'Арвен Собственноручная' });

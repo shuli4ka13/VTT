@@ -106,7 +106,6 @@ export const clockState = z.object({
   round: z.number().int().nonnegative(),
   order: z.array(z.string()),
   active: z.string().nullable(),
-  spent: z.record(z.string(), z.record(z.string(), z.number().int().nonnegative())),
 });
 
 export const roomState = z.object({

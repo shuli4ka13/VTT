@@ -1,4 +1,4 @@
-import { deskOf } from './desk.ts';
+import { deskFor } from './desk.ts';
 import { send, receive, fireOutgoing } from './envelope.ts';
 import { runSelfTrack, selfRefusal } from './self.ts';
 import { holderOf, releaseHolder } from './bonds.ts';
@@ -60,7 +60,7 @@ export function deliver({
   let updated = [...sheets];
   const put = (sheet: Sheet): void => { updated = updated.map(s => (s.id === sheet.id ? sheet : s)); };
   const live = (id: string): Sheet | null => updated.find(s => s.id === id) || null;
-  const desk = (): Sheet | null => deskOf(updated);
+  const desk = (): Sheet | null => deskFor(system, updated);
 
   const to = live(toId);
   if (!to) throw new Error(`не найдена цель «${toId}»`);
@@ -142,7 +142,7 @@ export function exchange({
   if (!from) throw new Error(`не найден отправитель «${fromId}»`);
   if (!to) throw new Error(`не найдена цель «${toId}»`);
 
-  const desk = deskOf(sheets);
+  const desk = deskFor(system, sheets);
   const envelope = send(actionId, { system, compendium, die, clock, desk, sheet: from, against: to, claims: claims?.source, ...(inputs ? { inputs } : {}) });
 
   const own = runSelfTrack(actionId, from, { system, compendium, die, clock, desk, ...(inputs ? { inputs } : {}) });

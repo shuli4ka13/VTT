@@ -4,7 +4,7 @@ import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
 import { emptySystem } from '../../store/world.ts';
 import {
   newEffect, newField, newRecordKind, newBinding, newProp, newDie, newRollEdit, newRoll, newTable,
-  newCalled, newActionType, BRICKS,
+  newCalled, BRICKS,
 } from './factory.ts';
 import type { System, Activation } from '@vtt/schema';
 
@@ -79,7 +79,6 @@ for (const [name, base] of BASES) {
       (system.rolls ??= []).push(newRoll(system));
       const table = newTable(system); (system.tables ??= {})[table.key] = table.value;
       const called = newCalled(system); system.effects[called.key] = called.value;
-      const action = newActionType(system); (system.action_types ??= {})[action.key] = action.value;
       expect(issuesOf(system)).toEqual([]);
     });
 

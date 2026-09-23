@@ -27,7 +27,7 @@ export interface Where {
 
 export type RefKind =
   | 'field' | 'effect' | 'constant' | 'table' | 'rollEdit' | 'event' | 'roll'
-  | 'actionType' | 'param' | 'step' | 'prop' | 'recordKind';
+  | 'param' | 'step' | 'prop' | 'recordKind';
 
 export interface Reference {
   kind: RefKind;
@@ -44,7 +44,6 @@ export interface Declared {
   rollEdit: Set<string>;
   event: Set<string>;
   roll: Set<string>;
-  actionType: Set<string>;
   prop: Set<string>;
   recordKind: Set<string>;
 }
@@ -58,7 +57,6 @@ export function declaredOf(system: System): Declared {
     rollEdit: new Set(Object.keys(system.roll_edits ?? {})),
     event: new Set(Object.keys(system.effects ?? {})),
     roll: new Set((system.rolls ?? []).map(r => r.tag)),
-    actionType: new Set(Object.keys(system.action_types ?? {})),
     prop: new Set(Object.values(system.records ?? {}).flatMap(k => (k.props ?? []).map(p => p.key))),
     recordKind: new Set(Object.keys(system.records ?? {})),
   };
@@ -230,7 +228,6 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
     slotRefs(condition, undefined, head, { params, earlier: new Set(), eventChain: false }, out);
   }
   for (const claim of effect.trigger?.claims ?? []) out.push({ kind: 'rollEdit', key: claim, from: head });
-  if (effect.cost) out.push({ kind: 'actionType', key: effect.cost, from: { tab: 'effects', effect: id, part: 'cost' } });
   modifierRefs(effect.modifiers, { tab: 'effects', effect: id, part: 'modifiers' }, out);
 }
 
@@ -271,10 +268,6 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
     modifierRefs(spec.modifiers, { tab: 'records', kind, part: 'modifiers' }, out);
   }
 
-  for (const [key, type] of Object.entries(system.action_types ?? {})) {
-    if (type.perTurnField) out.push({ kind: 'field', key: type.perTurnField, from: { tab: 'rules', section: 'action_types', key } });
-    if (type.within) out.push({ kind: 'actionType', key: type.within, from: { tab: 'rules', section: 'action_types', key } });
-  }
 
   for (const id of system.room_rules ?? []) out.push({ kind: 'effect', key: id, from: { tab: 'rules', section: 'room_rules', key: id } });
 

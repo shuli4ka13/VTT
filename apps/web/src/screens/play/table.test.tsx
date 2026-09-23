@@ -10,7 +10,6 @@ const room = (clock: object | null): RoomState => ({
   id: 'к', title: 'Стол', members: [{ userId: 'u', name: 'Ведущий', role: 'gm' }],
   system: {
     id: 'x', name: 'x', fields: [], effects: {},
-    action_types: { действие: { label: 'Действие', perTurn: 1 }, реакция: { label: 'Реакция' } },
   },
   compendium: { items: [], actions: [] },
   sheets: [
@@ -20,11 +19,11 @@ const room = (clock: object | null): RoomState => ({
   ...(clock ? { clock } : {}),
 } as unknown as RoomState);
 
-describe('стол: бюджет хода и журнал', () => {
+describe('стол: журнал и бой', () => {
   beforeEach(() => {
     useRoom.setState(state => ({
       ...state,
-      room: room({ round: 2, order: ['а', 'б'], active: 'а', spent: { а: { действие: 1, реакция: 2 } } }),
+      room: room({ round: 2, order: ['а', 'б'], active: 'а' }),
       log: [
         { id: '1', at: '2026-09-20T07:05:00.000Z', text: 'Арвен бьёт Мирру' },
         { id: '2', at: 'не время', text: 'без отметки' },
@@ -34,13 +33,6 @@ describe('стол: бюджет хода и журнал', () => {
   });
   afterEach(() => { cleanup(); });
 
-  it('показывает, сколько действий осталось, и считает потраченные без счёта', () => {
-    render(<TableScreen />);
-    expect(screen.getByText('Бюджет хода')).toBeTruthy();
-    expect(screen.getByText(/Действие: 0 из 1/)).toBeTruthy();
-    expect(screen.getByText(/Реакция: потрачено 2/)).toBeTruthy();
-  });
-
   it('журнал подписан временем, битая отметка не ломает строку', () => {
     render(<TableScreen />);
     const lines = [...document.querySelectorAll('.log-line')].map(node => node.textContent ?? '');
@@ -48,10 +40,9 @@ describe('стол: бюджет хода и журнал', () => {
     expect(lines[1]).toBe('без отметки');
   });
 
-  it('вне боя бюджет не показывается', () => {
+  it('вне боя стол так и говорит', () => {
     useRoom.setState(state => ({ ...state, room: room(null) }));
     render(<TableScreen />);
-    expect(screen.queryByText('Бюджет хода')).toBeNull();
     expect(screen.getByText('Бой не идёт')).toBeTruthy();
   });
 });

@@ -29,7 +29,6 @@ const NAMES: Record<Exclude<RefKind, 'param' | 'step'>, (key: string) => string>
   rollEdit: key => `правки броска «${key}» в системе нет`,
   event: key => `общего эффекта «${key}» в системе нет`,
   roll: key => `вида броска «${key}» в системе нет`,
-  actionType: key => `типа действия «${key}» в системе нет`,
   prop: key => `свойство «${key}» не объявлено ни одним типом записей — заведите его на вкладке «${TABS.records}»`,
   recordKind: key => `типа записи «${key}» в системе нет`,
 };

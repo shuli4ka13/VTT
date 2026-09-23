@@ -66,7 +66,6 @@ export function pathWords(issue: string, system: System): string {
     if (key === 'constants' && named) { words.push(`кость ${labelOf(system.constants, named)}`); i++; continue; }
     if (key === 'roll_edits' && named) { words.push(`правка броска ${labelOf(system.roll_edits, named)}`); i++; continue; }
     if (key === 'tables' && named) { words.push(`таблица ${labelOf(system.tables, named)}`); i++; continue; }
-    if (key === 'action_types' && named) { words.push(`тип действия ${labelOf(system.action_types, named)}`); i++; continue; }
     if (key === 'fields' && index !== null) { words.push(`поле «${system.fields[index]?.label ?? index + 1}»`); i++; continue; }
     if ((key === 'steps' || key === 'receive') && index !== null) { words.push(`${STEP.one} ${index + 1}`); i++; continue; }
     if (key === 'bindings' && index !== null) { words.push(`привязка ${index + 1}`); i++; continue; }

@@ -10,10 +10,9 @@ export interface Clock {
   round: number;
   order: string[];
   active: string | null;
-  spent: Record<string, Record<string, number>>;
 }
 
-export const idleClock = (): Clock => ({ round: 0, order: [], active: null, spent: {} });
+export const idleClock = (): Clock => ({ round: 0, order: [], active: null });
 
 export const inCombat = (clock: Clock | null | undefined): clock is Clock =>
   Boolean(clock && clock.round > 0 && clock.active !== null && clock.order.length > 0);
@@ -50,7 +49,7 @@ const shed = (
 
 export function startCombat(_clock: Clock, order: string[]): Clock {
   if (!order.length) throw new EngineError('бой не начать: порядок ходов пуст');
-  return { round: 1, order: [...order], active: order[0]!, spent: {} };
+  return { round: 1, order: [...order], active: order[0]! };
 }
 
 export const stopCombat = (): Clock => idleClock();
@@ -78,8 +77,7 @@ export function nextTurn(clock: Clock, sheets: Sheet[], endsAt: (effectId: strin
   }
   next = next.map(sheet => (sheet.id !== active ? sheet : countOwnTurn(sheet, 'turn-start', endsAt, expired)));
 
-  const spent = { ...clock.spent, [active]: {} };
-  return { clock: { ...clock, round, active, spent }, sheets: next, expired };
+  return { clock: { ...clock, round, active }, sheets: next, expired };
 }
 
 function countOwnTurn(
@@ -103,46 +101,16 @@ export function endScene(sheets: Sheet[]): { sheets: Sheet[]; expired: Expired[]
   return { sheets: sheets.map(sheet => shed(sheet, entry => entry.scene !== true, expired)), expired };
 }
 
-export const limitOf = (
-  type: { perTurn?: number; perTurnField?: string } | undefined, valueOf?: (tag: string) => unknown,
-): number | null => {
-  if (!type) return null;
-  if (type.perTurnField && valueOf) {
-    const fromSheet = Number(valueOf(type.perTurnField));
-    if (Number.isFinite(fromSheet) && fromSheet > 0) return Math.floor(fromSheet);
-  }
-  return type.perTurn ?? null;
-};
-
-export function spendAction(
-  system: System, clock: Clock, sheetId: string, effect: Effect, valueOf?: (tag: string) => unknown,
-): Clock {
-  if (!inCombat(clock) || !effect.cost) return clock;
-  const type = (system.action_types ?? {})[effect.cost];
-  const limit = limitOf(type, valueOf);
-  if (!limit) return clock;
-  const used = clock.spent[sheetId]?.[effect.cost] ?? 0;
-  if (used >= limit) {
-    throw new EngineError(`«${type!.label}» на этом ходу уже потрачено: ${used} из ${limit}`);
-  }
-  const outer = used === 0 && type!.within && type!.within !== effect.cost
-    ? spendAction(system, clock, sheetId, { ...effect, cost: type!.within }, valueOf)
-    : clock;
-  return {
-    ...outer,
-    spent: { ...outer.spent, [sheetId]: { ...(outer.spent[sheetId] ?? {}), [effect.cost]: used + 1 } },
-  };
-}
-
 export interface InitiativeRoll { sheetId: string; rolls: number[]; total: number; edits: string[] }
 
 export function rollInitiative(
   system: System, sheets: Sheet[], compendium: Compendium, die: Die,
 ): { order: string[]; rolls: InitiativeRoll[] } {
   const spec = system.initiative;
-  if (!spec) return { order: sheets.map(s => s.id), rolls: [] };
+  const fighters = sheets.filter(sheet => sheet.kind !== 'desk');
+  if (!spec) return { order: fighters.map(s => s.id), rolls: [] };
 
-  const rolls = sheets.map((sheet): InitiativeRoll => {
+  const rolls = fighters.map((sheet): InitiativeRoll => {
     const pass = newPass(system, sheet, { compendium });
     const ctx = { pass, owner: 'инициатива' };
     const mods = resolveRoll(system, sheet, spec.check ?? null, pass);

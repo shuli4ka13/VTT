@@ -114,17 +114,6 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
                 />
               ),
             },
-            ...(launch.kind === 'manual' || launch.ask ? [{
-              key: 'cost', label: 'Занимает', width: 150, hint: 'Действие, бонусное, реакция — чем это оплачивается в свой ход',
-              node: (
-                <Select
-                  value={effect.cost ?? ''}
-                  options={[['', '—'],
-                    ...Object.entries(system.action_types ?? {}).map(([key, t]) => [key, t.label] as const)] as never}
-                  onChange={next => edit(draft => { draft.cost = next || undefined; })}
-                />
-              ),
-            }] : []),
             {
               key: 'extends', label: 'На основе', width: 170,
               hint: effect.extends && system.effects[effect.extends]

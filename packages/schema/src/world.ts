@@ -256,7 +256,6 @@ export const effect = z.object({
   category: z.string().optional(),
   description: z.string().optional(),
   activation: activation.optional(),
-  cost: z.string().optional(),
   duration: z.object({
     kind: durationKind,
     max: z.number().int().positive().optional(),
@@ -323,14 +322,6 @@ export const system = z.object({
 
   roll_edits: z.record(z.string(), rollEdit).optional(),
   lists: z.record(z.string(), wordList).optional(),
-  action_types: z.record(z.string(), z.object({
-    label: z.string(),
-    icon: z.string().optional(),
-
-    perTurn: z.number().int().positive().optional(),
-    perTurnField: z.string().optional(),
-    within: z.string().optional(),
-  }).passthrough()).optional(),
   advantage: z.object({ methods: z.record(z.string(), z.boolean()).optional() }).passthrough().optional(),
 
   events: z.record(z.string(), systemEvent).optional(),

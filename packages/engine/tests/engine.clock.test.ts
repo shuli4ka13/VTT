@@ -1,6 +1,6 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.ts';
 import {
-  idleClock, inCombat, expiryOf, startCombat, stopCombat, nextTurn, endScene, spendAction, rollInitiative,
+  idleClock, inCombat, expiryOf, startCombat, stopCombat, nextTurn, endScene, rollInitiative,
 } from '../src/engine/clock.ts';
 import { exchange } from '../src/events/exchange.ts';
 import { system, arven, mirra, compendium } from './fixtures.ts';
@@ -112,33 +112,6 @@ group('часы боя: раунды, ходы, истечение', () => {
     const out = endScene([sheet('a', [{ effectId: 'x', scene: true }, { effectId: 'y' }])]);
     deepEq(out.sheets[0]!.effects, [{ effectId: 'y' }]);
     deepEq(out.expired, [{ sheetId: 'a', effectId: 'x' }]);
-  });
-});
-
-group('экономика действий', () => {
-  const sys: any = { ...system, action_types: { action: { label: 'Действие', perTurn: 1 }, free: { label: 'Свободное' } } };
-  const costly = { label: 'Удар', cost: 'action' } as any;
-
-  test('в бою одно действие за ход: второе — отказ словами', () => {
-    const clock = startCombat(idleClock(), ['arven', 'mirra']);
-    const once = spendAction(sys, clock, 'arven', costly);
-    eq(once.spent.arven!.action, 1);
-    throws(() => spendAction(sys, once, 'arven', costly), 'уже потрачено');
-  });
-
-  test('новый ход владельца обнуляет его траты', () => {
-    const clock = startCombat(idleClock(), ['arven', 'mirra']);
-    const spent = spendAction(sys, clock, 'arven', costly);
-    const back = nextTurn(nextTurn(spent, [arven, mirra]).clock, [arven, mirra]).clock;
-    eq(back.active, 'arven');
-    deepEq(back.spent.arven, {});
-  });
-
-  test('вне боя, без цены или без лимита — учёта нет', () => {
-    const clock = startCombat(idleClock(), ['arven']);
-    ok(spendAction(sys, idleClock(), 'arven', costly) === idleClock() || true);
-    eq(spendAction(sys, clock, 'arven', { label: 'Бесплатно' } as any), clock);
-    eq(spendAction(sys, clock, 'arven', { label: 'Свободно', cost: 'free' } as any), clock);
   });
 });
 

@@ -1171,6 +1171,85 @@
         "control": "stepper"
       },
       {
+        "tag": "turn_action",
+        "label": "Действие",
+        "group": "В бою",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1,
+          "min": 0,
+          "max": 1
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "turn_bonus",
+        "label": "Бонусное действие",
+        "group": "В бою",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1,
+          "min": 0,
+          "max": 1
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "turn_reaction",
+        "label": "Реакция",
+        "group": "В бою",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1,
+          "min": 0,
+          "max": 1
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "turn_once",
+        "label": "Раз за ход",
+        "group": "В бою",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1,
+          "min": 0,
+          "max": 1
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "turn_attacks",
+        "label": "Атак осталось",
+        "group": "В бою",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 4
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "battle",
+        "label": "Идёт бой",
+        "group": "В бою",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 1
+        },
+        "control": "toggle",
+        "desk": true
+      },
+      {
         "tag": "crit_from",
         "label": "Крит на костях от",
         "group": "Атака",
@@ -2008,6 +2087,7 @@
         "parent": "Навыки"
       },
       "Чувства и движение": {},
+      "В бою": {},
       "Защита": {},
       "Здоровье": {},
       "Магия": {},
@@ -3272,43 +3352,6 @@
         ]
       }
     },
-    "action_types": {
-      "action": {
-        "label": "Действие",
-        "icon": "◆",
-        "perTurn": 1
-      },
-      "attack": {
-        "label": "Атака",
-        "icon": "⚔",
-        "perTurn": 1,
-        "perTurnField": "attacks_per_action",
-        "within": "action"
-      },
-      "bonus": {
-        "label": "Бонусное действие",
-        "icon": "◇",
-        "perTurn": 1
-      },
-      "reaction": {
-        "label": "Реакция",
-        "icon": "↩",
-        "perTurn": 1
-      },
-      "once": {
-        "label": "Раз за ход",
-        "icon": "①",
-        "perTurn": 1
-      },
-      "free": {
-        "label": "Свободное",
-        "icon": "○"
-      },
-      "movement": {
-        "label": "Передвижение",
-        "icon": "→"
-      }
-    },
     "initiative": {
       "die": {
         "constant": "lead_die"
@@ -3324,7 +3367,6 @@
         "group": "Атака",
         "description": "Бросок атаки против класса брони, урон костью. На крите кости урона удваиваются. Бонус атаки и прибавку к урону приносит тот, кто зовёт: оружие считает их по листу, существо вписывает числами. Посчитанное уходит в общий эффект «Урон».",
         "activation": "manual",
-        "cost": "attack",
         "params": [
           {
             "key": "attack_with",
@@ -3394,6 +3436,64 @@
               }
             }
           }
+        ],
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "все(@стол.battle >= 1, @отправитель.turn_attacks < 1)"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "все(@стол.battle >= 1, @отправитель.turn_attacks < 1)"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_attacks"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "@отправитель.attacks_per_action"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "все(@стол.battle >= 1, @отправитель.turn_attacks < 1)"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_attacks"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
         ]
       },
       "flame_blade": {
@@ -3440,7 +3540,6 @@
         "group": "Умения класса",
         "description": "Раз за ход, после попадания с преимуществом или рядом с союзником: дополнительные кости урона — половина уровня, округляя вверх.",
         "activation": "manual",
-        "cost": "once",
         "params": [
           {
             "key": "damage_type",
@@ -3470,6 +3569,36 @@
               }
             }
           }
+        ],
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_once"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "это бывает раз за ход",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_once"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
         ]
       },
       "divine_smite": {
@@ -3477,7 +3606,6 @@
         "group": "Умения класса",
         "description": "После попадания оружием: тратишь ячейку, 2к8 излучением и ещё 1к8 за каждый круг выше первого, не больше 5к8.",
         "activation": "manual",
-        "cost": "free",
         "params": [
           {
             "key": "slot",
@@ -3713,7 +3841,6 @@
         "label": "Заклинание",
         "group": "Заклинания",
         "description": "Основа всех заклинаний: спрашивает круг ячейки и тратит её. Сама по себе не применяется.",
-        "cost": "action",
         "params": [
           {
             "key": "spell_level",
@@ -3733,6 +3860,34 @@
           }
         ],
         "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
           {
             "type": "compare",
             "value": {
@@ -3761,7 +3916,6 @@
         "group": "Заклинания",
         "description": "Атака заклинанием против класса брони. Костей столько, сколько даёт уровень персонажа: одна, с 5-го две, с 11-го три, с 17-го четыре.",
         "activation": "manual",
-        "cost": "action",
         "params": [
           {
             "key": "damage_die",
@@ -3815,6 +3969,36 @@
               }
             }
           }
+        ],
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
         ]
       },
       "cantrip_save": {
@@ -3822,7 +4006,6 @@
         "group": "Заклинания",
         "description": "Цель спасается против твоей сложности заклинаний. Провал — урон и, если задано, состояние; успех — ничего.",
         "activation": "manual",
-        "cost": "action",
         "params": [
           {
             "key": "save_by",
@@ -3897,6 +4080,36 @@
               "optional": true
             }
           }
+        ],
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
         ]
       },
       "cantrip_note": {
@@ -3904,16 +4117,44 @@
         "group": "Заклинания",
         "description": "Заговор, который стол не считает: свет, волшебная рука, фокусы. В журнал ложится строка — остальное решает ведущий.",
         "activation": "manual",
-        "cost": "action",
         "params": [],
-        "steps": []
+        "steps": [],
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
+        ]
       },
       "spell_attack": {
         "label": "Заклинание: бросок атаки",
         "group": "Заклинания",
         "description": "Тратит ячейку. Атака заклинанием против класса брони; ячейка выше круга заклинания добавляет кости.",
         "activation": "manual",
-        "cost": "action",
         "params": [
           {
             "key": "damage_die",
@@ -3991,14 +4232,43 @@
             }
           }
         ],
-        "extends": "spell"
+        "extends": "spell",
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
+        ]
       },
       "spell_save_half": {
         "label": "Заклинание: спасбросок, при успехе половина",
         "group": "Заклинания",
         "description": "Тратит ячейку один раз на всех. Кости бросаются один раз, спасбросок у каждой цели свой; успех — половина урона.",
         "activation": "manual",
-        "cost": "action",
         "params": [
           {
             "key": "save_by",
@@ -4077,14 +4347,43 @@
             }
           }
         ],
-        "extends": "spell"
+        "extends": "spell",
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
+        ]
       },
       "spell_save_none": {
         "label": "Заклинание: спасбросок, при успехе ничего",
         "group": "Заклинания",
         "description": "Тратит ячейку. Провал спасброска — урон и, если задано, состояние; успех — ничего.",
         "activation": "manual",
-        "cost": "action",
         "params": [
           {
             "key": "save_by",
@@ -4170,14 +4469,43 @@
             }
           }
         ],
-        "extends": "spell"
+        "extends": "spell",
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
+        ]
       },
       "spell_auto": {
         "label": "Заклинание: урон без броска",
         "group": "Заклинания",
         "description": "Тратит ячейку. Попадает всегда: волшебная стрела. К каждой кости идёт прибавка, ячейка выше круга добавляет кости.",
         "activation": "manual",
-        "cost": "action",
         "params": [
           {
             "key": "damage_die",
@@ -4231,14 +4559,43 @@
             }
           }
         ],
-        "extends": "spell"
+        "extends": "spell",
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
+        ]
       },
       "spell_condition": {
         "label": "Заклинание: спасбросок или состояние",
         "group": "Заклинания",
         "description": "Тратит ячейку. Провал спасброска вешает состояние, оно запоминает твою сложность для повторных спасбросков. Без концентрации.",
         "activation": "manual",
-        "cost": "action",
         "params": [
           {
             "key": "save_by",
@@ -4298,14 +4655,43 @@
             }
           }
         ],
-        "extends": "spell"
+        "extends": "spell",
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
+        ]
       },
       "spell_condition_held": {
         "label": "Заклинание: спасбросок или состояние, с концентрацией",
         "group": "Заклинания",
         "description": "То же, но держится твоей концентрацией: сорвалась или взялся за другое — состояние спало со всех целей.",
         "activation": "manual",
-        "cost": "action",
         "params": [
           {
             "key": "save_by",
@@ -4366,38 +4752,43 @@
           }
         ],
         "extends": "spell",
-        "bond": "concentration"
+        "bond": "concentration",
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
+        ]
       },
       "spell_buff": {
         "label": "Заклинание: усиление",
         "group": "Заклинания",
         "description": "Тратит ячейку и вешает на цели эффект. Без концентрации: висит, пока не истечёт срок самого эффекта.",
         "activation": "manual",
-        "cost": "action",
-        "params": [
-          {
-            "key": "status",
-            "label": "Состояние",
-            "kind": "effect"
-          }
-        ],
-        "steps": [
-          {
-            "type": "status",
-            "mode": "apply",
-            "effect": {
-              "param": "status"
-            }
-          }
-        ],
-        "extends": "spell"
-      },
-      "spell_buff_held": {
-        "label": "Заклинание: усиление с концентрацией",
-        "group": "Заклинания",
-        "description": "Тратит ячейку и вешает на цели эффект, пока держишь концентрацию. Целей может быть несколько — ячейка одна.",
-        "activation": "manual",
-        "cost": "action",
         "params": [
           {
             "key": "status",
@@ -4415,14 +4806,96 @@
           }
         ],
         "extends": "spell",
-        "bond": "concentration"
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
+        ]
+      },
+      "spell_buff_held": {
+        "label": "Заклинание: усиление с концентрацией",
+        "group": "Заклинания",
+        "description": "Тратит ячейку и вешает на цели эффект, пока держишь концентрацию. Целей может быть несколько — ячейка одна.",
+        "activation": "manual",
+        "params": [
+          {
+            "key": "status",
+            "label": "Состояние",
+            "kind": "effect"
+          }
+        ],
+        "steps": [
+          {
+            "type": "status",
+            "mode": "apply",
+            "effect": {
+              "param": "status"
+            }
+          }
+        ],
+        "extends": "spell",
+        "bond": "concentration",
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
+        ]
       },
       "spell_heal": {
         "label": "Заклинание: лечение",
         "group": "Заклинания",
         "description": "Тратит ячейку. Кости лечения плюс заклинательный модификатор; ячейка выше круга добавляет кости. Снимает состояние, если задано.",
         "activation": "manual",
-        "cost": "action",
         "params": [
           {
             "key": "heal_die",
@@ -4474,14 +4947,43 @@
             }
           }
         ],
-        "extends": "spell"
+        "extends": "spell",
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
+        ]
       },
       "spell_cleanse": {
         "label": "Заклинание: снять состояние",
         "group": "Заклинания",
         "description": "Тратит ячейку и снимает с цели одно состояние: малое восстановление, снятие проклятия.",
         "activation": "manual",
-        "cost": "action",
         "params": [
           {
             "key": "cure",
@@ -4498,24 +5000,82 @@
             }
           }
         ],
-        "extends": "spell"
+        "extends": "spell",
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
+        ]
       },
       "spell_note": {
         "label": "Заклинание: без броска",
         "group": "Заклинания",
         "description": "Тратит ячейку и пишет строку в журнал. Для заклинаний, которые стол не считает: обнаружение магии, туманный шаг, полёт.",
         "activation": "manual",
-        "cost": "action",
         "params": [],
         "steps": [],
-        "extends": "spell"
+        "extends": "spell",
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
+        ]
       },
       "potion_heal": {
         "label": "Выпить зелье лечения",
         "group": "Лечение",
         "description": "Кости зелья плюс прибавка. Цель — тот, кто пьёт.",
         "activation": "manual",
-        "cost": "action",
         "params": [
           {
             "key": "heal_die",
@@ -4548,6 +5108,36 @@
             },
             "targetModifiers": false
           }
+        ],
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
         ]
       },
       "second_wind": {
@@ -4555,10 +5145,37 @@
         "group": "Умения класса",
         "description": "Бонусным действием восполняешь 1к10 + уровень хитов. Раз до короткого отдыха.",
         "activation": "manual",
-        "cost": "bonus",
         "params": [],
         "steps": [],
         "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_bonus"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "бонусное действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_bonus"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
           {
             "type": "compare",
             "value": {
@@ -4605,9 +5222,8 @@
       "action_surge": {
         "label": "Всплеск действий",
         "group": "Умения класса",
-        "description": "Ещё одно действие в этом ходу. Стол списывает использование; второе действие ведущий разрешает сам.",
+        "description": "Ещё одно действие в этом ходу.",
         "activation": "manual",
-        "cost": "free",
         "params": [],
         "steps": [],
         "self": [
@@ -4632,6 +5248,20 @@
               "const": 1
             },
             "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "add",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
           }
         ]
       },
@@ -4640,10 +5270,37 @@
         "group": "Умения класса",
         "description": "Бонусным действием впадаешь в ярость на минуту: урон рукопашным оружием выше, сопротивление рубящему, колющему и дробящему, преимущество на проверки и спасброски Силы.",
         "activation": "manual",
-        "cost": "bonus",
         "params": [],
         "steps": [],
         "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_bonus"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "бонусное действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_bonus"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
           {
             "type": "compare",
             "value": {
@@ -4680,7 +5337,6 @@
         "group": "Умения класса",
         "description": "До начала твоего следующего хода: твои атаки с преимуществом, но и по тебе бьют с преимуществом.",
         "activation": "manual",
-        "cost": "free",
         "params": [],
         "steps": [],
         "self": [
@@ -4698,7 +5354,6 @@
         "group": "Умения класса",
         "description": "Бонусным действием даёшь союзнику кость: увидев свой бросок, он может прибавить её один раз.",
         "activation": "manual",
-        "cost": "bonus",
         "params": [],
         "steps": [
           {
@@ -4710,6 +5365,34 @@
           }
         ],
         "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_bonus"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "бонусное действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_bonus"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
           {
             "type": "compare",
             "value": {
@@ -4739,7 +5422,6 @@
         "group": "Умения класса",
         "description": "Лечишь из запаса ровно столько хитов, сколько назовёшь. Запас — пять на уровень, до долгого отдыха.",
         "activation": "manual",
-        "cost": "action",
         "params": [
           {
             "key": "amount",
@@ -4770,6 +5452,34 @@
           {
             "type": "compare",
             "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "compare",
+            "value": {
               "tag": "lay_on_hands_left"
             },
             "versus": {
@@ -4796,7 +5506,6 @@
         "group": "Умения класса",
         "description": "Божественный канал: нежить спасается Мудростью против твоей сложности, иначе бежит в страхе.",
         "activation": "manual",
-        "cost": "action",
         "params": [],
         "steps": [
           {
@@ -4830,6 +5539,34 @@
           {
             "type": "compare",
             "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "compare",
+            "value": {
               "tag": "channel_left"
             },
             "versus": {
@@ -4856,10 +5593,37 @@
         "group": "Действия в бою",
         "description": "До начала твоего следующего хода по тебе бьют с помехой, а спасброски Ловкости идут с преимуществом.",
         "activation": "manual",
-        "cost": "action",
         "params": [],
         "steps": [],
         "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
           {
             "type": "status",
             "mode": "apply",
@@ -4874,7 +5638,6 @@
         "group": "Действия в бою",
         "description": "Скорость до конца хода удваивается.",
         "activation": "manual",
-        "cost": "action",
         "params": [],
         "steps": [
           {
@@ -4882,6 +5645,36 @@
             "mode": "apply",
             "effect": {
               "const": "dashing"
+            }
+          }
+        ],
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
             }
           }
         ]
@@ -4913,16 +5706,44 @@
         "group": "Действия в бою",
         "description": "Твоё передвижение до конца хода не провоцирует атак.",
         "activation": "manual",
-        "cost": "action",
         "params": [],
-        "steps": []
+        "steps": [],
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
+        ]
       },
       "hide": {
         "label": "Засада",
         "group": "Действия в бою",
         "description": "Скрытность против пассивной внимательности цели. Вышло — прячешься.",
         "activation": "manual",
-        "cost": "action",
         "params": [],
         "steps": [
           {
@@ -4951,6 +5772,36 @@
             },
             "side": "source"
           }
+        ],
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
         ]
       },
       "hidden": {
@@ -4978,7 +5829,6 @@
         "group": "Действия в бою",
         "description": "Союзник бросает следующую проверку или атаку с преимуществом.",
         "activation": "manual",
-        "cost": "action",
         "params": [],
         "steps": [
           {
@@ -4986,6 +5836,36 @@
             "mode": "apply",
             "effect": {
               "const": "helped"
+            }
+          }
+        ],
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
             }
           }
         ]
@@ -5021,7 +5901,6 @@
         "group": "Отдых и смерть",
         "description": "На коротком отдыхе: бросаешь кость хитов, прибавляешь Телосложение, восполняешь столько хитов.",
         "activation": "manual",
-        "cost": "free",
         "params": [],
         "steps": [],
         "self": [
@@ -5073,7 +5952,6 @@
         "group": "Реакции",
         "description": "По тебе попали — тратишь ячейку 1-го круга, +5 к классу брони до начала твоего хода. Атака пересчитывается.",
         "activation": "reaction",
-        "cost": "reaction",
         "duration": {
           "kind": "permanent"
         },
@@ -5096,6 +5974,34 @@
         ],
         "self": [
           {
+            "type": "compare",
+            "value": {
+              "tag": "turn_reaction"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "реакция уже потрачена",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_reaction"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
             "type": "emit",
             "event": "spell_slot",
             "args": {
@@ -5112,7 +6018,6 @@
         "group": "Реакции",
         "description": "Тебя ранили — тратишь ячейку 1-го круга: обидчик спасается Ловкостью, провал — 2к10 огнём, успех — половина.",
         "activation": "reaction",
-        "cost": "reaction",
         "duration": {
           "kind": "permanent"
         },
@@ -5173,6 +6078,34 @@
         ],
         "self": [
           {
+            "type": "compare",
+            "value": {
+              "tag": "turn_reaction"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "реакция уже потрачена",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_reaction"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
             "type": "emit",
             "event": "spell_slot",
             "args": {
@@ -5189,7 +6122,6 @@
         "group": "Реакции",
         "description": "По тебе попали — урон этой атаки вдвое меньше.",
         "activation": "reaction",
-        "cost": "reaction",
         "duration": {
           "kind": "permanent"
         },
@@ -5214,6 +6146,36 @@
             "mode": "apply",
             "effect": {
               "const": "uncanny_off"
+            }
+          }
+        ],
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_reaction"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "реакция уже потрачена",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_reaction"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
             }
           }
         ]
@@ -7544,6 +8506,183 @@
           }
         ]
       },
+      "battle_start": {
+        "label": "Начало боя",
+        "group": "Правила комнаты",
+        "description": "Бой пошёл: траты хода считаются, у всех полный запас.",
+        "activation": "triggered",
+        "duration": {
+          "kind": "permanent"
+        },
+        "trigger": {
+          "on": "moment:combat-start"
+        },
+        "params": [],
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "battle"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_bonus"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_reaction"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_once"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_attacks"
+            },
+            "direction": "set",
+            "value": {
+              "const": 0
+            },
+            "targetModifiers": false
+          }
+        ]
+      },
+      "battle_end": {
+        "label": "Конец боя",
+        "group": "Правила комнаты",
+        "description": "Вне боя действия не считаются.",
+        "activation": "triggered",
+        "duration": {
+          "kind": "permanent"
+        },
+        "trigger": {
+          "on": "moment:combat-end"
+        },
+        "params": [],
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "battle"
+            },
+            "direction": "set",
+            "value": {
+              "const": 0
+            },
+            "targetModifiers": false
+          }
+        ]
+      },
+      "turn_refresh": {
+        "label": "Начало хода",
+        "group": "Правила комнаты",
+        "description": "Действие, бонусное, реакция и «раз за ход» — снова по одному.",
+        "activation": "triggered",
+        "duration": {
+          "kind": "permanent"
+        },
+        "trigger": {
+          "on": "moment:turn-start"
+        },
+        "params": [],
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_bonus"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_reaction"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_once"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_attacks"
+            },
+            "direction": "set",
+            "value": {
+              "const": 0
+            },
+            "targetModifiers": false
+          }
+        ]
+      },
       "exhaustion_rule": {
         "label": "Истощение",
         "group": "Правила комнаты",
@@ -8859,6 +9998,9 @@
       }
     },
     "room_rules": [
+      "battle_start",
+      "battle_end",
+      "turn_refresh",
       "taken_rule",
       "exhaustion_rule",
       "fall",
@@ -11331,6 +12473,18 @@
       "actions": [
         "ogre_club"
       ]
+    },
+    {
+      "id": "стол",
+      "systemId": "dnd5e",
+      "kind": "desk",
+      "name": "Стол",
+      "values": {
+        "battle": 0
+      },
+      "equipped": [],
+      "effects": [],
+      "actions": []
     }
   ]
 }

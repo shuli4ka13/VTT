@@ -17,10 +17,10 @@ describe('EffectsTab: палитра трёх понятий', () => {
     }));
   });
 
-  it('свойства эффекта — одной строкой; у активируемого есть «Занимает», но нет «сколько висит»', () => {
+  it('свойства эффекта — одной строкой; у активируемого нет «сколько висит»', () => {
     render(<EffectsTab />);
     const heads = [...document.querySelectorAll('.sheet-grid__title')].map(h => h.textContent);
-    expect(heads).toEqual(expect.arrayContaining(['Как запускается', 'Блок', 'Занимает', 'На основе', 'Описание для игрока']));
+    expect(heads).toEqual(expect.arrayContaining(['Как запускается', 'Блок', 'На основе', 'Описание для игрока']));
     expect(screen.queryByText('+ сколько висит')).toBeNull();
   });
 

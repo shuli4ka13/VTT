@@ -36,6 +36,9 @@ export function runSelfTrack(
     alone: true,
   };
   const done = runCall(packCall(call, world), { sheet, owner }, world);
+  const idle = done.trace.every(entry => (entry as { skipped?: boolean }).skipped)
+    && !done.stopped && !done.changes.length && !done.effects.length && !done.removed.length && !done.emitted.length;
+  if (idle) return { sheet, report: null };
 
   return {
     sheet: done.sheet,

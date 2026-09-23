@@ -1909,6 +1909,46 @@
           "kind": "formula",
           "expr": "@tech + @weaponstech"
         }
+      },
+      {
+        "tag": "turn_action",
+        "label": "Действие",
+        "group": "В бою",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1,
+          "min": 0,
+          "max": 1
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "turn_move",
+        "label": "Движение",
+        "group": "В бою",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1,
+          "min": 0,
+          "max": 1
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "battle",
+        "label": "Идёт бой",
+        "group": "В бою",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 1
+        },
+        "control": "toggle",
+        "desk": true
       }
     ],
     "groups": {
@@ -2010,7 +2050,9 @@
       "Атака": {},
       "Состояния": {},
       "Снаряжение": {},
-      "Приёмы": {}
+      "Приёмы": {},
+      "В бою": {},
+      "Правила комнаты": {}
     },
     "constants": {
       "lead_die": {
@@ -2246,16 +2288,6 @@
         ]
       }
     },
-    "action_types": {
-      "action": {
-        "label": "Действие",
-        "perTurn": 1
-      },
-      "move": {
-        "label": "Движение",
-        "perTurn": 1
-      }
-    },
     "initiative": {
       "die": {
         "constant": "lead_die"
@@ -2271,7 +2303,6 @@
         "icon": "🔫",
         "description": "Дистанцию называет ведущий: она задаёт сложность по таблице. Удачу можно потратить перед броском. Выстрел в голову идёт сквозь броню головы и бьёт вдвое.",
         "activation": "manual",
-        "cost": "action",
         "params": [
           {
             "key": "damage_type",
@@ -2318,6 +2349,34 @@
           }
         ],
         "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
           {
             "type": "apply",
             "target": {
@@ -2750,6 +2809,117 @@
             "optional": true
           }
         ]
+      },
+      "battle_start": {
+        "label": "Начало боя",
+        "group": "Правила комнаты",
+        "description": "Бой пошёл: траты хода считаются, у всех полный запас.",
+        "activation": "triggered",
+        "duration": {
+          "kind": "permanent"
+        },
+        "trigger": {
+          "on": "moment:combat-start"
+        },
+        "params": [],
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "battle"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_move"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          }
+        ]
+      },
+      "battle_end": {
+        "label": "Конец боя",
+        "group": "Правила комнаты",
+        "description": "Вне боя действия не считаются.",
+        "activation": "triggered",
+        "duration": {
+          "kind": "permanent"
+        },
+        "trigger": {
+          "on": "moment:combat-end"
+        },
+        "params": [],
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "battle"
+            },
+            "direction": "set",
+            "value": {
+              "const": 0
+            },
+            "targetModifiers": false
+          }
+        ]
+      },
+      "turn_refresh": {
+        "label": "Начало хода",
+        "group": "Правила комнаты",
+        "description": "Траты хода — снова полные.",
+        "activation": "triggered",
+        "duration": {
+          "kind": "permanent"
+        },
+        "trigger": {
+          "on": "moment:turn-start"
+        },
+        "params": [],
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_move"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          }
+        ]
       }
     },
     "records": {
@@ -2814,6 +2984,9 @@
       }
     },
     "room_rules": [
+      "battle_start",
+      "battle_end",
+      "turn_refresh",
       "serious_wound_rule",
       "death_save"
     ]
@@ -2938,6 +3111,18 @@
       "actions": [
         "injury"
       ]
+    },
+    {
+      "id": "стол",
+      "systemId": "cp-slice",
+      "kind": "desk",
+      "name": "Стол",
+      "values": {
+        "battle": 0
+      },
+      "equipped": [],
+      "effects": [],
+      "actions": []
     }
   ]
 }

@@ -4,6 +4,7 @@ import { resolveRef } from '../engine/refs.ts';
 import { activationOf, durationOf, wornEffects, findEffect } from '../engine/effects.ts';
 import { EngineError } from '../engine/errors.ts';
 import { spendUse, effectLabelOf } from './envelope.ts';
+import { deskOf } from './desk.ts';
 import type { Report, WorldContext } from './envelope.ts';
 import type { Sheet, Effect } from '../model/types.ts';
 
@@ -68,11 +69,13 @@ export function fireMoments(events: MomentEvent[], sheets: Sheet[], world: World
       };
       if (!holds(effect, live, seed, owner, world)) continue;
 
+      const here = { ...world, desk: deskOf(updated) ?? world.desk ?? null };
       const call = { effectId: id, effect, sheet: live, owner, args: {}, props: null, seed };
-      const done = runCall(packCall(call, world), { sheet: live, owner, seed }, world);
+      const done = runCall(packCall(call, here), { sheet: live, owner, seed }, here);
       let next = done.sheet;
       if (durationOf(effect) === 'uses') next = spendUse(next, id);
-      updated = updated.map(s => (s.id === next.id ? next : s));
+      const desk = done.desk;
+      updated = updated.map(s => (s.id === next.id ? next : desk && s.id === desk.id ? desk : s));
 
       reports.push({
         sheetId: event.sheetId,
@@ -149,11 +152,13 @@ export function fireCrossings(before: Sheet[], after: Sheet[], world: WorldConte
       const seed = { field: { tag, value }, worn: wornEntry(live, id) };
       if (!holds(effect, live, seed, owner, world)) continue;
 
+      const here = { ...world, desk: deskOf(updated) ?? world.desk ?? null };
       const call = { effectId: id, effect, sheet: live, owner, args: {}, props: null, seed };
-      const done = runCall(packCall(call, world), { sheet: live, owner, seed }, world);
+      const done = runCall(packCall(call, here), { sheet: live, owner, seed }, here);
       let next = done.sheet;
       if (durationOf(effect) === 'uses') next = spendUse(next, id);
-      updated = updated.map(s => (s.id === next.id ? next : s));
+      const desk = done.desk;
+      updated = updated.map(s => (s.id === next.id ? next : desk && s.id === desk.id ? desk : s));
 
       reports.push({
         sheetId,

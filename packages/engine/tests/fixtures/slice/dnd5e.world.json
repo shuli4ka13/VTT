@@ -109,29 +109,12 @@
         ]
       }
     },
-    "action_types": {
-      "action": {
-        "label": "Действие",
-        "icon": "◆",
-        "perTurn": 1
-      },
-      "reaction": {
-        "label": "Реакция",
-        "icon": "↩",
-        "perTurn": 1
-      },
-      "movement": {
-        "label": "Передвижение",
-        "icon": "→"
-      }
-    },
     "effects": {
       "strike": {
         "label": "Атака",
         "icon": "⚔",
         "category": "Атака",
         "activation": "manual",
-        "cost": "action",
         "params": [
           {
             "key": "damage_dice",
@@ -189,14 +172,43 @@
             }
           }
         ],
-        "description": "Удар оружием: попадание против класса брони, урон костью оружия и модификатором Силы. На двадцатке кости урона удваиваются. Посчитанное уходит в общий эффект «Урон»."
+        "description": "Удар оружием: попадание против класса брони, урон костью оружия и модификатором Силы. На двадцатке кости урона удваиваются. Посчитанное уходит в общий эффект «Урон».",
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
+        ]
       },
       "save": {
         "label": "Спасбросок",
         "icon": "☄",
         "category": "Атака",
         "activation": "manual",
-        "cost": "action",
         "params": [
           {
             "key": "save",
@@ -266,6 +278,36 @@
               "optional": true
             }
           }
+        ],
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
         ]
       },
       "heal": {
@@ -273,7 +315,6 @@
         "icon": "✚",
         "category": "Лечение",
         "activation": "manual",
-        "cost": "action",
         "params": [
           {
             "key": "heal_dice",
@@ -320,6 +361,34 @@
         ],
         "self": [
           {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
             "type": "apply",
             "target": {
               "tag": "slots_1"
@@ -337,7 +406,6 @@
         "icon": "🔥",
         "category": "Атака",
         "activation": "manual",
-        "cost": "action",
         "params": [],
         "steps": [
           {
@@ -377,6 +445,36 @@
               "damage_source": {
                 "const": "магический"
               }
+            }
+          }
+        ],
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
             }
           }
         ]
@@ -474,7 +572,6 @@
         "icon": "🛡",
         "category": "Реакции",
         "activation": "reaction",
-        "cost": "reaction",
         "duration": {
           "kind": "permanent"
         },
@@ -493,6 +590,36 @@
             "mode": "apply",
             "effect": {
               "const": "shield_up"
+            }
+          }
+        ],
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_reaction"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "реакция уже потрачена",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_reaction"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
             }
           }
         ]
@@ -664,7 +791,6 @@
         "category": "Поддержка",
         "description": "Тратит ячейку 1-го круга. Пока держишь концентрацию, цели получают +1к4 к любому броску.",
         "activation": "manual",
-        "cost": "action",
         "bond": true,
         "params": [],
         "steps": [
@@ -677,6 +803,34 @@
           }
         ],
         "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
           {
             "type": "apply",
             "target": {
@@ -695,8 +849,35 @@
         "category": "Атака",
         "description": "Тратит ячейку. Каждая цель делает спасбросок Ловкости: провал — полный урон, успех — половина. Ведущий называет, кто попал в область.",
         "activation": "manual",
-        "cost": "action",
         "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_action"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
           {
             "type": "apply",
             "target": {
@@ -952,7 +1133,6 @@
         "icon": "🔥",
         "category": "Реакции",
         "activation": "reaction",
-        "cost": "reaction",
         "duration": {
           "kind": "permanent"
         },
@@ -1011,6 +1191,36 @@
               }
             }
           }
+        ],
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_reaction"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "реакция уже потрачена",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_reaction"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
         ]
       },
       "damage": {
@@ -1062,9 +1272,117 @@
             "optional": true
           }
         ]
+      },
+      "battle_start": {
+        "label": "Начало боя",
+        "activation": "triggered",
+        "duration": {
+          "kind": "permanent"
+        },
+        "trigger": {
+          "on": "moment:combat-start"
+        },
+        "params": [],
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "battle"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_reaction"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          }
+        ]
+      },
+      "battle_end": {
+        "label": "Конец боя",
+        "activation": "triggered",
+        "duration": {
+          "kind": "permanent"
+        },
+        "trigger": {
+          "on": "moment:combat-end"
+        },
+        "params": [],
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "battle"
+            },
+            "direction": "set",
+            "value": {
+              "const": 0
+            },
+            "targetModifiers": false
+          }
+        ]
+      },
+      "turn_refresh": {
+        "label": "Начало хода",
+        "activation": "triggered",
+        "duration": {
+          "kind": "permanent"
+        },
+        "trigger": {
+          "on": "moment:turn-start"
+        },
+        "params": [],
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_reaction"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          }
+        ]
       }
     },
     "room_rules": [
+      "battle_start",
+      "battle_end",
+      "turn_refresh",
       "heavy_armor_rule",
       "mastery_rule",
       "fall",
@@ -2086,6 +2404,40 @@
         "value": {
           "kind": "formula",
           "expr": "8 + #prof_bonus + #cha_mod"
+        }
+      },
+      {
+        "tag": "turn_action",
+        "label": "Действие",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1,
+          "min": 0,
+          "max": 1
+        }
+      },
+      {
+        "tag": "turn_reaction",
+        "label": "Реакция",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1,
+          "min": 0,
+          "max": 1
+        }
+      },
+      {
+        "tag": "battle",
+        "label": "Идёт бой",
+        "desk": true,
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 1
         }
       }
     ],

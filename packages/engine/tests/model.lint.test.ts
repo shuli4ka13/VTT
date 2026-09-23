@@ -57,15 +57,14 @@ group('линт: висячие ссылки называются словами
     eq(problem?.where.kind, 'weapon');
   });
 
-  test('кость инициативы, таблица поля, правило комнаты, тип действия, правка броска', () => {
+  test('кость инициативы, таблица поля, правило комнаты, правка броска', () => {
     const system = bare();
     system.initiative = { die: { constant: 'нет_кости' }, check: 'нет_броска' } as never;
     system.fields.push({ tag: 'lvl', label: 'Ур', value: { kind: 'table', table: 'нет_таблицы', arg: '#hp' } } as never);
     system.room_rules = ['нет_правила'];
-    system.effects.spell = { label: 'x', activation: 'manual', cost: 'нет_типа', steps: [], trigger: undefined } as never;
     system.effects.buff = { label: 'y', activation: 'passive', modifiers: [{ kind: 'roll', target: '*', edit: 'нет_правки' }] } as never;
     const found = errorTexts(system).join('\n');
-    for (const key of ['кости «нет_кости»', 'вида броска «нет_броска»', 'таблицы «нет_таблицы»', 'эффекта «нет_правила»', 'типа действия «нет_типа»', 'правки броска «нет_правки»']) {
+    for (const key of ['кости «нет_кости»', 'вида броска «нет_броска»', 'таблицы «нет_таблицы»', 'эффекта «нет_правила»', 'правки броска «нет_правки»']) {
       ok(found.includes(key), `нет «${key}» в:\n${found}`);
     }
   });

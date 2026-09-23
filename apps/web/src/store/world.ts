@@ -59,7 +59,6 @@ export const emptySystem = (): System => ({
   constants: {},
   tables: {},
   rolls: [],
-  action_types: {},
 });
 
 const BROKEN_KEY = 'vtt.world.broken';

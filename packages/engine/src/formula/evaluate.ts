@@ -39,6 +39,16 @@ const FUNCTIONS: Record<string, Fn> = {
       return found;
     },
   },
+  все: {
+    arity: '1+',
+    apply: () => 0,
+    raw: args => args.every((value, n) => boolean(value, `аргумент ${n + 1} функции «все»`)),
+  },
+  любое: {
+    arity: '1+',
+    apply: () => 0,
+    raw: args => args.some((value, n) => boolean(value, `аргумент ${n + 1} функции «любое»`)),
+  },
   кинуть: {
     arity: '1+',
     apply: args => args[0]!,

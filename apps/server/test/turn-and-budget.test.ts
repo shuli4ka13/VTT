@@ -56,7 +56,7 @@ async function table() {
   return { as, me, roomId, arven, mirra, rooms: app.get(RoomsService) };
 }
 
-describe('часы и бюджет действий не портятся', () => {
+describe('часы и траты хода не портятся', () => {
   it('ход и сцену нельзя двигать, пока стол ждёт ответа на реакцию', async () => {
     const { as, me, roomId, arven, mirra, rooms } = await table();
     await rooms.setValue(me, roomId, arven.id, 'inspiration', 1);
@@ -78,7 +78,7 @@ describe('часы и бюджет действий не портятся', () =
     expect(stepped.body.clock.active).toBe(mirra.id);
   });
 
-  it('действие, упавшее с ошибкой уже на стороне цели, не сгорает из бюджета хода', async () => {
+  it('действие, упавшее с ошибкой уже на стороне цели, не тратит поле «Действие»', async () => {
     const { as, roomId, arven, mirra } = await table();
     await as(http().post(`/rooms/${roomId}/turn`)).send({ roomId, op: 'start', order: [mirra.id, arven.id] }).expect(201);
 
@@ -89,7 +89,9 @@ describe('часы и бюджет действий не портятся', () =
     expect(broken.body.message).toContain('нет_такой_правки');
 
     const state = (await as(http().get(`/rooms/${roomId}`))).body;
-    expect(state.clock.spent[mirra.id]?.action ?? 0).toBe(0);
+    const desk = state.sheets.find((sheet: { kind?: string }) => sheet.kind === 'desk');
+    expect(desk.values.battle, 'начало боя отметило бой на столе').toBe(1);
+    expect(state.sheets.find((sheet: { id: string }) => sheet.id === mirra.id).values.turn_action ?? 1, 'упавшее действие не потратило действие').toBe(1);
 
     const done = await as(http().post(`/rooms/${roomId}/act`)).send(spray).expect(201);
     if (done.body.pending) {

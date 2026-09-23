@@ -97,6 +97,7 @@ export function sheets() {
       hp_max: 59, hp_current: 59, hit_dice_left: 7,
       ac_base: 11,
     }, [], ['ogre_club']),
+    sheet('стол', 'Стол', 'desk', { battle: 0 }, [], []),
   ];
 }
 

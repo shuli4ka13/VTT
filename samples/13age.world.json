@@ -213,6 +213,59 @@
         },
         "control": "stepper",
         "desk": true
+      },
+      {
+        "tag": "turn_standard",
+        "label": "Стандартное",
+        "group": "В бою",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1,
+          "min": 0,
+          "max": 1
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "turn_move",
+        "label": "Движение",
+        "group": "В бою",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1,
+          "min": 0,
+          "max": 1
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "turn_quick",
+        "label": "Быстрое",
+        "group": "В бою",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1,
+          "min": 0,
+          "max": 1
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "battle",
+        "label": "Идёт бой",
+        "group": "В бою",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 1
+        },
+        "control": "toggle",
+        "desk": true
       }
     ],
     "groups": {
@@ -225,7 +278,9 @@
       "Бой": {},
       "Вызываемые": {},
       "Снаряжение": {},
-      "Приёмы": {}
+      "Приёмы": {},
+      "В бою": {},
+      "Правила комнаты": {}
     },
     "constants": {
       "lead_die": {
@@ -280,20 +335,6 @@
         ]
       }
     },
-    "action_types": {
-      "standard": {
-        "label": "Стандартное",
-        "perTurn": 1
-      },
-      "move": {
-        "label": "Движение",
-        "perTurn": 1
-      },
-      "quick": {
-        "label": "Быстрое",
-        "perTurn": 1
-      }
-    },
     "initiative": {
       "die": {
         "constant": "lead_die"
@@ -332,7 +373,6 @@
         "label": "Атака героя",
         "group": "Атака",
         "activation": "manual",
-        "cost": "standard",
         "description": "к20 + модификатор + уровень + кость эскалации против КЗ. Попал — кость оружия за каждый уровень, на 20 вдвое. Промах — урон, равный уровню.",
         "params": [
           {
@@ -406,13 +446,42 @@
               "not": true
             }
           }
+        ],
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_standard"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "стандартное действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_standard"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
         ]
       },
       "monster_attack": {
         "label": "Атака монстра",
         "group": "Атака",
         "activation": "manual",
-        "cost": "standard",
         "description": "Монстры бьют фиксированным уроном и кость эскалации не получают.",
         "params": [
           {
@@ -453,6 +522,36 @@
               }
             }
           }
+        ],
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "tag": "turn_standard"
+            },
+            "versus": {
+              "const": 1
+            },
+            "breakIf": "less",
+            "note": "стандартное действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_standard"
+            },
+            "direction": "subtract",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
         ]
       },
       "new_round": {
@@ -490,6 +589,139 @@
             "value": {
               "const": 0
             }
+          }
+        ]
+      },
+      "battle_start": {
+        "label": "Начало боя",
+        "group": "Правила комнаты",
+        "description": "Бой пошёл: траты хода считаются, у всех полный запас.",
+        "activation": "triggered",
+        "duration": {
+          "kind": "permanent"
+        },
+        "trigger": {
+          "on": "moment:combat-start"
+        },
+        "params": [],
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "battle"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_standard"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_move"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_quick"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          }
+        ]
+      },
+      "battle_end": {
+        "label": "Конец боя",
+        "group": "Правила комнаты",
+        "description": "Вне боя действия не считаются.",
+        "activation": "triggered",
+        "duration": {
+          "kind": "permanent"
+        },
+        "trigger": {
+          "on": "moment:combat-end"
+        },
+        "params": [],
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "battle"
+            },
+            "direction": "set",
+            "value": {
+              "const": 0
+            },
+            "targetModifiers": false
+          }
+        ]
+      },
+      "turn_refresh": {
+        "label": "Начало хода",
+        "group": "Правила комнаты",
+        "description": "Траты хода — снова полные.",
+        "activation": "triggered",
+        "duration": {
+          "kind": "permanent"
+        },
+        "trigger": {
+          "on": "moment:turn-start"
+        },
+        "params": [],
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_standard"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_move"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_quick"
+            },
+            "direction": "set",
+            "value": {
+              "const": 1
+            },
+            "targetModifiers": false
           }
         ]
       }
@@ -583,7 +815,11 @@
         "bindings": []
       }
     },
-    "room_rules": []
+    "room_rules": [
+      "battle_start",
+      "battle_end",
+      "turn_refresh"
+    ]
   },
   "compendium": {
     "items": [
@@ -761,7 +997,8 @@
       "kind": "desk",
       "name": "Стол",
       "values": {
-        "escalation": 0
+        "escalation": 0,
+        "battle": 0
       },
       "equipped": [],
       "effects": [],

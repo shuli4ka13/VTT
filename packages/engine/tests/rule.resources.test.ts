@@ -1,7 +1,6 @@
-import { group, test, eq, ok, deepEq, throws } from './harness.ts';
+import { group, test, eq, deepEq, throws } from './harness.ts';
 import { exchange } from '../src/events/exchange.ts';
 import { fireMoments } from '../src/events/moments.ts';
-import { spendAction, startCombat, idleClock, limitOf } from '../src/engine/clock.ts';
 import { lintSystem, errorsOf } from '../src/model/lint.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
@@ -13,9 +12,7 @@ const system = {
     { tag: 'ячейки_1', label: 'Ячейки 1-го круга', value: { kind: 'stored', type: 'number', default: 1, min: 0 } },
     { tag: 'ячейки_2', label: 'Ячейки 2-го круга', value: { kind: 'stored', type: 'number', default: 0, min: 0 } },
     { tag: 'ячейки_1_всего', label: 'Всего ячеек 1-го круга', value: { kind: 'stored', type: 'number', default: 4 } },
-    { tag: 'атак', label: 'Атак за действие', value: { kind: 'formula', expr: '#уровень >= 5 ? 2 : 1' } },
   ],
-  action_types: { атака: { label: 'Атака', perTurnField: 'атак' }, действие: { label: 'Действие', perTurn: 1 } },
   effects: {
     ячейка: {
       label: 'Ячейка заклинания',
@@ -28,7 +25,7 @@ const system = {
       ],
     },
     стрела: {
-      label: 'Волшебная стрела', activation: 'manual', cost: 'действие',
+      label: 'Волшебная стрела', activation: 'manual',
       params: [{ key: 'круг', label: 'Каким кругом', kind: 'number', ask: { by: 'actor', min: 1, max: 2 } }],
       self: [{ type: 'emit', event: 'ячейка', args: { круг: { param: 'круг' } }, strict: true }],
       steps: [
@@ -37,7 +34,7 @@ const system = {
       ],
     },
     скрытая: {
-      label: 'Скрытая атака', activation: 'manual', cost: 'атака',
+      label: 'Скрытая атака', activation: 'manual',
       steps: [
         { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d6' }, count: { expr: 'ceil(#уровень / 2)' } },
         { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { ref: 'урон' } },
@@ -118,21 +115,6 @@ group('отдых — момент, как начало хода', () => {
     const out = fireMoments([{ moment: 'long-rest', sheetId: 'маг' }], [tired], { system, compendium: book, die: () => 1 });
     eq(out.sheets[0]!.values.ячейки_1, 4);
     eq(fireMoments([{ moment: 'short-rest', sheetId: 'маг' }], [tired], { system, compendium: book, die: () => 1 }).reports.length, 0);
-  });
-});
-
-group('лимит действий с листа', () => {
-  test('у пятого уровня две атаки за ход, третья — отказ; у первого — одна', () => {
-    const clock = startCombat(idleClock(), ['воин']);
-    const strike = system.effects.скрытая!;
-    const five = (tag: string) => (tag === 'атак' ? 2 : undefined);
-    const once = spendAction(system, clock, 'воин', strike, five);
-    const twice = spendAction(system, once, 'воин', strike, five);
-    throws(() => spendAction(system, twice, 'воин', strike, five), '2 из 2');
-    throws(() => spendAction(system, once, 'воин', strike, () => 1), '1 из 1');
-    eq(limitOf({ perTurn: 1 }), 1);
-    eq(limitOf({ perTurnField: 'атак' }), null, 'без листа лимит из поля не читается');
-    ok(limitOf(undefined) === null);
   });
 });
 

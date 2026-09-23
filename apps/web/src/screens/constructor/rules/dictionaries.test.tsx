@@ -469,29 +469,6 @@ describe('Словари: кости, виды бросков, таблицы, �
     expect(grid.style.gridTemplateColumns).not.toBe(before);
   });
 
-  it('тип действия заводится в словарь системы', () => {
-    render(<RulesTab />);
-    открыть('Чего стоит действие');
-    fireEvent.click(screen.getByText('+ тип'));
-    const types = Object.values(useWorld.getState().system.action_types ?? {});
-    expect(types.length).toBe(1);
-  });
-
-  it('тип действия, которым платит эффект, удалить нельзя', () => {
-    useWorld.setState(state => ({
-      ...state,
-      system: {
-        ...emptySystem(),
-        action_types: { action: { label: 'Действие' } },
-        effects: { strike: { label: 'Атака', activation: 'manual', cost: 'action', params: [], steps: [] } },
-      },
-      activeEffectId: null,
-    }));
-    render(<RulesTab />);
-    открыть('Чего стоит действие');
-    const guarded = screen.getByTitle('тип используется') as HTMLButtonElement;
-    expect(guarded.disabled).toBe(true);
-  });
 });
 
 describe('Тоглы: крит и броня пишутся данными', () => {

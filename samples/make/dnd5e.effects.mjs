@@ -1,4 +1,4 @@
-import { RESOURCES, TAKEN, DAMAGE_TAGS, WIELD } from './dnd5e.system.mjs';
+import { RESOURCES, TAKEN, DAMAGE_TAGS, WIELD, TURN_FIELDS } from './dnd5e.system.mjs';
 
 const DIE = { constant: 'lead_die' };
 
@@ -60,9 +60,33 @@ const payResource = (key, note, amount = { const: 1 }) => [
   change(`${key}_left`, 'subtract', amount),
 ];
 
-const manual = (label, category, description, cost, rest) => ({
-  label, group: category, description, activation: 'manual', ...(cost ? { cost } : {}), params: [], steps: [], ...rest,
-});
+const IN_BATTLE = { expr: '@стол.battle >= 1' };
+const NEEDS_ACTION = { expr: 'все(@стол.battle >= 1, @turn_attacks < 1)' };
+const payTurn = (tag, note) => [
+  { type: 'compare', value: { tag }, versus: { const: 1 }, breakIf: 'less', note, when: IN_BATTLE },
+  change(tag, 'subtract', { const: 1 }, { when: IN_BATTLE }),
+];
+const COST = {
+  action: payTurn('turn_action', 'действие на этом ходу уже потрачено'),
+  bonus: payTurn('turn_bonus', 'бонусное действие на этом ходу уже потрачено'),
+  reaction: payTurn('turn_reaction', 'реакция уже потрачена'),
+  once: payTurn('turn_once', 'это бывает раз за ход'),
+  attack: [
+    { type: 'compare', value: { tag: 'turn_action' }, versus: { const: 1 }, breakIf: 'less', note: 'действие на этом ходу уже потрачено', when: NEEDS_ACTION },
+    change('turn_action', 'subtract', { const: 1 }, { when: NEEDS_ACTION }),
+    change('turn_attacks', 'set', { expr: '@attacks_per_action' }, { when: NEEDS_ACTION }),
+    change('turn_attacks', 'subtract', { const: 1 }, { when: IN_BATTLE }),
+  ],
+};
+const paid = (cost, self = []) => [...(COST[cost] ?? []), ...self];
+
+const manual = (label, category, description, cost, rest = {}) => {
+  const self = paid(cost, rest.self);
+  return {
+    label, group: category, description, activation: 'manual', params: [], steps: [], ...rest,
+    ...(self.length ? { self } : {}),
+  };
+};
 const passive = (label, description, modifiers, duration = { kind: 'temporary' }, extra = {}) => ({
   label, group: 'Состояния', description, activation: 'passive', duration, stacking: 'refresh', modifiers, ...extra,
 });
@@ -151,9 +175,8 @@ function spells() {
       label: 'Заклинание',
       group: 'Заклинания',
       description: 'Основа всех заклинаний: спрашивает круг ячейки и тратит её. Сама по себе не применяется.',
-      cost: 'action',
       params: infoParams,
-      self: paySlot,
+      self: paid('action', paySlot),
     },
     cantrip_attack: manual('Заговор: бросок атаки', 'Заклинания',
       'Атака заклинанием против класса брони. Костей столько, сколько даёт уровень персонажа: одна, с 5-го две, с 11-го три, с 17-го четыре.',
@@ -300,8 +323,8 @@ function features() {
         ],
       }),
     action_surge: manual('Всплеск действий', 'Умения класса',
-      'Ещё одно действие в этом ходу. Стол списывает использование; второе действие ведущий разрешает сам.', 'free', {
-        self: payResource('action_surge', 'всплеск действий уже потрачен'),
+      'Ещё одно действие в этом ходу.', 'free', {
+        self: [...payResource('action_surge', 'всплеск действий уже потрачен'), change('turn_action', 'add', { const: 1 }, { when: IN_BATTLE })],
       }),
     rage: manual('Ярость', 'Умения класса',
       'Бонусным действием впадаешь в ярость на минуту: урон рукопашным оружием выше, сопротивление рубящему, колющему и дробящему, преимущество на проверки и спасброски Силы.',
@@ -376,10 +399,14 @@ function features() {
 }
 
 function reactions() {
-  const reaction = (label, description, trigger, rest) => ({
-    label, group: 'Реакции', description, activation: 'reaction', cost: 'reaction',
-    duration: { kind: 'permanent' }, trigger, params: [], steps: [], ...rest,
-  });
+  const reaction = (label, description, trigger, { free, ...rest }) => {
+    const self = free ? rest.self ?? [] : paid('reaction', rest.self);
+    return {
+      label, group: 'Реакции', description, activation: 'reaction',
+      duration: { kind: 'permanent' }, trigger, params: [], steps: [], ...rest,
+      ...(self.length ? { self } : {}),
+    };
+  };
   return {
     shield: reaction('Щит', 'По тебе попали — тратишь ячейку 1-го круга, +5 к классу брони до начала твоего хода. Атака пересчитывается.',
       { on: '*', window: 'target', condition: { ref: 'hit.success' } },
@@ -403,7 +430,7 @@ function reactions() {
     inspire: reaction('Вдохновение: перебросить с преимуществом', 'Увидел свой бросок — тратишь вдохновение, к выпавшему добавляется вторая кость, берётся лучшая.',
       { on: '*', window: 'sender', claims: ['advantage'] },
       {
-        cost: undefined,
+        free: true,
         self: [
           { type: 'compare', value: { tag: 'inspiration' }, versus: { const: 1 }, breakIf: 'less', note: 'вдохновения нет' },
           change('inspiration', 'subtract', { const: 1 }),
@@ -411,10 +438,10 @@ function reactions() {
       }),
     lucky_point: reaction('Везунчик: очко удачи', 'Увидел свой бросок — тратишь очко удачи, кидаешь ещё одну кость и берёшь лучшую.',
       { on: '*', window: 'sender', claims: ['advantage'] },
-      { cost: undefined, self: payResource('luck', 'очки удачи кончились') }),
+      { free: true, self: payResource('luck', 'очки удачи кончились') }),
     bardic_ready: reaction('Кость вдохновения наготове', 'Увидел свой бросок — прибавляешь кость вдохновения. Один раз.',
       { on: '*', window: 'sender', claims: ['bardic'] },
-      { cost: undefined, duration: { kind: 'uses', max: 1 } }),
+      { free: true, duration: { kind: 'uses', max: 1 } }),
   };
 }
 
@@ -601,7 +628,19 @@ function lifecycle() {
 
 function roomRules() {
   const when = (level, modifier) => ({ ...modifier, condition: `@exhaustion >= ${level}` });
+  const refresh = [
+    ...TURN_FIELDS.map(([tag]) => change(tag, 'set', { const: 1 })),
+    change('turn_attacks', 'set', { const: 0 }),
+  ];
+  const onMoment = (label, description, moment, steps) => ({
+    label, group: 'Правила комнаты', description, activation: 'triggered', duration: { kind: 'permanent' },
+    trigger: { on: `moment:${moment}` }, params: [], steps,
+  });
   return {
+    battle_start: onMoment('Начало боя', 'Бой пошёл: траты хода считаются, у всех полный запас.', 'combat-start',
+      [change('battle', 'set', { const: 1 }), ...refresh]),
+    battle_end: onMoment('Конец боя', 'Вне боя действия не считаются.', 'combat-end', [change('battle', 'set', { const: 0 })]),
+    turn_refresh: onMoment('Начало хода', 'Действие, бонусное, реакция и «раз за ход» — снова по одному.', 'turn-start', refresh),
     exhaustion_rule: {
       label: 'Истощение', group: 'Правила комнаты', activation: 'passive', duration: { kind: 'permanent' },
       description: 'Шесть ступеней: помеха на проверки, скорость вдвое меньше, помеха на атаки и спасброски, максимум хитов вдвое меньше, скорость ноль. Шестая — смерть, её объявляет ведущий.',
@@ -624,5 +663,5 @@ export function effects() {
 }
 
 export const ROOM_RULES = [
-  'taken_rule', 'exhaustion_rule', 'fall', 'wake', 'death_now', 'stabilize', 'long_rest', 'short_rest',
+  'battle_start', 'battle_end', 'turn_refresh', 'taken_rule', 'exhaustion_rule', 'fall', 'wake', 'death_now', 'stabilize', 'long_rest', 'short_rest',
 ];

@@ -14,7 +14,7 @@ import type { Seen } from '@vtt/engine/events/exchange';
 import type { EmittedEvent } from '@vtt/engine/engine/rule';
 import { previewLines, describeEntry } from '@vtt/engine/events/describe';
 import { flattenSystem } from '@vtt/engine/model/inherit';
-import { effectLabelOf, actionOf, send, receive, offers, react, senderResults } from '@vtt/engine/events/envelope';
+import { effectLabelOf, send, receive, offers, react, senderResults } from '@vtt/engine/events/envelope';
 import { tapeDie, replayDie } from '@vtt/engine/engine/dice';
 import type { Envelope, Offer, ReactionWindow, Report } from '@vtt/engine/events/envelope';
 import { findEffect, usesMax } from '@vtt/engine/engine/effects';
@@ -30,7 +30,7 @@ import { rollTagOf } from '@vtt/engine/engine/targets';
 import { newPass, calc } from '@vtt/engine/engine/calc';
 import { rollLead, dieConstant } from '@vtt/engine/engine/lead-die';
 import {
-  idleClock, startCombat, stopCombat, nextTurn, endScene, spendAction, rollInitiative, expiryOf, endsAtOf, inCombat,
+  idleClock, startCombat, stopCombat, nextTurn, endScene, rollInitiative, expiryOf, endsAtOf, inCombat,
 } from '@vtt/engine/engine/clock';
 
 export type Role = 'gm' | 'player';
@@ -294,14 +294,10 @@ export class RoomsService {
     }
 
     const clock = await this.clockOf(intent.roomId);
-    let nextClock: ClockState = clock;
     let envelope: Envelope;
     let own: { sheet: Sheet; report: Report | null; desk?: Sheet } | null = null;
     try {
-      const action = actionOf(intent.actionId, { system, compendium });
-      const effect = findEffect(system, action.effect);
       const from = sheets.find(s => s.id === intent.fromId);
-      if (effect && from) nextClock = spendAction(system, clock, intent.fromId, effect, this.reader(system, compendium, from));
       const to = sheets.find(s => s.id === intent.toId);
       if (!from) throw new NotFoundException(`в комнате нет листа «${intent.fromId}»`);
       if (!to) throw new NotFoundException(`в комнате нет листа «${intent.toId}»`);
@@ -310,11 +306,11 @@ export class RoomsService {
       if (trouble) throw new BadRequestException(trouble);
       const inputs = normalizeInputs(asked, intent.inputs);
       envelope = send(intent.actionId, {
-        system, compendium, die: this.die, clock: nextClock, sheet: from, against: to, claims: intent.edits ?? [], desk: deskOf(sheets),
+        system, compendium, die: this.die, clock, sheet: from, against: to, claims: intent.edits ?? [], desk: deskOf(sheets),
         ...(Object.keys(inputs).length ? { inputs } : {}),
       });
       own = runSelfTrack(intent.actionId, from, {
-        system, compendium, die: this.die, clock: nextClock, desk: deskOf(sheets),
+        system, compendium, die: this.die, clock, desk: deskOf(sheets),
         ...(Object.keys(inputs).length ? { inputs } : {}),
       });
       const refused = selfRefusal(own, { system }, envelope.label);
@@ -340,12 +336,11 @@ export class RoomsService {
       : [];
 
     return this.proceed({
-      roomId: intent.roomId, intent, envelope, clock: nextClock, stage: 'sender',
+      roomId: intent.roomId, intent, envelope, clock, stage: 'sender',
       claims: intent.edits ?? [], results: {},
     }, {
       system, compendium, sheets: started, log: [...ownLines, ...releasedLines],
       touched: started.filter((sheet, at) => sheet !== sheets[at]),
-      clockDirty: nextClock !== clock,
       origin: sheets,
     });
   }
@@ -354,7 +349,7 @@ export class RoomsService {
     state: PendingRecord,
     world: {
       system: System; compendium: Compendium; sheets: Sheet[]; log: string[]; touched: Sheet[];
-      clockDirty: boolean; origin?: Sheet[];
+      origin?: Sheet[];
     },
   ): Promise<RoomDelta> {
     const { system, compendium } = world;
@@ -432,7 +427,6 @@ export class RoomsService {
       throw new BadRequestException((err as Error).message);
     }
 
-    if (world.clockDirty) await this.saveClock(state.roomId, state.clock);
     const touched = await this.persistSheets(state.roomId, world.sheets, sheets, world.touched);
     const log = await this.appendLog(state.roomId, [...world.log, ...lines]);
 
@@ -450,7 +444,7 @@ export class RoomsService {
       const parked = await this.park({
         ...state, stage: 'after', sheetId: target.id, offered, tapes, afterAt: at, afterSeen,
         results: seen.results, emitted: seen.emitted,
-      }, target, [], { system, sheets, log: [], touched: [], clockDirty: false });
+      }, target, [], { system, sheets, log: [], touched: [] });
       return { ...parked, sheets: touched, log: [...log, ...parked.log] };
     }
 
@@ -461,11 +455,10 @@ export class RoomsService {
   private async park(
     state: PendingRecord & { sheetId: string; offered: Offer[] },
     asked: Sheet, preview: string[],
-    world: { system: System; sheets: Sheet[]; log: string[]; touched: Sheet[]; clockDirty: boolean },
+    world: { system: System; sheets: Sheet[]; log: string[]; touched: Sheet[] },
   ): Promise<RoomDelta> {
     const id = this.newId();
     const record: PendingRecord = { ...state, id, preview };
-    if (world.clockDirty) await this.saveClock(state.roomId, state.clock);
     await this.db.delete(roomPending).where(eq(roomPending.roomId, state.roomId));
     await this.db.insert(roomPending).values({ id, roomId: state.roomId, data: JSON.stringify(record) });
     const pending = this.pendingView(record, asked);
@@ -495,7 +488,7 @@ export class RoomsService {
     if (!asked) throw new NotFoundException(`в комнате нет листа «${record.sheetId}»`);
     await this.assertMaySheet(intent.roomId, userId, asked.id);
 
-    let clock = record.clock;
+    const clock = record.clock;
     const lines: string[] = [];
     let envelope = record.envelope;
     let claims = record.claims;
@@ -505,10 +498,6 @@ export class RoomsService {
     try {
       const reacted = react(intent.chosen, envelope, record.stage as ReactionWindow,
         { system, compendium, die: this.die, clock, sheet: asked }, record.results, record.emitted ?? []);
-      for (const id of intent.chosen) {
-        const effect = findEffect(system, id);
-        if (effect) clock = spendAction(system, clock, asked.id, effect, this.reader(system, compendium, asked));
-      }
       sheets = sheets.map(s => (s.id === asked.id ? reacted.sheet : s));
       if (reacted.sheet !== asked) changed.push(reacted.sheet);
       for (const report of reacted.reports) {
@@ -557,7 +546,7 @@ export class RoomsService {
       ...(record.stage === 'target' ? { at: (record.at ?? 0) + 1 } : {}),
       ...(record.stage === 'after' ? { afterAt: (record.afterAt ?? 0) + 1 } : {}),
       results: {},
-    }, { system, compendium, sheets, log: lines, touched: changed, clockDirty: clock !== record.clock, origin });
+    }, { system, compendium, sheets, log: lines, touched: changed, origin });
   }
 
   private async persistSheets(roomId: string, before: Sheet[], after: Sheet[], already: Sheet[]): Promise<Sheet[]> {
@@ -804,11 +793,6 @@ export class RoomsService {
     return fired.sheets;
   }
 
-  private reader(system: System, compendium: Compendium, sheet: Sheet): (tag: string) => unknown {
-    const pass = newPass(system, sheet, { compendium });
-    return tag => calc(system, sheet, tag, pass);
-  }
-
   private readonly queues = new Map<string, Promise<unknown>>();
 
   private inTurn<T>(roomId: string, work: () => Promise<T>): Promise<T> {
@@ -907,7 +891,7 @@ const momentsOf = (
   op: TurnIntent['op'], before: ClockState, after: ClockState, sheets: Sheet[],
 ): MomentEvent[] => {
   const everyone = (moment: MomentEvent['moment']): MomentEvent[] =>
-    sheets.map(sheet => ({ moment, sheetId: sheet.id }));
+    sheets.filter(sheet => sheet.kind !== 'desk').map(sheet => ({ moment, sheetId: sheet.id }));
 
   if (op === 'start') {
     return [

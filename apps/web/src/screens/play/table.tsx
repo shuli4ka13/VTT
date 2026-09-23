@@ -8,8 +8,7 @@ import { Lobby } from './lobby.tsx';
 import { useSession } from '../../store/session.ts';
 import type { RoomState, Sheet, System } from '@vtt/schema';
 import { availableActions } from '@vtt/engine/events/envelope';
-import { limitOf } from '@vtt/engine/engine/clock';
-import { newPass, calc, deskSystemOf } from '@vtt/engine/engine/calc';
+import { deskSystemOf } from '@vtt/engine/engine/calc';
 import { useReader } from '../../engine/use-calc.ts';
 import { FieldCell } from '../../sheet/field-cell.tsx';
 import './table.css';
@@ -191,40 +190,9 @@ function Combat({ room, onError }: { room: RoomState; onError: (message: string 
               <Chip key={id} active={id === clock!.active}>{nameOf(id)}</Chip>
             ))}
           </div>
-          <Budget room={room} sheetId={String(clock!.active)} />
         </>
       ) : null}
     </Card>
-  );
-}
-
-function Budget({ room, sheetId }: { room: RoomState; sheetId: string }) {
-  const types = Object.entries(room.system.action_types ?? {});
-  if (!types.length) return null;
-  const spent = room.clock?.spent[sheetId] ?? {};
-  const sheet = room.sheets.find(s => s.id === sheetId);
-  const valueOf = (tag: string): unknown => {
-    if (!sheet) return undefined;
-    try { return calc(room.system as System, sheet, tag, newPass(room.system as System, sheet, { compendium: room.compendium })); }
-    catch { return undefined; }
-  };
-
-  return (
-    <div className="stack stack--tight">
-      <span className="field__label">Бюджет хода</span>
-      <div className="inline inline--tight">
-        {types.map(([key, type]) => {
-          const perTurn = limitOf(type, valueOf) ?? 0;
-          const used = spent[key] ?? 0;
-          const left = perTurn ? Math.max(0, perTurn - used) : null;
-          return (
-            <Chip key={key} active={left === null ? used === 0 : left > 0}>
-              {type.label}: {left === null ? (used ? `потрачено ${used}` : 'без счёта') : `${left} из ${perTurn}`}
-            </Chip>
-          );
-        })}
-      </div>
-    </div>
   );
 }
 

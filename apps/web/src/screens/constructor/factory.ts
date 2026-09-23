@@ -7,7 +7,6 @@ import type {
 
 export interface Made<T> { key: string; value: T }
 
-type ActionType = NonNullable<System['action_types']>[string];
 type RollKind = NonNullable<System['rolls']>[number];
 type Prop = NonNullable<RecordKind['props']>[number];
 
@@ -96,11 +95,6 @@ export const newCalled = (system: System): Made<Effect> => {
     } as Effect,
   };
 };
-
-export const newActionType = (system: System): Made<ActionType> => ({
-  key: freeId(Object.keys(system.action_types ?? {}), 'действие'),
-  value: { label: '' },
-});
 
 export interface StepTemplate {
   key: string;

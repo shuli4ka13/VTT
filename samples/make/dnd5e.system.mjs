@@ -120,6 +120,10 @@ export const lists = () => ({
   },
 });
 
+export const TURN_FIELDS = [
+  ['turn_action', 'Действие'], ['turn_bonus', 'Бонусное действие'], ['turn_reaction', 'Реакция'], ['turn_once', 'Раз за ход'],
+];
+
 export const WIELD = {
   melee: 'ближний бой — Сила', finesse: 'фехтовальное — Сила или Ловкость', ranged: 'дальний бой — Ловкость',
 };
@@ -231,6 +235,12 @@ export function fields() {
   out.push(formula('is_stable', 'Три успеха', 'Здоровье', '@death_ok >= 3'));
 
   out.push(stored('attacks_per_action', 'Атак за действие', 'Атака', 'number', 1, { min: 1, max: 4, control: 'stepper' }));
+
+  for (const [tag, label] of TURN_FIELDS) {
+    out.push(stored(tag, label, 'В бою', 'number', 1, { min: 0, max: 1, control: 'pips' }));
+  }
+  out.push(stored('turn_attacks', 'Атак осталось', 'В бою', 'number', 0, { min: 0, max: 4, control: 'pips' }));
+  out.push({ ...stored('battle', 'Идёт бой', 'В бою', 'number', 0, { min: 0, max: 1, control: 'toggle' }), desk: true });
   out.push(stored('crit_from', 'Крит на костях от', 'Атака', 'number', 20, { min: 18, max: 20 }));
   out.push(formula('sneak_dice', 'Костей скрытой атаки', 'Атака', 'ceil(@level / 2)'));
 
@@ -293,6 +303,7 @@ export const groups = () => ({
   'Навыки': {},
   ...Object.fromEntries(Object.values(SKILL_GROUP).map(name => [name, { parent: 'Навыки' }])),
   'Чувства и движение': {},
+  'В бою': {},
   'Защита': {},
   'Здоровье': {},
   'Атака': {},
@@ -366,15 +377,6 @@ export const rollEdits = () => ({
   auto_fail: { label: 'Автоматический провал', ops: [{ op: 'shiftVersus', by: 99 }] },
 });
 
-export const actionTypes = () => ({
-  action: { label: 'Действие', icon: '◆', perTurn: 1 },
-  attack: { label: 'Атака', icon: '⚔', perTurn: 1, perTurnField: 'attacks_per_action', within: 'action' },
-  bonus: { label: 'Бонусное действие', icon: '◇', perTurn: 1 },
-  reaction: { label: 'Реакция', icon: '↩', perTurn: 1 },
-  once: { label: 'Раз за ход', icon: '①', perTurn: 1 },
-  free: { label: 'Свободное', icon: '○' },
-  movement: { label: 'Передвижение', icon: '→' },
-});
 
 
 

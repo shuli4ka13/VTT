@@ -437,7 +437,6 @@ export function offers(
     if (!fits) continue;
     out.push({
       id, label: effect.label || id,
-      ...(effect.cost ? { cost: effect.cost } : {}),
       claims: [...(trigger.claims ?? [])],
     });
   }

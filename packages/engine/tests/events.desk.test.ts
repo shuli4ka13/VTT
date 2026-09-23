@@ -42,10 +42,17 @@ group('стол — третий участник с полями', () => {
     ok(!('страх' in out.sheets.find(s => s.id === 'держит')!.values), 'страх не лёг на лист цели');
   });
 
-  test('без стола чтение со стола — внятная ошибка', () => {
+  test('стола в наборе нет — поля стола читаются по умолчанию, а на лист цели ничего не ложится', () => {
+    const out = exchange({ system, compendium: book, die: () => 1, sheets: [pc('бьёт'), pc('держит')], actionId: 'удар:0', fromId: 'бьёт', toId: 'держит' });
+    eq(out.sheets.find(s => s.id === 'держит')!.values.хп, 20 - 3, 'эскалация по умолчанию 0');
+    ok(!('страх' in out.sheets.find(s => s.id === 'держит')!.values));
+  });
+
+  test('у системы без полей стола чтение со стола — внятная ошибка', () => {
+    const plain = { ...system, fields: system.fields.filter(f => !f.desk) } as System;
     let why = '';
     try {
-      exchange({ system, compendium: book, die: () => 1, sheets: [pc('бьёт'), pc('держит')], actionId: 'удар:0', fromId: 'бьёт', toId: 'держит' });
+      exchange({ system: plain, compendium: book, die: () => 1, sheets: [pc('бьёт'), pc('держит')], actionId: 'удар:0', fromId: 'бьёт', toId: 'держит' });
     } catch (err) { why = (err as Error).message; }
     ok(why.includes('стола нет'), why);
   });

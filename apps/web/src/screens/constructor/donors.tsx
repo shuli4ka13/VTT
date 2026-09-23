@@ -207,10 +207,6 @@ function Effects({ donor }: { donor: System }) {
       for (const mod of effect.modifiers ?? []) {
         if (mod.kind === 'roll' && mod.edit) bringEdit(mod.edit);
       }
-      if (effect.cost && donor.action_types?.[effect.cost]) {
-        draft.action_types = draft.action_types ?? {};
-        draft.action_types[effect.cost] ??= structuredClone(donor.action_types[effect.cost]!);
-      }
     });
     pick({ activeEffectId: id });
   };
