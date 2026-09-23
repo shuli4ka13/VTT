@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { RulesTab } from './rules-tab.tsx';
 import { useWorld, emptySystem } from '../../../store/world.ts';
 
@@ -426,6 +426,43 @@ describe('Словари: кости, виды бросков, таблицы, �
     открыть('Таблицы');
     const guarded = screen.getByTitle('таблица используется') as HTMLButtonElement;
     expect(guarded.disabled).toBe(true);
+  });
+
+  it('таблица как лист: ключ без подписи, формула правится в строке формул, колонку можно растянуть', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...emptySystem(),
+        fields: [{ tag: 'сила', label: 'Сила', value: { kind: 'stored', type: 'number', default: 0 } }],
+        tables: { wield: {
+          label: 'Способ атаки', key: 'word',
+          columns: [{ key: 'attack', label: 'Бонус атаки', kind: 'expr' }],
+          rows: [{ value: 'ближний бой', cells: { attack: '@сила + 2' } }],
+        } },
+      },
+      activeEffectId: null,
+    }));
+    render(<RulesTab />);
+    открыть('Таблицы');
+    fireEvent.click(screen.getByText('Способ атаки'));
+    expect(screen.queryByText(/подпись/i)).toBeNull();
+    expect(document.querySelector('.formula-bar')).toBeNull();
+
+    fireEvent.click(screen.getByTitle('@сила + 2'));
+    const bar = document.querySelector('.formula-bar')!;
+    expect(bar.textContent).toContain('«ближний бой» · Бонус атаки');
+    const tail = [...bar.querySelectorAll('input.chips__text')].at(-1) as HTMLInputElement;
+    fireEvent.change(tail, { target: { value: ' + 3' } });
+    expect(useWorld.getState().system.tables!.wield!.rows![0]!.cells!.attack).toBe('@сила + 3');
+
+    const grid = document.querySelector('.sheet-grid') as HTMLElement;
+    const before = grid.style.gridTemplateColumns;
+    act(() => {
+      screen.getByLabelText('ширина колонки «Бонус атаки»').dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, clientX: 100 }));
+      window.dispatchEvent(new MouseEvent('pointermove', { clientX: 180 }));
+      window.dispatchEvent(new MouseEvent('pointerup'));
+    });
+    expect(grid.style.gridTemplateColumns).not.toBe(before);
   });
 
   it('тип действия заводится в словарь системы', () => {

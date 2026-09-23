@@ -1783,8 +1783,8 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "number",
-          "default": 1
+          "type": "text",
+          "default": "как есть"
         },
         "control": "choice",
         "optionsFrom": "taken"
@@ -1795,8 +1795,8 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "number",
-          "default": 1
+          "type": "text",
+          "default": "как есть"
         },
         "control": "choice",
         "optionsFrom": "taken"
@@ -1807,8 +1807,8 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "number",
-          "default": 1
+          "type": "text",
+          "default": "как есть"
         },
         "control": "choice",
         "optionsFrom": "taken"
@@ -1819,8 +1819,8 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "number",
-          "default": 1
+          "type": "text",
+          "default": "как есть"
         },
         "control": "choice",
         "optionsFrom": "taken"
@@ -1831,8 +1831,8 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "number",
-          "default": 1
+          "type": "text",
+          "default": "как есть"
         },
         "control": "choice",
         "optionsFrom": "taken"
@@ -1843,8 +1843,8 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "number",
-          "default": 1
+          "type": "text",
+          "default": "как есть"
         },
         "control": "choice",
         "optionsFrom": "taken"
@@ -1855,8 +1855,8 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "number",
-          "default": 1
+          "type": "text",
+          "default": "как есть"
         },
         "control": "choice",
         "optionsFrom": "taken"
@@ -1867,8 +1867,8 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "number",
-          "default": 1
+          "type": "text",
+          "default": "как есть"
         },
         "control": "choice",
         "optionsFrom": "taken"
@@ -1879,8 +1879,8 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "number",
-          "default": 1
+          "type": "text",
+          "default": "как есть"
         },
         "control": "choice",
         "optionsFrom": "taken"
@@ -1891,8 +1891,8 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "number",
-          "default": 1
+          "type": "text",
+          "default": "как есть"
         },
         "control": "choice",
         "optionsFrom": "taken"
@@ -1903,8 +1903,8 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "number",
-          "default": 1
+          "type": "text",
+          "default": "как есть"
         },
         "control": "choice",
         "optionsFrom": "taken"
@@ -1915,8 +1915,8 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "number",
-          "default": 1
+          "type": "text",
+          "default": "как есть"
         },
         "control": "choice",
         "optionsFrom": "taken"
@@ -1927,8 +1927,8 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "number",
-          "default": 1
+          "type": "text",
+          "default": "как есть"
         },
         "control": "choice",
         "optionsFrom": "taken"
@@ -2566,40 +2566,31 @@
         "key": "word",
         "rows": [
           {
-            "value": "лёгкое",
-            "label": "лёгкое"
+            "value": "лёгкое"
           },
           {
-            "value": "фехтовальное",
-            "label": "фехтовальное"
+            "value": "фехтовальное"
           },
           {
-            "value": "метательное",
-            "label": "метательное"
+            "value": "метательное"
           },
           {
-            "value": "двуручное",
-            "label": "двуручное"
+            "value": "двуручное"
           },
           {
-            "value": "тяжёлое",
-            "label": "тяжёлое"
+            "value": "тяжёлое"
           },
           {
-            "value": "досягаемость",
-            "label": "досягаемость"
+            "value": "досягаемость"
           },
           {
-            "value": "универсальное",
-            "label": "универсальное"
+            "value": "универсальное"
           },
           {
-            "value": "перезарядка",
-            "label": "перезарядка"
+            "value": "перезарядка"
           },
           {
-            "value": "боеприпасы",
-            "label": "боеприпасы"
+            "value": "боеприпасы"
           }
         ]
       },
@@ -2608,16 +2599,13 @@
         "key": "word",
         "rows": [
           {
-            "value": "физический",
-            "label": "физический"
+            "value": "физический"
           },
           {
-            "value": "стихийный",
-            "label": "стихийный"
+            "value": "стихийный"
           },
           {
-            "value": "прочий",
-            "label": "прочий"
+            "value": "прочий"
           }
         ]
       },
@@ -2626,12 +2614,10 @@
         "key": "word",
         "rows": [
           {
-            "value": "немагический",
-            "label": "немагический"
+            "value": "немагический"
           },
           {
-            "value": "магический",
-            "label": "магический"
+            "value": "магический"
           }
         ]
       },
@@ -2649,91 +2635,78 @@
         "rows": [
           {
             "value": "рубящий",
-            "label": "рубящий",
             "cells": {
               "nature": "физический"
             }
           },
           {
             "value": "колющий",
-            "label": "колющий",
             "cells": {
               "nature": "физический"
             }
           },
           {
             "value": "дробящий",
-            "label": "дробящий",
             "cells": {
               "nature": "физический"
             }
           },
           {
             "value": "огонь",
-            "label": "огонь",
             "cells": {
               "nature": "стихийный"
             }
           },
           {
             "value": "холод",
-            "label": "холод",
             "cells": {
               "nature": "стихийный"
             }
           },
           {
             "value": "молния",
-            "label": "молния",
             "cells": {
               "nature": "стихийный"
             }
           },
           {
             "value": "гром",
-            "label": "гром",
             "cells": {
               "nature": "стихийный"
             }
           },
           {
             "value": "кислота",
-            "label": "кислота",
             "cells": {
               "nature": "стихийный"
             }
           },
           {
             "value": "яд",
-            "label": "яд",
             "cells": {
               "nature": "прочий"
             }
           },
           {
             "value": "некротический",
-            "label": "некротический",
             "cells": {
               "nature": "прочий"
             }
           },
           {
             "value": "излучение",
-            "label": "излучение",
             "cells": {
               "nature": "прочий"
             }
           },
           {
             "value": "психический",
-            "label": "психический",
             "cells": {
               "nature": "прочий"
             }
           },
           {
             "value": "силовой",
-            "label": "силовой",
             "cells": {
               "nature": "прочий"
             }
@@ -2757,24 +2730,21 @@
         ],
         "rows": [
           {
-            "value": "melee",
-            "label": "ближний бой — Сила",
+            "value": "ближний бой — Сила",
             "cells": {
               "attack": "@str_mod + @prof_bonus",
               "damage": "@str_mod"
             }
           },
           {
-            "value": "finesse",
-            "label": "фехтовальное — Сила или Ловкость",
+            "value": "фехтовальное — Сила или Ловкость",
             "cells": {
               "attack": "max(@str_mod, @dex_mod) + @prof_bonus",
               "damage": "max(@str_mod, @dex_mod)"
             }
           },
           {
-            "value": "ranged",
-            "label": "дальний бой — Ловкость",
+            "value": "дальний бой — Ловкость",
             "cells": {
               "attack": "@dex_mod + @prof_bonus",
               "damage": "@dex_mod"
@@ -2795,42 +2765,36 @@
         "rows": [
           {
             "value": "сила",
-            "label": "Сила",
             "cells": {
               "mod": "@str_mod"
             }
           },
           {
             "value": "ловкость",
-            "label": "Ловкость",
             "cells": {
               "mod": "@dex_mod"
             }
           },
           {
             "value": "телосложение",
-            "label": "Телосложение",
             "cells": {
               "mod": "@con_mod"
             }
           },
           {
             "value": "интеллект",
-            "label": "Интеллект",
             "cells": {
               "mod": "@int_mod"
             }
           },
           {
             "value": "мудрость",
-            "label": "Мудрость",
             "cells": {
               "mod": "@wis_mod"
             }
           },
           {
             "value": "харизма",
-            "label": "Харизма",
             "cells": {
               "mod": "@cha_mod"
             }
@@ -2863,7 +2827,6 @@
         "rows": [
           {
             "value": "варвар",
-            "label": "варвар",
             "cells": {
               "hit_die": "1к12",
               "saves": [
@@ -2874,7 +2837,6 @@
           },
           {
             "value": "бард",
-            "label": "бард",
             "cells": {
               "hit_die": "1к8",
               "saves": [
@@ -2886,7 +2848,6 @@
           },
           {
             "value": "жрец",
-            "label": "жрец",
             "cells": {
               "hit_die": "1к8",
               "saves": [
@@ -2898,7 +2859,6 @@
           },
           {
             "value": "друид",
-            "label": "друид",
             "cells": {
               "hit_die": "1к8",
               "saves": [
@@ -2910,7 +2870,6 @@
           },
           {
             "value": "воин",
-            "label": "воин",
             "cells": {
               "hit_die": "1к10",
               "saves": [
@@ -2921,7 +2880,6 @@
           },
           {
             "value": "монах",
-            "label": "монах",
             "cells": {
               "hit_die": "1к8",
               "saves": [
@@ -2932,7 +2890,6 @@
           },
           {
             "value": "паладин",
-            "label": "паладин",
             "cells": {
               "hit_die": "1к10",
               "saves": [
@@ -2944,7 +2901,6 @@
           },
           {
             "value": "следопыт",
-            "label": "следопыт",
             "cells": {
               "hit_die": "1к10",
               "saves": [
@@ -2956,7 +2912,6 @@
           },
           {
             "value": "плут",
-            "label": "плут",
             "cells": {
               "hit_die": "1к8",
               "saves": [
@@ -2967,7 +2922,6 @@
           },
           {
             "value": "чародей",
-            "label": "чародей",
             "cells": {
               "hit_die": "1к6",
               "saves": [
@@ -2979,7 +2933,6 @@
           },
           {
             "value": "колдун",
-            "label": "колдун",
             "cells": {
               "hit_die": "1к8",
               "saves": [
@@ -2991,7 +2944,6 @@
           },
           {
             "value": "волшебник",
-            "label": "волшебник",
             "cells": {
               "hit_die": "1к6",
               "saves": [
@@ -3016,42 +2968,36 @@
         "rows": [
           {
             "value": "крошечный",
-            "label": "крошечный",
             "cells": {
               "hit_die": "1к4"
             }
           },
           {
             "value": "маленький",
-            "label": "маленький",
             "cells": {
               "hit_die": "1к6"
             }
           },
           {
             "value": "средний",
-            "label": "средний",
             "cells": {
               "hit_die": "1к8"
             }
           },
           {
             "value": "большой",
-            "label": "большой",
             "cells": {
               "hit_die": "1к10"
             }
           },
           {
             "value": "огромный",
-            "label": "огромный",
             "cells": {
               "hit_die": "1к12"
             }
           },
           {
             "value": "громадный",
-            "label": "громадный",
             "cells": {
               "hit_die": "1к20"
             }
@@ -3077,7 +3023,6 @@
         "rows": [
           {
             "value": "дварф",
-            "label": "дварф",
             "cells": {
               "size": "средний",
               "speed": 25
@@ -3085,7 +3030,6 @@
           },
           {
             "value": "эльф",
-            "label": "эльф",
             "cells": {
               "size": "средний",
               "speed": 30
@@ -3093,7 +3037,6 @@
           },
           {
             "value": "полурослик",
-            "label": "полурослик",
             "cells": {
               "size": "маленький",
               "speed": 25
@@ -3101,7 +3044,6 @@
           },
           {
             "value": "человек",
-            "label": "человек",
             "cells": {
               "size": "средний",
               "speed": 30
@@ -3109,7 +3051,6 @@
           },
           {
             "value": "драконорождённый",
-            "label": "драконорождённый",
             "cells": {
               "size": "средний",
               "speed": 30
@@ -3117,7 +3058,6 @@
           },
           {
             "value": "гном",
-            "label": "гном",
             "cells": {
               "size": "маленький",
               "speed": 25
@@ -3125,7 +3065,6 @@
           },
           {
             "value": "полуэльф",
-            "label": "полуэльф",
             "cells": {
               "size": "средний",
               "speed": 30
@@ -3133,7 +3072,6 @@
           },
           {
             "value": "полуорк",
-            "label": "полуорк",
             "cells": {
               "size": "средний",
               "speed": 30
@@ -3141,7 +3079,6 @@
           },
           {
             "value": "тифлинг",
-            "label": "тифлинг",
             "cells": {
               "size": "средний",
               "speed": 30
@@ -3149,7 +3086,6 @@
           },
           {
             "value": "гоблин",
-            "label": "гоблин",
             "cells": {
               "size": "маленький",
               "speed": 30
@@ -3157,7 +3093,6 @@
           },
           {
             "value": "орк",
-            "label": "орк",
             "cells": {
               "size": "средний",
               "speed": 30
@@ -3165,7 +3100,6 @@
           },
           {
             "value": "огр",
-            "label": "огр",
             "cells": {
               "size": "большой",
               "speed": 40
@@ -3175,23 +3109,38 @@
       },
       "taken": {
         "label": "Стойкость к урону",
-        "key": "number",
+        "key": "word",
+        "columns": [
+          {
+            "key": "mult",
+            "label": "Множитель",
+            "kind": "number"
+          }
+        ],
         "rows": [
           {
-            "value": 0,
-            "label": "иммунитет"
+            "value": "иммунитет",
+            "cells": {
+              "mult": 0
+            }
           },
           {
-            "value": 0.5,
-            "label": "сопротивление"
+            "value": "сопротивление",
+            "cells": {
+              "mult": 0.5
+            }
           },
           {
-            "value": 1,
-            "label": "как есть"
+            "value": "как есть",
+            "cells": {
+              "mult": 1
+            }
           },
           {
-            "value": 2,
-            "label": "уязвимость"
+            "value": "уязвимость",
+            "cells": {
+              "mult": 2
+            }
           }
         ]
       }
@@ -3594,7 +3543,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_0"
+              "expr": "@taken_0.mult"
             },
             "stacking": "sum",
             "condition": null,
@@ -3607,7 +3556,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_1"
+              "expr": "@taken_1.mult"
             },
             "stacking": "sum",
             "condition": null,
@@ -3620,7 +3569,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_2"
+              "expr": "@taken_2.mult"
             },
             "stacking": "sum",
             "condition": null,
@@ -3633,7 +3582,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_3"
+              "expr": "@taken_3.mult"
             },
             "stacking": "sum",
             "condition": null,
@@ -3646,7 +3595,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_4"
+              "expr": "@taken_4.mult"
             },
             "stacking": "sum",
             "condition": null,
@@ -3659,7 +3608,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_5"
+              "expr": "@taken_5.mult"
             },
             "stacking": "sum",
             "condition": null,
@@ -3672,7 +3621,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_6"
+              "expr": "@taken_6.mult"
             },
             "stacking": "sum",
             "condition": null,
@@ -3685,7 +3634,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_7"
+              "expr": "@taken_7.mult"
             },
             "stacking": "sum",
             "condition": null,
@@ -3698,7 +3647,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_8"
+              "expr": "@taken_8.mult"
             },
             "stacking": "sum",
             "condition": null,
@@ -3711,7 +3660,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_9"
+              "expr": "@taken_9.mult"
             },
             "stacking": "sum",
             "condition": null,
@@ -3724,7 +3673,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_10"
+              "expr": "@taken_10.mult"
             },
             "stacking": "sum",
             "condition": null,
@@ -3737,7 +3686,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_11"
+              "expr": "@taken_11.mult"
             },
             "stacking": "sum",
             "condition": null,
@@ -3750,7 +3699,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_12"
+              "expr": "@taken_12.mult"
             },
             "stacking": "sum",
             "condition": null,
@@ -5840,7 +5789,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "cell:wield.melee.damage",
+            "target": "cell:wield.ближний бой — Сила.damage",
             "op": "add",
             "value": {
               "expr": "@rage_damage"
@@ -6344,7 +6293,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "cell:wield.melee.damage",
+            "target": "cell:wield.ближний бой — Сила.damage",
             "op": "add",
             "value": 2,
             "stacking": "sum",
@@ -6352,7 +6301,7 @@
           },
           {
             "kind": "value",
-            "target": "cell:wield.finesse.damage",
+            "target": "cell:wield.фехтовальное — Сила или Ловкость.damage",
             "op": "add",
             "value": 2,
             "stacking": "sum",
@@ -6372,7 +6321,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "cell:wield.ranged.attack",
+            "target": "cell:wield.дальний бой — Ловкость.attack",
             "op": "add",
             "value": 2,
             "stacking": "sum",
@@ -9001,7 +8950,7 @@
           "damage_dice": "1d4",
           "damage_type": "дробящий",
           "damage_source": "немагический",
-          "wield": "melee",
+          "wield": "ближний бой — Сила",
           "properties": [
             "лёгкое"
           ]
@@ -9016,7 +8965,7 @@
           "damage_dice": "1d8",
           "damage_type": "дробящий",
           "damage_source": "немагический",
-          "wield": "melee",
+          "wield": "ближний бой — Сила",
           "properties": [
             "двуручное"
           ]
@@ -9031,7 +8980,7 @@
           "damage_dice": "1d6",
           "damage_type": "рубящий",
           "damage_source": "немагический",
-          "wield": "melee",
+          "wield": "ближний бой — Сила",
           "properties": [
             "лёгкое",
             "метательное"
@@ -9047,7 +8996,7 @@
           "damage_dice": "1d6",
           "damage_type": "колющий",
           "damage_source": "немагический",
-          "wield": "melee",
+          "wield": "ближний бой — Сила",
           "properties": [
             "универсальное"
           ]
@@ -9062,7 +9011,7 @@
           "damage_dice": "1d6",
           "damage_type": "дробящий",
           "damage_source": "немагический",
-          "wield": "melee",
+          "wield": "ближний бой — Сила",
           "properties": []
         }
       },
@@ -9075,7 +9024,7 @@
           "damage_dice": "1d6",
           "damage_type": "дробящий",
           "damage_source": "немагический",
-          "wield": "melee",
+          "wield": "ближний бой — Сила",
           "properties": [
             "универсальное"
           ]
@@ -9090,7 +9039,7 @@
           "damage_dice": "1d8",
           "damage_type": "рубящий",
           "damage_source": "немагический",
-          "wield": "melee",
+          "wield": "ближний бой — Сила",
           "properties": [
             "универсальное"
           ]
@@ -9105,7 +9054,7 @@
           "damage_dice": "1d8",
           "damage_type": "рубящий",
           "damage_source": "немагический",
-          "wield": "melee",
+          "wield": "ближний бой — Сила",
           "properties": [
             "универсальное"
           ]
@@ -9120,7 +9069,7 @@
           "damage_dice": "1d8",
           "damage_type": "дробящий",
           "damage_source": "немагический",
-          "wield": "melee",
+          "wield": "ближний бой — Сила",
           "properties": [
             "универсальное"
           ]
@@ -9135,7 +9084,7 @@
           "damage_dice": "2d6",
           "damage_type": "рубящий",
           "damage_source": "немагический",
-          "wield": "melee",
+          "wield": "ближний бой — Сила",
           "properties": [
             "двуручное",
             "тяжёлое"
@@ -9151,7 +9100,7 @@
           "damage_dice": "1d12",
           "damage_type": "рубящий",
           "damage_source": "немагический",
-          "wield": "melee",
+          "wield": "ближний бой — Сила",
           "properties": [
             "двуручное",
             "тяжёлое"
@@ -9167,7 +9116,7 @@
           "damage_dice": "2d6",
           "damage_type": "дробящий",
           "damage_source": "немагический",
-          "wield": "melee",
+          "wield": "ближний бой — Сила",
           "properties": [
             "двуручное",
             "тяжёлое"
@@ -9183,7 +9132,7 @@
           "damage_dice": "1d10",
           "damage_type": "рубящий",
           "damage_source": "немагический",
-          "wield": "melee",
+          "wield": "ближний бой — Сила",
           "properties": [
             "тяжёлое",
             "досягаемость"
@@ -9199,7 +9148,7 @@
           "damage_dice": "1d10",
           "damage_type": "рубящий",
           "damage_source": "немагический",
-          "wield": "melee",
+          "wield": "ближний бой — Сила",
           "properties": [
             "тяжёлое",
             "досягаемость"
@@ -9215,7 +9164,7 @@
           "damage_dice": "1d4",
           "damage_type": "колющий",
           "damage_source": "немагический",
-          "wield": "finesse",
+          "wield": "фехтовальное — Сила или Ловкость",
           "properties": [
             "лёгкое",
             "фехтовальное",
@@ -9232,7 +9181,7 @@
           "damage_dice": "1d6",
           "damage_type": "колющий",
           "damage_source": "немагический",
-          "wield": "finesse",
+          "wield": "фехтовальное — Сила или Ловкость",
           "properties": [
             "лёгкое",
             "фехтовальное"
@@ -9248,7 +9197,7 @@
           "damage_dice": "1d8",
           "damage_type": "колющий",
           "damage_source": "немагический",
-          "wield": "finesse",
+          "wield": "фехтовальное — Сила или Ловкость",
           "properties": [
             "фехтовальное"
           ]
@@ -9263,7 +9212,7 @@
           "damage_dice": "1d6",
           "damage_type": "рубящий",
           "damage_source": "немагический",
-          "wield": "finesse",
+          "wield": "фехтовальное — Сила или Ловкость",
           "properties": [
             "лёгкое",
             "фехтовальное"
@@ -9279,7 +9228,7 @@
           "damage_dice": "1d4",
           "damage_type": "рубящий",
           "damage_source": "немагический",
-          "wield": "finesse",
+          "wield": "фехтовальное — Сила или Ловкость",
           "properties": [
             "фехтовальное",
             "досягаемость"
@@ -9295,7 +9244,7 @@
           "damage_dice": "1d6",
           "damage_type": "колющий",
           "damage_source": "немагический",
-          "wield": "ranged",
+          "wield": "дальний бой — Ловкость",
           "range": "80/320",
           "properties": [
             "двуручное",
@@ -9312,7 +9261,7 @@
           "damage_dice": "1d8",
           "damage_type": "колющий",
           "damage_source": "немагический",
-          "wield": "ranged",
+          "wield": "дальний бой — Ловкость",
           "range": "150/600",
           "properties": [
             "двуручное",
@@ -9330,7 +9279,7 @@
           "damage_dice": "1d8",
           "damage_type": "колющий",
           "damage_source": "немагический",
-          "wield": "ranged",
+          "wield": "дальний бой — Ловкость",
           "range": "80/320",
           "properties": [
             "перезарядка",
@@ -9347,7 +9296,7 @@
           "damage_dice": "1d10",
           "damage_type": "колющий",
           "damage_source": "немагический",
-          "wield": "ranged",
+          "wield": "дальний бой — Ловкость",
           "range": "100/400",
           "properties": [
             "тяжёлое",
@@ -9365,7 +9314,7 @@
           "damage_dice": "1d6",
           "damage_type": "колющий",
           "damage_source": "немагический",
-          "wield": "ranged",
+          "wield": "дальний бой — Ловкость",
           "range": "30/120",
           "properties": [
             "лёгкое",
@@ -9383,7 +9332,7 @@
           "damage_dice": "1d4",
           "damage_type": "дробящий",
           "damage_source": "немагический",
-          "wield": "ranged",
+          "wield": "дальний бой — Ловкость",
           "range": "30/120",
           "properties": [
             "боеприпасы"
@@ -9399,7 +9348,7 @@
           "damage_dice": "1d4",
           "damage_type": "колющий",
           "damage_source": "немагический",
-          "wield": "ranged",
+          "wield": "дальний бой — Ловкость",
           "range": "20/60",
           "properties": [
             "фехтовальное",
@@ -9416,7 +9365,7 @@
           "damage_dice": "1d8",
           "damage_type": "рубящий",
           "damage_source": "магический",
-          "wield": "melee",
+          "wield": "ближний бой — Сила",
           "properties": []
         },
         "grants": [
@@ -9432,7 +9381,7 @@
           "damage_dice": "1d8",
           "damage_type": "рубящий",
           "damage_source": "магический",
-          "wield": "melee",
+          "wield": "ближний бой — Сила",
           "properties": []
         },
         "modifiers": [

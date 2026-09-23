@@ -121,7 +121,6 @@ export const tableColumn = z.object({
 
 export const tableRow = z.object({
   value: tableValue.optional(),
-  label: z.string().optional(),
 
   from: z.number().optional(),
   to: z.number().optional(),

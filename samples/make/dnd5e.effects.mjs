@@ -1,4 +1,4 @@
-import { RESOURCES, TAKEN, DAMAGE_TAGS } from './dnd5e.system.mjs';
+import { RESOURCES, TAKEN, DAMAGE_TAGS, WIELD } from './dnd5e.system.mjs';
 
 const DIE = { constant: 'lead_die' };
 
@@ -144,7 +144,7 @@ function spells() {
       duration: { kind: 'permanent' },
       modifiers: TAKEN.map(([tag, damage]) => ({
         kind: 'value', target: 'event:damage', op: 'mul',
-        value: { expr: `@${tag}` }, stacking: 'sum', condition: null, tags: [damage],
+        value: { expr: `@${tag}.mult` }, stacking: 'sum', condition: null, tags: [damage],
       })),
     },
     spell: {
@@ -456,7 +456,7 @@ function conditions() {
       [roll('attack_roll', 'advantage'), incomingAdvantage], UNTIL_MY_TURN),
     raging: passive('В ярости', 'Урон рукопашным оружием выше, сопротивление рубящему, колющему и дробящему, преимущество на Силу.',
       [
-        value('cell:wield.melee.damage', 'add', { expr: '@rage_damage' }),
+        value(`cell:wield.${WIELD.melee}.damage`, 'add', { expr: '@rage_damage' }),
         resistNature('физический'),
         roll('check:athletics', 'advantage'), roll('check:str_save', 'advantage'), roll('check:str_mod', 'advantage'),
       ], { kind: 'rounds', max: 10 }),
@@ -497,8 +497,8 @@ function traits() {
     extra_attack: trait('Дополнительная атака', 'Действием «Атака» бьёшь дважды.', [value('attacks_per_action', 'add', 1)]),
     improved_critical: trait('Улучшенный критический удар', 'Крит на 19 и 20.', [value('crit_from', 'set', 19)]),
     style_defense: trait('Боевой стиль: оборона', '+1 к классу брони в доспехе.', [value('ac', 'add', 1)]),
-    style_dueling: trait('Боевой стиль: дуэлянт', '+2 к урону одноручным оружием.', [value('cell:wield.melee.damage', 'add', 2), value('cell:wield.finesse.damage', 'add', 2)]),
-    style_archery: trait('Боевой стиль: стрельба', '+2 к атаке дальнобойным оружием.', [value('cell:wield.ranged.attack', 'add', 2)]),
+    style_dueling: trait('Боевой стиль: дуэлянт', '+2 к урону одноручным оружием.', [value(`cell:wield.${WIELD.melee}.damage`, 'add', 2), value(`cell:wield.${WIELD.finesse}.damage`, 'add', 2)]),
+    style_archery: trait('Боевой стиль: стрельба', '+2 к атаке дальнобойным оружием.', [value(`cell:wield.${WIELD.ranged}.attack`, 'add', 2)]),
     unarmored_barbarian: trait('Защита без доспехов: варвар', 'Без доспеха база 10 + Телосложение.',
       [{ ...value('ac_base', 'set', { expr: '10 + @con_mod' }), stacking: 'max' }]),
     unarmored_monk: trait('Защита без доспехов: монах', 'Без доспеха и щита база 10 + Мудрость.',

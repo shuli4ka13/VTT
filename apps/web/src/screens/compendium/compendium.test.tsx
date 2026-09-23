@@ -257,32 +257,6 @@ describe('свойство из словаря — выбор, а не ввод'
     const select = полеУ('Без словаря').querySelector('select') as HTMLSelectElement;
     expect(select.options[0]!.textContent).toBe('— словарь не выбран —');
   });
-
-  it('игроку показывается подпись значения, а не машинное значение', () => {
-    useWorld.setState(state => ({
-      ...state,
-      system: {
-        ...state.system,
-        tables: {
-          wield: { label: 'Способ атаки', key: 'word', rows: [{ value: 'melee', label: 'силой — ближний бой' }] },
-        },
-        records: {
-          weapon: {
-            kind: 'item', label: 'Оружие',
-            props: [{ key: 'wield', label: 'Чем бьют', kind: 'choice', from: 'wield' }],
-            bindings: [],
-          },
-        },
-      },
-      compendium: { items: [{ id: 'sword', rk: 'weapon', label: 'Меч', props: { wield: 'melee' } }], actions: [] },
-      activeRecordId: 'sword',
-    }));
-    render(<CompendiumScreen />);
-
-    const превью = document.querySelector('.record-view')!;
-    expect(превью.textContent).toContain('силой — ближний бой');
-    expect(превью.textContent).not.toContain('melee');
-  });
 });
 
 describe('свойство «несколько значений» — фишки, а не одно поле', () => {

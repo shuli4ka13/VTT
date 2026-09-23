@@ -1,3 +1,4 @@
+import { WIELD } from './dnd5e.system.mjs';
 const item = (id, rk, label, description, props, extra = {}) => ({ id, rk, label, description, props, ...extra });
 const set = (target, amount, stacking = 'override') => ({ kind: 'value', target, op: 'set', value: amount, stacking, condition: null });
 const add = (target, amount) => ({ kind: 'value', target, op: 'add', value: amount, stacking: 'sum', condition: null });
@@ -17,11 +18,11 @@ const magical = weapon => ({ ...weapon, props: { ...weapon.props, damage_source:
 
 function weapons() {
   const melee = (id, label, dice, type, text) =>
-    item(id, 'weapon', label, text, { damage_dice: dice, damage_type: type, damage_source: 'немагический', wield: 'melee', properties: propertiesOf(text, false) });
+    item(id, 'weapon', label, text, { damage_dice: dice, damage_type: type, damage_source: 'немагический', wield: WIELD.melee, properties: propertiesOf(text, false) });
   const finesse = (id, label, dice, type, text) =>
-    item(id, 'weapon', label, text, { damage_dice: dice, damage_type: type, damage_source: 'немагический', wield: 'finesse', properties: propertiesOf(text, false) });
+    item(id, 'weapon', label, text, { damage_dice: dice, damage_type: type, damage_source: 'немагический', wield: WIELD.finesse, properties: propertiesOf(text, false) });
   const ranged = (id, label, dice, type, range, text) =>
-    item(id, 'weapon', label, text, { damage_dice: dice, damage_type: type, damage_source: 'немагический', wield: 'ranged', range, properties: propertiesOf(text, true) });
+    item(id, 'weapon', label, text, { damage_dice: dice, damage_type: type, damage_source: 'немагический', wield: WIELD.ranged, range, properties: propertiesOf(text, true) });
   return [
     melee('club', 'Дубинка', '1d4', 'дробящий', 'Простое оружие, лёгкое.'),
     melee('greatclub', 'Палица', '1d8', 'дробящий', 'Простое оружие, двуручное.'),

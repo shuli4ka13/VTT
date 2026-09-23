@@ -7,7 +7,7 @@ export function listOf(system: System, key: string | undefined): FieldOption[] |
   if (!table) return undefined;
   return rowsOf(table)
     .filter(row => row.value !== undefined)
-    .map(row => ({ value: row.value as FieldOption['value'], label: row.label || String(row.value) }));
+    .map(row => ({ value: row.value as FieldOption['value'], label: String(row.value) }));
 }
 
 export function optionsOf(system: System, field: Field): FieldOption[] {

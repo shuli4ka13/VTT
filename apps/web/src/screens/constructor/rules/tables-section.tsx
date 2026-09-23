@@ -2,6 +2,7 @@ import { MultiChoice } from '../../../ui/multi-choice.tsx';
 import { kindsFor } from '@vtt/engine/words/kinds';
 import { Card, CardHead, Field, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Chip, Empty } from '../../../ui/primitives.tsx';
 import { FormulaChips } from '../../../ui/formula-chips.tsx';
+import { formulaAsLabels } from '../../../ui/formula.tsx';
 import { DiceProp } from '../../../ui/dice-prop.tsx';
 import { newTable } from '../factory.ts';
 import { inUse, usersOf } from '../usage.ts';
@@ -26,8 +27,8 @@ const ROW_KEYS = [
 
 const blankRow = (key: TableKey): TableRow =>
   (key === 'range' ? { from: 1, to: 1, cells: {} }
-    : key === 'number' ? { value: 0, label: '', cells: {} }
-      : { value: '', label: '', cells: {} });
+    : key === 'number' ? { value: 0, cells: {} }
+      : { value: '', cells: {} });
 
 const COLUMN_KINDS = kindsFor('table');
 
@@ -224,6 +225,42 @@ function Columns({ id, table, system, edit }: {
   );
 }
 
+interface Spot { row: number; column: string }
+
+const WIDTH_KEY = (id: string) => `vtt.table-widths.${id}`;
+
+const defaultWidth = (column?: TableColumn): number =>
+  (!column ? 200 : column.kind === 'expr' ? 240 : column.kind === 'choice' && column.many ? 220 : 150);
+
+function useWidths(id: string) {
+  const [widths, setWidths] = useState<Record<string, number>>(() => {
+    try { return JSON.parse(localStorage.getItem(WIDTH_KEY(id)) ?? '{}') as Record<string, number>; } catch { return {}; }
+  });
+  const set = (key: string, width: number) => setWidths(all => {
+    const next = { ...all, [key]: Math.max(80, Math.round(width)) };
+    try { localStorage.setItem(WIDTH_KEY(id), JSON.stringify(next)); } catch { return next; }
+    return next;
+  });
+  return [widths, set] as const;
+}
+
+function HeadCell({ label, width, onResize }: { label: string; width: number; onResize: (width: number) => void }) {
+  const drag = (e: React.PointerEvent) => {
+    e.preventDefault();
+    const start = e.clientX;
+    const move = (ev: PointerEvent) => onResize(width + ev.clientX - start);
+    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+  return (
+    <div className="sheet-grid__head">
+      <span className="sheet-grid__title" title={label}>{label}</span>
+      <span className="sheet-grid__grip" role="separator" aria-label={`ширина колонки «${label}»`} onPointerDown={drag} />
+    </div>
+  );
+}
+
 function Rows({ id, table, system, edit, editSystem }: {
   id: string;
   table: Table;
@@ -243,6 +280,8 @@ function Rows({ id, table, system, edit, editSystem }: {
   const byRange = key === 'range';
   const rows = table.rows ?? [];
   const columns = table.columns ?? [];
+  const [widths, setWidth] = useWidths(id);
+  const [spot, setSpot] = useState<Spot | null>(null);
 
   const setCell = (i: number, column: string, value: unknown) => edit(draft => {
     const row = draft.rows?.[i];
@@ -250,24 +289,58 @@ function Rows({ id, table, system, edit, editSystem }: {
     (row.cells ??= {})[column] = value;
   });
 
+  const widthOf = (name: string, column?: TableColumn) => widths[name] ?? defaultWidth(column);
+  const lead = byRange ? ['от', 'до'] : [key === 'number' ? 'число' : 'слово'];
+  const template = [
+    ...lead.map(name => `${widthOf(`:${name}`, undefined)}px`),
+    ...columns.map(c => `${widthOf(c.key, c)}px`),
+    '40px',
+  ].join(' ');
+
+  const spotColumn = spot ? columns.find(c => c.key === spot.column) : undefined;
+  const spotRow = spot ? rows[spot.row] : undefined;
+
   return (
     <div className="stack stack--tight">
       <span className="field__label">Строки</span>
 
-      <div className="table-grid" style={{ gridTemplateColumns: `${lead(key)} ${columns.map(() => 'minmax(120px, 2fr)').join(' ')} auto` }}>
-        {key === 'range' ? <><span className="faint">от</span><span className="faint">до</span></>
-          : <><span className="faint">{key === 'number' ? 'число' : 'слово'}</span><span className="faint">подпись</span></>}
-        {columns.map(c => <span key={c.key} className="faint">{c.label || c.key}</span>)}
-        <span />
-
-        {rows.map((row, i) => (
-          <RowCells
-            key={i} row={row} at={i} rowKey={key} columns={columns} system={system}
-            users={key === 'range' ? [] : rowUsers(system, id, row.value, compendium).map(u => u.text)}
-            onRename={to => rename(row.value, to)} taken={next => taken(next, i)}
-            edit={edit} setCell={setCell}
+      {spotColumn && spotRow ? (
+        <div className="formula-bar">
+          <span className="formula-bar__where">
+            {`«${String(spotRow.value ?? `${spotRow.from}–${spotRow.to}`)}» · ${spotColumn.label || spotColumn.key}`}
+          </span>
+          <FormulaChips
+            value={String((spotRow.cells ?? {})[spotColumn.key] ?? '')}
+            system={system}
+            placeholder="формула — наберите @ и начало названия"
+            calculator
+            onChange={value => setCell(spot!.row, spotColumn.key, value)}
           />
-        ))}
+          <Button size="sm" variant="ghost" onClick={() => setSpot(null)}>готово</Button>
+        </div>
+      ) : null}
+
+      <div className="sheet-scroll">
+        <div className="sheet-grid" style={{ gridTemplateColumns: template }}>
+          {lead.map(name => (
+            <HeadCell key={name} label={name} width={widthOf(`:${name}`)} onResize={w => setWidth(`:${name}`, w)} />
+          ))}
+          {columns.map(c => (
+            <HeadCell key={c.key} label={c.label || c.key} width={widthOf(c.key, c)} onResize={w => setWidth(c.key, w)} />
+          ))}
+          <span />
+
+          {rows.map((row, i) => (
+            <RowCells
+              key={i} row={row} at={i} rowKey={key} columns={columns} system={system}
+              users={key === 'range' ? [] : rowUsers(system, id, row.value, compendium).map(u => u.text)}
+              onRename={to => rename(row.value, to)} taken={next => taken(next, i)}
+              edit={edit} setCell={setCell}
+              spot={spot?.row === i ? spot.column : null}
+              onSpot={column => setSpot({ row: i, column })}
+            />
+          ))}
+        </div>
       </div>
 
       <Button size="sm" onClick={() => edit(draft => {
@@ -282,7 +355,7 @@ function Rows({ id, table, system, edit, editSystem }: {
 
       {!columns.length && rows.length ? (
         <div className="inline inline--tight">
-          {rows.slice(0, 8).map((row, i) => <Chip key={i}>{row.label || String(row.value ?? '')}</Chip>)}
+          {rows.slice(0, 8).map((row, i) => <Chip key={i}>{String(row.value ?? '')}</Chip>)}
           {rows.length > 8 ? <span className="faint">и ещё {rows.length - 8}</span> : null}
         </div>
       ) : null}
@@ -290,7 +363,7 @@ function Rows({ id, table, system, edit, editSystem }: {
   );
 }
 
-function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRename, taken }: {
+function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRename, taken, spot, onSpot }: {
   row: TableRow;
   at: number;
   rowKey: TableKey;
@@ -301,6 +374,8 @@ function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRe
   system: System;
   edit: (change: (draft: Table) => void) => void;
   setCell: (i: number, column: string, value: unknown) => void;
+  spot: string | null;
+  onSpot: (column: string) => void;
 }) {
   const cells = row.cells ?? {};
   const set = (change: (r: TableRow) => void) => edit(draft => { const r = draft.rows?.[at]; if (r) change(r); });
@@ -312,19 +387,21 @@ function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRe
           <NumInput value={row.to ?? 0} onCommit={n => set(r => { r.to = n; })} />
         </>
       ) : (
-        <>
-          <KeyInput value={row.value} numeric={rowKey === 'number'} taken={taken} onRename={onRename} />
-          <Input
-            value={row.label ?? ''}
-            placeholder="что видит человек"
-            onChange={next => set(r => { r.label = next; })}
-          />
-        </>
+        <KeyInput value={row.value} numeric={rowKey === 'number'} taken={taken} onRename={onRename} />
       )}
-      {columns.map(column => (
+      {columns.map(column => (column.kind === 'expr' ? (
+        <button
+          key={column.key} type="button"
+          className={`sheet-cell${spot === column.key ? ' sheet-cell--spot' : ''}`}
+          title={String(cells[column.key] ?? '')}
+          onClick={() => onSpot(column.key)}
+        >
+          {cells[column.key] ? formulaAsLabels(system, String(cells[column.key])) : <span className="faint">формула</span>}
+        </button>
+      ) : (
         <Cell key={column.key} column={column} value={cells[column.key]} system={system}
           onChange={value => setCell(at, column.key, value)} />
-      ))}
+      )))}
       {users.length ? (
         <Button size="sm" variant="danger" disabled title={`строку используют: ${users.slice(0, 4).join('; ')}${users.length > 4 ? ` и ещё ${users.length - 4}` : ''}`}>×</Button>
       ) : (
@@ -371,9 +448,6 @@ function KeyInput({ value, numeric, taken, onRename }: {
   );
 }
 
-const lead = (key: TableKey): string =>
-  (key === 'range' ? '72px 72px' : 'minmax(90px, 1fr) minmax(120px, 1.4fr)');
-
 function Cell({ column, value, system, onChange }: {
   column: TableColumn;
   value: unknown;
@@ -383,9 +457,6 @@ function Cell({ column, value, system, onChange }: {
   const kind = column.kind ?? 'text';
   if (kind === 'number') {
     return <NumInput value={Number(value ?? 0)} onCommit={onChange} />;
-  }
-  if (kind === 'expr') {
-    return <FormulaChips value={String(value ?? '')} system={system} placeholder="формула" calculator onChange={onChange} />;
   }
   if (kind === 'dice') {
     return <DiceProp value={String(value ?? '')} onChange={onChange} />;

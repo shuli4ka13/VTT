@@ -52,20 +52,20 @@ export const WEAPON_PROPERTIES = [
 ];
 
 export const lists = () => ({
-  weapon_properties: words('Свойства оружия', 'word', WEAPON_PROPERTIES.map(p => ({ value: p, label: p }))),
+  weapon_properties: words('Свойства оружия', 'word', WEAPON_PROPERTIES.map(p => ({ value: p }))),
   damage_nature: words('Природа урона', 'word', [
-    { value: 'физический', label: 'физический' },
-    { value: 'стихийный', label: 'стихийный' },
-    { value: 'прочий', label: 'прочий' },
+    { value: 'физический' },
+    { value: 'стихийный' },
+    { value: 'прочий' },
   ]),
   damage_source: words('Источник урона', 'word', [
-    { value: 'немагический', label: 'немагический' },
-    { value: 'магический', label: 'магический' },
+    { value: 'немагический' },
+    { value: 'магический' },
   ]),
   damage_types: {
     label: 'Типы урона', key: 'word',
     columns: [{ key: 'nature', label: 'Природа', kind: 'choice', from: 'damage_nature' }],
-    rows: DAMAGE_TAGS.map(tag => ({ value: tag, label: tag, cells: { nature: NATURE[tag] } })),
+    rows: DAMAGE_TAGS.map(tag => ({ value: tag, cells: { nature: NATURE[tag] } })),
   },
   wield: {
     label: 'Способ атаки', key: 'word',
@@ -74,18 +74,18 @@ export const lists = () => ({
       { key: 'damage', label: 'Прибавка к урону', kind: 'expr' },
     ],
     rows: [
-      { value: 'melee', label: 'ближний бой — Сила',
+      { value: WIELD.melee,
         cells: { attack: '@str_mod + @prof_bonus', damage: '@str_mod' } },
-      { value: 'finesse', label: 'фехтовальное — Сила или Ловкость',
+      { value: WIELD.finesse,
         cells: { attack: 'max(@str_mod, @dex_mod) + @prof_bonus', damage: 'max(@str_mod, @dex_mod)' } },
-      { value: 'ranged', label: 'дальний бой — Ловкость',
+      { value: WIELD.ranged,
         cells: { attack: '@dex_mod + @prof_bonus', damage: '@dex_mod' } },
     ],
   },
   abilities: {
     label: 'Характеристики', key: 'word',
     columns: [{ key: 'mod', label: 'Модификатор', kind: 'expr' }],
-    rows: ABILITIES.map(([tag, label]) => ({ value: ABILITY_WORD[tag], label, cells: { mod: `@${tag}_mod` } })),
+    rows: ABILITIES.map(([tag]) => ({ value: ABILITY_WORD[tag], cells: { mod: `@${tag}_mod` } })),
   },
   classes: {
     label: 'Классы', key: 'word',
@@ -95,14 +95,14 @@ export const lists = () => ({
       { key: 'spell_ability', label: 'Заклинательная характеристика', kind: 'choice', from: 'abilities' },
     ],
     rows: CLASSES.map(([value, die, saves, spell]) => ({
-      value, label: value,
+      value,
       cells: { hit_die: `1к${die}`, saves, ...(spell ? { spell_ability: spell } : {}) },
     })),
   },
   sizes: {
     label: 'Размеры', key: 'word',
     columns: [{ key: 'hit_die', label: 'Кость хитов существа', kind: 'dice' }],
-    rows: SIZES.map(([value, die]) => ({ value, label: value, cells: { hit_die: `1к${die}` } })),
+    rows: SIZES.map(([value, die]) => ({ value, cells: { hit_die: `1к${die}` } })),
   },
   races: {
     label: 'Расы и виды существ', key: 'word',
@@ -110,13 +110,19 @@ export const lists = () => ({
       { key: 'size', label: 'Размер', kind: 'choice', from: 'sizes' },
       { key: 'speed', label: 'Скорость, футов', kind: 'number' },
     ],
-    rows: RACES.map(([value, size, speed]) => ({ value, label: value, cells: { size, speed } })),
+    rows: RACES.map(([value, size, speed]) => ({ value, cells: { size, speed } })),
   },
-  taken: words('Стойкость к урону', 'number', [
-    { value: 0, label: 'иммунитет' }, { value: 0.5, label: 'сопротивление' },
-    { value: 1, label: 'как есть' }, { value: 2, label: 'уязвимость' },
-  ]),
+  taken: {
+    label: 'Стойкость к урону', key: 'word',
+    columns: [{ key: 'mult', label: 'Множитель', kind: 'number' }],
+    rows: [['иммунитет', 0], ['сопротивление', 0.5], ['как есть', 1], ['уязвимость', 2]]
+      .map(([value, mult]) => ({ value, cells: { mult } })),
+  },
 });
+
+export const WIELD = {
+  melee: 'ближний бой — Сила', finesse: 'фехтовальное — Сила или Ловкость', ranged: 'дальний бой — Ловкость',
+};
 
 export const ABILITY_WORD = {
   str: 'сила', dex: 'ловкость', con: 'телосложение', int: 'интеллект', wis: 'мудрость', cha: 'харизма',
@@ -253,7 +259,7 @@ export function fields() {
   }
 
   for (const [tag, damage] of TAKEN) {
-    out.push(stored(tag, `${damage[0].toUpperCase()}${damage.slice(1)}`, 'Стойкость к урону', 'number', 1, {
+    out.push(stored(tag, `${damage[0].toUpperCase()}${damage.slice(1)}`, 'Стойкость к урону', 'text', 'как есть', {
       control: 'choice', optionsFrom: 'taken',
     }));
   }

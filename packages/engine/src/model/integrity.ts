@@ -105,7 +105,7 @@ export function rowUsers(system: System, table: string, key: unknown, compendium
         if (holds((row.cells ?? {})[column.key], key)) {
           out.push({
             where: { tab: 'rules', section: 'tables', key: id },
-            text: `таблица «${other.label || id}», строка «${row.label || String(row.value ?? `${row.from}–${row.to}`)}»`,
+            text: `таблица «${other.label || id}», строка «${String(row.value ?? `${row.from}–${row.to}`)}»`,
           });
         }
       }
@@ -166,7 +166,7 @@ export function danglingRows(system: System, compendium?: Compendium): Dangling[
         if (!lost.length) continue;
         out.push({
           where,
-          text: `в строке «${row.label || String(row.value)}» колонка «${column.label || column.key}» указывает на «${lost.map(String).join('», «')}», а в «${tables[column.from]!.label || column.from}» такой строки нет`,
+          text: `в строке «${String(row.value)}» колонка «${column.label || column.key}» указывает на «${lost.map(String).join('», «')}», а в «${tables[column.from]!.label || column.from}» такой строки нет`,
         });
       }
     }

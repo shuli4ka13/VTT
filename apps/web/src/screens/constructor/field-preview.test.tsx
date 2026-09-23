@@ -6,15 +6,20 @@ import type { System, Compendium, Field } from '@vtt/schema';
 
 const стойкость: Field = {
   tag: 'огонь', label: 'Огонь', optionsFrom: 'стойкость', control: 'choice',
-  value: { kind: 'stored', type: 'number', default: 1 },
+  value: { kind: 'stored', type: 'text', default: 'как есть' },
 } as Field;
 
 const system = {
   fields: [стойкость], constants: {}, effects: {},
   tables: {
     стойкость: {
-      label: 'Стойкость', key: 'number',
-      rows: [{ value: 0.5, label: 'сопротивление' }, { value: 1, label: 'как есть' }, { value: 2, label: 'уязвимость' }],
+      label: 'Стойкость', key: 'word',
+      columns: [{ key: 'множитель', label: 'Множитель', kind: 'number' }],
+      rows: [
+        { value: 'сопротивление', cells: { множитель: 0.5 } },
+        { value: 'как есть', cells: { множитель: 1 } },
+        { value: 'уязвимость', cells: { множитель: 2 } },
+      ],
     },
   },
 } as unknown as System;
@@ -27,7 +32,7 @@ describe('предпросмотр поля в конструкторе', () => 
     const уязвимость = screen.getByText('уязвимость');
     fireEvent.click(уязвимость);
     expect(уязвимость.closest('button')?.className).toContain('primary');
-    expect(system.fields[0]!.value).toEqual({ kind: 'stored', type: 'number', default: 1 });
+    expect(system.fields[0]!.value).toEqual({ kind: 'stored', type: 'text', default: 'как есть' });
   });
 });
 

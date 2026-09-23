@@ -90,7 +90,7 @@ function cellTargets(system: System): Target[] {
         if (row.value === undefined) continue;
         out.push({
           tag: cellTagOf(id, String(row.value), column.key),
-          label: `${name} → ${row.label || String(row.value)} → ${colName}`,
+          label: `${name} → ${String(row.value)} → ${colName}`,
           group: 'Таблицы',
           kind: 'cell',
           from: id,
