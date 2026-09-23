@@ -3707,7 +3707,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_attack",
+            "event": "cost_attack",
             "strict": true
           }
         ]
@@ -3789,7 +3789,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_once",
+            "event": "cost_once",
             "strict": true
           }
         ]
@@ -4055,7 +4055,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_action",
+            "event": "cost_action",
             "strict": true
           },
           {
@@ -4145,7 +4145,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_action",
+            "event": "cost_action",
             "strict": true
           }
         ]
@@ -4239,7 +4239,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_action",
+            "event": "cost_action",
             "strict": true
           }
         ]
@@ -4254,7 +4254,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_action",
+            "event": "cost_action",
             "strict": true
           }
         ]
@@ -4347,7 +4347,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_action",
+            "event": "cost_action",
             "strict": true
           }
         ]
@@ -4445,7 +4445,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_action",
+            "event": "cost_action",
             "strict": true
           }
         ]
@@ -4550,7 +4550,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_action",
+            "event": "cost_action",
             "strict": true
           }
         ]
@@ -4617,7 +4617,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_action",
+            "event": "cost_action",
             "strict": true
           }
         ]
@@ -4696,7 +4696,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_action",
+            "event": "cost_action",
             "strict": true
           }
         ]
@@ -4776,7 +4776,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_action",
+            "event": "cost_action",
             "strict": true
           }
         ]
@@ -4806,7 +4806,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_action",
+            "event": "cost_action",
             "strict": true
           }
         ]
@@ -4837,7 +4837,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_action",
+            "event": "cost_action",
             "strict": true
           }
         ]
@@ -4902,7 +4902,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_action",
+            "event": "cost_action",
             "strict": true
           }
         ]
@@ -4932,7 +4932,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_action",
+            "event": "cost_action",
             "strict": true
           }
         ]
@@ -4948,7 +4948,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_action",
+            "event": "cost_action",
             "strict": true
           }
         ]
@@ -4994,7 +4994,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_action",
+            "event": "cost_action",
             "strict": true
           }
         ]
@@ -5009,7 +5009,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_bonus",
+            "event": "cost_bonus",
             "strict": true
           },
           {
@@ -5111,7 +5111,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_bonus",
+            "event": "cost_bonus",
             "strict": true
           },
           {
@@ -5180,7 +5180,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_bonus",
+            "event": "cost_bonus",
             "strict": true
           },
           {
@@ -5241,7 +5241,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_action",
+            "event": "cost_action",
             "strict": true
           },
           {
@@ -5308,7 +5308,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_action",
+            "event": "cost_action",
             "strict": true
           },
           {
@@ -5345,7 +5345,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_action",
+            "event": "cost_action",
             "strict": true
           },
           {
@@ -5375,7 +5375,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_action",
+            "event": "cost_action",
             "strict": true
           }
         ]
@@ -5412,7 +5412,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_action",
+            "event": "cost_action",
             "strict": true
           }
         ]
@@ -5458,7 +5458,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_action",
+            "event": "cost_action",
             "strict": true
           }
         ]
@@ -5504,7 +5504,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_action",
+            "event": "cost_action",
             "strict": true
           }
         ]
@@ -5620,7 +5620,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_reaction",
+            "event": "cost_reaction",
             "strict": true
           },
           {
@@ -5704,7 +5704,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_reaction",
+            "event": "cost_reaction",
             "strict": true
           },
           {
@@ -5754,7 +5754,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_reaction",
+            "event": "cost_reaction",
             "strict": true
           }
         ]
@@ -8245,7 +8245,7 @@
       "battle_start": {
         "label": "Начало боя",
         "group": "Правила комнаты",
-        "description": "Бой пошёл: траты хода считаются, у всех полный запас.",
+        "description": "Бой пошёл: стоимость действий считается, у всех полный запас.",
         "activation": "triggered",
         "duration": {
           "kind": "permanent"
@@ -8481,11 +8481,11 @@
           }
         ]
       },
-      "spend_action": {
-        "label": "Трата: действие",
-        "group": "Вызываемые",
+      "cost_action": {
+        "label": "Стоимость: действие",
+        "group": "Стоимость",
         "activation": "manual",
-        "description": "Тратит ход только в бою. Кончилось — действие не состоялось.",
+        "description": "Списывается только в бою. Не хватило — действие не состоялось.",
         "params": [],
         "steps": [
           {
@@ -8518,11 +8518,11 @@
           }
         ]
       },
-      "spend_bonus": {
-        "label": "Трата: бонусное действие",
-        "group": "Вызываемые",
+      "cost_bonus": {
+        "label": "Стоимость: бонусное действие",
+        "group": "Стоимость",
         "activation": "manual",
-        "description": "Тратит ход только в бою. Кончилось — действие не состоялось.",
+        "description": "Списывается только в бою. Не хватило — действие не состоялось.",
         "params": [],
         "steps": [
           {
@@ -8555,11 +8555,11 @@
           }
         ]
       },
-      "spend_reaction": {
-        "label": "Трата: реакция",
-        "group": "Вызываемые",
+      "cost_reaction": {
+        "label": "Стоимость: реакция",
+        "group": "Стоимость",
         "activation": "manual",
-        "description": "Тратит ход только в бою. Кончилось — действие не состоялось.",
+        "description": "Списывается только в бою. Не хватило — действие не состоялось.",
         "params": [],
         "steps": [
           {
@@ -8592,11 +8592,11 @@
           }
         ]
       },
-      "spend_once": {
-        "label": "Трата: раз за ход",
-        "group": "Вызываемые",
+      "cost_once": {
+        "label": "Стоимость: раз за ход",
+        "group": "Стоимость",
         "activation": "manual",
-        "description": "Тратит ход только в бою. Кончилось — действие не состоялось.",
+        "description": "Списывается только в бою. Не хватило — действие не состоялось.",
         "params": [],
         "steps": [
           {
@@ -8629,11 +8629,11 @@
           }
         ]
       },
-      "spend_attack": {
-        "label": "Трата: атака",
-        "group": "Вызываемые",
+      "cost_attack": {
+        "label": "Стоимость: атака",
+        "group": "Стоимость",
         "activation": "manual",
-        "description": "Тратит ход только в бою. Кончилось — действие не состоялось.",
+        "description": "Списывается только в бою. Не хватило — действие не состоялось.",
         "params": [],
         "steps": [
           {

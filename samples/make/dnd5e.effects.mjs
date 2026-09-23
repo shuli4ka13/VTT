@@ -66,24 +66,24 @@ const payTurn = (tag, note) => [
   { type: 'compare', value: { tag }, versus: { const: 1 }, breakIf: 'less', note, when: IN_BATTLE },
   change(tag, 'subtract', { const: 1 }, { when: IN_BATTLE }),
 ];
-const SPEND = {
-  action: ['spend_action', 'Трата: действие', payTurn('turn_action', 'действие на этом ходу уже потрачено')],
-  bonus: ['spend_bonus', 'Трата: бонусное действие', payTurn('turn_bonus', 'бонусное действие на этом ходу уже потрачено')],
-  reaction: ['spend_reaction', 'Трата: реакция', payTurn('turn_reaction', 'реакция уже потрачена')],
-  once: ['spend_once', 'Трата: раз за ход', payTurn('turn_once', 'это бывает раз за ход')],
-  attack: ['spend_attack', 'Трата: атака', [
+const COSTS = {
+  action: ['cost_action', 'Стоимость: действие', payTurn('turn_action', 'действие на этом ходу уже потрачено')],
+  bonus: ['cost_bonus', 'Стоимость: бонусное действие', payTurn('turn_bonus', 'бонусное действие на этом ходу уже потрачено')],
+  reaction: ['cost_reaction', 'Стоимость: реакция', payTurn('turn_reaction', 'реакция уже потрачена')],
+  once: ['cost_once', 'Стоимость: раз за ход', payTurn('turn_once', 'это бывает раз за ход')],
+  attack: ['cost_attack', 'Стоимость: атака', [
     { type: 'compare', value: { tag: 'turn_action' }, versus: { const: 1 }, breakIf: 'less', note: 'действие на этом ходу уже потрачено', when: NEEDS_ACTION },
     change('turn_action', 'subtract', { const: 1 }, { when: NEEDS_ACTION }),
     change('turn_attacks', 'set', { expr: '@attacks_per_action' }, { when: NEEDS_ACTION }),
     change('turn_attacks', 'subtract', { const: 1 }, { when: IN_BATTLE }),
   ]],
 };
-const COST = Object.fromEntries(Object.entries(SPEND).map(([kind, [id]]) => [kind, [{ type: 'emit', event: id, strict: true }]]));
+const COST = Object.fromEntries(Object.entries(COSTS).map(([kind, [id]]) => [kind, [{ type: 'emit', event: id, strict: true }]]));
 
-function spends() {
-  return Object.fromEntries(Object.values(SPEND).map(([id, label, steps]) => [id, {
-    label, group: 'Вызываемые', activation: 'manual',
-    description: 'Тратит ход только в бою. Кончилось — действие не состоялось.',
+function costs() {
+  return Object.fromEntries(Object.values(COSTS).map(([id, label, steps]) => [id, {
+    label, group: 'Стоимость', activation: 'manual',
+    description: 'Списывается только в бою. Не хватило — действие не состоялось.',
     params: [], steps,
   }]));
 }
@@ -649,7 +649,7 @@ function roomRules() {
     trigger: { on: `moment:${moment}` }, params: [], steps,
   });
   return {
-    battle_start: onMoment('Начало боя', 'Бой пошёл: траты хода считаются, у всех полный запас.', 'combat-start',
+    battle_start: onMoment('Начало боя', 'Бой пошёл: стоимость действий считается, у всех полный запас.', 'combat-start',
       [change('battle', 'set', { const: 1 }), ...refresh]),
     battle_end: onMoment('Конец боя', 'Вне боя действия не считаются.', 'combat-end', [change('battle', 'set', { const: 0 })]),
     turn_refresh: onMoment('Начало хода', 'Действие, бонусное, реакция и «раз за ход» — снова по одному.', 'turn-start', refresh),
@@ -670,7 +670,7 @@ function roomRules() {
 
 export function effects() {
   return {
-    ...attacks(), ...spells(), ...features(), ...reactions(), ...conditions(), ...traits(), ...lifecycle(), ...roomRules(), ...spends(),
+    ...attacks(), ...spells(), ...features(), ...reactions(), ...conditions(), ...traits(), ...lifecycle(), ...roomRules(), ...costs(),
   };
 }
 

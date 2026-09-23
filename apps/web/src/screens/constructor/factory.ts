@@ -1,6 +1,7 @@
 import { freeId } from '../../store/world.ts';
 import { dice } from '../../words.ts';
 import { effectiveDefault } from './groups.ts';
+import { COST_BLOCK } from '@vtt/engine/words/glossary';
 import type {
   System, Effect, Activation, Field, RecordKind, Binding, Step, SystemConstant, RollEdit, RangeTable,
 } from '@vtt/schema';
@@ -76,6 +77,16 @@ export const newTable = (system: System): Made<RangeTable> => ({
 export const simpleReceive = (tag: string, direction: 'subtract' | 'add', targetModifiers: boolean): Step => ({
   type: 'apply', target: { tag }, direction, value: { ref: 'event.amount' }, targetModifiers,
 } as unknown as Step);
+
+export const newCost = (system: System): Made<Effect> => ({
+  key: freeId(Object.keys(system.effects ?? {}), 'стоимость'),
+  value: { label: `${COST_BLOCK}: новая`, group: COST_BLOCK, activation: 'manual', params: [], steps: [] },
+});
+
+export const costsOf = (system: System): [string, Effect][] =>
+  Object.entries(system.effects ?? {}).filter(([, effect]) => effect.group === COST_BLOCK);
+
+export const payStep = (id: string): Step => ({ type: 'emit', event: id, strict: true } as unknown as Step);
 
 export const newCalled = (system: System): Made<Effect> => {
   const field = system.fields.find(f => f.value.kind === 'stored' && f.value.type === 'number');

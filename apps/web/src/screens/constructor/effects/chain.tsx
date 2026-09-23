@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useWorld, freeId } from '../../../store/world.ts';
 import { STEP } from '../../../words.ts';
 import { CARD_TITLES } from './words.ts';
-import { Button, Verdict } from '../../../ui/primitives.tsx';
+import { Button, Select, Verdict } from '../../../ui/primitives.tsx';
 import { problemOf } from '../step-card.tsx';
 import { groupSteps, moveGroup, removeSteps, BRICKS } from '../cards.ts';
+import { costsOf, newCost, payStep } from '../factory.ts';
 import { GroupCard } from './cards/group-card.tsx';
 import { useOpened } from '../../../store/opened.ts';
 import { findDonorBlock, copyDonorBlock } from '../donors.tsx';
@@ -187,10 +188,33 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
             {b.label}
           </Button>
         ))}
+        {lane === 'sender' ? (
+          <span className="add-cost">
+            <Select<string>
+              value=""
+              title="Чего стоит эффект: эффект из блока «Стоимость» зовётся первым шагом; не хватило — эффект не состоится"
+              options={[['', '+ стоимость'],
+                ...costsOf(system).map(([id, cost]) => [id, cost.label || id] as const),
+                [NEW_COST, '+ новая стоимость…']]}
+              onChange={pick => {
+                if (!pick) return;
+                let id = pick;
+                if (pick === NEW_COST) {
+                  const made = newCost(system);
+                  id = made.key;
+                  editSystem(draft => { draft.effects[made.key] = made.value; });
+                }
+                edit(draft => { (draft.steps ??= []).unshift(payStep(id)); });
+              }}
+            />
+          </span>
+        ) : null}
       </div>
     </>
   );
 }
+
+const NEW_COST = ':новая';
 
 const cardTitle = (cards: ReturnType<typeof groupSteps>, index: number): string | undefined => {
   const card = cards.find(c => c.indices.includes(index));

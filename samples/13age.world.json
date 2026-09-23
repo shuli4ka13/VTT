@@ -455,7 +455,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_standard",
+            "event": "cost_standard",
             "strict": true
           }
         ]
@@ -510,7 +510,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_standard",
+            "event": "cost_standard",
             "strict": true
           }
         ]
@@ -686,11 +686,11 @@
           }
         ]
       },
-      "spend_standard": {
-        "label": "Трата: стандартное",
-        "group": "Вызываемые",
+      "cost_standard": {
+        "label": "Стоимость: стандартное",
+        "group": "Стоимость",
         "activation": "manual",
-        "description": "Тратит ход только в бою. Кончилось — действие не состоялось.",
+        "description": "Списывается только в бою. Не хватило — действие не состоялось.",
         "params": [],
         "steps": [
           {

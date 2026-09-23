@@ -2554,7 +2554,7 @@
         "self": [
           {
             "type": "emit",
-            "event": "spend_action",
+            "event": "cost_action",
             "strict": true
           },
           {
@@ -3108,11 +3108,11 @@
           }
         ]
       },
-      "spend_action": {
-        "label": "Трата: действие",
-        "group": "Вызываемые",
+      "cost_action": {
+        "label": "Стоимость: действие",
+        "group": "Стоимость",
         "activation": "manual",
-        "description": "Тратит ход только в бою. Кончилось — действие не состоялось.",
+        "description": "Списывается только в бою. Не хватило — действие не состоялось.",
         "params": [],
         "steps": [
           {

@@ -28,3 +28,5 @@ export const asDice = (text: string): string => {
 export const FORBIDDEN_STEMS = ['карточк', 'карточе', 'кирпич', 'чарник', 'Шаблон Компендиума', 'рода записей', 'родов записей', 'род записи', 'без рода', 'родов ещё', 'род неизвестен', 'событи'] as const;
 
 export const OUTCOME_COLUMNS = { success: 'успех', fail: 'провал' } as const;
+
+export const COST_BLOCK = 'Стоимость';
