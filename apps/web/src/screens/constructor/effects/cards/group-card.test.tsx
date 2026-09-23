@@ -414,3 +414,16 @@ describe('GroupCard: изменение само заводит число', () 
     expect((steps[0] as any).value.expr).toMatch(/^@получатель\.armor/);
   });
 });
+
+describe('GroupCard: встречный бросок', () => {
+  it('«против» переключается на бросок второй стороны', () => {
+    const step = { id: 'hit', type: 'threshold', roll: { die: { constant: 'd20' } }, versus: { const: 10 }, successWhen: 'atLeast' } as Record<string, any>;
+    const dieSystem = { ...system, constants: { d20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } } } as unknown as System;
+    const group = groupSteps([step as unknown as Step])[0]!;
+    render(<GroupCard group={group} position={1} system={dieSystem} effect={{} as Effect}
+      earlier={[]} problem={null} edit={(_, change) => change(step as never)} onDelete={() => {}} />);
+    const against = screen.getByDisplayValue('числа') as HTMLSelectElement;
+    fireEvent.change(against, { target: { value: 'roll' } });
+    expect(step.versus).toEqual({ roll: { die: { constant: 'd20' }, check: null } });
+  });
+});

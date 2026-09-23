@@ -50,6 +50,8 @@ export const STEP_WORDS = {
       { path: '.atMax', label: 'сколько костей легло максимумом', kind: 'number' },
       { path: '.atMin', label: 'сколько костей легло единицей', kind: 'number' },
       { path: '.edited', label: 'да или нет: бросок правили', kind: 'boolean' },
+      { path: '.versus', label: 'сколько вышло у второй стороны: порог или встречный бросок', kind: 'number' },
+      { path: '.versusNatural', label: 'встречный бросок — что выпало на костях', kind: 'number' },
     ],
     reasons: { 'threshold-miss': 'промах', 'threshold-held': 'цель устояла' },
     breakLines: { success: 'если порог не взят — промах', fail: 'если порог взят — цель устояла' },

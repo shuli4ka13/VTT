@@ -42,7 +42,7 @@ function ownCheckOf(bonus: unknown, ctx: StepContext): string | null {
 }
 
 function unfold(die: unknown, ctx: StepContext) {
-  return unfoldDice(dieOf(ctx.system, die), (ref, what) => resolveNumber(ref, ctx, what));
+  return unfoldDice(dieOf(ctx.system, die), (ref, what) => resolveNumber(packRef(ref, ctx), ctx, what));
 }
 
 const OUTCOMES: Record<string, (total: number, versus: number) => { success: boolean; margin: number }> = {
@@ -58,16 +58,68 @@ export const mayBreak = true;
 
 export const icon = '⌖';
 
+type RollSpec = { die?: unknown; bonus?: unknown; check?: string | null };
+
+const opposedOf = (versus: unknown): RollSpec | null =>
+  (versus && typeof versus === 'object' && 'roll' in (versus as object) ? (versus as { roll: RollSpec }).roll : null);
+
 export function lint(step: StepData) {
   if (!step.roll || !step.roll.die || !step.roll.die.constant) {
     return 'порогу нужна кость — слот roll.die ссылается на константу системы';
   }
+  const opposed = opposedOf(step.versus);
+  if (opposed && !(opposed.die && typeof opposed.die === 'object')) {
+    return 'встречному броску нужна кость';
+  }
   return null;
+}
+
+function rollHere(spec: RollSpec, ctx: StepContext, extra: unknown[] = []) {
+  const check = spec.check || null;
+  const mods = resolveRoll(
+    ctx.system, ctx.sheet, [check, ownCheckOf(spec.bonus, ctx)], ctx.pass,
+    [...extra, ...claimedModifiers(ctx.system, ctx.claims ?? [], check)] as never);
+  const rolled = rollLead(unfold(spec.die, ctx), ctx.die, mods.edits);
+  return { rolled, modBonus: mods.bonus, check };
+}
+
+function packVersus(versus: unknown, rollerSide: string, ctx: StepContext): unknown {
+  const opposed = opposedOf(versus);
+  if (!opposed) return packRef(versus, ctx);
+  if (rollerSide === 'target') {
+    const { rolled, modBonus, check } = rollHere(opposed, ctx);
+    return { rolled, bonus: packRef(opposed.bonus, ctx), modBonus, check };
+  }
+  return { roll: { die: opposed.die, bonus: packRef(opposed.bonus, ctx), check: opposed.check || null } };
+}
+
+function versusOf(packed: any, ctx: StepContext): { value: number; against?: Record<string, unknown> } {
+  if (packed && typeof packed === 'object' && ('rolled' in packed || 'roll' in packed)) {
+    const here = 'rolled' in packed
+      ? { rolled: packed.rolled, modBonus: packed.modBonus || 0, check: packed.check ?? null }
+      : rollHere(packed.roll, ctx);
+    const bonusRef = 'rolled' in packed ? packed.bonus : packed.roll.bonus;
+    const bonus = (resolveOptionalNumber(bonusRef, ctx, 'прибавка встречного броска') ?? 0) + here.modBonus;
+    const total = here.rolled.total + bonus;
+    return {
+      value: total,
+      against: {
+        natural: here.rolled.total, total, bonus, rolls: here.rolled.rolls, kept: here.rolled.kept,
+        ...(here.rolled.read && here.rolled.read !== 'sum' ? { read: here.rolled.read } : {}),
+        ...(here.check ? { check: here.check } : {}),
+      },
+    };
+  }
+  return { value: resolveNumber(packed, ctx, 'порогу не с чем сравнить бросок') };
 }
 
 export function traceLine(t: any, h: any) {
   const checkName = t.check ? ` «${h.labelOf(t.check)}»` : '';
   const versusName = t.versus.tag ? `${h.labelOf(t.versus.tag)} ` : '';
+  const opposed = t.against
+    ? `встречного броска${t.against.check ? ` «${h.labelOf(t.against.check)}»` : ''} [${t.against.rolls.join(', ')}]${
+      t.against.read === 'count' ? ` → успехов ${t.against.natural}` : ''} + ${t.against.bonus} = `
+    : '';
 
   const shown = Array.isArray(t.raw) && t.raw.length === t.rolls.length
     ? t.rolls.map((v: number, i: number) => (t.raw[i] === v ? String(v) : `${t.raw[i]}→${v}`)).join(', ')
@@ -85,7 +137,7 @@ export function traceLine(t: any, h: any) {
     : taken;
 
   const edits = t.edits?.length ? ` · ${t.edits.join(', ')}` : '';
-  return `проверка${checkName}: ${dice} + ${t.bonus} = ${t.total} против ${versusName}${t.versus.value} — ${verdict}${edits}${parts}`;
+  return `проверка${checkName}: ${dice} + ${t.bonus} = ${t.total} против ${opposed}${versusName}${t.versus.value} — ${verdict}${edits}${parts}`;
 }
 
 export function pack(step: StepData, ctx: StepContext) {
@@ -98,7 +150,7 @@ export function pack(step: StepData, ctx: StepContext) {
     side: step.side || 'source',
     continueOn: step.continueOn || 'success',
     successWhen: step.successWhen || 'atLeast',
-    versus: packRef(step.versus, ctx),
+    versus: packVersus(step.versus, step.side || 'source', ctx),
 
     ...(step.degrees && step.degrees.table ? { degrees: step.degrees } : {}),
   };
@@ -140,7 +192,8 @@ export function resolve(step: StepData, ctx: StepContext) {
   const shift = rolled.versusShift || 0;
   const eased = (String(step.successWhen) === 'notOver' || String(step.successWhen) === 'under')
     ? -shift : shift;
-  const versus = resolveNumber(step.versus, ctx, 'порогу не с чем сравнить бросок') + eased;
+  const against = versusOf(step.versus, ctx);
+  const versus = against.value + eased;
   const outcome = OUTCOMES[String(step.successWhen)] || OUTCOMES.atLeast!;
   const { success, margin } = outcome(total, versus);
 
@@ -162,6 +215,8 @@ export function resolve(step: StepData, ctx: StepContext) {
     ...(scale ? { degree } : {}),
     dice: { rolls: rolled.rolls, kept: rolled.kept },
     parts: rolled.parts || {},
+    versus,
+    ...(against.against ? { against: against.against, versusNatural: against.against.natural } : {}),
   };
 
   const goOn = step.continueOn === 'always' ? true : step.continueOn === 'fail' ? !success : success;
@@ -177,6 +232,7 @@ export function resolve(step: StepData, ctx: StepContext) {
         ? { tag: step.versus.tag, value: versus }
         : { value: versus },
       margin, success,
+      ...(against.against ? { against: against.against } : {}),
       ...(scale ? { degree } : {}),
       ...(Object.keys(rolled.parts || {}).length ? { parts: rolled.parts } : {}),
     },
