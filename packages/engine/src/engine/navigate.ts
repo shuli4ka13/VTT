@@ -44,7 +44,7 @@ export function walk(
     if (i === path.length - 1) return cell;
     if (column.kind !== 'choice' || !column.from) {
       throw new EngineError(
-        `${owner}: колонка «${column.label || columnKey}» не ссылка на таблицу — дальше «${path.slice(i + 1).join('.')}» идти некуда`);
+        `${owner}: колонка «${column.label || columnKey}» не из таблицы — дальше «${path.slice(i + 1).join('.')}» идти некуда`);
     }
     current = column.from;
     value = cell;

@@ -238,7 +238,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
                     })}
                   />
                 </Field>
-                <Field label="Чем заполняют">
+                <Field label="Тип">
                   <Select
                     value={String(prop.kind ?? 'number')}
                     options={PROP_KINDS}

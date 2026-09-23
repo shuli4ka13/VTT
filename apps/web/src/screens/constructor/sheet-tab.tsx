@@ -30,7 +30,7 @@ const TYPES = [
   ['number', 'число'],
   ['text', 'текст'],
   ['boolean', 'да / нет'],
-  ['link', 'ссылка на таблицу'],
+  ['link', 'из таблицы'],
 ] as const;
 
 const LINK = 'link';
@@ -186,7 +186,7 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
           ) : null}
 
           {(field.control === 'choice' || field.control === 'ring') && !field.optionsFrom ? (
-            <Field label="Свои варианты" hint="Короткий список прямо здесь. Если варианты — строки таблицы, выберите в типе значения «ссылка на таблицу»." needed={!field.options?.length}>
+            <Field label="Свои варианты" hint="Короткий список прямо здесь. Если варианты — строки таблицы, выберите тип значения «из таблицы»." needed={!field.options?.length}>
               <div className="stack stack--tight">
                 {(
                   <>

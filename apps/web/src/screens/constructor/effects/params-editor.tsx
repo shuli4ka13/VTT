@@ -1,8 +1,6 @@
 import { kindsFor } from '@vtt/engine/words/kinds';
 import { choiceTables } from '@vtt/engine/model/tables';
-import { freeId, useWorld } from '../../../store/world.ts';
-import { fillersOf } from './fillers.ts';
-import { pickFor } from '../problems.ts';
+import { freeId } from '../../../store/world.ts';
 import { Card, CardHead, Input, Select, Button, Empty } from '../../../ui/primitives.tsx';
 import type { Effect, System } from '@vtt/schema';
 
@@ -23,16 +21,13 @@ const FIXED_SIDE: Record<string, string> = {
 
 const MAIN_HINT = 'главное число — его правят сопротивления и уязвимости цели';
 
-export function ParamsEditor({ id, effect, system, onEdit, called = false }: {
-  id?: string;
+export function ParamsEditor({ effect, system, onEdit, called = false }: {
   effect: Effect;
   system: System;
   onEdit: (change: (draft: Effect) => void) => void;
   called?: boolean;
 }) {
   const params = effect.params ?? [];
-  const pick = useWorld(s => s.pick);
-  const fillers = id ? fillersOf(system, id) : [];
   const addWord = '+ вход';
   const addParam = () => onEdit(draft => {
     draft.params ??= [];
@@ -58,31 +53,9 @@ export function ParamsEditor({ id, effect, system, onEdit, called = false }: {
     <Card>
       <CardHead title="Что приходит" />
       <p className="faint">
-        {called
-          ? 'Входы эффекта, как у функции. Заполняет тот, кто зовёт этот эффект шагом «вызов». Выбор из таблицы — это ещё и метка вызова: по ней правки цели узнают, что за урон.'
-          : 'Входы эффекта, как у функции. Заполняет запись, к которой привязан эффект, — оружие, заклинание; или спрашивают у игрока в момент действия.'}
-        {' '}В шагах входы берут через @.
+        Входы эффекта — как параметры функции. В шагах их берут через @.
+        {called ? ' Вход «из таблицы» — ещё и метка: по ней правки цели узнают, что пришло, например тип урона.' : ''}
       </p>
-      {id ? (
-        <div className="fillers">
-          <span className="field__label">Заполняют</span>
-          {fillers.length ? fillers.map((filler, at) => (
-            <button
-              key={at} type="button"
-              className={`fillers__item${filler.missing.length ? ' fillers__item--short' : ''}`}
-              title={filler.missing.length ? `не заполнено: ${filler.missing.join(', ')}` : 'все входы заполнены'}
-              onClick={() => pick(pickFor(filler.where))}
-            >
-              {filler.label}
-              {filler.missing.length ? ` — не хватает: ${filler.missing.join(', ')}` : ' ✓'}
-            </button>
-          )) : (
-            <span className="faint">
-              {called ? 'пока никто не зовёт этот эффект шагом «вызов»' : 'пока ни одна запись не привязывает этот эффект к кнопке'}
-            </span>
-          )}
-        </div>
-      ) : null}
       {params.length === 0 ? (
         <Empty
           title="Входов нет"
@@ -95,7 +68,7 @@ export function ParamsEditor({ id, effect, system, onEdit, called = false }: {
         <div className="stack stack--tight">
           <div className="need-list__head">
             <span className="field__label">Название</span>
-            <span className="field__label">Чем заполняют</span>
+            <span className="field__label">Тип</span>
             <span className="field__label">Чей лист</span>
             <span aria-hidden />
           </div>

@@ -180,10 +180,10 @@ describe('RecordsTab: свойство на лист или служебное',
     expect('onSheet' in useWorld.getState().system.records!.weapon!.props![0]!).toBe(false);
   });
 
-  it('среди видов свойства есть «ссылка на запись»', () => {
+  it('среди видов свойства есть «запись»', () => {
     render(<RecordsTab />);
     const kind = screen.getByDisplayValue('число') as HTMLSelectElement;
-    expect([...kind.options].map(o => o.textContent)).toContain('ссылка на запись');
+    expect([...kind.options].map(o => o.textContent)).toContain('запись');
   });
 });
 

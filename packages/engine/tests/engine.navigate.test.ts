@@ -81,6 +81,6 @@ group('ссылка на таблицу читается через точку',
   test('идти дальше обычной колонки некуда — так и сказано', () => {
     const кривая = { ...система, fields: [...система.fields, { tag: 'х', label: 'х', value: { kind: 'formula', expr: '@класс.кость.ещё' } }] } as System;
     const беда = throws(() => calc(кривая, лист(), 'х'));
-    ok(String(беда.message).includes('не ссылка'), String(беда.message));
+    ok(String(беда.message).includes('не из таблицы'), String(беда.message));
   });
 });

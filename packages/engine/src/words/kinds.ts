@@ -7,10 +7,10 @@ export const KIND_LABEL: Record<Kind, string> = {
   text: 'слово',
   expr: 'формула',
   dice: 'кость',
-  choice: 'ссылка на таблицу',
-  effect: 'ссылка на эффект',
-  record: 'ссылка на запись',
-  tag: 'ссылка на поле листа',
+  choice: 'из таблицы',
+  effect: 'эффект',
+  record: 'запись',
+  tag: 'поле листа',
 };
 
 const ORDER: Kind[] = ['number', 'text', 'expr', 'dice', 'choice', 'effect', 'record', 'tag'];
