@@ -1,4 +1,5 @@
 import type { System, SlotRef } from '@vtt/schema';
+import { compile } from '@vtt/engine/formula';
 import { dieWord } from './readback.ts';
 import { asDice } from '../../words.ts';
 
@@ -15,7 +16,7 @@ export function notationOf(system: System, key: string): string {
   return dice.map(d => `${typeof d.count === 'number' ? d.count : 1}d${d.sides}`).join(' + ');
 }
 
-function dieRef(count: number, sides: number, system: System, picked?: string | null): SlotRef {
+export function dieRef(count: number, sides: number, system: System, picked?: string | null): SlotRef {
   if (picked && notationOf(system, picked) === `${count}d${sides}`) return { constant: picked } as SlotRef;
   const known = Object.entries(system.constants ?? {}).find(([, c]) =>
     c.kind === 'die' && c.dice?.length === 1
@@ -80,4 +81,21 @@ export function parseAmountExpr(text: string, system: System, picked?: string | 
 export function formatAmountExpr(amount: unknown, system: System): string {
   const a = (amount ?? {}) as { dice?: unknown; bonus?: unknown };
   return formatRollExpr({ die: a.dice, bonus: a.bonus }, system);
+}
+
+export function badFormula(bonus: unknown): string | null {
+  if (!bonus || typeof bonus !== 'object' || !('expr' in (bonus as object))) return null;
+  const text = String((bonus as { expr: unknown }).expr ?? '').trim();
+  if (!text) return null;
+  try { compile(text); return null; } catch (err) {
+    return (err as Error).message;
+  }
+}
+
+export function exprText(bonus: unknown): string {
+  if (!bonus || typeof bonus !== 'object') return '';
+  const b = bonus as Record<string, unknown>;
+  if ('expr' in b) return String(b.expr ?? '');
+  if ('const' in b) return String(b.const ?? '');
+  return '';
 }

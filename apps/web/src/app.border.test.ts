@@ -29,7 +29,6 @@ const AUTHOR_ONLY = [
   'constructor/effects/cards/send-body.tsx',
   'constructor/effects/cards/number-body.tsx',
   'constructor/effects/cards/condition-fold.tsx',
-  'constructor/effects/cards/roll-expr-input.tsx',
   'constructor/records-tab.tsx',
   'constructor/step-card.tsx',
   'constructor/slots.tsx',
@@ -40,7 +39,6 @@ const AUTHOR_ONLY = [
   'constructor/rules/rolls-section.tsx',
   'constructor/rules/tables-section.tsx',
   'constructor/rules/initiative-section.tsx',
-  'constructor/rules/action-types-section.tsx',
 ];
 
 const PLAY_SCREENS = ['screens/play/sheet.tsx', 'screens/play/table.tsx', 'screens/play/lobby.tsx'];

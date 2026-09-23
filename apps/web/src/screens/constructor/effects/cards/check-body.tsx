@@ -1,19 +1,20 @@
+import { useMemo, useState } from 'react';
 import type { System } from '@vtt/schema';
 import { Select } from '../../../../ui/primitives.tsx';
 import { FieldRow } from '../../../../ui/field-row.tsx';
 import type { RowField } from '../../../../ui/field-row.tsx';
 import { SlotInput } from '../../slot-input.tsx';
+import { FormulaField } from '../../../../ui/formula-field.tsx';
+import { namesOf, refForName, inputBadges } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
-import { RollExprInput } from './roll-expr-input.tsx';
+import { badFormula } from '../../roll-expr.ts';
+import { parseCheck, formatCheck } from '../../check-expr.ts';
 
 const firstDie = (system: System): string | undefined => Object.keys(system.constants ?? {})[0];
 
 const loose = (draft: unknown): Record<string, any> => draft as Record<string, any>;
 
-const dieOptions = (system: System) => Object.entries(system.constants ?? {})
-  .filter(([, c]) => (c as { kind?: string }).kind === 'die')
-  .map(([key, c]) => [key, (c as { label?: string }).label || key] as const);
 
 export function CheckBody({ step, context, edit, system }: {
   step: any;
@@ -22,8 +23,6 @@ export function CheckBody({ step, context, edit, system }: {
   system: System;
 }) {
   const mode = step.type === 'compare' ? 'plain' : 'roll';
-  const opposed = step.versus && typeof step.versus === 'object' && 'roll' in step.versus ? step.versus.roll : null;
-  const otherSide = step.side === 'target' ? 'отправителя' : 'получателя';
   const tables = Object.entries(system.tables ?? {});
 
   const setMode = (next: string) => edit(0, draft => {
@@ -85,95 +84,15 @@ export function CheckBody({ step, context, edit, system }: {
     );
   }
 
-  const versusFields: RowField[] = opposed ? [
-    {
-      key: 'otherDie', label: 'Кость второй стороны', width: 150,
-      node: (
-        <Select
-          value={String(opposed.die?.constant ?? '')}
-          options={dieOptions(system) as never}
-          onChange={next => edit(0, draft => { loose(draft).versus.roll.die = { constant: next }; })}
-        />
-      ),
-    },
-    {
-      key: 'otherBonus', label: 'Прибавка второй стороны', width: 200,
-      node: (
-        <SlotInput
-          where="проверка · прибавка второй стороны"
-          value={opposed.bonus} context={context} allow={['expr', 'const', 'param']}
-          onChange={next => edit(0, draft => {
-            const roll = loose(draft).versus.roll;
-            if (next) roll.bonus = next; else delete roll.bonus;
-          })}
-        />
-      ),
-    },
-    {
-      key: 'otherCheck', label: 'Какой бросок у второй стороны', width: 190,
-      hint: 'Вид броска из словаря — чтобы её правила («преимущество на защиту») знали, куда целиться',
-      node: (
-        <Select
-          value={String(opposed.check ?? '')}
-          options={[['', '— просто бросок —'], ...(system.rolls ?? []).map(r => [r.tag, r.label] as const)] as never}
-          onChange={next => edit(0, draft => { loose(draft).versus.roll.check = next || null; })}
-        />
-      ),
-    },
-  ] : [
-    {
-      key: 'versus', label: 'Число', width: 190,
-      node: (
-        <SlotInput
-          where="проверка · число"
-          value={step.versus} context={context} allow={['tag', 'expr', 'const', 'param', 'ref']} side="target"
-          onChange={next => edit(0, draft => { loose(draft).versus = next ?? undefined; })}
-        />
-      ),
-    },
-  ];
-
   return (
     <FieldRow
       id="check-roll"
       fields={[
         modeField,
-        { key: 'roll', label: 'Бросок', width: 220, node: <RollExprInput step={step} context={context} edit={edit} /> },
         {
-          key: 'successWhen', label: 'Успех', width: 80,
-          node: (
-            <Select
-              value={String(step.successWhen ?? 'atLeast')}
-              options={[['atLeast', '≥'], ['notOver', '≤'], ['over', '>'], ['under', '<'], ['equals', '=']] as const}
-              onChange={next => edit(0, draft => { loose(draft).successWhen = next; })}
-            />
-          ),
-        },
-        {
-          key: 'against', label: 'Против', width: 150,
-          node: (
-            <Select
-              value={opposed ? 'roll' : 'value'}
-              options={[['value', 'числа'], ['roll', `встречного броска ${otherSide}`]] as const}
-              onChange={next => edit(0, draft => {
-                const d = loose(draft);
-                d.versus = next === 'roll'
-                  ? { roll: { die: firstDie(system) ? { constant: firstDie(system) } : undefined, check: null } }
-                  : undefined;
-              })}
-            />
-          ),
-        },
-        ...versusFields,
-        {
-          key: 'side', label: 'Кто бросает', width: 140,
-          node: (
-            <Select
-              value={String(step.side ?? 'source')}
-              options={[['source', 'отправитель'], ['target', 'получатель']] as const}
-              onChange={next => edit(0, draft => { const d = loose(draft); if (next === 'target') d.side = 'target'; else delete d.side; })}
-            />
-          ),
+          key: 'formula', label: 'Формула', width: 420,
+          hint: 'кинуть(кость, вид броска) + прибавка, знак и с чем сравнить. Кость с @получатель — бросает получатель; справа можно встречное кинуть(…)',
+          node: <CheckFormula step={step} context={context} edit={edit} />,
         },
         {
           key: 'continueOn', label: 'Дальше при', width: 140,
@@ -183,18 +102,6 @@ export function CheckBody({ step, context, edit, system }: {
               value={String(step.continueOn ?? 'success')}
               options={[['success', 'успехе'], ['fail', 'провале'], ['always', 'всегда']] as const}
               onChange={next => edit(0, draft => { loose(draft).continueOn = next; })}
-            />
-          ),
-        },
-        {
-          key: 'check', label: 'Какой это бросок', width: 180,
-          hint: 'Вид броска из словаря — чтобы правило «преимущество на атаки» знало, куда целиться',
-          node: (
-            <Select
-              value={String(step.roll?.check ?? '')}
-              options={[['', '— просто бросок —'],
-                ...(context.system.rolls ?? []).map(r => [r.tag, r.label] as const)] as never}
-              onChange={next => edit(0, draft => { (loose(draft).roll ??= {}).check = next || null; })}
             />
           ),
         },
@@ -224,5 +131,51 @@ export function CheckBody({ step, context, edit, system }: {
         }] : []),
       ]}
     />
+  );
+}
+
+function CheckFormula({ step, context, edit }: { step: any; context: SlotContext; edit: EditFn }) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const [trouble, setTrouble] = useState<string | null>(null);
+  const names = useMemo(() => {
+    const out = namesOf(context);
+    for (const roll of context.system.rolls ?? []) out.set(roll.tag, `${roll.label || roll.tag} · вид броска`);
+    return out;
+  }, [context]);
+
+  const drop = () => { setDraft(null); setTrouble(null); };
+  const commit = (text: string) => {
+    const parsed = parseCheck(text, context.system, name => refForName(context, name));
+    if ('error' in parsed) { setTrouble(parsed.error); return; }
+    const opposed = (parsed.versus as { roll?: { bonus?: unknown } })?.roll;
+    const bad = badFormula(parsed.roll.bonus) ?? badFormula(opposed ? opposed.bonus : parsed.versus);
+    if (bad) { setTrouble(bad); return; }
+    edit(0, target => {
+      const d = loose(target);
+      d.roll = { die: parsed.roll.die, ...(parsed.roll.bonus ? { bonus: parsed.roll.bonus } : {}), check: parsed.roll.check };
+      if (parsed.side) d.side = parsed.side; else delete d.side;
+      d.successWhen = parsed.successWhen;
+      d.versus = parsed.versus;
+    });
+    drop();
+  };
+
+  return (
+    <>
+      <FormulaField
+        value={draft ?? formatCheck(step)}
+        system={context.system}
+        where="проверка"
+        extraNames={names}
+        owners
+        badges={inputBadges(context)}
+        invalid={Boolean(trouble)}
+        placeholder="кинуть(@кость, @вид броска) + прибавка >= против"
+        onChange={next => { setTrouble(null); setDraft(next); }}
+        onCommit={commit}
+        onCancel={drop}
+      />
+      {trouble ? <span className="field__error">{trouble}</span> : null}
+    </>
   );
 }

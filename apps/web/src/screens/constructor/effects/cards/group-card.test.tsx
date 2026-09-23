@@ -75,38 +75,6 @@ describe('GroupCard', () => {
     expect(screen.getByText(/кость бросает отправитель/)).toBeTruthy();
   });
 
-  it('слот «против» принимает число', () => {
-    const steps = attackSteps();
-    const group = groupSteps(steps)[0]!;
-    const edits: Array<(draft: Step) => void> = [];
-    render(<GroupCard group={group} position={1} system={system} effect={effect}
-      earlier={[]} problem={null} edit={(_, change) => edits.push(change)} onDelete={() => {}} />);
-
-    const versus = screen.getByPlaceholderText(/^число или формула/);
-    fireEvent.change(versus, { target: { value: '15' } });
-    fireEvent.keyDown(versus, { key: 'Enter' });
-
-    const draft = structuredClone(steps[0]!);
-    edits.forEach(change => change(draft));
-    expect((draft as any).versus).toEqual({ const: 15 });
-  });
-
-  it('слот «против» принимает формулу', () => {
-    const steps = attackSteps();
-    const group = groupSteps(steps)[0]!;
-    const edits: Array<(draft: Step) => void> = [];
-    render(<GroupCard group={group} position={1} system={system} effect={effect}
-      earlier={[]} problem={null} edit={(_, change) => edits.push(change)} onDelete={() => {}} />);
-
-    const versus = screen.getByPlaceholderText(/^число или формула/);
-    fireEvent.change(versus, { target: { value: '@что-то' } });
-    fireEvent.keyDown(versus, { key: 'Enter' });
-
-    const draft = structuredClone(steps[0]!);
-    edits.forEach(change => change(draft));
-    expect((draft as any).versus).toEqual({ expr: '@что-то' });
-  });
-
   it('в тонкостях изменения нет ни «не ниже», ни «не выше»', () => {
     const steps = attackSteps();
     const group = groupSteps(steps)[1]!;
@@ -244,60 +212,56 @@ describe('GroupCard: величина из записи', () => {
   });
 });
 
-const rollCell = (): HTMLElement => {
+const checkCell = (): HTMLElement => {
   const heads = [...document.querySelectorAll('.sheet-grid__title')].map(h => h.textContent);
-  return document.querySelectorAll('.field-row__cell')[heads.indexOf('Бросок')] as HTMLElement;
+  return document.querySelectorAll('.field-row__cell')[heads.indexOf('Формула')] as HTMLElement;
 };
 
-describe('GroupCard: строка броска', () => {
-  const rollSteps = () => [{
+describe('GroupCard: проверка одной формулой', () => {
+  const checkSteps = () => [{
     type: 'threshold', successWhen: 'atLeast', continueOn: 'success',
-    roll: { die: { constant: 'lead' }, bonus: { expr: '@armor' }, check: null },
+    roll: { die: { constant: 'lead' }, check: null }, versus: { const: 10 },
   }] as unknown as Step[];
 
-  it('кость стоит в строке текстом, поле — фишкой', () => {
-    const group = groupSteps(rollSteps())[0]!;
-    render(<GroupCard group={group} position={1} system={system} effect={effect}
-      earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
-    const line = rollCell();
-
-    expect(line.textContent).toContain('Класс брони');
-    const head = line.querySelector('.chips__text') as HTMLInputElement;
-    expect(head.value).toContain('1к20');
-  });
-
-  it('лишнего знака в строке нет: что видно, то и написано', () => {
-    const group = groupSteps(rollSteps())[0]!;
-    const { container } = render(<GroupCard group={group} position={1} system={system} effect={effect}
-      earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
-    expect(container.querySelector('.chips__plus')).toBeNull();
-  });
-
-  it('набранная нотация заменяет кость', () => {
-    const steps = rollSteps();
+  const typed = (tail: string) => {
+    const steps = checkSteps();
     const step = steps[0] as Record<string, any>;
     const group = groupSteps(steps)[0]!;
     render(<GroupCard group={group} position={1} system={system} effect={effect}
       earlier={[]} problem={null} edit={(_, change) => change(step as never)} onDelete={() => {}} />);
-    const line = rollCell();
+    const line = checkCell();
+    const last = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;
+    fireEvent.change(last, { target: { value: tail } });
+    fireEvent.keyDown(last, { key: 'Enter' });
+    return { step, line };
+  };
 
-    const head = line.querySelector('.chips__text') as HTMLInputElement;
-    fireEvent.change(head, { target: { value: '3d15 + ' } });
-    fireEvent.keyDown(head, { key: 'Enter' });
-    expect(step.roll.die).toEqual({ const: '3d15' });
+  it('кость — фишкой, сравнение — текстом в той же строке', () => {
+    const group = groupSteps(checkSteps())[0]!;
+    render(<GroupCard group={group} position={1} system={system} effect={effect}
+      earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
+    const line = checkCell();
+    expect(line.textContent).toContain('Ведущая кость');
+    const texts = [...line.querySelectorAll('.chips__text')].map(i => (i as HTMLInputElement).value).join('');
+    expect(texts).toContain('>= 10');
   });
 
-  it('непонятая формула не уходит в данные, а показывается ошибкой', () => {
-    const steps = rollSteps();
-    const step = steps[0] as Record<string, any>;
-    const group = groupSteps(steps)[0]!;
-    render(<GroupCard group={group} position={1} system={system} effect={effect}
-      earlier={[]} problem={null} edit={(_, change) => change(step as never)} onDelete={() => {}} />);
-    const line = rollCell();
-    const tail = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;
-    fireEvent.change(tail, { target: { value: '@ерунда' } });
-    fireEvent.keyDown(tail, { key: 'Enter' });
-    expect(step.roll.bonus).toEqual({ expr: '@armor' });
+  it('правка строки раскладывается по частям проверки', () => {
+    const { step } = typed(') + 2 >= @получатель.armor');
+    expect(step.roll).toEqual({ die: { constant: 'lead' }, bonus: { const: 2 }, check: null });
+    expect(step.versus).toEqual({ tag: 'armor' });
+    expect(step.successWhen).toBe('atLeast');
+  });
+
+  it('справа встречный бросок', () => {
+    const { step } = typed(') > кинуть(1к20) + 1');
+    expect(step.successWhen).toBe('over');
+    expect(step.versus).toEqual({ roll: { die: { constant: 'lead' }, bonus: { const: 1 }, check: null } });
+  });
+
+  it('проверка без сравнения не уходит в данные, а показывается ошибкой', () => {
+    const { step, line } = typed(') + 2');
+    expect(step.versus).toEqual({ const: 10 });
     expect(line.querySelector('.field__error')).toBeTruthy();
   });
 });
@@ -418,18 +382,5 @@ describe('GroupCard: изменение само заводит число', () 
     fireEvent.keyDown(value, { key: 'Enter' });
 
     expect((steps[0] as any).value.expr).toMatch(/^@получатель\.armor/);
-  });
-});
-
-describe('GroupCard: встречный бросок', () => {
-  it('«против» переключается на бросок второй стороны', () => {
-    const step = { id: 'hit', type: 'threshold', roll: { die: { constant: 'd20' } }, versus: { const: 10 }, successWhen: 'atLeast' } as Record<string, any>;
-    const dieSystem = { ...system, constants: { d20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } } } as unknown as System;
-    const group = groupSteps([step as unknown as Step])[0]!;
-    render(<GroupCard group={group} position={1} system={dieSystem} effect={{} as Effect}
-      earlier={[]} problem={null} edit={(_, change) => change(step as never)} onDelete={() => {}} />);
-    const against = screen.getByDisplayValue('числа') as HTMLSelectElement;
-    fireEvent.change(against, { target: { value: 'roll' } });
-    expect(step.versus).toEqual({ roll: { die: { constant: 'd20' }, check: null } });
   });
 });
