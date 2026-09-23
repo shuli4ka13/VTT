@@ -16,7 +16,7 @@ export interface Reader {
   rollOf: (tag: string) => RollResolution | null;
 }
 
-export function useReader(system: System, sheet: Sheet | null, compendium: Compendium): Reader {
+export function useReader(system: System, sheet: Sheet | null, compendium: Compendium, desk?: Sheet | null): Reader {
   return useMemo(() => {
     if (!sheet) {
       const idle: Reader = {
@@ -28,7 +28,7 @@ export function useReader(system: System, sheet: Sheet | null, compendium: Compe
 
     let pass: Pass;
     try {
-      pass = newPass(system, sheet, { compendium });
+      pass = newPass(system, sheet, { compendium, desk: desk ?? null });
     } catch (err) {
 
       const message = (err as Error).message;
@@ -51,7 +51,7 @@ export function useReader(system: System, sheet: Sheet | null, compendium: Compe
     };
     return reader;
 
-  }, [system, sheet, compendium]);
+  }, [system, sheet, compendium, desk]);
 }
 
 export function show(value: Computed): { text: string; title?: string; bad: boolean } {

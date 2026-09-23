@@ -3,6 +3,7 @@ import { UnknownTagError, CycleError, EngineError } from './errors.ts';
 import { readCell } from './cells.ts';
 import { referencedTable, splitPath, walk } from './navigate.ts';
 import { VALUE_COLUMN } from '../model/tables.ts';
+import { ownerOf, DESK } from './owners.ts';
 import { collectModifiers, applyValueModifiers } from './modifiers.ts';
 import type { CollectedModifiers } from './modifiers.ts';
 import type { System, Sheet, Field, Compendium, Resolve } from '../model/types.ts';
@@ -16,12 +17,19 @@ export interface Pass {
   computed: string[];
   modifiers: CollectedModifiers | null;
   resolve: Resolve;
+
+  desk?: Pass;
 }
 
 export interface PassOptions {
   compendium?: Compendium;
   modifiers?: CollectedModifiers;
+  desk?: Sheet | null;
 }
+
+export const deskSystemOf = (system: System): System => ({ ...system, fields: system.fields.filter(f => f.desk) });
+
+export const sheetSystemOf = (system: System): System => ({ ...system, fields: system.fields.filter(f => !f.desk) });
 
 export function findField(system: System, tag: string): Field | null {
   return system.fields.find(f => f.tag === tag) || null;
@@ -40,7 +48,14 @@ export function newPass(system: System, sheet: Sheet, options: PassOptions = {})
     resolve: () => undefined,
   };
 
+  if (options.desk) pass.desk = newPass(deskSystemOf(system), options.desk);
+
   pass.resolve = tag => {
+    const owned = ownerOf(tag);
+    if (owned?.owner === DESK) {
+      if (!pass.desk) throw new EngineError(`стола нет — «${owned.rest}» читать неоткуда`);
+      return pass.desk.resolve(owned.rest);
+    }
     const split = findField(system, tag) ? null : splitPath(tag);
     const table = split ? referencedTable(system, split.head) : undefined;
     if (split && table) {

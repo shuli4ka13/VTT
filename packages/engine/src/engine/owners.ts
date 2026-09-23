@@ -2,15 +2,19 @@ export const SENDER = 'отправитель';
 
 export const RECEIVER = 'получатель';
 
-export type Owner = typeof SENDER | typeof RECEIVER;
+export const DESK = 'стол';
+
+export type Owner = typeof SENDER | typeof RECEIVER | typeof DESK;
 
 export const OWNERS: readonly Owner[] = [SENDER, RECEIVER];
+
+export const DESK_ID = 'стол';
 
 export function ownerOf(name: string): { owner: Owner; rest: string } | null {
   const dot = name.indexOf('.');
   if (dot <= 0) return null;
   const head = name.slice(0, dot);
-  if (head !== SENDER && head !== RECEIVER) return null;
+  if (head !== SENDER && head !== RECEIVER && head !== DESK) return null;
   const rest = name.slice(dot + 1);
   return rest ? { owner: head, rest } : null;
 }

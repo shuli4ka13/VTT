@@ -25,6 +25,8 @@ export interface RuleReport {
   stopped: StopReason | null;
 
   emitted: EmittedEvent[];
+
+  desk?: Sheet;
 }
 
 export interface NestedRun { results: Record<string, unknown>; stopped: StopReason | null }
@@ -114,6 +116,9 @@ export function guardHolds(guard: unknown, ctx: StepContext, known?: unknown): b
 export function resolveRule(steps: StepData[], ctx: StepContext): RuleReport {
 
   const values: Record<string, StoredValue> = { ...ctx.sheet.values };
+  const deskValues: Record<string, StoredValue> | null = ctx.desk ? { ...ctx.desk.values } : null;
+  let deskTouched = false;
+  const onDesk = (tag: string): boolean => Boolean(findField(ctx.system, tag)?.desk);
   const worn: WornEffect[] = [...(ctx.sheet.effects || [])];
   const changes: Change[] = [];
   const effects: string[] = [];
@@ -122,6 +127,12 @@ export function resolveRule(steps: StepData[], ctx: StepContext): RuleReport {
   const trace: Record<string, unknown>[] = [];
 
   const read = (tag: string): unknown => {
+    if (onDesk(tag)) {
+      if (!deskValues) throw new EngineError(`${who(ctx)}: поле «${tag}» лежит на столе, а стола здесь нет`);
+      if (Object.prototype.hasOwnProperty.call(deskValues, tag)) return deskValues[tag];
+      const field = findField(ctx.system, tag)!;
+      return field.value.kind === 'stored' ? field.value.default : undefined;
+    }
     if (Object.prototype.hasOwnProperty.call(values, tag)) return values[tag];
     const field = findField(ctx.system, tag);
     if (!field) throw new EngineError(`система не объявляет поля «${tag}» — читать нечего`);
@@ -132,6 +143,7 @@ export function resolveRule(steps: StepData[], ctx: StepContext): RuleReport {
     const from = read(tag);
     if (Object.is(from, to)) return;
     changes.push({ tag, from, to });
+    if (onDesk(tag) && deskValues) { deskValues[tag] = to; deskTouched = true; return; }
     values[tag] = to;
   };
 
@@ -219,7 +231,10 @@ export function resolveRule(steps: StepData[], ctx: StepContext): RuleReport {
 
   const touched = changes.length || effects.length || removed.length;
   const sheet = touched ? { ...ctx.sheet, values, effects: worn } : ctx.sheet;
-  return { sheet, changes, effects, removed, results, trace, stopped, emitted };
+  return {
+    sheet, changes, effects, removed, results, trace, stopped, emitted,
+    ...(deskTouched && ctx.desk && deskValues ? { desk: { ...ctx.desk, values: deskValues } } : {}),
+  };
 }
 
 const who = (ctx: StepContext): string => ctx.owner || 'правило';

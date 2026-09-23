@@ -10,6 +10,7 @@ import { useSession } from '../../store/session.ts';
 import { Lobby } from './lobby.tsx';
 import type { Sheet, System, RoomState } from '@vtt/schema';
 import { availableActions } from '@vtt/engine/events/envelope';
+import { deskSystemOf, sheetSystemOf } from '@vtt/engine/engine/calc';
 
 export function SheetScreen() {
   const room = useRoom(s => s.room);
@@ -45,7 +46,7 @@ export function SheetScreen() {
                     <ListItem
                       key={item.id}
                       name={item.name ?? item.id}
-                      meta={item.kind === 'npc' ? 'НПС' : 'персонаж игрока'}
+                      meta={item.kind === 'desk' ? 'общий для всех' : item.kind === 'npc' ? 'НПС' : 'персонаж игрока'}
                       active={item.id === mySheetId}
                       onClick={() => pickSheet(item.id)}
                     />
@@ -64,22 +65,25 @@ export function SheetScreen() {
           ? <SheetBody room={room} sheet={sheet} />
           : <Empty title="Выберите лист слева" hint="Тот, которым играете." />,
       }}
-      right={sheet ? { head: 'Снаряжение и действия', body: <SidePanel room={room} sheet={sheet} /> } : undefined}
+      right={sheet && sheet.kind !== 'desk' ? { head: 'Снаряжение и действия', body: <SidePanel room={room} sheet={sheet} /> } : undefined}
     />
   );
 }
 
 function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
-  const reader = useReader(room.system as System, sheet, room.compendium);
+  const isDesk = sheet.kind === 'desk';
+  const desk = room.sheets.find(s => s.kind === 'desk') ?? null;
+  const system = isDesk ? deskSystemOf(room.system as System) : sheetSystemOf(room.system as System);
+  const reader = useReader(isDesk ? system : room.system as System, sheet, room.compendium, isDesk ? null : desk);
 
   return (
     <>
-      <ClaimRow room={room} sheet={sheet} />
+      {isDesk ? <span className="faint">общий стол комнаты — видят все, правит ведущий</span> : <ClaimRow room={room} sheet={sheet} />}
       <SheetView
-        system={room.system as System}
+        system={system}
         sheet={sheet}
         reader={reader}
-        badge={sheet.kind === 'npc' ? 'НПС' : 'игрок'}
+        badge={isDesk ? 'стол' : sheet.kind === 'npc' ? 'НПС' : 'игрок'}
         onChange={(tag, value) => tableSocket.setValue(room.id, sheet.id, tag, value)}
         onRoll={tag => tableSocket.rollField(room.id, sheet.id, tag)}
       />

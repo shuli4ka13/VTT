@@ -3,7 +3,7 @@ import { EngineError } from './errors.ts';
 import { readCell } from './cells.ts';
 import { referencedTable, splitPath, walk } from './navigate.ts';
 import { VALUE_COLUMN } from '../model/tables.ts';
-import { ownerOf, RECEIVER, SENDER } from './owners.ts';
+import { ownerOf, RECEIVER, SENDER, DESK } from './owners.ts';
 import { rollNotation, multiplyNotation } from './dice.ts';
 import type { Param, Die } from '../model/types.ts';
 import type { Pass } from './calc.ts';
@@ -239,6 +239,7 @@ function evaluate(expr: unknown, ctx: RefContext, sent?: Record<string, unknown>
     if (owned && (atReceiver || ctx.atReceiver) && owned.owner === SENDER) {
       throw new EngineError(`${who(ctx)}: «${owned.rest}» отправителя не пришло в сообщении — отправитель должен был посчитать его у себя`);
     }
+    if (owned?.owner === DESK) return ctx.pass.resolve(name);
     if (owned) return resolve(owned.rest);
     if (results && name in results && !isField(name)) return (results as Record<string, unknown>)[name];
     const dot = name.indexOf('.');

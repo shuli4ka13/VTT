@@ -42,6 +42,8 @@ export interface StepContext extends RefContext {
 
   sender?: Record<string, unknown>;
 
+  desk?: Sheet | null;
+
   kept?: Record<string, StepData>;
   [k: string]: unknown;
 }

@@ -31,6 +31,8 @@ export interface WorldContext {
   die: Die;
 
   clock?: Clock | null;
+
+  desk?: Sheet | null;
 }
 
 export interface Envelope {
@@ -69,6 +71,8 @@ export interface ReceiveResult {
   report: Report;
 
   results: Record<string, unknown>;
+
+  desk?: Sheet;
 }
 
 export function bindingsOf(record: CompendiumRecord, system: System): Binding[] {
@@ -139,7 +143,7 @@ export interface SendOptions {
 
 export function send(
   actionId: string,
-  { system, sheet, compendium, die, against, claims, inputs, kept }: WorldContext & { sheet: Sheet } & SendOptions,
+  { system, sheet, compendium, die, against, claims, inputs, kept, desk }: WorldContext & { sheet: Sheet } & SendOptions,
 ): Envelope {
   const action = actionOf(actionId, { system, compendium });
 
@@ -160,7 +164,7 @@ export function send(
     ...(targetPass ? { against: (rollTag: string | null) => incomingRollModifiers(rollTag, targetPass) } : {}),
     ...(claims?.length ? { claims } : {}),
     ...(kept?.length ? { kept } : {}),
-  }, { system, compendium, die });
+  }, { system, compendium, die, desk });
 
   return {
     kind: 'effect',
@@ -174,7 +178,7 @@ export function send(
 
 export function receive(
   envelope: Envelope,
-  { system, sheet, compendium, die, claims, clock }: WorldContext & { sheet: Sheet } & { claims?: string[] },
+  { system, sheet, compendium, die, claims, clock, desk }: WorldContext & { sheet: Sheet } & { claims?: string[] },
 ): ReceiveResult {
   const holder = findEffect(system, envelope.effect);
   const early = envelope.reply
@@ -184,7 +188,7 @@ export function receive(
     sheet: early.sheet, owner: `конверт «${envelope.label}»`,
     ...(claims?.length ? { claims } : {}),
     ...(holder?.bond ? { bond: { from: envelope.from, by: holderOf(envelope.effect, holder)! } } : {}),
-  }, { system, compendium, die, clock });
+  }, { system, compendium, die, clock, desk });
 
   const fired = envelope.reply
     ? { sheet: out.sheet, replies: [], spent: [], reactions: [] }
@@ -195,6 +199,7 @@ export function receive(
     sheet: fired.sheet,
     replies: fired.replies,
     results: out.results,
+    ...(out.desk ? { desk: out.desk } : {}),
     report: {
       kind: envelope.kind,
       effect: envelope.effect,

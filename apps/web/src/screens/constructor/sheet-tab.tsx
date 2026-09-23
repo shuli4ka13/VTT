@@ -161,6 +161,13 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
               }}
             />
           </Field>
+          <Field label="Где лежит" hint={field.desk ? 'Одно значение на всю комнату: кость эскалации, пул Страха, часы. В формулах эффектов — @стол.…' : undefined}>
+            <Select
+              value={field.desk ? 'desk' : 'sheet'}
+              options={[['sheet', 'на листе персонажа'], ['desk', 'на столе — одно на всю комнату']] as const}
+              onChange={next => edit(draft => { if (next === 'desk') draft.desk = true; else delete draft.desk; })}
+            />
+          </Field>
           <Field label="Блок">
             <BlockPick
               system={system}
@@ -411,6 +418,7 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
 const TYPE_WORDS: Record<string, string> = { number: 'число', text: 'текст', boolean: 'да / нет' };
 
 const storedWords = (system: System, field: FieldModel): string => {
+  if (field.desk) return `на столе · ${TYPE_WORDS[(field.value as { type: string }).type] ?? ''}`;
   const from = field.optionsFrom ? system.tables?.[field.optionsFrom]?.label || field.optionsFrom : '';
   const shape = field.control ? CONTROLS[field.control].toLowerCase() : '';
   if (from) return `выбирает игрок · из «${from}»${shape ? ` · ${shape}` : ''}`;

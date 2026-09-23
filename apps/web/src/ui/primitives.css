@@ -501,6 +501,7 @@
 .chips__side--pick:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .chips__side--sender { color: var(--accent); }
 .chips__side--receiver { color: var(--warn); }
+.chips__side--desk { color: var(--ok); }
 
 .chips__group { display: inline-flex; align-items: center; gap: var(--s-1); }
 .chips__chip--sent { border-style: dashed; }

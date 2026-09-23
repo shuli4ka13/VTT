@@ -22,6 +22,8 @@ import { asksOf, checkInputs, normalizeInputs } from '@vtt/engine/model/asks';
 import { fireMoments, fireCrossings, describeMoment } from '@vtt/engine/events/moments';
 import { sweepBonds, releaseHolder } from '@vtt/engine/events/bonds';
 import { runSelfTrack, selfRefusal } from '@vtt/engine/events/self';
+import { deskOf } from '@vtt/engine/events/desk';
+import { DESK_ID } from '@vtt/engine/engine/owners';
 import type { MomentEvent } from '@vtt/engine/events/moments';
 import { resolveRoll } from '@vtt/engine/engine/modifiers';
 import { rollTagOf } from '@vtt/engine/engine/targets';
@@ -85,7 +87,11 @@ export class RoomsService {
       compendium: JSON.stringify(world.compendium),
       createdAt: this.now(),
     });
-    for (const sheet of world.sheets) {
+    const deskFields = world.system.fields.filter(field => field.desk);
+    const withDesk = deskFields.length && !deskOf(world.sheets)
+      ? [...world.sheets, { id: DESK_ID, systemId: world.system.id, kind: 'desk', name: 'Стол', values: {}, equipped: [], effects: [], actions: [] } as Sheet]
+      : world.sheets;
+    for (const sheet of withDesk) {
       await this.db.insert(roomSheets).values({
         roomId: id, sheetId: sheet.id, data: JSON.stringify(sheet),
       });
@@ -290,7 +296,7 @@ export class RoomsService {
     const clock = await this.clockOf(intent.roomId);
     let nextClock: ClockState = clock;
     let envelope: Envelope;
-    let own: { sheet: Sheet; report: Report | null } | null = null;
+    let own: { sheet: Sheet; report: Report | null; desk?: Sheet } | null = null;
     try {
       const action = actionOf(intent.actionId, { system, compendium });
       const effect = findEffect(system, action.effect);
@@ -304,11 +310,11 @@ export class RoomsService {
       if (trouble) throw new BadRequestException(trouble);
       const inputs = normalizeInputs(asked, intent.inputs);
       envelope = send(intent.actionId, {
-        system, compendium, die: this.die, clock: nextClock, sheet: from, against: to, claims: intent.edits ?? [],
+        system, compendium, die: this.die, clock: nextClock, sheet: from, against: to, claims: intent.edits ?? [], desk: deskOf(sheets),
         ...(Object.keys(inputs).length ? { inputs } : {}),
       });
       own = runSelfTrack(intent.actionId, from, {
-        system, compendium, die: this.die, clock: nextClock,
+        system, compendium, die: this.die, clock: nextClock, desk: deskOf(sheets),
         ...(Object.keys(inputs).length ? { inputs } : {}),
       });
       const refused = selfRefusal(own, { system }, envelope.label);
@@ -317,7 +323,9 @@ export class RoomsService {
       if (err instanceof NotFoundException) throw err;
       throw new BadRequestException((err as Error).message);
     }
-    const afterOwn = own?.report ? sheets.map(s => (s.id === own!.sheet.id ? own!.sheet : s)) : sheets;
+    const afterOwn = own?.report
+      ? sheets.map(s => (s.id === own!.sheet.id ? own!.sheet : own!.desk && s.id === own!.desk.id ? own!.desk : s))
+      : sheets;
     const shared = sharedHolderOf(system, envelope.effect);
     const released = shared ? releaseHolder(system, afterOwn, intent.fromId, shared) : { sheets: afterOwn, broken: [] };
     const started = released.sheets;
@@ -381,7 +389,7 @@ export class RoomsService {
           const target = sheetOf(targets[at]!);
           const taped = tapeDie(this.die);
           const dry = receive(state.envelope, {
-            ...ctx, die: taped.die, sheet: target, claims: claimsFor(target.id),
+            ...ctx, die: taped.die, sheet: target, claims: claimsFor(target.id), desk: deskOf(sheets),
           });
           const results = dry.results;
           tapes[target.id] = taped.tape;
@@ -509,9 +517,10 @@ export class RoomsService {
       for (const reply of reacted.replies) {
         const target = sheets.find(s => s.id === reply.to);
         if (!target) continue;
-        const back = receive(reply, { system, compendium, die: this.die, clock, sheet: target });
-        sheets = sheets.map(s => (s.id === back.sheet.id ? back.sheet : s));
+        const back = receive(reply, { system, compendium, die: this.die, clock, sheet: target, desk: deskOf(sheets) });
+        sheets = sheets.map(s => (s.id === back.sheet.id ? back.sheet : back.desk && s.id === back.desk.id ? back.desk : s));
         if (back.sheet !== target) changed.push(back.sheet);
+        if (back.desk) changed.push(back.desk);
         lines.push(describeEntry({ fromId: asked.id, toId: target.id, report: back.report }, system, sheets));
       }
       if (!intent.chosen.length) lines.push(`${asked.name} пропускает реакцию`);
@@ -532,7 +541,7 @@ export class RoomsService {
         const asked = asksOf(record.intent.actionId, { system, compendium });
         const inputs = normalizeInputs(asked, record.intent.inputs);
         envelope = send(record.intent.actionId, {
-          system, compendium, die: this.die, clock, sheet: from, against: to, claims,
+          system, compendium, die: this.die, clock, sheet: from, against: to, claims, desk: deskOf(sheets),
           ...(Object.keys(inputs).length ? { inputs } : {}),
           kept: envelope.steps,
         });
@@ -838,6 +847,9 @@ export class RoomsService {
       const rows = await this.db.select().from(roomSheets)
         .where(and(eq(roomSheets.roomId, roomId), eq(roomSheets.sheetId, sheetId)));
       if (!rows[0]) throw new NotFoundException(`в комнате нет листа «${sheetId}»`);
+      if ((JSON.parse(rows[0].data) as Sheet).kind === 'desk') {
+        throw new BadRequestException('стол общий — за ним не играют, его правит ведущий');
+      }
 
       const taken = (await this.db.select().from(members).where(eq(members.roomId, roomId)))
         .find(row => row.sheetId === sheetId && row.userId !== userId);

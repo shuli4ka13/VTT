@@ -4,6 +4,7 @@ import { activationOf, calledOf } from '../engine/effects.ts';
 import { basedOn, paramsOf } from './inherit.ts';
 import { danglingRows } from './integrity.ts';
 import { TABS, STEP } from '../words/glossary.ts';
+import { DESK, SENDER } from '../engine/owners.ts';
 import {
   referencesOf, declaredOf, chainRefs, listenerOf,
   type Where, type Reference, type RefKind, type Declared,
@@ -34,6 +35,16 @@ const NAMES: Record<Exclude<RefKind, 'param' | 'step'>, (key: string) => string>
 };
 
 const sameWhere = (a: Where, b: Where): boolean => JSON.stringify(a) === JSON.stringify(b);
+
+function ownerText(ref: Reference, system: System): string | null {
+  if (ref.kind !== 'field' || !ref.scope?.startsWith('owner:')) return null;
+  const owner = ref.scope.slice('owner:'.length);
+  const field = system.fields.find(f => f.tag === ref.key);
+  if (!field) return null;
+  if (field.desk && owner !== DESK) return `поле «${field.label}» лежит на столе, а не на листе ${owner === SENDER ? 'отправителя' : 'получателя'} — пишите @стол.${field.tag}`;
+  if (!field.desk && owner === DESK) return `поле «${field.label}» лежит на листе персонажа, а не на столе — пишите @отправитель.${field.tag} или @получатель.${field.tag}`;
+  return null;
+}
 
 function danglingText(ref: Reference, declared: Declared): string | null {
   if (ref.kind === 'param') {
@@ -81,11 +92,11 @@ function stepProblems(steps: Step[], whereOf: (index: number) => Where, params: 
   return out;
 }
 
-function refProblems(refs: Reference[], declared: Declared, earlierByWhere: (ref: Reference) => boolean): Problem[] {
+function refProblems(refs: Reference[], declared: Declared, earlierByWhere: (ref: Reference) => boolean, system?: System): Problem[] {
   const out: Problem[] = [];
   for (const ref of refs) {
     if (ref.kind === 'step' && earlierByWhere(ref)) continue;
-    const text = danglingText(ref, declared);
+    const text = danglingText(ref, declared) ?? (system ? ownerText(ref, system) : null);
     if (!text) continue;
     if (out.some(p => sameWhere(p.where, ref.from) && p.text === text)) continue;
     out.push({
@@ -113,7 +124,7 @@ export function lintStep(step: Step, system: System, effect: Effect, earlier: Ea
   const refs = chainRefs([step], () => where, params, inChain)
     .filter(ref => !(ref.kind === 'step' && known.has(ref.key)))
     .filter(ref => !(ref.kind === 'field' && known.has(ref.key)));
-  const [first] = refProblems(refs, declared, () => false);
+  const [first] = refProblems(refs, declared, () => false, system);
   return first ?? null;
 }
 
@@ -314,7 +325,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...refProblems(refs, declared, ref => {
     const steps = chainOf(ref.from);
     return Boolean(steps && ref.from.step !== undefined && earlierIds(steps, ref.from.step).has(ref.key));
-  }));
+  }, system));
 
   out.push(...listenerProblems(system));
   out.push(...cycleProblems(system));

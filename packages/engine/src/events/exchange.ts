@@ -1,3 +1,4 @@
+import { deskOf } from './desk.ts';
 import { send, receive, fireOutgoing } from './envelope.ts';
 import { runSelfTrack, selfRefusal } from './self.ts';
 import { holderOf, releaseHolder } from './bonds.ts';
@@ -59,20 +60,23 @@ export function deliver({
   let updated = [...sheets];
   const put = (sheet: Sheet): void => { updated = updated.map(s => (s.id === sheet.id ? sheet : s)); };
   const live = (id: string): Sheet | null => updated.find(s => s.id === id) || null;
+  const desk = (): Sheet | null => deskOf(updated);
 
   const to = live(toId);
   if (!to) throw new Error(`не найдена цель «${toId}»`);
 
-  const main = receive(envelope, { ...ctx, sheet: to, claims: claims?.target });
+  const main = receive(envelope, { ...ctx, sheet: to, claims: claims?.target, desk: desk() });
   put(main.sheet);
+  if (main.desk) put(main.desk);
   const reports: ExchangeEntry[] = [{ fromId, toId, report: main.report }];
   const seen: Record<string, Seen> = { [toId]: { results: main.results, emitted: main.report.emitted } };
 
   for (const reply of main.replies) {
     const target = live(String(reply.to));
     if (!target) continue;
-    const back = receive(reply, { ...ctx, sheet: target });
+    const back = receive(reply, { ...ctx, sheet: target, desk: desk() });
     put(back.sheet);
+    if (back.desk) put(back.desk);
     reports.push({ fromId: reply.from, toId: String(reply.to), report: back.report });
   }
 
@@ -92,8 +96,9 @@ export function deliver({
     for (const reply of out.replies) {
       const target = live(String(reply.to));
       if (!target) continue;
-      const back = receive(reply, { ...ctx, sheet: target });
+      const back = receive(reply, { ...ctx, sheet: target, desk: desk() });
       put(back.sheet);
+      if (back.desk) put(back.desk);
       reports.push({ fromId: reply.from, toId: String(reply.to), report: back.report });
     }
   }
@@ -137,12 +142,15 @@ export function exchange({
   if (!from) throw new Error(`не найден отправитель «${fromId}»`);
   if (!to) throw new Error(`не найдена цель «${toId}»`);
 
-  const envelope = send(actionId, { system, compendium, die, clock, sheet: from, against: to, claims: claims?.source, ...(inputs ? { inputs } : {}) });
+  const desk = deskOf(sheets);
+  const envelope = send(actionId, { system, compendium, die, clock, desk, sheet: from, against: to, claims: claims?.source, ...(inputs ? { inputs } : {}) });
 
-  const own = runSelfTrack(actionId, from, { system, compendium, die, clock, ...(inputs ? { inputs } : {}) });
+  const own = runSelfTrack(actionId, from, { system, compendium, die, clock, desk, ...(inputs ? { inputs } : {}) });
   const refused = selfRefusal(own, { system }, envelope.label);
   if (refused) throw new EngineError(refused);
-  const afterOwn = own.report ? sheets.map(s => (s.id === own.sheet.id ? own.sheet : s)) : sheets;
+  const afterOwn = own.report
+    ? sheets.map(s => (s.id === own.sheet.id ? own.sheet : own.desk && s.id === own.desk.id ? own.desk : s))
+    : sheets;
   const shared = sharedHolderOf(system, envelope.effect);
   const started = shared ? releaseHolder(system, afterOwn, fromId, shared).sheets : afterOwn;
 

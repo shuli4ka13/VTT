@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
 import { matchTagQuery } from './tag-suggest.tsx';
 import { fieldPaths } from './paths.ts';
-import { ownerOf, OWNERS, SENDER, RECEIVER } from '@vtt/engine/engine/owners';
+import { ownerOf, OWNERS, SENDER, RECEIVER, DESK } from '@vtt/engine/engine/owners';
 
 const plainLabel = (system: System, tag: string, extra?: Map<string, string>): string =>
   system.fields.find(f => f.tag === tag)?.label ?? extra?.get(tag) ?? fieldPaths(system).get(tag) ?? tag;
@@ -112,7 +112,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
 
   const fields = useMemo(() => {
     const sheet = [
-      ...system.fields.map(f => ({ tag: f.tag, label: f.label ?? f.tag, via: false })),
+      ...system.fields.filter(f => !owners || !f.desk).map(f => ({ tag: f.tag, label: f.label ?? f.tag, via: false })),
       ...[...paths].map(([tag, label]) => ({ tag, label, via: true })),
     ];
     const local = [...(extraNames ?? [])].map(([tag, label]) => ({ tag, label, group: 'здесь же' }));
@@ -122,6 +122,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
     return [
       ...local,
       ...OWNERS.flatMap(owner => sheet.map(f => ({ tag: `${owner}.${f.tag}`, label: f.label, group: `поле ${owner === SENDER ? 'отправителя' : 'получателя'}` }))),
+      ...system.fields.filter(f => f.desk).map(f => ({ tag: `${DESK}.${f.tag}`, label: f.label ?? f.tag, group: 'стол' })),
     ];
   }, [system, extraNames, paths, owners]);
 
@@ -242,7 +243,9 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
             <span title={labelOfTag(system, part.tag, extraNames)}>
               {shortLabel(labelOfTag(system, part.tag, extraNames))}
             </span>
-            {ownerOf(part.tag) ? (
+            {ownerOf(part.tag)?.owner === DESK ? (
+              <span className="chips__side chips__side--desk">стол</span>
+            ) : ownerOf(part.tag) ? (
               <button
                 type="button"
                 className={`chips__side chips__side--pick chips__side--${ownerOf(part.tag)!.owner === SENDER ? 'sender' : 'receiver'}`}

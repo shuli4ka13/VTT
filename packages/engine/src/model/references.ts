@@ -131,7 +131,7 @@ function exprRefs(source: string, from: Where, scope: ChainScope, out: Reference
   for (const dep of deps) {
     const owned = ownerOf(dep);
     if (owned) {
-      out.push({ kind: 'field', key: owned.rest.split('.')[0]!, from });
+      out.push({ kind: 'field', key: owned.rest.split('.')[0]!, from, scope: `owner:${owned.owner}` });
       continue;
     }
     if (scope.earlier.has(dep) || scope.params.has(dep)) continue;

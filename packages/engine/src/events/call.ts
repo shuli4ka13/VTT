@@ -31,7 +31,7 @@ const keptById = (steps: StepData[]): Record<string, StepData> => {
 };
 
 export function packCall(call: Call, world: WorldContext): StepData[] {
-  const pass = newPass(world.system, call.sheet, { compendium: world.compendium });
+  const pass = newPass(world.system, call.sheet, { compendium: world.compendium, desk: world.desk });
   return packRule(call.effect, {
     system: world.system, sheet: call.sheet, pass, die: world.die,
     params: call.args ?? {},
@@ -56,7 +56,8 @@ export interface Run {
 export function runCall(steps: StepData[], run: Run, world: WorldContext): RuleReport {
   return resolveRule(steps, {
     system: world.system, sheet: run.sheet, die: world.die,
-    pass: newPass(world.system, run.sheet, { compendium: world.compendium }),
+    pass: newPass(world.system, run.sheet, { compendium: world.compendium, desk: world.desk }),
+    desk: world.desk ?? null,
     ...(run.seed ? { results: run.seed } : {}),
     owner: run.owner,
     expiry: (effect: Effect) => expiryOf(effect, world.clock),

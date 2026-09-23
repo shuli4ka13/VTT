@@ -28,6 +28,9 @@ export function TableScreen() {
 
   const sender = room.sheets.find(s => s.id === from) ?? null;
   const targets = room.sheets.filter(s => to.includes(s.id));
+  const people = room.sheets.filter(s => s.kind !== 'desk');
+  const desk = room.sheets.find(s => s.kind === 'desk') ?? null;
+  const deskFields = room.system.fields.filter(f => f.desk);
 
   return (
     <Columns
@@ -80,14 +83,14 @@ export function TableScreen() {
                     >
                       <option value="">— ничего —</option>
                       {room.system.fields
-                        .filter(f => f.value.kind === 'stored' && f.value.type === 'number')
+                        .filter(f => !f.desk && f.value.kind === 'stored' && f.value.type === 'number')
                         .map(f => <option key={f.tag} value={f.tag}>{f.label}</option>)}
                     </select>
                   </>
                 }
               />
               <div className="tokens">
-                {room.sheets.map(sheet => (
+                {people.map(sheet => (
                   <button
                     key={sheet.id}
                     type="button"
@@ -105,6 +108,17 @@ export function TableScreen() {
                 ))}
               </div>
             </Card>
+
+            {desk && deskFields.length ? (
+              <Card>
+                <CardHead title="Стол" />
+                <div className="inline inline--tight">
+                  {deskFields.map(field => (
+                    <Chip key={field.tag}>{field.label}: {String(desk.values[field.tag] ?? (field.value.kind === 'stored' ? field.value.default : '—'))}</Chip>
+                  ))}
+                </div>
+              </Card>
+            ) : null}
 
             <Combat room={room} onError={setError} />
             {room.pending ? <Prompt room={room} onError={setError} /> : null}
