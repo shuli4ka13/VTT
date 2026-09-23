@@ -53,7 +53,7 @@ group('конверт вызова', () => {
     test('сложность спасброска считается отправителем по СВОЕЙ системе', () => {
       const env = send('poison-spray:0', ctx(mirra, queue(3, 4)));
       deepEq(env.steps[0].versus, { const: 13 }, '8 + бонус мастерства 2 + Харизма 3');
-      deepEq(env.steps[0].roll.bonus, { expr: '#dex_save', of: 'target' },
+      deepEq(env.steps[0].roll.bonus, { expr: '@получатель.dex_save', of: 'target' },
         'а чем спасаться — уехало выражением: его посчитает цель');
       eq(env.steps[1].rolled.total, 7, 'кости урона брошены отправителем');
     });
@@ -200,10 +200,9 @@ group('конверт вызова', () => {
 const PARAMETRIC = {
   label: 'Параметрический удар', activation: 'manual',
   params: [
-    { key: 'bonus', label: 'Бонус проверки', kind: 'expr' },
-    { key: 'versus', label: 'Против чего', kind: 'tag' },
-    { key: 'damage_bonus', label: 'Бонус урона', kind: 'expr' },
-    { key: 'apply_to', label: 'Куда наносится', kind: 'tag' },
+    { key: 'bonus', label: 'Бонус проверки', kind: 'number' },
+    { key: 'versus', label: 'Против чего', kind: 'number' },
+    { key: 'damage_bonus', label: 'Бонус урона', kind: 'number' },
   ],
   steps: [
     { id: 'hit', type: 'threshold',
@@ -211,7 +210,7 @@ const PARAMETRIC = {
       versus: { param: 'versus' } },
     { id: 'dmg', type: 'amount', source: 'roll',
       dice: { prop: 'damage_dice' }, bonus: { param: 'damage_bonus' } },
-    { type: 'apply', target: { param: 'apply_to' }, direction: 'subtract',
+    { type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract',
       value: { ref: 'dmg' }, targetModifiers: true },
   ],
 };
@@ -229,15 +228,9 @@ group('конверт не даёт целиться в бессмыслицу',
   const withStrike = args => paramBook('bogus', args);
 
   test('сравнивать бросок с текстовым полем нельзя — внятная ошибка, а не тихое «мимо»', () => {
-    const book = withStrike({ bonus: '#attack_bonus', versus: 'race', damage_bonus: '0', apply_to: 'hp_current' });
+    const book = withStrike({ bonus: '#attack_bonus', versus: '@получатель.race', damage_bonus: '0' });
     const env = send('bogus:0', { system: paramSys, sheet: arven, compendium: book, die: die(15, 5) });
     throws(() => receive(env, { system: paramSys, sheet: mirra, compendium: book, die: die() }), 'race');
-  });
-
-  test('урон нельзя лить в вычисляемое поле — его считает движок, а не эффект', () => {
-    const book = withStrike({ bonus: '#attack_bonus', versus: 'ac', damage_bonus: '0', apply_to: 'ac' });
-    const env = send('bogus:0', { system: paramSys, sheet: arven, compendium: book, die: die(20, 5) });
-    throws(() => receive(env, { system: paramSys, sheet: mirra, compendium: book, die: die() }), 'ac');
   });
 });
 
@@ -246,21 +239,21 @@ group('в параметрах эффекта живут выражения, а 
   const withStrike = args => paramBook('custom', args);
 
   test('бонус проверки — выражение, а не один тег', () => {
-    const book = withStrike({ bonus: '#attack_bonus + 2', versus: 'ac', damage_bonus: '#str_mod', apply_to: 'hp_current' });
+    const book = withStrike({ bonus: '#attack_bonus + 2', versus: '@получатель.ac', damage_bonus: '#str_mod' });
     const env = send('custom:0', { system: paramSys, sheet: arven, compendium: book, die: die(10, 4) });
     const { report } = receive(env, { system: paramSys, sheet: mirra, compendium: book, die: die() });
     eq(report.trace[0].total, 18, 'кость 10 плюс бонус атаки 6 плюс двойка из выражения');
   });
 
   test('бонус урона задаётся выражением', () => {
-    const book = withStrike({ bonus: '#attack_bonus', versus: 'ac', damage_bonus: '#str_mod * 2', apply_to: 'hp_current' });
+    const book = withStrike({ bonus: '#attack_bonus', versus: '@получатель.ac', damage_bonus: '#str_mod * 2' });
     const env = send('custom:0', { system: paramSys, sheet: arven, compendium: book, die: die(10, 4) });
     const { report } = receive(env, { system: paramSys, sheet: mirra, compendium: book, die: die() });
     eq(report.trace[1].total, 10, 'кость 4 плюс удвоенная Сила 6');
   });
 
   test('битое выражение в параметре — внятная ошибка при отправке', () => {
-    const book = withStrike({ bonus: '#attack_bonus +', versus: 'ac', damage_bonus: '0', apply_to: 'hp_current' });
+    const book = withStrike({ bonus: '#attack_bonus +', versus: '@получатель.ac', damage_bonus: '0' });
     throws(() => send('custom:0', { system: paramSys, sheet: arven, compendium: book, die: die(10, 4) }));
   });
 });

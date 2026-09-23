@@ -43,13 +43,12 @@ export function requireEffect(system: System, id: string, who: string): Effect {
 export const calledOf = (system: System): [string, Effect][] => {
   const called = new Set<string>();
   for (const effect of Object.values(system.effects || {})) {
-    if (effect.tags?.length) continue;
     for (const step of [...(effect.steps ?? []), ...(effect.self ?? [])] as Record<string, unknown>[]) {
       if (step.type === 'emit' && step.event) called.add(String(step.event));
     }
   }
   const takesAmount = (effect: Effect) => (effect.params ?? []).some(p => (p as { role?: string }).role === 'amount');
-  return Object.entries(system.effects || {}).filter(([id, effect]) => effect.tags?.length || takesAmount(effect) || called.has(id));
+  return Object.entries(system.effects || {}).filter(([id, effect]) => takesAmount(effect) || called.has(id));
 };
 
 export function requireCalled(system: System, id: string, who: string): Effect {

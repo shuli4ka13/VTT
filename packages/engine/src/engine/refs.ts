@@ -52,14 +52,6 @@ export function packRef(ref: unknown, ctx: RefContext): unknown {
       }
       return { expr: r.expr, of: 'target', ...(Object.keys(sent).length ? { sent } : {}) };
     }
-    if ((r.of || 'sender') === 'target') {
-
-      const names = Array.isArray(r.sender) ? r.sender : [];
-      if (!names.length) return { expr: r.expr, of: 'target' };
-      const sent: Record<string, unknown> = {};
-      for (const name of names) sent[String(name)] = evaluate(`@${name}`, ctx);
-      return { expr: r.expr, of: 'target', sent };
-    }
     if (waitsForStep(String(r.expr), ctx)) {
       const sent: Record<string, unknown> = {};
       for (const name of compile(String(r.expr)).deps) {
@@ -118,10 +110,12 @@ function packParam(key: string, optional: boolean, ctx: RefContext): unknown {
     throw new EngineError(`${who(ctx)}: параметр «${key}» не заполнен`);
   }
 
-  if (decl.kind === 'expr') return typeof value === 'number' ? { const: value } : packRef({ expr: value, of: decl.of }, ctx);
-  if (decl.kind === 'tag') return { tag: value };
+  if (isFormula(decl, value)) return packRef({ expr: value }, ctx);
   return { const: value };
 }
+
+const isFormula = (decl: Param | undefined, value: unknown): value is string =>
+  decl?.kind === 'number' && typeof value === 'string';
 
 const columnOf = (r: AnyRef): string => (typeof r.column === 'string' && r.column ? r.column : VALUE_COLUMN);
 
@@ -279,8 +273,11 @@ export function exactFieldOf(ref: unknown, ctx: RefContext): string | null {
   else if ('expr' in r) text = r.expr;
   else if ('param' in r && ctx.params && String(r.param) in ctx.params) text = fromArgs(String(r.param), ctx);
   if (typeof text !== 'string') return null;
-  const exact = /^\s*[@#]([\p{L}\p{N}_-]+)\s*$/u.exec(text);
-  return exact ? exact[1]! : null;
+  const exact = /^\s*[@#]([\p{L}\p{N}_.-]+)\s*$/u.exec(text);
+  if (!exact) return null;
+  const owned = ownerOf(exact[1]!);
+  if (owned) return owned.rest;
+  return exact[1]!.includes('.') ? null : exact[1]!;
 }
 
 function senderValue(name: string, ctx: RefContext): unknown {
@@ -303,19 +300,12 @@ function namedValue(name: string, ctx: RefContext): unknown {
   if (ctx.inputs && name in ctx.inputs) return ctx.inputs[name];
 
   const decl = (ctx.paramDefs || []).find(p => p.key === name);
-  const asFormula = (value: unknown): unknown =>
-    (decl?.kind === 'expr' && typeof value === 'string' ? evaluate(value, ctx) : value);
-
-  if (ctx.props && name in ctx.props) {
-    const own = ctx.props[name];
-    if (Array.isArray(own)) return own;
-    if (own !== null && typeof own !== 'object') return asFormula(own);
-  }
-
   if (!decl) return undefined;
   if (!ctx.params || !(name in ctx.params)) return undefined;
   const value = fromArgs(name, ctx);
-  return value === null || typeof value === 'object' ? undefined : asFormula(value);
+  if (Array.isArray(value)) return value;
+  if (value === null || typeof value === 'object') return undefined;
+  return isFormula(decl, value) ? evaluate(value, ctx) : value;
 }
 
 function who(ctx: RefContext): string {

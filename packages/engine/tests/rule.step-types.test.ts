@@ -90,7 +90,7 @@ group('шаг «порог»', () => {
 
     const save = {
       id: 'save', type: 'threshold', side: 'target',
-      roll: { die: { constant: 'lead_die' }, bonus: { expr: '#dex_save', of: 'target' }, check: 'save_roll' },
+      roll: { die: { constant: 'lead_die' }, bonus: { expr: '@получатель.dex_save' }, check: 'save_roll' },
       versus: { expr: '#spell_dc' },
       continueOn: 'fail',
     };

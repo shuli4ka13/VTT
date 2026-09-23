@@ -4,11 +4,8 @@ export const refSide = z.enum(['source', 'target']);
 
 export const slotRef = z.union([
 
-  z.object({
-    expr: z.string(), of: refSide.optional(),
-    sender: z.array(z.string()).optional(), optional: z.boolean().optional(),
-  }),
-  z.object({ tag: z.string(), of: refSide.optional(), optional: z.boolean().optional() }),
+  z.object({ expr: z.string(), optional: z.boolean().optional() }),
+  z.object({ tag: z.string(), optional: z.boolean().optional() }),
   z.object({ param: z.string(), optional: z.boolean().optional() }),
   z.object({ prop: z.string(), optional: z.boolean().optional() }),
 
@@ -189,8 +186,6 @@ export const stacking = z.enum(['ignore', 'refresh', 'stack']);
 
 export const ask = z.object({
   by: z.enum(['actor', 'gm']).optional(),
-  kind: z.enum(['number', 'text', 'choice']).optional(),
-  options: z.array(z.string().min(1)).optional(),
   min: z.number().optional(),
   max: z.number().optional(),
   hint: z.string().optional(),
@@ -202,8 +197,6 @@ export const param = z.object({
   kind: z.string().optional(),
 
   from: z.string().optional(),
-
-  of: refSide.optional(),
 
   ask: ask.optional(),
 
@@ -220,7 +213,7 @@ export const guard = z.union([
 
     where: z.object({ table: z.string().min(1), column: z.string().min(1), is: tableValue }).optional(),
   }),
-  z.object({ expr: z.string(), of: refSide.optional() }),
+  z.object({ expr: z.string() }),
 ]);
 
 export const scale = z.object({
@@ -258,10 +251,8 @@ export const trigger = z.object({
 export const effect = z.object({
   extends: z.string().min(1).optional(),
   group: z.string().optional(),
-  tagsFrom: z.union([z.string().min(1), z.array(z.string().min(1))]).optional(),
   bond: z.union([z.boolean(), z.string().min(1)]).optional(),
   label: z.string().optional(),
-  tags: z.array(z.string().min(1)).optional(),
   icon: z.string().optional(),
   category: z.string().optional(),
   description: z.string().optional(),

@@ -184,7 +184,7 @@ describe('GroupCard: изменение как вызов', () => {
   it('счёт и вызов — два шага, у вызова видно, что уходит', () => {
     const steps = [
       { id: 'n', type: 'amount', source: 'roll' },
-      { type: 'emit', event: 'damage', amount: { ref: 'n' }, tags: ['огонь'] },
+      { type: 'emit', event: 'damage', args: { amount: { ref: 'n' } } },
     ] as unknown as Step[];
     const cards = groupSteps(steps);
     expect(cards.map(c => c.kind), 'число больше не прячется внутри вызова').toEqual(['number', 'change']);
@@ -193,8 +193,8 @@ describe('GroupCard: изменение как вызов', () => {
       earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
     expect(screen.getByText('Зовём эффект')).toBeTruthy();
     expect(screen.getByText(/^Что отправляем в «/)).toBeTruthy();
-    expect(screen.getByText('число')).toBeTruthy();
-    expect(screen.getByText('метки')).toBeTruthy();
+    expect(screen.getByText('Сколько')).toBeTruthy();
+    expect(screen.queryByText('метки')).toBeNull();
   });
 
   it('без вызываемых эффектов режима «вызов» нет', () => {

@@ -109,7 +109,7 @@ group('линт: висячие ссылки называются словами
 
   test('в шагах вызываемого эффекта «event.amount» — не висячая ссылка', () => {
     const system = bare();
-    system.effects.damage = { label: 'Урон', tags: ['рубящий'], steps: [{ type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { ref: 'event.amount' } }] } as never;
+    system.effects.damage = { label: 'Урон', params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }], steps: [{ type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { ref: 'event.amount' } }] } as never;
     eq(errorTexts(system).join(''), '');
   });
 });
@@ -127,22 +127,22 @@ group('линт: слушатели, круги, потребности', () => 
   test('вызовы по кругу: эффект зовёт тот, на который сам и срабатывает', () => {
     const system = withEffect('loop', {
       activation: 'triggered', trigger: { on: 'event:damage' },
-      steps: [{ type: 'emit', event: 'damage', amount: { const: 1 } }] as Step[],
+      steps: [{ type: 'emit', event: 'damage' }] as Step[],
     });
-    system.effects.damage = { label: 'Урон', tags: ['рубящий'], steps: [] } as never;
+    system.effects.damage = { label: 'Урон', params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }], steps: [] } as never;
     const found = errorTexts(system).find(t => t.includes('по кругу'));
     ok(found, errorTexts(system).join('|'));
     ok(found!.includes('«loop»') && found!.includes('«Урон»'), found);
   });
 
   test('без круга — тишина', () => {
-    const system = withEffect('a', { steps: [{ type: 'emit', event: 'damage', amount: { const: 1 } }] as Step[] });
-    system.effects.damage = { label: 'Урон', tags: ['рубящий'], steps: [{ type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { ref: 'event.amount' } }] } as never;
+    const system = withEffect('a', { steps: [{ type: 'emit', event: 'damage' }] as Step[] });
+    system.effects.damage = { label: 'Урон', params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }], steps: [{ type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { ref: 'event.amount' } }] } as never;
     ok(!texts(system).some(t => t.includes('по кругу')));
   });
 
   test('эффект зовут, а он ничего не делает — предупреждение', () => {
-    const system = withEffect('a', { steps: [{ type: 'emit', event: 'ping', amount: { const: 1 } }] as Step[] });
+    const system = withEffect('a', { steps: [{ type: 'emit', event: 'ping' }] as Step[] });
     system.effects.ping = { label: 'Пинг', tags: ['сигнал'] } as never;
     ok(texts(system).some(t => t.startsWith('warn') && t.includes('«Пинг» вызывают, но он ничего не делает')), texts(system).join('|'));
     eq(errorTexts(system).length, 0);
@@ -157,7 +157,7 @@ group('линт: слушатели, круги, потребности', () => 
   });
 
   test('потребность, которую спрашивают за столом, привязка закрывать не обязана', () => {
-    const system = withEffect('strike', { params: [{ key: 'дистанция', label: 'Дистанция', ask: { by: 'actor', kind: 'number' } }], steps: [] });
+    const system = withEffect('strike', { params: [{ key: 'дистанция', label: 'Дистанция', ask: { by: 'actor' } }], steps: [] });
     system.records = { weapon: { kind: 'item', label: 'Оружие', props: [], bindings: [{ label: 'Удар', effect: 'strike', args: {} }] } } as never;
     eq(errorTexts(system).join(''), '');
   });

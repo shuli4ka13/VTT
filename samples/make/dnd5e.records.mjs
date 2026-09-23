@@ -180,11 +180,12 @@ export function records() {
     },
     monster_attack: {
       kind: 'action', label: 'Атака существа', icon: '🐺', group: 'Бестиарий',
-      hint: 'Для НПС: бонус атаки и прибавка к урону вписаны числами.',
+      hint: 'Для НПС: бонус атаки и прибавка к урону вписаны числами — та же «Атака», что и у оружия.',
       props: [prop('to_hit', 'Бонус атаки', 'number'), DICE, prop('damage_bonus', 'Прибавка к урону', 'number'), DAMAGE],
-      bindings: [bind('Атаковать', 'monster_attack', {
-        to_hit: ref('to_hit'), damage_dice: ref('damage_dice'),
-        damage_bonus: ref('damage_bonus'), damage_type: ref('damage_type'),
+      bindings: [bind('Атаковать', 'strike', {
+        attack_with: ref('to_hit'), damage_with: ref('damage_bonus'),
+        damage_dice: ref('damage_dice'), damage_type: ref('damage_type'),
+        damage_source: { const: 'немагический' },
       })],
     },
   };

@@ -31,12 +31,11 @@ const PARAM_TO_PROP_KIND: Record<string, string> = {
   dice: 'dice',
   number: 'number',
   effect: 'effect',
-  tag: 'text',
   text: 'text',
   choice: 'choice',
   record: 'record',
 };
-const propKindFor = (paramKind?: string) => PARAM_TO_PROP_KIND[paramKind ?? ''] ?? 'expr';
+const propKindFor = (paramKind?: string) => PARAM_TO_PROP_KIND[paramKind ?? ''] ?? 'number';
 
 export function RecordsTab() {
   const system = useWorld(s => s.system);
@@ -339,7 +338,7 @@ function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWi
     const value = binding.args?.[key];
     return value !== undefined && value !== null;
   };
-  const unclosed = params.filter(param => !isClosed(param.key));
+  const unclosed = params.filter(param => !isClosed(param.key) && !param.optional && !param.ask);
 
   return (
     <Card tone="flat">
@@ -371,8 +370,8 @@ function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWi
                 <SlotInput
                   value={binding.args?.[param.key] as never}
                   context={{ system, effect: effect ?? ({ label: '' } as Effect), earlier: [], recordKind }}
-                  allow={['prop', 'expr', 'const', 'tag', 'table', 'empty']}
-                  placeholder={param.from ? 'значение словаря или свойство записи' : undefined}
+                  allow={['prop', 'expr', 'const', 'table', 'empty']}
+                  placeholder="число или формула — или выберите ниже"
                   extraOptions={[
                     ...(isClosed(param.key) ? [] : [{
                       group: 'Завести',
@@ -382,7 +381,7 @@ function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWi
                       onPick: () => onFillWithProp(param),
                     }]),
                     ...(listOf(system, param.from) ?? []).map(option => ({
-                      group: (system.tables?.[String(param.from)]?.label) || 'из словаря',
+                      group: (system.tables?.[String(param.from)]?.label) || 'из таблицы',
                       label: option.label ?? String(option.value),
                       ref: { const: String(option.value) } as never,
                     })),
@@ -395,10 +394,22 @@ function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWi
                 />
               </Field>
               {!isClosed(param.key) ? (
-                <Button size="sm" onClick={() => onFillWithProp(param)}>
-                  + завести свойство «{param.label ?? param.key}»
-                </Button>
+                <div className="inline inline--tight need-fill__ways">
+                  <span className="faint">взять:</span>
+                  {sourcesFor(param, recordKind, system).map(source => (
+                    <Button
+                      key={source.label} size="sm" variant="ghost"
+                      onClick={() => onEdit(draft => { draft.args ??= {}; draft.args[param.key] = source.ref as never; })}
+                    >
+                      {source.label}
+                    </Button>
+                  ))}
+                  <Button size="sm" onClick={() => onFillWithProp(param)}>
+                    + новое свойство «{param.label ?? param.key}»
+                  </Button>
+                </div>
               ) : null}
+              {asksAtTable(param, isClosed(param.key))}
             </div>
           ))}
           {unclosed.length ? (
@@ -412,6 +423,39 @@ function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWi
       ) : null}
     </Card>
   );
+}
+
+const FITS: Record<string, string[]> = {
+  number: ['number', 'expr'],
+  dice: ['dice'],
+  text: ['text'],
+  effect: ['effect'],
+  record: ['record'],
+};
+
+function sourcesFor(param: Param, kind: RecordKind, system: System): { label: string; ref: unknown }[] {
+  const props = kind.props ?? [];
+  const want = String(param.kind ?? 'number');
+  const own = props
+    .filter(prop => (want === 'choice'
+      ? prop.kind === 'choice' && prop.from === param.from
+      : (FITS[want] ?? []).includes(String(prop.kind ?? 'number'))))
+    .map(prop => ({ label: `свойство «${prop.label ?? prop.key}»`, ref: { prop: prop.key } }));
+  if (want !== 'number') return own;
+  const viaTable = props
+    .filter(prop => prop.kind === 'choice' && prop.from && system.tables?.[prop.from]?.columns?.length)
+    .flatMap(prop => (system.tables![prop.from!]!.columns ?? [])
+      .filter(column => ['number', 'expr'].includes(String(column.kind ?? 'number')))
+      .map(column => ({
+        label: `«${prop.label ?? prop.key}» → столбец «${column.label || column.key}»`,
+        ref: { table: prop.from, by: { prop: prop.key }, column: column.key },
+      })));
+  return [...own, ...viaTable];
+}
+
+function asksAtTable(param: Param, closed: boolean) {
+  if (closed || !param.ask) return null;
+  return <span className="faint need-fill__ways">{`не заполните — спросят ${param.ask.by === 'gm' ? 'ведущего' : 'игрока'} за столом`}</span>;
 }
 
 function propDestiny(kind: RecordKind, propKey: string): string {

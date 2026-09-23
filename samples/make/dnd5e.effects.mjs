@@ -5,10 +5,10 @@ const DIE = { constant: 'lead_die' };
 const P = {
   slot: {
     key: 'slot', label: 'Каким кругом', kind: 'number',
-    ask: { by: 'actor', kind: 'number', min: 1, max: 9, hint: 'Круг ячейки, которую тратишь. Не ниже круга заклинания.' },
+    ask: { by: 'actor', min: 1, max: 9, hint: 'Круг ячейки, которую тратишь. Не ниже круга заклинания.' },
   },
   level: { key: 'spell_level', label: 'Круг заклинания', kind: 'number' },
-  saveBy: { key: 'save_by', label: 'Бонус спасброска', kind: 'expr', of: 'target' },
+  saveBy: { key: 'save_by', label: 'Бонус спасброска', kind: 'number' },
   die: { key: 'damage_die', label: 'Кость урона', kind: 'dice' },
   count: { key: 'dice_count', label: 'Сколько костей', kind: 'number' },
   up: { key: 'dice_up', label: 'Костей за каждый круг выше', kind: 'number' },
@@ -85,12 +85,12 @@ const UNTIL_MY_TURN = { kind: 'turns', max: 1, ends: 'turn-start' };
 
 function attacks() {
   return {
-    strike: manual('Атака оружием', 'Атака',
-      'Бросок атаки против класса брони, урон костью оружия. На крите кости урона удваиваются. Посчитанное уходит в общий эффект «Урон».',
+    strike: manual('Атака', 'Атака',
+      'Бросок атаки против класса брони, урон костью. На крите кости урона удваиваются. Бонус атаки и прибавку к урону приносит тот, кто зовёт: оружие считает их по листу, существо вписывает числами. Посчитанное уходит в общий эффект «Урон».',
       'attack', {
         params: [
-          { key: 'attack_with', label: 'Бонус атаки', kind: 'expr' },
-          { key: 'damage_with', label: 'Прибавка к урону', kind: 'expr' },
+          { key: 'attack_with', label: 'Бонус атаки', kind: 'number' },
+          { key: 'damage_with', label: 'Прибавка к урону', kind: 'number' },
           { key: 'damage_dice', label: 'Кость урона', kind: 'dice' },
           P.type,
           P.source,
@@ -99,20 +99,6 @@ function attacks() {
           hit({ param: 'attack_with' }),
           { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'damage_dice' }, bonus: { param: 'damage_with' }, count: { expr: CRIT } },
           damage({ ref: 'dmg' }, [{ param: 'damage_type' }, { param: 'damage_source' }]),
-        ],
-      }),
-    monster_attack: manual('Атака существа', 'Атака',
-      'Для статблоков: бонус атаки и прибавка к урону вписаны числами прямо в запись.', 'action', {
-        params: [
-          { key: 'to_hit', label: 'Бонус атаки', kind: 'number' },
-          { key: 'damage_dice', label: 'Кость урона', kind: 'dice' },
-          { key: 'damage_bonus', label: 'Прибавка к урону', kind: 'number' },
-          P.type,
-        ],
-        steps: [
-          hit({ param: 'to_hit' }),
-          { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'damage_dice' }, bonus: { param: 'damage_bonus' }, count: { expr: '@hit.natural >= 20 ? 2 : 1' } },
-          damage({ ref: 'dmg' }, [{ param: 'damage_type' }, 'немагический']),
         ],
       }),
     flame_blade: {
@@ -335,7 +321,7 @@ function features() {
       'Лечишь из запаса ровно столько хитов, сколько назовёшь. Запас — пять на уровень, до долгого отдыха.', 'action', {
         params: [{
           key: 'amount', label: 'Сколько хитов', kind: 'number',
-          ask: { by: 'actor', kind: 'number', min: 1, max: 100, hint: 'Не больше, чем осталось в запасе.' },
+          ask: { by: 'actor', min: 1, max: 100, hint: 'Не больше, чем осталось в запасе.' },
         }],
         self: payResource('lay_on_hands', 'в запасе наложения рук столько нет', { param: 'amount' }),
         steps: [change('hp_current', 'add', { param: 'amount' })],

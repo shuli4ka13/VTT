@@ -25,18 +25,14 @@ export function dieOf(mode: DiceMode, random: () => number = Math.random): Die {
 }
 
 export function sampleArg(
-  kind: string | undefined, system: System, effect?: Effect, key?: string,
-  options?: string[], from?: string,
+  kind: string | undefined, system: System, effect?: Effect, key?: string, from?: string,
 ): unknown {
-  if (options?.length) return options[0];
   const list = listOf(system, from);
   if (list?.length) return list[0]!.value;
   if (kind === 'dice') return '1к6';
   if (kind === 'number') return 1;
-  if (kind === 'expr') return '0';
   if (kind === 'text') return 'проба';
   if (kind === 'effect') return Object.keys(system.effects)[0] ?? '';
-  if (kind === 'tag') return (system.fields.find(f => f.value.kind === 'stored' && f.value.type === 'number') ?? system.fields[0])?.tag ?? '';
   if (kind === 'choice' && effect && key) return firstChoice(effect, key) ?? '';
   return '';
 }
@@ -89,7 +85,7 @@ export function trial({ system, compendium, effectId, from, to, args, dice = 'av
   for (const param of effect.params ?? []) {
     filled[param.key] = args?.[param.key] !== undefined
       ? args[param.key]
-      : sampleArg(param.kind, system, effect, param.key, param.ask?.options, param.from);
+      : sampleArg(param.kind, system, effect, param.key, param.from);
   }
   const probe: System = {
     ...system,

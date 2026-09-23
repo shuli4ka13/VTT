@@ -15,21 +15,16 @@ export function optionsOf(system: System, field: Field): FieldOption[] {
 }
 
 export function tagTablesOf(effect: Effect | undefined): string[] {
-  const from = effect?.tagsFrom;
-  const legacy = !from ? [] : Array.isArray(from) ? from : [from];
-  const chosen = (effect?.params ?? [])
+  return [...new Set((effect?.params ?? [])
     .filter(p => p.kind === 'choice' && typeof p.from === 'string' && p.from)
-    .map(p => String(p.from));
-  return [...new Set([...legacy, ...chosen])];
+    .map(p => String(p.from)))];
 }
 
 export const amountParamOf = (effect: Effect | undefined) =>
   (effect?.params ?? []).find(p => (p as { role?: string }).role === 'amount');
 
 export function tagsOf(system: System, effect: Effect): string[] {
-  const tables = tagTablesOf(effect);
-  if (!tables.length) return effect.tags ?? [];
-  return tables.flatMap(table => (listOf(system, table) ?? []).map(option => String(option.value)));
+  return tagTablesOf(effect).flatMap(table => (listOf(system, table) ?? []).map(option => String(option.value)));
 }
 
 export function listUsers(system: System, key: string): string[] {

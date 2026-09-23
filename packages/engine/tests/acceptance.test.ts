@@ -203,7 +203,7 @@ group('образец D&D: урон сперва съедает временны
     const out = receive(
       {
         kind: 'effect', effect: 'урон', from: sender.id, action: 'проба', label: 'Урон',
-        steps: [{ type: 'emit', event: 'damage', amount: { const: amount }, tags: ['рубящий'] }],
+        steps: [{ type: 'emit', event: 'damage', args: { amount: { const: amount }, damage_type: { const: 'рубящий' } } }],
       } as never,
       { system: dnd, compendium: world.compendium as Compendium, die: () => 1, sheet: target },
     );

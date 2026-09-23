@@ -6,8 +6,7 @@ import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 import { calledOf } from '@vtt/engine/engine/effects';
 import { Extras } from './extras.tsx';
-import { TagPick, type Tag } from '../../tag-pick.tsx';
-import { tagsOf, listOf, amountParamOf } from '@vtt/engine/model/lists';
+import { listOf } from '@vtt/engine/model/lists';
 import { WhatNext, meddlersOf } from '../what-next.tsx';
 
 const loose = (draft: unknown): Record<string, unknown> => draft as Record<string, unknown>;
@@ -29,7 +28,6 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect, canAns
 }) {
   const [peek, setPeek] = useState(false);
   const commons = calledOf(system);
-  const all: unknown[] = Array.isArray(step.tags) ? step.tags : [];
   const called = system.effects?.[String(step.event ?? '')];
   const asks = called?.params ?? [];
   const args = (step.args ?? {}) as Record<string, unknown>;
@@ -71,16 +69,7 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect, canAns
             </Button>
           </div>
 
-          {step.amount !== undefined || !amountParamOf(called) ? (
-          <div className="pair">
-            <span className="call-args__name">число</span>
-            <SlotInput
-              value={step.amount} context={context} allow={['ref', 'expr', 'const', 'param']}
-              onChange={next => edit(at, draft => { loose(draft).amount = next ?? undefined; })}
-            />
-            <span />
-          </div>
-          ) : null}
+          {asks.length ? null : <span className="faint">«{called?.label || String(step.event)}» ничего не принимает.</span>}
 
           {asks.map(need => (
             <div className="pair" key={need.key}>
@@ -94,26 +83,14 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect, canAns
                   if (Object.keys(all).length) loose(draft).args = all; else delete loose(draft).args;
                 })}
               />
-              <span className={args[need.key] === undefined && !need.optional ? 'need' : 'faint'}>
-                {args[need.key] !== undefined ? '' : need.optional ? 'можно не заполнять' : 'не заполнено'}
+              <span className={args[need.key] === undefined && !need.optional && !need.ask ? 'need' : 'faint'}>
+                {args[need.key] !== undefined ? ''
+                  : need.ask ? (need.ask.by === 'gm' ? 'спросят ведущего' : 'спросят игрока')
+                    : need.optional ? 'можно не заполнять' : 'не заполнено'}
               </span>
             </div>
           ))}
 
-          {all.length || called?.tags?.length ? (
-          <div className="pair">
-            <span className="call-args__name">метки</span>
-            <TagPick
-              value={all as Tag[]}
-              known={called ? tagsOf(system, called) : []}
-              fromRecord={(context.effect.params ?? []).map(p => ({ key: p.key, label: p.label ?? p.key }))}
-              onChange={next => edit(at, draft => {
-                if (next.length) loose(draft).tags = next; else delete loose(draft).tags;
-              })}
-            />
-            <span />
-          </div>
-          ) : null}
         </div>
       ) : null}
 

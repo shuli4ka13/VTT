@@ -6,13 +6,14 @@ import type { System, Compendium, Sheet } from '../src/model/types.ts';
 const system = {
   id: 'x', name: 'x',
   fields: [{ tag: 'hp', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } }],
+  tables: { места: { label: 'Места', key: 'word', rows: [{ value: 'тело', label: 'тело' }, { value: 'голова', label: 'голова' }] } },
   constants: { к6: { label: 'Кость', kind: 'die', dice: [{ count: 1, sides: 6 }] } },
   effects: {
     выстрел: {
       label: 'Выстрел', activation: 'manual',
       params: [
-        { key: 'дистанция', label: 'Дистанция', kind: 'number', ask: { by: 'actor', kind: 'number', min: 1, max: 100 } },
-        { key: 'прицел', label: 'Куда целишься', kind: 'number', ask: { by: 'gm', kind: 'choice', options: ['тело', 'голова'] } },
+        { key: 'дистанция', label: 'Дистанция', kind: 'number', ask: { by: 'actor', min: 1, max: 100 } },
+        { key: 'прицел', label: 'Куда целишься', kind: 'choice', from: 'места', ask: { by: 'gm' } },
         { key: 'кость', label: 'Кость урона', kind: 'dice' },
       ],
       steps: [
@@ -40,13 +41,13 @@ group('значение, которое называет человек за с�
   });
 
   test('пустое, лишнее и вне границ — отказ словами', () => {
-    ok(checkInputs(asked, {})!.includes('Дистанция'));
-    ok(checkInputs(asked, { дистанция: 5 })!.includes('Куда целишься'));
-    ok(checkInputs(asked, { дистанция: 0, прицел: 'тело' })!.includes('не меньше 1'));
-    ok(checkInputs(asked, { дистанция: 200, прицел: 'тело' })!.includes('не больше 100'));
-    ok(checkInputs(asked, { дистанция: 5, прицел: 'нога' })!.includes('можно только'));
-    ok(checkInputs(asked, { дистанция: 5, прицел: 'тело', лишнее: 1 })!.includes('лишнее'));
-    eq(checkInputs(asked, { дистанция: 5, прицел: 'тело' }), null);
+    ok(checkInputs(asked, {}, system)!.includes('Дистанция'));
+    ok(checkInputs(asked, { дистанция: 5 }, system)!.includes('Куда целишься'));
+    ok(checkInputs(asked, { дистанция: 0, прицел: 'тело' }, system)!.includes('не меньше 1'));
+    ok(checkInputs(asked, { дистанция: 200, прицел: 'тело' }, system)!.includes('не больше 100'));
+    ok(checkInputs(asked, { дистанция: 5, прицел: 'нога' }, system)!.includes('можно только'));
+    ok(checkInputs(asked, { дистанция: 5, прицел: 'тело', лишнее: 1 }, system)!.includes('лишнее'));
+    eq(checkInputs(asked, { дистанция: 5, прицел: 'тело' }, system), null);
   });
 
   test('число приходит числом, выбор — строкой', () => {

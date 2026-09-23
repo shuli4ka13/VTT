@@ -48,18 +48,18 @@ group('чей лист считает слагаемое', () => {
     const rule: any = {
       steps: [
         { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d8' } },
-        { type: 'apply', target: { tag: 'хп' }, direction: 'set', value: { expr: '#хп - (#урон + #сила)', of: 'target' } },
+        { type: 'apply', target: { tag: 'хп' }, direction: 'set', value: { expr: '@получатель.хп - (#урон + @получатель.сила)' } },
       ],
     };
     eq(hit(rule).sheet.values.хп, 15, '20 − (4 + Сила ЦЕЛИ 1) — другое число, и молча');
   });
 
-  test('пометка «у отправителя» берёт его Силу, не трогая выражения', () => {
+  test('имя с хозяином «отправитель» берёт его Силу', () => {
     const rule: any = {
       steps: [
         { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d8' } },
         { type: 'apply', target: { tag: 'хп' }, direction: 'set',
-          value: { expr: '#хп - (#урон + #сила)', of: 'target', sender: ['сила'] } },
+          value: { expr: '@получатель.хп - (#урон + @отправитель.сила)' } },
       ],
     };
     eq(hit(rule).sheet.values.хп, 11, '20 − (4 + Сила АТАКУЮЩЕГО 5): та же формула, другая сторона');
@@ -71,7 +71,7 @@ group('чей лист считает слагаемое', () => {
         { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d8' } },
         { type: 'apply', target: { tag: 'хп' }, direction: 'set',
 
-          value: { expr: '#хп - #урон - #сила + #сила', of: 'target', sender: ['сила'] } },
+          value: { expr: '@получатель.хп - #урон - @отправитель.сила + @отправитель.сила' } },
       ],
     };
 
@@ -82,7 +82,7 @@ group('чей лист считает слагаемое', () => {
     const rule: any = {
       steps: [
         { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d8' }, bonus: { expr: '#сила' } },
-        { type: 'apply', target: { tag: 'хп' }, direction: 'set', value: { expr: '#хп - #урон', of: 'target' } },
+        { type: 'apply', target: { tag: 'хп' }, direction: 'set', value: { expr: '@получатель.хп - #урон' } },
       ],
     };
     eq(hit(rule).sheet.values.хп, 11, 'выражение цели берёт ГОТОВОЕ число отправителя');

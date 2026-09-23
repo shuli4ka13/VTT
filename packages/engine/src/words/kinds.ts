@@ -18,7 +18,7 @@ const ORDER: Kind[] = ['number', 'text', 'expr', 'dice', 'choice', 'effect', 're
 const ALLOWED: Record<KindPlace, Kind[]> = {
   table: ['number', 'text', 'expr', 'dice', 'choice', 'effect', 'tag'],
   prop: ['number', 'text', 'expr', 'dice', 'choice', 'effect', 'record'],
-  param: ['number', 'text', 'expr', 'dice', 'choice', 'effect', 'tag'],
+  param: ['number', 'text', 'dice', 'choice', 'effect'],
 };
 
 export const kindsFor = (place: KindPlace): readonly (readonly [Kind, string])[] =>

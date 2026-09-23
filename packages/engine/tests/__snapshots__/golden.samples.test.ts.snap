@@ -228575,7 +228575,7 @@ exports[`золотые трассы: dnd5e > goblin → arven · goblin_scimita
             "to": 30,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -228887,7 +228887,7 @@ exports[`золотые трассы: dnd5e > goblin → arven · goblin_scimita
             "to": 30,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -229193,7 +229193,7 @@ exports[`золотые трассы: dnd5e > goblin → arven · goblin_scimita
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -229437,7 +229437,7 @@ exports[`золотые трассы: dnd5e > goblin → arven · goblin_scimita
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -229681,7 +229681,7 @@ exports[`золотые трассы: dnd5e > goblin → arven · goblin_scimita
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -229925,7 +229925,7 @@ exports[`золотые трассы: dnd5e > goblin → arven · goblin_scimita
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -232994,7 +232994,7 @@ exports[`золотые трассы: dnd5e > goblin → doran · goblin_scimita
             "to": 24,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -233306,7 +233306,7 @@ exports[`золотые трассы: dnd5e > goblin → doran · goblin_scimita
             "to": 24,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -233612,7 +233612,7 @@ exports[`золотые трассы: dnd5e > goblin → doran · goblin_scimita
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -233856,7 +233856,7 @@ exports[`золотые трассы: dnd5e > goblin → doran · goblin_scimita
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -234100,7 +234100,7 @@ exports[`золотые трассы: dnd5e > goblin → doran · goblin_scimita
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -234344,7 +234344,7 @@ exports[`золотые трассы: dnd5e > goblin → doran · goblin_scimita
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -237413,7 +237413,7 @@ exports[`золотые трассы: dnd5e > goblin → goblin · goblin_scimit
             "to": 0,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [
           "dead",
         ],
@@ -237732,7 +237732,7 @@ exports[`золотые трассы: dnd5e > goblin → goblin · goblin_scimit
             "to": 0,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [
           "dead",
         ],
@@ -238045,7 +238045,7 @@ exports[`золотые трассы: dnd5e > goblin → goblin · goblin_scimit
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -238289,7 +238289,7 @@ exports[`золотые трассы: dnd5e > goblin → goblin · goblin_scimit
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -238533,7 +238533,7 @@ exports[`золотые трассы: dnd5e > goblin → goblin · goblin_scimit
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -238777,7 +238777,7 @@ exports[`золотые трассы: dnd5e > goblin → goblin · goblin_scimit
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -241846,7 +241846,7 @@ exports[`золотые трассы: dnd5e > goblin → mirra · goblin_scimita
             "to": 19,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -242158,7 +242158,7 @@ exports[`золотые трассы: dnd5e > goblin → mirra · goblin_scimita
             "to": 19,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -242464,7 +242464,7 @@ exports[`золотые трассы: dnd5e > goblin → mirra · goblin_scimita
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -242708,7 +242708,7 @@ exports[`золотые трассы: dnd5e > goblin → mirra · goblin_scimita
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -242952,7 +242952,7 @@ exports[`золотые трассы: dnd5e > goblin → mirra · goblin_scimita
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -243196,7 +243196,7 @@ exports[`золотые трассы: dnd5e > goblin → mirra · goblin_scimita
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -246265,7 +246265,7 @@ exports[`золотые трассы: dnd5e > goblin → ogre · goblin_scimitar
             "to": 45,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -246577,7 +246577,7 @@ exports[`золотые трассы: dnd5e > goblin → ogre · goblin_scimitar
             "to": 45,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -246883,7 +246883,7 @@ exports[`золотые трассы: dnd5e > goblin → ogre · goblin_scimitar
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -247127,7 +247127,7 @@ exports[`золотые трассы: dnd5e > goblin → ogre · goblin_scimitar
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -247371,7 +247371,7 @@ exports[`золотые трассы: dnd5e > goblin → ogre · goblin_scimitar
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -247615,7 +247615,7 @@ exports[`золотые трассы: dnd5e > goblin → ogre · goblin_scimitar
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -250684,7 +250684,7 @@ exports[`золотые трассы: dnd5e > goblin → orc · goblin_scimitar:
             "to": 1,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -250996,7 +250996,7 @@ exports[`золотые трассы: dnd5e > goblin → orc · goblin_scimitar:
             "to": 1,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -251302,7 +251302,7 @@ exports[`золотые трассы: dnd5e > goblin → orc · goblin_scimitar:
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -251546,7 +251546,7 @@ exports[`золотые трассы: dnd5e > goblin → orc · goblin_scimitar:
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -251790,7 +251790,7 @@ exports[`золотые трассы: dnd5e > goblin → orc · goblin_scimitar:
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -252034,7 +252034,7 @@ exports[`золотые трассы: dnd5e > goblin → orc · goblin_scimitar:
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -255103,7 +255103,7 @@ exports[`золотые трассы: dnd5e > goblin → sil · goblin_scimitar:
             "to": 19,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -255415,7 +255415,7 @@ exports[`золотые трассы: dnd5e > goblin → sil · goblin_scimitar:
             "to": 19,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -255721,7 +255721,7 @@ exports[`золотые трассы: dnd5e > goblin → sil · goblin_scimitar:
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -255965,7 +255965,7 @@ exports[`золотые трассы: dnd5e > goblin → sil · goblin_scimitar:
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -256209,7 +256209,7 @@ exports[`золотые трассы: dnd5e > goblin → sil · goblin_scimitar:
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -256453,7 +256453,7 @@ exports[`золотые трассы: dnd5e > goblin → sil · goblin_scimitar:
       "fromId": "goblin",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "goblin",
@@ -329887,7 +329887,7 @@ exports[`золотые трассы: dnd5e > ogre → arven · ogre_club:0 · �
             "to": 8,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -330199,7 +330199,7 @@ exports[`золотые трассы: dnd5e > ogre → arven · ogre_club:0 · �
             "to": 8,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -330505,7 +330505,7 @@ exports[`золотые трассы: dnd5e > ogre → arven · ogre_club:0 · �
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -330749,7 +330749,7 @@ exports[`золотые трассы: dnd5e > ogre → arven · ogre_club:0 · �
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -330993,7 +330993,7 @@ exports[`золотые трассы: dnd5e > ogre → arven · ogre_club:0 · �
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -331237,7 +331237,7 @@ exports[`золотые трассы: dnd5e > ogre → arven · ogre_club:0 · �
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -331487,7 +331487,7 @@ exports[`золотые трассы: dnd5e > ogre → doran · ogre_club:0 · �
             "to": 2,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -331799,7 +331799,7 @@ exports[`золотые трассы: dnd5e > ogre → doran · ogre_club:0 · �
             "to": 2,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -332105,7 +332105,7 @@ exports[`золотые трассы: dnd5e > ogre → doran · ogre_club:0 · �
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -332349,7 +332349,7 @@ exports[`золотые трассы: dnd5e > ogre → doran · ogre_club:0 · �
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -332593,7 +332593,7 @@ exports[`золотые трассы: dnd5e > ogre → doran · ogre_club:0 · �
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -332837,7 +332837,7 @@ exports[`золотые трассы: dnd5e > ogre → doran · ogre_club:0 · �
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -333087,7 +333087,7 @@ exports[`золотые трассы: dnd5e > ogre → goblin · ogre_club:0 · 
             "to": 0,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [
           "dead",
         ],
@@ -333406,7 +333406,7 @@ exports[`золотые трассы: dnd5e > ogre → goblin · ogre_club:0 · 
             "to": 0,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [
           "dead",
         ],
@@ -333719,7 +333719,7 @@ exports[`золотые трассы: dnd5e > ogre → goblin · ogre_club:0 · 
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -333963,7 +333963,7 @@ exports[`золотые трассы: dnd5e > ogre → goblin · ogre_club:0 · 
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -334207,7 +334207,7 @@ exports[`золотые трассы: dnd5e > ogre → goblin · ogre_club:0 · 
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -334451,7 +334451,7 @@ exports[`золотые трассы: dnd5e > ogre → goblin · ogre_club:0 · 
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -334701,7 +334701,7 @@ exports[`золотые трассы: dnd5e > ogre → mirra · ogre_club:0 · �
             "to": 0,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -335013,7 +335013,7 @@ exports[`золотые трассы: dnd5e > ogre → mirra · ogre_club:0 · �
             "to": 0,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -335319,7 +335319,7 @@ exports[`золотые трассы: dnd5e > ogre → mirra · ogre_club:0 · �
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -335563,7 +335563,7 @@ exports[`золотые трассы: dnd5e > ogre → mirra · ogre_club:0 · �
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -335807,7 +335807,7 @@ exports[`золотые трассы: dnd5e > ogre → mirra · ogre_club:0 · �
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -336051,7 +336051,7 @@ exports[`золотые трассы: dnd5e > ogre → mirra · ogre_club:0 · �
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -336301,7 +336301,7 @@ exports[`золотые трассы: dnd5e > ogre → ogre · ogre_club:0 · к
             "to": 23,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -336613,7 +336613,7 @@ exports[`золотые трассы: dnd5e > ogre → ogre · ogre_club:0 · к
             "to": 23,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -336919,7 +336919,7 @@ exports[`золотые трассы: dnd5e > ogre → ogre · ogre_club:0 · к
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -337163,7 +337163,7 @@ exports[`золотые трассы: dnd5e > ogre → ogre · ogre_club:0 · к
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -337413,7 +337413,7 @@ exports[`золотые трассы: dnd5e > ogre → ogre · ogre_club:0 · к
             "to": 50,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -337725,7 +337725,7 @@ exports[`золотые трассы: dnd5e > ogre → ogre · ogre_club:0 · к
             "to": 50,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -338037,7 +338037,7 @@ exports[`золотые трассы: dnd5e > ogre → orc · ogre_club:0 · к�
             "to": 0,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [
           "dead",
         ],
@@ -338356,7 +338356,7 @@ exports[`золотые трассы: dnd5e > ogre → orc · ogre_club:0 · к�
             "to": 0,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [
           "dead",
         ],
@@ -338669,7 +338669,7 @@ exports[`золотые трассы: dnd5e > ogre → orc · ogre_club:0 · к�
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -338913,7 +338913,7 @@ exports[`золотые трассы: dnd5e > ogre → orc · ogre_club:0 · к�
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -339157,7 +339157,7 @@ exports[`золотые трассы: dnd5e > ogre → orc · ogre_club:0 · к�
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -339401,7 +339401,7 @@ exports[`золотые трассы: dnd5e > ogre → orc · ogre_club:0 · к�
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -339651,7 +339651,7 @@ exports[`золотые трассы: dnd5e > ogre → sil · ogre_club:0 · к�
             "to": 0,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -339963,7 +339963,7 @@ exports[`золотые трассы: dnd5e > ogre → sil · ogre_club:0 · к�
             "to": 0,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -340269,7 +340269,7 @@ exports[`золотые трассы: dnd5e > ogre → sil · ogre_club:0 · к�
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -340513,7 +340513,7 @@ exports[`золотые трассы: dnd5e > ogre → sil · ogre_club:0 · к�
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -340757,7 +340757,7 @@ exports[`золотые трассы: dnd5e > ogre → sil · ogre_club:0 · к�
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -341001,7 +341001,7 @@ exports[`золотые трассы: dnd5e > ogre → sil · ogre_club:0 · к�
       "fromId": "ogre",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "ogre",
@@ -342670,7 +342670,7 @@ exports[`золотые трассы: dnd5e > orc → arven · orc_greataxe:0 ·
             "to": 17,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -342982,7 +342982,7 @@ exports[`золотые трассы: dnd5e > orc → arven · orc_greataxe:0 ·
             "to": 17,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -343288,7 +343288,7 @@ exports[`золотые трассы: dnd5e > orc → arven · orc_greataxe:0 ·
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -343532,7 +343532,7 @@ exports[`золотые трассы: dnd5e > orc → arven · orc_greataxe:0 ·
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -343776,7 +343776,7 @@ exports[`золотые трассы: dnd5e > orc → arven · orc_greataxe:0 ·
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -344020,7 +344020,7 @@ exports[`золотые трассы: dnd5e > orc → arven · orc_greataxe:0 ·
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -345689,7 +345689,7 @@ exports[`золотые трассы: dnd5e > orc → doran · orc_greataxe:0 ·
             "to": 11,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -346001,7 +346001,7 @@ exports[`золотые трассы: dnd5e > orc → doran · orc_greataxe:0 ·
             "to": 11,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -346307,7 +346307,7 @@ exports[`золотые трассы: dnd5e > orc → doran · orc_greataxe:0 ·
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -346551,7 +346551,7 @@ exports[`золотые трассы: dnd5e > orc → doran · orc_greataxe:0 ·
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -346795,7 +346795,7 @@ exports[`золотые трассы: dnd5e > orc → doran · orc_greataxe:0 ·
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -347039,7 +347039,7 @@ exports[`золотые трассы: dnd5e > orc → doran · orc_greataxe:0 ·
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -348708,7 +348708,7 @@ exports[`золотые трассы: dnd5e > orc → goblin · orc_greataxe:0 �
             "to": 0,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [
           "dead",
         ],
@@ -349027,7 +349027,7 @@ exports[`золотые трассы: dnd5e > orc → goblin · orc_greataxe:0 �
             "to": 0,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [
           "dead",
         ],
@@ -349340,7 +349340,7 @@ exports[`золотые трассы: dnd5e > orc → goblin · orc_greataxe:0 �
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -349584,7 +349584,7 @@ exports[`золотые трассы: dnd5e > orc → goblin · orc_greataxe:0 �
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -349828,7 +349828,7 @@ exports[`золотые трассы: dnd5e > orc → goblin · orc_greataxe:0 �
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -350072,7 +350072,7 @@ exports[`золотые трассы: dnd5e > orc → goblin · orc_greataxe:0 �
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -351741,7 +351741,7 @@ exports[`золотые трассы: dnd5e > orc → mirra · orc_greataxe:0 ·
             "to": 6,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -352053,7 +352053,7 @@ exports[`золотые трассы: dnd5e > orc → mirra · orc_greataxe:0 ·
             "to": 6,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -352359,7 +352359,7 @@ exports[`золотые трассы: dnd5e > orc → mirra · orc_greataxe:0 ·
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -352603,7 +352603,7 @@ exports[`золотые трассы: dnd5e > orc → mirra · orc_greataxe:0 ·
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -352847,7 +352847,7 @@ exports[`золотые трассы: dnd5e > orc → mirra · orc_greataxe:0 ·
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -353091,7 +353091,7 @@ exports[`золотые трассы: dnd5e > orc → mirra · orc_greataxe:0 ·
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -354760,7 +354760,7 @@ exports[`золотые трассы: dnd5e > orc → ogre · orc_greataxe:0 · 
             "to": 32,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -355072,7 +355072,7 @@ exports[`золотые трассы: dnd5e > orc → ogre · orc_greataxe:0 · 
             "to": 32,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -355378,7 +355378,7 @@ exports[`золотые трассы: dnd5e > orc → ogre · orc_greataxe:0 · 
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -355622,7 +355622,7 @@ exports[`золотые трассы: dnd5e > orc → ogre · orc_greataxe:0 · 
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -355866,7 +355866,7 @@ exports[`золотые трассы: dnd5e > orc → ogre · orc_greataxe:0 · 
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -356110,7 +356110,7 @@ exports[`золотые трассы: dnd5e > orc → ogre · orc_greataxe:0 · 
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -357779,7 +357779,7 @@ exports[`золотые трассы: dnd5e > orc → orc · orc_greataxe:0 · �
             "to": 0,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -358091,7 +358091,7 @@ exports[`золотые трассы: dnd5e > orc → orc · orc_greataxe:0 · �
             "to": 0,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -358397,7 +358397,7 @@ exports[`золотые трассы: dnd5e > orc → orc · orc_greataxe:0 · �
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -358641,7 +358641,7 @@ exports[`золотые трассы: dnd5e > orc → orc · orc_greataxe:0 · �
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -358885,7 +358885,7 @@ exports[`золотые трассы: dnd5e > orc → orc · orc_greataxe:0 · �
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -359129,7 +359129,7 @@ exports[`золотые трассы: dnd5e > orc → orc · orc_greataxe:0 · �
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -360798,7 +360798,7 @@ exports[`золотые трассы: dnd5e > orc → sil · orc_greataxe:0 · �
             "to": 6,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -361110,7 +361110,7 @@ exports[`золотые трассы: dnd5e > orc → sil · orc_greataxe:0 · �
             "to": 6,
           },
         ],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [
           {
@@ -361416,7 +361416,7 @@ exports[`золотые трассы: dnd5e > orc → sil · orc_greataxe:0 · �
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -361660,7 +361660,7 @@ exports[`золотые трассы: dnd5e > orc → sil · orc_greataxe:0 · �
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -361904,7 +361904,7 @@ exports[`золотые трассы: dnd5e > orc → sil · orc_greataxe:0 · �
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",
@@ -362148,7 +362148,7 @@ exports[`золотые трассы: dnd5e > orc → sil · orc_greataxe:0 · �
       "fromId": "orc",
       "report": {
         "changes": [],
-        "effect": "monster_attack",
+        "effect": "strike",
         "effects": [],
         "emitted": [],
         "from": "orc",

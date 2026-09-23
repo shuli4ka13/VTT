@@ -30,7 +30,7 @@ describe('RecordsTab: тип видит потребности эффекта', 
     render(<RecordsTab />);
     expect(screen.getByText(/не закрыто/).textContent).toContain('Кость урона');
 
-    fireEvent.click(screen.getByText('+ завести свойство «Кость урона»'));
+    fireEvent.click(screen.getByText('+ новое свойство «Кость урона»'));
 
     const kind = useWorld.getState().system.records!.weapon!;
     expect(kind.props!.some(p => p.label === 'Кость урона' && p.kind === 'dice')).toBe(true);
@@ -209,7 +209,7 @@ describe('слот привязки подсказывает то, чем его
         label: 'Удар', activation: 'manual', steps: [],
         params: [
           { key: 'damage_type', label: 'Тип урона', kind: 'choice', from: 'damage_types' },
-          { key: 'attack_with', label: 'Бонус атаки', kind: 'expr' },
+          { key: 'attack_with', label: 'Бонус атаки', kind: 'number' },
         ],
       },
     },

@@ -46,12 +46,11 @@ function mergeEffect(base: Effect, own: Effect): Effect {
   const o = own as Loose;
   const merged: Loose = { ...base, ...own };
   merged.params = byKey((base.params ?? []) as Param[], (own.params ?? []) as Param[]);
-  merged.tags = [...new Set([...(base.tags ?? []), ...(own.tags ?? [])])];
   merged.modifiers = [...(base.modifiers ?? []), ...(own.modifiers ?? [])] as Modifier[];
   merged.self = o.self === undefined ? base.self : ([...(base.self ?? []), ...(own.self ?? [])] as Step[]);
   merged.steps = [...(base.steps ?? []), ...(own.steps ?? [])] as Step[];
 
-  dropEmpty(merged, ['params', 'tags', 'modifiers', 'self', 'steps']);
+  dropEmpty(merged, ['params', 'modifiers', 'self', 'steps']);
   return merged as Effect;
 }
 

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Button, Field, Input, Select, Verdict } from '../../ui/primitives.tsx';
-import { asksOf, checkInputs, choicesOf, normalizeInputs } from '@vtt/engine/model/asks';
+import { asksOf, askKindOf, checkInputs, choicesOf, normalizeInputs } from '@vtt/engine/model/asks';
 import type { AskedParam } from '@vtt/engine/model/asks';
 import type { System, Compendium } from '@vtt/schema';
 
@@ -69,7 +69,7 @@ export function ActionForm({ system, compendium, actionId, label, disabled, onAc
           label={`${param.label ?? param.key}${param.ask.by === 'gm' ? ' · говорит ведущий' : ''}`}
           hint={param.ask.hint}
         >
-          {(param.ask.kind ?? 'number') === 'choice'
+          {askKindOf(param) === 'choice'
             ? (
               <Select
                 value={answers[param.key] ?? ''}
@@ -80,7 +80,7 @@ export function ActionForm({ system, compendium, actionId, label, disabled, onAc
             )
             : (
               <Input
-                type={(param.ask.kind ?? 'number') === 'number' ? 'number' : 'text'}
+                type={askKindOf(param) === 'number' ? 'number' : 'text'}
                 value={answers[param.key] ?? ''}
                 onChange={next => setAnswers(all => ({ ...all, [param.key]: next }))}
               />

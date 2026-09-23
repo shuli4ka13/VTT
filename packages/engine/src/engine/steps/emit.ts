@@ -1,4 +1,4 @@
-import { packRef, resolveRef, resolveOptionalNumber } from '../refs.ts';
+import { packRef, resolveRef } from '../refs.ts';
 import { applyValueModifiers } from '../modifiers.ts';
 import { eventTagOf } from '../targets.ts';
 import { requireCalled } from '../effects.ts';
@@ -41,16 +41,12 @@ export function traceLine(t: any, h: any) {
 export function pack(step: StepData, ctx: StepContext) {
   const id = String(step.event ?? '');
   requireCalled(ctx.system, id, who(ctx));
-  const tags = (Array.isArray(step.tags) ? step.tags : [])
-    .map((t: unknown) => (typeof t === 'string' ? t : packRef(t, ctx)));
   const args = step.args && typeof step.args === 'object'
     ? Object.fromEntries(Object.entries(step.args as Record<string, unknown>)
       .map(([key, ref]) => [key, packRef(ref, ctx)]))
     : undefined;
   return {
     event: id,
-    amount: step.amount === undefined ? null : packRef(step.amount, ctx),
-    tags,
     ...(args ? { args } : {}),
     ...(step.strict ? { strict: true } : {}),
     ...(step.to === 'sender' ? { to: 'sender' } : {}),
@@ -69,8 +65,8 @@ export function resolve(step: StepData, ctx: StepContext) {
   const main = amountParamOf(spec);
   const incoming = main && args[main.key] !== undefined
     ? number(args[main.key], `«${main.label ?? main.key}» вызова «${spec.label ?? id}»`)
-    : (resolveOptionalNumber(step.amount, ctx, 'величина общего эффекта') ?? 0);
-  const tags = [...new Set([...tagsOf(step.tags, ctx), ...chosenTags(spec, args)])];
+    : 0;
+  const tags = chosenTags(spec, args);
   const amount = Math.floor(Number(applyValueModifiers(incoming, eventTagOf(id), ctx.pass, { tags })));
   const payload = { event: id, amount, incoming, tags };
   if (main) args[main.key] = amount;
@@ -96,7 +92,7 @@ export function resolve(step: StepData, ctx: StepContext) {
 
 export function answerSteps(call: { event: string; args: Record<string, unknown> }): StepData[] {
   return [{
-    type, event: call.event, amount: null, tags: [],
+    type, event: call.event,
     args: Object.fromEntries(Object.entries(call.args).map(([key, value]) => [key, { const: value }])),
   } as StepData];
 }
@@ -111,16 +107,6 @@ function argsOf(raw: unknown, ctx: StepContext): Record<string, unknown> | undef
   return Object.keys(out).length ? out : undefined;
 }
 
-function tagsOf(raw: unknown, ctx: StepContext): string[] {
-  const out: string[] = [];
-  for (const item of Array.isArray(raw) ? raw : []) {
-    const value = typeof item === 'string' ? item : resolveRef(item, ctx);
-    if (value === null || value === undefined || value === '') continue;
-    if (Array.isArray(value)) out.push(...value.map(String));
-    else out.push(...String(value).split(',').map(s => s.trim()).filter(Boolean));
-  }
-  return [...new Set(out)];
-}
 
 const who = (ctx: StepContext): string => ctx.owner || 'правило';
 

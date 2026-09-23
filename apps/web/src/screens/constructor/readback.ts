@@ -1,6 +1,7 @@
 import { amountParamOf } from '@vtt/engine/model/lists';
 import type { System, Effect, Step, SystemConstant } from '@vtt/schema';
 import { labelOfTag } from '../../ui/formula.tsx';
+import { ownerOf } from '@vtt/engine/engine/owners';
 import { dice as diceText, asDice, DIE_LETTER } from '../../words.ts';
 
 export type Segment = { text: string } | { hole: string };
@@ -129,13 +130,13 @@ export function amountValueSegments(step: Step, system: System, effect: Effect, 
   return out;
 }
 
-function exprSegments(expr: string, amount: Step | null, system: System, effect: Effect, sender: string[] = [], names?: Names): Segment[] {
+function exprSegments(expr: string, amount: Step | null, system: System, effect: Effect, names?: Names): Segment[] {
   const id = String((amount as any)?.id ?? '');
   const out: Segment[] = [];
   let rest = expr.trim();
   if (!rest) return [hole('чем станет?')];
   for (;;) {
-    const m = rest.match(/[@#]([\p{L}\p{N}_]+)/u);
+    const m = rest.match(/[@#]([\p{L}\p{N}_.]+)/u);
     if (!m || m.index === undefined) break;
     const before = rest.slice(0, m.index).trim();
     if (before) out.push(seg(before));
@@ -143,10 +144,11 @@ function exprSegments(expr: string, amount: Step | null, system: System, effect:
       const inner = amountValueSegments(amount, system, effect, names);
       out.push(seg('('), ...inner, seg(')'));
     } else {
-      const known = system.fields.some(f => f.tag === m[1]);
-
-      const suffix = sender.includes(m[1]!) ? ' отправителя' : '';
-      out.push(known ? seg(`«${labelOfTag(system, m[1]!)}»${suffix}`) : hole(`${m[1]} — такого нет`));
+      const name = m[1]!;
+      const field = ownerOf(name)?.rest ?? name;
+      const label = names?.get(name)
+        ?? (system.fields.some(f => f.tag === field) ? labelOfTag(system, name) : null);
+      out.push(label ? seg(`«${label}»`) : hole(`${name} — такого нет`));
     }
     rest = rest.slice(m.index + m[0].length);
   }
@@ -174,9 +176,8 @@ export function changeReadback(step: Step, amount: Step | null, system: System, 
 
   const expr = s.value && typeof s.value === 'object' && 'expr' in s.value
     ? String(s.value.expr ?? '') : null;
-  const sender: string[] = expr !== null && Array.isArray(s.value.sender) ? s.value.sender : [];
   const what = expr !== null
-    ? exprSegments(expr, amount, system, effect, sender, names)
+    ? exprSegments(expr, amount, system, effect, names)
     : amount
       ? amountValueSegments(amount, system, effect, names)
       : [refSegment(s.value, system, effect, 'сколько?', names)];
@@ -193,7 +194,7 @@ export function sendReadback(step: Step, system: System, effect: Effect, names?:
   const name = id ? seg(`«${event?.label || id}»:`) : hole('какой эффект зовём?');
   const args = (s.args ?? {}) as Record<string, unknown>;
   const main = amountParamOf(event);
-  const sent = main ? args[main.key] : s.amount;
+  const sent = main ? args[main.key] : undefined;
   const amount = sent === undefined ? seg('без величины') : refSegment(sent, system, effect, 'сколько?', names);
   const word = (t: unknown): string => {
     if (typeof t === 'string') return t;
@@ -203,7 +204,7 @@ export function sendReadback(step: Step, system: System, effect: Effect, names?:
     return param ? String(param.label ?? param.key) : '…';
   };
   const chosen = (event?.params ?? []).filter(p => p.kind === 'choice' && args[p.key] !== undefined).map(p => word(args[p.key]));
-  const tags = [...chosen, ...(Array.isArray(s.tags) ? s.tags.map(word) : [])].filter(Boolean);
+  const tags = chosen.filter(Boolean);
   return [
     seg(s.to === 'sender' ? 'Отправитель в ответ получает' : 'Цель получает'), name, amount,
     ...(tags.length ? [seg(`[${tags.join(', ')}]`)] : []),

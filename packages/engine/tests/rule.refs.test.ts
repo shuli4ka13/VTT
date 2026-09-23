@@ -5,11 +5,10 @@ import { system, arven, compendium } from './fixtures.ts';
 
 const sender = () => ({
   pass: newPass(system, arven, { compendium }),
-  params: { bonus: '#attack_bonus', versus: 'ac', flat: 4 },
+  params: { bonus: '#attack_bonus', flat: 4 },
   paramDefs: [
-    { key: 'bonus', label: 'Бонус', kind: 'expr' },
-    { key: 'save', label: 'Чем спасается цель', kind: 'expr', of: 'target' },
-    { key: 'versus', label: 'Против чего', kind: 'tag' },
+    { key: 'bonus', label: 'Бонус', kind: 'number' },
+    { key: 'save', label: 'Чем спасается цель', kind: 'number' },
     { key: 'flat', label: 'Число', kind: 'number' },
   ],
   props: { damage_dice: '1d8', damage_flat: 3 },
@@ -38,22 +37,18 @@ group('структурные ссылки', () => {
       deepEq(packRef({ expr: '#str_mod * 2' }, sender()), { const: 6 });
     });
 
-    test('выражение цели проносится нетронутым — отправитель не считает за цель', () => {
-      deepEq(packRef({ expr: '#dex_save', of: 'target' }, sender()),
-        { expr: '#dex_save', of: 'target' });
+    test('выражение с полем получателя проносится нетронутым — отправитель не считает за цель', () => {
+      deepEq(packRef({ expr: '@получатель.dex_save' }, sender()),
+        { expr: '@получатель.dex_save', of: 'target' });
     });
 
-    test('параметр подставляется по объявлению правила: expr считается', () => {
+    test('вход-число, пришедший формулой, считается листом отправителя', () => {
       deepEq(packRef({ param: 'bonus' }, sender()), { const: 6 });
     });
 
-    test('параметр-выражение со стороной цели уезжает выражением', () => {
-      const ctx = { ...sender(), params: { save: '#dex_save' } };
-      deepEq(packRef({ param: 'save' }, ctx), { expr: '#dex_save', of: 'target' });
-    });
-
-    test('параметр-тег уезжает тегом: считать его будет получатель', () => {
-      deepEq(packRef({ param: 'versus' }, sender()), { tag: 'ac' });
+    test('вход-число с полем получателя в формуле уезжает выражением', () => {
+      const ctx = { ...sender(), params: { save: '@получатель.dex_save' } };
+      deepEq(packRef({ param: 'save' }, ctx), { expr: '@получатель.dex_save', of: 'target' });
     });
 
     test('параметр-число уезжает числом', () => {
@@ -126,7 +121,7 @@ group('структурные ссылки', () => {
     });
 
     test('выражение цели считается листом получателя', () => {
-      eq(resolveRef({ expr: '#dex_save', of: 'target' }, target()), 1);
+      eq(resolveRef({ expr: '@получатель.dex_save', of: 'target' }, target()), 1);
     });
 
     test('тег считается формулами получателя', () => {

@@ -365,6 +365,7 @@
 
 .need-fill {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--s-3);
   padding: var(--s-2) var(--s-3);
@@ -373,6 +374,7 @@
 .need-fill + .need-fill { border-top: 1px solid var(--border); }
 .need-fill--ok { border-left-color: var(--ok); }
 .need-fill .field { flex: 1; min-width: 0; }
+.need-fill__ways { flex-basis: 100%; }
 
 .dict-row {
   display: flex;

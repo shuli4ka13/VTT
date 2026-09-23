@@ -12,12 +12,12 @@ group('один путь вызова', () => {
     const looped = structuredClone(system) as System;
     looped.effects.damage = {
       label: 'Урон',
-      tags: ['рубящий'],
-      steps: [{ type: 'emit', event: 'damage', amount: { ref: 'event.amount' } }],
+      params: [{ key: 'amount', label: 'Сколько', kind: 'number', role: 'amount' }],
+      steps: [{ type: 'emit', event: 'damage', args: { amount: { ref: 'event.amount' } } }],
     } as unknown as Effect;
     looped.effects.echo = {
       label: 'Эхо', activation: 'manual',
-      steps: [{ type: 'emit', event: 'damage', amount: { const: 3 } }],
+      steps: [{ type: 'emit', event: 'damage', args: { amount: { const: 3 } } }],
     } as unknown as Effect;
     looped.records = { ...(looped.records ?? {}), shout: { kind: 'action', label: 'Крик', bindings: [{ label: 'Эхо', effect: 'echo', args: {} }] } } as never;
     const book = { ...compendium, actions: [...(compendium.actions ?? []), { id: 'shout', rk: 'shout', label: 'Крик', props: {} }] };

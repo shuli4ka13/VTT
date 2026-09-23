@@ -6,13 +6,14 @@ import type { System, Compendium } from '@vtt/schema';
 
 const system = {
   id: 'x', name: 'x',
+  tables: { места: { label: 'Места', key: 'word', rows: [{ value: 'тело', label: 'тело' }, { value: 'голова', label: 'голова' }] } },
   fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } }],
   effects: {
     выстрел: {
       label: 'Выстрел', activation: 'manual',
       params: [
-        { key: 'дистанция', label: 'Дистанция', kind: 'number', ask: { by: 'actor', kind: 'number', min: 1, max: 50 } },
-        { key: 'куда', label: 'Куда целишься', kind: 'number', ask: { by: 'gm', kind: 'choice', options: ['тело', 'голова'] } },
+        { key: 'дистанция', label: 'Дистанция', kind: 'number', ask: { by: 'actor', min: 1, max: 50 } },
+        { key: 'куда', label: 'Куда целишься', kind: 'choice', from: 'места', ask: { by: 'gm' } },
       ],
       steps: [],
     },

@@ -33,7 +33,7 @@ group('направление «задать» и сопротивления ц�
     const r = run([
       eight,
       { type: 'apply', target: { tag: 'hp_current' }, direction: 'set',
-        value: { expr: '#hp_current - #dmg', of: 'target' }, targetModifiers: true },
+        value: { expr: '@получатель.hp_current - #dmg' }, targetModifiers: true },
     ], stony);
     eq(r.sheet.values.hp_current, 18, '22 − floor(8 × 0.5) = 18, а не floor(14 × 0.5) = 7');
     eq(r.trace[1]!.incoming, 8);
@@ -53,7 +53,7 @@ group('направление «задать» и сопротивления ц�
     const r = run([
       eight,
       { type: 'apply', target: { tag: 'hp_current' }, direction: 'set',
-        value: { expr: '#hp_current - #dmg', of: 'target' }, targetModifiers: false },
+        value: { expr: '@получатель.hp_current - #dmg' }, targetModifiers: false },
     ], stony);
     eq(r.sheet.values.hp_current, 14);
   });

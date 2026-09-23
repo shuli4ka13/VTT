@@ -51,6 +51,50 @@
             }
           }
         ]
+      },
+      "damage_types": {
+        "label": "Тип урона",
+        "key": "word",
+        "rows": [
+          {
+            "value": "рубящий",
+            "label": "рубящий"
+          },
+          {
+            "value": "колющий",
+            "label": "колющий"
+          },
+          {
+            "value": "дробящий",
+            "label": "дробящий"
+          },
+          {
+            "value": "огонь",
+            "label": "огонь"
+          },
+          {
+            "value": "холод",
+            "label": "холод"
+          },
+          {
+            "value": "яд",
+            "label": "яд"
+          }
+        ]
+      },
+      "damage_source": {
+        "label": "Источник урона",
+        "key": "word",
+        "rows": [
+          {
+            "value": "немагический",
+            "label": "немагический"
+          },
+          {
+            "value": "магический",
+            "label": "магический"
+          }
+        ]
       }
     },
     "constants": {
@@ -135,14 +179,14 @@
           {
             "type": "emit",
             "event": "damage",
-            "amount": {
-              "ref": "dmg"
-            },
-            "tags": [
-              {
+            "args": {
+              "amount": {
+                "ref": "dmg"
+              },
+              "damage_type": {
                 "param": "damage_type"
               }
-            ]
+            }
           }
         ],
         "description": "Удар оружием: попадание против класса брони, урон костью оружия и модификатором Силы. На двадцатке кости урона удваиваются. Посчитанное уходит в общий эффект «Урон»."
@@ -157,8 +201,7 @@
           {
             "key": "save",
             "label": "Чем спасается цель",
-            "kind": "expr",
-            "of": "target"
+            "kind": "number"
           },
           {
             "key": "damage_dice",
@@ -206,14 +249,14 @@
           {
             "type": "emit",
             "event": "damage",
-            "amount": {
-              "ref": "dmg"
-            },
-            "tags": [
-              {
+            "args": {
+              "amount": {
+                "ref": "dmg"
+              },
+              "damage_type": {
                 "param": "damage_type"
               }
-            ]
+            }
           },
           {
             "type": "status",
@@ -324,13 +367,17 @@
           {
             "type": "emit",
             "event": "damage",
-            "amount": {
-              "ref": "dmg"
-            },
-            "tags": [
-              "огонь",
-              "магический"
-            ]
+            "args": {
+              "amount": {
+                "ref": "dmg"
+              },
+              "damage_type": {
+                "const": "огонь"
+              },
+              "damage_source": {
+                "const": "магический"
+              }
+            }
           }
         ]
       },
@@ -597,13 +644,17 @@
           {
             "type": "emit",
             "event": "damage",
-            "amount": {
-              "ref": "back"
-            },
-            "tags": [
-              "колющий",
-              "магический"
-            ]
+            "args": {
+              "amount": {
+                "ref": "back"
+              },
+              "damage_type": {
+                "const": "колющий"
+              },
+              "damage_source": {
+                "const": "магический"
+              }
+            }
           }
         ]
       },
@@ -661,8 +712,7 @@
           {
             "key": "save_by",
             "label": "Чем спасается цель",
-            "kind": "expr",
-            "of": "target"
+            "kind": "number"
           },
           {
             "key": "damage_dice",
@@ -712,15 +762,17 @@
           {
             "type": "emit",
             "event": "damage",
-            "amount": {
-              "ref": "dmg"
-            },
-            "tags": [
-              {
+            "args": {
+              "amount": {
+                "ref": "dmg"
+              },
+              "damage_type": {
                 "param": "damage_type"
               },
-              "магический"
-            ]
+              "damage_source": {
+                "const": "магический"
+              }
+            }
           }
         ]
       },
@@ -920,8 +972,7 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "#dex_save",
-                "of": "target"
+                "expr": "@получатель.dex_save"
               },
               "check": "save_roll"
             },
@@ -948,27 +999,22 @@
           {
             "type": "emit",
             "event": "damage",
-            "amount": {
-              "ref": "dmg"
-            },
-            "tags": [
-              "огонь",
-              "магический"
-            ]
+            "args": {
+              "amount": {
+                "ref": "dmg"
+              },
+              "damage_type": {
+                "const": "огонь"
+              },
+              "damage_source": {
+                "const": "магический"
+              }
+            }
           }
         ]
       },
       "damage": {
         "label": "Урон",
-        "tags": [
-          "рубящий",
-          "колющий",
-          "дробящий",
-          "огонь",
-          "холод",
-          "яд",
-          "магический"
-        ],
         "steps": [
           {
             "id": "по_временным",
@@ -992,6 +1038,28 @@
               "ref": "по_временным.overkill"
             },
             "targetModifiers": false
+          }
+        ],
+        "params": [
+          {
+            "key": "amount",
+            "label": "Сколько урона",
+            "kind": "number",
+            "role": "amount"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "choice",
+            "from": "damage_types",
+            "optional": true
+          },
+          {
+            "key": "damage_source",
+            "label": "Источник урона",
+            "kind": "choice",
+            "from": "damage_source",
+            "optional": true
           }
         ]
       }
@@ -2159,7 +2227,7 @@
         "description": "Заговор. Цель делает спасбросок Ловкости; при провале — урон и отравление.",
         "props": {
           "damage_dice": "2d6",
-          "save_by": "#dex_save",
+          "save_by": "@получатель.dex_save",
           "status": "poisoned",
           "damage_type": "яд"
         }
@@ -2200,7 +2268,7 @@
         "label": "Огненный шар",
         "description": "Взрыв по области: спасбросок Ловкости, при успехе — половина урона.",
         "props": {
-          "save_by": "#dex_save",
+          "save_by": "@получатель.dex_save",
           "damage_dice": "6d6",
           "damage_type": "огонь"
         }

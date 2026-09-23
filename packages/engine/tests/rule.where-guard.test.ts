@@ -12,7 +12,10 @@ const withProbe = (tags: string[]) => {
   const system = мир.system as System;
   system.effects.проба = {
     label: 'Проба', activation: 'manual',
-    steps: [{ type: 'emit', event: 'damage', amount: { const: 10 }, tags }],
+    steps: [{ type: 'emit', event: 'damage', args: {
+      amount: { const: 10 },
+      ...Object.fromEntries(tags.map(tag => [tag.startsWith('по ') ? 'aim' : 'damage_type', { const: tag }])),
+    } }],
   } as never;
   system.records = { ...system.records, проба: { kind: 'action', label: 'Проба' } } as never;
   const book = { items: [], actions: [{ id: 'проба', rk: 'проба', label: 'Проба', effect: 'проба' }] };

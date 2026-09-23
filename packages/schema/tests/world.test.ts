@@ -180,7 +180,7 @@ describe('ссылки слотов не теряются при разборе'
       { const: '1d6' },
       { const: null },
       { expr: '#str_mod' },
-      { expr: '#dex_save', of: 'target' as const },
+      { expr: '@получатель.dex_save' },
       { tag: 'hp_current' },
       { param: 'save' },
       { prop: 'damage_dice' },

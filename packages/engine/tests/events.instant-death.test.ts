@@ -21,7 +21,7 @@ const sys: any = {
       trigger: { on: 'удар', to: 'self' },
       steps: [
 
-        { type: 'compare', value: { ref: 'рана.overkill' }, versus: { expr: '#хп_макс', of: 'target' }, breakIf: 'less' },
+        { type: 'compare', value: { ref: 'рана.overkill' }, versus: { expr: '@получатель.хп_макс' }, breakIf: 'less' },
         { type: 'status', mode: 'apply', effect: { const: 'мёртв' } },
       ],
     },

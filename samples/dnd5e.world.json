@@ -3371,21 +3371,21 @@
     },
     "effects": {
       "strike": {
-        "label": "Атака оружием",
+        "label": "Атака",
         "group": "Атака",
-        "description": "Бросок атаки против класса брони, урон костью оружия. На крите кости урона удваиваются. Посчитанное уходит в общий эффект «Урон».",
+        "description": "Бросок атаки против класса брони, урон костью. На крите кости урона удваиваются. Бонус атаки и прибавку к урону приносит тот, кто зовёт: оружие считает их по листу, существо вписывает числами. Посчитанное уходит в общий эффект «Урон».",
         "activation": "manual",
         "cost": "attack",
         "params": [
           {
             "key": "attack_with",
             "label": "Бонус атаки",
-            "kind": "expr"
+            "kind": "number"
           },
           {
             "key": "damage_with",
             "label": "Прибавка к урону",
-            "kind": "expr"
+            "kind": "number"
           },
           {
             "key": "damage_dice",
@@ -3442,77 +3442,6 @@
               },
               "damage_source": {
                 "param": "damage_source"
-              }
-            }
-          }
-        ]
-      },
-      "monster_attack": {
-        "label": "Атака существа",
-        "group": "Атака",
-        "description": "Для статблоков: бонус атаки и прибавка к урону вписаны числами прямо в запись.",
-        "activation": "manual",
-        "cost": "action",
-        "params": [
-          {
-            "key": "to_hit",
-            "label": "Бонус атаки",
-            "kind": "number"
-          },
-          {
-            "key": "damage_dice",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "damage_bonus",
-            "label": "Прибавка к урону",
-            "kind": "number"
-          },
-          {
-            "key": "damage_type",
-            "label": "Тип урона",
-            "kind": "choice",
-            "from": "damage_types"
-          }
-        ],
-        "steps": [
-          {
-            "id": "hit",
-            "type": "threshold",
-            "roll": {
-              "die": {
-                "constant": "lead_die"
-              },
-              "bonus": {
-                "param": "to_hit"
-              },
-              "check": "attack_roll"
-            },
-            "versus": {
-              "tag": "ac"
-            }
-          },
-          {
-            "id": "dmg",
-            "type": "amount",
-            "source": "item",
-            "fixed": {
-              "expr": "кинуть(@damage_dice, (@hit.natural >= 20 ? 2 : 1)) + @damage_bonus"
-            }
-          },
-          {
-            "type": "emit",
-            "event": "damage",
-            "args": {
-              "amount": {
-                "ref": "dmg"
-              },
-              "damage_type": {
-                "param": "damage_type"
-              },
-              "damage_source": {
-                "const": "немагический"
               }
             }
           }
@@ -3607,7 +3536,6 @@
             "kind": "number",
             "ask": {
               "by": "actor",
-              "kind": "number",
               "min": 1,
               "max": 9,
               "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
@@ -3849,7 +3777,6 @@
             "kind": "number",
             "ask": {
               "by": "actor",
-              "kind": "number",
               "min": 1,
               "max": 9,
               "hint": "Круг ячейки, которую тратишь. Не ниже круга заклинания."
@@ -3951,7 +3878,7 @@
           {
             "key": "save_by",
             "label": "Бонус спасброска",
-            "kind": "expr"
+            "kind": "number"
           },
           {
             "key": "damage_die",
@@ -4127,7 +4054,7 @@
           {
             "key": "save_by",
             "label": "Бонус спасброска",
-            "kind": "expr"
+            "kind": "number"
           },
           {
             "key": "damage_die",
@@ -4213,7 +4140,7 @@
           {
             "key": "save_by",
             "label": "Бонус спасброска",
-            "kind": "expr"
+            "kind": "number"
           },
           {
             "key": "damage_die",
@@ -4367,7 +4294,7 @@
           {
             "key": "save_by",
             "label": "Бонус спасброска",
-            "kind": "expr"
+            "kind": "number"
           },
           {
             "key": "status",
@@ -4434,7 +4361,7 @@
           {
             "key": "save_by",
             "label": "Бонус спасброска",
-            "kind": "expr"
+            "kind": "number"
           },
           {
             "key": "status",
@@ -4871,7 +4798,6 @@
             "kind": "number",
             "ask": {
               "by": "actor",
-              "kind": "number",
               "min": 1,
               "max": 100,
               "hint": "Не больше, чем осталось в запасе."
@@ -8934,7 +8860,7 @@
         "label": "Атака существа",
         "icon": "🐺",
         "group": "Бестиарий",
-        "hint": "Для НПС: бонус атаки и прибавка к урону вписаны числами.",
+        "hint": "Для НПС: бонус атаки и прибавка к урону вписаны числами — та же «Атака», что и у оружия.",
         "props": [
           {
             "key": "to_hit",
@@ -8961,19 +8887,22 @@
         "bindings": [
           {
             "label": "Атаковать",
-            "effect": "monster_attack",
+            "effect": "strike",
             "args": {
-              "to_hit": {
+              "attack_with": {
                 "prop": "to_hit"
+              },
+              "damage_with": {
+                "prop": "damage_bonus"
               },
               "damage_dice": {
                 "prop": "damage_dice"
               },
-              "damage_bonus": {
-                "prop": "damage_bonus"
-              },
               "damage_type": {
                 "prop": "damage_type"
+              },
+              "damage_source": {
+                "const": "немагический"
               }
             }
           }

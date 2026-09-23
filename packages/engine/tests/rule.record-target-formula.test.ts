@@ -12,9 +12,9 @@ const sys: any = {
 };
 
 const spell: any = {
-  params: [{ key: 'порог', label: 'Порог', kind: 'expr', of: 'target' }],
+  params: [{ key: 'порог', label: 'Порог', kind: 'number' }],
   steps: [
-    { type: 'compare', value: { param: 'порог' }, versus: { expr: '#хп', of: 'target' }, breakIf: 'less' },
+    { type: 'compare', value: { param: 'порог' }, versus: { expr: '@получатель.хп' }, breakIf: 'less' },
     { type: 'apply', target: { tag: 'хп' }, direction: 'set', value: { const: 0 } },
   ],
 };
@@ -45,20 +45,20 @@ group('формула из записи листом цели', () => {
   });
 
   test('«Слово отчаяния»: порог — половина максимума САМОЙ жертвы', () => {
-    eq(cast('#хп_макс / 2', 40, 100).sheet.values.хп, 0, '40 ≤ 50: считался ЕЁ максимум, не магов');
+    eq(cast('@получатель.хп_макс / 2', 40, 100).sheet.values.хп, 0, '40 ≤ 50: считался ЕЁ максимум, не магов');
   });
 
   test('та же запись, жертва здоровее половины — жива', () => {
-    eq(cast('#хп_макс / 2', 60, 100).sheet.values.хп, 60);
+    eq(cast('@получатель.хп_макс / 2', 60, 100).sheet.values.хп, 60);
   });
 
   test('конверт не несёт ни одного числа жертвы — сторона цели уезжает текстом', () => {
     const packed = packRule(spell, {
-      system: sys, sheet: маг, params: { порог: '#хп_макс / 2' }, item: null,
+      system: sys, sheet: маг, params: { порог: '@получатель.хп_макс / 2' }, item: null,
       die: () => 1, pass: newPass(sys, маг, { compendium: { items: [] } }),
     } as any);
     const text = JSON.stringify(packed);
-    eq(text.includes('"expr":"#хп_макс / 2"'), true, 'формула в конверте — текстом');
+    eq(text.includes('"expr":"@получатель.хп_макс / 2"'), true, 'формула в конверте — текстом');
     eq(text.includes('10'), false, 'посчитанного магом порога в конверте нет');
   });
 });

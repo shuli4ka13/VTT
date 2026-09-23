@@ -345,12 +345,12 @@
           {
             "key": "attack_with",
             "label": "Бонус атаки",
-            "kind": "expr"
+            "kind": "number"
           },
           {
             "key": "damage_with",
             "label": "Прибавка к урону",
-            "kind": "expr"
+            "kind": "number"
           }
         ],
         "steps": [

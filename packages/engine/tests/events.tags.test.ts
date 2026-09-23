@@ -14,11 +14,18 @@ const queue = (...values: number[]) => {
 const passive = (label: string, modifiers: unknown[]) =>
   ({ label, activation: 'passive', duration: { kind: 'temporary' }, modifiers });
 
-const strike = (id: string, label: string, amount: number, tags: unknown[]) => ({
+const SOURCES = ['магический'];
+
+const damageArgs = (amount: unknown, tags: string[]) => ({
+  сколько: amount,
+  ...Object.fromEntries(tags.map(tag => [SOURCES.includes(tag) ? 'источник' : 'тип', { const: tag }])),
+});
+
+const strike = (id: string, label: string, amount: number, tags: string[]) => ({
   label, activation: 'manual',
   steps: [
     { id: 'n', type: 'amount', source: 'item', fixed: { const: amount } },
-    { type: 'emit', event: 'урон', amount: { ref: 'n' }, tags },
+    { type: 'emit', event: 'урон', args: damageArgs({ ref: 'n' }, tags) },
   ],
 });
 
@@ -31,9 +38,21 @@ const world = (extraEffects: Record<string, unknown> = {}, receive: unknown[] | 
     удар: strike('удар', 'Удар', 8, ['рубящий']),
     огонь: strike('огонь', 'Огненный шар', 8, ['огонь', 'магический']),
     сигнал: { label: 'Тревога', activation: 'manual', steps: [{ type: 'emit', event: 'тревога' }] },
-    урон: { label: 'Урон', tags: ['рубящий', 'огонь', 'магический'], ...(receive ? { steps: receive } : {}) },
-    тревога: { label: 'Тревога', tags: ['сигнал'] },
+    урон: {
+      label: 'Урон',
+      params: [
+        { key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' },
+        { key: 'тип', label: 'Тип', kind: 'choice', from: 'типы', optional: true },
+        { key: 'источник', label: 'Источник', kind: 'choice', from: 'источники', optional: true },
+      ],
+      ...(receive ? { steps: receive } : {}),
+    },
+    тревога: { label: 'Тревога' },
     ...extraEffects,
+  },
+  tables: {
+    типы: { label: 'Типы', key: 'word', rows: ['рубящий', 'колющий', 'огонь'].map(value => ({ value, label: value })) },
+    источники: { label: 'Источники', key: 'word', rows: [{ value: 'магический', label: 'магический' }] },
   },
   records: { приём: { kind: 'action', label: 'Приём' } },
 });
@@ -128,7 +147,7 @@ group('реакции слушают слово, а не имя эффекта',
     шипы: {
       label: 'Шипы', activation: 'triggered', duration: { kind: 'permanent' },
       trigger: { on: 'event:урон', condition: null },
-      steps: [{ type: 'emit', event: 'урон', amount: { ref: 'event.amount' }, tags: ['колющий'] }],
+      steps: [{ type: 'emit', event: 'урон', args: damageArgs({ ref: 'event.amount' }, ['колющий']) }],
     },
     сторож: {
       label: 'Сторож', activation: 'triggered', duration: { kind: 'permanent' },
@@ -145,7 +164,7 @@ group('реакции слушают слово, а не имя эффекта',
 
   test('ответка несёт величину вызова константой: отправитель не знает чужих результатов', () => {
     const out = hit(spiky, 'удар', foe(['шипы']));
-    deepEq(out.replies[0]!.steps[0]!.amount, { const: 8 });
+    deepEq(out.replies[0]!.steps[0]!.args.сколько, { const: 8 });
   });
 
   test('ход целиком: шипы возвращают полученное', () => {

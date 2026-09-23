@@ -1,62 +1,62 @@
 import { kindsFor } from '@vtt/engine/words/kinds';
 import { choiceTables } from '@vtt/engine/model/tables';
+import { ASKABLE } from '@vtt/engine/model/asks';
 import { freeId } from '../../../store/world.ts';
 import { Card, CardHead, Input, Select, Button, Empty } from '../../../ui/primitives.tsx';
-import type { Effect, System } from '@vtt/schema';
+import type { Effect, Param, System } from '@vtt/schema';
 
 const PARAM_KINDS = kindsFor('param');
 
-
 const KIND_NOTE: Record<string, string> = {
-  expr: 'чьи поля — видно по именам в формуле',
-  dice: 'бросает отправитель',
-  tag: 'поле получателя',
+  number: 'можно числом или формулой — она считается там, чьи поля в ней',
+  dice: 'бросает тот, кто считает шаг',
+  text: 'слово как есть',
+  effect: 'какой эффект повесить или снять',
 };
 
 const MAIN_HINT = 'главное число — его правят сопротивления и уязвимости цели';
 
-export function ParamsEditor({ effect, system, onEdit, called = false }: {
+const ASK_OPTIONS = [
+  ['', 'нет — обязан передать тот, кто вызывает'],
+  ['actor', 'спросить игрока'],
+  ['gm', 'спросить ведущего'],
+] as const;
+
+type Loose = Param & { role?: string; optional?: boolean };
+
+export function ParamsEditor({ effect, system, onEdit }: {
   effect: Effect;
   system: System;
   onEdit: (change: (draft: Effect) => void) => void;
-  called?: boolean;
 }) {
   const params = effect.params ?? [];
-  const addWord = '+ вход';
+  const change = (key: string, fn: (target: Loose) => void) => onEdit(draft => {
+    const target = draft.params?.find(p => p.key === key) as Loose | undefined;
+    if (target) fn(target);
+  });
   const addParam = () => onEdit(draft => {
     draft.params ??= [];
-    const key = freeId(draft.params.map(p => p.key), called ? 'вход' : 'из_записи');
-    draft.params.push(called
-      ? { key, label: 'Новый вход', kind: 'choice' }
-      : { key, label: 'Новый вход', kind: 'expr' });
+    draft.params.push({ key: freeId(draft.params.map(p => p.key), 'вход'), label: 'Новый вход', kind: 'number' });
   });
   const setMain = (key: string, on: boolean) => onEdit(draft => {
-    for (const p of draft.params ?? []) {
-      const loose = p as { role?: string; key: string };
-      if (loose.key === key && on) loose.role = 'amount';
-      else if (loose.key === key || on) delete loose.role;
+    for (const p of (draft.params ?? []) as Loose[]) {
+      if (p.key === key && on) p.role = 'amount';
+      else if (p.key === key || on) delete p.role;
     }
-  });
-  const setOptional = (key: string, on: boolean) => onEdit(draft => {
-    const target = draft.params?.find(p => p.key === key) as { optional?: boolean } | undefined;
-    if (!target) return;
-    if (on) target.optional = true; else delete target.optional;
   });
 
   return (
     <Card>
       <CardHead title="Что приходит" />
       <p className="faint">
-        Входы эффекта — как параметры функции. В шагах их берут через @.
-        {called ? ' Вход «из таблицы» — ещё и метка: по ней правки цели узнают, что пришло, например тип урона.' : ''}
+        Входы эффекта — как параметры функции: то, что у каждого вызова своё (кость меча, тип урона, дистанция).
+        Поля листов объявлять не нужно — они пишутся прямо в шагах: @отправитель.…, @получатель.…, @стол.…
       </p>
       {params.length === 0 ? (
         <Empty
           title="Входов нет"
-          hint={called
-            ? 'Заведите число, которое приходит, и выборы из таблиц — например «Тип урона».'
-            : 'Значения шагов можно вписать прямо в шаги. Вход нужен, когда значение у каждой записи своё: кость меча, тип урона.'}
-          action={<Button size="sm" onClick={addParam}>{addWord}</Button>}
+          hint="Всё, что лежит на листах и на столе, эффект читает сам. Вход нужен, когда значение приносит тот, кто вызывает, или его говорят за столом."
+          action={<Button size="sm" onClick={addParam}>+ вход</Button>}
         />
       ) : (
         <div className="stack stack--tight">
@@ -66,49 +66,40 @@ export function ParamsEditor({ effect, system, onEdit, called = false }: {
             <span className="field__label" />
             <span aria-hidden />
           </div>
-          {params.map(param => (
-            <div key={param.key} className="need">
-              <Input
-                value={param.label ?? ''}
-                onChange={next => onEdit(draft => {
-                  const target = draft.params?.find(p => p.key === param.key);
-                  if (target) target.label = next;
-                })}
-              />
-              <Select
-                value={String(param.kind ?? 'expr')}
-                options={PARAM_KINDS}
-                onChange={next => onEdit(draft => {
-                  const target = draft.params?.find(p => p.key === param.key);
-                  if (target) target.kind = next;
-                })}
-              />
-              {String(param.kind) === 'choice' ? (
+          {(params as Loose[]).map(param => {
+            const kind = String(param.kind ?? 'number');
+            return (
+              <div key={param.key} className="need">
+                <Input value={param.label ?? ''} onChange={next => change(param.key, t => { t.label = next; })} />
                 <Select
-                  value={String(param.from ?? '')}
-                  options={[['', '— какая таблица —'],
-                    ...choiceTables(system)
-                      .map(([key, list]) => [key, list.label || key] as const)] as never}
-                  onChange={next => onEdit(draft => {
-                    const target = draft.params?.find(p => p.key === param.key);
-                    if (!target) return;
-                    if (next) target.from = next; else delete target.from;
+                  value={kind}
+                  options={PARAM_KINDS}
+                  onChange={next => change(param.key, t => {
+                    t.kind = next;
+                    if (next !== 'number') delete t.role;
+                    if (!(ASKABLE as readonly string[]).includes(next)) delete t.ask;
                   })}
                 />
-              ) : (
-                <span className="faint">{KIND_NOTE[String(param.kind ?? 'expr')] ?? ''}</span>
-              )}
-              <Button size="sm" variant="danger" onClick={() => onEdit(draft => {
-                draft.params = (draft.params ?? []).filter(p => p.key !== param.key);
-              })}>
-                Убрать
-              </Button>
-              {(
+                {kind === 'choice' ? (
+                  <Select
+                    value={String(param.from ?? '')}
+                    options={[['', '— какая таблица —'],
+                      ...choiceTables(system).map(([key, list]) => [key, list.label || key] as const)] as never}
+                    onChange={next => change(param.key, t => { if (next) t.from = next; else delete t.from; })}
+                  />
+                ) : (
+                  <span className="faint">{KIND_NOTE[kind] ?? ''}</span>
+                )}
+                <Button size="sm" variant="danger" onClick={() => onEdit(draft => {
+                  draft.params = (draft.params ?? []).filter(p => p.key !== param.key);
+                })}>
+                  Убрать
+                </Button>
                 <div className="need__extra">
-                  {called && ['number', 'expr'].includes(String(param.kind ?? 'expr')) ? (
+                  {kind === 'number' ? (
                     <label className="inline inline--tight" title={MAIN_HINT}>
                       <input
-                        type="checkbox" checked={(param as { role?: string }).role === 'amount'}
+                        type="checkbox" checked={param.role === 'amount'}
                         onChange={e => setMain(param.key, e.target.checked)}
                       />
                       <span>{MAIN_HINT}</span>
@@ -116,19 +107,42 @@ export function ParamsEditor({ effect, system, onEdit, called = false }: {
                   ) : null}
                   <label className="inline inline--tight">
                     <input
-                      type="checkbox" checked={!(param as { optional?: boolean }).optional}
-                      onChange={e => setOptional(param.key, !e.target.checked)}
+                      type="checkbox" checked={!param.optional}
+                      onChange={e => change(param.key, t => { if (e.target.checked) delete t.optional; else t.optional = true; })}
                     />
                     <span>обязателен</span>
                   </label>
+                  {(ASKABLE as readonly string[]).includes(kind) ? (
+                    <label className="inline inline--tight">
+                      <span className="faint">если не передали:</span>
+                      <Select
+                        value={param.ask?.by ?? (param.ask ? 'actor' : '')}
+                        options={ASK_OPTIONS}
+                        onChange={next => change(param.key, t => {
+                          if (next) t.ask = { ...(t.ask ?? {}), by: next };
+                          else delete t.ask;
+                        })}
+                      />
+                    </label>
+                  ) : null}
+                  {param.ask ? (
+                    <Input
+                      value={param.ask.hint ?? ''}
+                      placeholder="что подсказать за столом"
+                      onChange={next => change(param.key, t => {
+                        if (!t.ask) return;
+                        if (next) t.ask.hint = next; else delete t.ask.hint;
+                      })}
+                    />
+                  ) : null}
                 </div>
-              )}
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
       )}
 
-      {params.length ? <Button size="sm" onClick={addParam}>{addWord}</Button> : null}
+      {params.length ? <Button size="sm" onClick={addParam}>+ вход</Button> : null}
     </Card>
   );
 }

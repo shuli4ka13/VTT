@@ -19,14 +19,17 @@ export function asksOf(actionId: string, { system, compendium }: { system: Syste
     .map(param => ({ ...param, effect: action.effect, effectLabel: effect.label ?? action.effect }));
 }
 
-export function choicesOf(system: System, param: Param & { ask?: Ask }): string[] {
-  const list = listOf(system, param.from);
-  if (list?.length) return list.map(option => String(option.value));
-  return param.ask?.options ?? [];
+export const ASKABLE = ['number', 'choice', 'text'] as const;
+
+export const askKindOf = (param: Param): 'number' | 'choice' | 'text' =>
+  (param.kind === 'choice' || param.kind === 'text' ? param.kind : 'number');
+
+export function choicesOf(system: System, param: Param): string[] {
+  return (listOf(system, param.from) ?? []).map(option => String(option.value));
 }
 
 export function checkInputs(
-  asked: AskedParam[], inputs: Record<string, number | string> | undefined, system?: System,
+  asked: AskedParam[], inputs: Record<string, number | string> | undefined, system: System,
 ): string | null {
   const given = inputs ?? {};
   for (const key of Object.keys(given)) {
@@ -36,7 +39,7 @@ export function checkInputs(
     const value = given[param.key];
     const name = param.label ?? param.key;
     if (value === undefined || value === '') return `не заполнено: ${name}`;
-    const kind = param.ask.kind ?? 'number';
+    const kind = askKindOf(param);
     if (kind === 'number') {
       const number = Number(value);
       if (!Number.isFinite(number)) return `${name}: нужно число, а пришло «${value}»`;
@@ -44,7 +47,7 @@ export function checkInputs(
       if (param.ask.max !== undefined && number > param.ask.max) return `${name}: не больше ${param.ask.max}`;
     }
     if (kind === 'choice') {
-      const options = system ? choicesOf(system, param) : (param.ask.options ?? []);
+      const options = choicesOf(system, param);
       if (!options.includes(String(value))) {
         return `${name}: можно только ${options.map((option: string) => `«${option}»`).join(', ') || '(список пуст)'}`;
       }
@@ -60,7 +63,7 @@ export const normalizeInputs = (
   for (const param of asked) {
     const value = (inputs ?? {})[param.key];
     if (value === undefined) continue;
-    out[param.key] = (param.ask.kind ?? 'number') === 'number' ? Number(value) : String(value);
+    out[param.key] = askKindOf(param) === 'number' ? Number(value) : String(value);
   }
   return out;
 };

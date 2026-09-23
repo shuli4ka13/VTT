@@ -93,7 +93,7 @@ group('ветвление по исходу: стражи на шагах', () =
   test('страж-формула цели считается её листом', () => {
     const steps = [
       { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { const: 5 },
-        when: { expr: '#уровень >= 5', of: 'target' } },
+        when: { expr: '@получатель.уровень >= 5' } },
     ];
     eq(play(steps).sheet.values.хп, 20, 'у цели третий уровень — шаг пропущен');
   });

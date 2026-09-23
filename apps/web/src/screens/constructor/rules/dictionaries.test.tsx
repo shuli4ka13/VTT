@@ -463,7 +463,7 @@ describe('Тоглы: крит и броня пишутся данными', () 
           { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
           { tag: 'броня', label: 'Броня', value: { kind: 'stored', type: 'number', default: 5 } },
         ],
-        effects: { урон: { label: 'Урон', tags: ['рубящий'], steps: [] } },
+        effects: { урон: { label: 'Урон', params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }], steps: [] } },
       },
       activeEffectId: null,
     }));

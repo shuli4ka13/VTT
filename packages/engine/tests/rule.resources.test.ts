@@ -19,6 +19,7 @@ const system = {
   effects: {
     ячейка: {
       label: 'Ячейка заклинания',
+      params: [{ key: 'круг', label: 'Круг', kind: 'number', role: 'amount' }],
       steps: [
         { id: 'есть_1', type: 'compare', value: { tag: 'ячейки_1' }, versus: { const: 1 }, breakIf: 'less', when: { ref: 'event.amount', is: 1 } },
         { type: 'apply', target: { tag: 'ячейки_1' }, direction: 'subtract', value: { const: 1 }, when: { ref: 'event.amount', is: 1 } },
@@ -28,8 +29,8 @@ const system = {
     },
     стрела: {
       label: 'Волшебная стрела', activation: 'manual', cost: 'действие',
-      params: [{ key: 'круг', label: 'Каким кругом', kind: 'number', ask: { by: 'actor', kind: 'number', min: 1, max: 2 } }],
-      self: [{ type: 'emit', event: 'ячейка', amount: { param: 'круг' }, strict: true }],
+      params: [{ key: 'круг', label: 'Каким кругом', kind: 'number', ask: { by: 'actor', min: 1, max: 2 } }],
+      self: [{ type: 'emit', event: 'ячейка', args: { круг: { param: 'круг' } }, strict: true }],
       steps: [
         { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d4' }, count: { expr: '2 + #круг' }, bonus: { expr: '2 + #круг' } },
         { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { ref: 'урон' } },
@@ -44,7 +45,7 @@ const system = {
     },
     сон: {
       label: 'Долгий отдых: ячейки', activation: 'triggered', trigger: { on: 'moment:long-rest' },
-      steps: [{ type: 'apply', target: { tag: 'ячейки_1' }, direction: 'set', value: { expr: '#ячейки_1_всего', of: 'target' } }],
+      steps: [{ type: 'apply', target: { tag: 'ячейки_1' }, direction: 'set', value: { expr: '@получатель.ячейки_1_всего' } }],
     },
   },
   room_rules: ['сон'],
@@ -150,11 +151,11 @@ group('бросок отвечает нескольким мишеням', () =>
       опутан: { label: 'Опутан', activation: 'passive', modifiers: [{ kind: 'roll', target: 'check:спас_лов', edit: 'помеха', condition: null }] },
       шар: {
         label: 'Шар', activation: 'manual',
-        params: [{ key: 'чем', label: 'Чем спасаются', kind: 'expr', of: 'target' }],
+        params: [{ key: 'чем', label: 'Чем спасаются', kind: 'number' }],
         steps: [{ id: 'спас', type: 'threshold', side: 'target', roll: { die: { constant: 'к20' }, bonus: { param: 'чем' }, check: 'спас' }, versus: { const: 12 }, continueOn: 'always' }],
       },
     },
-    records: { чары: { kind: 'action', label: 'Чары', props: [], bindings: [{ label: 'Шар', effect: 'шар', args: { чем: '#спас_лов' } }] } },
+    records: { чары: { kind: 'action', label: 'Чары', props: [], bindings: [{ label: 'Шар', effect: 'шар', args: { чем: '@получатель.спас_лов' } }] } },
   } as unknown as System;
   const spells = { items: [], actions: [{ id: 'шар', rk: 'чары', label: 'Шар', props: {} }] } as unknown as Compendium;
   const who = (id: string, worn: string[] = []): Sheet => ({

@@ -285,7 +285,7 @@
           {
             "key": "rating",
             "label": "Рейтинг действия",
-            "kind": "expr"
+            "kind": "number"
           }
         ],
         "steps": [

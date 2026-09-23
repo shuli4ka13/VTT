@@ -5,9 +5,6 @@ import { ModifiersEditor } from '../modifiers.tsx';
 import { LAUNCH_KINDS, launchHint } from './words.ts';
 import { LaunchCard } from './launch-card.tsx';
 import { Chain, type Lane } from './chain.tsx';
-import { WordList } from '../word-list.tsx';
-import { amountParamOf } from '@vtt/engine/model/lists';
-import { calledOf } from '@vtt/engine/engine/effects';
 import { BlockPick } from '../block-pick.tsx';
 import { Extras } from './cards/extras.tsx';
 import { ParamsEditor } from './params-editor.tsx';
@@ -46,9 +43,6 @@ const fromBase = (base: Effect): string => {
     ? `От основы «${base.label ?? ''}» достаётся — ${parts.join(', ')}.`
     : `Основа «${base.label ?? ''}» пока ничего не даёт.`;
 };
-
-const isCalledEffect = (system: System, effect: Effect): boolean =>
-  !!amountParamOf(effect) || !!effect.tags?.length || calledOf(system).some(([, other]) => other === effect);
 
 export function EffectEditor({ id, effect, system }: { id: string; effect: Effect; system: System }) {
   const editSystem = useWorld(s => s.editSystem);
@@ -134,23 +128,6 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
                 </Field>
               ),
             },
-            ...(effect.tags?.length ? [{
-              key: 'tags', label: 'свои метки', on: true,
-              add: () => {}, drop: () => edit(draft => { delete draft.tags; }),
-              node: (
-                <Field
-                  label="Свои метки"
-                  hint="Слова без таблицы. Надёжнее завести таблицу и вход-выбор из неё в «Что приходит»."
-                >
-                  <WordList
-                    value={effect.tags ?? []} known={knownTags(system)} placeholder="новая метка"
-                    onChange={next => edit(draft => {
-                      if (next.length) draft.tags = next; else delete draft.tags;
-                    })}
-                  />
-                </Field>
-              ),
-            }] : []),
             ...(launch.kind === 'manual' || launch.ask ? [{
               key: 'cost', label: 'занимает', on: !!effect.cost,
               add: () => {}, drop: () => edit(draft => { delete draft.cost; }),
@@ -200,7 +177,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
 
       {launch.kind === 'auto' ? <LaunchCard id={id} effect={effect} system={system} edit={edit} /> : null}
 
-      {pipeline ? <ParamsEditor effect={effect} system={system} onEdit={edit} called={isCalledEffect(system, effect)} /> : null}
+      {pipeline ? <ParamsEditor effect={effect} system={system} onEdit={edit} /> : null}
 
       {pipeline ? (
         <>
@@ -222,10 +199,6 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
     </>
   );
 }
-
-const knownTags = (system: System): string[] => [...new Set(
-  Object.values(system.effects).flatMap(effect => effect.tags ?? []),
-)];
 
 const idleWords = (effect: Effect): string => {
   const also: string[] = [];

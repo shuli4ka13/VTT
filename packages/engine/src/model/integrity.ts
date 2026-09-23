@@ -39,16 +39,28 @@ function modifierLists(system: System): { where: Where; modifiers: Loose[] }[] {
   return out;
 }
 
-function tagSteps(system: System): { where: Where; step: Loose; tags: unknown[] }[] {
-  const out: { where: Where; step: Loose; tags: unknown[] }[] = [];
+function choiceArgs(system: System, table: string): { where: Where; args: Loose; key: string }[] {
+  const out: { where: Where; args: Loose; key: string }[] = [];
+  const takes = (effectId: unknown, key: string): boolean =>
+    (system.effects[String(effectId)]?.params ?? []).some(p => p.key === key && p.kind === 'choice' && p.from === table);
+  const collect = (where: Where, effectId: unknown, args: unknown) => {
+    if (!args || typeof args !== 'object') return;
+    for (const key of Object.keys(args)) if (takes(effectId, key)) out.push({ where, args: args as Loose, key });
+  };
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
     for (const [at, step] of [...(effect.steps ?? []), ...(effect.self ?? [])].entries()) {
       const s = step as unknown as Loose;
-      if (s.type === 'emit' && Array.isArray(s.tags)) out.push({ where: { tab: 'effects', effect: id, step: at }, step: s, tags: s.tags });
+      if (s.type === 'emit') collect({ tab: 'effects', effect: id, step: at }, s.event, s.args);
     }
+  }
+  for (const [rk, kind] of Object.entries(system.records ?? {})) {
+    for (const binding of kind.bindings ?? []) collect({ tab: 'records', kind: rk }, binding.effect, binding.args);
   }
   return out;
 }
+
+const constOf = (arg: unknown): unknown =>
+  (arg && typeof arg === 'object' && 'const' in (arg as Loose) ? (arg as Loose).const : undefined);
 
 function stepConditions(system: System): { where: Where; cond: Loose }[] {
   const out: { where: Where; cond: Loose }[] = [];
@@ -112,10 +124,8 @@ export function rowUsers(system: System, table: string, key: unknown, compendium
   for (const { where, cond } of stepConditions(system)) {
     if (pointsAt(system, cond, table) && same(cond.is, key)) out.push({ where, text: 'условие шага' });
   }
-  for (const { where, step, tags } of tagSteps(system)) {
-    if (tagTablesOf(system.effects[String(step.event)]).includes(table) && tags.some(t => same(t, key))) {
-      out.push({ where, text: 'метка вызова' });
-    }
+  for (const { where, args, key: arg } of choiceArgs(system, table)) {
+    if (holds(constOf(args[arg]), key)) out.push({ where, text: 'значение входа при вызове' });
   }
   for (const [rk, kind] of Object.entries(system.records ?? {})) {
     const props = (kind.props ?? []).filter(p => (p as Loose).kind === 'choice' && (p as Loose).from === table);
@@ -215,8 +225,9 @@ export function renameRow(system: System, table: string, from: unknown, to: unkn
       }
     }
   }
-  for (const { step } of tagSteps(system)) {
-    if (tagTablesOf(system.effects[String(step.event)]).includes(table)) step.tags = retag(step.tags);
+  for (const { args, key } of choiceArgs(system, table)) {
+    const value = constOf(args[key]);
+    if (holds(value, from)) args[key] = { const: swap(value, from, to) };
   }
   for (const { cond } of stepConditions(system)) {
     if (pointsAt(system, cond, table) && same(cond.is, from)) cond.is = to;
