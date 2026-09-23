@@ -34,10 +34,11 @@ export interface WorldState {
   activeSheetId: string | null;
   activeTab: ConstructorTab;
   activeStepIndex: number | null;
+  activeTableId: string | null;
 
   pick: (what: Partial<Pick<WorldState,
     'activeFieldTag' | 'activeGroupName' | 'activeEffectId' | 'activeRecordKind' | 'activeRecordId' | 'activeSheetId'
-    | 'activeTab' | 'activeStepIndex'>>) => void;
+    | 'activeTab' | 'activeStepIndex' | 'activeTableId'>>) => void;
 
   editSystem: (edit: (draft: System) => void) => void;
   editEffect: (id: string, edit: (draft: Effect) => void) => void;
@@ -83,6 +84,7 @@ export const useWorld = create<WorldState>()(persist(set => ({
   activeSheetId: null,
   activeTab: 'sheet',
   activeStepIndex: null,
+  activeTableId: null,
 
   pick: what => set(what),
 

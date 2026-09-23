@@ -45,7 +45,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
       .map(b => b.textContent!.trim())
       .filter(t => !LAUNCH_KINDS.some(kind => t === `+ ${kind.label.toLowerCase()}`)
         && t !== '+ вызываемый' && t !== '+ новый' && t !== '+ блок'
-        && !t.startsWith('+ брать') && !t.startsWith('+ в «')
+        && t !== '+ вход' && !t.startsWith('+ в «')
         && !['+ блок', '+ метки', '+ описание для игрока', '+ занимает', '+ какие метки бывают', '+ сколько висит', '+ на основе'].includes(t));
     expect(palette).toEqual(['+ проверка', '+ изменение', '+ таблица', '+ число']);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
@@ -66,20 +66,20 @@ describe('EffectsTab: палитра трёх понятий', () => {
   it('на экране нет слова «дырка»', () => {
     render(<EffectsTab />);
     expect(screen.queryByText(/дырк/i)).toBeNull();
-    expect(screen.getByText('Что эффект берёт из записи')).toBeTruthy();
+    expect(screen.getByText('Что приходит')).toBeTruthy();
   });
 
-  it('«Берёт из записи» — видимая секция с кнопкой', () => {
+  it('«Что приходит» — видимая секция с кнопкой', () => {
     render(<EffectsTab />);
-    expect(screen.getByText('Что эффект берёт из записи')).toBeTruthy();
-    fireEvent.click(screen.getByText('+ брать из записи'));
+    expect(screen.getByText('Что приходит')).toBeTruthy();
+    fireEvent.click(screen.getByText('+ вход'));
     const effect = useWorld.getState().system.effects.strike!;
     expect(effect.params!.length).toBe(1);
   });
 
   it('сторона — выбор у формулы и факт у костей', () => {
     render(<EffectsTab />);
-    fireEvent.click(screen.getByText('+ брать из записи'));
+    fireEvent.click(screen.getByText('+ вход'));
     expect(screen.getByText('Чей лист')).toBeTruthy();
 
     const need = document.querySelector('.need')!;

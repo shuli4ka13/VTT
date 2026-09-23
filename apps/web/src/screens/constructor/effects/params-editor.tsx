@@ -28,13 +28,13 @@ export function ParamsEditor({ effect, system, onEdit, called = false }: {
   called?: boolean;
 }) {
   const params = effect.params ?? [];
-  const addWord = called ? '+ вход' : '+ брать из записи';
+  const addWord = '+ вход';
   const addParam = () => onEdit(draft => {
     draft.params ??= [];
     const key = freeId(draft.params.map(p => p.key), called ? 'вход' : 'из_записи');
     draft.params.push(called
       ? { key, label: 'Новый вход', kind: 'choice' }
-      : { key, label: 'Новая потребность', kind: 'expr' });
+      : { key, label: 'Новый вход', kind: 'expr' });
   });
   const setMain = (key: string, on: boolean) => onEdit(draft => {
     for (const p of draft.params ?? []) {
@@ -51,19 +51,19 @@ export function ParamsEditor({ effect, system, onEdit, called = false }: {
 
   return (
     <Card>
-      <CardHead title={called ? 'Что приходит' : 'Что эффект берёт из записи'} />
-      {called ? (
-        <p className="faint">
-          Входы эффекта, как у функции: зовущий заполняет каждый. Выбор из таблицы — это метка вызова: по ней правки цели
-          узнают, что за урон. В шагах входы берут через @.
-        </p>
-      ) : null}
+      <CardHead title="Что приходит" />
+      <p className="faint">
+        {called
+          ? 'Входы эффекта, как у функции. Заполняет тот, кто зовёт этот эффект шагом «вызов». Выбор из таблицы — это ещё и метка вызова: по ней правки цели узнают, что за урон.'
+          : 'Входы эффекта, как у функции. Заполняет запись, к которой привязан эффект, — оружие, заклинание; или спрашивают у игрока в момент действия.'}
+        {' '}В шагах входы берут через @.
+      </p>
       {params.length === 0 ? (
         <Empty
-          title={called ? 'Входов нет' : 'Потребностей нет'}
+          title="Входов нет"
           hint={called
             ? 'Заведите число, которое приходит, и выборы из таблиц — например «Тип урона».'
-            : 'Значения шагов заполняются прямо на шагах. Заведите потребность, когда значение должно приходить от записи.'}
+            : 'Значения шагов можно вписать прямо в шаги. Вход нужен, когда значение у каждой записи своё: кость меча, тип урона.'}
           action={<Button size="sm" onClick={addParam}>{addWord}</Button>}
         />
       ) : (
@@ -121,9 +121,9 @@ export function ParamsEditor({ effect, system, onEdit, called = false }: {
               })}>
                 Убрать
               </Button>
-              {called ? (
+              {(
                 <div className="need__extra">
-                  {['number', 'expr'].includes(String(param.kind ?? 'expr')) ? (
+                  {called && ['number', 'expr'].includes(String(param.kind ?? 'expr')) ? (
                     <label className="inline inline--tight" title={MAIN_HINT}>
                       <input
                         type="checkbox" checked={(param as { role?: string }).role === 'amount'}
@@ -140,7 +140,7 @@ export function ParamsEditor({ effect, system, onEdit, called = false }: {
                     <span>обязателен</span>
                   </label>
                 </div>
-              ) : null}
+              )}
             </div>
           ))}
         </div>

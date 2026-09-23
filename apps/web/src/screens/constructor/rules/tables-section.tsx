@@ -11,7 +11,7 @@ import { listUsers, listOf } from '@vtt/engine/model/lists';
 import { isRange, keyOf } from '@vtt/engine/model/tables';
 import { rowUsers, renameRow, renameRowInBook } from '@vtt/engine/model/integrity';
 import { useWorld } from '../../../store/world.ts';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { System, Table, TableColumn, TableRow, TableKey } from '@vtt/schema';
 import type { WorldState } from '../../../store/world.ts';
 
@@ -78,6 +78,14 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
   const rows = table.rows ?? [];
   const columns = table.columns ?? [];
   const users = [...new Set([...listUsers(system, id), ...usersOf(usage, 'table', id, system)])];
+  const wanted = useWorld(s => s.activeTableId) === id;
+  const [openAtStart] = useState(wanted);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!wanted) return;
+    ref.current?.scrollIntoView({ block: 'start' });
+    useWorld.getState().pick({ activeTableId: null });
+  }, [wanted]);
   const held = users.length > 0 || inUse(usage, 'table', id);
   const broken = byRange && rangesBroken(rows);
 
@@ -93,7 +101,8 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
     : 'пока никто не берёт';
 
   return (
-    <Fold title={table.label || id} count={rows.length} summary={summary}>
+    <div ref={ref}>
+    <Fold title={table.label || id} count={rows.length} summary={summary} open={openAtStart || undefined}>
       <div className="inline">
         <Input
           value={table.label ?? ''}
@@ -143,6 +152,7 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
         </Field>
       ) : null}
     </Fold>
+    </div>
   );
 }
 

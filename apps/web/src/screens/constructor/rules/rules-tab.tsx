@@ -47,7 +47,8 @@ export function RulesTab() {
   const editSystem = useWorld(s => s.editSystem);
   const usage = useUsage();
   const problems = useProblems();
-  const [section, setSection] = useState<SectionKey>('dice');
+  const wantedTable = useWorld(s => s.activeTableId);
+  const [section, setSection] = useState<SectionKey>(wantedTable ? 'tables' : 'dice');
 
   const broken = new Set(
     problems.filter(p => p.where.tab === 'rules' && p.where.section).map(p => p.where.section),

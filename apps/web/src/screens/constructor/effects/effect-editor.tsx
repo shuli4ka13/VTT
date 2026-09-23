@@ -187,7 +187,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
 
       {launch.kind === 'auto' ? <LaunchCard id={id} effect={effect} system={system} edit={edit} /> : null}
 
-      {pipeline && isCalledEffect(system, effect) ? <ParamsEditor effect={effect} system={system} onEdit={edit} called /> : null}
+      {pipeline ? <ParamsEditor effect={effect} system={system} onEdit={edit} called={isCalledEffect(system, effect)} /> : null}
 
       {pipeline ? (
         <>
@@ -196,7 +196,6 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
             empty={idleWords(effect)}
           />
           <SelfTrack effect={effect} system={system} edit={edit} />
-          {isCalledEffect(system, effect) ? null : <ParamsEditor effect={effect} system={system} onEdit={edit} />}
         </>
       ) : (
         <ModifiersEditor
