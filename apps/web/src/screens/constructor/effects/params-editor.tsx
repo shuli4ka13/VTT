@@ -3,24 +3,27 @@ import { choiceTables } from '@vtt/engine/model/tables';
 import { ASKABLE } from '@vtt/engine/model/asks';
 import { freeId } from '../../../store/world.ts';
 import { Card, CardHead, Input, Select, Button, Empty } from '../../../ui/primitives.tsx';
+import { SheetGrid } from '../../../ui/sheet-grid.tsx';
+import type { GridColumn } from '../../../ui/sheet-grid.tsx';
 import type { Effect, Param, System } from '@vtt/schema';
 
 const PARAM_KINDS = kindsFor('param');
 
-const KIND_NOTE: Record<string, string> = {
-  number: 'можно числом или формулой — она считается там, чьи поля в ней',
-  dice: 'бросает тот, кто считает шаг',
-  text: 'слово как есть',
-  effect: 'какой эффект повесить или снять',
-};
-
-const MAIN_HINT = 'главное число — его правят сопротивления и уязвимости цели';
-
 const ASK_OPTIONS = [
-  ['', 'нет — обязан передать тот, кто вызывает'],
+  ['', 'нет'],
   ['actor', 'спросить игрока'],
   ['gm', 'спросить ведущего'],
 ] as const;
+
+const COLUMNS: GridColumn[] = [
+  { key: 'label', label: 'Название', width: 170 },
+  { key: 'kind', label: 'Тип', width: 120 },
+  { key: 'from', label: 'Таблица', width: 140, hint: 'для типа «из таблицы» — из какой' },
+  { key: 'ask', label: 'Если не передали', width: 160, hint: 'нет — обязан передать тот, кто вызывает; иначе спросят за столом' },
+  { key: 'hint', label: 'Подсказка за столом', width: 170, hint: 'что увидит спрошенный' },
+  { key: 'main', label: 'Правят сопротивления', width: 180, hint: 'это число меняют сопротивления и уязвимости цели: урон, лечение. Одно на эффект' },
+  { key: 'required', label: 'Обязателен', width: 100 },
+];
 
 type Loose = Param & { role?: string; optional?: boolean };
 
@@ -29,7 +32,7 @@ export function ParamsEditor({ effect, system, onEdit }: {
   system: System;
   onEdit: (change: (draft: Effect) => void) => void;
 }) {
-  const params = effect.params ?? [];
+  const params = (effect.params ?? []) as Loose[];
   const change = (key: string, fn: (target: Loose) => void) => onEdit(draft => {
     const target = draft.params?.find(p => p.key === key) as Loose | undefined;
     if (target) fn(target);
@@ -44,102 +47,85 @@ export function ParamsEditor({ effect, system, onEdit }: {
       else if (p.key === key || on) delete p.role;
     }
   });
+  const tables = choiceTables(system).map(([key, list]) => [key, list.label || key] as const);
 
   return (
     <Card>
-      <CardHead title="Что приходит" />
-      <p className="faint">
-        Входы эффекта — как параметры функции: то, что у каждого вызова своё (кость меча, тип урона, дистанция).
-        Поля листов объявлять не нужно — они пишутся прямо в шагах: @отправитель.…, @получатель.…, @стол.…
-      </p>
+      <CardHead title="Что приходит" sub="То, что у каждого вызова своё. Поля листов сюда не нужны — они пишутся прямо в шагах." />
       {params.length === 0 ? (
         <Empty
           title="Входов нет"
-          hint="Всё, что лежит на листах и на столе, эффект читает сам. Вход нужен, когда значение приносит тот, кто вызывает, или его говорят за столом."
+          hint="Вход нужен, когда значение приносит тот, кто вызывает, или его говорят за столом."
           action={<Button size="sm" onClick={addParam}>+ вход</Button>}
         />
       ) : (
-        <div className="stack stack--tight">
-          <div className="need-list__head">
-            <span className="field__label">Название</span>
-            <span className="field__label">Тип</span>
-            <span className="field__label" />
-            <span aria-hidden />
-          </div>
-          {(params as Loose[]).map(param => {
+        <SheetGrid id="params" columns={COLUMNS}>
+          {params.map(param => {
             const kind = String(param.kind ?? 'number');
-            return (
-              <div key={param.key} className="need">
-                <Input value={param.label ?? ''} onChange={next => change(param.key, t => { t.label = next; })} />
+            const askable = (ASKABLE as readonly string[]).includes(kind);
+            return [
+              <Input key={`${param.key}:label`} value={param.label ?? ''} onChange={next => change(param.key, t => { t.label = next; })} />,
+              <Select
+                key={`${param.key}:kind`}
+                value={kind}
+                options={PARAM_KINDS}
+                onChange={next => change(param.key, t => {
+                  t.kind = next;
+                  if (next !== 'number') delete t.role;
+                  if (next !== 'choice') delete t.from;
+                  if (!(ASKABLE as readonly string[]).includes(next)) delete t.ask;
+                })}
+              />,
+              kind === 'choice' ? (
                 <Select
-                  value={kind}
-                  options={PARAM_KINDS}
+                  key={`${param.key}:from`}
+                  value={String(param.from ?? '')}
+                  options={[['', '— какая —'], ...tables] as never}
+                  onChange={next => change(param.key, t => { if (next) t.from = next; else delete t.from; })}
+                />
+              ) : <span key={`${param.key}:from`} className="faint">—</span>,
+              askable ? (
+                <Select
+                  key={`${param.key}:ask`}
+                  value={param.ask?.by ?? (param.ask ? 'actor' : '')}
+                  options={ASK_OPTIONS}
                   onChange={next => change(param.key, t => {
-                    t.kind = next;
-                    if (next !== 'number') delete t.role;
-                    if (!(ASKABLE as readonly string[]).includes(next)) delete t.ask;
+                    if (next) t.ask = { ...(t.ask ?? {}), by: next };
+                    else delete t.ask;
                   })}
                 />
-                {kind === 'choice' ? (
-                  <Select
-                    value={String(param.from ?? '')}
-                    options={[['', '— какая таблица —'],
-                      ...choiceTables(system).map(([key, list]) => [key, list.label || key] as const)] as never}
-                    onChange={next => change(param.key, t => { if (next) t.from = next; else delete t.from; })}
-                  />
-                ) : (
-                  <span className="faint">{KIND_NOTE[kind] ?? ''}</span>
-                )}
-                <Button size="sm" variant="danger" onClick={() => onEdit(draft => {
-                  draft.params = (draft.params ?? []).filter(p => p.key !== param.key);
-                })}>
-                  Убрать
-                </Button>
-                <div className="need__extra">
-                  {kind === 'number' ? (
-                    <label className="inline inline--tight" title={MAIN_HINT}>
-                      <input
-                        type="checkbox" checked={param.role === 'amount'}
-                        onChange={e => setMain(param.key, e.target.checked)}
-                      />
-                      <span>{MAIN_HINT}</span>
-                    </label>
-                  ) : null}
-                  <label className="inline inline--tight">
-                    <input
-                      type="checkbox" checked={!param.optional}
-                      onChange={e => change(param.key, t => { if (e.target.checked) delete t.optional; else t.optional = true; })}
-                    />
-                    <span>обязателен</span>
-                  </label>
-                  {(ASKABLE as readonly string[]).includes(kind) ? (
-                    <label className="inline inline--tight">
-                      <span className="faint">если не передали:</span>
-                      <Select
-                        value={param.ask?.by ?? (param.ask ? 'actor' : '')}
-                        options={ASK_OPTIONS}
-                        onChange={next => change(param.key, t => {
-                          if (next) t.ask = { ...(t.ask ?? {}), by: next };
-                          else delete t.ask;
-                        })}
-                      />
-                    </label>
-                  ) : null}
-                  {param.ask ? (
-                    <Input
-                      value={param.ask.hint ?? ''}
-                      placeholder="что подсказать за столом"
-                      onChange={next => change(param.key, t => {
-                        if (!t.ask) return;
-                        if (next) t.ask.hint = next; else delete t.ask.hint;
-                      })}
-                    />
-                  ) : null}
-                </div>
-              </div>
-            );
+              ) : <span key={`${param.key}:ask`} className="faint">—</span>,
+              param.ask ? (
+                <Input
+                  key={`${param.key}:hint`}
+                  value={param.ask.hint ?? ''}
+                  placeholder="что подсказать"
+                  onChange={next => change(param.key, t => {
+                    if (!t.ask) return;
+                    if (next) t.ask.hint = next; else delete t.ask.hint;
+                  })}
+                />
+              ) : <span key={`${param.key}:hint`} className="faint">—</span>,
+              kind === 'number' ? (
+                <input
+                  key={`${param.key}:main`} type="checkbox" className="sheet-grid__check"
+                  aria-label={`«${param.label ?? param.key}» правят сопротивления`}
+                  checked={param.role === 'amount'}
+                  onChange={e => setMain(param.key, e.target.checked)}
+                />
+              ) : <span key={`${param.key}:main`} className="faint">—</span>,
+              <input
+                key={`${param.key}:required`} type="checkbox" className="sheet-grid__check"
+                aria-label={`«${param.label ?? param.key}» обязателен`}
+                checked={!param.optional}
+                onChange={e => change(param.key, t => { if (e.target.checked) delete t.optional; else t.optional = true; })}
+              />,
+              <Button key={`${param.key}:drop`} size="sm" variant="danger" title="убрать вход" onClick={() => onEdit(draft => {
+                draft.params = (draft.params ?? []).filter(p => p.key !== param.key);
+              })}>×</Button>,
+            ];
           })}
-        </div>
+        </SheetGrid>
       )}
 
       {params.length ? <Button size="sm" onClick={addParam}>+ вход</Button> : null}

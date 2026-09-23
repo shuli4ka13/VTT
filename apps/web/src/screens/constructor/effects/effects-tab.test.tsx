@@ -87,22 +87,22 @@ describe('EffectsTab: палитра трёх понятий', () => {
     expect(effect.params!.length).toBe(1);
   });
 
-  it('вход — число без выбора стороны; «главное число» и «спросить за столом» есть у любого эффекта', () => {
+  it('входы — таблицей: без подсказок в строке, флажки в конце, «правят сопротивления» только у числа', () => {
     render(<EffectsTab />);
     fireEvent.click(screen.getByText('+ вход'));
     expect(screen.queryByText('Чей лист')).toBeNull();
-    expect(screen.getByText(/можно числом или формулой/)).toBeTruthy();
-    expect(screen.getByText(/главное число/)).toBeTruthy();
+    expect(screen.queryByText(/можно числом или формулой/)).toBeNull();
+    const heads = [...document.querySelectorAll('.sheet-grid__title')].map(h => h.textContent);
+    expect(heads.slice(-2)).toEqual(['Правят сопротивления', 'Обязателен']);
+    expect(screen.getByLabelText('«Новый вход» правят сопротивления')).toBeTruthy();
 
-    const need = document.querySelector('.need')!;
-    const ask = [...need.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'gm'))!;
+    const ask = [...document.querySelectorAll('.sheet-grid select')].find(el => [...(el as HTMLSelectElement).options].some(o => o.value === 'gm'))!;
     fireEvent.change(ask, { target: { value: 'gm' } });
     const effect = Object.values(useWorld.getState().system.effects).find(e => e.params?.length)!;
     expect(effect.params![0]!.ask).toEqual({ by: 'gm' });
 
-    fireEvent.change(need.querySelectorAll('select')[0]!, { target: { value: 'dice' } });
-    expect(screen.getByText('бросает тот, кто считает шаг')).toBeTruthy();
-    expect(screen.queryByText(/главное число/)).toBeNull();
+    fireEvent.change(document.querySelectorAll('.sheet-grid select')[0]!, { target: { value: 'dice' } });
+    expect(screen.queryByLabelText('«Новый вход» правят сопротивления')).toBeNull();
   });
 
   it('ошибка про недостающее поле предлагает взять блок донора', () => {

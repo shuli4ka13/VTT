@@ -2,6 +2,8 @@ import { MultiChoice } from '../../../ui/multi-choice.tsx';
 import { kindsFor } from '@vtt/engine/words/kinds';
 import { Card, CardHead, Field, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Chip, Empty } from '../../../ui/primitives.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
+import { SheetGrid } from '../../../ui/sheet-grid.tsx';
+import type { GridColumn } from '../../../ui/sheet-grid.tsx';
 import { DiceProp } from '../../../ui/dice-prop.tsx';
 import { newTable } from '../factory.ts';
 import { inUse, usersOf } from '../usage.ts';
@@ -224,39 +226,8 @@ function Columns({ id, table, system, edit }: {
   );
 }
 
-const WIDTH_KEY = (id: string) => `vtt.table-widths.${id}`;
-
 const defaultWidth = (column?: TableColumn): number =>
   (!column ? 200 : column.kind === 'expr' ? 240 : column.kind === 'choice' && column.many ? 220 : 150);
-
-function useWidths(id: string) {
-  const [widths, setWidths] = useState<Record<string, number>>(() => {
-    try { return JSON.parse(localStorage.getItem(WIDTH_KEY(id)) ?? '{}') as Record<string, number>; } catch { return {}; }
-  });
-  const set = (key: string, width: number) => setWidths(all => {
-    const next = { ...all, [key]: Math.max(80, Math.round(width)) };
-    try { localStorage.setItem(WIDTH_KEY(id), JSON.stringify(next)); } catch { return next; }
-    return next;
-  });
-  return [widths, set] as const;
-}
-
-function HeadCell({ label, width, onResize }: { label: string; width: number; onResize: (width: number) => void }) {
-  const drag = (e: React.PointerEvent) => {
-    e.preventDefault();
-    const start = e.clientX;
-    const move = (ev: PointerEvent) => onResize(width + ev.clientX - start);
-    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
-    window.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', up);
-  };
-  return (
-    <div className="sheet-grid__head">
-      <span className="sheet-grid__title" title={label}>{label}</span>
-      <span className="sheet-grid__grip" role="separator" aria-label={`ширина колонки «${label}»`} onPointerDown={drag} />
-    </div>
-  );
-}
 
 function Rows({ id, table, system, edit, editSystem }: {
   id: string;
@@ -277,7 +248,6 @@ function Rows({ id, table, system, edit, editSystem }: {
   const byRange = key === 'range';
   const rows = table.rows ?? [];
   const columns = table.columns ?? [];
-  const [widths, setWidth] = useWidths(id);
 
   const setCell = (i: number, column: string, value: unknown) => edit(draft => {
     const row = draft.rows?.[i];
@@ -285,28 +255,17 @@ function Rows({ id, table, system, edit, editSystem }: {
     (row.cells ??= {})[column] = value;
   });
 
-  const widthOf = (name: string, column?: TableColumn) => widths[name] ?? defaultWidth(column);
   const lead = byRange ? ['от', 'до'] : [key === 'number' ? 'число' : 'слово'];
-  const template = [
-    ...lead.map(name => `${widthOf(`:${name}`, undefined)}px`),
-    ...columns.map(c => `${widthOf(c.key, c)}px`),
-    '40px',
-  ].join(' ');
+  const gridColumns: GridColumn[] = [
+    ...lead.map(name => ({ key: `:${name}`, label: name, width: byRange ? 90 : defaultWidth() })),
+    ...columns.map(c => ({ key: c.key, label: c.label || c.key, width: defaultWidth(c) })),
+  ];
 
   return (
     <div className="stack stack--tight">
       <span className="field__label">Строки</span>
 
-      <div className="sheet-scroll">
-        <div className="sheet-grid" style={{ gridTemplateColumns: template }}>
-          {lead.map(name => (
-            <HeadCell key={name} label={name} width={widthOf(`:${name}`)} onResize={w => setWidth(`:${name}`, w)} />
-          ))}
-          {columns.map(c => (
-            <HeadCell key={c.key} label={c.label || c.key} width={widthOf(c.key, c)} onResize={w => setWidth(c.key, w)} />
-          ))}
-          <span />
-
+      <SheetGrid id={`table.${id}`} columns={gridColumns}>
           {rows.map((row, i) => (
             <RowCells
               key={i} row={row} at={i} rowKey={key} columns={columns} system={system}
@@ -316,8 +275,7 @@ function Rows({ id, table, system, edit, editSystem }: {
               where={column => `${table.label || id} · «${String(row.value ?? `${row.from}–${row.to}`)}» · ${column.label || column.key}`}
             />
           ))}
-        </div>
-      </div>
+      </SheetGrid>
 
       <Button size="sm" onClick={() => edit(draft => {
         const list = (draft.rows ??= []);

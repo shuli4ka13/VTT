@@ -613,3 +613,4 @@
 
 .field-preview { display: grid; gap: var(--s-1); margin-top: var(--s-2); padding: var(--s-2) var(--s-3); border: 1px dashed var(--border); border-radius: var(--r-1); }
 .field-preview__note { font-size: var(--fs-2); }
+.sheet-grid__check { justify-self: center; width: 18px; height: 18px; }

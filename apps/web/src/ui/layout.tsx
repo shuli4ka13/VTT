@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 
 export interface Pane {
@@ -8,24 +9,57 @@ export interface Pane {
   body: ReactNode;
 }
 
+const FOLD_KEY = (side: string, head: ReactNode) => `vtt.fold.${side}.${typeof head === 'string' ? head : ''}`;
+
+function useFold(side: 'left' | 'right', head: ReactNode) {
+  const key = FOLD_KEY(side, head);
+  const [folded, setFolded] = useState(() => {
+    try { return localStorage.getItem(key) === '1'; } catch { return false; }
+  });
+  const toggle = () => setFolded(was => {
+    try { localStorage.setItem(key, was ? '0' : '1'); } catch { return !was; }
+    return !was;
+  });
+  return [folded, toggle] as const;
+}
+
 export function Columns({ left, main, right }: { left?: Pane; main: { body: ReactNode }; right?: Pane }) {
-  const shape = left && right ? '' : left || right ? 'columns--two' : 'columns--one';
+  const [leftFolded, toggleLeft] = useFold('left', left?.head);
+  const [rightFolded, toggleRight] = useFold('right', right?.head);
+  const shape = left && right ? '' : left ? 'columns--left-only' : right ? 'columns--right-only' : 'columns--one';
+  const folds = `${left && leftFolded ? ' columns--l-folded' : ''}${right && rightFolded ? ' columns--r-folded' : ''}`;
 
   return (
-    <div className={`columns ${shape}`}>
-      {left ? <Column kind="side" pane={left} /> : null}
+    <div className={`columns ${shape}${folds}`}>
+      {left ? <Column kind="side" pane={left} folded={leftFolded} onFold={toggleLeft} /> : null}
       <div className="column column--main">
         <div className="column__inner">{main.body}</div>
       </div>
-      {right ? <Column kind="right" pane={right} /> : null}
+      {right ? <Column kind="right" pane={right} folded={rightFolded} onFold={toggleRight} /> : null}
     </div>
   );
 }
 
-function Column({ kind, pane }: { kind: 'side' | 'right'; pane: Pane }) {
+function Column({ kind, pane, folded, onFold }: { kind: 'side' | 'right'; pane: Pane; folded: boolean; onFold: () => void }) {
+  const title = typeof pane.head === 'string' ? pane.head : 'панель';
+  const arrow = (kind === 'side') === folded ? '»' : '«';
+  const fold = (
+    <button type="button" className="column__fold" onClick={onFold}
+      aria-label={folded ? `развернуть «${title}»` : `свернуть «${title}»`} title={folded ? 'развернуть' : 'свернуть'}>
+      {arrow}
+    </button>
+  );
+  if (folded) {
+    return (
+      <div className={`column column--${kind} column--folded`}>
+        {fold}
+        <span className="column__spine">{pane.head}</span>
+      </div>
+    );
+  }
   return (
     <div className={`column column--${kind}`}>
-      {pane.head ? <ColumnHead head={pane.head} tools={pane.tools} /> : null}
+      <ColumnHead head={pane.head ?? ''} tools={<>{pane.tools}{fold}</>} />
       {pane.body}
     </div>
   );
