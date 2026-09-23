@@ -15,8 +15,6 @@ export interface Target {
   from?: string;
 }
 
-export const rollTagOf = (tag: string) => `check:${tag}`;
-
 export const incomingTagOf = (tag: string) => `incoming:${tag}`;
 
 export const ANY_ROLL = 'roll:any';
@@ -24,32 +22,11 @@ export const ANY_ROLL = 'roll:any';
 export const eventTagOf = (id: string) => `event:${id}`;
 
 export function targets(system: System): Target[] {
-  const rolls: Target[] = [
-    { tag: ANY_ROLL, label: 'Любой бросок', group: 'Броски', kind: 'roll' },
-
-    ...(system.rolls || []).map((r): Target => ({ tag: r.tag, label: r.label, group: 'Броски', kind: 'roll' })),
-
-    ...system.fields.filter(f => f.roll).map((f): Target => ({
-      tag: rollTagOf(f.tag),
-      label: f.roll!.label || `Проверка: ${f.label}`,
-      group: f.group,
-      kind: 'roll',
-      from: f.tag,
-    })),
-  ];
-
   return [
-    ...rolls,
+    { tag: ANY_ROLL, label: 'Мой бросок', group: 'Броски', kind: 'roll' },
+    { tag: incomingTagOf(ANY_ROLL), label: 'Бросок по мне', group: 'Броски', kind: 'roll', from: ANY_ROLL },
 
     ...system.fields.map((f): Target => ({ tag: f.tag, label: f.label, group: f.group, kind: 'value' })),
-
-    ...rolls.map((r): Target => ({
-      tag: incomingTagOf(r.tag),
-      label: `Против меня: ${r.label.toLowerCase()}`,
-      group: 'Броски по мне',
-      kind: 'roll',
-      from: r.tag,
-    })),
 
     ...system.fields.filter(f => f.value.kind === 'stored').map((f): Target => ({
       tag: incomingTagOf(f.tag),

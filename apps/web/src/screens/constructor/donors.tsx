@@ -189,12 +189,6 @@ function Effects({ donor }: { donor: System }) {
           draft.constants[name] ??= structuredClone(constant);
         }
       }
-      for (const roll of donor.rolls ?? []) {
-        if (text.includes(`"${roll.tag}"`)) {
-          draft.rolls = draft.rolls ?? [];
-          if (!draft.rolls.some(r => r.tag === roll.tag)) draft.rolls.push({ ...roll });
-        }
-      }
 
       const bringEdit = (key: string) => {
         const edit = donor.roll_edits?.[key];

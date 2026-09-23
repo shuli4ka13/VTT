@@ -14,7 +14,7 @@ export interface Reader {
 
   valueOf: (tag: string) => Computed;
 
-  rollOf: (tag: string) => RollResolution | null;
+  rollOf: (tags: string[]) => RollResolution | null;
 }
 
 export function useReader(system: System, sheet: Sheet | null, compendium: Compendium, desk?: Sheet | null): Reader {
@@ -46,8 +46,8 @@ export function useReader(system: System, sheet: Sheet | null, compendium: Compe
         try { return { ok: true, value: calc(system, sheet, tag, pass) }; }
         catch (err) { return { ok: false, error: (err as Error).message }; }
       },
-      rollOf: tag => {
-        try { return resolveRoll(system, sheet, tag, pass); }
+      rollOf: tags => {
+        try { return resolveRoll(system, sheet, tags, pass); }
         catch { return null; }
       },
     };

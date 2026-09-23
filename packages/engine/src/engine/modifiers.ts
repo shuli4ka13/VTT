@@ -3,6 +3,7 @@ import { assertTarget, incomingTagOf, ANY_ROLL } from './targets.ts';
 import { roomEffects, wornEffects, activationOf } from './effects.ts';
 import { EngineError } from './errors.ts';
 import { anyRowSays } from './tables.ts';
+import { tagsHold } from './roll-tags.ts';
 import type { System, Sheet, Compendium, Modifier, RollEdit } from '../model/types.ts';
 import type { Pass } from './calc.ts';
 
@@ -21,7 +22,7 @@ export interface CollectedModifiers {
 }
 
 export interface RollResolution {
-  tag: string;
+  tags: string[];
 
   edits: RollEdit[];
   bonus: number;
@@ -124,15 +125,12 @@ export function applyValueModifiers(
 export const VALUE_OPS = ['set', 'add', 'mul', 'floor', 'cap'];
 
 export function resolveRoll(
-  system: System, _sheet: Sheet, rollTag: string | (string | null)[] | null, pass: Pass,
+  system: System, _sheet: Sheet, rollTags: readonly (string | null | undefined)[], pass: Pass,
   extra: SourcedModifier[] = [],
 ): RollResolution {
-  const tags = [...new Set((Array.isArray(rollTag) ? rollTag : [rollTag]).filter((t): t is string => Boolean(t)))];
-  for (const tag of tags) assertTarget(system, tag);
-
-  const bucket = (tag: string) => (pass?.modifiers ? pass.modifiers.roll.get(tag) || [] : []);
+  const tags = [...new Set(rollTags.filter((t): t is string => Boolean(t)))];
   const mods = [
-    ...[...tags.flatMap(bucket), ...bucket(ANY_ROLL)].filter(m => conditionHolds(m, pass)),
+    ...rollBucket(pass, ANY_ROLL).filter(m => conditionHolds(m, pass) && rollTagsHold(m, tags)),
     ...extra,
   ];
 
@@ -151,24 +149,28 @@ export function resolveRoll(
   });
 
   const adds = mods.filter(m => m.op === 'add');
-  const bonus = adds.length ? totalOf(adds, pass, tags[0] ?? ANY_ROLL) : 0;
+  const bonus = adds.length ? totalOf(adds, pass, tags.join(', ') || ANY_ROLL) : 0;
 
   return {
-    tag: tags[0] ?? ANY_ROLL,
+    tags,
     edits: surviving.map(key => ({ ...dictionary[key]!, label: dictionary[key]!.label || key })),
     bonus,
     sources: mods.map(m => ({ ...m.source, edit: m.edit })),
   };
 }
 
-export function incomingRollModifiers(rollTag: string | null, pass: Pass): SourcedModifier[] {
-  if (!pass.modifiers) return [];
-  const bucket = (tag: string) => pass.modifiers!.roll.get(tag) || [];
-  return [...(rollTag ? bucket(incomingTagOf(rollTag)) : []), ...bucket(incomingTagOf(ANY_ROLL))]
-    .filter(m => conditionHolds(m, pass));
+const rollBucket = (pass: Pass, target: string): SourcedModifier[] =>
+  (pass?.modifiers ? pass.modifiers.roll.get(target) || [] : []);
+
+const rollTagsHold = (mod: SourcedModifier, tags: readonly string[]): boolean =>
+  tagsHold((mod as { tags?: string[] }).tags, tags);
+
+export function incomingRollModifiers(rollTags: readonly string[], pass: Pass): SourcedModifier[] {
+  return rollBucket(pass, incomingTagOf(ANY_ROLL))
+    .filter(m => conditionHolds(m, pass) && rollTagsHold(m, rollTags));
 }
 
-export function claimedModifiers(system: System, keys: string[], rollTag: string | null): SourcedModifier[] {
+export function claimedModifiers(system: System, keys: string[]): SourcedModifier[] {
   const dictionary = system.roll_edits || {};
   return keys.map(key => {
     const edit = dictionary[key];
@@ -178,7 +180,7 @@ export function claimedModifiers(system: System, keys: string[], rollTag: string
           Object.keys(dictionary).join(', ') || '(пусто)'}`);
     }
     return {
-      kind: 'roll' as const, target: rollTag ?? ANY_ROLL, edit: key, condition: null,
+      kind: 'roll' as const, target: ANY_ROLL, edit: key, condition: null,
       source: { type: 'claim' as const, id: key, label: edit.label || key, modifiers: [] },
     };
   });

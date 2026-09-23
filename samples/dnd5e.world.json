@@ -134,7 +134,10 @@
         "group": "Модификаторы",
         "roll": {
           "label": "Проверка: Сила",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "сила"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -147,7 +150,10 @@
         "group": "Модификаторы",
         "roll": {
           "label": "Проверка: Ловкость",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "ловкость"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -160,7 +166,10 @@
         "group": "Модификаторы",
         "roll": {
           "label": "Проверка: Телосложение",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "телосложение"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -173,7 +182,10 @@
         "group": "Модификаторы",
         "roll": {
           "label": "Проверка: Интеллект",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "интеллект"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -186,7 +198,10 @@
         "group": "Модификаторы",
         "roll": {
           "label": "Проверка: Мудрость",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "мудрость"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -199,7 +214,10 @@
         "group": "Модификаторы",
         "roll": {
           "label": "Проверка: Харизма",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "харизма"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -282,7 +300,10 @@
         "group": "Спасброски",
         "roll": {
           "label": "Спасбросок: Сила",
-          "check": "save_roll"
+          "tags": [
+            "спасбросок",
+            "сила"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -317,7 +338,10 @@
         "group": "Спасброски",
         "roll": {
           "label": "Спасбросок: Ловкость",
-          "check": "save_roll"
+          "tags": [
+            "спасбросок",
+            "ловкость"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -352,7 +376,10 @@
         "group": "Спасброски",
         "roll": {
           "label": "Спасбросок: Телосложение",
-          "check": "save_roll"
+          "tags": [
+            "спасбросок",
+            "телосложение"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -387,7 +414,10 @@
         "group": "Спасброски",
         "roll": {
           "label": "Спасбросок: Интеллект",
-          "check": "save_roll"
+          "tags": [
+            "спасбросок",
+            "интеллект"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -422,7 +452,10 @@
         "group": "Спасброски",
         "roll": {
           "label": "Спасбросок: Мудрость",
-          "check": "save_roll"
+          "tags": [
+            "спасбросок",
+            "мудрость"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -457,7 +490,10 @@
         "group": "Спасброски",
         "roll": {
           "label": "Спасбросок: Харизма",
-          "check": "save_roll"
+          "tags": [
+            "спасбросок",
+            "харизма"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -483,7 +519,11 @@
         "group": "Навыки от силы",
         "roll": {
           "label": "Проверка: Атлетика",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "сила",
+            "атлетика"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -509,7 +549,11 @@
         "group": "Навыки от ловкости",
         "roll": {
           "label": "Проверка: Акробатика",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "ловкость",
+            "акробатика"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -535,7 +579,11 @@
         "group": "Навыки от ловкости",
         "roll": {
           "label": "Проверка: Ловкость рук",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "ловкость",
+            "ловкость_рук"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -561,7 +609,11 @@
         "group": "Навыки от ловкости",
         "roll": {
           "label": "Проверка: Скрытность",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "ловкость",
+            "скрытность"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -587,7 +639,11 @@
         "group": "Навыки от интеллекта",
         "roll": {
           "label": "Проверка: Магия",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "интеллект",
+            "магия"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -613,7 +669,11 @@
         "group": "Навыки от интеллекта",
         "roll": {
           "label": "Проверка: История",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "интеллект",
+            "история"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -639,7 +699,11 @@
         "group": "Навыки от интеллекта",
         "roll": {
           "label": "Проверка: Анализ",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "интеллект",
+            "анализ"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -665,7 +729,11 @@
         "group": "Навыки от интеллекта",
         "roll": {
           "label": "Проверка: Природа",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "интеллект",
+            "природа"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -691,7 +759,11 @@
         "group": "Навыки от интеллекта",
         "roll": {
           "label": "Проверка: Религия",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "интеллект",
+            "религия"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -717,7 +789,11 @@
         "group": "Навыки от мудрости",
         "roll": {
           "label": "Проверка: Уход за животными",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "мудрость",
+            "уход_за_животными"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -743,7 +819,11 @@
         "group": "Навыки от мудрости",
         "roll": {
           "label": "Проверка: Проницательность",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "мудрость",
+            "проницательность"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -769,7 +849,11 @@
         "group": "Навыки от мудрости",
         "roll": {
           "label": "Проверка: Медицина",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "мудрость",
+            "медицина"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -795,7 +879,11 @@
         "group": "Навыки от мудрости",
         "roll": {
           "label": "Проверка: Внимательность",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "мудрость",
+            "внимательность"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -821,7 +909,11 @@
         "group": "Навыки от мудрости",
         "roll": {
           "label": "Проверка: Выживание",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "мудрость",
+            "выживание"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -847,7 +939,11 @@
         "group": "Навыки от харизмы",
         "roll": {
           "label": "Проверка: Обман",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "харизма",
+            "обман"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -873,7 +969,11 @@
         "group": "Навыки от харизмы",
         "roll": {
           "label": "Проверка: Запугивание",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "харизма",
+            "запугивание"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -899,7 +999,11 @@
         "group": "Навыки от харизмы",
         "roll": {
           "label": "Проверка: Выступление",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "харизма",
+            "выступление"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -925,7 +1029,11 @@
         "group": "Навыки от харизмы",
         "roll": {
           "label": "Проверка: Убеждение",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "харизма",
+            "убеждение"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -938,7 +1046,11 @@
         "group": "Чувства и движение",
         "roll": {
           "label": "Инициатива",
-          "check": "skill_roll"
+          "tags": [
+            "проверка",
+            "ловкость",
+            "инициатива"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -2832,6 +2944,170 @@
           }
         ]
       },
+      "rolls": {
+        "label": "Броски",
+        "key": "word",
+        "columns": [
+          {
+            "key": "успех",
+            "label": "Успех",
+            "kind": "text"
+          },
+          {
+            "key": "провал",
+            "label": "Провал",
+            "kind": "text"
+          }
+        ],
+        "rows": [
+          {
+            "value": "атака",
+            "cells": {
+              "успех": "попадание",
+              "провал": "промах"
+            }
+          },
+          {
+            "value": "спасбросок",
+            "cells": {
+              "успех": "спасся",
+              "провал": "не спасся"
+            }
+          },
+          {
+            "value": "проверка",
+            "cells": {
+              "успех": "успех",
+              "провал": "провал"
+            }
+          },
+          {
+            "value": "инициатива"
+          }
+        ]
+      },
+      "skills": {
+        "label": "Навыки",
+        "key": "word",
+        "columns": [
+          {
+            "key": "ability",
+            "label": "Характеристика",
+            "kind": "choice",
+            "from": "abilities"
+          }
+        ],
+        "rows": [
+          {
+            "value": "атлетика",
+            "cells": {
+              "ability": "сила"
+            }
+          },
+          {
+            "value": "акробатика",
+            "cells": {
+              "ability": "ловкость"
+            }
+          },
+          {
+            "value": "ловкость_рук",
+            "cells": {
+              "ability": "ловкость"
+            }
+          },
+          {
+            "value": "скрытность",
+            "cells": {
+              "ability": "ловкость"
+            }
+          },
+          {
+            "value": "магия",
+            "cells": {
+              "ability": "интеллект"
+            }
+          },
+          {
+            "value": "история",
+            "cells": {
+              "ability": "интеллект"
+            }
+          },
+          {
+            "value": "анализ",
+            "cells": {
+              "ability": "интеллект"
+            }
+          },
+          {
+            "value": "природа",
+            "cells": {
+              "ability": "интеллект"
+            }
+          },
+          {
+            "value": "религия",
+            "cells": {
+              "ability": "интеллект"
+            }
+          },
+          {
+            "value": "уход_за_животными",
+            "cells": {
+              "ability": "мудрость"
+            }
+          },
+          {
+            "value": "проницательность",
+            "cells": {
+              "ability": "мудрость"
+            }
+          },
+          {
+            "value": "медицина",
+            "cells": {
+              "ability": "мудрость"
+            }
+          },
+          {
+            "value": "внимательность",
+            "cells": {
+              "ability": "мудрость"
+            }
+          },
+          {
+            "value": "выживание",
+            "cells": {
+              "ability": "мудрость"
+            }
+          },
+          {
+            "value": "обман",
+            "cells": {
+              "ability": "харизма"
+            }
+          },
+          {
+            "value": "запугивание",
+            "cells": {
+              "ability": "харизма"
+            }
+          },
+          {
+            "value": "выступление",
+            "cells": {
+              "ability": "харизма"
+            }
+          },
+          {
+            "value": "убеждение",
+            "cells": {
+              "ability": "харизма"
+            }
+          }
+        ]
+      },
       "abilities": {
         "label": "Характеристики",
         "key": "word",
@@ -2840,43 +3116,54 @@
             "key": "mod",
             "label": "Модификатор",
             "kind": "expr"
+          },
+          {
+            "key": "save",
+            "label": "Спасбросок",
+            "kind": "expr"
           }
         ],
         "rows": [
           {
             "value": "сила",
             "cells": {
-              "mod": "@str_mod"
+              "mod": "@str_mod",
+              "save": "@str_save"
             }
           },
           {
             "value": "ловкость",
             "cells": {
-              "mod": "@dex_mod"
+              "mod": "@dex_mod",
+              "save": "@dex_save"
             }
           },
           {
             "value": "телосложение",
             "cells": {
-              "mod": "@con_mod"
+              "mod": "@con_mod",
+              "save": "@con_save"
             }
           },
           {
             "value": "интеллект",
             "cells": {
-              "mod": "@int_mod"
+              "mod": "@int_mod",
+              "save": "@int_save"
             }
           },
           {
             "value": "мудрость",
             "cells": {
-              "mod": "@wis_mod"
+              "mod": "@wis_mod",
+              "save": "@wis_save"
             }
           },
           {
             "value": "харизма",
             "cells": {
-              "mod": "@cha_mod"
+              "mod": "@cha_mod",
+              "save": "@cha_save"
             }
           }
         ]
@@ -3225,32 +3512,6 @@
         ]
       }
     },
-    "rolls": [
-      {
-        "tag": "attack_roll",
-        "label": "Бросок атаки",
-        "words": {
-          "success": "попадание",
-          "fail": "промах"
-        }
-      },
-      {
-        "tag": "save_roll",
-        "label": "Спасбросок",
-        "words": {
-          "success": "спасся",
-          "fail": "не спасся"
-        }
-      },
-      {
-        "tag": "skill_roll",
-        "label": "Проверка характеристики или навыка",
-        "words": {
-          "success": "успех",
-          "fail": "провал"
-        }
-      }
-    ],
     "roll_edits": {
       "advantage": {
         "label": "Преимущество",
@@ -3359,7 +3620,11 @@
       "bonus": {
         "expr": "@initiative"
       },
-      "check": "skill_roll"
+      "tags": [
+        "проверка",
+        "ловкость",
+        "инициатива"
+      ]
     },
     "effects": {
       "strike": {
@@ -3407,7 +3672,9 @@
               "bonus": {
                 "param": "attack_with"
               },
-              "check": "attack_roll"
+              "tags": [
+                "атака"
+              ]
             },
             "versus": {
               "tag": "ac"
@@ -3843,7 +4110,9 @@
               "bonus": {
                 "expr": "@отправитель.spell_attack"
               },
-              "check": "attack_roll"
+              "tags": [
+                "атака"
+              ]
             },
             "versus": {
               "tag": "ac"
@@ -3889,8 +4158,9 @@
         "params": [
           {
             "key": "save_by",
-            "label": "Бонус спасброска",
-            "kind": "number"
+            "label": "Чем спасаются",
+            "kind": "choice",
+            "from": "abilities"
           },
           {
             "key": "damage_die",
@@ -3919,9 +4189,14 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "param": "save_by"
+                "expr": "@получатель.save_by.save"
               },
-              "check": "save_roll"
+              "tags": [
+                "спасбросок",
+                {
+                  "param": "save_by"
+                }
+              ]
             },
             "versus": {
               "expr": "@отправитель.spell_dc"
@@ -4028,7 +4303,9 @@
               "bonus": {
                 "expr": "@отправитель.spell_attack"
               },
-              "check": "attack_roll"
+              "tags": [
+                "атака"
+              ]
             },
             "versus": {
               "tag": "ac"
@@ -4083,8 +4360,9 @@
         "params": [
           {
             "key": "save_by",
-            "label": "Бонус спасброска",
-            "kind": "number"
+            "label": "Чем спасаются",
+            "kind": "choice",
+            "from": "abilities"
           },
           {
             "key": "damage_die",
@@ -4118,9 +4396,14 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "param": "save_by"
+                "expr": "@получатель.save_by.save"
               },
-              "check": "save_roll"
+              "tags": [
+                "спасбросок",
+                {
+                  "param": "save_by"
+                }
+              ]
             },
             "versus": {
               "expr": "@отправитель.spell_dc"
@@ -4175,8 +4458,9 @@
         "params": [
           {
             "key": "save_by",
-            "label": "Бонус спасброска",
-            "kind": "number"
+            "label": "Чем спасаются",
+            "kind": "choice",
+            "from": "abilities"
           },
           {
             "key": "damage_die",
@@ -4215,9 +4499,14 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "param": "save_by"
+                "expr": "@получатель.save_by.save"
               },
-              "check": "save_roll"
+              "tags": [
+                "спасбросок",
+                {
+                  "param": "save_by"
+                }
+              ]
             },
             "versus": {
               "expr": "@отправитель.spell_dc"
@@ -4341,8 +4630,9 @@
         "params": [
           {
             "key": "save_by",
-            "label": "Бонус спасброска",
-            "kind": "number"
+            "label": "Чем спасаются",
+            "kind": "choice",
+            "from": "abilities"
           },
           {
             "key": "status",
@@ -4365,9 +4655,14 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "param": "save_by"
+                "expr": "@получатель.save_by.save"
               },
-              "check": "save_roll"
+              "tags": [
+                "спасбросок",
+                {
+                  "param": "save_by"
+                }
+              ]
             },
             "versus": {
               "expr": "@отправитель.spell_dc"
@@ -4414,8 +4709,9 @@
         "params": [
           {
             "key": "save_by",
-            "label": "Бонус спасброска",
-            "kind": "number"
+            "label": "Чем спасаются",
+            "kind": "choice",
+            "from": "abilities"
           },
           {
             "key": "status",
@@ -4438,9 +4734,14 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "param": "save_by"
+                "expr": "@получатель.save_by.save"
               },
-              "check": "save_roll"
+              "tags": [
+                "спасбросок",
+                {
+                  "param": "save_by"
+                }
+              ]
             },
             "versus": {
               "expr": "@отправитель.spell_dc"
@@ -4985,7 +5286,10 @@
               "bonus": {
                 "expr": "@получатель.wis_save"
               },
-              "check": "save_roll"
+              "tags": [
+                "спасбросок",
+                "мудрость"
+              ]
             },
             "versus": {
               "expr": "@отправитель.spell_dc"
@@ -5130,7 +5434,11 @@
               "bonus": {
                 "expr": "@отправитель.stealth"
               },
-              "check": "skill_roll"
+              "tags": [
+                "проверка",
+                "ловкость",
+                "скрытность"
+              ]
             },
             "versus": {
               "tag": "passive_perception"
@@ -5169,7 +5477,10 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "attack_roll",
+            "target": "roll:any",
+            "tags": [
+              "атака"
+            ],
             "edit": "advantage",
             "condition": null
           }
@@ -5212,13 +5523,19 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "attack_roll",
+            "target": "roll:any",
+            "tags": [
+              "атака"
+            ],
             "edit": "advantage",
             "condition": null
           },
           {
             "kind": "roll",
-            "target": "skill_roll",
+            "target": "roll:any",
+            "tags": [
+              "проверка"
+            ],
             "edit": "advantage",
             "condition": null
           }
@@ -5343,7 +5660,10 @@
               "bonus": {
                 "expr": "@получатель.dex_save"
               },
-              "check": "save_roll"
+              "tags": [
+                "спасбросок",
+                "ловкость"
+              ]
             },
             "versus": {
               "expr": "@отправитель.spell_dc"
@@ -5554,13 +5874,19 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "attack_roll",
+            "target": "roll:any",
+            "tags": [
+              "атака"
+            ],
             "edit": "disadvantage",
             "condition": null
           },
           {
             "kind": "roll",
-            "target": "incoming:attack_roll",
+            "target": "incoming:roll:any",
+            "tags": [
+              "атака"
+            ],
             "edit": "advantage",
             "condition": null
           }
@@ -5600,13 +5926,19 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "attack_roll",
+            "target": "roll:any",
+            "tags": [
+              "атака"
+            ],
             "edit": "disadvantage",
             "condition": null
           },
           {
             "kind": "roll",
-            "target": "skill_roll",
+            "target": "roll:any",
+            "tags": [
+              "проверка"
+            ],
             "edit": "disadvantage",
             "condition": null
           }
@@ -5655,13 +5987,19 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "attack_roll",
+            "target": "roll:any",
+            "tags": [
+              "атака"
+            ],
             "edit": "advantage",
             "condition": null
           },
           {
             "kind": "roll",
-            "target": "incoming:attack_roll",
+            "target": "incoming:roll:any",
+            "tags": [
+              "атака"
+            ],
             "edit": "disadvantage",
             "condition": null
           }
@@ -5679,19 +6017,30 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "incoming:attack_roll",
+            "target": "incoming:roll:any",
+            "tags": [
+              "атака"
+            ],
             "edit": "advantage",
             "condition": null
           },
           {
             "kind": "roll",
-            "target": "check:str_save",
+            "target": "roll:any",
+            "tags": [
+              "спасбросок",
+              "сила"
+            ],
             "edit": "auto_fail",
             "condition": null
           },
           {
             "kind": "roll",
-            "target": "check:dex_save",
+            "target": "roll:any",
+            "tags": [
+              "спасбросок",
+              "ловкость"
+            ],
             "edit": "auto_fail",
             "condition": null
           },
@@ -5717,19 +6066,30 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "incoming:attack_roll",
+            "target": "incoming:roll:any",
+            "tags": [
+              "атака"
+            ],
             "edit": "advantage",
             "condition": null
           },
           {
             "kind": "roll",
-            "target": "check:str_save",
+            "target": "roll:any",
+            "tags": [
+              "спасбросок",
+              "сила"
+            ],
             "edit": "auto_fail",
             "condition": null
           },
           {
             "kind": "roll",
-            "target": "check:dex_save",
+            "target": "roll:any",
+            "tags": [
+              "спасбросок",
+              "ловкость"
+            ],
             "edit": "auto_fail",
             "condition": null
           },
@@ -5763,13 +6123,19 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "attack_roll",
+            "target": "roll:any",
+            "tags": [
+              "атака"
+            ],
             "edit": "disadvantage",
             "condition": null
           },
           {
             "kind": "roll",
-            "target": "skill_roll",
+            "target": "roll:any",
+            "tags": [
+              "проверка"
+            ],
             "edit": "disadvantage",
             "condition": null
           }
@@ -5787,13 +6153,19 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "incoming:attack_roll",
+            "target": "incoming:roll:any",
+            "tags": [
+              "атака"
+            ],
             "edit": "advantage",
             "condition": null
           },
           {
             "kind": "roll",
-            "target": "attack_roll",
+            "target": "roll:any",
+            "tags": [
+              "атака"
+            ],
             "edit": "disadvantage",
             "condition": null
           }
@@ -5819,19 +6191,29 @@
           },
           {
             "kind": "roll",
-            "target": "attack_roll",
+            "target": "roll:any",
+            "tags": [
+              "атака"
+            ],
             "edit": "disadvantage",
             "condition": null
           },
           {
             "kind": "roll",
-            "target": "incoming:attack_roll",
+            "target": "incoming:roll:any",
+            "tags": [
+              "атака"
+            ],
             "edit": "advantage",
             "condition": null
           },
           {
             "kind": "roll",
-            "target": "check:dex_save",
+            "target": "roll:any",
+            "tags": [
+              "спасбросок",
+              "ловкость"
+            ],
             "edit": "disadvantage",
             "condition": null
           }
@@ -5849,19 +6231,30 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "incoming:attack_roll",
+            "target": "incoming:roll:any",
+            "tags": [
+              "атака"
+            ],
             "edit": "advantage",
             "condition": null
           },
           {
             "kind": "roll",
-            "target": "check:str_save",
+            "target": "roll:any",
+            "tags": [
+              "спасбросок",
+              "сила"
+            ],
             "edit": "auto_fail",
             "condition": null
           },
           {
             "kind": "roll",
-            "target": "check:dex_save",
+            "target": "roll:any",
+            "tags": [
+              "спасбросок",
+              "ловкость"
+            ],
             "edit": "auto_fail",
             "condition": null
           }
@@ -5879,19 +6272,30 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "incoming:attack_roll",
+            "target": "incoming:roll:any",
+            "tags": [
+              "атака"
+            ],
             "edit": "advantage",
             "condition": null
           },
           {
             "kind": "roll",
-            "target": "check:str_save",
+            "target": "roll:any",
+            "tags": [
+              "спасбросок",
+              "сила"
+            ],
             "edit": "auto_fail",
             "condition": null
           },
           {
             "kind": "roll",
-            "target": "check:dex_save",
+            "target": "roll:any",
+            "tags": [
+              "спасбросок",
+              "ловкость"
+            ],
             "edit": "auto_fail",
             "condition": null
           },
@@ -5959,13 +6363,20 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "incoming:attack_roll",
+            "target": "incoming:roll:any",
+            "tags": [
+              "атака"
+            ],
             "edit": "disadvantage",
             "condition": null
           },
           {
             "kind": "roll",
-            "target": "check:dex_save",
+            "target": "roll:any",
+            "tags": [
+              "спасбросок",
+              "ловкость"
+            ],
             "edit": "advantage",
             "condition": null
           }
@@ -5985,13 +6396,19 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "attack_roll",
+            "target": "roll:any",
+            "tags": [
+              "атака"
+            ],
             "edit": "advantage",
             "condition": null
           },
           {
             "kind": "roll",
-            "target": "incoming:attack_roll",
+            "target": "incoming:roll:any",
+            "tags": [
+              "атака"
+            ],
             "edit": "advantage",
             "condition": null
           }
@@ -6033,19 +6450,10 @@
           },
           {
             "kind": "roll",
-            "target": "check:athletics",
-            "edit": "advantage",
-            "condition": null
-          },
-          {
-            "kind": "roll",
-            "target": "check:str_save",
-            "edit": "advantage",
-            "condition": null
-          },
-          {
-            "kind": "roll",
-            "target": "check:str_mod",
+            "target": "roll:any",
+            "tags": [
+              "сила"
+            ],
             "edit": "advantage",
             "condition": null
           }
@@ -6105,13 +6513,19 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "attack_roll",
+            "target": "roll:any",
+            "tags": [
+              "атака"
+            ],
             "edit": "bless",
             "condition": null
           },
           {
             "kind": "roll",
-            "target": "save_roll",
+            "target": "roll:any",
+            "tags": [
+              "спасбросок"
+            ],
             "edit": "bless",
             "condition": null
           }
@@ -6129,13 +6543,19 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "attack_roll",
+            "target": "roll:any",
+            "tags": [
+              "атака"
+            ],
             "edit": "bane",
             "condition": null
           },
           {
             "kind": "roll",
-            "target": "save_roll",
+            "target": "roll:any",
+            "tags": [
+              "спасбросок"
+            ],
             "edit": "bane",
             "condition": null
           }
@@ -6153,7 +6573,10 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "skill_roll",
+            "target": "roll:any",
+            "tags": [
+              "проверка"
+            ],
             "edit": "guidance",
             "condition": null
           }
@@ -6171,7 +6594,10 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "save_roll",
+            "target": "roll:any",
+            "tags": [
+              "спасбросок"
+            ],
             "edit": "guidance",
             "condition": null
           }
@@ -6205,7 +6631,11 @@
           },
           {
             "kind": "roll",
-            "target": "check:dex_save",
+            "target": "roll:any",
+            "tags": [
+              "спасбросок",
+              "ловкость"
+            ],
             "edit": "advantage",
             "condition": null
           }
@@ -6239,7 +6669,11 @@
           },
           {
             "kind": "roll",
-            "target": "check:dex_save",
+            "target": "roll:any",
+            "tags": [
+              "спасбросок",
+              "ловкость"
+            ],
             "op": "add",
             "value": -2,
             "condition": null
@@ -6258,7 +6692,10 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "incoming:attack_roll",
+            "target": "incoming:roll:any",
+            "tags": [
+              "атака"
+            ],
             "edit": "advantage",
             "condition": null
           }
@@ -6276,7 +6713,10 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "incoming:attack_roll",
+            "target": "incoming:roll:any",
+            "tags": [
+              "атака"
+            ],
             "edit": "disadvantage",
             "condition": null
           }
@@ -6606,7 +7046,11 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "check:dex_save",
+            "target": "roll:any",
+            "tags": [
+              "спасбросок",
+              "ловкость"
+            ],
             "edit": "advantage",
             "condition": null
           }
@@ -6624,7 +7068,10 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "check:initiative",
+            "target": "roll:any",
+            "tags": [
+              "инициатива"
+            ],
             "edit": "advantage",
             "condition": null
           }
@@ -6642,7 +7089,10 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "skill_roll",
+            "target": "roll:any",
+            "tags": [
+              "проверка"
+            ],
             "edit": "reliable",
             "condition": null
           }
@@ -6826,7 +7276,11 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "check:con_save",
+            "target": "roll:any",
+            "tags": [
+              "спасбросок",
+              "телосложение"
+            ],
             "edit": "advantage",
             "condition": null
           }
@@ -6852,7 +7306,10 @@
           },
           {
             "kind": "roll",
-            "target": "save_roll",
+            "target": "roll:any",
+            "tags": [
+              "спасбросок"
+            ],
             "op": "add",
             "value": 1,
             "condition": null
@@ -6883,7 +7340,10 @@
               "bonus": {
                 "expr": "@отправитель.con_save"
               },
-              "check": "save_roll"
+              "tags": [
+                "спасбросок",
+                "телосложение"
+              ]
             },
             "versus": {
               "expr": "max(10, floor(@event_amount / 2))"
@@ -6953,7 +7413,9 @@
               "die": {
                 "constant": "lead_die"
               },
-              "check": "save_roll"
+              "tags": [
+                "спасбросок"
+              ]
             },
             "versus": {
               "const": 10
@@ -7553,7 +8015,10 @@
               "bonus": {
                 "expr": "@отправитель.wis_save"
               },
-              "check": "save_roll"
+              "tags": [
+                "спасбросок",
+                "мудрость"
+              ]
             },
             "versus": {
               "ref": "worn.carry"
@@ -7600,7 +8065,10 @@
               "bonus": {
                 "expr": "@отправитель.wis_save"
               },
-              "check": "save_roll"
+              "tags": [
+                "спасбросок",
+                "мудрость"
+              ]
             },
             "versus": {
               "ref": "worn.carry"
@@ -7647,7 +8115,10 @@
               "bonus": {
                 "expr": "@отправитель.wis_save"
               },
-              "check": "save_roll"
+              "tags": [
+                "спасбросок",
+                "мудрость"
+              ]
             },
             "versus": {
               "ref": "worn.carry"
@@ -7694,7 +8165,10 @@
               "bonus": {
                 "expr": "@отправитель.con_save"
               },
-              "check": "save_roll"
+              "tags": [
+                "спасбросок",
+                "телосложение"
+              ]
             },
             "versus": {
               "ref": "worn.carry"
@@ -7741,7 +8215,10 @@
               "bonus": {
                 "expr": "@отправитель.str_save"
               },
-              "check": "save_roll"
+              "tags": [
+                "спасбросок",
+                "сила"
+              ]
             },
             "versus": {
               "ref": "worn.carry"
@@ -7953,7 +8430,10 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "skill_roll",
+            "target": "roll:any",
+            "tags": [
+              "проверка"
+            ],
             "edit": "disadvantage",
             "condition": "@exhaustion >= 1"
           },
@@ -7967,13 +8447,19 @@
           },
           {
             "kind": "roll",
-            "target": "attack_roll",
+            "target": "roll:any",
+            "tags": [
+              "атака"
+            ],
             "edit": "disadvantage",
             "condition": "@exhaustion >= 3"
           },
           {
             "kind": "roll",
-            "target": "save_roll",
+            "target": "roll:any",
+            "tags": [
+              "спасбросок"
+            ],
             "edit": "disadvantage",
             "condition": "@exhaustion >= 3"
           },
@@ -8812,7 +9298,8 @@
           {
             "key": "save_by",
             "label": "Чем спасаются",
-            "kind": "expr"
+            "kind": "choice",
+            "from": "abilities"
           },
           {
             "key": "status",
@@ -8939,7 +9426,8 @@
           {
             "key": "save_by",
             "label": "Чем спасаются",
-            "kind": "expr"
+            "kind": "choice",
+            "from": "abilities"
           },
           {
             "key": "damage_die",
@@ -9005,7 +9493,8 @@
           {
             "key": "save_by",
             "label": "Чем спасаются",
-            "kind": "expr"
+            "kind": "choice",
+            "from": "abilities"
           },
           {
             "key": "damage_die",
@@ -9146,7 +9635,8 @@
           {
             "key": "save_by",
             "label": "Чем спасаются",
-            "kind": "expr"
+            "kind": "choice",
+            "from": "abilities"
           },
           {
             "key": "status",
@@ -10616,7 +11106,7 @@
         "props": {
           "damage_die": "1d8",
           "damage_type": "излучение",
-          "save_by": "@получатель.dex_save",
+          "save_by": "ловкость",
           "status": ""
         }
       },
@@ -10628,7 +11118,7 @@
         "props": {
           "damage_die": "1d12",
           "damage_type": "яд",
-          "save_by": "@получатель.con_save",
+          "save_by": "телосложение",
           "status": ""
         }
       },
@@ -10640,7 +11130,7 @@
         "props": {
           "damage_die": "1d8",
           "damage_type": "некротический",
-          "save_by": "@получатель.wis_save",
+          "save_by": "мудрость",
           "status": ""
         }
       },
@@ -10696,7 +11186,7 @@
         "description": "Конус огня: спасбросок Ловкости, 3к6, при успехе половина. Круг выше — ещё 1к6.",
         "props": {
           "spell_level": 1,
-          "save_by": "@получатель.dex_save",
+          "save_by": "ловкость",
           "damage_die": "1d6",
           "dice_count": 3,
           "dice_up": 1,
@@ -10710,7 +11200,7 @@
         "description": "Волна вокруг себя: спасбросок Телосложения, 2к8 громом, при успехе половина.",
         "props": {
           "spell_level": 1,
-          "save_by": "@получатель.con_save",
+          "save_by": "телосложение",
           "damage_die": "1d8",
           "dice_count": 2,
           "dice_up": 1,
@@ -10780,7 +11270,7 @@
         "description": "Шар в 20 футов: спасбросок Ловкости, 8к6 огнём, при успехе половина. Круг выше — ещё 1к6.",
         "props": {
           "spell_level": 3,
-          "save_by": "@получатель.dex_save",
+          "save_by": "ловкость",
           "damage_die": "1d6",
           "dice_count": 8,
           "dice_up": 1,
@@ -10794,7 +11284,7 @@
         "description": "Линия в 100 футов: спасбросок Ловкости, 8к6 молнией, при успехе половина.",
         "props": {
           "spell_level": 3,
-          "save_by": "@получатель.dex_save",
+          "save_by": "ловкость",
           "damage_die": "1d6",
           "dice_count": 8,
           "dice_up": 1,
@@ -10808,7 +11298,7 @@
         "description": "Конус в 60 футов: спасбросок Телосложения, 8к8 холодом, при успехе половина.",
         "props": {
           "spell_level": 5,
-          "save_by": "@получатель.con_save",
+          "save_by": "телосложение",
           "damage_die": "1d8",
           "dice_count": 8,
           "dice_up": 1,
@@ -10822,7 +11312,7 @@
         "description": "Спасбросок Ловкости: провал — 10к6+40 силовым уроном, успех — ничего.",
         "props": {
           "spell_level": 6,
-          "save_by": "@получатель.dex_save",
+          "save_by": "ловкость",
           "damage_die": "1d6",
           "dice_count": 10,
           "dice_up": 3,
@@ -10837,7 +11327,7 @@
         "description": "Спасбросок Мудрости: провал — паралич. В конце своего хода цель пробует снова.",
         "props": {
           "spell_level": 2,
-          "save_by": "@получатель.wis_save",
+          "save_by": "мудрость",
           "status": "paralyzed",
           "repeat": "repeat_wis_paralyzed",
           "holds": "да"
@@ -10850,7 +11340,7 @@
         "description": "Спасбросок Мудрости: провал — испуг и бегство. В конце хода цель пробует снова.",
         "props": {
           "spell_level": 3,
-          "save_by": "@получатель.wis_save",
+          "save_by": "мудрость",
           "status": "frightened",
           "repeat": "repeat_wis_frightened",
           "holds": "да"
@@ -10863,7 +11353,7 @@
         "description": "Спасбросок Мудрости: провал — замедление. В конце хода цель пробует снова.",
         "props": {
           "spell_level": 3,
-          "save_by": "@получатель.wis_save",
+          "save_by": "мудрость",
           "status": "slowed",
           "repeat": "repeat_wis_slowed",
           "holds": "да"
@@ -10876,7 +11366,7 @@
         "description": "Спасбросок Телосложения: провал — слепота на минуту.",
         "props": {
           "spell_level": 2,
-          "save_by": "@получатель.con_save",
+          "save_by": "телосложение",
           "status": "blinded",
           "repeat": "repeat_con_blinded",
           "holds": "нет"
@@ -10889,7 +11379,7 @@
         "description": "Спасбросок Силы: провал — цель опутана.",
         "props": {
           "spell_level": 1,
-          "save_by": "@получатель.str_save",
+          "save_by": "сила",
           "status": "restrained",
           "repeat": "repeat_str_restrained",
           "holds": "да"

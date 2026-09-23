@@ -103,6 +103,15 @@ export function checkReadback(step: Step, system: System, effect: Effect, names?
 
   const out: Segment[] = [seg(s.side === 'target' ? 'Цель бросает' : 'Ты бросаешь')];
   out.push(roll.die ? refSegment(roll.die, system, effect, 'какой костью?', names) : hole('какой костью?'));
+  const tags = (roll.tags ?? []) as unknown[];
+  if (tags.length) {
+    out.push(seg('('));
+    tags.forEach((tag, i) => {
+      if (i) out.push(seg(','));
+      out.push(typeof tag === 'string' ? seg(tag) : refSegment(tag, system, effect, 'метка?', names));
+    });
+    out.push(seg(')'));
+  }
   if (roll.bonus !== undefined && roll.bonus !== null) {
     const bonus = refSegment(roll.bonus, system, effect, 'прибавка?', names);
     if (!('text' in bonus) || (bonus.text !== '0' && bonus.text !== '')) out.push(seg('+'), bonus);

@@ -54,12 +54,21 @@ export function packRef(ref: unknown, ctx: RefContext): unknown {
         throw new EngineError(`${who(ctx)}: «${ownerOf(name)!.rest}» получателя — но в шагах отправителя получателя нет, они идут один раз до всех целей`);
       }
       const sent: Record<string, unknown> = {};
+      const rows: Record<string, string> = {};
       for (const name of deps) {
-        if (ownerOf(name)?.owner === RECEIVER) continue;
-        const known = senderValue(name, ctx);
-        if (known !== undefined) sent[name] = known;
+        const owned = ownerOf(name);
+        const chosen = owned?.owner === RECEIVER ? chosenRowOf(owned.rest, ctx) : null;
+        if (chosen) rows[chosen.head] = chosen.table;
+        const key = owned?.owner === RECEIVER ? chosen?.head : name;
+        if (!key || key in sent) continue;
+        const known = senderValue(key, ctx);
+        if (known !== undefined) sent[key] = known;
       }
-      return { expr, of: 'target', ...(Object.keys(sent).length ? { sent } : {}) };
+      return {
+        expr, of: 'target',
+        ...(Object.keys(sent).length ? { sent } : {}),
+        ...(Object.keys(rows).length ? { rows } : {}),
+      };
     }
     if (waitsForStep(expr, ctx)) {
       const sent: Record<string, unknown> = {};
@@ -106,6 +115,12 @@ export function packRef(ref: unknown, ctx: RefContext): unknown {
   }
 
   return unknownForm(r, ctx);
+}
+
+function chosenRowOf(name: string, ctx: RefContext): { head: string; table: string } | null {
+  const head = splitPath(name)?.head;
+  const table = head ? referencedTable(ctx.pass.system, head, ctx.paramDefs) : undefined;
+  return head && table && (ctx.paramDefs || []).some(p => p.key === head) ? { head, table } : null;
 }
 
 function packParam(key: string, optional: boolean, ctx: RefContext): unknown {
@@ -199,7 +214,7 @@ export function resolveRef(ref: unknown, ctx: RefContext): unknown {
       throw new EngineError(
         `${who(ctx)}: выражение «${r.expr}» стороны отправителя пришло неразрешённым — конверт бит`);
     }
-    return evaluate(r.expr, ctx, r.sent as Record<string, unknown> | undefined, true);
+    return evaluate(r.expr, ctx, r.sent as Record<string, unknown> | undefined, true, r.rows as Record<string, string> | undefined);
   }
 
   if ('table' in r) {
@@ -273,7 +288,9 @@ function waitsForStep(expr: string, ctx: RefContext): boolean {
   });
 }
 
-function evaluate(expr: unknown, ctx: RefContext, sent?: Record<string, unknown>, atReceiver = false): unknown {
+function evaluate(
+  expr: unknown, ctx: RefContext, sent?: Record<string, unknown>, atReceiver = false, rows?: Record<string, string>,
+): unknown {
   const results = ctx.results;
   const isField = (name: string) => ctx.pass.system.fields.some(f => f.tag === name);
   const resolve = (name: string): unknown => {
@@ -302,7 +319,7 @@ function evaluate(expr: unknown, ctx: RefContext, sent?: Record<string, unknown>
       if (named !== undefined) return named;
       if (ctx.recordScope && ctx.props && name in ctx.props) return recordValue(name, ctx);
       const split = splitPath(name);
-      const table = split ? referencedTable(ctx.pass.system, split.head, ctx.paramDefs) : undefined;
+      const table = split ? rows?.[split.head] ?? referencedTable(ctx.pass.system, split.head, ctx.paramDefs) : undefined;
       if (split && table) return walk(ctx.pass.system, ctx.pass, table, resolve(split.head), split.path, who(ctx));
     }
     return ctx.pass.resolve(name);

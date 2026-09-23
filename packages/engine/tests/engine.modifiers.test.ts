@@ -153,12 +153,12 @@ group('модификаторы', () => {
     const names = roll => roll.edits.map(e => e.label);
 
     test('без эффектов правок нет', () => {
-      deepEq(names(resolveRoll(system, arven, 'attack_roll', withGear(arven))), []);
+      deepEq(names(resolveRoll(system, arven, ['атака'], withGear(arven))), []);
     });
 
     test('отравление приносит правку, названную автором мира', () => {
       const sheet = poisoned(arven);
-      deepEq(names(resolveRoll(system, sheet, 'attack_roll', withGear(sheet))), ['Помеха']);
+      deepEq(names(resolveRoll(system, sheet, ['атака'], withGear(sheet))), ['Помеха']);
     });
 
     test('помеха не является числом и в значение не превращается', () => {
@@ -169,10 +169,10 @@ group('модификаторы', () => {
     test('гашение объявлено в СЛОВАРЕ, а не зашито в движке', () => {
       const sys = withEffects({
         blessed: passive('Благословение',
-          [{ kind: 'roll', target: 'attack_roll', edit: 'advantage', condition: null }]),
+          [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'advantage', condition: null }]),
       });
       const sheet = { ...arven, effects: [{ effectId: 'poisoned' }, { effectId: 'blessed' }] };
-      deepEq(names(resolveRoll(sys, sheet, 'attack_roll', newPass(sys, sheet, { compendium }))), [],
+      deepEq(names(resolveRoll(sys, sheet, ['атака'], newPass(sys, sheet, { compendium }))), [],
         'у обеих записей объявлено «гасится другой» — обе уходят');
     });
 
@@ -188,20 +188,20 @@ group('модификаторы', () => {
         effects: {
           ...system.effects,
           blessed: passive('Благословение',
-            [{ kind: 'roll', target: 'attack_roll', edit: 'advantage', condition: null }]),
+            [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'advantage', condition: null }]),
         },
       };
       const sheet = { ...arven, effects: [{ effectId: 'poisoned' }, { effectId: 'blessed' }] };
-      const roll = resolveRoll(loose, sheet, 'attack_roll', newPass(loose, sheet, { compendium }));
+      const roll = resolveRoll(loose, sheet, ['атака'], newPass(loose, sheet, { compendium }));
       eq(roll.edits.length, 2, 'закон гашения переехал в данные — движок его не навязывает');
     });
 
     test('две одинаковых правки не складываются — это по-прежнему одна правка', () => {
       const adv = n => passive('Пре' + n,
-        [{ kind: 'roll', target: 'attack_roll', edit: 'advantage', condition: null }]);
+        [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'advantage', condition: null }]);
       const sys = withEffects({ adv1: adv(1), adv2: adv(2) });
       const sheet = { ...arven, effects: [{ effectId: 'adv1' }, { effectId: 'adv2' }] };
-      const roll = resolveRoll(sys, sheet, 'attack_roll', newPass(sys, sheet, { compendium }));
+      const roll = resolveRoll(sys, sheet, ['атака'], newPass(sys, sheet, { compendium }));
       deepEq(names(roll), ['Преимущество'], 'нестакаемость — закон движка, а не данных');
       eq(roll.sources.length, 2, 'оба источника видны в разборе броска');
     });
@@ -209,15 +209,15 @@ group('модификаторы', () => {
     test('ссылка на правку, которой нет в словаре — внятная ошибка', () => {
       const sys = withEffects({
         weird: passive('Странное',
-          [{ kind: 'roll', target: 'attack_roll', edit: 'котик', condition: null }]),
+          [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'котик', condition: null }]),
       });
       const sheet = { ...arven, effects: [{ effectId: 'weird' }] };
-      throws(() => resolveRoll(sys, sheet, 'attack_roll', newPass(sys, sheet, { compendium })), 'котик');
+      throws(() => resolveRoll(sys, sheet, ['атака'], newPass(sys, sheet, { compendium })), 'котик');
     });
 
     test('что правка ДЕЛАЕТ, движок берёт из записи словаря', () => {
       const sheet = poisoned(arven);
-      const [edit] = resolveRoll(system, sheet, 'attack_roll', withGear(sheet)).edits;
+      const [edit] = resolveRoll(system, sheet, ['атака'], withGear(sheet)).edits;
       deepEq(edit.ops, [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }]);
     });
   });
@@ -228,31 +228,31 @@ group('модификаторы', () => {
 
     test('правило системы применяется без предметов и эффектов', () => {
       const sys = withRule({
-        kind: 'roll', label: 'Тяжёлый доспех мешает', target: 'skill_roll',
+        kind: 'roll', label: 'Тяжёлый доспех мешает', target: 'roll:any', tags: ['проверка'],
         edit: 'disadvantage', condition: null,
       });
       const p = newPass(sys, arven, { compendium });
-      deepEq(resolveRoll(sys, arven, 'skill_roll', p).edits.map(e => e.label), ['Помеха']);
+      deepEq(resolveRoll(sys, arven, ['проверка'], p).edits.map(e => e.label), ['Помеха']);
     });
 
     test('условие правила считается по каждому листу отдельно', () => {
       const sys = withRule({
-        kind: 'roll', label: 'Мастерство даёт фору', target: 'skill_roll',
+        kind: 'roll', label: 'Мастерство даёт фору', target: 'roll:any', tags: ['проверка'],
         edit: 'advantage', condition: '#prof_bonus >= 3',
       });
-      eq(resolveRoll(sys, arven, 'skill_roll', newPass(sys, arven, { compendium })).edits.length,
+      eq(resolveRoll(sys, arven, ['проверка'], newPass(sys, arven, { compendium })).edits.length,
         1, 'у Арвен бонус мастерства 3');
-      eq(resolveRoll(sys, mirra, 'skill_roll', newPass(sys, mirra, { compendium })).edits.length,
+      eq(resolveRoll(sys, mirra, ['проверка'], newPass(sys, mirra, { compendium })).edits.length,
         0, 'у Мирры 2');
     });
 
     test('правило системы гасится помехой от эффекта наравне с прочими', () => {
       const sys = withRule({
-        kind: 'roll', label: 'Фора', target: 'attack_roll',
+        kind: 'roll', label: 'Фора', target: 'roll:any', tags: ['атака'],
         edit: 'advantage', condition: null,
       });
       const sheet = { ...arven, effects: [{ effectId: 'poisoned' }] };
-      eq(resolveRoll(sys, sheet, 'attack_roll', newPass(sys, sheet, { compendium })).edits.length, 0);
+      eq(resolveRoll(sys, sheet, ['атака'], newPass(sys, sheet, { compendium })).edits.length, 0);
     });
 
     test('правило системы может править и значение, а не только бросок', () => {
@@ -265,10 +265,10 @@ group('модификаторы', () => {
 
     test('источник правила виден в разборе броска под своим ярлыком', () => {
       const sys = withRule({
-        kind: 'roll', label: 'Тяжёлый доспех мешает', target: 'skill_roll',
+        kind: 'roll', label: 'Тяжёлый доспех мешает', target: 'roll:any', tags: ['проверка'],
         edit: 'disadvantage', condition: null,
       });
-      const roll = resolveRoll(sys, arven, 'skill_roll', newPass(sys, arven, { compendium }));
+      const roll = resolveRoll(sys, arven, ['проверка'], newPass(sys, arven, { compendium }));
       eq(roll.sources[0].label, 'Тяжёлый доспех мешает');
       eq(roll.sources[0].type, 'room', 'источник — правило комнаты, а не предмет и не висящий эффект');
     });
@@ -278,17 +278,17 @@ group('модификаторы', () => {
 
     const bonus = (value, condition = null) => withEffects({
       guidance: passive('Наставление',
-        [{ kind: 'roll', target: 'skill_roll', op: 'add', value, stacking: 'sum', condition }]),
+        [{ kind: 'roll', target: 'roll:any', tags: ['проверка'], op: 'add', value, stacking: 'sum', condition }]),
     });
     const hung = { ...arven, effects: [{ effectId: 'guidance' }] };
-    const roll = sys => resolveRoll(sys, hung, 'skill_roll', newPass(sys, hung, { compendium }));
+    const roll = sys => resolveRoll(sys, hung, ['проверка'], newPass(sys, hung, { compendium }));
 
     test('прибавка к броску приходит числом', () => {
       eq(roll(bonus(5)).bonus, 5);
     });
 
     test('без модификаторов прибавки нет', () => {
-      eq(resolveRoll(system, arven, 'skill_roll', newPass(system, arven, { compendium })).bonus, 0);
+      eq(resolveRoll(system, arven, ['проверка'], newPass(system, arven, { compendium })).bonus, 0);
     });
 
     test('прибавка может быть формулой', () => {
@@ -298,13 +298,13 @@ group('модификаторы', () => {
     test('прибавка не отменяет и не заменяет преимущество', () => {
       const both = withEffects({
         guidance: passive('Наставление', [
-          { kind: 'roll', target: 'skill_roll', op: 'add', value: 2, stacking: 'sum', condition: null },
-          { kind: 'roll', target: 'skill_roll', edit: 'advantage', condition: null },
+          { kind: 'roll', target: 'roll:any', tags: ['проверка'], op: 'add', value: 2, stacking: 'sum', condition: null },
+          { kind: 'roll', target: 'roll:any', tags: ['проверка'], edit: 'advantage', condition: null },
         ]),
       });
 
       const bare = { ...arven, equipped: [], effects: [{ effectId: 'guidance' }] };
-      const result = resolveRoll(both, bare, 'skill_roll', newPass(both, bare, { compendium }));
+      const result = resolveRoll(both, bare, ['проверка'], newPass(both, bare, { compendium }));
       eq(result.bonus, 2, 'число живёт отдельно от правки');
       deepEq(result.edits.map(e => e.label), ['Преимущество']);
     });
@@ -312,8 +312,8 @@ group('модификаторы', () => {
     test('прибавка остаётся, даже когда преимущество погашено помехой', () => {
       const both = withEffects({
         guidance: passive('Наставление', [
-          { kind: 'roll', target: 'skill_roll', op: 'add', value: 2, stacking: 'sum', condition: null },
-          { kind: 'roll', target: 'skill_roll', edit: 'advantage', condition: null },
+          { kind: 'roll', target: 'roll:any', tags: ['проверка'], op: 'add', value: 2, stacking: 'sum', condition: null },
+          { kind: 'roll', target: 'roll:any', tags: ['проверка'], edit: 'advantage', condition: null },
         ]),
       });
 
@@ -338,26 +338,20 @@ group('модификаторы', () => {
   });
 
   group('словарь мишеней выводится из системы', () => {
-    test('в него попадают все поля, все броски и входящее хранимых полей', () => {
+    test('в него попадают все поля, два броска и входящее хранимых полей', () => {
       const all = targets(system);
-      const derived = system.fields.filter(f => f.roll).length;
       const incoming = system.fields.filter(f => f.value.kind === 'stored').length;
-      const rolls = 1 + system.rolls.length + derived;
       const events = calledOf(system).length;
       const cells = Object.values(system.tables ?? {}).reduce((n, table) => {
         const columns = (table.columns ?? []).filter(c => c.kind === 'expr' || c.kind === 'number').length;
         const rows = table.key === 'range' ? 0 : (table.rows ?? []).filter(r => r.value !== undefined).length;
         return n + columns * (1 + rows);
       }, 0);
-      eq(all.length, rolls * 2 + system.fields.length + incoming + events + cells,
-        'общая мишень, поля, объявленные броски, броски из полей, входящее хранимых, «против меня» на каждый бросок, входящие вызовы и ячейки таблиц');
-      ok(all.some(t => t.tag === 'incoming:attack_roll' && t.kind === 'roll'),
-        'состояние цели может править чужой бросок по ней');
+      eq(all.length, 2 + system.fields.length + incoming + events + cells,
+        'мой бросок и бросок по мне, поля, входящее хранимых, входящие вызовы и ячейки таблиц');
+      ok(all.some(t => t.tag === 'roll:any' && t.kind === 'roll'), 'свой бросок');
+      ok(all.some(t => t.tag === 'incoming:roll:any' && t.kind === 'roll'), 'бросок по мне правит состояние цели');
       ok(all.some(t => t.tag === 'ac' && t.kind === 'value'));
-      ok(all.some(t => t.tag === 'attack_roll' && t.kind === 'roll'));
-
-      ok(all.some(t => t.tag === 'roll:any' && t.kind === 'roll'),
-        'общая мишень выводится, как и все прочие');
       ok(all.some(t => t.tag === 'incoming:hp_current' && t.kind === 'incoming'),
         'на входящее вешаются сопротивления');
     });
@@ -378,49 +372,34 @@ group('модификаторы', () => {
   });
 });
 
-group('броски выводятся из полей', () => {
-  const rollable = (tag, label) => ({
-    ...system,
-    fields: system.fields.map(f => f.tag === tag ? { ...f, roll: { label } } : f),
+group('бросок находят по меткам', () => {
+  const owl = (tags) => ({ ...system, effects: { ...system.effects,
+    owl: passive('Сова-помощница',
+      [{ kind: 'roll', target: 'roll:any', tags, op: 'add', value: 5, stacking: 'sum', condition: null }]) } });
+  const sheet = { ...arven, effects: [{ effectId: 'owl' }] };
+  const bonus = (sys, tags) => resolveRoll(sys, sheet, tags, newPass(sys, sheet, { compendium })).bonus;
+
+  test('правка на метки ложится на бросок, где есть все её метки', () => {
+    const sys = owl(['проверка', 'мудрость']);
+    eq(bonus(sys, ['проверка', 'мудрость']), 5);
+    eq(bonus(sys, ['проверка', 'мудрость', 'внимательность']), 5, 'лишние метки броска не мешают');
   });
 
-  test('помеченное поле даёт мишень броска', () => {
-    const sys = rollable('hp_max', 'Бросок хитов');
-    const found = targets(sys).find(t => t.tag === 'check:hp_max');
-    ok(found, `мишени нет; есть: ${targets(sys).filter(t => t.kind === 'roll').map(t => t.tag)}`);
-    eq(found.label, 'Бросок хитов');
-    eq(found.kind, 'roll');
+  test('не хватает хоть одной метки — правка мимо', () => {
+    const sys = owl(['проверка', 'мудрость']);
+    eq(bonus(sys, ['проверка', 'сила']), 0, 'другая характеристика');
+    eq(bonus(sys, ['спасбросок', 'мудрость']), 0, 'спасбросок той же характеристики');
+    eq(bonus(sys, []), 0, 'бросок без меток');
   });
 
-  test('непомеченное поле мишени не даёт', () => {
-    eq(targets(system).some(t => t.tag === 'check:hp_max'), false);
-  });
-
-  test('поле остаётся мишенью и для бонусов к значению', () => {
-    const sys = rollable('wis', 'Проверка Мудрости');
-    ok(targets(sys).some(t => t.tag === 'wis' && t.kind === 'value'), 'само поле никуда не делось');
-  });
-
-  test('эффект на проверку Мудрости не задевает другие броски', () => {
-    const sys = rollable('wis', 'Проверка Мудрости');
-    const owled = { ...sys, effects: { ...sys.effects,
-      owl: passive('Сова-помощница',
-        [{ kind: 'roll', target: 'check:wis', op: 'add', value: 5, stacking: 'sum', condition: null }]) } };
-    const sheet = { ...arven, effects: [{ effectId: 'owl' }] };
-    const p = () => newPass(owled, sheet, { compendium });
-
-    eq(resolveRoll(owled, sheet, 'check:wis', p()).bonus, 5);
-    eq(resolveRoll(owled, sheet, 'skill_roll', p()).bonus, 0, 'общая проверка навыка не тронута');
-    eq(resolveRoll(owled, sheet, 'attack_roll', p()).bonus, 0, 'атака не тронута');
+  test('правка без меток ложится на любой бросок', () => {
+    eq(bonus(owl(undefined), ['атака']), 5);
+    eq(bonus(owl(undefined), []), 5);
   });
 
   test('характеристика при этом не меняется', () => {
-    const sys = rollable('wis', 'Проверка Мудрости');
-    const owled = { ...sys, effects: { ...sys.effects,
-      owl: passive('Сова',
-        [{ kind: 'roll', target: 'check:wis', op: 'add', value: 5, stacking: 'sum', condition: null }]) } };
-    const sheet = { ...arven, effects: [{ effectId: 'owl' }] };
-    eq(calc(owled, sheet, 'wis', newPass(owled, sheet, { compendium })), 12, 'Мудрость как была');
-    eq(calc(owled, sheet, 'wis_mod', newPass(owled, sheet, { compendium })), 1, 'и модификатор тоже');
+    const sys = owl(['проверка', 'мудрость']);
+    eq(calc(sys, sheet, 'wis', newPass(sys, sheet, { compendium })), 12, 'Мудрость как была');
+    eq(calc(sys, sheet, 'wis_mod', newPass(sys, sheet, { compendium })), 1, 'и модификатор тоже');
   });
 });

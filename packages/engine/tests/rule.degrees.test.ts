@@ -16,7 +16,7 @@ group('степени успеха', () => {
   const sys: any = {
     id: 'pbta',
     fields: [],
-    rolls: [{ tag: 'ход', label: 'Ход' }],
+    tables: { rolls: { label: 'Броски', key: 'word', rows: [{ value: 'ход' }] } },
     constants: { пара: { label: 'Две шестёрки', kind: 'die', dice: [{ count: 2, sides: 6 }] } },
     tables: {
       исходы: {
@@ -41,7 +41,7 @@ group('степени успеха', () => {
       ...sys.effects,
       [id]: {
         label: id, activation: 'passive', duration: { kind: 'permanent' },
-        modifiers: [{ kind: 'roll', target: 'ход', edit, condition: null }],
+        modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['ход'], edit, condition: null }],
       },
     },
   });
@@ -49,7 +49,7 @@ group('степени успеха', () => {
   const rule: any = {
     steps: [{
       id: 'move', type: 'threshold',
-      roll: { die: { constant: 'пара' }, bonus: { const: 0 }, check: 'ход' },
+      roll: { die: { constant: 'пара' }, bonus: { const: 0 }, tags: ['ход'] },
       versus: { const: 7 },
       degrees: { table: 'исходы', of: 'total' },
     }],

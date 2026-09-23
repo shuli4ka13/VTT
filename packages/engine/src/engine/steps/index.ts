@@ -25,7 +25,7 @@ export interface StepContext extends RefContext {
   attach?: (id: string, extra?: Record<string, number>) => void;
   detach?: (id: string) => void;
 
-  against?: (rollTag: string | null) => SourcedModifier[];
+  against?: (tags: readonly string[]) => SourcedModifier[];
 
   claims?: string[];
 

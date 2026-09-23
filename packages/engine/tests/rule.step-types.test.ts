@@ -52,7 +52,7 @@ const run = (steps, opts = {}) => {
 
 const hit = (over = {}) => ({
   id: 'hit', type: 'threshold',
-  roll: { die: { constant: 'lead_die' }, bonus: { expr: '#attack_bonus' }, check: 'attack_roll' },
+  roll: { die: { constant: 'lead_die' }, bonus: { expr: '#attack_bonus' }, tags: ['атака'] },
   versus: { tag: 'ac' },
   ...over,
 });
@@ -90,7 +90,7 @@ group('шаг «порог»', () => {
 
     const save = {
       id: 'save', type: 'threshold', side: 'target',
-      roll: { die: { constant: 'lead_die' }, bonus: { expr: '@получатель.dex_save' }, check: 'save_roll' },
+      roll: { die: { constant: 'lead_die' }, bonus: { expr: '@получатель.dex_save' }, tags: ['спасбросок'] },
       versus: { expr: '#spell_dc' },
       continueOn: 'fail',
     };

@@ -1,3 +1,5 @@
+import { tagWords } from '../engine/roll-tags.ts';
+import { ANY_ROLL, incomingTagOf } from '../engine/targets.ts';
 import { ownerOf } from '../engine/owners.ts';
 import type { System, Compendium, Effect, Step, Modifier, Guard } from './types.ts';
 import { compile } from '../formula/index.ts';
@@ -56,7 +58,7 @@ export function declaredOf(system: System): Declared {
     table: new Set(Object.keys(system.tables ?? {})),
     rollEdit: new Set(Object.keys(system.roll_edits ?? {})),
     event: new Set(Object.keys(system.effects ?? {})),
-    roll: new Set((system.rolls ?? []).map(r => r.tag)),
+    roll: new Set(tagWords(system).keys()),
     prop: new Set(Object.values(system.records ?? {}).flatMap(k => (k.props ?? []).map(p => p.key))),
     recordKind: new Set(Object.keys(system.records ?? {})),
   };
@@ -83,7 +85,10 @@ function slotRefs(value: unknown, slotKind: string | undefined, from: Where, sco
     return;
   }
   if (slotKind === 'roll') {
-    if (typeof value === 'string' && value) out.push({ kind: 'roll', key: value, from });
+    for (const tag of Array.isArray(value) ? value : [value]) {
+      if (typeof tag === 'string') { if (tag) out.push({ kind: 'roll', key: tag, from }); }
+      else slotRefs(tag, undefined, from, scope, out);
+    }
     return;
   }
   if (typeof value !== 'object') return;
@@ -129,7 +134,9 @@ function exprRefs(source: string, from: Where, scope: ChainScope, out: Reference
   for (const dep of deps) {
     const owned = ownerOf(dep);
     if (owned) {
-      out.push({ kind: 'field', key: owned.rest.split('.')[0]!, from, scope: `owner:${owned.owner}` });
+      const head = owned.rest.split('.')[0]!;
+      if (owned.rest.includes('.') && scope.params.has(head)) continue;
+      out.push({ kind: 'field', key: head, from, scope: `owner:${owned.owner}` });
       continue;
     }
     if (scope.earlier.has(dep) || scope.params.has(dep)) continue;
@@ -184,7 +191,8 @@ function modifierRefs(list: Modifier[] | undefined, from: Where, out: Reference[
     if (mod.kind === 'value') {
       if (target && !target.includes(':') && target !== '*') out.push({ kind: 'field', key: target, from });
     } else {
-      if (target && target !== '*' && !target.includes(':')) out.push({ kind: 'roll', key: target, from });
+      if (target && target !== ANY_ROLL && target !== incomingTagOf(ANY_ROLL)) out.push({ kind: 'roll', key: target, from });
+      for (const tag of (mod as { tags?: string[] }).tags ?? []) out.push({ kind: 'roll', key: tag, from });
       if (mod.edit) out.push({ kind: 'rollEdit', key: String(mod.edit), from });
     }
     if (typeof mod.condition === 'string' && mod.condition.trim()) {
@@ -237,8 +245,7 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
 
   for (const field of system.fields) {
     const from: Where = { tab: 'sheet', field: field.tag };
-    const rollKind = (field.roll as { check?: unknown } | undefined)?.check;
-    if (typeof rollKind === 'string' && rollKind) out.push({ kind: 'roll', key: rollKind, from });
+    for (const tag of field.roll?.tags ?? []) out.push({ kind: 'roll', key: tag, from });
     if (field.value.kind === 'formula') exprRefs(field.value.expr, from, noScope, out);
     if (field.value.kind === 'table') {
       if (field.value.table) out.push({ kind: 'table', key: field.value.table, from });
@@ -275,7 +282,7 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
     const from: Where = { tab: 'rules', section: 'initiative' };
     if (system.initiative.die?.constant) out.push({ kind: 'constant', key: system.initiative.die.constant, from });
     if (system.initiative.bonus) slotRefs(system.initiative.bonus, undefined, from, noScope, out);
-    if (system.initiative.check) out.push({ kind: 'roll', key: system.initiative.check, from });
+    for (const tag of system.initiative.tags ?? []) out.push({ kind: 'roll', key: tag, from });
   }
 
   for (const list of [compendium?.items ?? [], compendium?.actions ?? []]) {

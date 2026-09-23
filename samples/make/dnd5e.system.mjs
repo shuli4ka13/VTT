@@ -14,6 +14,8 @@ export const SKILLS = [
   ['performance', 'Выступление', 'cha'], ['persuasion', 'Убеждение', 'cha'],
 ];
 
+export const skillWord = label => label.toLowerCase().replace(/\s+/g, '_');
+
 const SKILL_GROUP = {
   str: 'Навыки от силы', dex: 'Навыки от ловкости', int: 'Навыки от интеллекта',
   wis: 'Навыки от мудрости', cha: 'Навыки от харизмы',
@@ -82,10 +84,31 @@ export const lists = () => ({
         cells: { attack: '@dex_mod + @prof_bonus', damage: '@dex_mod' } },
     ],
   },
+  rolls: {
+    label: 'Броски', key: 'word',
+    columns: [
+      { key: 'успех', label: 'Успех', kind: 'text' },
+      { key: 'провал', label: 'Провал', kind: 'text' },
+    ],
+    rows: [
+      { value: 'атака', cells: { успех: 'попадание', провал: 'промах' } },
+      { value: 'спасбросок', cells: { успех: 'спасся', провал: 'не спасся' } },
+      { value: 'проверка', cells: { успех: 'успех', провал: 'провал' } },
+      { value: 'инициатива' },
+    ],
+  },
+  skills: {
+    label: 'Навыки', key: 'word',
+    columns: [{ key: 'ability', label: 'Характеристика', kind: 'choice', from: 'abilities' }],
+    rows: SKILLS.map(([, label, a]) => ({ value: skillWord(label), cells: { ability: ABILITY_WORD[a] } })),
+  },
   abilities: {
     label: 'Характеристики', key: 'word',
-    columns: [{ key: 'mod', label: 'Модификатор', kind: 'expr' }],
-    rows: ABILITIES.map(([tag]) => ({ value: ABILITY_WORD[tag], cells: { mod: `@${tag}_mod` } })),
+    columns: [
+      { key: 'mod', label: 'Модификатор', kind: 'expr' },
+      { key: 'save', label: 'Спасбросок', kind: 'expr' },
+    ],
+    rows: ABILITIES.map(([tag]) => ({ value: ABILITY_WORD[tag], cells: { mod: `@${tag}_mod`, save: `@${tag}_save` } })),
   },
   classes: {
     label: 'Классы', key: 'word',
@@ -188,7 +211,7 @@ export function fields() {
   for (const [a, label] of ABILITIES) out.push(stored(a, label, 'Характеристики', 'number', 10, { min: 1, max: 30 }));
   for (const [a, label] of ABILITIES) {
     out.push(formula(`${a}_mod`, `Модификатор: ${label}`, 'Модификаторы', `floor((@${a} - 10) / 2)`,
-      { label: `Проверка: ${label}`, check: 'skill_roll' }));
+      { label: `Проверка: ${label}`, tags: ['проверка', ABILITY_WORD[a]] }));
   }
 
   out.push(stored('level', 'Уровень', 'Прогрессия', 'number', 1, { min: 1, max: 20, control: 'stepper' }));
@@ -201,16 +224,16 @@ export function fields() {
     out.push(formula(`${a}_save_prof`, `Владение: спасбросок ${label}`, 'Спасброски',
       `max(@${a}_save_extra, есть(@class_name.saves, "${ABILITY_WORD[a]}") ? 1 : 0)`));
     out.push(formula(`${a}_save`, `Спасбросок: ${label}`, 'Спасброски', `@${a}_mod + @${a}_save_prof * @prof_bonus`,
-      { label: `Спасбросок: ${label}`, check: 'save_roll' }));
+      { label: `Спасбросок: ${label}`, tags: ['спасбросок', ABILITY_WORD[a]] }));
   }
 
   for (const [tag, label, a] of SKILLS) {
     out.push(stored(`${tag}_prof`, `Владение: ${label}`, SKILL_GROUP[a], 'number', 0, { min: 0, max: 2, control: 'ring' }));
     out.push(formula(tag, label, SKILL_GROUP[a], `@${a}_mod + @${tag}_prof * @prof_bonus`,
-      { label: `Проверка: ${label}`, check: 'skill_roll' }));
+      { label: `Проверка: ${label}`, tags: ['проверка', ABILITY_WORD[a], skillWord(label)] }));
   }
 
-  out.push(formula('initiative', 'Инициатива', 'Чувства и движение', '@dex_mod', { label: 'Инициатива', check: 'skill_roll' }));
+  out.push(formula('initiative', 'Инициатива', 'Чувства и движение', '@dex_mod', { label: 'Инициатива', tags: INITIATIVE_TAGS }));
   out.push(formula('passive_perception', 'Пассивная внимательность', 'Чувства и движение', '10 + @perception'));
   out.push(formula('speed', 'Скорость, футов', 'Чувства и движение', 'или(@race.speed, 30)'));
   out.push(stored('darkvision', 'Тёмное зрение, футов', 'Чувства и движение', 'number', 0, { min: 0 }));
@@ -358,11 +381,7 @@ export const constants = () => ({
   lead_die: { label: 'Ведущая кость', kind: 'die', dice: [{ count: 1, sides: 20 }] },
 });
 
-export const rolls = () => [
-  { tag: 'attack_roll', label: 'Бросок атаки', words: { success: 'попадание', fail: 'промах' } },
-  { tag: 'save_roll', label: 'Спасбросок', words: { success: 'спасся', fail: 'не спасся' } },
-  { tag: 'skill_roll', label: 'Проверка характеристики или навыка', words: { success: 'успех', fail: 'провал' } },
-];
+export const INITIATIVE_TAGS = ['проверка', 'ловкость', 'инициатива'];
 
 export const rollEdits = () => ({
   advantage: { label: 'Преимущество', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }], canceledBy: 'disadvantage' },

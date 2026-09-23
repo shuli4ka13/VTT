@@ -15,7 +15,7 @@ const system = {
     пул_атаки: { label: 'Пул атаки', kind: 'die', dice: [{ count: { expr: '@отправитель.ловкость + @отправитель.стрельба' }, sides: 6 }], read: { kind: 'count', atLeast: 5 } },
     пул_защиты: { label: 'Пул защиты', kind: 'die', dice: [{ count: { expr: '@получатель.реакция' }, sides: 6 }], read: { kind: 'count', atLeast: 5 } },
   },
-  rolls: [{ tag: 'защита', label: 'Защита' }],
+  tables: { rolls: { label: 'Броски', key: 'word', rows: [{ value: 'защита' }] } },
   effects: {
     вырваться: {
       label: 'Вырваться', activation: 'manual',
@@ -31,7 +31,7 @@ const system = {
       steps: [
         {
           id: 'попал', type: 'threshold', roll: { die: { constant: 'пул_атаки' } },
-          versus: { roll: { die: { constant: 'пул_защиты' }, check: 'защита' } }, successWhen: 'over',
+          versus: { roll: { die: { constant: 'пул_защиты' }, tags: ['защита'] } }, successWhen: 'over',
         },
         { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', targetModifiers: false, value: { expr: '2 + @попал.margin' } },
       ],

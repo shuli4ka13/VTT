@@ -95,6 +95,21 @@
             "label": "магический"
           }
         ]
+      },
+      "rolls": {
+        "label": "Броски",
+        "key": "word",
+        "rows": [
+          {
+            "value": "атака"
+          },
+          {
+            "value": "спасбросок"
+          },
+          {
+            "value": "проверка"
+          }
+        ]
       }
     },
     "constants": {
@@ -138,7 +153,9 @@
               "bonus": {
                 "expr": "#attack_bonus"
               },
-              "check": "attack_roll"
+              "tags": [
+                "атака"
+              ]
             },
             "versus": {
               "tag": "ac"
@@ -243,7 +260,9 @@
               "bonus": {
                 "param": "save"
               },
-              "check": "save_roll"
+              "tags": [
+                "спасбросок"
+              ]
             },
             "versus": {
               "expr": "#spell_dc"
@@ -418,7 +437,9 @@
               "bonus": {
                 "expr": "#attack_bonus"
               },
-              "check": "attack_roll"
+              "tags": [
+                "атака"
+              ]
             },
             "versus": {
               "tag": "ac"
@@ -492,9 +513,12 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "attack_roll",
+            "target": "roll:any",
             "condition": null,
-            "edit": "disadvantage"
+            "edit": "disadvantage",
+            "tags": [
+              "атака"
+            ]
           }
         ],
         "steps": []
@@ -692,15 +716,21 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "incoming:attack_roll",
+            "target": "incoming:roll:any",
             "condition": null,
-            "edit": "advantage"
+            "edit": "advantage",
+            "tags": [
+              "атака"
+            ]
           },
           {
             "kind": "roll",
-            "target": "attack_roll",
+            "target": "roll:any",
             "condition": null,
-            "edit": "disadvantage"
+            "edit": "disadvantage",
+            "tags": [
+              "атака"
+            ]
           }
         ],
         "steps": []
@@ -716,9 +746,12 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "skill_roll",
+            "target": "roll:any",
             "condition": "#armor_heavy",
-            "edit": "disadvantage"
+            "edit": "disadvantage",
+            "tags": [
+              "проверка"
+            ]
           }
         ],
         "steps": []
@@ -734,9 +767,12 @@
         "modifiers": [
           {
             "kind": "roll",
-            "target": "skill_roll",
+            "target": "roll:any",
             "condition": "#prof_bonus >= 4",
-            "edit": "advantage"
+            "edit": "advantage",
+            "tags": [
+              "проверка"
+            ]
           }
         ],
         "steps": []
@@ -918,7 +954,9 @@
               "bonus": {
                 "param": "save_by"
               },
-              "check": "save_roll"
+              "tags": [
+                "спасбросок"
+              ]
             },
             "versus": {
               "expr": "#spell_dc"
@@ -981,7 +1019,9 @@
               "die": {
                 "constant": "lead_die"
               },
-              "check": "save_roll"
+              "tags": [
+                "спасбросок"
+              ]
             },
             "versus": {
               "const": 10
@@ -1154,7 +1194,9 @@
               "bonus": {
                 "expr": "@получатель.dex_save"
               },
-              "check": "save_roll"
+              "tags": [
+                "спасбросок"
+              ]
             },
             "versus": {
               "expr": "#spell_dc"
@@ -1582,20 +1624,6 @@
         ]
       }
     },
-    "rolls": [
-      {
-        "tag": "attack_roll",
-        "label": "Бросок атаки"
-      },
-      {
-        "tag": "save_roll",
-        "label": "Спасбросок"
-      },
-      {
-        "tag": "skill_roll",
-        "label": "Проверка навыка"
-      }
-    ],
     "fields": [
       {
         "tag": "race",
@@ -1632,7 +1660,10 @@
         "label": "Сила",
         "group": "Характеристики",
         "roll": {
-          "label": "Проверка Силы"
+          "label": "Проверка Силы",
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "stored",
@@ -1645,7 +1676,10 @@
         "label": "Ловкость",
         "group": "Характеристики",
         "roll": {
-          "label": "Проверка Ловкости"
+          "label": "Проверка Ловкости",
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "stored",
@@ -1658,7 +1692,10 @@
         "label": "Телосложение",
         "group": "Характеристики",
         "roll": {
-          "label": "Проверка Телосложения"
+          "label": "Проверка Телосложения",
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "stored",
@@ -1671,7 +1708,10 @@
         "label": "Интеллект",
         "group": "Характеристики",
         "roll": {
-          "label": "Проверка Интеллекта"
+          "label": "Проверка Интеллекта",
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "stored",
@@ -1684,7 +1724,10 @@
         "label": "Мудрость",
         "group": "Характеристики",
         "roll": {
-          "label": "Проверка Мудрости"
+          "label": "Проверка Мудрости",
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "stored",
@@ -1697,7 +1740,10 @@
         "label": "Харизма",
         "group": "Характеристики",
         "roll": {
-          "label": "Проверка Харизмы"
+          "label": "Проверка Харизмы",
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "stored",
@@ -1822,7 +1868,10 @@
         "label": "Атлетика",
         "group": "Навыки от силы",
         "roll": {
-          "label": "Проверка: Атлетика"
+          "label": "Проверка: Атлетика",
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -1847,7 +1896,10 @@
         "label": "Акробатика",
         "group": "Навыки от ловкости",
         "roll": {
-          "label": "Проверка: Акробатика"
+          "label": "Проверка: Акробатика",
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -1872,7 +1924,10 @@
         "label": "Ловкость рук",
         "group": "Навыки от ловкости",
         "roll": {
-          "label": "Проверка: Ловкость рук"
+          "label": "Проверка: Ловкость рук",
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -1897,7 +1952,10 @@
         "label": "Скрытность",
         "group": "Навыки от ловкости",
         "roll": {
-          "label": "Проверка: Скрытность"
+          "label": "Проверка: Скрытность",
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -1922,7 +1980,10 @@
         "label": "Магия",
         "group": "Навыки от интеллекта",
         "roll": {
-          "label": "Проверка: Магия"
+          "label": "Проверка: Магия",
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -1947,7 +2008,10 @@
         "label": "История",
         "group": "Навыки от интеллекта",
         "roll": {
-          "label": "Проверка: История"
+          "label": "Проверка: История",
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -1972,7 +2036,10 @@
         "label": "Анализ",
         "group": "Навыки от интеллекта",
         "roll": {
-          "label": "Проверка: Анализ"
+          "label": "Проверка: Анализ",
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -1997,7 +2064,10 @@
         "label": "Природа",
         "group": "Навыки от интеллекта",
         "roll": {
-          "label": "Проверка: Природа"
+          "label": "Проверка: Природа",
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -2022,7 +2092,10 @@
         "label": "Религия",
         "group": "Навыки от интеллекта",
         "roll": {
-          "label": "Проверка: Религия"
+          "label": "Проверка: Религия",
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -2047,7 +2120,10 @@
         "label": "Уход за животными",
         "group": "Навыки от мудрости",
         "roll": {
-          "label": "Проверка: Уход за животными"
+          "label": "Проверка: Уход за животными",
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -2072,7 +2148,10 @@
         "label": "Проницательность",
         "group": "Навыки от мудрости",
         "roll": {
-          "label": "Проверка: Проницательность"
+          "label": "Проверка: Проницательность",
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -2097,7 +2176,10 @@
         "label": "Медицина",
         "group": "Навыки от мудрости",
         "roll": {
-          "label": "Проверка: Медицина"
+          "label": "Проверка: Медицина",
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -2122,7 +2204,10 @@
         "label": "Внимательность",
         "group": "Навыки от мудрости",
         "roll": {
-          "label": "Проверка: Внимательность"
+          "label": "Проверка: Внимательность",
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -2147,7 +2232,10 @@
         "label": "Выживание",
         "group": "Навыки от мудрости",
         "roll": {
-          "label": "Проверка: Выживание"
+          "label": "Проверка: Выживание",
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -2172,7 +2260,10 @@
         "label": "Обман",
         "group": "Навыки от харизмы",
         "roll": {
-          "label": "Проверка: Обман"
+          "label": "Проверка: Обман",
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -2197,7 +2288,10 @@
         "label": "Запугивание",
         "group": "Навыки от харизмы",
         "roll": {
-          "label": "Проверка: Запугивание"
+          "label": "Проверка: Запугивание",
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -2222,7 +2316,10 @@
         "label": "Выступление",
         "group": "Навыки от харизмы",
         "roll": {
-          "label": "Проверка: Выступление"
+          "label": "Проверка: Выступление",
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -2247,7 +2344,10 @@
         "label": "Убеждение",
         "group": "Навыки от харизмы",
         "roll": {
-          "label": "Проверка: Убеждение"
+          "label": "Проверка: Убеждение",
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -2302,7 +2402,10 @@
         "label": "Спасбросок Ловкости",
         "group": "Защита",
         "roll": {
-          "label": "Спасбросок Ловкости"
+          "label": "Спасбросок Ловкости",
+          "tags": [
+            "спасбросок"
+          ]
         },
         "value": {
           "kind": "formula",
@@ -2530,7 +2633,9 @@
       "bonus": {
         "expr": "#dex_mod"
       },
-      "check": "skill_roll"
+      "tags": [
+        "проверка"
+      ]
     }
   },
   "compendium": {

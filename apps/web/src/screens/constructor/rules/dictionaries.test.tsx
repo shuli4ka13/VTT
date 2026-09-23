@@ -9,7 +9,7 @@ import { useWorld, emptySystem } from '../../../store/world.ts';
 
 const открыть = (раздел: string) => fireEvent.click(screen.getByText(раздел));
 
-describe('Словари: кости, виды бросков, таблицы, цена действий', () => {
+describe('Словари: кости, правки броска, таблицы', () => {
   beforeEach(() => {
     useWorld.setState(state => ({
       ...state,
@@ -130,21 +130,6 @@ describe('Словари: кости, виды бросков, таблицы, �
 
     fireEvent.click(screen.getByText('+ ещё часть'));
     expect(screen.getByDisplayValue('сумма')).toBeTruthy();
-  });
-
-  it('вид броска: название правится, тег остаётся прежним', () => {
-    renderOpen(<RulesTab />);
-    открыть('Виды бросков');
-    fireEvent.click(screen.getByText('+ вид'));
-    const input = screen.getByPlaceholderText('название броска');
-    const выданный = (useWorld.getState().system.rolls ?? [])[0]!.tag;
-
-    fireEvent.change(input, { target: { value: 'Бросок' } });
-    fireEvent.change(input, { target: { value: 'Бросок защиты' } });
-
-    const rolls = useWorld.getState().system.rolls ?? [];
-    expect(rolls[0]!.label).toBe('Бросок защиты', 'название дописывается целиком');
-    expect(rolls[0]!.tag).toBe(выданный, 'тег не переезжает под каждую букву');
   });
 
   it('правка броска заводится со своим именем и набором примитивов', () => {
@@ -371,46 +356,6 @@ describe('Словари: кости, виды бросков, таблицы, �
     }));
     renderOpen(<RulesTab />);
     const guarded = screen.getByTitle('кость используется') as HTMLButtonElement;
-    expect(guarded.disabled).toBe(true);
-  });
-
-  it('вид броска, на который ссылается эффект, удалить нельзя', () => {
-    useWorld.setState(state => ({
-      ...state,
-      system: {
-        ...emptySystem(),
-        rolls: [{ tag: 'attack_roll', label: 'Бросок атаки' }],
-        effects: {
-          hit: {
-            label: 'Удар', activation: 'manual', params: [],
-            steps: [{ type: 'threshold', roll: { die: undefined, check: 'attack_roll' } }],
-          },
-        },
-      },
-      activeEffectId: null,
-    }));
-    renderOpen(<RulesTab />);
-    открыть('Виды бросков');
-    const guarded = screen.getByTitle('этот вид броска используется') as HTMLButtonElement;
-    expect(guarded.disabled).toBe(true);
-  });
-
-  it('вид броска, на который смотрит модификатор предмета, удалить нельзя', () => {
-    useWorld.setState(state => ({
-      ...state,
-      system: { ...emptySystem(), rolls: [{ tag: 'attack_roll', label: 'Бросок атаки' }] },
-      compendium: {
-        items: [{
-          id: 'lucky-charm', label: 'Талисман удачи',
-          modifiers: [{ kind: 'roll', target: 'attack_roll', edit: 'advantage' }],
-        }],
-        actions: [],
-      },
-      activeEffectId: null,
-    }));
-    renderOpen(<RulesTab />);
-    открыть('Виды бросков');
-    const guarded = screen.getByTitle('этот вид броска используется') as HTMLButtonElement;
     expect(guarded.disabled).toBe(true);
   });
 

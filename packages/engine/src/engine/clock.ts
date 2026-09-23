@@ -113,7 +113,7 @@ export function rollInitiative(
   const rolls = fighters.map((sheet): InitiativeRoll => {
     const pass = newPass(system, sheet, { compendium });
     const ctx = { pass, owner: 'инициатива' };
-    const mods = resolveRoll(system, sheet, spec.check ?? null, pass);
+    const mods = resolveRoll(system, sheet, spec.tags ?? [], pass);
     const def = unfoldDice(dieConstant(system, spec.die.constant), (ref, what) => resolveNumber(ref, ctx, what));
     const rolled = rollLead(def, die, mods.edits);
     const bonus = spec.bonus ? (resolveOptionalNumber(packRef(spec.bonus, ctx), ctx, 'бонус инициативы') ?? 0) : 0;

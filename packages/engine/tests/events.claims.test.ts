@@ -12,10 +12,17 @@ const queue = (...values: number[]) => {
   };
 };
 
-const passive = (label: string, target: string, edit: string, condition: string | null = null) => ({
-  label, activation: 'passive', duration: { kind: 'permanent' },
-  modifiers: [{ kind: 'roll', target, edit, condition }],
-});
+const passive = (label: string, target: string, edit: string, condition: string | null = null) => {
+  const incoming = target.startsWith('incoming:');
+  const tag = target.replace(/^incoming:/, '');
+  return {
+    label, activation: 'passive', duration: { kind: 'permanent' },
+    modifiers: [{
+      kind: 'roll', target: incoming ? 'incoming:roll:any' : 'roll:any',
+      ...(tag === 'roll:any' ? {} : { tags: [tag] }), edit, condition,
+    }],
+  };
+};
 const withEffects = (extra: Record<string, unknown>) => ({ ...system, effects: { ...system.effects, ...extra } });
 
 group('заявка правки за столом', () => {
@@ -63,12 +70,12 @@ group('заявка правки за столом', () => {
 });
 
 group('цель видна отправителю: состояния цели правят бросок по ней', () => {
-  const prone = withEffects({ prone: passive('Лежит', 'incoming:attack_roll', 'advantage') });
+  const prone = withEffects({ prone: passive('Лежит', 'incoming:атака', 'advantage') });
   const lying = { ...mirra, effects: [{ effectId: 'prone' }] };
 
-  test('мишень «Против меня» выводится из словаря на каждый бросок', () => {
-    ok(targets(system).some(t => t.tag === 'incoming:attack_roll' && t.kind === 'roll'));
-    ok(targets(system).some(t => t.tag === 'incoming:roll:any'));
+  test('мишень «бросок по мне» одна, вид броска уточняют метки', () => {
+    ok(targets(system).some(t => t.tag === 'incoming:roll:any' && t.kind === 'roll'));
+    ok(!targets(system).some(t => t.tag === 'incoming:атака'));
   });
 
   test('по лежащей цели атакуют с преимуществом — правку даёт лист ЦЕЛИ', () => {
@@ -85,7 +92,7 @@ group('цель видна отправителю: состояния цели �
   });
 
   test('условие правки цели считается по листу ЦЕЛИ', () => {
-    const sys = withEffects({ prone: passive('Лежит', 'incoming:attack_roll', 'advantage', '#level >= 5') });
+    const sys = withEffects({ prone: passive('Лежит', 'incoming:атака', 'advantage', '#level >= 5') });
     const env = send('longsword-item:0', {
       system: sys, sheet: arven, compendium, die: queue(4, 5), against: { ...mirra, effects: [{ effectId: 'prone' }] },
     });

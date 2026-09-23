@@ -108,7 +108,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
   const parts = useMemo(
     () => partsOf(value, tag => {
       const owned = ownerOf(tag);
-      if (owned) return knownSheetName(system, owned.rest, paths);
+      if (owned) return knownSheetName(system, owned.rest, paths) || Boolean(extraNames?.has(owned.rest));
       return knownSheetName(system, tag, paths) || Boolean(names?.[tag]) || Boolean(extraNames?.has(tag));
     }),
     [value, system, names, extraNames, paths],

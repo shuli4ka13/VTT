@@ -162,7 +162,7 @@ export function send(
     props: propsOf(action.record, system),
     owner: `эффект «${effect.label || action.effect}»`,
     ...(inputs ? { inputs } : {}),
-    ...(targetPass ? { against: (rollTag: string | null) => incomingRollModifiers(rollTag, targetPass) } : {}),
+    ...(targetPass ? { against: (tags: readonly string[]) => incomingRollModifiers(tags, targetPass) } : {}),
     ...(claims?.length ? { claims } : {}),
     ...(kept?.length ? { kept } : {}),
   }, { system, compendium, die, desk });

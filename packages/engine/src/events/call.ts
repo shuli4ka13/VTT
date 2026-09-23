@@ -18,7 +18,7 @@ export interface Call {
   inputs?: Record<string, number | string>;
   props?: Record<string, unknown> | null;
   seed?: Record<string, unknown>;
-  against?: (rollTag: string | null) => SourcedModifier[];
+  against?: (tags: readonly string[]) => SourcedModifier[];
   claims?: string[];
 
   kept?: StepData[];

@@ -1,21 +1,21 @@
 import { effectLabelOf } from './envelope.ts';
 import { breakReasonWord, registry as stepRegistry } from '../engine/steps/index.ts';
 import { ownerOf, OWNER_WORDS } from '../engine/owners.ts';
+import { outcomeWords, rollName } from '../engine/roll-tags.ts';
 import type { Envelope } from './envelope.ts';
 import type { System, Sheet } from '../model/types.ts';
 
-function verdictWords(system: System, tag: unknown): { success: string; fail: string } {
-  const words = system.rolls?.find(r => r.tag === tag)?.words;
-  return { success: words?.success ?? 'успех', fail: words?.fail ?? 'промах' };
-}
+const tagsOfStep = (step: Record<string, any> | undefined, trace?: Record<string, any>): string[] =>
+  (trace?.tags ?? step?.tags ?? (step?.roll?.tags ?? []).filter((t: unknown) => typeof t === 'string')) as string[];
+
+const rollTitle = (tags: string[], fallback: string): string => (tags.length ? `${fallback} (${rollName(tags)})` : fallback);
 
 export function previewLines(envelope: Envelope, system: System, dry: { report: { trace: Record<string, any>[] } } | null): string[] {
   const lines: string[] = [];
   const steps = envelope.steps as Record<string, any>[];
   for (const step of steps) {
     if (step.type !== 'threshold' || !step.rolled) continue;
-    const tag = step.check ?? step.roll?.check;
-    const check = system.rolls?.find(r => r.tag === tag)?.label ?? 'Бросок';
+    const check = rollTitle(tagsOfStep(step), 'Бросок');
     const bonus = typeof step.bonus?.const === 'number' ? step.bonus.const + (step.modBonus ?? 0) : (step.modBonus ?? 0);
     const rolls = step.rolled.kept != null && step.rolled.rolls.length > 1
       ? `[${step.rolled.rolls.join(', ')}] → ${step.rolled.kept}` : `[${step.rolled.rolls.join(', ')}]`;
@@ -29,7 +29,7 @@ export function previewLines(envelope: Envelope, system: System, dry: { report: 
     const own = !packed.has(String(trace.step ?? '')) && Array.isArray(trace.rolls)
       ? `бросок цели [${trace.rolls.join(', ')}] + ${trace.bonus ?? 0} = ${trace.total} ` : '';
     const step = steps.find(s => String(s.id ?? '') === String(trace.step ?? ''));
-    const words = verdictWords(system, step?.check ?? step?.roll?.check);
+    const words = outcomeWords(system, tagsOfStep(step, trace));
     lines.push(`${own}против ${versus} ${trace.versus?.value}: ${trace.success ? words.success : words.fail}`);
   }
   return lines;
@@ -53,9 +53,7 @@ export function describeEntry(
     return `${field?.label ?? c.tag}: ${c.from} → ${c.to}`;
   });
   const labelOf = (tag: string) =>
-    system.fields.find(f => f.tag === tag)?.label
-    ?? system.rolls?.find(r => r.tag === tag)?.label
-    ?? tag;
+    system.fields.find(f => f.tag === tag)?.label ?? tag;
   const effect = system.effects[String(entry.report.effect)] as any;
   const stepOf = (trace: Record<string, unknown>) => (effect?.steps ?? [])
     .find((step: any, index: number) => String(step.id ?? index) === String(trace.step));
@@ -105,13 +103,13 @@ export function describeEntry(
         .map((v, i) => (raw.length === trace.rolls.length && raw[i] !== v ? `${raw[i]}→${v}` : String(v)))
         .join(', ');
       const rolls = trace.kept != null && trace.rolls?.length > 1 ? `[${shown}] → ${trace.kept}` : `[${shown}]`;
-      const check = system.rolls?.find(r => r.tag === step?.roll?.check)?.label ?? 'Проверка';
+      const check = rollTitle(tagsOfStep(step, trace), 'Проверка');
       const edits = trace.edits?.length ? ` (${trace.edits.join(', ')})` : '';
       const bonus = step?.roll?.bonus ? ` + ${refLabel(step.roll.bonus) ?? 'Бонус'}: ${trace.bonus}` : '';
       const versus = trace.versus?.tag ? labelOf(String(trace.versus.tag))
         : (refLabel(step?.versus) ?? 'порог');
       const degree = trace.degree !== undefined && trace.degree !== null ? `, степень ${trace.degree}` : '';
-      const words = verdictWords(system, step?.roll?.check);
+      const words = outcomeWords(system, tagsOfStep(step, trace));
       const verdict = (trace.success ? words.success : words.fail) + degree;
       return `${check}: ${rolls}${edits}${bonus} = ${trace.total} против ${versus}: ${trace.versus?.value} — ${verdict}`;
     }

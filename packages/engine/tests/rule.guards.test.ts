@@ -16,7 +16,7 @@ const sys: any = {
     { tag: 'хп', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20, min: 0 } },
     { tag: 'уровень', label: 'Уровень', value: { kind: 'stored', type: 'number', default: 3 } },
   ],
-  rolls: [{ tag: 'спас', label: 'Спасбросок' }],
+  tables: { rolls: { label: 'Броски', key: 'word', rows: [{ value: 'спас' }] } },
   constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
   tables: { исход: { label: 'Исход', key: 'range', columns: [{ key: 'value', label: 'исход', kind: 'text' }], rows: [
     { from: -100, to: 9, cells: { value: 'провал' } }, { from: 10, to: 14, cells: { value: 'частичный' } },
@@ -40,7 +40,7 @@ const play = (steps: any[], ...dice: number[]) => {
 };
 
 const save = { id: 'спас', type: 'threshold', side: 'target', continueOn: 'always',
-  roll: { die: { constant: 'к20' }, bonus: { const: 0 }, check: 'спас' }, versus: { const: 12 } };
+  roll: { die: { constant: 'к20' }, bonus: { const: 0 }, tags: ['спас'] }, versus: { const: 12 } };
 
 group('ветвление по исходу: стражи на шагах', () => {
   const halfOnSave = [

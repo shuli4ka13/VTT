@@ -3,6 +3,7 @@ import { FormulaInput } from '../../../ui/formula.tsx';
 import { dieEntries } from './dice-section.tsx';
 import type { System } from '@vtt/schema';
 import type { WorldState } from '../../../store/world.ts';
+import { RollTagsPick } from '../roll-tags-pick.tsx';
 
 type EditSystem = WorldState['editSystem'];
 interface Props { system: System; editSystem: EditSystem }
@@ -47,14 +48,13 @@ export function InitiativeSection({ system, editSystem }: Props) {
               />
             </div>
             <div className="dict-row">
-              <span className="dict-row__label">Вид броска</span>
-              <Select
-                value={spec.check ?? ''}
-                options={[['', '— просто бросок —'],
-                  ...(system.rolls ?? []).map(r => [r.tag, r.label] as const)] as never}
-                onChange={tag => editSystem(draft => {
+              <span className="dict-row__label">Метки броска</span>
+              <RollTagsPick
+                system={system}
+                value={spec.tags}
+                onChange={tags => editSystem(draft => {
                   if (!draft.initiative) return;
-                  if (tag) draft.initiative.check = tag; else delete draft.initiative.check;
+                  if (tags.length) draft.initiative.tags = tags; else delete draft.initiative.tags;
                 })}
               />
             </div>

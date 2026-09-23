@@ -6,7 +6,7 @@ const sys: any = {
   id: 'рода-с-модификаторами',
   fields: [
     { tag: 'скрытность', label: 'Скрытность', value: { kind: 'stored', type: 'number', default: 3 },
-      roll: { label: 'Проверка: Скрытность' } },
+      roll: { label: 'Проверка: Скрытность', tags: ['скрытность'] } },
     { tag: 'кд', label: 'Класс брони', value: { kind: 'stored', type: 'number', default: 10 } },
   ],
   roll_edits: { помеха: { label: 'Помеха', ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }] } },
@@ -15,7 +15,7 @@ const sys: any = {
       kind: 'item', label: 'Тяжёлый доспех',
       props: [], bindings: [],
 
-      modifiers: [{ kind: 'roll', target: 'check:скрытность', edit: 'помеха', condition: null }],
+      modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['скрытность'], edit: 'помеха', condition: null }],
     },
     лёгкий: { kind: 'item', label: 'Лёгкий доспех', props: [], bindings: [] },
     кольцо: {
@@ -40,7 +40,7 @@ const compendium: any = {
 const hero = (equipped: string[]) => ({ id: 'вор', values: { скрытность: 3, кд: 10 }, equipped, effects: [] });
 const pass = (equipped: string[]) => newPass(sys, hero(equipped), { compendium });
 const edits = (equipped: string[]) =>
-  resolveRoll(sys, hero(equipped), 'check:скрытность', pass(equipped)).edits.map(e => e.label);
+  resolveRoll(sys, hero(equipped), ['скрытность'], pass(equipped)).edits.map(e => e.label);
 
 group('модификаторы рода', () => {
   test('надел кольчугу — помеха от РОДА, хотя на самой вещи ничего не написано', () => {
@@ -60,7 +60,7 @@ group('модификаторы рода', () => {
   });
 
   test('источник назван родом: игроку видно, откуда прилетело', () => {
-    const roll = resolveRoll(sys, hero(['кольчуга']), 'check:скрытность', pass(['кольчуга']));
+    const roll = resolveRoll(sys, hero(['кольчуга']), ['скрытность'], pass(['кольчуга']));
     const source = (roll.sources[0] ?? {}) as { type?: string; label?: string };
     eq(source.type, 'kind');
     eq(source.label, 'Тяжёлый доспех');
@@ -82,7 +82,7 @@ group('модификаторы рода', () => {
     const sheet = hero(['кольчуга']);
     const p = newPass(sys, sheet, { compendium: book });
     eq(calc(sys, sheet, 'кд', p), 16, 'своя база доспеха у вещи');
-    deepEq(resolveRoll(sys, sheet, 'check:скрытность', p).edits.map(e => e.label), ['Помеха'],
+    deepEq(resolveRoll(sys, sheet, ['скрытность'], p).edits.map(e => e.label), ['Помеха'],
       'и родовая помеха на месте');
   });
 });

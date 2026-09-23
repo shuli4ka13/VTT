@@ -134,7 +134,7 @@ group('инициатива — правило системы, не движка
       ...system,
       effects: { ...system.effects, alert: {
         label: 'Бдительный', activation: 'passive', duration: { kind: 'permanent' },
-        modifiers: [{ kind: 'roll', target: 'skill_roll', edit: 'advantage', condition: null }],
+        modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['проверка'], edit: 'advantage', condition: null }],
       } },
     };
     const keen = { ...mirra, effects: [{ effectId: 'alert' }] };

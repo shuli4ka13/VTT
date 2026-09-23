@@ -1,4 +1,4 @@
-import { RESOURCES, TAKEN, DAMAGE_TAGS, WIELD, TURN_FIELDS } from './dnd5e.system.mjs';
+import { RESOURCES, TAKEN, DAMAGE_TAGS, WIELD, TURN_FIELDS, ABILITY_WORD } from './dnd5e.system.mjs';
 
 const DIE = { constant: 'lead_die' };
 
@@ -8,7 +8,7 @@ const P = {
     ask: { by: 'actor', min: 1, max: 9, hint: 'Круг ячейки, которую тратишь. Не ниже круга заклинания.' },
   },
   level: { key: 'spell_level', label: 'Круг заклинания', kind: 'number' },
-  saveBy: { key: 'save_by', label: 'Бонус спасброска', kind: 'number' },
+  saveBy: { key: 'save_by', label: 'Чем спасаются', kind: 'choice', from: 'abilities' },
   die: { key: 'damage_die', label: 'Кость урона', kind: 'dice' },
   count: { key: 'dice_count', label: 'Сколько костей', kind: 'number' },
   up: { key: 'dice_up', label: 'Костей за каждый круг выше', kind: 'number' },
@@ -21,11 +21,11 @@ const P = {
 const LEVELED = '@dice_count + (@slot - @spell_level) * @dice_up';
 
 const hit = bonus => ({
-  id: 'hit', type: 'threshold', roll: { die: DIE, bonus, check: 'attack_roll' }, versus: { tag: 'ac' },
+  id: 'hit', type: 'threshold', roll: { die: DIE, bonus, tags: ['атака'] }, versus: { tag: 'ac' },
 });
 const save = continueOn => ({
   id: 'save', type: 'threshold', side: 'target',
-  roll: { die: DIE, bonus: { param: 'save_by' }, check: 'save_roll' },
+  roll: { die: DIE, bonus: { expr: '@получатель.save_by.save' }, tags: ['спасбросок', { param: 'save_by' }] },
   versus: { expr: '@spell_dc' }, successWhen: 'atLeast', continueOn,
 });
 const CRIT = '@hit.natural >= @crit_from ? 2 : 1';
@@ -99,7 +99,10 @@ const manual = (label, category, description, cost, rest = {}) => {
 const passive = (label, description, modifiers, duration = { kind: 'temporary' }, extra = {}) => ({
   label, group: 'Состояния', description, activation: 'passive', duration, stacking: 'refresh', modifiers, ...extra,
 });
-const roll = (target, edit, condition = null) => ({ kind: 'roll', target, edit, condition });
+const roll = (tags, edit, condition = null) => ({
+  kind: 'roll', target: 'roll:any', ...(tags.length ? { tags } : {}), edit, condition,
+});
+const against = (tags, edit) => ({ kind: 'roll', target: 'incoming:roll:any', tags, edit, condition: null });
 const value = (target, op, amount, extra = {}) => ({
   kind: 'value', target, op, value: amount, stacking: op === 'set' ? 'override' : 'sum', condition: null, ...extra,
 });
@@ -113,7 +116,7 @@ const resistNature = (nature, notTags) => ({
   stacking: 'max',
 });
 
-const autoFailBody = [roll('check:str_save', 'auto_fail'), roll('check:dex_save', 'auto_fail')];
+const autoFailBody = [roll(['спасбросок', 'сила'], 'auto_fail'), roll(['спасбросок', 'ловкость'], 'auto_fail')];
 const UNTIL_MY_TURN = { kind: 'turns', max: 1, ends: 'turn-start' };
 
 function attacks() {
@@ -364,7 +367,7 @@ function features() {
         self: payResource('channel', 'божественный канал уже потрачен'),
         steps: [
           {
-            id: 'save', type: 'threshold', side: 'target', roll: { die: DIE, bonus: { expr: '@wis_save', of: 'target' }, check: 'save_roll' },
+            id: 'save', type: 'threshold', side: 'target', roll: { die: DIE, bonus: { expr: '@wis_save', of: 'target' }, tags: ['спасбросок', 'мудрость'] },
             versus: { expr: '@spell_dc' }, successWhen: 'atLeast', continueOn: 'fail',
           },
           hang({ const: 'frightened' }),
@@ -382,18 +385,18 @@ function features() {
     disengage: manual('Отход', 'Действия в бою', 'Твоё передвижение до конца хода не провоцирует атак.', 'action', {}),
     hide: manual('Засада', 'Действия в бою', 'Скрытность против пассивной внимательности цели. Вышло — прячешься.', 'action', {
       steps: [
-        { id: 'sneak', type: 'threshold', roll: { die: DIE, bonus: { expr: '@stealth' }, check: 'skill_roll' },
+        { id: 'sneak', type: 'threshold', roll: { die: DIE, bonus: { expr: '@stealth' }, tags: ['проверка', 'ловкость', 'скрытность'] },
           versus: { tag: 'passive_perception' }, successWhen: 'atLeast', continueOn: 'success' },
         { type: 'status', mode: 'apply', effect: { const: 'hidden' }, side: 'source' },
       ],
     }),
     hidden: passive('Прячется', 'Тебя не видят: атаки по цели, которая тебя не видит, идут с преимуществом.',
-      [roll('attack_roll', 'advantage')], { kind: 'turns', max: 1, ends: 'turn-start' }),
+      [roll(['атака'], 'advantage')], { kind: 'turns', max: 1, ends: 'turn-start' }),
     help: manual('Помощь', 'Действия в бою', 'Союзник бросает следующую проверку или атаку с преимуществом.', 'action', {
       steps: [hang({ const: 'helped' })],
     }),
     helped: passive('Ему помогают', 'Следующая проверка или атака — с преимуществом.',
-      [roll('attack_roll', 'advantage'), roll('skill_roll', 'advantage')],
+      [roll(['атака'], 'advantage'), roll(['проверка'], 'advantage')],
       { kind: 'turns', max: 1, ends: 'turn-start' }),
     spend_hit_die: manual('Потратить кость хитов', 'Отдых и смерть',
       'На коротком отдыхе: бросаешь кость хитов, прибавляешь Телосложение, восполняешь столько хитов.', 'free', {
@@ -426,7 +429,7 @@ function reactions() {
         self: payFirstSlot,
         steps: [
           {
-            id: 'save', type: 'threshold', side: 'target', roll: { die: DIE, bonus: { expr: '@dex_save', of: 'target' }, check: 'save_roll' },
+            id: 'save', type: 'threshold', side: 'target', roll: { die: DIE, bonus: { expr: '@dex_save', of: 'target' }, tags: ['спасбросок', 'ловкость'] },
             versus: { expr: '@spell_dc' }, successWhen: 'atLeast', continueOn: 'always',
           },
           { id: 'dmg', type: 'amount', source: 'roll', dice: { const: '2d10' }, scale: { times: 0.5, when: { ref: 'save.success' } } },
@@ -455,29 +458,29 @@ function reactions() {
 }
 
 function conditions() {
-  const incomingAdvantage = roll('incoming:attack_roll', 'advantage');
-  const incomingDisadvantage = roll('incoming:attack_roll', 'disadvantage');
+  const incomingAdvantage = against(['атака'], 'advantage');
+  const incomingDisadvantage = against(['атака'], 'disadvantage');
   return {
     blinded: passive('Ослеплён', 'Твои атаки с помехой, по тебе — с преимуществом.',
-      [roll('attack_roll', 'disadvantage'), incomingAdvantage]),
+      [roll(['атака'], 'disadvantage'), incomingAdvantage]),
     charmed: passive('Очарован', 'Не можешь вредить очаровавшему; у него преимущество на общение с тобой. Считает ведущий.', []),
     deafened: passive('Оглушён', 'Не слышишь. Проверки на слух проваливаются — считает ведущий.', []),
     frightened: passive('Испуган', 'Помеха на атаки и проверки, пока источник страха на виду.',
-      [roll('attack_roll', 'disadvantage'), roll('skill_roll', 'disadvantage')]),
+      [roll(['атака'], 'disadvantage'), roll(['проверка'], 'disadvantage')]),
     grappled: passive('Схвачен', 'Скорость ноль.', [value('speed', 'set', 0)]),
     incapacitated: passive('Недееспособен', 'Ни действий, ни реакций. Следит ведущий.', []),
     invisible: passive('Невидим', 'Твои атаки с преимуществом, по тебе — с помехой.',
-      [roll('attack_roll', 'advantage'), incomingDisadvantage]),
+      [roll(['атака'], 'advantage'), incomingDisadvantage]),
     paralyzed: passive('Парализован', 'Недееспособен, скорость ноль, спасброски Силы и Ловкости провалены, по тебе бьют с преимуществом.',
       [incomingAdvantage, ...autoFailBody, value('speed', 'set', 0)]),
     petrified: passive('Окаменел', 'Как паралич, плюс сопротивление любому урону.',
       [incomingAdvantage, ...autoFailBody, value('speed', 'set', 0), resist()]),
     poisoned: passive('Отравлен', 'Помеха на атаки и проверки характеристик.',
-      [roll('attack_roll', 'disadvantage'), roll('skill_roll', 'disadvantage')]),
+      [roll(['атака'], 'disadvantage'), roll(['проверка'], 'disadvantage')]),
     prone: passive('Лежит', 'Твои атаки с помехой, по тебе вблизи бьют с преимуществом. Встать — половина скорости.',
-      [incomingAdvantage, roll('attack_roll', 'disadvantage')]),
+      [incomingAdvantage, roll(['атака'], 'disadvantage')]),
     restrained: passive('Опутан', 'Скорость ноль, твои атаки и спасброски Ловкости с помехой, по тебе — с преимуществом.',
-      [value('speed', 'set', 0), roll('attack_roll', 'disadvantage'), incomingAdvantage, roll('check:dex_save', 'disadvantage')]),
+      [value('speed', 'set', 0), roll(['атака'], 'disadvantage'), incomingAdvantage, roll(['спасбросок', 'ловкость'], 'disadvantage')]),
     stunned: passive('Ошеломлён', 'Недееспособен, спасброски Силы и Ловкости провалены, по тебе бьют с преимуществом.',
       [incomingAdvantage, ...autoFailBody]),
     unconscious: passive('Без сознания', 'Лежит без чувств: как паралич, и роняет всё, что держал.',
@@ -487,27 +490,27 @@ function conditions() {
     dead: passive('Мёртв', 'Три провала или урон, перекрывший максимум хитов.', [value('speed', 'set', 0)], { kind: 'permanent' }),
 
     dodging: passive('Уклоняется', 'По тебе бьют с помехой, спасброски Ловкости с преимуществом.',
-      [incomingDisadvantage, roll('check:dex_save', 'advantage')], UNTIL_MY_TURN),
+      [incomingDisadvantage, roll(['спасбросок', 'ловкость'], 'advantage')], UNTIL_MY_TURN),
     reckless: passive('Безрассуден', 'Твои атаки с преимуществом, по тебе — тоже.',
-      [roll('attack_roll', 'advantage'), incomingAdvantage], UNTIL_MY_TURN),
+      [roll(['атака'], 'advantage'), incomingAdvantage], UNTIL_MY_TURN),
     raging: passive('В ярости', 'Урон рукопашным оружием выше, сопротивление рубящему, колющему и дробящему, преимущество на Силу.',
       [
         value(`cell:wield.${WIELD.melee}.damage`, 'add', { expr: '@rage_damage' }),
         resistNature('физический'),
-        roll('check:athletics', 'advantage'), roll('check:str_save', 'advantage'), roll('check:str_mod', 'advantage'),
+        roll(['сила'], 'advantage'),
       ], { kind: 'rounds', max: 10 }),
     shield_up: passive('Под щитом', '+5 к классу брони.', [value('ac', 'add', 5)], UNTIL_MY_TURN),
     uncanny_up: passive('Невероятное уклонение', 'Урон этой атаки вдвое меньше.', [value('event:damage', 'mul', 0.5)]),
     blessed: passive('Благословлён', '+1к4 к броскам атаки и спасброскам. Кость сверх: преимущество её не отбрасывает.',
-      [roll('attack_roll', 'bless'), roll('save_roll', 'bless')], { kind: 'permanent' }),
+      [roll(['атака'], 'bless'), roll(['спасбросок'], 'bless')], { kind: 'permanent' }),
     baned: passive('Под порчей', '−1к4 к броскам атаки и спасброскам.',
-      [roll('attack_roll', 'bane'), roll('save_roll', 'bane')], { kind: 'permanent' }),
-    guided: passive('Указание', '+1к4 к одной проверке характеристики.', [roll('skill_roll', 'guidance')], { kind: 'permanent' }),
-    resisted: passive('Сопротивление', '+1к4 к одному спасброску.', [roll('save_roll', 'guidance')], { kind: 'permanent' }),
+      [roll(['атака'], 'bane'), roll(['спасбросок'], 'bane')], { kind: 'permanent' }),
+    guided: passive('Указание', '+1к4 к одной проверке характеристики.', [roll(['проверка'], 'guidance')], { kind: 'permanent' }),
+    resisted: passive('Сопротивление', '+1к4 к одному спасброску.', [roll(['спасбросок'], 'guidance')], { kind: 'permanent' }),
     hasted: passive('Ускорен', '+2 к классу брони, скорость вдвое, преимущество на спасброски Ловкости. Лишнее действие разрешает ведущий.',
-      [value('ac', 'add', 2), value('speed', 'mul', 2), roll('check:dex_save', 'advantage')], { kind: 'permanent' }),
+      [value('ac', 'add', 2), value('speed', 'mul', 2), roll(['спасбросок', 'ловкость'], 'advantage')], { kind: 'permanent' }),
     slowed: passive('Замедлен', '−2 к классу брони и спасброскам Ловкости, скорость вдвое меньше.',
-      [value('ac', 'add', -2), value('speed', 'mul', 0.5), { kind: 'roll', target: 'check:dex_save', op: 'add', value: -2, condition: null }],
+      [value('ac', 'add', -2), value('speed', 'mul', 0.5), { kind: 'roll', target: 'roll:any', tags: ['спасбросок', 'ловкость'], op: 'add', value: -2, condition: null }],
       { kind: 'permanent' }),
     lit: passive('Подсвечен', 'Атаки по тебе идут с преимуществом, невидимость не помогает.', [incomingAdvantage], { kind: 'permanent' }),
     blurred: passive('Размыт', 'Атаки по тебе идут с помехой.', [incomingDisadvantage], { kind: 'permanent' }),
@@ -539,10 +542,10 @@ function traits() {
       [{ ...value('ac_base', 'set', { expr: '10 + @con_mod' }), stacking: 'max' }]),
     unarmored_monk: trait('Защита без доспехов: монах', 'Без доспеха и щита база 10 + Мудрость.',
       [{ ...value('ac_base', 'set', { expr: '10 + @wis_mod' }), stacking: 'max' }]),
-    danger_sense: trait('Чувство опасности', 'Преимущество на спасброски Ловкости.', [roll('check:dex_save', 'advantage')]),
-    feral_instinct: trait('Дикий инстинкт', 'Преимущество на инициативу.', [roll('check:initiative', 'advantage')]),
-    reliable_talent: trait('Надёжный талант', 'На проверках навыков кость считается не меньше десяти.', [roll('skill_roll', 'reliable')]),
-    halfling_lucky: trait('Везучий', 'Единица на к20 перебрасывается, новый результат обязателен.', [roll('roll:any', 'lucky')]),
+    danger_sense: trait('Чувство опасности', 'Преимущество на спасброски Ловкости.', [roll(['спасбросок', 'ловкость'], 'advantage')]),
+    feral_instinct: trait('Дикий инстинкт', 'Преимущество на инициативу.', [roll(['инициатива'], 'advantage')]),
+    reliable_talent: trait('Надёжный талант', 'На проверках навыков кость считается не меньше десяти.', [roll(['проверка'], 'reliable')]),
+    halfling_lucky: trait('Везучий', 'Единица на к20 перебрасывается, новый результат обязателен.', [roll([], 'lucky')]),
     darkvision_60: trait('Тёмное зрение', 'Видишь в темноте на 60 футов.', [value('darkvision', 'set', 60)]),
     dwarven_resilience: trait('Дварфская стойкость', 'Сопротивление урону ядом.', [resist(['яд'])]),
     infernal_legacy: trait('Дьявольское наследие', 'Сопротивление урону огнём.', [resist(['огонь'])]),
@@ -550,9 +553,9 @@ function traits() {
     feat_tough: trait('Черта: крепкий', 'Максимум хитов выше на два за уровень.', [value('hp_max', 'add', { expr: '2 * @level' })]),
     feat_mobile: trait('Черта: подвижный', 'Скорость выше на 10 футов.', [value('speed', 'add', 10)]),
     feat_observant: trait('Черта: наблюдательный', '+5 к пассивной внимательности.', [value('passive_perception', 'add', 5)]),
-    feat_war_caster: trait('Черта: боевой заклинатель', 'Преимущество на спасброски Телосложения — ими держат концентрацию.', [roll('check:con_save', 'advantage')]),
+    feat_war_caster: trait('Черта: боевой заклинатель', 'Преимущество на спасброски Телосложения — ими держат концентрацию.', [roll(['спасбросок', 'телосложение'], 'advantage')]),
     ring_protection: trait('Кольцо защиты', '+1 к классу брони и всем спасброскам.',
-      [value('ac', 'add', 1), { kind: 'roll', target: 'save_roll', op: 'add', value: 1, condition: null }]),
+      [value('ac', 'add', 1), { kind: 'roll', target: 'roll:any', tags: ['спасбросок'], op: 'add', value: 1, condition: null }]),
   };
 }
 
@@ -579,7 +582,7 @@ function lifecycle() {
     { on: 'moment:turn-end' },
     [
       {
-        id: 'save', type: 'threshold', roll: { die: DIE, bonus: { expr: `@${ability}_save` }, check: 'save_roll' },
+        id: 'save', type: 'threshold', roll: { die: DIE, bonus: { expr: `@${ability}_save` }, tags: ['спасбросок', ABILITY_WORD[ability]] },
         versus: { ref: 'worn.carry' }, successWhen: 'atLeast', continueOn: 'success',
       },
       ...ends.map(drop),
@@ -591,7 +594,7 @@ function lifecycle() {
       { on: 'event:damage', to: 'self' },
       [
         {
-          id: 'save', type: 'threshold', roll: { die: DIE, bonus: { expr: '@con_save' }, check: 'save_roll' },
+          id: 'save', type: 'threshold', roll: { die: DIE, bonus: { expr: '@con_save' }, tags: ['спасбросок', 'телосложение'] },
           versus: { expr: 'max(10, floor(@event_amount / 2))' }, successWhen: 'atLeast', continueOn: 'fail',
         },
         drop('concentration'),
@@ -603,7 +606,7 @@ function lifecycle() {
       'На нуле хитов: в начале своего хода к20. Десять и выше — успех, иначе провал; единица — два провала, двадцатка — один хит и на ноги.',
       { on: 'moment:turn-start', condition: { expr: '@hp_current <= 0' } },
       [
-        { id: 'спас', type: 'threshold', roll: { die: DIE, check: 'save_roll' }, versus: { const: 10 }, successWhen: 'atLeast', continueOn: 'always' },
+        { id: 'спас', type: 'threshold', roll: { die: DIE, tags: ['спасбросок'] }, versus: { const: 10 }, successWhen: 'atLeast', continueOn: 'always' },
         change('death_ok', 'add', { const: 1 }, { when: { ref: 'спас.success' } }),
         change('death_fail', 'add', { const: 1 }, { when: { ref: 'спас.success', not: true } }),
         change('death_fail', 'add', { const: 1 }, { when: { ref: 'спас.natural', atMost: 1 } }),
@@ -654,10 +657,10 @@ function roomRules() {
       label: 'Истощение', group: 'Правила комнаты', activation: 'passive', duration: { kind: 'permanent' },
       description: 'Шесть ступеней: помеха на проверки, скорость вдвое меньше, помеха на атаки и спасброски, максимум хитов вдвое меньше, скорость ноль. Шестая — смерть, её объявляет ведущий.',
       modifiers: [
-        when(1, roll('skill_roll', 'disadvantage')),
+        when(1, roll(['проверка'], 'disadvantage')),
         when(2, value('speed', 'mul', 0.5)),
-        when(3, roll('attack_roll', 'disadvantage')),
-        when(3, roll('save_roll', 'disadvantage')),
+        when(3, roll(['атака'], 'disadvantage')),
+        when(3, roll(['спасбросок'], 'disadvantage')),
         when(4, value('hp_max', 'mul', 0.5)),
         when(5, value('speed', 'set', 0)),
       ],

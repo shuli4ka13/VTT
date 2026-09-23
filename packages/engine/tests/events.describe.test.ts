@@ -8,16 +8,22 @@ const system = {
     { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 10 } },
     { tag: 'броня', label: 'Класс брони', value: { kind: 'stored', type: 'number', default: 15 } },
   ],
-  rolls: [
-    { tag: 'атака', label: 'Бросок атаки', words: { success: 'попадание', fail: 'промах' } },
-    { tag: 'спас', label: 'Спасбросок', words: { success: 'спасся', fail: 'не спасся' } },
-    { tag: 'без-слов', label: 'Проверка' },
-  ],
+  tables: {
+    rolls: {
+      label: 'Броски', key: 'word',
+      columns: [{ key: 'успех', label: 'Успех', kind: 'text' }, { key: 'провал', label: 'Провал', kind: 'text' }],
+      rows: [
+        { value: 'атака', cells: { успех: 'попадание', провал: 'промах' } },
+        { value: 'спас', cells: { успех: 'спасся', провал: 'не спасся' } },
+        { value: 'без_слов' },
+      ],
+    },
+  },
   effects: {
     шаблон: {
       label: 'Заклинание: спасбросок, половина при успехе',
       steps: [
-        { id: 'п', type: 'threshold', roll: { check: 'спас' }, versus: { tag: 'броня' } },
+        { id: 'п', type: 'threshold', roll: { tags: ['спас'] }, versus: { tag: 'броня' } },
         { id: 'в', type: 'amount', dice: { const: '8к6' } },
       ],
     },
@@ -53,11 +59,18 @@ group('журнал говорит словами стола, а не движк
     ok(!line({ label: 'Огненный шар', trace }).includes('промах'));
   });
 
-  test('вид броска без своих слов говорит по-старому', () => {
+  test('метка без своих слов говорит «успех» и «провал»', () => {
     const plain = { ...system, effects: { шаблон: { ...(system.effects as any).шаблон,
-      steps: [{ id: 'п', type: 'threshold', roll: { check: 'без-слов' }, versus: { tag: 'броня' } }] } } } as unknown as System;
+      steps: [{ id: 'п', type: 'threshold', roll: { tags: ['без_слов'] }, versus: { tag: 'броня' } }] } } } as unknown as System;
     const trace = [{ type: 'threshold', step: 'п', rolls: [3], total: 3, versus: { tag: 'броня', value: 15 }, success: false }];
-    ok(describeEntry({ fromId: 'мирра', toId: 'орк', report: report({ trace }) }, plain, sheets).includes('— промах'));
+    ok(describeEntry({ fromId: 'мирра', toId: 'орк', report: report({ trace }) }, plain, sheets).includes('— провал'));
+  });
+
+  test('слова исхода ищутся по всем меткам броска', () => {
+    const both = { ...system, effects: { шаблон: { ...(system.effects as any).шаблон,
+      steps: [{ id: 'п', type: 'threshold', roll: { tags: ['без_слов', 'атака'] }, versus: { tag: 'броня' } }] } } } as unknown as System;
+    const trace = [{ type: 'threshold', step: 'п', rolls: [3], total: 3, versus: { tag: 'броня', value: 15 }, success: false }];
+    ok(describeEntry({ fromId: 'мирра', toId: 'орк', report: report({ trace }) }, both, sheets).includes('— промах'));
   });
 
   test('половина при успехе видна в строке: сколько выпало и сколько осталось', () => {
@@ -78,7 +91,7 @@ group('журнал называет чужие и общие поля слов�
     const owned = { ...system,
       fields: [...system.fields, { tag: 'эскалация', label: 'Кость эскалации', desk: true, value: { kind: 'stored', type: 'number', default: 0 } }],
       effects: { шаблон: { label: 'Удар', steps: [
-        { id: 'п', type: 'threshold', roll: { check: 'атака', bonus: { expr: '@отправитель.хиты + @стол.эскалация' } }, versus: { expr: '@получатель.броня' } },
+        { id: 'п', type: 'threshold', roll: { tags: ['атака'], bonus: { expr: '@отправитель.хиты + @стол.эскалация' } }, versus: { expr: '@получатель.броня' } },
         { id: 'в', type: 'amount', fixed: { expr: '@п.natural >= 20 ? 2 : 1' } },
       ] } } } as unknown as System;
     const trace = [

@@ -180,7 +180,7 @@ describe('сквозной прогон стенда', () => {
     expect(res.body.log.length).toBeGreaterThanOrEqual(1);
     const journal = res.body.log.map((l: { text: string }) => l.text).join(' · ');
     expect(journal).toContain('Арвен');
-    expect(journal).toContain('Бросок атаки:');
+    expect(journal).toContain('(атака):');
     expect(journal).toContain('Кость урона:');
     expect(journal).toContain('применено:');
   });
@@ -322,7 +322,7 @@ describe('сквозной прогон стенда', () => {
     expect(paused.body.pending).toBeTruthy();
     expect(paused.body.pending.sheetId).toBe(arven.id);
     expect(paused.body.pending.options.map((o: { id: string }) => o.id)).toEqual(['inspire']);
-    expect(paused.body.pending.preview.join(' ')).toContain('Бросок атаки');
+    expect(paused.body.pending.preview.join(' ')).toContain('Бросок (атака)');
 
     const denied = await swing().expect(400);
     expect(denied.body.message).toContain('ждёт ответа');
@@ -436,7 +436,7 @@ describe('публикация компендиума проверяется л�
       title: 'Для линта книги',
       system: {
         name: 'Для линта книги', fields: [], effects: {},
-        rolls: [{ tag: 'attack_roll', label: 'Бросок атаки' }],
+        tables: { rolls: { label: 'Броски', key: 'word', rows: [{ value: 'атака' }] } },
         records: { gear: { kind: 'item', label: 'Снаряжение', props: [], bindings: [] } },
       },
     }).expect(201);
@@ -444,7 +444,7 @@ describe('публикация компендиума проверяется л�
     const book = await as(http().post('/compendiums')).send({
       title: 'Книга с дыркой', systemId: sys.body.id,
       compendium: {
-        items: [{ id: 'ring', rk: 'gear', label: 'Кольцо', props: {}, modifiers: [{ kind: 'roll', target: 'attack_roll', edit: 'нет_такой', condition: null }] }],
+        items: [{ id: 'ring', rk: 'gear', label: 'Кольцо', props: {}, modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'нет_такой', condition: null }] }],
         actions: [],
       },
     }).expect(201);

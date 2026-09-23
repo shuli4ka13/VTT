@@ -6,21 +6,24 @@ import type { System, Modifier } from '@vtt/schema';
 
 const system = {
   fields: [{ tag: 'ac', label: 'Класс брони', value: { kind: 'stored', type: 'number', default: 10 } }],
-  rolls: [{ tag: 'attack_roll', label: 'Бросок атаки' }],
+  tables: { rolls: { label: 'Броски', key: 'word', rows: [{ value: 'атака' }, { value: 'спасбросок' }] } },
   roll_edits: { фора: { label: 'Фора', ops: [{ op: 'addDie' }] } },
   effects: {},
 } as unknown as System;
 
-const rollMod = [{ kind: 'roll', target: 'attack_roll', edit: 'фора', condition: null }] as Modifier[];
+const rollMod = [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'фора', condition: null }] as Modifier[];
 
 const optionsOf = (select: HTMLSelectElement) => [...select.options].map(o => o.textContent);
 
 describe('редактор модификаторов', () => {
-  it('«Любой бросок» предлагается наравне с объявленными мишенями', () => {
+  it('чей бросок — мой или по мне, а какой именно — метки из строк таблиц', () => {
     render(<ModifiersEditor system={system} modifiers={rollMod} onEdit={vi.fn()} />);
-    const target = screen.getByDisplayValue('Бросок атаки') as HTMLSelectElement;
-    expect(optionsOf(target)).toContain('Любой бросок');
-    expect(optionsOf(target)).toContain('Бросок атаки');
+    const target = screen.getByDisplayValue('Мой бросок') as HTMLSelectElement;
+    expect(optionsOf(target)).toEqual(['— выберите бросок —', 'Мой бросок', 'Бросок по мне']);
+    expect(screen.getByText('атака')).toBeTruthy();
+    const more = screen.getByDisplayValue('+ ещё…') as HTMLSelectElement;
+    expect(optionsOf(more)).toContain('спасбросок');
+    expect(more.querySelector('optgroup')?.getAttribute('label')).toBe('Броски');
   });
 
   it('правки предлагаются из словаря автора, а не из зашитого списка', () => {

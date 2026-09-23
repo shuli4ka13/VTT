@@ -118,41 +118,62 @@ group('отдых — момент, как начало хода', () => {
   });
 });
 
-group('бросок отвечает нескольким мишеням', () => {
+group('бросок несёт несколько меток, одна приходит входом', () => {
   const sys = {
     id: 'm', name: 'm',
     fields: [
       { tag: 'лов', label: 'Ловкость', value: { kind: 'stored', type: 'number', default: 2 } },
-      { tag: 'спас_лов', label: 'Спасбросок Ловкости', roll: { label: 'Спасбросок Ловкости', check: 'спас' }, value: { kind: 'formula', expr: '#лов' } },
+      { tag: 'спас_лов', label: 'Спасбросок Ловкости', value: { kind: 'formula', expr: '@лов' } },
       { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
     ],
     constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
-    rolls: [{ tag: 'спас', label: 'Спасбросок' }],
-    roll_edits: { помеха: { label: 'Помеха', ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }] } },
-    effects: {
-      опутан: { label: 'Опутан', activation: 'passive', modifiers: [{ kind: 'roll', target: 'check:спас_лов', edit: 'помеха', condition: null }] },
-      шар: {
-        label: 'Шар', activation: 'manual',
-        params: [{ key: 'чем', label: 'Чем спасаются', kind: 'number' }],
-        steps: [{ id: 'спас', type: 'threshold', side: 'target', roll: { die: { constant: 'к20' }, bonus: { param: 'чем' }, check: 'спас' }, versus: { const: 12 }, continueOn: 'always' }],
+    tables: {
+      rolls: { label: 'Броски', key: 'word', rows: [{ value: 'спас' }] },
+      черты: {
+        label: 'Характеристики', key: 'word',
+        columns: [{ key: 'спас', label: 'Спасбросок', kind: 'expr' }],
+        rows: [{ value: 'лов', cells: { спас: '@спас_лов' } }],
       },
     },
-    records: { чары: { kind: 'action', label: 'Чары', props: [], bindings: [{ label: 'Шар', effect: 'шар', args: { чем: '@получатель.спас_лов' } }] } },
+    roll_edits: { помеха: { label: 'Помеха', ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }] } },
+    effects: {
+      опутан: { label: 'Опутан', activation: 'passive', modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['спас', 'лов'], edit: 'помеха', condition: null }] },
+      шар: {
+        label: 'Шар', activation: 'manual',
+        params: [{ key: 'чем', label: 'Чем спасаются', kind: 'choice', from: 'черты' }],
+        steps: [{
+          id: 'спас', type: 'threshold', side: 'target',
+          roll: { die: { constant: 'к20' }, bonus: { expr: '@получатель.чем.спас' }, tags: ['спас', { param: 'чем' }] },
+          versus: { const: 12 }, continueOn: 'always',
+        }],
+      },
+    },
+    records: { чары: { kind: 'action', label: 'Чары', props: [], bindings: [{ label: 'Шар', effect: 'шар', args: { чем: 'лов' } }] } },
   } as unknown as System;
   const spells = { items: [], actions: [{ id: 'шар', rk: 'чары', label: 'Шар', props: {} }] } as unknown as Compendium;
   const who = (id: string, worn: string[] = []): Sheet => ({
     id, systemId: 'm', kind: 'pc', name: id, values: {}, equipped: [], actions: ['шар'], effects: worn.map(effectId => ({ effectId })),
   } as unknown as Sheet);
 
-  test('помеха на «Спасбросок Ловкости» действует, когда заклинание требует именно его', () => {
+  const cast = (worn: string[], values: Record<string, number> = {}) => {
     const rolls = [15, 4];
+    const target = { ...who('цель', worn), values };
     const out = exchange({
       system: sys, compendium: spells, die: () => rolls.shift() ?? 1,
-      sheets: [who('маг'), who('цель', ['опутан'])], actionId: 'шар:0', fromId: 'маг', toId: 'цель',
+      sheets: [{ ...who('маг'), values: { лов: 9 } }, target], actionId: 'шар:0', fromId: 'маг', toId: 'цель',
     });
-    const trace = out.reports[0]!.report.trace[0] as { rolls: number[]; kept: number };
+    return out.reports[0]!.report.trace[0] as { rolls: number[]; kept: number; bonus: number; tags: string[] };
+  };
+
+  test('помеха на «спасбросок + лов» ловит спасбросок, где характеристику назвал вход', () => {
+    const trace = cast(['опутан']);
+    deepEq(trace.tags, ['спас', 'лов']);
     deepEq(trace.rolls, [15, 4]);
     eq(trace.kept, 4);
+  });
+
+  test('прибавка — колонка выбранной строки, посчитанная листом получателя', () => {
+    eq(cast([], { лов: 5 }).bonus, 5, 'Ловкость цели, а не мага');
   });
 });
 
@@ -215,7 +236,7 @@ group('наложенное помнит число, штрафная кость
       { tag: 'заряды', label: 'Заряды', value: { kind: 'stored', type: 'number', default: 1, min: 0 } },
     ],
     constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
-    rolls: [{ tag: 'атака', label: 'Бросок атаки' }],
+    tables: { rolls: { label: 'Броски', key: 'word', rows: [{ value: 'атака' }] } },
     roll_edits: { порча: { label: 'Порча', ops: [{ op: 'bonusDie', sides: 4, minus: true }] } },
     effects: {
       горит: {
@@ -223,11 +244,11 @@ group('наложенное помнит число, штрафная кость
         steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { ref: 'worn.carry' } }],
       },
       поджечь: { label: 'Поджечь', activation: 'manual', steps: [{ type: 'status', mode: 'apply', effect: { const: 'горит' }, carry: { const: 4 } }] },
-      порченый: { label: 'Порченый', activation: 'passive', modifiers: [{ kind: 'roll', target: 'атака', edit: 'порча', condition: null }] },
+      порченый: { label: 'Порченый', activation: 'passive', modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'порча', condition: null }] },
       удар: {
         label: 'Удар', activation: 'manual',
         steps: [
-          { id: 'hit', type: 'threshold', roll: { die: { constant: 'к20' }, check: 'атака' }, versus: { tag: 'кд' } },
+          { id: 'hit', type: 'threshold', roll: { die: { constant: 'к20' }, tags: ['атака'] }, versus: { tag: 'кд' } },
           { id: 'dmg', type: 'amount', source: 'roll', dice: { const: '1d6' }, double: { ref: 'hit.natural', atLeast: { tag: 'крит_от' } } },
           { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { ref: 'dmg' } },
         ],

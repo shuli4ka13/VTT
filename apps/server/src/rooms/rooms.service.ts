@@ -26,7 +26,6 @@ import { deskOf } from '@vtt/engine/events/desk';
 import { DESK_ID } from '@vtt/engine/engine/owners';
 import type { MomentEvent } from '@vtt/engine/events/moments';
 import { resolveRoll } from '@vtt/engine/engine/modifiers';
-import { rollTagOf } from '@vtt/engine/engine/targets';
 import { newPass, calc } from '@vtt/engine/engine/calc';
 import { rollLead, dieConstant } from '@vtt/engine/engine/lead-die';
 import {
@@ -652,8 +651,7 @@ export class RoomsService {
     let line: string;
     try {
       const pass = newPass(system, sheet, { compendium });
-      const kind = typeof field.roll.check === 'string' && field.roll.check ? field.roll.check : null;
-      const resolution = resolveRoll(system, sheet, [rollTagOf(tag), kind], pass);
+      const resolution = resolveRoll(system, sheet, field.roll.tags ?? [], pass);
       const bonus = Number(calc(system, sheet, tag, pass) ?? 0);
       const rolled = rollLead(dieConstant(system, system.initiative.die.constant), this.die, resolution.edits);
       const total = rolled.total + bonus + resolution.bonus;

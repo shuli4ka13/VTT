@@ -66,7 +66,7 @@ group('конверт вызова', () => {
       const blessedSys = { ...system, effects: { ...system.effects,
         blessed: {
           label: 'Благословение', activation: 'passive', duration: { kind: 'temporary' },
-          modifiers: [{ kind: 'roll', target: 'attack_roll', op: 'add', value: 4, stacking: 'sum', condition: null }],
+          modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['атака'], op: 'add', value: 4, stacking: 'sum', condition: null }],
         } } };
       const sheet = { ...arven, effects: [{ effectId: 'blessed' }] };
 
@@ -162,7 +162,7 @@ group('конверт вызова', () => {
       const shakenSys = { ...system, effects: { ...system.effects,
         shaken: {
           label: 'Потрясён', activation: 'passive', duration: { kind: 'temporary' },
-          modifiers: [{ kind: 'roll', target: 'save_roll', edit: 'disadvantage', condition: null }],
+          modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['спасбросок'], edit: 'disadvantage', condition: null }],
         } } };
       const sheet = { ...arven, effects: [{ effectId: 'shaken' }] };
       const { report } = receive(poisonAt(), { system: shakenSys, sheet, compendium, die: queue(19, 5) });
@@ -206,7 +206,7 @@ const PARAMETRIC = {
   ],
   steps: [
     { id: 'hit', type: 'threshold',
-      roll: { die: { constant: 'lead_die' }, bonus: { param: 'bonus' }, check: 'attack_roll' },
+      roll: { die: { constant: 'lead_die' }, bonus: { param: 'bonus' }, tags: ['атака'] },
       versus: { param: 'versus' } },
     { id: 'dmg', type: 'amount', source: 'roll',
       dice: { prop: 'damage_dice' }, bonus: { param: 'damage_bonus' } },

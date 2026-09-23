@@ -17,9 +17,10 @@ const sys: any = {
     {
       tag: 'скрытность', label: 'Скрытность',
       value: { kind: 'stored', type: 'number', default: 3 },
-      roll: { label: 'Проверка: Скрытность' },
+      roll: { label: 'Проверка: Скрытность', tags: ['скрытность'] },
     },
   ],
+  tables: { skills: { label: 'Навыки', key: 'word', rows: [{ value: 'скрытность' }] } },
   constants: { lead: { label: 'Ведущая кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
   roll_edits: {
     помеха: { label: 'Помеха', ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }] },
@@ -29,7 +30,7 @@ const sys: any = {
       label: 'Красться', activation: 'manual', params: [],
       steps: [{
         id: 'бросок', type: 'threshold',
-        roll: { die: { constant: 'lead' }, bonus: { expr: '#скрытность' }, check: 'check:скрытность' },
+        roll: { die: { constant: 'lead' }, bonus: { expr: '#скрытность' }, tags: ['скрытность'] },
         versus: { const: 15 },
       }],
     },
@@ -39,7 +40,7 @@ const sys: any = {
 const compendium: any = {
   items: [{
     id: 'кольчуга', rk: 'доспех', label: 'Кольчуга',
-    modifiers: [{ kind: 'roll', target: 'check:скрытность', edit: 'помеха', condition: null }],
+    modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['скрытность'], edit: 'помеха', condition: null }],
   }],
   actions: [],
 };
@@ -86,7 +87,7 @@ group('тяжёлый доспех мешает красться', () => {
       effects: {
         sneak: {
           ...sys.effects.sneak,
-          steps: [{ ...sys.effects.sneak.steps[0], roll: { ...sys.effects.sneak.steps[0].roll, check: null, bonus: { const: 3 } } }],
+          steps: [{ ...sys.effects.sneak.steps[0], roll: { ...sys.effects.sneak.steps[0].roll, tags: [], bonus: { const: 3 } } }],
         },
       },
     };

@@ -7,7 +7,6 @@ import type {
 
 export interface Made<T> { key: string; value: T }
 
-type RollKind = NonNullable<System['rolls']>[number];
 type Prop = NonNullable<RecordKind['props']>[number];
 
 export const firstHeard = (system: System): string => {
@@ -69,11 +68,6 @@ export const newRollEdit = (system: System): Made<RollEdit> => ({
   value: { label: '', ops: [] },
 });
 
-export const newRoll = (system: System): RollKind => ({
-  tag: freeId((system.rolls ?? []).map(r => r.tag), 'бросок'),
-  label: '',
-});
-
 export const newTable = (system: System): Made<RangeTable> => ({
   key: freeId(Object.keys(system.tables ?? {}), 'таблица'),
   value: { label: '', key: 'word', rows: [{ value: '' }] },
@@ -109,7 +103,7 @@ const blankCheck = (system: System): Step => {
   const die = firstDie(system);
   return {
     type: 'threshold', successWhen: 'atLeast', continueOn: 'success',
-    roll: { die: die ? { constant: die } : undefined, check: null },
+    roll: { die: die ? { constant: die } : undefined },
   } as unknown as Step;
 };
 

@@ -23,7 +23,7 @@ export const STEP_WORDS = {
         key: 'versus', label: 'Против чего', kind: 'ref', main: true, required: true,
         allow: ['tag', 'expr', 'const', 'param', 'ref'],
       },
-      { key: 'roll.check', label: 'Какой это бросок', kind: 'roll', allow: [] },
+      { key: 'roll.tags', label: 'Метки броска', kind: 'roll', allow: [] },
       {
         key: 'side', label: 'Кто бросает', kind: 'choice', options: ['source', 'target'], fallback: 'source',
         choice: [['source', 'отправитель — это атака'], ['target', 'цель — это спасбросок']],

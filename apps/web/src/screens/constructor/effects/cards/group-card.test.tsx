@@ -15,7 +15,7 @@ const effect = { params: [] } as unknown as Effect;
 const attackSteps = () => [
   {
     type: 'threshold', successWhen: 'atLeast', continueOn: 'success',
-    roll: { die: { constant: 'lead' }, check: null },
+    roll: { die: { constant: 'lead' } },
   },
   { id: 'n', type: 'amount', source: 'roll' },
   { type: 'apply', direction: 'subtract', targetModifiers: true, value: { ref: 'n' } },
@@ -220,7 +220,7 @@ const checkCell = (): HTMLElement => {
 describe('GroupCard: проверка одной формулой', () => {
   const checkSteps = () => [{
     type: 'threshold', successWhen: 'atLeast', continueOn: 'success',
-    roll: { die: { constant: 'lead' }, check: null }, versus: { const: 10 },
+    roll: { die: { constant: 'lead' } }, versus: { const: 10 },
   }] as unknown as Step[];
 
   const typed = (tail: string) => {
@@ -248,7 +248,7 @@ describe('GroupCard: проверка одной формулой', () => {
 
   it('правка строки раскладывается по частям проверки', () => {
     const { step } = typed(') + 2 >= @получатель.armor');
-    expect(step.roll).toEqual({ die: { constant: 'lead' }, bonus: { const: 2 }, check: null });
+    expect(step.roll).toEqual({ die: { constant: 'lead' }, bonus: { const: 2 } });
     expect(step.versus).toEqual({ tag: 'armor' });
     expect(step.successWhen).toBe('atLeast');
   });
@@ -256,7 +256,7 @@ describe('GroupCard: проверка одной формулой', () => {
   it('справа встречный бросок', () => {
     const { step } = typed(') > кинуть(1к20) + 1');
     expect(step.successWhen).toBe('over');
-    expect(step.versus).toEqual({ roll: { die: { constant: 'lead' }, bonus: { const: 1 }, check: null } });
+    expect(step.versus).toEqual({ roll: { die: { constant: 'lead' }, bonus: { const: 1 } } });
   });
 
   it('проверка без сравнения не уходит в данные, а показывается ошибкой', () => {

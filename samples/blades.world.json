@@ -225,12 +225,6 @@
         "read": "best"
       }
     },
-    "rolls": [
-      {
-        "tag": "action_roll",
-        "label": "Бросок действия"
-      }
-    ],
     "roll_edits": {},
     "tables": {
       "outcome": {
@@ -266,6 +260,15 @@
             }
           }
         ]
+      },
+      "rolls": {
+        "label": "Броски",
+        "key": "word",
+        "rows": [
+          {
+            "value": "действие"
+          }
+        ]
       }
     },
     "effects": {
@@ -289,7 +292,9 @@
               "die": {
                 "constant": "pool"
               },
-              "check": "action_roll"
+              "tags": [
+                "действие"
+              ]
             },
             "versus": {
               "const": 4

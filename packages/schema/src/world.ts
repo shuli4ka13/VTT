@@ -63,7 +63,7 @@ export const field = z.object({
   tag,
   label: z.string(),
   group: z.string().optional(),
-  roll: z.object({ label: z.string().optional() }).passthrough().optional(),
+  roll: z.object({ label: z.string().optional(), tags: z.array(z.string().min(1)).optional() }).passthrough().optional(),
   value: fieldValue,
 
   control: control.optional(),
@@ -170,6 +170,7 @@ export const valueModifier = z.object({
 export const rollModifier = z.object({
   kind: z.literal('roll'),
   target: z.string(),
+  tags: z.array(z.string().min(1)).optional(),
   edit: z.string().optional(),
   op: z.string().optional(),
   value: z.unknown().optional(),
@@ -315,11 +316,6 @@ export const system = z.object({
   records: z.record(z.string(), recordKind).optional(),
   constants: z.record(z.string(), systemConstant).optional(),
   tables: z.record(z.string(), table).optional(),
-  rolls: z.array(z.object({
-    tag: z.string(), label: z.string(),
-    words: z.object({ success: z.string(), fail: z.string() }).optional(),
-  })).optional(),
-
   roll_edits: z.record(z.string(), rollEdit).optional(),
   lists: z.record(z.string(), wordList).optional(),
   advantage: z.object({ methods: z.record(z.string(), z.boolean()).optional() }).passthrough().optional(),
@@ -329,7 +325,7 @@ export const system = z.object({
   initiative: z.object({
     die: z.object({ constant: z.string().min(1) }),
     bonus: slotRef.optional(),
-    check: z.string().optional(),
+    tags: z.array(z.string().min(1)).optional(),
   }).passthrough().optional(),
 
   mannequins: z.array(z.lazy(() => sheet)).optional(),

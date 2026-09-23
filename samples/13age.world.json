@@ -294,12 +294,6 @@
         ]
       }
     },
-    "rolls": [
-      {
-        "tag": "attack_roll",
-        "label": "Бросок атаки"
-      }
-    ],
     "roll_edits": {},
     "tables": {
       "wield": {
@@ -331,6 +325,15 @@
               "attack": "@dex_mod",
               "damage": "@dex_mod"
             }
+          }
+        ]
+      },
+      "rolls": {
+        "label": "Броски",
+        "key": "word",
+        "rows": [
+          {
+            "value": "атака"
           }
         ]
       }
@@ -402,7 +405,9 @@
               "bonus": {
                 "expr": "@attack_with + @отправитель.level + @стол.escalation"
               },
-              "check": "attack_roll"
+              "tags": [
+                "атака"
+              ]
             },
             "versus": {
               "expr": "@получатель.ac"
@@ -483,7 +488,9 @@
               "bonus": {
                 "param": "to_hit"
               },
-              "check": "attack_roll"
+              "tags": [
+                "атака"
+              ]
             },
             "versus": {
               "expr": "@получатель.ac"

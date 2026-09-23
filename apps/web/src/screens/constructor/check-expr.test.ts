@@ -29,17 +29,17 @@ const asExpr = (ref: Loose) => {
 };
 
 const lean = (step: Loose) => ({
-  roll: { die: step.roll?.die, ...(step.roll?.bonus ? { bonus: step.roll.bonus } : {}), check: step.roll?.check ?? null },
+  roll: { die: step.roll?.die, ...(step.roll?.bonus ? { bonus: step.roll.bonus } : {}), tags: step.roll?.tags ?? [] },
   ...(step.side === 'target' ? { side: 'target' } : {}),
   successWhen: step.successWhen ?? 'atLeast',
   versus: step.versus?.roll
-    ? { roll: { die: step.versus.roll.die, ...(step.versus.roll.bonus ? { bonus: step.versus.roll.bonus } : {}), check: step.versus.roll.check ?? null } }
+    ? { roll: { die: step.versus.roll.die, ...(step.versus.roll.bonus ? { bonus: step.versus.roll.bonus } : {}), ...(step.versus.roll.tags?.length ? { tags: step.versus.roll.tags } : {}) } }
     : asExpr(step.versus),
 });
 
 const parsedLean = (parsed: Loose) => ({
   ...parsed,
-  roll: { die: parsed.roll.die, ...(parsed.roll.bonus ? { bonus: parsed.roll.bonus } : {}), check: parsed.roll.check },
+  roll: { die: parsed.roll.die, ...(parsed.roll.bonus ? { bonus: parsed.roll.bonus } : {}), tags: parsed.roll.tags },
 });
 
 describe('проверка одной формулой', () => {
@@ -60,13 +60,13 @@ describe('проверка одной формулой', () => {
   const system = {
     fields: [{ tag: 'ac', label: 'КД' }],
     constants: { lead: { label: 'Ведущая', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
-    rolls: [{ tag: 'attack_roll', label: 'Атака' }],
+    tables: { rolls: { label: 'Броски', key: 'word', rows: [{ value: 'атака' }, { value: 'ловкость' }] } },
     effects: {},
   } as unknown as System;
 
-  it('атака: кость, вид броска, прибавка и поле получателя', () => {
-    expect(parseCheck('кинуть(@lead, @attack_roll) + 2 >= @получатель.ac', system)).toEqual({
-      roll: { die: { constant: 'lead' }, bonus: { const: 2 }, check: 'attack_roll' },
+  it('атака: кость, метки, прибавка и поле получателя', () => {
+    expect(parseCheck('кинуть(@lead, @атака, @ловкость) + 2 >= @получатель.ac', system)).toEqual({
+      roll: { die: { constant: 'lead' }, bonus: { const: 2 }, tags: ['атака', 'ловкость'] },
       successWhen: 'atLeast',
       versus: { tag: 'ac' },
     });
@@ -79,9 +79,9 @@ describe('проверка одной формулой', () => {
   });
 
   it('встречный бросок справа', () => {
-    expect(parseCheck('кинуть(@lead) > кинуть(@получатель.lead, @attack_roll) + 1', system)).toMatchObject({
+    expect(parseCheck('кинуть(@lead) > кинуть(@получатель.lead, @атака) + 1', system)).toMatchObject({
       successWhen: 'over',
-      versus: { roll: { die: { constant: 'lead' }, bonus: { const: 1 }, check: 'attack_roll' } },
+      versus: { roll: { die: { constant: 'lead' }, bonus: { const: 1 }, tags: ['атака'] } },
     });
   });
 
@@ -89,5 +89,15 @@ describe('проверка одной формулой', () => {
     expect(parseCheck('кинуть(@lead) + 2', system)).toHaveProperty('error');
     expect(parseCheck('@lead >= 10', system)).toHaveProperty('error');
     expect(parseCheck('кинуть(@lead, @нет) >= 10', system)).toHaveProperty('error');
+    expect(parseCheck('кинуть(@lead, 5) >= 10', system)).toHaveProperty('error');
+  });
+
+  it('метка может прийти входом', () => {
+    const asName = (name: string) => (name === 'чем' ? ({ param: 'чем' } as never) : null);
+    expect(parseCheck('кинуть(@lead, @атака, @чем) >= 10', system, asName)).toMatchObject({
+      roll: { tags: ['атака', { param: 'чем' }] },
+    });
+    expect(formatCheck({ roll: { die: { constant: 'lead' }, tags: ['атака', { param: 'чем' }] }, versus: { const: 10 } }))
+      .toBe('кинуть(@lead, @атака, @чем) >= 10');
   });
 });

@@ -10,6 +10,7 @@ import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 import { badFormula } from '../../roll-expr.ts';
 import { parseCheck, formatCheck } from '../../check-expr.ts';
+import { tagWords } from '@vtt/engine/engine/roll-tags';
 
 const firstDie = (system: System): string | undefined => Object.keys(system.constants ?? {})[0];
 
@@ -29,7 +30,7 @@ export function CheckBody({ step, context, edit, system }: {
     const d = loose(draft);
     if (next === 'roll') {
       draft.type = 'threshold';
-      d.roll ??= { die: firstDie(system) ? { constant: firstDie(system) } : undefined, check: null };
+      d.roll ??= { die: firstDie(system) ? { constant: firstDie(system) } : undefined };
       d.successWhen ??= 'atLeast'; d.continueOn ??= 'success';
     } else {
       draft.type = 'compare';
@@ -91,7 +92,7 @@ export function CheckBody({ step, context, edit, system }: {
         modeField,
         {
           key: 'formula', label: 'Формула', width: 420,
-          hint: 'кинуть(кость, вид броска) + прибавка, знак и с чем сравнить. Кость с @получатель — бросает получатель; справа можно встречное кинуть(…)',
+          hint: 'кинуть(кость, метки) + прибавка, знак и с чем сравнить. Метки — строки таблиц («атака», «ловкость») или вход; по ним правки находят бросок. Кость с @получатель — бросает получатель; справа можно встречное кинуть(…)',
           node: <CheckFormula step={step} context={context} edit={edit} />,
         },
         {
@@ -139,7 +140,7 @@ function CheckFormula({ step, context, edit }: { step: any; context: SlotContext
   const [trouble, setTrouble] = useState<string | null>(null);
   const names = useMemo(() => {
     const out = namesOf(context);
-    for (const roll of context.system.rolls ?? []) out.set(roll.tag, `${roll.label || roll.tag} · вид броска`);
+    for (const word of tagWords(context.system).keys()) out.set(word, word);
     return out;
   }, [context]);
 
@@ -152,7 +153,11 @@ function CheckFormula({ step, context, edit }: { step: any; context: SlotContext
     if (bad) { setTrouble(bad); return; }
     edit(0, target => {
       const d = loose(target);
-      d.roll = { die: parsed.roll.die, ...(parsed.roll.bonus ? { bonus: parsed.roll.bonus } : {}), check: parsed.roll.check };
+      d.roll = {
+        die: parsed.roll.die,
+        ...(parsed.roll.bonus ? { bonus: parsed.roll.bonus } : {}),
+        ...(parsed.roll.tags.length ? { tags: parsed.roll.tags } : {}),
+      };
       if (parsed.side) d.side = parsed.side; else delete d.side;
       d.successWhen = parsed.successWhen;
       d.versus = parsed.versus;
@@ -170,7 +175,7 @@ function CheckFormula({ step, context, edit }: { step: any; context: SlotContext
         owners
         badges={inputBadges(context)}
         invalid={Boolean(trouble)}
-        placeholder="кинуть(@кость, @вид броска) + прибавка >= против"
+        placeholder="кинуть(@кость, @метка) + прибавка >= против"
         onChange={next => { setTrouble(null); setDraft(next); }}
         onCommit={commit}
         onCancel={drop}

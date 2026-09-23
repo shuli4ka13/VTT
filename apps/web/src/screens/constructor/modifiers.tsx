@@ -6,6 +6,7 @@ import { targets } from '@vtt/engine/engine/targets';
 import { installMethod, recipesToInstall } from '@vtt/engine/model/advantage-methods';
 import { tagsOf, tagTablesOf, listOf as rowsFrom } from '@vtt/engine/model/lists';
 import { TagPick, type Tag } from './tag-pick.tsx';
+import { RollTagsPick } from './roll-tags-pick.tsx';
 
 const OPS = [
   ['add', 'прибавить'],
@@ -140,12 +141,22 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
             </div>
           ) : (
             <div className="row">
-              <Field label="На какой бросок" needed={!modifier.target}>
+              <Field label="Чей бросок" needed={!modifier.target}>
                 <Select
                   value={modifier.target}
                   options={[['', '— выберите бросок —'],
                     ...rollTargets.map(t => [t.tag, t.label] as const)] as never}
                   onChange={target => onEdit(draft => { (draft[index] as Modifier).target = target; })}
+                />
+              </Field>
+              <Field label="С метками" hint="Бросок должен нести все метки. Пусто — любой бросок.">
+                <RollTagsPick
+                  system={system}
+                  value={(modifier as { tags?: string[] }).tags}
+                  onChange={tags => onEdit(draft => {
+                    const d = draft[index] as { tags?: string[] };
+                    if (tags.length) d.tags = tags; else delete d.tags;
+                  })}
                 />
               </Field>
               <Field

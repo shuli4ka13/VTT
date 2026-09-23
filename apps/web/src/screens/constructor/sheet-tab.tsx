@@ -19,6 +19,7 @@ import { BlockPick } from './block-pick.tsx';
 import { effectiveDefault, sameValue } from './groups.ts';
 import { blockTree, BlockBranches } from './block-tree.tsx';
 import type { Field as FieldModel, FieldValue, System } from '@vtt/schema';
+import { RollTagsPick } from './roll-tags-pick.tsx';
 
 const KINDS = [
   ['stored', 'вводит игрок'],
@@ -397,6 +398,16 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
           >
             {field.roll ? 'Броски включены' : 'Включить броски'}
           </Button>
+          {field.roll ? (
+            <RollTagsPick
+              system={system}
+              value={field.roll.tags}
+              onChange={tags => edit(draft => {
+                if (!draft.roll) return;
+                if (tags.length) draft.roll.tags = tags; else delete draft.roll.tags;
+              })}
+            />
+          ) : null}
         </div>
       </Card>
 

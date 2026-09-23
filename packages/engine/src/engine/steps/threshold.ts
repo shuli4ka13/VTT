@@ -1,8 +1,7 @@
 import { resolveRoll, claimedModifiers } from '../modifiers.ts';
 import { lookupDegree } from '../tables.ts';
 import { dieConstant, rollLead, unfoldDice } from '../lead-die.ts';
-import { packRef, resolveNumber, resolveOptionalNumber, exactFieldOf } from '../refs.ts';
-import { rollTagOf } from '../targets.ts';
+import { packRef, resolveRef, resolveNumber, resolveOptionalNumber } from '../refs.ts';
 import { EngineError } from '../errors.ts';
 import type { StepData, StepContext } from './index.ts';
 import type { RolledDie } from '../readings.ts';
@@ -35,10 +34,18 @@ function dieOf(system: Parameters<typeof dieConstant>[0], die: unknown) {
   return dieConstant(system, (die as { constant: string }).constant);
 }
 
-function ownCheckOf(bonus: unknown, ctx: StepContext): string | null {
-  const tag = exactFieldOf(bonus, ctx);
-  if (!tag) return null;
-  return ctx.system.fields.some(f => f.tag === tag && f.roll) ? rollTagOf(tag) : null;
+const tagList = (tags: unknown): unknown[] => (Array.isArray(tags) ? tags : []);
+
+const packTags = (tags: unknown, ctx: StepContext): unknown[] =>
+  tagList(tags).map(tag => (typeof tag === 'string' ? tag : packRef(tag, ctx)));
+
+function tagsHere(tags: unknown, ctx: StepContext): string[] {
+  return [...new Set(tagList(tags).flatMap(tag => {
+    if (typeof tag === 'string') return [tag];
+    const value = resolveRef(tag, ctx);
+    if (Array.isArray(value)) return value.map(String);
+    return value === null || value === undefined || value === '' ? [] : [String(value)];
+  }))];
 }
 
 function unfold(die: unknown, ctx: StepContext) {
@@ -58,7 +65,7 @@ export const mayBreak = true;
 
 export const icon = '⌖';
 
-type RollSpec = { die?: unknown; bonus?: unknown; check?: string | null };
+type RollSpec = { die?: unknown; bonus?: unknown; tags?: unknown[] };
 
 const opposedOf = (versus: unknown): RollSpec | null =>
   (versus && typeof versus === 'object' && 'roll' in (versus as object) ? (versus as { roll: RollSpec }).roll : null);
@@ -75,28 +82,28 @@ export function lint(step: StepData) {
 }
 
 function rollHere(spec: RollSpec, ctx: StepContext, extra: unknown[] = []) {
-  const check = spec.check || null;
+  const tags = tagsHere(spec.tags, ctx);
   const mods = resolveRoll(
-    ctx.system, ctx.sheet, [check, ownCheckOf(spec.bonus, ctx)], ctx.pass,
-    [...extra, ...claimedModifiers(ctx.system, ctx.claims ?? [], check)] as never);
+    ctx.system, ctx.sheet, tags, ctx.pass,
+    [...extra, ...claimedModifiers(ctx.system, ctx.claims ?? [])] as never);
   const rolled = rollLead(unfold(spec.die, ctx), ctx.die, mods.edits);
-  return { rolled, modBonus: mods.bonus, check };
+  return { rolled, modBonus: mods.bonus, tags };
 }
 
 function packVersus(versus: unknown, rollerSide: string, ctx: StepContext): unknown {
   const opposed = opposedOf(versus);
   if (!opposed) return packRef(versus, ctx);
   if (rollerSide === 'target') {
-    const { rolled, modBonus, check } = rollHere(opposed, ctx);
-    return { rolled, bonus: packRef(opposed.bonus, ctx), modBonus, check };
+    const { rolled, modBonus, tags } = rollHere(opposed, ctx);
+    return { rolled, bonus: packRef(opposed.bonus, ctx), modBonus, tags };
   }
-  return { roll: { die: opposed.die, bonus: packRef(opposed.bonus, ctx), check: opposed.check || null } };
+  return { roll: { die: opposed.die, bonus: packRef(opposed.bonus, ctx), tags: packTags(opposed.tags, ctx) } };
 }
 
 function versusOf(packed: any, ctx: StepContext): { value: number; against?: Record<string, unknown> } {
   if (packed && typeof packed === 'object' && ('rolled' in packed || 'roll' in packed)) {
     const here = 'rolled' in packed
-      ? { rolled: packed.rolled, modBonus: packed.modBonus || 0, check: packed.check ?? null }
+      ? { rolled: packed.rolled, modBonus: packed.modBonus || 0, tags: (packed.tags ?? []) as string[] }
       : rollHere(packed.roll, ctx);
     const bonusRef = 'rolled' in packed ? packed.bonus : packed.roll.bonus;
     const bonus = (resolveOptionalNumber(bonusRef, ctx, 'прибавка встречного броска') ?? 0) + here.modBonus;
@@ -106,7 +113,7 @@ function versusOf(packed: any, ctx: StepContext): { value: number; against?: Rec
       against: {
         natural: here.rolled.total, total, bonus, rolls: here.rolled.rolls, kept: here.rolled.kept,
         ...(here.rolled.read && here.rolled.read !== 'sum' ? { read: here.rolled.read } : {}),
-        ...(here.check ? { check: here.check } : {}),
+        ...(here.tags.length ? { tags: here.tags } : {}),
       },
     };
   }
@@ -114,10 +121,10 @@ function versusOf(packed: any, ctx: StepContext): { value: number; against?: Rec
 }
 
 export function traceLine(t: any, h: any) {
-  const checkName = t.check ? ` «${h.labelOf(t.check)}»` : '';
+  const checkName = t.tags?.length ? ` «${t.tags.join(', ')}»` : '';
   const versusName = t.versus.tag ? `${h.labelOf(t.versus.tag)} ` : '';
   const opposed = t.against
-    ? `встречного броска${t.against.check ? ` «${h.labelOf(t.against.check)}»` : ''} [${t.against.rolls.join(', ')}]${
+    ? `встречного броска${t.against.tags?.length ? ` «${t.against.tags.join(', ')}»` : ''} [${t.against.rolls.join(', ')}]${
       t.against.read === 'count' ? ` → успехов ${t.against.natural}` : ''} + ${t.against.bonus} = `
     : '';
 
@@ -157,30 +164,30 @@ export function pack(step: StepData, ctx: StepContext) {
 
   if (base.side === 'target') {
 
-    return { ...base, roll: { die: roll.die, bonus: packRef(roll.bonus, ctx), check: roll.check || null } };
+    return { ...base, roll: { die: roll.die, bonus: packRef(roll.bonus, ctx), tags: packTags(roll.tags, ctx) } };
   }
 
-  const check = roll.check || null;
+  const tags = tagsHere(roll.tags, ctx);
   const extra = [
-    ...(ctx.against ? ctx.against(check) : []),
-    ...claimedModifiers(ctx.system, ctx.claims ?? [], check),
+    ...(ctx.against ? ctx.against(tags) : []),
+    ...claimedModifiers(ctx.system, ctx.claims ?? []),
   ];
-  const mods = resolveRoll(ctx.system, ctx.sheet, [check, ownCheckOf(roll.bonus, ctx)], ctx.pass, extra);
+  const mods = resolveRoll(ctx.system, ctx.sheet, tags, ctx.pass, extra);
   const held = ctx.kept?.[String(step.id ?? '')]?.rolled?.entries as RolledDie[] | undefined;
   const rolled = rollLead(unfold(roll.die, ctx), ctx.die, mods.edits, held ?? []);
-  return { ...base, check, rolled, bonus: packRef(roll.bonus, ctx), modBonus: mods.bonus };
+  return { ...base, tags, rolled, bonus: packRef(roll.bonus, ctx), modBonus: mods.bonus };
 }
 
 export function resolve(step: StepData, ctx: StepContext) {
   let rolled = step.rolled;
   let modBonus = step.modBonus || 0;
+  let tags: string[] = (step.tags ?? []) as string[];
 
   if (!rolled) {
-
-    const check = step.roll.check || null;
+    tags = tagsHere(step.roll.tags, ctx);
     const mods = resolveRoll(
-      ctx.system, ctx.sheet, [check, ownCheckOf(step.roll.bonus, ctx)], ctx.pass,
-      claimedModifiers(ctx.system, ctx.claims ?? [], check));
+      ctx.system, ctx.sheet, tags, ctx.pass,
+      claimedModifiers(ctx.system, ctx.claims ?? []));
     rolled = rollLead(unfold(step.roll.die, ctx), ctx.die, mods.edits);
     modBonus = mods.bonus;
   }
@@ -224,6 +231,7 @@ export function resolve(step: StepData, ctx: StepContext) {
     value,
     trace: {
       rolls: rolled.rolls, kept: rolled.kept, bonus, total,
+      ...(tags.length ? { tags } : {}),
       ...(rolled.raw && rolled.raw.some((v: number, i: number) => v !== rolled.rolls[i]) ? { raw: rolled.raw } : {}),
 
       ...(rolled.read && rolled.read !== 'sum' ? { read: rolled.read } : {}),

@@ -14,13 +14,13 @@ const queue = (...values: number[]) => {
 
 const passive = (label: string, edit: string) => ({
   label, activation: 'passive', duration: { kind: 'permanent' },
-  modifiers: [{ kind: 'roll', target: 'проверка', edit, condition: null }],
+  modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['проверка'], edit, condition: null }],
 });
 
 const world = (edits: Record<string, unknown>, effects: string[]) => ({
   id: 'чужой-мир',
   fields: [],
-  rolls: [{ tag: 'проверка', label: 'Проверка' }],
+  tables: { rolls: { label: 'Броски', key: 'word', rows: [{ value: 'проверка' }] } },
   constants: { кость: { label: 'Кость черты', kind: 'die', dice: [{ count: 1, sides: 6 }] } },
   roll_edits: edits,
   effects: Object.fromEntries(effects.map(e => [e, passive(e, e)])),
@@ -31,7 +31,7 @@ const sheet = (effects: string[]) => ({ id: 'герой', values: {}, effects: e
 const rule = {
   steps: [{
     id: 'try', type: 'threshold',
-    roll: { die: { constant: 'кость' }, bonus: { const: 0 }, check: 'проверка' },
+    roll: { die: { constant: 'кость' }, bonus: { const: 0 }, tags: ['проверка'] },
     versus: { const: 8 },
   }],
 };
@@ -101,8 +101,8 @@ group('механики разных систем доезжают через э
 
   test('правка на ЧУЖОЙ бросок этот бросок не трогает', () => {
     const sys = world({ помощь: { label: 'Помощь', ops: [{ op: 'addDie' }] } }, ['помощь']);
-    sys.rolls.push({ tag: 'другой', label: 'Другой бросок' });
-    sys.effects.помощь.modifiers[0].target = 'другой';
+    sys.tables.rolls.rows.push({ value: 'другой' });
+    sys.effects.помощь.modifiers[0].tags = ['другой'];
     const r = run(sys, sheet(['помощь']), 5);
     deepEq(r.trace[0].rolls, [5], 'одна кость: правка висит на другой мишени');
   });
@@ -144,7 +144,7 @@ group('любой бросок ловит правку, ничего для эт
     const sys: any = withRule('disadvantage');
     sys.effects.фланг = {
       label: 'Во фланге', activation: 'passive', duration: { kind: 'permanent' },
-      modifiers: [{ kind: 'roll', target: 'attack_roll', edit: 'advantage', condition: null }],
+      modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'advantage', condition: null }],
     };
     const t = attack(sys, cursed(sys, ['всякий', 'фланг']), 18, 4, 5);
     deepEq(t.rolls, [18], 'одна кость: гашение не смотрит, с какой мишени пришла правка');
@@ -165,7 +165,7 @@ group('переворот к100 доезжает через эффект — п�
   const sys = (lucky: boolean) => ({
     id: 'варгейм',
     fields: [],
-    rolls: [{ tag: 'проверка', label: 'Проверка' }],
+    tables: { rolls: { label: 'Броски', key: 'word', rows: [{ value: 'проверка' }] } },
     constants: { сотня: { label: 'к100', kind: 'die', dice: [{ count: 1, sides: 100 }] } },
     roll_edits: { удача: { label: 'Удача', ops: [{ op: 'flip', prefer: 'low' }] } },
     effects: lucky ? { удача: passive('удача', 'удача') } : {},
@@ -173,7 +173,7 @@ group('переворот к100 доезжает через эффект — п�
   const under = {
     steps: [{
       id: 'try', type: 'threshold',
-      roll: { die: { constant: 'сотня' }, bonus: { const: 0 }, check: 'проверка' },
+      roll: { die: { constant: 'сотня' }, bonus: { const: 0 }, tags: ['проверка'] },
       versus: { const: 45 }, successWhen: 'notOver',
     }],
   };
