@@ -64,7 +64,7 @@ group('шаг «порог»', () => {
       success: true, margin: 2, total: 16,
       natural: 10,
       rolled: 1, atMax: 0, atMin: 0, edited: false,
-      dice: { rolls: [10], kept: 10 }, parts: {},
+      dice: { rolls: [10], kept: 10 }, parts: {}, versus: 14,
     }, 'бросок 10 + бонус 6 против КД Мирры 14');
     eq(out.stopped, null);
     deepEq(out.trace[0].versus, { tag: 'ac', value: 14 });
