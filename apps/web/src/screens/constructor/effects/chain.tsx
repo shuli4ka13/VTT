@@ -7,7 +7,7 @@ import { problemOf } from '../step-card.tsx';
 import { groupSteps, moveGroup, removeSteps, BRICKS } from '../cards.ts';
 import { GroupCard } from './cards/group-card.tsx';
 import { findDonorBlock, copyDonorBlock } from '../donors.tsx';
-import type { System, Effect } from '@vtt/schema';
+import type { System, Effect, Step } from '@vtt/schema';
 
 export function Chain({ effect, system, edit, title = 'Цепочка шагов', empty = 'шагов ещё нет — эффект ничего не делает' }: {
   effect: Effect;
@@ -19,7 +19,7 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
   const editSystem = useWorld(s => s.editSystem);
   const pick = useWorld(s => s.pick);
   const onOpenEffect = (id: string) => pick({ activeEffectId: id });
-  const [removed, setRemoved] = useState<string | null>(null);
+  const [removed, setRemoved] = useState<{ text: string; before: Step[] } | null>(null);
 
   const addParam = (label: string, kind: string, want?: string): string => {
     let key = '';
@@ -62,7 +62,21 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
             : <Verdict tone="warn">{empty}</Verdict>}
       </div>
 
-      {removed ? <Verdict tone="warn" action={<Button size="sm" variant="ghost" onClick={() => setRemoved(null)}>ясно</Button>}>{removed}</Verdict> : null}
+      {removed ? (
+        <Verdict
+          tone="warn"
+          action={(
+            <>
+              <Button size="sm" onClick={() => { const before = removed.before; edit(draft => { draft.steps = before; }); setRemoved(null); }}>
+                вернуть {STEP.one}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setRemoved(null)}>ясно</Button>
+            </>
+          )}
+        >
+          {removed.text}
+        </Verdict>
+      ) : null}
 
       {cards.map((group, at) => {
         const problem = group.indices.map(i => problems[i]).find(Boolean) ?? null;
@@ -110,11 +124,15 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
               change(amount, steps[amountAt + 1]!, String(amount.id));
             })}
             onDelete={() => {
+              const before = structuredClone(steps);
               const removal = removeSteps(steps, group.indices);
               edit(draft => { draft.steps = removal.steps; });
-              setRemoved(removal.cleared.length
-                ? `${STEP.one} убран; ссылки на него очищены: ${removal.cleared.map(c => `${STEP.one} ${c.step + 1} · ${c.slot}`).join(', ')}`
-                : null);
+              setRemoved({
+                before,
+                text: removal.cleared.length
+                  ? `Убран ${STEP.one} ${at + 1}; ссылки на него очищены: ${removal.cleared.map(c => `${STEP.one} ${c.step + 1} · ${c.slot}`).join(', ')}`
+                  : `Убран ${STEP.one} ${at + 1}${cardTitle(cards, group.indices[0]!) ? ` · ${cardTitle(cards, group.indices[0]!)}` : ''}`,
+              });
             }}
             onMoveUp={at === 0 ? undefined : () => edit(draft => {
               draft.steps = moveGroup(draft.steps ?? [], at, -1);

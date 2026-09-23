@@ -53,6 +53,16 @@ describe('EffectsTab: палитра трёх понятий', () => {
     expect(screen.queryByText(/порог/i)).toBeNull();
   });
 
+  it('убранный шаг можно вернуть', () => {
+    render(<EffectsTab />);
+    fireEvent.click(screen.getAllByText('+ проверка')[0]!);
+    fireEvent.click(screen.getByTitle('убрать шаг'));
+    fireEvent.click(screen.getByText('убрать'));
+    expect(useWorld.getState().system.effects.strike!.steps).toHaveLength(0);
+    fireEvent.click(screen.getByText('вернуть шаг'));
+    expect(useWorld.getState().system.effects.strike!.steps).toHaveLength(1);
+  });
+
   it('кнопки палитры не знают доменных слов', () => {
     render(<EffectsTab />);
     const palette = screen.getAllByRole('button')
