@@ -1,6 +1,7 @@
 import { unifyTables } from './tables.ts';
 import { unifyBlocks } from './blocks.ts';
 import { unifyCalls } from './calls.ts';
+import { unifySides } from './sides.ts';
 import type { System, Compendium, CompendiumRecord } from './types.ts';
 
 type Loose = Record<string, any>;
@@ -348,5 +349,5 @@ export function unifyWorld(
   const withRefs = unifyCompendium(world.compendium, renames);
   const edited = convertRollEdits(system, withRefs);
   const bounded = unifyBounds({ system: edited.system, compendium: edited.compendium ?? withRefs });
-  return { system: bounded.system, compendium: bounded.compendium ?? withRefs };
+  return unifySides({ system: bounded.system, compendium: bounded.compendium ?? withRefs });
 }

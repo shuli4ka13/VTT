@@ -13,6 +13,7 @@ import { badFormula, exprText } from './roll-expr-input.tsx';
 import { SendBody } from './send-body.tsx';
 import { Extras } from './extras.tsx';
 import { calledOf } from '@vtt/engine/engine/effects';
+import { SENDER, RECEIVER } from '@vtt/engine/engine/owners';
 
 function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onCreateFromRecord }: {
 
@@ -42,7 +43,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
       ? ('ref' in value ? `@${value.ref}` : 'tag' in value ? `@${value.tag}` : 'const' in value ? String(value.const) : '')
       : '';
     const amountName = amountId ? `@${amountId}` : named;
-    const targetName = target && typeof target === 'object' && 'tag' in target ? `@${target.tag}` : '';
+    const targetName = target && typeof target === 'object' && 'tag' in target ? `@${RECEIVER}.${target.tag}` : '';
     const direction = String(a.direction ?? 'subtract');
     if (direction === 'set') return amountName;
     if (!targetName) return amountName;
@@ -51,10 +52,6 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   };
 
   const shown = draft ?? asExpr();
-
-  const rawValue = (apply as Record<string, any>).value;
-  const senderMarks: string[] = rawValue && typeof rawValue === 'object' && Array.isArray(rawValue.sender)
-    ? rawValue.sender : [];
 
   const dice = (amount as Record<string, any> | undefined)?.dice;
   const bonus = (amount as Record<string, any> | undefined)?.bonus;
@@ -65,7 +62,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   const sentChip = (label: ReactNode, onRemove: () => void, key: string) => (
     <span key={key} className="chips__chip chips__chip--sent">
       {label}
-      <span className="chips__side" title="посчитано отправителем, приходит числом">у отправителя</span>
+      <span className="chips__side chips__side--sender" title="посчитано отправителем, приходит числом">{SENDER}</span>
       <button
         type="button" className="chips__x" aria-label="убрать слагаемое"
         onMouseDown={e => { e.preventDefault(); onRemove(); }}
@@ -112,8 +109,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
       const target = apply as Record<string, any>;
       target.direction = 'set';
 
-      const kept = senderMarks.filter(tag => mentions(next, tag));
-      target.value = { expr: next, of: 'target', sender: kept.length ? kept : undefined };
+      target.value = { expr: next };
     };
     if (!withNumber && !amountId) {
 
@@ -157,8 +153,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
       if (!text) { delete a.value; return; }
       a.direction = 'set';
 
-      const kept = senderMarks.filter(tag => mentions(text, tag));
-      a.value = { expr: text, of: 'target', sender: kept.length ? kept : undefined };
+      a.value = { expr: text };
     });
     setDraft(null);
     setTrouble(null);
@@ -167,20 +162,6 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   const putIntoAmount = (ref: SlotRef, place?: (name: string) => string) =>
     sendThrough(a => { a.dice = ref; }, place);
 
-  const flipSide = (tag: string) => {
-    const line = (draft ?? asExpr()).trim();
-    edit(applyIndex, step => {
-      const a = step as Record<string, any>;
-      const value = (a.value && typeof a.value === 'object' && 'expr' in a.value)
-        ? a.value : { expr: line, of: 'target' };
-      const marked: string[] = Array.isArray(value.sender) ? value.sender : [];
-      const sender = marked.includes(tag) ? marked.filter(t => t !== tag) : [...marked, tag];
-      a.direction = 'set';
-      a.value = { ...value, sender: sender.length ? sender : undefined };
-    });
-    setDraft(null);
-    setTrouble(null);
-  };
 
   const needs = (context.effect.params ?? []).map(p => ({
     group: 'из записи',
@@ -247,19 +228,17 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
       <Field
         label="станет"
         error={trouble}
-        hint="Обычная математика. Подпись у поля — чей лист его считает: щёлкните, чтобы взять у отправителя — он пришлёт своё число."
+        hint="Обычная математика. У каждого поля подписано, чьё оно: отправителя или получателя. Щелчок по подписи меняет хозяина."
       >
         <FormulaChips
           value={shown}
           system={context.system}
           names={names}
           extraNames={рядом}
-          side="target"
+          owners
           placeholder="например: @хп − @урон"
           calculator
           extraOptions={needs}
-          fromSender={senderMarks}
-          onFlipSide={flipSide}
           onChange={setDraft}
           onBlur={commit}
           onKeyDown={e => {

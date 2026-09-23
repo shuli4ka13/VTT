@@ -2355,7 +2355,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "@handgun_total"
+              "expr": "@отправитель.handgun_total"
             },
             "bonus": {
               "param": "spend_luck"
@@ -2556,7 +2556,7 @@
               "check": "skill_roll"
             },
             "versus": {
-              "expr": "@body"
+              "expr": "@отправитель.body"
             },
             "successWhen": "notOver",
             "continueOn": "fail"

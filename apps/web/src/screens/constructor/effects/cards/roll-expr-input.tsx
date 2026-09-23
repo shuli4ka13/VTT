@@ -46,7 +46,7 @@ export function RollExprInput({ step, context, edit }: {
         value={shown}
         system={context.system}
         extraNames={names}
-        side={step.side === 'target' ? 'target' : 'self'}
+        owners
         placeholder="1к20 + @поле"
         calculator
         extraOptions={Object.entries(context.system.constants ?? {})

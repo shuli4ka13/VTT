@@ -3426,7 +3426,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть(@damage_dice, (@hit.natural >= @crit_from ? 2 : 1)) + @damage_with"
+              "expr": "кинуть(@damage_dice, (@hit.natural >= @отправитель.crit_from ? 2 : 1)) + @damage_with"
             }
           },
           {
@@ -3576,7 +3576,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть('1d6', @sneak_dice)"
+              "expr": "кинуть('1d6', @отправитель.sneak_dice)"
             }
           },
           {
@@ -3907,7 +3907,7 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "@spell_attack"
+                "expr": "@отправитель.spell_attack"
               },
               "check": "attack_roll"
             },
@@ -3920,7 +3920,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть(@damage_die, ((@cantrip_dice) * (@hit.natural >= @crit_from ? 2 : 1)))"
+              "expr": "кинуть(@damage_die, ((@отправитель.cantrip_dice) * (@hit.natural >= @отправитель.crit_from ? 2 : 1)))"
             }
           },
           {
@@ -3950,8 +3950,7 @@
           {
             "key": "save_by",
             "label": "Бонус спасброска",
-            "kind": "expr",
-            "of": "target"
+            "kind": "expr"
           },
           {
             "key": "damage_die",
@@ -3985,7 +3984,7 @@
               "check": "save_roll"
             },
             "versus": {
-              "expr": "@spell_dc"
+              "expr": "@отправитель.spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -3995,7 +3994,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть(@damage_die, @cantrip_dice)"
+              "expr": "кинуть(@damage_die, @отправитель.cantrip_dice)"
             }
           },
           {
@@ -4075,7 +4074,7 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "@spell_attack"
+                "expr": "@отправитель.spell_attack"
               },
               "check": "attack_roll"
             },
@@ -4088,7 +4087,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть(@damage_die, ((@dice_count + (@slot - @spell_level) * @dice_up) * (@hit.natural >= @crit_from ? 2 : 1)))"
+              "expr": "кинуть(@damage_die, ((@dice_count + (@slot - @spell_level) * @dice_up) * (@hit.natural >= @отправитель.crit_from ? 2 : 1)))"
             }
           },
           {
@@ -4127,8 +4126,7 @@
           {
             "key": "save_by",
             "label": "Бонус спасброска",
-            "kind": "expr",
-            "of": "target"
+            "kind": "expr"
           },
           {
             "key": "damage_die",
@@ -4167,7 +4165,7 @@
               "check": "save_roll"
             },
             "versus": {
-              "expr": "@spell_dc"
+              "expr": "@отправитель.spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "always"
@@ -4214,8 +4212,7 @@
           {
             "key": "save_by",
             "label": "Бонус спасброска",
-            "kind": "expr",
-            "of": "target"
+            "kind": "expr"
           },
           {
             "key": "damage_die",
@@ -4259,7 +4256,7 @@
               "check": "save_roll"
             },
             "versus": {
-              "expr": "@spell_dc"
+              "expr": "@отправитель.spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -4369,8 +4366,7 @@
           {
             "key": "save_by",
             "label": "Бонус спасброска",
-            "kind": "expr",
-            "of": "target"
+            "kind": "expr"
           },
           {
             "key": "status",
@@ -4398,7 +4394,7 @@
               "check": "save_roll"
             },
             "versus": {
-              "expr": "@spell_dc"
+              "expr": "@отправитель.spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -4410,7 +4406,7 @@
               "param": "status"
             },
             "carry": {
-              "expr": "@spell_dc"
+              "expr": "@отправитель.spell_dc"
             }
           },
           {
@@ -4421,7 +4417,7 @@
               "optional": true
             },
             "carry": {
-              "expr": "@spell_dc"
+              "expr": "@отправитель.spell_dc"
             }
           }
         ],
@@ -4437,8 +4433,7 @@
           {
             "key": "save_by",
             "label": "Бонус спасброска",
-            "kind": "expr",
-            "of": "target"
+            "kind": "expr"
           },
           {
             "key": "status",
@@ -4466,7 +4461,7 @@
               "check": "save_roll"
             },
             "versus": {
-              "expr": "@spell_dc"
+              "expr": "@отправитель.spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -4478,7 +4473,7 @@
               "param": "status"
             },
             "carry": {
-              "expr": "@spell_dc"
+              "expr": "@отправитель.spell_dc"
             }
           },
           {
@@ -4489,7 +4484,7 @@
               "optional": true
             },
             "carry": {
-              "expr": "@spell_dc"
+              "expr": "@отправитель.spell_dc"
             }
           }
         ],
@@ -4579,7 +4574,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть(@heal_die, (@dice_count + (@slot - @spell_level) * @dice_up)) + (@spell_mod)"
+              "expr": "кинуть(@heal_die, (@dice_count + (@slot - @spell_level) * @dice_up)) + (@отправитель.spell_mod)"
             }
           },
           {
@@ -4714,7 +4709,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть('1d10') + (@level)"
+              "expr": "кинуть('1d10') + (@отправитель.level)"
             }
           },
           {
@@ -4937,13 +4932,12 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "@wis_save",
-                "of": "target"
+                "expr": "@получатель.wis_save"
               },
               "check": "save_roll"
             },
             "versus": {
-              "expr": "@spell_dc"
+              "expr": "@отправитель.spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -5063,7 +5057,7 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "@stealth"
+                "expr": "@отправитель.stealth"
               },
               "check": "skill_roll"
             },
@@ -5182,7 +5176,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть((@hit_die)) + (@con_mod)"
+              "expr": "кинуть((@отправитель.hit_die)) + (@отправитель.con_mod)"
             }
           },
           {
@@ -5261,13 +5255,12 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "@dex_save",
-                "of": "target"
+                "expr": "@получатель.dex_save"
               },
               "check": "save_roll"
             },
             "versus": {
-              "expr": "@spell_dc"
+              "expr": "@отправитель.spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "always"
@@ -6791,7 +6784,7 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "@con_save"
+                "expr": "@отправитель.con_save"
               },
               "check": "save_roll"
             },
@@ -7144,8 +7137,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "@hp_max",
-              "of": "target"
+              "expr": "@получатель.hp_max"
             },
             "targetModifiers": false
           },
@@ -7178,8 +7170,7 @@
             },
             "direction": "add",
             "value": {
-              "expr": "max(1, floor(@level / 2))",
-              "of": "target"
+              "expr": "max(1, floor(@получатель.level / 2))"
             },
             "targetModifiers": false
           },
@@ -7212,8 +7203,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "@slots_1_max",
-              "of": "target"
+              "expr": "@получатель.slots_1_max"
             },
             "targetModifiers": false
           },
@@ -7224,8 +7214,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "@slots_2_max",
-              "of": "target"
+              "expr": "@получатель.slots_2_max"
             },
             "targetModifiers": false
           },
@@ -7236,8 +7225,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "@slots_3_max",
-              "of": "target"
+              "expr": "@получатель.slots_3_max"
             },
             "targetModifiers": false
           },
@@ -7248,8 +7236,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "@slots_4_max",
-              "of": "target"
+              "expr": "@получатель.slots_4_max"
             },
             "targetModifiers": false
           },
@@ -7260,8 +7247,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "@slots_5_max",
-              "of": "target"
+              "expr": "@получатель.slots_5_max"
             },
             "targetModifiers": false
           },
@@ -7272,8 +7258,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "@slots_6_max",
-              "of": "target"
+              "expr": "@получатель.slots_6_max"
             },
             "targetModifiers": false
           },
@@ -7284,8 +7269,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "@slots_7_max",
-              "of": "target"
+              "expr": "@получатель.slots_7_max"
             },
             "targetModifiers": false
           },
@@ -7296,8 +7280,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "@slots_8_max",
-              "of": "target"
+              "expr": "@получатель.slots_8_max"
             },
             "targetModifiers": false
           },
@@ -7308,8 +7291,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "@slots_9_max",
-              "of": "target"
+              "expr": "@получатель.slots_9_max"
             },
             "targetModifiers": false
           },
@@ -7320,8 +7302,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "@rages_max",
-              "of": "target"
+              "expr": "@получатель.rages_max"
             },
             "targetModifiers": false
           },
@@ -7332,8 +7313,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "@bardic_max",
-              "of": "target"
+              "expr": "@получатель.bardic_max"
             },
             "targetModifiers": false
           },
@@ -7344,8 +7324,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "@lay_on_hands_max",
-              "of": "target"
+              "expr": "@получатель.lay_on_hands_max"
             },
             "targetModifiers": false
           },
@@ -7356,8 +7335,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "@sorcery_max",
-              "of": "target"
+              "expr": "@получатель.sorcery_max"
             },
             "targetModifiers": false
           },
@@ -7368,8 +7346,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "@luck_max",
-              "of": "target"
+              "expr": "@получатель.luck_max"
             },
             "targetModifiers": false
           },
@@ -7380,8 +7357,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "@relentless_max",
-              "of": "target"
+              "expr": "@получатель.relentless_max"
             },
             "targetModifiers": false
           }
@@ -7407,8 +7383,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "@ki_max",
-              "of": "target"
+              "expr": "@получатель.ki_max"
             },
             "targetModifiers": false
           },
@@ -7419,8 +7394,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "@channel_max",
-              "of": "target"
+              "expr": "@получатель.channel_max"
             },
             "targetModifiers": false
           },
@@ -7431,8 +7405,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "@second_wind_max",
-              "of": "target"
+              "expr": "@получатель.second_wind_max"
             },
             "targetModifiers": false
           },
@@ -7443,8 +7416,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "@action_surge_max",
-              "of": "target"
+              "expr": "@получатель.action_surge_max"
             },
             "targetModifiers": false
           },
@@ -7455,8 +7427,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "@superiority_max",
-              "of": "target"
+              "expr": "@получатель.superiority_max"
             },
             "targetModifiers": false
           }
@@ -7483,7 +7454,7 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "@wis_save"
+                "expr": "@отправитель.wis_save"
               },
               "check": "save_roll"
             },
@@ -7530,7 +7501,7 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "@wis_save"
+                "expr": "@отправитель.wis_save"
               },
               "check": "save_roll"
             },
@@ -7577,7 +7548,7 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "@wis_save"
+                "expr": "@отправитель.wis_save"
               },
               "check": "save_roll"
             },
@@ -7624,7 +7595,7 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "@con_save"
+                "expr": "@отправитель.con_save"
               },
               "check": "save_roll"
             },
@@ -7671,7 +7642,7 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "@str_save"
+                "expr": "@отправитель.str_save"
               },
               "check": "save_roll"
             },
@@ -7786,8 +7757,7 @@
             },
             "targetModifiers": false,
             "when": {
-              "expr": "@hp_current <= 0",
-              "of": "target"
+              "expr": "@получатель.hp_current <= 0"
             }
           },
           {
@@ -10153,7 +10123,7 @@
         "props": {
           "damage_die": "1d8",
           "damage_type": "излучение",
-          "save_by": "@dex_save",
+          "save_by": "@получатель.dex_save",
           "status": ""
         }
       },
@@ -10165,7 +10135,7 @@
         "props": {
           "damage_die": "1d12",
           "damage_type": "яд",
-          "save_by": "@con_save",
+          "save_by": "@получатель.con_save",
           "status": ""
         }
       },
@@ -10177,7 +10147,7 @@
         "props": {
           "damage_die": "1d8",
           "damage_type": "некротический",
-          "save_by": "@wis_save",
+          "save_by": "@получатель.wis_save",
           "status": ""
         }
       },
@@ -10233,7 +10203,7 @@
         "description": "Конус огня: спасбросок Ловкости, 3к6, при успехе половина. Круг выше — ещё 1к6.",
         "props": {
           "spell_level": 1,
-          "save_by": "@dex_save",
+          "save_by": "@получатель.dex_save",
           "damage_die": "1d6",
           "dice_count": 3,
           "dice_up": 1,
@@ -10247,7 +10217,7 @@
         "description": "Волна вокруг себя: спасбросок Телосложения, 2к8 громом, при успехе половина.",
         "props": {
           "spell_level": 1,
-          "save_by": "@con_save",
+          "save_by": "@получатель.con_save",
           "damage_die": "1d8",
           "dice_count": 2,
           "dice_up": 1,
@@ -10317,7 +10287,7 @@
         "description": "Шар в 20 футов: спасбросок Ловкости, 8к6 огнём, при успехе половина. Круг выше — ещё 1к6.",
         "props": {
           "spell_level": 3,
-          "save_by": "@dex_save",
+          "save_by": "@получатель.dex_save",
           "damage_die": "1d6",
           "dice_count": 8,
           "dice_up": 1,
@@ -10331,7 +10301,7 @@
         "description": "Линия в 100 футов: спасбросок Ловкости, 8к6 молнией, при успехе половина.",
         "props": {
           "spell_level": 3,
-          "save_by": "@dex_save",
+          "save_by": "@получатель.dex_save",
           "damage_die": "1d6",
           "dice_count": 8,
           "dice_up": 1,
@@ -10345,7 +10315,7 @@
         "description": "Конус в 60 футов: спасбросок Телосложения, 8к8 холодом, при успехе половина.",
         "props": {
           "spell_level": 5,
-          "save_by": "@con_save",
+          "save_by": "@получатель.con_save",
           "damage_die": "1d8",
           "dice_count": 8,
           "dice_up": 1,
@@ -10359,7 +10329,7 @@
         "description": "Спасбросок Ловкости: провал — 10к6+40 силовым уроном, успех — ничего.",
         "props": {
           "spell_level": 6,
-          "save_by": "@dex_save",
+          "save_by": "@получатель.dex_save",
           "damage_die": "1d6",
           "dice_count": 10,
           "dice_up": 3,
@@ -10374,7 +10344,7 @@
         "description": "Спасбросок Мудрости: провал — паралич. В конце своего хода цель пробует снова.",
         "props": {
           "spell_level": 2,
-          "save_by": "@wis_save",
+          "save_by": "@получатель.wis_save",
           "status": "paralyzed",
           "repeat": "repeat_wis_paralyzed",
           "holds": "да"
@@ -10387,7 +10357,7 @@
         "description": "Спасбросок Мудрости: провал — испуг и бегство. В конце хода цель пробует снова.",
         "props": {
           "spell_level": 3,
-          "save_by": "@wis_save",
+          "save_by": "@получатель.wis_save",
           "status": "frightened",
           "repeat": "repeat_wis_frightened",
           "holds": "да"
@@ -10400,7 +10370,7 @@
         "description": "Спасбросок Мудрости: провал — замедление. В конце хода цель пробует снова.",
         "props": {
           "spell_level": 3,
-          "save_by": "@wis_save",
+          "save_by": "@получатель.wis_save",
           "status": "slowed",
           "repeat": "repeat_wis_slowed",
           "holds": "да"
@@ -10413,7 +10383,7 @@
         "description": "Спасбросок Телосложения: провал — слепота на минуту.",
         "props": {
           "spell_level": 2,
-          "save_by": "@con_save",
+          "save_by": "@получатель.con_save",
           "status": "blinded",
           "repeat": "repeat_con_blinded",
           "holds": "нет"
@@ -10426,7 +10396,7 @@
         "description": "Спасбросок Силы: провал — цель опутана.",
         "props": {
           "spell_level": 1,
-          "save_by": "@str_save",
+          "save_by": "@получатель.str_save",
           "status": "restrained",
           "repeat": "repeat_str_restrained",
           "holds": "да"

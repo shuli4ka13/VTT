@@ -55,7 +55,7 @@ describe('GroupCard', () => {
 
     expect(amount.dice).toEqual({ const: '1d8' });
 
-    expect(apply.value).toEqual({ expr: '@n', of: 'target' });
+    expect(apply.value).toEqual({ expr: '@n' });
     expect(apply.direction).toBe('set');
   });
 
@@ -237,7 +237,7 @@ describe('GroupCard: величина из записи', () => {
     fireEvent.change(tail, { target: { value: ' - 2' } });
     fireEvent.keyDown(tail, { key: 'Enter' });
 
-    expect(apply.value).toEqual({ expr: '@armor - @n - 2', of: 'target' });
+    expect(apply.value).toEqual({ expr: '@получатель.armor - @n - 2' });
     expect(apply.direction).toBe('set');
     expect(amount.dice).toEqual({ param: 'кость_урона' }, 'величина осталась своей');
   });
@@ -314,7 +314,7 @@ describe('GroupCard: присланное число по слагаемым', (
     expect(sent[0]!.textContent).toContain('Кость урона');
     expect(sent[1]!.textContent).toContain('Класс брони');
 
-    expect(sent.every(c => c.textContent?.includes('у отправителя'))).toBe(true);
+    expect(sent.every(c => c.textContent?.includes('отправитель'))).toBe(true);
   });
 
   it('крестик убирает ровно своё слагаемое', () => {
@@ -366,7 +366,7 @@ describe('GroupCard: изменение само заводит число', () 
 
     expect(steps).toHaveLength(2);
     expect(steps[0]).toMatchObject({ type: 'amount', dice: { const: '1d8' } });
-    expect((steps[1] as any).value).toEqual({ expr: '@n', of: 'target' });
+    expect((steps[1] as any).value).toEqual({ expr: '@n' });
   });
 
   it('«из записи» больше не проваливается в пустоту', () => {
@@ -383,50 +383,34 @@ describe('GroupCard: изменение само заводит число', () 
     fireEvent.mouseDown(screen.getByText('Кость урона'));
 
     expect(steps[0]).toMatchObject({ type: 'amount', dice: { param: 'урон' } });
-    expect((steps[1] as any).value).toEqual({ expr: '@armor - @n', of: 'target' });
+    expect((steps[1] as any).value).toEqual({ expr: '@armor - @n' });
   });
 
-  it('щелчок по подписи помечает имя «у отправителя», не трогая формулу', () => {
+  it('у поля в формуле подписан хозяин, щелчок меняет его', () => {
     const steps = [
       { type: 'apply', target: { tag: 'armor' }, direction: 'set',
-        value: { expr: '@armor - @armor / 2', of: 'target' } },
+        value: { expr: '@получатель.armor - @отправитель.armor / 2' } },
     ] as unknown as Step[];
     const { line } = mount(steps);
 
-    fireEvent.mouseDown([...line.querySelectorAll('.chips__side--pick')].at(-1)!);
+    const badges = [...line.querySelectorAll('.chips__side--pick')];
+    expect(badges.map(b => b.textContent)).toEqual(['получатель', 'отправитель']);
+    fireEvent.mouseDown(badges[1]!);
+    const value = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;
+    fireEvent.keyDown(value, { key: 'Enter' });
 
-    expect((steps[0] as any).value).toEqual({
-      expr: '@armor - @armor / 2', of: 'target', sender: ['armor'],
-    });
+    expect((steps[0] as any).value).toEqual({ expr: '@получатель.armor - @получатель.armor / 2' });
   });
 
-  it('и обратно: второй щелчок снимает пометку', () => {
+  it('новая формула изменения сразу пишет поле получателя', () => {
     const steps = [
-      { type: 'apply', target: { tag: 'armor' }, direction: 'set',
-        value: { expr: '@armor - 1', of: 'target', sender: ['armor'] } },
-    ] as unknown as Step[];
-    const { line } = mount(steps);
-
-    const badge = [...line.querySelectorAll('.chips__side--pick')].at(-1)!;
-    expect(badge.textContent).toContain('у отправителя');
-    fireEvent.mouseDown(badge);
-
-    expect((steps[0] as any).value).toEqual({ expr: '@armor - 1', of: 'target', sender: undefined });
-  });
-
-  it('правка текста не теряет пометку, пока имя стоит в выражении', () => {
-    const steps = [
-      { type: 'apply', target: { tag: 'armor' }, direction: 'set',
-        value: { expr: '@armor - 1', of: 'target', sender: ['armor'] } },
+      { type: 'apply', target: { tag: 'armor' }, direction: 'subtract', value: { const: 1 } },
     ] as unknown as Step[];
     const { line } = mount(steps);
     const value = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;
-
     fireEvent.change(value, { target: { value: ' - 2' } });
     fireEvent.keyDown(value, { key: 'Enter' });
 
-    expect((steps[0] as any).value).toEqual({
-      expr: '@armor - 2', of: 'target', sender: ['armor'],
-    });
+    expect((steps[0] as any).value.expr).toMatch(/^@получатель\.armor/);
   });
 });

@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import type { System, SlotRef } from '@vtt/schema';
-import { Select } from '../../ui/primitives.tsx';
 import { labelOfTag } from '../../ui/formula.tsx';
 import { dieWord, readingWord } from './readback.ts';
 import { FormulaChips } from '../../ui/formula-chips.tsx';
@@ -8,6 +7,7 @@ import { matchTagQuery } from '../../ui/tag-suggest.tsx';
 import { outputRefs, outputLabel, declaredProps } from './slots.tsx';
 import type { SlotContext, SlotKind } from './slots.tsx';
 import { asDice } from '../../words.ts';
+import { SENDER, RECEIVER } from '@vtt/engine/engine/owners';
 
 const WORD_OF: Record<SlotKind, string> = {
   const: 'число',
@@ -244,12 +244,12 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
       <FormulaChips
         value={shown}
         system={context.system}
-        side={side}
+        owners
         placeholder={chip ? undefined : (placeholder ?? 'число или формула')}
         prefix={chip ? (
           <span className={`chips__chip${chip.record ? ' chips__chip--record' : ''}`}>
             {chip.label}
-            {side ? <span className="chips__side">{side === 'self' ? 'у себя' : 'у цели'}</span> : null}
+            {side ? <span className={`chips__side chips__side--${side === 'self' ? 'sender' : 'receiver'}`}>{side === 'self' ? SENDER : RECEIVER}</span> : null}
             <button
               type="button" className="chips__x" aria-label="убрать"
               onMouseDown={e => { e.preventDefault(); onChange(null); }}
@@ -285,13 +285,6 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
         </div>
       ) : null}
       {trouble ? <span className="field__error">{trouble}</span> : null}
-      {value && typeof value === 'object' && 'expr' in (value as object) ? (
-        <Select
-          value={(value as { of?: string }).of ?? 'source'}
-          options={[['source', 'считает отправитель'], ['target', 'считает цель — её листом']] as const}
-          onChange={of => onChange({ ...(value as { expr: string }), of: of === 'source' ? undefined : 'target' } as SlotRef)}
-        />
-      ) : null}
     </div>
   );
 }

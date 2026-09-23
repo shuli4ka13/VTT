@@ -3,6 +3,7 @@ import { EngineError } from './errors.ts';
 import { readCell } from './cells.ts';
 import { referencedTable, splitPath, walk } from './navigate.ts';
 import { VALUE_COLUMN } from '../model/tables.ts';
+import { ownerOf, RECEIVER, SENDER } from './owners.ts';
 import { rollNotation, multiplyNotation } from './dice.ts';
 import type { Param, Die } from '../model/types.ts';
 import type { Pass } from './calc.ts';
@@ -23,6 +24,8 @@ export interface RefContext {
   inputs?: Record<string, number | string>;
 
   results?: Record<string, unknown>;
+
+  atReceiver?: boolean;
 }
 
 const FORMS = ['const', 'expr', 'param', 'prop', 'item', 'tag', 'ref', 'table'];
@@ -39,6 +42,16 @@ export function packRef(ref: unknown, ctx: RefContext): unknown {
   if ('const' in r) return { const: r.const };
 
   if ('expr' in r) {
+    const deps = compile(String(r.expr)).deps;
+    if (deps.some(name => ownerOf(name)?.owner === RECEIVER)) {
+      const sent: Record<string, unknown> = {};
+      for (const name of deps) {
+        if (ownerOf(name)?.owner === RECEIVER) continue;
+        const known = senderValue(name, ctx);
+        if (known !== undefined) sent[name] = known;
+      }
+      return { expr: r.expr, of: 'target', ...(Object.keys(sent).length ? { sent } : {}) };
+    }
     if ((r.of || 'sender') === 'target') {
 
       const names = Array.isArray(r.sender) ? r.sender : [];
@@ -50,7 +63,7 @@ export function packRef(ref: unknown, ctx: RefContext): unknown {
     if (waitsForStep(String(r.expr), ctx)) {
       const sent: Record<string, unknown> = {};
       for (const name of compile(String(r.expr)).deps) {
-        if (name.includes('.')) continue;
+        if (name.includes('.') && !ownerOf(name)) continue;
         const known = senderValue(name, ctx);
         if (known !== undefined) sent[name] = known;
       }
@@ -138,12 +151,12 @@ export function resolveRef(ref: unknown, ctx: RefContext): unknown {
   if ('const' in r) return r.const;
 
   if ('expr' in r) {
-    if (r.later) return evaluate(r.expr, ctx, r.sent as Record<string, unknown> | undefined);
+    if (r.later) return evaluate(r.expr, ctx, r.sent as Record<string, unknown> | undefined, true);
     if ((r.of || 'sender') !== 'target') {
       throw new EngineError(
         `${who(ctx)}: выражение «${r.expr}» стороны отправителя пришло неразрешённым — конверт бит`);
     }
-    return evaluate(r.expr, ctx, r.sent as Record<string, unknown> | undefined);
+    return evaluate(r.expr, ctx, r.sent as Record<string, unknown> | undefined, true);
   }
 
   if ('table' in r) {
@@ -207,6 +220,7 @@ export function resolveOptionalNumber(ref: unknown, ctx: RefContext, what: strin
 function waitsForStep(expr: string, ctx: RefContext): boolean {
   const fields = ctx.pass.system.fields;
   return compile(expr).deps.some(name => {
+    if (ownerOf(name)) return false;
     const dot = name.indexOf('.');
     if (dot <= 0) return false;
     if (fields.some(field => field.tag === name)) return false;
@@ -216,11 +230,16 @@ function waitsForStep(expr: string, ctx: RefContext): boolean {
   });
 }
 
-function evaluate(expr: unknown, ctx: RefContext, sent?: Record<string, unknown>): unknown {
+function evaluate(expr: unknown, ctx: RefContext, sent?: Record<string, unknown>, atReceiver = false): unknown {
   const results = ctx.results;
   const isField = (name: string) => ctx.pass.system.fields.some(f => f.tag === name);
   const resolve = (name: string): unknown => {
     if (sent && name in sent) return sent[name];
+    const owned = ownerOf(name);
+    if (owned && (atReceiver || ctx.atReceiver) && owned.owner === SENDER) {
+      throw new EngineError(`${who(ctx)}: «${owned.rest}» отправителя не пришло в сообщении — отправитель должен был посчитать его у себя`);
+    }
+    if (owned) return resolve(owned.rest);
     if (results && name in results && !isField(name)) return (results as Record<string, unknown>)[name];
     const dot = name.indexOf('.');
     if (dot > 0 && results) {

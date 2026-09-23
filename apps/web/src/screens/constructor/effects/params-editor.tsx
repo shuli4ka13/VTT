@@ -7,16 +7,10 @@ import type { Effect, System } from '@vtt/schema';
 const PARAM_KINDS = kindsFor('param');
 
 
-const PARAM_SIDES = [
-  ['source', 'отправителя'],
-  ['target', 'цели'],
-] as const;
-
-const FIXED_SIDE: Record<string, string> = {
+const KIND_NOTE: Record<string, string> = {
+  expr: 'чьи поля — видно по именам в формуле',
   dice: 'бросает отправитель',
-  tag: 'лист цели',
-  text: 'просто слово из записи',
-  choice: 'выбирают в записи',
+  tag: 'поле получателя',
 };
 
 const MAIN_HINT = 'главное число — его правят сопротивления и уязвимости цели';
@@ -69,7 +63,7 @@ export function ParamsEditor({ effect, system, onEdit, called = false }: {
           <div className="need-list__head">
             <span className="field__label">Название</span>
             <span className="field__label">Тип</span>
-            <span className="field__label">Чей лист</span>
+            <span className="field__label" />
             <span aria-hidden />
           </div>
           {params.map(param => (
@@ -101,18 +95,8 @@ export function ParamsEditor({ effect, system, onEdit, called = false }: {
                     if (next) target.from = next; else delete target.from;
                   })}
                 />
-              ) : String(param.kind ?? 'expr') === 'expr' ? (
-                <Select
-                  value={param.of ?? 'source'}
-                  options={PARAM_SIDES}
-                  onChange={next => onEdit(draft => {
-                    const target = draft.params?.find(p => p.key === param.key);
-                    if (target) target.of = next === 'source' ? undefined : next;
-                  })}
-                />
               ) : (
-
-                <span className="faint">{FIXED_SIDE[String(param.kind ?? '')] ?? '—'}</span>
+                <span className="faint">{KIND_NOTE[String(param.kind ?? 'expr')] ?? ''}</span>
               )}
               <Button size="sm" variant="danger" onClick={() => onEdit(draft => {
                 draft.params = (draft.params ?? []).filter(p => p.key !== param.key);

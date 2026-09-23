@@ -1,3 +1,4 @@
+import { ownerOf } from '@vtt/engine/engine/owners';
 import { useMemo, useState } from 'react';
 import type { Step } from '@vtt/schema';
 import { Field, Select, Button } from '../../../../ui/primitives.tsx';
@@ -34,7 +35,8 @@ export function NumberBody({ step, context, edit, onAddParam }: {
   const names = useMemo(() => namesOf(context), [context]);
   const words = shown ? formulaAsLabels(context.system, shown, names) : '';
 
-  const unknown = [...new Set([...shown.matchAll(/@([\p{L}\p{N}_]+)/gu)].map(m => m[1]!))]
+  const unknown = [...new Set([...shown.matchAll(/@([\p{L}\p{N}_.]+)/gu)].map(m => m[1]!))]
+    .filter(name => !ownerOf(name) && !name.includes('.'))
     .filter(name => !names.has(name) && !context.system.fields.some(f => f.tag === name));
 
   const commit = () => {
@@ -74,6 +76,7 @@ export function NumberBody({ step, context, edit, onAddParam }: {
           value={shown}
           system={context.system}
           extraNames={names}
+          owners
           calculator
           placeholder="наберите @ и выберите название"
           onChange={setDraft}

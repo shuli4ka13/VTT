@@ -7,6 +7,7 @@ import { compendium } from './dnd5e.book.mjs';
 import { sheets, mannequins } from './dnd5e.sheets.mjs';
 import { unifyAmounts } from '../../packages/engine/dist/model/amounts.js';
 import { unifyCalls } from '../../packages/engine/dist/model/calls.js';
+import { unifySides } from '../../packages/engine/dist/model/sides.js';
 
 const world = {
   title: 'D&D 5e',
@@ -31,6 +32,7 @@ const world = {
 };
 
 world.system = unifyCalls(unifyAmounts(world.system));
+Object.assign(world, unifySides({ system: world.system, compendium: world.compendium }));
 
 const out = fileURLToPath(new URL('../dnd5e.world.json', import.meta.url));
 writeFileSync(out, `${JSON.stringify(world, null, 2)}\n`);

@@ -87,15 +87,13 @@ describe('EffectsTab: палитра трёх понятий', () => {
     expect(effect.params!.length).toBe(1);
   });
 
-  it('сторона — выбор у формулы и факт у костей', () => {
+  it('у входа нет выбора стороны: у формулы стороны видны по именам, у костей — факт', () => {
     render(<EffectsTab />);
     fireEvent.click(screen.getByText('+ вход'));
-    expect(screen.getByText('Чей лист')).toBeTruthy();
+    expect(screen.queryByText('Чей лист')).toBeNull();
+    expect(screen.getByText('чьи поля — видно по именам в формуле')).toBeTruthy();
 
     const need = document.querySelector('.need')!;
-    const sides = [...need.querySelectorAll('select')].at(-1)!;
-    expect([...sides.options].map(o => o.textContent)).toEqual(['отправителя', 'цели']);
-
     fireEvent.change(need.querySelectorAll('select')[0]!, { target: { value: 'dice' } });
     expect(screen.getByText('бросает отправитель')).toBeTruthy();
   });

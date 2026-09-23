@@ -3,9 +3,18 @@ import type { ReactNode } from 'react';
 import type { System } from '@vtt/schema';
 import { matchTagQuery } from './tag-suggest.tsx';
 import { fieldPaths } from './paths.ts';
+import { ownerOf, OWNERS, SENDER, RECEIVER } from '@vtt/engine/engine/owners';
 
-const labelOfTag = (system: System, tag: string, extra?: Map<string, string>): string =>
+const plainLabel = (system: System, tag: string, extra?: Map<string, string>): string =>
   system.fields.find(f => f.tag === tag)?.label ?? extra?.get(tag) ?? fieldPaths(system).get(tag) ?? tag;
+
+const labelOfTag = (system: System, tag: string, extra?: Map<string, string>): string => {
+  const owned = ownerOf(tag);
+  return owned ? plainLabel(system, owned.rest, extra) : plainLabel(system, tag, extra);
+};
+
+const knownSheetName = (system: System, tag: string, paths: Map<string, string>): boolean =>
+  system.fields.some(field => field.tag === tag) || paths.has(tag);
 
 export type Part = { text: string } | { tag: string };
 
@@ -61,10 +70,7 @@ export function joinParts(parts: Part[]): string {
   return parts.map(p => ('tag' in p ? `@${p.tag}` : p.text)).join('');
 }
 
-const isSheetField = (system: System, tag: string): boolean =>
-  system.fields.some(field => field.tag === tag) || tag.includes('.') && system.fields.some(field => field.tag === tag.split('.')[0]);
-
-export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraNames, side, extraOptions, fromSender, onFlipSide, calculator }: {
+export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraNames, owners, extraOptions, calculator }: {
   value: string;
   onChange: (next: string) => void;
   system: System;
@@ -84,20 +90,19 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
 
   extraNames?: Map<string, string>;
 
-  side?: 'self' | 'target';
+  owners?: boolean;
 
   extraOptions?: { group: string; label: string; onPick: (insert: (piece: string) => string) => void }[];
-
-  fromSender?: string[];
-
-  onFlipSide?: (tag: string) => void;
 
   calculator?: boolean;
 }) {
   const paths = useMemo(() => fieldPaths(system), [system]);
   const parts = useMemo(
-    () => partsOf(value, tag => (system.fields ?? []).some(field => field.tag === tag)
-      || Boolean(names?.[tag]) || Boolean(extraNames?.has(tag)) || paths.has(tag)),
+    () => partsOf(value, tag => {
+      const owned = ownerOf(tag);
+      if (owned) return knownSheetName(system, owned.rest, paths);
+      return knownSheetName(system, tag, paths) || Boolean(names?.[tag]) || Boolean(extraNames?.has(tag));
+    }),
     [value, system, names, extraNames, paths],
   );
   const host = useRef<HTMLDivElement>(null);
@@ -105,14 +110,20 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
   const [active, setActive] = useState<number | null>(null);
   const [caret, setCaret] = useState(0);
 
-  const fields = useMemo(
-    () => [
-      ...[...(extraNames ?? [])].map(([tag, label]) => ({ tag, label, group: 'здесь же' })),
-      ...system.fields.map(f => ({ tag: f.tag, label: f.label ?? f.tag, group: 'поле' })),
-      ...[...paths].map(([tag, label]) => ({ tag, label, group: 'по ссылке' })),
-    ],
-    [system, extraNames, paths],
-  );
+  const fields = useMemo(() => {
+    const sheet = [
+      ...system.fields.map(f => ({ tag: f.tag, label: f.label ?? f.tag, via: false })),
+      ...[...paths].map(([tag, label]) => ({ tag, label, via: true })),
+    ];
+    const local = [...(extraNames ?? [])].map(([tag, label]) => ({ tag, label, group: 'здесь же' }));
+    if (!owners) {
+      return [...local, ...sheet.map(f => ({ tag: f.tag, label: f.label, group: f.via ? 'по ссылке' : 'поле' }))];
+    }
+    return [
+      ...local,
+      ...OWNERS.flatMap(owner => sheet.map(f => ({ tag: `${owner}.${f.tag}`, label: f.label, group: `поле ${owner === SENDER ? 'отправителя' : 'получателя'}` }))),
+    ];
+  }, [system, extraNames, paths, owners]);
 
   const commitParts = (next: Part[], focusAt?: { index: number; caret: number }) => {
     onChange(joinParts(next));
@@ -231,19 +242,21 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
             <span title={labelOfTag(system, part.tag, extraNames)}>
               {shortLabel(labelOfTag(system, part.tag, extraNames))}
             </span>
-            {!isSheetField(system, part.tag) ? null : side && onFlipSide ? (
-
+            {ownerOf(part.tag) ? (
               <button
-                type="button" className="chips__side chips__side--pick"
-                title={fromSender?.includes(part.tag)
-                  ? 'считает отправитель и присылает числом; щёлкните — считать листом цели'
-                  : 'считает цель своим листом; щёлкните — взять у отправителя'}
+                type="button"
+                className={`chips__side chips__side--pick chips__side--${ownerOf(part.tag)!.owner === SENDER ? 'sender' : 'receiver'}`}
+                title={ownerOf(part.tag)!.owner === SENDER
+                  ? 'поле отправителя: он считает его у себя и присылает числом. Щёлкните — взять у получателя'
+                  : 'поле получателя: он досчитает его своим листом. Щёлкните — взять у отправителя'}
                 onMouseDown={e => {
                   e.preventDefault();
-                  onFlipSide(part.tag);
+                  const owned = ownerOf(part.tag)!;
+                  const flipped = `${owned.owner === SENDER ? RECEIVER : SENDER}.${owned.rest}`;
+                  commitParts(parts.map((p, i) => (i === index ? { tag: flipped } : p)));
                 }}
-              >{fromSender?.includes(part.tag) ? 'у отправителя' : side === 'self' ? 'у себя' : 'у цели'} ⇄</button>
-            ) : side ? <span className="chips__side">{side === 'self' ? 'у себя' : 'у цели'}</span> : null}
+              >{ownerOf(part.tag)!.owner}</button>
+            ) : null}
             <button
               type="button" className="chips__x" aria-label="убрать поле"
               onMouseDown={e => { e.preventDefault(); dropChip(index); }}

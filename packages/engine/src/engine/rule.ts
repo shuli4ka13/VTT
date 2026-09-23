@@ -204,7 +204,7 @@ export function resolveRule(steps: StepData[], ctx: StepContext): RuleReport {
     }
     try {
       const packed = packSteps(list, {
-        ...ctx, results: seed,
+        ...ctx, results: seed, atReceiver: true,
         ...(params ? { params } : {}),
         ...(paramDefs ? { paramDefs } : {}),
       });

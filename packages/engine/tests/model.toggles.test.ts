@@ -55,7 +55,7 @@ group('тогл крита пишет данные, а не код', () => {
     const голые = ['strike', 'cantrip_attack', 'spell_attack'].map(lineOf);
     deepEq(голые, [
       'кинуть(@damage_dice) + @damage_with',
-      'кинуть(@damage_die, @cantrip_dice)',
+      'кинуть(@damage_die, @отправитель.cantrip_dice)',
       'кинуть(@damage_die, (@dice_count + (@slot - @spell_level) * @dice_up))',
     ]);
     setCrit(system, 'double');

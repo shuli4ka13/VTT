@@ -161,13 +161,27 @@ describe('ссылка через две таблицы', () => {
   });
 });
 
-describe('сторона считается только у полей листа', () => {
-  it('у пришедшего числа пометки «у цели» нет, у поля — есть', () => {
+describe('хозяин поля — часть имени', () => {
+  it('у поля подписан хозяин, у пришедшего числа — нет', () => {
     render(<FormulaChips
-      value="@бонус_атаки - @event.amount" system={system} side="target" onFlipSide={() => {}}
+      value="@отправитель.бонус_атаки - @event.amount" system={system} owners
       extraNames={new Map([['event.amount', 'пришедшее число']])} onChange={() => {}}
     />);
-    expect(screen.getAllByText(/у цели/).length).toBe(1);
+    expect(screen.getByText('Бонус атаки')).toBeTruthy();
+    expect(screen.getAllByText('отправитель').length).toBe(1);
     expect(screen.getByText('пришедшее число')).toBeTruthy();
+  });
+
+  it('подсказка предлагает поле отправителя и поле получателя', () => {
+    let value = '@сил';
+    render(<FormulaChips value={value} system={system} owners onChange={next => { value = next; }} />);
+    const input = screen.getByDisplayValue('@сил') as HTMLInputElement;
+    input.focus();
+    input.setSelectionRange(value.length, value.length);
+    fireEvent.click(input);
+    const groups = [...document.querySelectorAll('.slot__option')].map(o => o.textContent?.trim());
+    expect(groups).toEqual(['поле отправителяСила', 'поле получателяСила']);
+    fireEvent.mouseDown(screen.getAllByText('Сила')[1]!);
+    expect(value).toBe('@получатель.сила');
   });
 });

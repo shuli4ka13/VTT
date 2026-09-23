@@ -1,3 +1,4 @@
+import { ownerOf } from '../engine/owners.ts';
 import type { System, Compendium, Effect, Step, Modifier, Guard } from './types.ts';
 import { compile } from '../formula/index.ts';
 import { registry } from '../engine/steps/index.ts';
@@ -128,6 +129,11 @@ function exprRefs(source: string, from: Where, scope: ChainScope, out: Reference
   const deps = formulaDeps(text);
   if (!deps) return;
   for (const dep of deps) {
+    const owned = ownerOf(dep);
+    if (owned) {
+      out.push({ kind: 'field', key: owned.rest.split('.')[0]!, from });
+      continue;
+    }
     if (scope.earlier.has(dep) || scope.params.has(dep)) continue;
     if (scope.eventChain && (EVENT_RESULTS as readonly string[]).includes(dep)) continue;
 
