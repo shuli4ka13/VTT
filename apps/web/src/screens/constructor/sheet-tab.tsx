@@ -2,6 +2,7 @@ import { choiceTables } from '@vtt/engine/model/tables';
 import { useWorld, freeId, slugOf } from '../../store/world.ts';
 import { useUsage, usersOf } from './usage.ts';
 import { LiveValue } from './live-value.tsx';
+import { FieldPreview } from './field-preview.tsx';
 import { Starters } from './starters.tsx';
 import { CONTROLS } from '../../sheet/controls/index.tsx';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
@@ -71,7 +72,7 @@ export function SheetTab() {
                     key={field.tag}
                     icon={field.value.kind === 'stored' ? undefined : '='}
                     name={field.label}
-                    meta={metaOf(system, field.value)}
+                    meta={metaOf(system, field.value, field)}
                     active={field.tag === activeTag}
                     onClick={() => pick({ activeFieldTag: field.tag, activeGroupName: null })}
                   />
@@ -176,6 +177,7 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
                   if (next) draft.control = next as typeof draft.control; else delete draft.control;
                 })}
               />
+              <FieldPreview key={`${field.tag}:${field.control ?? ''}`} field={field} system={system} compendium={compendium} />
             </Field>
           ) : null}
 
@@ -369,8 +371,16 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
 
 const TYPE_WORDS: Record<string, string> = { number: 'число', text: 'текст', boolean: 'да / нет' };
 
-const metaOf = (system: System, value: FieldValue) =>
-  value.kind === 'stored' ? `вводит игрок · ${TYPE_WORDS[value.type] ?? value.type}`
+const storedWords = (system: System, field: FieldModel): string => {
+  const from = field.optionsFrom ? system.tables?.[field.optionsFrom]?.label || field.optionsFrom : '';
+  const shape = field.control ? CONTROLS[field.control].toLowerCase() : '';
+  if (from) return `выбирает игрок · из «${from}»${shape ? ` · ${shape}` : ''}`;
+  const value = field.value as { type: string };
+  return `вводит игрок · ${TYPE_WORDS[value.type] ?? value.type}${shape ? ` · ${shape}` : ''}`;
+};
+
+const metaOf = (system: System, value: FieldValue, field?: FieldModel) =>
+  value.kind === 'stored' ? (field ? storedWords(system, field) : `вводит игрок · ${TYPE_WORDS[value.type] ?? value.type}`)
     : value.kind === 'formula' ? (value.expr ? `= ${formulaAsLabels(system, value.expr)}` : '= формула не дописана')
       : `= таблица «${system.tables?.[value.table]?.label || value.table || '—'}»`;
 

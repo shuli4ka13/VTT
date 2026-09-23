@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Field, Input, Button, NumInput } from '../ui/primitives.tsx';
+import { Field, Input, Button, NumInput, Select } from '../ui/primitives.tsx';
 import { show } from '../engine/use-calc.ts';
 import { CONTROL_VIEWS } from './controls/index.tsx';
 import type { Reader } from '../engine/use-calc.ts';
@@ -40,6 +40,25 @@ export function FieldCell({ field, system, sheet, reader, onChange, onRoll }: {
               max={typeof bounds?.max === 'number' ? bounds.max : boundOf(bounds?.max, reader)}
               options={optionsOf(system, field)}
               onChange={next => onChange(field.tag, next)}
+            />
+            {roll}
+          </div>
+        </Field>
+      );
+    }
+
+    const options = optionsOf(system, field);
+    if (options.length) {
+      return (
+        <Field label={field.label}>
+          <div className="inline inline--tight">
+            <Select
+              value={String(stored ?? '')}
+              options={[['', '— не выбрано —'], ...options.map(o => [String(o.value), o.label] as const)] as never}
+              onChange={next => {
+                const picked = options.find(o => String(o.value) === next);
+                onChange(field.tag, picked ? picked.value : '');
+              }}
             />
             {roll}
           </div>

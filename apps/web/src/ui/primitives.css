@@ -588,3 +588,5 @@
 .table-grid { display: grid; gap: var(--s-2); align-items: center; }
 .table-grid > .faint { font-size: var(--fs-2); text-transform: uppercase; letter-spacing: 0.04em; }
 
+.field-preview { display: grid; gap: var(--s-1); margin-top: var(--s-2); padding: var(--s-2) var(--s-3); border: 1px dashed var(--border); border-radius: var(--r-1, 4px); }
+.field-preview__note { font-size: var(--fs-2); }
