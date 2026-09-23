@@ -4,6 +4,7 @@ import { parseRollExpr, formatRollExpr, notationOf } from '../../roll-expr.ts';
 import { compile } from '@vtt/engine/formula';
 import { FormulaField } from '../../../../ui/formula-field.tsx';
 import { namesOf, refForName } from '../../slots.tsx';
+import { inputBadges } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 
@@ -47,6 +48,7 @@ export function RollExprInput({ step, context, edit }: {
         where="проверка · бросок"
         extraNames={names}
         owners
+        badges={inputBadges(context)}
         invalid={Boolean(trouble)}
         placeholder="1к20 + @поле"
         options={Object.entries(context.system.constants ?? {})

@@ -4,7 +4,7 @@ import { labelOfTag } from '../../ui/formula.tsx';
 import { dieWord, readingWord } from './readback.ts';
 import { FormulaField } from '../../ui/formula-field.tsx';
 import type { BarOption } from '../../store/formula-bar.ts';
-import { outputRefs, outputLabel, declaredProps } from './slots.tsx';
+import { outputRefs, outputLabel, declaredProps, inputBadges } from './slots.tsx';
 import type { SlotContext, SlotKind } from './slots.tsx';
 import { asDice } from '../../words.ts';
 import { SENDER, RECEIVER } from '@vtt/engine/engine/owners';
@@ -126,9 +126,6 @@ export function optionsFor(ctx: SlotContext, allow?: SlotKind[]): SlotOption[] {
   if (ok('prop')) {
     const own = ctx.recordKind?.props ?? [];
     for (const p of own) out.push({ group: 'Свойства записи', label: p.label ?? p.key, ref: { prop: p.key } });
-    if (!ctx.recordKind) {
-      for (const [key, label] of declaredProps(ctx.system)) out.push({ group: 'Свойства записи', label, ref: { prop: key } });
-    }
   }
   if (ok('param')) {
     for (const p of ctx.effect.params ?? []) out.push({ group: 'Из записи', label: p.label ?? p.key, ref: { param: p.key } });
@@ -164,6 +161,7 @@ export function optionsFor(ctx: SlotContext, allow?: SlotKind[]): SlotOption[] {
 const nameOf = (ref: SlotRef): string | null => {
   const r = ref as Record<string, unknown>;
   if ('prop' in r && r.prop) return String(r.prop);
+  if ('param' in r && r.param) return String(r.param);
   if ('ref' in r) return String(r.ref);
   if ('tag' in r) return String(r.tag);
   if ('table' in r && r.column && r.by && typeof r.by === 'object' && 'prop' in (r.by as object)) {
@@ -191,6 +189,7 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
 }) {
   const [draft, setDraft] = useState<string | null>(null);
   const [trouble, setTrouble] = useState<string | null>(null);
+  const [picked] = useState(() => new Map<string, SlotRef>());
   const options = useMemo(() => {
     const base = [...(extraOptions ?? []), ...optionsFor(context, allow)];
     if (!onCreateFromRecord) return base;
@@ -212,25 +211,42 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
     label: option.label,
     ...(option.synthetic ? {} : { name: nameOf(option.ref) ?? undefined }),
     onPick: (insert, bar) => {
-      const rest = insert('').trim();
-      const name = option.synthetic ? null : nameOf(option.ref);
-      if (!rest || !name) {
+      if (option.onPick) {
         setDraft(null);
         setTrouble(null);
         bar.dismiss();
-        if (option.onPick) option.onPick();
-        else onChange(option.synthetic && onCreateFromRecord ? onCreateFromRecord() : option.ref);
+        option.onPick();
         return;
       }
+      const ref = option.synthetic && onCreateFromRecord ? onCreateFromRecord() : option.ref;
+      const name = nameOf(ref);
+      if (!name) {
+        setDraft(null);
+        setTrouble(null);
+        bar.dismiss();
+        onChange(ref);
+        return;
+      }
+      picked.set(name, ref);
       bar.write(insert(`@${name}`));
     },
-  })), [options, onChange, onCreateFromRecord]);
+  })), [options, onChange, onCreateFromRecord, picked]);
 
   const chip = draft === null ? chipOf(value, context) : null;
   const initial = chip ? (asText(value, context) ?? '') : displayOf(value, context);
 
   const commitTyped = (text: string) => {
     setDraft(null);
+    const exact = /^\s*[@#]([\p{L}\p{N}_.]+)\s*$/u.exec(text)?.[1];
+    const named = exact
+      ? picked.get(exact) ?? options.find(option => !option.synthetic && nameOf(option.ref) === exact)?.ref
+      : undefined;
+    picked.clear();
+    if (named) {
+      onChange(named);
+      setTrouble(null);
+      return;
+    }
     const grown = grownFrom(value, text, context);
     if (grown) {
       onChange(grown);
@@ -260,6 +276,7 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
         where={where}
         owners
         extraNames={names}
+        badges={inputBadges(context)}
         options={menu}
         placeholder={chip ? undefined : (placeholder ?? 'число или формула — @ подскажет')}
         prefix={chip ? (

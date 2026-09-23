@@ -25,6 +25,7 @@ export function FormulaBar() {
         system={target.system}
         {...(target.names ? { names: target.names } : {})}
         {...(target.extraNames ? { extraNames: target.extraNames } : {})}
+        {...(target.badges ? { badges: target.badges } : {})}
         {...(target.owners ? { owners: true } : {})}
         placeholder={target.placeholder ?? 'формула — наберите @ и начало названия'}
         calculator

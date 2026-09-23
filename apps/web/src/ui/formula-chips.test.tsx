@@ -185,3 +185,27 @@ describe('хозяин поля — часть имени', () => {
     expect(value).toBe('@получатель.сила');
   });
 });
+
+describe('набор формулы не рвётся посреди имени', () => {
+  it('недописанное имя остаётся в том же куске текста — нового пустого поля ввода не появляется', () => {
+    const known = (tag: string) => tag === 'сила';
+    expect(partsOf('1к20 + @б', known)).toEqual([{ text: '1к20 + @б' }]);
+    expect(partsOf('@сила + @б', known)).toEqual([{ text: '' }, { tag: 'сила' }, { text: ' + @б' }]);
+  });
+
+  it('стрелка влево в начале куска переходит через фишку в конец предыдущего', () => {
+    render(<FormulaChips value="1 + @сила + 2" system={system} onChange={() => {}} />);
+    const [first, last] = [...document.querySelectorAll('input.chips__text')] as HTMLInputElement[];
+    last!.focus();
+    last!.setSelectionRange(0, 0);
+    fireEvent.keyDown(last!, { key: 'ArrowLeft' });
+    expect(document.activeElement).toBe(first);
+    expect(first!.selectionStart).toBe(first!.value.length);
+  });
+
+  it('у входа эффекта — метка «вход», а не отправитель или получатель', () => {
+    render(<FormulaChips value="1к20 + @бонус" system={system} onChange={() => {}}
+      extraNames={new Map([['бонус', 'Бонус атаки']])} badges={new Map([['бонус', 'вход']])} />);
+    expect(screen.getByText('вход')).toBeTruthy();
+  });
+});

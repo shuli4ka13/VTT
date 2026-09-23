@@ -87,8 +87,10 @@ describe('SlotInput', () => {
   it('выбор варианта по @ отдаёт структурную ссылку', () => {
     let got: unknown = 'untouched';
     render(<SlotInput value={undefined} onChange={next => { got = next; }} context={ctx} />);
-    typeAt('@Класс');
+    const input = typeAt('@Класс');
     fireEvent.mouseDown(screen.getAllByText('Класс брони')[0]!);
+    expect(got, 'выбор вставляет фишку, а не закрывает правку').toBe('untouched');
+    fireEvent.keyDown(document.querySelector('input.chips__text') ?? input, { key: 'Enter' });
     expect(got).toEqual({ tag: 'armor' });
   });
 
@@ -104,8 +106,9 @@ describe('SlotInput', () => {
     fireEvent.keyDown(input, { key: 'ArrowUp' });
     expect(lit()).toBe(first);
     fireEvent.keyDown(input, { key: 'Enter' });
-    expect(got).not.toBe('untouched');
     expect(document.querySelector('.slot__menu')).toBeNull();
+    fireEvent.keyDown([...document.querySelectorAll('input.chips__text')].at(-1)!, { key: 'Enter' });
+    expect(got).not.toBe('untouched');
   });
 
   it('набранное число уходит как const по Enter', () => {
@@ -151,6 +154,7 @@ describe('SlotInput', () => {
       onCreateFromRecord={() => ({ param: 'новая' })} />);
     typeAt('@');
     fireEvent.mouseDown(screen.getByText(/новая потребность/));
+    fireEvent.keyDown([...document.querySelectorAll('input.chips__text')].at(-1)!, { key: 'Enter' });
     expect(got).toEqual({ param: 'новая' });
   });
 });

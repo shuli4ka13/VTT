@@ -93,6 +93,9 @@ export function stepNames(ctx: SlotContext): Map<string, string> {
   return out;
 }
 
+export const inputBadges = (ctx: SlotContext): Map<string, string> =>
+  new Map((ctx.effect.params ?? []).map(param => [param.key, 'вход']));
+
 export function namesOf(ctx: SlotContext): Map<string, string> {
   const out = new Map<string, string>();
   for (const [key, label] of propsFor(ctx)) out.set(key, label);
@@ -117,7 +120,7 @@ export function refForName(ctx: SlotContext, name: string): SlotRef | null {
 }
 
 function propsFor(ctx: SlotContext): Map<string, string> {
-  if (!ctx.recordKind) return declaredProps(ctx.system);
+  if (!ctx.recordKind) return new Map();
   const out = new Map<string, string>();
   for (const prop of ctx.recordKind.props ?? []) {
     out.set(prop.key, prop.label ?? prop.key);

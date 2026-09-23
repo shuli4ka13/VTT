@@ -36,21 +36,23 @@ const OPS: { label: string; hint: string; open: string; close?: string; word?: b
 
 export function partsOf(value: string, known?: (tag: string) => boolean): Part[] {
   const out: Part[] = [];
+  let text = '';
   let rest = value;
   for (;;) {
     const m = rest.match(/[@#]([\p{L}\p{N}_.]+)/u);
     if (!m || m.index === undefined) break;
+    const cut = m.index + m[0].length;
     if (known && !known(m[1]!)) {
-      const cut = m.index + m[0].length;
-      out.push({ text: rest.slice(0, cut) });
+      text += rest.slice(0, cut);
       rest = rest.slice(cut);
       continue;
     }
-    out.push({ text: rest.slice(0, m.index) });
+    out.push({ text: text + rest.slice(0, m.index) });
     out.push({ tag: m[1]! });
-    rest = rest.slice(m.index + m[0].length);
+    text = '';
+    rest = rest.slice(cut);
   }
-  out.push({ text: rest });
+  out.push({ text: text + rest });
   return out;
 }
 
@@ -70,7 +72,7 @@ export function joinParts(parts: Part[]): string {
   return parts.map(p => ('tag' in p ? `@${p.tag}` : p.text)).join('');
 }
 
-export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraNames, owners, extraOptions, calculator, readOnly, autoFocus }: {
+export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, onBlur, onFocus, prefix, suffix, names, extraNames, badges, owners, extraOptions, calculator, readOnly, autoFocus }: {
   value: string;
   onChange: (next: string) => void;
   system: System;
@@ -99,6 +101,8 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
   readOnly?: boolean;
 
   autoFocus?: boolean;
+
+  badges?: Map<string, string>;
 }) {
   const paths = useMemo(() => fieldPaths(system), [system]);
   const parts = useMemo(
@@ -116,6 +120,10 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
   const [highlight, setHighlight] = useState(0);
   const [closed, setClosed] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const focusOnce = useRef(Boolean(autoFocus));
+  const badge = (tag: string) => (badges?.has(tag)
+    ? <span className="chips__side chips__side--input" title="вход эффекта: значение приносит тот, кто вызывает">{badges.get(tag)}</span>
+    : null);
 
   const fields = useMemo(() => {
     const desk = system.fields.filter(f => f.desk).map(f => ({ tag: `${DESK}.${f.tag}`, label: f.label ?? f.tag, group: 'стол' }));
@@ -176,6 +184,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
       ? { text: before + piece + after }
       : p)));
     onChange(insert(''));
+    setClosed(true);
     onPick(insert);
   };
 
@@ -255,6 +264,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
           ) : (
             <span key={index} className="chips__chip">
               <span>{shortLabel(labelOfTag(system, part.tag, extraNames))}</span>
+              {badge(part.tag)}
               {ownerOf(part.tag) ? (
                 <span className={`chips__side chips__side--${ownerOf(part.tag)!.owner === DESK ? 'desk' : ownerOf(part.tag)!.owner === SENDER ? 'sender' : 'receiver'}`}>
                   {ownerOf(part.tag)!.owner}
@@ -285,6 +295,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
             <span title={labelOfTag(system, part.tag, extraNames)}>
               {shortLabel(labelOfTag(system, part.tag, extraNames))}
             </span>
+            {badge(part.tag)}
             {ownerOf(part.tag)?.owner === DESK ? (
               <span className="chips__side chips__side--desk">стол</span>
             ) : ownerOf(part.tag) ? (
@@ -311,10 +322,17 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
         ) : (
           <input
             key={index}
-            ref={el => { if (el) inputs.current.set(index, el); else inputs.current.delete(index); }}
+            ref={el => {
+              if (!el) { inputs.current.delete(index); return; }
+              inputs.current.set(index, el);
+              if (focusOnce.current && index === parts.length - 1) {
+                focusOnce.current = false;
+                el.focus();
+                el.setSelectionRange(el.value.length, el.value.length);
+              }
+            }}
 
             className={`chips__text ${!part.text && index !== parts.length - 1 ? 'chips__text--ghost' : ''}`}
-            autoFocus={autoFocus && index === parts.length - 1}
             value={part.text}
             placeholder={empty ? placeholder : undefined}
             size={Math.max(1, part.text.length || (empty ? (placeholder?.length ?? 8) : 1))}
@@ -345,6 +363,17 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
                 setClosed(true);
                 return;
               }
+              const el = e.currentTarget;
+              const hop = (to: number, at: 'start' | 'end') => {
+                const next = inputs.current.get(to);
+                if (!next) return;
+                e.preventDefault();
+                next.focus();
+                const where = at === 'end' ? next.value.length : 0;
+                next.setSelectionRange(where, where);
+              };
+              if (e.key === 'ArrowLeft' && el.selectionStart === 0 && el.selectionEnd === 0 && index > 1) { hop(index - 2, 'end'); return; }
+              if (e.key === 'ArrowRight' && el.selectionStart === el.value.length && index < parts.length - 2) { hop(index + 2, 'start'); return; }
               if (e.key === 'Backspace' && e.currentTarget.selectionStart === 0
                 && e.currentTarget.selectionEnd === 0 && index > 0) {
                 e.preventDefault();

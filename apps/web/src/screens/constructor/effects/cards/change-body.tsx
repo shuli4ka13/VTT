@@ -7,7 +7,7 @@ import { FormulaField } from '../../../../ui/formula-field.tsx';
 import type { BarApi } from '../../../../store/formula-bar.ts';
 import { labelOfTag } from '../../../../ui/formula.tsx';
 import { SlotInput, chipOf, type SlotOption } from '../../slot-input.tsx';
-import { outputRefs, stepNames } from '../../slots.tsx';
+import { outputRefs, stepNames, inputBadges } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn, WithNumber } from '../words.ts';
 import { badFormula, exprText } from './roll-expr-input.tsx';
@@ -241,6 +241,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
           names={names}
           extraNames={рядом}
           owners
+          badges={inputBadges(context)}
           invalid={Boolean(trouble)}
           placeholder="например: @хп − @урон"
           options={needs}

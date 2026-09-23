@@ -606,6 +606,7 @@
 .formula-field:focus-visible { outline: none; box-shadow: var(--focus); }
 .formula-field--spot { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 .formula-field--bad { border-color: var(--danger); }
+.chips__side--input { color: var(--from-record); }
 .chips--read { display: flex; align-items: center; gap: var(--s-1); min-width: 0; overflow: hidden; white-space: nowrap; border: 0; background: transparent; padding: 0; }
 .chips--read .chips__word { white-space: pre; }
 .chips--read .chips__placeholder { color: var(--text-faint); }

@@ -7,6 +7,7 @@ import { formulaAsLabels } from '../../../../ui/formula.tsx';
 import { SlotInput } from '../../slot-input.tsx';
 import { asOneFormula } from '@vtt/engine/model/amounts';
 import { namesOf } from '../../slots.tsx';
+import { inputBadges } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 
@@ -78,6 +79,7 @@ export function NumberBody({ step, context, edit, onAddParam }: {
           where="число · сколько"
           extraNames={names}
           owners
+          badges={inputBadges(context)}
           placeholder="наберите @ и выберите название"
           onChange={setDraft}
           onCommit={commit}
