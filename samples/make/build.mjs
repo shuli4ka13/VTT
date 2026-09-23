@@ -5,9 +5,9 @@ import { effects, ROOM_RULES } from './dnd5e.effects.mjs';
 import { records } from './dnd5e.records.mjs';
 import { compendium } from './dnd5e.book.mjs';
 import { sheets, mannequins } from './dnd5e.sheets.mjs';
-import { unifyAmounts } from '../../packages/engine/dist/model/amounts.js';
-import { unifyCalls } from '../../packages/engine/dist/model/calls.js';
-import { unifySides } from '../../packages/engine/dist/model/sides.js';
+import { unifyAmounts } from './convert/amounts.ts';
+import { unifyCalls } from './convert/calls.ts';
+import { unifySides } from './convert/sides.ts';
 
 const world = {
   title: 'D&D 5e',

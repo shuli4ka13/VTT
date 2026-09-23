@@ -38,22 +38,3 @@ export function blockUse(system: System, name: string): BlockUse {
   for (const kind of Object.values(system.records ?? {})) if (blockOf(system, kind) === name) records += 1;
   return { fields, effects, records };
 }
-
-type Blocks = Record<string, Record<string, unknown>>;
-
-export function unifyBlocks(system: System): System {
-  const known = (system.groups ?? {}) as Blocks;
-  const strays = blockNames(system).filter(name => !known[name]);
-  const named = (Object.values(system.effects ?? {}) as Loose[]).some(effect => effect.category);
-  if (!strays.length && !named) return system;
-
-  const next = JSON.parse(JSON.stringify(system)) as System & { groups: Blocks };
-  next.groups ??= {};
-  for (const effect of Object.values(next.effects ?? {}) as Loose[]) {
-    if (effect.category === undefined) continue;
-    effect.group ??= effect.category;
-    delete effect.category;
-  }
-  for (const name of blockNames(next)) next.groups[name] ??= {};
-  return next;
-}

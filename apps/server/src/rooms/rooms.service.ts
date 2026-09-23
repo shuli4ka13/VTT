@@ -13,7 +13,6 @@ import { deliver, sharedHolderOf } from '@vtt/engine/events/exchange';
 import type { Seen } from '@vtt/engine/events/exchange';
 import type { EmittedEvent } from '@vtt/engine/engine/rule';
 import { previewLines, describeEntry } from '@vtt/engine/events/describe';
-import { unifyWorld } from '@vtt/engine/model/unify';
 import { flattenSystem } from '@vtt/engine/model/inherit';
 import { effectLabelOf, actionOf, send, receive, offers, react, senderResults } from '@vtt/engine/events/envelope';
 import { tapeDie, replayDie } from '@vtt/engine/engine/dice';
@@ -71,11 +70,9 @@ export class RoomsService {
   ) {}
 
   private worldOf(room: { system: string; compendium: string }): { system: System; compendium: Compendium } {
-    const world = unifyWorld({
-      system: JSON.parse(room.system) as System,
-      compendium: JSON.parse(room.compendium) as Compendium,
-    });
-    return { system: flattenSystem(world.system), compendium: world.compendium as Compendium };
+    const system = JSON.parse(room.system) as System;
+    const compendium = JSON.parse(room.compendium) as Compendium;
+    return { system: flattenSystem(system), compendium };
   }
 
   async create(userId: string, worldId: string, title: string): Promise<RoomSummary> {

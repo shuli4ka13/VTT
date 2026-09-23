@@ -1,7 +1,6 @@
 import { group, test, eq, ok, throws } from './harness.ts';
 import { lookupTable, lookupDegree, isCases } from '../src/engine/tables.ts';
 import { send, receive } from '../src/events/envelope.ts';
-import { unifyTables } from '../src/model/tables.ts';
 import type { System } from '../src/model/types.ts';
 
 const system = {
@@ -120,12 +119,4 @@ group('ключ строки — одно из трёх', () => {
     eq(lookupTable(система, 'ступени', '1'), 2);
   });
 
-  test('старый словарь с числами получает ключ «число», а не «слово»', () => {
-    const старая = unifyTables({
-      id: 'с', name: 'с', fields: [], effects: {},
-      lists: { стойкость: { label: 'Стойкость', of: 'number', values: [{ value: 0.5, label: 'сопротивление' }] } },
-    } as unknown as System);
-    eq(старая.tables?.стойкость?.key, 'number');
-    ok(!('of' in (старая.tables?.стойкость ?? {})), 'старое поле «of» ушло');
-  });
 });

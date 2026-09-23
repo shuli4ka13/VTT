@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { world as W } from '@vtt/schema';
 import { exchange } from '@vtt/engine/events/exchange';
-import { unifyWorld } from '@vtt/engine/model/unify';
 import { emptySystem } from '../../store/world.ts';
 import { newField, newDie, newEffect, newRecordKind, newBinding, BRICKS } from './factory.ts';
 import type { System, Compendium, Sheet, Step } from '@vtt/schema';
@@ -61,7 +60,7 @@ describe('сквозной путь: собрал в конструкторе �
 
   it('удар по максимальным костям уменьшает хиты цели', () => {
     const made = assemble();
-    const world = unifyWorld({ system: made.system, compendium: made.compendium });
+    const world = { system: made.system, compendium: made.compendium };
     const out = exchange({
       ...world, die: (sides: number) => sides, sheets: made.sheets,
       actionId: made.action, fromId: 'герой', toId: 'враг',
@@ -72,7 +71,7 @@ describe('сквозной путь: собрал в конструкторе �
 
   it('удар по минимальным костям обрывается на проверке и хиты не трогает', () => {
     const made = assemble();
-    const world = unifyWorld({ system: made.system, compendium: made.compendium });
+    const world = { system: made.system, compendium: made.compendium };
     const out = exchange({
       ...world, die: () => 1, sheets: made.sheets,
       actionId: made.action, fromId: 'герой', toId: 'враг',

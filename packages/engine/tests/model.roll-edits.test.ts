@@ -1,6 +1,5 @@
 import { group, test, eq, ok, deepEq } from './harness.ts';
 import { editPrimitives, editPalette, paletteKeyOf } from '../src/engine/roll-edits.ts';
-import { unifyRollEdits } from '../src/model/unify.ts';
 import { ADVANTAGE_METHODS } from '../src/model/advantage-methods.ts';
 import { system, cyberpunk } from './fixtures.ts';
 
@@ -54,40 +53,6 @@ group('правки броска — словарь автора', () => {
   });
 });
 
-group('перевод старой формы', () => {
-  const legacy = () => ({
-    id: 'старый', fields: [], effects: {
-      poisoned: {
-        label: 'Отравлен', activation: 'passive',
-        modifiers: [{ kind: 'roll', target: 'attack_roll', effect: 'disadvantage', method: 'rerollBest' }],
-      },
-    },
-    advantage: { methods: { rerollBest: true } },
-  });
-
-  test('зашитый режим становится ссылкой на запись словаря', () => {
-    const next = unifyRollEdits(legacy());
-    const mod = next.effects.poisoned.modifiers[0];
-    eq(mod.edit, 'disadvantage');
-    eq(mod.effect, undefined, 'старой формы не остаётся — иначе мир жил бы на двух сразу');
-    eq(mod.method, undefined, 'чем правка отыгрывается, сказано в записи, а не в ссылке');
-    eq(next.roll_edits.disadvantage.label, 'Помеха');
-  });
-
-  test('гашение не заводится на запись, которой в мире нет', () => {
-    const next = unifyRollEdits(legacy());
-    eq(next.roll_edits.advantage, undefined, 'преимуществом никто не пользовался');
-    eq(next.roll_edits.disadvantage.canceledBy, undefined);
-  });
-
-  test('справочник механик системы упраздняется вместе с понятием', () => {
-    eq(unifyRollEdits(legacy()).advantage, undefined);
-  });
-
-  test('система без старой формы возвращается та же самая', () => {
-    eq(unifyRollEdits(system), system, 'переводить нечего — не копируем');
-  });
-});
 
 group('справочник механик — материал для образцов, не механизм', () => {
   test('семь механик черновика с примерами живы как материал', () => {

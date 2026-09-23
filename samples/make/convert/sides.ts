@@ -1,7 +1,7 @@
-import { compile } from '../formula/index.ts';
-import { ownerOf, owned, SENDER, RECEIVER, type Owner } from '../engine/owners.ts';
-import type { System, Compendium, Effect } from './types.ts';
-import { calledOf } from '../engine/effects.ts';
+import { compile } from '../../../packages/engine/src/formula/index.ts';
+import { ownerOf, owned, SENDER, RECEIVER, type Owner } from '../../../packages/engine/src/engine/owners.ts';
+import type { System, Compendium, Effect } from '../../../packages/engine/src/model/types.ts';
+import { calledOf } from '../../../packages/engine/src/engine/effects.ts';
 
 type Loose = Record<string, unknown>;
 

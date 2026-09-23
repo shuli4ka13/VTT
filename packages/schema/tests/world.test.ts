@@ -3,8 +3,6 @@ import { world as W, api } from '../src/index.ts';
 
 // @ts-expect-error — образцы лежат в пакете движка, деклараций не имеют.
 import { SAMPLE_SYSTEMS, SAMPLE_WORLDS } from '../../engine/src/model/systems.ts';
-// @ts-expect-error — та же причина.
-import { migrateWorld } from '../../engine/src/model/migrate.ts';
 
 const { compendium, sheets } = SAMPLE_WORLDS[0];
 
@@ -115,22 +113,6 @@ describe('round-trip: разбор и сборка не теряют и не д�
     }
   });
 
-  it('мир версии 1 после миграции проходит схему нового формата', () => {
-
-    const v1 = {
-      system: {
-        id: 'legacy', name: 'Старый', fields: [], effects: {},
-        rules: { strike: { label: 'Удар', params: [], steps: [] } },
-        modifiers: [{ id: 'fog', label: 'Туман', kind: 'roll', target: 'attack_roll', effect: 'disadvantage' }],
-      },
-      compendium: { items: [], actions: [], effects: [] },
-      sheets: [],
-    };
-    const migrated = migrateWorld(v1);
-    const result = W.world.safeParse(migrated);
-    expect(result.success, JSON.stringify(result.error?.issues?.slice(0, 3))).toBe(true);
-    expect(migrated.system.rules).toBe(undefined);
-  });
 });
 
 describe('контракты клиент ↔ сервер', () => {

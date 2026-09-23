@@ -1,5 +1,5 @@
-import { rowsOf, tableOf, isRange } from './tables.ts';
-import type { System, Effect, Param } from './types.ts';
+import { rowsOf, tableOf, isRange } from '../../../packages/engine/src/model/tables.ts';
+import type { System, Effect, Param } from '../../../packages/engine/src/model/types.ts';
 
 type Loose = Record<string, unknown>;
 

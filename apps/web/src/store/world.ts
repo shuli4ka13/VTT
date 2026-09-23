@@ -2,8 +2,6 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { world as W } from '@vtt/schema';
 import type { System, Compendium, Sheet, Effect, Field } from '@vtt/schema';
-import { unifyWorld } from '@vtt/engine/model/unify';
-import { healLegacySides } from '@vtt/engine/model/migrate';
 import { lazyStorage } from './lazy-storage.ts';
 import { blockOf } from '@vtt/engine/model/blocks';
 
@@ -139,7 +137,6 @@ export const useWorld = create<WorldState>()(persist(set => ({
 
   replaceWorld: world => set({
     ...world,
-    ...unifyWorld(world),
     activeFieldTag: null,
     activeGroupName: null,
     activeEffectId: null,
@@ -159,7 +156,7 @@ export const useWorld = create<WorldState>()(persist(set => ({
 
   merge: (saved, current) => {
     if (saved == null) return current;
-    const parsed = W.world.safeParse(healLegacySides(saved as Record<string, any>));
+    const parsed = W.world.safeParse(saved);
     const origin = (saved as { origin?: Origin })?.origin;
     if (parsed.success) return { ...current, ...parsed.data, ...(origin ? { origin } : {}) };
 
@@ -169,10 +166,6 @@ export const useWorld = create<WorldState>()(persist(set => ({
       : 'формат не распознан';
     try { localStorage.setItem(BROKEN_KEY, JSON.stringify(saved)); } catch { restoreProblem += ' · копию сохранить не удалось'; }
     return current;
-  },
-
-  onRehydrateStorage: () => state => {
-    if (state) Object.assign(state, unifyWorld(state));
   },
 }));
 

@@ -2006,7 +2006,11 @@
           "min": 0,
           "max": 10
         }
-      }
+      },
+      "Атака": {},
+      "Состояния": {},
+      "Снаряжение": {},
+      "Приёмы": {}
     },
     "constants": {
       "lead_die": {
@@ -2274,7 +2278,6 @@
       "shoot": {
         "label": "Выстрел",
         "icon": "🔫",
-        "category": "Атака",
         "description": "Дистанцию называет ведущий: она задаёт сложность по таблице. Удачу можно потратить перед броском. Выстрел в голову идёт сквозь броню головы и бьёт вдвое.",
         "activation": "manual",
         "cost": "action",
@@ -2431,12 +2434,12 @@
               }
             }
           }
-        ]
+        ],
+        "group": "Атака"
       },
       "injury_roll": {
         "label": "Травма",
         "icon": "🩸",
-        "category": "Состояния",
         "description": "Две шестёрки на костях урона — травма по таблице.",
         "activation": "manual",
         "params": [],
@@ -2462,12 +2465,12 @@
             },
             "targetModifiers": false
           }
-        ]
+        ],
+        "group": "Состояния"
       },
       "wired": {
         "label": "Вживлённые рефлексы",
         "icon": "⚡",
-        "category": "Состояния",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -2480,12 +2483,12 @@
             "edit": "advantage",
             "condition": null
           }
-        ]
+        ],
+        "group": "Состояния"
       },
       "bleeding": {
         "label": "Кровотечение",
         "icon": "🩸",
-        "category": "Состояния",
         "activation": "triggered",
         "duration": {
           "kind": "permanent"
@@ -2508,12 +2511,12 @@
               }
             }
           }
-        ]
+        ],
+        "group": "Состояния"
       },
       "serious_wound_rule": {
         "label": "Тяжёлая рана",
         "icon": "🩹",
-        "category": "Состояния",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -2527,12 +2530,12 @@
             "value": -2,
             "condition": "@seriously"
           }
-        ]
+        ],
+        "group": "Состояния"
       },
       "death_save": {
         "label": "Спасбросок от смерти",
         "icon": "💀",
-        "category": "Состояния",
         "activation": "triggered",
         "duration": {
           "kind": "permanent"
@@ -2572,7 +2575,8 @@
             },
             "targetModifiers": false
           }
-        ]
+        ],
+        "group": "Состояния"
       },
       "damage": {
         "label": "Урон",

@@ -1,12 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import dnd5e from './fixtures/frozen/dnd5e.world.json' with { type: 'json' };
-import cyberpunk from './fixtures/frozen/cyberpunk.world.json' with { type: 'json' };
-import { unifyWorld } from '../src/model/unify.ts';
+import { SAMPLE_WORLDS } from '../src/model/systems.ts';
+import { flattenSystem } from '../src/model/inherit.ts';
 import { availableActions } from '../src/events/envelope.ts';
 import { exchange } from '../src/events/exchange.ts';
 import { idleClock, startCombat } from '../src/engine/clock.ts';
 
-const WORLDS: Record<string, any> = { dnd5e, cyberpunk };
+const WORLDS: Record<string, any> = Object.fromEntries(SAMPLE_WORLDS.map(w => [w.system.id, w]));
 
 const DICE: Record<string, (sides: number, n: number) => number> = {
   low: () => 1,
@@ -20,7 +19,8 @@ const dieOf = (kind: string) => {
 };
 
 function play(world: any, fromId: string, toId: string, actionId: string, kind: string, inCombat: boolean) {
-  const { system, compendium } = unifyWorld({ system: world.system, compendium: world.compendium });
+  const system = flattenSystem(world.system);
+  const compendium = world.compendium;
   const clock = inCombat ? startCombat(idleClock(), world.sheets.map((s: any) => s.id)) : null;
   try {
     const out = exchange({
@@ -37,9 +37,10 @@ function play(world: any, fromId: string, toId: string, actionId: string, kind: 
 
 for (const [name, world] of Object.entries(WORLDS)) {
   describe(`золотые трассы: ${name}`, () => {
-    const { system, compendium } = unifyWorld({ system: world.system, compendium: world.compendium });
+    const system = flattenSystem(world.system);
+  const compendium = world.compendium;
 
-    it('замороженный образец не пуст', () => {
+    it('образец не пуст', () => {
       expect(world.sheets.length).toBeGreaterThan(1);
       expect(Object.keys(system.effects).length).toBeGreaterThan(0);
     });
