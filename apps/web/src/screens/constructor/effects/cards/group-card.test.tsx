@@ -81,7 +81,7 @@ describe('GroupCard', () => {
     render(<GroupCard group={group} position={1} system={system} effect={effect}
       earlier={[]} problem={null} edit={(_, change) => edits.push(change)} onDelete={() => {}} />);
 
-    const versus = screen.getByPlaceholderText('число или формула');
+    const versus = screen.getByPlaceholderText(/^число или формула/);
     fireEvent.change(versus, { target: { value: '15' } });
     fireEvent.keyDown(versus, { key: 'Enter' });
 
@@ -97,7 +97,7 @@ describe('GroupCard', () => {
     render(<GroupCard group={group} position={1} system={system} effect={effect}
       earlier={[]} problem={null} edit={(_, change) => edits.push(change)} onDelete={() => {}} />);
 
-    const versus = screen.getByPlaceholderText('число или формула');
+    const versus = screen.getByPlaceholderText(/^число или формула/);
     fireEvent.change(versus, { target: { value: '@что-то' } });
     fireEvent.keyDown(versus, { key: 'Enter' });
 

@@ -69,12 +69,43 @@ describe('optionsFor', () => {
 });
 
 describe('SlotInput', () => {
-  it('клик по варианту отдаёт структурную ссылку', () => {
+  const typeAt = (text: string) => {
+    const input = screen.getByRole('textbox') as HTMLInputElement;
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: text, selectionStart: text.length } });
+    return input;
+  };
+
+  it('на фокус подсказок нет — они открываются только собачкой', () => {
+    render(<SlotInput value={undefined} onChange={() => {}} context={ctx} />);
+    fireEvent.focus(screen.getByRole('textbox'));
+    expect(document.querySelector('.slot__menu')).toBeNull();
+    typeAt('@');
+    expect(document.querySelector('.slot__menu')).not.toBeNull();
+  });
+
+  it('выбор варианта по @ отдаёт структурную ссылку', () => {
     let got: unknown = 'untouched';
     render(<SlotInput value={undefined} onChange={next => { got = next; }} context={ctx} />);
-    fireEvent.focus(screen.getByRole('textbox'));
-    fireEvent.mouseDown(screen.getByText('Класс брони'));
+    typeAt('@Класс');
+    fireEvent.mouseDown(screen.getAllByText('Класс брони')[0]!);
     expect(got).toEqual({ tag: 'armor' });
+  });
+
+  it('стрелки двигают подсветку, Enter выбирает подсвеченное', () => {
+    let got: unknown = 'untouched';
+    render(<SlotInput value={undefined} onChange={next => { got = next; }} context={ctx} />);
+    const input = typeAt('@');
+    const lit = () => document.querySelector('.slot__option--lit')?.textContent;
+    const first = lit();
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    const second = lit();
+    expect(second).not.toBe(first);
+    fireEvent.keyDown(input, { key: 'ArrowUp' });
+    expect(lit()).toBe(first);
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(got).not.toBe('untouched');
+    expect(document.querySelector('.slot__menu')).toBeNull();
   });
 
   it('набранное число уходит как const по Enter', () => {
@@ -118,7 +149,7 @@ describe('SlotInput', () => {
     let got: unknown = null;
     render(<SlotInput value={undefined} onChange={next => { got = next; }} context={ctx}
       onCreateFromRecord={() => ({ param: 'новая' })} />);
-    fireEvent.focus(screen.getByRole('textbox'));
+    typeAt('@');
     fireEvent.mouseDown(screen.getByText(/новая потребность/));
     expect(got).toEqual({ param: 'новая' });
   });

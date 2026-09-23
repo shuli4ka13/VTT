@@ -167,6 +167,7 @@ describe('ссылка на результат шага', () => {
     const label = screen.getByText('какое превышение');
     const input = label.parentElement!.querySelector('.chips__text') as HTMLInputElement;
     fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: '@', selectionStart: 1 } });
 
     const options = [...document.querySelectorAll('.slot__option')].map(o => o.textContent?.trim());
     expect(options).toContain('Результаты шаговшаг 1 · Проверка — на сколько перебил порог');

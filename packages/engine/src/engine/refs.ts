@@ -28,6 +28,8 @@ export interface RefContext {
   atReceiver?: boolean;
 
   alone?: boolean;
+
+  recordScope?: boolean;
 }
 
 const FORMS = ['const', 'expr', 'param', 'prop', 'item', 'tag', 'ref', 'table'];
@@ -117,7 +119,7 @@ function packParam(key: string, optional: boolean, ctx: RefContext): unknown {
     throw new EngineError(`${who(ctx)}: параметр «${key}» не заполнен`);
   }
 
-  if (isFormula(decl, value)) return packRef({ expr: value }, ctx);
+  if (isFormula(decl, value)) return packRef({ expr: value }, inRecord(ctx));
   return { const: value };
 }
 
@@ -128,6 +130,23 @@ const MAX_INPUT_DEPTH = 8;
 
 const readsReceiver = (expr: string): boolean =>
   compile(expr).deps.some(name => ownerOf(name)?.owner === RECEIVER);
+
+const inRecord = (ctx: RefContext): RefContext => (ctx.props ? { ...ctx, recordScope: true } : ctx);
+
+const nameRegex = (name: string): RegExp =>
+  new RegExp(`[@#]${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}_.])`, 'gu');
+
+const isRecordName = (name: string, ctx: RefContext): boolean =>
+  Boolean(ctx.props) && (name in ctx.props! || (splitPath(name)?.head ?? '') in ctx.props!);
+
+function recordNamesAsNumbers(expr: string, ctx: RefContext): string {
+  let out = expr;
+  for (const name of compile(expr).deps) {
+    if (ownerOf(name) || !isRecordName(name, ctx)) continue;
+    out = out.replace(nameRegex(name), `(${String(evaluate(`@${name}`, inRecord(ctx)))})`);
+  }
+  return out;
+}
 
 function withReceiverInputs(expr: string, ctx: RefContext, depth = 0): string {
   if (depth > MAX_INPUT_DEPTH) {
@@ -140,9 +159,8 @@ function withReceiverInputs(expr: string, ctx: RefContext, depth = 0): string {
     if (!decl || !ctx.params || !(name in ctx.params)) continue;
     const value = fromArgs(name, ctx);
     if (!isFormula(decl, value) || !readsReceiver(value)) continue;
-    const inner = withReceiverInputs(value, ctx, depth + 1);
-    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    out = out.replace(new RegExp(`[@#]${escaped}(?![\\p{L}\\p{N}_.])`, 'gu'), `(${inner})`);
+    const inner = withReceiverInputs(recordNamesAsNumbers(value, ctx), ctx, depth + 1);
+    out = out.replace(nameRegex(name), `(${inner})`);
   }
   return out;
 }
@@ -156,6 +174,7 @@ function fromArgs(key: string, ctx: RefContext): unknown {
   if (arg === null || typeof arg !== 'object') return arg;
   if ('prop' in arg) return (ctx.props || {})[String((arg as AnyRef).prop)];
   if ('const' in arg) return (arg as AnyRef).const;
+  if ('expr' in arg) return String((arg as AnyRef).expr);
   if ('table' in arg) {
     const by = (arg as AnyRef).by;
     const input = by && typeof by === 'object' && 'prop' in (by as AnyRef)
@@ -164,7 +183,7 @@ function fromArgs(key: string, ctx: RefContext): unknown {
     return readCell(ctx.pass.system, ctx.pass, String((arg as AnyRef).table), input, columnOf(arg as AnyRef), who(ctx));
   }
   throw new EngineError(
-    `${who(ctx)}: аргумент «${key}» неизвестной формы ${JSON.stringify(arg)} — умею значение, { const }, { prop } или { table }`);
+    `${who(ctx)}: аргумент «${key}» неизвестной формы ${JSON.stringify(arg)} — умею значение, { const }, { prop }, { expr } или { table }`);
 }
 
 export function resolveRef(ref: unknown, ctx: RefContext): unknown {
@@ -281,6 +300,7 @@ function evaluate(expr: unknown, ctx: RefContext, sent?: Record<string, unknown>
     if (!isField(name)) {
       const named = namedValue(name, ctx);
       if (named !== undefined) return named;
+      if (ctx.recordScope && ctx.props && name in ctx.props) return recordValue(name, ctx);
       const split = splitPath(name);
       const table = split ? referencedTable(ctx.pass.system, split.head, ctx.paramDefs) : undefined;
       if (split && table) return walk(ctx.pass.system, ctx.pass, table, resolve(split.head), split.path, who(ctx));
@@ -338,7 +358,14 @@ function namedValue(name: string, ctx: RefContext): unknown {
   const value = fromArgs(name, ctx);
   if (Array.isArray(value)) return value;
   if (value === null || typeof value === 'object') return undefined;
-  return isFormula(decl, value) ? evaluate(value, ctx) : value;
+  return isFormula(decl, value) ? evaluate(value, inRecord(ctx)) : value;
+}
+
+function recordValue(name: string, ctx: RefContext): unknown {
+  const value = ctx.props![name];
+  const formula = Object.values(ctx.pass.system.records ?? {})
+    .some(kind => (kind.props ?? []).some(prop => prop.key === name && prop.kind === 'expr'));
+  return formula && typeof value === 'string' ? evaluate(value, ctx) : value;
 }
 
 function who(ctx: RefContext): string {

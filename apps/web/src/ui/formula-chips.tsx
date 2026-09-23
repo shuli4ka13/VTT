@@ -92,7 +92,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
 
   owners?: boolean;
 
-  extraOptions?: { group: string; label: string; onPick: (insert: (piece: string) => string) => void }[];
+  extraOptions?: { group: string; label: string; name?: string; onPick: (insert: (piece: string) => string) => void }[];
 
   calculator?: boolean;
 }) {
@@ -109,6 +109,9 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
   const inputs = useRef(new Map<number, HTMLInputElement>());
   const [active, setActive] = useState<number | null>(null);
   const [caret, setCaret] = useState(0);
+  const [highlight, setHighlight] = useState(0);
+  const [closed, setClosed] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const fields = useMemo(() => {
     const desk = system.fields.filter(f => f.desk).map(f => ({ tag: `${DESK}.${f.tag}`, label: f.label ?? f.tag, group: 'стол' }));
@@ -116,7 +119,8 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
       ...system.fields.filter(f => !f.desk).map(f => ({ tag: f.tag, label: f.label ?? f.tag, via: false })),
       ...[...paths].map(([tag, label]) => ({ tag, label, via: true })),
     ];
-    const local = [...(extraNames ?? [])].map(([tag, label]) => ({ tag, label, group: 'здесь же' }));
+    const offered = new Set((extraOptions ?? []).map(o => o.name).filter(Boolean));
+    const local = [...(extraNames ?? [])].filter(([tag]) => !offered.has(tag)).map(([tag, label]) => ({ tag, label, group: 'здесь же' }));
     if (!owners) {
       return [...local, ...sheet.map(f => ({ tag: f.tag, label: f.label, group: f.via ? 'по ссылке' : 'поле' })), ...desk];
     }
@@ -125,7 +129,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
       ...OWNERS.flatMap(owner => sheet.map(f => ({ tag: `${owner}.${f.tag}`, label: f.label, group: `поле ${owner === SENDER ? 'отправителя' : 'получателя'}` }))),
       ...desk,
     ];
-  }, [system, extraNames, paths, owners]);
+  }, [system, extraNames, extraOptions, paths, owners]);
 
   const commitParts = (next: Part[], focusAt?: { index: number; caret: number }) => {
     onChange(joinParts(next));
@@ -147,8 +151,17 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
       .slice(0, 12)
     : [];
   const extras = query
-    ? (extraOptions ?? []).filter(o => !query.needle || o.label.toLowerCase().includes(query.needle))
+    ? (extraOptions ?? [])
+      .filter(o => !query.needle || rankOf({ tag: '', label: o.label }, query.needle) < 3)
+      .sort((a, b) => rankOf({ tag: '', label: a.label }, query.needle) - rankOf({ tag: '', label: b.label }, query.needle))
     : [];
+  const shownMenu = !closed && (matches.length > 0 || extras.length > 0);
+  const total = extras.length + matches.length;
+  const lit = total ? Math.min(highlight, total - 1) : 0;
+  const pickAt = (index: number) => {
+    if (index < extras.length) pickExtra(extras[index]!.onPick);
+    else pick(matches[index - extras.length]!.tag);
+  };
 
   const pickExtra = (onPick: (insert: (piece: string) => string) => void) => {
     if (active === null || !query) return;
@@ -196,6 +209,8 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
   );
 
   const editText = (index: number, text: string, at: number) => {
+    setHighlight(0);
+    setClosed(false);
     const next = parts.map((p, i) => (i === index ? { text } : p));
     setCaret(at);
     commitParts(next);
@@ -283,7 +298,26 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
             onKeyUp={e => setCaret(e.currentTarget.selectionStart ?? 0)}
             onClick={e => setCaret(e.currentTarget.selectionStart ?? 0)}
             onKeyDown={e => {
-
+              if (shownMenu && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+                e.preventDefault();
+                const step = e.key === 'ArrowDown' ? 1 : -1;
+                const next = (lit + step + total) % total;
+                setHighlight(next);
+                menuRef.current?.children[next]?.scrollIntoView?.({ block: 'nearest' });
+                return;
+              }
+              if (shownMenu && (e.key === 'Enter' || e.key === 'Tab')) {
+                e.preventDefault();
+                e.stopPropagation();
+                pickAt(lit);
+                return;
+              }
+              if (shownMenu && e.key === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();
+                setClosed(true);
+                return;
+              }
               if (e.key === 'Backspace' && e.currentTarget.selectionStart === 0
                 && e.currentTarget.selectionEnd === 0 && index > 0) {
                 e.preventDefault();
@@ -301,20 +335,24 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
           {OPS.filter(op => op.word).map(opButton)}
         </div>
       ) : null}
-      {matches.length || extras.length ? (
-        <div className="slot__menu">
+      {shownMenu ? (
+        <div className="slot__menu" ref={menuRef} role="listbox">
           {extras.map((option, i) => (
             <button
-              key={`extra-${i}`} type="button" className="slot__option"
+              key={`extra-${i}`} type="button" role="option" aria-selected={i === lit}
+              className={`slot__option${i === lit ? ' slot__option--lit' : ''}`}
+              onMouseEnter={() => setHighlight(i)}
               onMouseDown={e => { e.preventDefault(); pickExtra(option.onPick); }}
             >
               <span className="slot__group slot__group--record">{option.group}</span>
               {option.label}
             </button>
           ))}
-          {matches.map(f => (
+          {matches.map((f, j) => (
             <button
-              key={f.tag} type="button" className="slot__option"
+              key={f.tag} type="button" role="option" aria-selected={extras.length + j === lit}
+              className={`slot__option${extras.length + j === lit ? ' slot__option--lit' : ''}`}
+              onMouseEnter={() => setHighlight(extras.length + j)}
               onMouseDown={e => { e.preventDefault(); pick(f.tag); }}
             >
               <span className="slot__group">{f.group}</span>

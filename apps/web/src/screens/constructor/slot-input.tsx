@@ -3,7 +3,6 @@ import type { System, SlotRef } from '@vtt/schema';
 import { labelOfTag } from '../../ui/formula.tsx';
 import { dieWord, readingWord } from './readback.ts';
 import { FormulaChips } from '../../ui/formula-chips.tsx';
-import { matchTagQuery } from '../../ui/tag-suggest.tsx';
 import { outputRefs, outputLabel, declaredProps } from './slots.tsx';
 import type { SlotContext, SlotKind } from './slots.tsx';
 import { asDice } from '../../words.ts';
@@ -161,13 +160,15 @@ export function optionsFor(ctx: SlotContext, allow?: SlotKind[]): SlotOption[] {
   return out;
 }
 
-const rankOf = (label: string, needle: string): number => {
-  const text = label.toLowerCase();
-  if (!needle) return 0;
-  if (text.startsWith(needle)) return 0;
-  if (new RegExp(`\\b${needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'u').test(text)) return 1;
-  if (text.includes(needle)) return 2;
-  return 3;
+const nameOf = (ref: SlotRef): string | null => {
+  const r = ref as Record<string, unknown>;
+  if ('prop' in r && r.prop) return String(r.prop);
+  if ('ref' in r) return String(r.ref);
+  if ('tag' in r) return String(r.tag);
+  if ('table' in r && r.column && r.by && typeof r.by === 'object' && 'prop' in (r.by as object)) {
+    return `${String((r.by as { prop: unknown }).prop)}.${String(r.column)}`;
+  }
+  return null;
 };
 
 export function SlotInput({ value, onChange, context, allow, placeholder, extraOptions, dice, side, onCreateFromRecord }: {
@@ -186,66 +187,79 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
   onCreateFromRecord?: () => SlotRef;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
-  const [open, setOpen] = useState(false);
   const [trouble, setTrouble] = useState<string | null>(null);
   const options = useMemo(() => {
     const base = [...(extraOptions ?? []), ...optionsFor(context, allow)];
     if (!onCreateFromRecord) return base;
-    let insertAt = 0;
-    base.forEach((option, i) => { if (option.group === 'Из записи') insertAt = i + 1; });
     const born: SlotOption = { group: 'Из записи', label: 'из записи → новая потребность…', ref: { param: '' }, synthetic: true };
-    return [...base.slice(0, insertAt), born, ...base.slice(insertAt)];
+    return [born, ...base];
   }, [context, allow, extraOptions, onCreateFromRecord]);
+
+  const names = useMemo(() => {
+    const out = new Map<string, string>();
+    for (const option of options) {
+      const name = option.synthetic ? null : nameOf(option.ref);
+      if (name && !out.has(name)) out.set(name, option.label);
+    }
+    return out;
+  }, [options]);
+
+  const menu = useMemo(() => options.map(option => ({
+    group: option.group,
+    label: option.label,
+    ...(option.synthetic ? {} : { name: nameOf(option.ref) ?? undefined }),
+    onPick: (insert: (piece: string) => string) => {
+      const rest = insert('').trim();
+      const name = option.synthetic ? null : nameOf(option.ref);
+      if (!rest || !name) {
+        setDraft(null);
+        setTrouble(null);
+        if (option.onPick) option.onPick();
+        else onChange(option.synthetic && onCreateFromRecord ? onCreateFromRecord() : option.ref);
+        return;
+      }
+      setDraft(insert(`@${name}`));
+    },
+  })), [options, onChange, onCreateFromRecord]);
 
   const chip = draft === null ? chipOf(value, context) : null;
   const shown = chip ? '' : (draft ?? displayOf(value, context));
-  const needle = (draft ?? '').toLowerCase();
-  const filtered = needle
-    ? options.filter(o => o.synthetic || rankOf(o.label, needle) < 3)
-      .sort((a, b) => rankOf(a.label, needle) - rankOf(b.label, needle))
-    : options;
-
-  const typingTag = matchTagQuery(draft ?? '', (draft ?? '').length) !== null;
 
   const commitTyped = () => {
-    if (draft !== null) {
-      const grown = grownFrom(value, draft, context);
-      if (grown) {
-        onChange(grown);
-        setDraft(null);
-        setTrouble(null);
-        setOpen(false);
-        return;
-      }
-
-      const diced = dice ? normalizeDice(draft) : null;
-      const tagged = singleTag(draft, context.system);
-      const candidate: SlotRef | null = tagged
-        ?? (diced !== null ? { const: diced } : parseTyped(draft));
-      if (candidate !== null && allow) {
-        const kind: SlotKind = tagged ? 'tag' : 'const' in candidate ? 'const' : 'expr';
-        if (!allow.includes(kind)) {
-          setTrouble(`сюда нельзя ${WORD_OF[kind]} — только ${allow.map(k => WORD_OF[k]).join(', ')}`);
-          setDraft(null);
-          setOpen(false);
-          return;
-        }
-      }
-      onChange(candidate);
+    if (draft === null) return;
+    const grown = grownFrom(value, draft, context);
+    if (grown) {
+      onChange(grown);
       setDraft(null);
       setTrouble(null);
+      return;
     }
-    setOpen(false);
+    const diced = dice ? normalizeDice(draft) : null;
+    const tagged = singleTag(draft, context.system);
+    const candidate: SlotRef | null = tagged
+      ?? (diced !== null ? { const: diced } : parseTyped(draft));
+    if (candidate !== null && allow) {
+      const kind: SlotKind = tagged ? 'tag' : 'const' in candidate ? 'const' : 'expr';
+      if (!allow.includes(kind)) {
+        setTrouble(`сюда нельзя ${WORD_OF[kind]} — только ${allow.map(k => WORD_OF[k]).join(', ')}`);
+        setDraft(null);
+        return;
+      }
+    }
+    onChange(candidate);
+    setDraft(null);
+    setTrouble(null);
   };
 
   return (
     <div className="slot">
-      {}
       <FormulaChips
         value={shown}
         system={context.system}
         owners
-        placeholder={chip ? undefined : (placeholder ?? 'число или формула')}
+        extraNames={names}
+        extraOptions={menu}
+        placeholder={chip ? undefined : (placeholder ?? 'число или формула — @ подскажет')}
         prefix={chip ? (
           <span className={`chips__chip${chip.record ? ' chips__chip--record' : ''}`}>
             {chip.label}
@@ -256,34 +270,14 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
             >×</button>
           </span>
         ) : null}
-        onFocus={() => { setOpen(true); setTrouble(null); }}
-        onChange={next => { setDraft(next); setOpen(true); }}
+        onFocus={() => setTrouble(null)}
+        onChange={next => setDraft(next)}
         onBlur={commitTyped}
         onKeyDown={e => {
           if (e.key === 'Enter') commitTyped();
-          if (e.key === 'Escape') { setDraft(null); setOpen(false); }
+          if (e.key === 'Escape') setDraft(null);
         }}
       />
-      {open && filtered.length && !typingTag ? (
-        <div className="slot__menu">
-          {filtered.map((option, i) => (
-            <button
-              key={i} type="button" className="slot__option"
-              onMouseDown={e => {
-                e.preventDefault();
-                if (option.onPick) option.onPick();
-                else onChange(option.synthetic && onCreateFromRecord ? onCreateFromRecord() : option.ref);
-                setDraft(null); setOpen(false);
-              }}
-            >
-              <span className={`slot__group${option.group === 'Из записи' ? ' slot__group--record' : ''}`}>
-                {option.group}
-              </span>
-              {option.label}
-            </button>
-          ))}
-        </div>
-      ) : null}
       {trouble ? <span className="field__error">{trouble}</span> : null}
     </div>
   );

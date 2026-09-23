@@ -289,7 +289,7 @@
   padding: 6px 10px; border: none; background: none; text-align: left;
   font: inherit; font-size: 13px; color: inherit; cursor: pointer;
 }
-.slot__option:hover { background: rgba(122, 132, 255, .12); }
+.slot__option:hover, .slot__option--lit { background: rgba(122, 132, 255, .12); }
 .slot__group { font-size: 10px; text-transform: uppercase; letter-spacing: .4px; opacity: .5; min-width: 92px; }
 
 .slot__group--record { opacity: 1; color: var(--from-record); }

@@ -231,7 +231,7 @@ describe('слот привязки подсказывает то, чем его
       .find(el => el.textContent?.includes(подпись))!;
     const поле = [...строка.querySelectorAll('input.chips__text')].at(-1) as HTMLInputElement;
     fireEvent.focus(поле);
-    fireEvent.change(поле, { target: { value: текст } });
+    fireEvent.change(поле, { target: { value: `@${текст}`, selectionStart: текст.length + 1 } });
     return [...document.querySelectorAll('.slot__option')].map(o => o.textContent?.trim() ?? '');
   };
 
