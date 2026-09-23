@@ -144,7 +144,7 @@ function exprRefs(source: string, from: Where, scope: ChainScope, out: Reference
       out.push({ kind: 'step', key: head, from, scope: 'dotted' });
       continue;
     }
-    out.push({ kind: 'field', key: dep, from });
+    out.push({ kind: 'field', key: dep, from, scope: 'plain' });
   }
 }
 
@@ -246,6 +246,9 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
     if (field.value.kind === 'table') {
       if (field.value.table) out.push({ kind: 'table', key: field.value.table, from });
       exprRefs(field.value.arg, from, noScope, out);
+    }
+    if (field.desk) {
+      for (const ref of out) if (ref.from === from && ref.scope === 'plain') delete ref.scope;
     }
   }
 

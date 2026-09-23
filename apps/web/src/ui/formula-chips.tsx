@@ -111,18 +111,19 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
   const [caret, setCaret] = useState(0);
 
   const fields = useMemo(() => {
+    const desk = system.fields.filter(f => f.desk).map(f => ({ tag: `${DESK}.${f.tag}`, label: f.label ?? f.tag, group: 'стол' }));
     const sheet = [
-      ...system.fields.filter(f => !owners || !f.desk).map(f => ({ tag: f.tag, label: f.label ?? f.tag, via: false })),
+      ...system.fields.filter(f => !f.desk).map(f => ({ tag: f.tag, label: f.label ?? f.tag, via: false })),
       ...[...paths].map(([tag, label]) => ({ tag, label, via: true })),
     ];
     const local = [...(extraNames ?? [])].map(([tag, label]) => ({ tag, label, group: 'здесь же' }));
     if (!owners) {
-      return [...local, ...sheet.map(f => ({ tag: f.tag, label: f.label, group: f.via ? 'по ссылке' : 'поле' }))];
+      return [...local, ...sheet.map(f => ({ tag: f.tag, label: f.label, group: f.via ? 'по ссылке' : 'поле' })), ...desk];
     }
     return [
       ...local,
       ...OWNERS.flatMap(owner => sheet.map(f => ({ tag: `${owner}.${f.tag}`, label: f.label, group: `поле ${owner === SENDER ? 'отправителя' : 'получателя'}` }))),
-      ...system.fields.filter(f => f.desk).map(f => ({ tag: `${DESK}.${f.tag}`, label: f.label ?? f.tag, group: 'стол' })),
+      ...desk,
     ];
   }, [system, extraNames, paths, owners]);
 

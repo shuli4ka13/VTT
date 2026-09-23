@@ -134,3 +134,37 @@ describe('вопрос стола: отвечает владелец листа 
     expect(skip.disabled).toBe(false);
   });
 });
+
+describe('панель «Стол»', () => {
+  const withDesk = (role: 'gm' | 'player'): RoomState => ({
+    ...room(null),
+    members: [{ userId: 'u', name: 'Я', role }],
+    system: {
+      id: 'x', name: 'x', effects: {},
+      fields: [{ tag: 'страх', label: 'Страх', desk: true, value: { kind: 'stored', type: 'number', default: 0 } }],
+    },
+    sheets: [
+      { id: 'а', systemId: 'x', kind: 'pc', name: 'Арвен', values: {}, equipped: [], effects: [], actions: [] },
+      { id: 'стол', systemId: 'x', kind: 'desk', name: 'Стол', values: { страх: 3 }, equipped: [], effects: [], actions: [] },
+    ],
+  } as unknown as RoomState);
+
+  beforeEach(() => { useSession.setState(state => ({ ...state, userId: 'u' })); });
+  afterEach(() => { cleanup(); });
+
+  it('ведущий правит значение стола, стола нет среди фишек', () => {
+    useRoom.setState(state => ({ ...state, room: withDesk('gm'), log: [], error: null }));
+    render(<TableScreen />);
+    expect(screen.getByText('общий для всех — правите вы')).toBeTruthy();
+    expect(screen.getByDisplayValue('3')).toBeTruthy();
+    expect([...document.querySelectorAll('.token__name')].map(n => n.textContent)).toEqual(['Арвен']);
+  });
+
+  it('игрок видит значение, но не правит', () => {
+    useRoom.setState(state => ({ ...state, room: withDesk('player'), log: [], error: null }));
+    render(<TableScreen />);
+    expect(screen.getByText('общий для всех — правит ведущий')).toBeTruthy();
+    expect(screen.queryByDisplayValue('3')).toBeNull();
+    expect(screen.getByText('3')).toBeTruthy();
+  });
+});

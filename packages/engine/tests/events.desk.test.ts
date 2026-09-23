@@ -65,3 +65,29 @@ group('проверки конструктора про стол', () => {
     eq(errorsOf(lintSystem(system, book)).length, 0);
   });
 });
+
+group('стол в формулах листа', () => {
+  const withSheetFormula = (expr: string, desk = false) => {
+    const next = JSON.parse(JSON.stringify(system)) as System;
+    next.fields.push({ tag: 'атака', label: 'Атака', ...(desk ? { desk: true } : {}), value: { kind: 'formula', expr } } as never);
+    return next;
+  };
+
+  test('поле листа читает стол через @стол', async () => {
+    const { calc, newPass } = await import('../src/engine/calc.ts');
+    const s = withSheetFormula('5 + @стол.эскалация');
+    const hero = pc('герой');
+    eq(calc(s, hero, 'атака', newPass(s, hero, { desk: desk({ эскалация: 3 }) })), 8);
+  });
+
+  test('поле стола без @стол в формуле листа — ошибка словами', async () => {
+    const { lintSystem, errorsOf } = await import('../src/model/lint.ts');
+    const texts = errorsOf(lintSystem(withSheetFormula('5 + @эскалация'), book)).map(p => p.text);
+    ok(texts.some(t => t.includes('лежит на столе')), texts.join(' | '));
+  });
+
+  test('у поля самого стола соседние поля стола пишутся без приставки', async () => {
+    const { lintSystem, errorsOf } = await import('../src/model/lint.ts');
+    eq(errorsOf(lintSystem(withSheetFormula('@страх + @эскалация', true), book)).length, 0);
+  });
+});

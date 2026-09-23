@@ -9,7 +9,9 @@ import { useSession } from '../../store/session.ts';
 import type { RoomState, Sheet, System } from '@vtt/schema';
 import { availableActions } from '@vtt/engine/events/envelope';
 import { limitOf } from '@vtt/engine/engine/clock';
-import { newPass, calc } from '@vtt/engine/engine/calc';
+import { newPass, calc, deskSystemOf } from '@vtt/engine/engine/calc';
+import { useReader } from '../../engine/use-calc.ts';
+import { FieldCell } from '../../sheet/field-cell.tsx';
 import './table.css';
 
 export function TableScreen() {
@@ -109,16 +111,7 @@ export function TableScreen() {
               </div>
             </Card>
 
-            {desk && deskFields.length ? (
-              <Card>
-                <CardHead title="Стол" />
-                <div className="inline inline--tight">
-                  {deskFields.map(field => (
-                    <Chip key={field.tag}>{field.label}: {String(desk.values[field.tag] ?? (field.value.kind === 'stored' ? field.value.default : '—'))}</Chip>
-                  ))}
-                </div>
-              </Card>
-            ) : null}
+            {desk && deskFields.length ? <DeskPanel room={room} desk={desk} /> : null}
 
             <Combat room={room} onError={setError} />
             {room.pending ? <Prompt room={room} onError={setError} /> : null}
@@ -133,6 +126,26 @@ export function TableScreen() {
         ),
       }}
     />
+  );
+}
+
+function DeskPanel({ room, desk }: { room: RoomState; desk: Sheet }) {
+  const userId = useSession(s => s.userId);
+  const gm = room.members.some(m => m.userId === userId && m.role === 'gm');
+  const system = deskSystemOf(room.system as System);
+  const reader = useReader(system, desk, room.compendium, null);
+  return (
+    <Card>
+      <CardHead title="Стол" actions={<span className="faint">{gm ? 'общий для всех — правите вы' : 'общий для всех — правит ведущий'}</span>} />
+      <div className="row">
+        {system.fields.map(field => (
+          <FieldCell
+            key={field.tag} field={field} system={system} sheet={desk} reader={reader}
+            onChange={gm ? (tag, value) => tableSocket.setValue(room.id, desk.id, tag, value) : undefined}
+          />
+        ))}
+      </div>
+    </Card>
   );
 }
 

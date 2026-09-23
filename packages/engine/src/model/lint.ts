@@ -37,6 +37,10 @@ const NAMES: Record<Exclude<RefKind, 'param' | 'step'>, (key: string) => string>
 const sameWhere = (a: Where, b: Where): boolean => JSON.stringify(a) === JSON.stringify(b);
 
 function ownerText(ref: Reference, system: System): string | null {
+  if (ref.kind === 'field' && ref.scope === 'plain') {
+    const field = system.fields.find(f => f.tag === ref.key);
+    return field?.desk ? `поле «${field.label}» лежит на столе — пишите @стол.${field.tag}` : null;
+  }
   if (ref.kind !== 'field' || !ref.scope?.startsWith('owner:')) return null;
   const owner = ref.scope.slice('owner:'.length);
   const field = system.fields.find(f => f.tag === ref.key);

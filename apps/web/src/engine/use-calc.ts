@@ -28,7 +28,8 @@ export function useReader(system: System, sheet: Sheet | null, compendium: Compe
 
     let pass: Pass;
     try {
-      pass = newPass(system, sheet, { compendium, desk: desk ?? null });
+      const table = desk !== undefined ? desk : system.fields.some(f => f.desk) ? ({ id: 'стол', systemId: system.id, kind: 'desk', name: 'Стол', values: {}, equipped: [], effects: [], actions: [] } as Sheet) : null;
+      pass = newPass(system, sheet, { compendium, desk: table });
     } catch (err) {
 
       const message = (err as Error).message;
