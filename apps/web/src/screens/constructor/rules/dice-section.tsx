@@ -133,8 +133,7 @@ function DiceComposer({ dice, system, onEdit }: {
 }) {
   const many = dice.length > 1;
   const numeric = system.fields.filter(f =>
-    f.value.kind === 'formula' || f.value.kind === 'table'
-    || (f.value.kind === 'stored' && f.value.type === 'number'));
+    f.value.kind === 'formula' || (f.value.kind === 'stored' && f.value.type === 'number'));
 
   return (
     <div className="dice-composer">
@@ -144,10 +143,10 @@ function DiceComposer({ dice, system, onEdit }: {
           <div key={i} className="dice-term">
             {fromField ? (
               <Select
-                value={String((term.count as { tag?: string }).tag ?? '')}
+                value={String((term.count as { expr?: string }).expr ?? '').replace(/^@/, '')}
                 options={[['', '— какое поле? —'],
                   ...numeric.map(f => [f.tag, f.label] as const)] as never}
-                onChange={tag => onEdit(list => { list[i]!.count = { tag } as never; })}
+                onChange={tag => onEdit(list => { list[i]!.count = { expr: `@${tag}` }; })}
               />
             ) : (
               <span className="dice-term__num">
@@ -185,7 +184,7 @@ function DiceComposer({ dice, system, onEdit }: {
               title={fromField ? 'задать числом' : 'взять число из поля листа'}
               disabled={!fromField && numeric.length === 0}
               onClick={() => onEdit(list => {
-                list[i]!.count = fromField ? 1 : ({ tag: numeric[0]?.tag ?? '' } as never);
+                list[i]!.count = fromField ? 1 : { expr: `@${numeric[0]?.tag ?? ''}` };
               })}
             >
               {fromField ? 'числом' : 'из поля'}

@@ -1,6 +1,6 @@
 import { newPass, calc } from '../engine/calc.ts';
 import { packCall, runCall } from './call.ts';
-import { resolveRef } from '../engine/refs.ts';
+import { holdsNow } from '../engine/refs.ts';
 import { durationOf } from '../engine/effects.ts';
 import { listening, subscribers, withSteps, MOMENT_PREFIX, FIELD_PREFIX } from './bus.ts';
 import { EngineError } from '../engine/errors.ts';
@@ -167,14 +167,7 @@ function holds(
   const condition = handler.if;
   if (!condition) return true;
   const pass = newPass(world.system, sheet, { compendium: world.compendium });
-  const own = condition && typeof condition === 'object' && 'expr' in condition
-    ? { ...condition, of: 'target' as const }
-    : condition;
-  const value = resolveRef(own, { pass, owner, results: seed });
-  if (typeof value !== 'boolean') {
-    throw new EngineError(`${owner}: условие должно давать да/нет, а дало ${JSON.stringify(value)}`);
-  }
-  return value;
+  return holdsNow(condition, { pass, owner, results: seed });
 }
 
 export const describeMoment = (

@@ -79,8 +79,9 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
   const conditions = isMoment ? [] : anyAction ? conditionsOfAny(system) : conditionsOf(system, listened);
   const watchable = system.fields.filter(f => f.value.kind !== 'stored' || f.value.type === 'boolean');
   const aims = moment === 'after-in' || moment === 'after-out' || moment === 'ask-after';
-  const raw = handler.if as { expr?: string } | null | undefined;
-  const formula = raw && typeof raw === 'object' && 'expr' in raw ? String(raw.expr ?? '') : null;
+  const written = handler.if?.expr ?? null;
+  const picked = written !== null ? conditions.find(([ref]) => written.trim() === `@${ref}`)?.[0] ?? null : null;
+  const formula = written !== null && picked === null ? written : null;
 
   return (
     <Card>
@@ -127,11 +128,11 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
               : conditions.length ? undefined : 'У того, что слушаем, нет шагов с исходом «да/нет» — сработает всегда.'}
         >
           <Select<string>
-            value={formula !== null ? BY_FORMULA : String((handler.if as { ref?: string } | null | undefined)?.ref ?? '')}
+            value={formula !== null ? BY_FORMULA : picked ?? ''}
             options={[['', 'всегда'], ...conditions, [BY_FORMULA, 'формулой…']]}
             onChange={next => edit(draft => {
-              if (next === BY_FORMULA) draft.if = { expr: formula ?? '' };
-              else if (next) draft.if = { ref: next };
+              if (next === BY_FORMULA) draft.if = { expr: written ?? '' };
+              else if (next) draft.if = { expr: `@${next}` };
               else delete draft.if;
             })}
           />

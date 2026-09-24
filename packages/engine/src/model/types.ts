@@ -1,5 +1,5 @@
 export type {
-  SlotRef, RefSide, Tag, Field, FieldValue, FieldOption, DiceTerm, DieConstant,
+  SlotRef, Formula, RefSide, Tag, Field, FieldValue, FieldOption, DiceTerm, DieConstant,
   SystemConstant, Table, TableColumn, TableRow, TableKey, RollEditOp, RollEdit, Modifier, Param,
   Step, Guard, Ask, Handler, Effect,
   Activation, DurationKind, Stacking, Binding, RecordKind, System,

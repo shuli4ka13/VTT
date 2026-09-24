@@ -14,7 +14,7 @@ const system = {
       label: 'Удар', activation: 'manual',
       steps: [
         { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', targetModifiers: false, value: { expr: '3 + @стол.эскалация' } },
-        { type: 'apply', target: { tag: 'страх' }, direction: 'add', targetModifiers: false, value: { const: 1 } },
+        { type: 'apply', target: { tag: 'страх' }, direction: 'add', targetModifiers: false, value: { expr: '1' } },
       ],
     },
   },

@@ -242,10 +242,8 @@
         "label": "Бонус мастерства",
         "group": "Прогрессия",
         "value": {
-          "kind": "table",
-          "table": "levels",
-          "arg": "@level",
-          "column": "prof"
+          "kind": "formula",
+          "expr": "таблица(\"levels\", @level, \"prof\")"
         }
       },
       {
@@ -1427,10 +1425,8 @@
         "label": "Костей заговора",
         "group": "Магия",
         "value": {
-          "kind": "table",
-          "table": "levels",
-          "arg": "@level",
-          "column": "cantrips"
+          "kind": "formula",
+          "expr": "таблица(\"levels\", @level, \"cantrips\")"
         }
       },
       {
@@ -1438,10 +1434,8 @@
         "label": "Всего ячеек 1-го круга",
         "group": "Ячейки заклинаний",
         "value": {
-          "kind": "table",
-          "table": "spell_slots",
-          "arg": "@caster_level",
-          "column": "круг_1"
+          "kind": "formula",
+          "expr": "таблица(\"spell_slots\", @caster_level, \"круг_1\")"
         }
       },
       {
@@ -1462,10 +1456,8 @@
         "label": "Всего ячеек 2-го круга",
         "group": "Ячейки заклинаний",
         "value": {
-          "kind": "table",
-          "table": "spell_slots",
-          "arg": "@caster_level",
-          "column": "круг_2"
+          "kind": "formula",
+          "expr": "таблица(\"spell_slots\", @caster_level, \"круг_2\")"
         }
       },
       {
@@ -1486,10 +1478,8 @@
         "label": "Всего ячеек 3-го круга",
         "group": "Ячейки заклинаний",
         "value": {
-          "kind": "table",
-          "table": "spell_slots",
-          "arg": "@caster_level",
-          "column": "круг_3"
+          "kind": "formula",
+          "expr": "таблица(\"spell_slots\", @caster_level, \"круг_3\")"
         }
       },
       {
@@ -1510,10 +1500,8 @@
         "label": "Всего ячеек 4-го круга",
         "group": "Ячейки заклинаний",
         "value": {
-          "kind": "table",
-          "table": "spell_slots",
-          "arg": "@caster_level",
-          "column": "круг_4"
+          "kind": "formula",
+          "expr": "таблица(\"spell_slots\", @caster_level, \"круг_4\")"
         }
       },
       {
@@ -1534,10 +1522,8 @@
         "label": "Всего ячеек 5-го круга",
         "group": "Ячейки заклинаний",
         "value": {
-          "kind": "table",
-          "table": "spell_slots",
-          "arg": "@caster_level",
-          "column": "круг_5"
+          "kind": "formula",
+          "expr": "таблица(\"spell_slots\", @caster_level, \"круг_5\")"
         }
       },
       {
@@ -1558,10 +1544,8 @@
         "label": "Всего ячеек 6-го круга",
         "group": "Ячейки заклинаний",
         "value": {
-          "kind": "table",
-          "table": "spell_slots",
-          "arg": "@caster_level",
-          "column": "круг_6"
+          "kind": "formula",
+          "expr": "таблица(\"spell_slots\", @caster_level, \"круг_6\")"
         }
       },
       {
@@ -1582,10 +1566,8 @@
         "label": "Всего ячеек 7-го круга",
         "group": "Ячейки заклинаний",
         "value": {
-          "kind": "table",
-          "table": "spell_slots",
-          "arg": "@caster_level",
-          "column": "круг_7"
+          "kind": "formula",
+          "expr": "таблица(\"spell_slots\", @caster_level, \"круг_7\")"
         }
       },
       {
@@ -1606,10 +1588,8 @@
         "label": "Всего ячеек 8-го круга",
         "group": "Ячейки заклинаний",
         "value": {
-          "kind": "table",
-          "table": "spell_slots",
-          "arg": "@caster_level",
-          "column": "круг_8"
+          "kind": "formula",
+          "expr": "таблица(\"spell_slots\", @caster_level, \"круг_8\")"
         }
       },
       {
@@ -1630,10 +1610,8 @@
         "label": "Всего ячеек 9-го круга",
         "group": "Ячейки заклинаний",
         "value": {
-          "kind": "table",
-          "table": "spell_slots",
-          "arg": "@caster_level",
-          "column": "круг_9"
+          "kind": "formula",
+          "expr": "таблица(\"spell_slots\", @caster_level, \"круг_9\")"
         }
       },
       {
@@ -1918,10 +1896,8 @@
         "label": "Урон ярости",
         "group": "Ресурсы класса",
         "value": {
-          "kind": "table",
-          "table": "levels",
-          "arg": "@level",
-          "column": "rage"
+          "kind": "formula",
+          "expr": "таблица(\"levels\", @level, \"rage\")"
         }
       },
       {
@@ -3670,14 +3646,14 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "param": "attack_with"
+                "expr": "@attack_with"
               },
               "tags": [
                 "атака"
               ]
             },
             "versus": {
-              "tag": "ac"
+              "expr": "@получатель.ac"
             }
           },
           {
@@ -3693,7 +3669,7 @@
             "event": "damage",
             "args": {
               "amount": {
-                "ref": "dmg"
+                "expr": "@dmg"
               },
               "damage_type": {
                 "param": "damage_type"
@@ -3739,7 +3715,7 @@
                 "event": "damage",
                 "args": {
                   "amount": {
-                    "ref": "жар"
+                    "expr": "@жар"
                   },
                   "damage_type": {
                     "const": "огонь"
@@ -3780,7 +3756,7 @@
             "event": "damage",
             "args": {
               "amount": {
-                "ref": "dmg"
+                "expr": "@dmg"
               },
               "damage_type": {
                 "param": "damage_type"
@@ -3828,7 +3804,7 @@
             "event": "damage",
             "args": {
               "amount": {
-                "ref": "dmg"
+                "expr": "@dmg"
               },
               "damage_type": {
                 "const": "излучение"
@@ -4063,10 +4039,10 @@
           {
             "type": "compare",
             "value": {
-              "param": "slot"
+              "expr": "@slot"
             },
             "versus": {
-              "param": "spell_level"
+              "expr": "@spell_level"
             },
             "breakIf": "less",
             "note": "круг ячейки ниже круга заклинания"
@@ -4117,7 +4093,7 @@
               ]
             },
             "versus": {
-              "tag": "ac"
+              "expr": "@получатель.ac"
             }
           },
           {
@@ -4133,7 +4109,7 @@
             "event": "damage",
             "args": {
               "amount": {
-                "ref": "dmg"
+                "expr": "@dmg"
               },
               "damage_type": {
                 "param": "damage_type"
@@ -4219,7 +4195,7 @@
             "event": "damage",
             "args": {
               "amount": {
-                "ref": "dmg"
+                "expr": "@dmg"
               },
               "damage_type": {
                 "param": "damage_type"
@@ -4310,7 +4286,7 @@
               ]
             },
             "versus": {
-              "tag": "ac"
+              "expr": "@получатель.ac"
             }
           },
           {
@@ -4326,7 +4302,7 @@
             "event": "damage",
             "args": {
               "amount": {
-                "ref": "dmg"
+                "expr": "@dmg"
               },
               "damage_type": {
                 "param": "damage_type"
@@ -4418,9 +4394,11 @@
             "type": "amount",
             "source": "item",
             "scale": {
-              "times": 0.5,
+              "times": {
+                "expr": "0.5"
+              },
               "when": {
-                "ref": "save.success"
+                "expr": "@save.success"
               }
             },
             "fixed": {
@@ -4432,7 +4410,7 @@
             "event": "damage",
             "args": {
               "amount": {
-                "ref": "dmg"
+                "expr": "@dmg"
               },
               "damage_type": {
                 "param": "damage_type"
@@ -4529,7 +4507,7 @@
             "event": "damage",
             "args": {
               "amount": {
-                "ref": "dmg"
+                "expr": "@dmg"
               },
               "damage_type": {
                 "param": "damage_type"
@@ -4604,7 +4582,7 @@
             "event": "damage",
             "args": {
               "amount": {
-                "ref": "dmg"
+                "expr": "@dmg"
               },
               "damage_type": {
                 "param": "damage_type"
@@ -4855,7 +4833,7 @@
             },
             "direction": "add",
             "value": {
-              "ref": "amt"
+              "expr": "@amt"
             },
             "targetModifiers": false
           },
@@ -4956,7 +4934,7 @@
             },
             "direction": "add",
             "value": {
-              "ref": "amt"
+              "expr": "@amt"
             },
             "targetModifiers": false
           }
@@ -4985,10 +4963,10 @@
           {
             "type": "compare",
             "value": {
-              "tag": "second_wind_left"
+              "expr": "@second_wind_left"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "второе дыхание уже потрачено"
@@ -5000,7 +4978,7 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false
           },
@@ -5019,7 +4997,7 @@
             },
             "direction": "add",
             "value": {
-              "ref": "amt"
+              "expr": "@amt"
             },
             "targetModifiers": false
           }
@@ -5036,10 +5014,10 @@
           {
             "type": "compare",
             "value": {
-              "tag": "action_surge_left"
+              "expr": "@action_surge_left"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "всплеск действий уже потрачен"
@@ -5051,7 +5029,7 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false
           },
@@ -5062,7 +5040,7 @@
             },
             "direction": "add",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
@@ -5087,10 +5065,10 @@
           {
             "type": "compare",
             "value": {
-              "tag": "rages_left"
+              "expr": "@rages_left"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "ярости на сегодня кончились"
@@ -5102,7 +5080,7 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false
           },
@@ -5156,10 +5134,10 @@
           {
             "type": "compare",
             "value": {
-              "tag": "bardic_left"
+              "expr": "@bardic_left"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "вдохновение на сегодня кончилось"
@@ -5171,7 +5149,7 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false
           }
@@ -5203,7 +5181,7 @@
             },
             "direction": "add",
             "value": {
-              "param": "amount"
+              "expr": "@amount"
             },
             "targetModifiers": false
           }
@@ -5217,10 +5195,10 @@
           {
             "type": "compare",
             "value": {
-              "tag": "lay_on_hands_left"
+              "expr": "@lay_on_hands_left"
             },
             "versus": {
-              "param": "amount"
+              "expr": "@amount"
             },
             "breakIf": "less",
             "note": "в запасе наложения рук столько нет"
@@ -5232,7 +5210,7 @@
             },
             "direction": "subtract",
             "value": {
-              "param": "amount"
+              "expr": "@amount"
             },
             "targetModifiers": false
           }
@@ -5284,10 +5262,10 @@
           {
             "type": "compare",
             "value": {
-              "tag": "channel_left"
+              "expr": "@channel_left"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "божественный канал уже потрачен"
@@ -5299,7 +5277,7 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false
           }
@@ -5411,7 +5389,7 @@
               ]
             },
             "versus": {
-              "tag": "passive_perception"
+              "expr": "@получатель.passive_perception"
             },
             "successWhen": "atLeast",
             "continueOn": "success"
@@ -5522,10 +5500,10 @@
           {
             "type": "compare",
             "value": {
-              "tag": "hit_dice_left"
+              "expr": "@hit_dice_left"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "костей хитов не осталось"
@@ -5537,7 +5515,7 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false
           },
@@ -5556,7 +5534,7 @@
             },
             "direction": "add",
             "value": {
-              "ref": "amt"
+              "expr": "@amt"
             },
             "targetModifiers": false
           }
@@ -5576,7 +5554,7 @@
             "on": "*",
             "phase": "before",
             "if": {
-              "ref": "hit.success"
+              "expr": "@hit.success"
             },
             "ask": true,
             "self": [
@@ -5667,9 +5645,11 @@
                 "type": "amount",
                 "source": "item",
                 "scale": {
-                  "times": 0.5,
+                  "times": {
+                    "expr": "0.5"
+                  },
                   "when": {
-                    "ref": "save.success"
+                    "expr": "@save.success"
                   }
                 },
                 "fixed": {
@@ -5681,7 +5661,7 @@
                 "event": "damage",
                 "args": {
                   "amount": {
-                    "ref": "dmg"
+                    "expr": "@dmg"
                   },
                   "damage_type": {
                     "const": "огонь"
@@ -5709,7 +5689,7 @@
             "on": "*",
             "phase": "before",
             "if": {
-              "ref": "hit.success"
+              "expr": "@hit.success"
             },
             "ask": true,
             "self": [
@@ -5753,10 +5733,10 @@
               {
                 "type": "compare",
                 "value": {
-                  "tag": "inspiration"
+                  "expr": "@inspiration"
                 },
                 "versus": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "breakIf": "less",
                 "note": "вдохновения нет"
@@ -5768,7 +5748,7 @@
                 },
                 "direction": "subtract",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               }
@@ -5799,10 +5779,10 @@
               {
                 "type": "compare",
                 "value": {
-                  "tag": "luck_left"
+                  "expr": "@luck_left"
                 },
                 "versus": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "breakIf": "less",
                 "note": "очки удачи кончились"
@@ -5814,7 +5794,7 @@
                 },
                 "direction": "subtract",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               }
@@ -5898,7 +5878,7 @@
                   ]
                 },
                 "versus": {
-                  "ref": "worn.carry"
+                  "expr": "@worn.carry"
                 },
                 "successWhen": "atLeast",
                 "continueOn": "success"
@@ -5988,7 +5968,7 @@
                   ]
                 },
                 "versus": {
-                  "ref": "worn.carry"
+                  "expr": "@worn.carry"
                 },
                 "successWhen": "atLeast",
                 "continueOn": "success"
@@ -6136,7 +6116,7 @@
                   ]
                 },
                 "versus": {
-                  "ref": "worn.carry"
+                  "expr": "@worn.carry"
                 },
                 "successWhen": "atLeast",
                 "continueOn": "success"
@@ -6339,7 +6319,7 @@
                   ]
                 },
                 "versus": {
-                  "ref": "worn.carry"
+                  "expr": "@worn.carry"
                 },
                 "successWhen": "atLeast",
                 "continueOn": "success"
@@ -6852,7 +6832,7 @@
                   ]
                 },
                 "versus": {
-                  "ref": "worn.carry"
+                  "expr": "@worn.carry"
                 },
                 "successWhen": "atLeast",
                 "continueOn": "success"
@@ -7577,7 +7557,7 @@
                   ]
                 },
                 "versus": {
-                  "const": 10
+                  "expr": "10"
                 },
                 "successWhen": "atLeast",
                 "continueOn": "always"
@@ -7589,11 +7569,11 @@
                 },
                 "direction": "add",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false,
                 "when": {
-                  "ref": "спас.success"
+                  "expr": "@спас.success"
                 }
               },
               {
@@ -7603,12 +7583,11 @@
                 },
                 "direction": "add",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false,
                 "when": {
-                  "ref": "спас.success",
-                  "not": true
+                  "expr": "не(@спас.success)"
                 }
               },
               {
@@ -7618,12 +7597,11 @@
                 },
                 "direction": "add",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false,
                 "when": {
-                  "ref": "спас.natural",
-                  "atMost": 1
+                  "expr": "@спас.natural <= 1"
                 }
               },
               {
@@ -7633,12 +7611,11 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false,
                 "when": {
-                  "ref": "спас.natural",
-                  "atLeast": 20
+                  "expr": "@спас.natural >= 20"
                 }
               }
             ]
@@ -7717,7 +7694,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 0
+                  "expr": "0"
                 },
                 "targetModifiers": false
               },
@@ -7728,7 +7705,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 0
+                  "expr": "0"
                 },
                 "targetModifiers": false
               }
@@ -7814,10 +7791,10 @@
               {
                 "type": "compare",
                 "value": {
-                  "tag": "relentless_left"
+                  "expr": "@relentless_left"
                 },
                 "versus": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "breakIf": "less"
               },
@@ -7828,7 +7805,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               },
@@ -7839,7 +7816,7 @@
                 },
                 "direction": "subtract",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               }
@@ -7878,7 +7855,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 0
+                  "expr": "0"
                 },
                 "targetModifiers": false
               },
@@ -7889,7 +7866,7 @@
                 },
                 "direction": "subtract",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               },
@@ -7911,7 +7888,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 0
+                  "expr": "0"
                 },
                 "targetModifiers": false
               },
@@ -7922,7 +7899,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 0
+                  "expr": "0"
                 },
                 "targetModifiers": false
               },
@@ -8187,7 +8164,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               },
@@ -8198,7 +8175,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               },
@@ -8209,7 +8186,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               },
@@ -8220,7 +8197,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               },
@@ -8231,7 +8208,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               },
@@ -8242,7 +8219,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 0
+                  "expr": "0"
                 },
                 "targetModifiers": false
               }
@@ -8270,7 +8247,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 0
+                  "expr": "0"
                 },
                 "targetModifiers": false
               }
@@ -8298,7 +8275,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               },
@@ -8309,7 +8286,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               },
@@ -8320,7 +8297,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               },
@@ -8331,7 +8308,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               },
@@ -8342,7 +8319,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 0
+                  "expr": "0"
                 },
                 "targetModifiers": false
               }
@@ -8422,10 +8399,10 @@
           {
             "type": "compare",
             "value": {
-              "tag": "turn_action"
+              "expr": "@получатель.turn_action"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "действие на этом ходу уже потрачено",
@@ -8440,7 +8417,7 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
@@ -8459,10 +8436,10 @@
           {
             "type": "compare",
             "value": {
-              "tag": "turn_bonus"
+              "expr": "@получатель.turn_bonus"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "бонусное действие на этом ходу уже потрачено",
@@ -8477,7 +8454,7 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
@@ -8496,10 +8473,10 @@
           {
             "type": "compare",
             "value": {
-              "tag": "turn_reaction"
+              "expr": "@получатель.turn_reaction"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "реакция уже потрачена",
@@ -8514,7 +8491,7 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
@@ -8533,10 +8510,10 @@
           {
             "type": "compare",
             "value": {
-              "tag": "turn_once"
+              "expr": "@получатель.turn_once"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "это бывает раз за ход",
@@ -8551,7 +8528,7 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
@@ -8570,10 +8547,10 @@
           {
             "type": "compare",
             "value": {
-              "tag": "turn_action"
+              "expr": "@получатель.turn_action"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "действие на этом ходу уже потрачено",
@@ -8588,7 +8565,7 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
@@ -8616,7 +8593,7 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
@@ -8657,7 +8634,7 @@
             },
             "direction": "add",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
@@ -8672,7 +8649,7 @@
             },
             "direction": "subtract",
             "value": {
-              "ref": "event.amount"
+              "expr": "@event.amount"
             },
             "targetModifiers": false
           },
@@ -8684,7 +8661,7 @@
             },
             "direction": "subtract",
             "value": {
-              "ref": "по_временным.overkill"
+              "expr": "@по_временным.overkill"
             },
             "targetModifiers": false
           },
@@ -8695,10 +8672,7 @@
               "const": "dead"
             },
             "when": {
-              "ref": "по_хитам.overkill",
-              "atLeast": {
-                "tag": "hp_max"
-              }
+              "expr": "@по_хитам.overkill >= @получатель.hp_max"
             }
           }
         ]
@@ -8719,16 +8693,15 @@
             "id": "есть_1",
             "type": "compare",
             "value": {
-              "tag": "slots_1"
+              "expr": "@получатель.slots_1"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "нет ячейки 1-го круга",
             "when": {
-              "ref": "event.amount",
-              "is": 1
+              "expr": "@event.amount == 1"
             }
           },
           {
@@ -8738,28 +8711,26 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
-              "ref": "event.amount",
-              "is": 1
+              "expr": "@event.amount == 1"
             }
           },
           {
             "id": "есть_2",
             "type": "compare",
             "value": {
-              "tag": "slots_2"
+              "expr": "@получатель.slots_2"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "нет ячейки 2-го круга",
             "when": {
-              "ref": "event.amount",
-              "is": 2
+              "expr": "@event.amount == 2"
             }
           },
           {
@@ -8769,28 +8740,26 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
-              "ref": "event.amount",
-              "is": 2
+              "expr": "@event.amount == 2"
             }
           },
           {
             "id": "есть_3",
             "type": "compare",
             "value": {
-              "tag": "slots_3"
+              "expr": "@получатель.slots_3"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "нет ячейки 3-го круга",
             "when": {
-              "ref": "event.amount",
-              "is": 3
+              "expr": "@event.amount == 3"
             }
           },
           {
@@ -8800,28 +8769,26 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
-              "ref": "event.amount",
-              "is": 3
+              "expr": "@event.amount == 3"
             }
           },
           {
             "id": "есть_4",
             "type": "compare",
             "value": {
-              "tag": "slots_4"
+              "expr": "@получатель.slots_4"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "нет ячейки 4-го круга",
             "when": {
-              "ref": "event.amount",
-              "is": 4
+              "expr": "@event.amount == 4"
             }
           },
           {
@@ -8831,28 +8798,26 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
-              "ref": "event.amount",
-              "is": 4
+              "expr": "@event.amount == 4"
             }
           },
           {
             "id": "есть_5",
             "type": "compare",
             "value": {
-              "tag": "slots_5"
+              "expr": "@получатель.slots_5"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "нет ячейки 5-го круга",
             "when": {
-              "ref": "event.amount",
-              "is": 5
+              "expr": "@event.amount == 5"
             }
           },
           {
@@ -8862,28 +8827,26 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
-              "ref": "event.amount",
-              "is": 5
+              "expr": "@event.amount == 5"
             }
           },
           {
             "id": "есть_6",
             "type": "compare",
             "value": {
-              "tag": "slots_6"
+              "expr": "@получатель.slots_6"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "нет ячейки 6-го круга",
             "when": {
-              "ref": "event.amount",
-              "is": 6
+              "expr": "@event.amount == 6"
             }
           },
           {
@@ -8893,28 +8856,26 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
-              "ref": "event.amount",
-              "is": 6
+              "expr": "@event.amount == 6"
             }
           },
           {
             "id": "есть_7",
             "type": "compare",
             "value": {
-              "tag": "slots_7"
+              "expr": "@получатель.slots_7"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "нет ячейки 7-го круга",
             "when": {
-              "ref": "event.amount",
-              "is": 7
+              "expr": "@event.amount == 7"
             }
           },
           {
@@ -8924,28 +8885,26 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
-              "ref": "event.amount",
-              "is": 7
+              "expr": "@event.amount == 7"
             }
           },
           {
             "id": "есть_8",
             "type": "compare",
             "value": {
-              "tag": "slots_8"
+              "expr": "@получатель.slots_8"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "нет ячейки 8-го круга",
             "when": {
-              "ref": "event.amount",
-              "is": 8
+              "expr": "@event.amount == 8"
             }
           },
           {
@@ -8955,28 +8914,26 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
-              "ref": "event.amount",
-              "is": 8
+              "expr": "@event.amount == 8"
             }
           },
           {
             "id": "есть_9",
             "type": "compare",
             "value": {
-              "tag": "slots_9"
+              "expr": "@получатель.slots_9"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "нет ячейки 9-го круга",
             "when": {
-              "ref": "event.amount",
-              "is": 9
+              "expr": "@event.amount == 9"
             }
           },
           {
@@ -8986,12 +8943,11 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
-              "ref": "event.amount",
-              "is": 9
+              "expr": "@event.amount == 9"
             }
           }
         ]
@@ -9057,18 +9013,10 @@
                 "prop": "damage_source"
               },
               "attack_with": {
-                "table": "wield",
-                "by": {
-                  "prop": "wield"
-                },
-                "column": "attack"
+                "expr": "таблица(\"wield\", @wield, \"attack\")"
               },
               "damage_with": {
-                "table": "wield",
-                "by": {
-                  "prop": "wield"
-                },
-                "column": "damage"
+                "expr": "таблица(\"wield\", @wield, \"damage\")"
               }
             }
           }

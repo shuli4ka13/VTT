@@ -14,8 +14,8 @@ const system = {
         { key: 'сколько', label: 'Сколько костей', kind: 'number' },
       ],
       steps: [
-        { id: 'н', type: 'amount', source: 'roll', dice: { param: 'кость' }, count: { param: 'сколько' } },
-        { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { ref: 'н' }, targetModifiers: false },
+        { id: 'н', type: 'amount', source: 'roll', dice: { param: 'кость' }, count: { expr: '@сколько' } },
+        { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '@н' }, targetModifiers: false },
       ],
     },
     меч: {

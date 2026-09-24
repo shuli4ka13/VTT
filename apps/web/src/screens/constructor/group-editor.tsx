@@ -18,8 +18,7 @@ const DEFAULT_KINDS = [
 
 const describeValue = (system: System, value: FieldValue): string =>
   value.kind === 'stored' ? `число ${String(value.default)}`
-    : value.kind === 'formula' ? `формула: ${formulaAsLabels(system, value.expr) || '—'}`
-      : `таблица «${value.table || '—'}»`;
+    : `формула: ${formulaAsLabels(system, value.expr) || '—'}`;
 
 export function GroupEditor({ name, system }: { name: string; system: System }) {
   const editSystem = useWorld(s => s.editSystem);

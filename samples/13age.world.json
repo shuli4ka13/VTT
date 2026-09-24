@@ -367,7 +367,7 @@
             "direction": "subtract",
             "targetModifiers": false,
             "value": {
-              "ref": "event.amount"
+              "expr": "@event.amount"
             }
           }
         ]
@@ -423,7 +423,7 @@
               "expr": "кинуть(@weapon_die, @отправитель.level * (@hit.natural >= 20 ? 2 : 1)) + @damage_with"
             },
             "when": {
-              "ref": "hit.success"
+              "expr": "@hit.success"
             }
           },
           {
@@ -431,11 +431,11 @@
             "event": "damage",
             "args": {
               "amount": {
-                "ref": "dmg"
+                "expr": "@dmg"
               }
             },
             "when": {
-              "ref": "hit.success"
+              "expr": "@hit.success"
             }
           },
           {
@@ -447,8 +447,7 @@
               }
             },
             "when": {
-              "ref": "hit.success",
-              "not": true
+              "expr": "не(@hit.success)"
             }
           }
         ],
@@ -486,7 +485,7 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "param": "to_hit"
+                "expr": "@to_hit"
               },
               "tags": [
                 "атака"
@@ -548,7 +547,7 @@
             "direction": "set",
             "targetModifiers": false,
             "value": {
-              "const": 0
+              "expr": "0"
             }
           }
         ]
@@ -573,7 +572,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               },
@@ -584,7 +583,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               },
@@ -595,7 +594,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               },
@@ -606,7 +605,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               }
@@ -634,7 +633,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 0
+                  "expr": "0"
                 },
                 "targetModifiers": false
               }
@@ -662,7 +661,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               },
@@ -673,7 +672,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               },
@@ -684,7 +683,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               }
@@ -702,10 +701,10 @@
           {
             "type": "compare",
             "value": {
-              "tag": "turn_standard"
+              "expr": "@получатель.turn_standard"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "стандартное действие на этом ходу уже потрачено",
@@ -720,7 +719,7 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
@@ -759,18 +758,10 @@
                 "prop": "weapon_die"
               },
               "attack_with": {
-                "table": "wield",
-                "by": {
-                  "prop": "wield"
-                },
-                "column": "attack"
+                "expr": "таблица(\"wield\", @wield, \"attack\")"
               },
               "damage_with": {
-                "table": "wield",
-                "by": {
-                  "prop": "wield"
-                },
-                "column": "damage"
+                "expr": "таблица(\"wield\", @wield, \"damage\")"
               }
             }
           }

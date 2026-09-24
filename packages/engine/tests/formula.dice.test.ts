@@ -16,12 +16,12 @@ const система = {
       label: 'Удар', activation: 'manual',
       params: [{ key: 'кость', label: 'Кость урона', kind: 'dice' }],
       steps: [
-        { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' } }, versus: { const: 0 } },
+        { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' } }, versus: { expr: '0' } },
         {
           id: 'урон', type: 'amount', source: 'item',
           fixed: { expr: 'кинуть(#кость, #бросок.natural >= #порог ? 2 : 1) + #сила' },
         },
-        { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { ref: 'урон' } },
+        { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@урон' } },
       ],
     },
   },

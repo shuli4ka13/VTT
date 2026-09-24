@@ -38,7 +38,7 @@ group('чей лист считает слагаемое', () => {
     const rule: any = {
       steps: [
         { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d8' }, bonus: { expr: '#сила' } },
-        { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { ref: 'урон' } },
+        { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '@урон' } },
       ],
     };
     eq(hit(rule).sheet.values.хп, 11, '20 − (4 + Сила АТАКУЮЩЕГО 5)');

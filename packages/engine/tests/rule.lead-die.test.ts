@@ -182,12 +182,12 @@ group('ведущая кость', () => {
   });
 
   group('счёт костей — ссылка: пул собирается из листа', () => {
-    const poolDef = { label: 'Пул', kind: 'die', dice: [{ count: { tag: 'pool' }, sides: 6 }] };
+    const poolDef = { label: 'Пул', kind: 'die', dice: [{ count: { expr: '@pool' }, sides: 6 }] };
 
     test('unfoldDice разрешает счёт числом, исходник не трогает', () => {
       const solved = unfoldDice(poolDef, () => 3);
       deepEq(solved.dice, [{ count: 3, sides: 6 }]);
-      deepEq(poolDef.dice, [{ count: { tag: 'pool' }, sides: 6 }], 'константа системы неизменна');
+      deepEq(poolDef.dice, [{ count: { expr: '@pool' }, sides: 6 }], 'константа системы неизменна');
     });
 
     test('без разрешателя — внятная ошибка, а не тихий мусор', () => {

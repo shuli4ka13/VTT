@@ -13,7 +13,7 @@ const withProbe = (tags: string[]) => {
   system.effects.проба = {
     label: 'Проба', activation: 'manual',
     steps: [{ type: 'emit', event: 'damage', args: {
-      amount: { const: 10 },
+      amount: { expr: '10' },
       ...Object.fromEntries(tags.map(tag => [tag.startsWith('по ') ? 'aim' : 'damage_type', { const: tag }])),
     } }],
   } as never;
@@ -57,13 +57,15 @@ group('условие шага «где у метки колонка = знач�
     ok(rowUsers(system, 'armor_pass', 'мимо брони').some(u => u.text === 'условие шага'));
     renameRow(system, 'armor_pass', 'мимо брони', 'в обход');
     eq(danglingRows(system).length, 0);
-    const шаг = system.effects.damage!.steps!.at(-1) as { when: { where: { is: string } } };
-    eq(шаг.when.where.is, 'в обход');
+    const шаг = system.effects.damage!.steps!.at(-1) as { when: { expr: string } };
+    ok(шаг.when.expr.includes('"в обход"'), шаг.when.expr);
+    ok(!шаг.when.expr.includes('мимо брони'), шаг.when.expr);
   });
 
   test('условие ждёт строку, которой нет, — висячая ссылка словами', () => {
     const system = red().system as System;
-    (system.effects.damage!.steps!.at(-1) as { when: { where: { is: string } } }).when.where.is = 'сквозь стены';
+    const шаг = system.effects.damage!.steps!.at(-1) as { when: { expr: string } };
+    шаг.when.expr = шаг.when.expr.replace('мимо брони', 'сквозь стены');
     ok(danglingRows(system).some(d => d.text.includes('условие шага ждёт «сквозь стены»')));
   });
 });

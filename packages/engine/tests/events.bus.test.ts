@@ -3,7 +3,7 @@ import { fireMoments } from '../src/events/moments.ts';
 import { subscribers, subscriberByKey, listening } from '../src/events/bus.ts';
 import type { System, Sheet } from '../src/model/types.ts';
 
-const hp = (sign: 'add' | 'subtract', n: number) => ({ type: 'apply', target: { tag: 'хиты' }, direction: sign, value: { const: n } });
+const hp = (sign: 'add' | 'subtract', n: number) => ({ type: 'apply', target: { tag: 'хиты' }, direction: sign, value: { expr: `${JSON.stringify(n)}` } });
 
 const system = {
   id: 'x', name: 'x',

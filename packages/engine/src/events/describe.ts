@@ -60,10 +60,18 @@ export function describeEntry(
   const nameLabel = (name: string): string => {
     const owned = ownerOf(name);
     if (owned) return `${nameLabel(owned.rest)} ${OWNER_WORDS[owned.owner]}`;
-    if (name.includes('.') && !system.fields.some(f => f.tag === name)) return refLabel({ ref: name }) ?? name;
+    if (name.includes('.') && !system.fields.some(f => f.tag === name)) return outputLabel(name);
     const params: { key: string; label?: string }[] = effect?.params ?? [];
     const param = params.find(p => p.key === name);
     return param ? String(param.label ?? name) : labelOf(name);
+  };
+  const outputLabel = (name: string): string => {
+    const [head, ...path] = name.split('.');
+    const source = (effect?.steps ?? []).find((step: any) => String(step.id) === head);
+    const outputs = (stepRegistry.get(String(source?.type)) as any)?.outputs as
+      { path: string; label: string }[] | undefined;
+    const found = outputs?.find(o => o.path === (path.length ? `.${path.join('.')}` : ''));
+    return found?.label ?? name;
   };
   const refLabel = (ref: any): string | null => {
     if (!ref || typeof ref !== 'object') return null;
@@ -77,14 +85,6 @@ export function describeEntry(
       return String(ref.prop);
     }
     if ('constant' in ref) return system.constants?.[String(ref.constant)]?.label ?? String(ref.constant);
-    if ('ref' in ref) {
-      const [head, ...path] = String(ref.ref).split('.');
-      const source = (effect?.steps ?? []).find((step: any) => String(step.id) === head);
-      const outputs = (stepRegistry.get(String(source?.type)) as any)?.outputs as
-        { path: string; label: string }[] | undefined;
-      const found = outputs?.find(o => o.path === (path.length ? `.${path.join('.')}` : ''));
-      return found?.label ?? String(ref.ref);
-    }
     if ('expr' in ref) {
       const exact = /^[@#]([\p{L}\p{N}_.-]+)$/u.exec(String(ref.expr).trim());
       if (exact) return nameLabel(exact[1]!);

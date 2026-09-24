@@ -16,7 +16,7 @@ describe('parseRollExpr', () => {
 
   it('чужая кость — литералом, число — числом', () => {
     expect(parseRollExpr('2к6 + 3', system))
-      .toEqual({ die: { const: '2d6' }, bonus: { const: 3 } });
+      .toEqual({ die: { const: '2d6' }, bonus: { expr: '3' } });
   });
 
   it('кость с чтением, отличным от суммы, не подменяет литерал', () => {
@@ -65,23 +65,15 @@ describe('formatRollExpr', () => {
     expect(formatRollExpr({ die: { const: '2d6' } }, system)).toBe('2к6');
   });
 
-  it('любая ссылка пишется через собаку — одинаково с формулой числа', () => {
+  it('прибавка — формула как есть', () => {
     const как = (bonus: unknown) => formatRollExpr({ die: { const: '1d20' }, bonus }, system);
-    expect(как({ param: 'attack_with' })).toBe('1к20 + @attack_with');
-    expect(как({ prop: 'вес' })).toBe('1к20 + @вес');
-    expect(как({ ref: 'hit' })).toBe('1к20 + @hit');
-    expect(как({ tag: 'сила' })).toBe('1к20 + @сила');
+    expect(как({ expr: '@attack_with' })).toBe('1к20 + @attack_with');
     expect(как({ expr: '@сила + 2' })).toBe('1к20 + @сила + 2');
   });
 
-  it('собака возвращается в ту же ссылку, а не в текст формулы', () => {
-    const asName = (name: string) => (name === 'attack_with' ? { param: name } : null);
-    expect(parseRollExpr('1к20 + @attack_with', system, null, asName).bonus)
-      .toEqual({ param: 'attack_with' });
-    expect(parseRollExpr('1к20 + @сила', system, null, asName).bonus)
-      .toEqual({ expr: '@сила' }, 'поле листа остаётся формулой');
-    expect(parseRollExpr('1к20 + @attack_with + 2', system, null, asName).bonus)
-      .toEqual({ expr: '@attack_with + 2' }, 'с математикой — формула целиком');
+  it('набранная прибавка остаётся формулой — даже одно имя', () => {
+    expect(parseRollExpr('1к20 + @attack_with', system, null).bonus).toEqual({ expr: '@attack_with' });
+    expect(parseRollExpr('1к20 + @attack_with + 2', system, null).bonus).toEqual({ expr: '@attack_with + 2' });
   });
 });
 
@@ -93,7 +85,7 @@ describe('parseAmountExpr', () => {
 
   it('без кости вся строка — величина', () => {
     expect(parseAmountExpr('#мод + 2', system)).toEqual({ die: undefined, bonus: { expr: '#мод + 2' } });
-    expect(parseAmountExpr('3', system)).toEqual({ die: undefined, bonus: { const: 3 } });
+    expect(parseAmountExpr('3', system)).toEqual({ die: undefined, bonus: { expr: '3' } });
   });
 
   it('пусто — пустая величина', () => {

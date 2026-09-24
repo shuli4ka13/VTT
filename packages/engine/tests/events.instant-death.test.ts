@@ -12,15 +12,15 @@ const sys: any = {
       label: 'Удар', activation: 'manual',
       params: [{ key: 'величина', label: 'Урон', kind: 'number' }],
       steps: [
-        { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d1' }, bonus: { param: 'величина' } },
-        { id: 'рана', type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { ref: 'урон' } },
+        { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d1' }, bonus: { expr: '@величина' } },
+        { id: 'рана', type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '@урон' } },
       ],
     },
     мгновенная_смерть: {
       label: 'Мгновенная смерть', activation: 'passive',
       on: [{ on: 'удар', steps: [
 
-        { type: 'compare', value: { ref: 'рана.overkill' }, versus: { expr: '@получатель.хп_макс' }, breakIf: 'less' },
+        { type: 'compare', value: { expr: '@рана.overkill' }, versus: { expr: '@получатель.хп_макс' }, breakIf: 'less' },
         { type: 'status', mode: 'apply', effect: { const: 'мёртв' } },
       ] }],
     },

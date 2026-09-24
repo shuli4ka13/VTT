@@ -3,7 +3,7 @@ import { exchange } from '../src/events/exchange.ts';
 import { fireLifecycle, lifecycleChanges } from '../src/events/lifecycle.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
-const add = (tag: string, n: number) => ({ type: 'apply', target: { tag }, direction: 'add', value: { const: n } });
+const add = (tag: string, n: number) => ({ type: 'apply', target: { tag }, direction: 'add', value: { expr: `${JSON.stringify(n)}` } });
 
 const system = {
   id: 'x', name: 'x',

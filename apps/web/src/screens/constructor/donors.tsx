@@ -4,6 +4,7 @@ import { Select, Empty } from '../../ui/primitives.tsx';
 import type { System, Effect } from '@vtt/schema';
 import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
 import { compile } from '@vtt/engine/formula';
+import { tablesIn } from '@vtt/engine/model/references';
 import { groupChain, subtreeNames } from './groups.ts';
 import { launchOf, LAUNCHES } from '@vtt/engine/model/effect-kinds';
 
@@ -56,9 +57,10 @@ export function copyDonorBlock(
         draft.fields.push(structuredClone(field));
         present.add(field.tag);
 
-        if (field.value.kind === 'table' && donor.tables?.[field.value.table]) {
+        for (const table of field.value.kind === 'formula' ? tablesIn(field.value.expr) : []) {
+          if (!donor.tables?.[table]) continue;
           draft.tables = draft.tables ?? {};
-          draft.tables[field.value.table] ??= structuredClone(donor.tables[field.value.table]!);
+          draft.tables[table] ??= structuredClone(donor.tables[table]!);
         }
       }
     }
@@ -135,8 +137,7 @@ function blockDeps(donor: System, group: string): string[] {
   const out: string[] = [];
   for (const field of donor.fields) {
     if ((field.group ?? 'Без блока') !== group) continue;
-    const source = field.value.kind === 'formula' ? field.value.expr
-      : field.value.kind === 'table' ? field.value.arg : '';
+    const source = field.value.kind === 'formula' ? field.value.expr : '';
     if (!source) continue;
     out.push(...depsOf(source));
   }

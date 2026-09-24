@@ -1,4 +1,6 @@
 import { rowsOf } from './tables.ts';
+import { compile } from '../formula/index.ts';
+import type { Node } from '../formula/index.ts';
 import { tagTablesOf } from './lists.ts';
 import type { System, Compendium } from './types.ts';
 import type { Where } from './references.ts';
@@ -62,20 +64,64 @@ function choiceArgs(system: System, table: string): { where: Where; args: Loose;
 const constOf = (arg: unknown): unknown =>
   (arg && typeof arg === 'object' && 'const' in (arg as Loose) ? (arg as Loose).const : undefined);
 
-function stepConditions(system: System): { where: Where; cond: Loose }[] {
-  const out: { where: Where; cond: Loose }[] = [];
-  const visit = (steps: unknown, id: string) => {
+interface StepCondition { where: Where; cond: Loose; rename: (to: unknown) => void }
+
+const quoted = (value: unknown): string => {
+  const raw = String(value);
+  return raw.includes('"') ? `'${raw}'` : `"${raw}"`;
+};
+
+function conditionsIn(source: string): { table: string; column: string; is: string; at: number; raw: string }[] {
+  let ast: Node;
+  try { ast = compile(source).ast; } catch { return []; }
+  const out: { table: string; column: string; is: string; at: number; raw: string }[] = [];
+  const walk = (node: Node): void => {
+    if (node.kind === 'Call') {
+      const [lookup, wanted] = node.args;
+      if (node.name === 'есть' && lookup?.kind === 'Call' && lookup.name === 'таблица' && wanted?.kind === 'Text'
+        && wanted.at !== undefined && wanted.raw !== undefined) {
+        const [table, , column] = lookup.args;
+        if (table?.kind === 'Text' && column?.kind === 'Text') {
+          out.push({ table: table.value, column: column.value, is: wanted.value, at: wanted.at, raw: wanted.raw });
+        }
+      }
+      node.args.forEach(walk);
+    } else if (node.kind === 'Unary') walk(node.operand);
+    else if (node.kind === 'Binary') { walk(node.left); walk(node.right); }
+    else if (node.kind === 'Conditional') { walk(node.test); walk(node.then); walk(node.otherwise); }
+  };
+  walk(ast);
+  return out;
+}
+
+function stepConditions(system: System): StepCondition[] {
+  const out: StepCondition[] = [];
+  const visit = (steps: unknown, where: (at: number) => Where) => {
     if (!Array.isArray(steps)) return;
     for (const [at, step] of steps.entries()) {
-      const s = step as Loose;
-      const cond = s.when as Loose | undefined;
-      if (cond && typeof cond === 'object' && cond.where) out.push({ where: { tab: 'effects', effect: id, step: at }, cond: cond.where as Loose });
-      visit(s.steps, id);
+      const when = (step as Loose).when as { expr?: unknown } | undefined;
+      if (!when || typeof when.expr !== 'string') continue;
+      for (const found of conditionsIn(when.expr)) {
+        out.push({
+          where: where(at),
+          cond: { table: found.table, column: found.column, is: found.is },
+          rename: to => {
+            const expr = String(when.expr);
+            when.expr = `${expr.slice(0, found.at)}${quoted(to)}${expr.slice(found.at + found.raw.length)}`;
+          },
+        });
+      }
     }
   };
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
-    visit(effect.steps, id);
-    visit(effect.self, id);
+    visit(effect.steps, at => ({ tab: 'effects', effect: id, step: at }));
+    visit(effect.self, at => ({ tab: 'effects', effect: id, step: at, part: 'self' }));
+    (effect.on ?? []).forEach((handler, index) => {
+      visit(handler.steps, at => ({ tab: 'effects', effect: id, handler: index, step: at }));
+      visit(handler.self, at => ({ tab: 'effects', effect: id, handler: index, step: at, part: 'self' }));
+    });
+    visit(effect.attach, at => ({ tab: 'effects', effect: id, step: at, part: 'attach' }));
+    visit(effect.detach, at => ({ tab: 'effects', effect: id, step: at, part: 'detach' }));
   }
   return out;
 }
@@ -229,8 +275,8 @@ export function renameRow(system: System, table: string, from: unknown, to: unkn
     const value = constOf(args[key]);
     if (holds(value, from)) args[key] = { const: swap(value, from, to) };
   }
-  for (const { cond } of stepConditions(system)) {
-    if (pointsAt(system, cond, table) && same(cond.is, from)) cond.is = to;
+  for (const { cond, rename } of stepConditions(system).reverse()) {
+    if (pointsAt(system, cond, table) && same(cond.is, from)) rename(to);
   }
   for (const field of system.fields ?? []) {
     if (field.optionsFrom !== table) continue;

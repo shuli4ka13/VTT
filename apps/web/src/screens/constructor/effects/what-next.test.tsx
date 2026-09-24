@@ -16,7 +16,7 @@ const system = {
     damage: {
       label: 'Урон',
       steps: [
-        { id: 'по_хитам', type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { ref: 'event.amount' } },
+        { id: 'по_хитам', type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '@event.amount' } },
       ],
     },
     taken_rule: {
@@ -28,11 +28,11 @@ const system = {
     },
     stone: {
       label: 'Каменная кожа', activation: 'passive',
-      modifiers: [{ kind: 'value', target: 'event:damage', op: 'mul', value: { const: 0.5 }, tags: ['рубящий'] }],
+      modifiers: [{ kind: 'value', target: 'event:damage', op: 'mul', value: { expr: '0.5' }, tags: ['рубящий'] }],
     },
     other: {
       label: 'Не сюда', activation: 'passive',
-      modifiers: [{ kind: 'value', target: 'event:healing', op: 'mul', value: { const: 2 }, tags: [] }],
+      modifiers: [{ kind: 'value', target: 'event:healing', op: 'mul', value: { expr: '2' }, tags: [] }],
     },
   },
 } as unknown as System;

@@ -3,6 +3,7 @@ import { ANY_ROLL, incomingTagOf } from '../engine/targets.ts';
 import { ownerOf } from '../engine/owners.ts';
 import type { System, Compendium, Effect, Step, Modifier, Guard } from './types.ts';
 import { compile } from '../formula/index.ts';
+import type { Node } from '../formula/index.ts';
 import { registry } from '../engine/steps/index.ts';
 import { calledOf } from '../engine/effects.ts';
 
@@ -78,6 +79,7 @@ export interface ChainScope {
   params: Set<string>;
   earlier: Set<string>;
   eventChain: boolean;
+  later?: Set<string>;
 }
 
 function slotRefs(value: unknown, slotKind: string | undefined, from: Where, scope: ChainScope, out: Reference[]): void {
@@ -107,16 +109,8 @@ function slotRefs(value: unknown, slotKind: string | undefined, from: Where, sco
     out.push({ kind: 'param', key: String(r.param), from, scope: 'chain' });
     return;
   }
-  if ('prop' in r || 'item' in r) {
-    const key = String(r.prop ?? r.item ?? '');
-    if (key) out.push({ kind: 'prop', key, from });
-    return;
-  }
-  if ('ref' in r) {
-    const head = String(r.ref).split('.')[0] ?? '';
-    if (scope.eventChain && (EVENT_RESULTS as readonly string[]).includes(head)) return;
-    if ((SEED_RESULTS as readonly string[]).includes(head)) return;
-    if (head) out.push({ kind: 'step', key: head, from, scope: 'chain' });
+  if ('prop' in r) {
+    if (r.prop) out.push({ kind: 'prop', key: String(r.prop), from });
     return;
   }
   if ('expr' in r) {
@@ -128,11 +122,29 @@ function slotRefs(value: unknown, slotKind: string | undefined, from: Where, sco
   }
 }
 
-function exprRefs(source: string, from: Where, scope: ChainScope, out: Reference[]): void {
+export const tablesIn = (source: string): string[] => {
+  let ast: Node;
+  try { ast = compile(source).ast; } catch { return []; }
+  const out: string[] = [];
+  const walk = (node: Node): void => {
+    if (node.kind === 'Call') {
+      const first = node.args[0];
+      if (node.name === 'таблица' && first?.kind === 'Text' && !out.includes(first.value)) out.push(first.value);
+      node.args.forEach(walk);
+    } else if (node.kind === 'Unary') walk(node.operand);
+    else if (node.kind === 'Binary') { walk(node.left); walk(node.right); }
+    else if (node.kind === 'Conditional') { walk(node.test); walk(node.then); walk(node.otherwise); }
+  };
+  walk(ast);
+  return out;
+};
+
+export function exprRefs(source: string, from: Where, scope: ChainScope, out: Reference[]): void {
   const text = source.trim();
   if (!text) return;
   const deps = formulaDeps(text);
   if (!deps) return;
+  for (const table of tablesIn(text)) out.push({ kind: 'table', key: table, from });
   for (const dep of deps) {
     const owned = ownerOf(dep);
     if (owned) {
@@ -143,12 +155,17 @@ function exprRefs(source: string, from: Where, scope: ChainScope, out: Reference
     }
     if (scope.earlier.has(dep) || scope.params.has(dep)) continue;
     if (scope.eventChain && (EVENT_RESULTS as readonly string[]).includes(dep)) continue;
+    if (scope.later?.has(dep)) {
+      out.push({ kind: 'step', key: dep, from, scope: 'chain' });
+      continue;
+    }
 
     const dot = dep.indexOf('.');
     if (dot > 0) {
       const head = dep.slice(0, dot);
       if (scope.earlier.has(head) || scope.params.has(head)) continue;
       if ((SEED_RESULTS as readonly string[]).includes(head)) continue;
+      if (scope.eventChain && (EVENT_RESULTS as readonly string[]).includes(head)) continue;
       out.push({ kind: 'step', key: head, from, scope: 'dotted' });
       continue;
     }
@@ -157,25 +174,17 @@ function exprRefs(source: string, from: Where, scope: ChainScope, out: Reference
 }
 
 function guardRefs(guard: Guard | undefined, from: Where, scope: ChainScope, out: Reference[]): void {
-  if (!guard) return;
-  if ('ref' in guard) {
-    const head = String(guard.ref).split('.')[0] ?? '';
-    for (const bound of [guard.atLeast, guard.atMost]) {
-      if (bound && typeof bound === 'object') out.push({ kind: 'field', key: bound.tag, from });
-    }
-    if (scope.eventChain && (EVENT_RESULTS as readonly string[]).includes(head)) return;
-    if (head) out.push({ kind: 'step', key: head, from, scope: 'chain' });
-    return;
-  }
-  exprRefs(guard.expr, from, scope, out);
+  if (guard) exprRefs(guard.expr, from, scope, out);
 }
 
 export function chainRefs(steps: Step[], whereOf: (index: number) => Where, params: Set<string>, eventChain: boolean): Reference[] {
   const out: Reference[] = [];
   const earlier = new Set<string>();
+  const ids = steps.map(step => step.id).filter((id): id is string => Boolean(id));
   steps.forEach((step, index) => {
     const from = whereOf(index);
-    const scope: ChainScope = { params, earlier: new Set(earlier), eventChain };
+    const later = new Set(ids.filter(id => !earlier.has(id)));
+    const scope: ChainScope = { params, earlier: new Set(earlier), eventChain, later };
     const mod = registry.get(step.type);
     for (const slot of (mod?.slots ?? []) as { key: string; kind?: string; refersTo?: string }[]) {
       const kind = slot.refersTo === 'effect' ? 'effectRef' : slot.kind;
@@ -228,15 +237,16 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
     if (heard.kind === 'event') out.push({ kind: 'event', key: heard.key!, from: head });
     if (heard.kind === 'effect') out.push({ kind: 'effect', key: heard.key!, from: head });
     if (heard.kind === 'field') out.push({ kind: 'field', key: heard.key!, from: head });
-    const condition = handler.if;
-    if (condition && typeof condition === 'object' && 'ref' in condition) {
+    if (handler.if) {
+      const found: Reference[] = [];
+      exprRefs(handler.if.expr, head, { params, earlier: new Set(), eventChain: heard.kind === 'event' }, found);
       const listened = heard.kind === 'effect' ? system.effects[heard.key!] : undefined;
-      const name = String(condition.ref).split('.')[0] ?? '';
-      if (listened && name && !(listened.steps ?? []).some(s => s.id === name)) {
-        out.push({ kind: 'step', key: name, from: head, scope: `listened:${heard.key}` });
+      for (const ref of found) {
+        if (ref.kind !== 'step') { out.push(ref); continue; }
+        if (listened && !(listened.steps ?? []).some(s => s.id === ref.key)) {
+          out.push({ ...ref, scope: `listened:${heard.key}` });
+        }
       }
-    } else if (condition) {
-      slotRefs(condition, undefined, head, { params, earlier: new Set(), eventChain: false }, out);
     }
     for (const claim of handler.claims ?? []) out.push({ kind: 'rollEdit', key: claim, from: head });
   });
@@ -254,10 +264,6 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
     const from: Where = { tab: 'sheet', field: field.tag };
     for (const tag of field.roll?.tags ?? []) out.push({ kind: 'roll', key: tag, from });
     if (field.value.kind === 'formula') exprRefs(field.value.expr, from, noScope, out);
-    if (field.value.kind === 'table') {
-      if (field.value.table) out.push({ kind: 'table', key: field.value.table, from });
-      exprRefs(field.value.arg, from, noScope, out);
-    }
     if (field.desk) {
       for (const ref of out) if (ref.from === from && ref.scope === 'plain') delete ref.scope;
     }
@@ -271,8 +277,8 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
       const from: Where = { tab: 'records', kind, part: 'bindings', binding: index };
       if (binding.effect) out.push({ kind: 'effect', key: binding.effect, from });
       for (const arg of Object.values(binding.args ?? {})) {
-        if (arg && typeof arg === 'object' && ('prop' in arg || 'item' in arg)) {
-          const key = String((arg as { prop?: string; item?: string }).prop ?? (arg as { item?: string }).item ?? '');
+        if (arg && typeof arg === 'object' && 'prop' in arg) {
+          const key = String(arg.prop ?? '');
           if (key) out.push({ kind: 'prop', key, from, scope: own.has(key) ? kind : 'foreign' });
         } else {
           slotRefs(arg, undefined, from, noScope, out);

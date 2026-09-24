@@ -50,10 +50,12 @@ const run = (steps, opts = {}) => {
   });
 };
 
+const viaInput = (key, kind = 'number') => ({ paramDefs: [{ key, kind }], params: { [key]: { prop: key } } });
+
 const hit = (over = {}) => ({
   id: 'hit', type: 'threshold',
   roll: { die: { constant: 'lead_die' }, bonus: { expr: '#attack_bonus' }, tags: ['атака'] },
-  versus: { tag: 'ac' },
+  versus: { expr: '@получатель.ac' },
   ...over,
 });
 
@@ -115,8 +117,8 @@ group('шаг «порог»', () => {
       },
     };
     const out = run([
-      hit({ versus: { const: 10 } }),
-      { id: 'pen', type: 'compare', value: { ref: 'hit.parts.hope' }, versus: { const: 5 } },
+      hit({ versus: { expr: '10' } }),
+      { id: 'pen', type: 'compare', value: { expr: '@hit.parts.hope' }, versus: { expr: '5' } },
     ], { sys: duality, die: queue(7, 4) });
     eq(out.results.hit.total, 17, 'сумма 11 плюс бонус 6 — total есть всегда');
     eq(out.results.hit.success, true);
@@ -124,18 +126,18 @@ group('шаг «порог»', () => {
   });
 
   test('сравнивать бросок с текстовым полем нельзя — внятная ошибка', () => {
-    throws(() => run([hit({ versus: { tag: 'race' } })], { die: queue(10) }), 'race');
+    throws(() => run([hit({ versus: { expr: '@получатель.race' } })], { die: queue(10) }), 'race');
   });
 
   test('порог без кости — ошибка при упаковке, а не в бою', () => {
-    throws(() => run([hit({ roll: { bonus: { const: 0 } } })]), 'кост');
+    throws(() => run([hit({ roll: { bonus: { expr: '0' } } })]), 'кост');
   });
 });
 
 group('шаг «величина»', () => {
   test('свой бросок: кость из записи оружия плюс бонус-выражение', () => {
-    const out = run([{ id: 'dmg', type: 'amount', source: 'roll', dice: { item: 'damage_dice' }, bonus: { expr: '#str_mod' } }],
-      { die: queue(5), props: { damage_dice: '1d8' } });
+    const out = run([{ id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'damage_dice' }, bonus: { expr: '#str_mod' } }],
+      { die: queue(5), props: { damage_dice: '1d8' }, ...viaInput('damage_dice', 'dice') });
     eq(out.results.dmg, 8, 'кость 5 плюс Сила 3');
     eq(out.trace[0].total, 8);
     deepEq(out.trace[0].rolls, [5]);
@@ -144,15 +146,15 @@ group('шаг «величина»', () => {
   test('превышение: база плюс превышение порога по имени', () => {
     const out = run([
       hit(),
-      { id: 'dmg', type: 'amount', source: 'margin', fixed: { const: 3 }, margin: { ref: 'hit.margin' } },
+      { id: 'dmg', type: 'amount', source: 'margin', fixed: { expr: '3' }, margin: { expr: '@hit.margin' } },
     ], { die: queue(10) });
     eq(out.results.dmg, 5, 'нож 3 плюс превышение 2');
     eq(out.trace[1].margin, 2, 'слагаемые видны в трассе');
   });
 
   test('фикс предмета: костей не бросали вовсе', () => {
-    const out = run([{ id: 'dmg', type: 'amount', source: 'item', fixed: { item: 'damage_flat' } }],
-      { die: queue(), props: { damage_flat: 3 } });
+    const out = run([{ id: 'dmg', type: 'amount', source: 'item', fixed: { expr: '@damage_flat' } }],
+      { die: queue(), props: { damage_flat: 3 }, ...viaInput('damage_flat') });
     eq(out.results.dmg, 3);
     deepEq(out.trace[0].rolls, [], 'очередь костей пуста — и не понадобилась');
   });
@@ -160,7 +162,7 @@ group('шаг «величина»', () => {
   test('источник требует свои слоты: без них — ошибка при упаковке', () => {
     throws(() => run([{ id: 'd', type: 'amount', source: 'roll' }]), 'кост');
     throws(() => run([{ id: 'd', type: 'amount', source: 'item' }]), 'fixed');
-    throws(() => run([{ id: 'd', type: 'amount', source: 'margin', fixed: { const: 3 } }]), 'margin');
+    throws(() => run([{ id: 'd', type: 'amount', source: 'margin', fixed: { expr: '3' } }]), 'margin');
   });
 
   test('неизвестный источник — ошибка с перечнем', () => {
@@ -170,45 +172,45 @@ group('шаг «величина»', () => {
 });
 
 group('шаг «сравнение»', () => {
-  const dmg = { id: 'dmg', type: 'amount', source: 'item', fixed: { item: 'damage_flat' } };
+  const dmg = { id: 'dmg', type: 'amount', source: 'item', fixed: { expr: '@damage_flat' } };
 
   test('выше порога: разница доступна дальше по имени', () => {
-    const out = run([dmg, { id: 'pen', type: 'compare', value: { ref: 'dmg' }, versus: { const: 5 } }],
-      { props: { damage_flat: 8 } });
+    const out = run([dmg, { id: 'pen', type: 'compare', value: { expr: '@dmg' }, versus: { expr: '5' } }],
+      { props: { damage_flat: 8 }, ...viaInput('damage_flat') });
     eq(out.stopped, null);
     eq(out.results.pen.margin, 3);
   });
 
   test('ниже порога: обрыв, и запись в журнале ДРУГАЯ, чем у порога', () => {
-    const out = run([dmg, { id: 'pen', type: 'compare', value: { ref: 'dmg' }, versus: { const: 5 } }],
-      { props: { damage_flat: 3 } });
+    const out = run([dmg, { id: 'pen', type: 'compare', value: { expr: '@dmg' }, versus: { expr: '5' } }],
+      { props: { damage_flat: 3 }, ...viaInput('damage_flat') });
     eq(out.stopped.reason, 'compare-short');
     eq(out.trace[1].margin, -2, 'трасса есть и у оборвавшего шага');
   });
 
   test('равенство при «less» проходит', () => {
-    const out = run([dmg, { id: 'pen', type: 'compare', value: { ref: 'dmg' }, versus: { const: 5 } }],
-      { props: { damage_flat: 5 } });
+    const out = run([dmg, { id: 'pen', type: 'compare', value: { expr: '@dmg' }, versus: { expr: '5' } }],
+      { props: { damage_flat: 5 }, ...viaInput('damage_flat') });
     eq(out.stopped, null);
     eq(out.results.pen.margin, 0);
   });
 
   test('равенство при «atMost» обрывает', () => {
-    const out = run([dmg, { id: 'pen', type: 'compare', value: { ref: 'dmg' }, versus: { const: 5 }, breakIf: 'atMost' }],
-      { props: { damage_flat: 5 } });
+    const out = run([dmg, { id: 'pen', type: 'compare', value: { expr: '@dmg' }, versus: { expr: '5' }, breakIf: 'atMost' }],
+      { props: { damage_flat: 5 }, ...viaInput('damage_flat') });
     eq(out.stopped.reason, 'compare-short');
   });
 
   test('неизвестное условие обрыва — ошибка', () => {
-    throws(() => run([dmg, { id: 'pen', type: 'compare', value: { ref: 'dmg' }, versus: { const: 5 }, breakIf: 'котик' }],
-      { props: { damage_flat: 5 } }), 'котик');
+    throws(() => run([dmg, { id: 'pen', type: 'compare', value: { expr: '@dmg' }, versus: { expr: '5' }, breakIf: 'котик' }],
+      { props: { damage_flat: 5 }, ...viaInput('damage_flat') }), 'котик');
   });
 });
 
 group('шаг «применить»', () => {
 
   test('вычесть: хиты падают, журнал изменений полон', () => {
-    const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { const: 8 } }]);
+    const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { expr: '8' } }]);
     deepEq(out.changes, [{ tag: 'hp_current', from: 21, to: 13 }]);
     eq(out.sheet.values.hp_current, 13);
     eq(mirra.values.hp_current, 21, 'исходный лист не тронут');
@@ -216,26 +218,26 @@ group('шаг «применить»', () => {
 
   test('нижняя граница поля держит: хиты не уходят ниже нуля', () => {
     const weak = { ...mirra, values: { ...mirra.values, hp_current: 3 } };
-    const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { const: 8 } }],
+    const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { expr: '8' } }],
       { targetSheet: weak });
     eq(out.sheet.values.hp_current, 0, 'min поля, эффект о нуле не знает');
   });
 
   test('верхняя граница-формула: лечение не выше максимума хитов', () => {
     const wounded = { ...mirra, values: { ...mirra.values, hp_current: 15 } };
-    const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'add', value: { const: 10 } }],
+    const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'add', value: { expr: '10' } }],
       { targetSheet: wounded });
     eq(out.sheet.values.hp_current, 21, '15 + 10, но max поля — «#hp_max» листа цели');
   });
 
   test('присвоить: направление «set» пишет величину как есть', () => {
-    const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'set', value: { const: 5 } }]);
+    const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'set', value: { expr: '5' } }]);
     eq(out.sheet.values.hp_current, 5);
   });
 
   test('модификаторы цели: сопротивление половинит входящее, округляя вниз', () => {
     const stony = { ...mirra, effects: [{ effectId: 'tough' }] };
-    const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { const: 9 }, targetModifiers: true }],
+    const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { expr: '9' }, targetModifiers: true }],
       { sys: TOUGH, targetSys: TOUGH, targetSheet: stony });
     eq(out.sheet.values.hp_current, 17, '21 минус floor(9/2)');
     eq(out.trace[0].incoming, 9, 'в трассе видно, что пришло…');
@@ -244,17 +246,17 @@ group('шаг «применить»', () => {
 
   test('без targetModifiers сопротивление не участвует — лечение и износ идут мимо него', () => {
     const stony = { ...mirra, effects: [{ effectId: 'tough' }] };
-    const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { const: 9 }, targetModifiers: false }],
+    const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { expr: '9' }, targetModifiers: false }],
       { sys: TOUGH, targetSys: TOUGH, targetSheet: stony });
     eq(out.sheet.values.hp_current, 12, '21 минус все 9');
   });
 
   test('в вычисляемое поле писать нельзя — его считает движок, а не эффект', () => {
-    throws(() => run([{ type: 'apply', target: { tag: 'ac' }, direction: 'subtract', value: { const: 1 } }]), 'ac');
+    throws(() => run([{ type: 'apply', target: { tag: 'ac' }, direction: 'subtract', value: { expr: '1' } }]), 'ac');
   });
 
   test('неизвестное направление — ошибка с перечнем', () => {
-    throws(() => run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'котик', value: { const: 1 } }]), 'котик');
+    throws(() => run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'котик', value: { expr: '1' } }]), 'котик');
   });
 });
 
@@ -328,9 +330,9 @@ group('линт шага — для приговора в конструктор
 
   test('применить: без мишени или величины', () => {
     const { lint } = applyStep;
-    ok(lint({ type: 'apply', value: { const: 1 } }).includes('мишен'));
+    ok(lint({ type: 'apply', value: { expr: '1' } }).includes('мишен'));
     ok(lint({ type: 'apply', target: { tag: 'hp' } }).includes('величин'));
-    eq(lint({ type: 'apply', target: { tag: 'hp' }, value: { const: 1 } }), null);
+    eq(lint({ type: 'apply', target: { tag: 'hp' }, value: { expr: '1' } }), null);
   });
 });
 

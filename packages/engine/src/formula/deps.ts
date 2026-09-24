@@ -9,6 +9,7 @@ export function dependencies(ast: Node): string[] {
     switch (node.kind) {
       case 'Number':
       case 'Text':
+      case 'Bool':
         return;
       case 'Ref':
         if (!found.includes(node.tag)) found.push(node.tag);

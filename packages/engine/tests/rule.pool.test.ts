@@ -16,7 +16,7 @@ const sys = {
     pool_die: {
       label: 'Пул',
       kind: 'die',
-      dice: [{ count: { tag: 'pool' }, sides: 6 }],
+      dice: [{ count: { expr: '@pool' }, sides: 6 }],
       read: { kind: 'count', atLeast: 5 },
     },
   },
@@ -28,8 +28,8 @@ const sys = {
 const rule = {
   steps: [{
     id: 'try', type: 'threshold',
-    roll: { die: { constant: 'pool_die' }, bonus: { const: 0 }, check: null },
-    versus: { const: 2 },
+    roll: { die: { constant: 'pool_die' }, bonus: { expr: '0' }, check: null },
+    versus: { expr: '2' },
   }],
 };
 

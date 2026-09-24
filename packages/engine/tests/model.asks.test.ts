@@ -18,8 +18,8 @@ const system = {
       ],
       steps: [
         { id: 'урон', type: 'amount', source: 'roll', dice: { param: 'кость' } },
-        { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { ref: 'урон' } },
-        { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { param: 'дистанция' } },
+        { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '@урон' } },
+        { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '@дистанция' } },
       ],
     },
   },

@@ -14,7 +14,7 @@ const system = (): System => ({
       label: 'Удар', activation: 'manual', params: [],
       steps: [
         { id: 'число', type: 'amount', source: 'roll', dice: { constant: 'к6' } },
-        { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { ref: 'число' } },
+        { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@число' } },
       ],
     },
     щит: { label: 'Щит', activation: 'passive', modifiers: [] },

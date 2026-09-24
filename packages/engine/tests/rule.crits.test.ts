@@ -26,10 +26,10 @@ const rule: any = {
   steps: [
     {
       id: 'roll', type: 'threshold',
-      roll: { die: { constant: 'пул' }, bonus: { const: 0 }, tags: ['проверка'] },
-      versus: { const: 4 },
+      roll: { die: { constant: 'пул' }, bonus: { expr: '0' }, tags: ['проверка'] },
+      versus: { expr: '4' },
     },
-    { id: 'крит', type: 'compare', value: { ref: 'roll.atMax' }, versus: { const: 2 }, breakIf: 'less' },
+    { id: 'крит', type: 'compare', value: { expr: '@roll.atMax' }, versus: { expr: '2' }, breakIf: 'less' },
   ],
 };
 

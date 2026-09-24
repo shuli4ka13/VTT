@@ -22,19 +22,13 @@ const checksOf = (system: System) => Object.entries(system.effects ?? {}).flatMa
   return steps.filter(s => s.type === 'threshold').map(step => ({ id, effect, earlier, step }));
 });
 
-const asExpr = (ref: Loose) => {
-  if (ref && typeof ref === 'object' && 'ref' in ref && String(ref.ref).includes('.')) return { expr: `@${ref.ref}` };
-  const field = /^@получатель\.([\p{L}\p{N}_]+)$/u.exec(String(ref?.expr ?? ''));
-  return field ? { tag: field[1] } : ref;
-};
-
 const lean = (step: Loose) => ({
   roll: { die: step.roll?.die, ...(step.roll?.bonus ? { bonus: step.roll.bonus } : {}), tags: step.roll?.tags ?? [] },
   ...(step.side === 'target' ? { side: 'target' } : {}),
   successWhen: step.successWhen ?? 'atLeast',
   versus: step.versus?.roll
     ? { roll: { die: step.versus.roll.die, ...(step.versus.roll.bonus ? { bonus: step.versus.roll.bonus } : {}), ...(step.versus.roll.tags?.length ? { tags: step.versus.roll.tags } : {}) } }
-    : asExpr(step.versus),
+    : step.versus,
 });
 
 const parsedLean = (parsed: Loose) => ({
@@ -66,9 +60,9 @@ describe('проверка одной формулой', () => {
 
   it('атака: кость, метки, прибавка и поле получателя', () => {
     expect(parseCheck('кинуть(@lead, @атака, @ловкость) + 2 >= @получатель.ac', system)).toEqual({
-      roll: { die: { constant: 'lead' }, bonus: { const: 2 }, tags: ['атака', 'ловкость'] },
+      roll: { die: { constant: 'lead' }, bonus: { expr: '2' }, tags: ['атака', 'ловкость'] },
       successWhen: 'atLeast',
-      versus: { tag: 'ac' },
+      versus: { expr: '@получатель.ac' },
     });
   });
 
@@ -81,7 +75,7 @@ describe('проверка одной формулой', () => {
   it('встречный бросок справа', () => {
     expect(parseCheck('кинуть(@lead) > кинуть(@получатель.lead, @атака) + 1', system)).toMatchObject({
       successWhen: 'over',
-      versus: { roll: { die: { constant: 'lead' }, bonus: { const: 1 }, tags: ['атака'] } },
+      versus: { roll: { die: { constant: 'lead' }, bonus: { expr: '1' }, tags: ['атака'] } },
     });
   });
 
@@ -97,7 +91,7 @@ describe('проверка одной формулой', () => {
     expect(parseCheck('кинуть(@lead, @атака, @чем) >= 10', system, asName)).toMatchObject({
       roll: { tags: ['атака', { param: 'чем' }] },
     });
-    expect(formatCheck({ roll: { die: { constant: 'lead' }, tags: ['атака', { param: 'чем' }] }, versus: { const: 10 } }))
+    expect(formatCheck({ roll: { die: { constant: 'lead' }, tags: ['атака', { param: 'чем' }] }, versus: { expr: '10' } }))
       .toBe('кинуть(@lead, @атака, @чем) >= 10');
   });
 });

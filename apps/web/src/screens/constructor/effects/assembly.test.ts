@@ -58,7 +58,7 @@ describe('собранное шагами конструктора работа�
     fill(id, 1, step => {
       step.target = { tag: 'хиты' };
       step.direction = 'subtract';
-      step.value = { ref: `${first.id}.overkill` };
+      step.value = { expr: `@${first.id}.overkill` };
     });
 
     const system = useWorld.getState().system;
@@ -70,7 +70,7 @@ describe('собранное шагами конструктора работа�
     expect(target.values.хиты).toBe(17);
   });
 
-  it('крит по «выпало 20 на костях»: условие — не формула, а сравнение числа', () => {
+  it('крит по «выпало 20 на костях»: условие — сравнение числа формулой', () => {
     const id = newManual();
     const check = addStep(id, 'check');
     fill(id, 0, step => {
@@ -81,13 +81,13 @@ describe('собранное шагами конструктора работа�
     fill(id, 1, step => {
       step.target = { tag: 'хиты' };
       step.direction = 'subtract';
-      step.value = { const: 6 };
-      step.when = { ref: `${check.id}.natural`, atLeast: 20 };
+      step.value = { expr: '6' };
+      step.when = { expr: `@${check.id}.natural >= 20` };
     });
 
     const system = useWorld.getState().system;
     expect(errorsOf(lintSystem(system))).toEqual([]);
-    expect(JSON.stringify(system.effects[id]!.steps![1]!.when)).not.toContain('expr');
+    expect(system.effects[id]!.steps![1]!.when).toEqual({ expr: `@${check.id}.natural >= 20` });
 
     expect(played(system, id, { хиты: 20, броня: 10 }, 'max').sheets.find(s => s.id === 'б')!.values.хиты).toBe(14);
     expect(played(system, id, { хиты: 20, броня: 1 }, 'min').sheets.find(s => s.id === 'б')!.values.хиты).toBe(20);
@@ -102,7 +102,7 @@ describe('собранное шагами конструктора работа�
     fill(id, 0, step => {
       step.type = 'emit';
       step.event = made.key;
-      step.args = { amount: { const: 7 } };
+      step.args = { amount: { expr: '7' } };
       delete step.target;
       delete step.direction;
     });

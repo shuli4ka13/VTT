@@ -21,12 +21,19 @@ import { effectiveDefault, sameValue } from './groups.ts';
 import { blockTree, BlockBranches } from './block-tree.tsx';
 import type { Field as FieldModel, FieldValue, System } from '@vtt/schema';
 import { RollTagsPick } from './roll-tags-pick.tsx';
+import { tableCallOf, writeTableCall } from '@vtt/engine/model/amounts';
+import type { TableCall } from '@vtt/engine/model/amounts';
 
 const KINDS = [
   ['stored', 'вводит игрок'],
   ['formula', 'считается формулой'],
   ['table', 'берётся из таблицы'],
 ] as const;
+
+type ValueMode = typeof KINDS[number][0];
+
+const modeOf = (value: FieldValue): ValueMode =>
+  (value.kind === 'formula' && tableCallOf(value.expr) ? 'table' : value.kind);
 
 const TYPES = [
   ['number', 'число'],
@@ -114,11 +121,15 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
 
   const edit = (change: (draft: FieldModel) => void) => editField(field.tag, change);
 
-  const setKind = (kind: FieldValue['kind']) => edit(draft => {
-
+  const setKind = (kind: ValueMode) => edit(draft => {
     draft.value = kind === 'stored' ? { kind: 'stored', type: 'number', default: 0 }
       : kind === 'formula' ? { kind: 'formula', expr: '' }
-        : { kind: 'table', table: '', arg: '' };
+        : { kind: 'formula', expr: writeTableCall({ table: Object.keys(system.tables ?? {})[0] ?? '', arg: '', column: null }) };
+  });
+  const lookup = field.value.kind === 'formula' ? tableCallOf(field.value.expr) : null;
+  const setLookup = (change: Partial<TableCall>) => edit(draft => {
+    const now = draft.value.kind === 'formula' ? tableCallOf(draft.value.expr) : null;
+    if (now) draft.value = { kind: 'formula', expr: writeTableCall({ ...now, ...change }) };
   });
 
   const usage = useUsage();
@@ -231,7 +242,7 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
           ) : null}
 
           <Field label="Откуда значение">
-            <Select value={field.value.kind} options={KINDS} onChange={setKind} />
+            <Select value={modeOf(field.value)} options={KINDS} onChange={setKind} />
           </Field>
         </div>
         {follows ? (
@@ -348,7 +359,7 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
         </Card>
       ) : null}
 
-      {field.value.kind === 'formula' ? (
+      {field.value.kind === 'formula' && !lookup ? (
         <Card>
           <CardHead title="Значение считает движок" />
           <Field label="Правило">
@@ -363,29 +374,38 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
         </Card>
       ) : null}
 
-      {field.value.kind === 'table' ? (
+      {lookup ? (
         <Card>
           <CardHead title="Значение берётся из таблицы" />
           <div className="row">
-            <Field label="Таблица" needed={!field.value.table}>
+            <Field label="Таблица" needed={!lookup.table}>
               <Select
-                value={field.value.table}
+                value={lookup.table}
                 options={[['', '— какая таблица —'], ...Object.entries(system.tables ?? {})
                   .map(([key, table]) => [key, table.label ?? key] as const)] as never}
-                onChange={next => edit(draft => { if (draft.value.kind === 'table') draft.value.table = next; })}
+                onChange={next => setLookup({ table: next, column: null })}
               />
             </Field>
+            {(system.tables?.[lookup.table]?.columns ?? []).length > 1 ? (
+              <Field label="Колонка">
+                <Select
+                  value={lookup.column ?? 'value'}
+                  options={(system.tables?.[lookup.table]?.columns ?? []).map(c => [c.key, c.label || c.key] as const) as never}
+                  onChange={next => setLookup({ column: next === 'value' ? null : next })}
+                />
+              </Field>
+            ) : null}
           </div>
-          <Field label="Аргумент" needed={!field.value.arg}>
+          <Field label="По чему искать строку" needed={!lookup.arg.trim()}>
             <FormulaInput
-              where={`${field.label || field.tag} · аргумент таблицы`}
+              where={`${field.label || field.tag} · по чему искать`}
               system={system}
-              value={field.value.arg}
-              onChange={arg => edit(draft => { if (draft.value.kind === 'table') draft.value.arg = arg; })}
+              value={lookup.arg}
+              onChange={arg => setLookup({ arg })}
               placeholder="например: @уровень"
             />
           </Field>
-          <LiveValue system={system} compendium={compendium} tag={field.tag} source={field.value.arg} />
+          <LiveValue system={system} compendium={compendium} tag={field.tag} source={field.value.kind === 'formula' ? field.value.expr : ''} />
         </Card>
       ) : null}
 
@@ -443,10 +463,12 @@ const storedWords = (system: System, field: FieldModel): string => {
   return `вводит игрок · ${TYPE_WORDS[value.type] ?? value.type}${shape ? ` · ${shape}` : ''}`;
 };
 
-const metaOf = (system: System, value: FieldValue, field?: FieldModel) =>
-  value.kind === 'stored' ? (field ? storedWords(system, field) : `вводит игрок · ${TYPE_WORDS[value.type] ?? value.type}`)
-    : value.kind === 'formula' ? (value.expr ? `= ${formulaAsLabels(system, value.expr)}` : '= формула не дописана')
-      : `= таблица «${system.tables?.[value.table]?.label || value.table || '—'}»`;
+const metaOf = (system: System, value: FieldValue, field?: FieldModel) => {
+  if (value.kind === 'stored') return field ? storedWords(system, field) : `вводит игрок · ${TYPE_WORDS[value.type] ?? value.type}`;
+  const lookup = tableCallOf(value.expr);
+  if (lookup) return `= таблица «${system.tables?.[lookup.table]?.label || lookup.table || '—'}»`;
+  return value.expr ? `= ${formulaAsLabels(system, value.expr)}` : '= формула не дописана';
+};
 
 export function boundProblem(bound: number | string | undefined, system: System): string | undefined {
   if (bound === undefined || typeof bound === 'number') return undefined;

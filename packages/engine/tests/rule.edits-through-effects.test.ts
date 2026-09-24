@@ -31,8 +31,8 @@ const sheet = (effects: string[]) => ({ id: 'герой', values: {}, effects: e
 const rule = {
   steps: [{
     id: 'try', type: 'threshold',
-    roll: { die: { constant: 'кость' }, bonus: { const: 0 }, tags: ['проверка'] },
-    versus: { const: 8 },
+    roll: { die: { constant: 'кость' }, bonus: { expr: '0' }, tags: ['проверка'] },
+    versus: { expr: '8' },
   }],
 };
 
@@ -173,8 +173,8 @@ group('переворот к100 доезжает через эффект — п�
   const under = {
     steps: [{
       id: 'try', type: 'threshold',
-      roll: { die: { constant: 'сотня' }, bonus: { const: 0 }, tags: ['проверка'] },
-      versus: { const: 45 }, successWhen: 'notOver',
+      roll: { die: { constant: 'сотня' }, bonus: { expr: '0' }, tags: ['проверка'] },
+      versus: { expr: '45' }, successWhen: 'notOver',
     }],
   };
   const play = (s: any, sh: any, ...dice: number[]) => {

@@ -1,4 +1,4 @@
-import { packRef, resolveNumber } from '../refs.ts';
+import { packRef, resolveNumber, lonelyField } from '../refs.ts';
 import { EngineError } from '../errors.ts';
 import type { StepData, StepContext } from './index.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
@@ -37,9 +37,13 @@ export function pack(step: StepData, ctx: StepContext) {
     throw new EngineError(
       `${ctx.owner || 'правило'}: неизвестное условие обрыва «${breakIf}» — умею: ${Object.keys(BREAKS).join(', ')}`);
   }
+  const of = lonelyField(step.value);
+  const against = lonelyField(step.versus);
   return {
     value: packRef(step.value, ctx),
     versus: packRef(step.versus, ctx),
+    ...(of ? { of } : {}),
+    ...(against ? { against } : {}),
     breakIf,
     ...(typeof step.note === 'string' && step.note.trim() ? { note: step.note.trim() } : {}),
   };
@@ -55,10 +59,8 @@ export function resolve(step: StepData, ctx: StepContext) {
     value: { margin, value, versus },
     trace: {
       value,
-      ...(step.value && typeof step.value === 'object' && 'tag' in step.value ? { of: step.value.tag } : {}),
-      versus: step.versus && typeof step.versus === 'object' && 'tag' in step.versus
-        ? { tag: step.versus.tag, value: versus }
-        : { value: versus },
+      ...(step.of ? { of: step.of } : {}),
+      versus: step.against ? { tag: step.against, value: versus } : { value: versus },
       margin, passed: !broke,
     },
     break: broke ? { reason: 'compare-short', ...(step.note ? { note: String(step.note) } : {}) } : null,

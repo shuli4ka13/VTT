@@ -24,13 +24,13 @@ const damageArgs = (amount: unknown, tags: string[]) => ({
 const strike = (id: string, label: string, amount: number, tags: string[]) => ({
   label, activation: 'manual',
   steps: [
-    { id: 'n', type: 'amount', source: 'item', fixed: { const: amount } },
-    { type: 'emit', event: 'урон', args: damageArgs({ ref: 'n' }, tags) },
+    { id: 'n', type: 'amount', source: 'item', fixed: { expr: `${JSON.stringify(amount)}` } },
+    { type: 'emit', event: 'урон', args: damageArgs({ expr: '@n' }, tags) },
   ],
 });
 
 const world = (extraEffects: Record<string, unknown> = {}, receive: unknown[] | undefined = [
-  { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { ref: 'event.amount' }, targetModifiers: false },
+  { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '@event.amount' }, targetModifiers: false },
 ]) => ({
   id: 'вызовы',
   fields: [{ tag: 'хп', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20, min: 0 } }],
@@ -136,7 +136,7 @@ group('сопротивления по тегам', () => {
 
   test('старое сопротивление на поле продолжает работать, если приём его учитывает', () => {
     const sys = world({ камень: resist.effects.камень }, [
-      { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { ref: 'event.amount' }, targetModifiers: true },
+      { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '@event.amount' }, targetModifiers: true },
     ]);
     eq(hit(sys, 'удар', foe(['камень'])).sheet.values.хп, 16);
   });
@@ -146,11 +146,11 @@ group('реакции слушают слово, а не имя эффекта',
   const spiky = world({
     шипы: {
       label: 'Шипы', activation: 'passive', duration: { kind: 'permanent' },
-      on: [{ on: 'event:урон', to: 'other', if: null, steps: [{ type: 'emit', event: 'урон', args: damageArgs({ ref: 'event.amount' }, ['колющий']) }] }],
+      on: [{ on: 'event:урон', to: 'other', if: null, steps: [{ type: 'emit', event: 'урон', args: damageArgs({ expr: '@event.amount' }, ['колющий']) }] }],
     },
     сторож: {
       label: 'Сторож', activation: 'passive', duration: { kind: 'permanent' },
-      on: [{ on: 'event:тревога', to: 'other', steps: [{ type: 'apply', target: { tag: 'хп' }, direction: 'add', value: { const: 1 } }] }],
+      on: [{ on: 'event:тревога', to: 'other', steps: [{ type: 'apply', target: { tag: 'хп' }, direction: 'add', value: { expr: '1' } }] }],
     },
   });
 

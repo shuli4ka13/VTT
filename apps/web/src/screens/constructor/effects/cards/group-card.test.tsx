@@ -18,7 +18,7 @@ const attackSteps = () => [
     roll: { die: { constant: 'lead' } },
   },
   { id: 'n', type: 'amount', source: 'roll' },
-  { type: 'apply', direction: 'subtract', targetModifiers: true, value: { ref: 'n' } },
+  { type: 'apply', direction: 'subtract', targetModifiers: true, value: { expr: '@n' } },
 ] as unknown as Step[];
 
 describe('GroupCard', () => {
@@ -39,7 +39,7 @@ describe('GroupCard', () => {
   it('выражение ложится в «применить», а кость — в величину под своим именем', () => {
     const steps = [
       { id: 'n', type: 'amount', source: 'roll' },
-      { type: 'apply', target: { tag: 'armor' }, direction: 'set', value: { ref: 'n' } },
+      { type: 'apply', target: { tag: 'armor' }, direction: 'set', value: { expr: '@n' } },
     ] as unknown as Step[];
     const group = groupSteps(steps)[0]!;
     const amount = steps[0] as any;
@@ -108,7 +108,7 @@ describe('GroupCard: условие выполнения шага', () => {
   const earlier = [{ id: 'hit', type: 'threshold', at: 1, title: 'Проверка' }];
 
   it('когда выше есть проверка с исходом да/нет, у шага появляется «Делать этот шаг»', () => {
-    const steps = [{ type: 'apply', direction: 'subtract', targetModifiers: true, value: { const: 4 } }] as unknown as Step[];
+    const steps = [{ type: 'apply', direction: 'subtract', targetModifiers: true, value: { expr: '4' } }] as unknown as Step[];
     const group = groupSteps(steps)[0]!;
     const apply = steps[0] as any;
     render(<GroupCard group={group} position={2} system={system} effect={effect}
@@ -117,7 +117,7 @@ describe('GroupCard: условие выполнения шага', () => {
     const selects = [...document.querySelectorAll('select')] as HTMLSelectElement[];
     const picker = selects.find(el => [...el.options].some(o => o.value === 'hit.success'))!;
     fireEvent.change(picker, { target: { value: 'hit.success' } });
-    expect(apply.when).toEqual({ ref: 'hit.success' });
+    expect(apply.when).toEqual({ expr: '@hit.success' });
   });
 
   it('без проверок выше секции условия нет', () => {
@@ -137,7 +137,7 @@ describe('GroupCard: изменение как вызов', () => {
   it('где есть вызываемый эффект, у изменения появляется третий режим, переводящий шаг в emit', () => {
     const steps = [
       { id: 'n', type: 'amount', source: 'roll' },
-      { type: 'apply', direction: 'subtract', targetModifiers: true, value: { ref: 'n' } },
+      { type: 'apply', direction: 'subtract', targetModifiers: true, value: { expr: '@n' } },
     ] as unknown as Step[];
     const group = groupSteps(steps)[0]!;
     const apply = steps[1] as any;
@@ -147,13 +147,13 @@ describe('GroupCard: изменение как вызов', () => {
     fireEvent.click(screen.getByText('вызов'));
     expect(apply.type).toBe('emit');
     expect(apply.event).toBe('damage');
-    expect(apply.args).toEqual({ amount: { ref: 'n' } });
+    expect(apply.args).toEqual({ amount: { expr: '@n' } });
   });
 
   it('счёт и вызов — два шага, у вызова видно, что уходит', () => {
     const steps = [
       { id: 'n', type: 'amount', source: 'roll' },
-      { type: 'emit', event: 'damage', args: { amount: { ref: 'n' } } },
+      { type: 'emit', event: 'damage', args: { amount: { expr: '@n' } } },
     ] as unknown as Step[];
     const cards = groupSteps(steps);
     expect(cards.map(c => c.kind), 'число больше не прячется внутри вызова').toEqual(['number', 'change']);
@@ -177,7 +177,7 @@ describe('GroupCard: изменение как вызов', () => {
 describe('GroupCard: величина из записи', () => {
   const steps = () => [
     { id: 'n', type: 'amount', source: 'roll', dice: { param: 'кость_урона' } },
-    { type: 'apply', target: { tag: 'armor' }, direction: 'subtract', value: { ref: 'n' } },
+    { type: 'apply', target: { tag: 'armor' }, direction: 'subtract', value: { expr: '@n' } },
   ] as unknown as Step[];
   const withParam = { params: [{ key: 'кость_урона', label: 'Кость урона', kind: 'dice' }] } as unknown as Effect;
 
@@ -220,7 +220,7 @@ const checkCell = (): HTMLElement => {
 describe('GroupCard: проверка одной формулой', () => {
   const checkSteps = () => [{
     type: 'threshold', successWhen: 'atLeast', continueOn: 'success',
-    roll: { die: { constant: 'lead' } }, versus: { const: 10 },
+    roll: { die: { constant: 'lead' } }, versus: { expr: '10' },
   }] as unknown as Step[];
 
   const typed = (tail: string) => {
@@ -248,20 +248,20 @@ describe('GroupCard: проверка одной формулой', () => {
 
   it('правка строки раскладывается по частям проверки', () => {
     const { step } = typed(') + 2 >= @получатель.armor');
-    expect(step.roll).toEqual({ die: { constant: 'lead' }, bonus: { const: 2 } });
-    expect(step.versus).toEqual({ tag: 'armor' });
+    expect(step.roll).toEqual({ die: { constant: 'lead' }, bonus: { expr: '2' } });
+    expect(step.versus).toEqual({ expr: '@получатель.armor' });
     expect(step.successWhen).toBe('atLeast');
   });
 
   it('справа встречный бросок', () => {
     const { step } = typed(') > кинуть(1к20) + 1');
     expect(step.successWhen).toBe('over');
-    expect(step.versus).toEqual({ roll: { die: { constant: 'lead' }, bonus: { const: 1 } } });
+    expect(step.versus).toEqual({ roll: { die: { constant: 'lead' }, bonus: { expr: '1' } } });
   });
 
   it('проверка без сравнения не уходит в данные, а показывается ошибкой', () => {
     const { step, line } = typed(') + 2');
-    expect(step.versus).toEqual({ const: 10 });
+    expect(step.versus).toEqual({ expr: '10' });
     expect(line.querySelector('.field__error')).toBeTruthy();
   });
 });
@@ -269,7 +269,7 @@ describe('GroupCard: проверка одной формулой', () => {
 describe('GroupCard: присланное число по слагаемым', () => {
   const steps = () => [
     { id: 'n', type: 'amount', source: 'roll', dice: { param: 'кость_урона' }, bonus: { expr: '@armor' } },
-    { type: 'apply', target: { tag: 'armor' }, direction: 'subtract', value: { ref: 'n' } },
+    { type: 'apply', target: { tag: 'armor' }, direction: 'subtract', value: { expr: '@n' } },
   ] as unknown as Step[];
   const withParam = { params: [{ key: 'кость_урона', label: 'Кость урона', kind: 'dice' }] } as unknown as Effect;
 
@@ -374,7 +374,7 @@ describe('GroupCard: изменение само заводит число', () 
 
   it('новая формула изменения сразу пишет поле получателя', () => {
     const steps = [
-      { type: 'apply', target: { tag: 'armor' }, direction: 'subtract', value: { const: 1 } },
+      { type: 'apply', target: { tag: 'armor' }, direction: 'subtract', value: { expr: '1' } },
     ] as unknown as Step[];
     const { line } = mount(steps);
     const value = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;

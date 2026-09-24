@@ -78,25 +78,29 @@ group('структурные ссылки', () => {
     });
 
     test('свойство предмета читается из записи-источника', () => {
-      deepEq(packRef({ item: 'damage_flat' }, sender()), { const: 3 });
+      deepEq(packRef({ prop: 'damage_flat' }, sender()), { const: 3 });
     });
 
     test('ссылка на предмет без предмета-источника — внятная ошибка при упаковке', () => {
       const ctx = { ...sender(), props: null };
-      const err = throws(() => packRef({ item: 'damage_flat' }, ctx), 'damage_flat');
+      const err = throws(() => packRef({ prop: 'damage_flat' }, ctx), 'damage_flat');
       eq(err.message.includes('эффект «Тестовый»'), true);
     });
 
     test('свойство, которого запись не заполнила, — ошибка, а не undefined в рантайме', () => {
-      throws(() => packRef({ item: 'котик' }, sender()), 'котик');
+      throws(() => packRef({ prop: 'котик' }, sender()), 'котик');
     });
 
     test('тег цели проносится нетронутым', () => {
       deepEq(packRef({ tag: 'hp_max' }, sender()), { tag: 'hp_max' });
     });
 
-    test('ссылка на результат шага проносится нетронутой: результаты рождаются у цели', () => {
-      deepEq(packRef({ ref: 'hit.margin' }, sender()), { ref: 'hit.margin' });
+    test('ссылка на результат шага откладывается: результаты рождаются у цели', () => {
+      deepEq(packRef({ expr: '@hit.margin' }, { ...sender(), stepIds: new Set(['hit']) }), { expr: '@hit.margin', later: true });
+    });
+
+    test('результат шага целиком — тоже потом, даже без точки', () => {
+      deepEq(packRef({ expr: '@урон * 2' }, { ...sender(), stepIds: new Set(['урон']) }), { expr: '@урон * 2', later: true });
     });
 
     test('ссылка неизвестной формы — ошибка со списком форм', () => {
@@ -113,16 +117,16 @@ group('структурные ссылки', () => {
 
     test('необязательное свойство предмета без предмета — пустота, не ошибка', () => {
       const ctx = { ...sender(), props: null };
-      deepEq(packRef({ item: 'damage_flat', optional: true }, ctx), { const: null });
+      deepEq(packRef({ prop: 'damage_flat', optional: true }, ctx), { const: null });
     });
 
     test('незаполненное необязательное свойство предмета — пустота', () => {
-      deepEq(packRef({ item: 'котик', optional: true }, sender()), { const: null });
+      deepEq(packRef({ prop: 'котик', optional: true }, sender()), { const: null });
     });
 
     test('но БЕЗ пометки те же пустоты остаются ошибками', () => {
       throws(() => packRef({ param: 'flat' }, { ...sender(), params: {} }), 'flat');
-      throws(() => packRef({ item: 'damage_flat' }, { ...sender(), props: null }), 'damage_flat');
+      throws(() => packRef({ prop: 'damage_flat' }, { ...sender(), props: null }), 'damage_flat');
     });
   });
 
@@ -141,12 +145,12 @@ group('структурные ссылки', () => {
     });
 
     test('ссылка на результат шага идёт по пути через точку', () => {
-      eq(resolveRef({ ref: 'hit.margin' }, target()), 2);
-      eq(resolveRef({ ref: 'hit.dice.kept' }, target()), 10);
+      eq(resolveRef({ expr: '@hit.margin', later: true }, target()), 2);
+      eq(resolveRef({ expr: '@hit.dice.kept', later: true }, target()), 10);
     });
 
     test('ссылка на шаг, которого не было, — ошибка с именем шага', () => {
-      throws(() => resolveRef({ ref: 'котик.margin' }, target()), 'котик');
+      throws(() => resolveRef({ expr: '@котик.margin', later: true }, target()), 'котик');
     });
 
     test('неупакованный параметр в конверте — подделка, внятная ошибка', () => {
@@ -159,7 +163,7 @@ group('структурные ссылки', () => {
 
     test('resolveNumber сторожит нечисло', () => {
       eq(resolveNumber({ const: 7 }, target(), 'урон'), 7);
-      throws(() => resolveNumber({ tag: 'race' }, target(), 'урон'), 'race');
+      throws(() => resolveNumber({ expr: '@получатель.race', of: 'target' }, target(), 'урон'), 'race');
     });
   });
 });

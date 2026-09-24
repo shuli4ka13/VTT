@@ -23,35 +23,35 @@ const run = (steps: object[], die: number) => {
 };
 
 group('условие шага по числу и степени', () => {
-  const hit = { id: 'hit', type: 'threshold', roll: { die: { constant: 'd20' }, bonus: { const: 5 } }, versus: { const: 1 } };
+  const hit = { id: 'hit', type: 'threshold', roll: { die: { constant: 'd20' }, bonus: { expr: '5' } }, versus: { expr: '1' } };
 
   test('«выпало на костях» — без прибавок: крит при natural ≥ 20', () => {
-    const crit = { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { const: 7 }, when: { ref: 'hit.natural', atLeast: 20 } };
+    const crit = { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '7' }, when: { expr: '@hit.natural >= 20' } };
     eq(run([hit, crit], 20).sheet.values.hp, 3);
     eq(run([hit, crit], 15).sheet.values.hp, 10, 'итог 15+5=20, но на костях 15 — не крит');
   });
 
   test('atMost и оба края', () => {
-    const low = { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { const: 1 }, when: { ref: 'hit.natural', atMost: 1 } };
+    const low = { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '1' }, when: { expr: '@hit.natural <= 1' } };
     eq(run([hit, low], 1).sheet.values.hp, 9);
     eq(run([hit, low], 2).sheet.values.hp, 10);
-    const mid = { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { const: 1 }, when: { ref: 'hit.natural', atLeast: 5, atMost: 10 } };
+    const mid = { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '1' }, when: { expr: 'все(@hit.natural >= 5, @hit.natural <= 10)' } };
     eq(run([hit, mid], 7).sheet.values.hp, 9);
     eq(run([hit, mid], 11).sheet.values.hp, 10);
   });
 
   test('«has» сравнивает степень по имени, «not» переворачивает', () => {
     const scaled = { ...hit, degrees: { table: 'levels', of: 'total' } };
-    const onWin = { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { const: 2 }, when: { ref: 'hit.degree', has: 'успех' } };
+    const onWin = { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '2' }, when: { expr: 'есть(@hit.degree, "успех")' } };
     eq(run([scaled, onWin], 10).sheet.values.hp, 8);
     eq(run([scaled, onWin], 2).sheet.values.hp, 10);
-    const unlessWin = { ...onWin, when: { ...onWin.when, not: true } };
+    const unlessWin = { ...onWin, when: { expr: 'не(есть(@hit.degree, "успех"))' } };
     eq(run([scaled, unlessWin], 2).sheet.values.hp, 8);
   });
 
   test('число против не-числа — внятная ошибка', () => {
-    const bad = { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { const: 1 }, when: { ref: 'hit.success', atLeast: 1 } };
-    throws(() => run([hit, bad], 10), 'сравнивает с числом');
+    const bad = { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '1' }, when: { expr: '@hit.success >= 1' } };
+    throws(() => run([hit, bad], 10), 'должен быть числом');
   });
 });
 

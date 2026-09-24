@@ -1,6 +1,7 @@
 import { group, test, eq, ok } from './harness.ts';
 import { slots } from '../src/engine/steps/threshold.ts';
 import { packRule, resolveRule } from '../src/engine/rule.ts';
+import { newPass } from '../src/engine/calc.ts';
 
 const queue = (...values) => { let i = 0; return () => values[i++] ?? 1; };
 
@@ -16,13 +17,13 @@ const run = (successWhen, rolled, versus, extra = {}) => {
     steps: [{
       id: 'try', type: 'threshold',
       ...(successWhen ? { successWhen } : {}),
-      roll: { die: { constant: 'lead_die' }, bonus: { const: 0 }, check: null },
-      versus: { const: versus },
+      roll: { die: { constant: 'lead_die' }, bonus: { expr: '0' }, check: null },
+      versus: { expr: `${JSON.stringify(versus)}` },
       ...extra,
     }],
   };
-  const packed = packRule(rule, { system: sys, sheet, params: {}, item: null, die: queue(rolled) });
-  return resolveRule(packed, { system: sys, sheet, die: queue(rolled) });
+  const packed = packRule(rule, { system: sys, sheet, params: {}, item: null, die: queue(rolled), pass: newPass(sys, sheet) });
+  return resolveRule(packed, { system: sys, sheet, die: queue(rolled), pass: newPass(sys, sheet) });
 };
 
 group('порог: направление успеха объявляется слотом', () => {
@@ -57,11 +58,11 @@ group('порог: направление успеха объявляется с
     const rule = {
       steps: [{
         id: 'try', type: 'threshold', side: 'target', successWhen: 'notOver',
-        roll: { die: { constant: 'lead_die' }, bonus: { const: 0 }, check: null },
-        versus: { const: 40 },
+        roll: { die: { constant: 'lead_die' }, bonus: { expr: '0' }, check: null },
+        versus: { expr: '40' },
       }],
     };
-    const packed = packRule(rule, { system: sys, sheet, params: {}, item: null, die: queue() });
+    const packed = packRule(rule, { system: sys, sheet, params: {}, item: null, die: queue(), pass: newPass(sys, sheet) });
     const done = resolveRule(packed, { system: sys, sheet, die: queue(15) });
     ok(done.results.try.success, 'цель бросила 15 против 40 «вниз» — спаслась');
     eq(done.results.try.margin, 25);

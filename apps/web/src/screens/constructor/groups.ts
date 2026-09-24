@@ -13,7 +13,6 @@ export function sameValue(a: FieldValue | undefined, b: FieldValue | undefined):
       && (a.min ?? null) === (b.min ?? null) && (a.max ?? null) === (b.max ?? null);
   }
   if (a.kind === 'formula' && b.kind === 'formula') return a.expr.trim() === b.expr.trim();
-  if (a.kind === 'table' && b.kind === 'table') return a.table === b.table && a.arg === b.arg;
   return false;
 }
 

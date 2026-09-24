@@ -185,8 +185,6 @@ describe('ссылки слотов не теряются при разборе'
       { tag: 'hp_current' },
       { param: 'save' },
       { prop: 'damage_dice' },
-      { item: 'damage_dice' },
-      { ref: 'hit.success' },
       { constant: 'lead_die' },
       { prop: 'status', optional: true },
     ];
@@ -195,6 +193,17 @@ describe('ссылки слотов не теряются при разборе'
       const parsed = W.slotRef.parse(form);
       expect(parsed, JSON.stringify(form)).toEqual(form);
     }
+  });
+
+  it('старые формы значения — ссылка на шаг, свойство под другим именем, таблица — схему не проходят', () => {
+    for (const form of [{ ref: 'hit.success' }, { item: 'damage_dice' }, { table: 't', by: { const: 1 } }, { expr: '1', optional: true }]) {
+      expect(W.slotRef.safeParse(form).success, JSON.stringify(form)).toBe(false);
+    }
+  });
+
+  it('условие шага — только формула', () => {
+    expect(W.guard.safeParse({ expr: '@hit.success' }).success).toBe(true);
+    expect(W.guard.safeParse({ ref: 'hit.success', not: true }).success).toBe(false);
   });
 
   it('образцовые эффекты переживают round-trip без потерь', () => {

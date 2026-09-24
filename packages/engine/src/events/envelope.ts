@@ -2,7 +2,7 @@ import { answerSteps } from '../engine/steps/emit.ts';
 import { newPass } from '../engine/calc.ts';
 import { rolledSoFar } from '../engine/rolled.ts';
 import { packCall, runCall } from './call.ts';
-import { packRef, resolveRef } from '../engine/refs.ts';
+import { holdsNow } from '../engine/refs.ts';
 import { requireEffect, findEffect, isPipeline, durationOf } from '../engine/effects.ts';
 import { listening, subscriberByKey, hears, runsAtOther, withSteps } from './bus.ts';
 import type { Role, Phase } from './bus.ts';
@@ -16,7 +16,6 @@ import type {
 } from '../model/types.ts';
 import type { StepData } from '../engine/steps/index.ts';
 import type { EmittedEvent } from '../engine/rule.ts';
-import type { RefContext } from '../engine/refs.ts';
 
 export interface Action {
   id: string;
@@ -238,8 +237,7 @@ function fireBefore(
     const refs = { pass: newPass(ctx.system, current, { compendium: ctx.compendium }), results: {}, owner };
     let fits: boolean;
     try {
-      fits = conditionHolds(handler.if === undefined || handler.if === null
-        ? null : packRef(handler.if, refs), refs);
+      fits = holdsNow(handler.if, refs);
     } catch (err) {
       if (!(err instanceof EngineError)) throw err;
       fits = false;
@@ -320,7 +318,7 @@ function fireTriggers(
   for (const { id, effect, handler, heard } of listening(ctx.system, sheet, occasion, { compendium: ctx.compendium })) {
     const results = withEvent(out.results, heard);
     const owner = `триггер «${effect.label || id}»`;
-    if (!conditionHolds(handler.if, { pass: newPass(ctx.system, sheet, { compendium: ctx.compendium }), results, owner })) continue;
+    if (!holdsNow(handler.if, { pass: newPass(ctx.system, sheet, { compendium: ctx.compendium }), results, owner })) continue;
 
     const body = withSteps(effect, handler.steps);
     if (runsAtOther(handler)) {
@@ -355,7 +353,7 @@ export function fireOutgoing(
   for (const { id, effect, handler, heard } of listening(ctx.system, sheet, occasion, { compendium: ctx.compendium })) {
     const results = withEvent(outcome.results, heard);
     const owner = `триггер «${effect.label || id}»`;
-    if (!conditionHolds(handler.if, { pass: newPass(ctx.system, sheet, { compendium: ctx.compendium }), results, owner })) continue;
+    if (!holdsNow(handler.if, { pass: newPass(ctx.system, sheet, { compendium: ctx.compendium }), results, owner })) continue;
 
     const body = withSteps(effect, handler.steps);
     if (runsAtOther(handler)) {
@@ -396,8 +394,7 @@ export function offers(
     const ctx = { pass: newPass(system, sheet, { compendium }), results: withEvent(results, heard), owner };
     let fits: boolean;
     try {
-      fits = conditionHolds(handler.if === undefined || handler.if === null
-        ? null : packRef(handler.if, ctx), ctx);
+      fits = holdsNow(handler.if, ctx);
     } catch (err) {
       if (!(err instanceof EngineError)) throw err;
       fits = false;
@@ -463,16 +460,6 @@ export function react(
     }
   }
   return { sheet, reports, claims: [...new Set(claims)], spent, replies };
-}
-
-function conditionHolds(condition: unknown, ctx: RefContext): boolean {
-  if (condition === null || condition === undefined) return true;
-  const value = resolveRef(condition, ctx);
-  if (typeof value !== 'boolean') {
-    throw new EngineError(
-      `${ctx.owner}: условие должно давать логическое значение, а дало ${JSON.stringify(value)}`);
-  }
-  return value;
 }
 
 export function spendUse(sheet: Sheet, effectId: string): Sheet {

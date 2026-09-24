@@ -12,11 +12,11 @@ const system = {
   effects: {
     отравление: {
       label: 'Отравление', activation: 'passive',
-      on: [{ on: 'moment:turn-start', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { const: 3 } }] }],
+      on: [{ on: 'moment:turn-start', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '3' } }] }],
     },
     передышка: {
       label: 'Передышка', activation: 'passive',
-      on: [{ on: 'moment:turn-end', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'add', value: { const: 1 } }] }],
+      on: [{ on: 'moment:turn-end', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'add', value: { expr: '1' } }] }],
     },
     кнопка: { label: 'Кнопка', activation: 'manual', steps: [] },
   },

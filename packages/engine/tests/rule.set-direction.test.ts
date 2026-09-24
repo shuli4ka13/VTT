@@ -26,7 +26,7 @@ const run = (steps: any[], target: any, sys: any = TOUGH) => {
 };
 
 const stony = { ...mirra, values: { ...mirra.values, hp_current: 22 }, effects: [{ effectId: 'tough' }] };
-const eight = { id: 'dmg', type: 'amount', source: 'item', fixed: { const: 8 } };
+const eight = { id: 'dmg', type: 'amount', source: 'item', fixed: { expr: '8' } };
 
 group('направление «задать» и сопротивления цели', () => {
   test('сопротивление режет РАЗНИЦУ, а не итоговое значение поля', () => {
@@ -44,7 +44,7 @@ group('направление «задать» и сопротивления ц�
     const r = run([
       eight,
       { type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract',
-        value: { ref: 'dmg' }, targetModifiers: true },
+        value: { expr: '@dmg' }, targetModifiers: true },
     ], stony);
     eq(r.sheet.values.hp_current, 18);
   });
@@ -61,14 +61,14 @@ group('направление «задать» и сопротивления ц�
   test('«задать» вверх — лечение: сопротивление режет прибавку', () => {
     const r = run([
       { type: 'apply', target: { tag: 'hp_current' }, direction: 'set',
-        value: { const: 30 }, targetModifiers: true },
+        value: { expr: '30' }, targetModifiers: true },
     ], { ...stony, values: { ...stony.values, hp_max: 40 } });
     eq(r.sheet.values.hp_current, 26, '22 + floor(8 × 0.5)');
   });
 
   test('текстовое поле «задать» по-прежнему просто присваивает', () => {
     const r = run([
-      { type: 'apply', target: { tag: 'alignment' }, direction: 'set', value: { const: 'хаотично-добрый' } },
+      { type: 'apply', target: { tag: 'alignment' }, direction: 'set', value: { expr: '"хаотично-добрый"' } },
     ], stony);
     eq(r.sheet.values.alignment, 'хаотично-добрый');
   });

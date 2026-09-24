@@ -2564,7 +2564,7 @@
             },
             "direction": "subtract",
             "value": {
-              "param": "spend_luck"
+              "expr": "@spend_luck"
             },
             "targetModifiers": false
           }
@@ -2577,7 +2577,7 @@
               "const": "dv_range"
             },
             "value": {
-              "param": "distance"
+              "expr": "@distance"
             }
           },
           {
@@ -2588,7 +2588,7 @@
               "expr": "@отправитель.handgun_total"
             },
             "bonus": {
-              "param": "spend_luck"
+              "expr": "@spend_luck"
             }
           },
           {
@@ -2599,14 +2599,14 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "ref": "прицел"
+                "expr": "@прицел"
               },
               "tags": [
                 "атака"
               ]
             },
             "versus": {
-              "ref": "dv"
+              "expr": "@dv"
             }
           },
           {
@@ -2622,11 +2622,10 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "const": 5
+              "expr": "5"
             },
             "when": {
-              "ref": "dmg.atMax",
-              "atLeast": 2
+              "expr": "@dmg.atMax >= 2"
             }
           },
           {
@@ -2634,7 +2633,7 @@
             "event": "damage",
             "args": {
               "amount": {
-                "ref": "dmg"
+                "expr": "@dmg"
               },
               "damage_type": {
                 "param": "damage_type"
@@ -2648,12 +2647,11 @@
             "type": "emit",
             "event": "damage",
             "when": {
-              "ref": "dmg.atMax",
-              "atLeast": 2
+              "expr": "@dmg.atMax >= 2"
             },
             "args": {
               "amount": {
-                "ref": "boom"
+                "expr": "@boom"
               },
               "damage_type": {
                 "param": "damage_type"
@@ -2690,7 +2688,7 @@
             },
             "direction": "set",
             "value": {
-              "ref": "что"
+              "expr": "@что"
             },
             "targetModifiers": false
           }
@@ -2808,7 +2806,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": true
+                  "expr": "да"
                 },
                 "targetModifiers": false
               }
@@ -2823,20 +2821,14 @@
             "id": "сквозь_броню",
             "type": "compare",
             "value": {
-              "ref": "event.amount"
+              "expr": "@event.amount"
             },
             "versus": {
-              "tag": "sp_body"
+              "expr": "@получатель.sp_body"
             },
             "breakIf": "less",
             "when": {
-              "ref": "event.tags",
-              "has": "по телу",
-              "where": {
-                "table": "damage_types",
-                "column": "armor",
-                "is": "через броню"
-              }
+              "expr": "все(есть(@event.tags, \"по телу\"), есть(таблица(\"damage_types\", @event.tags, \"armor\"), \"через броню\"))"
             }
           },
           {
@@ -2846,17 +2838,11 @@
             },
             "direction": "subtract",
             "value": {
-              "ref": "сквозь_броню.margin"
+              "expr": "@сквозь_броню.margin"
             },
             "targetModifiers": false,
             "when": {
-              "ref": "event.tags",
-              "has": "по телу",
-              "where": {
-                "table": "damage_types",
-                "column": "armor",
-                "is": "через броню"
-              }
+              "expr": "все(есть(@event.tags, \"по телу\"), есть(таблица(\"damage_types\", @event.tags, \"armor\"), \"через броню\"))"
             }
           },
           {
@@ -2866,37 +2852,25 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
-              "ref": "event.tags",
-              "has": "по телу",
-              "where": {
-                "table": "damage_types",
-                "column": "armor",
-                "is": "через броню"
-              }
+              "expr": "все(есть(@event.tags, \"по телу\"), есть(таблица(\"damage_types\", @event.tags, \"armor\"), \"через броню\"))"
             }
           },
           {
             "id": "сквозь_шлем",
             "type": "compare",
             "value": {
-              "ref": "event.amount"
+              "expr": "@event.amount"
             },
             "versus": {
-              "tag": "sp_head"
+              "expr": "@получатель.sp_head"
             },
             "breakIf": "less",
             "when": {
-              "ref": "event.tags",
-              "has": "по голове",
-              "where": {
-                "table": "damage_types",
-                "column": "armor",
-                "is": "через броню"
-              }
+              "expr": "все(есть(@event.tags, \"по голове\"), есть(таблица(\"damage_types\", @event.tags, \"armor\"), \"через броню\"))"
             }
           },
           {
@@ -2904,19 +2878,15 @@
             "type": "amount",
             "source": "margin",
             "margin": {
-              "ref": "сквозь_шлем.margin"
+              "expr": "@сквозь_шлем.margin"
             },
             "scale": {
-              "times": 2
+              "times": {
+                "expr": "2"
+              }
             },
             "when": {
-              "ref": "event.tags",
-              "has": "по голове",
-              "where": {
-                "table": "damage_types",
-                "column": "armor",
-                "is": "через броню"
-              }
+              "expr": "все(есть(@event.tags, \"по голове\"), есть(таблица(\"damage_types\", @event.tags, \"armor\"), \"через броню\"))"
             }
           },
           {
@@ -2926,17 +2896,11 @@
             },
             "direction": "subtract",
             "value": {
-              "ref": "в_голову"
+              "expr": "@в_голову"
             },
             "targetModifiers": false,
             "when": {
-              "ref": "event.tags",
-              "has": "по голове",
-              "where": {
-                "table": "damage_types",
-                "column": "armor",
-                "is": "через броню"
-              }
+              "expr": "все(есть(@event.tags, \"по голове\"), есть(таблица(\"damage_types\", @event.tags, \"armor\"), \"через броню\"))"
             }
           },
           {
@@ -2946,17 +2910,11 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
-              "ref": "event.tags",
-              "has": "по голове",
-              "where": {
-                "table": "damage_types",
-                "column": "armor",
-                "is": "через броню"
-              }
+              "expr": "все(есть(@event.tags, \"по голове\"), есть(таблица(\"damage_types\", @event.tags, \"armor\"), \"через броню\"))"
             }
           },
           {
@@ -2966,16 +2924,11 @@
             },
             "direction": "subtract",
             "value": {
-              "ref": "event.amount"
+              "expr": "@event.amount"
             },
             "targetModifiers": false,
             "when": {
-              "ref": "event.tags",
-              "where": {
-                "table": "damage_types",
-                "column": "armor",
-                "is": "мимо брони"
-              }
+              "expr": "есть(таблица(\"damage_types\", @event.tags, \"armor\"), \"мимо брони\")"
             }
           }
         ],
@@ -3021,7 +2974,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               },
@@ -3032,7 +2985,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               },
@@ -3043,7 +2996,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               }
@@ -3071,7 +3024,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 0
+                  "expr": "0"
                 },
                 "targetModifiers": false
               }
@@ -3099,7 +3052,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               },
@@ -3110,7 +3063,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               }
@@ -3128,10 +3081,10 @@
           {
             "type": "compare",
             "value": {
-              "tag": "turn_action"
+              "expr": "@получатель.turn_action"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "действие на этом ходу уже потрачено",
@@ -3146,7 +3099,7 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {

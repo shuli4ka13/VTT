@@ -1,60 +1,35 @@
 import { useMemo, useState } from 'react';
-import type { System, SlotRef } from '@vtt/schema';
+import type { SlotRef } from '@vtt/schema';
 import { labelOfTag } from '../../ui/formula.tsx';
 import { dieWord, readingWord } from './readback.ts';
 import { FormulaField } from '../../ui/formula-field.tsx';
 import type { BarOption } from '../../store/formula-bar.ts';
-import { outputRefs, outputLabel, declaredProps, inputBadges } from './slots.tsx';
+import { outputRefs, declaredProps, inputBadges } from './slots.tsx';
 import type { SlotContext, SlotKind } from './slots.tsx';
 import { asDice } from '../../words.ts';
-import { SENDER, RECEIVER } from '@vtt/engine/engine/owners';
+import { SENDER, RECEIVER, owned } from '@vtt/engine/engine/owners';
+import { writeTableCall } from '@vtt/engine/model/amounts';
 
-const WORD_OF: Record<SlotKind, string> = {
-  const: 'число',
-  expr: 'формулу',
-  tag: 'поле листа',
-  constant: 'константу системы',
-  prop: 'свойство записи',
-  param: 'значение из записи',
-  ref: 'результат шага',
-  table: 'значение по таблице',
-  empty: 'пусто',
-};
+export type Keep = 'const' | 'param' | 'prop' | 'tag' | 'constant';
 
-export function asText(value: unknown, ctx: SlotContext): string | null {
+export function asText(value: unknown): string | null {
   if (value === null || value === undefined) return null;
   if (typeof value !== 'object') return String(value);
   const r = value as Record<string, unknown>;
-  if ('tag' in r) return `@${String(r.tag)}`;
-  if ('prop' in r || 'item' in r) return `@${String(r.prop ?? r.item)}`;
-  if ('param' in r) return `@${String(r.param)}`;
-  if ('ref' in r) return `@${String(r.ref)}`;
-  if ('const' in r) return String(r.const);
   if ('expr' in r) return String(r.expr);
-  void ctx;
+  if ('const' in r) return String(r.const);
+  if ('tag' in r) return `@${String(r.tag)}`;
+  if ('prop' in r) return `@${String(r.prop)}`;
+  if ('param' in r) return `@${String(r.param)}`;
   return null;
 }
 
-export function grownFrom(value: unknown, typed: string, ctx: SlotContext): SlotRef | null {
+export function grownFrom(value: unknown, typed: string): SlotRef | null {
   const added = typed.trim();
   if (!added || !/^[+\-*/]/.test(added)) return null;
-  const already = asText(value, ctx);
+  const already = asText(value);
   if (!already) return null;
-  return { expr: `${already} ${added}`.replace(/\s+/g, ' ').trim() } as SlotRef;
-}
-
-export function parseTyped(text: string): SlotRef | null {
-  const t = text.trim();
-  if (!t) return null;
-  if (/^-?\d+(\.\d+)?$/.test(t)) return { const: Number(t) };
-  return { expr: t };
-}
-
-export function singleTag(text: string, system: System): SlotRef | null {
-  const m = /^[#@]([\p{L}\p{N}_]+)$/u.exec(text.trim());
-  if (!m) return null;
-  const tag = m[1]!;
-  return system.fields.some(f => f.tag === tag) ? { tag } : null;
+  return { expr: `${already} ${added}`.replace(/\s+/g, ' ').trim() };
 }
 
 export function normalizeDice(text: string): string | null {
@@ -65,23 +40,6 @@ export function normalizeDice(text: string): string | null {
   return `${count}d${sides}`;
 }
 
-export function displayOf(ref: unknown, ctx: SlotContext): string {
-  if (ref === null || ref === undefined) return '';
-  if (typeof ref !== 'object') return String(ref);
-  const r = ref as Record<string, unknown>;
-  if ('const' in r) return asDice(String(r.const ?? ''));
-  if ('expr' in r) return String(r.expr ?? '');
-  if ('tag' in r) return `поле: ${labelOfTag(ctx.system, String(r.tag))}`;
-  if ('param' in r) {
-    const declared = ctx.effect.params?.find(p => p.key === r.param);
-    return `из записи: ${declared?.label ?? String(r.param)}`;
-  }
-  if ('prop' in r || 'item' in r) return `из записи: ${String(r.prop ?? r.item)}`;
-  if ('ref' in r) return outputLabel(String(r.ref), ctx.earlier);
-  if ('constant' in r) return `кость: ${dieWord(ctx.system, String(r.constant))}`;
-  return '';
-}
-
 export function chipOf(ref: unknown, ctx: SlotContext): { label: string; record: boolean } | null {
   if (!ref || typeof ref !== 'object') return null;
   const r = ref as Record<string, unknown>;
@@ -90,17 +48,10 @@ export function chipOf(ref: unknown, ctx: SlotContext): { label: string; record:
     const declared = ctx.effect.params?.find(p => p.key === r.param);
     return { label: declared?.label ?? String(r.param), record: true };
   }
-  if ('prop' in r || 'item' in r) {
-    const key = String(r.prop ?? r.item);
+  if ('prop' in r) {
+    const key = String(r.prop);
     const own = ctx.recordKind?.props?.find(p => p.key === key);
     return { label: own?.label ?? declaredProps(ctx.system).get(key) ?? key, record: true };
-  }
-  if ('ref' in r) return { label: outputLabel(String(r.ref), ctx.earlier), record: false };
-  if ('table' in r) {
-    const table = ctx.system.tables?.[String(r.table)];
-    const column = (table?.columns ?? []).find(c => c.key === String(r.column ?? 'value'));
-    const name = table?.label || String(r.table);
-    return { label: column ? `«${name}» → ${column.label || column.key}` : `по таблице «${name}»`, record: false };
   }
   if ('constant' in r) {
     const name = String(r.constant);
@@ -114,67 +65,78 @@ export function chipOf(ref: unknown, ctx: SlotContext): { label: string; record:
 export interface SlotOption {
   group: string;
   label: string;
-  ref: SlotRef;
+
+  name?: string;
+
+  ref?: SlotRef;
   synthetic?: boolean;
 
   onPick?: () => void;
 }
 
-export function optionsFor(ctx: SlotContext, allow?: SlotKind[]): SlotOption[] {
+const tableOption = (ctx: SlotContext, table: string, column: string): Pick<SlotOption, 'name' | 'ref'> | null => {
+  const props = ctx.recordKind?.props ?? [];
+  const chosen = props.find(p => (p as { kind?: string }).kind === 'choice' && (p as { from?: string }).from === table);
+  if (chosen) return { name: `${chosen.key}.${column}` };
+  const by = props[0];
+  if (!by) return null;
+  return { ref: { expr: writeTableCall({ table, arg: `@${by.key}`, column }) } };
+};
+
+export function optionsFor(ctx: SlotContext, allow: SlotKind[] | undefined, keep: readonly Keep[], side?: 'self' | 'target'): SlotOption[] {
   const ok = (kind: SlotKind) => !allow || allow.includes(kind);
   const out: SlotOption[] = [];
   if (ok('prop')) {
-    const own = ctx.recordKind?.props ?? [];
-    for (const p of own) out.push({ group: 'Свойства записи', label: p.label ?? p.key, ref: { prop: p.key } });
+    for (const p of ctx.recordKind?.props ?? []) {
+      out.push({ group: 'Свойства записи', label: p.label ?? p.key, name: p.key, ...(keep.includes('prop') ? { ref: { prop: p.key } } : {}) });
+    }
   }
   if (ok('param')) {
-    for (const p of ctx.effect.params ?? []) out.push({ group: 'Из записи', label: p.label ?? p.key, ref: { param: p.key } });
+    for (const p of ctx.effect.params ?? []) {
+      out.push({ group: 'Из записи', label: p.label ?? p.key, name: p.key, ...(keep.includes('param') ? { ref: { param: p.key } } : {}) });
+    }
   }
   if (ok('table')) {
     for (const [key, table] of Object.entries(ctx.system.tables ?? {})) {
-      const columns = table.columns ?? [];
-      if (!columns.length) continue;
-      const props = ctx.recordKind?.props ?? [];
-      const by = props.find(p => (p as { from?: string }).from === key) ?? props[0];
       const name = table.label || key;
-      for (const column of columns) {
-        out.push({
-          group: 'По таблице',
-          label: `«${name}» → ${column.label || column.key}`,
-          ref: { table: key, column: column.key, ...(by ? { by: { prop: by.key } } : {}) } as SlotRef,
-        });
+      for (const column of table.columns ?? []) {
+        const found = tableOption(ctx, key, column.key);
+        if (found) out.push({ group: 'По таблице', label: `«${name}» → ${column.label || column.key}`, ...found });
       }
     }
   }
   if (ok('ref')) {
-    for (const o of outputRefs(ctx.earlier)) {
-      out.push({ group: 'Результаты шагов', label: o.label, ref: { ref: o.ref } });
+    for (const o of outputRefs(ctx.earlier)) out.push({ group: 'Результаты шагов', label: o.label, name: o.ref });
+  }
+  if (ok('tag')) {
+    for (const f of ctx.system.fields) {
+      out.push(keep.includes('tag')
+        ? { group: 'Поля листа', label: f.label ?? f.tag, name: f.tag, ref: { tag: f.tag } }
+        : { group: side === 'target' ? 'Поля цели' : 'Поля листа', label: f.label ?? f.tag, name: side === 'target' ? owned(RECEIVER, f.tag) : f.tag });
     }
   }
-  if (ok('tag')) for (const f of ctx.system.fields) out.push({ group: 'Поля цели', label: f.label ?? f.tag, ref: { tag: f.tag } });
   if (ok('constant')) {
-    for (const [key, c] of Object.entries(ctx.system.constants ?? {})) out.push({ group: 'Кости', label: c.label ?? key, ref: { constant: key } });
+    for (const [key, c] of Object.entries(ctx.system.constants ?? {})) {
+      out.push({ group: 'Кости', label: c.label ?? key, name: key, ...(keep.includes('constant') ? { ref: { constant: key } } : {}) });
+    }
   }
   return out;
 }
 
-const nameOf = (ref: SlotRef): string | null => {
+const structuredName = (ref: unknown): string | null => {
+  if (!ref || typeof ref !== 'object') return null;
   const r = ref as Record<string, unknown>;
-  if ('prop' in r && r.prop) return String(r.prop);
-  if ('param' in r && r.param) return String(r.param);
-  if ('ref' in r) return String(r.ref);
-  if ('tag' in r) return String(r.tag);
-  if ('table' in r && r.column && r.by && typeof r.by === 'object' && 'prop' in (r.by as object)) {
-    return `${String((r.by as { prop: unknown }).prop)}.${String(r.column)}`;
-  }
+  for (const key of ['tag', 'param', 'prop', 'constant'] as const) if (key in r && r[key]) return String(r[key]);
   return null;
 };
 
-export function SlotInput({ value, onChange, context, allow, placeholder, extraOptions, dice, side, onCreateFromRecord, where = 'значение' }: {
+export function SlotInput({ value, onChange, context, allow, keep = [], placeholder, extraOptions, dice, side, onCreateFromRecord, where = 'значение' }: {
   value: unknown;
   onChange: (next: SlotRef | null) => void;
   context: SlotContext;
   allow?: SlotKind[];
+
+  keep?: readonly Keep[];
   placeholder?: string;
 
   extraOptions?: SlotOption[];
@@ -188,20 +150,19 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
   where?: string;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
-  const [trouble, setTrouble] = useState<string | null>(null);
   const [picked] = useState(() => new Map<string, SlotRef>());
   const options = useMemo(() => {
-    const base = [...(extraOptions ?? []), ...optionsFor(context, allow)];
+    const base = [...(extraOptions ?? []), ...optionsFor(context, allow, keep, side)];
     if (!onCreateFromRecord) return base;
-    const born: SlotOption = { group: 'Из записи', label: 'из записи → новая потребность…', ref: { param: '' }, synthetic: true };
+    const born: SlotOption = { group: 'Из записи', label: 'из записи → новая потребность…', synthetic: true };
     return [born, ...base];
-  }, [context, allow, extraOptions, onCreateFromRecord]);
+  }, [context, allow, keep, side, extraOptions, onCreateFromRecord]);
 
   const names = useMemo(() => {
     const out = new Map<string, string>();
     for (const option of options) {
-      const name = option.synthetic ? null : nameOf(option.ref);
-      if (name && !out.has(name)) out.set(name, option.label);
+      if (option.synthetic || !option.name || out.has(option.name)) continue;
+      out.set(option.name, option.label);
     }
     return out;
   }, [options]);
@@ -209,71 +170,57 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
   const menu = useMemo((): BarOption[] => options.map(option => ({
     group: option.group,
     label: option.label,
-    ...(option.synthetic ? {} : { name: nameOf(option.ref) ?? undefined }),
+    ...(option.synthetic || !option.name ? {} : { name: option.name }),
     onPick: (insert, bar) => {
       if (option.onPick) {
         setDraft(null);
-        setTrouble(null);
         bar.dismiss();
         option.onPick();
         return;
       }
       const ref = option.synthetic && onCreateFromRecord ? onCreateFromRecord() : option.ref;
-      const name = nameOf(ref);
+      const name = option.synthetic ? structuredName(ref) : option.name;
       if (!name) {
         setDraft(null);
-        setTrouble(null);
         bar.dismiss();
-        onChange(ref);
+        if (ref) onChange(ref);
         return;
       }
-      picked.set(name, ref);
+      if (ref) picked.set(name, ref);
       bar.write(insert(`@${name}`));
     },
   })), [options, onChange, onCreateFromRecord, picked]);
 
-  const ownName = !side && value && typeof value === 'object' ? nameOf(value as SlotRef) : null;
-  const named = ownName && (names.has(ownName) || context.system.fields.some(f => f.tag === ownName)) ? ownName : null;
-  const chip = draft === null && !named ? chipOf(value, context) : null;
-  const initial = named ? `@${named}` : chip ? (asText(value, context) ?? '') : displayOf(value, context);
+  const own = structuredName(value);
+  const shownByName = own !== null && (names.has(own) || context.system.fields.some(f => f.tag === own));
+  const chip = draft === null && !shownByName ? chipOf(value, context) : null;
+  const initial = chip ? '' : value && typeof value === 'object' && 'const' in value && dice
+    ? asDice(String((value as { const: unknown }).const ?? ''))
+    : asText(value) ?? '';
 
   const commitTyped = (text: string) => {
     setDraft(null);
     const exact = /^\s*[@#]([\p{L}\p{N}_.]+)\s*$/u.exec(text)?.[1];
     const named = exact
-      ? picked.get(exact) ?? options.find(option => !option.synthetic && nameOf(option.ref) === exact)?.ref
+      ? picked.get(exact) ?? options.find(option => option.ref && option.name === exact)?.ref
       : undefined;
     picked.clear();
-    if (named) {
-      onChange(named);
-      setTrouble(null);
-      return;
-    }
-    const grown = grownFrom(value, text, context);
-    if (grown) {
-      onChange(grown);
-      setTrouble(null);
-      return;
-    }
-    const diced = dice ? normalizeDice(text) : null;
-    const tagged = singleTag(text, context.system);
-    const candidate: SlotRef | null = tagged
-      ?? (diced !== null ? { const: diced } : parseTyped(text));
-    if (candidate !== null && allow) {
-      const kind: SlotKind = tagged ? 'tag' : 'const' in candidate ? 'const' : 'expr';
-      if (!allow.includes(kind)) {
-        setTrouble(`сюда нельзя ${WORD_OF[kind]} — только ${allow.map(k => WORD_OF[k]).join(', ')}`);
-        return;
-      }
-    }
-    onChange(candidate);
-    setTrouble(null);
+    if (named) { onChange(named); return; }
+    const trimmed = text.trim();
+    if (!trimmed) { onChange(null); return; }
+    const grown = grownFrom(value, text);
+    if (grown) { onChange(grown); return; }
+    const diced = dice ? normalizeDice(trimmed) : null;
+    if (diced !== null) { onChange({ const: diced }); return; }
+    if (keep.includes('const') && /^-?\d+(\.\d+)?$/.test(trimmed)) { onChange({ const: Number(trimmed) }); return; }
+    if (keep.includes('const') && !trimmed.startsWith('@') && !/[()+\-*/<>=@#]/.test(trimmed)) { onChange({ const: trimmed }); return; }
+    onChange({ expr: trimmed });
   };
 
   return (
     <div className="slot">
       <FormulaField
-        value={draft ?? (chip ? '' : initial)}
+        value={draft ?? initial}
         system={context.system}
         where={where}
         owners
@@ -284,7 +231,7 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
         prefix={chip ? (
           <span className={`chips__chip${chip.record ? ' chips__chip--record' : ''}`}>
             {chip.label}
-            {side ? <span className={`chips__side chips__side--${side === 'self' ? 'sender' : 'receiver'}`}>{side === 'self' ? SENDER : RECEIVER}</span> : null}
+            {side && 'tag' in (value as object) ? <span className={`chips__side chips__side--${side === 'self' ? 'sender' : 'receiver'}`}>{side === 'self' ? SENDER : RECEIVER}</span> : null}
             <button
               type="button" className="chips__x" aria-label="убрать"
               onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onChange(null); }}
@@ -293,11 +240,10 @@ export function SlotInput({ value, onChange, context, allow, placeholder, extraO
           </span>
         ) : null}
         barValue={draft ?? initial}
-        onChange={next => { setTrouble(null); setDraft(next); }}
+        onChange={next => setDraft(next)}
         onCommit={commitTyped}
         onCancel={() => setDraft(null)}
       />
-      {trouble ? <span className="field__error">{trouble}</span> : null}
     </div>
   );
 }

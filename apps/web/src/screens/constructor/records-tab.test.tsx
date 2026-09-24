@@ -78,7 +78,7 @@ describe('RecordsTab: тип видит потребности эффекта', 
       effect: system.effects.hit!,
       earlier: [],
       recordKind: system.records!.weapon!,
-    }).map(option => option.label);
+    }, undefined, ['prop']).map(option => option.label);
 
     expect(предложат.some(label => label.includes('Кость урона')), предложат.join(' | ')).toBe(true);
     expect(предложат.some(label => label.includes('Класс защиты'))).toBe(false);

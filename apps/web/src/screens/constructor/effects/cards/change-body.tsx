@@ -14,6 +14,7 @@ import { SendBody } from './send-body.tsx';
 import { Extras } from './extras.tsx';
 import { calledOf } from '@vtt/engine/engine/effects';
 import { amountParamOf } from '@vtt/engine/model/lists';
+import { tight } from '@vtt/engine/model/amounts';
 import { SENDER, RECEIVER } from '@vtt/engine/engine/owners';
 
 function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onCreateFromRecord, targetOwner }: {
@@ -39,15 +40,13 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   const asExpr = (): string => {
     const a = apply as Record<string, any>;
     const value = a.value;
-    if (value && typeof value === 'object' && 'expr' in value) return String(value.expr);
-
-    const named = value && typeof value === 'object'
-      ? ('ref' in value ? `@${value.ref}` : 'tag' in value ? `@${value.tag}` : 'const' in value ? String(value.const) : '')
+    const written = value && typeof value === 'object'
+      ? 'expr' in value ? String(value.expr) : 'const' in value ? String(value.const) : ''
       : '';
-    const amountName = amountId ? `@${amountId}` : named;
-    const targetName = target && typeof target === 'object' && 'tag' in target ? `@${targetOwner}.${target.tag}` : '';
     const direction = String(a.direction ?? 'subtract');
-    if (direction === 'set') return amountName;
+    if (direction === 'set') return written;
+    const amountName = written.trim() ? tight(written) : amountId ? `@${amountId}` : '';
+    const targetName = target && typeof target === 'object' && 'tag' in target ? `@${targetOwner}.${target.tag}` : '';
     if (!targetName) return amountName;
 
     return `${targetName} ${direction === 'add' ? '+' : '-'} ${amountName}`;
@@ -187,7 +186,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
         edit(applyIndex, apply => {
           const target = apply as Record<string, unknown>;
           target.direction = 'subtract';
-          target.value = { ref: output.ref };
+          target.value = { expr: `@${output.ref}` };
         });
         setDraft(null);
         setTrouble(null);
@@ -217,6 +216,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
           value={target}
           context={context}
           allow={['tag', 'param']}
+          keep={['tag', 'param']}
           side={targetOwner === SENDER ? 'self' : 'target'}
           placeholder={targetOwner === SENDER ? 'поле отправителя' : 'поле получателя'}
           onChange={next => edit(applyIndex, target => {
@@ -294,7 +294,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
             draft.type = 'emit';
             d.event ??= firstEvent ?? '';
             const main = amountParamOf(system.effects[String(d.event)]);
-            if (group.amount?.id && main) d.args = { ...(d.args ?? {}), [main.key]: { ref: group.amount.id } };
+            if (group.amount?.id && main) d.args = { ...(d.args ?? {}), [main.key]: { expr: `@${group.amount.id}` } };
           } else {
             draft.type = 'apply';
             d.direction ??= 'subtract';
@@ -366,7 +366,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
           <Field label="какое">
             <SlotInput
               where="изменение · какое"
-              value={step.effect} context={context} extraOptions={statusOptions}
+              value={step.effect} context={context} extraOptions={statusOptions} keep={['const', 'param']}
               onChange={next => edit(applyIndex, draft => { (draft as any).effect = next ?? undefined; })}
               onCreateFromRecord={fromRecord('какое', 'effect')}
             />

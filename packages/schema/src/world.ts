@@ -2,24 +2,15 @@ import { z } from 'zod';
 
 export const refSide = z.enum(['source', 'target']);
 
+export const formula = z.object({ expr: z.string() }).strict();
+
 export const slotRef = z.union([
-
-  z.object({ expr: z.string(), optional: z.boolean().optional() }),
-  z.object({ tag: z.string(), optional: z.boolean().optional() }),
-  z.object({ param: z.string(), optional: z.boolean().optional() }),
-  z.object({ prop: z.string(), optional: z.boolean().optional() }),
-
-  z.object({ item: z.string(), optional: z.boolean().optional() }),
-  z.object({ ref: z.string(), optional: z.boolean().optional() }),
-  z.object({ constant: z.string(), optional: z.boolean().optional() }),
-  z.object({
-    table: z.string().min(1),
-    by: z.lazy((): z.ZodTypeAny => slotRef),
-
-    column: z.string().min(1).optional(),
-    optional: z.boolean().optional(),
-  }),
-  z.object({ const: z.unknown(), optional: z.boolean().optional() })
+  formula,
+  z.object({ tag: z.string() }).strict(),
+  z.object({ param: z.string(), optional: z.boolean().optional() }).strict(),
+  z.object({ prop: z.string(), optional: z.boolean().optional() }).strict(),
+  z.object({ constant: z.string() }).strict(),
+  z.object({ const: z.unknown() }).strict()
     .refine(value => 'const' in value, { message: 'ссылка неизвестной формы' }),
 ]);
 
@@ -34,7 +25,6 @@ export const fieldValue = z.discriminatedUnion('kind', [
     max: bound.optional(),
   }),
   z.object({ kind: z.literal('formula'), expr: z.string() }),
-  z.object({ kind: z.literal('table'), table: z.string(), arg: z.string(), column: z.string().min(1).optional() }),
 ]);
 
 export const groupSpec = z.object({
@@ -196,17 +186,7 @@ export const param = z.object({
   optional: z.boolean().optional(),
 }).passthrough();
 
-export const guard = z.union([
-  z.object({
-    ref: z.string().min(1), is: z.unknown().optional(), not: z.boolean().optional(),
-    atLeast: z.union([z.number(), z.object({ tag: z.string().min(1) })]).optional(),
-    atMost: z.union([z.number(), z.object({ tag: z.string().min(1) })]).optional(),
-    has: z.string().optional(),
-
-    where: z.object({ table: z.string().min(1), column: z.string().min(1), is: tableValue }).optional(),
-  }),
-  z.object({ expr: z.string() }),
-]);
+export const guard = formula;
 
 export const scale = z.object({
   times: z.number().positive(),
@@ -227,7 +207,7 @@ export const handler = z.object({
   phase: z.enum(['before', 'after']).optional(),
   ask: z.boolean().optional(),
   to: z.enum(['self', 'other']).optional(),
-  if: slotRef.nullable().optional(),
+  if: guard.nullable().optional(),
   claims: z.array(z.string().min(1)).optional(),
   self: z.array(step).optional(),
   steps: z.array(step).optional(),
@@ -360,6 +340,7 @@ export const world = z.object({
 }).passthrough();
 
 export type SlotRef = z.infer<typeof slotRef>;
+export type Formula = z.infer<typeof formula>;
 export type RefSide = z.infer<typeof refSide>;
 export type Tag = z.infer<typeof tag>;
 export type DiceTerm = z.infer<typeof diceTerm>;

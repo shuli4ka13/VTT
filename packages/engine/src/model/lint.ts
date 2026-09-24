@@ -96,6 +96,10 @@ function danglingText(ref: Reference, declared: Declared): string | null {
   }
   if (ref.kind === 'field' && !declared.field.has(ref.key) && declared.effect.has(ref.key)
     && (ref.scope === 'plain' || ref.scope?.startsWith('owner:'))) return null;
+  if (ref.kind === 'field' && ref.scope === 'plain' && !declared.field.has(ref.key) && declared.prop.has(ref.key)) return null;
+  if (ref.kind === 'field' && ref.scope === 'plain' && ref.from.tab === 'effects' && !declared.field.has(ref.key)) {
+    return `«${ref.key}» — нет ни поля листа, ни потребности эффекта с таким именем: заведите поле на вкладке «Лист» или потребность у эффекта`;
+  }
   return declared[ref.kind].has(ref.key) ? null : NAMES[ref.kind](ref.key);
 }
 
@@ -345,6 +349,14 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
     const params = new Set((effect.params ?? []).map(p => p.key));
     for (const chain of chainsOf(id, effect, called.has(id))) {
       out.push(...stepProblems(chain.steps, chain.where, params, chain.eventChain));
+      chain.steps.forEach((step, index) => {
+        if (step.id && declared.field.has(String(step.id))) {
+          out.push({
+            where: chain.where(index), level: 'warn',
+            text: `${STEP.one} «${step.id}» назван как поле листа — в формулах @${step.id} прочтёт поле, а не результат ${STEP.gen}`,
+          });
+        }
+      });
     }
   }
 

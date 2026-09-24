@@ -68,7 +68,7 @@ export const newTable = (system: System): Made<Table> => ({
 });
 
 export const simpleReceive = (tag: string, direction: 'subtract' | 'add', targetModifiers: boolean): Step => ({
-  type: 'apply', target: { tag }, direction, value: { ref: 'event.amount' }, targetModifiers,
+  type: 'apply', target: { tag }, direction, value: { expr: '@event.amount' }, targetModifiers,
 } as unknown as Step);
 
 export const newCost = (system: System): Made<Effect> => ({

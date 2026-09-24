@@ -67,12 +67,7 @@ function comparison(text: string): { left: string; op: string; right: string } |
 
 const bareName = (text: string): string | null => /^@([\p{L}\p{N}_.]+)$/u.exec(text.trim())?.[1] ?? null;
 
-const tailRef = (rest: string, asName?: NameRef): SlotRef => {
-  if (/^-?\d+(\.\d+)?$/.test(rest)) return { const: Number(rest) } as SlotRef;
-  const alone = bareName(rest);
-  const known = alone && asName ? asName(alone) : null;
-  return known ?? ({ expr: rest } as SlotRef);
-};
+const tailRef = (rest: string): SlotRef => ({ expr: rest.trim() });
 
 interface RollSide { roll: CheckRoll; owner: string | null; error?: string }
 
@@ -117,7 +112,7 @@ function rollSide(text: string, system: System, asName?: NameRef): RollSide | nu
   if (rest) {
     if (!/^[+-]/.test(rest)) return { roll: { tags: [] }, owner, error: `после «кинуть(…)» ждётся «+» или «−», а стоит «${rest}»` };
     const tail = rest.startsWith('+') ? rest.slice(1).trim() : rest;
-    bonus = tailRef(tail, asName);
+    bonus = tailRef(tail);
   }
   return { roll: { die, bonus, tags }, owner };
 }
@@ -132,13 +127,9 @@ export function parseCheck(text: string, system: System, asName?: NameRef): Pars
 
   const other = rollSide(cmp.right, system, asName);
   if (other?.error) return { error: other.error };
-  const receiverField = bareName(cmp.right);
-  const owned = receiverField ? ownerOf(receiverField) : null;
   const versus = other
     ? { roll: { die: other.roll.die, ...(other.roll.bonus ? { bonus: other.roll.bonus } : {}), ...(other.roll.tags.length ? { tags: other.roll.tags } : {}) } }
-    : owned?.owner === RECEIVER && !owned.rest.includes('.') && system.fields.some(f => f.tag === owned.rest)
-      ? { tag: owned.rest }
-      : tailRef(cmp.right, asName);
+    : tailRef(cmp.right);
 
   return {
     roll: mine.roll,
@@ -153,10 +144,9 @@ function refText(ref: unknown): string {
   const r = ref as Record<string, unknown>;
   if ('expr' in r) return String(r.expr ?? '');
   if ('const' in r) return String(r.const ?? '');
-  for (const key of ['param', 'prop', 'item', 'ref', 'constant'] as const) {
+  for (const key of ['param', 'constant'] as const) {
     if (key in r) return `@${String(r[key])}`;
   }
-  if ('tag' in r) return `@${RECEIVER}.${String(r.tag)}`;
   return '';
 }
 

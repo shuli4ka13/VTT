@@ -74,7 +74,7 @@ export function pack(step: StepData, ctx: StepContext) {
     throw new EngineError(`${who(ctx)}: источнику «свой бросок» нужны кости — слот dice пуст`);
   }
   const deferred = typeof fixed === 'object' && fixed !== null
-    && ('later' in (fixed as Record<string, unknown>) || 'table' in (fixed as Record<string, unknown>));
+    && 'later' in (fixed as Record<string, unknown>);
   if (source === 'item' && !deferred
     && (fixed === null || (typeof fixed === 'object' && (fixed as any).const == null))) {
     throw new EngineError(`${who(ctx)}: источнику «фикс предмета» нужен заполненный слот fixed`);
@@ -102,10 +102,7 @@ export function pack(step: StepData, ctx: StepContext) {
 
 function timesNow(step: StepData, ctx: StepContext): number | null {
   if (step.count === undefined || step.count === null) return null;
-  const ref = step.count as Record<string, unknown>;
-  const raw = ref && typeof ref === 'object' && 'tag' in ref
-    ? ctx.pass.resolve(String(ref.tag))
-    : constant(packRef(step.count, ctx), ctx, 'сколько раз кинуть кости');
+  const raw = constant(packRef(step.count, ctx), ctx, 'сколько раз кинуть кости');
   const times = Number(raw);
   if (!Number.isFinite(times)) {
     throw new EngineError(`${who(ctx)}: «сколько раз кинуть кости» должно быть числом, а пришло ${JSON.stringify(raw)}`);
@@ -120,7 +117,7 @@ function countedNotation(notation: unknown, times: number): string | null {
 
 function doublesNow(step: StepData, ctx: StepContext): boolean {
   if (step.double === undefined || step.double === null) return false;
-  return guardHolds(step.double, { ...ctx, results: ctx.sender ?? {} });
+  return guardHolds(step.double, ctx);
 }
 
 export function resolve(step: StepData, ctx: StepContext) {
@@ -158,12 +155,7 @@ function shareOf(step: StepData, ctx: StepContext): number | null {
 function constant(packed: unknown, ctx: StepContext, what: string): any {
   if (packed === null || typeof packed !== 'object') return packed;
   if ('const' in packed) return packed.const;
-  if ('table' in packed || 'ref' in packed || ('expr' in packed && (packed as Record<string, unknown>).later)) {
-    return resolveRef(packed, {
-      ...ctx,
-      results: { ...(ctx.sender ?? {}), ...(ctx.results ?? {}) },
-    });
-  }
+  if ('expr' in packed && (packed as Record<string, unknown>).later) return resolveRef(packed, ctx);
   throw new EngineError(
     `${who(ctx)}: ${what} должен быть известен отправителю, а пришло ${JSON.stringify(packed)}`);
 }

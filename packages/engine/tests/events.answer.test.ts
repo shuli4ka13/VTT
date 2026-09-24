@@ -8,11 +8,11 @@ const system = {
   effects: {
     урон: {
       label: 'Урон', params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }],
-      steps: [{ type: 'apply', target: { tag: 'хп' }, direction: 'subtract', targetModifiers: false, value: { ref: 'event.amount' } }],
+      steps: [{ type: 'apply', target: { tag: 'хп' }, direction: 'subtract', targetModifiers: false, value: { expr: '@event.amount' } }],
     },
     лечение: {
       label: 'Лечение', params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }],
-      steps: [{ type: 'apply', target: { tag: 'хп' }, direction: 'add', targetModifiers: false, value: { ref: 'event.amount' } }],
+      steps: [{ type: 'apply', target: { tag: 'хп' }, direction: 'add', targetModifiers: false, value: { expr: '@event.amount' } }],
     },
     сопротивление: {
       label: 'Сопротивление', activation: 'passive', duration: { kind: 'permanent' },

@@ -49,8 +49,8 @@ group('степени успеха', () => {
   const rule: any = {
     steps: [{
       id: 'move', type: 'threshold',
-      roll: { die: { constant: 'пара' }, bonus: { const: 0 }, tags: ['ход'] },
-      versus: { const: 7 },
+      roll: { die: { constant: 'пара' }, bonus: { expr: '0' }, tags: ['ход'] },
+      versus: { expr: '7' },
       degrees: { table: 'исходы', of: 'total' },
     }],
   };

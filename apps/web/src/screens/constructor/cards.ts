@@ -22,10 +22,13 @@ const depsOf = (source: string): readonly string[] => {
   try { return compile(source).deps; } catch { return []; }
 };
 
-const refHead = (value: unknown): string | null => {
-  if (!value || typeof value !== 'object' || !('ref' in value)) return null;
-  return String((value as { ref: unknown }).ref).split('.')[0] ?? null;
+const loneName = (value: unknown): string | null => {
+  if (!value || typeof value !== 'object' || !('expr' in value)) return null;
+  return /^\s*@([\p{L}\p{N}_.]+)\s*$/u.exec(String((value as { expr: unknown }).expr))?.[1] ?? null;
 };
+
+const readsStep = (source: string, id: string): boolean =>
+  depsOf(source).some(dep => dep === id || dep.startsWith(`${id}.`));
 
 const walk = (node: unknown, seen: (value: object) => boolean): boolean => {
   if (!node || typeof node !== 'object') return false;
@@ -36,13 +39,11 @@ const walk = (node: unknown, seen: (value: object) => boolean): boolean => {
 
 export const mentions = (step: Step, id: string): boolean =>
   walk(step, node => {
-    if (refHead(node) === id) return true;
     const expr = (node as { expr?: unknown }).expr;
-    return typeof expr === 'string' && depsOf(expr).includes(id);
+    return typeof expr === 'string' && readsStep(expr, id);
   });
 
-const takesWhole = (value: unknown, id: string): boolean =>
-  !!value && typeof value === 'object' && (value as Record<string, unknown>).ref === id;
+const takesWhole = (value: unknown, id: string): boolean => loneName(value) === id;
 
 const names = (step: Step, id: string): boolean =>
   walk(step, node => {
@@ -100,22 +101,21 @@ export function removeSteps(steps: Step[], indices: number[]): Removal {
   const kept = steps.filter((_, i) => !gone.has(i)).map(step => structuredClone(step));
   const cleared: Removal['cleared'] = [];
   if (!ids.size) return { steps: kept, cleared };
-  const headOf = (ref: unknown): string => String(ref).split('.')[0] ?? '';
-  const isRef = (value: unknown): value is { ref: unknown } =>
-    Boolean(value) && typeof value === 'object' && 'ref' in (value as object);
   const isExpr = (value: unknown): value is { expr: unknown } =>
     Boolean(value) && typeof value === 'object' && 'expr' in (value as object);
   const sweep = (node: Record<string, unknown>, at: number, prefix: string) => {
     for (const [key, value] of Object.entries(node)) {
       const slot = prefix ? `${prefix}.${key}` : key;
-      if (isRef(value) && ids.has(headOf(value.ref))) {
-        delete node[key];
-        cleared.push({ step: at, slot: key === 'when' ? 'выполнять' : slot });
-        continue;
-      }
       if (isExpr(value)) {
         const expr = String(value.expr ?? '');
-        if ([...ids].some(id => names({ expr } as unknown as Step, id))) cleared.push({ step: at, slot: `${slot} (формула)` });
+        if (![...ids].some(id => readsStep(expr, id))) continue;
+        const lone = loneName(value);
+        if (key === 'when' || (lone && ids.has(lone.split('.')[0]!))) {
+          delete node[key];
+          cleared.push({ step: at, slot: key === 'when' ? 'выполнять' : slot });
+        } else {
+          cleared.push({ step: at, slot: `${slot} (формула)` });
+        }
         continue;
       }
       if (value && typeof value === 'object' && !Array.isArray(value)) sweep(value as Record<string, unknown>, at, slot);

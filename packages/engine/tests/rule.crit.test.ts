@@ -20,12 +20,12 @@ const sheet = (id: string): Sheet => ({
 } as unknown as Sheet);
 
 const steps = [
-  { id: 'удар', type: 'threshold', roll: { die: { constant: 'к20' } }, versus: { tag: 'броня' } },
+  { id: 'удар', type: 'threshold', roll: { die: { constant: 'к20' } }, versus: { expr: '@получатель.броня' } },
   {
     id: 'урон', type: 'amount', source: 'roll', dice: { const: '2d6' },
-    double: { ref: 'удар.natural', atLeast: 20 },
+    double: { expr: '@удар.natural >= 20' },
   },
-  { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { ref: 'урон' } },
+  { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@урон' } },
 ];
 
 const play = (rolls: number[]) => {
@@ -79,9 +79,9 @@ group('крит: кости удваиваются до броска', () => {
 
   test('условие смотрит на кости, а не на итог с прибавкой', () => {
     const withBonus = [
-      { id: 'удар', type: 'threshold', roll: { die: { constant: 'к20' }, bonus: { const: 9 } }, versus: { tag: 'броня' } },
-      { id: 'урон', type: 'amount', source: 'roll', dice: { const: '2d6' }, double: { ref: 'удар.natural', atLeast: 20 } },
-      { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { ref: 'урон' } },
+      { id: 'удар', type: 'threshold', roll: { die: { constant: 'к20' }, bonus: { expr: '9' } }, versus: { expr: '@получатель.броня' } },
+      { id: 'урон', type: 'amount', source: 'roll', dice: { const: '2d6' }, double: { expr: '@удар.natural >= 20' } },
+      { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@урон' } },
     ];
     let at = 0;
     const die = () => [15, 3, 3][at++] ?? 1;
@@ -97,9 +97,9 @@ group('крит: кости удваиваются до броска', () => {
 
 group('доля величины: половина при удачном спасброске', () => {
   const chain = (times: number) => [
-    { id: 'спас', type: 'threshold', side: 'target', roll: { die: { constant: 'к20' } }, versus: { const: 10 }, continueOn: 'always' },
-    { id: 'урон', type: 'amount', source: 'roll', dice: { const: '2d6' }, scale: { times, when: { ref: 'спас.success' } } },
-    { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { ref: 'урон' } },
+    { id: 'спас', type: 'threshold', side: 'target', roll: { die: { constant: 'к20' } }, versus: { expr: '10' }, continueOn: 'always' },
+    { id: 'урон', type: 'amount', source: 'roll', dice: { const: '2d6' }, scale: { times, when: { expr: '@спас.success' } } },
+    { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@урон' } },
   ];
 
   const run = (rolls: number[], times = 0.5) => {

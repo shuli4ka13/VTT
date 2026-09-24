@@ -175,7 +175,7 @@ describe('значение, которое называет человек за 
         выстрел: {
           label: 'Выстрел', activation: 'manual',
           params: [{ key: 'дистанция', label: 'Дистанция', kind: 'number', ask: { by: 'actor', kind: 'number', min: 1, max: 50 } }],
-          steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { param: 'дистанция' } }],
+          steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@дистанция' } }],
         },
       },
       records: { ствол: { kind: 'action', label: 'Ствол', props: [], bindings: [{ label: 'Выстрел', effect: 'выстрел', args: {} }] } },
@@ -244,7 +244,7 @@ describe('моменты хода', () => {
         отравление: {
           label: 'Отравление', activation: 'passive',
           duration: { kind: 'permanent' },
-          on: [{ on: 'moment:turn-start', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { const: 3 } }] }],
+          on: [{ on: 'moment:turn-start', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '3' } }] }],
         },
       },
     };
@@ -292,8 +292,8 @@ describe('ячейка тратится один раз на действие', 
       effects: {
         шар: {
           label: 'Огненный шар', activation: 'manual',
-          self: [{ type: 'apply', target: { tag: 'ячейки' }, direction: 'subtract', value: { const: 1 } }],
-          steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { const: 5 } }],
+          self: [{ type: 'apply', target: { tag: 'ячейки' }, direction: 'subtract', value: { expr: '1' } }],
+          steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '5' } }],
         },
       },
       records: { свиток: { kind: 'action', label: 'Свиток', props: [], bindings: [{ label: 'Огненный шар', effect: 'шар', args: {} }] } },
@@ -341,11 +341,11 @@ describe('моменты вещей и эффектов', () => {
       effects: {
         при_надевании: {
           label: 'При надевании', activation: 'passive',
-          on: [{ on: 'moment:equipped', steps: [{ type: 'apply', target: { tag: 'надето' }, direction: 'add', value: { const: 1 } }] }],
+          on: [{ on: 'moment:equipped', steps: [{ type: 'apply', target: { tag: 'надето' }, direction: 'add', value: { expr: '1' } }] }],
         },
         при_спадении: {
           label: 'При спадении', activation: 'passive',
-          on: [{ on: 'moment:expired', steps: [{ type: 'apply', target: { tag: 'снято' }, direction: 'add', value: { const: 1 } }] }],
+          on: [{ on: 'moment:expired', steps: [{ type: 'apply', target: { tag: 'снято' }, direction: 'add', value: { expr: '1' } }] }],
         },
         бафф: { label: 'Бафф', activation: 'passive', duration: { kind: 'temporary' }, modifiers: [] },
       },
@@ -391,8 +391,8 @@ describe('вопросы к человеку переживают пересбо
           label: 'Удар', activation: 'manual',
           params: [{ key: 'сила', label: 'Сила', kind: 'number', ask: { by: 'actor', kind: 'number', min: 1, max: 10 } }],
           steps: [
-            { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' } }, versus: { const: 0 }, continueOn: 'success' },
-            { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { param: 'сила' } },
+            { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' } }, versus: { expr: '0' }, continueOn: 'success' },
+            { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@сила' } },
           ],
         },
         вдохновение: {
@@ -447,8 +447,8 @@ describe('цель правит свой бросок, увидев его', () 
         залп: {
           label: 'Залп', activation: 'manual',
           steps: [
-            { id: 'спас', type: 'threshold', side: 'target', roll: { die: { constant: 'к20' } }, versus: { const: 11 }, continueOn: 'fail' },
-            { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { const: 6 } },
+            { id: 'спас', type: 'threshold', side: 'target', roll: { die: { constant: 'к20' } }, versus: { expr: '11' }, continueOn: 'fail' },
+            { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '6' } },
           ],
         },
         везение: {
@@ -568,7 +568,7 @@ describe('два сообщения стола сразу', () => {
     const system = {
       id: 'гонка', name: 'Гонка',
       fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } }],
-      effects: { удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { const: 5 } }] } },
+      effects: { удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '5' } }] } },
       records: { приём: { kind: 'action', label: 'Приём', props: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
     };
     const book = { items: [], actions: [{ id: 'приём', rk: 'приём', label: 'Удар', props: {} }] };
@@ -606,13 +606,13 @@ describe('реакция после разрешения', () => {
         удар: {
           label: 'Удар', activation: 'manual',
           steps: [
-            { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' } }, versus: { const: 0 }, continueOn: 'success' },
-            { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { const: 5 } },
+            { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' } }, versus: { expr: '0' }, continueOn: 'success' },
+            { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '5' } },
           ],
         },
         возмездие: {
           label: 'Возмездие', activation: 'passive',
-          on: [{ on: 'удар', to: 'other', ask: true, steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { const: 2 } }] }],
+          on: [{ on: 'удар', to: 'other', ask: true, steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '2' } }] }],
         },
       },
       records: { приём: { kind: 'action', label: 'Приём', props: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
@@ -669,18 +669,18 @@ describe('отдых и плата ячейкой', () => {
         ячейка: {
           label: 'Ячейка',
           steps: [
-            { id: 'есть', type: 'compare', value: { tag: 'ячейки' }, versus: { const: 1 }, breakIf: 'less' },
-            { type: 'apply', target: { tag: 'ячейки' }, direction: 'subtract', value: { const: 1 } },
+            { id: 'есть', type: 'compare', value: { expr: '@получатель.ячейки' }, versus: { expr: '1' }, breakIf: 'less' },
+            { type: 'apply', target: { tag: 'ячейки' }, direction: 'subtract', value: { expr: '1' } },
           ],
         },
         стрела: {
           label: 'Стрела', activation: 'manual',
-          self: [{ type: 'emit', event: 'ячейка', amount: { const: 1 }, strict: true }],
-          steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { const: 4 } }],
+          self: [{ type: 'emit', event: 'ячейка', amount: { expr: '1' }, strict: true }],
+          steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '4' } }],
         },
         сон: {
           label: 'Сон', activation: 'passive',
-          on: [{ on: 'moment:long-rest', steps: [{ type: 'apply', target: { tag: 'ячейки' }, direction: 'set', value: { const: 1 } }] }],
+          on: [{ on: 'moment:long-rest', steps: [{ type: 'apply', target: { tag: 'ячейки' }, direction: 'set', value: { expr: '1' } }] }],
         },
       },
       room_rules: ['сон'],

@@ -1,7 +1,7 @@
 import { resolveRoll, claimedModifiers } from '../modifiers.ts';
 import { lookupDegree } from '../tables.ts';
 import { dieConstant, rollLead, unfoldDice } from '../lead-die.ts';
-import { packRef, resolveRef, resolveNumber, resolveOptionalNumber } from '../refs.ts';
+import { packRef, resolveRef, resolveNumber, resolveOptionalNumber, lonelyField } from '../refs.ts';
 import { EngineError } from '../errors.ts';
 import type { StepData, StepContext } from './index.ts';
 import type { RolledDie } from '../readings.ts';
@@ -158,6 +158,7 @@ export function pack(step: StepData, ctx: StepContext) {
     continueOn: step.continueOn || 'success',
     successWhen: step.successWhen || 'atLeast',
     versus: packVersus(step.versus, step.side || 'source', ctx),
+    ...(lonelyField(step.versus) ? { against: lonelyField(step.versus) } : {}),
 
     ...(step.degrees && step.degrees.table ? { degrees: step.degrees } : {}),
   };
@@ -236,9 +237,7 @@ export function resolve(step: StepData, ctx: StepContext) {
 
       ...(rolled.read && rolled.read !== 'sum' ? { read: rolled.read } : {}),
       ...(rolled.edits?.length ? { edits: rolled.edits } : {}),
-      versus: step.versus && typeof step.versus === 'object' && 'tag' in step.versus
-        ? { tag: step.versus.tag, value: versus }
-        : { value: versus },
+      versus: step.against ? { tag: step.against, value: versus } : { value: versus },
       margin, success,
       ...(against.against ? { against: against.against } : {}),
       ...(scale ? { degree } : {}),

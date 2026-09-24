@@ -14,8 +14,8 @@ const sys: any = {
 const spell: any = {
   params: [{ key: 'порог', label: 'Порог', kind: 'number' }],
   steps: [
-    { type: 'compare', value: { param: 'порог' }, versus: { expr: '@получатель.хп' }, breakIf: 'less' },
-    { type: 'apply', target: { tag: 'хп' }, direction: 'set', value: { const: 0 } },
+    { type: 'compare', value: { expr: '@порог' }, versus: { expr: '@получатель.хп' }, breakIf: 'less' },
+    { type: 'apply', target: { tag: 'хп' }, direction: 'set', value: { expr: '0' } },
   ],
 };
 

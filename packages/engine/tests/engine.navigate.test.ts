@@ -35,7 +35,7 @@ const система = {
       params: [{ key: 'тип', label: 'Тип урона', kind: 'choice', from: 'урон' }],
       steps: [
         { id: 'сколько', type: 'amount', source: 'item', fixed: { expr: '5 + @тип.прибавка' } },
-        { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { ref: 'сколько' } },
+        { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@сколько' } },
       ],
     },
   },

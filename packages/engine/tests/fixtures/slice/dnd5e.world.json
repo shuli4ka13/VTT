@@ -157,7 +157,7 @@
               ]
             },
             "versus": {
-              "tag": "ac"
+              "expr": "@получатель.ac"
             }
           },
           {
@@ -171,8 +171,7 @@
               "expr": "#str_mod"
             },
             "double": {
-              "ref": "hit.natural",
-              "atLeast": 20
+              "expr": "@hit.natural >= 20"
             }
           },
           {
@@ -180,7 +179,7 @@
             "event": "damage",
             "args": {
               "amount": {
-                "ref": "dmg"
+                "expr": "@dmg"
               },
               "damage_type": {
                 "param": "damage_type"
@@ -193,10 +192,10 @@
           {
             "type": "compare",
             "value": {
-              "tag": "turn_action"
+              "expr": "@turn_action"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "действие на этом ходу уже потрачено",
@@ -211,7 +210,7 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
@@ -257,7 +256,7 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "param": "save"
+                "expr": "@save"
               },
               "tags": [
                 "спасбросок"
@@ -281,7 +280,7 @@
             "event": "damage",
             "args": {
               "amount": {
-                "ref": "dmg"
+                "expr": "@dmg"
               },
               "damage_type": {
                 "param": "damage_type"
@@ -301,10 +300,10 @@
           {
             "type": "compare",
             "value": {
-              "tag": "turn_action"
+              "expr": "@turn_action"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "действие на этом ходу уже потрачено",
@@ -319,7 +318,7 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
@@ -364,7 +363,7 @@
             },
             "direction": "add",
             "value": {
-              "ref": "amt"
+              "expr": "@amt"
             },
             "targetModifiers": false
           },
@@ -381,10 +380,10 @@
           {
             "type": "compare",
             "value": {
-              "tag": "turn_action"
+              "expr": "@turn_action"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "действие на этом ходу уже потрачено",
@@ -399,7 +398,7 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
@@ -413,7 +412,7 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             }
           }
         ],
@@ -441,7 +440,7 @@
               ]
             },
             "versus": {
-              "tag": "ac"
+              "expr": "@получатель.ac"
             }
           },
           {
@@ -457,7 +456,7 @@
             "event": "damage",
             "args": {
               "amount": {
-                "ref": "dmg"
+                "expr": "@dmg"
               },
               "damage_type": {
                 "const": "огонь"
@@ -472,10 +471,10 @@
           {
             "type": "compare",
             "value": {
-              "tag": "turn_action"
+              "expr": "@turn_action"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "действие на этом ходу уже потрачено",
@@ -490,7 +489,7 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
@@ -609,10 +608,10 @@
               {
                 "type": "compare",
                 "value": {
-                  "tag": "turn_reaction"
+                  "expr": "@turn_reaction"
                 },
                 "versus": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "breakIf": "less",
                 "note": "реакция уже потрачена",
@@ -627,7 +626,7 @@
                 },
                 "direction": "subtract",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false,
                 "when": {
@@ -636,7 +635,7 @@
               }
             ],
             "if": {
-              "ref": "hit.success"
+              "expr": "@hit.success"
             },
             "steps": [
               {
@@ -702,7 +701,7 @@
                 },
                 "direction": "subtract",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               }
@@ -799,7 +798,7 @@
             "on": "strike",
             "to": "other",
             "if": {
-              "ref": "hit.success"
+              "expr": "@hit.success"
             },
             "steps": [
               {
@@ -815,7 +814,7 @@
                 "event": "damage",
                 "args": {
                   "amount": {
-                    "ref": "back"
+                    "expr": "@back"
                   },
                   "damage_type": {
                     "const": "колющий"
@@ -850,10 +849,10 @@
           {
             "type": "compare",
             "value": {
-              "tag": "turn_action"
+              "expr": "@turn_action"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "действие на этом ходу уже потрачено",
@@ -868,7 +867,7 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
@@ -882,7 +881,7 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             }
           }
         ],
@@ -897,10 +896,10 @@
           {
             "type": "compare",
             "value": {
-              "tag": "turn_action"
+              "expr": "@turn_action"
             },
             "versus": {
-              "const": 1
+              "expr": "1"
             },
             "breakIf": "less",
             "note": "действие на этом ходу уже потрачено",
@@ -915,7 +914,7 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
@@ -929,7 +928,7 @@
             },
             "direction": "subtract",
             "value": {
-              "const": 1
+              "expr": "1"
             }
           }
         ],
@@ -960,7 +959,7 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "param": "save_by"
+                "expr": "@save_by"
               },
               "tags": [
                 "спасбросок"
@@ -980,9 +979,11 @@
               "param": "damage_dice"
             },
             "scale": {
-              "times": 0.5,
+              "times": {
+                "expr": "0.5"
+              },
               "when": {
-                "ref": "save.success"
+                "expr": "@save.success"
               }
             }
           },
@@ -991,7 +992,7 @@
             "event": "damage",
             "args": {
               "amount": {
-                "ref": "dmg"
+                "expr": "@dmg"
               },
               "damage_type": {
                 "param": "damage_type"
@@ -1032,7 +1033,7 @@
                   ]
                 },
                 "versus": {
-                  "const": 10
+                  "expr": "10"
                 },
                 "successWhen": "atLeast",
                 "continueOn": "always"
@@ -1044,11 +1045,11 @@
                 },
                 "direction": "add",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false,
                 "when": {
-                  "ref": "спас.success"
+                  "expr": "@спас.success"
                 }
               },
               {
@@ -1058,12 +1059,11 @@
                 },
                 "direction": "add",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false,
                 "when": {
-                  "ref": "спас.success",
-                  "not": true
+                  "expr": "не(@спас.success)"
                 }
               },
               {
@@ -1073,12 +1073,11 @@
                 },
                 "direction": "add",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false,
                 "when": {
-                  "ref": "спас.natural",
-                  "atMost": 1
+                  "expr": "@спас.natural <= 1"
                 }
               }
             ]
@@ -1163,7 +1162,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 0
+                  "expr": "0"
                 },
                 "targetModifiers": false
               },
@@ -1174,7 +1173,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 0
+                  "expr": "0"
                 },
                 "targetModifiers": false
               }
@@ -1201,10 +1200,10 @@
               {
                 "type": "compare",
                 "value": {
-                  "tag": "turn_reaction"
+                  "expr": "@turn_reaction"
                 },
                 "versus": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "breakIf": "less",
                 "note": "реакция уже потрачена",
@@ -1219,7 +1218,7 @@
                 },
                 "direction": "subtract",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false,
                 "when": {
@@ -1257,9 +1256,11 @@
                   "const": "2d10"
                 },
                 "scale": {
-                  "times": 0.5,
+                  "times": {
+                    "expr": "0.5"
+                  },
                   "when": {
-                    "ref": "save.success"
+                    "expr": "@save.success"
                   }
                 }
               },
@@ -1268,7 +1269,7 @@
                 "event": "damage",
                 "args": {
                   "amount": {
-                    "ref": "dmg"
+                    "expr": "@dmg"
                   },
                   "damage_type": {
                     "const": "огонь"
@@ -1294,7 +1295,7 @@
             },
             "direction": "subtract",
             "value": {
-              "ref": "event.amount"
+              "expr": "@event.amount"
             },
             "targetModifiers": true
           },
@@ -1305,7 +1306,7 @@
             },
             "direction": "subtract",
             "value": {
-              "ref": "по_временным.overkill"
+              "expr": "@по_временным.overkill"
             },
             "targetModifiers": false
           }
@@ -1351,7 +1352,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               },
@@ -1362,7 +1363,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               },
@@ -1373,7 +1374,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               }
@@ -1399,7 +1400,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 0
+                  "expr": "0"
                 },
                 "targetModifiers": false
               }
@@ -1425,7 +1426,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               },
@@ -1436,7 +1437,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "const": 1
+                  "expr": "1"
                 },
                 "targetModifiers": false
               }
@@ -1856,9 +1857,8 @@
         "label": "Бонус мастерства",
         "group": "Прогрессия",
         "value": {
-          "kind": "table",
-          "table": "proficiency",
-          "arg": "#level"
+          "kind": "formula",
+          "expr": "таблица(\"proficiency\", #level)"
         }
       },
       {

@@ -35,7 +35,7 @@ group('конверт вызова', () => {
       eq(env.effect, 'strike', 'конверт называет эффект, а не пересказывает его');
       eq(env.from, 'arven');
       eq(env.steps[0].rolled.total, 15, 'свой бросок сделан своей ведущей костью');
-      deepEq(env.steps[0].versus, { tag: 'ac' }, 'в конверте лежит ТЕГ, а не посчитанный КД цели');
+      deepEq(env.steps[0].versus, { expr: '@получатель.ac', of: 'target' }, 'в конверте лежит формула, а не посчитанный КД цели');
       eq(env.steps[1].rolled.total, 5, 'своя кость урона брошена');
     });
 
@@ -206,12 +206,12 @@ const PARAMETRIC = {
   ],
   steps: [
     { id: 'hit', type: 'threshold',
-      roll: { die: { constant: 'lead_die' }, bonus: { param: 'bonus' }, tags: ['атака'] },
-      versus: { param: 'versus' } },
+      roll: { die: { constant: 'lead_die' }, bonus: { expr: '@bonus' }, tags: ['атака'] },
+      versus: { expr: '@versus' } },
     { id: 'dmg', type: 'amount', source: 'roll',
-      dice: { prop: 'damage_dice' }, bonus: { param: 'damage_bonus' } },
+      dice: { prop: 'damage_dice' }, bonus: { expr: '@damage_bonus' } },
     { type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract',
-      value: { ref: 'dmg' }, targetModifiers: true },
+      value: { expr: '@dmg' }, targetModifiers: true },
   ],
 };
 const paramSys = { ...system, effects: { ...system.effects, parametric: PARAMETRIC } };

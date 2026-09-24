@@ -40,15 +40,15 @@ const play = (steps: any[], ...dice: number[]) => {
 };
 
 const save = { id: 'спас', type: 'threshold', side: 'target', continueOn: 'always',
-  roll: { die: { constant: 'к20' }, bonus: { const: 0 }, tags: ['спас'] }, versus: { const: 12 } };
+  roll: { die: { constant: 'к20' }, bonus: { expr: '0' }, tags: ['спас'] }, versus: { expr: '12' } };
 
 group('ветвление по исходу: стражи на шагах', () => {
   const halfOnSave = [
     save,
-    { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { const: 8 },
-      when: { ref: 'спас.success', not: true } },
-    { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { const: 4 },
-      when: { ref: 'спас.success' } },
+    { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '8' },
+      when: { expr: 'не(@спас.success)' } },
+    { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '4' },
+      when: { expr: '@спас.success' } },
   ];
 
   test('провалил спасбросок — полный урон, шаг «половина» пропущен', () => {
@@ -67,10 +67,10 @@ group('ветвление по исходу: стражи на шагах', () =
   test('страж по степени успеха: «is» сравнивает с ярлыком таблицы', () => {
     const graded = [
       { ...save, degrees: { table: 'исход', of: 'total' } },
-      { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { const: 10 },
-        when: { ref: 'спас.degree', is: 'полный' } },
-      { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { const: 3 },
-        when: { ref: 'спас.degree', is: 'частичный' } },
+      { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '10' },
+        when: { expr: '@спас.degree == "полный"' } },
+      { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '3' },
+        when: { expr: '@спас.degree == "частичный"' } },
     ];
     eq(play(graded, 17).sheet.values.хп, 10, 'полный успех');
     eq(play(graded, 11).sheet.values.хп, 17, 'частичный');
@@ -79,7 +79,7 @@ group('ветвление по исходу: стражи на шагах', () =
 
   test('страж-формула отправителя упаковывается константой: цель её не пересчитывает', () => {
     const steps = [
-      { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { const: 5 },
+      { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '5' },
         when: { expr: '#уровень >= 5' } },
     ];
     const packed = packRule({ params: [], steps } as any, {
@@ -92,7 +92,7 @@ group('ветвление по исходу: стражи на шагах', () =
 
   test('страж-формула цели считается её листом', () => {
     const steps = [
-      { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { const: 5 },
+      { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '5' },
         when: { expr: '@получатель.уровень >= 5' } },
     ];
     eq(play(steps).sheet.values.хп, 20, 'у цели третий уровень — шаг пропущен');
@@ -100,13 +100,13 @@ group('ветвление по исходу: стражи на шагах', () =
 
   test('страж, дающий не да/нет, — внятная ошибка', () => {
     const steps = [
-      { id: 'n', type: 'amount', source: 'item', fixed: { const: 3 } },
-      { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { const: 5 }, when: { ref: 'n' } },
+      { id: 'n', type: 'amount', source: 'item', fixed: { expr: '3' } },
+      { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '5' }, when: { expr: '@n' } },
     ];
     throws(() => play(steps), 'да/нет');
   });
 
   test('шаг без стража работает как раньше — совместимость с мирами до ветвления', () => {
-    eq(play([{ type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { const: 1 } }]).sheet.values.хп, 19);
+    eq(play([{ type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '1' } }]).sheet.values.хп, 19);
   });
 });

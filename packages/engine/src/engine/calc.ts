@@ -1,8 +1,7 @@
 import { compile } from '../formula/index.ts';
 import { UnknownTagError, CycleError, EngineError } from './errors.ts';
-import { readCell } from './cells.ts';
+import { toolsOf } from './refs.ts';
 import { referencedTable, splitPath, walk } from './navigate.ts';
-import { VALUE_COLUMN } from '../model/tables.ts';
 import { ownerOf, DESK } from './owners.ts';
 import { collectModifiers, applyValueModifiers } from './modifiers.ts';
 import { wornEffects } from './effects.ts';
@@ -106,7 +105,6 @@ export function dependenciesOf(system: System, tag: string): string[] {
   if (!field) throw new UnknownTagError(tag);
   const source = field.value;
   if (source.kind === 'formula') return [...compile(source.expr).deps];
-  if (source.kind === 'table') return [...compile(source.arg).deps];
   return [];
 }
 
@@ -119,10 +117,7 @@ function computeBase(field: Field, pass: Pass): unknown {
       return readStored(pass.sheet, field);
 
     case 'formula':
-      return compile(source.expr).evaluate(resolve);
-
-    case 'table':
-      return readCell(pass.system, pass, source.table, compile(source.arg).evaluate(resolve), source.column ?? VALUE_COLUMN, field.tag);
+      return compile(source.expr).evaluate(resolve, toolsOf(pass.system, pass, field.tag));
 
     default:
       throw new EngineError(

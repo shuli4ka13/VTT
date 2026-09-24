@@ -41,16 +41,16 @@ const run = (steps: object[], rolls: number[] = []) => {
 group('шаг «таблица»', () => {
   test('бросок 2к6 читается строкой таблицы и попадает в поле', () => {
     const out = run([
-      { id: 'травма', type: 'table', table: { const: 'травмы' }, dice: { const: '2d6' } },
-      { type: 'apply', target: { tag: 'травма' }, direction: 'set', value: { ref: 'травма' } },
+      { id: 'исход', type: 'table', table: { const: 'травмы' }, dice: { const: '2d6' } },
+      { type: 'apply', target: { tag: 'травма' }, direction: 'set', value: { expr: '@исход' } },
     ], [6, 6]);
-    eq(out.results.травма, 'потеря глаза');
+    eq(out.results.исход, 'потеря глаза');
     eq(out.sheet.values.травма, 'потеря глаза');
     eq((out.trace[0] as { rolls: number[] }).rolls.join(','), '6,6');
   });
 
   test('без костей читается по числу — дистанция даёт сложность', () => {
-    const out = run([{ id: 'порог', type: 'table', table: { const: 'сложность' }, value: { const: 9 } }]);
+    const out = run([{ id: 'порог', type: 'table', table: { const: 'сложность' }, value: { expr: '9' } }]);
     eq(out.results.порог, 15);
   });
 
@@ -58,7 +58,7 @@ group('шаг «таблица»', () => {
     const effect = {
       label: 'e', activation: 'manual',
       params: [{ key: 'какая', label: 'Какая таблица', kind: 'choice' }],
-      steps: [{ id: 'итог', type: 'table', table: { param: 'какая' }, value: { const: 3 } }],
+      steps: [{ id: 'итог', type: 'table', table: { param: 'какая' }, value: { expr: '3' } }],
     } as unknown as Effect;
     const ctx = { system, sheet, compendium, die: () => 1, pass: newPass(system, sheet, { compendium }), owner: 'тест', params: { какая: 'травмы' } };
     const packed = packRule(effect, ctx as never);
@@ -67,9 +67,9 @@ group('шаг «таблица»', () => {
   });
 
   test('таблицы нет, аргумента нет, число вне диапазонов — внятные отказы', () => {
-    throws(() => run([{ type: 'table', table: { const: 'нет_такой' }, value: { const: 1 } }]), 'нет_такой');
+    throws(() => run([{ type: 'table', table: { const: 'нет_такой' }, value: { expr: '1' } }]), 'нет_такой');
     throws(() => run([{ type: 'table', table: { const: 'травмы' } }]), 'нужен аргумент');
     throws(() => run([{ type: 'table' }]), 'какую таблицу');
-    throws(() => run([{ type: 'table', table: { const: 'травмы' }, value: { const: 99 } }]), 'не попадает');
+    throws(() => run([{ type: 'table', table: { const: 'травмы' }, value: { expr: '99' } }]), 'не попадает');
   });
 });

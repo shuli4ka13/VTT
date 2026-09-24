@@ -74,7 +74,7 @@ group('критерии приёмки', () => {
 
     const envelope = send('longsword-item:0', ctx(arven, die(18, 6)));
     ok(!JSON.stringify(envelope).includes('mirra'), 'отправитель о цели не знает');
-    deepEq(envelope.steps[0].versus, { tag: 'ac' }, 'класс брони цели отправителем не посчитан — уехал тег');
+    deepEq(envelope.steps[0].versus, { expr: '@получатель.ac', of: 'target' }, 'класс брони цели отправителем не посчитан — уехал формулой');
 
     const before = calc(system, mirra, 'hp_current', newPass(system, mirra, { compendium }));
     const { sheet, report } = receive(envelope, ctx(mirra, die()));

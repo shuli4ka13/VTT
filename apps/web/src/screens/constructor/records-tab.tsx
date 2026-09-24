@@ -377,6 +377,7 @@ function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWi
                   value={binding.args?.[param.key] as never}
                   context={{ system, effect: effect ?? ({ label: '' } as Effect), earlier: [], recordKind }}
                   allow={['prop', 'expr', 'const', 'table', 'empty']}
+                  keep={['prop', 'const']}
                   placeholder="число или формула — или выберите ниже"
                   extraOptions={[
                     ...(isClosed(param.key) ? [] : [{
@@ -454,7 +455,7 @@ function sourcesFor(param: Param, kind: RecordKind, system: System): { label: st
       .filter(column => ['number', 'expr'].includes(String(column.kind ?? 'number')))
       .map(column => ({
         label: `«${prop.label ?? prop.key}» → столбец «${column.label || column.key}»`,
-        ref: { table: prop.from, by: { prop: prop.key }, column: column.key },
+        ref: { expr: `@${prop.key}.${column.key}` },
       })));
   return [...own, ...viaTable];
 }

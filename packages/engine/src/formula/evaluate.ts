@@ -6,6 +6,7 @@ export type Value = number | boolean | string;
 
 export interface Tools {
   roll?: (notation: string, times: number) => number;
+  table?: (name: string, key: Value | Value[], column: string | null) => Value;
 }
 
 interface Fn {
@@ -49,6 +50,22 @@ const FUNCTIONS: Record<string, Fn> = {
     apply: () => 0,
     raw: args => args.some((value, n) => boolean(value, `аргумент ${n + 1} функции «любое»`)),
   },
+  не: {
+    arity: 1,
+    apply: () => 0,
+    raw: args => !boolean(args[0], 'аргумент функции «не»'),
+  },
+  таблица: {
+    arity: '1+',
+    apply: () => 0,
+    raw: (args, tools) => {
+      if (args.length < 2 || args.length > 3) {
+        throw new FormulaRuntimeError('«таблица» требует два или три аргумента: какая таблица, по чему искать и, если нужно, какая колонка');
+      }
+      if (!tools.table) throw new FormulaRuntimeError('«таблица» здесь нельзя: таблиц системы тут не видно');
+      return tools.table(String(args[0]), args[1] as Value, args.length > 2 ? String(args[2]) : null);
+    },
+  },
   кинуть: {
     arity: '1+',
     apply: args => args[0]!,
@@ -77,6 +94,9 @@ export function evaluate(ast: Node, resolve: Resolve, tools: Tools = {}): Value 
         return node.value;
 
       case 'Text':
+        return node.value;
+
+      case 'Bool':
         return node.value;
 
       case 'Ref':

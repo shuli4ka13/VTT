@@ -1,3 +1,4 @@
+import { readGuard } from './guard-expr.ts';
 import { amountParamOf } from '@vtt/engine/model/lists';
 import type { System, Effect, Step, SystemConstant } from '@vtt/schema';
 import { labelOfTag, formulaAsLabels } from '../../ui/formula.tsx';
@@ -11,9 +12,11 @@ const hole = (label: string): Segment => ({ hole: label });
 
 export function countWord(system: System, count: unknown): string {
   if (typeof count !== 'object' || count === null) return String(count ?? 1);
-  const tag = (count as { tag?: unknown }).tag;
-  if (tag) return system.fields.find(f => f.tag === tag)?.label || String(tag);
-  return '…';
+  const expr = String((count as { expr?: unknown }).expr ?? '').trim();
+  if (!expr) return '…';
+  const tag = /^@([\p{L}\p{N}_]+)$/u.exec(expr)?.[1];
+  if (tag) return system.fields.find(f => f.tag === tag)?.label || tag;
+  return formulaAsLabels(system, expr);
 }
 
 export function dieWord(system: System, name: string): string {
@@ -49,6 +52,20 @@ export function refSegment(ref: unknown, system: System, effect: Effect, emptyAs
   if ('expr' in r) {
     const text = String(r.expr ?? '').trim();
     if (!text) return hole(emptyAs);
+    const alone = /^@([\p{L}\p{N}_.]+)$/u.exec(text)?.[1];
+    if (alone) {
+      const head = alone.split('.')[0]!;
+      const field = ownerOf(alone)?.rest ?? alone;
+      const declared = effect.params?.find(p => p.key === alone);
+      if (declared) return hole(`${declared.label ?? alone} — из записи`);
+      if (head === 'event') return seg(EVENT_WORDS[alone] ?? 'присланное');
+      if (alone === 'worn.carry') return seg('запомненного числа');
+      if (system.fields.some(f => f.tag === field)) return seg(`«${labelOfTag(system, field)}»`);
+      if (!ownerOf(alone)) {
+        const named = names?.get(alone) ?? names?.get(head);
+        return seg(named ? `«${named}»` : `результат «${head}»`);
+      }
+    }
     return seg(formulaAsLabels(system, text, names));
   }
   if ('tag' in r) return seg(`«${labelOfTag(system, String(r.tag))}»`);
@@ -56,15 +73,7 @@ export function refSegment(ref: unknown, system: System, effect: Effect, emptyAs
     const declared = effect.params?.find(p => p.key === r.param);
     return hole(`${declared?.label ?? String(r.param)} — из записи`);
   }
-  if ('prop' in r || 'item' in r) return hole(`${String(r.prop ?? r.item)} — из записи`);
-  if ('ref' in r) {
-    const path = String(r.ref);
-    const head = path.split('.')[0]!;
-    if (head === 'event') return seg(EVENT_WORDS[path] ?? 'присланное');
-    if (path === 'worn.carry') return seg('запомненного числа');
-    const named = names?.get(path) ?? names?.get(head);
-    return seg(named ? `«${named}»` : `результат «${head}»`);
-  }
+  if ('prop' in r) return hole(`${String(r.prop)} — из записи`);
   if ('constant' in r) {
     const name = String(r.constant);
     const reading = readingWord(system, name);
@@ -183,9 +192,11 @@ export function changeReadback(step: Step, amount: Step | null, system: System, 
 
   const expr = s.value && typeof s.value === 'object' && 'expr' in s.value
     ? String(s.value.expr ?? '') : null;
-  const what = expr !== null
+  const whole = amount && expr !== null && expr.trim() === `@${String((amount as { id?: unknown }).id ?? '')}`;
+  const lone = expr !== null && /^\s*@[\p{L}\p{N}_.]+\s*$/u.test(expr);
+  const what = expr !== null && !whole && !lone
     ? exprSegments(expr, amount, system, effect, names)
-    : amount
+    : amount && (whole || expr === null)
       ? amountValueSegments(amount, system, effect, names)
       : [refSegment(s.value, system, effect, 'сколько?', names)];
   const direction = s.direction ?? 'subtract';
@@ -221,9 +232,12 @@ export function sendReadback(step: Step, system: System, effect: Effect, names?:
 
 export function numberReadback(step: Step, system: System, effect: Effect, names?: Names): Segment[] {
   const out: Segment[] = [seg('Считается число:'), ...amountValueSegments(step, system, effect, names)];
-  const double = (step as { double?: { ref?: string; atLeast?: number } }).double;
-  if (double?.ref) {
-    out.push(seg(`— и вдвое, если ${outputWords(double.ref)} не меньше ${double.atLeast ?? 20}`));
+  const double = (step as { double?: { expr?: string } }).double;
+  if (double?.expr) {
+    const when = readGuard(double.expr);
+    out.push(seg(when?.atLeast !== undefined
+      ? `— и вдвое, если ${outputWords(when.ref)} не меньше ${when.atLeast}`
+      : `— и вдвое, если ${formulaAsLabels(system, double.expr, names)}`));
   }
   out.push(seg('.'));
   return out;

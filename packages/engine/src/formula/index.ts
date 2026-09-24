@@ -10,6 +10,8 @@ export type { Tools } from './evaluate.ts';
 export { FormulaError, FormulaSyntaxError, FormulaRuntimeError } from './errors.ts';
 export { FUNCTION_NAMES } from './evaluate.ts';
 export { lex } from './lex.ts';
+export { BOOLEANS } from './parse.ts';
+export { printFormula } from './print.ts';
 export type { Token, TokenType } from './lex.ts';
 export type { Node } from './ast.ts';
 export type { Value } from './evaluate.ts';

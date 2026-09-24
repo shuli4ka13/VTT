@@ -29,7 +29,7 @@ function assemble(): { system: System; compendium: Compendium; sheets: Sheet[]; 
   amount.dice = { const: '1d4' };
   const change = brick('change', system) as Record<string, any>;
   change.target = { tag: hits.key };
-  change.value = { ref: amount.id };
+  change.value = { expr: `@${amount.id}` };
   effect.value.steps = [check, amount, change] as Step[];
   system.effects[effect.key] = effect.value;
 

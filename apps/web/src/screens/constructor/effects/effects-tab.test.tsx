@@ -73,7 +73,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
   it('изначально шаги свёрнуты, а только что добавленный — открыт', () => {
     useWorld.setState(state => ({
       ...state,
-      system: { ...state.system, effects: { fresh: { label: 'Свежий эффект', activation: 'manual', params: [], steps: [{ id: 'был', type: 'threshold', roll: { check: null }, versus: { const: 10 } }] } } },
+      system: { ...state.system, effects: { fresh: { label: 'Свежий эффект', activation: 'manual', params: [], steps: [{ id: 'был', type: 'threshold', roll: { check: null }, versus: { expr: '10' } }] } } },
       activeEffectId: 'fresh',
     }));
     render(<EffectsTab />);
@@ -144,7 +144,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
         effects: {
           strike: {
             label: 'Атака', activation: 'manual', params: [],
-            steps: [{ type: 'apply', target: { tag: 'hp_current' }, value: { const: 1 } }],
+            steps: [{ type: 'apply', target: { tag: 'hp_current' }, value: { expr: '1' } }],
           },
         },
       },
@@ -171,7 +171,7 @@ describe('ссылка на результат шага', () => {
               {
                 id: 'бросок', type: 'threshold',
                 roll: { die: { constant: 'lead' }, check: null },
-                versus: { const: 10 },
+                versus: { expr: '10' },
               },
               { id: 'сколько', type: 'amount', source: 'margin' },
             ],
@@ -270,7 +270,7 @@ describe('вызываемый эффект — обычный эффект', ()
     const key = useWorld.getState().activeEffectId!;
     const made = useWorld.getState().system.effects[key]!;
     expect(made.steps).toEqual([
-      { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { ref: 'event.amount' }, targetModifiers: true },
+      { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '@event.amount' }, targetModifiers: true },
     ]);
     expect(key.startsWith('event:')).toBe(false);
   });
@@ -332,7 +332,7 @@ describe('крит — обычная формула, а не особый сл�
           удар: {
             label: 'Удар', activation: 'manual', params: [],
             steps: [
-              { id: 'проверка', type: 'threshold', roll: { die: { constant: 'к20' } }, versus: { const: 10 } },
+              { id: 'проверка', type: 'threshold', roll: { die: { constant: 'к20' } }, versus: { expr: '10' } },
               { id: 'урон', type: 'amount', source: 'roll', dice: { const: '2d6' } },
             ],
           },

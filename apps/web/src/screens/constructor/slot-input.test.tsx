@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
 import { render, fireEvent, screen } from '@testing-library/react';
-import { parseTyped, displayOf, optionsFor, SlotInput, normalizeDice, asText, grownFrom } from './slot-input.tsx';
+import { optionsFor, SlotInput, normalizeDice, asText, grownFrom } from './slot-input.tsx';
 import type { SlotContext } from './slots.tsx';
 import type { System, Effect } from '@vtt/schema';
 
@@ -16,14 +16,6 @@ const ctx: SlotContext = {
   earlier: [{ id: 'hit', type: 'threshold', at: 1, title: 'Проверка' }],
 };
 
-describe('parseTyped', () => {
-  it('пусто → null, число → const, текст → expr', () => {
-    expect(parseTyped('')).toBeNull();
-    expect(parseTyped('3')).toEqual({ const: 3 });
-    expect(parseTyped('@armor + 2')).toEqual({ expr: '@armor + 2' });
-  });
-});
-
 describe('normalizeDice', () => {
   it('разбирает кириллическую и латинскую нотацию, число опущено → 1', () => {
     expect(normalizeDice('1к8')).toBe('1d8');
@@ -36,23 +28,16 @@ describe('normalizeDice', () => {
   });
 });
 
-describe('displayOf', () => {
-  it('структурные ссылки показываются словами', () => {
-    expect(displayOf({ tag: 'armor' }, ctx)).toBe('поле: Класс брони');
-    expect(displayOf({ param: 'p_1' }, ctx)).toBe('из записи: кость урона');
-    expect(displayOf({ ref: 'hit.margin' }, ctx)).toBe('шаг 1 · Проверка — на сколько перебил порог');
-    expect(displayOf({ const: 5 }, ctx)).toBe('5');
-  });
-});
-
 describe('optionsFor', () => {
   it('собирает поля, запись, результаты и кости; prop не предлагает', () => {
-    const groups = new Set(optionsFor(ctx).map(o => o.group));
-    expect(groups).toEqual(new Set(['Поля цели', 'Из записи', 'Результаты шагов', 'Кости']));
+    const groups = new Set(optionsFor(ctx, undefined, []).map(o => o.group));
+    expect(groups).toEqual(new Set(['Поля листа', 'Из записи', 'Результаты шагов', 'Кости']));
+    expect(new Set(optionsFor(ctx, undefined, [], 'target').map(o => o.group))).toContain('Поля цели');
+    expect(optionsFor(ctx, ['tag'], [], 'target')[0]!.name).toBe('получатель.armor');
   });
   it('allow сужает список', () => {
 
-    expect(optionsFor(ctx, ['ref']).map(o => o.label)).toEqual([
+    expect(optionsFor(ctx, ['ref'], []).map(o => o.label)).toEqual([
       'шаг 1 · Проверка — да или нет: взят ли порог',
       'шаг 1 · Проверка — на сколько перебил порог',
       'шаг 1 · Проверка — сколько вышло всего, с прибавками',
@@ -84,12 +69,21 @@ describe('SlotInput', () => {
     expect(document.querySelector('.slot__menu')).not.toBeNull();
   });
 
-  it('выбор варианта по @ отдаёт структурную ссылку', () => {
+  it('выбор варианта по @ пишет имя в формулу', () => {
     let got: unknown = 'untouched';
     render(<SlotInput value={undefined} onChange={next => { got = next; }} context={ctx} />);
     const input = typeAt('@Класс');
     fireEvent.mouseDown(screen.getAllByText('Класс брони')[0]!);
     expect(got, 'выбор вставляет фишку, а не закрывает правку').toBe('untouched');
+    fireEvent.keyDown(document.querySelector('input.chips__text') ?? input, { key: 'Enter' });
+    expect(got).toEqual({ expr: '@armor' });
+  });
+
+  it('где имя — само значение (какое поле менять), выбор отдаёт ссылку на поле', () => {
+    let got: unknown = 'untouched';
+    render(<SlotInput value={undefined} onChange={next => { got = next; }} context={ctx} allow={['tag', 'param']} keep={['tag', 'param']} />);
+    const input = typeAt('@Класс');
+    fireEvent.mouseDown(screen.getAllByText('Класс брони')[0]!);
     fireEvent.keyDown(document.querySelector('input.chips__text') ?? input, { key: 'Enter' });
     expect(got).toEqual({ tag: 'armor' });
   });
@@ -111,9 +105,18 @@ describe('SlotInput', () => {
     expect(got).not.toBe('untouched');
   });
 
-  it('набранное число уходит как const по Enter', () => {
+  it('набранное число — тоже формула', () => {
     let got: unknown = 'untouched';
     render(<SlotInput value={undefined} onChange={next => { got = next; }} context={ctx} />);
+    const input = screen.getByRole('textbox');
+    fireEvent.change(input, { target: { value: '7' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(got).toEqual({ expr: '7' });
+  });
+
+  it('в аргументе вызова число остаётся значением', () => {
+    let got: unknown = 'untouched';
+    render(<SlotInput value={undefined} onChange={next => { got = next; }} context={ctx} keep={['const']} />);
     const input = screen.getByRole('textbox');
     fireEvent.change(input, { target: { value: '7' } });
     fireEvent.keyDown(input, { key: 'Enter' });
@@ -127,18 +130,6 @@ describe('SlotInput', () => {
     fireEvent.change(input, { target: { value: '1к8' } });
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(got).toEqual({ const: '1d8' });
-  });
-
-  it('allow сужает набранный текст: чужой вид отменяется, фишка остаётся', () => {
-    let called = false;
-    render(<SlotInput value={{ tag: 'armor' }} onChange={() => { called = true; }} context={ctx} allow={['constant']} />);
-
-    expect(screen.getByText('Класс брони')).toBeTruthy();
-    const input = screen.getAllByRole('textbox').at(-1) as HTMLInputElement;
-    fireEvent.change(input, { target: { value: 'abc' } });
-    fireEvent.keyDown(input, { key: 'Enter' });
-    expect(called).toBe(false);
-    expect(screen.getByText('Класс брони')).toBeTruthy();
   });
 
   it('крестик на фишке очищает слот', () => {
@@ -190,30 +181,21 @@ describe('SlotInput: дописывание после фишки', () => {
 });
 
 describe('фишка дорастает до формулы', () => {
-  const ctx = {
-    system: {
-      fields: [{ tag: 'сила', label: 'Сила', value: { kind: 'stored', type: 'number', default: 10 } }],
-      effects: {}, records: {},
-    },
-    effect: { label: 'Удар' },
-    earlier: [],
-  } as never;
-
   it('поле листа превращается в текст формулы', () => {
-    expect(asText({ tag: 'сила' }, ctx)).toBe('@сила');
+    expect(asText({ tag: 'сила' })).toBe('@сила');
   });
 
   it('свойство записи тоже, чтобы к нему можно было дописать', () => {
-    expect(asText({ prop: 'кость_урона' }, ctx)).toBe('@кость_урона');
+    expect(asText({ prop: 'кость_урона' })).toBe('@кость_урона');
   });
 
   it('набранное со знака дописывается к тому, что уже стоит', () => {
-    expect(grownFrom({ prop: 'кость_урона' }, ' + 2', ctx)).toEqual({ expr: '@кость_урона + 2' });
-    expect(grownFrom({ tag: 'сила' }, '* 2', ctx)).toEqual({ expr: '@сила * 2' });
+    expect(grownFrom({ prop: 'кость_урона' }, ' + 2')).toEqual({ expr: '@кость_урона + 2' });
+    expect(grownFrom({ tag: 'сила' }, '* 2')).toEqual({ expr: '@сила * 2' });
   });
 
   it('набранное без знака заменяет, а не дописывает', () => {
-    expect(grownFrom({ prop: 'кость_урона' }, '7', ctx)).toBeNull();
-    expect(grownFrom(null, '+ 2', ctx)).toBeNull();
+    expect(grownFrom({ prop: 'кость_урона' }, '7')).toBeNull();
+    expect(grownFrom(null, '+ 2')).toBeNull();
   });
 });

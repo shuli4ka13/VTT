@@ -1,4 +1,5 @@
 import { ANY_ROLL } from '../engine/targets.ts';
+import { lonelyField } from '../engine/refs.ts';
 import { findRoll, writeRoll, factorsOf, bare, tight } from './amounts.ts';
 import type { System, Step } from './types.ts';
 
@@ -125,18 +126,18 @@ export function setCrit(draft: System, choice: CritChoice): void {
 
 export function armorTail(choice: ArmorChoice, armor: string, hp: string): Step[] {
   if (choice === 'none') {
-    return [{ type: 'apply', target: { tag: hp }, direction: 'subtract', value: { ref: 'event.amount' }, targetModifiers: true } as Step];
+    return [{ type: 'apply', target: { tag: hp }, direction: 'subtract', value: { expr: '@event.amount' }, targetModifiers: true } as Step];
   }
   if (choice === 'threshold') {
     return [
-      { id: ARMOR_STEP, type: 'compare', value: { ref: 'event.amount' }, versus: { tag: armor }, breakIf: 'atMost' } as Step,
-      { type: 'apply', target: { tag: hp }, direction: 'subtract', value: { ref: 'event.amount' }, targetModifiers: false } as Step,
+      { id: ARMOR_STEP, type: 'compare', value: { expr: '@event.amount' }, versus: { expr: `@получатель.${armor}` }, breakIf: 'atMost' } as Step,
+      { type: 'apply', target: { tag: hp }, direction: 'subtract', value: { expr: '@event.amount' }, targetModifiers: false } as Step,
     ];
   }
   return [
-    { id: ARMOR_STEP, type: 'compare', value: { ref: 'event.amount' }, versus: { tag: armor }, breakIf: 'less' } as Step,
-    { type: 'apply', target: { tag: hp }, direction: 'subtract', value: { ref: `${ARMOR_STEP}.margin` }, targetModifiers: false } as Step,
-    { type: 'apply', target: { tag: armor }, direction: 'subtract', value: { const: 1 }, targetModifiers: false } as Step,
+    { id: ARMOR_STEP, type: 'compare', value: { expr: '@event.amount' }, versus: { expr: `@получатель.${armor}` }, breakIf: 'less' } as Step,
+    { type: 'apply', target: { tag: hp }, direction: 'subtract', value: { expr: `@${ARMOR_STEP}.margin` }, targetModifiers: false } as Step,
+    { type: 'apply', target: { tag: armor }, direction: 'subtract', value: { expr: '1' }, targetModifiers: false } as Step,
   ];
 }
 
@@ -145,9 +146,9 @@ export interface ArmorReading { choice: ArmorChoice; armor: string | null; hp: s
 export function armorOf(system: System, event: string): ArmorReading {
   const steps = (system.effects?.[event]?.steps ?? []) as Record<string, unknown>[];
   const first = steps[0];
-  const versus = first?.versus as { tag?: string } | undefined;
-  if (!first || first.type !== 'compare' || !versus?.tag) return { choice: 'none', armor: null, hp: null };
-  const armor = String(versus.tag);
+  const armorTag = lonelyField(first?.versus);
+  if (!first || first.type !== 'compare' || !armorTag) return { choice: 'none', armor: null, hp: null };
+  const armor = armorTag;
   const applies = steps.filter(s => s.type === 'apply');
   const hp = applies.map(s => (s.target as { tag?: string } | undefined)?.tag).find(tag => tag && tag !== armor) ?? null;
   const wears = applies.some(s => (s.target as { tag?: string } | undefined)?.tag === armor);

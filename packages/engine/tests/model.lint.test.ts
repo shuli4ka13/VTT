@@ -29,7 +29,7 @@ group('линт: образцы чисты', () => {
 
 group('линт: висячие ссылки называются словами экрана', () => {
   test('поле, которого нет — с подсказкой завести его на «Листе»', () => {
-    const system = withEffect('hit', { steps: [{ type: 'apply', target: { tag: 'нет_такого' }, value: { const: 1 } }] as Step[] });
+    const system = withEffect('hit', { steps: [{ type: 'apply', target: { tag: 'нет_такого' }, value: { expr: '1' } }] as Step[] });
     const [problem] = errorsOf(lintSystem(system));
     ok(problem?.text.includes('«нет_такого»'), problem?.text);
     ok(problem?.text.includes('Лист'), problem?.text);
@@ -60,7 +60,7 @@ group('линт: висячие ссылки называются словами
   test('кость инициативы, таблица поля, правило комнаты, правка броска', () => {
     const system = bare();
     system.initiative = { die: { constant: 'нет_кости' }, tags: ['нет_броска'] } as never;
-    system.fields.push({ tag: 'lvl', label: 'Ур', value: { kind: 'table', table: 'нет_таблицы', arg: '#hp' } } as never);
+    system.fields.push({ tag: 'lvl', label: 'Ур', value: { kind: 'formula', expr: 'таблица("нет_таблицы", #hp)' } } as never);
     system.room_rules = ['нет_правила'];
     system.effects.buff = { label: 'y', activation: 'passive', modifiers: [{ kind: 'roll', target: 'roll:any', edit: 'нет_правки' }] } as never;
     const found = errorTexts(system).join('\n');
@@ -71,32 +71,32 @@ group('линт: висячие ссылки называются словами
 
   test('ссылка на шаг выше по цепочке — законна, ниже — нет', () => {
     const okSystem = withEffect('e', {
-      steps: [{ id: 'roll', type: 'amount', source: 'roll', dice: { constant: 'd20' } }, { type: 'apply', target: { tag: 'hp' }, value: { ref: 'roll' } }] as Step[],
+      steps: [{ id: 'roll', type: 'amount', source: 'roll', dice: { constant: 'd20' } }, { type: 'apply', target: { tag: 'hp' }, value: { expr: '@roll' } }] as Step[],
     });
     eq(errorTexts(okSystem).join(''), '');
     const badSystem = withEffect('e', {
-      steps: [{ type: 'apply', target: { tag: 'hp' }, value: { ref: 'roll' } }, { id: 'roll', type: 'amount', source: 'roll', dice: { constant: 'd20' } }] as Step[],
+      steps: [{ type: 'apply', target: { tag: 'hp' }, value: { expr: '@roll' } }, { id: 'roll', type: 'amount', source: 'roll', dice: { constant: 'd20' } }] as Step[],
     });
     ok(errorTexts(badSystem).some(t => t.includes('«roll» выше по цепочке нет')), errorTexts(badSystem).join('|'));
   });
 
   test('условие «только если» ссылается на шаг выше', () => {
     const system = withEffect('e', {
-      steps: [{ type: 'apply', target: { tag: 'hp' }, value: { const: 1 }, when: { ref: 'нет.success' } }] as Step[],
+      steps: [{ type: 'apply', target: { tag: 'hp' }, value: { expr: '1' }, when: { expr: '@нет.success' } }] as Step[],
     });
     ok(errorTexts(system).some(t => t.includes('«нет» выше по цепочке нет')), errorTexts(system).join('|'));
   });
 
   test('потребность, которую эффект не объявил', () => {
-    const system = withEffect('e', { params: [], steps: [{ type: 'apply', target: { tag: 'hp' }, value: { param: 'dmg' } }] as Step[] });
-    ok(errorTexts(system).some(t => t.includes('потребность «dmg» эффектом не объявлена')), errorTexts(system).join('|'));
+    const system = withEffect('e', { params: [], steps: [{ type: 'apply', target: { tag: 'hp' }, value: { expr: '@dmg' } }] as Step[] });
+    ok(errorTexts(system).some(t => t.includes('«dmg» — нет ни поля листа, ни потребности эффекта')), errorTexts(system).join('|'));
   });
 
   test('условие срабатывания смотрит на шаг слушаемого эффекта', () => {
-    const system = withEffect('strike', { steps: [{ id: 'hit', type: 'threshold', roll: { die: { constant: 'd20' } }, versus: { const: 10 } }] as Step[] });
-    system.effects.thorns = { label: 'Шипы', activation: 'passive', on: [{ on: 'strike', to: 'other', if: { ref: 'hit.success' }, steps: [] }] } as never;
+    const system = withEffect('strike', { steps: [{ id: 'hit', type: 'threshold', roll: { die: { constant: 'd20' } }, versus: { expr: '10' } }] as Step[] });
+    system.effects.thorns = { label: 'Шипы', activation: 'passive', on: [{ on: 'strike', to: 'other', if: { expr: '@hit.success' }, steps: [] }] } as never;
     eq(errorTexts(system).join(''), '');
-    system.effects.thorns = { label: 'Шипы', activation: 'passive', on: [{ on: 'strike', to: 'other', if: { ref: 'miss.success' }, steps: [] }] } as never;
+    system.effects.thorns = { label: 'Шипы', activation: 'passive', on: [{ on: 'strike', to: 'other', if: { expr: '@miss.success' }, steps: [] }] } as never;
     ok(errorTexts(system).some(t => t.includes('нет шага «miss»')), errorTexts(system).join('|'));
   });
 
@@ -108,7 +108,7 @@ group('линт: висячие ссылки называются словами
 
   test('в шагах вызываемого эффекта «event.amount» — не висячая ссылка', () => {
     const system = bare();
-    system.effects.damage = { label: 'Урон', params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }], steps: [{ type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { ref: 'event.amount' } }] } as never;
+    system.effects.damage = { label: 'Урон', params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }], steps: [{ type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '@event.amount' } }] } as never;
     eq(errorTexts(system).join(''), '');
   });
 });
@@ -149,7 +149,7 @@ group('линт: слушатели, круги, потребности', () => 
 
   test('без круга — тишина', () => {
     const system = withEffect('a', { steps: [{ type: 'emit', event: 'damage' }] as Step[] });
-    system.effects.damage = { label: 'Урон', params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }], steps: [{ type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { ref: 'event.amount' } }] } as never;
+    system.effects.damage = { label: 'Урон', params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }], steps: [{ type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '@event.amount' } }] } as never;
     ok(!texts(system).some(t => t.includes('по кругу')));
   });
 

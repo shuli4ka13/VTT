@@ -3,6 +3,8 @@ import type { Token, TokenType } from './lex.ts';
 import type { Node } from './ast.ts';
 import { FormulaSyntaxError } from './errors.ts';
 
+export const BOOLEANS: Record<string, boolean> = { да: true, нет: false };
+
 const COMPARISON_OPS = ['==', '!=', '<', '<=', '>', '>='];
 
 export function parse(source: unknown): Node {
@@ -76,7 +78,7 @@ export function parse(source: unknown): Node {
 
     if (t.type === 'text') {
       advance();
-      return { kind: 'Text', value: String(t.value) };
+      return { kind: 'Text', value: String(t.value), at: t.pos, raw: t.text };
     }
 
     if (t.type === 'ref') {
@@ -86,6 +88,7 @@ export function parse(source: unknown): Node {
 
     if (t.type === 'ident') {
       advance();
+      if (!at('lparen') && String(t.value) in BOOLEANS) return { kind: 'Bool', value: BOOLEANS[String(t.value)]! };
       if (!at('lparen')) throw new FormulaSyntaxError(`после имени «${t.value}» ожидается «(»`, t.pos);
       advance();
       const args: Node[] = [];

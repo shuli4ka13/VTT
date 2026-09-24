@@ -46,6 +46,7 @@ exports[`золотые трассы: 13age > goblin → goblin · goblin_spear:
             "total": 26,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -196,6 +197,7 @@ exports[`золотые трассы: 13age > goblin → goblin · goblin_spear:
             "total": 26,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -337,6 +339,7 @@ exports[`золотые трассы: 13age > goblin → goblin · goblin_spear:
             "total": 7,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -459,6 +462,7 @@ exports[`золотые трассы: 13age > goblin → goblin · goblin_spear:
             "total": 7,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -581,6 +585,7 @@ exports[`золотые трассы: 13age > goblin → goblin · goblin_spear:
             "total": 10,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -703,6 +708,7 @@ exports[`золотые трассы: 13age > goblin → goblin · goblin_spear:
             "total": 10,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -834,6 +840,7 @@ exports[`золотые трассы: 13age > goblin → kai · goblin_spear:0 �
             "total": 26,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -984,6 +991,7 @@ exports[`золотые трассы: 13age > goblin → kai · goblin_spear:0 �
             "total": 26,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -1125,6 +1133,7 @@ exports[`золотые трассы: 13age > goblin → kai · goblin_spear:0 �
             "total": 7,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -1247,6 +1256,7 @@ exports[`золотые трассы: 13age > goblin → kai · goblin_spear:0 �
             "total": 7,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -1369,6 +1379,7 @@ exports[`золотые трассы: 13age > goblin → kai · goblin_spear:0 �
             "total": 10,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -1491,6 +1502,7 @@ exports[`золотые трассы: 13age > goblin → kai · goblin_spear:0 �
             "total": 10,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -1622,6 +1634,7 @@ exports[`золотые трассы: 13age > goblin → leya · goblin_spear:0 
             "total": 26,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -1772,6 +1785,7 @@ exports[`золотые трассы: 13age > goblin → leya · goblin_spear:0 
             "total": 26,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -1913,6 +1927,7 @@ exports[`золотые трассы: 13age > goblin → leya · goblin_spear:0 
             "total": 7,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -2035,6 +2050,7 @@ exports[`золотые трассы: 13age > goblin → leya · goblin_spear:0 
             "total": 7,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -2157,6 +2173,7 @@ exports[`золотые трассы: 13age > goblin → leya · goblin_spear:0 
             "total": 10,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -2279,6 +2296,7 @@ exports[`золотые трассы: 13age > goblin → leya · goblin_spear:0 
             "total": 10,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -2410,6 +2428,7 @@ exports[`золотые трассы: 13age > goblin → orc · goblin_spear:0 �
             "total": 26,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -2560,6 +2579,7 @@ exports[`золотые трассы: 13age > goblin → orc · goblin_spear:0 �
             "total": 26,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -2701,6 +2721,7 @@ exports[`золотые трассы: 13age > goblin → orc · goblin_spear:0 �
             "total": 7,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -2823,6 +2844,7 @@ exports[`золотые трассы: 13age > goblin → orc · goblin_spear:0 �
             "total": 7,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -2945,6 +2967,7 @@ exports[`золотые трассы: 13age > goblin → orc · goblin_spear:0 �
             "total": 10,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -3067,6 +3090,7 @@ exports[`золотые трассы: 13age > goblin → orc · goblin_spear:0 �
             "total": 10,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -3858,6 +3882,7 @@ exports[`золотые трассы: 13age > kai → goblin · longsword:0 · �
             "total": 26,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -4024,6 +4049,7 @@ exports[`золотые трассы: 13age > kai → goblin · longsword:0 · �
             "total": 26,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -4190,6 +4216,7 @@ exports[`золотые трассы: 13age > kai → goblin · longsword:0 · �
             "total": 7,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -4350,6 +4377,7 @@ exports[`золотые трассы: 13age > kai → goblin · longsword:0 · �
             "total": 7,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -4510,6 +4538,7 @@ exports[`золотые трассы: 13age > kai → goblin · longsword:0 · �
             "total": 10,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -4670,6 +4699,7 @@ exports[`золотые трассы: 13age > kai → goblin · longsword:0 · �
             "total": 10,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -6186,6 +6216,7 @@ exports[`золотые трассы: 13age > kai → kai · longsword:0 · ко
             "total": 26,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -6352,6 +6383,7 @@ exports[`золотые трассы: 13age > kai → kai · longsword:0 · ко
             "total": 26,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -6518,6 +6550,7 @@ exports[`золотые трассы: 13age > kai → kai · longsword:0 · ко
             "total": 7,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -6678,6 +6711,7 @@ exports[`золотые трассы: 13age > kai → kai · longsword:0 · ко
             "total": 7,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -6838,6 +6872,7 @@ exports[`золотые трассы: 13age > kai → kai · longsword:0 · ко
             "total": 10,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -6998,6 +7033,7 @@ exports[`золотые трассы: 13age > kai → kai · longsword:0 · ко
             "total": 10,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -8514,6 +8550,7 @@ exports[`золотые трассы: 13age > kai → leya · longsword:0 · к�
             "total": 26,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -8680,6 +8717,7 @@ exports[`золотые трассы: 13age > kai → leya · longsword:0 · к�
             "total": 26,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -8846,6 +8884,7 @@ exports[`золотые трассы: 13age > kai → leya · longsword:0 · к�
             "total": 7,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -9006,6 +9045,7 @@ exports[`золотые трассы: 13age > kai → leya · longsword:0 · к�
             "total": 7,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -9166,6 +9206,7 @@ exports[`золотые трассы: 13age > kai → leya · longsword:0 · к�
             "total": 10,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -9326,6 +9367,7 @@ exports[`золотые трассы: 13age > kai → leya · longsword:0 · к�
             "total": 10,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -10842,6 +10884,7 @@ exports[`золотые трассы: 13age > kai → orc · longsword:0 · ко
             "total": 26,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -11008,6 +11051,7 @@ exports[`золотые трассы: 13age > kai → orc · longsword:0 · ко
             "total": 26,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -11174,6 +11218,7 @@ exports[`золотые трассы: 13age > kai → orc · longsword:0 · ко
             "total": 7,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -11334,6 +11379,7 @@ exports[`золотые трассы: 13age > kai → orc · longsword:0 · ко
             "total": 7,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -11494,6 +11540,7 @@ exports[`золотые трассы: 13age > kai → orc · longsword:0 · ко
             "total": 10,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -11654,6 +11701,7 @@ exports[`золотые трассы: 13age > kai → orc · longsword:0 · ко
             "total": 10,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -12510,6 +12558,7 @@ exports[`золотые трассы: 13age > leya → goblin · dagger:0 · к�
             "total": 22,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -12676,6 +12725,7 @@ exports[`золотые трассы: 13age > leya → goblin · dagger:0 · к�
             "total": 22,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -12842,6 +12892,7 @@ exports[`золотые трассы: 13age > leya → goblin · dagger:0 · к�
             "total": 3,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -13002,6 +13053,7 @@ exports[`золотые трассы: 13age > leya → goblin · dagger:0 · к�
             "total": 3,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -13162,6 +13214,7 @@ exports[`золотые трассы: 13age > leya → goblin · dagger:0 · к�
             "total": 6,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -13322,6 +13375,7 @@ exports[`золотые трассы: 13age > leya → goblin · dagger:0 · к�
             "total": 6,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -14142,6 +14196,7 @@ exports[`золотые трассы: 13age > leya → goblin · longbow:0 · к
             "total": 26,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -14308,6 +14363,7 @@ exports[`золотые трассы: 13age > leya → goblin · longbow:0 · к
             "total": 26,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -14474,6 +14530,7 @@ exports[`золотые трассы: 13age > leya → goblin · longbow:0 · к
             "total": 7,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -14634,6 +14691,7 @@ exports[`золотые трассы: 13age > leya → goblin · longbow:0 · к
             "total": 7,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -14794,6 +14852,7 @@ exports[`золотые трассы: 13age > leya → goblin · longbow:0 · к
             "total": 10,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -14954,6 +15013,7 @@ exports[`золотые трассы: 13age > leya → goblin · longbow:0 · к
             "total": 10,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -15810,6 +15870,7 @@ exports[`золотые трассы: 13age > leya → kai · dagger:0 · кос
             "total": 22,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -15976,6 +16037,7 @@ exports[`золотые трассы: 13age > leya → kai · dagger:0 · кос
             "total": 22,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -16142,6 +16204,7 @@ exports[`золотые трассы: 13age > leya → kai · dagger:0 · кос
             "total": 3,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -16302,6 +16365,7 @@ exports[`золотые трассы: 13age > leya → kai · dagger:0 · кос
             "total": 3,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -16462,6 +16526,7 @@ exports[`золотые трассы: 13age > leya → kai · dagger:0 · кос
             "total": 6,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -16622,6 +16687,7 @@ exports[`золотые трассы: 13age > leya → kai · dagger:0 · кос
             "total": 6,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -17442,6 +17508,7 @@ exports[`золотые трассы: 13age > leya → kai · longbow:0 · ко�
             "total": 26,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -17608,6 +17675,7 @@ exports[`золотые трассы: 13age > leya → kai · longbow:0 · ко�
             "total": 26,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -17774,6 +17842,7 @@ exports[`золотые трассы: 13age > leya → kai · longbow:0 · ко�
             "total": 7,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -17934,6 +18003,7 @@ exports[`золотые трассы: 13age > leya → kai · longbow:0 · ко�
             "total": 7,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -18094,6 +18164,7 @@ exports[`золотые трассы: 13age > leya → kai · longbow:0 · ко�
             "total": 10,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -18254,6 +18325,7 @@ exports[`золотые трассы: 13age > leya → kai · longbow:0 · ко�
             "total": 10,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -19110,6 +19182,7 @@ exports[`золотые трассы: 13age > leya → leya · dagger:0 · ко�
             "total": 22,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -19276,6 +19349,7 @@ exports[`золотые трассы: 13age > leya → leya · dagger:0 · ко�
             "total": 22,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -19442,6 +19516,7 @@ exports[`золотые трассы: 13age > leya → leya · dagger:0 · ко�
             "total": 3,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -19602,6 +19677,7 @@ exports[`золотые трассы: 13age > leya → leya · dagger:0 · ко�
             "total": 3,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -19762,6 +19838,7 @@ exports[`золотые трассы: 13age > leya → leya · dagger:0 · ко�
             "total": 6,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -19922,6 +19999,7 @@ exports[`золотые трассы: 13age > leya → leya · dagger:0 · ко�
             "total": 6,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -20742,6 +20820,7 @@ exports[`золотые трассы: 13age > leya → leya · longbow:0 · ко
             "total": 26,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -20908,6 +20987,7 @@ exports[`золотые трассы: 13age > leya → leya · longbow:0 · ко
             "total": 26,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -21074,6 +21154,7 @@ exports[`золотые трассы: 13age > leya → leya · longbow:0 · ко
             "total": 7,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -21234,6 +21315,7 @@ exports[`золотые трассы: 13age > leya → leya · longbow:0 · ко
             "total": 7,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -21394,6 +21476,7 @@ exports[`золотые трассы: 13age > leya → leya · longbow:0 · ко
             "total": 10,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -21554,6 +21637,7 @@ exports[`золотые трассы: 13age > leya → leya · longbow:0 · ко
             "total": 10,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -22410,6 +22494,7 @@ exports[`золотые трассы: 13age > leya → orc · dagger:0 · кос
             "total": 22,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -22576,6 +22661,7 @@ exports[`золотые трассы: 13age > leya → orc · dagger:0 · кос
             "total": 22,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -22742,6 +22828,7 @@ exports[`золотые трассы: 13age > leya → orc · dagger:0 · кос
             "total": 3,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -22902,6 +22989,7 @@ exports[`золотые трассы: 13age > leya → orc · dagger:0 · кос
             "total": 3,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -23062,6 +23150,7 @@ exports[`золотые трассы: 13age > leya → orc · dagger:0 · кос
             "total": 6,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -23222,6 +23311,7 @@ exports[`золотые трассы: 13age > leya → orc · dagger:0 · кос
             "total": 6,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -24042,6 +24132,7 @@ exports[`золотые трассы: 13age > leya → orc · longbow:0 · ко�
             "total": 26,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -24208,6 +24299,7 @@ exports[`золотые трассы: 13age > leya → orc · longbow:0 · ко�
             "total": 26,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -24374,6 +24466,7 @@ exports[`золотые трассы: 13age > leya → orc · longbow:0 · ко�
             "total": 7,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -24534,6 +24627,7 @@ exports[`золотые трассы: 13age > leya → orc · longbow:0 · ко�
             "total": 7,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -24694,6 +24788,7 @@ exports[`золотые трассы: 13age > leya → orc · longbow:0 · ко�
             "total": 10,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -24854,6 +24949,7 @@ exports[`золотые трассы: 13age > leya → orc · longbow:0 · ко�
             "total": 10,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -25710,6 +25806,7 @@ exports[`золотые трассы: 13age > orc → goblin · orc_axe:0 · к�
             "total": 27,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -25860,6 +25957,7 @@ exports[`золотые трассы: 13age > orc → goblin · orc_axe:0 · к�
             "total": 27,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -26001,6 +26099,7 @@ exports[`золотые трассы: 13age > orc → goblin · orc_axe:0 · к�
             "total": 8,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -26123,6 +26222,7 @@ exports[`золотые трассы: 13age > orc → goblin · orc_axe:0 · к�
             "total": 8,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -26245,6 +26345,7 @@ exports[`золотые трассы: 13age > orc → goblin · orc_axe:0 · к�
             "total": 11,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -26367,6 +26468,7 @@ exports[`золотые трассы: 13age > orc → goblin · orc_axe:0 · к�
             "total": 11,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -26498,6 +26600,7 @@ exports[`золотые трассы: 13age > orc → kai · orc_axe:0 · кос
             "total": 27,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -26648,6 +26751,7 @@ exports[`золотые трассы: 13age > orc → kai · orc_axe:0 · кос
             "total": 27,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -26789,6 +26893,7 @@ exports[`золотые трассы: 13age > orc → kai · orc_axe:0 · кос
             "total": 8,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -26911,6 +27016,7 @@ exports[`золотые трассы: 13age > orc → kai · orc_axe:0 · кос
             "total": 8,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -27033,6 +27139,7 @@ exports[`золотые трассы: 13age > orc → kai · orc_axe:0 · кос
             "total": 11,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -27155,6 +27262,7 @@ exports[`золотые трассы: 13age > orc → kai · orc_axe:0 · кос
             "total": 11,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 17,
             },
           },
@@ -27286,6 +27394,7 @@ exports[`золотые трассы: 13age > orc → leya · orc_axe:0 · ко�
             "total": 27,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -27436,6 +27545,7 @@ exports[`золотые трассы: 13age > orc → leya · orc_axe:0 · ко�
             "total": 27,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -27577,6 +27687,7 @@ exports[`золотые трассы: 13age > orc → leya · orc_axe:0 · ко�
             "total": 8,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -27699,6 +27810,7 @@ exports[`золотые трассы: 13age > orc → leya · orc_axe:0 · ко�
             "total": 8,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -27821,6 +27933,7 @@ exports[`золотые трассы: 13age > orc → leya · orc_axe:0 · ко�
             "total": 11,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -27943,6 +28056,7 @@ exports[`золотые трассы: 13age > orc → leya · orc_axe:0 · ко�
             "total": 11,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 15,
             },
           },
@@ -28074,6 +28188,7 @@ exports[`золотые трассы: 13age > orc → orc · orc_axe:0 · кос
             "total": 27,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -28224,6 +28339,7 @@ exports[`золотые трассы: 13age > orc → orc · orc_axe:0 · кос
             "total": 27,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -28365,6 +28481,7 @@ exports[`золотые трассы: 13age > orc → orc · orc_axe:0 · кос
             "total": 8,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -28487,6 +28604,7 @@ exports[`золотые трассы: 13age > orc → orc · orc_axe:0 · кос
             "total": 8,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -28609,6 +28727,7 @@ exports[`золотые трассы: 13age > orc → orc · orc_axe:0 · кос
             "total": 11,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -28731,6 +28850,7 @@ exports[`золотые трассы: 13age > orc → orc · orc_axe:0 · кос
             "total": 11,
             "type": "threshold",
             "versus": {
+              "tag": "ac",
               "value": 16,
             },
           },
@@ -151453,37 +151573,37 @@ exports[`золотые трассы: dnd5e > doran → arven · bless_spell:0 �
 
 exports[`золотые трассы: dnd5e > doran → arven · cure_wounds:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → arven · cure_wounds:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → arven · cure_wounds:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → arven · cure_wounds:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → arven · cure_wounds:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → arven · cure_wounds:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
@@ -153380,6 +153500,7 @@ exports[`золотые трассы: dnd5e > doran → arven · feature_turn_un
             "total": 21,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -153707,6 +153828,7 @@ exports[`золотые трассы: dnd5e > doran → arven · feature_turn_un
             "total": 21,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -154032,6 +154154,7 @@ exports[`золотые трассы: dnd5e > doran → arven · feature_turn_un
             "total": 2,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -154367,6 +154490,7 @@ exports[`золотые трассы: dnd5e > doran → arven · feature_turn_un
             "total": 2,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -154702,6 +154826,7 @@ exports[`золотые трассы: dnd5e > doran → arven · feature_turn_un
             "total": 5,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -155037,6 +155162,7 @@ exports[`золотые трассы: dnd5e > doran → arven · feature_turn_un
             "total": 5,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -155301,37 +155427,37 @@ exports[`золотые трассы: dnd5e > doran → arven · guidance_cantri
 
 exports[`золотые трассы: dnd5e > doran → arven · healing_word:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → arven · healing_word:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → arven · healing_word:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → arven · healing_word:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → arven · healing_word:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → arven · healing_word:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
@@ -157069,6 +157195,7 @@ exports[`золотые трассы: dnd5e > doran → arven · sacred_flame:0 
             "total": 22,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -157323,6 +157450,7 @@ exports[`золотые трассы: dnd5e > doran → arven · sacred_flame:0 
             "total": 22,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -157589,6 +157717,7 @@ exports[`золотые трассы: dnd5e > doran → arven · sacred_flame:0 
             "total": 3,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -157917,6 +158046,7 @@ exports[`золотые трассы: dnd5e > doran → arven · sacred_flame:0 
             "total": 3,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -158233,6 +158363,7 @@ exports[`золотые трассы: dnd5e > doran → arven · sacred_flame:0 
             "total": 20,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -158487,6 +158618,7 @@ exports[`золотые трассы: dnd5e > doran → arven · sacred_flame:0 
             "total": 20,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -161969,37 +162101,37 @@ exports[`золотые трассы: dnd5e > doran → doran · bless_spell:0 �
 
 exports[`золотые трассы: dnd5e > doran → doran · cure_wounds:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → doran · cure_wounds:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → doran · cure_wounds:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → doran · cure_wounds:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → doran · cure_wounds:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → doran · cure_wounds:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
@@ -163896,6 +164028,7 @@ exports[`золотые трассы: dnd5e > doran → doran · feature_turn_un
             "total": 27,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -164223,6 +164356,7 @@ exports[`золотые трассы: dnd5e > doran → doran · feature_turn_un
             "total": 27,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -164548,6 +164682,7 @@ exports[`золотые трассы: dnd5e > doran → doran · feature_turn_un
             "total": 8,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -164883,6 +165018,7 @@ exports[`золотые трассы: dnd5e > doran → doran · feature_turn_un
             "total": 8,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -165218,6 +165354,7 @@ exports[`золотые трассы: dnd5e > doran → doran · feature_turn_un
             "total": 11,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -165553,6 +165690,7 @@ exports[`золотые трассы: dnd5e > doran → doran · feature_turn_un
             "total": 11,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -165817,37 +165955,37 @@ exports[`золотые трассы: dnd5e > doran → doran · guidance_cantri
 
 exports[`золотые трассы: dnd5e > doran → doran · healing_word:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → doran · healing_word:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → doran · healing_word:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → doran · healing_word:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → doran · healing_word:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → doran · healing_word:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
@@ -167585,6 +167723,7 @@ exports[`золотые трассы: dnd5e > doran → doran · sacred_flame:0 
             "total": 20,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -167839,6 +167978,7 @@ exports[`золотые трассы: dnd5e > doran → doran · sacred_flame:0 
             "total": 20,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -168105,6 +168245,7 @@ exports[`золотые трассы: dnd5e > doran → doran · sacred_flame:0 
             "total": 1,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -168433,6 +168574,7 @@ exports[`золотые трассы: dnd5e > doran → doran · sacred_flame:0 
             "total": 1,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -168749,6 +168891,7 @@ exports[`золотые трассы: dnd5e > doran → doran · sacred_flame:0 
             "total": 18,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -169003,6 +169146,7 @@ exports[`золотые трассы: dnd5e > doran → doran · sacred_flame:0 
             "total": 18,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -172485,37 +172629,37 @@ exports[`золотые трассы: dnd5e > doran → goblin · bless_spell:0 
 
 exports[`золотые трассы: dnd5e > doran → goblin · cure_wounds:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → goblin · cure_wounds:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → goblin · cure_wounds:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → goblin · cure_wounds:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → goblin · cure_wounds:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → goblin · cure_wounds:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
@@ -174412,6 +174556,7 @@ exports[`золотые трассы: dnd5e > doran → goblin · feature_turn_u
             "total": 19,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -174739,6 +174884,7 @@ exports[`золотые трассы: dnd5e > doran → goblin · feature_turn_u
             "total": 19,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -175064,6 +175210,7 @@ exports[`золотые трассы: dnd5e > doran → goblin · feature_turn_u
             "total": 0,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -175399,6 +175546,7 @@ exports[`золотые трассы: dnd5e > doran → goblin · feature_turn_u
             "total": 0,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -175734,6 +175882,7 @@ exports[`золотые трассы: dnd5e > doran → goblin · feature_turn_u
             "total": 3,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -176069,6 +176218,7 @@ exports[`золотые трассы: dnd5e > doran → goblin · feature_turn_u
             "total": 3,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -176333,37 +176483,37 @@ exports[`золотые трассы: dnd5e > doran → goblin · guidance_cantr
 
 exports[`золотые трассы: dnd5e > doran → goblin · healing_word:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → goblin · healing_word:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → goblin · healing_word:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → goblin · healing_word:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → goblin · healing_word:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → goblin · healing_word:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
@@ -178115,6 +178265,7 @@ exports[`золотые трассы: dnd5e > doran → goblin · sacred_flame:0
             "total": 22,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -178369,6 +178520,7 @@ exports[`золотые трассы: dnd5e > doran → goblin · sacred_flame:0
             "total": 22,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -178635,6 +178787,7 @@ exports[`золотые трассы: dnd5e > doran → goblin · sacred_flame:0
             "total": 3,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -178963,6 +179116,7 @@ exports[`золотые трассы: dnd5e > doran → goblin · sacred_flame:0
             "total": 3,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -179279,6 +179433,7 @@ exports[`золотые трассы: dnd5e > doran → goblin · sacred_flame:0
             "total": 20,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -179533,6 +179688,7 @@ exports[`золотые трассы: dnd5e > doran → goblin · sacred_flame:0
             "total": 20,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -183015,37 +183171,37 @@ exports[`золотые трассы: dnd5e > doran → mirra · bless_spell:0 �
 
 exports[`золотые трассы: dnd5e > doran → mirra · cure_wounds:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → mirra · cure_wounds:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → mirra · cure_wounds:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → mirra · cure_wounds:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → mirra · cure_wounds:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → mirra · cure_wounds:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
@@ -184942,6 +185098,7 @@ exports[`золотые трассы: dnd5e > doran → mirra · feature_turn_un
             "total": 20,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -185269,6 +185426,7 @@ exports[`золотые трассы: dnd5e > doran → mirra · feature_turn_un
             "total": 20,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -185594,6 +185752,7 @@ exports[`золотые трассы: dnd5e > doran → mirra · feature_turn_un
             "total": 1,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -185929,6 +186088,7 @@ exports[`золотые трассы: dnd5e > doran → mirra · feature_turn_un
             "total": 1,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -186264,6 +186424,7 @@ exports[`золотые трассы: dnd5e > doran → mirra · feature_turn_un
             "total": 4,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -186599,6 +186760,7 @@ exports[`золотые трассы: dnd5e > doran → mirra · feature_turn_un
             "total": 4,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -186863,37 +187025,37 @@ exports[`золотые трассы: dnd5e > doran → mirra · guidance_cantri
 
 exports[`золотые трассы: dnd5e > doran → mirra · healing_word:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → mirra · healing_word:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → mirra · healing_word:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → mirra · healing_word:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → mirra · healing_word:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → mirra · healing_word:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
@@ -188631,6 +188793,7 @@ exports[`золотые трассы: dnd5e > doran → mirra · sacred_flame:0 
             "total": 23,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -188885,6 +189048,7 @@ exports[`золотые трассы: dnd5e > doran → mirra · sacred_flame:0 
             "total": 23,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -189151,6 +189315,7 @@ exports[`золотые трассы: dnd5e > doran → mirra · sacred_flame:0 
             "total": 4,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -189479,6 +189644,7 @@ exports[`золотые трассы: dnd5e > doran → mirra · sacred_flame:0 
             "total": 4,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -189795,6 +189961,7 @@ exports[`золотые трассы: dnd5e > doran → mirra · sacred_flame:0 
             "total": 21,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -190049,6 +190216,7 @@ exports[`золотые трассы: dnd5e > doran → mirra · sacred_flame:0 
             "total": 21,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -193531,37 +193699,37 @@ exports[`золотые трассы: dnd5e > doran → ogre · bless_spell:0 ·
 
 exports[`золотые трассы: dnd5e > doran → ogre · cure_wounds:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → ogre · cure_wounds:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → ogre · cure_wounds:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → ogre · cure_wounds:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → ogre · cure_wounds:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → ogre · cure_wounds:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
@@ -195458,6 +195626,7 @@ exports[`золотые трассы: dnd5e > doran → ogre · feature_turn_und
             "total": 18,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -195785,6 +195954,7 @@ exports[`золотые трассы: dnd5e > doran → ogre · feature_turn_und
             "total": 18,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -196110,6 +196280,7 @@ exports[`золотые трассы: dnd5e > doran → ogre · feature_turn_und
             "total": -1,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -196445,6 +196616,7 @@ exports[`золотые трассы: dnd5e > doran → ogre · feature_turn_und
             "total": -1,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -196780,6 +196952,7 @@ exports[`золотые трассы: dnd5e > doran → ogre · feature_turn_und
             "total": 2,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -197115,6 +197288,7 @@ exports[`золотые трассы: dnd5e > doran → ogre · feature_turn_und
             "total": 2,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -197379,37 +197553,37 @@ exports[`золотые трассы: dnd5e > doran → ogre · guidance_cantrip
 
 exports[`золотые трассы: dnd5e > doran → ogre · healing_word:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → ogre · healing_word:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → ogre · healing_word:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → ogre · healing_word:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → ogre · healing_word:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → ogre · healing_word:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
@@ -199147,6 +199321,7 @@ exports[`золотые трассы: dnd5e > doran → ogre · sacred_flame:0 �
             "total": 19,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -199401,6 +199576,7 @@ exports[`золотые трассы: dnd5e > doran → ogre · sacred_flame:0 �
             "total": 19,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -199667,6 +199843,7 @@ exports[`золотые трассы: dnd5e > doran → ogre · sacred_flame:0 �
             "total": 0,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -199995,6 +200172,7 @@ exports[`золотые трассы: dnd5e > doran → ogre · sacred_flame:0 �
             "total": 0,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -200311,6 +200489,7 @@ exports[`золотые трассы: dnd5e > doran → ogre · sacred_flame:0 �
             "total": 17,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -200565,6 +200744,7 @@ exports[`золотые трассы: dnd5e > doran → ogre · sacred_flame:0 �
             "total": 17,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -204047,37 +204227,37 @@ exports[`золотые трассы: dnd5e > doran → orc · bless_spell:0 · 
 
 exports[`золотые трассы: dnd5e > doran → orc · cure_wounds:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → orc · cure_wounds:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → orc · cure_wounds:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → orc · cure_wounds:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → orc · cure_wounds:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → orc · cure_wounds:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
@@ -205974,6 +206154,7 @@ exports[`золотые трассы: dnd5e > doran → orc · feature_turn_unde
             "total": 20,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -206301,6 +206482,7 @@ exports[`золотые трассы: dnd5e > doran → orc · feature_turn_unde
             "total": 20,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -206626,6 +206808,7 @@ exports[`золотые трассы: dnd5e > doran → orc · feature_turn_unde
             "total": 1,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -206961,6 +207144,7 @@ exports[`золотые трассы: dnd5e > doran → orc · feature_turn_unde
             "total": 1,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -207296,6 +207480,7 @@ exports[`золотые трассы: dnd5e > doran → orc · feature_turn_unde
             "total": 4,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -207631,6 +207816,7 @@ exports[`золотые трассы: dnd5e > doran → orc · feature_turn_unde
             "total": 4,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -207895,37 +208081,37 @@ exports[`золотые трассы: dnd5e > doran → orc · guidance_cantrip:
 
 exports[`золотые трассы: dnd5e > doran → orc · healing_word:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → orc · healing_word:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → orc · healing_word:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → orc · healing_word:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → orc · healing_word:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → orc · healing_word:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
@@ -209663,6 +209849,7 @@ exports[`золотые трассы: dnd5e > doran → orc · sacred_flame:0 ·
             "total": 21,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -209917,6 +210104,7 @@ exports[`золотые трассы: dnd5e > doran → orc · sacred_flame:0 ·
             "total": 21,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -210183,6 +210371,7 @@ exports[`золотые трассы: dnd5e > doran → orc · sacred_flame:0 ·
             "total": 2,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -210511,6 +210700,7 @@ exports[`золотые трассы: dnd5e > doran → orc · sacred_flame:0 ·
             "total": 2,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -210827,6 +211017,7 @@ exports[`золотые трассы: dnd5e > doran → orc · sacred_flame:0 ·
             "total": 19,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -211081,6 +211272,7 @@ exports[`золотые трассы: dnd5e > doran → orc · sacred_flame:0 ·
             "total": 19,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -214563,37 +214755,37 @@ exports[`золотые трассы: dnd5e > doran → sil · bless_spell:0 · 
 
 exports[`золотые трассы: dnd5e > doran → sil · cure_wounds:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → sil · cure_wounds:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → sil · cure_wounds:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → sil · cure_wounds:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → sil · cure_wounds:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → sil · cure_wounds:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
@@ -216493,6 +216685,7 @@ exports[`золотые трассы: dnd5e > doran → sil · feature_turn_unde
             "total": 21,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -216823,6 +217016,7 @@ exports[`золотые трассы: dnd5e > doran → sil · feature_turn_unde
             "total": 21,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -217151,6 +217345,7 @@ exports[`золотые трассы: dnd5e > doran → sil · feature_turn_unde
             "total": 2,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -217489,6 +217684,7 @@ exports[`золотые трассы: dnd5e > doran → sil · feature_turn_unde
             "total": 2,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -217827,6 +218023,7 @@ exports[`золотые трассы: dnd5e > doran → sil · feature_turn_unde
             "total": 5,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -218165,6 +218362,7 @@ exports[`золотые трассы: dnd5e > doran → sil · feature_turn_unde
             "total": 5,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -218429,37 +218627,37 @@ exports[`золотые трассы: dnd5e > doran → sil · guidance_cantrip:
 
 exports[`золотые трассы: dnd5e > doran → sil · healing_word:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → sil · healing_word:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → sil · healing_word:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → sil · healing_word:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → sil · healing_word:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > doran → sil · healing_word:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: лечение»: параметр «slot» не заполнен",
 }
 `;
 
@@ -220200,6 +220398,7 @@ exports[`золотые трассы: dnd5e > doran → sil · sacred_flame:0 ·
             "total": 27,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -220457,6 +220656,7 @@ exports[`золотые трассы: dnd5e > doran → sil · sacred_flame:0 ·
             "total": 27,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -220726,6 +220926,7 @@ exports[`золотые трассы: dnd5e > doran → sil · sacred_flame:0 ·
             "total": 8,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -221057,6 +221258,7 @@ exports[`золотые трассы: dnd5e > doran → sil · sacred_flame:0 ·
             "total": 8,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -221376,6 +221578,7 @@ exports[`золотые трассы: dnd5e > doran → sil · sacred_flame:0 ·
             "total": 25,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -221633,6 +221836,7 @@ exports[`золотые трассы: dnd5e > doran → sil · sacred_flame:0 ·
             "total": 25,
             "type": "threshold",
             "versus": {
+              "tag": "spell_dc",
               "value": 15,
             },
           },
@@ -258588,37 +258792,37 @@ exports[`золотые трассы: dnd5e > mirra → arven · act_dodge:0 · 
 
 exports[`золотые трассы: dnd5e > mirra → arven · burning_hands:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → arven · burning_hands:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → arven · burning_hands:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → arven · burning_hands:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → arven · burning_hands:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → arven · burning_hands:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
@@ -261944,37 +262148,37 @@ exports[`золотые трассы: dnd5e > mirra → arven · fire_bolt:0 · 
 
 exports[`золотые трассы: dnd5e > mirra → arven · fireball:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → arven · fireball:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → arven · fireball:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → arven · fireball:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → arven · fireball:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → arven · fireball:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
@@ -263468,37 +263672,37 @@ exports[`золотые трассы: dnd5e > mirra → arven · mage_armor:0 ·
 
 exports[`золотые трассы: dnd5e > mirra → arven · magic_missile:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → arven · magic_missile:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → arven · magic_missile:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → arven · magic_missile:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → arven · magic_missile:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → arven · magic_missile:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
@@ -269492,37 +269696,37 @@ exports[`золотые трассы: dnd5e > mirra → doran · act_dodge:0 · 
 
 exports[`золотые трассы: dnd5e > mirra → doran · burning_hands:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → doran · burning_hands:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → doran · burning_hands:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → doran · burning_hands:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → doran · burning_hands:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → doran · burning_hands:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
@@ -272848,37 +273052,37 @@ exports[`золотые трассы: dnd5e > mirra → doran · fire_bolt:0 · 
 
 exports[`золотые трассы: dnd5e > mirra → doran · fireball:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → doran · fireball:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → doran · fireball:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → doran · fireball:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → doran · fireball:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → doran · fireball:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
@@ -274372,37 +274576,37 @@ exports[`золотые трассы: dnd5e > mirra → doran · mage_armor:0 ·
 
 exports[`золотые трассы: dnd5e > mirra → doran · magic_missile:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → doran · magic_missile:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → doran · magic_missile:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → doran · magic_missile:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → doran · magic_missile:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → doran · magic_missile:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
@@ -280396,37 +280600,37 @@ exports[`золотые трассы: dnd5e > mirra → goblin · act_dodge:0 ·
 
 exports[`золотые трассы: dnd5e > mirra → goblin · burning_hands:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → goblin · burning_hands:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → goblin · burning_hands:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → goblin · burning_hands:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → goblin · burning_hands:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → goblin · burning_hands:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
@@ -283766,37 +283970,37 @@ exports[`золотые трассы: dnd5e > mirra → goblin · fire_bolt:0 ·
 
 exports[`золотые трассы: dnd5e > mirra → goblin · fireball:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → goblin · fireball:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → goblin · fireball:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → goblin · fireball:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → goblin · fireball:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → goblin · fireball:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
@@ -285290,37 +285494,37 @@ exports[`золотые трассы: dnd5e > mirra → goblin · mage_armor:0 �
 
 exports[`золотые трассы: dnd5e > mirra → goblin · magic_missile:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → goblin · magic_missile:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → goblin · magic_missile:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → goblin · magic_missile:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → goblin · magic_missile:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → goblin · magic_missile:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
@@ -291314,37 +291518,37 @@ exports[`золотые трассы: dnd5e > mirra → mirra · act_dodge:0 · 
 
 exports[`золотые трассы: dnd5e > mirra → mirra · burning_hands:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → mirra · burning_hands:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → mirra · burning_hands:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → mirra · burning_hands:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → mirra · burning_hands:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → mirra · burning_hands:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
@@ -294670,37 +294874,37 @@ exports[`золотые трассы: dnd5e > mirra → mirra · fire_bolt:0 · 
 
 exports[`золотые трассы: dnd5e > mirra → mirra · fireball:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → mirra · fireball:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → mirra · fireball:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → mirra · fireball:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → mirra · fireball:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → mirra · fireball:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
@@ -296194,37 +296398,37 @@ exports[`золотые трассы: dnd5e > mirra → mirra · mage_armor:0 ·
 
 exports[`золотые трассы: dnd5e > mirra → mirra · magic_missile:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → mirra · magic_missile:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → mirra · magic_missile:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → mirra · magic_missile:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → mirra · magic_missile:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → mirra · magic_missile:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
@@ -302218,37 +302422,37 @@ exports[`золотые трассы: dnd5e > mirra → ogre · act_dodge:0 · �
 
 exports[`золотые трассы: dnd5e > mirra → ogre · burning_hands:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → ogre · burning_hands:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → ogre · burning_hands:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → ogre · burning_hands:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → ogre · burning_hands:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → ogre · burning_hands:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
@@ -305846,37 +306050,37 @@ exports[`золотые трассы: dnd5e > mirra → ogre · fire_bolt:0 · �
 
 exports[`золотые трассы: dnd5e > mirra → ogre · fireball:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → ogre · fireball:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → ogre · fireball:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → ogre · fireball:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → ogre · fireball:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → ogre · fireball:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
@@ -307370,37 +307574,37 @@ exports[`золотые трассы: dnd5e > mirra → ogre · mage_armor:0 · 
 
 exports[`золотые трассы: dnd5e > mirra → ogre · magic_missile:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → ogre · magic_missile:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → ogre · magic_missile:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → ogre · magic_missile:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → ogre · magic_missile:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → ogre · magic_missile:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
@@ -313394,37 +313598,37 @@ exports[`золотые трассы: dnd5e > mirra → orc · act_dodge:0 · к
 
 exports[`золотые трассы: dnd5e > mirra → orc · burning_hands:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → orc · burning_hands:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → orc · burning_hands:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → orc · burning_hands:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → orc · burning_hands:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → orc · burning_hands:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
@@ -316764,37 +316968,37 @@ exports[`золотые трассы: dnd5e > mirra → orc · fire_bolt:0 · к
 
 exports[`золотые трассы: dnd5e > mirra → orc · fireball:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → orc · fireball:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → orc · fireball:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → orc · fireball:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → orc · fireball:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → orc · fireball:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
@@ -318288,37 +318492,37 @@ exports[`золотые трассы: dnd5e > mirra → orc · mage_armor:0 · �
 
 exports[`золотые трассы: dnd5e > mirra → orc · magic_missile:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → orc · magic_missile:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → orc · magic_missile:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → orc · magic_missile:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → orc · magic_missile:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → orc · magic_missile:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
@@ -324312,37 +324516,37 @@ exports[`золотые трассы: dnd5e > mirra → sil · act_dodge:0 · к
 
 exports[`золотые трассы: dnd5e > mirra → sil · burning_hands:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → sil · burning_hands:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → sil · burning_hands:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → sil · burning_hands:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → sil · burning_hands:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → sil · burning_hands:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
@@ -327668,37 +327872,37 @@ exports[`золотые трассы: dnd5e > mirra → sil · fire_bolt:0 · к
 
 exports[`золотые трассы: dnd5e > mirra → sil · fireball:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → sil · fireball:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → sil · fireball:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → sil · fireball:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → sil · fireball:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → sil · fireball:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: спасбросок, при успехе половина»: параметр «slot» не заполнен",
 }
 `;
 
@@ -329192,37 +329396,37 @@ exports[`золотые трассы: dnd5e > mirra → sil · mage_armor:0 · �
 
 exports[`золотые трассы: dnd5e > mirra → sil · magic_missile:0 · кости high · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → sil · magic_missile:0 · кости high · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → sil · magic_missile:0 · кости low · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → sil · magic_missile:0 · кости low · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → sil · magic_missile:0 · кости walk · в бою 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 
 exports[`золотые трассы: dnd5e > mirra → sil · magic_missile:0 · кости walk · вне боя 1`] = `
 {
-  "error": "UnknownTagError: система не объявляет тег «slot»",
+  "error": "EngineError: эффект «Заклинание: урон без броска»: параметр «slot» не заполнен",
 }
 `;
 

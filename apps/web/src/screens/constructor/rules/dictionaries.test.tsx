@@ -93,7 +93,7 @@ describe('Словари: кости, правки броска, таблицы'
     fireEvent.click(screen.getByText('из поля'));
 
     expect(Object.values(useWorld.getState().system.constants ?? {})[0]?.dice?.[0])
-      .toEqual({ count: { tag: 'пул' }, sides: 6 });
+      .toEqual({ count: { expr: '@пул' }, sides: 6 });
     expect(screen.getByText(/по числу «Пул»/)).toBeTruthy();
   });
 
@@ -366,7 +366,7 @@ describe('Словари: кости, правки броска, таблицы'
         ...emptySystem(),
         tables: { proficiency: { label: 'Бонус мастерства', key: 'range',
           columns: [{ key: 'value', label: 'значение', kind: 'number' }], rows: [{ from: 1, to: 4, cells: { value: 2 } }] } },
-        fields: [{ tag: 'pb', label: 'Бонус мастерства', value: { kind: 'table', table: 'proficiency', arg: '#level' } }],
+        fields: [{ tag: 'pb', label: 'Бонус мастерства', value: { kind: 'formula', expr: 'таблица("proficiency", #level)' } }],
       },
       activeEffectId: null,
     }));
@@ -455,6 +455,6 @@ describe('Тоглы: крит и броня пишутся данными', () 
     const tail = useWorld.getState().system.effects?.урон?.steps ?? [];
     expect(tail.map(s => s.type)).toEqual(['compare', 'apply']);
     expect((tail[0] as { breakIf?: string }).breakIf).toBe('atMost');
-    expect((tail[0] as { versus?: { tag?: string } }).versus?.tag).toBe('броня');
+    expect((tail[0] as { versus?: { expr?: string } }).versus?.expr).toBe('@получатель.броня');
   });
 });

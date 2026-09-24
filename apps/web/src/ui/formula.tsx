@@ -40,7 +40,14 @@ export function formulaAsLabels(
   source: string,
   names?: Map<string, string>,
 ): string {
-  return source.replace(/[@#]([\p{L}\p{N}_.]+)/gu, (_, name: string) => {
+  const lookups = source.replace(/таблица\(\s*(["'])([^"']*)\1\s*,([^,()]*(?:\([^()]*\)[^,()]*)*)(?:,\s*(["'])([^"']*)\4)?\s*\)/gu,
+    (whole, _q, table: string, arg: string, _q2, column?: string) => {
+      const found = system.tables?.[table];
+      if (!found) return whole;
+      const col = column ? found.columns?.find(c => c.key === column) : undefined;
+      return `«${found.label || table}»${col ? ` → ${col.label || col.key}` : ''} по ${arg.trim()}`;
+    });
+  return lookups.replace(/[@#]([\p{L}\p{N}_.]+)/gu, (_, name: string) => {
     if (ownerOf(name)) return labelOfTag(system, name);
     const field = system.fields.find(f => f.tag === name);
     if (field) return field.label ?? name;

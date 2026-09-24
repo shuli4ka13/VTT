@@ -16,7 +16,7 @@ describe('problemOf: тег внутри формулы слота', () => {
     const step = {
       type: 'threshold',
       roll: { die: { constant: 'd20' }, bonus: { expr: '#нет_такого' } },
-      versus: { const: 10 },
+      versus: { expr: '10' },
     } as unknown as Step;
 
     const problem = problemOf(step, systemWithDie(), blankEffect, []);
@@ -29,7 +29,7 @@ describe('problemOf: тег внутри формулы слота', () => {
     const step = {
       type: 'threshold',
       roll: { die: { constant: 'd20' }, bonus: { expr: '#attack_bonus' } },
-      versus: { const: 10 },
+      versus: { expr: '10' },
     } as unknown as Step;
 
     expect(problemOf(step, system, blankEffect, [])).toBeNull();
@@ -39,7 +39,7 @@ describe('problemOf: тег внутри формулы слота', () => {
     const step = {
       type: 'threshold',
       roll: { die: { constant: 'd20' }, bonus: { expr: '#нез +' } },
-      versus: { const: 10 },
+      versus: { expr: '10' },
     } as unknown as Step;
 
     expect(problemOf(step, systemWithDie(), blankEffect, [])).toBeNull();
@@ -78,7 +78,7 @@ describe('описание слотов живёт в движке, а не в �
   });
 
   it('обязательный слот описан движком: пустая мишень применения — приговор', () => {
-    const step = { type: 'apply', direction: 'subtract', value: { const: 1 } } as unknown as Step;
+    const step = { type: 'apply', direction: 'subtract', value: { expr: '1' } } as unknown as Step;
     expect(problemOf(step, systemWithDie(), blankEffect, [])?.text).toContain('не заполнено');
   });
 

@@ -77,6 +77,7 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect, canAns
               <SlotInput
                 where={`вызов · ${need.label ?? need.key}`}
                 value={args[need.key] as never} context={context}
+                keep={need.kind === 'number' ? ['param'] : ['const', 'param']}
                 extraOptions={rowsAsOptions(system, need)}
                 onChange={next => edit(at, draft => {
                   const all = { ...((loose(draft).args ?? {}) as Record<string, unknown>) };

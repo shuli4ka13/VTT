@@ -13,12 +13,12 @@ const system = {
   effects: {
     снаряд: {
       label: 'Снаряд', activation: 'manual',
-      self: [{ type: 'apply', target: { tag: 'ячейки' }, direction: 'subtract', value: { const: 1 } }],
-      steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { const: 4 } }],
+      self: [{ type: 'apply', target: { tag: 'ячейки' }, direction: 'subtract', value: { expr: '1' } }],
+      steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '4' } }],
     },
     удар: {
       label: 'Удар', activation: 'manual',
-      steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { const: 2 } }],
+      steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '2' } }],
     },
   },
   records: {

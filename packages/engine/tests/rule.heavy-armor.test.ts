@@ -31,7 +31,7 @@ const sys: any = {
       steps: [{
         id: 'бросок', type: 'threshold',
         roll: { die: { constant: 'lead' }, bonus: { expr: '#скрытность' }, tags: ['скрытность'] },
-        versus: { const: 15 },
+        versus: { expr: '15' },
       }],
     },
   },
@@ -87,7 +87,7 @@ group('тяжёлый доспех мешает красться', () => {
       effects: {
         sneak: {
           ...sys.effects.sneak,
-          steps: [{ ...sys.effects.sneak.steps[0], roll: { ...sys.effects.sneak.steps[0].roll, tags: [], bonus: { const: 3 } } }],
+          steps: [{ ...sys.effects.sneak.steps[0], roll: { ...sys.effects.sneak.steps[0].roll, tags: [], bonus: { expr: '3' } } }],
         },
       },
     };

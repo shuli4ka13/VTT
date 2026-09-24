@@ -23,7 +23,7 @@ const system = {
     шаблон: {
       label: 'Заклинание: спасбросок, половина при успехе',
       steps: [
-        { id: 'п', type: 'threshold', roll: { tags: ['спас'] }, versus: { tag: 'броня' } },
+        { id: 'п', type: 'threshold', roll: { tags: ['спас'] }, versus: { expr: '@получатель.броня' } },
         { id: 'в', type: 'amount', dice: { const: '8к6' } },
       ],
     },
@@ -61,14 +61,14 @@ group('журнал говорит словами стола, а не движк
 
   test('метка без своих слов говорит «успех» и «провал»', () => {
     const plain = { ...system, effects: { шаблон: { ...(system.effects as any).шаблон,
-      steps: [{ id: 'п', type: 'threshold', roll: { tags: ['без_слов'] }, versus: { tag: 'броня' } }] } } } as unknown as System;
+      steps: [{ id: 'п', type: 'threshold', roll: { tags: ['без_слов'] }, versus: { expr: '@получатель.броня' } }] } } } as unknown as System;
     const trace = [{ type: 'threshold', step: 'п', rolls: [3], total: 3, versus: { tag: 'броня', value: 15 }, success: false }];
     ok(describeEntry({ fromId: 'мирра', toId: 'орк', report: report({ trace }) }, plain, sheets).includes('— провал'));
   });
 
   test('слова исхода ищутся по всем меткам броска', () => {
     const both = { ...system, effects: { шаблон: { ...(system.effects as any).шаблон,
-      steps: [{ id: 'п', type: 'threshold', roll: { tags: ['без_слов', 'атака'] }, versus: { tag: 'броня' } }] } } } as unknown as System;
+      steps: [{ id: 'п', type: 'threshold', roll: { tags: ['без_слов', 'атака'] }, versus: { expr: '@получатель.броня' } }] } } } as unknown as System;
     const trace = [{ type: 'threshold', step: 'п', rolls: [3], total: 3, versus: { tag: 'броня', value: 15 }, success: false }];
     ok(describeEntry({ fromId: 'мирра', toId: 'орк', report: report({ trace }) }, both, sheets).includes('— промах'));
   });

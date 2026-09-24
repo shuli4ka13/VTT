@@ -1,4 +1,3 @@
-import { anyRowSays } from './tables.ts';
 import { stepModule } from './steps/index.ts';
 import { rolledSoFar } from './rolled.ts';
 import { findField } from './calc.ts';
@@ -35,37 +34,17 @@ export interface NestedRun { results: Record<string, unknown>; stopped: StopReas
 
 export const MAX_CALL_DEPTH = 8;
 
-export const packGuardRef = (guard: unknown, ctx: StepContext): unknown => packGuard(guard, ctx);
-
-const packGuard = (guard: unknown, ctx: StepContext): unknown => {
-  if (guard === null || guard === undefined) return undefined;
-  if (typeof guard === 'object' && 'ref' in (guard as object)) {
-    const decided = decideNow(guard as Record<string, unknown>, ctx);
-    return decided ?? guard;
-  }
-  return packRef(guard, ctx);
-};
-
-const walkPath = (from: unknown, path: string[]): unknown =>
-  path.reduce<unknown>((node, key) =>
-    (node == null || typeof node !== 'object' ? undefined : (node as Record<string, unknown>)[key]), from);
-
-function decideNow(guard: Record<string, unknown>, ctx: StepContext): { const: boolean } | null {
-  const [head, ...path] = String(guard.ref).split('.');
-  const known = ctx.sender?.[String(head)];
-  if (known === undefined) return null;
-  const value = path.length ? walkPath(known, path) : known;
-  if (value === undefined) return null;
-  return { const: guardHolds({ ...guard, ref: undefined, const: undefined, at: value }, ctx, value) };
-}
+export const packGuardRef = (guard: unknown, ctx: StepContext): unknown =>
+  (guard === null || guard === undefined ? undefined : packRef(guard, ctx));
 
 export function packSteps(steps: Step[], ctx: StepContext): StepData[] {
   const packed: StepData[] = [];
+  const stepIds = new Set(steps.map(step => step.id).filter((id): id is string => typeof id === 'string' && id !== ''));
   for (const step of steps) {
     const mod = stepModule(step.type);
     const sender = rolledSoFar(packed as unknown as Record<string, unknown>[]);
-    const inner = { ...ctx, sender };
-    const when = packGuard((step as StepData).when, inner);
+    const inner = { ...ctx, sender, stepIds };
+    const when = packGuardRef((step as StepData).when, inner);
     packed.push({
       type: step.type, id: step.id ?? null,
       ...(when !== undefined ? { when } : {}),
@@ -79,36 +58,11 @@ export function packRule(rule: Effect, ctx: StepContext): StepData[] {
   return packSteps(rule.steps || [], { ...ctx, paramDefs: rule.params || [] });
 }
 
-export function guardHolds(guard: unknown, ctx: StepContext, known?: unknown): boolean {
+export function guardHolds(guard: unknown, ctx: StepContext): boolean {
   if (guard === null || guard === undefined) return true;
   const g = guard as Record<string, unknown>;
-  if (known === undefined && 'const' in g) return Boolean(g.const);
-  if (known !== undefined || 'ref' in g) {
-    const value = known !== undefined ? known : resolveRef({ ref: g.ref }, ctx);
-    let holds: boolean;
-    if (g.is !== undefined) holds = value === g.is;
-    else if (g.atLeast !== undefined || g.atMost !== undefined) {
-      if (typeof value !== 'number') {
-        throw new EngineError(
-          `${who(ctx)}: условие шага «${g.ref}» сравнивает с числом, а там ${JSON.stringify(value)}`);
-      }
-      const limit = (raw: unknown): number => (raw && typeof raw === 'object' && 'tag' in raw
-        ? Number(ctx.pass.resolve(String((raw as { tag: unknown }).tag)))
-        : Number(raw));
-      holds = (g.atLeast === undefined || value >= limit(g.atLeast)) && (g.atMost === undefined || value <= limit(g.atMost));
-    } else if (g.has !== undefined || g.where !== undefined) {
-      const hasIt = g.has === undefined
-        || (Array.isArray(value) ? value.map(String).includes(String(g.has)) : String(value ?? '') === String(g.has));
-      const where = g.where as { table: string; column: string; is: unknown } | undefined;
-      holds = hasIt && (!where || anyRowSays(ctx.pass.system, value, where));
-    } else if (typeof value === 'boolean') holds = value;
-    else {
-      throw new EngineError(
-        `${who(ctx)}: условие шага «${g.ref}» должно давать да/нет, а дало ${JSON.stringify(value)}`);
-    }
-    return g.not ? !holds : holds;
-  }
-  const value = resolveRef(g, ctx);
+  const packed = 'expr' in g && !g.later && !g.of ? packRef(g, ctx) : g;
+  const value = resolveRef(packed, ctx);
   if (typeof value !== 'boolean') {
     throw new EngineError(`${who(ctx)}: условие шага должно давать да/нет, а дало ${JSON.stringify(value)}`);
   }

@@ -17,7 +17,7 @@ const shieldWorld: any = {
     ...system.effects,
     shield: {
       label: 'Щит', activation: 'passive', cost: 'reaction',
-      on: [{ on: '*', phase: 'before', ask: true, if: { ref: 'hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: { const: 'shield_up' } }] }],
+      on: [{ on: '*', phase: 'before', ask: true, if: { expr: '@hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: { const: 'shield_up' } }] }],
     },
     shield_up: {
       label: 'Под щитом', activation: 'passive', duration: { kind: 'turns', max: 1 },
@@ -86,7 +86,7 @@ group('реакция отправителя: увидел бросок — ре
       ...system.effects,
       inspire: {
         label: 'Вдохновение: перебросить', activation: 'passive',
-        on: [{ on: '*', role: 'sender', phase: 'before', ask: true, if: { expr: '#inspiration > 0' }, claims: ['advantage'], steps: [{ type: 'apply', target: { tag: 'inspiration' }, direction: 'subtract', value: { const: 1 } }] }],
+        on: [{ on: '*', role: 'sender', phase: 'before', ask: true, if: { expr: '#inspiration > 0' }, claims: ['advantage'], steps: [{ type: 'apply', target: { tag: 'inspiration' }, direction: 'subtract', value: { expr: '1' } }] }],
       },
     },
   };
@@ -123,7 +123,7 @@ group('подписка на исходящее: вампиризм и метк�
       },
       brand: {
         label: 'Метка охотника', activation: 'passive', duration: { kind: 'permanent' },
-        on: [{ on: 'fire_bolt', role: 'sender', to: 'other', if: { ref: 'hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: { const: 'poisoned' } }] }],
+        on: [{ on: 'fire_bolt', role: 'sender', to: 'other', if: { expr: '@hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: { const: 'poisoned' } }] }],
       },
     },
   };
@@ -194,7 +194,7 @@ group('реакция после разрешения: «на меня поде�
       ...system.effects,
       rebuke: {
         label: 'Возмездие', activation: 'passive', cost: 'reaction',
-        on: [{ on: 'strike', to: 'other', ask: true, if: { ref: 'hit.success' }, steps: [{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { const: 3 } }] }],
+        on: [{ on: 'strike', to: 'other', ask: true, if: { expr: '@hit.success' }, steps: [{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { expr: '3' } }] }],
       },
     },
   };

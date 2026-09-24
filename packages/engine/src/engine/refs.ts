@@ -1,11 +1,13 @@
 import { compile } from '../formula/index.ts';
+import type { Tools, Value } from '../formula/index.ts';
 import { EngineError } from './errors.ts';
 import { readCell } from './cells.ts';
+import { rowOf } from './tables.ts';
 import { referencedTable, splitPath, walk } from './navigate.ts';
 import { VALUE_COLUMN } from '../model/tables.ts';
 import { ownerOf, RECEIVER, SENDER, DESK } from './owners.ts';
 import { rollNotation, multiplyNotation } from './dice.ts';
-import type { Param, Die } from '../model/types.ts';
+import type { Param, Die, System } from '../model/types.ts';
 import type { Pass } from './calc.ts';
 
 export interface RefContext {
@@ -25,6 +27,10 @@ export interface RefContext {
 
   results?: Record<string, unknown>;
 
+  sender?: Record<string, unknown>;
+
+  stepIds?: ReadonlySet<string>;
+
   atReceiver?: boolean;
 
   alone?: boolean;
@@ -32,11 +38,11 @@ export interface RefContext {
   recordScope?: boolean;
 }
 
-const FORMS = ['const', 'expr', 'param', 'prop', 'item', 'tag', 'ref', 'table'];
+const FORMS = ['expr', 'const', 'param', 'prop', 'tag'];
 
 type AnyRef = Record<string, unknown>;
 
-const propKey = (ref: AnyRef): string => String('prop' in ref ? ref.prop : ref.item);
+const knownOf = (ctx: RefContext): Record<string, unknown> => ({ ...(ctx.sender ?? {}), ...(ctx.results ?? {}) });
 
 export function packRef(ref: unknown, ctx: RefContext): unknown {
   if (ref === null || ref === undefined || typeof ref !== 'object') return ref ?? null;
@@ -44,77 +50,49 @@ export function packRef(ref: unknown, ctx: RefContext): unknown {
   const r = ref as AnyRef;
 
   if ('const' in r) return { const: r.const };
-
-  if ('expr' in r) {
-    const expr = withReceiverInputs(String(r.expr), ctx);
-    const deps = compile(expr).deps;
-    if (deps.some(name => ownerOf(name)?.owner === RECEIVER)) {
-      if (ctx.alone) {
-        const name = deps.find(dep => ownerOf(dep)?.owner === RECEIVER)!;
-        throw new EngineError(`${who(ctx)}: «${ownerOf(name)!.rest}» получателя — но в шагах отправителя получателя нет, они идут один раз до всех целей`);
-      }
-      const sent: Record<string, unknown> = {};
-      const rows: Record<string, string> = {};
-      for (const name of deps) {
-        const owned = ownerOf(name);
-        const chosen = owned?.owner === RECEIVER ? chosenRowOf(owned.rest, ctx) : null;
-        if (chosen) rows[chosen.head] = chosen.table;
-        const key = owned?.owner === RECEIVER ? chosen?.head : name;
-        if (!key || key in sent) continue;
-        const known = senderValue(key, ctx);
-        if (known !== undefined) sent[key] = known;
-      }
-      return {
-        expr, of: 'target',
-        ...(Object.keys(sent).length ? { sent } : {}),
-        ...(Object.keys(rows).length ? { rows } : {}),
-      };
-    }
-    if (waitsForStep(expr, ctx)) {
-      const sent: Record<string, unknown> = {};
-      for (const name of deps) {
-        if (name.includes('.') && !ownerOf(name)) continue;
-        const known = senderValue(name, ctx);
-        if (known !== undefined) sent[name] = known;
-      }
-      return { expr, later: true, ...(Object.keys(sent).length ? { sent } : {}) };
-    }
-    return { const: evaluate(expr, ctx) };
-  }
-
+  if ('expr' in r) return packExpr(String(r.expr), ctx);
   if ('param' in r) return packParam(String(r.param), Boolean(r.optional), ctx);
-
-  if ('prop' in r || 'item' in r) {
-    const key = propKey(r);
-    if (!ctx.props) {
-      if (r.optional) return { const: null };
-      throw new EngineError(
-        `${who(ctx)}: неоткуда взять свойство «${key}» — у источника нет записи со свойствами`);
-    }
-    if (ctx.props[key] === undefined) {
-      if (r.optional) return { const: null };
-      throw new EngineError(
-        `${who(ctx)}: запись-источник не заполнила свойство «${key}»`);
-    }
-    return { const: ctx.props[key] };
-  }
-
-  if ('table' in r) {
-    const packed = packRef((r as { by?: unknown }).by, ctx);
-    const ready = packed && typeof packed === 'object' && 'const' in (packed as AnyRef);
-    return ready
-      ? { const: readCell(ctx.pass.system, ctx.pass, String(r.table), (packed as AnyRef).const, columnOf(r), who(ctx)) }
-      : { table: r.table, by: packed, ...(r.column ? { column: r.column } : {}) };
-  }
-
+  if ('prop' in r) return packProp(String(r.prop), Boolean(r.optional), ctx);
   if ('tag' in r) return { tag: r.tag };
-  if ('ref' in r) {
-    const head = String(r.ref).split('.')[0] ?? '';
-    if (ctx.results && head in ctx.results) return { const: resolveRef(r, ctx) };
-    return { ref: r.ref };
-  }
 
   return unknownForm(r, ctx);
+}
+
+function packExpr(source: string, ctx: RefContext): unknown {
+  const expr = withReceiverInputs(source, ctx);
+  const deps = compile(expr).deps;
+  if (deps.some(name => ownerOf(name)?.owner === RECEIVER)) {
+    if (ctx.alone) {
+      const name = deps.find(dep => ownerOf(dep)?.owner === RECEIVER)!;
+      throw new EngineError(`${who(ctx)}: «${ownerOf(name)!.rest}» получателя — но в шагах отправителя получателя нет, они идут один раз до всех целей`);
+    }
+    const sent: Record<string, unknown> = {};
+    const rows: Record<string, string> = {};
+    for (const name of deps) {
+      const owned = ownerOf(name);
+      const chosen = owned?.owner === RECEIVER ? chosenRowOf(owned.rest, ctx) : null;
+      if (chosen) rows[chosen.head] = chosen.table;
+      const key = owned?.owner === RECEIVER ? chosen?.head : name;
+      if (!key || key in sent) continue;
+      const known = senderValue(key, ctx);
+      if (known !== undefined) sent[key] = known;
+    }
+    return {
+      expr, of: 'target',
+      ...(Object.keys(sent).length ? { sent } : {}),
+      ...(Object.keys(rows).length ? { rows } : {}),
+    };
+  }
+  if (waitsForStep(expr, ctx)) {
+    const sent: Record<string, unknown> = {};
+    for (const name of deps) {
+      if (waitingName(name, ctx)) continue;
+      const known = senderValue(name, ctx);
+      if (known !== undefined) sent[name] = known;
+    }
+    return { expr, later: true, ...(Object.keys(sent).length ? { sent } : {}) };
+  }
+  return { const: evaluate(expr, ctx) };
 }
 
 function chosenRowOf(name: string, ctx: RefContext): { head: string; table: string } | null {
@@ -134,8 +112,24 @@ function packParam(key: string, optional: boolean, ctx: RefContext): unknown {
     throw new EngineError(`${who(ctx)}: параметр «${key}» не заполнен`);
   }
 
-  if (isFormula(decl, value)) return packRef({ expr: value }, inRecord(ctx));
+  if (isFormula(decl, value)) return packExpr(value, inRecord(ctx));
   return { const: value };
+}
+
+const inRecord = (ctx: RefContext): RefContext => (ctx.props ? { ...ctx, recordScope: true } : ctx);
+
+function packProp(key: string, optional: boolean, ctx: RefContext): unknown {
+  if (!ctx.props) {
+    if (optional) return { const: null };
+    throw new EngineError(
+      `${who(ctx)}: неоткуда взять свойство «${key}» — у источника нет записи со свойствами`);
+  }
+  if (ctx.props[key] === undefined) {
+    if (optional) return { const: null };
+    throw new EngineError(
+      `${who(ctx)}: запись-источник не заполнила свойство «${key}»`);
+  }
+  return { const: ctx.props[key] };
 }
 
 const isFormula = (decl: Param | undefined, value: unknown): value is string =>
@@ -145,8 +139,6 @@ const MAX_INPUT_DEPTH = 8;
 
 const readsReceiver = (expr: string): boolean =>
   compile(expr).deps.some(name => ownerOf(name)?.owner === RECEIVER);
-
-const inRecord = (ctx: RefContext): RefContext => (ctx.props ? { ...ctx, recordScope: true } : ctx);
 
 const nameRegex = (name: string): RegExp =>
   new RegExp(`[@#]${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}_.])`, 'gu');
@@ -175,12 +167,11 @@ function withReceiverInputs(expr: string, ctx: RefContext, depth = 0): string {
     const value = fromArgs(name, ctx);
     if (!isFormula(decl, value) || !readsReceiver(value)) continue;
     const inner = withReceiverInputs(recordNamesAsNumbers(value, ctx), ctx, depth + 1);
+    if (new RegExp(`^\\s*${nameRegex(name).source}\\s*$`, 'u').test(out)) return inner;
     out = out.replace(nameRegex(name), `(${inner})`);
   }
   return out;
 }
-
-const columnOf = (r: AnyRef): string => (typeof r.column === 'string' && r.column ? r.column : VALUE_COLUMN);
 
 function fromArgs(key: string, ctx: RefContext): unknown {
   const asked = (ctx.inputs || {})[key];
@@ -190,15 +181,8 @@ function fromArgs(key: string, ctx: RefContext): unknown {
   if ('prop' in arg) return (ctx.props || {})[String((arg as AnyRef).prop)];
   if ('const' in arg) return (arg as AnyRef).const;
   if ('expr' in arg) return String((arg as AnyRef).expr);
-  if ('table' in arg) {
-    const by = (arg as AnyRef).by;
-    const input = by && typeof by === 'object' && 'prop' in (by as AnyRef)
-      ? (ctx.props || {})[String((by as AnyRef).prop)]
-      : resolveRef(by, ctx);
-    return readCell(ctx.pass.system, ctx.pass, String((arg as AnyRef).table), input, columnOf(arg as AnyRef), who(ctx));
-  }
   throw new EngineError(
-    `${who(ctx)}: аргумент «${key}» неизвестной формы ${JSON.stringify(arg)} — умею значение, { const }, { prop }, { expr } или { table }`);
+    `${who(ctx)}: аргумент «${key}» неизвестной формы ${JSON.stringify(arg)} — умею значение, { const }, { prop } или { expr }`);
 }
 
 export function resolveRef(ref: unknown, ctx: RefContext): unknown {
@@ -217,49 +201,35 @@ export function resolveRef(ref: unknown, ctx: RefContext): unknown {
     return evaluate(r.expr, ctx, r.sent as Record<string, unknown> | undefined, true, r.rows as Record<string, string> | undefined);
   }
 
-  if ('table' in r) {
-    const by = resolveRef((r as { by?: unknown }).by, ctx);
-    return readCell(ctx.pass.system, ctx.pass, String(r.table), by, columnOf(r), who(ctx));
-  }
-
-
   if ('param' in r) {
     throw new EngineError(
       `${who(ctx)}: параметр «${r.param}» не был упакован отправителем — конверт бит`);
   }
 
-  if ('prop' in r || 'item' in r) {
+  if ('prop' in r) {
     throw new EngineError(
-      `${who(ctx)}: свойство записи «${propKey(r)}» пришло неразрешённым — конверт бит`);
+      `${who(ctx)}: свойство записи «${r.prop}» пришло неразрешённым — конверт бит`);
   }
 
   if ('tag' in r) return ctx.pass.resolve(String(r.tag));
 
-  if ('ref' in r) {
-    const [head, ...path] = String(r.ref).split('.');
-    if (head === undefined) throw new EngineError(`${who(ctx)}: пустая ссылка на шаг`);
-    if (!(head in (ctx.results || {}))) {
-      throw new EngineError(
-        `${who(ctx)}: шаг «${head}» результата не оставил — он вообще был раньше по цепочке?`);
-    }
-    let value: unknown = (ctx.results || {})[head];
-    for (const key of path) {
-      if (value === null || typeof value !== 'object' || !(key in value)) {
-        throw new EngineError(`${who(ctx)}: у результата шага «${head}» нет «${path.join('.')}»`);
-      }
-      value = (value as AnyRef)[key];
-    }
-    return value;
-  }
-
   return unknownForm(r, ctx);
+}
+
+export function holdsNow(condition: unknown, ctx: RefContext): boolean {
+  if (condition === null || condition === undefined) return true;
+  const value = resolveRef(packRef(condition, ctx), ctx);
+  if (typeof value !== 'boolean') {
+    throw new EngineError(`${who(ctx)}: условие должно давать да/нет, а дало ${JSON.stringify(value)}`);
+  }
+  return value;
 }
 
 export function resolveNumber(ref: unknown, ctx: RefContext, what: string): number {
   const value = resolveRef(ref, ctx);
   if (typeof value !== 'number') {
     throw new EngineError(
-      `${who(ctx)}: ${what} — не число (${describe(ref)} даёт ${typeof value})`);
+      `${who(ctx)}: ${what} — не число (${describe(ref)} даёт ${value === null ? 'пусто' : typeof value})`);
   }
   return value;
 }
@@ -275,24 +245,48 @@ export function resolveOptionalNumber(ref: unknown, ctx: RefContext, what: strin
   return value;
 }
 
+const isField = (system: System, name: string): boolean => system.fields.some(field => field.tag === name);
+
+function waitingName(name: string, ctx: RefContext): boolean {
+  if (ownerOf(name)) return false;
+  const system = ctx.pass.system;
+  if (isField(system, name)) return false;
+  const known = knownOf(ctx);
+  const split = splitPath(name);
+  const head = split?.head ?? name;
+  if (!split) return Boolean(ctx.stepIds?.has(head)) && !(head in (ctx.results ?? {}));
+  if (referencedTable(system, head, ctx.paramDefs)) return false;
+  const held = known[head];
+  if (held === undefined || held === null || typeof held !== 'object') return true;
+  return split.path.reduce<unknown>((at, key) => (at && typeof at === 'object' ? (at as AnyRef)[key] : undefined), held) === undefined;
+}
+
 function waitsForStep(expr: string, ctx: RefContext): boolean {
-  const fields = ctx.pass.system.fields;
-  return compile(expr).deps.some(name => {
-    if (ownerOf(name)) return false;
-    const dot = name.indexOf('.');
-    if (dot <= 0) return false;
-    if (fields.some(field => field.tag === name)) return false;
-    if (referencedTable(ctx.pass.system, name.slice(0, dot), ctx.paramDefs)) return false;
-    const held = (ctx.results ?? {})[name.slice(0, dot)];
-    return held === undefined || typeof held !== 'object';
-  });
+  return compile(expr).deps.some(name => waitingName(name, ctx));
+}
+
+export function toolsOf(system: System, pass: Pass, owner: string, die?: Die): Tools {
+  return {
+    ...(die ? {
+      roll: (notation: string, times: number) => {
+        const written = times > 1 ? multiplyNotation(notation, times) : notation;
+        return rollNotation(written, die).total;
+      },
+    } : {}),
+    table: (name, key, column) => {
+      const read = (one: unknown) => readCell(system, pass, name, one, column ?? VALUE_COLUMN, owner);
+      if (!Array.isArray(key)) return read(key) as Value;
+      return key.filter(one => rowOf(system, name, one)).map(read) as unknown as Value;
+    },
+  };
 }
 
 function evaluate(
   expr: unknown, ctx: RefContext, sent?: Record<string, unknown>, atReceiver = false, rows?: Record<string, string>,
 ): unknown {
-  const results = ctx.results;
-  const isField = (name: string) => ctx.pass.system.fields.some(f => f.tag === name);
+  const results = ctx.results ?? {};
+  const known = knownOf(ctx);
+  const system = ctx.pass.system;
   const resolve = (name: string): unknown => {
     if (sent && name in sent) return sent[name];
     const owned = ownerOf(name);
@@ -304,50 +298,48 @@ function evaluate(
     }
     if (owned?.owner === DESK) return ctx.pass.resolve(name);
     if (owned) return resolve(owned.rest);
-    if (results && name in results && !isField(name)) return (results as Record<string, unknown>)[name];
+    if (name in results && !isField(system, name)) return results[name];
     const dot = name.indexOf('.');
-    if (dot > 0 && results) {
-      const head = name.slice(0, dot);
-      const held = (results as Record<string, unknown>)[head];
+    if (dot > 0) {
+      const held = known[name.slice(0, dot)];
       if (held && typeof held === 'object') {
-        const value = (held as Record<string, unknown>)[name.slice(dot + 1)];
+        const value = name.slice(dot + 1).split('.')
+          .reduce<unknown>((at, key) => (at && typeof at === 'object' ? (at as AnyRef)[key] : undefined), held);
         if (value !== undefined) return value;
       }
     }
-    if (!isField(name)) {
+    if (!isField(system, name)) {
       const named = namedValue(name, ctx);
       if (named !== undefined) return named;
       if (ctx.recordScope && ctx.props && name in ctx.props) return recordValue(name, ctx);
       const split = splitPath(name);
-      const table = split ? rows?.[split.head] ?? referencedTable(ctx.pass.system, split.head, ctx.paramDefs) : undefined;
-      if (split && table) return walk(ctx.pass.system, ctx.pass, table, resolve(split.head), split.path, who(ctx));
+      const table = split ? rows?.[split.head] ?? referencedTable(system, split.head, ctx.paramDefs) : undefined;
+      if (split && table) return walk(system, ctx.pass, table, resolve(split.head), split.path, who(ctx));
+      if (ctx.stepIds?.has(split?.head ?? name)) {
+        throw new EngineError(`${who(ctx)}: шаг «${split?.head ?? name}» ещё не прошёл — его результата здесь нет`);
+      }
     }
     return ctx.pass.resolve(name);
   };
+  const tools = toolsOf(system, ctx.pass, who(ctx), ctx.die);
   return compile(String(expr)).evaluate(resolve, {
-    roll: (notation, times) => {
-      if (!ctx.die) {
-        throw new EngineError(`${who(ctx)}: «кинуть» здесь нельзя — кости бросает только шаг эффекта`);
-      }
-      const written = times > 1 ? multiplyNotation(notation, times) : notation;
-      return rollNotation(written, ctx.die).total;
-    },
+    ...tools,
+    roll: tools.roll ?? (() => {
+      throw new EngineError(`${who(ctx)}: «кинуть» здесь нельзя — кости бросает только шаг эффекта`);
+    }),
   });
 }
 
-export function exactFieldOf(ref: unknown, ctx: RefContext): string | null {
+export function lonelyField(ref: unknown): string | null {
   if (!ref || typeof ref !== 'object') return null;
   const r = ref as AnyRef;
-  let text: unknown = null;
-  if ('tag' in r) text = `@${String(r.tag)}`;
-  else if ('expr' in r) text = r.expr;
-  else if ('param' in r && ctx.params && String(r.param) in ctx.params) text = fromArgs(String(r.param), ctx);
-  if (typeof text !== 'string') return null;
-  const exact = /^\s*[@#]([\p{L}\p{N}_.-]+)\s*$/u.exec(text);
+  if ('tag' in r) return String(r.tag);
+  if (!('expr' in r) || typeof r.expr !== 'string') return null;
+  const exact = /^\s*[@#]([\p{L}\p{N}_.-]+)\s*$/u.exec(r.expr);
   if (!exact) return null;
   const owned = ownerOf(exact[1]!);
-  if (owned) return owned.rest;
-  return exact[1]!.includes('.') ? null : exact[1]!;
+  const name = owned ? owned.rest : exact[1]!;
+  return name.includes('.') ? null : name;
 }
 
 function senderValue(name: string, ctx: RefContext): unknown {
@@ -371,10 +363,13 @@ function namedValue(name: string, ctx: RefContext): unknown {
 
   const decl = (ctx.paramDefs || []).find(p => p.key === name);
   if (!decl) return undefined;
-  if (!ctx.params || !(name in ctx.params)) return undefined;
-  const value = fromArgs(name, ctx);
+  const value = ctx.params && name in ctx.params ? fromArgs(name, ctx) : undefined;
   if (Array.isArray(value)) return value;
-  if (value === null || typeof value === 'object') return undefined;
+  if (value === undefined || value === null || value === '') {
+    if (decl.optional) return null;
+    throw new EngineError(`${who(ctx)}: параметр «${name}» не заполнен`);
+  }
+  if (typeof value === 'object') return undefined;
   return isFormula(decl, value) ? evaluate(value, inRecord(ctx)) : value;
 }
 
@@ -392,7 +387,7 @@ function who(ctx: RefContext): string {
 function describe(ref: unknown): string {
   if (ref === null || typeof ref !== 'object') return JSON.stringify(ref);
   const form = FORMS.find(f => f in (ref as AnyRef));
-  return form ? `«${form}: ${(ref as AnyRef)[form]}»` : JSON.stringify(ref);
+  return form ? `«${(ref as AnyRef)[form]}»` : JSON.stringify(ref);
 }
 
 function unknownForm(ref: unknown, ctx: RefContext): never {

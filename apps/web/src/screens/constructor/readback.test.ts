@@ -19,7 +19,7 @@ describe('checkReadback', () => {
     const step = {
       type: 'threshold', successWhen: 'atLeast', continueOn: 'success',
       roll: { die: { constant: 'lead' }, bonus: { expr: '#power_mod' }, check: null },
-      versus: { tag: 'armor' },
+      versus: { expr: '@получатель.armor' },
     } as unknown as Step;
     expect(joinReadback(checkReadback(step, system, effect)))
       .toBe('Ты бросаешь 1к20 + Мод Силы против «Класс брони». Не добросил — эффект кончается.');
@@ -32,7 +32,7 @@ describe('checkReadback', () => {
   });
 
   it('сравнение без броска', () => {
-    const step = { type: 'compare', value: { ref: 'dmg' }, versus: { tag: 'armor' }, breakIf: 'atMost' } as unknown as Step;
+    const step = { type: 'compare', value: { expr: '@dmg' }, versus: { expr: '@получатель.armor' }, breakIf: 'atMost' } as unknown as Step;
     expect(joinReadback(checkReadback(step, system, effect)))
       .toBe('результат «dmg» против «Класс брони» у цели — не превысило, эффект кончается.');
   });
@@ -41,7 +41,7 @@ describe('checkReadback', () => {
 describe('changeReadback', () => {
   it('вычитание со склеенным числом: кости из записи + прибавка', () => {
     const amount = { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'p_1' }, bonus: { expr: '#power_mod' } } as unknown as Step;
-    const apply = { type: 'apply', target: { tag: 'wounds' }, direction: 'subtract', value: { ref: 'dmg' } } as unknown as Step;
+    const apply = { type: 'apply', target: { tag: 'wounds' }, direction: 'subtract', value: { expr: '@dmg' } } as unknown as Step;
     expect(joinReadback(changeReadback(apply, amount, system, effect)))
       .toBe('Цель теряет ⟨кость урона — из записи⟩ + Мод Силы из «Текущие хиты».');
   });
@@ -135,7 +135,7 @@ describe('dieReadback — кость словами', () => {
       ...system,
       fields: [...system.fields, { tag: 'pool', label: 'Пул костей', value: { kind: 'stored', type: 'number', default: 4 } }],
     } as unknown as System;
-    const die = { kind: 'die', dice: [{ count: { tag: 'pool' }, sides: 6 }], read: 'best' };
+    const die = { kind: 'die', dice: [{ count: { expr: '@pool' }, sides: 6 }], read: 'best' };
     expect(joinReadback(dieReadback(die, sys)))
       .toBe('Кинуть к6 по числу «Пул костей» и взять лучшую.');
   });
@@ -145,7 +145,7 @@ describe('крит в пересказе', () => {
   it('удвоение костей названо словами и порогом', () => {
     const step = {
       id: 'dmg', type: 'amount', source: 'roll', dice: { const: '2d6' },
-      double: { ref: 'hit.natural', atLeast: 20 },
+      double: { expr: '@hit.natural >= 20' },
     } as unknown as Step;
     expect(joinReadback(numberReadback(step, system, effect)))
       .toBe('Считается число: 2к6 — и вдвое, если выпавшее на костях не меньше 20.');
