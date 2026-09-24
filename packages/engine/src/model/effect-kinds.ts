@@ -46,13 +46,8 @@ export function activationFor(launch: Launch): 'manual' | 'passive' {
 
 export const DURATIONS = {
   permanent: {
-    label: 'Постоянный',
-    hint: 'Живёт, пока жив источник: снял предмет — ушёл, выключил из правил комнаты — ушёл.',
-    forActivations: ['passive'],
-  },
-  temporary: {
-    label: 'Временный',
-    hint: 'Снимается рукой или шагом «состояние» в режиме «снять».',
+    label: 'Пока не снимут',
+    hint: 'Снимается рукой, шагом «состояние» в режиме «снять» или своим «когда». Выданное вещью живёт, пока вещь на листе.',
     forActivations: ['passive'],
   },
   uses: {
@@ -66,8 +61,13 @@ export const DURATIONS = {
     forActivations: ['passive'],
   },
   turns: {
-    label: 'Ходы владельца',
-    hint: 'Спадает в конце N-го своего хода. Вне боя висит, пока не снимут.',
+    label: 'Ходы',
+    hint: 'Спадает в конце или начале N-го хода — своего или того, кто наложил. Вне боя висит, пока не снимут.',
+    forActivations: ['passive'],
+  },
+  combat: {
+    label: 'До конца боя',
+    hint: 'Спадает, когда бой кончился. Раунды и ходы тоже спадают с концом боя.',
     forActivations: ['passive'],
   },
   scene: {

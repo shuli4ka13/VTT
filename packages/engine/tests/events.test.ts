@@ -65,7 +65,7 @@ group('конверт вызова', () => {
     test('числовой бонус эффекта попадает в бросок атаки', () => {
       const blessedSys = { ...system, effects: { ...system.effects,
         blessed: {
-          label: 'Благословение', activation: 'passive', duration: { kind: 'temporary' },
+          label: 'Благословение', activation: 'passive', duration: { kind: 'permanent' },
           modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['атака'], op: 'add', value: 4, stacking: 'sum', condition: null }],
         } } };
       const sheet = { ...arven, effects: [{ effectId: 'blessed' }] };
@@ -161,7 +161,7 @@ group('конверт вызова', () => {
 
       const shakenSys = { ...system, effects: { ...system.effects,
         shaken: {
-          label: 'Потрясён', activation: 'passive', duration: { kind: 'temporary' },
+          label: 'Потрясён', activation: 'passive', duration: { kind: 'permanent' },
           modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['спасбросок'], edit: 'disadvantage', condition: null }],
         } } };
       const sheet = { ...arven, effects: [{ effectId: 'shaken' }] };

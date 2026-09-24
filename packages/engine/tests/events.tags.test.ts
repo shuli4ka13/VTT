@@ -12,7 +12,7 @@ const queue = (...values: number[]) => {
 };
 
 const passive = (label: string, modifiers: unknown[]) =>
-  ({ label, activation: 'passive', duration: { kind: 'temporary' }, modifiers });
+  ({ label, activation: 'passive', duration: { kind: 'permanent' }, modifiers });
 
 const SOURCES = ['магический'];
 

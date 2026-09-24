@@ -1,7 +1,10 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.ts';
 import {
-  idleClock, inCombat, expiryOf, startCombat, stopCombat, nextTurn, endScene, rollInitiative,
+  idleClock, inCombat, expiryOf, startCombat, stopCombat, nextTurn, rollInitiative,
 } from '../src/engine/clock.ts';
+import { fireMoments, momentsOfTurn } from '../src/events/moments.ts';
+import type { TurnOp } from '../src/events/moments.ts';
+import type { Clock } from '../src/engine/clock.ts';
 import { exchange } from '../src/events/exchange.ts';
 import { system, arven, mirra, compendium } from './fixtures.ts';
 
@@ -40,12 +43,32 @@ group('срок эффекта считается в момент наложен
     deepEq(expiryOf(scene(), idleClock()), { scene: true });
   });
 
-  test('постоянный и временный — без пометок', () => {
+  test('«пока не снимут» — без пометок', () => {
     deepEq(expiryOf(forever(), fighting()), {});
+  });
+
+  test('«до конца боя» помечается только в бою', () => {
+    const combat = { label: 'До конца боя', activation: 'passive', duration: { kind: 'combat' } } as any;
+    deepEq(expiryOf(combat, fighting()), { combat: true });
+    deepEq(expiryOf(combat, idleClock()), {});
   });
 });
 
-group('часы боя: раунды, ходы, истечение', () => {
+const durations = {
+  x: { label: 'Икс', activation: 'passive', duration: { kind: 'turns', max: 1 } },
+  y: { label: 'Игрек', activation: 'passive', duration: { kind: 'turns', max: 1 } },
+  щит: { label: 'Щит', activation: 'passive', duration: { kind: 'turns', max: 1, ends: 'turn-start' } },
+  помощь: { label: 'Помощь', activation: 'passive', duration: { kind: 'turns', max: 1, ends: 'turn-start', whose: 'source' } },
+};
+const lapseWorld = (clock: Clock) => ({ system: { id: 'с', fields: [], effects: durations } as any, compendium: { records: [] }, die: () => 1, clock });
+
+const turn = (op: TurnOp, before: Clock, sheets: any[]) => {
+  const after = op === 'next' ? nextTurn(before) : op === 'stop' ? stopCombat() : before;
+  const run = fireMoments(momentsOfTurn(op, before, after, sheets), sheets, lapseWorld(after));
+  return { clock: after, sheets: run.sheets, expired: run.expired ?? [] };
+};
+
+group('часы боя двигают ход, срок спадает на моментах', () => {
   test('бой начинается с первого в порядке, раунд первый', () => {
     const clock = fighting();
     ok(inCombat(clock));
@@ -58,19 +81,19 @@ group('часы боя: раунды, ходы, истечение', () => {
   });
 
   test('следующий ход идёт по кругу, круг замкнулся — новый раунд', () => {
-    const one = nextTurn(fighting(), [sheet('a'), sheet('b')]);
-    eq(one.clock.active, 'b');
-    eq(one.clock.round, 1);
-    const two = nextTurn(one.clock, [sheet('a'), sheet('b')]);
-    eq(two.clock.active, 'a');
-    eq(two.clock.round, 2);
+    const one = nextTurn(fighting());
+    eq(one.active, 'b');
+    eq(one.round, 1);
+    const two = nextTurn(one);
+    eq(two.active, 'a');
+    eq(two.round, 2);
   });
 
   test('эффект на раунды спадает в начале указанного раунда, и только у кого истёк', () => {
     const sheets = [sheet('a', [{ effectId: 'x', until: 2 }]), sheet('b', [{ effectId: 'y', until: 3 }])];
-    const one = nextTurn(fighting(), sheets);
+    const one = turn('next', fighting(), sheets);
     deepEq(one.expired, [], 'раунд ещё первый');
-    const two = nextTurn(one.clock, one.sheets);
+    const two = turn('next', one.clock, one.sheets);
     deepEq(two.expired, [{ sheetId: 'a', effectId: 'x' }]);
     deepEq(two.sheets[0]!.effects, []);
     deepEq(two.sheets[1]!.effects, [{ effectId: 'y', until: 3 }]);
@@ -78,30 +101,46 @@ group('часы боя: раунды, ходы, истечение', () => {
 
   test('эффект на ходы тратится в конце хода владельца, чужие ходы его не трогают', () => {
     const sheets = [sheet('a', [{ effectId: 'x', turnsLeft: 1 }]), sheet('b', [{ effectId: 'y', turnsLeft: 1 }])];
-    const one = nextTurn(fighting(), sheets);
+    const one = turn('next', fighting(), sheets);
     deepEq(one.expired, [{ sheetId: 'a', effectId: 'x' }], 'ход a кончился — его эффект спал');
     deepEq(one.sheets[1]!.effects, [{ effectId: 'y', turnsLeft: 1 }], 'у b ход ещё не был');
   });
 
   test('эффект «до начала своего хода» спадает, когда ход владельца снова наступил', () => {
-    const endsAt = (id: string) => (id === 'щит' ? 'turn-start' as const : 'turn-end' as const);
     const sheets = [sheet('a', [{ effectId: 'щит', turnsLeft: 1 }]), sheet('b')];
-    const one = nextTurn(fighting(), sheets, endsAt);
+    const one = turn('next', fighting(), sheets);
     deepEq(one.expired, [], 'конец хода a щит не трогает');
     deepEq(one.sheets[0]!.effects, [{ effectId: 'щит', turnsLeft: 1 }]);
-    const two = nextTurn(one.clock, one.sheets, endsAt);
+    const two = turn('next', one.clock, one.sheets);
     deepEq(two.expired, [{ sheetId: 'a', effectId: 'щит' }], 'начался новый ход a — щит спал');
     deepEq(two.sheets[0]!.effects, []);
   });
 
+  test('«до начала хода того, кто наложил» считает ходы наложившего, а не носителя', () => {
+    const sheets = [sheet('a'), sheet('b', [{ effectId: 'помощь', turnsLeft: 1, from: 'a' }])];
+    const one = turn('next', fighting(), sheets);
+    deepEq(one.expired, [], 'начался ход b — но наложил a');
+    const two = turn('next', one.clock, one.sheets);
+    deepEq(two.expired, [{ sheetId: 'b', effectId: 'помощь' }], 'начался ход a — помощь спала с b');
+  });
+
+  test('конец боя снимает раунды, ходы и «до конца боя», остальное не трогает', () => {
+    const sheets = [sheet('a', [
+      { effectId: 'x', until: 9 }, { effectId: 'y', turnsLeft: 3 }, { effectId: 'z', combat: true }, { effectId: 'w' },
+    ]), sheet('b')];
+    const out = turn('stop', fighting(), sheets);
+    deepEq(out.sheets[0]!.effects, [{ effectId: 'w' }]);
+    deepEq(out.expired.map(e => e.effectId), ['x', 'y', 'z']);
+  });
+
   test('листы без изменений возвращаются теми же объектами — дельта только по делу', () => {
     const untouched = sheet('b');
-    const one = nextTurn(fighting(), [sheet('a'), untouched]);
+    const one = turn('next', fighting(), [sheet('a'), untouched]);
     ok(one.sheets[1] === untouched);
   });
 
   test('вне боя следующий ход — ошибка словами', () => {
-    throws(() => nextTurn(idleClock(), []), 'бой не идёт');
+    throws(() => nextTurn(idleClock()), 'бой не идёт');
   });
 
   test('конец боя сбрасывает часы', () => {
@@ -109,7 +148,7 @@ group('часы боя: раунды, ходы, истечение', () => {
   });
 
   test('конец сцены снимает только сценические эффекты', () => {
-    const out = endScene([sheet('a', [{ effectId: 'x', scene: true }, { effectId: 'y' }])]);
+    const out = turn('scene', fighting(), [sheet('a', [{ effectId: 'x', scene: true }, { effectId: 'y' }])]);
     deepEq(out.sheets[0]!.effects, [{ effectId: 'y' }]);
     deepEq(out.expired, [{ sheetId: 'a', effectId: 'x' }]);
   });

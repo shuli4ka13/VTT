@@ -6,7 +6,7 @@ import type {
 } from '../model/types.ts';
 
 const ACTIVATIONS: Activation[] = ['manual', 'passive'];
-const DURATIONS: DurationKind[] = ['permanent', 'temporary', 'uses', 'rounds', 'turns', 'scene'];
+const DURATIONS: DurationKind[] = ['permanent', 'uses', 'rounds', 'turns', 'combat', 'scene'];
 const STACKINGS: Stacking[] = ['ignore', 'refresh', 'stack'];
 
 const pick = <T extends string>(value: unknown, allowed: T[], fallback: T): T =>

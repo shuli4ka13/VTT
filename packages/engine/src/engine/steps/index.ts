@@ -40,6 +40,8 @@ export interface StepContext extends RefContext {
 
   bond?: { from: string; by: string };
 
+  source?: string;
+
   sender?: Record<string, unknown>;
 
   desk?: Sheet | null;

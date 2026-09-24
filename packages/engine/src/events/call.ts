@@ -54,6 +54,8 @@ export interface Run {
   seed?: Record<string, unknown>;
   claims?: string[];
   bond?: { from: string; by: string };
+
+  source?: string;
 }
 
 export function runCall(steps: StepData[], run: Run, world: WorldContext): RuleReport {
@@ -66,5 +68,6 @@ export function runCall(steps: StepData[], run: Run, world: WorldContext): RuleR
     expiry: (effect: Effect) => expiryOf(effect, world.clock),
     ...(run.claims?.length ? { claims: run.claims } : {}),
     ...(run.bond ? { bond: run.bond } : {}),
+    source: run.source ?? run.sheet.id,
   });
 }

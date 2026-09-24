@@ -13,7 +13,7 @@ const system = {
   ],
   effects: {
     ярость: {
-      label: 'Ярость', activation: 'passive', duration: { kind: 'temporary' },
+      label: 'Ярость', activation: 'passive', duration: { kind: 'permanent' },
       attach: [add('ярость', 1)],
       detach: [add('усталость', 1)],
     },

@@ -49260,6 +49260,7 @@ exports[`золотые трассы: dnd5e > arven → arven · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
           "turnsLeft": 1,
         },
       ],
@@ -49504,6 +49505,7 @@ exports[`золотые трассы: dnd5e > arven → arven · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
         },
       ],
       "id": "arven",
@@ -49747,6 +49749,7 @@ exports[`золотые трассы: dnd5e > arven → arven · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
           "turnsLeft": 1,
         },
       ],
@@ -49991,6 +49994,7 @@ exports[`золотые трассы: dnd5e > arven → arven · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
         },
       ],
       "id": "arven",
@@ -50234,6 +50238,7 @@ exports[`золотые трассы: dnd5e > arven → arven · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
           "turnsLeft": 1,
         },
       ],
@@ -50478,6 +50483,7 @@ exports[`золотые трассы: dnd5e > arven → arven · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
         },
       ],
       "id": "arven",
@@ -64095,6 +64101,7 @@ exports[`золотые трассы: dnd5e > arven → doran · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
           "turnsLeft": 1,
         },
       ],
@@ -64339,6 +64346,7 @@ exports[`золотые трассы: dnd5e > arven → doran · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
         },
       ],
       "id": "doran",
@@ -64582,6 +64590,7 @@ exports[`золотые трассы: dnd5e > arven → doran · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
           "turnsLeft": 1,
         },
       ],
@@ -64826,6 +64835,7 @@ exports[`золотые трассы: dnd5e > arven → doran · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
         },
       ],
       "id": "doran",
@@ -65069,6 +65079,7 @@ exports[`золотые трассы: dnd5e > arven → doran · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
           "turnsLeft": 1,
         },
       ],
@@ -65313,6 +65324,7 @@ exports[`золотые трассы: dnd5e > arven → doran · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
         },
       ],
       "id": "doran",
@@ -78926,6 +78938,7 @@ exports[`золотые трассы: dnd5e > arven → goblin · act_help:0 · 
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
           "turnsLeft": 1,
         },
       ],
@@ -79170,6 +79183,7 @@ exports[`золотые трассы: dnd5e > arven → goblin · act_help:0 · 
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
         },
       ],
       "id": "goblin",
@@ -79413,6 +79427,7 @@ exports[`золотые трассы: dnd5e > arven → goblin · act_help:0 · 
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
           "turnsLeft": 1,
         },
       ],
@@ -79657,6 +79672,7 @@ exports[`золотые трассы: dnd5e > arven → goblin · act_help:0 · 
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
         },
       ],
       "id": "goblin",
@@ -79900,6 +79916,7 @@ exports[`золотые трассы: dnd5e > arven → goblin · act_help:0 · 
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
           "turnsLeft": 1,
         },
       ],
@@ -80144,6 +80161,7 @@ exports[`золотые трассы: dnd5e > arven → goblin · act_help:0 · 
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
         },
       ],
       "id": "goblin",
@@ -93619,6 +93637,7 @@ exports[`золотые трассы: dnd5e > arven → mirra · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
           "turnsLeft": 1,
         },
       ],
@@ -93863,6 +93882,7 @@ exports[`золотые трассы: dnd5e > arven → mirra · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
         },
       ],
       "id": "mirra",
@@ -94106,6 +94126,7 @@ exports[`золотые трассы: dnd5e > arven → mirra · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
           "turnsLeft": 1,
         },
       ],
@@ -94350,6 +94371,7 @@ exports[`золотые трассы: dnd5e > arven → mirra · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
         },
       ],
       "id": "mirra",
@@ -94593,6 +94615,7 @@ exports[`золотые трассы: dnd5e > arven → mirra · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
           "turnsLeft": 1,
         },
       ],
@@ -94837,6 +94860,7 @@ exports[`золотые трассы: dnd5e > arven → mirra · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
         },
       ],
       "id": "mirra",
@@ -108524,6 +108548,7 @@ exports[`золотые трассы: dnd5e > arven → ogre · act_help:0 · к
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
           "turnsLeft": 1,
         },
       ],
@@ -108768,6 +108793,7 @@ exports[`золотые трассы: dnd5e > arven → ogre · act_help:0 · к
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
         },
       ],
       "id": "ogre",
@@ -109011,6 +109037,7 @@ exports[`золотые трассы: dnd5e > arven → ogre · act_help:0 · к
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
           "turnsLeft": 1,
         },
       ],
@@ -109255,6 +109282,7 @@ exports[`золотые трассы: dnd5e > arven → ogre · act_help:0 · к
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
         },
       ],
       "id": "ogre",
@@ -109498,6 +109526,7 @@ exports[`золотые трассы: dnd5e > arven → ogre · act_help:0 · к
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
           "turnsLeft": 1,
         },
       ],
@@ -109742,6 +109771,7 @@ exports[`золотые трассы: dnd5e > arven → ogre · act_help:0 · к
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
         },
       ],
       "id": "ogre",
@@ -123541,6 +123571,7 @@ exports[`золотые трассы: dnd5e > arven → orc · act_help:0 · к�
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
           "turnsLeft": 1,
         },
       ],
@@ -123785,6 +123816,7 @@ exports[`золотые трассы: dnd5e > arven → orc · act_help:0 · к�
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
         },
       ],
       "id": "orc",
@@ -124028,6 +124060,7 @@ exports[`золотые трассы: dnd5e > arven → orc · act_help:0 · к�
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
           "turnsLeft": 1,
         },
       ],
@@ -124272,6 +124305,7 @@ exports[`золотые трассы: dnd5e > arven → orc · act_help:0 · к�
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
         },
       ],
       "id": "orc",
@@ -124515,6 +124549,7 @@ exports[`золотые трассы: dnd5e > arven → orc · act_help:0 · к�
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
           "turnsLeft": 1,
         },
       ],
@@ -124759,6 +124794,7 @@ exports[`золотые трассы: dnd5e > arven → orc · act_help:0 · к�
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
         },
       ],
       "id": "orc",
@@ -138255,6 +138291,7 @@ exports[`золотые трассы: dnd5e > arven → sil · act_help:0 · к�
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
           "turnsLeft": 1,
         },
       ],
@@ -138499,6 +138536,7 @@ exports[`золотые трассы: dnd5e > arven → sil · act_help:0 · к�
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
         },
       ],
       "id": "sil",
@@ -138742,6 +138780,7 @@ exports[`золотые трассы: dnd5e > arven → sil · act_help:0 · к�
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
           "turnsLeft": 1,
         },
       ],
@@ -138986,6 +139025,7 @@ exports[`золотые трассы: dnd5e > arven → sil · act_help:0 · к�
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
         },
       ],
       "id": "sil",
@@ -139229,6 +139269,7 @@ exports[`золотые трассы: dnd5e > arven → sil · act_help:0 · к�
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
           "turnsLeft": 1,
         },
       ],
@@ -139473,6 +139514,7 @@ exports[`золотые трассы: dnd5e > arven → sil · act_help:0 · к�
       "effects": [
         {
           "effectId": "helped",
+          "from": "arven",
         },
       ],
       "id": "sil",
@@ -150074,6 +150116,7 @@ exports[`золотые трассы: dnd5e > doran → arven · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
           "turnsLeft": 1,
         },
       ],
@@ -150318,6 +150361,7 @@ exports[`золотые трассы: dnd5e > doran → arven · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
         },
       ],
       "id": "arven",
@@ -150561,6 +150605,7 @@ exports[`золотые трассы: dnd5e > doran → arven · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
           "turnsLeft": 1,
         },
       ],
@@ -150805,6 +150850,7 @@ exports[`золотые трассы: dnd5e > doran → arven · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
         },
       ],
       "id": "arven",
@@ -151048,6 +151094,7 @@ exports[`золотые трассы: dnd5e > doran → arven · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
           "turnsLeft": 1,
         },
       ],
@@ -151292,6 +151339,7 @@ exports[`золотые трассы: dnd5e > doran → arven · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
         },
       ],
       "id": "arven",
@@ -160672,6 +160720,7 @@ exports[`золотые трассы: dnd5e > doran → doran · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
           "turnsLeft": 1,
         },
       ],
@@ -160916,6 +160965,7 @@ exports[`золотые трассы: dnd5e > doran → doran · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
         },
       ],
       "id": "doran",
@@ -161159,6 +161209,7 @@ exports[`золотые трассы: dnd5e > doran → doran · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
           "turnsLeft": 1,
         },
       ],
@@ -161403,6 +161454,7 @@ exports[`золотые трассы: dnd5e > doran → doran · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
         },
       ],
       "id": "doran",
@@ -161646,6 +161698,7 @@ exports[`золотые трассы: dnd5e > doran → doran · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
           "turnsLeft": 1,
         },
       ],
@@ -161890,6 +161943,7 @@ exports[`золотые трассы: dnd5e > doran → doran · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
         },
       ],
       "id": "doran",
@@ -171266,6 +171320,7 @@ exports[`золотые трассы: dnd5e > doran → goblin · act_help:0 · 
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
           "turnsLeft": 1,
         },
       ],
@@ -171510,6 +171565,7 @@ exports[`золотые трассы: dnd5e > doran → goblin · act_help:0 · 
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
         },
       ],
       "id": "goblin",
@@ -171753,6 +171809,7 @@ exports[`золотые трассы: dnd5e > doran → goblin · act_help:0 · 
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
           "turnsLeft": 1,
         },
       ],
@@ -171997,6 +172054,7 @@ exports[`золотые трассы: dnd5e > doran → goblin · act_help:0 · 
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
         },
       ],
       "id": "goblin",
@@ -172240,6 +172298,7 @@ exports[`золотые трассы: dnd5e > doran → goblin · act_help:0 · 
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
           "turnsLeft": 1,
         },
       ],
@@ -172484,6 +172543,7 @@ exports[`золотые трассы: dnd5e > doran → goblin · act_help:0 · 
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
         },
       ],
       "id": "goblin",
@@ -181708,6 +181768,7 @@ exports[`золотые трассы: dnd5e > doran → mirra · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
           "turnsLeft": 1,
         },
       ],
@@ -181952,6 +182013,7 @@ exports[`золотые трассы: dnd5e > doran → mirra · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
         },
       ],
       "id": "mirra",
@@ -182195,6 +182257,7 @@ exports[`золотые трассы: dnd5e > doran → mirra · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
           "turnsLeft": 1,
         },
       ],
@@ -182439,6 +182502,7 @@ exports[`золотые трассы: dnd5e > doran → mirra · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
         },
       ],
       "id": "mirra",
@@ -182682,6 +182746,7 @@ exports[`золотые трассы: dnd5e > doran → mirra · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
           "turnsLeft": 1,
         },
       ],
@@ -182926,6 +182991,7 @@ exports[`золотые трассы: dnd5e > doran → mirra · act_help:0 · �
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
         },
       ],
       "id": "mirra",
@@ -192376,6 +192442,7 @@ exports[`золотые трассы: dnd5e > doran → ogre · act_help:0 · к
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
           "turnsLeft": 1,
         },
       ],
@@ -192620,6 +192687,7 @@ exports[`золотые трассы: dnd5e > doran → ogre · act_help:0 · к
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
         },
       ],
       "id": "ogre",
@@ -192863,6 +192931,7 @@ exports[`золотые трассы: dnd5e > doran → ogre · act_help:0 · к
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
           "turnsLeft": 1,
         },
       ],
@@ -193107,6 +193176,7 @@ exports[`золотые трассы: dnd5e > doran → ogre · act_help:0 · к
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
         },
       ],
       "id": "ogre",
@@ -193350,6 +193420,7 @@ exports[`золотые трассы: dnd5e > doran → ogre · act_help:0 · к
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
           "turnsLeft": 1,
         },
       ],
@@ -193594,6 +193665,7 @@ exports[`золотые трассы: dnd5e > doran → ogre · act_help:0 · к
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
         },
       ],
       "id": "ogre",
@@ -202884,6 +202956,7 @@ exports[`золотые трассы: dnd5e > doran → orc · act_help:0 · к�
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
           "turnsLeft": 1,
         },
       ],
@@ -203128,6 +203201,7 @@ exports[`золотые трассы: dnd5e > doran → orc · act_help:0 · к�
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
         },
       ],
       "id": "orc",
@@ -203371,6 +203445,7 @@ exports[`золотые трассы: dnd5e > doran → orc · act_help:0 · к�
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
           "turnsLeft": 1,
         },
       ],
@@ -203615,6 +203690,7 @@ exports[`золотые трассы: dnd5e > doran → orc · act_help:0 · к�
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
         },
       ],
       "id": "orc",
@@ -203858,6 +203934,7 @@ exports[`золотые трассы: dnd5e > doran → orc · act_help:0 · к�
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
           "turnsLeft": 1,
         },
       ],
@@ -204102,6 +204179,7 @@ exports[`золотые трассы: dnd5e > doran → orc · act_help:0 · к�
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
         },
       ],
       "id": "orc",
@@ -213361,6 +213439,7 @@ exports[`золотые трассы: dnd5e > doran → sil · act_help:0 · к�
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
           "turnsLeft": 1,
         },
       ],
@@ -213605,6 +213684,7 @@ exports[`золотые трассы: dnd5e > doran → sil · act_help:0 · к�
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
         },
       ],
       "id": "sil",
@@ -213848,6 +213928,7 @@ exports[`золотые трассы: dnd5e > doran → sil · act_help:0 · к�
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
           "turnsLeft": 1,
         },
       ],
@@ -214092,6 +214173,7 @@ exports[`золотые трассы: dnd5e > doran → sil · act_help:0 · к�
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
         },
       ],
       "id": "sil",
@@ -214335,6 +214417,7 @@ exports[`золотые трассы: dnd5e > doran → sil · act_help:0 · к�
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
           "turnsLeft": 1,
         },
       ],
@@ -214579,6 +214662,7 @@ exports[`золотые трассы: dnd5e > doran → sil · act_help:0 · к�
       "effects": [
         {
           "effectId": "helped",
+          "from": "doran",
         },
       ],
       "id": "sil",

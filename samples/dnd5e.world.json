@@ -5465,7 +5465,8 @@
         "duration": {
           "kind": "turns",
           "max": 1,
-          "ends": "turn-start"
+          "ends": "turn-start",
+          "whose": "source"
         },
         "stacking": "refresh",
         "modifiers": [
@@ -5832,7 +5833,7 @@
         "description": "Твои атаки с помехой, по тебе — с преимуществом. Наложенное заклинанием: в конце хода — спасбросок Телосложения против запомненной сложности.",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
         "stacking": "refresh",
         "modifiers": [
@@ -5900,7 +5901,7 @@
         "description": "Не можешь вредить очаровавшему; у него преимущество на общение с тобой. Считает ведущий.",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
         "stacking": "refresh",
         "modifiers": []
@@ -5911,7 +5912,7 @@
         "description": "Не слышишь. Проверки на слух проваливаются — считает ведущий.",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
         "stacking": "refresh",
         "modifiers": []
@@ -5922,7 +5923,7 @@
         "description": "Помеха на атаки и проверки, пока источник страха на виду. Наложенное заклинанием: в конце хода — спасбросок Мудрости против запомненной сложности.",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
         "stacking": "refresh",
         "modifiers": [
@@ -5990,7 +5991,7 @@
         "description": "Скорость ноль.",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
         "stacking": "refresh",
         "modifiers": [
@@ -6010,7 +6011,7 @@
         "description": "Ни действий, ни реакций. Следит ведущий.",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
         "stacking": "refresh",
         "modifiers": []
@@ -6021,7 +6022,7 @@
         "description": "Твои атаки с преимуществом, по тебе — с помехой.",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
         "stacking": "refresh",
         "modifiers": [
@@ -6051,7 +6052,7 @@
         "description": "Недееспособен, скорость ноль, спасброски Силы и Ловкости провалены, по тебе бьют с преимуществом. Наложенное заклинанием: в конце хода — спасбросок Мудрости против запомненной сложности.",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
         "stacking": "refresh",
         "modifiers": [
@@ -6138,7 +6139,7 @@
         "description": "Как паралич, плюс сопротивление любому урону.",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
         "stacking": "refresh",
         "modifiers": [
@@ -6195,7 +6196,7 @@
         "description": "Помеха на атаки и проверки характеристик.",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
         "stacking": "refresh",
         "modifiers": [
@@ -6225,7 +6226,7 @@
         "description": "Твои атаки с помехой, по тебе вблизи бьют с преимуществом. Встать — половина скорости.",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
         "stacking": "refresh",
         "modifiers": [
@@ -6255,7 +6256,7 @@
         "description": "Скорость ноль, твои атаки и спасброски Ловкости с помехой, по тебе — с преимуществом. Наложенное заклинанием: в конце хода — спасбросок Силы против запомненной сложности.",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
         "stacking": "refresh",
         "modifiers": [
@@ -6341,7 +6342,7 @@
         "description": "Недееспособен, спасброски Силы и Ловкости провалены, по тебе бьют с преимуществом.",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
         "stacking": "refresh",
         "modifiers": [
@@ -6382,7 +6383,7 @@
         "description": "Лежит без чувств: как паралич, и роняет всё, что держал.",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
         "stacking": "refresh",
         "modifiers": [
@@ -6603,7 +6604,7 @@
         "description": "Урон этой атаки вдвое меньше; после удара спадает само.",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
         "stacking": "refresh",
         "modifiers": [
@@ -7490,7 +7491,7 @@
         "description": "Висит на том, кто держит заклинание. Получил урон — спасбросок Телосложения против 10 или половины урона; провал срывает всё, что держал.",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
         "params": [],
         "on": [
@@ -7535,7 +7536,7 @@
         "description": "На нуле хитов: в начале своего хода к20. Десять и выше — успех, иначе провал; единица — два провала, двадцатка — один хит и на ноги.",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
         "params": [],
         "on": [

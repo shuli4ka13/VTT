@@ -3,9 +3,11 @@ import { newPass } from '../engine/calc.ts';
 import { rolledSoFar } from '../engine/rolled.ts';
 import { packCall, runCall } from './call.ts';
 import { holdsNow } from '../engine/refs.ts';
+import { burnsUse, spendUse } from './durations.ts';
+export { spendUse } from './durations.ts';
 import { findRecord, heldBy, isItem, kindOfRecord, entryOf, propsOf } from '../model/owned.ts';
 export { propsOf } from '../model/owned.ts';
-import { requireEffect, findEffect, isPipeline, durationOf } from '../engine/effects.ts';
+import { requireEffect, findEffect, isPipeline } from '../engine/effects.ts';
 import { listening, subscriberByKey, hears, runsAtOther, withSteps } from './bus.ts';
 import type { Role, Phase } from './bus.ts';
 import { EngineError } from '../engine/errors.ts';
@@ -172,7 +174,7 @@ export function receive(
     ? { sheet, reactions: [] as Report[], spent: [] as string[] }
     : fireBefore(envelope, sheet, { system, compendium, die, clock });
   const out = runCall(envelope.steps || [], {
-    sheet: early.sheet, owner: `конверт «${envelope.label}»`,
+    sheet: early.sheet, owner: `конверт «${envelope.label}»`, source: envelope.from,
     ...(claims?.length ? { claims } : {}),
     ...(holder?.bond ? { bond: { from: envelope.from, by: holderOf(envelope.effect, holder)! } } : {}),
   }, { system, compendium, die, clock, desk });
@@ -234,7 +236,7 @@ function fireBefore(
     const done = runOnSelf(id, withSteps(effect, handler.steps), current, {}, owner, ctx);
     current = done.sheet;
     reactions.push(done.report);
-    if (durationOf(effect) === 'uses') {
+    if (burnsUse(effect)) {
       current = spendUse(current, id);
       spent.push(id);
     }
@@ -316,7 +318,7 @@ function fireTriggers(
       reactions.push(done.report);
     }
 
-    if (durationOf(effect) === 'uses') {
+    if (burnsUse(effect)) {
       sheet = spendUse(sheet, id);
       spent.push(id);
     }
@@ -351,7 +353,7 @@ export function fireOutgoing(
       reactions.push(done.report);
     }
 
-    if (durationOf(effect) === 'uses') {
+    if (burnsUse(effect)) {
       sheet = spendUse(sheet, id);
       spent.push(id);
     }
@@ -441,22 +443,12 @@ export function react(
       reports.push(done.report);
     }
     claims.push(...offer.claims);
-    if (durationOf(effect) === 'uses') {
+    if (burnsUse(effect)) {
       sheet = spendUse(sheet, found.id);
       spent.push(found.id);
     }
   }
   return { sheet, reports, claims: [...new Set(claims)], spent, replies };
-}
-
-export function spendUse(sheet: Sheet, effectId: string): Sheet {
-  const effects: Sheet['effects'] = [];
-  for (const entry of sheet.effects || []) {
-    if (entry.effectId !== effectId) { effects.push(entry); continue; }
-    const left = Number(entry.usesLeft ?? 1) - 1;
-    if (left > 0) effects.push({ ...entry, usesLeft: left });
-  }
-  return { ...sheet, effects };
 }
 
 export const effectLabelOf = (system: System, id: string): string => {

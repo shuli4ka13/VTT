@@ -347,7 +347,7 @@ describe('моменты вещей и эффектов', () => {
           label: 'При спадении', activation: 'passive',
           on: [{ on: 'moment:expired', steps: [{ type: 'apply', target: { tag: 'снято' }, direction: 'add', value: { expr: '1' } }] }],
         },
-        бафф: { label: 'Бафф', activation: 'passive', duration: { kind: 'temporary' }, modifiers: [] },
+        бафф: { label: 'Бафф', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [] },
       },
       room_rules: ['при_надевании', 'при_спадении'],
       records: { оружие: { kind: 'item', label: 'Оружие', props: [], bindings: [] } },
@@ -501,7 +501,7 @@ describe('поле стало верным', () => {
         { tag: 'без_сил', label: 'Без сил', value: { kind: 'formula', expr: '#хиты <= 0' } },
       ],
       effects: {
-        без_сознания: { label: 'Без сознания', activation: 'passive', duration: { kind: 'temporary' }, modifiers: [] },
+        без_сознания: { label: 'Без сознания', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [] },
         падение: {
           label: 'Падение', activation: 'passive',
           on: [{ on: 'field:без_сил', steps: [{ type: 'status', mode: 'apply', effect: { const: 'без_сознания' } }] }],

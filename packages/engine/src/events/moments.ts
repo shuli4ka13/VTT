@@ -1,10 +1,12 @@
 import { newPass, calc } from '../engine/calc.ts';
 import { packCall, runCall } from './call.ts';
 import { holdsNow } from '../engine/refs.ts';
-import { durationOf } from '../engine/effects.ts';
+import { lapse, burnsUse, spendUse } from './durations.ts';
+import type { Expired } from './durations.ts';
+import type { Clock } from '../engine/clock.ts';
 import { listening, subscribers, withSteps, MOMENT_PREFIX, FIELD_PREFIX } from './bus.ts';
 import { EngineError } from '../engine/errors.ts';
-import { spendUse, effectLabelOf } from './envelope.ts';
+import { effectLabelOf } from './envelope.ts';
 import { deskOf } from './desk.ts';
 import type { Report, WorldContext } from './envelope.ts';
 import type { Sheet, Effect, Handler, WornEffect } from '../model/types.ts';
@@ -44,6 +46,32 @@ export interface MomentEvent {
 export interface MomentRun {
   sheets: Sheet[];
   reports: { sheetId: string; report: Report }[];
+
+  expired?: Expired[];
+}
+
+export type TurnOp = 'start' | 'next' | 'stop' | 'scene' | 'short-rest' | 'long-rest';
+
+export function momentsOfTurn(op: TurnOp, before: Clock, after: Clock, sheets: Sheet[]): MomentEvent[] {
+  const everyone = (moment: MomentKey): MomentEvent[] =>
+    sheets.filter(sheet => sheet.kind !== 'desk').map(sheet => ({ moment, sheetId: sheet.id }));
+  if (op === 'start') {
+    return [
+      ...everyone('combat-start'),
+      ...everyone('round-start'),
+      ...(after.active ? [{ moment: 'turn-start' as const, sheetId: String(after.active) }] : []),
+    ];
+  }
+  if (op === 'next') {
+    const ended = before.active ? [{ moment: 'turn-end' as const, sheetId: String(before.active) }] : [];
+    const round = after.round !== before.round ? everyone('round-start') : [];
+    const started = after.active ? [{ moment: 'turn-start' as const, sheetId: String(after.active) }] : [];
+    return [...ended, ...round, ...started];
+  }
+  if (op === 'stop') return everyone('combat-end');
+  if (op === 'short-rest') return everyone('short-rest');
+  if (op === 'long-rest') return [...everyone('short-rest'), ...everyone('long-rest')];
+  return everyone('scene-end');
 }
 
 const MAX_FIRES = 32;
@@ -51,9 +79,19 @@ const MAX_FIRES = 32;
 export function fireMoments(events: MomentEvent[], sheets: Sheet[], world: WorldContext): MomentRun {
   let updated = sheets;
   const reports: { sheetId: string; report: Report }[] = [];
+  const expired: Expired[] = [];
+  const queue = [...events];
   let fired = 0;
 
-  for (const event of events) {
+  for (let at = 0; at < queue.length; at += 1) {
+    const event = queue[at]!;
+    const lapsed = lapse(event, updated, world.system, world.clock);
+    updated = lapsed.sheets;
+    for (const gone of lapsed.expired) {
+      expired.push(gone);
+      queue.push({ moment: 'expired', sheetId: gone.sheetId, about: gone.effectId });
+    }
+
     const sheet = updated.find(s => s.id === event.sheetId);
     if (!sheet) continue;
 
@@ -73,7 +111,7 @@ export function fireMoments(events: MomentEvent[], sheets: Sheet[], world: World
       const call = { effectId: id, effect: withSteps(effect, handler.steps), sheet: live, owner, args: {}, props: null, seed };
       const done = runCall(packCall(call, here), { sheet: live, owner, seed }, here);
       let next = done.sheet;
-      if (durationOf(effect) === 'uses') next = spendUse(next, id);
+      if (burnsUse(effect)) next = spendUse(next, id);
       const desk = done.desk;
       updated = updated.map(s => (s.id === next.id ? next : desk && s.id === desk.id ? desk : s));
 
@@ -89,7 +127,7 @@ export function fireMoments(events: MomentEvent[], sheets: Sheet[], world: World
     }
   }
 
-  return { sheets: updated, reports };
+  return { sheets: updated, reports, expired };
 }
 
 export const wornSeed = (entry: WornEffect | undefined): Record<string, unknown> => ({ carry: null, ...(entry ?? {}) });
@@ -142,7 +180,7 @@ export function fireCrossings(before: Sheet[], after: Sheet[], world: WorldConte
       const call = { effectId: id, effect: withSteps(effect, handler.steps), sheet: live, owner, args: {}, props: null, seed };
       const done = runCall(packCall(call, here), { sheet: live, owner, seed }, here);
       let next = done.sheet;
-      if (durationOf(effect) === 'uses') next = spendUse(next, id);
+      if (burnsUse(effect)) next = spendUse(next, id);
       const desk = done.desk;
       updated = updated.map(s => (s.id === next.id ? next : desk && s.id === desk.id ? desk : s));
 

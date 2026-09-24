@@ -504,7 +504,7 @@
         "icon": "☠",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
         "stacking": "refresh",
         "description": "Помеха на броски атаки.",
@@ -527,7 +527,7 @@
         "icon": "🪨",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
         "description": "Немагический урон вдвое меньше.",
         "modifiers": [
@@ -551,7 +551,7 @@
         "icon": "🧯",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
         "description": "Входящий урон с тегом «огонь» половинится.",
         "modifiers": [
@@ -715,7 +715,7 @@
         "icon": "🛌",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
         "description": "Атаки по лежащему — с преимуществом, его собственные атаки — с помехой.",
         "modifiers": [
@@ -1011,7 +1011,7 @@
         "description": "На нуле хитов: в начале своего хода бросок к20. 10 и выше — успех, иначе провал. Три провала — смерть, три успеха — стабилизация; считает стол.",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
         "params": [],
         "on": [
@@ -1090,7 +1090,7 @@
         "icon": "😵",
         "activation": "passive",
         "duration": {
-          "kind": "temporary"
+          "kind": "permanent"
         },
         "description": "Хиты на нуле: лежит, пока не поднимут.",
         "modifiers": [],

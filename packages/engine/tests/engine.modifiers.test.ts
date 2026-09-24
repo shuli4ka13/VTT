@@ -9,7 +9,7 @@ import { system, arven, mirra, compendium } from './fixtures.ts';
 const withGear = (sheet, book = compendium) => newPass(system, sheet, { compendium: book });
 
 const withEffects = extra => ({ ...system, effects: { ...system.effects, ...extra } });
-const passive = (label, modifiers) => ({ label, activation: 'passive', duration: { kind: 'temporary' }, modifiers });
+const passive = (label, modifiers) => ({ label, activation: 'passive', duration: { kind: 'permanent' }, modifiers });
 
 const withRoomRule = (id, label, modifier) => ({
   ...system,

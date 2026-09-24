@@ -95,7 +95,7 @@ const manual = (label, category, description, cost, rest = {}) => {
     ...(self.length ? { self } : {}),
   };
 };
-const passive = (label, description, modifiers, duration = { kind: 'temporary' }, extra = {}) => ({
+const passive = (label, description, modifiers, duration = { kind: 'permanent' }, extra = {}) => ({
   label, group: 'Состояния', description, activation: 'passive', duration, stacking: 'refresh', modifiers, ...extra,
 });
 const roll = (tags, edit, condition = null) => ({
@@ -408,7 +408,7 @@ function features() {
     }),
     helped: passive('Ему помогают', 'Следующая проверка или атака — с преимуществом.',
       [roll(['атака'], 'advantage'), roll(['проверка'], 'advantage')],
-      { kind: 'turns', max: 1, ends: 'turn-start' }),
+      { kind: 'turns', max: 1, ends: 'turn-start', whose: 'source' }),
     spend_hit_die: manual('Потратить кость хитов', 'Отдых и смерть',
       'На коротком отдыхе: бросаешь кость хитов, прибавляешь Телосложение, восполняешь столько хитов.', 'free', {
         self: [
@@ -600,7 +600,7 @@ function lifecycle() {
           versus: { expr: 'max(10, floor(@event_amount / 2))' }, successWhen: 'atLeast', continueOn: 'fail',
         },
         drop('concentration'),
-      ], { group: 'Заклинания', duration: { kind: 'temporary' } }),
+      ], { group: 'Заклинания', duration: { kind: 'permanent' } }),
     dying: auto('При смерти',
       'На нуле хитов: в начале своего хода к20. Десять и выше — успех, иначе провал; единица — два провала, двадцатка — один хит и на ноги.',
       { on: 'moment:turn-start', if: { expr: '@hp_current <= 0' } },
@@ -610,7 +610,7 @@ function lifecycle() {
         change('death_fail', 'add', { const: 1 }, { when: { ref: 'спас.success', not: true } }),
         change('death_fail', 'add', { const: 1 }, { when: { ref: 'спас.natural', atMost: 1 } }),
         change('hp_current', 'set', { const: 1 }, { when: { ref: 'спас.natural', atLeast: 20 } }),
-      ], { group: 'Состояния', duration: { kind: 'temporary' } }),
+      ], { group: 'Состояния', duration: { kind: 'permanent' } }),
     fall: auto('Падение', 'Хиты опустились до нуля — «Без сознания» и «При смерти».',
       { on: 'field:down' }, [hang({ const: 'unconscious' }), hang({ const: 'dying' })]),
     wake: auto('Подъём', 'Хиты снова выше нуля — встаёт, спасброски от смерти сброшены.',

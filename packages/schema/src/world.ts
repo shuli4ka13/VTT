@@ -165,7 +165,7 @@ export const rollModifier = z.object({
 export const modifier = z.discriminatedUnion('kind', [valueModifier, rollModifier]);
 
 export const activation = z.enum(['manual', 'passive']);
-export const durationKind = z.enum(['permanent', 'temporary', 'uses', 'rounds', 'turns', 'scene']);
+export const durationKind = z.enum(['permanent', 'uses', 'rounds', 'turns', 'combat', 'scene']);
 export const stacking = z.enum(['ignore', 'refresh', 'stack']);
 
 export const ask = z.object({
@@ -225,6 +225,7 @@ export const effect = z.object({
     kind: durationKind,
     max: z.number().int().positive().optional(),
     ends: z.enum(['turn-end', 'turn-start']).optional(),
+    whose: z.enum(['own', 'source']).optional(),
   }).optional(),
   stacking: stacking.optional(),
   params: z.array(param).optional(),

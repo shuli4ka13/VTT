@@ -20,7 +20,7 @@ import { tapeDie, replayDie } from '@vtt/engine/engine/dice';
 import type { Envelope, Offer, ReactionWindow, Report } from '@vtt/engine/events/envelope';
 import { findEffect, usesMax } from '@vtt/engine/engine/effects';
 import { asksOf, checkInputs, normalizeInputs } from '@vtt/engine/model/asks';
-import { fireMoments, fireCrossings, describeMoment } from '@vtt/engine/events/moments';
+import { fireMoments, fireCrossings, describeMoment, momentsOfTurn } from '@vtt/engine/events/moments';
 import { sweepBonds, releaseHolder } from '@vtt/engine/events/bonds';
 import { fireLifecycle } from '@vtt/engine/events/lifecycle';
 import { runSelfTrack, selfRefusal } from '@vtt/engine/events/self';
@@ -31,7 +31,7 @@ import { resolveRoll } from '@vtt/engine/engine/modifiers';
 import { newPass, calc } from '@vtt/engine/engine/calc';
 import { rollLead, dieConstant } from '@vtt/engine/engine/lead-die';
 import {
-  idleClock, startCombat, stopCombat, nextTurn, endScene, rollInitiative, expiryOf, endsAtOf, inCombat,
+  idleClock, startCombat, stopCombat, nextTurn, rollInitiative, expiryOf, inCombat,
 } from '@vtt/engine/engine/clock';
 
 export type Role = 'gm' | 'player';
@@ -208,13 +208,6 @@ export class RoomsService {
     let next: ClockState = clock;
     let after: Sheet[] = sheets;
     const lines: string[] = [];
-    const gone: MomentEvent[] = [];
-    const tell = (expired: { sheetId: string; effectId: string }[]) => {
-      for (const e of expired) {
-        lines.push(`«${effectLabelOf(system, e.effectId)}» спало с ${nameOf(e.sheetId)}`);
-        gone.push({ moment: 'expired', sheetId: e.sheetId, about: e.effectId });
-      }
-    };
 
     try {
       if (intent.op === 'start') {
@@ -234,10 +227,7 @@ export class RoomsService {
         next = startCombat(clock, order);
         lines.push(`Раунд 1. Ход: ${nameOf(String(next.active))}`);
       } else if (intent.op === 'next') {
-        const tick = nextTurn(clock, sheets, id => endsAtOf(findEffect(system, id)));
-        next = tick.clock;
-        after = tick.sheets;
-        tell(tick.expired);
+        next = nextTurn(clock);
         lines.push(next.round !== clock.round
           ? `Раунд ${next.round}. Ход: ${nameOf(String(next.active))}`
           : `Ход: ${nameOf(String(next.active))}`);
@@ -248,9 +238,6 @@ export class RoomsService {
         if (inCombat(clock)) throw new BadRequestException('в бою не отдыхают — сначала закончите бой');
         lines.push(intent.op === 'long-rest' ? 'Долгий отдых' : 'Короткий отдых');
       } else {
-        const closed = endScene(sheets);
-        after = closed.sheets;
-        tell(closed.expired);
         lines.push('Сцена закрыта');
       }
     } catch (err) {
@@ -260,8 +247,9 @@ export class RoomsService {
 
     try {
       const world = { system, compendium, die: this.die, clock: next };
-      const fired = fireMoments([...momentsOf(intent.op, clock, next, after), ...gone], after, world);
+      const fired = fireMoments(momentsOfTurn(intent.op, clock, next, after), after, world);
       after = fired.sheets;
+      for (const e of fired.expired ?? []) lines.push(`«${effectLabelOf(system, e.effectId)}» спало с ${nameOf(e.sheetId)}`);
       for (const entry of fired.reports) lines.push(describeMoment(world, entry, after));
       after = this.settle(world, sheets, after, lines);
     } catch (err) {
@@ -928,27 +916,3 @@ export class RoomsService {
 
 }
 
-const momentsOf = (
-  op: TurnIntent['op'], before: ClockState, after: ClockState, sheets: Sheet[],
-): MomentEvent[] => {
-  const everyone = (moment: MomentEvent['moment']): MomentEvent[] =>
-    sheets.filter(sheet => sheet.kind !== 'desk').map(sheet => ({ moment, sheetId: sheet.id }));
-
-  if (op === 'start') {
-    return [
-      ...everyone('combat-start'),
-      ...everyone('round-start'),
-      ...(after.active ? [{ moment: 'turn-start' as const, sheetId: String(after.active) }] : []),
-    ];
-  }
-  if (op === 'next') {
-    const ended = before.active ? [{ moment: 'turn-end' as const, sheetId: String(before.active) }] : [];
-    const round = after.round !== before.round ? everyone('round-start') : [];
-    const started = after.active ? [{ moment: 'turn-start' as const, sheetId: String(after.active) }] : [];
-    return [...ended, ...round, ...started];
-  }
-  if (op === 'stop') return everyone('combat-end');
-  if (op === 'short-rest') return everyone('short-rest');
-  if (op === 'long-rest') return [...everyone('short-rest'), ...everyone('long-rest')];
-  return everyone('scene-end');
-};

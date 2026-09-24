@@ -14,19 +14,24 @@ import { launchOf, activationFor } from '@vtt/engine/model/effect-kinds';
 import type { System, Effect, Step } from '@vtt/schema';
 
 const DURATIONS = [
-  ['permanent', 'постоянно'],
-  ['temporary', 'временно'],
+  ['permanent', 'пока не снимут'],
   ['uses', 'на N срабатываний'],
   ['rounds', 'на N раундов боя'],
-  ['turns', 'на N своих ходов'],
+  ['turns', 'на N ходов'],
+  ['combat', 'до конца боя'],
   ['scene', 'до конца сцены'],
 ] as const;
 
 const COUNTED = new Set(['uses', 'rounds', 'turns']);
 
 const ENDS = [
-  ['turn-end', 'в конце своего хода'],
-  ['turn-start', 'в начале своего хода'],
+  ['turn-end', 'в конце хода'],
+  ['turn-start', 'в начале хода'],
+] as const;
+
+const WHOSE = [
+  ['own', 'своего — того, на ком висит'],
+  ['source', 'того, кто наложил'],
 ] as const;
 
 const STACKING = [
@@ -142,7 +147,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
           <Extras
             items={[{
               key: 'duration', label: 'сколько висит', on: !!effect.duration || !!effect.bond,
-              add: () => edit(draft => { draft.duration = { kind: 'temporary' }; }),
+              add: () => edit(draft => { draft.duration = { kind: 'permanent' }; }),
               drop: () => edit(draft => { delete draft.duration; delete draft.bond; delete draft.stacking; }),
               node: <Lifetime effect={effect} system={system} id={id} edit={edit} />,
             }]}
@@ -318,7 +323,7 @@ function Lifetime({ effect, system, id, edit }: {
           value={held ? 'held' : kind}
           options={[...DURATIONS, ['held', 'пока я держу']] as never}
           onChange={next => edit(draft => {
-            if (next === 'held') { draft.bond = true; draft.duration = { kind: 'temporary' }; return; }
+            if (next === 'held') { draft.bond = true; draft.duration = { kind: 'permanent' }; return; }
             delete draft.bond;
             draft.duration = COUNTED.has(next) ? { kind: next, max: draft.duration?.max ?? 1 } : { kind: next };
           })}
@@ -348,13 +353,26 @@ function Lifetime({ effect, system, id, edit }: {
       ) : null}
 
       {!held && kind === 'turns' ? (
-        <Field label="Спадает" hint="«В начале своего хода» — как «до начала вашего следующего хода»: щит, уклонение.">
+        <Field label="Спадает" hint="«В начале хода» — как «до начала следующего хода»: щит, уклонение.">
           <Select
             value={effect.duration?.ends ?? 'turn-end'}
             options={ENDS}
             onChange={next => edit(draft => {
               if (!draft.duration) return;
               if (next === 'turn-start') draft.duration.ends = next; else delete draft.duration.ends;
+            })}
+          />
+        </Field>
+      ) : null}
+
+      {!held && kind === 'turns' ? (
+        <Field label="Чьи ходы считать" hint="«Того, кто наложил» — как «до начала вашего следующего хода» у помощи и щита веры.">
+          <Select
+            value={effect.duration?.whose ?? 'own'}
+            options={WHOSE}
+            onChange={next => edit(draft => {
+              if (!draft.duration) return;
+              if (next === 'source') draft.duration.whose = next; else delete draft.duration.whose;
             })}
           />
         </Field>

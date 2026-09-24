@@ -1,3 +1,4 @@
+import { whoseOf } from '../events/durations.ts';
 import { stepModule } from './steps/index.ts';
 import { rolledSoFar } from './rolled.ts';
 import { findField } from './calc.ts';
@@ -110,6 +111,7 @@ export function resolveRule(steps: StepData[], ctx: StepContext): RuleReport {
       effectId,
       ...(extra ?? {}),
       ...(ctx.expiry ? ctx.expiry(effect) : {}),
+      ...(whoseOf(effect) === 'source' && ctx.source ? { from: ctx.source } : {}),
       ...(ctx.bond ? { from: ctx.bond.from, by: ctx.bond.by } : {}),
     };
     const max = usesMax(effect);

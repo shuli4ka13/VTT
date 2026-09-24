@@ -10,7 +10,7 @@ const system = {
   fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } }],
   effects: {
     горит: {
-      label: 'Горит', activation: 'passive', duration: { kind: 'temporary' },
+      label: 'Горит', activation: 'passive', duration: { kind: 'permanent' },
       on: [
         { on: 'moment:turn-start', steps: [hp('subtract', 3)] },
         { on: 'moment:turn-end', steps: [hp('add', 1)] },
