@@ -236,6 +236,7 @@ export const effect = z.object({
   on: z.array(handler).optional(),
   attach: z.array(step).optional(),
   detach: z.array(step).optional(),
+  grants: z.array(z.string().min(1)).optional(),
 }).passthrough();
 
 export const bindingArg = z.union([

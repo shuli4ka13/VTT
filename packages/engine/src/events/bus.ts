@@ -5,6 +5,8 @@ import type { EmittedEvent } from '../engine/rule.ts';
 export const EVENT_PREFIX = 'event:';
 export const MOMENT_PREFIX = 'moment:';
 export const FIELD_PREFIX = 'field:';
+export const GAINED_PREFIX = 'gained:';
+export const LOST_PREFIX = 'lost:';
 
 export type Role = 'target' | 'sender';
 export type Phase = 'before' | 'after';
@@ -20,6 +22,8 @@ export interface Subscriber {
 export type Occasion =
   | { kind: 'moment'; moment: string }
   | { kind: 'field'; tag: string }
+  | { kind: 'gained'; effect: string }
+  | { kind: 'lost'; effect: string }
   | { kind: 'action'; role: Role; phase: Phase; ask: boolean; effect: string; emitted: EmittedEvent[] };
 
 export const handlerKey = (id: string, index: number): string => (index ? `${id}#${index}` : id);
@@ -34,7 +38,7 @@ export const handlersOf = (effect: Effect | null | undefined): Handler[] => effe
 export function hears(on: string, effectId: string, emitted: EmittedEvent[]): EmittedEvent | undefined | null {
   if (on === '*') return undefined;
   if (on.startsWith(EVENT_PREFIX)) return emitted.filter(e => `${EVENT_PREFIX}${e.event}` === on).at(-1) ?? null;
-  if (on.startsWith(MOMENT_PREFIX) || on.startsWith(FIELD_PREFIX)) return null;
+  if ([MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX].some(prefix => on.startsWith(prefix))) return null;
   return on === effectId ? undefined : null;
 }
 
@@ -68,6 +72,11 @@ export function listening(
     }
     if (occasion.kind === 'field') {
       if (handler.on === `${FIELD_PREFIX}${occasion.tag}`) out.push(sub);
+      continue;
+    }
+    if (occasion.kind === 'gained' || occasion.kind === 'lost') {
+      const prefix = occasion.kind === 'gained' ? GAINED_PREFIX : LOST_PREFIX;
+      if (handler.on === `${prefix}${occasion.effect}`) out.push(sub);
       continue;
     }
     if (roleOf(handler) !== occasion.role || phaseOf(handler) !== occasion.phase || asks(handler) !== occasion.ask) continue;

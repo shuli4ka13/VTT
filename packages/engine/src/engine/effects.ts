@@ -94,9 +94,19 @@ export const allSteps = (system: System): Step[] =>
   effectsOf(system).flatMap(([, effect]) => effect.steps || []);
 
 export function grantedTo(system: System, sheet: Sheet, compendium: Compendium | null | undefined): string[] {
-  const own = sheetKindOf(system, sheet)?.grants ?? [];
-  if (!compendium) return [...new Set(own)];
-  return [...new Set([...own, ...heldBy(sheet, compendium).flatMap(({ record }) => record.grants ?? [])])];
+  const granted = new Set<string>([
+    ...(compendium ? heldBy(sheet, compendium).flatMap(({ record }) => record.grants ?? []) : []),
+    ...sheetKindOf(system, sheet)?.grants ?? [],
+  ]);
+  const queue = [...(sheet.effects ?? []).map(entry => entry.effectId), ...granted];
+  for (let at = 0; at < queue.length; at += 1) {
+    for (const id of findEffect(system, queue[at]!)?.grants ?? []) {
+      if (granted.has(id)) continue;
+      granted.add(id);
+      queue.push(id);
+    }
+  }
+  return [...granted];
 }
 
 export function wornEffects(

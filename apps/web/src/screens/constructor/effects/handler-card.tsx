@@ -1,8 +1,8 @@
 import { Card, CardHead, Field, Select, Chip, Button } from '../../../ui/primitives.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import { registry } from '@vtt/engine/engine/steps/index';
-import { MOMENTS as TIMES, fieldOf } from '@vtt/engine/events/moments';
-import { MOMENT_PREFIX, FIELD_PREFIX } from '@vtt/engine/events/bus';
+import { MOMENTS as TIMES } from '@vtt/engine/events/moments';
+import { MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX } from '@vtt/engine/events/bus';
 import type { MomentKey } from '@vtt/engine/events/moments';
 
 import { MOMENTS } from './words.ts';
@@ -75,7 +75,8 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
   const asks = handler.ask === true;
   const listened = handler.on;
   const anyAction = !listened || listened === '*';
-  const isMoment = Boolean(listened?.startsWith(MOMENT_PREFIX)) || Boolean(fieldOf(listened));
+  const isMoment = [MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX].some(prefix => listened?.startsWith(prefix));
+  const hanging = Object.entries(system.effects).filter(([key, e]) => key !== id && (e.activation ?? 'manual') === 'passive');
   const conditions = isMoment ? [] : anyAction ? conditionsOfAny(system) : conditionsOf(system, listened);
   const watchable = system.fields.filter(f => f.value.kind !== 'stored' || f.value.type === 'boolean');
   const aims = moment === 'after-in' || moment === 'after-out' || moment === 'ask-after';
@@ -106,6 +107,10 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
                 .map(key => [`${MOMENT_PREFIX}${key}`, `время: ${TIMES[key]}`] as const)),
               ...(asks ? [] : watchable
                 .map(f => [`${FIELD_PREFIX}${f.tag}`, `поле «${f.label}» стало верным`] as const)),
+              ...(asks ? [] : hanging
+                .map(([key, e]) => [`${GAINED_PREFIX}${key}`, `на мне появилось «${e.label ?? key}»`] as const)),
+              ...(asks ? [] : hanging
+                .map(([key, e]) => [`${LOST_PREFIX}${key}`, `с меня ушло «${e.label ?? key}»`] as const)),
             ] as never}
             onChange={next => edit(draft => { draft.on = next || (asks ? '*' : ''); })}
           />
@@ -124,7 +129,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
         <Field
           label="Только если"
           hint={formula !== null ? 'Сработает, только когда формула верна.'
-            : isMoment ? 'У времени и поля нет исходов — выберите «формулой…», если нужно условие.'
+            : isMoment ? 'У времени, поля и появления эффекта нет исходов — выберите «формулой…», если нужно условие.'
               : conditions.length ? undefined : 'У того, что слушаем, нет шагов с исходом «да/нет» — сработает всегда.'}
         >
           <Select<string>

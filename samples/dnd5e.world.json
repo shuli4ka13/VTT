@@ -6008,13 +6008,22 @@
       "incapacitated": {
         "label": "Недееспособен",
         "group": "Состояния",
-        "description": "Ни действий, ни реакций. Следит ведущий.",
+        "description": "Ни действий, ни реакций, концентрация прерывается. Действия запрещает ведущий.",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
         "stacking": "refresh",
-        "modifiers": []
+        "modifiers": [],
+        "attach": [
+          {
+            "type": "status",
+            "mode": "remove",
+            "effect": {
+              "const": "concentration"
+            }
+          }
+        ]
       },
       "invisible": {
         "label": "Невидим",
@@ -6093,6 +6102,9 @@
             "stacking": "override",
             "condition": null
           }
+        ],
+        "grants": [
+          "incapacitated"
         ],
         "on": [
           {
@@ -6188,6 +6200,9 @@
             "stacking": "max",
             "condition": null
           }
+        ],
+        "grants": [
+          "incapacitated"
         ]
       },
       "poisoned": {
@@ -6375,12 +6390,15 @@
             "edit": "auto_fail",
             "condition": null
           }
+        ],
+        "grants": [
+          "incapacitated"
         ]
       },
       "unconscious": {
         "label": "Без сознания",
         "group": "Состояния",
-        "description": "Лежит без чувств: как паралич, и роняет всё, что держал.",
+        "description": "Недееспособен и лежит, роняет всё, что держал. Очнулся — остаётся лежать.",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -6423,6 +6441,18 @@
             "value": 0,
             "stacking": "override",
             "condition": null
+          }
+        ],
+        "grants": [
+          "incapacitated"
+        ],
+        "attach": [
+          {
+            "type": "status",
+            "mode": "apply",
+            "effect": {
+              "const": "prone"
+            }
           }
         ]
       },
@@ -8960,14 +8990,20 @@
         "label": "Персонаж",
         "icon": "🧙",
         "group": "Бестиарий",
-        "hint": "Лист героя: все блоки."
+        "hint": "Лист героя: все блоки. На нуле хитов падает без сознания и делает спасброски от смерти.",
+        "grants": [
+          "fall",
+          "wake",
+          "death_now",
+          "stabilize"
+        ]
       },
       "противник": {
         "kind": "sheet",
         "label": "Противник",
         "icon": "👹",
         "group": "Бестиарий",
-        "hint": "Лист противника: без личного дела, магии, ресурсов класса и богатства.",
+        "hint": "Лист противника: без личного дела, магии, ресурсов класса и богатства. Спасбросков от смерти нет — что с ним на нуле хитов, решает ведущий.",
         "blocks": [
           "Характеристики",
           "Модификаторы",
@@ -9862,10 +9898,6 @@
       "turn_refresh",
       "taken_rule",
       "exhaustion_rule",
-      "fall",
-      "wake",
-      "death_now",
-      "stabilize",
       "long_rest",
       "short_rest"
     ],

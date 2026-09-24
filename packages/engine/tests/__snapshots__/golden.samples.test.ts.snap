@@ -271587,6 +271587,92 @@ exports[`золотые трассы: dnd5e > mirra → doran · fire_bolt:0 · 
       },
       "toId": "doran",
     },
+    {
+      "fromId": "doran",
+      "report": {
+        "changes": [],
+        "effect": "fall",
+        "effects": [
+          "unconscious",
+          "dying",
+        ],
+        "emitted": [],
+        "from": "doran",
+        "kind": "moment",
+        "label": "Падение",
+        "removed": [],
+        "reply": false,
+        "spent": [],
+        "stopped": null,
+        "trace": [
+          {
+            "effect": "unconscious",
+            "mode": "apply",
+            "step": 0,
+            "type": "status",
+          },
+          {
+            "effect": "dying",
+            "mode": "apply",
+            "step": 1,
+            "type": "status",
+          },
+        ],
+      },
+      "toId": "doran",
+    },
+    {
+      "fromId": "doran",
+      "report": {
+        "changes": [],
+        "effect": "unconscious",
+        "effects": [
+          "prone",
+        ],
+        "emitted": [],
+        "from": "doran",
+        "kind": "moment",
+        "label": "Без сознания · при наложении",
+        "removed": [],
+        "reply": false,
+        "spent": [],
+        "stopped": null,
+        "trace": [
+          {
+            "effect": "prone",
+            "mode": "apply",
+            "step": 0,
+            "type": "status",
+          },
+        ],
+      },
+      "toId": "doran",
+    },
+    {
+      "fromId": "doran",
+      "report": {
+        "changes": [],
+        "effect": "incapacitated",
+        "effects": [],
+        "emitted": [],
+        "from": "doran",
+        "kind": "moment",
+        "label": "Недееспособен · при наложении",
+        "removed": [],
+        "reply": false,
+        "spent": [],
+        "stopped": null,
+        "trace": [
+          {
+            "effect": "concentration",
+            "mode": "remove",
+            "step": 0,
+            "type": "status",
+          },
+        ],
+      },
+      "toId": "doran",
+    },
   ],
   "sheets": [
     {
@@ -271660,7 +271746,17 @@ exports[`золотые трассы: dnd5e > mirra → doran · fire_bolt:0 · 
       },
     },
     {
-      "effects": [],
+      "effects": [
+        {
+          "effectId": "unconscious",
+        },
+        {
+          "effectId": "dying",
+        },
+        {
+          "effectId": "prone",
+        },
+      ],
       "id": "doran",
       "values": {
         "alignment": "Нейтрально-добрый",
@@ -271909,6 +272005,92 @@ exports[`золотые трассы: dnd5e > mirra → doran · fire_bolt:0 · 
       },
       "toId": "doran",
     },
+    {
+      "fromId": "doran",
+      "report": {
+        "changes": [],
+        "effect": "fall",
+        "effects": [
+          "unconscious",
+          "dying",
+        ],
+        "emitted": [],
+        "from": "doran",
+        "kind": "moment",
+        "label": "Падение",
+        "removed": [],
+        "reply": false,
+        "spent": [],
+        "stopped": null,
+        "trace": [
+          {
+            "effect": "unconscious",
+            "mode": "apply",
+            "step": 0,
+            "type": "status",
+          },
+          {
+            "effect": "dying",
+            "mode": "apply",
+            "step": 1,
+            "type": "status",
+          },
+        ],
+      },
+      "toId": "doran",
+    },
+    {
+      "fromId": "doran",
+      "report": {
+        "changes": [],
+        "effect": "unconscious",
+        "effects": [
+          "prone",
+        ],
+        "emitted": [],
+        "from": "doran",
+        "kind": "moment",
+        "label": "Без сознания · при наложении",
+        "removed": [],
+        "reply": false,
+        "spent": [],
+        "stopped": null,
+        "trace": [
+          {
+            "effect": "prone",
+            "mode": "apply",
+            "step": 0,
+            "type": "status",
+          },
+        ],
+      },
+      "toId": "doran",
+    },
+    {
+      "fromId": "doran",
+      "report": {
+        "changes": [],
+        "effect": "incapacitated",
+        "effects": [],
+        "emitted": [],
+        "from": "doran",
+        "kind": "moment",
+        "label": "Недееспособен · при наложении",
+        "removed": [],
+        "reply": false,
+        "spent": [],
+        "stopped": null,
+        "trace": [
+          {
+            "effect": "concentration",
+            "mode": "remove",
+            "step": 0,
+            "type": "status",
+          },
+        ],
+      },
+      "toId": "doran",
+    },
   ],
   "sheets": [
     {
@@ -271982,7 +272164,17 @@ exports[`золотые трассы: dnd5e > mirra → doran · fire_bolt:0 · 
       },
     },
     {
-      "effects": [],
+      "effects": [
+        {
+          "effectId": "unconscious",
+        },
+        {
+          "effectId": "dying",
+        },
+        {
+          "effectId": "prone",
+        },
+      ],
       "id": "doran",
       "values": {
         "alignment": "Нейтрально-добрый",
@@ -326407,6 +326599,92 @@ exports[`золотые трассы: dnd5e > mirra → sil · fire_bolt:0 · к
       },
       "toId": "sil",
     },
+    {
+      "fromId": "sil",
+      "report": {
+        "changes": [],
+        "effect": "fall",
+        "effects": [
+          "unconscious",
+          "dying",
+        ],
+        "emitted": [],
+        "from": "sil",
+        "kind": "moment",
+        "label": "Падение",
+        "removed": [],
+        "reply": false,
+        "spent": [],
+        "stopped": null,
+        "trace": [
+          {
+            "effect": "unconscious",
+            "mode": "apply",
+            "step": 0,
+            "type": "status",
+          },
+          {
+            "effect": "dying",
+            "mode": "apply",
+            "step": 1,
+            "type": "status",
+          },
+        ],
+      },
+      "toId": "sil",
+    },
+    {
+      "fromId": "sil",
+      "report": {
+        "changes": [],
+        "effect": "unconscious",
+        "effects": [
+          "prone",
+        ],
+        "emitted": [],
+        "from": "sil",
+        "kind": "moment",
+        "label": "Без сознания · при наложении",
+        "removed": [],
+        "reply": false,
+        "spent": [],
+        "stopped": null,
+        "trace": [
+          {
+            "effect": "prone",
+            "mode": "apply",
+            "step": 0,
+            "type": "status",
+          },
+        ],
+      },
+      "toId": "sil",
+    },
+    {
+      "fromId": "sil",
+      "report": {
+        "changes": [],
+        "effect": "incapacitated",
+        "effects": [],
+        "emitted": [],
+        "from": "sil",
+        "kind": "moment",
+        "label": "Недееспособен · при наложении",
+        "removed": [],
+        "reply": false,
+        "spent": [],
+        "stopped": null,
+        "trace": [
+          {
+            "effect": "concentration",
+            "mode": "remove",
+            "step": 0,
+            "type": "status",
+          },
+        ],
+      },
+      "toId": "sil",
+    },
   ],
   "sheets": [
     {
@@ -326515,7 +326793,17 @@ exports[`золотые трассы: dnd5e > mirra → sil · fire_bolt:0 · к
       },
     },
     {
-      "effects": [],
+      "effects": [
+        {
+          "effectId": "unconscious",
+        },
+        {
+          "effectId": "dying",
+        },
+        {
+          "effectId": "prone",
+        },
+      ],
       "id": "sil",
       "values": {
         "acrobatics_prof": 1,
@@ -326729,6 +327017,92 @@ exports[`золотые трассы: dnd5e > mirra → sil · fire_bolt:0 · к
       },
       "toId": "sil",
     },
+    {
+      "fromId": "sil",
+      "report": {
+        "changes": [],
+        "effect": "fall",
+        "effects": [
+          "unconscious",
+          "dying",
+        ],
+        "emitted": [],
+        "from": "sil",
+        "kind": "moment",
+        "label": "Падение",
+        "removed": [],
+        "reply": false,
+        "spent": [],
+        "stopped": null,
+        "trace": [
+          {
+            "effect": "unconscious",
+            "mode": "apply",
+            "step": 0,
+            "type": "status",
+          },
+          {
+            "effect": "dying",
+            "mode": "apply",
+            "step": 1,
+            "type": "status",
+          },
+        ],
+      },
+      "toId": "sil",
+    },
+    {
+      "fromId": "sil",
+      "report": {
+        "changes": [],
+        "effect": "unconscious",
+        "effects": [
+          "prone",
+        ],
+        "emitted": [],
+        "from": "sil",
+        "kind": "moment",
+        "label": "Без сознания · при наложении",
+        "removed": [],
+        "reply": false,
+        "spent": [],
+        "stopped": null,
+        "trace": [
+          {
+            "effect": "prone",
+            "mode": "apply",
+            "step": 0,
+            "type": "status",
+          },
+        ],
+      },
+      "toId": "sil",
+    },
+    {
+      "fromId": "sil",
+      "report": {
+        "changes": [],
+        "effect": "incapacitated",
+        "effects": [],
+        "emitted": [],
+        "from": "sil",
+        "kind": "moment",
+        "label": "Недееспособен · при наложении",
+        "removed": [],
+        "reply": false,
+        "spent": [],
+        "stopped": null,
+        "trace": [
+          {
+            "effect": "concentration",
+            "mode": "remove",
+            "step": 0,
+            "type": "status",
+          },
+        ],
+      },
+      "toId": "sil",
+    },
   ],
   "sheets": [
     {
@@ -326837,7 +327211,17 @@ exports[`золотые трассы: dnd5e > mirra → sil · fire_bolt:0 · к
       },
     },
     {
-      "effects": [],
+      "effects": [
+        {
+          "effectId": "unconscious",
+        },
+        {
+          "effectId": "dying",
+        },
+        {
+          "effectId": "prone",
+        },
+      ],
       "id": "sil",
       "values": {
         "acrobatics_prof": 1,
@@ -336037,6 +336421,92 @@ exports[`золотые трассы: dnd5e > ogre → mirra · ogre_club:0 · �
       },
       "toId": "mirra",
     },
+    {
+      "fromId": "mirra",
+      "report": {
+        "changes": [],
+        "effect": "fall",
+        "effects": [
+          "unconscious",
+          "dying",
+        ],
+        "emitted": [],
+        "from": "mirra",
+        "kind": "moment",
+        "label": "Падение",
+        "removed": [],
+        "reply": false,
+        "spent": [],
+        "stopped": null,
+        "trace": [
+          {
+            "effect": "unconscious",
+            "mode": "apply",
+            "step": 0,
+            "type": "status",
+          },
+          {
+            "effect": "dying",
+            "mode": "apply",
+            "step": 1,
+            "type": "status",
+          },
+        ],
+      },
+      "toId": "mirra",
+    },
+    {
+      "fromId": "mirra",
+      "report": {
+        "changes": [],
+        "effect": "unconscious",
+        "effects": [
+          "prone",
+        ],
+        "emitted": [],
+        "from": "mirra",
+        "kind": "moment",
+        "label": "Без сознания · при наложении",
+        "removed": [],
+        "reply": false,
+        "spent": [],
+        "stopped": null,
+        "trace": [
+          {
+            "effect": "prone",
+            "mode": "apply",
+            "step": 0,
+            "type": "status",
+          },
+        ],
+      },
+      "toId": "mirra",
+    },
+    {
+      "fromId": "mirra",
+      "report": {
+        "changes": [],
+        "effect": "incapacitated",
+        "effects": [],
+        "emitted": [],
+        "from": "mirra",
+        "kind": "moment",
+        "label": "Недееспособен · при наложении",
+        "removed": [],
+        "reply": false,
+        "spent": [],
+        "stopped": null,
+        "trace": [
+          {
+            "effect": "concentration",
+            "mode": "remove",
+            "step": 0,
+            "type": "status",
+          },
+        ],
+      },
+      "toId": "mirra",
+    },
   ],
   "sheets": [
     {
@@ -336076,7 +336546,17 @@ exports[`золотые трассы: dnd5e > ogre → mirra · ogre_club:0 · �
       },
     },
     {
-      "effects": [],
+      "effects": [
+        {
+          "effectId": "unconscious",
+        },
+        {
+          "effectId": "dying",
+        },
+        {
+          "effectId": "prone",
+        },
+      ],
       "id": "mirra",
       "values": {
         "alignment": "Хаотично-нейтральная",
@@ -336359,6 +336839,92 @@ exports[`золотые трассы: dnd5e > ogre → mirra · ogre_club:0 · �
       },
       "toId": "mirra",
     },
+    {
+      "fromId": "mirra",
+      "report": {
+        "changes": [],
+        "effect": "fall",
+        "effects": [
+          "unconscious",
+          "dying",
+        ],
+        "emitted": [],
+        "from": "mirra",
+        "kind": "moment",
+        "label": "Падение",
+        "removed": [],
+        "reply": false,
+        "spent": [],
+        "stopped": null,
+        "trace": [
+          {
+            "effect": "unconscious",
+            "mode": "apply",
+            "step": 0,
+            "type": "status",
+          },
+          {
+            "effect": "dying",
+            "mode": "apply",
+            "step": 1,
+            "type": "status",
+          },
+        ],
+      },
+      "toId": "mirra",
+    },
+    {
+      "fromId": "mirra",
+      "report": {
+        "changes": [],
+        "effect": "unconscious",
+        "effects": [
+          "prone",
+        ],
+        "emitted": [],
+        "from": "mirra",
+        "kind": "moment",
+        "label": "Без сознания · при наложении",
+        "removed": [],
+        "reply": false,
+        "spent": [],
+        "stopped": null,
+        "trace": [
+          {
+            "effect": "prone",
+            "mode": "apply",
+            "step": 0,
+            "type": "status",
+          },
+        ],
+      },
+      "toId": "mirra",
+    },
+    {
+      "fromId": "mirra",
+      "report": {
+        "changes": [],
+        "effect": "incapacitated",
+        "effects": [],
+        "emitted": [],
+        "from": "mirra",
+        "kind": "moment",
+        "label": "Недееспособен · при наложении",
+        "removed": [],
+        "reply": false,
+        "spent": [],
+        "stopped": null,
+        "trace": [
+          {
+            "effect": "concentration",
+            "mode": "remove",
+            "step": 0,
+            "type": "status",
+          },
+        ],
+      },
+      "toId": "mirra",
+    },
   ],
   "sheets": [
     {
@@ -336398,7 +336964,17 @@ exports[`золотые трассы: dnd5e > ogre → mirra · ogre_club:0 · �
       },
     },
     {
-      "effects": [],
+      "effects": [
+        {
+          "effectId": "unconscious",
+        },
+        {
+          "effectId": "dying",
+        },
+        {
+          "effectId": "prone",
+        },
+      ],
       "id": "mirra",
       "values": {
         "alignment": "Хаотично-нейтральная",
@@ -341167,6 +341743,92 @@ exports[`золотые трассы: dnd5e > ogre → sil · ogre_club:0 · к�
       },
       "toId": "sil",
     },
+    {
+      "fromId": "sil",
+      "report": {
+        "changes": [],
+        "effect": "fall",
+        "effects": [
+          "unconscious",
+          "dying",
+        ],
+        "emitted": [],
+        "from": "sil",
+        "kind": "moment",
+        "label": "Падение",
+        "removed": [],
+        "reply": false,
+        "spent": [],
+        "stopped": null,
+        "trace": [
+          {
+            "effect": "unconscious",
+            "mode": "apply",
+            "step": 0,
+            "type": "status",
+          },
+          {
+            "effect": "dying",
+            "mode": "apply",
+            "step": 1,
+            "type": "status",
+          },
+        ],
+      },
+      "toId": "sil",
+    },
+    {
+      "fromId": "sil",
+      "report": {
+        "changes": [],
+        "effect": "unconscious",
+        "effects": [
+          "prone",
+        ],
+        "emitted": [],
+        "from": "sil",
+        "kind": "moment",
+        "label": "Без сознания · при наложении",
+        "removed": [],
+        "reply": false,
+        "spent": [],
+        "stopped": null,
+        "trace": [
+          {
+            "effect": "prone",
+            "mode": "apply",
+            "step": 0,
+            "type": "status",
+          },
+        ],
+      },
+      "toId": "sil",
+    },
+    {
+      "fromId": "sil",
+      "report": {
+        "changes": [],
+        "effect": "incapacitated",
+        "effects": [],
+        "emitted": [],
+        "from": "sil",
+        "kind": "moment",
+        "label": "Недееспособен · при наложении",
+        "removed": [],
+        "reply": false,
+        "spent": [],
+        "stopped": null,
+        "trace": [
+          {
+            "effect": "concentration",
+            "mode": "remove",
+            "step": 0,
+            "type": "status",
+          },
+        ],
+      },
+      "toId": "sil",
+    },
   ],
   "sheets": [
     {
@@ -341275,7 +341937,17 @@ exports[`золотые трассы: dnd5e > ogre → sil · ogre_club:0 · к�
       },
     },
     {
-      "effects": [],
+      "effects": [
+        {
+          "effectId": "unconscious",
+        },
+        {
+          "effectId": "dying",
+        },
+        {
+          "effectId": "prone",
+        },
+      ],
       "id": "sil",
       "values": {
         "acrobatics_prof": 1,
@@ -341489,6 +342161,92 @@ exports[`золотые трассы: dnd5e > ogre → sil · ogre_club:0 · к�
       },
       "toId": "sil",
     },
+    {
+      "fromId": "sil",
+      "report": {
+        "changes": [],
+        "effect": "fall",
+        "effects": [
+          "unconscious",
+          "dying",
+        ],
+        "emitted": [],
+        "from": "sil",
+        "kind": "moment",
+        "label": "Падение",
+        "removed": [],
+        "reply": false,
+        "spent": [],
+        "stopped": null,
+        "trace": [
+          {
+            "effect": "unconscious",
+            "mode": "apply",
+            "step": 0,
+            "type": "status",
+          },
+          {
+            "effect": "dying",
+            "mode": "apply",
+            "step": 1,
+            "type": "status",
+          },
+        ],
+      },
+      "toId": "sil",
+    },
+    {
+      "fromId": "sil",
+      "report": {
+        "changes": [],
+        "effect": "unconscious",
+        "effects": [
+          "prone",
+        ],
+        "emitted": [],
+        "from": "sil",
+        "kind": "moment",
+        "label": "Без сознания · при наложении",
+        "removed": [],
+        "reply": false,
+        "spent": [],
+        "stopped": null,
+        "trace": [
+          {
+            "effect": "prone",
+            "mode": "apply",
+            "step": 0,
+            "type": "status",
+          },
+        ],
+      },
+      "toId": "sil",
+    },
+    {
+      "fromId": "sil",
+      "report": {
+        "changes": [],
+        "effect": "incapacitated",
+        "effects": [],
+        "emitted": [],
+        "from": "sil",
+        "kind": "moment",
+        "label": "Недееспособен · при наложении",
+        "removed": [],
+        "reply": false,
+        "spent": [],
+        "stopped": null,
+        "trace": [
+          {
+            "effect": "concentration",
+            "mode": "remove",
+            "step": 0,
+            "type": "status",
+          },
+        ],
+      },
+      "toId": "sil",
+    },
   ],
   "sheets": [
     {
@@ -341597,7 +342355,17 @@ exports[`золотые трассы: dnd5e > ogre → sil · ogre_club:0 · к�
       },
     },
     {
-      "effects": [],
+      "effects": [
+        {
+          "effectId": "unconscious",
+        },
+        {
+          "effectId": "dying",
+        },
+        {
+          "effectId": "prone",
+        },
+      ],
       "id": "sil",
       "values": {
         "acrobatics_prof": 1,

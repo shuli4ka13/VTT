@@ -14,19 +14,18 @@ import type { Seen } from '@vtt/engine/events/exchange';
 import type { EmittedEvent } from '@vtt/engine/engine/rule';
 import { previewLines, describeEntry } from '@vtt/engine/events/describe';
 import { flattenSystem } from '@vtt/engine/model/inherit';
-import { findRecord, isItem } from '@vtt/engine/model/owned';
+import { findRecord } from '@vtt/engine/model/owned';
 import { effectLabelOf, send, receive, offers, react, senderResults } from '@vtt/engine/events/envelope';
 import { tapeDie, replayDie } from '@vtt/engine/engine/dice';
 import type { Envelope, Offer, ReactionWindow, Report } from '@vtt/engine/events/envelope';
 import { findEffect, usesMax } from '@vtt/engine/engine/effects';
 import { asksOf, checkInputs, normalizeInputs } from '@vtt/engine/model/asks';
-import { fireMoments, fireCrossings, describeMoment, momentsOfTurn } from '@vtt/engine/events/moments';
-import { sweepBonds, releaseHolder } from '@vtt/engine/events/bonds';
-import { fireLifecycle } from '@vtt/engine/events/lifecycle';
+import { fireMoments, describeMoment, momentsOfTurn } from '@vtt/engine/events/moments';
+import { releaseHolder } from '@vtt/engine/events/bonds';
+import { settle as settleSheets } from '@vtt/engine/events/settle';
 import { runSelfTrack, selfRefusal } from '@vtt/engine/events/self';
 import { deskOf } from '@vtt/engine/events/desk';
 import { DESK_ID } from '@vtt/engine/engine/owners';
-import type { MomentEvent } from '@vtt/engine/events/moments';
 import { resolveRoll } from '@vtt/engine/engine/modifiers';
 import { newPass, calc } from '@vtt/engine/engine/calc';
 import { rollLead, dieConstant } from '@vtt/engine/engine/lead-die';
@@ -768,25 +767,14 @@ export class RoomsService {
     await this.db.update(roomSheets).set({ data: JSON.stringify(next) })
       .where(and(eq(roomSheets.roomId, roomId), eq(roomSheets.sheetId, sheetId)));
 
-    const wasActive = list === 'has' && (sheet.has ?? []).some(entry => entry.of === id && !entry.off);
-    const nowActive = list === 'has' && (next.has ?? []).some(entry => entry.of === id && !entry.off);
-
     const before = (await this.db.select().from(roomSheets).where(eq(roomSheets.roomId, roomId)))
       .map(entry => (entry.sheetId === sheetId ? sheet : JSON.parse(entry.data) as Sheet));
     const all = before.map(entry => (entry.id === sheetId ? next : entry));
-    const moment: MomentEvent['moment'] | null = list === 'has'
-      ? (nowActive && !wasActive && isItem(system, record) ? 'equipped' : null)
-      : (on ? 'attached' : 'expired');
     const lines: string[] = [];
-    let settled = all;
+    const world = { system, compendium, die: this.die, clock: await this.clockOf(roomId) };
+    let settled: Sheet[];
     try {
-      const world = { system, compendium, die: this.die, clock: await this.clockOf(roomId) };
-      if (moment) {
-        const fired = fireMoments([{ moment, sheetId, about: id }], all, world);
-        settled = fired.sheets;
-        for (const entry of fired.reports) lines.push(describeMoment(world, entry, settled));
-      }
-      settled = this.settle(world, before, settled, lines);
+      settled = this.settle(world, before, all, lines);
     } catch (err) {
       throw new BadRequestException((err as Error).message);
     }
@@ -799,27 +787,13 @@ export class RoomsService {
     world: { system: System; compendium: Compendium; die: (sides: number) => number; clock?: ClockState | null },
     before: Sheet[], after: Sheet[], lines: string[],
   ): Sheet[] {
-    const { system } = world;
-    const hooked = fireLifecycle(before, after, world);
-    for (const entry of hooked.reports) lines.push(describeMoment(world, entry, hooked.sheets));
-    const crossed = fireCrossings(before, hooked.sheets, world);
-    for (const entry of crossed.reports) lines.push(describeMoment(world, entry, crossed.sheets));
-    const swept = sweepBonds(system, crossed.sheets);
-    let current = swept.sheets;
-    if (swept.broken.length) {
-      const gone: MomentEvent[] = [];
-      for (const broken of swept.broken) {
-        const who = swept.sheets.find(s => s.id === broken.sheetId)?.name ?? broken.sheetId;
-        lines.push(`«${effectLabelOf(system, broken.effectId)}» спало с ${who}: держать стало нечем`);
-        gone.push({ moment: 'expired', sheetId: broken.sheetId, about: broken.effectId });
-      }
-      const fired = fireMoments(gone, current, world);
-      for (const entry of fired.reports) lines.push(describeMoment(world, entry, fired.sheets));
-      current = fired.sheets;
+    const done = settleSheets(before, after, world);
+    for (const entry of done.aftermath) {
+      if (entry.kind === 'fired') { lines.push(describeMoment(world, entry, done.sheets)); continue; }
+      const who = done.sheets.find(s => s.id === entry.sheetId)?.name ?? entry.sheetId;
+      lines.push(`«${effectLabelOf(world.system, entry.effectId)}» спало с ${who}: держать стало нечем`);
     }
-    const late = fireLifecycle(hooked.sheets, current, world);
-    for (const entry of late.reports) lines.push(describeMoment(world, entry, late.sheets));
-    return late.sheets;
+    return done.sheets;
   }
 
   private readonly queues = new Map<string, Promise<unknown>>();

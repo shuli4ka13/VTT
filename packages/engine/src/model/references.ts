@@ -9,7 +9,7 @@ import { calledOf } from '../engine/effects.ts';
 import { recordsOf } from './owned.ts';
 
 export { EVENT_PREFIX, MOMENT_PREFIX, FIELD_PREFIX } from '../events/bus.ts';
-import { EVENT_PREFIX, MOMENT_PREFIX, FIELD_PREFIX } from '../events/bus.ts';
+import { EVENT_PREFIX, MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX } from '../events/bus.ts';
 
 export const EVENT_RESULTS = ['event', 'event_amount', 'event_incoming'] as const;
 
@@ -216,12 +216,14 @@ function modifierRefs(list: Modifier[] | undefined, from: Where, out: Reference[
 
 export function listenerOf(
   on: string | undefined,
-): { kind: 'any' | 'event' | 'effect' | 'moment' | 'field' | 'empty'; key?: string } {
+): { kind: 'any' | 'event' | 'effect' | 'moment' | 'field' | 'gained' | 'lost' | 'empty'; key?: string } {
   if (!on) return { kind: 'empty' };
   if (on === '*') return { kind: 'any' };
   if (on.startsWith(EVENT_PREFIX)) return { kind: 'event', key: on.slice(EVENT_PREFIX.length) };
   if (on.startsWith(MOMENT_PREFIX)) return { kind: 'moment', key: on.slice(MOMENT_PREFIX.length) };
   if (on.startsWith(FIELD_PREFIX)) return { kind: 'field', key: on.slice(FIELD_PREFIX.length) };
+  if (on.startsWith(GAINED_PREFIX)) return { kind: 'gained', key: on.slice(GAINED_PREFIX.length) };
+  if (on.startsWith(LOST_PREFIX)) return { kind: 'lost', key: on.slice(LOST_PREFIX.length) };
   return { kind: 'effect', key: on };
 }
 
@@ -236,7 +238,7 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
     out.push(...chainRefs(handler.steps ?? [], step => ({ tab: 'effects', effect: id, handler: index, step }), params, heard.kind === 'event'));
     out.push(...chainRefs(handler.self ?? [], step => ({ tab: 'effects', effect: id, handler: index, step, part: 'self' }), params, false));
     if (heard.kind === 'event') out.push({ kind: 'event', key: heard.key!, from: head });
-    if (heard.kind === 'effect') out.push({ kind: 'effect', key: heard.key!, from: head });
+    if (heard.kind === 'effect' || heard.kind === 'gained' || heard.kind === 'lost') out.push({ kind: 'effect', key: heard.key!, from: head });
     if (heard.kind === 'field') out.push({ kind: 'field', key: heard.key!, from: head });
     if (handler.if) {
       const found: Reference[] = [];
@@ -255,6 +257,7 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
     out.push(...chainRefs(effect[turn] ?? [], step => ({ tab: 'effects', effect: id, step, part: turn }), params, false));
   }
   modifierRefs(effect.modifiers, { tab: 'effects', effect: id, part: 'modifiers' }, out);
+  for (const key of effect.grants ?? []) out.push({ kind: 'effect', key, from: { tab: 'effects', effect: id, part: 'grants' } });
 }
 
 export function referencesOf(system: System, compendium?: Compendium): Reference[] {

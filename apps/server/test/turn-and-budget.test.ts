@@ -326,12 +326,13 @@ describe('ячейка тратится один раз на действие', 
   });
 });
 
-describe('моменты вещей и эффектов', () => {
-  it('надели вещь, повесили и сняли эффект — слушатели срабатывают и пишут в журнал', async () => {
+describe('появилось и ушло с листа', () => {
+  it('надели вещь — её эффект «при наложении»; сняли эффект кнопкой — слушатель «с меня ушло»', async () => {
     const token = (await http().post('/auth/login').send({ name: 'Ведущий вещей' })).body.token as string;
     const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
     const me = (await as(http().get('/auth/me'))).body.userId as string;
 
+    const add = (tag: string) => ({ type: 'apply', target: { tag }, direction: 'add', value: { expr: '1' } });
     const system = {
       id: 'вещи', name: 'С вещами',
       fields: [
@@ -339,20 +340,14 @@ describe('моменты вещей и эффектов', () => {
         { tag: 'снято', label: 'Снято', value: { kind: 'stored', type: 'number', default: 0 } },
       ],
       effects: {
-        при_надевании: {
-          label: 'При надевании', activation: 'passive',
-          on: [{ on: 'moment:equipped', steps: [{ type: 'apply', target: { tag: 'надето' }, direction: 'add', value: { expr: '1' } }] }],
-        },
-        при_спадении: {
-          label: 'При спадении', activation: 'passive',
-          on: [{ on: 'moment:expired', steps: [{ type: 'apply', target: { tag: 'снято' }, direction: 'add', value: { expr: '1' } }] }],
-        },
+        заточка: { label: 'Заточка', activation: 'passive', attach: [add('надето')] },
         бафф: { label: 'Бафф', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [] },
+        сторож: { label: 'Сторож', activation: 'passive', on: [{ on: 'lost:бафф', steps: [add('снято')] }] },
       },
-      room_rules: ['при_надевании', 'при_спадении'],
+      room_rules: ['сторож'],
       records: { оружие: { kind: 'item', label: 'Оружие', props: [], bindings: [] } },
     };
-    const book = { records: [{ id: 'меч', rk: 'оружие', label: 'Меч', props: {} }] };
+    const book = { records: [{ id: 'меч', rk: 'оружие', label: 'Меч', props: {}, grants: ['заточка'] }] };
     const sheet = { id: 'воин', systemId: 'вещи', kind: 'pc', name: 'Воин', values: {}, has: [], effects: [] };
 
     const systemId = (await as(http().post('/systems')).send({ title: 'С вещами', system })).body.id;
@@ -366,13 +361,13 @@ describe('моменты вещей и эффектов', () => {
     const rooms = app.get(RoomsService);
 
     const worn = await rooms.setBelonging(me, roomId, 'воин', 'has', 'меч', true);
-    expect(worn.sheets[0]!.values.надето, 'слушатель «когда вещь надели» сработал').toBe(1);
-    expect(worn.log.map(e => e.text).join(' ')).toContain('При надевании');
+    expect(worn.sheets[0]!.values.надето, 'выданное вещью появилось').toBe(1);
+    expect(worn.log.map(e => e.text).join(' ')).toContain('Заточка');
 
     await rooms.setBelonging(me, roomId, 'воин', 'effects', 'бафф', true);
     const shed = await rooms.setBelonging(me, roomId, 'воин', 'effects', 'бафф', false);
-    expect(shed.sheets[0]!.values.снято, 'слушатель «когда эффект спал» сработал').toBe(1);
-    expect(shed.log.map(e => e.text).join(' ')).toContain('При спадении');
+    expect(shed.sheets[0]!.values.снято, 'слушатель «с меня ушло» сработал').toBe(1);
+    expect(shed.log.map(e => e.text).join(' ')).toContain('Сторож');
   });
 });
 

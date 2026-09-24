@@ -479,13 +479,14 @@ function conditions() {
     frightened: passive('Испуган', 'Помеха на атаки и проверки, пока источник страха на виду. Наложенное заклинанием: в конце хода — спасбросок Мудрости против запомненной сложности.',
       [roll(['атака'], 'disadvantage'), roll(['проверка'], 'disadvantage')], undefined, { on: [repeatSave('wis', 'frightened')] }),
     grappled: passive('Схвачен', 'Скорость ноль.', [value('speed', 'set', 0)]),
-    incapacitated: passive('Недееспособен', 'Ни действий, ни реакций. Следит ведущий.', []),
+    incapacitated: passive('Недееспособен', 'Ни действий, ни реакций, концентрация прерывается. Действия запрещает ведущий.', [],
+      undefined, { attach: [drop('concentration')] }),
     invisible: passive('Невидим', 'Твои атаки с преимуществом, по тебе — с помехой.',
       [roll(['атака'], 'advantage'), incomingDisadvantage]),
     paralyzed: passive('Парализован', 'Недееспособен, скорость ноль, спасброски Силы и Ловкости провалены, по тебе бьют с преимуществом. Наложенное заклинанием: в конце хода — спасбросок Мудрости против запомненной сложности.',
-      [incomingAdvantage, ...autoFailBody, value('speed', 'set', 0)], undefined, { on: [repeatSave('wis', 'paralyzed')] }),
+      [incomingAdvantage, ...autoFailBody, value('speed', 'set', 0)], undefined, { grants: ['incapacitated'], on: [repeatSave('wis', 'paralyzed')] }),
     petrified: passive('Окаменел', 'Как паралич, плюс сопротивление любому урону.',
-      [incomingAdvantage, ...autoFailBody, value('speed', 'set', 0), resist()]),
+      [incomingAdvantage, ...autoFailBody, value('speed', 'set', 0), resist()], undefined, { grants: ['incapacitated'] }),
     poisoned: passive('Отравлен', 'Помеха на атаки и проверки характеристик.',
       [roll(['атака'], 'disadvantage'), roll(['проверка'], 'disadvantage')]),
     prone: passive('Лежит', 'Твои атаки с помехой, по тебе вблизи бьют с преимуществом. Встать — половина скорости.',
@@ -493,9 +494,9 @@ function conditions() {
     restrained: passive('Опутан', 'Скорость ноль, твои атаки и спасброски Ловкости с помехой, по тебе — с преимуществом. Наложенное заклинанием: в конце хода — спасбросок Силы против запомненной сложности.',
       [value('speed', 'set', 0), roll(['атака'], 'disadvantage'), incomingAdvantage, roll(['спасбросок', 'ловкость'], 'disadvantage')], undefined, { on: [repeatSave('str', 'restrained')] }),
     stunned: passive('Ошеломлён', 'Недееспособен, спасброски Силы и Ловкости провалены, по тебе бьют с преимуществом.',
-      [incomingAdvantage, ...autoFailBody]),
-    unconscious: passive('Без сознания', 'Лежит без чувств: как паралич, и роняет всё, что держал.',
-      [incomingAdvantage, ...autoFailBody, value('speed', 'set', 0)]),
+      [incomingAdvantage, ...autoFailBody], undefined, { grants: ['incapacitated'] }),
+    unconscious: passive('Без сознания', 'Недееспособен и лежит, роняет всё, что держал. Очнулся — остаётся лежать.',
+      [incomingAdvantage, ...autoFailBody, value('speed', 'set', 0)], undefined, { grants: ['incapacitated'], attach: [hang({ const: 'prone' })] }),
     stable: passive('Стабилен', 'Ноль хитов, но спасброски от смерти больше не нужны.',
       [value('death_ok', 'set', 3)], { kind: 'permanent' }),
     dead: passive('Мёртв', 'Три провала или урон, перекрывший максимум хитов.', [value('speed', 'set', 0)], { kind: 'permanent' }),
@@ -669,5 +670,7 @@ export function effects() {
 }
 
 export const ROOM_RULES = [
-  'battle_start', 'battle_end', 'turn_refresh', 'taken_rule', 'exhaustion_rule', 'fall', 'wake', 'death_now', 'stabilize', 'long_rest', 'short_rest',
+  'battle_start', 'battle_end', 'turn_refresh', 'taken_rule', 'exhaustion_rule', 'long_rest', 'short_rest',
 ];
+
+export const DEATH_RULES = ['fall', 'wake', 'death_now', 'stabilize'];

@@ -5,6 +5,7 @@ import { basedOn, paramsOf } from './inherit.ts';
 import { danglingRows } from './integrity.ts';
 import { recordsOf, sheetKinds } from './owned.ts';
 import { blockNames } from './blocks.ts';
+import { MOMENTS } from '../events/moments.ts';
 import { TABS, STEP } from '../words/glossary.ts';
 import { DESK, RECEIVER, SENDER } from '../engine/owners.ts';
 import {
@@ -215,10 +216,7 @@ function cycleProblems(system: System): Problem[] {
   return out;
 }
 
-const MOMENT_KEYS = new Set([
-  'turn-start', 'turn-end', 'round-start', 'combat-start', 'combat-end', 'scene-end', 'short-rest', 'long-rest',
-  'equipped', 'attached', 'expired',
-]);
+const MOMENT_KEYS = new Set(Object.keys(MOMENTS));
 
 function listenerProblems(system: System): Problem[] {
   const out: Problem[] = [];
@@ -231,6 +229,10 @@ function listenerProblems(system: System): Problem[] {
       }
       if (heard.kind === 'moment' && !MOMENT_KEYS.has(heard.key!)) {
         out.push({ where, level: 'error', text: `такого момента нет: «${heard.key}» — стол знает ${[...MOMENT_KEYS].join(', ')}` });
+      }
+      if ((heard.kind === 'gained' || heard.kind === 'lost') && system.effects[heard.key!]
+        && (system.effects[heard.key!]!.activation ?? 'manual') === 'manual') {
+        out.push({ where, level: 'error', text: 'слушать, что появилось или ушло, можно только эффект, который висит' });
       }
     });
   }
@@ -289,6 +291,7 @@ function orphanProblems(system: System, compendium?: Compendium): Problem[] {
     for (const id of kind.grants ?? []) bound.add(id);
   }
   for (const id of system.room_rules ?? []) bound.add(id);
+  for (const effect of Object.values(system.effects)) for (const id of effect.grants ?? []) bound.add(id);
   for (const record of recordsOf(compendium)) {
     for (const binding of record.bindings ?? []) bound.add(binding.effect);
     for (const id of record.grants ?? []) bound.add(id);
