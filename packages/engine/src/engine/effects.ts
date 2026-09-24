@@ -1,4 +1,4 @@
-import { heldBy } from '../model/owned.ts';
+import { heldBy, sheetKindOf } from '../model/owned.ts';
 import { EngineError } from './errors.ts';
 import type {
   System, Sheet, Compendium, Effect, Modifier, Step,
@@ -93,9 +93,10 @@ export const allModifiers = (system: System, compendium: Compendium = {}): Modif
 export const allSteps = (system: System): Step[] =>
   effectsOf(system).flatMap(([, effect]) => effect.steps || []);
 
-export function grantedTo(sheet: Sheet, compendium: Compendium | null | undefined): string[] {
-  if (!compendium) return [];
-  return [...new Set(heldBy(sheet, compendium).flatMap(({ record }) => record.grants ?? []))];
+export function grantedTo(system: System, sheet: Sheet, compendium: Compendium | null | undefined): string[] {
+  const own = sheetKindOf(system, sheet)?.grants ?? [];
+  if (!compendium) return [...new Set(own)];
+  return [...new Set([...own, ...heldBy(sheet, compendium).flatMap(({ record }) => record.grants ?? [])])];
 }
 
 export function wornEffects(
@@ -112,7 +113,7 @@ export function wornEffects(
     }
     out.push({ id: entry.effectId, effect, entry });
   }
-  for (const id of grantedTo(sheet, compendium)) {
+  for (const id of grantedTo(system, sheet, compendium)) {
     if (out.some(worn => worn.id === id)) continue;
     const effect = findEffect(system, id);
     if (!effect) continue;

@@ -251,11 +251,14 @@ export const binding = z.object({
 export const recordKind = z.object({
   extends: z.string().min(1).optional(),
 
-  kind: z.enum(['item', 'action']),
+  kind: z.enum(['item', 'action', 'sheet']),
   label: z.string().optional(),
   icon: z.string().optional(),
   group: z.string().optional(),
   hint: z.string().optional(),
+
+  blocks: z.array(z.string().min(1)).optional(),
+  grants: z.array(z.string().min(1)).optional(),
   props: z.array(z.object({
     key: z.string().min(1),
     label: z.string().optional(),
@@ -308,6 +311,7 @@ export const sheet = z.object({
   systemId: z.string(),
 
   kind: z.enum(['pc', 'npc', 'desk']),
+  of: z.string().min(1).optional(),
   name: z.string(),
   values: z.record(z.string(), storedValue),
 

@@ -38,3 +38,27 @@ export function propsOf(record: CompendiumRecord, system: System, entry?: Owned)
   }
   return props;
 }
+
+export const sheetKindOf = (system: System, sheet: Sheet | null | undefined): RecordKind | undefined => {
+  const kind = sheet?.of ? system.records?.[sheet.of] : undefined;
+  return kind?.kind === 'sheet' ? kind : undefined;
+};
+
+export const sheetKinds = (system: System): [string, RecordKind][] =>
+  Object.entries(system.records ?? {}).filter(([, kind]) => kind.kind === 'sheet');
+
+export function blockLine(system: System, block: string | undefined): string[] {
+  const out: string[] = [];
+  let at = block;
+  while (at && !out.includes(at)) {
+    out.push(at);
+    at = system.groups?.[at]?.parent;
+  }
+  return out;
+}
+
+export function shownOn(system: System, sheet: Sheet | null | undefined): (field: { group?: string }) => boolean {
+  const blocks = sheetKindOf(system, sheet)?.blocks;
+  if (!blocks?.length) return () => true;
+  return field => blockLine(system, field.group).some(block => blocks.includes(block));
+}

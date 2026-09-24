@@ -1,5 +1,8 @@
+const KIND_OF = { pc: 'персонаж', npc: 'противник' };
+
 const sheet = (id, name, kind, values, equipped, actions, effects = []) => ({
-  id, systemId: 'dnd5e', kind, name, values, equipped, effects, actions,
+  id, systemId: 'dnd5e', kind, of: KIND_OF[kind], name, values,
+  has: [...equipped, ...actions].map(of => ({ of })), effects,
 });
 
 const PROF = tags => Object.fromEntries(tags.map(tag => [`${tag}_prof`, 1]));
@@ -101,6 +104,8 @@ export function sheets() {
   ];
 }
 
+const bare = ({ of, ...rest }) => (void of, rest);
+
 export function mannequins() {
   return [
     sheet('манекен-а', 'Манекен А', 'npc', {
@@ -118,5 +123,5 @@ export function mannequins() {
       str: 12, dex: 12, con: 12, int: 10, wis: 10, cha: 10,
       level: 5, hp_max: 40, hp_current: 40, ac_base: 13, hit_dice_left: 5,
     }, [], []),
-  ];
+  ].map(bare);
 }

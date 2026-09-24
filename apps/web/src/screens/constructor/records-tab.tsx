@@ -2,6 +2,8 @@ import { kindsFor } from '@vtt/engine/words/kinds';
 import { choiceTables } from '@vtt/engine/model/tables';
 import { useWorld, freeId } from '../../store/world.ts';
 import { ModifiersEditor } from './modifiers.tsx';
+import { MultiChoice } from '../../ui/multi-choice.tsx';
+import { blockNames } from '@vtt/engine/model/blocks';
 import { newRecordKind, newBinding, newProp } from './factory.ts';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
 import { useLookupPane } from './lookup-panel.tsx';
@@ -19,7 +21,63 @@ import { freeGroupName } from './groups.ts';
 const BASIS = [
   ['item', 'вещь — надевают и снимают'],
   ['action', 'действие — учат и применяют'],
+  ['sheet', 'лист — персонаж, противник, стол'],
 ] as const;
+
+function SheetKindCards({ kind, system, edit }: {
+  kind: RecordKind;
+  system: System;
+  edit: (change: (draft: RecordKind) => void) => void;
+}) {
+  const editSystem = useWorld(s => s.editSystem);
+  const blocks = blockNames(system).map(name => ({ value: name, label: name }));
+  const passive = Object.entries(system.effects)
+    .filter(([, effect]) => (effect.activation ?? 'manual') === 'passive')
+    .map(([key, effect]) => ({ value: key, label: effect.label || key }));
+  return (
+    <>
+      <Card>
+        <CardHead
+          title="Какие блоки на листе этого типа"
+          sub="Пусто — все блоки. Вложенный блок виден вместе со своим родителем. Считает движок все поля; род решает, что показать."
+        />
+        <MultiChoice
+          value={kind.blocks ?? []}
+          options={blocks}
+          onChange={next => edit(draft => {
+            const list = (Array.isArray(next) ? next : []).map(String);
+            if (list.length) draft.blocks = list; else delete draft.blocks;
+          })}
+        />
+      </Card>
+      <Card>
+        <CardHead
+          title="Что висит на каждом листе этого типа"
+          sub="Как правило комнаты, но только для листов этого типа: спасброски от смерти — персонажам, а противникам нет."
+        />
+        <MultiChoice
+          value={kind.grants ?? []}
+          options={passive}
+          onChange={next => edit(draft => {
+            const list = (Array.isArray(next) ? next : []).map(String);
+            if (list.length) draft.grants = list; else delete draft.grants;
+          })}
+        />
+      </Card>
+      <Card>
+        <CardHead title="Что правит на каждом листе этого типа" />
+        <ModifiersEditor
+          empty={{ title: 'тип пока ничего не правит', hint: 'Например, «+2 к классу брони» каждому противнику.' }}
+          system={system}
+          editSystem={editSystem}
+          title=""
+          modifiers={kind.modifiers ?? []}
+          onEdit={change => edit(draft => { change(draft.modifiers ??= []); })}
+        />
+      </Card>
+    </>
+  );
+}
 
 const PROP_KINDS = kindsFor('prop');
 
@@ -163,6 +221,8 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
         </Field>
       </Card>
 
+      {kind.kind === 'sheet' ? <SheetKindCards kind={kind} system={system} edit={edit} /> : (
+        <>
       <Card>
         <CardHead
           title="Что запись даёт владельцу"
@@ -292,6 +352,9 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
             </div>
           ))}
       </Card>
+
+        </>
+      )}
 
       {}
       {kind.kind === 'item' ? (

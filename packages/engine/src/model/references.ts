@@ -288,6 +288,7 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
       }
     });
     modifierRefs(spec.modifiers, { tab: 'records', kind, part: 'modifiers' }, out);
+    for (const id of spec.grants ?? []) out.push({ kind: 'effect', key: id, from: { tab: 'records', kind, part: 'grants' } });
   }
 
 

@@ -3,7 +3,8 @@ import { registry } from '../engine/steps/index.ts';
 import { calledOf, chainsOfEffect } from '../engine/effects.ts';
 import { basedOn, paramsOf } from './inherit.ts';
 import { danglingRows } from './integrity.ts';
-import { recordsOf } from './owned.ts';
+import { recordsOf, sheetKinds } from './owned.ts';
+import { blockNames } from './blocks.ts';
 import { TABS, STEP } from '../words/glossary.ts';
 import { DESK, RECEIVER, SENDER } from '../engine/owners.ts';
 import {
@@ -249,6 +250,19 @@ function emittedBy(steps: Step[] | undefined): string[] {
   return out;
 }
 
+function sheetKindProblems(system: System): Problem[] {
+  const out: Problem[] = [];
+  const known = new Set(blockNames(system));
+  for (const [key, kind] of sheetKinds(system)) {
+    for (const block of kind.blocks ?? []) {
+      if (!known.has(block)) {
+        out.push({ where: { tab: 'records', kind: key }, level: 'warn', text: `тип листа «${kind.label || key}» показывает блок «${block}», которого на листе нет` });
+      }
+    }
+  }
+  return out;
+}
+
 function orphanProblems(system: System, compendium?: Compendium): Problem[] {
   const out: Problem[] = [];
   const emitted = new Set<string>();
@@ -270,7 +284,10 @@ function orphanProblems(system: System, compendium?: Compendium): Problem[] {
     });
   }
   const bound = new Set<string>();
-  for (const kind of Object.values(system.records ?? {})) for (const b of kind.bindings ?? []) bound.add(b.effect);
+  for (const kind of Object.values(system.records ?? {})) {
+    for (const b of kind.bindings ?? []) bound.add(b.effect);
+    for (const id of kind.grants ?? []) bound.add(id);
+  }
   for (const id of system.room_rules ?? []) bound.add(id);
   for (const record of recordsOf(compendium)) {
     for (const binding of record.bindings ?? []) bound.add(binding.effect);
@@ -375,6 +392,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...cycleProblems(system));
   out.push(...paramProblems(system));
   out.push(...orphanProblems(system, compendium));
+  out.push(...sheetKindProblems(system));
   out.push(...danglingRows(system, compendium).map(d => ({ where: d.where, level: 'error' as const, text: d.text })));
   return out;
 }

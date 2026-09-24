@@ -7,7 +7,9 @@ export class SheetShapeError extends Error {
   }
 }
 
-const TOP_KEYS = ['id', 'systemId', 'kind', 'name', 'values', 'has', 'effects'];
+const TOP_KEYS = ['id', 'systemId', 'kind', 'of', 'name', 'values', 'has', 'effects'];
+
+const OPTIONAL_KEYS = ['of'];
 
 const KINDS = ['pc', 'npc'];
 
@@ -28,7 +30,7 @@ export function assertSheetShape(sheet: unknown): Sheet {
     }
   }
   for (const key of TOP_KEYS) {
-    if (!(key in s)) throw new SheetShapeError(`в листе нет обязательного поля «${key}»`);
+    if (!(key in s) && !OPTIONAL_KEYS.includes(key)) throw new SheetShapeError(`в листе нет обязательного поля «${key}»`);
   }
 
   if (!KINDS.includes(s.kind)) {
@@ -81,6 +83,7 @@ export function serializeSheet(sheet: unknown): string {
 
   const ordered: Record<string, unknown> = {};
   for (const key of TOP_KEYS) {
+    if (!(key in ok)) continue;
     ordered[key] = key === 'values' ? sortKeys(ok.values as Record<string, unknown>) : ok[key];
   }
   return JSON.stringify(ordered, null, 2);
@@ -98,6 +101,7 @@ export function deserializeSheet(json: string): Sheet {
     id: parsed.id,
     systemId: parsed.systemId,
     kind: parsed.kind,
+    ...(typeof parsed.of === 'string' ? { of: parsed.of } : {}),
     name: parsed.name,
     values: sortKeys(parsed.values) as Sheet['values'],
     has: parsed.has.map((e: { values?: object }) => ({ ...e, ...(e.values ? { values: { ...e.values } } : {}) })),

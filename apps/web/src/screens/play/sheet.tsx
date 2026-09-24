@@ -3,14 +3,14 @@ import { useRoom } from '../../store/room.ts';
 import { tableSocket } from '../../api/socket.ts';
 import { useReader } from '../../engine/use-calc.ts';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
-import { Card, Empty, Fold, Chip, Input, Button } from '../../ui/primitives.tsx';
+import { Card, Empty, Fold, Chip, Input, Button, Field, Select } from '../../ui/primitives.tsx';
 import { SheetView } from '../../sheet/sheet-view.tsx';
 import { recordDetails } from '../../sheet/record-view.tsx';
 import { useSession } from '../../store/session.ts';
 import { Lobby } from './lobby.tsx';
 import type { Sheet, System, RoomState } from '@vtt/schema';
 import { availableActions } from '@vtt/engine/events/envelope';
-import { recordsOf, isItem } from '@vtt/engine/model/owned';
+import { recordsOf, isItem, sheetKinds, sheetKindOf, shownOn } from '@vtt/engine/model/owned';
 import { deskSystemOf, sheetSystemOf } from '@vtt/engine/engine/calc';
 
 export function SheetScreen() {
@@ -76,15 +76,28 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   const desk = room.sheets.find(s => s.kind === 'desk') ?? null;
   const system = isDesk ? deskSystemOf(room.system as System) : sheetSystemOf(room.system as System);
   const reader = useReader(isDesk ? system : room.system as System, sheet, room.compendium, isDesk ? null : desk);
+  const kinds = sheetKinds(room.system as System);
+  const kind = sheetKindOf(room.system as System, sheet);
+  const only = kind?.blocks?.length ? system.fields.filter(shownOn(room.system as System, sheet)).map(f => f.tag) : undefined;
 
   return (
     <>
       {isDesk ? <span className="faint">общий стол комнаты — видят все, правит ведущий</span> : <ClaimRow room={room} sheet={sheet} />}
+      {!isDesk && kinds.length ? (
+        <Field label="Тип листа">
+          <Select
+            value={sheet.of ?? ''}
+            options={[['', '— без типа —'], ...kinds.map(([key, k]) => [key, k.label ?? key] as const)] as never}
+            onChange={next => tableSocket.setSheetKind(room.id, sheet.id, next || null)}
+          />
+        </Field>
+      ) : null}
       <SheetView
         system={system}
         sheet={sheet}
         reader={reader}
-        badge={isDesk ? 'стол' : sheet.kind === 'npc' ? 'НПС' : 'игрок'}
+        only={only}
+        badge={isDesk ? 'стол' : kind?.label ?? (sheet.kind === 'npc' ? 'НПС' : 'игрок')}
         onChange={(tag, value) => tableSocket.setValue(room.id, sheet.id, tag, value)}
         onRoll={tag => tableSocket.rollField(room.id, sheet.id, tag)}
       />

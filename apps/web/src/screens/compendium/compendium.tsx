@@ -19,7 +19,7 @@ export function CompendiumScreen() {
   const pick = useWorld(s => s.pick);
   const editCompendium = useWorld(s => s.editCompendium);
 
-  const kinds = Object.entries(system.records ?? {});
+  const kinds = Object.entries(system.records ?? {}).filter(([, kind]) => kind.kind !== 'sheet');
   const all = recordsOf(compendium).map(r => ({ record: r, basis: isItem(system, r) ? 'item' as const : 'action' as const }));
   const active = all.find(entry => entry.record.id === activeId) ?? null;
 

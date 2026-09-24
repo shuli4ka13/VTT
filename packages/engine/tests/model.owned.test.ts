@@ -2,6 +2,7 @@ import { group, test, eq, deepEq } from './harness.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
 import { availableActions, send, receive } from '../src/events/envelope.ts';
 import { wornEffects } from '../src/engine/effects.ts';
+import { shownOn } from '../src/model/owned.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const system = {
@@ -59,5 +60,36 @@ group('что есть у листа: запись со своим состоя�
     };
     eq(hit(hero([{ of: 'меч' }])), 15);
     eq(hit(hero([{ of: 'меч', values: { урон: 8 } }])), 12);
+  });
+});
+
+group('тип листа — как запись, которую лист носит всегда', () => {
+  const withKinds = {
+    ...system,
+    groups: { Защита: {}, Магия: {}, Щиты: { parent: 'Защита' } },
+    fields: [
+      { tag: 'кд', label: 'Класс брони', group: 'Щиты', value: { kind: 'stored', type: 'number', default: 10 } },
+      { tag: 'ячейки', label: 'Ячейки', group: 'Магия', value: { kind: 'stored', type: 'number', default: 2 } },
+    ],
+    records: {
+      ...system.records,
+      противник: {
+        kind: 'sheet', label: 'Противник', blocks: ['Защита'], grants: ['зоркость'],
+        modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: 1 }],
+      },
+    },
+  } as unknown as System;
+  const orc = { ...hero([]), id: 'орк', of: 'противник' } as Sheet;
+
+  test('правки и выданное рода действуют без записи в листе', () => {
+    eq(calc(withKinds, orc, 'кд', newPass(withKinds, orc, { compendium: book })), 11);
+    deepEq(wornEffects(withKinds, orc, { compendium: book }).map(w => w.id), ['зоркость']);
+    eq(calc(withKinds, hero([]), 'кд', newPass(withKinds, hero([]), { compendium: book })), 10, 'лист без типа — как прежде');
+  });
+
+  test('тип показывает только свои блоки, вложенные — вместе с родителем', () => {
+    const shown = withKinds.fields.filter(shownOn(withKinds, orc)).map(f => f.tag);
+    deepEq(shown, ['кд']);
+    deepEq(withKinds.fields.filter(shownOn(withKinds, hero([]))).map(f => f.tag), ['кд', 'ячейки']);
   });
 });

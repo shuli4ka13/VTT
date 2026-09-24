@@ -179,6 +179,13 @@ export const clientMessage = z.discriminatedUnion('type', [
   z.object({ type: z.literal('sheet:claim'), roomId: z.string(), sheetId: z.string().nullable() }),
 
   z.object({
+    type: z.literal('sheet:of'),
+    roomId: z.string(),
+    sheetId: z.string(),
+    of: z.string().min(1).nullable(),
+  }),
+
+  z.object({
     type: z.literal('sheet:belong'),
     roomId: z.string(),
     sheetId: z.string(),

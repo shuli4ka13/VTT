@@ -69,6 +69,10 @@ export class TableSocket {
     this.send('sheet:create', { roomId, name, kind });
   }
 
+  setSheetKind(roomId: string, sheetId: string, of: string | null): void {
+    this.send('sheet:of', { roomId, sheetId, of });
+  }
+
   setBelonging(
     roomId: string, sheetId: string,
     list: 'has' | 'effects', id: string, on: boolean, off?: boolean,

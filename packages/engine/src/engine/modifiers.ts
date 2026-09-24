@@ -3,7 +3,7 @@ import { assertTarget, incomingTagOf, ANY_ROLL } from './targets.ts';
 import { roomEffects, wornEffects, activationOf } from './effects.ts';
 import { EngineError } from './errors.ts';
 import { anyRowSays } from './tables.ts';
-import { findRecord, kindOfRecord } from '../model/owned.ts';
+import { findRecord, kindOfRecord, sheetKindOf } from '../model/owned.ts';
 import { tagsHold } from './roll-tags.ts';
 import type { System, Sheet, Compendium, Modifier, RollEdit } from '../model/types.ts';
 import type { Pass } from './calc.ts';
@@ -61,6 +61,11 @@ function sourcesOf(system: System, sheet: Sheet, compendium: Compendium): Modifi
   for (const { id, effect } of roomEffects(system)) {
     if (activationOf(effect) !== 'passive') continue;
     sources.push({ type: 'room', id, label: effect.label || id, modifiers: effect.modifiers || [] });
+  }
+
+  const own = sheetKindOf(system, sheet);
+  if (own?.modifiers?.length) {
+    sources.push({ type: 'kind', id: String(sheet.of), label: own.label || String(sheet.of), modifiers: own.modifiers });
   }
 
   for (const entry of sheet.has || []) {

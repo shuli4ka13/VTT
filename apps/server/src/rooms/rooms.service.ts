@@ -179,6 +179,10 @@ export class RoomsService {
     return this.inTurn(roomId, () => this.runSetBelonging(userId, roomId, sheetId, list, id, on, off));
   }
 
+  setSheetKind(userId: string, roomId: string, sheetId: string, of: string | null): Promise<RoomDelta> {
+    return this.inTurn(roomId, () => this.runSetSheetKind(userId, roomId, sheetId, of));
+  }
+
   claimSheet(userId: string, roomId: string, sheetId: string | null): Promise<RoomDelta> {
     return this.inTurn(roomId, () => this.runClaimSheet(userId, roomId, sheetId));
   }
@@ -623,6 +627,37 @@ export class RoomsService {
     let settled = before.map(entry => (entry.id === sheetId ? next : entry));
     try {
       const world = { system, compendium: this.worldOf(room).compendium, die: this.die, clock: await this.clockOf(roomId) };
+      settled = this.settle(world, before, settled, lines);
+    } catch (err) {
+      throw new BadRequestException((err as Error).message);
+    }
+    const touched = await this.persistSheets(roomId, before, settled, [next]);
+    const log = lines.length ? await this.appendLog(roomId, lines) : [];
+    return { roomId, sheets: touched, log };
+  }
+
+  private async runSetSheetKind(userId: string, roomId: string, sheetId: string, of: string | null): Promise<RoomDelta> {
+    const room = await this.requireRoom(roomId);
+    await this.assertMaySheet(roomId, userId, sheetId);
+    const { system, compendium } = this.worldOf(room);
+    if (of !== null && system.records?.[of]?.kind !== 'sheet') {
+      throw new BadRequestException(`система не объявляет типа листа «${of}»`);
+    }
+    const rows = await this.db.select().from(roomSheets)
+      .where(and(eq(roomSheets.roomId, roomId), eq(roomSheets.sheetId, sheetId)));
+    const row = rows[0];
+    if (!row) throw new NotFoundException(`в комнате нет листа «${sheetId}»`);
+    const sheet = JSON.parse(row.data) as Sheet;
+    const { of: _was, ...rest } = sheet;
+    void _was;
+    const next: Sheet = of === null ? rest : { ...rest, of };
+
+    const before = (await this.db.select().from(roomSheets).where(eq(roomSheets.roomId, roomId)))
+      .map(entry => (entry.sheetId === sheetId ? sheet : JSON.parse(entry.data) as Sheet));
+    const lines: string[] = [];
+    let settled = before.map(entry => (entry.id === sheetId ? next : entry));
+    try {
+      const world = { system, compendium, die: this.die, clock: await this.clockOf(roomId) };
       settled = this.settle(world, before, settled, lines);
     } catch (err) {
       throw new BadRequestException((err as Error).message);
