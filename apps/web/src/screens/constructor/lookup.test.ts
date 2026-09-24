@@ -20,7 +20,7 @@ describe('откуда это: щелчок по фишке объясняет �
   it('вход эффекта: кто и что передаёт', () => {
     const told = explain('save_by', 'cantrip_save');
     expect(told.kind).toBe('вход эффекта');
-    expect(told.facts).toContainEqual(['тип', 'выбор из таблицы']);
+    expect(told.facts).toContainEqual(['тип', 'из таблицы']);
     expect(told.from.some(line => line.includes('свойство записи «save_by»'))).toBe(true);
   });
 

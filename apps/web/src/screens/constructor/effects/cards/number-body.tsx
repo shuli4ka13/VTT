@@ -1,6 +1,6 @@
 import { ownerOf } from '@vtt/engine/engine/owners';
 import { useMemo, useState } from 'react';
-import type { Step } from '@vtt/schema';
+import type { Step, ValueKind } from '@vtt/schema';
 import { Field, Select, Button } from '../../../../ui/primitives.tsx';
 import { FormulaField } from '../../../../ui/formula-field.tsx';
 import { formulaAsLabels } from '../../../../ui/formula.tsx';
@@ -26,7 +26,7 @@ export function NumberBody({ step, context, edit, onAddParam }: {
   step: Step;
   context: SlotContext;
   edit: EditFn;
-  onAddParam?: (label: string, kind: string, want?: string) => string;
+  onAddParam?: (label: string, kind: ValueKind, want?: string) => string;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
   const read = loose(step);
@@ -92,7 +92,7 @@ export function NumberBody({ step, context, edit, onAddParam }: {
       {onAddParam ? unknown.map(name => (
         <Button
           key={name} size="sm" variant="ghost"
-          onClick={() => { onAddParam(name, name, name); }}
+          onClick={() => { onAddParam(name, 'number', name); }}
         >{`взять «${name}» из записи`}</Button>
       )) : null}
 

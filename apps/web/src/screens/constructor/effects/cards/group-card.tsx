@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import type { System, Effect, Step } from '@vtt/schema';
+import type { System, Effect, Step, ValueKind } from '@vtt/schema';
 import { Card, CardHead, Verdict, Button } from '../../../../ui/primitives.tsx';
 import type { CardGroup } from '../../cards.ts';
 import type { Segment } from '../../readback.ts';
@@ -51,7 +51,7 @@ export function GroupCard({
   onMoveUp?: () => void;
   onMoveDown?: () => void;
 
-  onAddParam?: (label: string, kind: string, want?: string) => string;
+  onAddParam?: (label: string, kind: ValueKind, want?: string) => string;
   onOpenEffect?: (id: string) => void;
   lane?: 'receiver' | 'sender';
   onMoveLane?: (to: 'receiver' | 'sender') => void;

@@ -1,10 +1,13 @@
-export type Kind = 'number' | 'text' | 'expr' | 'dice' | 'choice' | 'effect' | 'record' | 'tag';
+import type { ValueKind } from '../model/types.ts';
 
-export type KindPlace = 'table' | 'prop' | 'param';
+export type Kind = ValueKind;
+
+export type KindPlace = 'field' | 'table' | 'prop' | 'param';
 
 export const KIND_LABEL: Record<Kind, string> = {
   number: 'число',
   text: 'слово',
+  boolean: 'да / нет',
   expr: 'формула',
   dice: 'кость',
   choice: 'из таблицы',
@@ -13,16 +16,19 @@ export const KIND_LABEL: Record<Kind, string> = {
   tag: 'поле листа',
 };
 
-const ORDER: Kind[] = ['number', 'text', 'expr', 'dice', 'choice', 'effect', 'record', 'tag'];
+const ORDER: Kind[] = ['number', 'text', 'boolean', 'expr', 'dice', 'choice', 'effect', 'record', 'tag'];
 
 const ALLOWED: Record<KindPlace, Kind[]> = {
-  table: ['number', 'text', 'expr', 'dice', 'choice', 'effect', 'tag'],
-  prop: ['number', 'text', 'expr', 'dice', 'choice', 'effect', 'record'],
-  param: ['number', 'text', 'dice', 'choice', 'effect'],
+  field: ['number', 'text', 'boolean', 'choice'],
+  table: ['number', 'text', 'boolean', 'expr', 'dice', 'choice', 'effect', 'tag'],
+  prop: ['number', 'text', 'boolean', 'expr', 'dice', 'choice', 'effect', 'record'],
+  param: ['number', 'text', 'boolean', 'dice', 'choice', 'effect'],
 };
 
 export const kindsFor = (place: KindPlace): readonly (readonly [Kind, string])[] =>
   ORDER.filter(kind => ALLOWED[place].includes(kind)).map(kind => [kind, KIND_LABEL[kind]] as const);
+
+export const kindWord = (kind: string | undefined): string => KIND_LABEL[(kind ?? 'number') as Kind] ?? String(kind);
 
 export const isReference = (kind: string | undefined): boolean =>
   kind === 'choice' || kind === 'effect' || kind === 'record' || kind === 'tag';

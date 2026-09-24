@@ -10,10 +10,10 @@
         "group": "Личное дело",
         "value": {
           "kind": "stored",
-          "type": "text",
-          "default": ""
-        },
-        "optionsFrom": "races"
+          "type": "choice",
+          "default": "",
+          "from": "races"
+        }
       },
       {
         "tag": "class_name",
@@ -21,10 +21,10 @@
         "group": "Личное дело",
         "value": {
           "kind": "stored",
-          "type": "text",
-          "default": ""
-        },
-        "optionsFrom": "classes"
+          "type": "choice",
+          "default": "",
+          "from": "classes"
+        }
       },
       {
         "tag": "subclass",
@@ -1950,11 +1950,11 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "text",
-          "default": "как есть"
+          "type": "choice",
+          "default": "как есть",
+          "from": "taken"
         },
-        "control": "choice",
-        "optionsFrom": "taken"
+        "control": "choice"
       },
       {
         "tag": "taken_1",
@@ -1962,11 +1962,11 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "text",
-          "default": "как есть"
+          "type": "choice",
+          "default": "как есть",
+          "from": "taken"
         },
-        "control": "choice",
-        "optionsFrom": "taken"
+        "control": "choice"
       },
       {
         "tag": "taken_2",
@@ -1974,11 +1974,11 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "text",
-          "default": "как есть"
+          "type": "choice",
+          "default": "как есть",
+          "from": "taken"
         },
-        "control": "choice",
-        "optionsFrom": "taken"
+        "control": "choice"
       },
       {
         "tag": "taken_3",
@@ -1986,11 +1986,11 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "text",
-          "default": "как есть"
+          "type": "choice",
+          "default": "как есть",
+          "from": "taken"
         },
-        "control": "choice",
-        "optionsFrom": "taken"
+        "control": "choice"
       },
       {
         "tag": "taken_4",
@@ -1998,11 +1998,11 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "text",
-          "default": "как есть"
+          "type": "choice",
+          "default": "как есть",
+          "from": "taken"
         },
-        "control": "choice",
-        "optionsFrom": "taken"
+        "control": "choice"
       },
       {
         "tag": "taken_5",
@@ -2010,11 +2010,11 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "text",
-          "default": "как есть"
+          "type": "choice",
+          "default": "как есть",
+          "from": "taken"
         },
-        "control": "choice",
-        "optionsFrom": "taken"
+        "control": "choice"
       },
       {
         "tag": "taken_6",
@@ -2022,11 +2022,11 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "text",
-          "default": "как есть"
+          "type": "choice",
+          "default": "как есть",
+          "from": "taken"
         },
-        "control": "choice",
-        "optionsFrom": "taken"
+        "control": "choice"
       },
       {
         "tag": "taken_7",
@@ -2034,11 +2034,11 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "text",
-          "default": "как есть"
+          "type": "choice",
+          "default": "как есть",
+          "from": "taken"
         },
-        "control": "choice",
-        "optionsFrom": "taken"
+        "control": "choice"
       },
       {
         "tag": "taken_8",
@@ -2046,11 +2046,11 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "text",
-          "default": "как есть"
+          "type": "choice",
+          "default": "как есть",
+          "from": "taken"
         },
-        "control": "choice",
-        "optionsFrom": "taken"
+        "control": "choice"
       },
       {
         "tag": "taken_9",
@@ -2058,11 +2058,11 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "text",
-          "default": "как есть"
+          "type": "choice",
+          "default": "как есть",
+          "from": "taken"
         },
-        "control": "choice",
-        "optionsFrom": "taken"
+        "control": "choice"
       },
       {
         "tag": "taken_10",
@@ -2070,11 +2070,11 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "text",
-          "default": "как есть"
+          "type": "choice",
+          "default": "как есть",
+          "from": "taken"
         },
-        "control": "choice",
-        "optionsFrom": "taken"
+        "control": "choice"
       },
       {
         "tag": "taken_11",
@@ -2082,11 +2082,11 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "text",
-          "default": "как есть"
+          "type": "choice",
+          "default": "как есть",
+          "from": "taken"
         },
-        "control": "choice",
-        "optionsFrom": "taken"
+        "control": "choice"
       },
       {
         "tag": "taken_12",
@@ -2094,11 +2094,11 @@
         "group": "Стойкость к урону",
         "value": {
           "kind": "stored",
-          "type": "text",
-          "default": "как есть"
+          "type": "choice",
+          "default": "как есть",
+          "from": "taken"
         },
-        "control": "choice",
-        "optionsFrom": "taken"
+        "control": "choice"
       }
     ],
     "groups": {
@@ -4823,7 +4823,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть(@heal_die, (@dice_count + (@slot - @spell_level) * @dice_up)) + (@отправитель.spell_mod)"
+              "expr": "кинуть(@heal_die, (@dice_count + (@slot - @spell_level) * @dice_up)) + @отправитель.spell_mod"
             }
           },
           {
@@ -4987,7 +4987,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть('1d10') + (@отправитель.level)"
+              "expr": "кинуть('1d10') + @отправитель.level"
             }
           },
           {
@@ -5524,7 +5524,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть((@отправитель.hit_die)) + (@отправитель.con_mod)"
+              "expr": "кинуть(@отправитель.hit_die) + @отправитель.con_mod"
             }
           },
           {

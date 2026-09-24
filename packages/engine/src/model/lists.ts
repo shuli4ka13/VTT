@@ -7,11 +7,14 @@ export function listOf(system: System, key: string | undefined): FieldOption[] |
   if (!table) return undefined;
   return rowsOf(table)
     .filter(row => row.value !== undefined)
-    .map(row => ({ value: row.value as FieldOption['value'], label: String(row.value) }));
+    .map(row => ({ value: row.value as FieldOption['value'], label: row.label || String(row.value) }));
 }
 
+export const choiceTableOf = (field: Field | undefined): string | undefined =>
+  (field?.value.kind === 'stored' && field.value.type === 'choice' ? field.value.from : undefined);
+
 export function optionsOf(system: System, field: Field): FieldOption[] {
-  return listOf(system, field.optionsFrom) ?? field.options ?? [];
+  return listOf(system, choiceTableOf(field)) ?? [];
 }
 
 export function tagTablesOf(effect: Effect | undefined): string[] {
@@ -31,7 +34,7 @@ export function listUsers(system: System, key: string): string[] {
   const out: string[] = [];
   const from = (thing: unknown): string | undefined => (thing as { from?: string }).from;
   for (const field of system.fields ?? []) {
-    if (field.optionsFrom === key) out.push(`поле «${field.label}»`);
+    if (choiceTableOf(field) === key) out.push(`поле «${field.label}»`);
   }
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
     if (tagTablesOf(effect).includes(key)) out.push(`эффект «${effect.label ?? id}»`);

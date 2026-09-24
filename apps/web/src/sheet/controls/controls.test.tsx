@@ -18,13 +18,14 @@ const system = {
     { tag: 'тяжёлый', label: 'Тяжёлый доспех', group: 'Состояние', control: 'toggle',
       value: { kind: 'stored', type: 'boolean', default: false } },
     { tag: 'огонь', label: 'Огонь доходит', group: 'Состояние', control: 'choice',
-      options: [{ value: 0, label: 'иммунитет' }, { value: 0.5, label: 'половина' },
-        { value: 1, label: 'полностью' }, { value: 2, label: 'вдвое' }],
-      value: { kind: 'stored', type: 'number', default: 1 } },
+      value: { kind: 'stored', type: 'choice', from: 'доля', default: 1 } },
     { tag: 'атлетика', label: 'Атлетика', group: 'Состояние', control: 'ring',
-      options: [{ value: 0, label: 'нет' }, { value: 1, label: 'владение' }],
-      value: { kind: 'stored', type: 'number', default: 0 } },
+      value: { kind: 'stored', type: 'choice', from: 'владение', default: 0 } },
   ],
+  tables: {
+    доля: { key: 'number', rows: [{ value: 0, label: 'иммунитет' }, { value: 0.5, label: 'половина' }, { value: 1, label: 'полностью' }, { value: 2, label: 'вдвое' }] },
+    владение: { key: 'number', rows: [{ value: 0, label: 'нет' }, { value: 1, label: 'владение' }] },
+  },
 } as unknown as System;
 
 const sheet = { id: 'а', name: 'Арвен', values: { хиты: 7, провалы: 1, броня: 2, тяжёлый: false, огонь: 0.5, атлетика: 0 } } as unknown as Sheet;

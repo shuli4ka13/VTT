@@ -5,7 +5,7 @@ import { freeId } from '../../../store/world.ts';
 import { Card, CardHead, Input, Select, Button, Empty } from '../../../ui/primitives.tsx';
 import { SheetGrid } from '../../../ui/sheet-grid.tsx';
 import type { GridColumn } from '../../../ui/sheet-grid.tsx';
-import type { Effect, Param, System } from '@vtt/schema';
+import type { Effect, Param, System, ValueKind } from '@vtt/schema';
 
 const PARAM_KINDS = kindsFor('param');
 
@@ -70,7 +70,7 @@ export function ParamsEditor({ effect, system, onEdit }: {
                 value={kind}
                 options={PARAM_KINDS}
                 onChange={next => change(param.key, t => {
-                  t.kind = next;
+                  t.kind = next as ValueKind;
                   if (next !== 'number') delete t.role;
                   if (next !== 'choice') delete t.from;
                   if (!(ASKABLE as readonly string[]).includes(next)) delete t.ask;

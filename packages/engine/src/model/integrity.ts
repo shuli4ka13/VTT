@@ -1,7 +1,7 @@
 import { rowsOf } from './tables.ts';
 import { compile } from '../formula/index.ts';
 import type { Node } from '../formula/index.ts';
-import { tagTablesOf } from './lists.ts';
+import { tagTablesOf, choiceTableOf } from './lists.ts';
 import type { System, Compendium } from './types.ts';
 import type { Where } from './references.ts';
 
@@ -185,7 +185,7 @@ export function rowUsers(system: System, table: string, key: unknown, compendium
     }
   }
   for (const field of system.fields ?? []) {
-    if (field.optionsFrom !== table) continue;
+    if (choiceTableOf(field) !== table) continue;
     const value = field.value as Loose;
     if (value.kind === 'stored' && same(value.default, key)) {
       out.push({ where: { tab: 'sheet', field: field.tag }, text: `поле «${field.label}» — значение по умолчанию` });
@@ -279,7 +279,7 @@ export function renameRow(system: System, table: string, from: unknown, to: unkn
     if (pointsAt(system, cond, table) && same(cond.is, from)) rename(to);
   }
   for (const field of system.fields ?? []) {
-    if (field.optionsFrom !== table) continue;
+    if (choiceTableOf(field) !== table) continue;
     const value = field.value as Loose;
     if (value.kind === 'stored' && same(value.default, from)) value.default = to;
   }

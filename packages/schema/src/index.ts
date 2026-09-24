@@ -2,7 +2,7 @@ export * as world from './world.ts';
 export * as api from './api.ts';
 
 export type {
-  SlotRef, Formula, RefSide, Tag, Field, FieldValue, Control, FieldOption, DiceTerm, DieConstant,
+  SlotRef, Formula, ValueKind, RefSide, Tag, Field, FieldValue, Control, FieldOption, DiceTerm, DieConstant,
   SystemConstant, Table, TableColumn, TableRow, TableKey, RollEditOp, RollEdit, Modifier, Param,
   Step, Guard, Ask, Handler, Effect,
   Activation, DurationKind, Stacking, Binding, RecordKind, System,

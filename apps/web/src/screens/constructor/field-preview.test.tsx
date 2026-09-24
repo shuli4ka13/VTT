@@ -5,8 +5,8 @@ import { FieldPreview } from './field-preview.tsx';
 import type { System, Compendium, Field } from '@vtt/schema';
 
 const стойкость: Field = {
-  tag: 'огонь', label: 'Огонь', optionsFrom: 'стойкость', control: 'choice',
-  value: { kind: 'stored', type: 'text', default: 'как есть' },
+  tag: 'огонь', label: 'Огонь', control: 'choice',
+  value: { kind: 'stored', type: 'choice', from: 'стойкость', default: 'как есть' },
 } as Field;
 
 const system = {
@@ -32,7 +32,7 @@ describe('предпросмотр поля в конструкторе', () => 
     const уязвимость = screen.getByText('уязвимость');
     fireEvent.click(уязвимость);
     expect(уязвимость.closest('button')?.className).toContain('primary');
-    expect(system.fields[0]!.value).toEqual({ kind: 'stored', type: 'text', default: 'как есть' });
+    expect(system.fields[0]!.value).toEqual({ kind: 'stored', type: 'choice', from: 'стойкость', default: 'как есть' });
   });
 });
 
@@ -40,7 +40,7 @@ describe('поле со ссылкой на таблицу без особого
   afterEach(() => { cleanup(); });
 
   it('выбирается из списка, а не вписывается', () => {
-    const раса = { tag: 'раса', label: 'Раса', optionsFrom: 'расы', value: { kind: 'stored', type: 'text', default: '' } } as Field;
+    const раса = { tag: 'раса', label: 'Раса', value: { kind: 'stored', type: 'choice', from: 'расы', default: '' } } as Field;
     const мир = {
       fields: [раса], constants: {}, effects: {},
       tables: { расы: { label: 'Расы', key: 'word', rows: [{ value: 'дварф', label: 'дварф' }, { value: 'эльф', label: 'эльф' }] } },

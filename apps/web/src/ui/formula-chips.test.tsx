@@ -119,7 +119,7 @@ describe('FormulaChips', () => {
 describe('ссылка на таблицу видна в формуле через точку', () => {
   const сКлассом = {
     fields: [
-      { tag: 'класс', label: 'Класс', optionsFrom: 'классы', value: { kind: 'stored', type: 'text', default: 'воин' } },
+      { tag: 'класс', label: 'Класс', value: { kind: 'stored', type: 'choice', from: 'классы', default: 'воин' } },
       { tag: 'сила', label: 'Сила', value: { kind: 'stored', type: 'number', default: 10 } },
     ],
     tables: {
@@ -147,7 +147,7 @@ describe('ссылка на таблицу видна в формуле чере
 
 describe('ссылка через две таблицы', () => {
   const мир = {
-    fields: [{ tag: 'раса', label: 'Раса', optionsFrom: 'расы', value: { kind: 'stored', type: 'text', default: 'огр' } }],
+    fields: [{ tag: 'раса', label: 'Раса', value: { kind: 'stored', type: 'choice', from: 'расы', default: 'огр' } }],
     tables: {
       расы: { label: 'Расы', key: 'word', columns: [{ key: 'размер', label: 'Размер', kind: 'choice', from: 'размеры' }], rows: [] },
       размеры: { label: 'Размеры', key: 'word', columns: [{ key: 'кость', label: 'Кость хитов', kind: 'dice' }], rows: [] },

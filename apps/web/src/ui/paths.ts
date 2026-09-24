@@ -1,3 +1,4 @@
+import { choiceTableOf } from '@vtt/engine/model/lists';
 import type { System } from '@vtt/schema';
 
 const DEEPEST = 3;
@@ -21,5 +22,5 @@ export function columnPaths(
 
 export const fieldPaths = (system: System): Map<string, string> =>
   columnPaths(system, system.fields
-    .filter(f => f.optionsFrom)
-    .map(f => ({ key: f.tag, label: f.label ?? f.tag, from: f.optionsFrom })));
+    .filter(f => choiceTableOf(f))
+    .map(f => ({ key: f.tag, label: f.label ?? f.tag, from: choiceTableOf(f) })));

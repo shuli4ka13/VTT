@@ -1,15 +1,13 @@
-import { MultiChoice } from '../../ui/multi-choice.tsx';
 import { TABS } from '../../words.ts';
-import { listOf } from '@vtt/engine/model/lists';
 import { useWorld, freeId, randomTag } from '../../store/world.ts';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
 import { blockTree, BlockBranches } from '../constructor/block-tree.tsx';
 import {
-  Card, CardHead, Field, Input, Select, Empty, Verdict, DangerButton, NumInput, LabelInput, Chip,
+  Card, CardHead, Field, Select, Empty, Verdict, DangerButton, LabelInput, Chip,
 } from '../../ui/primitives.tsx';
 import { ModifiersEditor } from '../constructor/modifiers.tsx';
 import { RecordView } from '../../sheet/record-view.tsx';
-import { DiceProp } from '../../ui/dice-prop.tsx';
+import { ValueEditor } from '../../ui/value-editor.tsx';
 import type { CompendiumRecord, RecordKind, System, Compendium } from '@vtt/schema';
 
 export function CompendiumScreen() {
@@ -177,57 +175,15 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
                   && (record.props?.[prop.key] === undefined || record.props[prop.key] === ''
                     || (Array.isArray(record.props[prop.key]) && !(record.props[prop.key] as unknown[]).length))}
               >
-                {String(prop.kind) === 'effect' ? (
-                  <Select
-                    value={String(record.props?.[prop.key] ?? '')}
-                    options={[['', '— нет —'],
-                      ...Object.entries(system.effects)
-                        .filter(([, e]) => (e.activation ?? 'manual') === 'passive')
-                        .map(([key, e]) => [key, e.label ?? key] as const)] as never}
-                    onChange={next => edit(draft => { (draft.props ??= {})[prop.key] = next; })}
-                  />
-                ) : String(prop.kind) === 'record' ? (
-                  <Select
-                    value={String(record.props?.[prop.key] ?? '')}
-                    options={[['', '— нет —'],
-                      ...[...(compendium.items ?? []), ...(compendium.actions ?? [])]
-                        .filter(other => other.id !== record.id)
-                        .map(other => [other.id, other.label ?? other.id] as const)] as never}
-                    onChange={next => edit(draft => { (draft.props ??= {})[prop.key] = next; })}
-                  />
-                ) : String(prop.kind) === 'choice' && prop.many ? (
-                  <MultiChoice
-                    value={record.props?.[prop.key]}
-                    options={listOf(system, prop.from) ?? []}
-                    onChange={next => edit(draft => { (draft.props ??= {})[prop.key] = next; })}
-                  />
-                ) : String(prop.kind) === 'choice' ? (
-                  <Select
-                    value={String(record.props?.[prop.key] ?? '')}
-                    options={[['', listOf(system, prop.from) ? '— выберите —' : '— словарь не выбран —'],
-                      ...(listOf(system, prop.from) ?? [])
-                        .map(option => [String(option.value), option.label ?? String(option.value)] as const),
-                    ] as never}
-                    onChange={next => edit(draft => { (draft.props ??= {})[prop.key] = next; })}
-                  />
-                ) : String(prop.kind) === 'dice' ? (
-                  <DiceProp
-                    value={String(record.props?.[prop.key] ?? '')}
-                    onChange={next => edit(draft => { (draft.props ??= {})[prop.key] = next; })}
-                  />
-                ) : String(prop.kind) === 'number' ? (
-                  <NumInput
-                    value={Number(record.props?.[prop.key] ?? 0)}
-                    onCommit={n => edit(draft => { (draft.props ??= {})[prop.key] = n; })}
-                  />
-                ) : (
-                  <Input
-                    mono={String(prop.kind) === 'expr'}
-                    placeholder={String(prop.kind) === 'expr' ? 'формула' : undefined}
-                    value={String(record.props?.[prop.key] ?? '')}
-                    onChange={next => edit(draft => { (draft.props ??= {})[prop.key] = next; })}
-                  />
-                )}
+                <ValueEditor
+                  type={prop}
+                  value={record.props?.[prop.key]}
+                  system={system}
+                  compendium={compendium}
+                  onlyWorn
+                  except={record.id}
+                  onChange={next => edit(draft => { (draft.props ??= {})[prop.key] = next; })}
+                />
               </Field>
             ))}
           </div>

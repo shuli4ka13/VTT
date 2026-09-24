@@ -13,7 +13,10 @@ const nameOf = (ref: unknown): string | null => {
   }
   if ('param' in r) return `@${String(r.param)}`;
   if ('prop' in r) return `@${String(r.prop)}`;
-  if ('expr' in r) return `(${String(r.expr)})`;
+  if ('expr' in r) {
+    const text = String(r.expr).trim();
+    return /^@[\p{L}\p{N}_.]+$/u.test(text) ? text : `(${text})`;
+  }
   return null;
 };
 

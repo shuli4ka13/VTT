@@ -8,7 +8,7 @@ const система = {
   fields: [
     { tag: 'сила', label: 'Сила', value: { kind: 'stored', type: 'number', default: 3 } },
     { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 50 } },
-    { tag: 'класс', label: 'Класс', optionsFrom: 'классы', value: { kind: 'stored', type: 'text', default: 'воин' } },
+    { tag: 'класс', label: 'Класс', value: { kind: 'stored', type: 'choice', from: 'классы', default: 'воин' } },
     { tag: 'кость_хитов', label: 'Кость хитов', value: { kind: 'formula', expr: '@класс.кость' } },
     { tag: 'природа_класса', label: 'Природа', value: { kind: 'formula', expr: '@класс.урон.природа' } },
   ],

@@ -1,4 +1,4 @@
-import { tagTablesOf } from '../src/model/lists.ts';
+import { tagTablesOf, choiceTableOf } from '../src/model/lists.ts';
 import { group, test, eq, ok } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { listUsers } from '../src/model/lists.ts';
@@ -30,7 +30,7 @@ const troublesOf = (system: System): string[] => {
     for (const p of (kind.props ?? [])) look(`тип «${kind.label ?? rk}» · ${p.label ?? p.key}`, p as Loose);
   }
   for (const field of system.fields ?? []) {
-    const from = (field as Loose).optionsFrom as string | undefined;
+    const from = choiceTableOf(field);
     if (from && !lists[from]) out.push(`поле «${field.label}»: словаря «${from}» нет`);
   }
   return out;

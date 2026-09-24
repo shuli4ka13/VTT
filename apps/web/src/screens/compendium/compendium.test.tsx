@@ -256,7 +256,7 @@ describe('свойство из словаря — выбор, а не ввод'
   it('словарь не выбран — так и сказано, а не пустой список', () => {
     renderOpen(<CompendiumScreen />);
     const select = полеУ('Без словаря').querySelector('select') as HTMLSelectElement;
-    expect(select.options[0]!.textContent).toBe('— словарь не выбран —');
+    expect(select.options[0]!.textContent).toBe('— таблица не выбрана —');
   });
 });
 

@@ -16,10 +16,19 @@ export const slotRef = z.union([
 
 const bound = z.union([z.number(), z.string()]);
 
+export const valueKind = z.enum(['number', 'text', 'boolean', 'expr', 'dice', 'choice', 'effect', 'record', 'tag']);
+
+const typed = {
+  kind: valueKind.optional(),
+  from: z.string().min(1).optional(),
+  many: z.boolean().optional(),
+};
+
 export const fieldValue = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('stored'),
-    type: z.enum(['number', 'text', 'boolean']),
+    type: z.enum(['number', 'text', 'boolean', 'choice']),
+    from: z.string().min(1).optional(),
     default: z.union([z.number(), z.string(), z.boolean()]),
     min: bound.optional(),
     max: bound.optional(),
@@ -51,8 +60,6 @@ export const field = z.object({
   value: fieldValue,
 
   control: control.optional(),
-  options: z.array(fieldOption).optional(),
-  optionsFrom: z.string().min(1).optional(),
 
   desk: z.boolean().optional(),
 }).passthrough();
@@ -91,20 +98,15 @@ export const dieConstant = z.object({
 
 export const tableValue = z.union([z.number(), z.string(), z.boolean()]);
 
-export const columnKind = z.enum(['number', 'text', 'expr', 'dice', 'choice', 'effect', 'record', 'tag']);
-
 export const tableColumn = z.object({
   key: z.string().min(1),
   label: z.string().optional(),
-  kind: columnKind.optional(),
-
-  from: z.string().min(1).optional(),
-
-  many: z.boolean().optional(),
+  ...typed,
 });
 
 export const tableRow = z.object({
   value: tableValue.optional(),
+  label: z.string().optional(),
 
   from: z.number().optional(),
   to: z.number().optional(),
@@ -176,9 +178,7 @@ export const ask = z.object({
 export const param = z.object({
   key: z.string().min(1),
   label: z.string().optional(),
-  kind: z.string().optional(),
-
-  from: z.string().optional(),
+  ...typed,
 
   ask: ask.optional(),
 
@@ -259,11 +259,7 @@ export const recordKind = z.object({
   props: z.array(z.object({
     key: z.string().min(1),
     label: z.string().optional(),
-    kind: z.string().optional(),
-
-    from: z.string().optional(),
-
-    many: z.boolean().optional(),
+    ...typed,
     onSheet: z.boolean().optional(),
   }).passthrough()).optional(),
   bindings: z.array(binding).optional(),
@@ -341,6 +337,7 @@ export const world = z.object({
 
 export type SlotRef = z.infer<typeof slotRef>;
 export type Formula = z.infer<typeof formula>;
+export type ValueKind = z.infer<typeof valueKind>;
 export type RefSide = z.infer<typeof refSide>;
 export type Tag = z.infer<typeof tag>;
 export type DiceTerm = z.infer<typeof diceTerm>;

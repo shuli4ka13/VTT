@@ -2,7 +2,8 @@ import { choiceTables } from '@vtt/engine/model/tables';
 import { useWorld, freeId, slugOf } from '../../store/world.ts';
 import { useUsage, usersOf } from './usage.ts';
 import { LiveValue } from './live-value.tsx';
-import { optionsOf } from '@vtt/engine/model/lists';
+import { optionsOf, choiceTableOf } from '@vtt/engine/model/lists';
+import { kindsFor } from '@vtt/engine/words/kinds';
 import { FieldPreview } from './field-preview.tsx';
 import { Starters } from './starters.tsx';
 import { CONTROLS } from '../../sheet/controls/index.tsx';
@@ -35,14 +36,7 @@ type ValueMode = typeof KINDS[number][0];
 const modeOf = (value: FieldValue): ValueMode =>
   (value.kind === 'formula' && tableCallOf(value.expr) ? 'table' : value.kind);
 
-const TYPES = [
-  ['number', 'число'],
-  ['text', 'текст'],
-  ['boolean', 'да / нет'],
-  ['link', 'из таблицы'],
-] as const;
-
-const LINK = 'link';
+const TYPES = kindsFor('field');
 
 export function SheetTab() {
   const system = useWorld(s => s.system);
@@ -127,6 +121,7 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
         : { kind: 'formula', expr: writeTableCall({ table: Object.keys(system.tables ?? {})[0] ?? '', arg: '', column: null }) };
   });
   const lookup = field.value.kind === 'formula' ? tableCallOf(field.value.expr) : null;
+  const from = choiceTableOf(field);
   const setLookup = (change: Partial<TableCall>) => edit(draft => {
     const now = draft.value.kind === 'formula' ? tableCallOf(draft.value.expr) : null;
     if (now) draft.value = { kind: 'formula', expr: writeTableCall({ ...now, ...change }) };
@@ -208,39 +203,6 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
             </Field>
           ) : null}
 
-          {(field.control === 'choice' || field.control === 'ring') && !field.optionsFrom ? (
-            <Field label="Свои варианты" hint="Короткий список прямо здесь. Если варианты — строки таблицы, выберите тип значения «из таблицы»." needed={!field.options?.length}>
-              <div className="stack stack--tight">
-                {(
-                  <>
-                    {(field.options ?? []).map((option, at) => (
-                      <div className="pair" key={at}>
-                        <Input
-                          value={String(option.value)} placeholder="0.5" mono
-                          onChange={next => edit(draft => {
-                            const num = Number(next);
-                            draft.options![at]!.value = next !== '' && Number.isFinite(num) ? num : next;
-                          })}
-                        />
-                        <Input
-                          value={option.label} placeholder="как назвать"
-                          onChange={next => edit(draft => { draft.options![at]!.label = next; })}
-                        />
-                        <Button size="sm" variant="ghost" title="убрать вариант" onClick={() => edit(draft => {
-                          draft.options!.splice(at, 1);
-                          if (!draft.options!.length) delete draft.options;
-                        })}>×</Button>
-                      </div>
-                    ))}
-                    <Button size="sm" variant="ghost" onClick={() => edit(draft => {
-                      (draft.options ??= []).push({ value: draft.options.length, label: '' });
-                    })}>+ вариант</Button>
-                  </>
-                )}
-              </div>
-            </Field>
-          ) : null}
-
           <Field label="Откуда значение">
             <Select value={modeOf(field.value)} options={KINDS} onChange={setKind} />
           </Field>
@@ -257,48 +219,42 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
         <Card>
           <CardHead title="Значение вводит игрок" />
           <div className="row">
-            <Field label="Тип" hint={field.optionsFrom ? 'Игрок выбирает строку таблицы; формулы идут по ней дальше: @поле.колонка.' : undefined}>
+            <Field label="Тип" hint={from ? 'Игрок выбирает строку таблицы; формулы идут по ней дальше: @поле.колонка.' : undefined}>
               <Select
-                value={field.optionsFrom ? LINK : field.value.type}
-                options={TYPES}
+                value={field.value.type}
+                options={TYPES as never}
                 onChange={type => edit(draft => {
                   if (draft.value.kind !== 'stored') return;
-                  if (type === LINK) {
+                  if (type === 'choice') {
                     const first = choiceTables(system)[0];
                     if (!first) return;
-                    draft.optionsFrom = first[0];
-                    delete draft.options;
-                    draft.value.type = first[1].key === 'number' ? 'number' : 'text';
-                    draft.value.default = '';
+                    draft.value = { kind: 'stored', type: 'choice', from: first[0], default: '' };
                     return;
                   }
-                  delete draft.optionsFrom;
-                  draft.value.type = type as 'number' | 'text' | 'boolean';
-                  draft.value.default = type === 'number' ? 0 : type === 'boolean' ? false : '';
+                  const next = type as 'number' | 'text' | 'boolean';
+                  draft.value = { kind: 'stored', type: next, default: next === 'number' ? 0 : next === 'boolean' ? false : '' };
                 })}
               />
             </Field>
-            {field.optionsFrom ? (
+            {from ? (
               <Field label="Из какой таблицы">
                 <div className="inline inline--tight">
                   <Select
-                    value={field.optionsFrom}
+                    value={from}
                     options={choiceTables(system).map(([key, list]) => [key, list.label || key] as const) as never}
                     onChange={next => edit(draft => {
                       if (draft.value.kind !== 'stored') return;
-                      draft.optionsFrom = next;
-                      draft.value.type = system.tables?.[next]?.key === 'number' ? 'number' : 'text';
-                      draft.value.default = '';
+                      draft.value = { kind: 'stored', type: 'choice', from: next, default: '' };
                     })}
                   />
-                  <Button size="sm" variant="ghost" onClick={() => pick({ activeTab: 'dictionaries', activeTableId: field.optionsFrom ?? null })}>
+                  <Button size="sm" variant="ghost" onClick={() => pick({ activeTab: 'dictionaries', activeTableId: from })}>
                     открыть таблицу →
                   </Button>
                 </div>
               </Field>
             ) : null}
             <Field label="По умолчанию">
-              {field.optionsFrom ? (
+              {from ? (
                 <Select
                   value={String(field.value.default ?? '')}
                   options={[['', '— не выбрано —'], ...optionsOf(system, field).map(o => [String(o.value), o.label] as const)] as never}
@@ -326,12 +282,12 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
               )}
             </Field>
           </div>
-          {field.optionsFrom ? (
+          {from ? (
             <p className="faint">
               Строки: {optionsOf(system, field).map(o => o.label).join(', ') || 'таблица пока пустая'}
             </p>
           ) : null}
-          {field.value.type === 'number' && !field.optionsFrom ? (
+          {field.value.type === 'number' ? (
 
             <div className="row">
               <Field label="Не ниже" hint="Пусто — границы нет. Число или формула."
@@ -456,7 +412,8 @@ const TYPE_WORDS: Record<string, string> = { number: 'число', text: 'тек
 
 const storedWords = (system: System, field: FieldModel): string => {
   if (field.desk) return `на столе · ${TYPE_WORDS[(field.value as { type: string }).type] ?? ''}`;
-  const from = field.optionsFrom ? system.tables?.[field.optionsFrom]?.label || field.optionsFrom : '';
+  const table = choiceTableOf(field);
+  const from = table ? system.tables?.[table]?.label || table : '';
   const shape = field.control ? CONTROLS[field.control].toLowerCase() : '';
   if (from) return `выбирает игрок · из «${from}»${shape ? ` · ${shape}` : ''}`;
   const value = field.value as { type: string };

@@ -1,16 +1,15 @@
-import { MultiChoice } from '../../../ui/multi-choice.tsx';
 import { kindsFor } from '@vtt/engine/words/kinds';
 import { Card, CardHead, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Empty } from '../../../ui/primitives.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import { SheetGrid } from '../../../ui/sheet-grid.tsx';
 import { FieldRow } from '../../../ui/field-row.tsx';
 import type { GridColumn } from '../../../ui/sheet-grid.tsx';
-import { DiceProp } from '../../../ui/dice-prop.tsx';
+import { ValueEditor } from '../../../ui/value-editor.tsx';
 import { newTable } from '../factory.ts';
 import { inUse, usersOf } from '../usage.ts';
 import type { UsageIndex } from '../usage.ts';
 import { freeId } from '../../../store/world.ts';
-import { listUsers, listOf } from '@vtt/engine/model/lists';
+import { listUsers } from '@vtt/engine/model/lists';
 import { isRange, keyOf } from '@vtt/engine/model/tables';
 import { rowUsers, renameRow, renameRowInBook } from '@vtt/engine/model/integrity';
 import { useWorld } from '../../../store/world.ts';
@@ -260,7 +259,7 @@ function Rows({ id, table, system, edit, editSystem }: {
     (row.cells ??= {})[column] = value;
   });
 
-  const lead = byRange ? ['от', 'до'] : [key === 'number' ? 'число' : 'слово'];
+  const lead = byRange ? ['от', 'до'] : [key === 'number' ? 'число' : 'слово', 'как показать'];
   const gridColumns: GridColumn[] = [
     ...lead.map(name => ({ key: `:${name}`, label: name, width: byRange ? 90 : defaultWidth() })),
     ...columns.map(c => ({ key: c.key, label: c.label || c.key, width: defaultWidth(c) })),
@@ -319,7 +318,14 @@ function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRe
           <NumInput value={row.to ?? 0} onCommit={n => set(r => { r.to = n; })} />
         </>
       ) : (
-        <KeyInput value={row.value} numeric={rowKey === 'number'} taken={taken} onRename={onRename} />
+        <>
+          <KeyInput value={row.value} numeric={rowKey === 'number'} taken={taken} onRename={onRename} />
+          <Input
+            value={row.label ?? ''}
+            placeholder="как в списке"
+            onChange={next => set(r => { if (next.trim()) r.label = next; else delete r.label; })}
+          />
+        </>
       )}
       {columns.map(column => (column.kind === 'expr' ? (
         <FormulaField
@@ -331,7 +337,7 @@ function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRe
           onChange={value => setCell(at, column.key, value)}
         />
       ) : (
-        <Cell key={column.key} column={column} value={cells[column.key]} system={system}
+        <ValueEditor key={column.key} type={column} value={cells[column.key]} system={system}
           onChange={value => setCell(at, column.key, value)} />
       )))}
       {users.length ? (
@@ -380,51 +386,3 @@ function KeyInput({ value, numeric, taken, onRename }: {
   );
 }
 
-function Cell({ column, value, system, onChange }: {
-  column: TableColumn;
-  value: unknown;
-  system: System;
-  onChange: (value: unknown) => void;
-}) {
-  const kind = column.kind ?? 'text';
-  if (kind === 'number') {
-    return <NumInput value={Number(value ?? 0)} onCommit={onChange} />;
-  }
-  if (kind === 'dice') {
-    return <DiceProp value={String(value ?? '')} onChange={onChange} />;
-  }
-  if (kind === 'effect') {
-    return (
-      <Select
-        value={String(value ?? '')}
-        options={[['', '— какой эффект —'],
-          ...Object.entries(system.effects ?? {}).map(([key, e]) => [key, e.label || key] as const)] as never}
-        onChange={next => onChange(next)}
-      />
-    );
-  }
-  if (kind === 'tag') {
-    return (
-      <Select
-        value={String(value ?? '')}
-        options={[['', '— какое поле —'], ...system.fields.map(f => [f.tag, f.label] as const)] as never}
-        onChange={next => onChange(next)}
-      />
-    );
-  }
-  if (kind === 'choice' && column.many) {
-    return <MultiChoice value={value} options={listOf(system, column.from) ?? []} onChange={onChange} />;
-  }
-  if (kind === 'choice') {
-    const options = listOf(system, column.from) ?? [];
-    return (
-      <Select
-        value={String(value ?? '')}
-        options={[['', options.length ? '— выберите —' : '— таблица не выбрана —'],
-          ...options.map(o => [String(o.value), o.label] as const)] as never}
-        onChange={next => onChange(next)}
-      />
-    );
-  }
-  return <Input value={String(value ?? '')} placeholder="слово" onChange={onChange} />;
-}

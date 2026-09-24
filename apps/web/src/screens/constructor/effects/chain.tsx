@@ -9,7 +9,7 @@ import { costsOf, newCost, payStep } from '../factory.ts';
 import { GroupCard } from './cards/group-card.tsx';
 import { useOpened } from '../../../store/opened.ts';
 import { findDonorBlock, copyDonorBlock } from '../donors.tsx';
-import type { System, Effect, Step } from '@vtt/schema';
+import type { System, Effect, Step, ValueKind } from '@vtt/schema';
 
 export type Lane = 'receiver' | 'sender';
 
@@ -27,7 +27,7 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
   const onOpenEffect = (id: string) => pick({ activeEffectId: id });
   const [removed, setRemoved] = useState<{ text: string; before: Step[] } | null>(null);
 
-  const addParam = (label: string, kind: string, want?: string): string => {
+  const addParam = (label: string, kind: ValueKind, want?: string): string => {
     let key = '';
     edit(draft => {
       draft.params ??= [];

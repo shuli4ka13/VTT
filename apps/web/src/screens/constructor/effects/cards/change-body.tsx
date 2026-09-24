@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import type { System, Step, SlotRef } from '@vtt/schema';
+import type { System, Step, SlotRef, ValueKind } from '@vtt/schema';
 import { Field, Segmented, Select } from '../../../../ui/primitives.tsx';
 import type { CardGroup } from '../../cards.ts';
 import { parseRollExpr, badFormula, exprText } from '../../roll-expr.ts';
@@ -259,7 +259,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
   edit: EditFn;
   withNumber?: WithNumber;
   system: System;
-  onAddParam?: (label: string, kind: string) => string;
+  onAddParam?: (label: string, kind: ValueKind) => string;
   onOpenEffect?: (id: string) => void;
   lane?: 'receiver' | 'sender';
   onMoveLane?: (to: 'receiver' | 'sender') => void;
@@ -269,7 +269,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
   const applyIndex = group.amount ? 1 : 0;
   const firstEvent = calledOf(system)[0]?.[0];
 
-  const fromRecord = (label: string, kind: string) =>
+  const fromRecord = (label: string, kind: ValueKind) =>
     onAddParam ? () => ({ param: onAddParam(label, kind) }) : undefined;
 
   const statusOptions: SlotOption[] = Object.entries(system.effects ?? {})

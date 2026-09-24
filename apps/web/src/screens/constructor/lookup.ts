@@ -1,6 +1,8 @@
 import { ownerOf, OWNER_WORDS } from '@vtt/engine/engine/owners';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
 import { splitPath } from '@vtt/engine/engine/navigate';
+import { choiceTableOf } from '@vtt/engine/model/lists';
+import { kindWord } from '@vtt/engine/words/kinds';
 import type { RefKind } from '@vtt/engine/model/references';
 import type { System, Compendium, Effect } from '@vtt/schema';
 import { fieldPaths } from '../../ui/paths.ts';
@@ -27,9 +29,6 @@ export interface Explained {
 
 const ASK_WORDS: Record<string, string> = { actor: 'спросят игрока', gm: 'спросят ведущего' };
 
-const KIND_WORDS: Record<string, string> = {
-  number: 'число', text: 'текст', dice: 'кости', choice: 'выбор из таблицы', effect: 'эффект',
-};
 
 type Loose = Record<string, any>;
 
@@ -122,7 +121,7 @@ export function explainName(
       kind: 'вход эффекта',
       title: param.label ?? param.key,
       facts: [
-        ['тип', KIND_WORDS[String(decl.kind ?? 'number')] ?? String(decl.kind)],
+        ['тип', kindWord(decl.kind)],
         ...(table ? [['таблица', table.label ?? String(decl.from)] as [string, string]] : []),
         ['если не передали', asks ?? (decl.optional ? 'пусто' : 'эффект не сработает')],
       ],
@@ -153,13 +152,14 @@ export function explainName(
   const path = fieldPaths(system).get(rest);
   if (path) {
     const base = system.fields.find(f => f.tag === head);
+    const table = choiceTableOf(base);
     return {
       kind: 'колонка по полю',
       title: path,
       facts: [...ownerFact, ['строка', `та, что выбрана в поле «${base?.label ?? head}»`]],
-      from: [`таблица «${system.tables?.[base?.optionsFrom ?? '']?.label ?? base?.optionsFrom}»`],
+      from: [`таблица «${system.tables?.[table ?? '']?.label ?? table}»`],
       shown: [], users: [],
-      ...(base?.optionsFrom ? { go: { label: 'открыть таблицу', pick: { activeTab: 'dictionaries', activeTableId: base.optionsFrom } } } : {}),
+      ...(table ? { go: { label: 'открыть таблицу', pick: { activeTab: 'dictionaries', activeTableId: table } } } : {}),
     };
   }
 
@@ -211,7 +211,7 @@ export function explainName(
     return {
       kind: 'свойство записи',
       title: `${prop.label ?? prop.key} · ${kind.label ?? kindKey}`,
-      facts: [['тип', KIND_WORDS[String(prop.kind ?? 'number')] ?? String(prop.kind)]],
+      facts: [['тип', kindWord(prop.kind)]],
       from: [`заполняют записи компендиума типа «${kind.label ?? kindKey}»: ${records.length}`],
       shown: [], users: [],
       go: { label: 'открыть «Типы записей»', pick: { activeTab: 'records', activeRecordKind: kindKey } },

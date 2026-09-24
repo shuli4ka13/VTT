@@ -1,6 +1,7 @@
 import { readCell } from './cells.ts';
 import { EngineError } from './errors.ts';
 import { tableOf } from '../model/tables.ts';
+import { choiceTableOf } from '../model/lists.ts';
 import type { System, Param } from '../model/types.ts';
 import type { Pass } from './calc.ts';
 
@@ -10,7 +11,7 @@ export function referencedTable(system: System, head: string, paramDefs?: Param[
   const param = (paramDefs ?? []).find(p => p.key === head) as Loose | undefined;
   if (param) return param.kind === 'choice' ? (param.from as string | undefined) : undefined;
   const field = system.fields.find(f => f.tag === head);
-  if (field) return field.optionsFrom;
+  if (field) return choiceTableOf(field);
   for (const kind of Object.values(system.records ?? {})) {
     const prop = (kind.props ?? []).find(p => p.key === head) as Loose | undefined;
     if (prop?.kind === 'choice' && typeof prop.from === 'string') return prop.from;

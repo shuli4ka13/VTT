@@ -8,7 +8,7 @@ import { useLookupPane } from './lookup-panel.tsx';
 import {
   Card, CardHead, Field, Input, Select, Button, Empty, Verdict, Chip, DangerButton, LabelInput,
 } from '../../ui/primitives.tsx';
-import type { System, RecordKind, Binding, Param, Effect } from '@vtt/schema';
+import type { System, RecordKind, Binding, Param, Effect, ValueKind } from '@vtt/schema';
 import { SlotInput } from './slot-input.tsx';
 import { BlockPick } from './block-pick.tsx';
 import { blockOf } from '@vtt/engine/model/blocks';
@@ -28,15 +28,6 @@ const ON_SHEET = [
   ['service', 'служебное — только движку'],
 ] as const;
 
-const PARAM_TO_PROP_KIND: Record<string, string> = {
-  dice: 'dice',
-  number: 'number',
-  effect: 'effect',
-  text: 'text',
-  choice: 'choice',
-  record: 'record',
-};
-const propKindFor = (paramKind?: string) => PARAM_TO_PROP_KIND[paramKind ?? ''] ?? 'number';
 
 export function RecordsTab() {
   const system = useWorld(s => s.system);
@@ -206,7 +197,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
                 const label = param.label ?? param.key;
                 const newKey = freeId(draft.props.map(p => p.key), label);
                 draft.props.push({
-                  key: newKey, label, kind: propKindFor(param.kind),
+                  key: newKey, label, kind: param.kind ?? 'number',
                   ...(param.from ? { from: param.from } : {}),
                 });
                 const target = draft.bindings![index]!;
@@ -248,7 +239,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
                     options={PROP_KINDS}
                     onChange={next => edit(draft => {
                       const target = draft.props?.find(p => p.key === prop.key);
-                      if (target) target.kind = next;
+                      if (target) target.kind = next as ValueKind;
                     })}
                   />
                 </Field>

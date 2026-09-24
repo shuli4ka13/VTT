@@ -264,6 +264,7 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
     const from: Where = { tab: 'sheet', field: field.tag };
     for (const tag of field.roll?.tags ?? []) out.push({ kind: 'roll', key: tag, from });
     if (field.value.kind === 'formula') exprRefs(field.value.expr, from, noScope, out);
+    if (field.value.kind === 'stored' && field.value.type === 'choice') out.push({ kind: 'table', key: field.value.from ?? '', from });
     if (field.desk) {
       for (const ref of out) if (ref.from === from && ref.scope === 'plain') delete ref.scope;
     }
