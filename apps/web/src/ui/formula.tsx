@@ -32,7 +32,7 @@ export function labelOfTag(system: System, tag: string): string {
   if (owned) return `${labelOfTag(system, owned.rest)} ${OWNER_WORDS[owned.owner]}`;
   const field = system.fields.find(f => f.tag === tag);
   if (field) return field.label ?? tag;
-  return fieldPaths(system).get(tag) ?? tag;
+  return fieldPaths(system).get(tag) ?? system.effects?.[tag]?.label ?? tag;
 }
 
 export function formulaAsLabels(
@@ -44,7 +44,7 @@ export function formulaAsLabels(
     if (ownerOf(name)) return labelOfTag(system, name);
     const field = system.fields.find(f => f.tag === name);
     if (field) return field.label ?? name;
-    return names?.get(name) ?? fieldPaths(system).get(name) ?? name;
+    return names?.get(name) ?? fieldPaths(system).get(name) ?? system.effects?.[name]?.label ?? name;
   });
 }
 

@@ -5,6 +5,7 @@ import { referencedTable, splitPath, walk } from './navigate.ts';
 import { VALUE_COLUMN } from '../model/tables.ts';
 import { ownerOf, DESK } from './owners.ts';
 import { collectModifiers, applyValueModifiers } from './modifiers.ts';
+import { wornEffects } from './effects.ts';
 import type { CollectedModifiers } from './modifiers.ts';
 import type { System, Sheet, Field, Compendium, Resolve } from '../model/types.ts';
 
@@ -56,6 +57,7 @@ export function newPass(system: System, sheet: Sheet, options: PassOptions = {})
       if (!pass.desk) throw new EngineError(`стола нет — «${owned.rest}» читать неоткуда`);
       return pass.desk.resolve(owned.rest);
     }
+    if (!findField(system, tag) && system.effects?.[tag]) return wornCount(system, sheet, tag, options.compendium);
     const split = findField(system, tag) ? null : splitPath(tag);
     const table = split ? referencedTable(system, split.head) : undefined;
     if (split && table) {
@@ -69,6 +71,9 @@ export function newPass(system: System, sheet: Sheet, options: PassOptions = {})
 
   return pass;
 }
+
+export const wornCount = (system: System, sheet: Sheet, id: string, compendium?: Compendium | null): number =>
+  wornEffects(system, sheet, { strict: false, compendium: compendium ?? null }).filter(worn => worn.id === id).length;
 
 export function calc(system: System, sheet: Sheet, tag: string, pass: Pass = newPass(system, sheet)): unknown {
   const field = findField(system, tag);

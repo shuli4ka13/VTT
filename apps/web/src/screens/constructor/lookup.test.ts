@@ -41,4 +41,11 @@ describe('откуда это: щелчок по фишке объясняет �
   it('незнакомое имя так и называется', () => {
     expect(explain('нет_такого').kind).toBe('не найдено');
   });
+
+  it('висящий эффект — число «сколько раз висит»', () => {
+    const told = explain('получатель.paralyzed');
+    expect(told.kind).toBe('висит на листе');
+    expect(told.facts).toContainEqual(['чьё', 'лист получателя']);
+    expect(told.go?.pick).toEqual({ activeTab: 'effects', activeEffectId: 'paralyzed' });
+  });
 });

@@ -94,6 +94,8 @@ function danglingText(ref: Reference, declared: Declared): string | null {
   if (ref.kind === 'prop' && ref.scope === 'foreign') {
     return `свойство «${ref.key}» не объявлено у этого типа записи — привязка возьмёт его не оттуда`;
   }
+  if (ref.kind === 'field' && !declared.field.has(ref.key) && declared.effect.has(ref.key)
+    && (ref.scope === 'plain' || ref.scope?.startsWith('owner:'))) return null;
   return declared[ref.kind].has(ref.key) ? null : NAMES[ref.kind](ref.key);
 }
 

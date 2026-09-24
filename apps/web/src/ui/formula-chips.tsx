@@ -6,7 +6,13 @@ import { fieldPaths } from './paths.ts';
 import { ownerOf, OWNERS, SENDER, RECEIVER, DESK } from '@vtt/engine/engine/owners';
 
 const plainLabel = (system: System, tag: string, extra?: Map<string, string>): string =>
-  system.fields.find(f => f.tag === tag)?.label ?? extra?.get(tag) ?? fieldPaths(system).get(tag) ?? tag;
+  system.fields.find(f => f.tag === tag)?.label ?? extra?.get(tag) ?? fieldPaths(system).get(tag)
+  ?? system.effects?.[tag]?.label ?? tag;
+
+const statesOf = (system: System): { tag: string; label: string }[] =>
+  Object.entries(system.effects ?? {})
+    .filter(([, effect]) => effect.activation === 'passive')
+    .map(([tag, effect]) => ({ tag, label: effect.label ?? tag }));
 
 const labelOfTag = (system: System, tag: string, extra?: Map<string, string>): string => {
   const owned = ownerOf(tag);
@@ -14,7 +20,7 @@ const labelOfTag = (system: System, tag: string, extra?: Map<string, string>): s
 };
 
 const knownSheetName = (system: System, tag: string, paths: Map<string, string>): boolean =>
-  system.fields.some(field => field.tag === tag) || paths.has(tag);
+  system.fields.some(field => field.tag === tag) || paths.has(tag) || Boolean(system.effects?.[tag]);
 
 export type Part = { text: string } | { tag: string };
 
@@ -135,12 +141,17 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
     ];
     const offered = new Set((extraOptions ?? []).map(o => o.name).filter(Boolean));
     const local = [...(extraNames ?? [])].filter(([tag]) => !offered.has(tag)).map(([tag, label]) => ({ tag, label, group: 'здесь же' }));
+    const states = statesOf(system);
     if (!owners) {
-      return [...local, ...sheet.map(f => ({ tag: f.tag, label: f.label, group: f.via ? 'по ссылке' : 'поле' })), ...desk];
+      return [
+        ...local, ...sheet.map(f => ({ tag: f.tag, label: f.label, group: f.via ? 'по ссылке' : 'поле' })),
+        ...states.map(s => ({ ...s, group: 'висит на листе' })), ...desk,
+      ];
     }
     return [
       ...local,
       ...OWNERS.flatMap(owner => sheet.map(f => ({ tag: `${owner}.${f.tag}`, label: f.label, group: `поле ${owner === SENDER ? 'отправителя' : 'получателя'}` }))),
+      ...OWNERS.flatMap(owner => states.map(s => ({ tag: `${owner}.${s.tag}`, label: s.label, group: `висит на ${owner === SENDER ? 'отправителе' : 'получателе'}` }))),
       ...desk,
     ];
   }, [system, extraNames, extraOptions, paths, owners]);

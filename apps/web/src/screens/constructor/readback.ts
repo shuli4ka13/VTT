@@ -61,6 +61,7 @@ export function refSegment(ref: unknown, system: System, effect: Effect, emptyAs
     const path = String(r.ref);
     const head = path.split('.')[0]!;
     if (head === 'event') return seg(EVENT_WORDS[path] ?? 'присланное');
+    if (path === 'worn.carry') return seg('запомненного числа');
     const named = names?.get(path) ?? names?.get(head);
     return seg(named ? `«${named}»` : `результат «${head}»`);
   }

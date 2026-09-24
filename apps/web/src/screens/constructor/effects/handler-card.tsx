@@ -1,4 +1,5 @@
 import { Card, CardHead, Field, Select, Chip, Button } from '../../../ui/primitives.tsx';
+import { FormulaField } from '../../../ui/formula-field.tsx';
 import { registry } from '@vtt/engine/engine/steps/index';
 import { MOMENTS as TIMES, fieldOf } from '@vtt/engine/events/moments';
 import { MOMENT_PREFIX, FIELD_PREFIX } from '@vtt/engine/events/bus';
@@ -32,6 +33,10 @@ function conditionsOfAny(system: System): (readonly [string, string])[] {
   }
   return [...seen].map(([ref, label]) => [ref, label] as const);
 }
+
+const BY_FORMULA = ':формула';
+
+const SEED_NAMES = new Map([['worn.carry', 'запомненное число']]);
 
 export const momentOf = (handler: Handler): Moment => {
   const before = handler.phase === 'before';
@@ -74,6 +79,8 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
   const conditions = isMoment ? [] : anyAction ? conditionsOfAny(system) : conditionsOf(system, listened);
   const watchable = system.fields.filter(f => f.value.kind !== 'stored' || f.value.type === 'boolean');
   const aims = moment === 'after-in' || moment === 'after-out' || moment === 'ask-after';
+  const raw = handler.if as { expr?: string } | null | undefined;
+  const formula = raw && typeof raw === 'object' && 'expr' in raw ? String(raw.expr ?? '') : null;
 
   return (
     <Card>
@@ -115,15 +122,30 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
 
         <Field
           label="Только если"
-          hint={isMoment
-            ? 'У времени и поля нет исходов — сработает всегда.'
-            : conditions.length ? undefined : 'У того, что слушаем, нет шагов с исходом «да/нет» — сработает всегда.'}
+          hint={formula !== null ? 'Сработает, только когда формула верна.'
+            : isMoment ? 'У времени и поля нет исходов — выберите «формулой…», если нужно условие.'
+              : conditions.length ? undefined : 'У того, что слушаем, нет шагов с исходом «да/нет» — сработает всегда.'}
         >
-          <Select
-            value={String((handler.if as { ref?: string } | null | undefined)?.ref ?? '')}
-            options={[['', 'всегда'], ...conditions] as never}
-            onChange={next => edit(draft => { if (next) draft.if = { ref: next }; else delete draft.if; })}
+          <Select<string>
+            value={formula !== null ? BY_FORMULA : String((handler.if as { ref?: string } | null | undefined)?.ref ?? '')}
+            options={[['', 'всегда'], ...conditions, [BY_FORMULA, 'формулой…']]}
+            onChange={next => edit(draft => {
+              if (next === BY_FORMULA) draft.if = { expr: formula ?? '' };
+              else if (next) draft.if = { ref: next };
+              else delete draft.if;
+            })}
           />
+          {formula !== null ? (
+            <FormulaField
+              value={formula}
+              system={system}
+              where={`когда №${index + 1} · только если`}
+              extraNames={SEED_NAMES}
+              owners
+              placeholder="например: @получатель.хиты <= 0"
+              onCommit={next => edit(draft => { draft.if = { expr: next }; })}
+            />
+          ) : null}
         </Field>
 
         {isMoment || !aims ? null : (

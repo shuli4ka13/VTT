@@ -163,6 +163,19 @@ export function explainName(
     };
   }
 
+  const hung = system.effects?.[rest];
+  if (hung && rest !== effectId) {
+    return {
+      kind: 'висит на листе',
+      title: hung.label ?? rest,
+      facts: [...ownerFact, ['число', 'сколько раз висит: 0 — нет, 1 — висит, больше — наложен несколько раз']],
+      from: ['вешают шаги «повесить» в эффектах и надетые вещи; снимают шаги, срок и связь'],
+      shown: ['на листе среди висящих эффектов'],
+      users: usersBy(usage, 'field', rest, system),
+      go: { label: `открыть «${hung.label ?? rest}»`, pick: { activeTab: 'effects', activeEffectId: rest } },
+    };
+  }
+
   const constant = system.constants?.[rest];
   if (constant) {
     const dice = (constant.dice ?? []).map(d => asDice(`${typeof d.count === 'number' ? d.count : 1}d${d.sides}`)).join(' + ');
