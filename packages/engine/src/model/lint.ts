@@ -198,9 +198,7 @@ function cycleProblems(system: System): Problem[] {
         if (!seenCycles.has(key)) {
           seenCycles.add(key);
           const first = cycle[0]!;
-          const where: Where = first.startsWith('effect:')
-            ? { tab: 'effects', effect: first.slice('effect:'.length), part: 'on' }
-            : { tab: 'rules', section: 'events', key: first.slice('event:'.length) };
+          const where: Where = { tab: 'effects', effect: first.slice('effect:'.length), part: 'on' };
           out.push({ where, level: 'error', text: `вызовы идут по кругу: ${cycle.map(n => `«${labels.get(n) ?? n}»`).join(' → ')}` });
         }
       } else if (mark !== 'done') visit(next);

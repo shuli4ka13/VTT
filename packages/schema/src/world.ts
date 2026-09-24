@@ -53,12 +53,6 @@ export const fieldOption = z.object({
   label: z.string().min(1),
 });
 
-export const wordList = z.object({
-  label: z.string().min(1),
-  of: z.enum(['number', 'text']).optional(),
-  values: z.array(fieldOption).min(1),
-}).passthrough();
-
 export const field = z.object({
   tag,
   label: z.string(),
@@ -138,8 +132,6 @@ export const table = z.object({
   rows: z.array(tableRow).optional(),
   otherwise: tableValue.optional(),
 }).passthrough();
-
-export const rangeTable = table;
 
 export const rollEditOp = z.object({ op: z.string().min(1) }).passthrough();
 
@@ -229,12 +221,6 @@ export const step = z.object({
   when: guard.optional(),
 }).passthrough();
 
-export const systemEvent = z.object({
-  label: z.string().optional(),
-  tags: z.array(z.string().min(1)).optional(),
-  receive: z.array(step).optional(),
-}).passthrough();
-
 export const handler = z.object({
   on: z.string(),
   role: z.enum(['target', 'sender']).optional(),
@@ -253,7 +239,6 @@ export const effect = z.object({
   bond: z.union([z.boolean(), z.string().min(1)]).optional(),
   label: z.string().optional(),
   icon: z.string().optional(),
-  category: z.string().optional(),
   description: z.string().optional(),
   activation: activation.optional(),
   duration: z.object({
@@ -318,10 +303,7 @@ export const system = z.object({
   constants: z.record(z.string(), systemConstant).optional(),
   tables: z.record(z.string(), table).optional(),
   roll_edits: z.record(z.string(), rollEdit).optional(),
-  lists: z.record(z.string(), wordList).optional(),
   advantage: z.object({ methods: z.record(z.string(), z.boolean()).optional() }).passthrough().optional(),
-
-  events: z.record(z.string(), systemEvent).optional(),
 
   initiative: z.object({
     die: z.object({ constant: z.string().min(1) }),
@@ -386,7 +368,6 @@ export type DieConstant = z.infer<typeof dieConstant>;
 export type SystemConstant = z.infer<typeof systemConstant>;
 export type RollEditOp = z.infer<typeof rollEditOp>;
 export type RollEdit = z.infer<typeof rollEdit>;
-export type RangeTable = z.infer<typeof table>;
 export type Table = z.infer<typeof table>;
 export type TableColumn = z.infer<typeof tableColumn>;
 export type TableRow = z.infer<typeof tableRow>;
@@ -403,11 +384,9 @@ export type Param = z.infer<typeof param>;
 export type Step = z.infer<typeof step>;
 export type Ask = z.infer<typeof ask>;
 export type Control = z.infer<typeof control>;
-export type WordList = z.infer<typeof wordList>;
 export type FieldOption = z.infer<typeof fieldOption>;
 export type Guard = z.infer<typeof guard>;
 export type Scale = z.infer<typeof scale>;
-export type SystemEvent = z.infer<typeof systemEvent>;
 export type Handler = z.infer<typeof handler>;
 export type Effect = z.infer<typeof effect>;
 export type Binding = z.infer<typeof binding>;

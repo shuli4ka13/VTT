@@ -8,8 +8,7 @@ export function blockNames(system: System): string[] {
   const out = new Set<string>(Object.keys(system.groups ?? {}));
   for (const field of system.fields ?? []) if (field.group) out.add(field.group);
   for (const effect of Object.values(system.effects ?? {})) {
-    const name = (effect as Loose).group ?? (effect as Loose).category;
-    if (name) out.add(String(name));
+    if (effect.group) out.add(effect.group);
   }
   for (const kind of Object.values(system.records ?? {})) if (kind.group) out.add(kind.group);
   return [...out];

@@ -245,7 +245,7 @@ function Handlers({ id, effect, system, edit }: {
       <div className="inline">
         <span className="screen-title" style={{ fontSize: 'var(--fs-5)' }}>Когда</span>
         <span className="spacer" />
-        <Button size="sm" onClick={() => edit(draft => { (draft.on ??= []).push(newHandler(system)); })}>+ когда</Button>
+        <Button size="sm" onClick={() => edit(draft => { (draft.on ??= []).push(newHandler()); })}>+ когда</Button>
       </div>
       {list.length === 0 ? (
         <Empty title="Ни на что не отзывается" hint="«Когда» — что случилось (начался ход, пришёл урон, по мне бросают) и что эффект делает в ответ." />

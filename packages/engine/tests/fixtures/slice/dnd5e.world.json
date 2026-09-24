@@ -128,7 +128,6 @@
       "strike": {
         "label": "Атака",
         "icon": "⚔",
-        "category": "Атака",
         "activation": "manual",
         "params": [
           {
@@ -219,12 +218,12 @@
               "expr": "@стол.battle >= 1"
             }
           }
-        ]
+        ],
+        "group": "Атака"
       },
       "save": {
         "label": "Спасбросок",
         "icon": "☄",
-        "category": "Атака",
         "activation": "manual",
         "params": [
           {
@@ -327,12 +326,12 @@
               "expr": "@стол.battle >= 1"
             }
           }
-        ]
+        ],
+        "group": "Атака"
       },
       "heal": {
         "label": "Лечение",
         "icon": "✚",
-        "category": "Лечение",
         "activation": "manual",
         "params": [
           {
@@ -418,12 +417,12 @@
             }
           }
         ],
-        "description": "Тратит ячейку 1-го круга: восполняет хиты и, если задано, снимает состояние."
+        "description": "Тратит ячейку 1-го круга: восполняет хиты и, если задано, снимает состояние.",
+        "group": "Лечение"
       },
       "fire_bolt": {
         "label": "Огненный снаряд",
         "icon": "🔥",
-        "category": "Атака",
         "activation": "manual",
         "params": [],
         "steps": [
@@ -498,12 +497,12 @@
               "expr": "@стол.battle >= 1"
             }
           }
-        ]
+        ],
+        "group": "Атака"
       },
       "poisoned": {
         "label": "Отравлен",
         "icon": "☠",
-        "category": "Состояния",
         "activation": "passive",
         "duration": {
           "kind": "temporary"
@@ -521,12 +520,12 @@
             ]
           }
         ],
-        "steps": []
+        "steps": [],
+        "group": "Состояния"
       },
       "stoneskin": {
         "label": "Каменная кожа",
         "icon": "🪨",
-        "category": "Состояния",
         "activation": "passive",
         "duration": {
           "kind": "temporary"
@@ -545,12 +544,12 @@
             ]
           }
         ],
-        "steps": []
+        "steps": [],
+        "group": "Состояния"
       },
       "fire_resistance": {
         "label": "Сопротивление огню",
         "icon": "🧯",
-        "category": "Состояния",
         "activation": "passive",
         "duration": {
           "kind": "temporary"
@@ -569,12 +568,12 @@
             ]
           }
         ],
-        "steps": []
+        "steps": [],
+        "group": "Состояния"
       },
       "blessed": {
         "label": "Благословлён",
         "icon": "✨",
-        "category": "Состояния",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -589,12 +588,12 @@
             "condition": null
           }
         ],
-        "steps": []
+        "steps": [],
+        "group": "Состояния"
       },
       "shield": {
         "label": "Щит",
         "icon": "🛡",
-        "category": "Реакции",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -649,12 +648,12 @@
               }
             ]
           }
-        ]
+        ],
+        "group": "Реакции"
       },
       "shield_up": {
         "label": "Под щитом",
         "icon": "🛡",
-        "category": "Состояния",
         "activation": "passive",
         "duration": {
           "kind": "turns",
@@ -671,12 +670,12 @@
             "condition": null
           }
         ],
-        "steps": []
+        "steps": [],
+        "group": "Состояния"
       },
       "inspire": {
         "label": "Вдохновение: перебросить с преимуществом",
         "icon": "✨",
-        "category": "Реакции",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -709,12 +708,12 @@
               }
             ]
           }
-        ]
+        ],
+        "group": "Реакции"
       },
       "prone": {
         "label": "Лежит",
         "icon": "🛌",
-        "category": "Состояния",
         "activation": "passive",
         "duration": {
           "kind": "temporary"
@@ -740,12 +739,12 @@
             ]
           }
         ],
-        "steps": []
+        "steps": [],
+        "group": "Состояния"
       },
       "heavy_armor_rule": {
         "label": "Тяжёлый доспех мешает ловким проверкам",
         "icon": "⚖",
-        "category": "Правила комнаты",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -761,12 +760,12 @@
             ]
           }
         ],
-        "steps": []
+        "steps": [],
+        "group": "Правила комнаты"
       },
       "mastery_rule": {
         "label": "Мастерство даёт фору",
         "icon": "⚖",
-        "category": "Правила комнаты",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -782,12 +781,12 @@
             ]
           }
         ],
-        "steps": []
+        "steps": [],
+        "group": "Правила комнаты"
       },
       "thorns": {
         "label": "Шипы",
         "icon": "⚡",
-        "category": "Состояния",
         "activation": "passive",
         "duration": {
           "kind": "uses",
@@ -828,12 +827,12 @@
               }
             ]
           }
-        ]
+        ],
+        "group": "Состояния"
       },
       "bless": {
         "label": "Благословение",
         "icon": "✨",
-        "category": "Поддержка",
         "description": "Тратит ячейку 1-го круга. Пока держишь концентрацию, цели получают +1к4 к любому броску.",
         "activation": "manual",
         "bond": true,
@@ -886,12 +885,12 @@
               "const": 1
             }
           }
-        ]
+        ],
+        "group": "Поддержка"
       },
       "fireball": {
         "label": "Огненный шар",
         "icon": "💥",
-        "category": "Атака",
         "description": "Тратит ячейку. Каждая цель делает спасбросок Ловкости: провал — полный урон, успех — половина. Ведущий называет, кто попал в область.",
         "activation": "manual",
         "self": [
@@ -1002,12 +1001,12 @@
               }
             }
           }
-        ]
+        ],
+        "group": "Атака"
       },
       "dying": {
         "label": "При смерти",
         "icon": "💀",
-        "category": "Состояния",
         "description": "На нуле хитов: в начале своего хода бросок к20. 10 и выше — успех, иначе провал. Три провала — смерть, три успеха — стабилизация; считает стол.",
         "activation": "passive",
         "duration": {
@@ -1084,23 +1083,23 @@
               }
             ]
           }
-        ]
+        ],
+        "group": "Состояния"
       },
       "unconscious": {
         "label": "Без сознания",
         "icon": "😵",
-        "category": "Состояния",
         "activation": "passive",
         "duration": {
           "kind": "temporary"
         },
         "description": "Хиты на нуле: лежит, пока не поднимут.",
-        "modifiers": []
+        "modifiers": [],
+        "group": "Состояния"
       },
       "fall": {
         "label": "Падение",
         "icon": "⬇",
-        "category": "Состояния",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -1127,12 +1126,12 @@
               }
             ]
           }
-        ]
+        ],
+        "group": "Состояния"
       },
       "wake": {
         "label": "Подъём",
         "icon": "⬆",
-        "category": "Состояния",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -1181,12 +1180,12 @@
               }
             ]
           }
-        ]
+        ],
+        "group": "Состояния"
       },
       "hellish_rebuke": {
         "label": "Адское возмездие",
         "icon": "🔥",
-        "category": "Реакции",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -1281,7 +1280,8 @@
               }
             ]
           }
-        ]
+        ],
+        "group": "Реакции"
       },
       "damage": {
         "label": "Урон",

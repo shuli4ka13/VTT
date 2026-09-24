@@ -37,12 +37,11 @@ for (const [name, base] of BASES) {
       it(`новый эффект «${kind}» проходит схему`, check);
     }
 
-    it('новый «срабатывает сам» — висит с одним «когда», которое сразу слушает первый общий эффект', () => {
+    it('новый «срабатывает сам» — висит с одним пустым «когда»', () => {
       const system = base();
       const made = newEffect(system, 'auto');
-      const first = Object.keys(system.events ?? {})[0];
       expect(made.value.activation).toBe('passive');
-      expect(made.value.on).toEqual([{ on: first ? `event:${first}` : '', steps: [] }]);
+      expect(made.value.on).toEqual([{ on: '', steps: [] }]);
     });
 
     it('новое поле проходит схему', () => {

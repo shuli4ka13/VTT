@@ -4,19 +4,14 @@ import { effectiveDefault } from './groups.ts';
 import type { LaunchKind } from '@vtt/engine/model/effect-kinds';
 import { COST_BLOCK } from '@vtt/engine/words/glossary';
 import type {
-  System, Effect, Handler, Field, RecordKind, Binding, Step, SystemConstant, RollEdit, RangeTable,
+  System, Effect, Handler, Field, RecordKind, Binding, Step, SystemConstant, RollEdit, Table,
 } from '@vtt/schema';
 
 export interface Made<T> { key: string; value: T }
 
 type Prop = NonNullable<RecordKind['props']>[number];
 
-export const firstHeard = (system: System): string => {
-  const event = Object.keys(system.events ?? {})[0];
-  return event ? `event:${event}` : '';
-};
-
-export const newHandler = (system: System): Handler => ({ on: firstHeard(system), steps: [] });
+export const newHandler = (): Handler => ({ on: '', steps: [] });
 
 export const newEffect = (system: System, kind: LaunchKind): Made<Effect> => ({
   key: freeId(Object.keys(system.effects), 'effect'),
@@ -24,7 +19,7 @@ export const newEffect = (system: System, kind: LaunchKind): Made<Effect> => ({
     ? { label: 'Новый эффект', activation: 'manual', params: [], steps: [] }
     : {
       label: 'Новый эффект', activation: 'passive', duration: { kind: 'permanent' },
-      ...(kind === 'auto' ? { on: [newHandler(system)] } : { modifiers: [] }),
+      ...(kind === 'auto' ? { on: [newHandler()] } : { modifiers: [] }),
     },
 });
 
@@ -67,7 +62,7 @@ export const newRollEdit = (system: System): Made<RollEdit> => ({
   value: { label: '', ops: [] },
 });
 
-export const newTable = (system: System): Made<RangeTable> => ({
+export const newTable = (system: System): Made<Table> => ({
   key: freeId(Object.keys(system.tables ?? {}), 'таблица'),
   value: { label: '', key: 'word', rows: [{ value: '' }] },
 });
@@ -93,7 +88,6 @@ export const newCalled = (system: System): Made<Effect> => {
     key: freeId(Object.keys(system.effects ?? {}), 'вызываемый'),
     value: {
       label: '',
-      category: 'Вызываемые',
       params: [{ key: 'amount', label: 'Сколько', kind: 'number', role: 'amount' }],
       steps: field ? [simpleReceive(field.tag, 'subtract', true)] : [],
     } as Effect,

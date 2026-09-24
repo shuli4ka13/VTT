@@ -33,8 +33,7 @@ export function usersOf(index: UsageIndex, kind: RefKind, key: string, system: S
   for (const where of index.get(usageKey(kind, key)) ?? []) {
     const short: Where = where.tab === 'effects' ? { tab: 'effects', effect: where.effect }
       : where.tab === 'records' ? { tab: 'records', kind: where.kind }
-        : where.tab === 'rules' && where.section === 'events' ? { tab: 'rules', section: 'events', key: where.key }
-          : where;
+        : where;
     out.add(whereLabel(short, system));
   }
   return [...out];

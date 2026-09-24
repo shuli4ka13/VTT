@@ -220,7 +220,7 @@ function Effects({ donor }: { donor: System }) {
           >
             <span className="card__title" style={{ fontSize: 'var(--fs-4)' }}>{effect.label ?? id}</span>
             <span className="card__sub">
-              {already ? 'уже в системе' : `${effect.category ?? 'Механики'} · ${activationWord(effect)}`}
+              {already ? 'уже в системе' : `${effect.group ?? 'Механики'} · ${activationWord(effect)}`}
             </span>
           </button>
         );
