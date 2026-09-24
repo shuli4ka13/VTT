@@ -30,12 +30,12 @@ describe('автосохранение: автор всегда знает, со
   });
 
   it('отказ сервера доносит подробности, а не только общую фразу', async () => {
-    saveSystem.mockRejectedValue(new ApiError('запрос не проходит схему', 400, ['effects.e1.trigger.on: пусто']));
+    saveSystem.mockRejectedValue(new ApiError('запрос не проходит схему', 400, ['effects.e1.on.0.on: пусто']));
     edit('Вторая');
     expect(await settle()).toBe(false);
     const state = useAutosave.getState().state;
     expect(state.kind).toBe('failed');
-    expect(saveLabel(state, '')).toContain('effects.e1.trigger.on');
+    expect(saveLabel(state, '')).toContain('effects.e1.on.0.on');
   });
 
   it('после отказа следующая правка сохраняется снова', async () => {

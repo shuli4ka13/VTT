@@ -4,7 +4,7 @@ export * as api from './api.ts';
 export type {
   SlotRef, RefSide, Tag, Field, FieldValue, Control, FieldOption, WordList, DiceTerm, DieConstant,
   SystemConstant, RangeTable, Table, TableColumn, TableRow, TableKey, RollEditOp, RollEdit, Modifier, Param,
-  Step, Guard, Ask, SystemEvent, Trigger, Effect,
+  Step, Guard, Ask, SystemEvent, Handler, Effect,
   Activation, DurationKind, Stacking, Binding, RecordKind, System,
   StoredValue, WornEffect, Sheet, CompendiumRecord, Compendium, World,
 } from './world.ts';

@@ -11,14 +11,12 @@ const system = {
   ],
   effects: {
     отравление: {
-      label: 'Отравление', activation: 'triggered',
-      trigger: { on: 'moment:turn-start' },
-      steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { const: 3 } }],
+      label: 'Отравление', activation: 'passive',
+      on: [{ on: 'moment:turn-start', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { const: 3 } }] }],
     },
     передышка: {
-      label: 'Передышка', activation: 'triggered',
-      trigger: { on: 'moment:turn-end' },
-      steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'add', value: { const: 1 } }],
+      label: 'Передышка', activation: 'passive',
+      on: [{ on: 'moment:turn-end', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'add', value: { const: 1 } }] }],
     },
     кнопка: { label: 'Кнопка', activation: 'manual', steps: [] },
   },
@@ -65,9 +63,7 @@ group('шина моментов', () => {
 
   test('условие на срабатывании проверяется', () => {
     const picky = structuredClone(system) as System;
-    (picky.effects.отравление as Effect).trigger = {
-      on: 'moment:turn-start', condition: { expr: '#яд' },
-    } as never;
+    (picky.effects.отравление as Effect).on![0]!.if = { expr: '#яд' };
     const ctx = { ...world, system: picky };
     eq(fireMoments([{ moment: 'turn-start', sheetId: 'а' }], [sheet(['отравление'])], ctx as never)
       .sheets[0]!.values.хиты, 20, 'яда нет — молчит');
@@ -133,8 +129,8 @@ group('поле стало верным', () => {
     effects: {
       без_сознания: { label: 'Без сознания', activation: 'passive', duration: { kind: 'temporary' }, modifiers: [] },
       падение: {
-        label: 'Падение', activation: 'triggered', trigger: { on: 'field:без_сил' },
-        steps: [{ type: 'status', mode: 'apply', effect: { const: 'без_сознания' } }],
+        label: 'Падение', activation: 'passive',
+        on: [{ on: 'field:без_сил', steps: [{ type: 'status', mode: 'apply', effect: { const: 'без_сознания' } }] }],
       },
     },
     room_rules: ['падение'],

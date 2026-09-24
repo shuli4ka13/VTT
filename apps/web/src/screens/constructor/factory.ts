@@ -1,9 +1,10 @@
 import { freeId } from '../../store/world.ts';
 import { dice } from '../../words.ts';
 import { effectiveDefault } from './groups.ts';
+import type { LaunchKind } from '@vtt/engine/model/effect-kinds';
 import { COST_BLOCK } from '@vtt/engine/words/glossary';
 import type {
-  System, Effect, Activation, Field, RecordKind, Binding, Step, SystemConstant, RollEdit, RangeTable,
+  System, Effect, Handler, Field, RecordKind, Binding, Step, SystemConstant, RollEdit, RangeTable,
 } from '@vtt/schema';
 
 export interface Made<T> { key: string; value: T }
@@ -15,20 +16,17 @@ export const firstHeard = (system: System): string => {
   return event ? `event:${event}` : '';
 };
 
-export const newTrigger = (system: System, activation: Activation): Effect['trigger'] | undefined =>
-  activation === 'triggered' ? { on: firstHeard(system) }
-    : activation === 'reaction' ? { on: '*', window: 'target' }
-      : undefined;
+export const newHandler = (system: System): Handler => ({ on: firstHeard(system), steps: [] });
 
-export const newEffect = (system: System, activation: Activation): Made<Effect> => {
-  const trigger = newTrigger(system, activation);
-  return {
-    key: freeId(Object.keys(system.effects), 'effect'),
-    value: activation === 'passive'
-      ? { label: 'Новый эффект', activation, duration: { kind: 'permanent' }, modifiers: [] }
-      : { label: 'Новый эффект', activation, params: [], steps: [], ...(trigger ? { trigger } : {}) },
-  };
-};
+export const newEffect = (system: System, kind: LaunchKind): Made<Effect> => ({
+  key: freeId(Object.keys(system.effects), 'effect'),
+  value: kind === 'manual'
+    ? { label: 'Новый эффект', activation: 'manual', params: [], steps: [] }
+    : {
+      label: 'Новый эффект', activation: 'passive', duration: { kind: 'permanent' },
+      ...(kind === 'auto' ? { on: [newHandler(system)] } : { modifiers: [] }),
+    },
+});
 
 export const newField = (system: System, group: string): Made<Field> => {
   const tag = freeId(system.fields.map(f => f.tag), 'field');

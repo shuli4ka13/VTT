@@ -55,16 +55,16 @@ group('условие шага по числу и степени', () => {
   });
 });
 
-group('три вида запуска поверх старых данных', () => {
-  test('launchOf читает старые activation, activationFor пишет их обратно', () => {
+group('три вида запуска', () => {
+  test('вид запуска выводится из подписок, activationFor пишет «кнопкой» или «висит»', () => {
     eq(launchOf({ activation: 'manual' }).kind, 'manual');
     eq(launchOf({ activation: 'passive' }).kind, 'passive');
-    const triggered = launchOf({ activation: 'triggered' });
+    const triggered = launchOf({ activation: 'passive' , on: [{ on: '', to: 'other', steps: [] }] });
     eq(triggered.kind, 'auto'); eq(triggered.ask, false); eq(triggered.moment, 'after');
-    const reaction = launchOf({ activation: 'reaction' });
+    const reaction = launchOf({ activation: 'passive' , on: [{ on: '', phase: 'before', ask: true, steps: [] }] });
     eq(reaction.kind, 'auto'); eq(reaction.ask, true); eq(reaction.moment, 'before');
-    eq(activationFor(triggered), 'triggered');
-    eq(activationFor(reaction), 'reaction');
+    eq(activationFor(triggered), 'passive');
+    eq(activationFor(reaction), 'passive');
     eq(activationFor({ kind: 'manual', moment: 'after', ask: false }), 'manual');
     ok(launchOf(undefined).kind === 'manual');
   });

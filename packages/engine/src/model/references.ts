@@ -6,7 +6,8 @@ import { compile } from '../formula/index.ts';
 import { registry } from '../engine/steps/index.ts';
 import { calledOf } from '../engine/effects.ts';
 
-export const EVENT_PREFIX = 'event:';
+export { EVENT_PREFIX, MOMENT_PREFIX, FIELD_PREFIX } from '../events/bus.ts';
+import { EVENT_PREFIX, MOMENT_PREFIX, FIELD_PREFIX } from '../events/bus.ts';
 
 export const EVENT_RESULTS = ['event', 'event_amount', 'event_incoming'] as const;
 
@@ -25,6 +26,7 @@ export interface Where {
   section?: string;
   key?: string;
   part?: string;
+  handler?: number;
 }
 
 export type RefKind =
@@ -201,9 +203,6 @@ function modifierRefs(list: Modifier[] | undefined, from: Where, out: Reference[
   }
 }
 
-export const MOMENT_PREFIX = 'moment:';
-export const FIELD_PREFIX = 'field:';
-
 export function listenerOf(
   on: string | undefined,
 ): { kind: 'any' | 'event' | 'effect' | 'moment' | 'field' | 'empty'; key?: string } {
@@ -217,25 +216,29 @@ export function listenerOf(
 
 function effectRefs(system: System, id: string, effect: Effect, out: Reference[]): void {
   const params = new Set((effect.params ?? []).map(p => p.key));
-  const head: Where = { tab: 'effects', effect: id, part: 'trigger' };
-  const heard = listenerOf(effect.trigger?.on);
-  const inChain = heard.kind === 'event' || calledOf(system).some(([key]) => key === id);
-  out.push(...chainRefs(effect.steps ?? [], step => ({ tab: 'effects', effect: id, step }), params, inChain));
+  const called = calledOf(system).some(([key]) => key === id);
+  out.push(...chainRefs(effect.steps ?? [], step => ({ tab: 'effects', effect: id, step }), params, called));
   out.push(...chainRefs(effect.self ?? [], step => ({ tab: 'effects', effect: id, step, part: 'self' }), params, false));
-  if (heard.kind === 'event') out.push({ kind: 'event', key: heard.key!, from: head });
-  if (heard.kind === 'effect') out.push({ kind: 'effect', key: heard.key!, from: head });
-  if (heard.kind === 'field') out.push({ kind: 'field', key: heard.key!, from: head });
-  const condition = effect.trigger?.condition;
-  if (condition && typeof condition === 'object' && 'ref' in condition) {
-    const listened = heard.kind === 'effect' ? system.effects[heard.key!] : undefined;
-    const name = String(condition.ref).split('.')[0] ?? '';
-    if (listened && name && !(listened.steps ?? []).some(s => s.id === name)) {
-      out.push({ kind: 'step', key: name, from: head, scope: `listened:${heard.key}` });
+  (effect.on ?? []).forEach((handler, index) => {
+    const head: Where = { tab: 'effects', effect: id, part: 'on', handler: index };
+    const heard = listenerOf(handler.on);
+    out.push(...chainRefs(handler.steps ?? [], step => ({ tab: 'effects', effect: id, handler: index, step }), params, heard.kind === 'event'));
+    out.push(...chainRefs(handler.self ?? [], step => ({ tab: 'effects', effect: id, handler: index, step, part: 'self' }), params, false));
+    if (heard.kind === 'event') out.push({ kind: 'event', key: heard.key!, from: head });
+    if (heard.kind === 'effect') out.push({ kind: 'effect', key: heard.key!, from: head });
+    if (heard.kind === 'field') out.push({ kind: 'field', key: heard.key!, from: head });
+    const condition = handler.if;
+    if (condition && typeof condition === 'object' && 'ref' in condition) {
+      const listened = heard.kind === 'effect' ? system.effects[heard.key!] : undefined;
+      const name = String(condition.ref).split('.')[0] ?? '';
+      if (listened && name && !(listened.steps ?? []).some(s => s.id === name)) {
+        out.push({ kind: 'step', key: name, from: head, scope: `listened:${heard.key}` });
+      }
+    } else if (condition) {
+      slotRefs(condition, undefined, head, { params, earlier: new Set(), eventChain: false }, out);
     }
-  } else if (condition) {
-    slotRefs(condition, undefined, head, { params, earlier: new Set(), eventChain: false }, out);
-  }
-  for (const claim of effect.trigger?.claims ?? []) out.push({ kind: 'rollEdit', key: claim, from: head });
+    for (const claim of handler.claims ?? []) out.push({ kind: 'rollEdit', key: claim, from: head });
+  });
   modifierRefs(effect.modifiers, { tab: 'effects', effect: id, part: 'modifiers' }, out);
 }
 

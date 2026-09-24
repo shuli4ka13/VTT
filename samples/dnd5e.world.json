@@ -3716,38 +3716,40 @@
         "label": "Пламя клинка",
         "group": "Умения класса",
         "description": "Пока клинок горит, каждый удар им добавляет 2к6 огнём — отдельной частью, со своей меткой.",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
-        "trigger": {
-          "on": "strike",
-          "direction": "out",
-          "to": "target"
-        },
-        "steps": [
+        "on": [
           {
-            "id": "жар",
-            "type": "amount",
-            "source": "item",
-            "fixed": {
-              "expr": "кинуть('2к6')"
-            }
-          },
-          {
-            "type": "emit",
-            "event": "damage",
-            "args": {
-              "amount": {
-                "ref": "жар"
+            "on": "strike",
+            "role": "sender",
+            "to": "other",
+            "steps": [
+              {
+                "id": "жар",
+                "type": "amount",
+                "source": "item",
+                "fixed": {
+                  "expr": "кинуть('2к6')"
+                }
               },
-              "damage_type": {
-                "const": "огонь"
-              },
-              "damage_source": {
-                "const": "магический"
+              {
+                "type": "emit",
+                "event": "damage",
+                "args": {
+                  "amount": {
+                    "ref": "жар"
+                  },
+                  "damage_type": {
+                    "const": "огонь"
+                  },
+                  "damage_source": {
+                    "const": "магический"
+                  }
+                }
               }
-            }
+            ]
           }
         ]
       },
@@ -5596,42 +5598,45 @@
         "label": "Щит",
         "group": "Реакции",
         "description": "По тебе попали — тратишь ячейку 1-го круга, +5 к классу брони до начала твоего хода. Атака пересчитывается.",
-        "activation": "reaction",
+        "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
-        "trigger": {
-          "on": "*",
-          "window": "target",
-          "condition": {
-            "ref": "hit.success"
-          }
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "type": "status",
-            "mode": "apply",
-            "effect": {
-              "const": "shield_up"
-            }
-          }
-        ],
-        "self": [
-          {
-            "type": "emit",
-            "event": "cost_reaction",
-            "strict": true
-          },
-          {
-            "type": "emit",
-            "event": "spell_slot",
-            "args": {
-              "circle": {
-                "const": 1
-              }
+            "on": "*",
+            "phase": "before",
+            "if": {
+              "ref": "hit.success"
             },
-            "strict": true
+            "ask": true,
+            "self": [
+              {
+                "type": "emit",
+                "event": "cost_reaction",
+                "strict": true
+              },
+              {
+                "type": "emit",
+                "event": "spell_slot",
+                "args": {
+                  "circle": {
+                    "const": 1
+                  }
+                },
+                "strict": true
+              }
+            ],
+            "steps": [
+              {
+                "type": "status",
+                "mode": "apply",
+                "effect": {
+                  "const": "shield_up"
+                }
+              }
+            ]
           }
         ]
       },
@@ -5639,83 +5644,86 @@
         "label": "Адское возмездие",
         "group": "Реакции",
         "description": "Тебя ранили — тратишь ячейку 1-го круга: обидчик спасается Ловкостью, провал — 2к10 огнём, успех — половина.",
-        "activation": "reaction",
+        "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
-        "trigger": {
-          "on": "event:damage",
-          "window": "after"
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "id": "save",
-            "type": "threshold",
-            "side": "target",
-            "roll": {
-              "die": {
-                "constant": "lead_die"
+            "on": "event:damage",
+            "to": "other",
+            "ask": true,
+            "self": [
+              {
+                "type": "emit",
+                "event": "cost_reaction",
+                "strict": true
               },
-              "bonus": {
-                "expr": "@получатель.dex_save"
-              },
-              "tags": [
-                "спасбросок",
-                "ловкость"
-              ]
-            },
-            "versus": {
-              "expr": "@отправитель.spell_dc"
-            },
-            "successWhen": "atLeast",
-            "continueOn": "always"
-          },
-          {
-            "id": "dmg",
-            "type": "amount",
-            "source": "item",
-            "scale": {
-              "times": 0.5,
-              "when": {
-                "ref": "save.success"
+              {
+                "type": "emit",
+                "event": "spell_slot",
+                "args": {
+                  "circle": {
+                    "const": 1
+                  }
+                },
+                "strict": true
               }
-            },
-            "fixed": {
-              "expr": "кинуть('2d10')"
-            }
-          },
-          {
-            "type": "emit",
-            "event": "damage",
-            "args": {
-              "amount": {
-                "ref": "dmg"
+            ],
+            "steps": [
+              {
+                "id": "save",
+                "type": "threshold",
+                "side": "target",
+                "roll": {
+                  "die": {
+                    "constant": "lead_die"
+                  },
+                  "bonus": {
+                    "expr": "@получатель.dex_save"
+                  },
+                  "tags": [
+                    "спасбросок",
+                    "ловкость"
+                  ]
+                },
+                "versus": {
+                  "expr": "@отправитель.spell_dc"
+                },
+                "successWhen": "atLeast",
+                "continueOn": "always"
               },
-              "damage_type": {
-                "const": "огонь"
+              {
+                "id": "dmg",
+                "type": "amount",
+                "source": "item",
+                "scale": {
+                  "times": 0.5,
+                  "when": {
+                    "ref": "save.success"
+                  }
+                },
+                "fixed": {
+                  "expr": "кинуть('2d10')"
+                }
               },
-              "damage_source": {
-                "const": "магический"
+              {
+                "type": "emit",
+                "event": "damage",
+                "args": {
+                  "amount": {
+                    "ref": "dmg"
+                  },
+                  "damage_type": {
+                    "const": "огонь"
+                  },
+                  "damage_source": {
+                    "const": "магический"
+                  }
+                }
               }
-            }
-          }
-        ],
-        "self": [
-          {
-            "type": "emit",
-            "event": "cost_reaction",
-            "strict": true
-          },
-          {
-            "type": "emit",
-            "event": "spell_slot",
-            "args": {
-              "circle": {
-                "const": 1
-              }
-            },
-            "strict": true
+            ]
           }
         ]
       },
@@ -5723,39 +5731,42 @@
         "label": "Невероятное уклонение",
         "group": "Реакции",
         "description": "По тебе попали — урон этой атаки вдвое меньше.",
-        "activation": "reaction",
+        "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
-        "trigger": {
-          "on": "*",
-          "window": "target",
-          "condition": {
-            "ref": "hit.success"
-          }
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "type": "status",
-            "mode": "apply",
-            "effect": {
-              "const": "uncanny_up"
-            }
-          },
-          {
-            "type": "status",
-            "mode": "apply",
-            "effect": {
-              "const": "uncanny_off"
-            }
-          }
-        ],
-        "self": [
-          {
-            "type": "emit",
-            "event": "cost_reaction",
-            "strict": true
+            "on": "*",
+            "phase": "before",
+            "if": {
+              "ref": "hit.success"
+            },
+            "ask": true,
+            "self": [
+              {
+                "type": "emit",
+                "event": "cost_reaction",
+                "strict": true
+              }
+            ],
+            "steps": [
+              {
+                "type": "status",
+                "mode": "apply",
+                "effect": {
+                  "const": "uncanny_up"
+                }
+              },
+              {
+                "type": "status",
+                "mode": "apply",
+                "effect": {
+                  "const": "uncanny_off"
+                }
+              }
+            ]
           }
         ]
       },
@@ -5763,41 +5774,45 @@
         "label": "Вдохновение: перебросить с преимуществом",
         "group": "Реакции",
         "description": "Увидел свой бросок — тратишь вдохновение, к выпавшему добавляется вторая кость, берётся лучшая.",
-        "activation": "reaction",
+        "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
-        "trigger": {
-          "on": "*",
-          "window": "sender",
-          "claims": [
-            "advantage"
-          ]
-        },
         "params": [],
-        "steps": [],
-        "self": [
+        "on": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "inspiration"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "вдохновения нет"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "inspiration"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
+            "on": "*",
+            "role": "sender",
+            "phase": "before",
+            "claims": [
+              "advantage"
+            ],
+            "ask": true,
+            "self": [
+              {
+                "type": "compare",
+                "value": {
+                  "tag": "inspiration"
+                },
+                "versus": {
+                  "const": 1
+                },
+                "breakIf": "less",
+                "note": "вдохновения нет"
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "inspiration"
+                },
+                "direction": "subtract",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              }
+            ],
+            "steps": []
           }
         ]
       },
@@ -5805,41 +5820,45 @@
         "label": "Везунчик: очко удачи",
         "group": "Реакции",
         "description": "Увидел свой бросок — тратишь очко удачи, кидаешь ещё одну кость и берёшь лучшую.",
-        "activation": "reaction",
+        "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
-        "trigger": {
-          "on": "*",
-          "window": "sender",
-          "claims": [
-            "advantage"
-          ]
-        },
         "params": [],
-        "steps": [],
-        "self": [
+        "on": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "luck_left"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less",
-            "note": "очки удачи кончились"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "luck_left"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
+            "on": "*",
+            "role": "sender",
+            "phase": "before",
+            "claims": [
+              "advantage"
+            ],
+            "ask": true,
+            "self": [
+              {
+                "type": "compare",
+                "value": {
+                  "tag": "luck_left"
+                },
+                "versus": {
+                  "const": 1
+                },
+                "breakIf": "less",
+                "note": "очки удачи кончились"
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "luck_left"
+                },
+                "direction": "subtract",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              }
+            ],
+            "steps": []
           }
         ]
       },
@@ -5847,20 +5866,24 @@
         "label": "Кость вдохновения наготове",
         "group": "Реакции",
         "description": "Увидел свой бросок — прибавляешь кость вдохновения. Один раз.",
-        "activation": "reaction",
+        "activation": "passive",
         "duration": {
           "kind": "uses",
           "max": 1
         },
-        "trigger": {
-          "on": "*",
-          "window": "sender",
-          "claims": [
-            "bardic"
-          ]
-        },
         "params": [],
-        "steps": []
+        "on": [
+          {
+            "on": "*",
+            "role": "sender",
+            "phase": "before",
+            "claims": [
+              "bardic"
+            ],
+            "ask": true,
+            "steps": []
+          }
+        ]
       },
       "blinded": {
         "label": "Ослеплён",
@@ -7320,43 +7343,44 @@
         "label": "Концентрация",
         "group": "Заклинания",
         "description": "Висит на том, кто держит заклинание. Получил урон — спасбросок Телосложения против 10 или половины урона; провал срывает всё, что держал.",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "temporary"
         },
-        "trigger": {
-          "on": "event:damage",
-          "to": "self"
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "id": "save",
-            "type": "threshold",
-            "roll": {
-              "die": {
-                "constant": "lead_die"
+            "on": "event:damage",
+            "steps": [
+              {
+                "id": "save",
+                "type": "threshold",
+                "roll": {
+                  "die": {
+                    "constant": "lead_die"
+                  },
+                  "bonus": {
+                    "expr": "@отправитель.con_save"
+                  },
+                  "tags": [
+                    "спасбросок",
+                    "телосложение"
+                  ]
+                },
+                "versus": {
+                  "expr": "max(10, floor(@event_amount / 2))"
+                },
+                "successWhen": "atLeast",
+                "continueOn": "fail"
               },
-              "bonus": {
-                "expr": "@отправитель.con_save"
-              },
-              "tags": [
-                "спасбросок",
-                "телосложение"
-              ]
-            },
-            "versus": {
-              "expr": "max(10, floor(@event_amount / 2))"
-            },
-            "successWhen": "atLeast",
-            "continueOn": "fail"
-          },
-          {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "concentration"
-            }
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "concentration"
+                }
+              }
+            ]
           }
         ]
       },
@@ -7364,29 +7388,30 @@
         "label": "Невероятное уклонение: конец",
         "group": "Реакции",
         "description": "Снимает уполовинивание сразу после удара.",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "temporary"
         },
-        "trigger": {
-          "on": "event:damage",
-          "to": "self"
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "uncanny_up"
-            }
-          },
-          {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "uncanny_off"
-            }
+            "on": "event:damage",
+            "steps": [
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "uncanny_up"
+                }
+              },
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "uncanny_off"
+                }
+              }
+            ]
           }
         ]
       },
@@ -7394,93 +7419,95 @@
         "label": "При смерти",
         "group": "Состояния",
         "description": "На нуле хитов: в начале своего хода к20. Десять и выше — успех, иначе провал; единица — два провала, двадцатка — один хит и на ноги.",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "temporary"
         },
-        "trigger": {
-          "on": "moment:turn-start",
-          "condition": {
-            "expr": "@hp_current <= 0"
-          }
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "id": "спас",
-            "type": "threshold",
-            "roll": {
-              "die": {
-                "constant": "lead_die"
+            "on": "moment:turn-start",
+            "if": {
+              "expr": "@hp_current <= 0"
+            },
+            "steps": [
+              {
+                "id": "спас",
+                "type": "threshold",
+                "roll": {
+                  "die": {
+                    "constant": "lead_die"
+                  },
+                  "tags": [
+                    "спасбросок"
+                  ]
+                },
+                "versus": {
+                  "const": 10
+                },
+                "successWhen": "atLeast",
+                "continueOn": "always"
               },
-              "tags": [
-                "спасбросок"
-              ]
-            },
-            "versus": {
-              "const": 10
-            },
-            "successWhen": "atLeast",
-            "continueOn": "always"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "death_ok"
-            },
-            "direction": "add",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "ref": "спас.success"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "death_fail"
-            },
-            "direction": "add",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "ref": "спас.success",
-              "not": true
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "death_fail"
-            },
-            "direction": "add",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "ref": "спас.natural",
-              "atMost": 1
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "hp_current"
-            },
-            "direction": "set",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false,
-            "when": {
-              "ref": "спас.natural",
-              "atLeast": 20
-            }
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "death_ok"
+                },
+                "direction": "add",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false,
+                "when": {
+                  "ref": "спас.success"
+                }
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "death_fail"
+                },
+                "direction": "add",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false,
+                "when": {
+                  "ref": "спас.success",
+                  "not": true
+                }
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "death_fail"
+                },
+                "direction": "add",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false,
+                "when": {
+                  "ref": "спас.natural",
+                  "atMost": 1
+                }
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "hp_current"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false,
+                "when": {
+                  "ref": "спас.natural",
+                  "atLeast": 20
+                }
+              }
+            ]
           }
         ]
       },
@@ -7488,28 +7515,30 @@
         "label": "Падение",
         "group": "Отдых и смерть",
         "description": "Хиты опустились до нуля — «Без сознания» и «При смерти».",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
-        "trigger": {
-          "on": "field:down"
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "type": "status",
-            "mode": "apply",
-            "effect": {
-              "const": "unconscious"
-            }
-          },
-          {
-            "type": "status",
-            "mode": "apply",
-            "effect": {
-              "const": "dying"
-            }
+            "on": "field:down",
+            "steps": [
+              {
+                "type": "status",
+                "mode": "apply",
+                "effect": {
+                  "const": "unconscious"
+                }
+              },
+              {
+                "type": "status",
+                "mode": "apply",
+                "effect": {
+                  "const": "dying"
+                }
+              }
+            ]
           }
         ]
       },
@@ -7517,57 +7546,59 @@
         "label": "Подъём",
         "group": "Отдых и смерть",
         "description": "Хиты снова выше нуля — встаёт, спасброски от смерти сброшены.",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
-        "trigger": {
-          "on": "field:up"
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "unconscious"
-            }
-          },
-          {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "dying"
-            }
-          },
-          {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "stable"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "death_ok"
-            },
-            "direction": "set",
-            "value": {
-              "const": 0
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "death_fail"
-            },
-            "direction": "set",
-            "value": {
-              "const": 0
-            },
-            "targetModifiers": false
+            "on": "field:up",
+            "steps": [
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "unconscious"
+                }
+              },
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "dying"
+                }
+              },
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "stable"
+                }
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "death_ok"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 0
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "death_fail"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 0
+                },
+                "targetModifiers": false
+              }
+            ]
           }
         ]
       },
@@ -7575,28 +7606,30 @@
         "label": "Смерть",
         "group": "Отдых и смерть",
         "description": "Три провала спасбросков от смерти.",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
-        "trigger": {
-          "on": "field:is_dead"
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "dying"
-            }
-          },
-          {
-            "type": "status",
-            "mode": "apply",
-            "effect": {
-              "const": "dead"
-            }
+            "on": "field:is_dead",
+            "steps": [
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "dying"
+                }
+              },
+              {
+                "type": "status",
+                "mode": "apply",
+                "effect": {
+                  "const": "dead"
+                }
+              }
+            ]
           }
         ]
       },
@@ -7604,28 +7637,30 @@
         "label": "Стабилизация",
         "group": "Отдых и смерть",
         "description": "Три успеха спасбросков от смерти.",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
-        "trigger": {
-          "on": "field:is_stable"
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "dying"
-            }
-          },
-          {
-            "type": "status",
-            "mode": "apply",
-            "effect": {
-              "const": "stable"
-            }
+            "on": "field:is_stable",
+            "steps": [
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "dying"
+                }
+              },
+              {
+                "type": "status",
+                "mode": "apply",
+                "effect": {
+                  "const": "stable"
+                }
+              }
+            ]
           }
         ]
       },
@@ -7633,46 +7668,48 @@
         "label": "Непоколебимая стойкость",
         "group": "Черты",
         "description": "Раз до долгого отдыха: упал до нуля — остаёшься с одним хитом.",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
-        "trigger": {
-          "on": "field:down"
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "type": "compare",
-            "value": {
-              "tag": "relentless_left"
-            },
-            "versus": {
-              "const": 1
-            },
-            "breakIf": "less"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "hp_current"
-            },
-            "direction": "set",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "relentless_left"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
+            "on": "field:down",
+            "steps": [
+              {
+                "type": "compare",
+                "value": {
+                  "tag": "relentless_left"
+                },
+                "versus": {
+                  "const": 1
+                },
+                "breakIf": "less"
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "hp_current"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "relentless_left"
+                },
+                "direction": "subtract",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              }
+            ]
           }
         ]
       },
@@ -7680,245 +7717,247 @@
         "label": "Долгий отдых",
         "group": "Отдых и смерть",
         "description": "Хиты и ячейки полные, половина костей хитов, минус уровень истощения, ресурсы долгого отдыха.",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
-        "trigger": {
-          "on": "moment:long-rest"
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "type": "apply",
-            "target": {
-              "tag": "hp_current"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@получатель.hp_max"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "hp_temp"
-            },
-            "direction": "set",
-            "value": {
-              "const": 0
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "exhaustion"
-            },
-            "direction": "subtract",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "hit_dice_left"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "max(1, floor(@получатель.level / 2))"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "death_ok"
-            },
-            "direction": "set",
-            "value": {
-              "const": 0
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "death_fail"
-            },
-            "direction": "set",
-            "value": {
-              "const": 0
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "slots_1"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@получатель.slots_1_max"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "slots_2"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@получатель.slots_2_max"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "slots_3"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@получатель.slots_3_max"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "slots_4"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@получатель.slots_4_max"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "slots_5"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@получатель.slots_5_max"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "slots_6"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@получатель.slots_6_max"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "slots_7"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@получатель.slots_7_max"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "slots_8"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@получатель.slots_8_max"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "slots_9"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@получатель.slots_9_max"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "rages_left"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@получатель.rages_max"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "bardic_left"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@получатель.bardic_max"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "lay_on_hands_left"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@получатель.lay_on_hands_max"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "sorcery_left"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@получатель.sorcery_max"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "luck_left"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@получатель.luck_max"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "relentless_left"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@получатель.relentless_max"
-            },
-            "targetModifiers": false
+            "on": "moment:long-rest",
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "hp_current"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.hp_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "hp_temp"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 0
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "exhaustion"
+                },
+                "direction": "subtract",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "hit_dice_left"
+                },
+                "direction": "add",
+                "value": {
+                  "expr": "max(1, floor(@получатель.level / 2))"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "death_ok"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 0
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "death_fail"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 0
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "slots_1"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.slots_1_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "slots_2"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.slots_2_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "slots_3"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.slots_3_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "slots_4"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.slots_4_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "slots_5"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.slots_5_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "slots_6"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.slots_6_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "slots_7"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.slots_7_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "slots_8"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.slots_8_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "slots_9"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.slots_9_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "rages_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.rages_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "bardic_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.bardic_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "lay_on_hands_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.lay_on_hands_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "sorcery_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.sorcery_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "luck_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.luck_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "relentless_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.relentless_max"
+                },
+                "targetModifiers": false
+              }
+            ]
           }
         ]
       },
@@ -7926,69 +7965,71 @@
         "label": "Короткий отдых",
         "group": "Отдых и смерть",
         "description": "Возвращает ресурсы короткого отдыха. Кости хитов тратятся отдельной кнопкой.",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
-        "trigger": {
-          "on": "moment:short-rest"
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "type": "apply",
-            "target": {
-              "tag": "ki_left"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@получатель.ki_max"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "channel_left"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@получатель.channel_max"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "second_wind_left"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@получатель.second_wind_max"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "action_surge_left"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@получатель.action_surge_max"
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "superiority_left"
-            },
-            "direction": "set",
-            "value": {
-              "expr": "@получатель.superiority_max"
-            },
-            "targetModifiers": false
+            "on": "moment:short-rest",
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "ki_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.ki_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "channel_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.channel_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "second_wind_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.second_wind_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "action_surge_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.action_surge_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "superiority_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.superiority_max"
+                },
+                "targetModifiers": false
+              }
+            ]
           }
         ]
       },
@@ -7996,49 +8037,51 @@
         "label": "Повторный спасбросок: паралич",
         "group": "Состояния",
         "description": "В конце своего хода цель повторяет спасбросок против запомненной сложности; успех снимает состояние.",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "temporary"
         },
-        "trigger": {
-          "on": "moment:turn-end"
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "id": "save",
-            "type": "threshold",
-            "roll": {
-              "die": {
-                "constant": "lead_die"
+            "on": "moment:turn-end",
+            "steps": [
+              {
+                "id": "save",
+                "type": "threshold",
+                "roll": {
+                  "die": {
+                    "constant": "lead_die"
+                  },
+                  "bonus": {
+                    "expr": "@отправитель.wis_save"
+                  },
+                  "tags": [
+                    "спасбросок",
+                    "мудрость"
+                  ]
+                },
+                "versus": {
+                  "ref": "worn.carry"
+                },
+                "successWhen": "atLeast",
+                "continueOn": "success"
               },
-              "bonus": {
-                "expr": "@отправитель.wis_save"
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "paralyzed"
+                }
               },
-              "tags": [
-                "спасбросок",
-                "мудрость"
-              ]
-            },
-            "versus": {
-              "ref": "worn.carry"
-            },
-            "successWhen": "atLeast",
-            "continueOn": "success"
-          },
-          {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "paralyzed"
-            }
-          },
-          {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "repeat_wis_paralyzed"
-            }
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "repeat_wis_paralyzed"
+                }
+              }
+            ]
           }
         ]
       },
@@ -8046,49 +8089,51 @@
         "label": "Повторный спасбросок: страх",
         "group": "Состояния",
         "description": "В конце своего хода цель повторяет спасбросок против запомненной сложности; успех снимает состояние.",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "temporary"
         },
-        "trigger": {
-          "on": "moment:turn-end"
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "id": "save",
-            "type": "threshold",
-            "roll": {
-              "die": {
-                "constant": "lead_die"
+            "on": "moment:turn-end",
+            "steps": [
+              {
+                "id": "save",
+                "type": "threshold",
+                "roll": {
+                  "die": {
+                    "constant": "lead_die"
+                  },
+                  "bonus": {
+                    "expr": "@отправитель.wis_save"
+                  },
+                  "tags": [
+                    "спасбросок",
+                    "мудрость"
+                  ]
+                },
+                "versus": {
+                  "ref": "worn.carry"
+                },
+                "successWhen": "atLeast",
+                "continueOn": "success"
               },
-              "bonus": {
-                "expr": "@отправитель.wis_save"
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "frightened"
+                }
               },
-              "tags": [
-                "спасбросок",
-                "мудрость"
-              ]
-            },
-            "versus": {
-              "ref": "worn.carry"
-            },
-            "successWhen": "atLeast",
-            "continueOn": "success"
-          },
-          {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "frightened"
-            }
-          },
-          {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "repeat_wis_frightened"
-            }
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "repeat_wis_frightened"
+                }
+              }
+            ]
           }
         ]
       },
@@ -8096,49 +8141,51 @@
         "label": "Повторный спасбросок: замедление",
         "group": "Состояния",
         "description": "В конце своего хода цель повторяет спасбросок против запомненной сложности; успех снимает состояние.",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "temporary"
         },
-        "trigger": {
-          "on": "moment:turn-end"
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "id": "save",
-            "type": "threshold",
-            "roll": {
-              "die": {
-                "constant": "lead_die"
+            "on": "moment:turn-end",
+            "steps": [
+              {
+                "id": "save",
+                "type": "threshold",
+                "roll": {
+                  "die": {
+                    "constant": "lead_die"
+                  },
+                  "bonus": {
+                    "expr": "@отправитель.wis_save"
+                  },
+                  "tags": [
+                    "спасбросок",
+                    "мудрость"
+                  ]
+                },
+                "versus": {
+                  "ref": "worn.carry"
+                },
+                "successWhen": "atLeast",
+                "continueOn": "success"
               },
-              "bonus": {
-                "expr": "@отправитель.wis_save"
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "slowed"
+                }
               },
-              "tags": [
-                "спасбросок",
-                "мудрость"
-              ]
-            },
-            "versus": {
-              "ref": "worn.carry"
-            },
-            "successWhen": "atLeast",
-            "continueOn": "success"
-          },
-          {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "slowed"
-            }
-          },
-          {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "repeat_wis_slowed"
-            }
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "repeat_wis_slowed"
+                }
+              }
+            ]
           }
         ]
       },
@@ -8146,49 +8193,51 @@
         "label": "Повторный спасбросок: слепота",
         "group": "Состояния",
         "description": "В конце своего хода цель повторяет спасбросок против запомненной сложности; успех снимает состояние.",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "temporary"
         },
-        "trigger": {
-          "on": "moment:turn-end"
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "id": "save",
-            "type": "threshold",
-            "roll": {
-              "die": {
-                "constant": "lead_die"
+            "on": "moment:turn-end",
+            "steps": [
+              {
+                "id": "save",
+                "type": "threshold",
+                "roll": {
+                  "die": {
+                    "constant": "lead_die"
+                  },
+                  "bonus": {
+                    "expr": "@отправитель.con_save"
+                  },
+                  "tags": [
+                    "спасбросок",
+                    "телосложение"
+                  ]
+                },
+                "versus": {
+                  "ref": "worn.carry"
+                },
+                "successWhen": "atLeast",
+                "continueOn": "success"
               },
-              "bonus": {
-                "expr": "@отправитель.con_save"
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "blinded"
+                }
               },
-              "tags": [
-                "спасбросок",
-                "телосложение"
-              ]
-            },
-            "versus": {
-              "ref": "worn.carry"
-            },
-            "successWhen": "atLeast",
-            "continueOn": "success"
-          },
-          {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "blinded"
-            }
-          },
-          {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "repeat_con_blinded"
-            }
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "repeat_con_blinded"
+                }
+              }
+            ]
           }
         ]
       },
@@ -8196,49 +8245,51 @@
         "label": "Повторный спасбросок: путы",
         "group": "Состояния",
         "description": "В конце своего хода цель повторяет спасбросок против запомненной сложности; успех снимает состояние.",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "temporary"
         },
-        "trigger": {
-          "on": "moment:turn-end"
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "id": "save",
-            "type": "threshold",
-            "roll": {
-              "die": {
-                "constant": "lead_die"
+            "on": "moment:turn-end",
+            "steps": [
+              {
+                "id": "save",
+                "type": "threshold",
+                "roll": {
+                  "die": {
+                    "constant": "lead_die"
+                  },
+                  "bonus": {
+                    "expr": "@отправитель.str_save"
+                  },
+                  "tags": [
+                    "спасбросок",
+                    "сила"
+                  ]
+                },
+                "versus": {
+                  "ref": "worn.carry"
+                },
+                "successWhen": "atLeast",
+                "continueOn": "success"
               },
-              "bonus": {
-                "expr": "@отправитель.str_save"
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "restrained"
+                }
               },
-              "tags": [
-                "спасбросок",
-                "сила"
-              ]
-            },
-            "versus": {
-              "ref": "worn.carry"
-            },
-            "successWhen": "atLeast",
-            "continueOn": "success"
-          },
-          {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "restrained"
-            }
-          },
-          {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "repeat_str_restrained"
-            }
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "repeat_str_restrained"
+                }
+              }
+            ]
           }
         ]
       },
@@ -8246,80 +8297,82 @@
         "label": "Начало боя",
         "group": "Правила комнаты",
         "description": "Бой пошёл: стоимость действий считается, у всех полный запас.",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
-        "trigger": {
-          "on": "moment:combat-start"
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "type": "apply",
-            "target": {
-              "tag": "battle"
-            },
-            "direction": "set",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "set",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_bonus"
-            },
-            "direction": "set",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_reaction"
-            },
-            "direction": "set",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_once"
-            },
-            "direction": "set",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_attacks"
-            },
-            "direction": "set",
-            "value": {
-              "const": 0
-            },
-            "targetModifiers": false
+            "on": "moment:combat-start",
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "battle"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "turn_action"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "turn_bonus"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "turn_reaction"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "turn_once"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "turn_attacks"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 0
+                },
+                "targetModifiers": false
+              }
+            ]
           }
         ]
       },
@@ -8327,25 +8380,27 @@
         "label": "Конец боя",
         "group": "Правила комнаты",
         "description": "Вне боя действия не считаются.",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
-        "trigger": {
-          "on": "moment:combat-end"
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "type": "apply",
-            "target": {
-              "tag": "battle"
-            },
-            "direction": "set",
-            "value": {
-              "const": 0
-            },
-            "targetModifiers": false
+            "on": "moment:combat-end",
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "battle"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 0
+                },
+                "targetModifiers": false
+              }
+            ]
           }
         ]
       },
@@ -8353,69 +8408,71 @@
         "label": "Начало хода",
         "group": "Правила комнаты",
         "description": "Действие, бонусное, реакция и «раз за ход» — снова по одному.",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
-        "trigger": {
-          "on": "moment:turn-start"
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "set",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_bonus"
-            },
-            "direction": "set",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_reaction"
-            },
-            "direction": "set",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_once"
-            },
-            "direction": "set",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_attacks"
-            },
-            "direction": "set",
-            "value": {
-              "const": 0
-            },
-            "targetModifiers": false
+            "on": "moment:turn-start",
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "turn_action"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "turn_bonus"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "turn_reaction"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "turn_once"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "turn_attacks"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 0
+                },
+                "targetModifiers": false
+              }
+            ]
           }
         ]
       },

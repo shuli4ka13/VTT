@@ -38,12 +38,16 @@ function emitsIn(system: System): { owner: Effect; step: Loose }[] {
   for (const effect of Object.values(system.effects ?? {})) {
     visit(effect, effect.steps);
     visit(effect, effect.self);
+    for (const handler of effect.on ?? []) {
+      visit(effect, handler.steps);
+      visit(effect, handler.self);
+    }
   }
   return out;
 }
 
 const readsAmount = (effect: Effect): boolean =>
-  /event[._](amount|incoming)/.test(JSON.stringify([effect.steps ?? [], effect.self ?? []]));
+  /event[._](amount|incoming)/.test(JSON.stringify([effect.steps ?? [], effect.self ?? [], effect.on ?? []]));
 
 function sourceTable(system: System, owner: Effect, ref: Loose): string | undefined {
   if (typeof ref.param === 'string') {

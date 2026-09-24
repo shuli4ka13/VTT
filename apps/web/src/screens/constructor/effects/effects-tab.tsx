@@ -6,11 +6,11 @@ import { Columns, List, ListItem } from '../../../ui/layout.tsx';
 import { useLookupPane } from '../lookup-panel.tsx';
 import { Button, Empty } from '../../../ui/primitives.tsx';
 import { PreviewPanel } from './preview-panel.tsx';
-import { LAUNCH_KINDS } from './words.ts';
+import { CREATE_KINDS } from './words.ts';
 import { EffectEditor } from './effect-editor.tsx';
 import { RoomRules } from './room-rules.tsx';
 import { newCalled } from '../factory.ts';
-import { launchOf, activationFor, LAUNCHES } from '@vtt/engine/model/effect-kinds';
+import { launchOf, LAUNCHES } from '@vtt/engine/model/effect-kinds';
 import type { LaunchKind } from '@vtt/engine/model/effect-kinds';
 import { calledOf } from '@vtt/engine/engine/effects';
 import type { Effect } from '@vtt/schema';
@@ -33,13 +33,13 @@ export function EffectsTab() {
   };
 
   const addTo = (block: string) => {
-    const made = newEffect(system, activationFor({ kind: 'manual', moment: 'after', ask: false }));
+    const made = newEffect(system, 'manual');
     editSystem(draft => { draft.effects[made.key] = { ...made.value, group: block }; });
     pick({ activeEffectId: made.key });
   };
 
   const add = (kind: LaunchKind) => {
-    const made = newEffect(system, activationFor({ kind, moment: 'after', ask: false }));
+    const made = newEffect(system, kind);
     editSystem(draft => { draft.effects[made.key] = made.value; });
     pick({ activeEffectId: made.key });
   };
@@ -85,7 +85,7 @@ export function EffectsTab() {
 
             <div className="stack stack--tight">
               <span className="field__label">Создать с нуля</span>
-              {LAUNCH_KINDS.map(kind => (
+              {CREATE_KINDS.map(kind => (
                 <Button key={kind.key} size="sm" wide onClick={() => add(kind.key)} title={kind.title}>
                   + {kind.label.toLowerCase()}
                 </Button>
@@ -114,6 +114,7 @@ export function EffectsTab() {
 
 const metaOf = (effect: Effect, called: boolean) => {
   const kind = called ? 'вызывают другие' : LAUNCHES[launchOf(effect).kind].label;
-  const idle = !effect.steps?.length && !effect.self?.length && !effect.modifiers?.length;
+  const idle = !effect.steps?.length && !effect.self?.length && !effect.modifiers?.length
+    && !(effect.on ?? []).some(handler => handler.steps?.length || handler.self?.length || handler.claims?.length);
   return idle ? `${kind.toLowerCase()} · ничего не делает` : kind.toLowerCase();
 };

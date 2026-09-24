@@ -157,7 +157,8 @@ describe('контракты клиент ↔ сервер', () => {
     expect(api.answerIntent.safeParse({ roomId: 'r', pendingId: 'p1', chosen: [] }).success).toBe(true);
     expect(api.answerIntent.safeParse({ roomId: 'r', pendingId: '', chosen: [] }).success).toBe(false);
     expect(api.clientMessage.safeParse({ type: 'room:answer', intent: { roomId: 'r', pendingId: 'p1', chosen: ['shield'] } }).success).toBe(true);
-    expect(W.activation.safeParse('reaction').success).toBe(true);
+    expect(W.activation.safeParse('passive').success).toBe(true);
+    expect(W.activation.safeParse('reaction').success).toBe(false);
   });
 
   it('пустое действие или пустая цель не проходят', () => {
@@ -204,14 +205,14 @@ describe('ссылки слотов не теряются при разборе'
     }
   });
 
-  it('условие триггера доезжает целиком — регрессия «ответка молчит»', () => {
+  it('условие «когда» доезжает целиком — регрессия «ответка молчит»', () => {
     const thorns = SAMPLE_SYSTEMS
       .flatMap((s: { effects: Record<string, unknown> }) => Object.values(s.effects))
-      .find((e: any) => e?.trigger?.condition);
-    expect(thorns, 'в образцах есть эффект с условием триггера').toBeTruthy();
+      .find((e: any) => e?.on?.some((h: any) => h.if));
+    expect(thorns, 'в образцах есть «когда» с условием').toBeTruthy();
 
     const parsed = W.effect.parse(thorns);
-    expect((parsed as any).trigger.condition).toEqual((thorns as any).trigger.condition);
+    expect((parsed as any).on).toEqual((thorns as any).on);
   });
 });
 

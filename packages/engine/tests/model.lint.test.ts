@@ -39,12 +39,12 @@ group('линт: висячие ссылки называются словами
   });
 
   test('слушатель эффекта, которого нет', () => {
-    const system = withEffect('t', { activation: 'triggered', trigger: { on: 'event:нету' } });
+    const system = withEffect('t', { activation: 'passive', on: [{ on: 'event:нету', to: 'other', steps: [] }] });
     ok(errorTexts(system).some(t => t.includes('общего эффекта «нету»')), errorTexts(system).join('|'));
   });
 
   test('слушатель эффекта, которого нет', () => {
-    const system = withEffect('t', { activation: 'triggered', trigger: { on: 'нет_эффекта' } });
+    const system = withEffect('t', { activation: 'passive', on: [{ on: 'нет_эффекта', to: 'other', steps: [] }] });
     ok(errorTexts(system).some(t => t.includes('эффекта «нет_эффекта»')), errorTexts(system).join('|'));
   });
 
@@ -94,9 +94,9 @@ group('линт: висячие ссылки называются словами
 
   test('условие срабатывания смотрит на шаг слушаемого эффекта', () => {
     const system = withEffect('strike', { steps: [{ id: 'hit', type: 'threshold', roll: { die: { constant: 'd20' } }, versus: { const: 10 } }] as Step[] });
-    system.effects.thorns = { label: 'Шипы', activation: 'triggered', trigger: { on: 'strike', condition: { ref: 'hit.success' } }, steps: [] } as never;
+    system.effects.thorns = { label: 'Шипы', activation: 'passive', on: [{ on: 'strike', to: 'other', if: { ref: 'hit.success' }, steps: [] }] } as never;
     eq(errorTexts(system).join(''), '');
-    system.effects.thorns = { label: 'Шипы', activation: 'triggered', trigger: { on: 'strike', condition: { ref: 'miss.success' } }, steps: [] } as never;
+    system.effects.thorns = { label: 'Шипы', activation: 'passive', on: [{ on: 'strike', to: 'other', if: { ref: 'miss.success' }, steps: [] }] } as never;
     ok(errorTexts(system).some(t => t.includes('нет шага «miss»')), errorTexts(system).join('|'));
   });
 
@@ -126,19 +126,20 @@ group('линт: чей лист в шагах отправителя', () => {
 });
 
 group('линт: слушатели, круги, потребности', () => {
-  test('срабатывающий сам эффект без слушателя — ошибка человеческим текстом', () => {
-    const system = withEffect('t', { activation: 'triggered', trigger: { on: '' } });
+  test('«когда» без «что случилось» — ошибка человеческим текстом', () => {
+    const system = withEffect('t', { activation: 'passive', on: [{ on: '', to: 'other', steps: [] }] });
     const [problem] = errorsOf(lintSystem(system));
-    ok(problem?.text.includes('не сказано на что'), problem?.text);
-    eq(problem?.where.part, 'trigger');
-    const noTrigger = withEffect('r', { activation: 'reaction' });
-    ok(errorTexts(noTrigger).some(t => t.includes('не сказано на что')));
+    ok(problem?.text.includes('не сказано, когда срабатывает'), problem?.text);
+    eq(problem?.where.part, 'on');
+    eq(problem?.where.handler, 0);
+    const noTrigger = withEffect('r', { activation: 'passive' , on: [{ on: '', phase: 'before', ask: true, steps: [] }] });
+    ok(errorTexts(noTrigger).some(t => t.includes('не сказано, когда срабатывает')));
   });
 
   test('вызовы по кругу: эффект зовёт тот, на который сам и срабатывает', () => {
     const system = withEffect('loop', {
-      activation: 'triggered', trigger: { on: 'event:damage' },
-      steps: [{ type: 'emit', event: 'damage' }] as Step[],
+      activation: 'passive',
+      on: [{ on: 'event:damage', to: 'other', steps: [{ type: 'emit', event: 'damage' }] as Step[] }],
     });
     system.effects.damage = { label: 'Урон', params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }], steps: [] } as never;
     const found = errorTexts(system).find(t => t.includes('по кругу'));
@@ -235,12 +236,12 @@ group('ссылки и слушатели', () => {
 
 group('линт: моменты хода', () => {
   test('известный момент — законный слушатель', () => {
-    const system = withEffect('яд', { activation: 'triggered', trigger: { on: 'moment:turn-start' }, steps: [] });
+    const system = withEffect('яд', { activation: 'passive', on: [{ on: 'moment:turn-start', steps: [] }] });
     eq(errorsOf(lintSystem(system)).map(p => p.text).join(''), '');
   });
 
   test('выдуманный момент назван, и список известных показан', () => {
-    const system = withEffect('яд', { activation: 'triggered', trigger: { on: 'moment:когда-нибудь' }, steps: [] });
+    const system = withEffect('яд', { activation: 'passive', on: [{ on: 'moment:когда-нибудь', steps: [] }] });
     const [problem] = errorsOf(lintSystem(system));
     ok(problem?.text.includes('«когда-нибудь»'), problem?.text);
     ok(problem?.text.includes('turn-start'), problem?.text);

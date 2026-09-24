@@ -4,8 +4,7 @@ import type {
   Activation, DurationKind, Stacking, WornEffect,
 } from '../model/types.ts';
 
-const PIPELINE_ACTIVATIONS: Activation[] = ['manual', 'triggered', 'reaction'];
-const ACTIVATIONS: Activation[] = [...PIPELINE_ACTIVATIONS, 'passive'];
+const ACTIVATIONS: Activation[] = ['manual', 'passive'];
 const DURATIONS: DurationKind[] = ['permanent', 'temporary', 'uses', 'rounds', 'turns', 'scene'];
 const STACKINGS: Stacking[] = ['ignore', 'refresh', 'stack'];
 
@@ -21,8 +20,7 @@ export const durationOf = (effect: Effect | null | undefined): DurationKind =>
 export const stackingOf = (effect: Effect | null | undefined): Stacking =>
   pick(effect && effect.stacking, STACKINGS, 'ignore');
 
-export const isPipeline = (effect: Effect | null | undefined): boolean =>
-  PIPELINE_ACTIVATIONS.includes(activationOf(effect));
+export const isPipeline = (effect: Effect | null | undefined): boolean => activationOf(effect) === 'manual';
 
 export const effectsOf = (system: System): [string, Effect][] =>
   Object.entries(system.effects || {});

@@ -3,14 +3,19 @@ import type { System } from '../../../packages/engine/src/model/types.ts';
 
 type Loose = Record<string, unknown>;
 
+const chainsOf = (effect: System['effects'][string]) => [
+  effect.steps ?? [], effect.self ?? [],
+  ...(effect.on ?? []).flatMap(handler => [handler.steps ?? [], handler.self ?? []]),
+];
+
 export function unifyAmounts(system: System): System {
   const touched = Object.values(system.effects ?? {}).some(effect =>
-    [...(effect.steps ?? []), ...(effect.self ?? [])].some(step => asOneFormula(step) !== null));
+    chainsOf(effect).flat().some(step => asOneFormula(step) !== null));
   if (!touched) return system;
 
   const next = JSON.parse(JSON.stringify(system)) as System;
   for (const effect of Object.values(next.effects ?? {})) {
-    for (const list of [effect.steps ?? [], effect.self ?? []]) {
+    for (const list of chainsOf(effect)) {
       for (const step of list) {
         const one = asOneFormula(step);
         if (!one) continue;

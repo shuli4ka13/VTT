@@ -180,7 +180,7 @@ export const rollModifier = z.object({
 
 export const modifier = z.discriminatedUnion('kind', [valueModifier, rollModifier]);
 
-export const activation = z.enum(['manual', 'triggered', 'passive', 'reaction']);
+export const activation = z.enum(['manual', 'passive']);
 export const durationKind = z.enum(['permanent', 'temporary', 'uses', 'rounds', 'turns', 'scene']);
 export const stacking = z.enum(['ignore', 'refresh', 'stack']);
 
@@ -235,17 +235,16 @@ export const systemEvent = z.object({
   receive: z.array(step).optional(),
 }).passthrough();
 
-export const trigger = z.object({
+export const handler = z.object({
   on: z.string(),
-  when: z.string().optional(),
-  condition: slotRef.nullable().optional(),
-
-  to: z.enum(['sender', 'self', 'target']).optional(),
-
-  direction: z.enum(['in', 'out']).optional(),
-
-  window: z.enum(['sender', 'target', 'after']).optional(),
+  role: z.enum(['target', 'sender']).optional(),
+  phase: z.enum(['before', 'after']).optional(),
+  ask: z.boolean().optional(),
+  to: z.enum(['self', 'other']).optional(),
+  if: slotRef.nullable().optional(),
   claims: z.array(z.string().min(1)).optional(),
+  self: z.array(step).optional(),
+  steps: z.array(step).optional(),
 }).passthrough();
 
 export const effect = z.object({
@@ -268,7 +267,7 @@ export const effect = z.object({
 
   self: z.array(step).optional(),
   modifiers: z.array(modifier).optional(),
-  trigger: trigger.optional(),
+  on: z.array(handler).optional(),
 }).passthrough();
 
 export const bindingArg = z.union([
@@ -407,7 +406,7 @@ export type FieldOption = z.infer<typeof fieldOption>;
 export type Guard = z.infer<typeof guard>;
 export type Scale = z.infer<typeof scale>;
 export type SystemEvent = z.infer<typeof systemEvent>;
-export type Trigger = z.infer<typeof trigger>;
+export type Handler = z.infer<typeof handler>;
 export type Effect = z.infer<typeof effect>;
 export type Binding = z.infer<typeof binding>;
 export type BindingArg = z.infer<typeof bindingArg>;

@@ -7,7 +7,7 @@ import type { System } from '@vtt/schema';
 
 const broken = (): System => {
   const system = emptySystem();
-  system.effects.thorns = { label: 'Шипы', activation: 'triggered', trigger: { on: '' }, steps: [] } as never;
+  system.effects.thorns = { label: 'Шипы', activation: 'passive', on: [{ on: '', steps: [] }] } as never;
   system.effects.hit = {
     label: 'Удар', activation: 'manual',
     steps: [{ type: 'apply', target: { tag: 'нет_поля' }, value: { const: 1 } }],

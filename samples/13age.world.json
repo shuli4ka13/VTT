@@ -557,58 +557,60 @@
         "label": "Начало боя",
         "group": "Правила комнаты",
         "description": "Бой пошёл: траты хода считаются, у всех полный запас.",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
-        "trigger": {
-          "on": "moment:combat-start"
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "type": "apply",
-            "target": {
-              "tag": "battle"
-            },
-            "direction": "set",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_standard"
-            },
-            "direction": "set",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_move"
-            },
-            "direction": "set",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_quick"
-            },
-            "direction": "set",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
+            "on": "moment:combat-start",
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "battle"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "turn_standard"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "turn_move"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "turn_quick"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              }
+            ]
           }
         ]
       },
@@ -616,25 +618,27 @@
         "label": "Конец боя",
         "group": "Правила комнаты",
         "description": "Вне боя действия не считаются.",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
-        "trigger": {
-          "on": "moment:combat-end"
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "type": "apply",
-            "target": {
-              "tag": "battle"
-            },
-            "direction": "set",
-            "value": {
-              "const": 0
-            },
-            "targetModifiers": false
+            "on": "moment:combat-end",
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "battle"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 0
+                },
+                "targetModifiers": false
+              }
+            ]
           }
         ]
       },
@@ -642,47 +646,49 @@
         "label": "Начало хода",
         "group": "Правила комнаты",
         "description": "Траты хода — снова полные.",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
-        "trigger": {
-          "on": "moment:turn-start"
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "type": "apply",
-            "target": {
-              "tag": "turn_standard"
-            },
-            "direction": "set",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_move"
-            },
-            "direction": "set",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_quick"
-            },
-            "direction": "set",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
+            "on": "moment:turn-start",
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "turn_standard"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "turn_move"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "turn_quick"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              }
+            ]
           }
         ]
       },

@@ -17,7 +17,7 @@ describe('пути схемы переводятся в слова экрана'
 
   it('поле по номеру — с подписью, срабатывание — словами', () => {
     expect(pathWords('fields.0.label: Too small', system)).toBe('поле «Хиты» · название: пусто');
-    expect(pathWords('effects.hit.trigger.on: Invalid input', system)).toBe('эффект «Удар» · что слушает · что слушает: не то значение');
+    expect(pathWords('effects.hit.on.0.on: Invalid input', system)).toBe('эффект «Удар» · «когда» №1 · что случилось: не то значение');
   });
 
   it('незнакомое — как есть, но с переводом сообщения', () => {

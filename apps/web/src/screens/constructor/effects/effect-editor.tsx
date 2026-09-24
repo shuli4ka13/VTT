@@ -1,17 +1,17 @@
 import { useWorld } from '../../../store/world.ts';
-import { newTrigger, payStep } from '../factory.ts';
-import { Card, CardHead, Field, Input, Select, DangerButton, LabelInput } from '../../../ui/primitives.tsx';
+import { newHandler, payStep } from '../factory.ts';
+import { Card, CardHead, Field, Input, Select, DangerButton, LabelInput, Button, Empty } from '../../../ui/primitives.tsx';
 import { FieldRow } from '../../../ui/field-row.tsx';
 import { useOpened } from '../../../store/opened.ts';
 import { ModifiersEditor } from '../modifiers.tsx';
 import { LAUNCH_KINDS, launchHint } from './words.ts';
-import { LaunchCard } from './launch-card.tsx';
+import { HandlerCard } from './handler-card.tsx';
 import { Chain, CostPick, type Lane } from './chain.tsx';
 import { BlockPick } from '../block-pick.tsx';
 import { Extras } from './cards/extras.tsx';
 import { ParamsEditor } from './params-editor.tsx';
 import { launchOf, activationFor } from '@vtt/engine/model/effect-kinds';
-import type { System, Effect } from '@vtt/schema';
+import type { System, Effect, Step } from '@vtt/schema';
 
 const DURATIONS = [
   ['permanent', 'постоянно'],
@@ -54,7 +54,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
   const edit = (change: (draft: Effect) => void) => editEffect(id, change);
 
   const launch = launchOf(effect);
-  const pipeline = launch.kind !== 'passive';
+  const pipeline = launch.kind === 'manual';
 
   const moveLane = (indices: number[], to: Lane) => {
     const fromList = (to === 'sender' ? effect.steps : effect.self) ?? [];
@@ -64,18 +64,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
     shiftLane(indices, to);
   };
 
-  const shiftLane = (indices: number[], to: Lane) => edit(draft => {
-    const fromList = (to === 'sender' ? draft.steps : draft.self) ?? [];
-    const moved = indices.map(i => fromList[i]!).filter(Boolean);
-    const rest = fromList.filter((_, i) => !indices.includes(i));
-    if (to === 'sender') {
-      draft.steps = rest;
-      draft.self = [...(draft.self ?? []), ...moved];
-    } else {
-      if (rest.length) draft.self = rest; else delete draft.self;
-      draft.steps = [...moved, ...(draft.steps ?? [])];
-    }
-  });
+  const shiftLane = (indices: number[], to: Lane) => edit(draft => { shiftBetween(draft, indices, to); });
 
   return (
     <>
@@ -102,14 +91,11 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
               key: 'launch', label: 'Как запускается', width: 190, hint: launchHint(launch.kind),
               node: (
                 <Select
-                  value={launch.kind}
+                  value={pipeline ? 'manual' : 'passive'}
                   options={LAUNCH_KINDS.map(k => [k.key, k.label] as const)}
                   onChange={next => edit(draft => {
-                    const activation = activationFor({ ...launchOf(draft), kind: next });
-                    draft.activation = activation;
-                    if (next === 'passive') draft.modifiers ??= [];
-                    else draft.steps ??= [];
-                    if (next === 'auto') draft.trigger ??= newTrigger(system, activation);
+                    draft.activation = activationFor({ ...launchOf(draft), kind: next });
+                    if (next === 'manual') draft.steps ??= [];
                   })}
                 />
               ),
@@ -164,8 +150,6 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
         ) : null}
       </Card>
 
-      {launch.kind === 'auto' ? <LaunchCard id={id} effect={effect} system={system} edit={edit} /> : null}
-
       {pipeline ? <ParamsEditor effect={effect} system={system} onEdit={edit} /> : null}
 
       {pipeline ? (
@@ -178,13 +162,90 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
           />
         </>
       ) : (
-        <ModifiersEditor
-          system={system}
-          editSystem={editSystem}
-          modifiers={effect.modifiers ?? []}
-          onEdit={change => edit(draft => { change(draft.modifiers ??= []); })}
-        />
+        <>
+          <ModifiersEditor
+            system={system}
+            editSystem={editSystem}
+            title="Пока висит — правит"
+            empty={{ title: 'Ничего не правит', hint: 'Правки действуют, пока эффект висит: бонус к полю, помеха на бросок.' }}
+            modifiers={effect.modifiers ?? []}
+            onEdit={change => edit(draft => { change(draft.modifiers ??= []); })}
+          />
+          <Handlers id={id} effect={effect} system={system} edit={edit} />
+        </>
       )}
+    </>
+  );
+}
+
+type Holder = { steps?: Step[]; self?: Step[] };
+
+const shiftBetween = (holder: Holder, indices: number[], to: Lane): void => {
+  const fromList = (to === 'sender' ? holder.steps : holder.self) ?? [];
+  const moved = indices.map(i => fromList[i]!).filter(Boolean);
+  const rest = fromList.filter((_, i) => !indices.includes(i));
+  if (to === 'sender') {
+    holder.steps = rest;
+    holder.self = [...(holder.self ?? []), ...moved];
+  } else {
+    if (rest.length) holder.self = rest; else delete holder.self;
+    holder.steps = [...moved, ...(holder.steps ?? [])];
+  }
+};
+
+function Handlers({ id, effect, system, edit }: {
+  id: string; effect: Effect; system: System; edit: (change: (draft: Effect) => void) => void;
+}) {
+  const list = effect.on ?? [];
+  return (
+    <>
+      <div className="inline">
+        <span className="screen-title" style={{ fontSize: 'var(--fs-5)' }}>Когда</span>
+        <span className="spacer" />
+        <Button size="sm" onClick={() => edit(draft => { (draft.on ??= []).push(newHandler(system)); })}>+ когда</Button>
+      </div>
+      {list.length === 0 ? (
+        <Empty title="Ни на что не отзывается" hint="«Когда» — что случилось (начался ход, пришёл урон, по мне бросают) и что эффект делает в ответ." />
+      ) : null}
+      {list.map((handler, index) => {
+        const carrier = { ...effect, label: `${effect.label ?? ''} · когда ${index + 1}`, steps: handler.steps ?? [], self: handler.self } as Effect;
+        const editCarrier = (change: (draft: Effect) => void) => edit(draft => {
+          const own = draft.on?.[index];
+          if (!own) return;
+          const view = { ...draft, steps: own.steps ?? [], self: own.self } as Effect;
+          change(view);
+          own.steps = view.steps ?? [];
+          if (view.self?.length) own.self = view.self; else delete own.self;
+        });
+        const moveLane = (indices: number[], to: Lane) => edit(draft => {
+          const own = draft.on?.[index];
+          if (own) shiftBetween(own, indices, to);
+        });
+        return (
+          <div key={index} className="stack">
+            <HandlerCard
+              id={id} index={index} handler={handler} system={system}
+              edit={change => edit(draft => { const own = draft.on?.[index]; if (own) change(own); })}
+              onRemove={() => edit(draft => {
+                draft.on = (draft.on ?? []).filter((_, at) => at !== index);
+                if (!draft.on.length) delete draft.on;
+              })}
+            />
+            {handler.ask ? (
+              <SelfTrack
+                effect={carrier} system={system} edit={editCarrier} onMoveLane={moveLane}
+                title="Плата — списывается, если игрок согласился" lead="Чем платит:"
+              />
+            ) : null}
+            <Chain
+              effect={carrier} system={system} edit={editCarrier}
+              title={`Что делает — когда №${index + 1}`}
+              empty="шагов нет — отзывается, но ничего не делает"
+              onMoveLane={moveLane}
+            />
+          </div>
+        );
+      })}
     </>
   );
 }
@@ -269,17 +330,19 @@ function Lifetime({ effect, system, id, edit }: {
 
 
 
-function SelfTrack({ effect, system, edit, onMoveLane }: {
+function SelfTrack({ effect, system, edit, onMoveLane, title = 'У отправителя — один раз, до остальных шагов', lead = 'Чего стоит:' }: {
   effect: Effect;
   system: System;
   edit: (change: (draft: Effect) => void) => void;
   onMoveLane: (indices: number[], to: Lane) => void;
+  title?: string;
+  lead?: string;
 }) {
   const track = effect.self ?? [];
   if (!track.length) {
     return (
       <div className="inline">
-        <span className="faint">Чего стоит:</span>
+        <span className="faint">{lead}</span>
         <CostPick system={system} onPick={id => edit(draft => { draft.self = [payStep(id)]; })} />
         <span className="faint">ничего — пока не выбрали</span>
       </div>
@@ -301,7 +364,7 @@ function SelfTrack({ effect, system, edit, onMoveLane }: {
       edit={editTrack}
       lane="sender"
       onMoveLane={onMoveLane}
-      title="У отправителя — один раз, до остальных шагов"
+      title={title}
       empty="у отправителя ничего не делается"
     />
   );

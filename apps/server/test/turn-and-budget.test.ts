@@ -109,7 +109,7 @@ describe('пробный расчёт и итог бросают одни кос
       ...dnd,
       effects: {
         ...dnd.effects,
-        watch: { label: 'Настороже', activation: 'reaction', duration: { kind: 'permanent' }, params: [], steps: [], trigger: { on: '*', window: 'target' } },
+        watch: { label: 'Настороже', activation: 'passive', duration: { kind: 'permanent' }, params: [], on: [{ on: '*', phase: 'before', ask: true, steps: [] }] },
       },
     };
     const token = (await http().post('/auth/login').send({ name: 'Страж' })).body.token as string;
@@ -142,22 +142,22 @@ describe('пробный расчёт и итог бросают одни кос
 });
 
 describe('публикация проверяет систему линтом', () => {
-  it('эффект «срабатывает сам» без слушателя — отказ человеческим текстом', async () => {
+  it('подписка без «что случилось» — отказ человеческим текстом', async () => {
     const token = (await http().post('/auth/login').send({ name: 'Автор' })).body.token as string;
     const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
     const system = {
       name: 'Сломанная', fields: [],
-      effects: { thorns: { label: 'Шипы', activation: 'triggered', trigger: { on: '' }, steps: [] } },
+      effects: { thorns: { label: 'Шипы', activation: 'passive', on: [{ on: '', to: 'other', steps: [] }] } },
     };
     const id = (await as(http().post('/systems')).send({ title: 'Сломанная', system })).body.id as string;
     const rejected = await as(http().post(`/systems/${id}/publish`)).send({}).expect(400);
     expect(rejected.body.message).toContain('1 ошибка');
     expect(rejected.body.issues[0]).toContain('Эффекты · эффект «Шипы»');
-    expect(rejected.body.issues[0]).toContain('не сказано на что');
+    expect(rejected.body.issues[0]).toContain('не сказано, когда срабатывает');
 
     await as(http().put(`/systems/${id}`)).send({
       title: 'Сломанная',
-      system: { ...system, effects: { thorns: { ...system.effects.thorns, trigger: { on: '*' } } } },
+      system: { ...system, effects: { thorns: { ...system.effects.thorns, on: [{ on: '*', to: 'other', steps: [] }] } } },
     }).expect(200);
     await as(http().post(`/systems/${id}/publish`)).send({}).expect(201);
   });
@@ -242,10 +242,9 @@ describe('моменты хода', () => {
       initiative: { die: { constant: 'к20' } },
       effects: {
         отравление: {
-          label: 'Отравление', activation: 'triggered',
-          trigger: { on: 'moment:turn-start' },
+          label: 'Отравление', activation: 'passive',
           duration: { kind: 'permanent' },
-          steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { const: 3 } }],
+          on: [{ on: 'moment:turn-start', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { const: 3 } }] }],
         },
       },
     };
@@ -341,12 +340,12 @@ describe('моменты вещей и эффектов', () => {
       ],
       effects: {
         при_надевании: {
-          label: 'При надевании', activation: 'triggered', trigger: { on: 'moment:equipped' },
-          steps: [{ type: 'apply', target: { tag: 'надето' }, direction: 'add', value: { const: 1 } }],
+          label: 'При надевании', activation: 'passive',
+          on: [{ on: 'moment:equipped', steps: [{ type: 'apply', target: { tag: 'надето' }, direction: 'add', value: { const: 1 } }] }],
         },
         при_спадении: {
-          label: 'При спадении', activation: 'triggered', trigger: { on: 'moment:expired' },
-          steps: [{ type: 'apply', target: { tag: 'снято' }, direction: 'add', value: { const: 1 } }],
+          label: 'При спадении', activation: 'passive',
+          on: [{ on: 'moment:expired', steps: [{ type: 'apply', target: { tag: 'снято' }, direction: 'add', value: { const: 1 } }] }],
         },
         бафф: { label: 'Бафф', activation: 'passive', duration: { kind: 'temporary' }, modifiers: [] },
       },
@@ -397,8 +396,8 @@ describe('вопросы к человеку переживают пересбо
           ],
         },
         вдохновение: {
-          label: 'Вдохновение', activation: 'reaction',
-          trigger: { on: '*', window: 'sender', claims: ['плюс'] }, steps: [],
+          label: 'Вдохновение', activation: 'passive',
+          on: [{ on: '*', role: 'sender', phase: 'before', ask: true, claims: ['плюс'], steps: [] }],
         },
       },
       records: { приём: { kind: 'action', label: 'Приём', props: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
@@ -453,8 +452,8 @@ describe('цель правит свой бросок, увидев его', () 
           ],
         },
         везение: {
-          label: 'Везение', activation: 'reaction',
-          trigger: { on: '*', window: 'target', claims: ['удача'] }, steps: [],
+          label: 'Везение', activation: 'passive',
+          on: [{ on: '*', phase: 'before', ask: true, claims: ['удача'], steps: [] }],
         },
       },
       records: { приём: { kind: 'action', label: 'Приём', props: [], bindings: [{ label: 'Залп', effect: 'залп', args: {} }] } },
@@ -504,8 +503,8 @@ describe('поле стало верным', () => {
       effects: {
         без_сознания: { label: 'Без сознания', activation: 'passive', duration: { kind: 'temporary' }, modifiers: [] },
         падение: {
-          label: 'Падение', activation: 'triggered', trigger: { on: 'field:без_сил' },
-          steps: [{ type: 'status', mode: 'apply', effect: { const: 'без_сознания' } }],
+          label: 'Падение', activation: 'passive',
+          on: [{ on: 'field:без_сил', steps: [{ type: 'status', mode: 'apply', effect: { const: 'без_сознания' } }] }],
         },
       },
       room_rules: ['падение'],
@@ -612,9 +611,8 @@ describe('реакция после разрешения', () => {
           ],
         },
         возмездие: {
-          label: 'Возмездие', activation: 'reaction',
-          trigger: { on: 'удар', window: 'after' },
-          steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { const: 2 } }],
+          label: 'Возмездие', activation: 'passive',
+          on: [{ on: 'удар', to: 'other', ask: true, steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { const: 2 } }] }],
         },
       },
       records: { приём: { kind: 'action', label: 'Приём', props: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
@@ -681,8 +679,8 @@ describe('отдых и плата ячейкой', () => {
           steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { const: 4 } }],
         },
         сон: {
-          label: 'Сон', activation: 'triggered', trigger: { on: 'moment:long-rest' },
-          steps: [{ type: 'apply', target: { tag: 'ячейки' }, direction: 'set', value: { const: 1 } }],
+          label: 'Сон', activation: 'passive',
+          on: [{ on: 'moment:long-rest', steps: [{ type: 'apply', target: { tag: 'ячейки' }, direction: 'set', value: { const: 1 } }] }],
         },
       },
       room_rules: ['сон'],

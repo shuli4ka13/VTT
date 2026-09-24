@@ -41,8 +41,8 @@ const system = {
       ],
     },
     сон: {
-      label: 'Долгий отдых: ячейки', activation: 'triggered', trigger: { on: 'moment:long-rest' },
-      steps: [{ type: 'apply', target: { tag: 'ячейки_1' }, direction: 'set', value: { expr: '@получатель.ячейки_1_всего' } }],
+      label: 'Долгий отдых: ячейки', activation: 'passive',
+      on: [{ on: 'moment:long-rest', steps: [{ type: 'apply', target: { tag: 'ячейки_1' }, direction: 'set', value: { expr: '@получатель.ячейки_1_всего' } }] }],
     },
   },
   room_rules: ['сон'],
@@ -182,7 +182,7 @@ group('общий держатель: взялся за новое — стар�
     id: 'c', name: 'c',
     fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } }],
     effects: {
-      концентрация: { label: 'Концентрация', activation: 'triggered', trigger: { on: 'moment:scene-end' }, steps: [] },
+      концентрация: { label: 'Концентрация', activation: 'passive', on: [{ on: 'moment:scene-end', steps: [] }] },
       благословлён: { label: 'Благословлён', activation: 'passive', modifiers: [] },
       ускорен: { label: 'Ускорен', activation: 'passive', modifiers: [] },
       благословение: { label: 'Благословение', activation: 'manual', bond: 'концентрация', steps: [{ type: 'status', mode: 'apply', effect: { const: 'благословлён' } }] },
@@ -240,8 +240,8 @@ group('наложенное помнит число, штрафная кость
     roll_edits: { порча: { label: 'Порча', ops: [{ op: 'bonusDie', sides: 4, minus: true }] } },
     effects: {
       горит: {
-        label: 'Горит', activation: 'triggered', trigger: { on: 'moment:turn-start' },
-        steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { ref: 'worn.carry' } }],
+        label: 'Горит', activation: 'passive',
+        on: [{ on: 'moment:turn-start', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { ref: 'worn.carry' } }] }],
       },
       поджечь: { label: 'Поджечь', activation: 'manual', steps: [{ type: 'status', mode: 'apply', effect: { const: 'горит' }, carry: { const: 4 } }] },
       порченый: { label: 'Порченый', activation: 'passive', modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'порча', condition: null }] },
@@ -254,12 +254,11 @@ group('наложенное помнит число, штрафная кость
         ],
       },
       парирование: {
-        label: 'Парирование', activation: 'reaction', trigger: { on: '*', window: 'target' },
-        self: [
+        label: 'Парирование', activation: 'passive',
+        on: [{ on: '*', phase: 'before', ask: true, self: [
           { type: 'compare', value: { tag: 'заряды' }, versus: { const: 1 }, breakIf: 'less' },
           { type: 'apply', target: { tag: 'заряды' }, direction: 'subtract', value: { const: 1 } },
-        ],
-        steps: [],
+        ], steps: [] }],
       },
     },
     records: {

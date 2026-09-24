@@ -34,7 +34,7 @@ export function pickFor(where: Where): Pick {
 }
 
 const LEAF: Record<string, string> = {
-  on: 'что слушает', effect: 'эффект', target: 'какое поле меняем', value: 'сколько', edit: 'правка броска',
+  on: 'что случилось', effect: 'эффект', target: 'какое поле меняем', value: 'сколько', edit: 'правка броска',
   expr: 'формула', tag: 'поле', label: 'название', default: 'по умолчанию', die: 'кость', constant: 'кость',
   event: 'общий эффект', dice: 'кости', bonus: 'прибавка', versus: 'против чего', roll: 'бросок', type: 'тип',
   kind: 'вид', args: 'что берёт из записи', props: 'свойства', ops: 'операции', ranges: 'строки таблицы',
@@ -71,7 +71,7 @@ export function pathWords(issue: string, system: System): string {
     if (key === 'bindings' && index !== null) { words.push(`привязка ${index + 1}`); i++; continue; }
     if (key === 'modifiers' && index !== null) { words.push(`модификатор ${index + 1}`); i++; continue; }
     if (key === 'params' && index !== null) { words.push(`потребность ${index + 1}`); i++; continue; }
-    if (key === 'trigger') { words.push('что слушает'); continue; }
+    if (key === 'on' && index !== null) { words.push(`«когда» №${index + 1}`); i++; continue; }
     if (/^\d+$/.test(key)) { words.push(`№${Number(key) + 1}`); continue; }
     words.push(LEAF[key] ?? key);
   }

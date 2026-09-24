@@ -1,27 +1,15 @@
 export const ACTIVATIONS = {
   manual: {
-    label: 'Активируемый',
+    label: 'Кнопкой',
     icon: '⚔',
-    hint: 'Жмёшь сам: кнопка на листе. Конвейер шагов.',
-    payload: 'steps',
-  },
-  triggered: {
-    label: 'Триггерный',
-    icon: '⚡',
-    hint: 'Срабатывает сам на чужое действие или момент. Конвейер шагов.',
+    hint: 'Жмёшь сам или зовёт другой эффект: цепочка шагов.',
     payload: 'steps',
   },
   passive: {
-    label: 'Пассивный',
+    label: 'Висит',
     icon: '✦',
-    hint: 'Висит и правит цифры: прибавки, помеха, множители.',
+    hint: 'Висит на листе: правит цифры и броски, отзывается на то, что случилось.',
     payload: 'modifiers',
-  },
-  reaction: {
-    label: 'Реакция',
-    icon: '🛡',
-    hint: 'Стол делает паузу и спрашивает игрока: применить? Перед чужим действием или после своего броска.',
-    payload: 'steps',
   },
 };
 
@@ -39,50 +27,53 @@ export const LAUNCHES: Record<LaunchKind, { label: string; hint: string }> = {
   auto: { label: 'Срабатывает сам', hint: 'Слушает чужое действие или момент и запускается: молча или спросив игрока.' },
 };
 
-export function launchOf(effect: { activation?: string | null; trigger?: { when?: string; window?: string } | null } | null | undefined): Launch {
-  const activation = effect?.activation ?? 'manual';
-  if (activation === 'passive') return { kind: 'passive', moment: 'after', ask: false };
-  if (activation === 'triggered') return { kind: 'auto', moment: effect?.trigger?.when === 'before' ? 'before' : 'after', ask: false };
-  if (activation === 'reaction') return { kind: 'auto', moment: effect?.trigger?.window === 'after' ? 'after' : 'before', ask: true };
-  return { kind: 'manual', moment: 'after', ask: false };
+type Launchable = {
+  activation?: string | null;
+  modifiers?: unknown[] | null;
+  on?: { phase?: string; ask?: boolean }[] | null;
+} | null | undefined;
+
+export function launchOf(effect: Launchable): Launch {
+  if ((effect?.activation ?? 'manual') !== 'passive') return { kind: 'manual', moment: 'after', ask: false };
+  const first = effect?.on?.[0];
+  if (!first || effect?.modifiers?.length) return { kind: 'passive', moment: 'after', ask: false };
+  return { kind: 'auto', moment: first.phase === 'before' ? 'before' : 'after', ask: first.ask === true };
 }
 
-export function activationFor(launch: Launch): 'manual' | 'passive' | 'triggered' | 'reaction' {
-  if (launch.kind === 'manual') return 'manual';
-  if (launch.kind === 'passive') return 'passive';
-  return launch.ask ? 'reaction' : 'triggered';
+export function activationFor(launch: Launch): 'manual' | 'passive' {
+  return launch.kind === 'manual' ? 'manual' : 'passive';
 }
 
 export const DURATIONS = {
   permanent: {
     label: 'Постоянный',
     hint: 'Живёт, пока жив источник: снял предмет — ушёл, выключил из правил комнаты — ушёл.',
-    forActivations: ['passive', 'triggered', 'reaction'],
+    forActivations: ['passive'],
   },
   temporary: {
     label: 'Временный',
     hint: 'Снимается рукой или шагом «состояние» в режиме «снять».',
-    forActivations: ['passive', 'triggered', 'reaction'],
+    forActivations: ['passive'],
   },
   uses: {
     label: 'Счётчик срабатываний',
     hint: 'Сработал — минус один; на нуле спадает сам.',
-    forActivations: ['triggered', 'reaction'],
+    forActivations: ['passive'],
   },
   rounds: {
     label: 'Раунды боя',
     hint: 'Спадает в начале раунда через N раундов. Вне боя висит, пока не снимут.',
-    forActivations: ['passive', 'triggered'],
+    forActivations: ['passive'],
   },
   turns: {
     label: 'Ходы владельца',
     hint: 'Спадает в конце N-го своего хода. Вне боя висит, пока не снимут.',
-    forActivations: ['passive', 'triggered'],
+    forActivations: ['passive'],
   },
   scene: {
     label: 'До конца сцены',
     hint: 'Спадает, когда ведущий закрывает сцену.',
-    forActivations: ['passive', 'triggered'],
+    forActivations: ['passive'],
   },
 };
 

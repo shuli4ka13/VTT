@@ -1,12 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { world as W } from '@vtt/schema';
+import type { LaunchKind } from '@vtt/engine/model/effect-kinds';
 import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
 import { emptySystem } from '../../store/world.ts';
 import {
   newEffect, newField, newRecordKind, newBinding, newProp, newDie, newRollEdit, newTable,
   newCalled, BRICKS,
 } from './factory.ts';
-import type { System, Activation } from '@vtt/schema';
+import type { System } from '@vtt/schema';
 
 const BASES: [string, () => System][] = [
   ['пустая система', emptySystem],
@@ -18,7 +19,7 @@ const issuesOf = (system: System): string[] => {
   return parsed.success ? [] : parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`);
 };
 
-const ACTIVATIONS: Activation[] = ['manual', 'triggered', 'reaction', 'passive'];
+const KINDS: LaunchKind[] = ['manual', 'auto', 'passive'];
 
 for (const [name, base] of BASES) {
   describe(`фабрики конструктора поверх «${name}»`, () => {
@@ -26,26 +27,22 @@ for (const [name, base] of BASES) {
       expect(issuesOf(base())).toEqual([]);
     });
 
-    for (const activation of ACTIVATIONS) {
+    for (const kind of KINDS) {
       const check = () => {
         const system = base();
-        const made = newEffect(system, activation);
+        const made = newEffect(system, kind);
         system.effects[made.key] = made.value;
         expect(issuesOf(system)).toEqual([]);
       };
-      it(`новый эффект «${activation}» проходит схему`, check);
+      it(`новый эффект «${kind}» проходит схему`, check);
     }
 
-    it('новый эффект «reaction» получает настройку, когда стол спрашивает', () => {
-      const made = newEffect(base(), 'reaction');
-      expect(made.value.trigger).toEqual({ on: '*', window: 'target' });
-    });
-
-    it('новый эффект «triggered» сразу слушает первый общий эффект системы, если он есть', () => {
+    it('новый «срабатывает сам» — висит с одним «когда», которое сразу слушает первый общий эффект', () => {
       const system = base();
-      const made = newEffect(system, 'triggered');
+      const made = newEffect(system, 'auto');
       const first = Object.keys(system.events ?? {})[0];
-      expect(made.value.trigger?.on).toBe(first ? `event:${first}` : '');
+      expect(made.value.activation).toBe('passive');
+      expect(made.value.on).toEqual([{ on: first ? `event:${first}` : '', steps: [] }]);
     });
 
     it('новое поле проходит схему', () => {

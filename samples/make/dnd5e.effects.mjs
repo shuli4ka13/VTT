@@ -140,12 +140,14 @@ function attacks() {
     flame_blade: {
       label: 'Пламя клинка', group: 'Умения класса',
       description: 'Пока клинок горит, каждый удар им добавляет 2к6 огнём — отдельной частью, со своей меткой.',
-      activation: 'triggered', duration: { kind: 'permanent' },
-      trigger: { on: 'strike', direction: 'out', to: 'target' },
-      steps: [
-        { id: 'жар', type: 'amount', source: 'item', fixed: { expr: "кинуть('2к6')" } },
-        damage({ ref: 'жар' }, ['огонь', 'магический']),
-      ],
+      activation: 'passive', duration: { kind: 'permanent' },
+      on: [{
+        on: 'strike', role: 'sender', to: 'other',
+        steps: [
+          { id: 'жар', type: 'amount', source: 'item', fixed: { expr: "кинуть('2к6')" } },
+          damage({ ref: 'жар' }, ['огонь', 'магический']),
+        ],
+      }],
     },
     sneak_attack: manual('Скрытая атака', 'Умения класса',
       'Раз за ход, после попадания с преимуществом или рядом с союзником: дополнительные кости урона — половина уровня, округляя вверх.',
@@ -411,20 +413,20 @@ function features() {
 }
 
 function reactions() {
-  const reaction = (label, description, trigger, { free, ...rest }) => {
-    const self = free ? rest.self ?? [] : paid('reaction', rest.self);
+  const reaction = (label, description, when, { free, steps = [], self: own, ...rest }) => {
+    const self = free ? own ?? [] : paid('reaction', own);
     return {
-      label, group: 'Реакции', description, activation: 'reaction',
-      duration: { kind: 'permanent' }, trigger, params: [], steps: [], ...rest,
-      ...(self.length ? { self } : {}),
+      label, group: 'Реакции', description, activation: 'passive',
+      duration: { kind: 'permanent' }, params: [], ...rest,
+      on: [{ ...when, ask: true, ...(self.length ? { self } : {}), steps }],
     };
   };
   return {
     shield: reaction('Щит', 'По тебе попали — тратишь ячейку 1-го круга, +5 к классу брони до начала твоего хода. Атака пересчитывается.',
-      { on: '*', window: 'target', condition: { ref: 'hit.success' } },
+      { on: '*', phase: 'before', if: { ref: 'hit.success' } },
       { self: payFirstSlot, steps: [hang({ const: 'shield_up' })] }),
     hellish_rebuke: reaction('Адское возмездие', 'Тебя ранили — тратишь ячейку 1-го круга: обидчик спасается Ловкостью, провал — 2к10 огнём, успех — половина.',
-      { on: 'event:damage', window: 'after' },
+      { on: 'event:damage', to: 'other' },
       {
         self: payFirstSlot,
         steps: [
@@ -437,10 +439,10 @@ function reactions() {
         ],
       }),
     uncanny_dodge: reaction('Невероятное уклонение', 'По тебе попали — урон этой атаки вдвое меньше.',
-      { on: '*', window: 'target', condition: { ref: 'hit.success' } },
+      { on: '*', phase: 'before', if: { ref: 'hit.success' } },
       { steps: [hang({ const: 'uncanny_up' }), hang({ const: 'uncanny_off' })] }),
     inspire: reaction('Вдохновение: перебросить с преимуществом', 'Увидел свой бросок — тратишь вдохновение, к выпавшему добавляется вторая кость, берётся лучшая.',
-      { on: '*', window: 'sender', claims: ['advantage'] },
+      { on: '*', role: 'sender', phase: 'before', claims: ['advantage'] },
       {
         free: true,
         self: [
@@ -449,10 +451,10 @@ function reactions() {
         ],
       }),
     lucky_point: reaction('Везунчик: очко удачи', 'Увидел свой бросок — тратишь очко удачи, кидаешь ещё одну кость и берёшь лучшую.',
-      { on: '*', window: 'sender', claims: ['advantage'] },
+      { on: '*', role: 'sender', phase: 'before', claims: ['advantage'] },
       { free: true, self: payResource('luck', 'очки удачи кончились') }),
     bardic_ready: reaction('Кость вдохновения наготове', 'Увидел свой бросок — прибавляешь кость вдохновения. Один раз.',
-      { on: '*', window: 'sender', claims: ['bardic'] },
+      { on: '*', role: 'sender', phase: 'before', claims: ['bardic'] },
       { free: true, duration: { kind: 'uses', max: 1 } }),
   };
 }
@@ -560,9 +562,9 @@ function traits() {
 }
 
 function lifecycle() {
-  const auto = (label, description, trigger, steps, rest = {}) => ({
-    label, group: 'Отдых и смерть', description, activation: 'triggered', duration: { kind: 'permanent' },
-    trigger, params: [], steps, ...rest,
+  const auto = (label, description, when, steps, rest = {}) => ({
+    label, group: 'Отдых и смерть', description, activation: 'passive', duration: { kind: 'permanent' },
+    params: [], on: [{ ...when, steps }], ...rest,
   });
   const reset = (tag, expr) => change(tag, 'set', { expr, of: 'target' });
   const longRest = [
@@ -591,7 +593,7 @@ function lifecycle() {
   return {
     concentration: auto('Концентрация',
       'Висит на том, кто держит заклинание. Получил урон — спасбросок Телосложения против 10 или половины урона; провал срывает всё, что держал.',
-      { on: 'event:damage', to: 'self' },
+      { on: 'event:damage' },
       [
         {
           id: 'save', type: 'threshold', roll: { die: DIE, bonus: { expr: '@con_save' }, tags: ['спасбросок', 'телосложение'] },
@@ -600,11 +602,11 @@ function lifecycle() {
         drop('concentration'),
       ], { group: 'Заклинания', duration: { kind: 'temporary' } }),
     uncanny_off: auto('Невероятное уклонение: конец', 'Снимает уполовинивание сразу после удара.',
-      { on: 'event:damage', to: 'self' }, [drop('uncanny_up'), drop('uncanny_off')],
+      { on: 'event:damage' }, [drop('uncanny_up'), drop('uncanny_off')],
       { group: 'Реакции', duration: { kind: 'temporary' } }),
     dying: auto('При смерти',
       'На нуле хитов: в начале своего хода к20. Десять и выше — успех, иначе провал; единица — два провала, двадцатка — один хит и на ноги.',
-      { on: 'moment:turn-start', condition: { expr: '@hp_current <= 0' } },
+      { on: 'moment:turn-start', if: { expr: '@hp_current <= 0' } },
       [
         { id: 'спас', type: 'threshold', roll: { die: DIE, tags: ['спасбросок'] }, versus: { const: 10 }, successWhen: 'atLeast', continueOn: 'always' },
         change('death_ok', 'add', { const: 1 }, { when: { ref: 'спас.success' } }),
@@ -645,8 +647,8 @@ function roomRules() {
     change('turn_attacks', 'set', { const: 0 }),
   ];
   const onMoment = (label, description, moment, steps) => ({
-    label, group: 'Правила комнаты', description, activation: 'triggered', duration: { kind: 'permanent' },
-    trigger: { on: `moment:${moment}` }, params: [], steps,
+    label, group: 'Правила комнаты', description, activation: 'passive', duration: { kind: 'permanent' },
+    params: [], on: [{ on: `moment:${moment}`, steps }],
   });
   return {
     battle_start: onMoment('Начало боя', 'Бой пошёл: стоимость действий считается, у всех полный запас.', 'combat-start',

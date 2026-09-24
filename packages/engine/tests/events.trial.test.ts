@@ -45,11 +45,11 @@ group('пробный прогон эффекта на манекенах', () =
     ok(!('__проба' in (system.records ?? {})), 'исходная система не тронута');
   });
 
-  test('пассивный и срабатывающий сам — отказ словами', () => {
+  test('висящий на листе — отказ словами', () => {
     const system = SAMPLE_WORLDS[0]!.system as System;
     const a = mannequin(system, 'а', 'А');
-    throws(() => trial({ system, effectId: 'blessed', from: a, to: a }), 'пассивный');
-    throws(() => trial({ system, effectId: 'dying', from: a, to: a }), 'срабатывает сам');
+    throws(() => trial({ system, effectId: 'blessed', from: a, to: a }), 'висит на листе');
+    throws(() => trial({ system, effectId: 'dying', from: a, to: a }), 'висит на листе');
     throws(() => trial({ system, effectId: 'нету', from: a, to: a }), 'нету');
   });
 

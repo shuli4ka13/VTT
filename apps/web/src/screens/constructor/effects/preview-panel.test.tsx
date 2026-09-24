@@ -49,10 +49,10 @@ describe('проба на манекене', () => {
     expect(document.body.textContent).toContain('Хиты: 20 → 19');
   });
 
-  it('у пассивного эффекта проба отказывается словами, а не молчит', () => {
+  it('у висящего эффекта проба отказывается словами, а не молчит', () => {
     render(<PreviewPanel effectId="щит" />);
     fireEvent.click(screen.getByText('Проба'));
-    expect(screen.getByRole('alert').textContent).toContain('пассивный');
+    expect(screen.getByRole('alert').textContent).toContain('висит на листе');
   });
 
   it('пока эффект не выбран, проба просит выбрать', () => {

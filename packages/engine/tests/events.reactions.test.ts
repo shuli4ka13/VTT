@@ -16,9 +16,8 @@ const shieldWorld: any = {
   effects: {
     ...system.effects,
     shield: {
-      label: 'Щит', activation: 'reaction', cost: 'reaction',
-      trigger: { on: '*', window: 'target', condition: { ref: 'hit.success' } },
-      steps: [{ type: 'status', mode: 'apply', effect: { const: 'shield_up' } }],
+      label: 'Щит', activation: 'passive', cost: 'reaction',
+      on: [{ on: '*', phase: 'before', ask: true, if: { ref: 'hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: { const: 'shield_up' } }] }],
     },
     shield_up: {
       label: 'Под щитом', activation: 'passive', duration: { kind: 'turns', max: 1 },
@@ -86,9 +85,8 @@ group('реакция отправителя: увидел бросок — ре
     effects: {
       ...system.effects,
       inspire: {
-        label: 'Вдохновение: перебросить', activation: 'reaction',
-        trigger: { on: '*', window: 'sender', condition: { expr: '#inspiration > 0' }, claims: ['advantage'] },
-        steps: [{ type: 'apply', target: { tag: 'inspiration' }, direction: 'subtract', value: { const: 1 } }],
+        label: 'Вдохновение: перебросить', activation: 'passive',
+        on: [{ on: '*', role: 'sender', phase: 'before', ask: true, if: { expr: '#inspiration > 0' }, claims: ['advantage'], steps: [{ type: 'apply', target: { tag: 'inspiration' }, direction: 'subtract', value: { const: 1 } }] }],
       },
     },
   };
@@ -119,15 +117,13 @@ group('подписка на исходящее: вампиризм и метк�
     effects: {
       ...system.effects,
       vampiric: {
-        label: 'Вампиризм', activation: 'triggered', duration: { kind: 'permanent' },
-        trigger: { on: 'event:damage', direction: 'out', to: 'self' },
-        steps: [{ type: 'apply', target: { tag: 'hp_current' }, direction: 'add',
-          value: { expr: 'floor(#event_amount / 2)' }, targetModifiers: false }],
+        label: 'Вампиризм', activation: 'passive', duration: { kind: 'permanent' },
+        on: [{ on: 'event:damage', role: 'sender', steps: [{ type: 'apply', target: { tag: 'hp_current' }, direction: 'add',
+          value: { expr: 'floor(#event_amount / 2)' }, targetModifiers: false }] }],
       },
       brand: {
-        label: 'Метка охотника', activation: 'triggered', duration: { kind: 'permanent' },
-        trigger: { on: 'fire_bolt', direction: 'out', to: 'target', condition: { ref: 'hit.success' } },
-        steps: [{ type: 'status', mode: 'apply', effect: { const: 'poisoned' } }],
+        label: 'Метка охотника', activation: 'passive', duration: { kind: 'permanent' },
+        on: [{ on: 'fire_bolt', role: 'sender', to: 'other', if: { ref: 'hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: { const: 'poisoned' } }] }],
       },
     },
   };
@@ -197,9 +193,8 @@ group('реакция после разрешения: «на меня поде�
     effects: {
       ...system.effects,
       rebuke: {
-        label: 'Возмездие', activation: 'reaction', cost: 'reaction',
-        trigger: { on: 'strike', window: 'after', condition: { ref: 'hit.success' } },
-        steps: [{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { const: 3 } }],
+        label: 'Возмездие', activation: 'passive', cost: 'reaction',
+        on: [{ on: 'strike', to: 'other', ask: true, if: { ref: 'hit.success' }, steps: [{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { const: 3 } }] }],
       },
     },
   };
@@ -235,9 +230,8 @@ group('триггер до разрешения: срабатывает молч
     effects: {
       ...system.effects,
       brace: {
-        label: 'Стойка', activation: 'triggered',
-        trigger: { on: 'strike', when: 'before' },
-        steps: [{ type: 'status', mode: 'apply', effect: { const: 'wall' } }],
+        label: 'Стойка', activation: 'passive',
+        on: [{ on: 'strike', phase: 'before', steps: [{ type: 'status', mode: 'apply', effect: { const: 'wall' } }] }],
       },
       wall: {
         label: 'Стена', activation: 'passive', duration: { kind: 'turns', max: 1 },

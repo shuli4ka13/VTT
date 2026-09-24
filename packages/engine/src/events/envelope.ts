@@ -3,16 +3,16 @@ import { newPass } from '../engine/calc.ts';
 import { rolledSoFar } from '../engine/rolled.ts';
 import { packCall, runCall } from './call.ts';
 import { packRef, resolveRef } from '../engine/refs.ts';
-import {
-  requireEffect, findEffect, isPipeline, activationOf, durationOf, wornEffects,
-} from '../engine/effects.ts';
+import { requireEffect, findEffect, isPipeline, durationOf } from '../engine/effects.ts';
+import { listening, subscriberByKey, hears, runsAtOther, withSteps } from './bus.ts';
+import type { Role, Phase } from './bus.ts';
 import { EngineError } from '../engine/errors.ts';
 import { incomingRollModifiers } from '../engine/modifiers.ts';
 import { holderOf } from './bonds.ts';
 import { refusalWords } from './refusal.ts';
 import type { Clock } from '../engine/clock.ts';
 import type {
-  System, Sheet, Compendium, CompendiumRecord, Binding, Die, Effect, Activation,
+  System, Sheet, Compendium, CompendiumRecord, Binding, Die, Effect,
 } from '../model/types.ts';
 import type { StepData } from '../engine/steps/index.ts';
 import type { EmittedEvent } from '../engine/rule.ts';
@@ -232,24 +232,21 @@ function fireBefore(
   const spent: string[] = [];
   let current = sheet;
 
-  for (const { id, effect } of candidatesOf(ctx.system, sheet, 'triggered', true, ctx.compendium)) {
-    const trigger = effect.trigger;
-    if (!trigger || (trigger.direction ?? 'in') !== 'in' || trigger.when !== 'before') continue;
-    if (heardBy(trigger.on, envelope.effect, []) === null) continue;
-
+  const occasion = { kind: 'action' as const, role: 'target' as const, phase: 'before' as const, ask: false, effect: envelope.effect, emitted: [] };
+  for (const { id, effect, handler } of listening(ctx.system, sheet, occasion, { compendium: ctx.compendium })) {
     const owner = `триггер «${effect.label || id}»`;
     const refs = { pass: newPass(ctx.system, current, { compendium: ctx.compendium }), results: {}, owner };
     let fits: boolean;
     try {
-      fits = conditionHolds(trigger.condition === undefined || trigger.condition === null
-        ? null : packRef(trigger.condition, refs), refs);
+      fits = conditionHolds(handler.if === undefined || handler.if === null
+        ? null : packRef(handler.if, refs), refs);
     } catch (err) {
       if (!(err instanceof EngineError)) throw err;
       fits = false;
     }
     if (!fits) continue;
 
-    const done = runOnSelf(id, effect, current, {}, owner, ctx);
+    const done = runOnSelf(id, withSteps(effect, handler.steps), current, {}, owner, ctx);
     current = done.sheet;
     reactions.push(done.report);
     if (durationOf(effect) === 'uses') {
@@ -265,32 +262,7 @@ export function senderResults(envelope: Envelope): Record<string, unknown> {
   return rolledSoFar(envelope.steps as unknown as Record<string, unknown>[]);
 }
 
-export const EVENT_PREFIX = 'event:';
-
-export type TriggerDirection = 'in' | 'out';
 export type ReactionWindow = 'sender' | 'target' | 'after';
-
-interface Candidate { id: string; effect: Effect }
-
-function candidatesOf(
-  system: System, sheet: Sheet, activation: Activation, withRoom: boolean, compendium?: Compendium | null,
-): Candidate[] {
-  const worn = wornEffects(system, sheet, { strict: false, compendium });
-  const wornIds = new Set(worn.map(w => w.id));
-  const room = withRoom
-    ? (system.room_rules ?? [])
-      .filter(id => !wornIds.has(id))
-      .map(id => ({ id, effect: findEffect(system, id) }))
-      .filter((c): c is Candidate => Boolean(c.effect))
-    : [];
-  return [...worn, ...room].filter(({ effect }) => activationOf(effect) === activation);
-}
-
-function heardBy(on: string, effectId: string, emitted: EmittedEvent[]): EmittedEvent | undefined | null {
-  if (on === '*') return undefined;
-  if (on.startsWith(EVENT_PREFIX)) return emitted.filter(e => `${EVENT_PREFIX}${e.event}` === on).at(-1) ?? null;
-  return on === effectId ? undefined : null;
-}
 
 function withEvent(results: Record<string, unknown>, heard: EmittedEvent | undefined): Record<string, unknown> {
   if (!heard) return results;
@@ -344,23 +316,19 @@ function fireTriggers(
   const reactions: Report[] = [];
   let sheet = out.sheet;
 
-  for (const { id, effect } of candidatesOf(ctx.system, sheet, 'triggered', true, ctx.compendium)) {
-    const trigger = effect.trigger;
-    if (!trigger || (trigger.direction ?? 'in') !== 'in') continue;
-    const heard = heardBy(trigger.on, envelope.effect, out.emitted);
-    if (heard === null) continue;
-    if ((trigger.when || 'resolved') !== 'resolved') continue;
-
+  const occasion = { kind: 'action' as const, role: 'target' as const, phase: 'after' as const, ask: false, effect: envelope.effect, emitted: out.emitted };
+  for (const { id, effect, handler, heard } of listening(ctx.system, sheet, occasion, { compendium: ctx.compendium })) {
     const results = withEvent(out.results, heard);
     const owner = `триггер «${effect.label || id}»`;
-    if (!conditionHolds(trigger.condition, { pass: newPass(ctx.system, sheet, { compendium: ctx.compendium }), results, owner })) continue;
+    if (!conditionHolds(handler.if, { pass: newPass(ctx.system, sheet, { compendium: ctx.compendium }), results, owner })) continue;
 
-    if ((trigger.to ?? 'sender') === 'self') {
-      const done = runOnSelf(id, effect, sheet, results, owner, ctx);
+    const body = withSteps(effect, handler.steps);
+    if (runsAtOther(handler)) {
+      replies.push(replyFrom(id, body, sheet, envelope.from, results, owner, ctx));
+    } else {
+      const done = runOnSelf(id, body, sheet, results, owner, ctx);
       sheet = done.sheet;
       reactions.push(done.report);
-    } else {
-      replies.push(replyFrom(id, effect, sheet, envelope.from, results, owner, ctx));
     }
 
     if (durationOf(effect) === 'uses') {
@@ -383,20 +351,17 @@ export function fireOutgoing(
   const reactions: Report[] = [];
   let sheet = sender;
 
-  for (const { id, effect } of candidatesOf(ctx.system, sheet, 'triggered', true, ctx.compendium)) {
-    const trigger = effect.trigger;
-    if (!trigger || trigger.direction !== 'out') continue;
-    const heard = heardBy(trigger.on, envelope.effect, outcome.emitted);
-    if (heard === null) continue;
-
+  const occasion = { kind: 'action' as const, role: 'sender' as const, phase: 'after' as const, ask: false, effect: envelope.effect, emitted: outcome.emitted };
+  for (const { id, effect, handler, heard } of listening(ctx.system, sheet, occasion, { compendium: ctx.compendium })) {
     const results = withEvent(outcome.results, heard);
     const owner = `триггер «${effect.label || id}»`;
-    if (!conditionHolds(trigger.condition, { pass: newPass(ctx.system, sheet, { compendium: ctx.compendium }), results, owner })) continue;
+    if (!conditionHolds(handler.if, { pass: newPass(ctx.system, sheet, { compendium: ctx.compendium }), results, owner })) continue;
 
-    if (trigger.to === 'target') {
-      replies.push(replyFrom(id, effect, sheet, targetId, results, owner, ctx));
+    const body = withSteps(effect, handler.steps);
+    if (runsAtOther(handler)) {
+      replies.push(replyFrom(id, body, sheet, targetId, results, owner, ctx));
     } else {
-      const done = runOnSelf(id, effect, sheet, results, owner, ctx);
+      const done = runOnSelf(id, body, sheet, results, owner, ctx);
       sheet = done.sheet;
       reactions.push(done.report);
     }
@@ -412,6 +377,12 @@ export function fireOutgoing(
 
 export interface Offer { id: string; label: string; cost?: string; claims: string[] }
 
+const WINDOWS: Record<ReactionWindow, { role: Role; phase: Phase }> = {
+  sender: { role: 'sender', phase: 'before' },
+  target: { role: 'target', phase: 'before' },
+  after: { role: 'target', phase: 'after' },
+};
+
 export function offers(
   envelope: Envelope, window: ReactionWindow,
   { system, sheet, compendium }: WorldContext & { sheet: Sheet },
@@ -419,25 +390,22 @@ export function offers(
   emitted: EmittedEvent[] = [],
 ): Offer[] {
   const out: Offer[] = [];
-  for (const { id, effect } of candidatesOf(system, sheet, 'reaction', false, compendium)) {
-    const trigger = effect.trigger;
-    if (!trigger || (trigger.window ?? 'target') !== window) continue;
-    const heard = heardBy(trigger.on, envelope.effect, emitted);
-    if (heard === null) continue;
-    const owner = `реакция «${effect.label || id}»`;
+  const occasion = { kind: 'action' as const, ...WINDOWS[window], ask: true, effect: envelope.effect, emitted };
+  for (const { effect, handler, heard, key } of listening(system, sheet, occasion, { compendium, room: false })) {
+    const owner = `реакция «${effect.label || key}»`;
     const ctx = { pass: newPass(system, sheet, { compendium }), results: withEvent(results, heard), owner };
     let fits: boolean;
     try {
-      fits = conditionHolds(trigger.condition === undefined || trigger.condition === null
-        ? null : packRef(trigger.condition, ctx), ctx);
+      fits = conditionHolds(handler.if === undefined || handler.if === null
+        ? null : packRef(handler.if, ctx), ctx);
     } catch (err) {
       if (!(err instanceof EngineError)) throw err;
       fits = false;
     }
     if (!fits) continue;
     out.push({
-      id, label: effect.label || id,
-      claims: [...(trigger.claims ?? [])],
+      id: key, label: effect.label || key,
+      claims: [...(handler.claims ?? [])],
     });
   }
   return out;
@@ -468,27 +436,30 @@ export function react(
       throw new EngineError(
         `реакция «${id}» сейчас не предлагается; можно: ${offered.map(o => o.id).join(', ') || '(ничего)'}`);
     }
-    const effect = requireEffect(ctx.system, id, 'реакция');
+    const found = subscriberByKey(ctx.system, id);
+    if (!found) throw new EngineError(`реакция «${id}»: такой подписки в системе нет`);
+    const { effect, handler } = found;
     const owner = `реакция «${offer.label}»`;
-    if (effect.self?.length) {
-      const paid = runOnSelf(id, { ...effect, steps: effect.self }, sheet, results, `плата за «${offer.label}»`, ctx, offer.label);
+    if (handler.self?.length) {
+      const paid = runOnSelf(found.id, withSteps(effect, handler.self), sheet, results, `плата за «${offer.label}»`, ctx, offer.label);
       const why = refusalWords(paid.report, ctx.system);
       if (why) throw new EngineError(`«${offer.label}» не состоялось: ${why}`);
       sheet = paid.sheet;
       if (paid.report.changes.length) reports.push(paid.report);
     }
-    const seed = withEvent(results, heardBy(effect.trigger?.on ?? '*', envelope.effect, emitted) ?? undefined);
-    if (window === 'after' && (effect.trigger?.to ?? 'sender') !== 'self') {
-      replies.push(replyFrom(id, effect, sheet, envelope.from, seed, owner, ctx));
+    const seed = withEvent(results, hears(handler.on, envelope.effect, emitted) ?? undefined);
+    const body = withSteps(effect, handler.steps);
+    if (runsAtOther(handler)) {
+      replies.push(replyFrom(found.id, body, sheet, envelope.from, seed, owner, ctx));
     } else {
-      const done = runOnSelf(id, effect, sheet, seed, owner, ctx);
+      const done = runOnSelf(found.id, body, sheet, seed, owner, ctx);
       sheet = done.sheet;
       reports.push(done.report);
     }
     claims.push(...offer.claims);
     if (durationOf(effect) === 'uses') {
-      sheet = spendUse(sheet, id);
-      spent.push(id);
+      sheet = spendUse(sheet, found.id);
+      spent.push(found.id);
     }
   }
   return { sheet, reports, claims: [...new Set(claims)], spent, replies };

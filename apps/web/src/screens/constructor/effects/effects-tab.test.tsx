@@ -4,7 +4,7 @@ import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { renderOpen } from '../../../testing/render-open.tsx';
 import { EffectsTab } from './effects-tab.tsx';
 import { useWorld, emptySystem } from '../../../store/world.ts';
-import { LAUNCH_KINDS } from './words.ts';
+import { CREATE_KINDS } from './words.ts';
 
 describe('EffectsTab: палитра трёх понятий', () => {
   beforeEach(() => {
@@ -46,7 +46,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
       .filter(b => !b.closest('details'))
       .filter(b => (b.textContent ?? '').trimStart().startsWith('+ '))
       .map(b => b.textContent!.trim())
-      .filter(t => !LAUNCH_KINDS.some(kind => t === `+ ${kind.label.toLowerCase()}`)
+      .filter(t => !CREATE_KINDS.some(kind => t === `+ ${kind.label.toLowerCase()}`)
         && t !== '+ вызываемый' && t !== '+ новый' && t !== '+ блок'
         && t !== '+ вход' && !t.startsWith('+ в «')
         && !['+ блок', '+ метки', '+ описание для игрока', '+ занимает', '+ какие метки бывают', '+ сколько висит', '+ на основе'].includes(t));
@@ -207,7 +207,7 @@ describe('ссылка на результат шага', () => {
   });
 });
 
-describe('три вида запуска вместо четырёх', () => {
+describe('три вида создания, два вида запуска', () => {
   beforeEach(() => {
     useWorld.setState(state => ({
       ...state,
@@ -221,7 +221,7 @@ describe('три вида запуска вместо четырёх', () => {
     renderOpen(<EffectsTab />);
     const made = screen.getAllByRole('button')
       .map(b => b.textContent!.trim())
-      .filter(t => LAUNCH_KINDS.some(kind => t === `+ ${kind.label.toLowerCase()}`));
+      .filter(t => CREATE_KINDS.some(kind => t === `+ ${kind.label.toLowerCase()}`));
     expect(made).toEqual(['+ кнопкой', '+ срабатывает сам', '+ висит и правит']);
     const chrome = document.body.cloneNode(true) as HTMLElement;
     chrome.querySelectorAll('.column--right').forEach(node => node.remove());
@@ -230,7 +230,7 @@ describe('три вида запуска вместо четырёх', () => {
     expect(all.replace(/Реакции/g, '').match(/.{30}(реакци|триггерн).{30}/i)?.[0] ?? null).toBeNull();
   });
 
-  it('у «срабатывает сам» момент собран в один список: после молча или до с вопросом', () => {
+  it('у «когда» роль и фаза собраны в один список: после молча или до с вопросом', () => {
     renderOpen(<EffectsTab />);
     fireEvent.click(screen.getByText('+ срабатывает сам'));
     const moment = [...document.querySelectorAll('select')]
@@ -240,14 +240,14 @@ describe('три вида запуска вместо четырёх', () => {
 
     fireEvent.change(moment, { target: { value: 'ask-sender' } });
     const effect = Object.values(useWorld.getState().system.effects).at(-1)!;
-    expect(effect.activation).toBe('reaction');
-    expect(effect.trigger?.window).toBe('sender');
+    expect(effect.activation).toBe('passive');
+    expect(effect.on?.[0]).toMatchObject({ role: 'sender', phase: 'before', ask: true });
 
     fireEvent.change(moment, { target: { value: 'after-out' } });
-    const again = Object.values(useWorld.getState().system.effects).at(-1)!;
-    expect(again.activation).toBe('triggered');
-    expect(again.trigger?.direction).toBe('out');
-    expect(again.trigger?.window).toBeUndefined();
+    const again = Object.values(useWorld.getState().system.effects).at(-1)!.on![0]!;
+    expect(again.role).toBe('sender');
+    expect(again.ask).toBeUndefined();
+    expect(again.phase).toBeUndefined();
   });
 });
 
@@ -304,7 +304,7 @@ describe('эффект слушает время', () => {
   });
   afterEach(() => { cleanup(); });
 
-  it('в списке «Слушает» есть моменты хода, и выбор сохраняется', () => {
+  it('в «что случилось» есть моменты хода, и выбор сохраняется', () => {
     renderOpen(<EffectsTab />);
     fireEvent.click(screen.getByText('+ срабатывает сам'));
 
@@ -315,7 +315,7 @@ describe('эффект слушает время', () => {
 
     fireEvent.change(listens, { target: { value: 'moment:turn-start' } });
     const effect = Object.values(useWorld.getState().system.effects).at(-1)!;
-    expect(effect.trigger?.on).toBe('moment:turn-start');
+    expect(effect.on?.[0]?.on).toBe('moment:turn-start');
     expect(screen.getByText(/У времени и поля нет исходов/)).toBeTruthy();
   });
 });

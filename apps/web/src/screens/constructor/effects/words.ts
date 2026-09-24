@@ -3,7 +3,10 @@ import type { LaunchKind } from '@vtt/engine/model/effect-kinds';
 import { COST_BLOCK } from '@vtt/engine/words/glossary';
 import type { Step, System } from '@vtt/schema';
 
-export const LAUNCH_KINDS = (['manual', 'auto', 'passive'] as const)
+export const LAUNCH_KINDS = (['manual', 'passive'] as const)
+  .map(key => ({ key: key as LaunchKind, label: key === 'passive' ? 'Висит' : LAUNCHES[key].label, title: LAUNCHES[key].hint }));
+
+export const CREATE_KINDS = (['manual', 'auto', 'passive'] as const)
   .map(key => ({ key: key as LaunchKind, label: LAUNCHES[key].label, title: LAUNCHES[key].hint }));
 
 export const launchHint = (kind: LaunchKind): string => LAUNCHES[kind].hint;
@@ -11,12 +14,12 @@ export const launchHint = (kind: LaunchKind): string => LAUNCHES[kind].hint;
 export type Moment = 'after-in' | 'after-out' | 'before-in' | 'ask-target' | 'ask-sender' | 'ask-after';
 
 export const MOMENTS: readonly (readonly [Moment, string])[] = [
-  ['after-in', 'со мной что-то сделали — отвечаю сам, молча'],
-  ['after-out', 'я что-то сделал — срабатывает сам, молча'],
-  ['before-in', 'на меня действуют — срабатывает само до того, как это разрешится, молча'],
-  ['ask-target', 'на меня действуют — стол спрашивает меня до того, как это разрешится'],
-  ['ask-sender', 'я бросил — стол спрашивает меня до того, как результат уйдёт цели'],
-  ['ask-after', 'на меня подействовали — стол спрашивает меня после того, как это разрешилось'],
+  ['after-in', 'со мной — после, молча'],
+  ['after-out', 'я сделал — после, молча'],
+  ['before-in', 'со мной — до того, как решится, молча'],
+  ['ask-target', 'со мной — до того, как решится, спросить меня'],
+  ['ask-sender', 'я бросил — до того, как уйдёт цели, спросить меня'],
+  ['ask-after', 'со мной — после, спросить меня'],
 ];
 
 export type EditFn = (slotIndexInGroup: number, change: (draft: Step) => void) => void;

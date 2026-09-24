@@ -39,7 +39,7 @@ const sources = all.filter(f => !/\.test\.tsx?$/.test(f.path) && !/\/tests?\//.t
 
 const LATIN_DICE = /\b\d+d\d+\b/;
 const HASH_NAME = /(`#\$\{|['"]#[\p{L}])/u;
-const MACHINE_KEY = /«(trigger\.on|successWhen|continueOn|targetModifiers|effectId|fromId|toId|activation|rk|steps\.\d+)»/;
+const MACHINE_KEY = /«(on\.\d+\.on|successWhen|continueOn|targetModifiers|effectId|fromId|toId|activation|rk|steps\.\d+)»/;
 
 describe('одно слово на одно понятие', () => {
   it('запрещённые основы не встречаются ни в коде, ни в тестах четырёх пакетов', () => {
@@ -87,7 +87,7 @@ describe('одно слово на одно понятие', () => {
     expect(LATIN_DICE.test('бросьте 1d20')).toBe(true);
     expect(LATIN_DICE.test('бросьте 1к20')).toBe(false);
     expect(LATIN_DICE.test('`${count}d${sides}`')).toBe(false);
-    expect(MACHINE_KEY.test('не заполнено «trigger.on»')).toBe(true);
+    expect(MACHINE_KEY.test('не заполнено «on.0.on»')).toBe(true);
     expect(HASH_NAME.test('const name = `#${tag}`;')).toBe(true);
     expect(HASH_NAME.test("if (text === '#сила') return;")).toBe(true);
     expect(HASH_NAME.test('/^[@#]([\\p{L}]+)$/u')).toBe(false);

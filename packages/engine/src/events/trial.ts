@@ -2,7 +2,7 @@ import { deskOf, hasDesk, blankDesk } from './desk.ts';
 import { exchange } from './exchange.ts';
 import type { ExchangeResult } from './exchange.ts';
 import { describeEntry } from './describe.ts';
-import { activationOf, isPipeline } from '../engine/effects.ts';
+import { isPipeline } from '../engine/effects.ts';
 import { EngineError } from '../engine/errors.ts';
 import { registry } from '../engine/steps/index.ts';
 import { listOf } from '../model/lists.ts';
@@ -76,10 +76,7 @@ export function trial({ system, compendium, effectId, from, to, args, dice = 'av
   const effect: Effect | undefined = system.effects[effectId];
   if (!effect) throw new EngineError(`пробный прогон: система не объявляет эффекта «${effectId}»`);
   if (!isPipeline(effect)) {
-    throw new EngineError(`пробный прогон: эффект «${effect.label ?? effectId}» пассивный — у него нет цепочки, его вешают`);
-  }
-  if (activationOf(effect) !== 'manual') {
-    throw new EngineError(`пробный прогон: эффект «${effect.label ?? effectId}» срабатывает сам — запустите тот, кого он слушает`);
+    throw new EngineError(`пробный прогон: эффект «${effect.label ?? effectId}» висит на листе — его не запускают кнопкой, запустите то, на что он отзывается`);
   }
   const filled: Record<string, unknown> = {};
   for (const param of effect.params ?? []) {

@@ -2721,30 +2721,32 @@
       "bleeding": {
         "label": "Кровотечение",
         "icon": "🩸",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
         "description": "В начале своего хода теряешь 2 хита мимо брони, пока рану не заткнут.",
-        "trigger": {
-          "on": "moment:turn-start"
-        },
         "params": [],
-        "steps": [
+        "group": "Состояния",
+        "on": [
           {
-            "type": "emit",
-            "event": "damage",
-            "args": {
-              "amount": {
-                "const": 2
-              },
-              "damage_type": {
-                "const": "кровотечение"
+            "on": "moment:turn-start",
+            "steps": [
+              {
+                "type": "emit",
+                "event": "damage",
+                "args": {
+                  "amount": {
+                    "const": 2
+                  },
+                  "damage_type": {
+                    "const": "кровотечение"
+                  }
+                }
               }
-            }
+            ]
           }
-        ],
-        "group": "Состояния"
+        ]
       },
       "serious_wound_rule": {
         "label": "Тяжёлая рана",
@@ -2768,49 +2770,51 @@
       "death_save": {
         "label": "Спасбросок от смерти",
         "icon": "💀",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
         "description": "Хиты на нуле: в начале своего хода к10 не выше Телосложения, иначе смерть.",
-        "trigger": {
-          "on": "moment:turn-start",
-          "condition": {
-            "expr": "@mortal"
-          }
-        },
         "params": [],
-        "steps": [
+        "group": "Состояния",
+        "on": [
           {
-            "id": "спас",
-            "type": "threshold",
-            "roll": {
-              "die": {
-                "constant": "lead_die"
+            "on": "moment:turn-start",
+            "if": {
+              "expr": "@mortal"
+            },
+            "steps": [
+              {
+                "id": "спас",
+                "type": "threshold",
+                "roll": {
+                  "die": {
+                    "constant": "lead_die"
+                  },
+                  "tags": [
+                    "проверка"
+                  ]
+                },
+                "versus": {
+                  "expr": "@отправитель.body"
+                },
+                "successWhen": "notOver",
+                "continueOn": "fail"
               },
-              "tags": [
-                "проверка"
-              ]
-            },
-            "versus": {
-              "expr": "@отправитель.body"
-            },
-            "successWhen": "notOver",
-            "continueOn": "fail"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "dead"
-            },
-            "direction": "set",
-            "value": {
-              "const": true
-            },
-            "targetModifiers": false
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "dead"
+                },
+                "direction": "set",
+                "value": {
+                  "const": true
+                },
+                "targetModifiers": false
+              }
+            ]
           }
-        ],
-        "group": "Состояния"
+        ]
       },
       "damage": {
         "label": "Урон",
@@ -3001,47 +3005,49 @@
         "label": "Начало боя",
         "group": "Правила комнаты",
         "description": "Бой пошёл: траты хода считаются, у всех полный запас.",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
-        "trigger": {
-          "on": "moment:combat-start"
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "type": "apply",
-            "target": {
-              "tag": "battle"
-            },
-            "direction": "set",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "set",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_move"
-            },
-            "direction": "set",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
+            "on": "moment:combat-start",
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "battle"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "turn_action"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "turn_move"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              }
+            ]
           }
         ]
       },
@@ -3049,25 +3055,27 @@
         "label": "Конец боя",
         "group": "Правила комнаты",
         "description": "Вне боя действия не считаются.",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
-        "trigger": {
-          "on": "moment:combat-end"
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "type": "apply",
-            "target": {
-              "tag": "battle"
-            },
-            "direction": "set",
-            "value": {
-              "const": 0
-            },
-            "targetModifiers": false
+            "on": "moment:combat-end",
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "battle"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 0
+                },
+                "targetModifiers": false
+              }
+            ]
           }
         ]
       },
@@ -3075,36 +3083,38 @@
         "label": "Начало хода",
         "group": "Правила комнаты",
         "description": "Траты хода — снова полные.",
-        "activation": "triggered",
+        "activation": "passive",
         "duration": {
           "kind": "permanent"
         },
-        "trigger": {
-          "on": "moment:turn-start"
-        },
         "params": [],
-        "steps": [
+        "on": [
           {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "set",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_move"
-            },
-            "direction": "set",
-            "value": {
-              "const": 1
-            },
-            "targetModifiers": false
+            "on": "moment:turn-start",
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "turn_action"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "turn_move"
+                },
+                "direction": "set",
+                "value": {
+                  "const": 1
+                },
+                "targetModifiers": false
+              }
+            ]
           }
         ]
       },

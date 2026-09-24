@@ -17,13 +17,12 @@ const sys: any = {
       ],
     },
     мгновенная_смерть: {
-      label: 'Мгновенная смерть', activation: 'triggered',
-      trigger: { on: 'удар', to: 'self' },
-      steps: [
+      label: 'Мгновенная смерть', activation: 'passive',
+      on: [{ on: 'удар', steps: [
 
         { type: 'compare', value: { ref: 'рана.overkill' }, versus: { expr: '@получатель.хп_макс' }, breakIf: 'less' },
         { type: 'status', mode: 'apply', effect: { const: 'мёртв' } },
-      ],
+      ] }],
     },
     мёртв: { label: 'Мёртв', activation: 'passive' },
   },

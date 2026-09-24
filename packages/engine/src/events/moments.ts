@@ -1,14 +1,14 @@
 import { newPass, calc } from '../engine/calc.ts';
 import { packCall, runCall } from './call.ts';
 import { resolveRef } from '../engine/refs.ts';
-import { activationOf, durationOf, wornEffects, findEffect } from '../engine/effects.ts';
+import { durationOf } from '../engine/effects.ts';
+import { listening, subscribers, withSteps, MOMENT_PREFIX, FIELD_PREFIX } from './bus.ts';
 import { EngineError } from '../engine/errors.ts';
 import { spendUse, effectLabelOf } from './envelope.ts';
 import { deskOf } from './desk.ts';
 import type { Report, WorldContext } from './envelope.ts';
-import type { Sheet, Effect } from '../model/types.ts';
+import type { Sheet, Effect, Handler } from '../model/types.ts';
 
-export const MOMENT_PREFIX = 'moment:';
 
 export const MOMENTS = {
   'turn-start': 'в начале своего хода',
@@ -57,7 +57,7 @@ export function fireMoments(events: MomentEvent[], sheets: Sheet[], world: World
     const sheet = updated.find(s => s.id === event.sheetId);
     if (!sheet) continue;
 
-    for (const { id, effect } of listeners(sheet, event, world)) {
+    for (const { id, effect, handler } of listening(world.system, sheet, { kind: 'moment', moment: event.moment }, { compendium: world.compendium })) {
       if (fired++ >= MAX_FIRES) {
         throw new EngineError(`моменты срабатывают без остановки: больше ${MAX_FIRES} за один ход`);
       }
@@ -67,10 +67,10 @@ export function fireMoments(events: MomentEvent[], sheets: Sheet[], world: World
         moment: { moment: event.moment, sheet: event.sheetId, about: event.about ?? null },
         worn: wornEntry(live, id),
       };
-      if (!holds(effect, live, seed, owner, world)) continue;
+      if (!holds(handler, live, seed, owner, world)) continue;
 
       const here = { ...world, desk: deskOf(updated) ?? world.desk ?? null };
-      const call = { effectId: id, effect, sheet: live, owner, args: {}, props: null, seed };
+      const call = { effectId: id, effect: withSteps(effect, handler.steps), sheet: live, owner, args: {}, props: null, seed };
       const done = runCall(packCall(call, here), { sheet: live, owner, seed }, here);
       let next = done.sheet;
       if (durationOf(effect) === 'uses') next = spendUse(next, id);
@@ -95,22 +95,6 @@ export function fireMoments(events: MomentEvent[], sheets: Sheet[], world: World
 const wornEntry = (sheet: Sheet, effectId: string): Record<string, unknown> =>
   ({ ...((sheet.effects ?? []).find(entry => entry.effectId === effectId) ?? {}) });
 
-function triggeredOn(sheet: Sheet, world: WorldContext): { id: string; effect: Effect }[] {
-  const worn = wornEffects(world.system, sheet, { strict: false, compendium: world.compendium });
-  const roomWorn = new Set(worn.map(w => w.id));
-  const room = (world.system.room_rules ?? [])
-    .filter(id => !roomWorn.has(id))
-    .map(id => ({ id, effect: findEffect(world.system, id) }))
-    .filter((entry): entry is { id: string; effect: Effect } => Boolean(entry.effect));
-  return [...worn, ...room].filter(({ effect }) => activationOf(effect) === 'triggered');
-}
-
-function listeners(sheet: Sheet, event: MomentEvent, world: WorldContext): { id: string; effect: Effect }[] {
-  return triggeredOn(sheet, world).filter(({ effect }) => momentOf(effect.trigger?.on) === event.moment);
-}
-
-export const FIELD_PREFIX = 'field:';
-
 export const fieldOf = (on: string | undefined): string | null =>
   (on && on.startsWith(FIELD_PREFIX) ? on.slice(FIELD_PREFIX.length) : null);
 
@@ -127,22 +111,22 @@ export function fireCrossings(before: Sheet[], after: Sheet[], world: WorldConte
   let fired = 0;
 
   for (;;) {
-    const wave: { sheetId: string; id: string; effect: Effect; tag: string; value: unknown }[] = [];
+    const wave: { sheetId: string; id: string; effect: Effect; handler: Handler; tag: string; value: unknown }[] = [];
     for (const sheet of updated) {
       const was = previous.find(s => s.id === sheet.id);
       if (!was || was === sheet) continue;
-      for (const { id, effect } of triggeredOn(sheet, world)) {
-        const tag = fieldOf(effect.trigger?.on);
+      for (const { id, effect, handler } of subscribers(world.system, sheet, { compendium: world.compendium })) {
+        const tag = fieldOf(handler.on);
         if (!tag) continue;
         const value = valueOn(sheet, tag, world);
         if (!truthy(value) || truthy(valueOn(was, tag, world))) continue;
-        wave.push({ sheetId: sheet.id, id, effect, tag, value });
+        wave.push({ sheetId: sheet.id, id, effect, handler, tag, value });
       }
     }
     if (!wave.length) break;
     previous = updated;
 
-    for (const { sheetId, id, effect, tag, value } of wave) {
+    for (const { sheetId, id, effect, handler, tag, value } of wave) {
       if (fired++ >= MAX_FIRES) {
         throw new EngineError(`поля будят эффекты без остановки: больше ${MAX_FIRES} срабатываний за раз`);
       }
@@ -150,10 +134,10 @@ export function fireCrossings(before: Sheet[], after: Sheet[], world: WorldConte
       const label = world.system.fields.find(f => f.tag === tag)?.label ?? tag;
       const owner = `поле «${label}» стало верным у «${effect.label ?? id}»`;
       const seed = { field: { tag, value }, worn: wornEntry(live, id) };
-      if (!holds(effect, live, seed, owner, world)) continue;
+      if (!holds(handler, live, seed, owner, world)) continue;
 
       const here = { ...world, desk: deskOf(updated) ?? world.desk ?? null };
-      const call = { effectId: id, effect, sheet: live, owner, args: {}, props: null, seed };
+      const call = { effectId: id, effect: withSteps(effect, handler.steps), sheet: live, owner, args: {}, props: null, seed };
       const done = runCall(packCall(call, here), { sheet: live, owner, seed }, here);
       let next = done.sheet;
       if (durationOf(effect) === 'uses') next = spendUse(next, id);
@@ -176,9 +160,9 @@ export function fireCrossings(before: Sheet[], after: Sheet[], world: WorldConte
 }
 
 function holds(
-  effect: Effect, sheet: Sheet, seed: Record<string, unknown>, owner: string, world: WorldContext,
+  handler: Handler, sheet: Sheet, seed: Record<string, unknown>, owner: string, world: WorldContext,
 ): boolean {
-  const condition = effect.trigger?.condition;
+  const condition = handler.if;
   if (!condition) return true;
   const pass = newPass(world.system, sheet, { compendium: world.compendium });
   const own = condition && typeof condition === 'object' && 'expr' in condition

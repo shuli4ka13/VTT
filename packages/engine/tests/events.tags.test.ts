@@ -145,14 +145,12 @@ group('сопротивления по тегам', () => {
 group('реакции слушают слово, а не имя эффекта', () => {
   const spiky = world({
     шипы: {
-      label: 'Шипы', activation: 'triggered', duration: { kind: 'permanent' },
-      trigger: { on: 'event:урон', condition: null },
-      steps: [{ type: 'emit', event: 'урон', args: damageArgs({ ref: 'event.amount' }, ['колющий']) }],
+      label: 'Шипы', activation: 'passive', duration: { kind: 'permanent' },
+      on: [{ on: 'event:урон', to: 'other', if: null, steps: [{ type: 'emit', event: 'урон', args: damageArgs({ ref: 'event.amount' }, ['колющий']) }] }],
     },
     сторож: {
-      label: 'Сторож', activation: 'triggered', duration: { kind: 'permanent' },
-      trigger: { on: 'event:тревога' },
-      steps: [{ type: 'apply', target: { tag: 'хп' }, direction: 'add', value: { const: 1 } }],
+      label: 'Сторож', activation: 'passive', duration: { kind: 'permanent' },
+      on: [{ on: 'event:тревога', to: 'other', steps: [{ type: 'apply', target: { tag: 'хп' }, direction: 'add', value: { const: 1 } }] }],
     },
   });
 
@@ -177,7 +175,7 @@ group('реакции слушают слово, а не имя эффекта',
   });
 
   test('сигнал без приёма будит реакцию на самом себе', () => {
-    const sys = { ...spiky, effects: { ...spiky.effects, сторож: { ...spiky.effects.сторож, trigger: { on: 'event:тревога', to: 'self' } } } };
+    const sys = { ...spiky, effects: { ...spiky.effects, сторож: { ...spiky.effects.сторож, on: [{ ...spiky.effects.сторож.on[0], to: 'self' }] } } };
     const out = hit(sys, 'тревога', foe(['сторож']));
     eq(out.sheet.values.хп, 21);
   });
