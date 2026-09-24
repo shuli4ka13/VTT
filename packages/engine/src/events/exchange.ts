@@ -2,6 +2,7 @@ import { deskFor } from './desk.ts';
 import { send, receive, fireOutgoing } from './envelope.ts';
 import { runSelfTrack, selfRefusal } from './self.ts';
 import { holderOf, releaseHolder } from './bonds.ts';
+import { fireLifecycle } from './lifecycle.ts';
 import { EngineError } from '../engine/errors.ts';
 import type { Report, Envelope } from './envelope.ts';
 import type { System, Sheet, Compendium, Die } from '../model/types.ts';
@@ -158,7 +159,11 @@ export function exchange({
     system, compendium, die, clock, sheets: started, envelope, fromId, toId,
     claims: { target: claims?.target },
   });
-  return own.report
-    ? { sheets: out.sheets, reports: [{ fromId, toId: fromId, report: own.report }, ...out.reports] }
-    : out;
+  const hooked = fireLifecycle(sheets, out.sheets, { system, compendium, die, clock });
+  const hooks = hooked.reports.map(({ sheetId, report }) => ({ fromId: sheetId, toId: sheetId, report }));
+  return {
+    ...out,
+    sheets: hooked.sheets,
+    reports: [...(own.report ? [{ fromId, toId: fromId, report: own.report }] : []), ...out.reports, ...hooks],
+  };
 }

@@ -172,8 +172,51 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
             onEdit={change => edit(draft => { change(draft.modifiers ??= []); })}
           />
           <Handlers id={id} effect={effect} system={system} edit={edit} />
+          <Hooks effect={effect} system={system} edit={edit} />
         </>
       )}
+    </>
+  );
+}
+
+const HOOKS = [
+  ['attach', 'При наложении', 'шаги сразу, когда эффект повесили'],
+  ['detach', 'При спадании', 'шаги в тот миг, когда эффект ушёл: истёк срок, сняли, оборвалась связь'],
+] as const;
+
+function Hooks({ effect, system, edit }: {
+  effect: Effect; system: System; edit: (change: (draft: Effect) => void) => void;
+}) {
+  const absent = HOOKS.filter(([turn]) => effect[turn] === undefined);
+  return (
+    <>
+      {HOOKS.filter(([turn]) => effect[turn] !== undefined).map(([turn, title, hint]) => {
+        const carrier = { ...effect, label: `${effect.label ?? ''} · ${title}`, steps: effect[turn] ?? [] } as Effect;
+        const editCarrier = (change: (draft: Effect) => void) => edit(draft => {
+          const view = { ...draft, steps: draft[turn] ?? [] } as Effect;
+          change(view);
+          draft[turn] = view.steps ?? [];
+        });
+        return (
+          <div key={turn} className="stack">
+            <div className="inline">
+              <span className="faint">{hint}</span>
+              <span className="spacer" />
+              <Button size="sm" variant="ghost" title={`убрать «${title.toLowerCase()}»`} onClick={() => edit(draft => { delete draft[turn]; })}>×</Button>
+            </div>
+            <Chain effect={carrier} system={system} edit={editCarrier} title={title} empty="шагов нет — ничего не делает" />
+          </div>
+        );
+      })}
+      {absent.length ? (
+        <div className="inline inline--tight">
+          {absent.map(([turn, title, hint]) => (
+            <Button key={turn} size="sm" title={hint} onClick={() => edit(draft => { draft[turn] = []; })}>
+              + {title.toLowerCase()}
+            </Button>
+          ))}
+        </div>
+      ) : null}
     </>
   );
 }

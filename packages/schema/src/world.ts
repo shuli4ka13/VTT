@@ -268,6 +268,8 @@ export const effect = z.object({
   self: z.array(step).optional(),
   modifiers: z.array(modifier).optional(),
   on: z.array(handler).optional(),
+  attach: z.array(step).optional(),
+  detach: z.array(step).optional(),
 }).passthrough();
 
 export const bindingArg = z.union([

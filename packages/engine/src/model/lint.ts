@@ -1,6 +1,6 @@
 import type { System, Compendium, Effect, Step } from './types.ts';
 import { registry } from '../engine/steps/index.ts';
-import { calledOf } from '../engine/effects.ts';
+import { calledOf, chainsOfEffect } from '../engine/effects.ts';
 import { basedOn, paramsOf } from './inherit.ts';
 import { danglingRows } from './integrity.ts';
 import { TABS, STEP } from '../words/glossary.ts';
@@ -49,12 +49,16 @@ function chainsOf(id: string, effect: Effect, called: boolean): Chain[] {
     out.push({ steps: handler.steps ?? [], where: step => ({ tab: 'effects', effect: id, handler: index, step }), eventChain: event });
     out.push({ steps: handler.self ?? [], where: step => ({ tab: 'effects', effect: id, handler: index, step, part: 'self' }), eventChain: false, part: 'self' });
   });
+  for (const turn of ['attach', 'detach'] as const) {
+    out.push({ steps: effect[turn] ?? [], where: step => ({ tab: 'effects', effect: id, step, part: turn }), eventChain: false });
+  }
   return out;
 }
 
 const stepsAt = (system: System, where: Where): Step[] | undefined => {
   if (where.tab !== 'effects' || !where.effect) return undefined;
   const effect = system.effects[where.effect];
+  if (where.part === 'attach' || where.part === 'detach') return effect?.[where.part];
   const holder = where.handler === undefined ? effect : effect?.on?.[where.handler];
   return where.part === 'self' ? holder?.self : holder?.steps;
 };
@@ -168,7 +172,7 @@ function cycleProblems(system: System): Problem[] {
   const emitsOf = (steps: Step[] | undefined): string[] => emittedBy(steps);
 
   for (const [id, effect] of Object.entries(system.effects)) {
-    for (const called of emitsOf(effect.steps)) link(effectNode(id), effectNode(called));
+    for (const called of chainsOfEffect(effect).flatMap(emitsOf)) link(effectNode(id), effectNode(called));
     for (const handler of effect.on ?? []) {
       for (const called of emitsOf(handler.steps)) link(effectNode(id), effectNode(called));
       if (handler.ask) continue;
@@ -245,7 +249,7 @@ function orphanProblems(system: System, compendium?: Compendium): Problem[] {
   const emitted = new Set<string>();
   const heardEvents = new Set<string>();
   for (const effect of Object.values(system.effects)) {
-    for (const event of emittedBy(effect.steps)) emitted.add(event);
+    for (const event of chainsOfEffect(effect).flatMap(emittedBy)) emitted.add(event);
     for (const handler of effect.on ?? []) {
       for (const event of emittedBy(handler.steps)) emitted.add(event);
       const heard = listenerOf(handler.on);
@@ -382,6 +386,8 @@ export function describeWhere(where: Where, system: System, compendium?: Compend
     if (where.step !== undefined) parts.push(`${STEP.one} ${where.step + 1}`);
     if (where.handler !== undefined) parts.push(`«когда» №${where.handler + 1}`);
     if (where.part === 'on') parts.push('когда срабатывает');
+    if (where.part === 'attach') parts.push('при наложении');
+    if (where.part === 'detach') parts.push('при спадании');
     if (where.part === 'modifiers') parts.push('модификаторы');
     if (where.part === 'cost') parts.push('чего стоит');
   } else if (where.tab === 'rules') {

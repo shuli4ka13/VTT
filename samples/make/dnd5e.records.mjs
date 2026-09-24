@@ -122,11 +122,11 @@ export function records() {
     spell_condition: {
       kind: 'action', label: 'Заклинание: состояние', icon: '🌀', group: 'Заклинания',
       hint: 'Удержание личности, страх: провал спасброска вешает состояние. Держится концентрацией, если выбрано.',
-      props: [LEVEL, SAVE_BY, STATUS, prop('repeat', 'Повторный спасбросок', 'effect'),
+      props: [LEVEL, SAVE_BY, STATUS,
         prop('holds', 'Держится концентрацией', 'text', { onSheet: false })],
       bindings: [
         bind('Сотворить', 'spell_condition_held', spellArgs({
-          save_by: ref('save_by'), status: maybe('status'), repeat: maybe('repeat'),
+          save_by: ref('save_by'), status: maybe('status'),
         })),
       ],
     },

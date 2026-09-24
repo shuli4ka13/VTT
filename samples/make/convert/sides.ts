@@ -64,6 +64,7 @@ function walkSlots(value: unknown, fields: Set<string>, called: boolean): void {
 const stepsOf = (effect: Effect): unknown[] => [
   ...(effect.steps ?? []), ...(effect.self ?? []),
   ...(effect.on ?? []).flatMap(handler => [...(handler.steps ?? []), ...(handler.self ?? [])]),
+  ...(effect.attach ?? []), ...(effect.detach ?? []),
 ];
 
 function paramSide(system: System, effect: Effect | undefined, key: string, seen = new Set<Effect>()): Owner | null {

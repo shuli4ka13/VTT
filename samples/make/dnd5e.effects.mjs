@@ -15,7 +15,6 @@ const P = {
   type: { key: 'damage_type', label: 'Тип урона', kind: 'choice', from: 'damage_types' },
   source: { key: 'damage_source', label: 'Источник урона', kind: 'choice', from: 'damage_source' },
   status: { key: 'status', label: 'Состояние', kind: 'effect' },
-  repeat: { key: 'repeat', label: 'Повторный спасбросок', kind: 'effect' },
 };
 
 const LEVELED = '@dice_count + (@slot - @spell_level) * @dice_up';
@@ -114,6 +113,18 @@ const resistNature = (nature, notTags) => ({
     where: { table: 'damage_types', column: 'nature', is: nature }, ...(notTags ? { notTags } : {}),
   }),
   stacking: 'max',
+});
+
+const REMEMBERED = 'или(@worn.carry, 0) > 0';
+const repeatSave = (ability, self) => ({
+  on: 'moment:turn-end', if: { expr: REMEMBERED },
+  steps: [
+    {
+      id: 'save', type: 'threshold', roll: { die: DIE, bonus: { expr: `@${ability}_save` }, tags: ['спасбросок', ABILITY_WORD[ability]] },
+      versus: { ref: 'worn.carry' }, successWhen: 'atLeast', continueOn: 'success',
+    },
+    drop(self),
+  ],
 });
 
 const autoFailBody = [roll(['спасбросок', 'сила'], 'auto_fail'), roll(['спасбросок', 'ловкость'], 'auto_fail')];
@@ -262,24 +273,22 @@ function spells() {
         ],
       }),
     spell_condition: manual('Заклинание: спасбросок или состояние', 'Заклинания',
-      'Тратит ячейку. Провал спасброска вешает состояние, оно запоминает твою сложность для повторных спасбросков. Без концентрации.', 'action', {
+      'Тратит ячейку. Провал спасброска вешает состояние; оно запоминает твою сложность, и повторный спасбросок в конце хода делает само. Без концентрации.', 'action', {
         extends: 'spell',
-        params: [P.saveBy, P.status, { ...P.repeat }],
+        params: [P.saveBy, P.status],
         steps: [
           save('fail'),
           hang({ param: 'status' }, { carry: { expr: '@spell_dc' } }),
-          hang({ param: 'repeat', optional: true }, { carry: { expr: '@spell_dc' } }),
         ],
       }),
     spell_condition_held: manual('Заклинание: спасбросок или состояние, с концентрацией', 'Заклинания',
       'То же, но держится твоей концентрацией: сорвалась или взялся за другое — состояние спало со всех целей.', 'action', {
         extends: 'spell',
         bond: 'concentration',
-        params: [P.saveBy, P.status, { ...P.repeat }],
+        params: [P.saveBy, P.status],
         steps: [
           save('fail'),
           hang({ param: 'status' }, { carry: { expr: '@spell_dc' } }),
-          hang({ param: 'repeat', optional: true }, { carry: { expr: '@spell_dc' } }),
         ],
       }),
     spell_buff: manual('Заклинание: усиление', 'Заклинания',
@@ -440,7 +449,7 @@ function reactions() {
       }),
     uncanny_dodge: reaction('Невероятное уклонение', 'По тебе попали — урон этой атаки вдвое меньше.',
       { on: '*', phase: 'before', if: { ref: 'hit.success' } },
-      { steps: [hang({ const: 'uncanny_up' }), hang({ const: 'uncanny_off' })] }),
+      { steps: [hang({ const: 'uncanny_up' })] }),
     inspire: reaction('Вдохновение: перебросить с преимуществом', 'Увидел свой бросок — тратишь вдохновение, к выпавшему добавляется вторая кость, берётся лучшая.',
       { on: '*', role: 'sender', phase: 'before', claims: ['advantage'] },
       {
@@ -463,26 +472,26 @@ function conditions() {
   const incomingAdvantage = against(['атака'], 'advantage');
   const incomingDisadvantage = against(['атака'], 'disadvantage');
   return {
-    blinded: passive('Ослеплён', 'Твои атаки с помехой, по тебе — с преимуществом.',
-      [roll(['атака'], 'disadvantage'), incomingAdvantage]),
+    blinded: passive('Ослеплён', 'Твои атаки с помехой, по тебе — с преимуществом. Наложенное заклинанием: в конце хода — спасбросок Телосложения против запомненной сложности.',
+      [roll(['атака'], 'disadvantage'), incomingAdvantage], undefined, { on: [repeatSave('con', 'blinded')] }),
     charmed: passive('Очарован', 'Не можешь вредить очаровавшему; у него преимущество на общение с тобой. Считает ведущий.', []),
     deafened: passive('Оглушён', 'Не слышишь. Проверки на слух проваливаются — считает ведущий.', []),
-    frightened: passive('Испуган', 'Помеха на атаки и проверки, пока источник страха на виду.',
-      [roll(['атака'], 'disadvantage'), roll(['проверка'], 'disadvantage')]),
+    frightened: passive('Испуган', 'Помеха на атаки и проверки, пока источник страха на виду. Наложенное заклинанием: в конце хода — спасбросок Мудрости против запомненной сложности.',
+      [roll(['атака'], 'disadvantage'), roll(['проверка'], 'disadvantage')], undefined, { on: [repeatSave('wis', 'frightened')] }),
     grappled: passive('Схвачен', 'Скорость ноль.', [value('speed', 'set', 0)]),
     incapacitated: passive('Недееспособен', 'Ни действий, ни реакций. Следит ведущий.', []),
     invisible: passive('Невидим', 'Твои атаки с преимуществом, по тебе — с помехой.',
       [roll(['атака'], 'advantage'), incomingDisadvantage]),
-    paralyzed: passive('Парализован', 'Недееспособен, скорость ноль, спасброски Силы и Ловкости провалены, по тебе бьют с преимуществом.',
-      [incomingAdvantage, ...autoFailBody, value('speed', 'set', 0)]),
+    paralyzed: passive('Парализован', 'Недееспособен, скорость ноль, спасброски Силы и Ловкости провалены, по тебе бьют с преимуществом. Наложенное заклинанием: в конце хода — спасбросок Мудрости против запомненной сложности.',
+      [incomingAdvantage, ...autoFailBody, value('speed', 'set', 0)], undefined, { on: [repeatSave('wis', 'paralyzed')] }),
     petrified: passive('Окаменел', 'Как паралич, плюс сопротивление любому урону.',
       [incomingAdvantage, ...autoFailBody, value('speed', 'set', 0), resist()]),
     poisoned: passive('Отравлен', 'Помеха на атаки и проверки характеристик.',
       [roll(['атака'], 'disadvantage'), roll(['проверка'], 'disadvantage')]),
     prone: passive('Лежит', 'Твои атаки с помехой, по тебе вблизи бьют с преимуществом. Встать — половина скорости.',
       [incomingAdvantage, roll(['атака'], 'disadvantage')]),
-    restrained: passive('Опутан', 'Скорость ноль, твои атаки и спасброски Ловкости с помехой, по тебе — с преимуществом.',
-      [value('speed', 'set', 0), roll(['атака'], 'disadvantage'), incomingAdvantage, roll(['спасбросок', 'ловкость'], 'disadvantage')]),
+    restrained: passive('Опутан', 'Скорость ноль, твои атаки и спасброски Ловкости с помехой, по тебе — с преимуществом. Наложенное заклинанием: в конце хода — спасбросок Силы против запомненной сложности.',
+      [value('speed', 'set', 0), roll(['атака'], 'disadvantage'), incomingAdvantage, roll(['спасбросок', 'ловкость'], 'disadvantage')], undefined, { on: [repeatSave('str', 'restrained')] }),
     stunned: passive('Ошеломлён', 'Недееспособен, спасброски Силы и Ловкости провалены, по тебе бьют с преимуществом.',
       [incomingAdvantage, ...autoFailBody]),
     unconscious: passive('Без сознания', 'Лежит без чувств: как паралич, и роняет всё, что держал.',
@@ -502,7 +511,8 @@ function conditions() {
         roll(['сила'], 'advantage'),
       ], { kind: 'rounds', max: 10 }),
     shield_up: passive('Под щитом', '+5 к классу брони.', [value('ac', 'add', 5)], UNTIL_MY_TURN),
-    uncanny_up: passive('Невероятное уклонение', 'Урон этой атаки вдвое меньше.', [value('event:damage', 'mul', 0.5)]),
+    uncanny_up: passive('Невероятное уклонение', 'Урон этой атаки вдвое меньше; после удара спадает само.', [value('event:damage', 'mul', 0.5)],
+      undefined, { on: [{ on: 'event:damage', steps: [drop('uncanny_up')] }] }),
     blessed: passive('Благословлён', '+1к4 к броскам атаки и спасброскам. Кость сверх: преимущество её не отбрасывает.',
       [roll(['атака'], 'bless'), roll(['спасбросок'], 'bless')], { kind: 'permanent' }),
     baned: passive('Под порчей', '−1к4 к броскам атаки и спасброскам.',
@@ -511,9 +521,9 @@ function conditions() {
     resisted: passive('Сопротивление', '+1к4 к одному спасброску.', [roll(['спасбросок'], 'guidance')], { kind: 'permanent' }),
     hasted: passive('Ускорен', '+2 к классу брони, скорость вдвое, преимущество на спасброски Ловкости. Лишнее действие разрешает ведущий.',
       [value('ac', 'add', 2), value('speed', 'mul', 2), roll(['спасбросок', 'ловкость'], 'advantage')], { kind: 'permanent' }),
-    slowed: passive('Замедлен', '−2 к классу брони и спасброскам Ловкости, скорость вдвое меньше.',
+    slowed: passive('Замедлен', '−2 к классу брони и спасброскам Ловкости, скорость вдвое меньше. Наложенное заклинанием: в конце хода — спасбросок Мудрости против запомненной сложности.',
       [value('ac', 'add', -2), value('speed', 'mul', 0.5), { kind: 'roll', target: 'roll:any', tags: ['спасбросок', 'ловкость'], op: 'add', value: -2, condition: null }],
-      { kind: 'permanent' }),
+      { kind: 'permanent' }, { on: [repeatSave('wis', 'slowed')] }),
     lit: passive('Подсвечен', 'Атаки по тебе идут с преимуществом, невидимость не помогает.', [incomingAdvantage], { kind: 'permanent' }),
     blurred: passive('Размыт', 'Атаки по тебе идут с помехой.', [incomingDisadvantage], { kind: 'permanent' }),
     mage_armored: passive('Доспех мага', 'База доспеха 13, если не носишь настоящего.',
@@ -579,16 +589,6 @@ function lifecycle() {
   for (const [key, , rest] of RESOURCES) if (rest === 'long') longRest.push(reset(`${key}_left`, `@${key}_max`));
   const shortRest = RESOURCES.filter(([, , rest]) => rest === 'short').map(([key]) => reset(`${key}_left`, `@${key}_max`));
 
-  const repeatSave = (label, ability, ends) => auto(label,
-    'В конце своего хода цель повторяет спасбросок против запомненной сложности; успех снимает состояние.',
-    { on: 'moment:turn-end' },
-    [
-      {
-        id: 'save', type: 'threshold', roll: { die: DIE, bonus: { expr: `@${ability}_save` }, tags: ['спасбросок', ABILITY_WORD[ability]] },
-        versus: { ref: 'worn.carry' }, successWhen: 'atLeast', continueOn: 'success',
-      },
-      ...ends.map(drop),
-    ], { group: 'Состояния', duration: { kind: 'temporary' } });
 
   return {
     concentration: auto('Концентрация',
@@ -601,9 +601,6 @@ function lifecycle() {
         },
         drop('concentration'),
       ], { group: 'Заклинания', duration: { kind: 'temporary' } }),
-    uncanny_off: auto('Невероятное уклонение: конец', 'Снимает уполовинивание сразу после удара.',
-      { on: 'event:damage' }, [drop('uncanny_up'), drop('uncanny_off')],
-      { group: 'Реакции', duration: { kind: 'temporary' } }),
     dying: auto('При смерти',
       'На нуле хитов: в начале своего хода к20. Десять и выше — успех, иначе провал; единица — два провала, двадцатка — один хит и на ноги.',
       { on: 'moment:turn-start', if: { expr: '@hp_current <= 0' } },
@@ -632,11 +629,6 @@ function lifecycle() {
       { on: 'moment:long-rest' }, longRest),
     short_rest: auto('Короткий отдых', 'Возвращает ресурсы короткого отдыха. Кости хитов тратятся отдельной кнопкой.',
       { on: 'moment:short-rest' }, shortRest),
-    repeat_wis_paralyzed: repeatSave('Повторный спасбросок: паралич', 'wis', ['paralyzed', 'repeat_wis_paralyzed']),
-    repeat_wis_frightened: repeatSave('Повторный спасбросок: страх', 'wis', ['frightened', 'repeat_wis_frightened']),
-    repeat_wis_slowed: repeatSave('Повторный спасбросок: замедление', 'wis', ['slowed', 'repeat_wis_slowed']),
-    repeat_con_blinded: repeatSave('Повторный спасбросок: слепота', 'con', ['blinded', 'repeat_con_blinded']),
-    repeat_str_restrained: repeatSave('Повторный спасбросок: путы', 'str', ['restrained', 'repeat_str_restrained']),
   };
 }
 

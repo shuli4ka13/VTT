@@ -38,10 +38,16 @@ export function requireEffect(system: System, id: string, who: string): Effect {
   return effect;
 }
 
+export const chainsOfEffect = (effect: Effect): Step[][] => [
+  effect.steps ?? [], effect.self ?? [],
+  ...(effect.on ?? []).flatMap(handler => [handler.steps ?? [], handler.self ?? []]),
+  effect.attach ?? [], effect.detach ?? [],
+];
+
 export const calledOf = (system: System): [string, Effect][] => {
   const called = new Set<string>();
   for (const effect of Object.values(system.effects || {})) {
-    for (const step of [...(effect.steps ?? []), ...(effect.self ?? [])] as Record<string, unknown>[]) {
+    for (const step of chainsOfEffect(effect).flat() as Record<string, unknown>[]) {
       if (step.type === 'emit' && step.event) called.add(String(step.event));
     }
   }

@@ -4627,7 +4627,7 @@
       "spell_condition": {
         "label": "Заклинание: спасбросок или состояние",
         "group": "Заклинания",
-        "description": "Тратит ячейку. Провал спасброска вешает состояние, оно запоминает твою сложность для повторных спасбросков. Без концентрации.",
+        "description": "Тратит ячейку. Провал спасброска вешает состояние; оно запоминает твою сложность, и повторный спасбросок в конце хода делает само. Без концентрации.",
         "activation": "manual",
         "params": [
           {
@@ -4639,11 +4639,6 @@
           {
             "key": "status",
             "label": "Состояние",
-            "kind": "effect"
-          },
-          {
-            "key": "repeat",
-            "label": "Повторный спасбросок",
             "kind": "effect"
           }
         ],
@@ -4677,17 +4672,6 @@
             "mode": "apply",
             "effect": {
               "param": "status"
-            },
-            "carry": {
-              "expr": "@отправитель.spell_dc"
-            }
-          },
-          {
-            "type": "status",
-            "mode": "apply",
-            "effect": {
-              "param": "repeat",
-              "optional": true
             },
             "carry": {
               "expr": "@отправитель.spell_dc"
@@ -4719,11 +4703,6 @@
             "key": "status",
             "label": "Состояние",
             "kind": "effect"
-          },
-          {
-            "key": "repeat",
-            "label": "Повторный спасбросок",
-            "kind": "effect"
           }
         ],
         "steps": [
@@ -4756,17 +4735,6 @@
             "mode": "apply",
             "effect": {
               "param": "status"
-            },
-            "carry": {
-              "expr": "@отправитель.spell_dc"
-            }
-          },
-          {
-            "type": "status",
-            "mode": "apply",
-            "effect": {
-              "param": "repeat",
-              "optional": true
             },
             "carry": {
               "expr": "@отправитель.spell_dc"
@@ -5758,13 +5726,6 @@
                 "effect": {
                   "const": "uncanny_up"
                 }
-              },
-              {
-                "type": "status",
-                "mode": "apply",
-                "effect": {
-                  "const": "uncanny_off"
-                }
               }
             ]
           }
@@ -5888,7 +5849,7 @@
       "blinded": {
         "label": "Ослеплён",
         "group": "Состояния",
-        "description": "Твои атаки с помехой, по тебе — с преимуществом.",
+        "description": "Твои атаки с помехой, по тебе — с преимуществом. Наложенное заклинанием: в конце хода — спасбросок Телосложения против запомненной сложности.",
         "activation": "passive",
         "duration": {
           "kind": "temporary"
@@ -5912,6 +5873,44 @@
             ],
             "edit": "advantage",
             "condition": null
+          }
+        ],
+        "on": [
+          {
+            "on": "moment:turn-end",
+            "if": {
+              "expr": "или(@worn.carry, 0) > 0"
+            },
+            "steps": [
+              {
+                "id": "save",
+                "type": "threshold",
+                "roll": {
+                  "die": {
+                    "constant": "lead_die"
+                  },
+                  "bonus": {
+                    "expr": "@отправитель.con_save"
+                  },
+                  "tags": [
+                    "спасбросок",
+                    "телосложение"
+                  ]
+                },
+                "versus": {
+                  "ref": "worn.carry"
+                },
+                "successWhen": "atLeast",
+                "continueOn": "success"
+              },
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "blinded"
+                }
+              }
+            ]
           }
         ]
       },
@@ -5940,7 +5939,7 @@
       "frightened": {
         "label": "Испуган",
         "group": "Состояния",
-        "description": "Помеха на атаки и проверки, пока источник страха на виду.",
+        "description": "Помеха на атаки и проверки, пока источник страха на виду. Наложенное заклинанием: в конце хода — спасбросок Мудрости против запомненной сложности.",
         "activation": "passive",
         "duration": {
           "kind": "temporary"
@@ -5964,6 +5963,44 @@
             ],
             "edit": "disadvantage",
             "condition": null
+          }
+        ],
+        "on": [
+          {
+            "on": "moment:turn-end",
+            "if": {
+              "expr": "или(@worn.carry, 0) > 0"
+            },
+            "steps": [
+              {
+                "id": "save",
+                "type": "threshold",
+                "roll": {
+                  "die": {
+                    "constant": "lead_die"
+                  },
+                  "bonus": {
+                    "expr": "@отправитель.wis_save"
+                  },
+                  "tags": [
+                    "спасбросок",
+                    "мудрость"
+                  ]
+                },
+                "versus": {
+                  "ref": "worn.carry"
+                },
+                "successWhen": "atLeast",
+                "continueOn": "success"
+              },
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "frightened"
+                }
+              }
+            ]
           }
         ]
       },
@@ -6031,7 +6068,7 @@
       "paralyzed": {
         "label": "Парализован",
         "group": "Состояния",
-        "description": "Недееспособен, скорость ноль, спасброски Силы и Ловкости провалены, по тебе бьют с преимуществом.",
+        "description": "Недееспособен, скорость ноль, спасброски Силы и Ловкости провалены, по тебе бьют с преимуществом. Наложенное заклинанием: в конце хода — спасбросок Мудрости против запомненной сложности.",
         "activation": "passive",
         "duration": {
           "kind": "temporary"
@@ -6074,6 +6111,44 @@
             "value": 0,
             "stacking": "override",
             "condition": null
+          }
+        ],
+        "on": [
+          {
+            "on": "moment:turn-end",
+            "if": {
+              "expr": "или(@worn.carry, 0) > 0"
+            },
+            "steps": [
+              {
+                "id": "save",
+                "type": "threshold",
+                "roll": {
+                  "die": {
+                    "constant": "lead_die"
+                  },
+                  "bonus": {
+                    "expr": "@отправитель.wis_save"
+                  },
+                  "tags": [
+                    "спасбросок",
+                    "мудрость"
+                  ]
+                },
+                "versus": {
+                  "ref": "worn.carry"
+                },
+                "successWhen": "atLeast",
+                "continueOn": "success"
+              },
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "paralyzed"
+                }
+              }
+            ]
           }
         ]
       },
@@ -6197,7 +6272,7 @@
       "restrained": {
         "label": "Опутан",
         "group": "Состояния",
-        "description": "Скорость ноль, твои атаки и спасброски Ловкости с помехой, по тебе — с преимуществом.",
+        "description": "Скорость ноль, твои атаки и спасброски Ловкости с помехой, по тебе — с преимуществом. Наложенное заклинанием: в конце хода — спасбросок Силы против запомненной сложности.",
         "activation": "passive",
         "duration": {
           "kind": "temporary"
@@ -6239,6 +6314,44 @@
             ],
             "edit": "disadvantage",
             "condition": null
+          }
+        ],
+        "on": [
+          {
+            "on": "moment:turn-end",
+            "if": {
+              "expr": "или(@worn.carry, 0) > 0"
+            },
+            "steps": [
+              {
+                "id": "save",
+                "type": "threshold",
+                "roll": {
+                  "die": {
+                    "constant": "lead_die"
+                  },
+                  "bonus": {
+                    "expr": "@отправитель.str_save"
+                  },
+                  "tags": [
+                    "спасбросок",
+                    "сила"
+                  ]
+                },
+                "versus": {
+                  "ref": "worn.carry"
+                },
+                "successWhen": "atLeast",
+                "continueOn": "success"
+              },
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "restrained"
+                }
+              }
+            ]
           }
         ]
       },
@@ -6507,7 +6620,7 @@
       "uncanny_up": {
         "label": "Невероятное уклонение",
         "group": "Состояния",
-        "description": "Урон этой атаки вдвое меньше.",
+        "description": "Урон этой атаки вдвое меньше; после удара спадает само.",
         "activation": "passive",
         "duration": {
           "kind": "temporary"
@@ -6521,6 +6634,20 @@
             "value": 0.5,
             "stacking": "sum",
             "condition": null
+          }
+        ],
+        "on": [
+          {
+            "on": "event:damage",
+            "steps": [
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "uncanny_up"
+                }
+              }
+            ]
           }
         ]
       },
@@ -6667,7 +6794,7 @@
       "slowed": {
         "label": "Замедлен",
         "group": "Состояния",
-        "description": "−2 к классу брони и спасброскам Ловкости, скорость вдвое меньше.",
+        "description": "−2 к классу брони и спасброскам Ловкости, скорость вдвое меньше. Наложенное заклинанием: в конце хода — спасбросок Мудрости против запомненной сложности.",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -6700,6 +6827,44 @@
             "op": "add",
             "value": -2,
             "condition": null
+          }
+        ],
+        "on": [
+          {
+            "on": "moment:turn-end",
+            "if": {
+              "expr": "или(@worn.carry, 0) > 0"
+            },
+            "steps": [
+              {
+                "id": "save",
+                "type": "threshold",
+                "roll": {
+                  "die": {
+                    "constant": "lead_die"
+                  },
+                  "bonus": {
+                    "expr": "@отправитель.wis_save"
+                  },
+                  "tags": [
+                    "спасбросок",
+                    "мудрость"
+                  ]
+                },
+                "versus": {
+                  "ref": "worn.carry"
+                },
+                "successWhen": "atLeast",
+                "continueOn": "success"
+              },
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "slowed"
+                }
+              }
+            ]
           }
         ]
       },
@@ -7384,37 +7549,6 @@
           }
         ]
       },
-      "uncanny_off": {
-        "label": "Невероятное уклонение: конец",
-        "group": "Реакции",
-        "description": "Снимает уполовинивание сразу после удара.",
-        "activation": "passive",
-        "duration": {
-          "kind": "temporary"
-        },
-        "params": [],
-        "on": [
-          {
-            "on": "event:damage",
-            "steps": [
-              {
-                "type": "status",
-                "mode": "remove",
-                "effect": {
-                  "const": "uncanny_up"
-                }
-              },
-              {
-                "type": "status",
-                "mode": "remove",
-                "effect": {
-                  "const": "uncanny_off"
-                }
-              }
-            ]
-          }
-        ]
-      },
       "dying": {
         "label": "При смерти",
         "group": "Состояния",
@@ -8028,266 +8162,6 @@
                   "expr": "@получатель.superiority_max"
                 },
                 "targetModifiers": false
-              }
-            ]
-          }
-        ]
-      },
-      "repeat_wis_paralyzed": {
-        "label": "Повторный спасбросок: паралич",
-        "group": "Состояния",
-        "description": "В конце своего хода цель повторяет спасбросок против запомненной сложности; успех снимает состояние.",
-        "activation": "passive",
-        "duration": {
-          "kind": "temporary"
-        },
-        "params": [],
-        "on": [
-          {
-            "on": "moment:turn-end",
-            "steps": [
-              {
-                "id": "save",
-                "type": "threshold",
-                "roll": {
-                  "die": {
-                    "constant": "lead_die"
-                  },
-                  "bonus": {
-                    "expr": "@отправитель.wis_save"
-                  },
-                  "tags": [
-                    "спасбросок",
-                    "мудрость"
-                  ]
-                },
-                "versus": {
-                  "ref": "worn.carry"
-                },
-                "successWhen": "atLeast",
-                "continueOn": "success"
-              },
-              {
-                "type": "status",
-                "mode": "remove",
-                "effect": {
-                  "const": "paralyzed"
-                }
-              },
-              {
-                "type": "status",
-                "mode": "remove",
-                "effect": {
-                  "const": "repeat_wis_paralyzed"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "repeat_wis_frightened": {
-        "label": "Повторный спасбросок: страх",
-        "group": "Состояния",
-        "description": "В конце своего хода цель повторяет спасбросок против запомненной сложности; успех снимает состояние.",
-        "activation": "passive",
-        "duration": {
-          "kind": "temporary"
-        },
-        "params": [],
-        "on": [
-          {
-            "on": "moment:turn-end",
-            "steps": [
-              {
-                "id": "save",
-                "type": "threshold",
-                "roll": {
-                  "die": {
-                    "constant": "lead_die"
-                  },
-                  "bonus": {
-                    "expr": "@отправитель.wis_save"
-                  },
-                  "tags": [
-                    "спасбросок",
-                    "мудрость"
-                  ]
-                },
-                "versus": {
-                  "ref": "worn.carry"
-                },
-                "successWhen": "atLeast",
-                "continueOn": "success"
-              },
-              {
-                "type": "status",
-                "mode": "remove",
-                "effect": {
-                  "const": "frightened"
-                }
-              },
-              {
-                "type": "status",
-                "mode": "remove",
-                "effect": {
-                  "const": "repeat_wis_frightened"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "repeat_wis_slowed": {
-        "label": "Повторный спасбросок: замедление",
-        "group": "Состояния",
-        "description": "В конце своего хода цель повторяет спасбросок против запомненной сложности; успех снимает состояние.",
-        "activation": "passive",
-        "duration": {
-          "kind": "temporary"
-        },
-        "params": [],
-        "on": [
-          {
-            "on": "moment:turn-end",
-            "steps": [
-              {
-                "id": "save",
-                "type": "threshold",
-                "roll": {
-                  "die": {
-                    "constant": "lead_die"
-                  },
-                  "bonus": {
-                    "expr": "@отправитель.wis_save"
-                  },
-                  "tags": [
-                    "спасбросок",
-                    "мудрость"
-                  ]
-                },
-                "versus": {
-                  "ref": "worn.carry"
-                },
-                "successWhen": "atLeast",
-                "continueOn": "success"
-              },
-              {
-                "type": "status",
-                "mode": "remove",
-                "effect": {
-                  "const": "slowed"
-                }
-              },
-              {
-                "type": "status",
-                "mode": "remove",
-                "effect": {
-                  "const": "repeat_wis_slowed"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "repeat_con_blinded": {
-        "label": "Повторный спасбросок: слепота",
-        "group": "Состояния",
-        "description": "В конце своего хода цель повторяет спасбросок против запомненной сложности; успех снимает состояние.",
-        "activation": "passive",
-        "duration": {
-          "kind": "temporary"
-        },
-        "params": [],
-        "on": [
-          {
-            "on": "moment:turn-end",
-            "steps": [
-              {
-                "id": "save",
-                "type": "threshold",
-                "roll": {
-                  "die": {
-                    "constant": "lead_die"
-                  },
-                  "bonus": {
-                    "expr": "@отправитель.con_save"
-                  },
-                  "tags": [
-                    "спасбросок",
-                    "телосложение"
-                  ]
-                },
-                "versus": {
-                  "ref": "worn.carry"
-                },
-                "successWhen": "atLeast",
-                "continueOn": "success"
-              },
-              {
-                "type": "status",
-                "mode": "remove",
-                "effect": {
-                  "const": "blinded"
-                }
-              },
-              {
-                "type": "status",
-                "mode": "remove",
-                "effect": {
-                  "const": "repeat_con_blinded"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "repeat_str_restrained": {
-        "label": "Повторный спасбросок: путы",
-        "group": "Состояния",
-        "description": "В конце своего хода цель повторяет спасбросок против запомненной сложности; успех снимает состояние.",
-        "activation": "passive",
-        "duration": {
-          "kind": "temporary"
-        },
-        "params": [],
-        "on": [
-          {
-            "on": "moment:turn-end",
-            "steps": [
-              {
-                "id": "save",
-                "type": "threshold",
-                "roll": {
-                  "die": {
-                    "constant": "lead_die"
-                  },
-                  "bonus": {
-                    "expr": "@отправитель.str_save"
-                  },
-                  "tags": [
-                    "спасбросок",
-                    "сила"
-                  ]
-                },
-                "versus": {
-                  "ref": "worn.carry"
-                },
-                "successWhen": "atLeast",
-                "continueOn": "success"
-              },
-              {
-                "type": "status",
-                "mode": "remove",
-                "effect": {
-                  "const": "restrained"
-                }
-              },
-              {
-                "type": "status",
-                "mode": "remove",
-                "effect": {
-                  "const": "repeat_str_restrained"
-                }
               }
             ]
           }
@@ -9701,11 +9575,6 @@
             "kind": "effect"
           },
           {
-            "key": "repeat",
-            "label": "Повторный спасбросок",
-            "kind": "effect"
-          },
-          {
             "key": "holds",
             "label": "Держится концентрацией",
             "kind": "text",
@@ -9725,10 +9594,6 @@
               },
               "status": {
                 "prop": "status",
-                "optional": true
-              },
-              "repeat": {
-                "prop": "repeat",
                 "optional": true
               }
             }
@@ -11386,7 +11251,6 @@
           "spell_level": 2,
           "save_by": "мудрость",
           "status": "paralyzed",
-          "repeat": "repeat_wis_paralyzed",
           "holds": "да"
         }
       },
@@ -11399,7 +11263,6 @@
           "spell_level": 3,
           "save_by": "мудрость",
           "status": "frightened",
-          "repeat": "repeat_wis_frightened",
           "holds": "да"
         }
       },
@@ -11412,7 +11275,6 @@
           "spell_level": 3,
           "save_by": "мудрость",
           "status": "slowed",
-          "repeat": "repeat_wis_slowed",
           "holds": "да"
         }
       },
@@ -11425,7 +11287,6 @@
           "spell_level": 2,
           "save_by": "телосложение",
           "status": "blinded",
-          "repeat": "repeat_con_blinded",
           "holds": "нет"
         }
       },
@@ -11438,7 +11299,6 @@
           "spell_level": 1,
           "save_by": "сила",
           "status": "restrained",
-          "repeat": "repeat_str_restrained",
           "holds": "да"
         }
       },

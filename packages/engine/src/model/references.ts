@@ -148,6 +148,7 @@ function exprRefs(source: string, from: Where, scope: ChainScope, out: Reference
     if (dot > 0) {
       const head = dep.slice(0, dot);
       if (scope.earlier.has(head) || scope.params.has(head)) continue;
+      if ((SEED_RESULTS as readonly string[]).includes(head)) continue;
       out.push({ kind: 'step', key: head, from, scope: 'dotted' });
       continue;
     }
@@ -239,6 +240,9 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
     }
     for (const claim of handler.claims ?? []) out.push({ kind: 'rollEdit', key: claim, from: head });
   });
+  for (const turn of ['attach', 'detach'] as const) {
+    out.push(...chainRefs(effect[turn] ?? [], step => ({ tab: 'effects', effect: id, step, part: turn }), params, false));
+  }
   modifierRefs(effect.modifiers, { tab: 'effects', effect: id, part: 'modifiers' }, out);
 }
 

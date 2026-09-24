@@ -21,6 +21,7 @@ import { findEffect, usesMax } from '@vtt/engine/engine/effects';
 import { asksOf, checkInputs, normalizeInputs } from '@vtt/engine/model/asks';
 import { fireMoments, fireCrossings, describeMoment } from '@vtt/engine/events/moments';
 import { sweepBonds, releaseHolder } from '@vtt/engine/events/bonds';
+import { fireLifecycle } from '@vtt/engine/events/lifecycle';
 import { runSelfTrack, selfRefusal } from '@vtt/engine/events/self';
 import { deskOf } from '@vtt/engine/events/desk';
 import { DESK_ID } from '@vtt/engine/engine/owners';
@@ -776,19 +777,26 @@ export class RoomsService {
     before: Sheet[], after: Sheet[], lines: string[],
   ): Sheet[] {
     const { system } = world;
-    const crossed = fireCrossings(before, after, world);
+    const hooked = fireLifecycle(before, after, world);
+    for (const entry of hooked.reports) lines.push(describeMoment(world, entry, hooked.sheets));
+    const crossed = fireCrossings(before, hooked.sheets, world);
     for (const entry of crossed.reports) lines.push(describeMoment(world, entry, crossed.sheets));
     const swept = sweepBonds(system, crossed.sheets);
-    if (!swept.broken.length) return swept.sheets;
-    const gone: MomentEvent[] = [];
-    for (const broken of swept.broken) {
-      const who = swept.sheets.find(s => s.id === broken.sheetId)?.name ?? broken.sheetId;
-      lines.push(`«${effectLabelOf(system, broken.effectId)}» спало с ${who}: держать стало нечем`);
-      gone.push({ moment: 'expired', sheetId: broken.sheetId, about: broken.effectId });
+    let current = swept.sheets;
+    if (swept.broken.length) {
+      const gone: MomentEvent[] = [];
+      for (const broken of swept.broken) {
+        const who = swept.sheets.find(s => s.id === broken.sheetId)?.name ?? broken.sheetId;
+        lines.push(`«${effectLabelOf(system, broken.effectId)}» спало с ${who}: держать стало нечем`);
+        gone.push({ moment: 'expired', sheetId: broken.sheetId, about: broken.effectId });
+      }
+      const fired = fireMoments(gone, current, world);
+      for (const entry of fired.reports) lines.push(describeMoment(world, entry, fired.sheets));
+      current = fired.sheets;
     }
-    const fired = fireMoments(gone, swept.sheets, world);
-    for (const entry of fired.reports) lines.push(describeMoment(world, entry, fired.sheets));
-    return fired.sheets;
+    const late = fireLifecycle(hooked.sheets, current, world);
+    for (const entry of late.reports) lines.push(describeMoment(world, entry, late.sheets));
+    return late.sheets;
   }
 
   private readonly queues = new Map<string, Promise<unknown>>();

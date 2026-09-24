@@ -7,7 +7,7 @@ import { EngineError } from '../engine/errors.ts';
 import { spendUse, effectLabelOf } from './envelope.ts';
 import { deskOf } from './desk.ts';
 import type { Report, WorldContext } from './envelope.ts';
-import type { Sheet, Effect, Handler } from '../model/types.ts';
+import type { Sheet, Effect, Handler, WornEffect } from '../model/types.ts';
 
 
 export const MOMENTS = {
@@ -92,8 +92,10 @@ export function fireMoments(events: MomentEvent[], sheets: Sheet[], world: World
   return { sheets: updated, reports };
 }
 
+export const wornSeed = (entry: WornEffect | undefined): Record<string, unknown> => ({ carry: null, ...(entry ?? {}) });
+
 const wornEntry = (sheet: Sheet, effectId: string): Record<string, unknown> =>
-  ({ ...((sheet.effects ?? []).find(entry => entry.effectId === effectId) ?? {}) });
+  wornSeed((sheet.effects ?? []).find(entry => entry.effectId === effectId));
 
 export const fieldOf = (on: string | undefined): string | null =>
   (on && on.startsWith(FIELD_PREFIX) ? on.slice(FIELD_PREFIX.length) : null);
@@ -179,7 +181,7 @@ export const describeMoment = (
   world: WorldContext, entry: { sheetId: string; report: Report }, sheets: Sheet[],
 ): string => {
   const who = sheets.find(s => s.id === entry.sheetId)?.name ?? entry.sheetId;
-  const what = effectLabelOf(world.system, entry.report.effect);
+  const what = entry.report.label || effectLabelOf(world.system, entry.report.effect);
   const changes = (entry.report.changes as { tag: string; from: unknown; to: unknown }[])
     .map(change => {
       const field = world.system.fields.find(f => f.tag === change.tag);
