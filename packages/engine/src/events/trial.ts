@@ -51,7 +51,7 @@ function firstChoice(effect: Effect, key: string): string | null {
 }
 
 export function mannequin(system: System, id: string, name: string): Sheet {
-  return { id, systemId: system.id ?? 'system', kind: 'npc', name, values: {}, has: [], effects: [] };
+  return { id, systemId: system.id ?? 'system', name, values: {}, has: [], effects: [] };
 }
 
 export interface TrialArgs {

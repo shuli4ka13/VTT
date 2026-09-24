@@ -27,7 +27,7 @@ const system = {
   records: { приём: { kind: 'action', label: 'Приём', bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
 };
 const compendium = { records: [{ id: 'удар', rk: 'приём', label: 'Удар', props: {} }] };
-const pc = (id: string) => ({ id, systemId: 'стол', kind: 'pc', name: id, values: {}, has: [{ of: 'удар' }], effects: [] });
+const pc = (id: string) => ({ id, systemId: 'стол', name: id, values: {}, has: [{ of: 'удар' }], effects: [] });
 
 let app: INestApplication;
 let db: Database;
@@ -63,14 +63,14 @@ describe('стол комнаты', () => {
     const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол' })).body.id as string;
 
     const before = (await as(http().get(`/rooms/${roomId}`))).body;
-    const desk = before.sheets.find((s: { kind: string }) => s.kind === 'desk');
+    const desk = before.sheets.find((s: { id: string }) => s.id === 'стол');
     expect(desk?.name).toBe('Стол');
 
     await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: 'удар:0', fromId: 'бьёт', toId: 'держит' }).then(r => { if (r.status !== 201) throw new Error(JSON.stringify(r.body)); });
     await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: 'удар:0', fromId: 'бьёт', toId: 'держит' }).then(r => { if (r.status !== 201) throw new Error(JSON.stringify(r.body)); });
 
     const after = (await as(http().get(`/rooms/${roomId}`))).body;
-    expect(after.sheets.find((s: { kind: string }) => s.kind === 'desk').values.страх).toBe(2);
+    expect(after.sheets.find((s: { id: string }) => s.id === 'стол').values.страх).toBe(2);
     expect(after.sheets.find((s: { id: string }) => s.id === 'держит').values.хп).toBe(20 - 2 - 3);
   });
 });

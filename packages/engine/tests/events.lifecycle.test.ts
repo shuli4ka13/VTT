@@ -45,7 +45,7 @@ const book = {
 const world = { system, compendium: book, die: () => 1 } as never;
 
 const hero = (worn: string[] = [], has: Sheet['has'] = []): Sheet => ({
-  id: 'г', systemId: 'x', kind: 'pc', name: 'Герой', values: { ярость: 0, усталость: 0, замечено: 0 },
+  id: 'г', systemId: 'x', name: 'Герой', values: { ярость: 0, усталость: 0, замечено: 0 },
   has: [{ of: 'в' }, { of: 'у' }, ...(has ?? [])], effects: worn.map(effectId => ({ effectId })),
 } as unknown as Sheet);
 

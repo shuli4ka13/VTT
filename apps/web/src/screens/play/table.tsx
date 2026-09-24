@@ -8,6 +8,7 @@ import { Lobby } from './lobby.tsx';
 import { useSession } from '../../store/session.ts';
 import type { RoomState, Sheet, System } from '@vtt/schema';
 import { availableActions } from '@vtt/engine/events/envelope';
+import { isDesk } from '@vtt/engine/engine/owners';
 import { deskSystemOf } from '@vtt/engine/engine/calc';
 import { useReader } from '../../engine/use-calc.ts';
 import { FieldCell } from '../../sheet/field-cell.tsx';
@@ -31,8 +32,8 @@ function RoomTable({ room }: { room: RoomState }) {
 
   const sender = room.sheets.find(s => s.id === from) ?? null;
   const targets = room.sheets.filter(s => to.includes(s.id));
-  const people = room.sheets.filter(s => s.kind !== 'desk');
-  const desk = room.sheets.find(s => s.kind === 'desk') ?? null;
+  const people = room.sheets.filter(s => !isDesk(s));
+  const desk = room.sheets.find(isDesk) ?? null;
   const deskFields = room.system.fields.filter(f => f.desk);
 
   return (

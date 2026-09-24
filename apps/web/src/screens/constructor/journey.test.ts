@@ -44,7 +44,7 @@ function assemble(): { system: System; compendium: Compendium; sheets: Sheet[]; 
   } as Compendium;
 
   const sheet = (id: string, name: string): Sheet => W.sheet.parse({
-    id, systemId: system.id ?? '', kind: 'pc', name, values: {}, has: [{ of: 'удар' }], effects: []
+    id, systemId: system.id ?? '', name, values: {}, has: [{ of: 'удар' }], effects: []
   });
 
   return { system, compendium, sheets: [sheet('герой', 'Герой'), sheet('враг', 'Враг')], hits: hits.key, action: 'удар:0' };

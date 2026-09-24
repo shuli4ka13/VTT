@@ -503,7 +503,6 @@
     {
       "id": "vex",
       "systemId": "blades",
-      "kind": "pc",
       "name": "Векс",
       "values": {
         "skirmish": 2,
@@ -541,7 +540,6 @@
     {
       "id": "mira",
       "systemId": "blades",
-      "kind": "pc",
       "name": "Мира",
       "values": {
         "skirmish": 0,
@@ -579,7 +577,6 @@
     {
       "id": "стол",
       "systemId": "blades",
-      "kind": "desk",
       "name": "Стол",
       "values": {
         "alarm": 0,

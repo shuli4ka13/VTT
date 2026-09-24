@@ -311,8 +311,6 @@ export const owned = z.object({
 export const sheet = z.object({
   id: z.string().min(1),
   systemId: z.string(),
-
-  kind: z.enum(['pc', 'npc', 'desk']),
   of: z.string().min(1).optional(),
   name: z.string(),
   values: z.record(z.string(), storedValue),

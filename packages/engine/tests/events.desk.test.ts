@@ -22,8 +22,8 @@ const system = {
 } as unknown as System;
 
 const book = { records: [{ id: 'удар', rk: 'приём', label: 'Удар', bindings: [{ label: 'Удар', effect: 'удар', args: {} }] }] } as unknown as Compendium;
-const pc = (id: string): Sheet => ({ id, systemId: 'стол', kind: 'pc', name: id, values: {}, has: [{ of: 'удар' }], effects: [] } as unknown as Sheet);
-const desk = (values: Record<string, number>): Sheet => ({ id: 'стол', systemId: 'стол', kind: 'desk', name: 'Стол', values, has: [], effects: [] } as unknown as Sheet);
+const pc = (id: string): Sheet => ({ id, systemId: 'стол', name: id, values: {}, has: [{ of: 'удар' }], effects: [] } as unknown as Sheet);
+const desk = (values: Record<string, number>): Sheet => ({ id: 'стол', systemId: 'стол', name: 'Стол', values, has: [], effects: [] } as unknown as Sheet);
 
 const hit = (deskValues: Record<string, number>) => exchange({
   system, compendium: book, die: () => 1,

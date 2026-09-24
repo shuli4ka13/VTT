@@ -12,7 +12,7 @@ const fresh = () => JSON.parse(JSON.stringify(world.sheets)) as Sheet[];
 const queue = (...values: number[]) => () => values.shift() ?? 1;
 const act = (sheets: Sheet[], actionId: string, who: string, ...dice: number[]) =>
   exchange({ system, compendium: book, die: queue(...dice), sheets, actionId, fromId: who, toId: who });
-const desk = (sheets: Sheet[]) => sheets.find(s => s.kind === 'desk')!.values;
+const desk = (sheets: Sheet[]) => sheets.find(s => s.id === 'стол')!.values;
 
 group('Blades: эффекты крутят часы на столе', () => {
   test('образец чист для проверок конструктора', () => {

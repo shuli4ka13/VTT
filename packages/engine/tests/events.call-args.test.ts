@@ -42,7 +42,7 @@ const compendium = {
 } as unknown as Compendium;
 
 const sheet = (id: string): Sheet => ({
-  id, systemId: 'общий-кусок', kind: 'pc', name: id,
+  id, systemId: 'общий-кусок', name: id,
   values: {}, has: [{ of: 'секира' }, { of: 'шар' }], effects: []
 } as unknown as Sheet);
 

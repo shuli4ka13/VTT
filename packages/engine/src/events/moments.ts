@@ -7,7 +7,7 @@ import type { Clock } from '../engine/clock.ts';
 import { listening, subscribers, withSteps, MOMENT_PREFIX, FIELD_PREFIX } from './bus.ts';
 import { EngineError } from '../engine/errors.ts';
 import { effectLabelOf } from './envelope.ts';
-import { deskOf } from './desk.ts';
+import { deskOf, isDesk } from './desk.ts';
 import type { Report, WorldContext } from './envelope.ts';
 import type { Sheet, Effect, Handler, Step, WornEffect } from '../model/types.ts';
 
@@ -50,7 +50,7 @@ export type TurnOp = 'start' | 'next' | 'stop' | 'scene' | 'short-rest' | 'long-
 
 export function momentsOfTurn(op: TurnOp, before: Clock, after: Clock, sheets: Sheet[]): MomentEvent[] {
   const everyone = (moment: MomentKey): MomentEvent[] =>
-    sheets.filter(sheet => sheet.kind !== 'desk').map(sheet => ({ moment, sheetId: sheet.id }));
+    sheets.filter(sheet => !isDesk(sheet)).map(sheet => ({ moment, sheetId: sheet.id }));
   if (op === 'start') {
     return [
       ...everyone('combat-start'),

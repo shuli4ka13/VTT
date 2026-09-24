@@ -246,7 +246,7 @@ describe('манекены системы', () => {
     expect(W.system.safeParse(base).success).toBe(true);
     const withDolls = {
       ...base,
-      mannequins: [{ id: 'а', systemId: 'x', kind: 'npc', name: 'А', values: {}, has: [], effects: [] }],
+      mannequins: [{ id: 'а', systemId: 'x', name: 'А', values: {}, has: [], effects: [] }],
     };
     expect(W.system.safeParse(withDolls).success).toBe(true);
     const broken = { ...base, mannequins: [{ id: 'а', name: 'А', values: { hp: 3 } }] };

@@ -42,7 +42,7 @@ const system = {
 
 const book = { records: [{ id: 'выстрел', rk: 'приём', label: 'Выстрел', bindings: [{ label: 'Выстрел', effect: 'выстрел', args: {} }] }, { id: 'вырваться', rk: 'приём', label: 'Вырваться', bindings: [{ label: 'Вырваться', effect: 'вырваться', args: {} }] }] } as unknown as Compendium;
 const sheet = (id: string, effects: unknown[] = []): Sheet =>
-  ({ id, systemId: 'пулы', kind: 'pc', name: id, values: {}, has: [{ of: 'выстрел' }, { of: 'вырваться' }], effects } as unknown as Sheet);
+  ({ id, systemId: 'пулы', name: id, values: {}, has: [{ of: 'выстрел' }, { of: 'вырваться' }], effects } as unknown as Sheet);
 
 const queue = (...values: number[]) => () => values.shift() ?? 1;
 

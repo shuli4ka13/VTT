@@ -9905,7 +9905,6 @@
       {
         "id": "манекен-а",
         "systemId": "dnd5e",
-        "kind": "npc",
         "name": "Манекен А",
         "values": {
           "str": 16,
@@ -9950,7 +9949,6 @@
       {
         "id": "манекен-б",
         "systemId": "dnd5e",
-        "kind": "npc",
         "name": "Манекен Б",
         "values": {
           "str": 12,
@@ -12141,7 +12139,6 @@
     {
       "id": "arven",
       "systemId": "dnd5e",
-      "kind": "pc",
       "of": "персонаж",
       "name": "Арвен",
       "values": {
@@ -12228,7 +12225,6 @@
     {
       "id": "mirra",
       "systemId": "dnd5e",
-      "kind": "pc",
       "of": "персонаж",
       "name": "Мирра",
       "values": {
@@ -12328,7 +12324,6 @@
     {
       "id": "doran",
       "systemId": "dnd5e",
-      "kind": "pc",
       "of": "персонаж",
       "name": "Доран",
       "values": {
@@ -12420,7 +12415,6 @@
     {
       "id": "sil",
       "systemId": "dnd5e",
-      "kind": "pc",
       "of": "персонаж",
       "name": "Силь",
       "values": {
@@ -12499,7 +12493,6 @@
     {
       "id": "goblin",
       "systemId": "dnd5e",
-      "kind": "npc",
       "of": "противник",
       "name": "Гоблин-налётчик",
       "values": {
@@ -12534,7 +12527,6 @@
     {
       "id": "orc",
       "systemId": "dnd5e",
-      "kind": "npc",
       "of": "противник",
       "name": "Орк-воин",
       "values": {
@@ -12566,7 +12558,6 @@
     {
       "id": "ogre",
       "systemId": "dnd5e",
-      "kind": "npc",
       "of": "противник",
       "name": "Огр",
       "values": {
@@ -12595,7 +12586,6 @@
     {
       "id": "стол",
       "systemId": "dnd5e",
-      "kind": "desk",
       "name": "Стол",
       "values": {
         "battle": 0

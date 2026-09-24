@@ -7,11 +7,9 @@ export class SheetShapeError extends Error {
   }
 }
 
-const TOP_KEYS = ['id', 'systemId', 'kind', 'of', 'name', 'values', 'has', 'effects'];
+const TOP_KEYS = ['id', 'systemId', 'of', 'name', 'values', 'has', 'effects'];
 
 const OPTIONAL_KEYS = ['of'];
-
-const KINDS = ['pc', 'npc'];
 
 const isScalar = (v: unknown) => v === null || ['number', 'boolean', 'string'].includes(typeof v);
 
@@ -31,10 +29,6 @@ export function assertSheetShape(sheet: unknown): Sheet {
   }
   for (const key of TOP_KEYS) {
     if (!(key in s) && !OPTIONAL_KEYS.includes(key)) throw new SheetShapeError(`в листе нет обязательного поля «${key}»`);
-  }
-
-  if (!KINDS.includes(s.kind)) {
-    throw new SheetShapeError(`«kind» должен быть одним из: ${KINDS.join(', ')}`);
   }
 
   for (const key of ['id', 'systemId', 'name']) {
@@ -100,7 +94,6 @@ export function deserializeSheet(json: string): Sheet {
   return {
     id: parsed.id,
     systemId: parsed.systemId,
-    kind: parsed.kind,
     ...(typeof parsed.of === 'string' ? { of: parsed.of } : {}),
     name: parsed.name,
     values: sortKeys(parsed.values) as Sheet['values'],

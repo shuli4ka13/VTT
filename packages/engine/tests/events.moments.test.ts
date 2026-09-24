@@ -23,7 +23,7 @@ const system = {
 } as unknown as System;
 
 const sheet = (worn: string[], values: Record<string, unknown> = {}): Sheet => ({
-  id: 'а', systemId: 'x', kind: 'pc', name: 'Арвен',
+  id: 'а', systemId: 'x', name: 'Арвен',
   values: { хиты: 20, яд: false, ...values },
   has: [], effects: worn.map(effectId => ({ effectId })),
 } as unknown as Sheet);
@@ -137,7 +137,7 @@ group('поле стало верным', () => {
   } as unknown as System;
   const ctx = { system: watched, compendium: { records: [] }, die: () => 3 };
   const with_ = (hp: number, worn: string[] = []): Sheet => ({
-    id: 'а', systemId: 'п', kind: 'pc', name: 'Арвен', values: { хиты: hp },
+    id: 'а', systemId: 'п', name: 'Арвен', values: { хиты: hp },
     has: [], effects: worn.map(effectId => ({ effectId })),
   } as unknown as Sheet);
 

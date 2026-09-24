@@ -1,7 +1,7 @@
-const KIND_OF = { pc: 'персонаж', npc: 'противник' };
+const TYPE_OF = { pc: 'персонаж', npc: 'противник' };
 
-const sheet = (id, name, kind, values, equipped, actions, effects = []) => ({
-  id, systemId: 'dnd5e', kind, of: KIND_OF[kind], name, values,
+const sheet = (id, name, who, values, equipped, actions, effects = []) => ({
+  id, systemId: 'dnd5e', ...(TYPE_OF[who] ? { of: TYPE_OF[who] } : {}), name, values,
   has: [...equipped, ...actions].map(of => ({ of })), effects,
 });
 

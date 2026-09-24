@@ -10,6 +10,8 @@ export const OWNERS: readonly Owner[] = [SENDER, RECEIVER];
 
 export const DESK_ID = 'стол';
 
+export const isDesk = (sheet: { id: string }): boolean => sheet.id === DESK_ID;
+
 export const OWNER_WORDS: Record<Owner, string> = { [SENDER]: 'отправителя', [RECEIVER]: 'получателя', [DESK]: 'на столе' };
 
 export function ownerOf(name: string): { owner: Owner; rest: string } | null {

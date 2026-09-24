@@ -9,7 +9,7 @@ const sample = () => ({
   values: { str: 16, dex: 14, athletics_prof: true },
   has: [{ of: 'chain-mail' }, { of: 'longsword' }],
   effects: [],
-  kind: 'pc',
+  
 });
 
 group('сериализация листа', () => {
@@ -36,7 +36,7 @@ group('сериализация листа', () => {
 
   test('в сериализованном виде нет ничего, кроме объявленных полей DTO', () => {
     const keys = Object.keys(JSON.parse(serializeSheet(sample())));
-    deepEq(keys.sort(), ['effects', 'has', 'id', 'kind', 'name', 'systemId', 'values']);
+    deepEq(keys.sort(), ['effects', 'has', 'id', 'name', 'systemId', 'values']);
   });
 
   group('защита от вычисленных значений в DTO', () => {
@@ -87,15 +87,9 @@ group('сериализация листа', () => {
     });
   });
 
-  group('кто владеет листом', () => {
-    test('лист знает, персонаж это игрока или ведущего', () => {
-      for (const sheet of sheets) {
-        ok(['pc', 'npc'].includes(sheet.kind), `у ${sheet.id} странный род: ${sheet.kind}`);
-      }
-    });
-
-    test('посторонний род отвергается', () => {
-      throws(() => serializeSheet({ ...sample(), kind: 'дракон' }), SheetShapeError, 'kind');
+  group('чей лист и какой он', () => {
+    test('«персонаж или противник» — не поле листа, а его тип; старое «kind» отвергается', () => {
+      throws(() => serializeSheet({ ...sample(), kind: 'pc' }), SheetShapeError, 'не является полем листа');
     });
 
     test('текстовое значение — законный скаляр', () => {

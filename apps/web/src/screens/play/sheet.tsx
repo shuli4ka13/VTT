@@ -12,12 +12,14 @@ import type { Sheet, System, RoomState } from '@vtt/schema';
 import { availableActions } from '@vtt/engine/events/envelope';
 import { recordsOf, isItem, sheetKinds, sheetKindOf, shownOn } from '@vtt/engine/model/owned';
 import { deskSystemOf, sheetSystemOf } from '@vtt/engine/engine/calc';
+import { isDesk as atDesk } from '@vtt/engine/engine/owners';
 
 export function SheetScreen() {
   const room = useRoom(s => s.room);
   const mySheetId = useRoom(s => s.mySheetId);
   const pickSheet = useRoom(s => s.pickSheet);
   const [newName, setNewName] = useState('');
+  const [newOf, setNewOf] = useState('');
 
   if (!room) return <Lobby />;
 
@@ -26,9 +28,10 @@ export function SheetScreen() {
   const create = () => {
     const name = newName.trim();
     if (!name) return;
-    tableSocket.createSheet(room.id, name);
+    tableSocket.createSheet(room.id, name, newOf || undefined);
     setNewName('');
   };
+  const kinds = sheetKinds(room.system as System);
 
   return (
     <Columns
@@ -47,7 +50,7 @@ export function SheetScreen() {
                     <ListItem
                       key={item.id}
                       name={item.name ?? item.id}
-                      meta={item.kind === 'desk' ? 'общий для всех' : item.kind === 'npc' ? 'НПС' : 'персонаж игрока'}
+                      meta={atDesk(item) ? 'общий для всех' : sheetKindOf(room.system as System, item)?.label ?? 'лист'}
                       active={item.id === mySheetId}
                       onClick={() => pickSheet(item.id)}
                     />
@@ -55,7 +58,14 @@ export function SheetScreen() {
                 </List>
               )}
             <div className="stack stack--tight">
-              <Input value={newName} onChange={setNewName} placeholder="имя нового персонажа" />
+              <Input value={newName} onChange={setNewName} placeholder="имя нового листа" />
+              {kinds.length ? (
+                <Select
+                  value={newOf}
+                  options={[['', '— без типа —'], ...kinds.map(([key, k]) => [key, k.label ?? key] as const)] as never}
+                  onChange={setNewOf}
+                />
+              ) : null}
               <Button size="sm" wide onClick={create} disabled={!newName.trim()}>+ лист</Button>
             </div>
           </>
@@ -66,14 +76,14 @@ export function SheetScreen() {
           ? <SheetBody room={room} sheet={sheet} />
           : <Empty title="Выберите лист слева" hint="Тот, которым играете." />,
       }}
-      right={sheet && sheet.kind !== 'desk' ? { head: 'Снаряжение и действия', body: <SidePanel room={room} sheet={sheet} /> } : undefined}
+      right={sheet && !atDesk(sheet) ? { head: 'Снаряжение и действия', body: <SidePanel room={room} sheet={sheet} /> } : undefined}
     />
   );
 }
 
 function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
-  const isDesk = sheet.kind === 'desk';
-  const desk = room.sheets.find(s => s.kind === 'desk') ?? null;
+  const isDesk = atDesk(sheet);
+  const desk = room.sheets.find(atDesk) ?? null;
   const system = isDesk ? deskSystemOf(room.system as System) : sheetSystemOf(room.system as System);
   const reader = useReader(isDesk ? system : room.system as System, sheet, room.compendium, isDesk ? null : desk);
   const kinds = sheetKinds(room.system as System);
@@ -97,7 +107,7 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
         sheet={sheet}
         reader={reader}
         only={only}
-        badge={isDesk ? 'стол' : kind?.label ?? (sheet.kind === 'npc' ? 'НПС' : 'игрок')}
+        badge={isDesk ? 'стол' : kind?.label ?? 'лист'}
         onChange={(tag, value) => tableSocket.setValue(room.id, sheet.id, tag, value)}
         onRoll={tag => tableSocket.rollField(room.id, sheet.id, tag)}
       />

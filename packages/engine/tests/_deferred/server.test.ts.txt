@@ -104,8 +104,8 @@ if (inNode) {
             actions: [],
           },
           sheets: [
-            { id: 'x', systemId: 'old', kind: 'pc', name: 'Икс', values: { hp: 10 }, equipped: ['club'], effects: [], actions: [] },
-            { id: 'y', systemId: 'old', kind: 'npc', name: 'Игрек', values: { hp: 10 }, equipped: [], effects: [], actions: [] },
+            { id: 'x', systemId: 'old', name: 'Икс', values: { hp: 10 }, equipped: ['club'], effects: [], actions: [] },
+            { id: 'y', systemId: 'old', name: 'Игрек', values: { hp: 10 }, equipped: [], effects: [], actions: [] },
           ],
         };
         const worldId = publishWorld(db, 'Старый мир', old, 'влад');

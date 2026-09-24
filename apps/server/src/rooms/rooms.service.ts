@@ -14,7 +14,7 @@ import type { Seen } from '@vtt/engine/events/exchange';
 import type { EmittedEvent } from '@vtt/engine/engine/rule';
 import { previewLines, describeEntry } from '@vtt/engine/events/describe';
 import { flattenSystem } from '@vtt/engine/model/inherit';
-import { findRecord } from '@vtt/engine/model/owned';
+import { findRecord, sheetKindOf } from '@vtt/engine/model/owned';
 import { effectLabelOf, send, receive, offers, react, senderResults } from '@vtt/engine/events/envelope';
 import { tapeDie, replayDie } from '@vtt/engine/engine/dice';
 import type { Envelope, Offer, ReactionWindow, Report } from '@vtt/engine/events/envelope';
@@ -25,7 +25,7 @@ import { releaseHolder } from '@vtt/engine/events/bonds';
 import { settle as settleSheets } from '@vtt/engine/events/settle';
 import { runSelfTrack, selfRefusal } from '@vtt/engine/events/self';
 import { deskOf } from '@vtt/engine/events/desk';
-import { DESK_ID } from '@vtt/engine/engine/owners';
+import { DESK_ID, isDesk } from '@vtt/engine/engine/owners';
 import { resolveRoll } from '@vtt/engine/engine/modifiers';
 import { newPass, calc } from '@vtt/engine/engine/calc';
 import { rollLead, dieConstant } from '@vtt/engine/engine/lead-die';
@@ -89,7 +89,7 @@ export class RoomsService {
     });
     const deskFields = world.system.fields.filter(field => field.desk);
     const withDesk = deskFields.length && !deskOf(world.sheets)
-      ? [...world.sheets, { id: DESK_ID, systemId: world.system.id, kind: 'desk', name: 'Стол', values: {}, has: [], effects: [] } as Sheet]
+      ? [...world.sheets, { id: DESK_ID, systemId: world.system.id, name: 'Стол', values: {}, has: [], effects: [] } as Sheet]
       : world.sheets;
     for (const sheet of withDesk) {
       await this.db.insert(roomSheets).values({
@@ -167,8 +167,8 @@ export class RoomsService {
     return this.inTurn(roomId, () => this.runRollField(userId, roomId, sheetId, tag));
   }
 
-  createSheet(userId: string, roomId: string, name: string, kind: 'pc' | 'npc' = 'pc'): Promise<RoomDelta> {
-    return this.inTurn(roomId, () => this.runCreateSheet(userId, roomId, name, kind));
+  createSheet(userId: string, roomId: string, name: string, of?: string): Promise<RoomDelta> {
+    return this.inTurn(roomId, () => this.runCreateSheet(userId, roomId, name, of));
   }
 
   setBelonging(
@@ -692,17 +692,19 @@ export class RoomsService {
   }
 
   private async runCreateSheet(
-    userId: string, roomId: string, name: string, kind: 'pc' | 'npc' = 'pc',
+    userId: string, roomId: string, name: string, of?: string,
   ): Promise<RoomDelta> {
     const room = await this.requireRoom(roomId);
     if (!await this.memberOf(roomId, userId)) throw new ForbiddenException('вы не в этой комнате');
 
     const { system } = this.worldOf(room);
 
+    if (of && !sheetKindOf(system, { of } as Sheet)) throw new BadRequestException(`в системе нет типа листа «${of}»`);
+
     const sheet = W.sheet.parse({
       id: this.newId(),
       systemId: system.id ?? '',
-      kind,
+      ...(of ? { of } : {}),
       name,
       values: {},
       has: [],
@@ -834,7 +836,7 @@ export class RoomsService {
       const rows = await this.db.select().from(roomSheets)
         .where(and(eq(roomSheets.roomId, roomId), eq(roomSheets.sheetId, sheetId)));
       if (!rows[0]) throw new NotFoundException(`в комнате нет листа «${sheetId}»`);
-      if ((JSON.parse(rows[0].data) as Sheet).kind === 'desk') {
+      if (isDesk(JSON.parse(rows[0].data) as Sheet)) {
         throw new BadRequestException('стол общий — за ним не играют, его правит ведущий');
       }
 

@@ -130,7 +130,7 @@ export class TableGateway {
 
     try {
       const delta = await this.roomsService.createSheet(
-        guest.userId, parsed.data.roomId, parsed.data.name, parsed.data.kind ?? 'pc');
+        guest.userId, parsed.data.roomId, parsed.data.name, parsed.data.of);
       this.broadcast(parsed.data.roomId, { type: 'room:delta', delta });
     } catch (err) {
       this.fail(socket, (err as Error).message);

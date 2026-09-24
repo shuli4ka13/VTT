@@ -36,9 +36,9 @@ const book = {
 } as unknown as Compendium;
 
 const hero = (has: Sheet['has']): Sheet =>
-  ({ id: 'герой', systemId: 'в', kind: 'pc', name: 'Герой', values: {}, has, effects: [] }) as Sheet;
+  ({ id: 'герой', systemId: 'в', name: 'Герой', values: {}, has, effects: [] }) as Sheet;
 
-const target = (): Sheet => ({ id: 'цель', systemId: 'в', kind: 'npc', name: 'Цель', values: {}, has: [], effects: [] }) as Sheet;
+const target = (): Sheet => ({ id: 'цель', systemId: 'в', name: 'Цель', values: {}, has: [], effects: [] }) as Sheet;
 
 group('что есть у листа: запись со своим состоянием', () => {
   test('надетое правит и выдаёт, в сумке — ни правок, ни выданного, ни кнопок', () => {

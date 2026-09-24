@@ -29,7 +29,7 @@ const system = {
 } as unknown as System;
 
 const compendium = { records: [{ id: 'ствол', rk: 'ствол', label: 'Ствол', props: {} }] } as unknown as Compendium;
-const sheet = (id: string): Sheet => ({ id, systemId: 'x', kind: 'pc', name: id, values: { hp: 20 }, has: [{ of: 'ствол' }], effects: [] } as unknown as Sheet);
+const sheet = (id: string): Sheet => ({ id, systemId: 'x', name: id, values: { hp: 20 }, has: [{ of: 'ствол' }], effects: [] } as unknown as Sheet);
 
 group('значение, которое называет человек за столом', () => {
   const asked = asksOf('ствол:0', { system, compendium });

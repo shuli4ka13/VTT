@@ -21,7 +21,7 @@ const book = {
   ],
 } as unknown as Compendium;
 
-const who = (id: string): Sheet => ({ id, systemId: 'с', kind: 'pc', name: id, values: {}, has: [{ of: 'помочь' }, { of: 'отвлечь' }], effects: [] }) as Sheet;
+const who = (id: string): Sheet => ({ id, systemId: 'с', name: id, values: {}, has: [{ of: 'помочь' }, { of: 'отвлечь' }], effects: [] }) as Sheet;
 
 const apply = (action: string) => {
   const clock = startCombat(idleClock(), ['а', 'б']);

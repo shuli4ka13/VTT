@@ -24,7 +24,7 @@ const system = {
 const compendium = { records: [{ id: 'молитва', rk: 'молитва', label: 'Молитва', props: {} }] } as unknown as Compendium;
 
 const sheet = (id: string, effects: object[] = []): Sheet => ({
-  id, systemId: 'x', kind: 'pc', name: id, values: {}, has: [{ of: 'молитва' }], effects,
+  id, systemId: 'x', name: id, values: {}, has: [{ of: 'молитва' }], effects,
 } as unknown as Sheet);
 
 group('эффект, который держится другим эффектом', () => {

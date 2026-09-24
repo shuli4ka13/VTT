@@ -4,6 +4,7 @@ import { resolveRoll } from './modifiers.ts';
 import { dieConstant, rollLead, unfoldDice } from './lead-die.ts';
 import { packRef, resolveNumber, resolveOptionalNumber } from './refs.ts';
 import { EngineError } from './errors.ts';
+import { isDesk } from './owners.ts';
 import type { System, Sheet, Effect, WornEffect, Compendium, Die } from '../model/types.ts';
 
 export interface Clock {
@@ -48,7 +49,7 @@ export function rollInitiative(
   system: System, sheets: Sheet[], compendium: Compendium, die: Die,
 ): { order: string[]; rolls: InitiativeRoll[] } {
   const spec = system.initiative;
-  const fighters = sheets.filter(sheet => sheet.kind !== 'desk');
+  const fighters = sheets.filter(sheet => !isDesk(sheet));
   if (!spec) return { order: fighters.map(s => s.id), rolls: [] };
 
   const rolls = fighters.map((sheet): InitiativeRoll => {

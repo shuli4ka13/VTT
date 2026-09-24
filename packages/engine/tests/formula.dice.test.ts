@@ -38,7 +38,7 @@ const книга = {
 } as never;
 
 const лист = (порог: number) => ({
-  id: 'я', systemId: 'ф', kind: 'pc', name: 'я',
+  id: 'я', systemId: 'ф', name: 'я',
   values: { порог }, has: [{ of: 'меч' }], effects: []
 } as never);
 

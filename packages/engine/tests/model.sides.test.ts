@@ -41,7 +41,7 @@ describe('имя с хозяином', () => {
     records: [...(['удар', 'просто', 'зовёт_наивного'].map(id => ({ id, rk: 'приём', label: id, bindings: [{ label: id, effect: id, args: {} }] })))],
   } as unknown as Compendium;
   const sheet = (id: string, сила: number, броня: number): Sheet =>
-    ({ id, systemId: 'стороны', kind: 'pc', name: id, values: { сила, броня, хп: 20 }, has: [{ of: 'удар' }, { of: 'просто' }, { of: 'зовёт_наивного' }], effects: [] } as unknown as Sheet);
+    ({ id, systemId: 'стороны', name: id, values: { сила, броня, хп: 20 }, has: [{ of: 'удар' }, { of: 'просто' }, { of: 'зовёт_наивного' }], effects: [] } as unknown as Sheet);
   const hit = (action: string) => {
     const env = send(`${action}:0`, { system, sheet: sheet('бьёт', 7, 1), compendium: book, die: () => 1 });
     return receive(env, { system, sheet: sheet('держит', 3, 5), compendium: book, die: () => 1 }).sheet.values.хп;

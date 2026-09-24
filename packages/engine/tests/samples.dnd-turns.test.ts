@@ -12,7 +12,7 @@ const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 
 const table = (battle: number): Sheet[] => {
   const sheets = clone(dnd.sheets as Sheet[]);
-  const desk = sheets.find(s => s.kind === 'desk')!;
+  const desk = sheets.find(s => s.id === 'стол')!;
   desk.values = { ...desk.values, battle };
   const goblin = sheets.find(s => s.id === 'goblin')!;
   goblin.values = { ...goblin.values, hp_current: 500, hp_max: 500 };
@@ -53,8 +53,8 @@ group('действия хода — поля листа, а не отдельн
 
   test('начало боя отмечает бой на столе, конец — снимает', () => {
     const started = fireMoments([{ moment: 'combat-start', sheetId: 'arven' }], table(0), { system, compendium, die: () => 1 });
-    eq(started.sheets.find(s => s.kind === 'desk')!.values.battle, 1);
+    eq(started.sheets.find(s => s.id === 'стол')!.values.battle, 1);
     const ended = fireMoments([{ moment: 'combat-end', sheetId: 'arven' }], started.sheets, { system, compendium, die: () => 1 });
-    eq(ended.sheets.find(s => s.kind === 'desk')!.values.battle, 0);
+    eq(ended.sheets.find(s => s.id === 'стол')!.values.battle, 0);
   });
 });

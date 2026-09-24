@@ -46,7 +46,7 @@ const система = {
 } as unknown as System;
 
 const лист = (класс = 'воин') => ({
-  id: 'я', systemId: 'н', kind: 'pc', name: 'я', values: { класс }, has: [{ of: 'меч' }, { of: 'факел' }], effects: []
+  id: 'я', systemId: 'н', name: 'я', values: { класс }, has: [{ of: 'меч' }, { of: 'факел' }], effects: []
 } as unknown as Sheet);
 
 group('ссылка на таблицу читается через точку', () => {

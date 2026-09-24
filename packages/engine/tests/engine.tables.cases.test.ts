@@ -84,7 +84,7 @@ group('формула видит результат шага выше', () => {
     } as unknown as System;
     const книга = { records: [{ id: 'приём', rk: 'приём', label: 'Удар', props: {} }] } as never;
     const лист = (порог: number) => ({
-      id: 'я', systemId: 'к', kind: 'pc', name: 'я',
+      id: 'я', systemId: 'к', name: 'я',
       values: { порог }, has: [{ of: 'приём' }], effects: []
     } as never);
 

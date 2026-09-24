@@ -3222,7 +3222,6 @@
     {
       "id": "silver",
       "systemId": "cp-slice",
-      "kind": "pc",
       "name": "Сильвер",
       "values": {
         "handle": "Сильвер",
@@ -3265,7 +3264,6 @@
     {
       "id": "raze",
       "systemId": "cp-slice",
-      "kind": "pc",
       "name": "Рейз",
       "values": {
         "handle": "Рейз",
@@ -3308,7 +3306,6 @@
     {
       "id": "стол",
       "systemId": "cp-slice",
-      "kind": "desk",
       "name": "Стол",
       "values": {
         "battle": 0

@@ -65,8 +65,8 @@ export class TableSocket {
     this.send('sheet:roll', { roomId, sheetId, tag });
   }
 
-  createSheet(roomId: string, name: string, kind: 'pc' | 'npc' = 'pc'): void {
-    this.send('sheet:create', { roomId, name, kind });
+  createSheet(roomId: string, name: string, of?: string): void {
+    this.send('sheet:create', { roomId, name, ...(of ? { of } : {}) });
   }
 
   setSheetKind(roomId: string, sheetId: string, of: string | null): void {

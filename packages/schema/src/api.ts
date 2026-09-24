@@ -172,7 +172,7 @@ export const clientMessage = z.discriminatedUnion('type', [
   z.object({ type: z.literal('room:answer'), intent: answerIntent }),
   z.object({ type: z.literal('sheet:set'), roomId: z.string(), sheetId: z.string(), tag: z.string(), value: z.union([z.number(), z.string(), z.boolean(), z.null()]) }),
 
-  z.object({ type: z.literal('sheet:create'), roomId: z.string(), name: z.string().min(1).max(64), kind: z.enum(['pc', 'npc']).optional() }),
+  z.object({ type: z.literal('sheet:create'), roomId: z.string(), name: z.string().min(1).max(64), of: z.string().min(1).optional() }),
 
   z.object({ type: z.literal('sheet:roll'), roomId: z.string(), sheetId: z.string(), tag: z.string().min(1) }),
 

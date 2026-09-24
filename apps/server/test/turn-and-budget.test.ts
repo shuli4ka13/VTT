@@ -89,7 +89,7 @@ describe('часы и траты хода не портятся', () => {
     expect(broken.body.message).toContain('нет_такой_правки');
 
     const state = (await as(http().get(`/rooms/${roomId}`))).body;
-    const desk = state.sheets.find((sheet: { kind?: string }) => sheet.kind === 'desk');
+    const desk = state.sheets.find((sheet: { id: string }) => sheet.id === 'стол');
     expect(desk.values.battle, 'начало боя отметило бой на столе').toBe(1);
     expect(state.sheets.find((sheet: { id: string }) => sheet.id === mirra.id).values.turn_action ?? 1, 'упавшее действие не потратило действие').toBe(1);
 
@@ -182,7 +182,7 @@ describe('значение, которое называет человек за 
     };
     const book = { records: [{ id: 'ствол', rk: 'ствол', label: 'Ствол', props: {} }] };
     const sheet = (id: string) => ({
-      id, systemId: 'ask', kind: 'pc', name: id, values: { хиты: 20 }, has: [{ of: 'ствол' }], effects: []
+      id, systemId: 'ask', name: id, values: { хиты: 20 }, has: [{ of: 'ствол' }], effects: []
     });
 
     const systemId = (await as(http().post('/systems')).send({ title: 'Со спросом', system })).body.id;
@@ -212,7 +212,7 @@ describe('одно действие по нескольким целям', () =>
     const { as, roomId, arven, mirra, rooms } = await table();
     const state = (await as(http().get(`/rooms/${roomId}`))).body;
     const third = (await (async () => {
-      await rooms.createSheet((await as(http().get('/auth/me'))).body.userId, roomId, 'Третий', 'npc');
+      await rooms.createSheet((await as(http().get('/auth/me'))).body.userId, roomId, 'Третий');
       return (await as(http().get(`/rooms/${roomId}`))).body.sheets.find((s: { name: string }) => s.name === 'Третий');
     })());
     expect(third, 'третий лист заведён').toBeTruthy();
@@ -249,7 +249,7 @@ describe('моменты хода', () => {
       },
     };
     const sheet = (id: string, worn: string[]) => ({
-      id, systemId: 'яд', kind: 'pc', name: id, values: { хиты: 20 },
+      id, systemId: 'яд', name: id, values: { хиты: 20 },
       has: [], effects: worn.map(effectId => ({ effectId })),
     });
 
@@ -300,7 +300,7 @@ describe('ячейка тратится один раз на действие', 
     };
     const book = { records: [{ id: 'свиток', rk: 'свиток', label: 'Свиток', props: {} }] };
     const sheet = (id: string) => ({
-      id, systemId: 'ячейки', kind: 'pc', name: id, values: { хиты: 20, ячейки: 3 },
+      id, systemId: 'ячейки', name: id, values: { хиты: 20, ячейки: 3 },
       has: [{ of: 'свиток' }], effects: [],
     });
 
@@ -348,7 +348,7 @@ describe('появилось и ушло с листа', () => {
       records: { оружие: { kind: 'item', label: 'Оружие', props: [], bindings: [] } },
     };
     const book = { records: [{ id: 'меч', rk: 'оружие', label: 'Меч', props: {}, grants: ['заточка'] }] };
-    const sheet = { id: 'воин', systemId: 'вещи', kind: 'pc', name: 'Воин', values: {}, has: [], effects: [] };
+    const sheet = { id: 'воин', systemId: 'вещи', name: 'Воин', values: {}, has: [], effects: [] };
 
     const systemId = (await as(http().post('/systems')).send({ title: 'С вещами', system })).body.id;
     const bookId = (await as(http().post('/compendiums')).send({ title: 'Книга вещей', systemId, compendium: book })).body.id;
@@ -399,7 +399,7 @@ describe('вопросы к человеку переживают пересбо
     };
     const book = { records: [{ id: 'приём', rk: 'приём', label: 'Удар', props: {} }] };
     const sheet = (id: string, worn: string[]) => ({
-      id, systemId: 'вопросы', kind: 'pc', name: id, values: { хиты: 20 },
+      id, systemId: 'вопросы', name: id, values: { хиты: 20 },
       has: [{ of: 'приём' }], effects: worn.map(effectId => ({ effectId })),
     });
 
@@ -455,7 +455,7 @@ describe('цель правит свой бросок, увидев его', () 
     };
     const book = { records: [{ id: 'приём', rk: 'приём', label: 'Залп', props: {} }] };
     const sheet = (id: string, worn: string[]) => ({
-      id, systemId: 'спасение', kind: 'pc', name: id, values: { хиты: 20 },
+      id, systemId: 'спасение', name: id, values: { хиты: 20 },
       has: [{ of: 'приём' }], effects: worn.map(effectId => ({ effectId })),
     });
 
@@ -504,7 +504,7 @@ describe('поле стало верным', () => {
       },
       room_rules: ['падение'],
     };
-    const sheet = { id: 'воин', systemId: 'порог', kind: 'pc', name: 'Воин', values: { хиты: 5 }, has: [], effects: [] };
+    const sheet = { id: 'воин', systemId: 'порог', name: 'Воин', values: { хиты: 5 }, has: [], effects: [] };
 
     const systemId = (await as(http().post('/systems')).send({ title: 'С порогом', system })).body.id;
     const bookId = (await as(http().post('/compendiums')).send({ title: 'Пусто', systemId, compendium: { records: [] } })).body.id;
@@ -567,7 +567,7 @@ describe('два сообщения стола сразу', () => {
       records: { приём: { kind: 'action', label: 'Приём', props: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
     };
     const book = { records: [{ id: 'приём', rk: 'приём', label: 'Удар', props: {} }] };
-    const sheet = (id: string) => ({ id, systemId: 'гонка', kind: 'pc', name: id, values: { хиты: 20 }, has: [{ of: 'приём' }], effects: [] });
+    const sheet = (id: string) => ({ id, systemId: 'гонка', name: id, values: { хиты: 20 }, has: [{ of: 'приём' }], effects: [] });
 
     const systemId = (await as(http().post('/systems')).send({ title: 'Гонка', system })).body.id;
     const bookId = (await as(http().post('/compendiums')).send({ title: 'Книга гонки', systemId, compendium: book })).body.id;
@@ -614,7 +614,7 @@ describe('реакция после разрешения', () => {
     };
     const book = { records: [{ id: 'приём', rk: 'приём', label: 'Удар', props: {} }] };
     const sheet = (id: string, worn: string[]) => ({
-      id, systemId: 'возмездие', kind: 'pc', name: id, values: { хиты: 20 },
+      id, systemId: 'возмездие', name: id, values: { хиты: 20 },
       has: [{ of: 'приём' }], effects: worn.map(effectId => ({ effectId })),
     });
 
@@ -682,7 +682,7 @@ describe('отдых и плата ячейкой', () => {
       records: { чары: { kind: 'action', label: 'Чары', props: [], bindings: [{ label: 'Стрела', effect: 'стрела', args: {} }] } },
     };
     const book = { records: [{ id: 'стрела', rk: 'чары', label: 'Стрела', props: {} }] };
-    const sheet = (id: string) => ({ id, systemId: 'отдых', kind: 'pc', name: id, values: {}, has: [{ of: 'стрела' }], effects: [] });
+    const sheet = (id: string) => ({ id, systemId: 'отдых', name: id, values: {}, has: [{ of: 'стрела' }], effects: [] });
 
     const systemId = (await as(http().post('/systems')).send({ title: 'С отдыхом', system })).body.id;
     const bookId = (await as(http().post('/compendiums')).send({ title: 'Книга отдыха', systemId, compendium: book })).body.id;
@@ -705,5 +705,31 @@ describe('отдых и плата ячейкой', () => {
     await as(http().post(`/rooms/${roomId}/turn`)).send({ roomId, op: 'start', order: ['маг', 'цель'] }).expect(201);
     const denied = await as(http().post(`/rooms/${roomId}/turn`)).send({ roomId, op: 'short-rest' }).expect(400);
     expect(denied.body.message).toContain('в бою не отдыхают');
+  });
+});
+
+describe('лист заводят с типом из системы', () => {
+  it('тип берётся из тех, что завёл автор; чужой отвергается словами', async () => {
+    const token = (await http().post('/auth/login').send({ name: 'Ведущий типов' })).body.token as string;
+    const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
+    const me = (await as(http().get('/auth/me'))).body.userId as string;
+
+    const system = {
+      id: 'типы', name: 'С типами',
+      fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 5 } }],
+      effects: {},
+      records: { питомец: { kind: 'sheet', label: 'Питомец', hint: 'Зверь героя.' } },
+    };
+    const systemId = (await as(http().post('/systems')).send({ title: 'С типами', system })).body.id;
+    await as(http().post(`/systems/${systemId}/publish`)).send({}).expect(201);
+    const worldId = (await as(http().post('/worlds')).send({ title: 'Мир типов', systemId, compendiumIds: [], sheets: [] })).body.id;
+    const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол типов' })).body.id as string;
+    const rooms = app.get(RoomsService);
+
+    const made = await rooms.createSheet(me, roomId, 'Шарик', 'питомец');
+    const state = (await as(http().get(`/rooms/${roomId}`))).body;
+    expect(state.sheets.find((s: { name: string }) => s.name === 'Шарик').of).toBe('питомец');
+    expect(made.log.map(e => e.text).join(' ')).toContain('Шарик');
+    await expect(rooms.createSheet(me, roomId, 'Дракон', 'дракон')).rejects.toThrow('нет типа листа «дракон»');
   });
 });

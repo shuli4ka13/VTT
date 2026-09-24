@@ -45,7 +45,7 @@ for (const [name, world] of Object.entries(WORLDS)) {
       expect(Object.keys(system.effects).length).toBeGreaterThan(0);
     });
 
-    const players = world.sheets.filter((s: any) => s.kind !== 'desk');
+    const players = world.sheets.filter((s: any) => s.id !== 'стол');
     for (const from of players) {
       const actions = availableActions(from, { system, compendium });
       const targets = players.filter((s: any) => s.id !== from.id);

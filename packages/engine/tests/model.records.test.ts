@@ -1,7 +1,8 @@
 import { group, test, eq, ok } from './harness.ts';
+import { world as W } from '@vtt/schema';
 import { system, compendium, cyberpunk, cpCompendium } from './fixtures.ts';
 
-const BASES = ['item', 'action'];
+const BASES: string[] = W.recordKind.shape.kind.options;
 
 group('роды записей объявляет система', () => {
   test('5e объявляет свои рода, включая «Заклинание»', () => {

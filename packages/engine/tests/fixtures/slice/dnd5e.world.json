@@ -1647,6 +1647,18 @@
             }
           }
         ]
+      },
+      "персонаж": {
+        "kind": "sheet",
+        "label": "Персонаж",
+        "icon": "🧙",
+        "hint": "Лист героя."
+      },
+      "противник": {
+        "kind": "sheet",
+        "label": "Противник",
+        "icon": "👹",
+        "hint": "Лист противника."
       }
     },
     "fields": [
@@ -2764,7 +2776,7 @@
     {
       "id": "arven",
       "systemId": "dnd5e-slice",
-      "kind": "pc",
+      "of": "персонаж",
       "name": "Арвен",
       "values": {
         "race": "Человек",
@@ -2810,7 +2822,7 @@
     {
       "id": "mirra",
       "systemId": "dnd5e-slice",
-      "kind": "npc",
+      "of": "противник",
       "name": "Мирра",
       "values": {
         "race": "Полуэльф",

@@ -808,6 +808,18 @@
         "hint": "Ведущий двигает кость эскалации.",
         "props": [],
         "bindings": []
+      },
+      "персонаж": {
+        "kind": "sheet",
+        "label": "Персонаж",
+        "icon": "🧙",
+        "hint": "Лист героя."
+      },
+      "противник": {
+        "kind": "sheet",
+        "label": "Противник",
+        "icon": "👹",
+        "hint": "Лист противника."
       }
     },
     "room_rules": [
@@ -900,7 +912,7 @@
     {
       "id": "kai",
       "systemId": "13age",
-      "kind": "pc",
+      "of": "персонаж",
       "name": "Кай",
       "values": {
         "str": 18,
@@ -932,7 +944,7 @@
     {
       "id": "leya",
       "systemId": "13age",
-      "kind": "pc",
+      "of": "персонаж",
       "name": "Лея",
       "values": {
         "str": 10,
@@ -967,7 +979,7 @@
     {
       "id": "goblin",
       "systemId": "13age",
-      "kind": "npc",
+      "of": "противник",
       "name": "Гоблин",
       "values": {
         "str": 10,
@@ -989,7 +1001,7 @@
     {
       "id": "orc",
       "systemId": "13age",
-      "kind": "npc",
+      "of": "противник",
       "name": "Орк-берсерк",
       "values": {
         "str": 16,
@@ -1011,7 +1023,6 @@
     {
       "id": "стол",
       "systemId": "13age",
-      "kind": "desk",
       "name": "Стол",
       "values": {
         "escalation": 0,

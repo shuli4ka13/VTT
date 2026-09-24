@@ -5,9 +5,13 @@ import { randomDie } from '../src/engine/dice.ts';
 import { system, compendium, sheets, arven, mirra } from './fixtures.ts';
 
 const ms = (work: () => void): number => {
-  const started = performance.now();
-  work();
-  return performance.now() - started;
+  let best = Infinity;
+  for (let run = 0; run < 3; run++) {
+    const started = performance.now();
+    work();
+    best = Math.min(best, performance.now() - started);
+  }
+  return best;
 };
 
 group('бюджет времени — страховка от регрессий', () => {

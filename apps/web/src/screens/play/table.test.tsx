@@ -14,8 +14,8 @@ const room = (clock: object | null): RoomState => ({
   },
   compendium: { records: [] },
   sheets: [
-    { id: 'а', systemId: 'x', kind: 'pc', name: 'Арвен', values: {}, has: [], effects: [] },
-    { id: 'б', systemId: 'x', kind: 'npc', name: 'Мирра', values: {}, has: [], effects: [] },
+    { id: 'а', systemId: 'x', name: 'Арвен', values: {}, has: [], effects: [] },
+    { id: 'б', systemId: 'x', name: 'Мирра', values: {}, has: [], effects: [] },
   ],
   ...(clock ? { clock } : {}),
 } as unknown as RoomState);
@@ -148,8 +148,8 @@ describe('панель «Стол»', () => {
       fields: [{ tag: 'страх', label: 'Страх', desk: true, value: { kind: 'stored', type: 'number', default: 0 } }],
     },
     sheets: [
-      { id: 'а', systemId: 'x', kind: 'pc', name: 'Арвен', values: {}, has: [], effects: [] },
-      { id: 'стол', systemId: 'x', kind: 'desk', name: 'Стол', values: { страх: 3 }, has: [], effects: [] },
+      { id: 'а', systemId: 'x', name: 'Арвен', values: {}, has: [], effects: [] },
+      { id: 'стол', systemId: 'x', name: 'Стол', values: { страх: 3 }, has: [], effects: [] },
     ],
   } as unknown as RoomState);
 

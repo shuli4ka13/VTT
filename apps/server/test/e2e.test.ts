@@ -510,7 +510,7 @@ describe('концентрация снимается с листа', () => {
     };
     const book = { records: [{ id: 'жест', rk: 'жест', label: 'Жест', props: {} }] };
     const sheet = (id: string) => ({
-      id, systemId: 'связи', kind: 'pc', name: id, values: {}, has: [{ of: 'жест' }], effects: [],
+      id, systemId: 'связи', name: id, values: {}, has: [{ of: 'жест' }], effects: [],
     });
 
     const systemId = (await as(http().post('/systems')).send({ title: 'Со связями', system })).body.id;

@@ -22,7 +22,7 @@ const system = {
 } as unknown as System;
 
 const sheet = (): Sheet => ({
-  id: 'а', systemId: 'x', kind: 'pc', name: 'Арвен', values: { хиты: 20 },
+  id: 'а', systemId: 'x', name: 'Арвен', values: { хиты: 20 },
   has: [], effects: [{ effectId: 'горит' }],
 } as unknown as Sheet);
 
