@@ -1,12 +1,12 @@
 import { useWorld } from '../../../store/world.ts';
-import { newTrigger } from '../factory.ts';
+import { newTrigger, payStep } from '../factory.ts';
 import { Card, CardHead, Field, Input, Select, DangerButton, LabelInput } from '../../../ui/primitives.tsx';
 import { FieldRow } from '../../../ui/field-row.tsx';
 import { useOpened } from '../../../store/opened.ts';
 import { ModifiersEditor } from '../modifiers.tsx';
 import { LAUNCH_KINDS, launchHint } from './words.ts';
 import { LaunchCard } from './launch-card.tsx';
-import { Chain, type Lane } from './chain.tsx';
+import { Chain, CostPick, type Lane } from './chain.tsx';
 import { BlockPick } from '../block-pick.tsx';
 import { Extras } from './cards/extras.tsx';
 import { ParamsEditor } from './params-editor.tsx';
@@ -276,7 +276,15 @@ function SelfTrack({ effect, system, edit, onMoveLane }: {
   onMoveLane: (indices: number[], to: Lane) => void;
 }) {
   const track = effect.self ?? [];
-  if (!track.length) return null;
+  if (!track.length) {
+    return (
+      <div className="inline">
+        <span className="faint">Чего стоит:</span>
+        <CostPick system={system} onPick={id => edit(draft => { draft.self = [payStep(id)]; })} />
+        <span className="faint">ничего — пока не выбрали</span>
+      </div>
+    );
+  }
   const carrier = { ...effect, steps: track } as Effect;
 
   const editTrack = (change: (draft: Effect) => void) => edit(draft => {

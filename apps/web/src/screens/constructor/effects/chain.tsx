@@ -189,25 +189,10 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
           </Button>
         ))}
         {lane === 'sender' ? (
-          <span className="add-cost">
-            <Select<string>
-              value=""
-              title="Чего стоит эффект: эффект из блока «Стоимость» зовётся первым шагом; не хватило — эффект не состоится"
-              options={[['', '+ стоимость'],
-                ...costsOf(system).map(([id, cost]) => [id, cost.label || id] as const),
-                [NEW_COST, '+ новая стоимость…']]}
-              onChange={pick => {
-                if (!pick) return;
-                let id = pick;
-                if (pick === NEW_COST) {
-                  const made = newCost(system);
-                  id = made.key;
-                  editSystem(draft => { draft.effects[made.key] = made.value; });
-                }
-                edit(draft => { (draft.steps ??= []).unshift(payStep(id)); });
-              }}
-            />
-          </span>
+          <CostPick system={system} onPick={id => edit(draft => {
+            const taken = (draft.steps ?? []).map(s => String(s.id ?? ''));
+            (draft.steps ??= []).unshift(payStep(id, taken));
+          })} />
         ) : null}
       </div>
     </>
@@ -215,6 +200,28 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
 }
 
 const NEW_COST = ':новая';
+
+export function CostPick({ system, onPick }: { system: System; onPick: (id: string) => void }) {
+  const editSystem = useWorld(s => s.editSystem);
+  return (
+    <span className="add-cost">
+      <Select<string>
+        value=""
+        title="Чего стоит эффект: эффект из блока «Стоимость» зовётся первым шагом; не хватило — эффект не состоится"
+        options={[['', '+ стоимость'],
+          ...costsOf(system).map(([id, cost]) => [id, cost.label || id] as const),
+          [NEW_COST, '+ новая стоимость…']]}
+        onChange={pick => {
+          if (!pick) return;
+          if (pick !== NEW_COST) { onPick(pick); return; }
+          const made = newCost(system);
+          editSystem(draft => { draft.effects[made.key] = made.value; });
+          onPick(made.key);
+        }}
+      />
+    </span>
+  );
+}
 
 const cardTitle = (cards: ReturnType<typeof groupSteps>, index: number): string | undefined => {
   const card = cards.find(c => c.indices.includes(index));
