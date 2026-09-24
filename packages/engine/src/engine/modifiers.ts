@@ -3,6 +3,7 @@ import { assertTarget, incomingTagOf, ANY_ROLL } from './targets.ts';
 import { roomEffects, wornEffects, activationOf } from './effects.ts';
 import { EngineError } from './errors.ts';
 import { anyRowSays } from './tables.ts';
+import { findRecord, kindOfRecord } from '../model/owned.ts';
 import { tagsHold } from './roll-tags.ts';
 import type { System, Sheet, Compendium, Modifier, RollEdit } from '../model/types.ts';
 import type { Pass } from './calc.ts';
@@ -62,18 +63,19 @@ function sourcesOf(system: System, sheet: Sheet, compendium: Compendium): Modifi
     sources.push({ type: 'room', id, label: effect.label || id, modifiers: effect.modifiers || [] });
   }
 
-  for (const id of sheet.equipped || []) {
-    const item = (compendium.items || []).find(i => i.id === id);
-    if (!item) throw new EngineError(`лист «${sheet.id}» носит предмет «${id}», которого нет в компендиуме`);
+  for (const entry of sheet.has || []) {
+    if (entry.off) continue;
+    const item = findRecord(compendium, entry.of);
+    if (!item) throw new EngineError(`у листа «${sheet.id}» есть «${entry.of}», которого нет в компендиуме`);
 
-    const kind = item.rk ? (system.records || {})[item.rk] : undefined;
+    const kind = kindOfRecord(system, item);
     if (kind?.modifiers?.length) {
       sources.push({
         type: 'kind', id: String(item.rk), label: kind.label || String(item.rk),
         modifiers: kind.modifiers,
       });
     }
-    sources.push({ type: 'item', id: item.id, label: item.label, modifiers: item.modifiers || [] });
+    if (item.modifiers?.length) sources.push({ type: 'item', id: item.id, label: item.label, modifiers: item.modifiers });
   }
 
   for (const { id, effect } of wornEffects(system, sheet, { compendium })) {

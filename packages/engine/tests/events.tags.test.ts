@@ -58,16 +58,11 @@ const world = (extraEffects: Record<string, unknown> = {}, receive: unknown[] | 
 });
 
 const book = {
-  items: [],
-  actions: [
-    { id: 'удар', rk: 'приём', label: 'Удар', effect: 'удар' },
-    { id: 'огонь', rk: 'приём', label: 'Огненный шар', effect: 'огонь' },
-    { id: 'тревога', rk: 'приём', label: 'Тревога', effect: 'сигнал' },
-  ],
+  records: [{ id: 'удар', rk: 'приём', label: 'Удар', bindings: [{ label: 'Удар', effect: 'удар', args: {} }] }, { id: 'огонь', rk: 'приём', label: 'Огненный шар', bindings: [{ label: 'Огненный шар', effect: 'огонь', args: {} }] }, { id: 'тревога', rk: 'приём', label: 'Тревога', bindings: [{ label: 'Тревога', effect: 'сигнал', args: {} }] }],
 };
 
 const hero = (effects: string[] = []) => ({
-  id: 'герой', values: { хп: 20 }, effects: effects.map(effectId => ({ effectId })), actions: ['удар', 'огонь', 'тревога'],
+  id: 'герой', values: { хп: 20 }, effects: effects.map(effectId => ({ effectId })), has: [{ of: 'удар' }, { of: 'огонь' }, { of: 'тревога' }],
 });
 const foe = (effects: string[] = []) => ({ id: 'враг', values: { хп: 20 }, effects: effects.map(effectId => ({ effectId })) });
 
@@ -96,8 +91,8 @@ group('вызываемый эффект как провод: отправите
 
   test('необъявленный вызов — ошибка перечисляет известные эффекты', () => {
     const sys: any = world({ чужое: { label: 'Чужое', activation: 'manual', steps: [{ type: 'emit', event: 'котик' }] } });
-    const withAction = { ...book, actions: [...book.actions, { id: 'чужое', rk: 'приём', label: 'Чужое', effect: 'чужое' }] };
-    throws(() => send('чужое:0', { system: sys, sheet: { ...hero(), actions: ['чужое'] }, compendium: withAction, die: queue() }), 'котик');
+    const withAction = { ...book, records: [...book.records, { id: 'чужое', rk: 'приём', label: 'Чужое', bindings: [{ label: 'Чужое', effect: 'чужое', args: {} }] }] };
+    throws(() => send('чужое:0', { system: sys, sheet: { ...hero(), records: ['чужое'] }, compendium: withAction, die: queue() }), 'котик');
   });
 
   test('вызов без шагов — просто сигнал: поля не тронуты, но он отправлен', () => {

@@ -10,6 +10,7 @@ import { useSession } from '../../store/session.ts';
 import { Lobby } from './lobby.tsx';
 import type { Sheet, System, RoomState } from '@vtt/schema';
 import { availableActions } from '@vtt/engine/events/envelope';
+import { recordsOf, isItem } from '@vtt/engine/model/owned';
 import { deskSystemOf, sheetSystemOf } from '@vtt/engine/engine/calc';
 
 export function SheetScreen() {
@@ -128,15 +129,18 @@ function actionsOf(sheet: Sheet, room: RoomState): { id: string; label: string }
 function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   const available = actionsOf(sheet, room);
 
-  const equipped = new Set(sheet.equipped ?? []);
-  const known = new Set(sheet.actions ?? []);
+  const system = room.system as System;
+  const owned = (id: string) => (sheet.has ?? []).find(entry => entry.of === id);
   const wornOf = (id: string) => (sheet.effects ?? []).find(e => e.effectId === id);
 
-  const toggle = (list: 'equipped' | 'actions' | 'effects', id: string, on: boolean) =>
-    tableSocket.setBelonging(room.id, sheet.id, list, id, on);
+  const toggle = (list: 'has' | 'effects', id: string, on: boolean, off?: boolean) =>
+    tableSocket.setBelonging(room.id, sheet.id, list, id, on, off);
 
-  const items = room.compendium.items ?? [];
-  const actions = room.compendium.actions ?? [];
+  const records = recordsOf(room.compendium);
+  const items = records.filter(record => isItem(system, record));
+  const actions = records.filter(record => !isItem(system, record));
+  const carried = items.filter(item => owned(item.id)).length;
+  const known = actions.filter(action => owned(action.id)).length;
   const itemDetails = (item: (typeof items)[number]): string[] =>
     recordDetails(item, room.system as System, room.compendium).map(line => `${line.label}: ${line.value}`);
 
@@ -162,21 +166,27 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
           ))}
       </Fold>
 
-      <Fold title="Снаряжение" count={equipped.size}>
+      <Fold title="Снаряжение" count={carried}>
         {items.length === 0
           ? <span className="faint">В компендиуме мира нет предметов.</span>
           : (
             <div className="stack stack--tight">
               {items.map(item => {
                 const details = itemDetails(item);
+                const entry = owned(item.id);
                 return (
                   <div key={item.id}>
                     <Chip
-                      active={equipped.has(item.id)}
-                      onClick={() => toggle('equipped', item.id, !equipped.has(item.id))}
+                      active={Boolean(entry) && !entry?.off}
+                      onClick={() => toggle('has', item.id, !entry)}
                     >
                       {item.label ?? item.id}
                     </Chip>
+                    {entry ? (
+                      <Chip onClick={() => toggle('has', item.id, true, !entry.off)}>
+                        {entry.off ? 'в сумке' : 'надето'}
+                      </Chip>
+                    ) : null}
                     {details.length ? <div className="faint">{details.join(' · ')}</div> : null}
                   </div>
                 );
@@ -185,7 +195,7 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
           )}
       </Fold>
 
-      <Fold title="Известные действия" count={known.size}>
+      <Fold title="Известные действия" count={known}>
         {actions.length === 0
           ? <span className="faint">В компендиуме мира нет действий.</span>
           : (
@@ -193,8 +203,8 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
               {actions.map(action => (
                 <Chip
                   key={action.id}
-                  active={known.has(action.id)}
-                  onClick={() => toggle('actions', action.id, !known.has(action.id))}
+                  active={Boolean(owned(action.id))}
+                  onClick={() => toggle('has', action.id, !owned(action.id))}
                 >
                   {action.label ?? action.id}
                 </Chip>

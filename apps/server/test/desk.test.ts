@@ -26,8 +26,8 @@ const system = {
   },
   records: { приём: { kind: 'action', label: 'Приём', bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
 };
-const compendium = { items: [], actions: [{ id: 'удар', rk: 'приём', label: 'Удар', props: {} }] };
-const pc = (id: string) => ({ id, systemId: 'стол', kind: 'pc', name: id, values: {}, equipped: [], effects: [], actions: ['удар'] });
+const compendium = { records: [{ id: 'удар', rk: 'приём', label: 'Удар', props: {} }] };
+const pc = (id: string) => ({ id, systemId: 'стол', kind: 'pc', name: id, values: {}, has: [{ of: 'удар' }], effects: [] });
 
 let app: INestApplication;
 let db: Database;

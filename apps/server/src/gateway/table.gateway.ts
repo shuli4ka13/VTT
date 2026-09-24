@@ -183,9 +183,9 @@ export class TableGateway {
       return this.fail(socket, 'правка принадлежностей не проходит схему');
     }
 
-    const { roomId, sheetId, list, id, on } = parsed.data;
+    const { roomId, sheetId, list, id, on, off } = parsed.data;
     try {
-      const delta = await this.roomsService.setBelonging(guest.userId, roomId, sheetId, list, id, on);
+      const delta = await this.roomsService.setBelonging(guest.userId, roomId, sheetId, list, id, on, off);
       this.broadcast(roomId, { type: 'room:delta', delta });
     } catch (err) {
       this.fail(socket, (err as Error).message);

@@ -77,7 +77,7 @@ group('триггерные эффекты: ответка получателя'
   test('триггер слушает КОНКРЕТНЫЙ эффект, а не любой вызов', () => {
     const sys = thorny();
 
-    const healer = { ...arven, actions: [...arven.actions, 'healing-word'] };
+    const healer = { ...arven, has: [...arven.has, { of: 'healing-word' }] };
     const { reports } = exchange({
       system: sys, compendium, die: queue(2),
       sheets: [spiked(healer), spiked(mirra)], actionId: 'healing-word:0',
@@ -135,7 +135,7 @@ group('длительность: счётчик срабатываний', () =>
 group('шаг «состояние» в режиме «снять»', () => {
   test('лечащее заклинание снимает отравление тем же конвейером', () => {
     const poisoned = { ...arven, effects: [{ effectId: 'poisoned' }] };
-    const healer = { ...mirra, actions: [...mirra.actions, 'healing-word'] };
+    const healer = { ...mirra, has: [...mirra.has, { of: 'healing-word' }] };
     const { sheets, reports } = exchange({
       system, compendium, die: queue(2),
       sheets: [healer, poisoned], actionId: 'healing-word:0',

@@ -20,7 +20,7 @@ const hit = (steps: any[], values: Record<string, number>) => {
   const sheet = { id: 'цель', values, effects: [] };
   const ctx = () => ({
     system: sys, sheet, params: {}, item: null,
-    die: () => 1, pass: newPass(sys, sheet, { compendium: { items: [] } }),
+    die: () => 1, pass: newPass(sys, sheet, { compendium: { records: [] } }),
   });
   return resolveRule(packRule({ steps } as any, ctx() as any), ctx() as any);
 };

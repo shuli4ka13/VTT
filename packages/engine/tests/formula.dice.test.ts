@@ -34,13 +34,12 @@ const система = {
 } as unknown as System;
 
 const книга = {
-  items: [{ id: 'меч', rk: 'оружие', label: 'Меч', props: { кость: '1к8' } }],
-  actions: [],
+  records: [{ id: 'меч', rk: 'оружие', label: 'Меч', props: { кость: '1к8' } }],
 } as never;
 
 const лист = (порог: number) => ({
   id: 'я', systemId: 'ф', kind: 'pc', name: 'я',
-  values: { порог }, equipped: ['меч'], effects: [], actions: [],
+  values: { порог }, has: [{ of: 'меч' }], effects: []
 } as never);
 
 const бей = (порог: number, выпало: number) => {

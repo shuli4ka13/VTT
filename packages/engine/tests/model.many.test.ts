@@ -16,7 +16,7 @@ group('ссылка «несколько значений» — многие к�
 
   test('у кинжала три свойства, и каждое занимает свою строку таблицы', () => {
     const мир = clone(PLAYABLE_WORLDS[0]!);
-    const кинжал = мир.compendium.items!.find(i => i.id === 'dagger')!;
+    const кинжал = мир.compendium.records!.find(i => i.id === 'dagger')!;
     eq(JSON.stringify(кинжал.props!.properties), JSON.stringify(['лёгкое', 'фехтовальное', 'метательное']));
     const кто = rowUsers(мир.system as System, 'weapon_properties', 'метательное', мир.compendium as Compendium);
     ok(кто.some(u => u.text.includes('Кинжал')), кто.map(u => u.text).join(' | '));
@@ -28,7 +28,7 @@ group('ссылка «несколько значений» — многие к�
     const книга = мир.compendium as Compendium;
     renameRow(system, 'weapon_properties', 'метательное', 'бросковое');
     renameRowInBook(system, книга, 'weapon_properties', 'метательное', 'бросковое');
-    const кинжал = книга.items!.find(i => i.id === 'dagger')!;
+    const кинжал = книга.records!.find(i => i.id === 'dagger')!;
     eq(JSON.stringify(кинжал.props!.properties), JSON.stringify(['лёгкое', 'фехтовальное', 'бросковое']));
     eq(danglingRows(system, книга).length, 0);
   });

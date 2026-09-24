@@ -3,8 +3,8 @@ import { calc, calcAll, newPass, dependenciesOf } from '../src/engine/calc.ts';
 import { UnknownTagError, CycleError, TableError } from '../src/engine/errors.ts';
 import { system, arven, mirra } from './fixtures.ts';
 
-const tinySystem = (fields, tables = {}) => ({ id: 'tiny', name: 'Крошечная', tables, rolls: [], fields, actions: [] });
-const tinySheet = values => ({ id: 't', systemId: 'tiny', name: 'Т', values, equipped: [], effects: [] });
+const tinySystem = (fields, tables = {}) => ({ id: 'tiny', name: 'Крошечная', tables, rolls: [], fields, records: [] });
+const tinySheet = values => ({ id: 't', systemId: 'tiny', name: 'Т', values, has: [], effects: [] });
 
 const stored = (tag, def) => ({ tag, label: tag, group: 'g', value: { kind: 'stored', type: typeof def, default: def } });
 const formula = (tag, expr) => ({ tag, label: tag, group: 'g', value: { kind: 'formula', expr } });

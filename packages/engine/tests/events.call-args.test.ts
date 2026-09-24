@@ -38,13 +38,12 @@ const system = {
 } as unknown as System;
 
 const compendium = {
-  items: [{ id: 'секира', rk: 'оружие', label: 'Секира', props: { кость: '1d12' } }],
-  actions: [{ id: 'шар', rk: 'чары', label: 'Огненный шар', props: {} }],
+  records: [{ id: 'секира', rk: 'оружие', label: 'Секира', props: { кость: '1d12' } }, { id: 'шар', rk: 'чары', label: 'Огненный шар', props: {} }],
 } as unknown as Compendium;
 
 const sheet = (id: string): Sheet => ({
   id, systemId: 'общий-кусок', kind: 'pc', name: id,
-  values: {}, equipped: ['секира'], effects: [], actions: ['шар'],
+  values: {}, has: [{ of: 'секира' }, { of: 'шар' }], effects: []
 } as unknown as Sheet);
 
 const hit = (actionId: string, die: number, sys: System = system) => {

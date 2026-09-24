@@ -24,7 +24,7 @@ const plus = (id, label, target, value, stacking = 'sum') => ({
 });
 
 const book = extraItems => ({
-  items: [...compendium.items, ...extraItems],
+  records: [...compendium.records, ...extraItems],
 });
 
 group('модификаторы', () => {
@@ -33,28 +33,28 @@ group('модификаторы', () => {
       id, label: id, slot: 'ring',
       modifiers: [{ kind: 'value', target: 'ac', op: 'mul', value, stacking, condition: null }],
     });
-    const bare = { ...arven, equipped: [] };
+    const bare = { ...arven, has: [] };
 
     test('один множитель ×0.5 уполовинивает значение', () => {
-      eq(ac({ ...bare, equipped: ['half-a'] }, book([times('half-a', 0.5)])), 5.5);
+      eq(ac({ ...bare, has: [{ of: 'half-a' }] }, book([times('half-a', 0.5)])), 5.5);
     });
 
     test('два множителя ×0.5 с накоплением «сумма» перемножаются, а не складываются в ×1', () => {
-      eq(ac({ ...bare, equipped: ['half-a', 'half-b'] }, book([times('half-a', 0.5), times('half-b', 0.5)])), 2.75);
+      eq(ac({ ...bare, has: [{ of: 'half-a' }, { of: 'half-b' }] }, book([times('half-a', 0.5), times('half-b', 0.5)])), 2.75);
     });
 
     test('три множителя ×0.5 дают ×0.125, а не ×1.5', () => {
       const items = [times('half-a', 0.5), times('half-b', 0.5), times('half-c', 0.5)];
-      eq(ac({ ...bare, equipped: ['half-a', 'half-b', 'half-c'] }, book(items)), 1.375);
+      eq(ac({ ...bare, has: [{ of: 'half-a' }, { of: 'half-b' }, { of: 'half-c' }] }, book(items)), 1.375);
     });
 
     test('накопление «наибольшее» у множителей по-прежнему берёт один — так выражается «сопротивления не складываются»', () => {
       const items = [times('half-a', 0.5, 'max'), times('half-b', 0.5, 'max')];
-      eq(ac({ ...bare, equipped: ['half-a', 'half-b'] }, book(items)), 5.5);
+      eq(ac({ ...bare, has: [{ of: 'half-a' }, { of: 'half-b' }] }, book(items)), 5.5);
     });
 
     test('без снаряжения класс брони считается по голым характеристикам', () => {
-      eq(ac({ ...arven, equipped: [] }), 11);
+      eq(ac({ ...arven, has: [] }), 11);
     });
 
     test('кольчуга задаёт базу доспеха и гасит вклад Ловкости', () => {
@@ -63,7 +63,7 @@ group('модификаторы', () => {
 
     test('новый предмет с бонусом добавляется правкой данных, без правки движка', () => {
       const ring = plus('ring-of-protection', 'Кольцо защиты', 'ac', 1);
-      eq(ac({ ...arven, equipped: ['chain-mail', 'ring-of-protection'] }, book([ring])), 17);
+      eq(ac({ ...arven, has: [{ of: 'chain-mail' }, { of: 'ring-of-protection' }] }, book([ring])), 17);
     });
 
     test('модификатор может ссылаться на формулу, а не только на число', () => {
@@ -71,7 +71,7 @@ group('модификаторы', () => {
         id: 'belt', label: 'Пояс', slot: 'waist',
         modifiers: [{ kind: 'value', target: 'ac', op: 'add', value: { expr: '#prof_bonus' }, stacking: 'sum', condition: null }],
       };
-      eq(ac({ ...arven, equipped: ['belt'] }, book([belt])), 11 + 3);
+      eq(ac({ ...arven, has: [{ of: 'belt' }] }, book([belt])), 11 + 3);
     });
   });
 
@@ -80,20 +80,20 @@ group('модификаторы', () => {
       id, label: id, slot: 'ring',
       modifiers: [{ kind: 'value', target: 'ac', op, value, stacking: 'sum', condition: null }],
     });
-    const bare = { ...arven, equipped: [] };
+    const bare = { ...arven, has: [] };
 
     test('«не меньше» поднимает малое значение до пола, большое не трогает', () => {
-      eq(ac({ ...bare, equipped: ['floor'] }, book([bound('floor', 'floor', 15)])), 15);
-      eq(ac({ ...bare, equipped: ['floor'] }, book([bound('floor', 'floor', 5)])), 11);
+      eq(ac({ ...bare, has: [{ of: 'floor' }] }, book([bound('floor', 'floor', 15)])), 15);
+      eq(ac({ ...bare, has: [{ of: 'floor' }] }, book([bound('floor', 'floor', 5)])), 11);
     });
 
     test('«не больше» режет значение потолком', () => {
-      eq(ac({ ...bare, equipped: ['cap'] }, book([bound('cap', 'cap', 8)])), 8);
+      eq(ac({ ...bare, has: [{ of: 'cap' }] }, book([bound('cap', 'cap', 8)])), 8);
     });
 
     test('пол считается после прибавок и множителей, два пола — берётся выше', () => {
       const items = [plus('ring', 'Кольцо', 'ac', 2), bound('a', 'floor', 20), bound('b', 'floor', 16)];
-      eq(ac({ ...bare, equipped: ['ring', 'a', 'b'] }, book(items)), 20);
+      eq(ac({ ...bare, has: [{ of: 'ring' }, { of: 'a' }, { of: 'b' }] }, book(items)), 20);
     });
   });
 
@@ -101,7 +101,7 @@ group('модификаторы', () => {
     const two = [plus('a', 'A', 'ac', 1), plus('b', 'B', 'ac', 2)];
     const sheet = () => ({
       ...arven,
-      equipped: ['a', 'b'],
+      has: [{ of: 'a' }, { of: 'b' }],
     });
 
     test('sum складывает все бонусы', () => {
@@ -123,7 +123,7 @@ group('модификаторы', () => {
 
     test('разные правила стакинга на одной мишени не мешают друг другу', () => {
       const mixed = [plus('a', 'A', 'ac', 1, 'sum'), plus('b', 'B', 'ac', 5, 'max'), plus('c', 'C', 'ac', 3, 'max')];
-      eq(ac({ ...arven, equipped: ['a', 'b', 'c'] }, book(mixed)), 11 + 1 + 5);
+      eq(ac({ ...arven, has: [{ of: 'a' }, { of: 'b' }, { of: 'c' }] }, book(mixed)), 11 + 1 + 5);
     });
   });
 
@@ -134,17 +134,17 @@ group('модификаторы', () => {
     });
 
     test('модификатор с истинным условием применяется', () => {
-      eq(ac({ ...arven, equipped: ['cond'] }, book([conditional('#level >= 5')])), 21);
+      eq(ac({ ...arven, has: [{ of: 'cond' }] }, book([conditional('#level >= 5')])), 21);
     });
 
     test('модификатор с ложным условием не применяется', () => {
-      eq(ac({ ...arven, equipped: ['cond'] }, book([conditional('#level >= 99')])), 11);
+      eq(ac({ ...arven, has: [{ of: 'cond' }] }, book([conditional('#level >= 99')])), 11);
     });
 
     test('условие считается по листу владельца, а не по константам', () => {
       const gear = book([conditional('#dex_mod > 2')]);
-      eq(ac({ ...arven, equipped: ['cond'] }, gear), 11, 'у Арвен Ловкость мала');
-      eq(ac({ ...mirra, equipped: ['cond'] }, gear), 24, 'у Мирры Ловкость велика');
+      eq(ac({ ...arven, has: [{ of: 'cond' }] }, gear), 11, 'у Арвен Ловкость мала');
+      eq(ac({ ...mirra, has: [{ of: 'cond' }] }, gear), 24, 'у Мирры Ловкость велика');
     });
   });
 
@@ -303,7 +303,7 @@ group('модификаторы', () => {
         ]),
       });
 
-      const bare = { ...arven, equipped: [], effects: [{ effectId: 'guidance' }] };
+      const bare = { ...arven, has: [], effects: [{ effectId: 'guidance' }] };
       const result = resolveRoll(both, bare, ['проверка'], newPass(both, bare, { compendium }));
       eq(result.bonus, 2, 'число живёт отдельно от правки');
       deepEq(result.edits.map(e => e.label), ['Преимущество']);
@@ -366,7 +366,7 @@ group('модификаторы', () => {
 
     test('предмет с необъявленной мишенью роняет сборку модификаторов', () => {
       const bogus = plus('bogus', 'Мимо', 'несуществующий_тег', 1);
-      const sheet = { ...arven, equipped: ['bogus'] };
+      const sheet = { ...arven, has: [{ of: 'bogus' }] };
       throws(() => calc(system, sheet, 'ac', newPass(system, sheet, { compendium: book([bogus]) })), UnknownTagError);
     });
   });

@@ -27,11 +27,7 @@ describe('CompendiumScreen: запись говорит, что даст вла�
         },
       },
       compendium: {
-        items: [
-          { id: 'sword', rk: 'weapon', label: 'Меч', props: {} },
-          { id: 'bauble', rk: 'trinket', label: 'Побрякушка', props: {} },
-        ],
-        actions: [],
+        records: [{ id: 'sword', rk: 'weapon', label: 'Меч', props: {} }, { id: 'bauble', rk: 'trinket', label: 'Побрякушка', props: {} }],
       },
       activeRecordId: 'sword',
     }));
@@ -70,8 +66,7 @@ describe('CompendiumScreen: кость записи — формочкой, а �
         },
       },
       compendium: {
-        items: [{ id: 'sword', rk: 'weapon', label: 'Меч', props: { damage_dice: '1d8' } }],
-        actions: [],
+        records: [{ id: 'sword', rk: 'weapon', label: 'Меч', props: { damage_dice: '1d8' } }],
       },
       activeRecordId: 'sword',
     }));
@@ -91,7 +86,7 @@ describe('CompendiumScreen: кость записи — формочкой, а �
     const [, sides] = [...term.querySelectorAll('input')] as HTMLInputElement[];
     fireEvent.change(sides!, { target: { value: '12' } });
 
-    const sword = useWorld.getState().compendium.items!.find(i => i.id === 'sword')!;
+    const sword = useWorld.getState().compendium.records!.find(i => i.id === 'sword')!;
     expect(sword.props!.damage_dice).toBe('1d12', 'у этого меча — своя кость');
   });
 
@@ -101,7 +96,7 @@ describe('CompendiumScreen: кость записи — формочкой, а �
     const [, sides] = [...term.querySelectorAll('input')] as HTMLInputElement[];
     fireEvent.change(sides!, { target: { value: '' } });
 
-    const sword = useWorld.getState().compendium.items!.find(i => i.id === 'sword')!;
+    const sword = useWorld.getState().compendium.records!.find(i => i.id === 'sword')!;
     expect(sword.props!.damage_dice).toBe('1d8');
   });
 
@@ -117,7 +112,7 @@ describe('CompendiumScreen: кость записи — формочкой, а �
     fireEvent.change(sides!, { target: { value: '12' } });
     fireEvent.blur(sides!);
 
-    const sword = useWorld.getState().compendium.items!.find(i => i.id === 'sword')!;
+    const sword = useWorld.getState().compendium.records!.find(i => i.id === 'sword')!;
     expect(sword.props!.damage_dice).toBe('1d12');
     expect(sides!.value).toBe('12', 'после ухода фокуса — из данных');
   });
@@ -133,7 +128,7 @@ describe('CompendiumScreen: id новой записи не завязан то�
           weapon: { kind: 'item', label: 'Оружие', group: 'Снаряжение', props: [] },
         },
       },
-      compendium: { items: [], actions: [] },
+      compendium: { records: [] },
       activeRecordId: null,
     }));
   });
@@ -143,11 +138,11 @@ describe('CompendiumScreen: id новой записи не завязан то�
     const pick = () => fireEvent.click(container.querySelector('.card--pick')!);
 
     pick();
-    const first = useWorld.getState().compendium.items![0]!.id;
+    const first = useWorld.getState().compendium.records![0]!.id;
 
-    useWorld.setState({ compendium: { items: [], actions: [] }, activeRecordId: null });
+    useWorld.setState({ compendium: { records: [] }, activeRecordId: null });
     pick();
-    const second = useWorld.getState().compendium.items![0]!.id;
+    const second = useWorld.getState().compendium.records![0]!.id;
 
     expect(second).not.toBe(first);
   });
@@ -174,11 +169,7 @@ describe('CompendiumScreen: превью «как увидит игрок»', ()
         },
       },
       compendium: {
-        items: [
-          { id: 'gun', rk: 'weapon', label: 'Пистолет', description: 'Тяжёлый.', props: { dmg: '3d6', cost: 500, ammo: 'nine' } },
-          { id: 'nine', rk: 'ammo', label: 'Патроны 9 мм', props: {} },
-        ],
-        actions: [],
+        records: [{ id: 'gun', rk: 'weapon', label: 'Пистолет', description: 'Тяжёлый.', props: { dmg: '3d6', cost: 500, ammo: 'nine' } }, { id: 'nine', rk: 'ammo', label: 'Патроны 9 мм', props: {} }],
       },
       activeRecordId: 'gun',
     }));
@@ -228,8 +219,7 @@ describe('свойство из словаря — выбор, а не ввод'
         },
       },
       compendium: {
-        items: [{ id: 'sword', rk: 'weapon', label: 'Меч', props: { damage_type: 'рубящий' } }],
-        actions: [],
+        records: [{ id: 'sword', rk: 'weapon', label: 'Меч', props: { damage_type: 'рубящий' } }],
       },
       activeRecordId: 'sword',
     }));
@@ -250,7 +240,7 @@ describe('свойство из словаря — выбор, а не ввод'
   it('выбранное уходит в запись', () => {
     renderOpen(<CompendiumScreen />);
     fireEvent.change(полеУ('Тип урона').querySelector('select')!, { target: { value: 'огонь' } });
-    expect(useWorld.getState().compendium.items[0]!.props!.damage_type).toBe('огонь');
+    expect(useWorld.getState().compendium.records[0]!.props!.damage_type).toBe('огонь');
   });
 
   it('словарь не выбран — так и сказано, а не пустой список', () => {
@@ -278,7 +268,7 @@ describe('свойство «несколько значений» — фишк�
           },
         },
       },
-      compendium: { items: [{ id: 'sword', rk: 'weapon', label: 'Меч', props: { properties: ['лёгкое'] } }], actions: [] },
+      compendium: { records: [{ id: 'sword', rk: 'weapon', label: 'Меч', props: { properties: ['лёгкое'] } }] },
       activeRecordId: 'sword',
     }));
   });
@@ -288,6 +278,6 @@ describe('свойство «несколько значений» — фишк�
     const поле = [...document.querySelectorAll('label')].find(l => l.textContent?.includes('Свойства'))!;
     expect(поле.textContent).toContain('лёгкое');
     fireEvent.change(поле.querySelector('select')!, { target: { value: 'тяжёлое' } });
-    expect(useWorld.getState().compendium.items[0]!.props!.properties).toEqual(['лёгкое', 'тяжёлое']);
+    expect(useWorld.getState().compendium.records[0]!.props!.properties).toEqual(['лёгкое', 'тяжёлое']);
   });
 });

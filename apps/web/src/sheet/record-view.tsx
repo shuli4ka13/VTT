@@ -1,3 +1,4 @@
+import { findRecord } from '@vtt/engine/model/owned';
 import { Card, Chip } from '../ui/primitives.tsx';
 import { asDice } from '../words.ts';
 import { listOf } from '@vtt/engine/model/lists';
@@ -12,7 +13,7 @@ function labelsOf(system: System, from: string | undefined, value: unknown): str
 }
 
 const recordLabel = (compendium: Compendium | undefined, id: string): string => {
-  const found = [...(compendium?.items ?? []), ...(compendium?.actions ?? [])].find(r => r.id === id);
+  const found = findRecord(compendium, id);
   return found?.label ?? id;
 };
 
@@ -36,7 +37,7 @@ export function recordDetails(record: CompendiumRecord, system: System, compendi
 
 export function recordButtons(record: CompendiumRecord, system: System): string[] {
   const kind = system.records?.[String(record.rk)];
-  const bindings = record.activities?.length ? record.activities : (kind?.bindings ?? []);
+  const bindings = record.bindings?.length ? record.bindings : (kind?.bindings ?? []);
   return bindings.map(b => b.label ?? system.effects[b.effect]?.label ?? 'Применение');
 }
 

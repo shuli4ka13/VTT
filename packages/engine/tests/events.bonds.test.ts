@@ -21,10 +21,10 @@ const system = {
   },
 } as unknown as System;
 
-const compendium = { items: [], actions: [{ id: 'молитва', rk: 'молитва', label: 'Молитва', props: {} }] } as unknown as Compendium;
+const compendium = { records: [{ id: 'молитва', rk: 'молитва', label: 'Молитва', props: {} }] } as unknown as Compendium;
 
 const sheet = (id: string, effects: object[] = []): Sheet => ({
-  id, systemId: 'x', kind: 'pc', name: id, values: {}, equipped: [], actions: ['молитва'], effects,
+  id, systemId: 'x', kind: 'pc', name: id, values: {}, has: [{ of: 'молитва' }], effects,
 } as unknown as Sheet);
 
 group('эффект, который держится другим эффектом', () => {

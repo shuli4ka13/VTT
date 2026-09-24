@@ -39,7 +39,7 @@ export function SystemStart() {
       const named = { ...system, name };
       const saved = await createSystem(name, named);
       rememberVersion({ system: saved.updatedAt, compendium: undefined });
-      replaceWorld({ system: named, compendium: { items: [], actions: [] }, sheets: [] });
+      replaceWorld({ system: named, compendium: { records: [] }, sheets: [] });
       setOrigin({
         mode: 'system', systemId: saved.id, systemTitle: name, systemMine: true,
         compendiumId: undefined, compendiumTitle: undefined,
@@ -59,7 +59,7 @@ export function SystemStart() {
     try {
       const saved = await getSystem(summary.id);
       rememberVersion({ system: saved.updatedAt, compendium: undefined });
-      replaceWorld({ system: saved.system, compendium: { items: [], actions: [] }, sheets: [] });
+      replaceWorld({ system: saved.system, compendium: { records: [] }, sheets: [] });
       setOrigin({
         mode: 'system', systemId: saved.id, systemTitle: saved.title, systemMine: true,
         compendiumId: undefined, compendiumTitle: undefined,

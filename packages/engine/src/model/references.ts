@@ -6,6 +6,7 @@ import { compile } from '../formula/index.ts';
 import type { Node } from '../formula/index.ts';
 import { registry } from '../engine/steps/index.ts';
 import { calledOf } from '../engine/effects.ts';
+import { recordsOf } from './owned.ts';
 
 export { EVENT_PREFIX, MOMENT_PREFIX, FIELD_PREFIX } from '../events/bus.ts';
 import { EVENT_PREFIX, MOMENT_PREFIX, FIELD_PREFIX } from '../events/bus.ts';
@@ -299,7 +300,7 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
     for (const tag of system.initiative.tags ?? []) out.push({ kind: 'roll', key: tag, from });
   }
 
-  for (const list of [compendium?.items ?? [], compendium?.actions ?? []]) {
+  for (const list of [recordsOf(compendium)]) {
     for (const record of list) {
       const from: Where = { tab: 'book', record: record.id };
       if (record.rk) out.push({ kind: 'recordKind', key: String(record.rk), from });

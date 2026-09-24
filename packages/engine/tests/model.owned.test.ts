@@ -1,0 +1,63 @@
+import { group, test, eq, deepEq } from './harness.ts';
+import { calc, newPass } from '../src/engine/calc.ts';
+import { availableActions, send, receive } from '../src/events/envelope.ts';
+import { wornEffects } from '../src/engine/effects.ts';
+import type { System, Sheet, Compendium } from '../src/model/types.ts';
+
+const system = {
+  id: 'в', name: 'в',
+  fields: [
+    { tag: 'кд', label: 'Класс брони', value: { kind: 'stored', type: 'number', default: 10 } },
+    { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
+  ],
+  effects: {
+    удар: {
+      label: 'Удар', activation: 'manual',
+      params: [{ key: 'урон', label: 'Урон', kind: 'number' }],
+      steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@урон' } }],
+    },
+    зоркость: { label: 'Зоркость', activation: 'passive', modifiers: [] },
+  },
+  records: {
+    оружие: {
+      kind: 'item', label: 'Оружие', props: [{ key: 'урон', label: 'Урон', kind: 'number' }],
+      bindings: [{ label: 'Ударить', effect: 'удар', args: { урон: { prop: 'урон' } } }],
+    },
+    щит: { kind: 'item', label: 'Щит', props: [] },
+  },
+} as unknown as System;
+
+const book = {
+  records: [
+    { id: 'меч', rk: 'оружие', label: 'Меч', props: { урон: 5 } },
+    { id: 'щит', rk: 'щит', label: 'Щит', props: {}, grants: ['зоркость'], modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: 2 }] },
+  ],
+} as unknown as Compendium;
+
+const hero = (has: Sheet['has']): Sheet =>
+  ({ id: 'герой', systemId: 'в', kind: 'pc', name: 'Герой', values: {}, has, effects: [] }) as Sheet;
+
+const target = (): Sheet => ({ id: 'цель', systemId: 'в', kind: 'npc', name: 'Цель', values: {}, has: [], effects: [] }) as Sheet;
+
+group('что есть у листа: запись со своим состоянием', () => {
+  test('надетое правит и выдаёт, в сумке — ни правок, ни выданного, ни кнопок', () => {
+    const worn = hero([{ of: 'щит' }, { of: 'меч' }]);
+    eq(calc(system, worn, 'кд', newPass(system, worn, { compendium: book })), 12);
+    deepEq(wornEffects(system, worn, { compendium: book }).map(w => w.id), ['зоркость']);
+    eq(availableActions(worn, { system, compendium: book }).length, 1);
+
+    const bagged = hero([{ of: 'щит', off: true }, { of: 'меч', off: true }]);
+    eq(calc(system, bagged, 'кд', newPass(system, bagged, { compendium: book })), 10);
+    deepEq(wornEffects(system, bagged, { compendium: book }), []);
+    eq(availableActions(bagged, { system, compendium: book }).length, 0);
+  });
+
+  test('значение экземпляра перекрывает свойство записи: этот меч наточен', () => {
+    const hit = (sheet: Sheet) => {
+      const env = send('меч:0', { system, sheet, compendium: book, die: () => 1 });
+      return receive(env, { system, sheet: target(), compendium: book, die: () => 1 }).sheet.values.хиты;
+    };
+    eq(hit(hero([{ of: 'меч' }])), 15);
+    eq(hit(hero([{ of: 'меч', values: { урон: 8 } }])), 12);
+  });
+});

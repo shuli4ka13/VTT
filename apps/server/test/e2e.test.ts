@@ -87,7 +87,7 @@ describe('сквозной прогон стенда', () => {
     compendiumId = book.body.id;
     const extra = await http().post('/compendiums')
       .set('Authorization', `Bearer ${token}`)
-      .send({ title: 'Дополнение', systemId, compendium: { items: [], actions: [] } })
+      .send({ title: 'Дополнение', systemId, compendium: { records: [] } })
       .expect(201);
     extraCompendiumId = extra.body.id;
 
@@ -407,7 +407,7 @@ describe('сквозной прогон стенда', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({
         title: 'Пустая оружейная', systemId: sys.body.id,
-        compendium: { items: [{ id: 'sword', rk: 'weapon', label: 'Меч', props: {} }], actions: [] },
+        compendium: { records: [{ id: 'sword', rk: 'weapon', label: 'Меч', props: {} }] },
       })
       .expect(201);
 
@@ -419,7 +419,7 @@ describe('сквозной прогон стенда', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({
         title: 'Пустая оружейная', systemId: sys.body.id,
-        compendium: { items: [{ id: 'sword', rk: 'weapon', label: 'Меч', props: { dmg: '1d6' } }], actions: [] },
+        compendium: { records: [{ id: 'sword', rk: 'weapon', label: 'Меч', props: { dmg: '1d6' } }] },
       })
       .expect(200);
 
@@ -444,8 +444,7 @@ describe('публикация компендиума проверяется л�
     const book = await as(http().post('/compendiums')).send({
       title: 'Книга с дыркой', systemId: sys.body.id,
       compendium: {
-        items: [{ id: 'ring', rk: 'gear', label: 'Кольцо', props: {}, modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'нет_такой', condition: null }] }],
-        actions: [],
+        records: [{ id: 'ring', rk: 'gear', label: 'Кольцо', props: {}, modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'нет_такой', condition: null }] }],
       },
     }).expect(201);
     const rejected = await as(http().post(`/compendiums/${book.body.id}/publish`)).send({}).expect(400);
@@ -509,9 +508,9 @@ describe('концентрация снимается с листа', () => {
       },
       records: { жест: { kind: 'action', label: 'Жест', props: [], bindings: [{ label: 'Держу', effect: 'держу', args: {} }] } },
     };
-    const book = { items: [], actions: [{ id: 'жест', rk: 'жест', label: 'Жест', props: {} }] };
+    const book = { records: [{ id: 'жест', rk: 'жест', label: 'Жест', props: {} }] };
     const sheet = (id: string) => ({
-      id, systemId: 'связи', kind: 'pc', name: id, values: {}, equipped: [], actions: ['жест'], effects: [],
+      id, systemId: 'связи', kind: 'pc', name: id, values: {}, has: [{ of: 'жест' }], effects: [],
     });
 
     const systemId = (await as(http().post('/systems')).send({ title: 'Со связями', system })).body.id;

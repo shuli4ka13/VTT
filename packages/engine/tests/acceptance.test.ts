@@ -44,7 +44,7 @@ group('критерии приёмки', () => {
       ],
     };
     const book = {
-      items: [...compendium.items, {
+      records: [...compendium.records, {
         id: 'cloak-of-speed',
         label: 'Плащ скорости',
         slot: 'back',
@@ -52,7 +52,7 @@ group('критерии приёмки', () => {
       }],
       effects: compendium.effects,
     };
-    const sheet = { ...mirra, equipped: ['cloak-of-speed'] };
+    const sheet = { ...mirra, has: [{ of: 'cloak-of-speed' }] };
 
     eq(calc(extended, mirra, 'initiative', newPass(extended, mirra, { compendium: book })), 6);
     eq(calc(extended, sheet, 'initiative', newPass(extended, sheet, { compendium: book })), 8);
@@ -140,7 +140,7 @@ if (inNode) {
               `${sys.name}: привязка рода зовёт эффект «${binding.effect}», которого нет`);
           }
         }
-        for (const record of [...book.items, ...book.actions]) {
+        for (const record of book.records) {
           for (const act of record.activities || []) {
             ok(sys.effects[act.effect],
               `${sys.name}: активность «${record.id}» зовёт эффект «${act.effect}», которого нет`);

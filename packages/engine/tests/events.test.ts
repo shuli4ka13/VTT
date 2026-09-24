@@ -81,10 +81,10 @@ group('конверт вызова', () => {
     test('записи лежат в компендиуме, а автоматизация — в системе', () => {
       eq(system.actions, undefined, 'система не объявляет действий');
       eq(compendium.effects, undefined, 'а компендиум не объявляет эффектов');
-      ok(compendium.actions.every(a => !a.steps), 'ни у одной записи нет шагов');
+      ok(compendium.records.every(a => !a.steps), 'ни у одной записи нет шагов');
       ok(Object.keys(system.effects).length, 'шаги живут в библиотеке эффектов системы');
 
-      const sword = compendium.items.find(i => i.id === 'longsword-item');
+      const sword = compendium.records.find(i => i.id === 'longsword-item');
       ok(!sword.activities, 'у меча нет своей активности');
       ok(system.records[sword.rk].bindings.length, 'зато у его рода есть привязка');
     });
@@ -217,9 +217,8 @@ const PARAMETRIC = {
 const paramSys = { ...system, effects: { ...system.effects, parametric: PARAMETRIC } };
 const paramBook = (id, args) => ({
   ...compendium,
-  items: [...compendium.items,
-    { id, rk: 'weapon', label: 'Своё', props: { damage_dice: '1d6' },
-      activities: [{ label: 'Удар', effect: 'parametric', args }] }],
+  records: [...compendium.records, { id, rk: 'weapon', label: 'Своё', props: { damage_dice: '1d6' },
+      bindings: [{ label: 'Удар', effect: 'parametric', args }] }],
 });
 
 group('конверт не даёт целиться в бессмыслицу', () => {

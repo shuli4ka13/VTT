@@ -82,10 +82,10 @@ group('формула видит результат шага выше', () => {
       },
       records: { приём: { kind: 'action', label: 'Приём', bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
     } as unknown as System;
-    const книга = { items: [], actions: [{ id: 'приём', rk: 'приём', label: 'Удар', props: {} }] } as never;
+    const книга = { records: [{ id: 'приём', rk: 'приём', label: 'Удар', props: {} }] } as never;
     const лист = (порог: number) => ({
       id: 'я', systemId: 'к', kind: 'pc', name: 'я',
-      values: { порог }, equipped: [], effects: [], actions: ['приём'],
+      values: { порог }, has: [{ of: 'приём' }], effects: []
     } as never);
 
     const кости = (порог: number, выпало: number): string => {

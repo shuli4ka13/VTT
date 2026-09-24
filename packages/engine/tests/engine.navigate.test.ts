@@ -46,7 +46,7 @@ const система = {
 } as unknown as System;
 
 const лист = (класс = 'воин') => ({
-  id: 'я', systemId: 'н', kind: 'pc', name: 'я', values: { класс }, equipped: [], effects: [], actions: ['меч', 'факел'],
+  id: 'я', systemId: 'н', kind: 'pc', name: 'я', values: { класс }, has: [{ of: 'меч' }, { of: 'факел' }], effects: []
 } as unknown as Sheet);
 
 group('ссылка на таблицу читается через точку', () => {
@@ -61,7 +61,7 @@ group('ссылка на таблицу читается через точку',
   });
 
   test('потребность эффекта — тоже ссылка: прибавка берётся у своего типа урона, формула считается листом', () => {
-    const книга = { items: [], actions: [{ id: 'меч', rk: 'меч', label: 'Меч', props: {} }, { id: 'факел', rk: 'факел', label: 'Факел', props: {} }] } as never;
+    const книга = { records: [{ id: 'меч', rk: 'меч', label: 'Меч', props: {} }, { id: 'факел', rk: 'факел', label: 'Факел', props: {} }] } as never;
     const мир = { system: система, compendium: книга, die: () => 1 };
     const бей = (action: string) => {
       const итог = receive(send(action, { ...мир, sheet: лист() }), { ...мир, sheet: лист() });

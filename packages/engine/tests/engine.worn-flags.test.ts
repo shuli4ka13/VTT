@@ -14,9 +14,9 @@ const system = {
   },
 } as unknown as System;
 
-const book = { items: [{ id: 'к', label: 'Кольцо', grants: ['кольцо'] }], actions: [] } as unknown as Compendium;
+const book = { records: [{ id: 'к', label: 'Кольцо', grants: ['кольцо'] }] } as unknown as Compendium;
 const sheet = (worn: string[], equipped: string[] = []): Sheet =>
-  ({ id: 'а', values: {}, equipped, effects: worn.map(effectId => ({ effectId })) } as unknown as Sheet);
+  ({ id: 'а', values: {}, has: [...equipped.map(of => ({ of }))], effects: worn.map(effectId => ({ effectId })) } as unknown as Sheet);
 const read = (s: Sheet, name: string) => newPass(system, s, { compendium: book }).resolve(name);
 
 group('висящий эффект читается в формуле как счётчик', () => {

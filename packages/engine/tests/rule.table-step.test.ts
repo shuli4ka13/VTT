@@ -26,8 +26,8 @@ const system = {
   },
 } as unknown as System;
 
-const sheet = { id: 'а', systemId: 'x', kind: 'pc', name: 'А', values: { хиты: 20 }, equipped: [], effects: [], actions: [] } as unknown as Sheet;
-const compendium = { items: [], actions: [] };
+const sheet = { id: 'а', systemId: 'x', kind: 'pc', name: 'А', values: { хиты: 20 }, has: [], effects: [] } as unknown as Sheet;
+const compendium = { records: [] };
 
 const run = (steps: object[], rolls: number[] = []) => {
   let at = 0;

@@ -28,16 +28,12 @@ const system = {
 } as unknown as System;
 
 const compendium = {
-  items: [],
-  actions: [
-    { id: 'снаряд', rk: 'заклинание', label: 'Снаряд', props: {} },
-    { id: 'меч', rk: 'приём', label: 'Меч', props: {} },
-  ],
+  records: [{ id: 'снаряд', rk: 'заклинание', label: 'Снаряд', props: {} }, { id: 'меч', rk: 'приём', label: 'Меч', props: {} }],
 } as unknown as Compendium;
 
 const sheet = (id: string): Sheet => ({
   id, systemId: 'x', kind: 'pc', name: id, values: { хиты: 20, ячейки: 3 },
-  equipped: [], actions: ['снаряд', 'меч'], effects: [],
+  has: [{ of: 'снаряд' }, { of: 'меч' }], effects: [],
 } as unknown as Sheet);
 
 const world = { system, compendium, die: () => 1 };

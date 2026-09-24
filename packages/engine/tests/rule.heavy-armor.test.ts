@@ -38,14 +38,13 @@ const sys: any = {
 };
 
 const compendium: any = {
-  items: [{
+  records: [{
     id: 'кольчуга', rk: 'доспех', label: 'Кольчуга',
     modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['скрытность'], edit: 'помеха', condition: null }],
   }],
-  actions: [],
 };
 
-const hero = (equipped: string[]) => ({ id: 'вор', values: { скрытность: 3 }, equipped, effects: [] });
+const hero = (equipped: string[]) => ({ id: 'вор', values: { скрытность: 3 }, has: [...equipped.map(of => ({ of }))], effects: [] });
 
 const sneak = (equipped: string[], ...dice: number[]) => {
   const sheet = hero(equipped);

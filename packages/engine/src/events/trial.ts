@@ -51,7 +51,7 @@ function firstChoice(effect: Effect, key: string): string | null {
 }
 
 export function mannequin(system: System, id: string, name: string): Sheet {
-  return { id, systemId: system.id ?? 'system', kind: 'npc', name, values: {}, equipped: [], effects: [], actions: [] };
+  return { id, systemId: system.id ?? 'system', kind: 'npc', name, values: {}, has: [], effects: [] };
 }
 
 export interface TrialArgs {
@@ -92,10 +92,9 @@ export function trial({ system, compendium, effectId, from, to, args, dice = 'av
     },
   } as System;
   const book: Compendium = {
-    items: compendium?.items ?? [],
-    actions: [...(compendium?.actions ?? []), { id: TRIAL_RECORD, rk: TRIAL_KIND, label: effect.label ?? effectId, props: {} }],
+    records: [...(compendium?.records ?? []), { id: TRIAL_RECORD, rk: TRIAL_KIND, label: effect.label ?? effectId, props: {} }],
   };
-  const sender: Sheet = { ...from, actions: [...(from.actions ?? []), TRIAL_RECORD] };
+  const sender: Sheet = { ...from, has: [...(from.has ?? []), { of: TRIAL_RECORD }] };
   const people = from.id === to.id ? [sender] : [sender, to];
   const sheets = hasDesk(system) && !deskOf(people) ? [...people, blankDesk(system)] : people;
   const result = exchange({

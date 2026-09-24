@@ -1,5 +1,6 @@
 import type { System, Compendium, ValueKind } from '@vtt/schema';
 import { listOf } from '@vtt/engine/model/lists';
+import { recordsOf } from '@vtt/engine/model/owned';
 import { Input, NumInput, Select } from './primitives.tsx';
 import { MultiChoice } from './multi-choice.tsx';
 import { DiceProp } from './dice-prop.tsx';
@@ -50,7 +51,7 @@ export function ValueEditor({ type, value, system, compendium, onlyWorn, except,
       <Select
         value={String(value ?? '')}
         options={[['', '— какая запись —'],
-          ...[...(compendium?.items ?? []), ...(compendium?.actions ?? [])]
+          ...recordsOf(compendium)
             .filter(other => other.id !== except)
             .map(other => [other.id, other.label ?? other.id] as const)] as never}
         onChange={next => onChange(next)}

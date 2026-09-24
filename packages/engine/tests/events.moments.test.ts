@@ -25,10 +25,10 @@ const system = {
 const sheet = (worn: string[], values: Record<string, unknown> = {}): Sheet => ({
   id: 'а', systemId: 'x', kind: 'pc', name: 'Арвен',
   values: { хиты: 20, яд: false, ...values },
-  equipped: [], actions: [], effects: worn.map(effectId => ({ effectId })),
+  has: [], effects: worn.map(effectId => ({ effectId })),
 } as unknown as Sheet);
 
-const world = { system, compendium: { items: [], actions: [] }, die: () => 3 };
+const world = { system, compendium: { records: [] }, die: () => 3 };
 
 group('шина моментов', () => {
   test('момент разбирается по имени, чужое слово — не момент', () => {
@@ -135,10 +135,10 @@ group('поле стало верным', () => {
     },
     room_rules: ['падение'],
   } as unknown as System;
-  const ctx = { system: watched, compendium: { items: [], actions: [] }, die: () => 3 };
+  const ctx = { system: watched, compendium: { records: [] }, die: () => 3 };
   const with_ = (hp: number, worn: string[] = []): Sheet => ({
     id: 'а', systemId: 'п', kind: 'pc', name: 'Арвен', values: { хиты: hp },
-    equipped: [], actions: [], effects: worn.map(effectId => ({ effectId })),
+    has: [], effects: worn.map(effectId => ({ effectId })),
   } as unknown as Sheet);
 
   test('было ложно, стало истинно — слушатель срабатывает один раз', () => {

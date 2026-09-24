@@ -25,11 +25,11 @@ const цель = { id: 'цель', values: { хп: 20, сила: 1 }, effects: [
 const hit = (rule: any) => {
   const packed = packRule(rule, {
     system: sys, sheet: атакующий, params: {}, item: null,
-    die: queue(4), pass: newPass(sys, атакующий, { compendium: { items: [] } }),
+    die: queue(4), pass: newPass(sys, атакующий, { compendium: { records: [] } }),
   } as any);
   return resolveRule(packed, {
     system: sys, sheet: цель, params: {}, item: null,
-    die: queue(), pass: newPass(sys, цель, { compendium: { items: [] } }),
+    die: queue(), pass: newPass(sys, цель, { compendium: { records: [] } }),
   } as any);
 };
 

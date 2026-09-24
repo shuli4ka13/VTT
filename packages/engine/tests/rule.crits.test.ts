@@ -36,7 +36,7 @@ const rule: any = {
 const run = (...dice: number[]) => {
   const ctx = () => ({
     system: sys, sheet, params: {}, item: null,
-    die: queue(...dice), pass: newPass(sys, sheet, { compendium: { items: [] } }),
+    die: queue(...dice), pass: newPass(sys, sheet, { compendium: { records: [] } }),
   });
   return resolveRule(packRule(rule, ctx()), ctx());
 };
@@ -81,7 +81,7 @@ group('криты и глитчи собираются автором', () => {
     const hot = { ...sheet, effects: [{ effectId: 'всегда' }] };
     const ctx = () => ({
       system: explosive, sheet: hot, params: {}, item: null,
-      die: queue(6, 2, 3, 4), pass: newPass(explosive, hot, { compendium: { items: [] } }),
+      die: queue(6, 2, 3, 4), pass: newPass(explosive, hot, { compendium: { records: [] } }),
     });
     const r = resolveRule(packRule(rule, ctx()), ctx());
     eq(r.results.roll.atMax, 1, 'шестёрка была одна, хоть и выросла до десяти');

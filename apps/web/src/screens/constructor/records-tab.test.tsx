@@ -115,7 +115,7 @@ describe('модификаторы типа', () => {
     const kind = useWorld.getState().system.records!['тяжёлый']!;
     expect(kind.modifiers).toHaveLength(1);
     expect(kind.modifiers![0]).toMatchObject({ kind: 'roll', edit: 'помеха' });
-    expect(useWorld.getState().compendium.items).toEqual([]);
+    expect(useWorld.getState().compendium.records).toEqual([]);
   });
 });
 

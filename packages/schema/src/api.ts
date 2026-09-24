@@ -182,9 +182,10 @@ export const clientMessage = z.discriminatedUnion('type', [
     type: z.literal('sheet:belong'),
     roomId: z.string(),
     sheetId: z.string(),
-    list: z.enum(['equipped', 'actions', 'effects']),
+    list: z.enum(['has', 'effects']),
     id: z.string().min(1),
     on: z.boolean(),
+    off: z.boolean().optional(),
   }),
 ]);
 

@@ -1,3 +1,4 @@
+import { heldBy } from '../model/owned.ts';
 import { EngineError } from './errors.ts';
 import type {
   System, Sheet, Compendium, Effect, Modifier, Step,
@@ -86,7 +87,7 @@ export function roomEffects(system: System): EffectEntry[] {
 
 export const allModifiers = (system: System, compendium: Compendium = {}): Modifier[] => [
   ...effectsOf(system).flatMap(([, effect]) => effect.modifiers || []),
-  ...(compendium.items || []).flatMap(record => record.modifiers || []),
+  ...(compendium.records || []).flatMap(record => record.modifiers || []),
 ];
 
 export const allSteps = (system: System): Step[] =>
@@ -94,11 +95,7 @@ export const allSteps = (system: System): Step[] =>
 
 export function grantedTo(sheet: Sheet, compendium: Compendium | null | undefined): string[] {
   if (!compendium) return [];
-  const owned = [
-    ...(sheet.equipped || []).map(id => (compendium.items || []).find(record => record.id === id)),
-    ...((sheet.actions as string[] | undefined) || []).map(id => (compendium.actions || []).find(record => record.id === id)),
-  ];
-  return [...new Set(owned.flatMap(record => record?.grants ?? []))];
+  return [...new Set(heldBy(sheet, compendium).flatMap(({ record }) => record.grants ?? []))];
 }
 
 export function wornEffects(

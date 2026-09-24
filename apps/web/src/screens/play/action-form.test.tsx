@@ -26,11 +26,7 @@ const system = {
 } as unknown as System;
 
 const compendium = {
-  items: [],
-  actions: [
-    { id: 'ствол', rk: 'ствол', label: 'Ствол', props: {} },
-    { id: 'меч', rk: 'меч', label: 'Меч', props: {} },
-  ],
+  records: [{ id: 'ствол', rk: 'ствол', label: 'Ствол', props: {} }, { id: 'меч', rk: 'меч', label: 'Меч', props: {} }],
 } as unknown as Compendium;
 
 describe('форма действия спрашивает то, что объявлено', () => {

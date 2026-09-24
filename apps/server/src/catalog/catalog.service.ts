@@ -128,7 +128,7 @@ export class CatalogService {
     const parsed = schemas.compendium.safeParse(data);
     if (!parsed.success) throw new BadRequestException('компендиум не проходит схему');
     const system = await this.system(systemId);
-    const unknown = [...(parsed.data.items ?? []), ...(parsed.data.actions ?? [])]
+    const unknown = (parsed.data.records ?? [])
       .find(record => !system.system.records?.[String(record.rk)]);
     if (unknown) throw new BadRequestException(
       `запись «${unknown.label ?? unknown.id}» не соответствует выбранной системе`);
@@ -176,9 +176,9 @@ export class CatalogService {
   }
 
   private assertRecordsFilled(system: System, compendium: Compendium): void {
-    for (const record of [...(compendium.items ?? []), ...(compendium.actions ?? [])]) {
+    for (const record of compendium.records ?? []) {
       const kind = system.records?.[String(record.rk)];
-      const bindings = [...(kind?.bindings ?? []), ...(record.activities ?? [])];
+      const bindings = [...(kind?.bindings ?? []), ...(record.bindings ?? [])];
       for (const binding of bindings) {
         for (const arg of Object.values(binding.args ?? {})) {
           if (!arg || typeof arg !== 'object' || Array.isArray(arg)) continue;
@@ -230,7 +230,7 @@ export class CatalogService {
       return { id: row.id, title: row.title, systemId: row.systemId,
         systemName: system.system.name ?? system.system.id,
         authorName: await this.author(row.ownerId),
-        itemCount: (data.items?.length ?? 0) + (data.actions?.length ?? 0), updatedAt: row.updatedAt,
+        itemCount: data.records?.length ?? 0, updatedAt: row.updatedAt,
         status: row.status === 'published' ? 'published' as const : 'draft' as const };
     }));
   }

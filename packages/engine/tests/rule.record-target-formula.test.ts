@@ -25,11 +25,11 @@ const cast = (порог: string, хп: number, хп_макс: number) => {
   const жертва = { id: 'жертва', values: { хп, хп_макс }, effects: [] };
   const packed = packRule(spell, {
     system: sys, sheet: маг, params: { порог }, item: null,
-    die: () => 1, pass: newPass(sys, маг, { compendium: { items: [] } }),
+    die: () => 1, pass: newPass(sys, маг, { compendium: { records: [] } }),
   } as any);
   return resolveRule(packed, {
     system: sys, sheet: жертва, params: {}, item: null,
-    die: () => 1, pass: newPass(sys, жертва, { compendium: { items: [] } }),
+    die: () => 1, pass: newPass(sys, жертва, { compendium: { records: [] } }),
   } as any);
 };
 
@@ -55,7 +55,7 @@ group('формула из записи листом цели', () => {
   test('конверт не несёт ни одного числа жертвы — сторона цели уезжает текстом', () => {
     const packed = packRule(spell, {
       system: sys, sheet: маг, params: { порог: '@получатель.хп_макс / 2' }, item: null,
-      die: () => 1, pass: newPass(sys, маг, { compendium: { items: [] } }),
+      die: () => 1, pass: newPass(sys, маг, { compendium: { records: [] } }),
     } as any);
     const text = JSON.stringify(packed);
     eq(text.includes('"expr":"@получатель.хп_макс / 2"'), true, 'формула в конверте — текстом');

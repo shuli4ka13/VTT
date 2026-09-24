@@ -127,7 +127,7 @@ group('подписка на исходящее: вампиризм и метк�
       },
     },
   };
-  const caster = { ...arven, values: { ...arven.values, hp_current: 10 }, actions: ['fire-bolt'] };
+  const caster = { ...arven, values: { ...arven.values, hp_current: 10 }, has: [{ of: 'fire-bolt' }] };
 
   test('нанёс урон вызовом — сам подлечился на половину', () => {
     const r = exchange({

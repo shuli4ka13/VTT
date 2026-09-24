@@ -2,6 +2,7 @@ import { ownerOf, OWNER_WORDS } from '@vtt/engine/engine/owners';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
 import { splitPath } from '@vtt/engine/engine/navigate';
 import { choiceTableOf } from '@vtt/engine/model/lists';
+import { recordsOf } from '@vtt/engine/model/owned';
 import { kindWord } from '@vtt/engine/words/kinds';
 import type { RefKind } from '@vtt/engine/model/references';
 import type { System, Compendium, Effect } from '@vtt/schema';
@@ -207,7 +208,7 @@ export function explainName(
   for (const [kindKey, kind] of Object.entries(system.records ?? {})) {
     const prop = (kind.props ?? []).find(p => p.key === head);
     if (!prop) continue;
-    const records = [...(compendium?.items ?? []), ...(compendium?.actions ?? [])].filter(r => r.rk === kindKey);
+    const records = recordsOf(compendium).filter(r => r.rk === kindKey);
     return {
       kind: 'свойство записи',
       title: `${prop.label ?? prop.key} · ${kind.label ?? kindKey}`,

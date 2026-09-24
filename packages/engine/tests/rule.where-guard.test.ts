@@ -18,14 +18,14 @@ const withProbe = (tags: string[]) => {
     } }],
   } as never;
   system.records = { ...system.records, проба: { kind: 'action', label: 'Проба' } } as never;
-  const book = { items: [], actions: [{ id: 'проба', rk: 'проба', label: 'Проба', effect: 'проба' }] };
+  const book = { records: [{ id: 'проба', rk: 'проба', label: 'Проба', bindings: [{ label: 'Проба', effect: 'проба', args: {} }] }] };
   return { system, book };
 };
 
 const hit = (tags: string[]) => {
   const { system, book } = withProbe(tags);
   const target = { id: 'цель', values: { hp: 40, sp_body: 7, sp_head: 7 }, effects: [] };
-  const env = send('проба:0', { system, sheet: { id: 'стрелок', values: {}, effects: [], actions: ['проба'] }, compendium: book, die: () => 1 });
+  const env = send('проба:0', { system, sheet: { id: 'стрелок', values: {}, effects: [], has: [{ of: 'проба' }] }, compendium: book, die: () => 1 });
   return receive(env, { system, sheet: target, compendium: book, die: () => 1 }).sheet.values;
 };
 

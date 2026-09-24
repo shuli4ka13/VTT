@@ -817,7 +817,7 @@
     ]
   },
   "compendium": {
-    "items": [
+    "records": [
       {
         "id": "longsword",
         "rk": "weapon",
@@ -847,9 +847,7 @@
           "weapon_die": "1d8",
           "wield": "дальний бой — Ловкость"
         }
-      }
-    ],
-    "actions": [
+      },
       {
         "id": "goblin_spear",
         "rk": "monster_move",
@@ -874,15 +872,27 @@
         "id": "new_round",
         "rk": "battle",
         "label": "Новый раунд",
-        "effect": "new_round",
-        "props": {}
+        "props": {},
+        "bindings": [
+          {
+            "label": "Новый раунд",
+            "effect": "new_round",
+            "args": {}
+          }
+        ]
       },
       {
         "id": "end_battle",
         "rk": "battle",
         "label": "Конец боя",
-        "effect": "end_battle",
-        "props": {}
+        "props": {},
+        "bindings": [
+          {
+            "label": "Конец боя",
+            "effect": "end_battle",
+            "args": {}
+          }
+        ]
       }
     ]
   },
@@ -906,14 +916,18 @@
         "hp_max": 30,
         "hp": 30
       },
-      "equipped": [
-        "longsword"
+      "has": [
+        {
+          "of": "longsword"
+        },
+        {
+          "of": "new_round"
+        },
+        {
+          "of": "end_battle"
+        }
       ],
-      "effects": [],
-      "actions": [
-        "new_round",
-        "end_battle"
-      ]
+      "effects": []
     },
     {
       "id": "leya",
@@ -934,15 +948,21 @@
         "hp_max": 24,
         "hp": 24
       },
-      "equipped": [
-        "longbow",
-        "dagger"
+      "has": [
+        {
+          "of": "longbow"
+        },
+        {
+          "of": "dagger"
+        },
+        {
+          "of": "new_round"
+        },
+        {
+          "of": "end_battle"
+        }
       ],
-      "effects": [],
-      "actions": [
-        "new_round",
-        "end_battle"
-      ]
+      "effects": []
     },
     {
       "id": "goblin",
@@ -959,11 +979,12 @@
         "hp_max": 10,
         "hp": 10
       },
-      "equipped": [],
-      "effects": [],
-      "actions": [
-        "goblin_spear"
-      ]
+      "has": [
+        {
+          "of": "goblin_spear"
+        }
+      ],
+      "effects": []
     },
     {
       "id": "orc",
@@ -980,11 +1001,12 @@
         "hp_max": 30,
         "hp": 30
       },
-      "equipped": [],
-      "effects": [],
-      "actions": [
-        "orc_axe"
-      ]
+      "has": [
+        {
+          "of": "orc_axe"
+        }
+      ],
+      "effects": []
     },
     {
       "id": "стол",
@@ -995,9 +1017,8 @@
         "escalation": 0,
         "battle": 0
       },
-      "equipped": [],
-      "effects": [],
-      "actions": []
+      "has": [],
+      "effects": []
     }
   ]
 }

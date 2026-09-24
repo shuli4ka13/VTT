@@ -148,7 +148,7 @@ group('две системы одними слотами', () => {
       ];
       let checked = 0;
       for (const { system: sys, compendium: book } of books) {
-        for (const record of [...book.items, ...book.actions]) {
+        for (const record of book.records) {
           ok(!('steps' in record), `${record.id}: шаги живут в системе, не в записи`);
           for (const binding of bindingsOf(record, sys)) {
             checked++;
@@ -168,11 +168,10 @@ group('две системы одними слотами', () => {
 
       const book = {
         ...compendium,
-        items: [...compendium.items,
-          { id: 'axe-item', rk: 'weapon', label: 'Топор',
+        records: [...compendium.records, { id: 'axe-item', rk: 'weapon', label: 'Топор',
             props: { damage_dice: '1d12', damage_type: 'рубящий' }, modifiers: [],
 
-            activities: [{ label: 'Удар', effect: 'strike',
+            bindings: [{ label: 'Удар', effect: 'strike',
               args: { damage_dice: { prop: 'damage_dice' }, damage_type: { prop: 'damage_type' } } }] }],
       };
       const margined = {
@@ -242,14 +241,14 @@ group('две системы одними слотами', () => {
 
   group('сторожа', () => {
     test('действие без эффекта — внятная ошибка', () => {
-      const book = { ...compendium, actions: [{ id: 'пустое', label: 'Пустое', effect: 'нетакого' }] };
+      const book = { ...compendium, records: [{ id: 'пустое', label: 'Пустое', bindings: [{ label: 'Пустое', effect: 'нетакого', args: {} }] }] };
       throws(() => send('пустое', { system, sheet: arven, compendium: book, die: queue() }), 'нетакого');
     });
 
     test('запись зовёт эффект, которого система не объявляет', () => {
       const book = {
         ...compendium,
-        actions: [...compendium.actions, { id: 'a', rk: 'action', label: 'А', effect: 'котик', args: {} }],
+        records: [...compendium.records, { id: 'a', rk: 'action', label: 'А', bindings: [{ label: 'А', effect: 'котик', args: {} }] }],
       };
       throws(() => send('a:0', { system, sheet: arven, compendium: book, die: queue() }), 'котик');
     });

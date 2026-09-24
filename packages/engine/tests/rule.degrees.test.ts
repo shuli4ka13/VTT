@@ -59,7 +59,7 @@ group('степени успеха', () => {
     const sheet = { id: 'герой', values: {}, effects: effects.map(effectId => ({ effectId })) };
     const ctx = () => ({
       system: world, sheet, params: {}, item: null,
-      die: queue(...dice), pass: newPass(world, sheet, { compendium: { items: [] } }),
+      die: queue(...dice), pass: newPass(world, sheet, { compendium: { records: [] } }),
     });
     return resolveRule(packRule(rule, ctx()), ctx());
   };
@@ -92,7 +92,7 @@ group('степени успеха', () => {
     const sheet = { id: 'герой', values: {}, effects: [] };
     const ctx = () => ({
       system: sys, sheet, params: {}, item: null,
-      die: queue(3, 4), pass: newPass(sys, sheet, { compendium: { items: [] } }),
+      die: queue(3, 4), pass: newPass(sys, sheet, { compendium: { records: [] } }),
     });
     const r = resolveRule(packRule(plain, ctx()), ctx());
     eq('degree' in (r.results.move as object), false, 'ключа нет — старые правила не изменились');

@@ -169,15 +169,15 @@ describe('партия строит себя сама', () => {
 
     const equipped = waitFor(socket, 'room:delta');
     say(socket, 'sheet:belong', {
-      roomId: room.id, sheetId: sheet.id, list: 'equipped', id: 'longsword-item', on: true,
+      roomId: room.id, sheetId: sheet.id, list: 'has', id: 'longsword-item', on: true,
     });
-    expect((await equipped).delta.sheets[0].equipped).toEqual(['longsword-item']);
+    expect((await equipped).delta.sheets[0].has).toEqual([{ of: 'longsword-item' }]);
 
     const refused = waitFor(socket, 'error');
     say(socket, 'sheet:belong', {
-      roomId: room.id, sheetId: sheet.id, list: 'equipped', id: 'нет-такого', on: true,
+      roomId: room.id, sheetId: sheet.id, list: 'has', id: 'нет-такого', on: true,
     });
-    expect((await refused).message).toContain('нет предмета');
+    expect((await refused).message).toContain('нет записи');
 
     const refusedEffect = waitFor(socket, 'error');
     say(socket, 'sheet:belong', {

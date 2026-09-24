@@ -1,6 +1,7 @@
 import { packCall, runCall } from './call.ts';
 import { requireEffect } from '../engine/effects.ts';
-import { propsOf, actionOf } from './envelope.ts';
+import { actionOf } from './envelope.ts';
+import { propsOf, entryOf } from '../model/owned.ts';
 import type { Report, WorldContext } from './envelope.ts';
 import { refusalWords } from './refusal.ts';
 import type { Sheet, System } from '../model/types.ts';
@@ -31,7 +32,7 @@ export function runSelfTrack(
     sheet,
     owner,
     args: action.binding.args || {},
-    props: propsOf(action.record, world.system),
+    props: propsOf(action.record, world.system, entryOf(sheet, action.record.id)),
     ...(world.inputs ? { inputs: world.inputs } : {}),
     alone: true,
   };

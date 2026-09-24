@@ -185,7 +185,7 @@ group('линт: слушатели, круги, потребности', () => 
 
   test('активируемый эффект, который никто не даёт — предупреждение, не ошибка', () => {
     const system = withEffect('lonely', { steps: [] });
-    const withBook = lintSystem(system, { items: [], actions: [] } as never)
+    const withBook = lintSystem(system, { records: [] } as never)
       .map(p => `${p.level}: ${p.text}`);
     ok(withBook.some(t => t.startsWith('warn') && t.includes('никак не запускается')), withBook.join('|'));
     eq(errorTexts(system).length, 0);

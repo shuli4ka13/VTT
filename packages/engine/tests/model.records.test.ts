@@ -32,7 +32,7 @@ group('роды записей объявляет система', () => {
       [cyberpunk, cpCompendium],
     ];
     for (const [sys, book] of pairs) {
-      const all = [...book.items, ...book.actions];
+      const all = book.records;
       for (const record of all) {
         const decl = sys.records[record.rk];
         ok(decl, `запись «${record.id}»: род «${record.rk}» системой не объявлен`);
@@ -42,8 +42,8 @@ group('роды записей объявляет система', () => {
 
   test('базис рода согласован с хранением', () => {
     for (const [sys, book] of [[system, compendium], [cyberpunk, cpCompendium]]) {
-      for (const r of book.items) eq(sys.records[r.rk].kind, 'item', r.id);
-      for (const r of book.actions) eq(sys.records[r.rk].kind, 'action', r.id);
+      for (const r of book.records) ok(['item', 'action'].includes(sys.records[r.rk].kind), r.id);
+      eq(book.items, undefined, 'вещи и действия лежат одним списком записей');
       eq(book.effects, undefined, 'полки эффектов в компендиуме нет: эффект — закон системы');
     }
   });

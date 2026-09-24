@@ -30,11 +30,11 @@ const target = { id: 'цель', values: { хп: 20, уровень: 3 }, effect
 
 const play = (steps: any[], ...dice: number[]) => {
   const packed = packRule({ params: [], steps } as any, {
-    system: sys, sheet: sender, pass: newPass(sys, sender, { compendium: { items: [] } }),
+    system: sys, sheet: sender, pass: newPass(sys, sender, { compendium: { records: [] } }),
     die: queue(...dice), params: {}, props: null, owner: 'тест',
   });
   return resolveRule(packed, {
-    system: sys, sheet: target, pass: newPass(sys, target, { compendium: { items: [] } }),
+    system: sys, sheet: target, pass: newPass(sys, target, { compendium: { records: [] } }),
     die: queue(...dice), owner: 'тест',
   });
 };
@@ -83,7 +83,7 @@ group('ветвление по исходу: стражи на шагах', () =
         when: { expr: '#уровень >= 5' } },
     ];
     const packed = packRule({ params: [], steps } as any, {
-      system: sys, sheet: sender, pass: newPass(sys, sender, { compendium: { items: [] } }),
+      system: sys, sheet: sender, pass: newPass(sys, sender, { compendium: { records: [] } }),
       die: queue(), params: {}, props: null, owner: 'тест',
     });
     deepEq(packed[0]!.when, { const: true }, 'у мага шестой уровень');

@@ -23,10 +23,10 @@ const system = {
 
 const sheet = (): Sheet => ({
   id: 'а', systemId: 'x', kind: 'pc', name: 'Арвен', values: { хиты: 20 },
-  equipped: [], actions: [], effects: [{ effectId: 'горит' }],
+  has: [], effects: [{ effectId: 'горит' }],
 } as unknown as Sheet);
 
-const world = { system, compendium: { items: [], actions: [] }, die: () => 3 };
+const world = { system, compendium: { records: [] }, die: () => 3 };
 
 group('шина: одно состояние — несколько подписок', () => {
   test('каждая подписка отвечает на своё «что случилось»', () => {

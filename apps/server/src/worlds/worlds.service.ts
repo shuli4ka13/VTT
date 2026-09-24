@@ -65,23 +65,18 @@ export class WorldsService {
   }
 
   private async mergeCompendiums(systemId: string, ids: string[]): Promise<Compendium> {
-    const merged: Compendium = { items: [], actions: [] };
+    const merged: Compendium = { records: [] };
     const seen = new Set<string>();
     for (const id of ids) {
       const published = await this.catalog.playableCompendium(id);
       if (published.systemId !== systemId) {
         throw new BadRequestException(`компендиум «${published.title}» относится к другой системе`);
       }
-      for (const [kind, records] of [
-        ['items', published.compendium.items ?? []],
-        ['actions', published.compendium.actions ?? []],
-      ] as const) {
-        for (const record of records) {
-          if (seen.has(record.id)) throw new BadRequestException(
-            `в выбранных компендиумах повторяется id записи «${record.id}»`);
-          seen.add(record.id);
-          merged[kind]!.push(record);
-        }
+      for (const record of published.compendium.records ?? []) {
+        if (seen.has(record.id)) throw new BadRequestException(
+          `в выбранных компендиумах повторяется id записи «${record.id}»`);
+        seen.add(record.id);
+        merged.records!.push(record);
       }
     }
     return merged;

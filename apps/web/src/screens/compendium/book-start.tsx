@@ -10,7 +10,7 @@ import {
 import type { Compendium, CompendiumSummary, SystemSummary } from '@vtt/schema';
 
 const when = (iso: string): string => new Date(iso).toLocaleDateString('ru-RU');
-const EMPTY: Compendium = { items: [], actions: [] };
+const EMPTY: Compendium = { records: [] };
 
 export function BookStart() {
   const sheets = useWorld(s => s.sheets);

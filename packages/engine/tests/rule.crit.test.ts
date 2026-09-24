@@ -16,7 +16,7 @@ const system = {
 
 const sheet = (id: string): Sheet => ({
   id, systemId: 'x', kind: 'pc', name: id, values: { хиты: 30, броня: 10 },
-  equipped: [], actions: [], effects: [],
+  has: [], effects: [],
 } as unknown as Sheet);
 
 const steps = [
@@ -35,11 +35,11 @@ const play = (rolls: number[]) => {
   const from = sheet('а');
   const to = sheet('б');
   const packed = packRule(effect, {
-    system, sheet: from, pass: newPass(system, from, { compendium: { items: [], actions: [] } }),
+    system, sheet: from, pass: newPass(system, from, { compendium: { records: [] } }),
     die, owner: 'тест',
   } as never);
   const out = resolveRule(packed, {
-    system, sheet: to, pass: newPass(system, to, { compendium: { items: [], actions: [] } }),
+    system, sheet: to, pass: newPass(system, to, { compendium: { records: [] } }),
     die, owner: 'тест',
   } as never);
   return { packed, out, used: at };
@@ -87,7 +87,7 @@ group('крит: кости удваиваются до броска', () => {
     const die = () => [15, 3, 3][at++] ?? 1;
     const from = sheet('а');
     const packed = packRule({ label: 'e', activation: 'manual', steps: withBonus } as unknown as Effect, {
-      system, sheet: from, pass: newPass(system, from, { compendium: { items: [], actions: [] } }),
+      system, sheet: from, pass: newPass(system, from, { compendium: { records: [] } }),
       die, owner: 'тест',
     } as never);
     const rolls = (packed[1] as unknown as { rolled: { rolls: number[] } }).rolled.rolls;
@@ -108,10 +108,10 @@ group('доля величины: половина при удачном спа�
     const from = sheet('а');
     const to = sheet('б');
     const packed = packRule({ label: 'e', activation: 'manual', steps: chain(times) } as unknown as Effect, {
-      system, sheet: from, pass: newPass(system, from, { compendium: { items: [], actions: [] } }), die, owner: 'тест',
+      system, sheet: from, pass: newPass(system, from, { compendium: { records: [] } }), die, owner: 'тест',
     } as never);
     const out = resolveRule(packed, {
-      system, sheet: to, pass: newPass(system, to, { compendium: { items: [], actions: [] } }), die, owner: 'тест',
+      system, sheet: to, pass: newPass(system, to, { compendium: { records: [] } }), die, owner: 'тест',
     } as never);
     return { out, used: at };
   };

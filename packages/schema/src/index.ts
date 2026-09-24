@@ -6,7 +6,7 @@ export type {
   SystemConstant, Table, TableColumn, TableRow, TableKey, RollEditOp, RollEdit, Modifier, Param,
   Step, Guard, Ask, Handler, Effect,
   Activation, DurationKind, Stacking, Binding, RecordKind, System,
-  StoredValue, WornEffect, Sheet, CompendiumRecord, Compendium, World,
+  StoredValue, WornEffect, Owned, Sheet, CompendiumRecord, Compendium, World,
 } from './world.ts';
 
 export type {

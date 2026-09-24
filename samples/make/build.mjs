@@ -10,6 +10,7 @@ import { unifyCalls } from './convert/calls.ts';
 import { unifySides } from './convert/sides.ts';
 import { formulasOf } from './convert/formulas.ts';
 import { typesOf } from './convert/types.ts';
+import { ownedOf } from './convert/owned.ts';
 
 const world = {
   title: 'D&D 5e',
@@ -35,6 +36,7 @@ world.system = unifyCalls(unifyAmounts(world.system));
 Object.assign(world, unifySides({ system: world.system, compendium: world.compendium }));
 Object.assign(world, formulasOf({ system: world.system, compendium: world.compendium }));
 Object.assign(world, typesOf({ system: world.system }));
+Object.assign(world, ownedOf(world));
 
 const out = fileURLToPath(new URL('../dnd5e.world.json', import.meta.url));
 writeFileSync(out, `${JSON.stringify(world, null, 2)}\n`);
@@ -43,7 +45,7 @@ const count = {
   'полей': world.system.fields.length,
   'эффектов': Object.keys(world.system.effects).length,
   'типов записей': Object.keys(world.system.records).length,
-  'записей книги': world.compendium.items.length + world.compendium.actions.length,
+  'записей книги': world.compendium.records.length,
   'листов': world.sheets.length,
   'таблиц': Object.keys(world.system.tables).length,
 };

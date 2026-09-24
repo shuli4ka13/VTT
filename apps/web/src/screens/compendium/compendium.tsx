@@ -1,3 +1,4 @@
+import { recordsOf, isItem } from '@vtt/engine/model/owned';
 import { TABS } from '../../words.ts';
 import { useWorld, freeId, randomTag } from '../../store/world.ts';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
@@ -19,18 +20,14 @@ export function CompendiumScreen() {
   const editCompendium = useWorld(s => s.editCompendium);
 
   const kinds = Object.entries(system.records ?? {});
-  const all = [
-    ...(compendium.items ?? []).map(r => ({ record: r, basis: 'item' as const })),
-    ...(compendium.actions ?? []).map(r => ({ record: r, basis: 'action' as const })),
-  ];
+  const all = recordsOf(compendium).map(r => ({ record: r, basis: isItem(system, r) ? 'item' as const : 'action' as const }));
   const active = all.find(entry => entry.record.id === activeId) ?? null;
 
   const add = (rk: string, kind: RecordKind) => {
     const taken = all.map(e => e.record.id);
     const id = freeId(taken, `${kind.label ?? rk}_${randomTag()}`);
     editCompendium(draft => {
-      const list = kind.kind === 'item' ? (draft.items ??= []) : (draft.actions ??= []);
-      list.push({ id, rk, label: `Новая запись (${kind.label ?? rk})`, props: {} });
+      (draft.records ??= []).push({ id, rk, label: `Новая запись (${kind.label ?? rk})`, props: {} });
     });
     pick({ activeRecordId: id });
   };
@@ -104,15 +101,14 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
 
   const edit = (change: (draft: CompendiumRecord) => void) => {
     editCompendium(draft => {
-      const target = [...(draft.items ?? []), ...(draft.actions ?? [])].find(r => r.id === record.id);
+      const target = recordsOf(draft).find(r => r.id === record.id);
       if (target) change(target);
     });
   };
 
   const remove = () => {
     editCompendium(draft => {
-      draft.items = (draft.items ?? []).filter(r => r.id !== record.id);
-      draft.actions = (draft.actions ?? []).filter(r => r.id !== record.id);
+      draft.records = recordsOf(draft).filter(r => r.id !== record.id);
     });
     pick({ activeRecordId: null });
   };

@@ -297,6 +297,12 @@ export const wornEffect = z.object({
   usesLeft: z.number().int().optional(),
 }).catchall(storedValue);
 
+export const owned = z.object({
+  of: z.string().min(1),
+  off: z.boolean().optional(),
+  values: z.record(z.string(), storedValue).optional(),
+}).strict();
+
 export const sheet = z.object({
   id: z.string().min(1),
   systemId: z.string(),
@@ -305,9 +311,8 @@ export const sheet = z.object({
   name: z.string(),
   values: z.record(z.string(), storedValue),
 
-  equipped: z.array(z.string()),
+  has: z.array(owned),
   effects: z.array(wornEffect),
-  actions: z.array(z.string()),
 }).strict();
 
 export const compendiumRecord = z.object({
@@ -319,14 +324,13 @@ export const compendiumRecord = z.object({
   props: z.record(z.string(), z.unknown()).optional(),
   modifiers: z.array(modifier).optional(),
 
-  activities: z.array(binding).optional(),
+  bindings: z.array(binding).optional(),
 
   grants: z.array(z.string().min(1)).optional(),
 }).passthrough();
 
 export const compendium = z.object({
-  items: z.array(compendiumRecord).optional(),
-  actions: z.array(compendiumRecord).optional(),
+  records: z.array(compendiumRecord).optional(),
 }).passthrough();
 
 export const world = z.object({
@@ -372,6 +376,7 @@ export type BindingArg = z.infer<typeof bindingArg>;
 export type RecordKind = z.infer<typeof recordKind>;
 export type System = z.infer<typeof system>;
 export type WornEffect = z.infer<typeof wornEffect>;
+export type Owned = z.infer<typeof owned>;
 export type Sheet = z.infer<typeof sheet>;
 export type CompendiumRecord = z.infer<typeof compendiumRecord>;
 export type Compendium = z.infer<typeof compendium>;

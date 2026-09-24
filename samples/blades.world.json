@@ -425,8 +425,7 @@
     "room_rules": []
   },
   "compendium": {
-    "items": [],
-    "actions": [
+    "records": [
       {
         "id": "act_skirmish",
         "rk": "move",
@@ -476,15 +475,27 @@
         "id": "resist",
         "rk": "crew",
         "label": "Сопротивление",
-        "effect": "resist",
-        "props": {}
+        "props": {},
+        "bindings": [
+          {
+            "label": "Сопротивление",
+            "effect": "resist",
+            "args": {}
+          }
+        ]
       },
       {
         "id": "lay_low",
         "rk": "crew",
         "label": "Залечь на дно",
-        "effect": "lay_low",
-        "props": {}
+        "props": {},
+        "bindings": [
+          {
+            "label": "Залечь на дно",
+            "effect": "lay_low",
+            "args": {}
+          }
+        ]
       }
     ]
   },
@@ -502,17 +513,30 @@
         "study": 1,
         "stress": 0
       },
-      "equipped": [],
-      "effects": [],
-      "actions": [
-        "act_skirmish",
-        "act_prowl",
-        "act_finesse",
-        "act_sway",
-        "act_study",
-        "resist",
-        "lay_low"
-      ]
+      "has": [
+        {
+          "of": "act_skirmish"
+        },
+        {
+          "of": "act_prowl"
+        },
+        {
+          "of": "act_finesse"
+        },
+        {
+          "of": "act_sway"
+        },
+        {
+          "of": "act_study"
+        },
+        {
+          "of": "resist"
+        },
+        {
+          "of": "lay_low"
+        }
+      ],
+      "effects": []
     },
     {
       "id": "mira",
@@ -527,17 +551,30 @@
         "study": 0,
         "stress": 2
       },
-      "equipped": [],
-      "effects": [],
-      "actions": [
-        "act_skirmish",
-        "act_prowl",
-        "act_finesse",
-        "act_sway",
-        "act_study",
-        "resist",
-        "lay_low"
-      ]
+      "has": [
+        {
+          "of": "act_skirmish"
+        },
+        {
+          "of": "act_prowl"
+        },
+        {
+          "of": "act_finesse"
+        },
+        {
+          "of": "act_sway"
+        },
+        {
+          "of": "act_study"
+        },
+        {
+          "of": "resist"
+        },
+        {
+          "of": "lay_low"
+        }
+      ],
+      "effects": []
     },
     {
       "id": "стол",
@@ -548,9 +585,8 @@
         "alarm": 0,
         "heat": 1
       },
-      "equipped": [],
-      "effects": [],
-      "actions": []
+      "has": [],
+      "effects": []
     }
   ]
 }

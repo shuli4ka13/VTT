@@ -69,7 +69,7 @@ const worldStorage = lazyStorage(() => localStorage);
 
 export const useWorld = create<WorldState>()(persist(set => ({
   system: emptySystem(),
-  compendium: { items: [], actions: [] },
+  compendium: { records: [] },
   sheets: [],
   origin: { mode: 'system' },
 

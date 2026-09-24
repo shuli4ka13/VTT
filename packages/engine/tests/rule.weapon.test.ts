@@ -2,7 +2,7 @@ import { group, test, eq, ok, throws } from './harness.ts';
 import { send, receive, availableActions } from '../src/events/envelope.ts';
 import { system, arven, mirra, compendium } from './fixtures.ts';
 
-const findItem = (id: string) => compendium.items.find(i => i.id === id) || null;
+const findItem = (id: string) => compendium.records.find(i => i.id === id) || null;
 
 const queue = (...values) => {
   const rest = [...values];
@@ -33,7 +33,7 @@ group('предмет даёт действие', () => {
   });
 
   test('снял меч — атака пропала из списка', () => {
-    const bare = { ...arven, equipped: arven.equipped.filter(id => id !== 'longsword-item') };
+    const bare = { ...arven, has: arven.has.filter(entry => entry.of !== 'longsword-item') };
     ok(!availableActions(bare, world).some(a => a.id === 'longsword-item:0'));
   });
 
@@ -56,10 +56,10 @@ group('предмет даёт действие', () => {
   test('своя активность перебивает привязку рода — так живут штучные вещи', () => {
     const book = {
       ...compendium,
-      items: compendium.items.map(i => i.id === 'longsword-item'
-        ? { ...i, activities: [{ label: 'Особый удар', effect: 'strike',
+      records: [...(compendium.records.map(i => i.id === 'longsword-item'
+        ? { ...i, bindings: [{ label: 'Особый удар', effect: 'strike',
           args: { bonus: '#attack_bonus', versus: 'ac', damage_bonus: '0', apply_to: 'hp_current' } }] }
-        : i),
+        : i))],
     };
     const list = availableActions(arven, { system, compendium: book });
     const mine = list.filter(a => a.id.startsWith('longsword-item'));
@@ -76,9 +76,9 @@ group('предмет даёт действие', () => {
   test('привязка на пропавший эффект — внятная ошибка при отправке', () => {
     const book = {
       ...compendium,
-      items: compendium.items.map(i => i.id === 'longsword-item'
-        ? { ...i, activities: [{ label: 'Атака', effect: 'нетакого', args: {} }] }
-        : i),
+      records: [...(compendium.records.map(i => i.id === 'longsword-item'
+        ? { ...i, bindings: [{ label: 'Атака', effect: 'нетакого', args: {} }] }
+        : i))],
     };
     throws(() => send('longsword-item:0', { system, sheet: arven, compendium: book, die: queue(10) }), 'нетакого');
   });
@@ -90,9 +90,9 @@ group('предмет даёт действие', () => {
   test('пассивный эффект применить нельзя — его вешают, а не бьют им', () => {
     const book = {
       ...compendium,
-      items: compendium.items.map(i => i.id === 'longsword-item'
-        ? { ...i, activities: [{ label: 'Атака', effect: 'poisoned', args: {} }] }
-        : i),
+      records: [...(compendium.records.map(i => i.id === 'longsword-item'
+        ? { ...i, bindings: [{ label: 'Атака', effect: 'poisoned', args: {} }] }
+        : i))],
     };
     throws(() => send('longsword-item:0', { system, sheet: arven, compendium: book, die: queue(10) }), 'пассивн');
   });

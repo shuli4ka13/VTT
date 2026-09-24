@@ -7,7 +7,7 @@ export class SheetShapeError extends Error {
   }
 }
 
-const TOP_KEYS = ['id', 'systemId', 'kind', 'name', 'values', 'equipped', 'effects', 'actions'];
+const TOP_KEYS = ['id', 'systemId', 'kind', 'name', 'values', 'has', 'effects'];
 
 const KINDS = ['pc', 'npc'];
 
@@ -50,15 +50,13 @@ export function assertSheetShape(sheet: unknown): Sheet {
     }
   }
 
-  if (!Array.isArray(s.equipped)) throw new SheetShapeError('«equipped» должен быть массивом');
-  for (const id of s.equipped) {
-    if (typeof id !== 'string') throw new SheetShapeError('«equipped» содержит не ссылку на предмет, а значение');
-  }
-
-  if (!Array.isArray(s.actions)) throw new SheetShapeError('«actions» должен быть массивом');
-  for (const id of s.actions) {
-    if (typeof id !== 'string') {
-      throw new SheetShapeError('«actions» содержит не ссылку на действие, а объект — копий записей в листе не держим');
+  if (!Array.isArray(s.has)) throw new SheetShapeError('«has» должен быть массивом');
+  for (const entry of s.has) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry) || typeof entry.of !== 'string') {
+      throw new SheetShapeError('запись в «has» обязана ссылаться на запись компендиума через «of» — копий записей в листе не держим');
+    }
+    for (const [key, value] of Object.entries(entry.values ?? {})) {
+      if (!isScalar(value)) throw new SheetShapeError(`значение «${key}» у «${entry.of}» обязано быть скаляром`);
     }
   }
 
@@ -102,9 +100,8 @@ export function deserializeSheet(json: string): Sheet {
     kind: parsed.kind,
     name: parsed.name,
     values: sortKeys(parsed.values) as Sheet['values'],
-    equipped: [...parsed.equipped],
+    has: parsed.has.map((e: { values?: object }) => ({ ...e, ...(e.values ? { values: { ...e.values } } : {}) })),
     effects: parsed.effects.map((e: object) => ({ ...e })),
-    actions: [...parsed.actions],
   };
 }
 

@@ -28,7 +28,7 @@ describe('предпросмотр поля в конструкторе', () => 
   afterEach(() => { cleanup(); });
 
   it('рисует поле так, как увидит игрок, и откликается на клик', () => {
-    render(<FieldPreview field={стойкость} system={system} compendium={{ items: [], actions: [] } as unknown as Compendium} />);
+    render(<FieldPreview field={стойкость} system={system} compendium={{ records: [] } as unknown as Compendium} />);
     const уязвимость = screen.getByText('уязвимость');
     fireEvent.click(уязвимость);
     expect(уязвимость.closest('button')?.className).toContain('primary');
@@ -45,7 +45,7 @@ describe('поле со ссылкой на таблицу без особого
       fields: [раса], constants: {}, effects: {},
       tables: { расы: { label: 'Расы', key: 'word', rows: [{ value: 'дварф', label: 'дварф' }, { value: 'эльф', label: 'эльф' }] } },
     } as unknown as System;
-    render(<FieldPreview field={раса} system={мир} compendium={{ items: [], actions: [] } as unknown as Compendium} />);
+    render(<FieldPreview field={раса} system={мир} compendium={{ records: [] } as unknown as Compendium} />);
     const список = screen.getByRole('combobox') as HTMLSelectElement;
     fireEvent.change(список, { target: { value: 'эльф' } });
     expect(список.value).toBe('эльф');

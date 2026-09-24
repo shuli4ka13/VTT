@@ -1,4 +1,5 @@
 import { rowsOf } from './tables.ts';
+import { recordsOf } from './owned.ts';
 import { compile } from '../formula/index.ts';
 import type { Node } from '../formula/index.ts';
 import { tagTablesOf, choiceTableOf } from './lists.ts';
@@ -175,7 +176,7 @@ export function rowUsers(system: System, table: string, key: unknown, compendium
   }
   for (const [rk, kind] of Object.entries(system.records ?? {})) {
     const props = (kind.props ?? []).filter(p => (p as Loose).kind === 'choice' && (p as Loose).from === table);
-    for (const record of [...(compendium?.items ?? []), ...(compendium?.actions ?? [])]) {
+    for (const record of recordsOf(compendium)) {
       if (record.rk !== rk) continue;
       for (const prop of props) {
         if (holds((record.props ?? {})[prop.key], key)) {
@@ -232,7 +233,7 @@ export function danglingRows(system: System, compendium?: Compendium): Dangling[
     for (const prop of (kind.props ?? [])) {
       const p = prop as Loose;
       if (p.kind !== 'choice' || typeof p.from !== 'string') continue;
-      for (const record of [...(compendium?.items ?? []), ...(compendium?.actions ?? [])]) {
+      for (const record of recordsOf(compendium)) {
         if (record.rk !== rk) continue;
         const lost = missing(system, p.from, (record.props ?? {})[prop.key]);
         if (!lost.length) continue;
@@ -289,7 +290,7 @@ export function renameRowInBook(system: System, book: Compendium, table: string,
   for (const [rk, kind] of Object.entries(system.records ?? {})) {
     const props = (kind.props ?? []).filter(p => (p as Loose).kind === 'choice' && (p as Loose).from === table);
     if (!props.length) continue;
-    for (const record of [...(book.items ?? []), ...(book.actions ?? [])]) {
+    for (const record of recordsOf(book)) {
       if (record.rk !== rk || !record.props) continue;
       for (const prop of props) {
         if (holds(record.props[prop.key], from)) record.props[prop.key] = swap(record.props[prop.key], from, to);

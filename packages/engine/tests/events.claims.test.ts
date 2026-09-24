@@ -108,7 +108,7 @@ group('цель видна отправителю: состояния цели �
   });
 
   test('«против меня» не трогает собственные броски цели', () => {
-    const armed = { ...lying, equipped: ['longsword-item'] };
+    const armed = { ...lying, has: [{ of: 'longsword-item' }] };
     const env = send('longsword-item:0', { system: prone, sheet: armed, compendium, die: queue(9, 5) });
     deepEq(env.steps[0]!.rolled.rolls, [9]);
   });

@@ -39,7 +39,7 @@ const rule = {
 const run = (sys: any, sh: any, ...dice: number[]) => {
   const ctx = () => ({
     system: sys, sheet: sh, params: {}, item: null,
-    die: queue(...dice), pass: newPass(sys, sh, { compendium: { items: [] } }),
+    die: queue(...dice), pass: newPass(sys, sh, { compendium: { records: [] } }),
   });
   return resolveRule(packRule(rule, ctx()), ctx());
 };
@@ -51,7 +51,7 @@ group('механики разных систем доезжают через э
     const spy = (sides: number) => { asked.push(sides); return 5; };
     const ctx = () => ({
       system: sys, sheet: sheet(['ступень']), params: {}, item: null,
-      die: spy, pass: newPass(sys, sheet(['ступень']), { compendium: { items: [] } }),
+      die: spy, pass: newPass(sys, sheet(['ступень']), { compendium: { records: [] } }),
     });
     resolveRule(packRule(rule, ctx()), ctx());
     eq(asked[0], 8, 'эффект сменил величину кости, не трогая систему');
@@ -91,7 +91,7 @@ group('механики разных систем доезжают через э
     const sh = sheet(['ступень', 'помощь']);
     const ctx = () => ({
       system: sys, sheet: sh, params: {}, item: null,
-      die: spy, pass: newPass(sys, sh, { compendium: { items: [] } }),
+      die: spy, pass: newPass(sys, sh, { compendium: { records: [] } }),
     });
     const r = resolveRule(packRule(rule, ctx()), ctx());
     deepEq(asked, [8, 8], 'две кости, обе — уже подросшие');
@@ -180,7 +180,7 @@ group('переворот к100 доезжает через эффект — п�
   const play = (s: any, sh: any, ...dice: number[]) => {
     const ctx = () => ({
       system: s, sheet: sh, params: {}, item: null,
-      die: queue(...dice), pass: newPass(s, sh, { compendium: { items: [] } }),
+      die: queue(...dice), pass: newPass(s, sh, { compendium: { records: [] } }),
     });
     return resolveRule(packRule(under, ctx()), ctx());
   };

@@ -31,7 +31,7 @@ const run = (expr: string, ...dice: number[]) => {
   };
   const ctx = () => ({
     system: sys, sheet, params: {}, item: null,
-    die: queue(...dice), pass: newPass(sys, sheet, { compendium: { items: [] } }),
+    die: queue(...dice), pass: newPass(sys, sheet, { compendium: { records: [] } }),
   });
   return resolveRule(packRule(rule, ctx()), ctx());
 };
@@ -75,7 +75,7 @@ group('новое значение поля — выражение', () => {
     const sh = { ...sheet, values: { ...sheet.values, урон: 100 } };
     const ctx = () => ({
       system: collide, sheet: sh, params: {}, item: null,
-      die: queue(5), pass: newPass(collide, sh, { compendium: { items: [] } }),
+      die: queue(5), pass: newPass(collide, sh, { compendium: { records: [] } }),
     });
     const r = resolveRule(packRule(rule, ctx()), ctx());
     eq(r.sheet.values.хп, 100, 'считалось поле, а не шаг: переименование шага не меняет смысл формул');

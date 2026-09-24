@@ -29,9 +29,9 @@ const system = {
   records: { приём: { kind: 'action', label: 'Приём' } },
 } as unknown as System;
 
-const book = { items: [], actions: [{ id: 'касание', rk: 'приём', label: 'Касание', effect: 'касание' }] } as unknown as Compendium;
+const book = { records: [{ id: 'касание', rk: 'приём', label: 'Касание', bindings: [{ label: 'Касание', effect: 'касание', args: {} }] }] } as unknown as Compendium;
 const sheet = (id: string, хп: number, effects: string[] = []): Sheet =>
-  ({ id, systemId: 'ответ', kind: 'pc', name: id, values: { хп }, equipped: [], effects: effects.map(effectId => ({ effectId })), actions: ['касание'] } as unknown as Sheet);
+  ({ id, systemId: 'ответ', kind: 'pc', name: id, values: { хп }, has: [{ of: 'касание' }], effects: effects.map(effectId => ({ effectId })) } as unknown as Sheet);
 
 const touch = (target: Sheet) => exchange({
   system, compendium: book, die: () => 1, sheets: [sheet('вампир', 10), target], actionId: 'касание:0', fromId: 'вампир', toId: target.id,

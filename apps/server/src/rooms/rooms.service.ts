@@ -14,6 +14,7 @@ import type { Seen } from '@vtt/engine/events/exchange';
 import type { EmittedEvent } from '@vtt/engine/engine/rule';
 import { previewLines, describeEntry } from '@vtt/engine/events/describe';
 import { flattenSystem } from '@vtt/engine/model/inherit';
+import { findRecord, isItem } from '@vtt/engine/model/owned';
 import { effectLabelOf, send, receive, offers, react, senderResults } from '@vtt/engine/events/envelope';
 import { tapeDie, replayDie } from '@vtt/engine/engine/dice';
 import type { Envelope, Offer, ReactionWindow, Report } from '@vtt/engine/events/envelope';
@@ -89,7 +90,7 @@ export class RoomsService {
     });
     const deskFields = world.system.fields.filter(field => field.desk);
     const withDesk = deskFields.length && !deskOf(world.sheets)
-      ? [...world.sheets, { id: DESK_ID, systemId: world.system.id, kind: 'desk', name: 'Стол', values: {}, equipped: [], effects: [], actions: [] } as Sheet]
+      ? [...world.sheets, { id: DESK_ID, systemId: world.system.id, kind: 'desk', name: 'Стол', values: {}, has: [], effects: [] } as Sheet]
       : world.sheets;
     for (const sheet of withDesk) {
       await this.db.insert(roomSheets).values({
@@ -173,9 +174,9 @@ export class RoomsService {
 
   setBelonging(
     userId: string, roomId: string, sheetId: string,
-    list: 'equipped' | 'actions' | 'effects', id: string, on: boolean,
+    list: 'has' | 'effects', id: string, on: boolean, off?: boolean,
   ): Promise<RoomDelta> {
-    return this.inTurn(roomId, () => this.runSetBelonging(userId, roomId, sheetId, list, id, on));
+    return this.inTurn(roomId, () => this.runSetBelonging(userId, roomId, sheetId, list, id, on, off));
   }
 
   claimSheet(userId: string, roomId: string, sheetId: string | null): Promise<RoomDelta> {
@@ -682,9 +683,8 @@ export class RoomsService {
       kind,
       name,
       values: {},
-      equipped: [],
+      has: [],
       effects: [],
-      actions: [],
     });
 
     await this.db.insert(roomSheets).values({
@@ -696,19 +696,15 @@ export class RoomsService {
 
   private async runSetBelonging(
     userId: string, roomId: string, sheetId: string,
-    list: 'equipped' | 'actions' | 'effects', id: string, on: boolean,
+    list: 'has' | 'effects', id: string, on: boolean, off?: boolean,
   ): Promise<RoomDelta> {
     const room = await this.requireRoom(roomId);
     await this.assertMaySheet(roomId, userId, sheetId);
 
     const { system, compendium } = this.worldOf(room);
 
-    if (list === 'equipped' && !(compendium.items ?? []).some(i => i.id === id)) {
-      throw new BadRequestException(`в компендиуме нет предмета «${id}»`);
-    }
-    if (list === 'actions' && !(compendium.actions ?? []).some(a => a.id === id)) {
-      throw new BadRequestException(`в компендиуме нет действия «${id}»`);
-    }
+    const record = list === 'has' ? findRecord(compendium, id) : undefined;
+    if (list === 'has' && !record) throw new BadRequestException(`в компендиуме нет записи «${id}»`);
     const effect = list === 'effects' ? findEffect(system, id) : null;
     if (list === 'effects') {
       if (!effect) throw new BadRequestException(`система не объявляет эффекта «${id}»`);
@@ -738,21 +734,25 @@ export class RoomsService {
       }
       next.effects = worn;
     } else {
-      const refs = new Set(sheet[list] ?? []);
-      if (on) refs.add(id); else refs.delete(id);
-      next[list] = [...refs];
+      const list = sheet.has ?? [];
+      const was = list.find(entry => entry.of === id);
+      const entry = { ...(was ?? { of: id }) };
+      if (off) entry.off = true; else delete entry.off;
+      next.has = !on ? list.filter(other => other.of !== id)
+        : was ? list.map(other => (other.of === id ? entry : other)) : [...list, entry];
     }
 
     await this.db.update(roomSheets).set({ data: JSON.stringify(next) })
       .where(and(eq(roomSheets.roomId, roomId), eq(roomSheets.sheetId, sheetId)));
 
-    if (list === 'actions') return { roomId, sheets: [next], log: [] };
+    const wasActive = list === 'has' && (sheet.has ?? []).some(entry => entry.of === id && !entry.off);
+    const nowActive = list === 'has' && (next.has ?? []).some(entry => entry.of === id && !entry.off);
 
     const before = (await this.db.select().from(roomSheets).where(eq(roomSheets.roomId, roomId)))
       .map(entry => (entry.sheetId === sheetId ? sheet : JSON.parse(entry.data) as Sheet));
     const all = before.map(entry => (entry.id === sheetId ? next : entry));
-    const moment: MomentEvent['moment'] | null = list === 'equipped'
-      ? (on ? 'equipped' : null)
+    const moment: MomentEvent['moment'] | null = list === 'has'
+      ? (nowActive && !wasActive && isItem(system, record) ? 'equipped' : null)
       : (on ? 'attached' : 'expired');
     const lines: string[] = [];
     let settled = all;

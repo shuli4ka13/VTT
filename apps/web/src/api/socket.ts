@@ -71,9 +71,9 @@ export class TableSocket {
 
   setBelonging(
     roomId: string, sheetId: string,
-    list: 'equipped' | 'actions' | 'effects', id: string, on: boolean,
+    list: 'has' | 'effects', id: string, on: boolean, off?: boolean,
   ): void {
-    this.send('sheet:belong', { roomId, sheetId, list, id, on });
+    this.send('sheet:belong', { roomId, sheetId, list, id, on, ...(off ? { off } : {}) });
   }
 
   close(): void {

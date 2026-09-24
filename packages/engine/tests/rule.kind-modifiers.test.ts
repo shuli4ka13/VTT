@@ -27,17 +27,10 @@ const sys: any = {
 };
 
 const compendium: any = {
-  items: [
-    { id: 'кольчуга', rk: 'тяжёлый', label: 'Кольчуга' },
-    { id: 'латы', rk: 'тяжёлый', label: 'Латы' },
-    { id: 'кожа', rk: 'лёгкий', label: 'Кожаный доспех' },
-    { id: 'кольцо1', rk: 'кольцо', label: 'Кольцо защиты' },
-    { id: 'кольцо2', rk: 'кольцо', label: 'Кольцо стража' },
-  ],
-  actions: [],
+  records: [{ id: 'кольчуга', rk: 'тяжёлый', label: 'Кольчуга' }, { id: 'латы', rk: 'тяжёлый', label: 'Латы' }, { id: 'кожа', rk: 'лёгкий', label: 'Кожаный доспех' }, { id: 'кольцо1', rk: 'кольцо', label: 'Кольцо защиты' }, { id: 'кольцо2', rk: 'кольцо', label: 'Кольцо стража' }],
 };
 
-const hero = (equipped: string[]) => ({ id: 'вор', values: { скрытность: 3, кд: 10 }, equipped, effects: [] });
+const hero = (equipped: string[]) => ({ id: 'вор', values: { скрытность: 3, кд: 10 }, has: [...equipped.map(of => ({ of }))], effects: [] });
 const pass = (equipped: string[]) => newPass(sys, hero(equipped), { compendium });
 const edits = (equipped: string[]) =>
   resolveRoll(sys, hero(equipped), ['скрытность'], pass(equipped)).edits.map(e => e.label);
@@ -75,9 +68,9 @@ group('модификаторы рода', () => {
   test('вещь может добавить своё поверх родового', () => {
     const book = {
       ...compendium,
-      items: compendium.items.map((i: any) => i.id === 'кольчуга'
+      records: [...(compendium.records.map((i: any) => i.id === 'кольчуга'
         ? { ...i, modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: 6, stacking: 'sum', condition: null }] }
-        : i),
+        : i))],
     };
     const sheet = hero(['кольчуга']);
     const p = newPass(sys, sheet, { compendium: book });

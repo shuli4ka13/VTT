@@ -26,16 +26,12 @@ const system = {
 } as unknown as System;
 
 const book = {
-  items: [],
-  actions: [
-    { id: 'в', rk: 'умение', label: 'Впасть', effect: 'впасть' },
-    { id: 'у', rk: 'умение', label: 'Успокоиться', effect: 'успокоиться' },
-  ],
+  records: [{ id: 'в', rk: 'умение', label: 'Впасть', bindings: [{ label: 'Впасть', effect: 'впасть', args: {} }] }, { id: 'у', rk: 'умение', label: 'Успокоиться', bindings: [{ label: 'Успокоиться', effect: 'успокоиться', args: {} }] }],
 } as unknown as Compendium;
 
 const hero = (worn: string[] = []): Sheet => ({
   id: 'г', systemId: 'x', kind: 'pc', name: 'Герой', values: { ярость: 0, усталость: 0 },
-  equipped: [], actions: ['в', 'у'], effects: worn.map(effectId => ({ effectId })),
+  has: [{ of: 'в' }, { of: 'у' }], effects: worn.map(effectId => ({ effectId })),
 } as unknown as Sheet);
 
 const act = (actionId: string, sheet: Sheet) =>

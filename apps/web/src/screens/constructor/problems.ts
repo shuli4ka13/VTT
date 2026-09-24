@@ -14,7 +14,7 @@ export function useProblems(): Problem[] {
   const system = useWorld(s => s.system);
   const compendium = useWorld(s => s.compendium);
   const mode = useWorld(s => s.origin.mode);
-  const book = mode === 'compendium' || compendium.items?.length || compendium.actions?.length
+  const book = mode === 'compendium' || compendium.records?.length
     ? compendium : undefined;
   return useMemo(() => lintSystem(flattenSystem(system), book), [system, book]);
 }

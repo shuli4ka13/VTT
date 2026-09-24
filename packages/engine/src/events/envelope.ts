@@ -3,6 +3,8 @@ import { newPass } from '../engine/calc.ts';
 import { rolledSoFar } from '../engine/rolled.ts';
 import { packCall, runCall } from './call.ts';
 import { holdsNow } from '../engine/refs.ts';
+import { findRecord, heldBy, isItem, kindOfRecord, entryOf, propsOf } from '../model/owned.ts';
+export { propsOf } from '../model/owned.ts';
 import { requireEffect, findEffect, isPipeline, durationOf } from '../engine/effects.ts';
 import { listening, subscriberByKey, hears, runsAtOther, withSteps } from './bus.ts';
 import type { Role, Phase } from './bus.ts';
@@ -76,28 +78,14 @@ export interface ReceiveResult {
 }
 
 export function bindingsOf(record: CompendiumRecord, system: System): Binding[] {
-  if (record.activities && record.activities.length) return record.activities;
-  if (record.effect) return [{ label: record.label, effect: String(record.effect), args: (record.args || {}) as Binding['args'] }];
-  const decl = (system.records || {})[String(record.rk)];
-  return decl?.bindings || [];
+  if (record.bindings?.length) return record.bindings;
+  return kindOfRecord(system, record)?.bindings ?? [];
 }
 
 export function availableActions(
   sheet: Sheet, { system, compendium }: { system: System; compendium: Compendium },
 ): Action[] {
-  const out: Action[] = [];
-
-  for (const itemId of sheet.equipped || []) {
-    const item = (compendium.items || []).find(i => i.id === itemId);
-    if (item) out.push(...actionsOfRecord(item, system, true));
-  }
-
-  for (const actionId of (sheet.actions as string[] | undefined) || []) {
-    const record = (compendium.actions || []).find(a => a.id === actionId);
-    if (record) out.push(...actionsOfRecord(record, system, false));
-  }
-
-  return out;
+  return heldBy(sheet, compendium).flatMap(({ record }) => actionsOfRecord(record, system, isItem(system, record)));
 }
 
 export function actionOf(
@@ -107,15 +95,14 @@ export function actionOf(
   const recordId = at > 0 ? String(actionId).slice(0, at) : String(actionId);
   const index = at > 0 ? Number(String(actionId).slice(at + 1)) : 0;
 
-  const item = (compendium.items || []).find(r => r.id === recordId);
-  const record = item || (compendium.actions || []).find(r => r.id === recordId);
+  const record = findRecord(compendium, recordId);
   if (!record) throw new EngineError(`в компендиуме нет записи «${recordId}»`);
 
-  const action = actionsOfRecord(record, system, Boolean(item))[index];
+  const action = actionsOfRecord(record, system, isItem(system, record))[index];
   if (!action) {
     throw new EngineError(
       `запись «${record.label}» (${recordId}) не даёт действия №${index}: ` +
-      'ни своей активности, ни привязки у её рода');
+      'ни своей привязки, ни привязки у её рода');
   }
   return action;
 }
@@ -158,7 +145,7 @@ export function send(
   const steps = packCall({
     effectId: action.effect, effect, sheet,
     args: action.binding.args || {},
-    props: propsOf(action.record, system),
+    props: propsOf(action.record, system, entryOf(sheet, action.record.id)),
     owner: `эффект «${effect.label || action.effect}»`,
     ...(inputs ? { inputs } : {}),
     ...(targetPass ? { against: (tags: readonly string[]) => incomingRollModifiers(tags, targetPass) } : {}),
@@ -470,16 +457,6 @@ export function spendUse(sheet: Sheet, effectId: string): Sheet {
     if (left > 0) effects.push({ ...entry, usesLeft: left });
   }
   return { ...sheet, effects };
-}
-
-export function propsOf(record: CompendiumRecord, system: System): Record<string, unknown> | null {
-  const decl = (system.records || {})[String(record.rk)];
-  if (!decl?.props || !decl.props.length) return null;
-  const props: Record<string, unknown> = {};
-  for (const p of decl.props) {
-    if (record.props && record.props[p.key] !== undefined) props[p.key] = record.props[p.key];
-  }
-  return props;
 }
 
 export const effectLabelOf = (system: System, id: string): string => {

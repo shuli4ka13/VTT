@@ -3,6 +3,7 @@ import { registry } from '../engine/steps/index.ts';
 import { calledOf, chainsOfEffect } from '../engine/effects.ts';
 import { basedOn, paramsOf } from './inherit.ts';
 import { danglingRows } from './integrity.ts';
+import { recordsOf } from './owned.ts';
 import { TABS, STEP } from '../words/glossary.ts';
 import { DESK, RECEIVER, SENDER } from '../engine/owners.ts';
 import {
@@ -271,9 +272,8 @@ function orphanProblems(system: System, compendium?: Compendium): Problem[] {
   const bound = new Set<string>();
   for (const kind of Object.values(system.records ?? {})) for (const b of kind.bindings ?? []) bound.add(b.effect);
   for (const id of system.room_rules ?? []) bound.add(id);
-  for (const record of [...(compendium?.items ?? []), ...(compendium?.actions ?? [])]) {
-    if (record.effect) bound.add(String(record.effect));
-    for (const activity of record.activities ?? []) bound.add(activity.effect);
+  for (const record of recordsOf(compendium)) {
+    for (const binding of record.bindings ?? []) bound.add(binding.effect);
     for (const id of record.grants ?? []) bound.add(id);
   }
   if (compendium) {
@@ -416,7 +416,7 @@ export function describeWhere(where: Where, system: System, compendium?: Compend
   } else if (where.tab === 'book') {
     parts.push('Компендиум');
     if (where.record) {
-      const found = [...(compendium?.items ?? []), ...(compendium?.actions ?? [])].find(r => r.id === where.record);
+      const found = recordsOf(compendium).find(r => r.id === where.record);
       parts.push(`запись ${quoted(found?.label, where.record)}`);
     }
   }

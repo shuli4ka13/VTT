@@ -9885,9 +9885,8 @@
           "inspiration": 1,
           "hit_dice_left": 5
         },
-        "equipped": [],
-        "effects": [],
-        "actions": []
+        "has": [],
+        "effects": []
       },
       {
         "id": "манекен-б",
@@ -9907,14 +9906,13 @@
           "ac_base": 13,
           "hit_dice_left": 5
         },
-        "equipped": [],
-        "effects": [],
-        "actions": []
+        "has": [],
+        "effects": []
       }
     ]
   },
   "compendium": {
-    "items": [
+    "records": [
       {
         "id": "club",
         "rk": "weapon",
@@ -10925,9 +10923,7 @@
           "weight": 5,
           "cost": 2
         }
-      }
-    ],
-    "actions": [
+      },
       {
         "id": "fire_bolt",
         "rk": "cantrip_attack",
@@ -11448,7 +11444,13 @@
         "props": {
           "source": "Воин, 1 уровень"
         },
-        "effect": "second_wind"
+        "bindings": [
+          {
+            "label": "Второе дыхание",
+            "effect": "second_wind",
+            "args": {}
+          }
+        ]
       },
       {
         "id": "feature_action_surge",
@@ -11458,7 +11460,13 @@
         "props": {
           "source": "Воин, 2 уровень"
         },
-        "effect": "action_surge"
+        "bindings": [
+          {
+            "label": "Всплеск действий",
+            "effect": "action_surge",
+            "args": {}
+          }
+        ]
       },
       {
         "id": "feature_rage",
@@ -11468,7 +11476,13 @@
         "props": {
           "source": "Варвар, 1 уровень"
         },
-        "effect": "rage"
+        "bindings": [
+          {
+            "label": "Ярость",
+            "effect": "rage",
+            "args": {}
+          }
+        ]
       },
       {
         "id": "feature_reckless",
@@ -11478,7 +11492,13 @@
         "props": {
           "source": "Варвар, 2 уровень"
         },
-        "effect": "reckless_attack"
+        "bindings": [
+          {
+            "label": "Безрассудная атака",
+            "effect": "reckless_attack",
+            "args": {}
+          }
+        ]
       },
       {
         "id": "feature_sneak",
@@ -11488,7 +11508,13 @@
         "props": {
           "source": "Плут, 1 уровень"
         },
-        "effect": "sneak_attack"
+        "bindings": [
+          {
+            "label": "Скрытая атака",
+            "effect": "sneak_attack",
+            "args": {}
+          }
+        ]
       },
       {
         "id": "feature_lay_hands",
@@ -11498,7 +11524,13 @@
         "props": {
           "source": "Паладин, 1 уровень"
         },
-        "effect": "lay_on_hands"
+        "bindings": [
+          {
+            "label": "Наложение рук",
+            "effect": "lay_on_hands",
+            "args": {}
+          }
+        ]
       },
       {
         "id": "feature_smite",
@@ -11508,7 +11540,13 @@
         "props": {
           "source": "Паладин, 2 уровень"
         },
-        "effect": "divine_smite"
+        "bindings": [
+          {
+            "label": "Божественная кара",
+            "effect": "divine_smite",
+            "args": {}
+          }
+        ]
       },
       {
         "id": "feature_bardic",
@@ -11518,7 +11556,13 @@
         "props": {
           "source": "Бард, 1 уровень"
         },
-        "effect": "bardic_inspiration"
+        "bindings": [
+          {
+            "label": "Бардовское вдохновение",
+            "effect": "bardic_inspiration",
+            "args": {}
+          }
+        ]
       },
       {
         "id": "feature_turn_undead",
@@ -11528,7 +11572,13 @@
         "props": {
           "source": "Жрец, 2 уровень"
         },
-        "effect": "turn_undead"
+        "bindings": [
+          {
+            "label": "Изгнание нежити",
+            "effect": "turn_undead",
+            "args": {}
+          }
+        ]
       },
       {
         "id": "feature_hit_die",
@@ -11538,7 +11588,13 @@
         "props": {
           "source": "Правила отдыха"
         },
-        "effect": "spend_hit_die"
+        "bindings": [
+          {
+            "label": "Потратить кость хитов",
+            "effect": "spend_hit_die",
+            "args": {}
+          }
+        ]
       },
       {
         "id": "trait_extra_attack",
@@ -11846,7 +11902,13 @@
         "label": "Уклонение",
         "description": "По тебе бьют с помехой до начала твоего хода.",
         "props": {},
-        "effect": "dodge"
+        "bindings": [
+          {
+            "label": "Уклонение",
+            "effect": "dodge",
+            "args": {}
+          }
+        ]
       },
       {
         "id": "act_dash",
@@ -11854,7 +11916,13 @@
         "label": "Рывок",
         "description": "Скорость на этот ход удваивается.",
         "props": {},
-        "effect": "dash"
+        "bindings": [
+          {
+            "label": "Рывок",
+            "effect": "dash",
+            "args": {}
+          }
+        ]
       },
       {
         "id": "act_disengage",
@@ -11862,7 +11930,13 @@
         "label": "Отход",
         "description": "Передвижение не провоцирует атак.",
         "props": {},
-        "effect": "disengage"
+        "bindings": [
+          {
+            "label": "Отход",
+            "effect": "disengage",
+            "args": {}
+          }
+        ]
       },
       {
         "id": "act_hide",
@@ -11870,7 +11944,13 @@
         "label": "Засада",
         "description": "Скрытность против пассивной внимательности.",
         "props": {},
-        "effect": "hide"
+        "bindings": [
+          {
+            "label": "Засада",
+            "effect": "hide",
+            "args": {}
+          }
+        ]
       },
       {
         "id": "act_smite_note",
@@ -11878,7 +11958,13 @@
         "label": "Заклинание: состояние без концентрации",
         "description": "Для заклинаний, которые вешают состояние и не требуют концентрации.",
         "props": {},
-        "effect": "spell_condition"
+        "bindings": [
+          {
+            "label": "Заклинание: состояние без концентрации",
+            "effect": "spell_condition",
+            "args": {}
+          }
+        ]
       },
       {
         "id": "act_help",
@@ -11886,7 +11972,13 @@
         "label": "Помощь",
         "description": "Союзник получает преимущество на следующий бросок.",
         "props": {},
-        "effect": "help"
+        "bindings": [
+          {
+            "label": "Помощь",
+            "effect": "help",
+            "args": {}
+          }
+        ]
       },
       {
         "id": "goblin_scimitar",
@@ -12024,26 +12116,54 @@
         "gp": 120,
         "sp": 40
       },
-      "equipped": [
-        "chain_mail",
-        "shield_item",
-        "longsword",
-        "handaxe"
+      "has": [
+        {
+          "of": "chain_mail"
+        },
+        {
+          "of": "shield_item"
+        },
+        {
+          "of": "longsword"
+        },
+        {
+          "of": "handaxe"
+        },
+        {
+          "of": "trait_extra_attack"
+        },
+        {
+          "of": "trait_improved_crit"
+        },
+        {
+          "of": "trait_style_defense"
+        },
+        {
+          "of": "feature_second_wind"
+        },
+        {
+          "of": "feature_action_surge"
+        },
+        {
+          "of": "feature_hit_die"
+        },
+        {
+          "of": "trait_inspiration"
+        },
+        {
+          "of": "act_dodge"
+        },
+        {
+          "of": "act_dash"
+        },
+        {
+          "of": "act_disengage"
+        },
+        {
+          "of": "act_help"
+        }
       ],
-      "effects": [],
-      "actions": [
-        "trait_extra_attack",
-        "trait_improved_crit",
-        "trait_style_defense",
-        "feature_second_wind",
-        "feature_action_surge",
-        "feature_hit_die",
-        "trait_inspiration",
-        "act_dodge",
-        "act_dash",
-        "act_disengage",
-        "act_help"
-      ]
+      "effects": []
     },
     {
       "id": "mirra",
@@ -12080,31 +12200,69 @@
         "sorcery_left": 5,
         "gp": 95
       },
-      "equipped": [
-        "leather",
-        "dagger",
-        "arcane_focus"
+      "has": [
+        {
+          "of": "leather"
+        },
+        {
+          "of": "dagger"
+        },
+        {
+          "of": "arcane_focus"
+        },
+        {
+          "of": "fire_bolt"
+        },
+        {
+          "of": "light"
+        },
+        {
+          "of": "prestidigitation"
+        },
+        {
+          "of": "magic_missile"
+        },
+        {
+          "of": "burning_hands"
+        },
+        {
+          "of": "fireball"
+        },
+        {
+          "of": "haste"
+        },
+        {
+          "of": "hold_person"
+        },
+        {
+          "of": "misty_step"
+        },
+        {
+          "of": "mage_armor"
+        },
+        {
+          "of": "trait_shield_spell"
+        },
+        {
+          "of": "trait_rebuke"
+        },
+        {
+          "of": "trait_darkvision"
+        },
+        {
+          "of": "trait_infernal"
+        },
+        {
+          "of": "act_dodge"
+        },
+        {
+          "of": "act_dash"
+        },
+        {
+          "of": "act_disengage"
+        }
       ],
-      "effects": [],
-      "actions": [
-        "fire_bolt",
-        "light",
-        "prestidigitation",
-        "magic_missile",
-        "burning_hands",
-        "fireball",
-        "haste",
-        "hold_person",
-        "misty_step",
-        "mage_armor",
-        "trait_shield_spell",
-        "trait_rebuke",
-        "trait_darkvision",
-        "trait_infernal",
-        "act_dodge",
-        "act_dash",
-        "act_disengage"
-      ]
+      "effects": []
     },
     {
       "id": "doran",
@@ -12142,28 +12300,60 @@
         "channel_left": 1,
         "gp": 60
       },
-      "equipped": [
-        "scale_mail",
-        "shield_item",
-        "mace",
-        "holy_symbol"
+      "has": [
+        {
+          "of": "scale_mail"
+        },
+        {
+          "of": "shield_item"
+        },
+        {
+          "of": "mace"
+        },
+        {
+          "of": "holy_symbol"
+        },
+        {
+          "of": "sacred_flame"
+        },
+        {
+          "of": "guidance_cantrip"
+        },
+        {
+          "of": "cure_wounds"
+        },
+        {
+          "of": "healing_word"
+        },
+        {
+          "of": "bless_spell"
+        },
+        {
+          "of": "lesser_restoration"
+        },
+        {
+          "of": "aid"
+        },
+        {
+          "of": "feature_turn_undead"
+        },
+        {
+          "of": "feature_hit_die"
+        },
+        {
+          "of": "trait_darkvision"
+        },
+        {
+          "of": "trait_dwarf_resilience"
+        },
+        {
+          "of": "act_dodge"
+        },
+        {
+          "of": "act_help"
+        }
       ],
-      "effects": [],
-      "actions": [
-        "sacred_flame",
-        "guidance_cantrip",
-        "cure_wounds",
-        "healing_word",
-        "bless_spell",
-        "lesser_restoration",
-        "aid",
-        "feature_turn_undead",
-        "feature_hit_die",
-        "trait_darkvision",
-        "trait_dwarf_resilience",
-        "act_dodge",
-        "act_help"
-      ]
+      "effects": []
     },
     {
       "id": "sil",
@@ -12197,25 +12387,51 @@
         "luck_left": 3,
         "gp": 150
       },
-      "equipped": [
-        "studded_leather",
-        "rapier",
-        "shortbow",
-        "dagger",
-        "thieves_tools"
+      "has": [
+        {
+          "of": "studded_leather"
+        },
+        {
+          "of": "rapier"
+        },
+        {
+          "of": "shortbow"
+        },
+        {
+          "of": "dagger"
+        },
+        {
+          "of": "thieves_tools"
+        },
+        {
+          "of": "feature_sneak"
+        },
+        {
+          "of": "trait_uncanny"
+        },
+        {
+          "of": "trait_lucky_halfling"
+        },
+        {
+          "of": "feat_lucky"
+        },
+        {
+          "of": "feature_hit_die"
+        },
+        {
+          "of": "act_dodge"
+        },
+        {
+          "of": "act_dash"
+        },
+        {
+          "of": "act_disengage"
+        },
+        {
+          "of": "act_hide"
+        }
       ],
-      "effects": [],
-      "actions": [
-        "feature_sneak",
-        "trait_uncanny",
-        "trait_lucky_halfling",
-        "feat_lucky",
-        "feature_hit_die",
-        "act_dodge",
-        "act_dash",
-        "act_disengage",
-        "act_hide"
-      ]
+      "effects": []
     },
     {
       "id": "goblin",
@@ -12238,13 +12454,18 @@
         "hit_dice_left": 1,
         "ac_base": 15
       },
-      "equipped": [],
-      "effects": [],
-      "actions": [
-        "goblin_scimitar",
-        "act_hide",
-        "act_disengage"
-      ]
+      "has": [
+        {
+          "of": "goblin_scimitar"
+        },
+        {
+          "of": "act_hide"
+        },
+        {
+          "of": "act_disengage"
+        }
+      ],
+      "effects": []
     },
     {
       "id": "orc",
@@ -12267,12 +12488,15 @@
         "hit_dice_left": 2,
         "ac_base": 13
       },
-      "equipped": [],
-      "effects": [],
-      "actions": [
-        "orc_greataxe",
-        "act_dash"
-      ]
+      "has": [
+        {
+          "of": "orc_greataxe"
+        },
+        {
+          "of": "act_dash"
+        }
+      ],
+      "effects": []
     },
     {
       "id": "ogre",
@@ -12295,11 +12519,12 @@
         "hit_dice_left": 7,
         "ac_base": 11
       },
-      "equipped": [],
-      "effects": [],
-      "actions": [
-        "ogre_club"
-      ]
+      "has": [
+        {
+          "of": "ogre_club"
+        }
+      ],
+      "effects": []
     },
     {
       "id": "стол",
@@ -12309,9 +12534,8 @@
       "values": {
         "battle": 0
       },
-      "equipped": [],
-      "effects": [],
-      "actions": []
+      "has": [],
+      "effects": []
     }
   ]
 }

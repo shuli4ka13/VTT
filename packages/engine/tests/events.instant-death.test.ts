@@ -30,14 +30,14 @@ const sys: any = {
 };
 
 const compendium: any = {
-  items: [],
-  actions: [{ id: 'strike', rk: 'приём', label: 'Удар', effect: 'удар', args: { величина: 0 } }],
+  records: [{ id: 'strike', rk: 'приём', label: 'Удар', bindings: [{ label: 'Удар', effect: 'удар', args: { величина: 0 } }] }],
 };
 
 const hit = (величина: number, хп: number, хп_макс: number) => {
   const бьющий = { id: 'бьющий', values: { хп: 30, хп_макс: 30 }, effects: [] };
   const жертва = { id: 'жертва', values: { хп, хп_макс }, effects: [] };
-  const book = { ...compendium, actions: [{ ...compendium.actions[0], args: { величина } }] };
+  const first = compendium.records[0];
+  const book = { ...compendium, records: [{ ...first, bindings: [{ ...first.bindings[0], args: { величина } }] }] };
   const env = send('strike:0', {
     system: sys, sheet: бьющий, compendium: book, die: () => 1, toId: 'жертва',
   } as any);

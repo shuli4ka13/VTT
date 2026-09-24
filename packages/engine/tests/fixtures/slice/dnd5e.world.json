@@ -2663,7 +2663,7 @@
     }
   },
   "compendium": {
-    "items": [
+    "records": [
       {
         "id": "chain-mail",
         "rk": "gear",
@@ -2698,9 +2698,7 @@
           "damage_type": "рубящий"
         },
         "modifiers": []
-      }
-    ],
-    "actions": [
+      },
       {
         "id": "poison-spray",
         "rk": "attack-spell",
@@ -2734,7 +2732,13 @@
         "rk": "action",
         "label": "Огненный снаряд",
         "description": "Сгусток огня: попадание по КД, 1d10 огнём.",
-        "effect": "fire_bolt"
+        "bindings": [
+          {
+            "label": "Огненный снаряд",
+            "effect": "fire_bolt",
+            "args": {}
+          }
+        ]
       },
       {
         "id": "bless-spell",
@@ -2786,17 +2790,21 @@
         "intimidation_prof": 2,
         "dex_save_prof": 0
       },
-      "equipped": [
-        "chain-mail",
-        "longsword-item"
+      "has": [
+        {
+          "of": "chain-mail"
+        },
+        {
+          "of": "longsword-item"
+        },
+        {
+          "of": "bless-spell"
+        }
       ],
       "effects": [
         {
           "effectId": "hellish_rebuke"
         }
-      ],
-      "actions": [
-        "bless-spell"
       ]
     },
     {
@@ -2828,12 +2836,15 @@
         "persuasion_prof": 1,
         "dex_save_prof": 1
       },
-      "equipped": [],
-      "effects": [],
-      "actions": [
-        "poison-spray",
-        "fireball-spell"
-      ]
+      "has": [
+        {
+          "of": "poison-spray"
+        },
+        {
+          "of": "fireball-spell"
+        }
+      ],
+      "effects": []
     }
   ]
 }

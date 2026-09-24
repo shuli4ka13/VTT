@@ -38,7 +38,7 @@ const troublesOf = (system: System): string[] => {
 
 const unfilledOf = (system: System, book: Compendium): string[] => {
   const out: string[] = [];
-  for (const record of [...(book.items ?? []), ...(book.actions ?? [])]) {
+  for (const record of (book.records ?? [])) {
     const kind = system.records?.[String(record.rk)];
     if (!kind) continue;
     const must = new Set<string>();

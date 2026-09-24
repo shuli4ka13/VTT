@@ -51,12 +51,9 @@ const system = {
     приём: { kind: 'action', label: 'Приём', props: [], bindings: [{ label: 'Ударить', effect: 'скрытая', args: {} }] },
   },
 } as unknown as System;
-const book = { items: [], actions: [
-  { id: 'стрела', rk: 'чары', label: 'Волшебная стрела', props: {} },
-  { id: 'скрытая', rk: 'приём', label: 'Скрытая атака', props: {} },
-] } as unknown as Compendium;
+const book = { records: [{ id: 'стрела', rk: 'чары', label: 'Волшебная стрела', props: {} }, { id: 'скрытая', rk: 'приём', label: 'Скрытая атака', props: {} }] } as unknown as Compendium;
 const sheet = (id: string, values: Record<string, number> = {}): Sheet => ({
-  id, systemId: 'r', kind: 'pc', name: id, values, equipped: [], effects: [], actions: ['стрела', 'скрытая'],
+  id, systemId: 'r', kind: 'pc', name: id, values, has: [{ of: 'стрела' }, { of: 'скрытая' }], effects: []
 } as unknown as Sheet);
 const cast = (slot: number, sheets = [sheet('маг'), sheet('цель')]) => exchange({
   system, compendium: book, die: () => 3, sheets, actionId: 'стрела:0', fromId: 'маг', toId: 'цель', inputs: { круг: slot },
@@ -150,9 +147,9 @@ group('бросок несёт несколько меток, одна прих�
     },
     records: { чары: { kind: 'action', label: 'Чары', props: [], bindings: [{ label: 'Шар', effect: 'шар', args: { чем: 'лов' } }] } },
   } as unknown as System;
-  const spells = { items: [], actions: [{ id: 'шар', rk: 'чары', label: 'Шар', props: {} }] } as unknown as Compendium;
+  const spells = { records: [{ id: 'шар', rk: 'чары', label: 'Шар', props: {} }] } as unknown as Compendium;
   const who = (id: string, worn: string[] = []): Sheet => ({
-    id, systemId: 'm', kind: 'pc', name: id, values: {}, equipped: [], actions: ['шар'], effects: worn.map(effectId => ({ effectId })),
+    id, systemId: 'm', kind: 'pc', name: id, values: {}, has: [{ of: 'шар' }], effects: worn.map(effectId => ({ effectId })),
   } as unknown as Sheet);
 
   const cast = (worn: string[], values: Record<string, number> = {}) => {
@@ -193,8 +190,8 @@ group('общий держатель: взялся за новое — стар�
       б: { kind: 'action', label: 'Б', props: [], bindings: [{ label: 'Ускорение', effect: 'ускорение', args: {} }] },
     },
   } as unknown as System;
-  const spells = { items: [], actions: [{ id: 'а', rk: 'а', label: 'Благословение', props: {} }, { id: 'б', rk: 'б', label: 'Ускорение', props: {} }] } as unknown as Compendium;
-  const who = (id: string): Sheet => ({ id, systemId: 'c', kind: 'pc', name: id, values: {}, equipped: [], actions: ['а', 'б'], effects: [] } as unknown as Sheet);
+  const spells = { records: [{ id: 'а', rk: 'а', label: 'Благословение', props: {} }, { id: 'б', rk: 'б', label: 'Ускорение', props: {} }] } as unknown as Compendium;
+  const who = (id: string): Sheet => ({ id, systemId: 'c', kind: 'pc', name: id, values: {}, has: [{ of: 'а' }, { of: 'б' }], effects: [] } as unknown as Sheet);
   const worn = (sheets: Sheet[], id: string) => sheets.find(s => s.id === id)!.effects.map(e => e.effectId);
 
   test('держатель один на оба заклинания, второе снимает первое', () => {
@@ -214,13 +211,13 @@ group('запись выдаёт эффект владельцу', () => {
     effects: { стойка: { label: 'Оборонительная стойка', activation: 'passive', modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: 1, stacking: 'sum', condition: null }] } },
     records: { черта: { kind: 'action', label: 'Черта', props: [], bindings: [] } },
   } as unknown as System;
-  const feats = { items: [], actions: [{ id: 'оборона', rk: 'черта', label: 'Боевой стиль: оборона', props: {}, grants: ['стойка'] }] } as unknown as Compendium;
+  const feats = { records: [{ id: 'оборона', rk: 'черта', label: 'Боевой стиль: оборона', props: {}, grants: ['стойка'] }] } as unknown as Compendium;
 
   test('выучил черту — эффект действует, хотя на листе его нет; разучил — перестал', async () => {
     const { calc, newPass } = await import('../src/engine/calc.ts');
-    const knows = { id: 'в', systemId: 'g', kind: 'pc', name: 'в', values: {}, equipped: [], actions: ['оборона'], effects: [] } as unknown as Sheet;
+    const knows = { id: 'в', systemId: 'g', kind: 'pc', name: 'в', values: {}, has: [{ of: 'оборона' }], effects: [] } as unknown as Sheet;
     eq(calc(sys, knows, 'кд', newPass(sys, knows, { compendium: feats })), 11);
-    const forgot = { ...knows, actions: [] } as Sheet;
+    const forgot = { ...knows, has: [] } as Sheet;
     eq(calc(sys, forgot, 'кд', newPass(sys, forgot, { compendium: feats })), 10);
     deepEq(knows.effects, [], 'в данные листа ничего не записано');
   });
@@ -266,9 +263,9 @@ group('наложенное помнит число, штрафная кость
       б: { kind: 'action', label: 'Б', props: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] },
     },
   } as unknown as System;
-  const acts = { items: [], actions: [{ id: 'а', rk: 'а', label: 'Поджечь', props: {} }, { id: 'б', rk: 'б', label: 'Удар', props: {} }] } as unknown as Compendium;
+  const acts = { records: [{ id: 'а', rk: 'а', label: 'Поджечь', props: {} }, { id: 'б', rk: 'б', label: 'Удар', props: {} }] } as unknown as Compendium;
   const who = (id: string, worn: string[] = [], values: Record<string, number> = {}): Sheet => ({
-    id, systemId: 'k', kind: 'pc', name: id, values, equipped: [], actions: ['а', 'б'], effects: worn.map(effectId => ({ effectId })),
+    id, systemId: 'k', kind: 'pc', name: id, values, has: [{ of: 'а' }, { of: 'б' }], effects: worn.map(effectId => ({ effectId })),
   } as unknown as Sheet);
 
   test('состояние запомнило четвёрку и в начале хода снимает именно её', () => {

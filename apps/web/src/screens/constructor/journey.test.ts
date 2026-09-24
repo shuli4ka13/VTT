@@ -40,12 +40,11 @@ function assemble(): { system: System; compendium: Compendium; sheets: Sheet[]; 
   (system.records ??= {})[kind.key] = kind.value;
 
   const compendium: Compendium = {
-    items: [],
-    actions: [{ id: 'удар', rk: kind.key, label: 'Удар' }],
+    records: [{ id: 'удар', rk: kind.key, label: 'Удар' }],
   } as Compendium;
 
   const sheet = (id: string, name: string): Sheet => W.sheet.parse({
-    id, systemId: system.id ?? '', kind: 'pc', name, values: {}, equipped: [], effects: [], actions: ['удар'],
+    id, systemId: system.id ?? '', kind: 'pc', name, values: {}, has: [{ of: 'удар' }], effects: []
   });
 
   return { system, compendium, sheets: [sheet('герой', 'Герой'), sheet('враг', 'Враг')], hits: hits.key, action: 'удар:0' };

@@ -50,8 +50,8 @@ describe('схема стережёт инварианты, а не только
   });
 
   it('копия записи вместо ссылки не проходит', () => {
-    const bad = { ...sheets[0], equipped: [{ id: 'sword', label: 'Меч' }] };
-    expect(W.sheet.safeParse(bad).success, 'в equipped лежат только id').toBe(false);
+    const bad = { ...sheets[0], has: [{ id: 'sword', label: 'Меч' }] };
+    expect(W.sheet.safeParse(bad).success, 'в has лежат ссылки { of }, а не копии записей').toBe(false);
   });
 
   it('двоеточие в теге поля запрещено — им размечены выведенные мишени', () => {
@@ -246,7 +246,7 @@ describe('манекены системы', () => {
     expect(W.system.safeParse(base).success).toBe(true);
     const withDolls = {
       ...base,
-      mannequins: [{ id: 'а', systemId: 'x', kind: 'npc', name: 'А', values: {}, equipped: [], effects: [], actions: [] }],
+      mannequins: [{ id: 'а', systemId: 'x', kind: 'npc', name: 'А', values: {}, has: [], effects: [] }],
     };
     expect(W.system.safeParse(withDolls).success).toBe(true);
     const broken = { ...base, mannequins: [{ id: 'а', name: 'А', values: { hp: 3 } }] };

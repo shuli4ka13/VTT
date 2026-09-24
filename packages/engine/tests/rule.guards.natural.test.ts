@@ -12,8 +12,8 @@ const system = {
   tables: { levels: { label: 'Ступени', key: 'range', columns: [{ key: 'value', label: 'ступень', kind: 'text' }],
     rows: [{ from: 0, to: 9, cells: { value: 'провал' } }, { from: 10, to: 99, cells: { value: 'успех' } }] } },
 } as unknown as System;
-const sheet = { id: 'a', systemId: 'x', name: 'А', values: { hp: 10 }, equipped: [], actions: [], effects: [] } as unknown as Sheet;
-const compendium = { items: [], actions: [] };
+const sheet = { id: 'a', systemId: 'x', name: 'А', values: { hp: 10 }, has: [], effects: [] } as unknown as Sheet;
+const compendium = { records: [] };
 
 const run = (steps: object[], die: number) => {
   const effect = { label: 'e', activation: 'manual', steps } as unknown as Effect;

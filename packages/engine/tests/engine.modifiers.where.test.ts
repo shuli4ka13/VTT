@@ -11,7 +11,7 @@ const удар = (оружие: string, ярость: boolean, правка?: (s
   правка?.(system);
   const sheets = мир.sheets as Sheet[];
   const бьющий = clone(sheets[0]!);
-  (бьющий as Record<string, unknown>).equipped = [...(бьющий.equipped ?? []), оружие];
+  (бьющий as Record<string, unknown>).has = [...(бьющий.has ?? []), { of: оружие }];
   const цель = clone(sheets[5]!);
   (цель.values as Record<string, unknown>).hp_current = 200;
   if (ярость) (цель as Record<string, unknown>).effects = [...(цель.effects ?? []), { effectId: 'raging' }];

@@ -3179,7 +3179,7 @@
     ]
   },
   "compendium": {
-    "items": [
+    "records": [
       {
         "id": "heavy-pistol",
         "rk": "weapon",
@@ -3208,9 +3208,7 @@
         "props": {
           "sp": 11
         }
-      }
-    ],
-    "actions": [
+      },
       {
         "id": "injury",
         "rk": "action",
@@ -3251,14 +3249,18 @@
         "persuasion": 3,
         "hp": 45
       },
-      "equipped": [
-        "heavy-pistol",
-        "kevlar"
+      "has": [
+        {
+          "of": "heavy-pistol"
+        },
+        {
+          "of": "kevlar"
+        },
+        {
+          "of": "injury"
+        }
       ],
-      "effects": [],
-      "actions": [
-        "injury"
-      ]
+      "effects": []
     },
     {
       "id": "raze",
@@ -3290,14 +3292,18 @@
         "persuasion": 3,
         "hp": 40
       },
-      "equipped": [
-        "mono-knife",
-        "kevlar"
+      "has": [
+        {
+          "of": "mono-knife"
+        },
+        {
+          "of": "kevlar"
+        },
+        {
+          "of": "injury"
+        }
       ],
-      "effects": [],
-      "actions": [
-        "injury"
-      ]
+      "effects": []
     },
     {
       "id": "стол",
@@ -3307,9 +3313,8 @@
       "values": {
         "battle": 0
       },
-      "equipped": [],
-      "effects": [],
-      "actions": []
+      "has": [],
+      "effects": []
     }
   ]
 }

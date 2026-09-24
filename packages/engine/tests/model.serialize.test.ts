@@ -7,9 +7,8 @@ const sample = () => ({
   systemId: 'dnd5e-slice',
   name: 'Тестовый',
   values: { str: 16, dex: 14, athletics_prof: true },
-  equipped: ['chain-mail'],
+  has: [{ of: 'chain-mail' }, { of: 'longsword' }],
   effects: [],
-  actions: ['longsword'],
   kind: 'pc',
 });
 
@@ -37,7 +36,7 @@ group('сериализация листа', () => {
 
   test('в сериализованном виде нет ничего, кроме объявленных полей DTO', () => {
     const keys = Object.keys(JSON.parse(serializeSheet(sample())));
-    deepEq(keys.sort(), ['actions', 'effects', 'equipped', 'id', 'kind', 'name', 'systemId', 'values']);
+    deepEq(keys.sort(), ['effects', 'has', 'id', 'kind', 'name', 'systemId', 'values']);
   });
 
   group('защита от вычисленных значений в DTO', () => {
@@ -72,19 +71,19 @@ group('сериализация листа', () => {
   group('ссылки на записи компендиума', () => {
     test('лист хранит ссылки на действия, а не копии', () => {
       for (const sheet of sheets) {
-        ok(Array.isArray(sheet.actions), `у ${sheet.id} нет списка действий`);
-        for (const id of sheet.actions) eq(typeof id, 'string', 'действие — ссылка, а не объект');
+        ok(Array.isArray(sheet.has), `у ${sheet.id} нет списка «что есть»`);
+        for (const entry of sheet.has) eq(typeof entry.of, 'string', 'запись — ссылка, а не копия');
       }
     });
 
     test('объект вместо ссылки на действие отвергается', () => {
-      const dirty = { ...sample(), actions: [{ id: 'longsword', label: 'Копия' }] };
+      const dirty = { ...sample(), records: [{ id: 'longsword', label: 'Копия' }] };
       throws(() => serializeSheet(dirty), SheetShapeError, 'действ');
     });
 
-    test('без списка действий лист неполон', () => {
-      const { actions, ...rest } = sample();
-      throws(() => serializeSheet(rest), SheetShapeError, 'actions');
+    test('без списка «что есть» лист неполон', () => {
+      const { has, ...rest } = sample();
+      throws(() => serializeSheet(rest), SheetShapeError, 'has');
     });
   });
 

@@ -20,8 +20,8 @@ group('один путь вызова', () => {
       steps: [{ type: 'emit', event: 'damage', args: { amount: { expr: '3' } } }],
     } as unknown as Effect;
     looped.records = { ...(looped.records ?? {}), shout: { kind: 'action', label: 'Крик', bindings: [{ label: 'Эхо', effect: 'echo', args: {} }] } } as never;
-    const book = { ...compendium, actions: [...(compendium.actions ?? []), { id: 'shout', rk: 'shout', label: 'Крик', props: {} }] };
-    const sheet = { ...arven, actions: [...(arven.actions ?? []), 'shout'] };
+    const book = { ...compendium, records: [...(compendium.records ?? []), { id: 'shout', rk: 'shout', label: 'Крик', props: {} }] };
+    const sheet = { ...arven, has: [...arven.has, { of: 'shout' }] };
     let caught: unknown;
     try {
       exchange({ system: looped, compendium: book, die, sheets: [sheet, mirra], actionId: 'shout:0', fromId: sheet.id, toId: mirra.id });

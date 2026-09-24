@@ -43,7 +43,7 @@ group('целостность ссылок на строки таблиц', () =
     renameRow(system, 'damage_types', 'рубящий', 'режущий');
     renameRowInBook(system, книга, 'damage_types', 'рубящий', 'режущий');
     eq(danglingRows(system, книга).length, 0, 'ни одной висячей ссылки');
-    eq(книга.items!.find(i => i.id === 'longsword')!.props!.damage_type, 'режущий');
+    eq(книга.records!.find(i => i.id === 'longsword')!.props!.damage_type, 'режущий');
     ok(rowUsers(system, 'damage_types', 'режущий', книга).length > 0, 'ссылки переехали');
     eq(rowUsers(system, 'damage_types', 'рубящий', книга).length, 0, 'на старое имя не смотрит никто');
   });
