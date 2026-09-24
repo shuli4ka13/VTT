@@ -3,7 +3,7 @@ import { Drawer, Button, Empty, Chip } from '../../../ui/primitives.tsx';
 import { Readback } from './cards/group-card.tsx';
 import { groupSteps } from '../cards.ts';
 import { stepNames } from '../slots.tsx';
-import { CARD_TITLES } from './words.ts';
+import { CARD_TITLES, titleOf } from './words.ts';
 import { checkReadback, changeReadback, numberReadback, sendReadback, joinReadback } from '../readback.ts';
 import type { Segment } from '../readback.ts';
 import { eventTagOf } from '@vtt/engine/engine/targets';
@@ -27,7 +27,7 @@ function namesInside(system: System, effect: Effect): Map<string, string> {
   const steps = (effect.steps ?? []) as Step[];
   const earlier = steps.map((step, at) => ({
     id: String(step.id ?? ''), type: step.type, at: at + 1,
-    title: CARD_TITLES[(groupSteps([step])[0]?.kind ?? '') as keyof typeof CARD_TITLES],
+    title: titleOf(groupSteps([step])[0]?.kind ?? '', step, system),
   })).filter(step => step.id);
   return stepNames({ system, effect, earlier });
 }
@@ -137,7 +137,7 @@ export function WhatNext({ open, onClose, system, eventId, onEdit }: {
                 <div className="drawer__step-head">
                   <span className="drawer__step-no num">{i + 1}</span>
                   <span className="drawer__step-name">
-                    {CARD_TITLES[card.kind as keyof typeof CARD_TITLES] ?? card.kind}
+                    {titleOf(card.kind, card.step, system)}
                   </span>
                 </div>
                 <Readback segments={linesOf(card.kind, card.step, card.amount, system, called, names)} />

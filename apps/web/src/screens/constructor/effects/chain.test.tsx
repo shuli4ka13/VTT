@@ -58,4 +58,10 @@ describe('стоимость эффекта — одним выбором', () =
     rerender(view());
     expect(screen.queryByText('Чего стоит:')).toBeNull();
   });
+
+  it('шаг, зовущий эффект из блока «Стоимость», так и подписан', () => {
+    const effect = { label: 'Удар', steps: [{ id: 'стоимость', type: 'emit', event: 'cost_action', strict: true }] } as unknown as Effect;
+    render(<Chain effect={effect} system={withCost()} lane="sender" edit={() => {}} />);
+    expect(screen.getByText(/1 · Стоимость/)).toBeTruthy();
+  });
 });

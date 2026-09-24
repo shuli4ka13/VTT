@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useWorld, freeId } from '../../../store/world.ts';
 import { STEP } from '../../../words.ts';
-import { CARD_TITLES } from './words.ts';
+import { titleOf } from './words.ts';
 import { Button, Select, Verdict } from '../../../ui/primitives.tsx';
 import { problemOf } from '../step-card.tsx';
 import { groupSteps, moveGroup, removeSteps, BRICKS } from '../cards.ts';
@@ -49,7 +49,7 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
       .map((step, at) => ({ step, at }))
       .filter(({ step }) => step.id)
       .map(({ step, at }) => ({
-        id: String(step.id), type: step.type, at: cardAt(at), title: cardTitle(cards, at),
+        id: String(step.id), type: step.type, at: cardAt(at), title: cardTitle(cards, at, system),
       }));
 
   const problems = steps.map((step, index) => problemOf(step, system, effect, earlierOf(index)));
@@ -165,7 +165,7 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
                 before,
                 text: removal.cleared.length
                   ? `Убран ${STEP.one} ${at + 1}; ссылки на него очищены: ${removal.cleared.map(c => `${STEP.one} ${c.step + 1} · ${c.slot}`).join(', ')}`
-                  : `Убран ${STEP.one} ${at + 1}${cardTitle(cards, group.indices[0]!) ? ` · ${cardTitle(cards, group.indices[0]!)}` : ''}`,
+                  : `Убран ${STEP.one} ${at + 1}${cardTitle(cards, group.indices[0]!, system) ? ` · ${cardTitle(cards, group.indices[0]!, system)}` : ''}`,
               });
             }}
             onMoveUp={at === 0 ? undefined : () => edit(draft => {
@@ -223,7 +223,7 @@ export function CostPick({ system, onPick }: { system: System; onPick: (id: stri
   );
 }
 
-const cardTitle = (cards: ReturnType<typeof groupSteps>, index: number): string | undefined => {
+const cardTitle = (cards: ReturnType<typeof groupSteps>, index: number, system: System): string | undefined => {
   const card = cards.find(c => c.indices.includes(index));
-  return card ? CARD_TITLES[card.kind] : undefined;
+  return card ? titleOf(card.kind, card.step, system) : undefined;
 };

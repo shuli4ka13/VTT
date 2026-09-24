@@ -11,7 +11,7 @@ import { CheckBody } from './check-body.tsx';
 import { ChangeBody } from './change-body.tsx';
 import { NumberBody } from './number-body.tsx';
 import { ConditionFold, breakLine } from './condition-fold.tsx';
-import { CARD_TITLES } from '../words.ts';
+import { titleOf } from '../words.ts';
 
 
 export function Readback({ segments }: { segments: Segment[] }) {
@@ -85,7 +85,7 @@ export function GroupCard({
     );
   }
 
-  const title = `${position} · ${CARD_TITLES[group.kind]}`;
+  const title = `${position} · ${titleOf(group.kind, group.step, system)}`;
   const head = onFold ? (
     <button type="button" className="step-fold" aria-expanded={!folded} onClick={onFold}
       title={folded ? 'развернуть шаг' : 'свернуть шаг'}>
