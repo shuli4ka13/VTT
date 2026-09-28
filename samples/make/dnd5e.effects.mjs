@@ -8,7 +8,7 @@ const P = {
     ask: { by: 'actor', min: 1, max: 9, hint: 'Круг ячейки, которую тратишь. Не ниже круга заклинания.' },
   },
   level: { key: 'spell_level', label: 'Круг заклинания', kind: 'number' },
-  saveBy: { key: 'save_by', label: 'Чем спасаются', kind: 'choice', from: 'abilities' },
+  saveBy: { key: 'save_by', label: 'Чем спасаются', kind: 'choice', from: 'saves' },
   die: { key: 'damage_die', label: 'Кость урона', kind: 'dice' },
   count: { key: 'dice_count', label: 'Сколько костей', kind: 'number' },
   up: { key: 'dice_up', label: 'Костей за каждый круг выше', kind: 'number' },
@@ -581,14 +581,12 @@ function lifecycle() {
   const longRest = [
     reset('hp_current', '@hp_max'),
     change('hp_temp', 'set', { const: 0 }),
-    change('exhaustion', 'subtract', { const: 1 }),
     change('hit_dice_left', 'add', { expr: 'max(1, floor(@level / 2))', of: 'target' }),
-    change('death_ok', 'set', { const: 0 }),
-    change('death_fail', 'set', { const: 0 }),
   ];
-  for (let n = 1; n <= 9; n++) longRest.push(reset(`slots_${n}`, `@slots_${n}_max`));
-  for (const [key, , rest] of RESOURCES) if (rest === 'long') longRest.push(reset(`${key}_left`, `@${key}_max`));
-  const shortRest = RESOURCES.filter(([, , rest]) => rest === 'short').map(([key]) => reset(`${key}_left`, `@${key}_max`));
+  const slotsBack = [];
+  for (let n = 1; n <= 9; n++) slotsBack.push(reset(`slots_${n}`, `@slots_${n}_max`));
+  const restoredOn = rest => RESOURCES.filter(([, , when]) => when === rest).map(([key]) => reset(`${key}_left`, `@${key}_max`));
+  const deathReset = [change('death_ok', 'set', { const: 0 }), change('death_fail', 'set', { const: 0 })];
 
 
   return {
@@ -614,9 +612,10 @@ function lifecycle() {
       ], { group: 'Состояния', duration: { kind: 'permanent' } }),
     fall: auto('Падение', 'Хиты опустились до нуля — «Без сознания» и «При смерти».',
       { on: 'field:down' }, [hang({ const: 'unconscious' }), hang({ const: 'dying' })]),
-    wake: auto('Подъём', 'Хиты снова выше нуля — встаёт, спасброски от смерти сброшены.',
+    wake: auto('Подъём', 'Хиты снова выше нуля — встаёт, спасброски от смерти сброшены; долгий отдых тоже их сбрасывает.',
       { on: 'field:up' },
-      [drop('unconscious'), drop('dying'), drop('stable'), change('death_ok', 'set', { const: 0 }), change('death_fail', 'set', { const: 0 })]),
+      [drop('unconscious'), drop('dying'), drop('stable'), ...deathReset],
+      { on: [{ on: 'field:up', steps: [drop('unconscious'), drop('dying'), drop('stable'), ...deathReset] }, { on: 'moment:long-rest', steps: deathReset }] }),
     death_now: auto('Смерть', 'Три провала спасбросков от смерти.', { on: 'field:is_dead' }, [drop('dying'), hang({ const: 'dead' })]),
     stabilize: auto('Стабилизация', 'Три успеха спасбросков от смерти.', { on: 'field:is_stable' }, [drop('dying'), hang({ const: 'stable' })]),
     relentless: auto('Непоколебимая стойкость', 'Раз до долгого отдыха: упал до нуля — остаёшься с одним хитом.',
@@ -626,10 +625,13 @@ function lifecycle() {
         change('hp_current', 'set', { const: 1 }),
         change('relentless_left', 'subtract', { const: 1 }),
       ], { group: 'Черты' }),
-    long_rest: auto('Долгий отдых', 'Хиты и ячейки полные, половина костей хитов, минус уровень истощения, ресурсы долгого отдыха.',
+    long_rest: auto('Долгий отдых', 'Хиты полные, половина костей хитов обратно. Остальное каждое правило возвращает само: ячейки, ресурсы, истощение, спасброски от смерти.',
       { on: 'moment:long-rest' }, longRest),
-    short_rest: auto('Короткий отдых', 'Возвращает ресурсы короткого отдыха. Кости хитов тратятся отдельной кнопкой.',
-      { on: 'moment:short-rest' }, shortRest),
+    slots_rest: auto('Ячейки после отдыха', 'Долгий отдых возвращает все ячейки заклинаний.',
+      { on: 'moment:long-rest' }, slotsBack, { group: 'Заклинания' }),
+    resources_rest: auto('Ресурсы классов после отдыха', 'Короткий отдых возвращает ресурсы короткого отдыха, долгий — всех.',
+      { on: 'moment:long-rest' }, [],
+      { group: 'Умения класса', on: [{ on: 'moment:short-rest', steps: restoredOn('short') }, { on: 'moment:long-rest', steps: [...restoredOn('short'), ...restoredOn('long')] }] }),
   };
 }
 
@@ -651,6 +653,7 @@ function roomRules() {
     exhaustion_rule: {
       label: 'Истощение', group: 'Правила комнаты', activation: 'passive', duration: { kind: 'permanent' },
       description: 'Шесть ступеней: помеха на проверки, скорость вдвое меньше, помеха на атаки и спасброски, максимум хитов вдвое меньше, скорость ноль. Шестая — смерть, её объявляет ведущий.',
+      on: [{ on: 'moment:long-rest', steps: [change('exhaustion', 'subtract', { const: 1 })] }],
       modifiers: [
         when(1, roll(['проверка'], 'disadvantage')),
         when(2, value('speed', 'mul', 0.5)),
@@ -670,7 +673,7 @@ export function effects() {
 }
 
 export const ROOM_RULES = [
-  'battle_start', 'battle_end', 'turn_refresh', 'taken_rule', 'exhaustion_rule', 'long_rest', 'short_rest',
+  'battle_start', 'battle_end', 'turn_refresh', 'taken_rule', 'exhaustion_rule', 'long_rest', 'slots_rest', 'resources_rest',
 ];
 
 export const DEATH_RULES = ['fall', 'wake', 'death_now', 'stabilize'];

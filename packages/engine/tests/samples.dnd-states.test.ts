@@ -2,6 +2,7 @@ import { group, test, eq, ok } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { fireMoments } from '../src/events/moments.ts';
 import { exchange } from '../src/events/exchange.ts';
+import { calc, newPass } from '../src/engine/calc.ts';
 import type { System, Sheet } from '../src/model/types.ts';
 
 const dnd = PLAYABLE_WORLDS.find(w => (w.system as System).id === 'dnd5e')!;
@@ -57,5 +58,22 @@ group('D&D: потерял сознание — концентрация пре�
     ok(wears(after('mirra'), 'prone'), 'упала — лежит отдельно от «без сознания»');
     ok(!wears(after('mirra'), 'concentration'), 'концентрация прервалась');
     ok(!wears(after('sil'), 'blessed'), 'благословение держать стало нечем');
+  });
+});
+
+group('D&D: отдых — каждое правило возвращает своё', () => {
+  test('долгий отдых: хиты, ячейки, ресурсы, истощение и спасброски от смерти возвращаются разными правилами', () => {
+    const tired = { ...sheetOf('mirra'), values: { ...sheetOf('mirra').values, hp_current: 1, slots_1: 0, luck_left: 0, exhaustion: 2, death_fail: 2 } };
+    const out = fireMoments([{ moment: 'short-rest', sheetId: 'mirra' }, { moment: 'long-rest', sheetId: 'mirra' }], [tired], world(1) as never);
+    const rested = out.sheets[0]!;
+    const back = rested.values;
+    const full = (tag: string) => calc(system, rested, tag, newPass(system, rested, { compendium: dnd.compendium }));
+    eq(back.hp_current, full('hp_max'));
+    eq(back.slots_1, full('slots_1_max'));
+    eq(back.luck_left, full('luck_max'));
+    eq(back.exhaustion, 1);
+    eq(back.death_fail, 0);
+    const rules = new Set(out.reports.map(r => r.report.effect));
+    ok(['long_rest', 'slots_rest', 'resources_rest', 'exhaustion_rule', 'wake'].every(id => rules.has(id)), [...rules].join(', '));
   });
 });

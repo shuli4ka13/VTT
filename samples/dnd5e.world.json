@@ -3185,7 +3185,51 @@
             "key": "mod",
             "label": "Модификатор",
             "kind": "expr"
+          }
+        ],
+        "rows": [
+          {
+            "value": "сила",
+            "cells": {
+              "mod": "@str_mod"
+            }
           },
+          {
+            "value": "ловкость",
+            "cells": {
+              "mod": "@dex_mod"
+            }
+          },
+          {
+            "value": "телосложение",
+            "cells": {
+              "mod": "@con_mod"
+            }
+          },
+          {
+            "value": "интеллект",
+            "cells": {
+              "mod": "@int_mod"
+            }
+          },
+          {
+            "value": "мудрость",
+            "cells": {
+              "mod": "@wis_mod"
+            }
+          },
+          {
+            "value": "харизма",
+            "cells": {
+              "mod": "@cha_mod"
+            }
+          }
+        ]
+      },
+      "saves": {
+        "label": "Спасброски",
+        "key": "word",
+        "columns": [
           {
             "key": "save",
             "label": "Спасбросок",
@@ -3196,42 +3240,36 @@
           {
             "value": "сила",
             "cells": {
-              "mod": "@str_mod",
               "save": "@str_save"
             }
           },
           {
             "value": "ловкость",
             "cells": {
-              "mod": "@dex_mod",
               "save": "@dex_save"
             }
           },
           {
             "value": "телосложение",
             "cells": {
-              "mod": "@con_mod",
               "save": "@con_save"
             }
           },
           {
             "value": "интеллект",
             "cells": {
-              "mod": "@int_mod",
               "save": "@int_save"
             }
           },
           {
             "value": "мудрость",
             "cells": {
-              "mod": "@wis_mod",
               "save": "@wis_save"
             }
           },
           {
             "value": "харизма",
             "cells": {
-              "mod": "@cha_mod",
               "save": "@cha_save"
             }
           }
@@ -4231,7 +4269,7 @@
             "key": "save_by",
             "label": "Чем спасаются",
             "kind": "choice",
-            "from": "abilities"
+            "from": "saves"
           },
           {
             "key": "damage_die",
@@ -4433,7 +4471,7 @@
             "key": "save_by",
             "label": "Чем спасаются",
             "kind": "choice",
-            "from": "abilities"
+            "from": "saves"
           },
           {
             "key": "damage_die",
@@ -4533,7 +4571,7 @@
             "key": "save_by",
             "label": "Чем спасаются",
             "kind": "choice",
-            "from": "abilities"
+            "from": "saves"
           },
           {
             "key": "damage_die",
@@ -4705,7 +4743,7 @@
             "key": "save_by",
             "label": "Чем спасаются",
             "kind": "choice",
-            "from": "abilities"
+            "from": "saves"
           },
           {
             "key": "status",
@@ -4768,7 +4806,7 @@
             "key": "save_by",
             "label": "Чем спасаются",
             "kind": "choice",
-            "from": "abilities"
+            "from": "saves"
           },
           {
             "key": "status",
@@ -7780,7 +7818,7 @@
       "wake": {
         "label": "Подъём",
         "group": "Отдых и смерть",
-        "description": "Хиты снова выше нуля — встаёт, спасброски от смерти сброшены.",
+        "description": "Хиты снова выше нуля — встаёт, спасброски от смерти сброшены; долгий отдых тоже их сбрасывает.",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -7811,6 +7849,33 @@
                   "const": "stable"
                 }
               },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "death_ok"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "0"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "death_fail"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "0"
+                },
+                "targetModifiers": false
+              }
+            ]
+          },
+          {
+            "on": "moment:long-rest",
+            "steps": [
               {
                 "type": "apply",
                 "target": {
@@ -7951,7 +8016,7 @@
       "long_rest": {
         "label": "Долгий отдых",
         "group": "Отдых и смерть",
-        "description": "Хиты и ячейки полные, половина костей хитов, минус уровень истощения, ресурсы долгого отдыха.",
+        "description": "Хиты полные, половина костей хитов обратно. Остальное каждое правило возвращает само: ячейки, ресурсы, истощение, спасброски от смерти.",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -7986,17 +8051,6 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "exhaustion"
-                },
-                "direction": "subtract",
-                "value": {
-                  "expr": "1"
-                },
-                "targetModifiers": false
-              },
-              {
-                "type": "apply",
-                "target": {
                   "tag": "hit_dice_left"
                 },
                 "direction": "add",
@@ -8004,29 +8058,24 @@
                   "expr": "max(1, floor(@получатель.level / 2))"
                 },
                 "targetModifiers": false
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "tag": "death_ok"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "0"
-                },
-                "targetModifiers": false
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "tag": "death_fail"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "0"
-                },
-                "targetModifiers": false
-              },
+              }
+            ]
+          }
+        ]
+      },
+      "slots_rest": {
+        "label": "Ячейки после отдыха",
+        "group": "Заклинания",
+        "description": "Долгий отдых возвращает все ячейки заклинаний.",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "params": [],
+        "on": [
+          {
+            "on": "moment:long-rest",
+            "steps": [
               {
                 "type": "apply",
                 "target": {
@@ -8125,6 +8174,138 @@
                   "expr": "@получатель.slots_9_max"
                 },
                 "targetModifiers": false
+              }
+            ]
+          }
+        ]
+      },
+      "resources_rest": {
+        "label": "Ресурсы классов после отдыха",
+        "group": "Умения класса",
+        "description": "Короткий отдых возвращает ресурсы короткого отдыха, долгий — всех.",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "params": [],
+        "on": [
+          {
+            "on": "moment:short-rest",
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "ki_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.ki_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "channel_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.channel_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "second_wind_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.second_wind_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "action_surge_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.action_surge_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "superiority_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.superiority_max"
+                },
+                "targetModifiers": false
+              }
+            ]
+          },
+          {
+            "on": "moment:long-rest",
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "ki_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.ki_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "channel_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.channel_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "second_wind_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.second_wind_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "action_surge_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.action_surge_max"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "superiority_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "@получатель.superiority_max"
+                },
+                "targetModifiers": false
               },
               {
                 "type": "apply",
@@ -8189,78 +8370,6 @@
                 "direction": "set",
                 "value": {
                   "expr": "@получатель.relentless_max"
-                },
-                "targetModifiers": false
-              }
-            ]
-          }
-        ]
-      },
-      "short_rest": {
-        "label": "Короткий отдых",
-        "group": "Отдых и смерть",
-        "description": "Возвращает ресурсы короткого отдыха. Кости хитов тратятся отдельной кнопкой.",
-        "activation": "passive",
-        "duration": {
-          "kind": "permanent"
-        },
-        "params": [],
-        "on": [
-          {
-            "on": "moment:short-rest",
-            "steps": [
-              {
-                "type": "apply",
-                "target": {
-                  "tag": "ki_left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@получатель.ki_max"
-                },
-                "targetModifiers": false
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "tag": "channel_left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@получатель.channel_max"
-                },
-                "targetModifiers": false
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "tag": "second_wind_left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@получатель.second_wind_max"
-                },
-                "targetModifiers": false
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "tag": "action_surge_left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@получатель.action_surge_max"
-                },
-                "targetModifiers": false
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "tag": "superiority_left"
-                },
-                "direction": "set",
-                "value": {
-                  "expr": "@получатель.superiority_max"
                 },
                 "targetModifiers": false
               }
@@ -8459,6 +8568,24 @@
           "kind": "permanent"
         },
         "description": "Шесть ступеней: помеха на проверки, скорость вдвое меньше, помеха на атаки и спасброски, максимум хитов вдвое меньше, скорость ноль. Шестая — смерть, её объявляет ведущий.",
+        "on": [
+          {
+            "on": "moment:long-rest",
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "exhaustion"
+                },
+                "direction": "subtract",
+                "value": {
+                  "expr": "1"
+                },
+                "targetModifiers": false
+              }
+            ]
+          }
+        ],
         "modifiers": [
           {
             "kind": "roll",
@@ -9334,7 +9461,7 @@
             "key": "save_by",
             "label": "Чем спасаются",
             "kind": "choice",
-            "from": "abilities"
+            "from": "saves"
           },
           {
             "key": "status",
@@ -9462,7 +9589,7 @@
             "key": "save_by",
             "label": "Чем спасаются",
             "kind": "choice",
-            "from": "abilities"
+            "from": "saves"
           },
           {
             "key": "damage_die",
@@ -9529,7 +9656,7 @@
             "key": "save_by",
             "label": "Чем спасаются",
             "kind": "choice",
-            "from": "abilities"
+            "from": "saves"
           },
           {
             "key": "damage_die",
@@ -9671,7 +9798,7 @@
             "key": "save_by",
             "label": "Чем спасаются",
             "kind": "choice",
-            "from": "abilities"
+            "from": "saves"
           },
           {
             "key": "status",
@@ -9992,7 +10119,8 @@
       "taken_rule",
       "exhaustion_rule",
       "long_rest",
-      "short_rest"
+      "slots_rest",
+      "resources_rest"
     ],
     "mannequins": [
       {

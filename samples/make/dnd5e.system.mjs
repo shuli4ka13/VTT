@@ -104,11 +104,13 @@ export const lists = () => ({
   },
   abilities: {
     label: 'Характеристики', key: 'word',
-    columns: [
-      { key: 'mod', label: 'Модификатор', kind: 'expr' },
-      { key: 'save', label: 'Спасбросок', kind: 'expr' },
-    ],
-    rows: ABILITIES.map(([tag]) => ({ value: ABILITY_WORD[tag], cells: { mod: `@${tag}_mod`, save: `@${tag}_save` } })),
+    columns: [{ key: 'mod', label: 'Модификатор', kind: 'expr' }],
+    rows: ABILITIES.map(([tag]) => ({ value: ABILITY_WORD[tag], cells: { mod: `@${tag}_mod` } })),
+  },
+  saves: {
+    label: 'Спасброски', key: 'word',
+    columns: [{ key: 'save', label: 'Спасбросок', kind: 'expr' }],
+    rows: ABILITIES.map(([tag]) => ({ value: ABILITY_WORD[tag], cells: { save: `@${tag}_save` } })),
   },
   classes: {
     label: 'Классы', key: 'word',

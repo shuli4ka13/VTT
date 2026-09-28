@@ -27,8 +27,8 @@ describe('откуда это: щелчок по фишке объясняет �
   it('колонка выбранной строки у получателя', () => {
     const told = explain('получатель.save_by.save', 'cantrip_save');
     expect(told.kind).toBe('колонка по выбору');
-    expect(told.title).toBe('Характеристики → Спасбросок');
-    expect(told.go?.pick).toEqual({ activeTab: 'dictionaries', activeTableId: 'abilities' });
+    expect(told.title).toBe('Спасброски → Спасбросок');
+    expect(told.go?.pick).toEqual({ activeTab: 'dictionaries', activeTableId: 'saves' });
   });
 
   it('метка броска и кость системы', () => {
