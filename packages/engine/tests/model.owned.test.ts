@@ -93,3 +93,12 @@ group('тип листа — как запись, которую лист нос
     deepEq(withKinds.fields.filter(shownOn(withKinds, hero([]))).map(f => f.tag), ['кд', 'ячейки']);
   });
 });
+
+group('правила комнаты — выданное системой каждому листу', () => {
+  const ruled = { ...system, grants: ['зоркость'] } as unknown as System;
+
+  test('висят на любом листе, с типом и без, и считаются как висящее', () => {
+    deepEq(wornEffects(ruled, hero([]), { compendium: book }).map(w => w.id), ['зоркость']);
+    deepEq(wornEffects(ruled, hero([{ of: 'щит' }]), { compendium: book }).map(w => w.id), ['зоркость'], 'выданное дважды — одно');
+  });
+});

@@ -37,12 +37,12 @@ describe('адрес проблемы открывает нужное место
 
   it('тип записи и правила', () => {
     expect(pickFor({ tab: 'records', kind: 'weapon' })).toMatchObject({ activeTab: 'records', activeRecordKind: 'weapon' });
-    expect(pickFor({ tab: 'rules', section: 'room_rules' })).toMatchObject({ activeTab: 'dictionaries' });
+    expect(pickFor({ tab: 'rules', section: 'grants' })).toMatchObject({ activeTab: 'dictionaries' });
   });
 
   it('подпись места — словами системы', () => {
     expect(whereLabel({ tab: 'effects', effect: 'hit', step: 0 }, system)).toBe('Эффекты · эффект «Удар» · шаг 1');
-    expect(whereLabel({ tab: 'rules', section: 'room_rules' }, system)).toBe('Правила · правила комнаты');
+    expect(whereLabel({ tab: 'rules', section: 'grants' }, system)).toBe('Правила · правила комнаты');
     expect(whereLabel({ tab: 'records', kind: 'weapon', binding: 0 }, system)).toBe('Типы записей · «Оружие» · привязка 1');
   });
 });

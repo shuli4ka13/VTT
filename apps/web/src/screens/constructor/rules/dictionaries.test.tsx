@@ -437,10 +437,10 @@ describe('Тоглы: крит и броня пишутся данными', () 
     renderOpen(<RulesTab />);
     открыть('Тоглы');
     fireEvent.click(screen.getByText('взрывная кость'));
-    expect(useWorld.getState().system.room_rules).toContain('crit_explode_rule');
+    expect(useWorld.getState().system.grants).toContain('crit_explode_rule');
     expect(useWorld.getState().system.roll_edits?.crit_explode).toBeTruthy();
     fireEvent.click(screen.getByText('нет'));
-    expect(useWorld.getState().system.room_rules ?? []).not.toContain('crit_explode_rule');
+    expect(useWorld.getState().system.grants ?? []).not.toContain('crit_explode_rule');
   });
 
   it('броня «порог» ложится в вызываемый эффект урона после подтверждения', () => {

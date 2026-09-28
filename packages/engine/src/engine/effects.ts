@@ -75,16 +75,6 @@ export function usesMax(effect: Effect): number | null {
 export interface EffectEntry { id: string; effect: Effect }
 export interface WornEntry extends EffectEntry { entry: WornEffect }
 
-export function roomEffects(system: System): EffectEntry[] {
-  const out: EffectEntry[] = [];
-  for (const id of system.room_rules || []) {
-    const effect = findEffect(system, id);
-    if (!effect) continue;
-    out.push({ id, effect });
-  }
-  return out;
-}
-
 export const allModifiers = (system: System, compendium: Compendium = {}): Modifier[] => [
   ...effectsOf(system).flatMap(([, effect]) => effect.modifiers || []),
   ...(compendium.records || []).flatMap(record => record.modifiers || []),
@@ -97,6 +87,7 @@ export function grantedTo(system: System, sheet: Sheet, compendium: Compendium |
   const granted = new Set<string>([
     ...(compendium ? heldBy(sheet, compendium).flatMap(({ record }) => record.grants ?? []) : []),
     ...sheetKindOf(system, sheet)?.grants ?? [],
+    ...system.grants ?? [],
   ]);
   const queue = [...(sheet.effects ?? []).map(entry => entry.effectId), ...granted];
   for (let at = 0; at < queue.length; at += 1) {

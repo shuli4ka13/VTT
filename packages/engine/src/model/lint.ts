@@ -290,7 +290,7 @@ function orphanProblems(system: System, compendium?: Compendium): Problem[] {
     for (const b of kind.bindings ?? []) bound.add(b.effect);
     for (const id of kind.grants ?? []) bound.add(id);
   }
-  for (const id of system.room_rules ?? []) bound.add(id);
+  for (const id of system.grants ?? []) bound.add(id);
   for (const effect of Object.values(system.effects)) for (const id of effect.grants ?? []) bound.add(id);
   for (const record of recordsOf(compendium)) {
     for (const binding of record.bindings ?? []) bound.add(binding.effect);
@@ -425,7 +425,7 @@ export function describeWhere(where: Where, system: System, compendium?: Compend
     if (where.part === 'cost') parts.push('чего стоит');
   } else if (where.tab === 'rules') {
     parts.push(TABS.rules);
-    if (where.section === 'room_rules') parts.push('правила комнаты');
+    if (where.section === 'grants') parts.push('правила комнаты');
     else if (where.section === 'initiative') parts.push('инициатива');
     else if (where.section) parts.push(where.section);
     if (where.step !== undefined) parts.push(`${STEP.one} ${where.step + 1}`);

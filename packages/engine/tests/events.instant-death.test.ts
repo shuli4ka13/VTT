@@ -26,7 +26,7 @@ const sys: any = {
     },
     мёртв: { label: 'Мёртв', activation: 'passive' },
   },
-  room_rules: ['мгновенная_смерть'],
+  grants: ['мгновенная_смерть'],
 };
 
 const compendium: any = {

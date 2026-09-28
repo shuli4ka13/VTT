@@ -14,7 +14,7 @@ const passive = (label, modifiers) => ({ label, activation: 'passive', duration:
 const withRoomRule = (id, label, modifier) => ({
   ...system,
   effects: { ...system.effects, [id]: passive(label, [modifier]) },
-  room_rules: [id],
+  grants: [id],
 });
 const ac = (sheet, book) => calc(system, sheet, 'ac', withGear(sheet, book));
 
@@ -270,7 +270,7 @@ group('модификаторы', () => {
       });
       const roll = resolveRoll(sys, arven, ['проверка'], newPass(sys, arven, { compendium }));
       eq(roll.sources[0].label, 'Тяжёлый доспех мешает');
-      eq(roll.sources[0].type, 'room', 'источник — правило комнаты, а не предмет и не висящий эффект');
+      eq(roll.sources[0].type, 'effect', 'правило комнаты — обычный висящий эффект, выданный всем листам');
     });
   });
 

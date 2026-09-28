@@ -118,7 +118,7 @@ if (inNode) {
     test('в образцовых системах нет ни rules, ни modifiers', () => {
       for (const sys of SAMPLE_SYSTEMS) {
         eq(sys.rules, undefined, `${sys.name}: конвейеры живут в effects`);
-        eq(sys.modifiers, undefined, `${sys.name}: правила комнаты — это room_rules`);
+        eq(sys.modifiers, undefined, `${sys.name}: правила комнаты — это grants`);
         ok(sys.effects, `${sys.name}: библиотека эффектов обязательна`);
       }
     });
@@ -131,7 +131,7 @@ if (inNode) {
 
     test('каждая ссылка образцов бьёт по объявленному эффекту', () => {
       for (const { system: sys, compendium: book } of SAMPLE_WORLDS) {
-        for (const id of sys.room_rules || []) {
+        for (const id of sys.grants || []) {
           ok(sys.effects[id], `${sys.name}: правило комнаты «${id}» ссылается в пустоту`);
         }
         for (const decl of Object.values(sys.records || {})) {

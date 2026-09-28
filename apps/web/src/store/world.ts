@@ -54,7 +54,7 @@ export const emptySystem = (): System => ({
   name: 'Новая система',
   fields: [],
   effects: {},
-  room_rules: [],
+  grants: [],
   records: {},
   constants: {},
   tables: {},

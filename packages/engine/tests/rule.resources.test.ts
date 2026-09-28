@@ -45,7 +45,7 @@ const system = {
       on: [{ on: 'moment:long-rest', steps: [{ type: 'apply', target: { tag: 'ячейки_1' }, direction: 'set', value: { expr: '@получатель.ячейки_1_всего' } }] }],
     },
   },
-  room_rules: ['сон'],
+  grants: ['сон'],
   records: {
     чары: { kind: 'action', label: 'Чары', props: [], bindings: [{ label: 'Сотворить', effect: 'стрела', args: {} }] },
     приём: { kind: 'action', label: 'Приём', props: [], bindings: [{ label: 'Ударить', effect: 'скрытая', args: {} }] },

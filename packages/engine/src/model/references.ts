@@ -295,7 +295,7 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
   }
 
 
-  for (const id of system.room_rules ?? []) out.push({ kind: 'effect', key: id, from: { tab: 'rules', section: 'room_rules', key: id } });
+  for (const id of system.grants ?? []) out.push({ kind: 'effect', key: id, from: { tab: 'rules', section: 'grants', key: id } });
 
   if (system.initiative) {
     const from: Where = { tab: 'rules', section: 'initiative' };

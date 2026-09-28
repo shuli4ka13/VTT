@@ -277,10 +277,10 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
           )}
       </Fold>
 
-      {room.system.room_rules?.length ? (
-        <Fold title="Действует на всех" count={room.system.room_rules.length}>
+      {room.system.grants?.length ? (
+        <Fold title="Действует на всех" count={room.system.grants.length}>
           <div className="inline inline--tight">
-            {room.system.room_rules.map(id => (
+            {room.system.grants.map(id => (
               <Chip key={id}>{room.system.effects[id]?.label ?? id}</Chip>
             ))}
           </div>

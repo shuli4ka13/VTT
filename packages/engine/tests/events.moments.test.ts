@@ -133,7 +133,7 @@ group('поле стало верным', () => {
         on: [{ on: 'field:без_сил', steps: [{ type: 'status', mode: 'apply', effect: { const: 'без_сознания' } }] }],
       },
     },
-    room_rules: ['падение'],
+    grants: ['падение'],
   } as unknown as System;
   const ctx = { system: watched, compendium: { records: [] }, die: () => 3 };
   const with_ = (hp: number, worn: string[] = []): Sheet => ({

@@ -43,17 +43,9 @@ export function hears(on: string, effectId: string, emitted: EmittedEvent[]): Em
 }
 
 export function subscribers(
-  system: System, sheet: Sheet, { compendium, room = true }: { compendium?: Compendium | null; room?: boolean } = {},
+  system: System, sheet: Sheet, { compendium }: { compendium?: Compendium | null } = {},
 ): Subscriber[] {
-  const worn = wornEffects(system, sheet, { strict: false, compendium });
-  const wornIds = new Set(worn.map(w => w.id));
-  const rules = room
-    ? (system.room_rules ?? [])
-      .filter(id => !wornIds.has(id))
-      .map(id => ({ id, effect: findEffect(system, id) }))
-      .filter((entry): entry is { id: string; effect: Effect } => Boolean(entry.effect))
-    : [];
-  return [...worn, ...rules].flatMap(({ id, effect }) => handlersOf(effect).map((handler, index) => ({
+  return wornEffects(system, sheet, { strict: false, compendium }).flatMap(({ id, effect }) => handlersOf(effect).map((handler, index) => ({
     id, effect, handler, index, key: handlerKey(id, index),
   })));
 }
@@ -61,7 +53,7 @@ export function subscribers(
 export interface Heard extends Subscriber { heard?: EmittedEvent }
 
 export function listening(
-  system: System, sheet: Sheet, occasion: Occasion, options: { compendium?: Compendium | null; room?: boolean } = {},
+  system: System, sheet: Sheet, occasion: Occasion, options: { compendium?: Compendium | null } = {},
 ): Heard[] {
   const out: Heard[] = [];
   for (const sub of subscribers(system, sheet, options)) {

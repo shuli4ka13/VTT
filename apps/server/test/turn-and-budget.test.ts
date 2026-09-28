@@ -344,7 +344,7 @@ describe('появилось и ушло с листа', () => {
         бафф: { label: 'Бафф', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [] },
         сторож: { label: 'Сторож', activation: 'passive', on: [{ on: 'lost:бафф', steps: [add('снято')] }] },
       },
-      room_rules: ['сторож'],
+      grants: ['сторож'],
       records: { оружие: { kind: 'item', label: 'Оружие', props: [], bindings: [] } },
     };
     const book = { records: [{ id: 'меч', rk: 'оружие', label: 'Меч', props: {}, grants: ['заточка'] }] };
@@ -502,7 +502,7 @@ describe('поле стало верным', () => {
           on: [{ on: 'field:без_сил', steps: [{ type: 'status', mode: 'apply', effect: { const: 'без_сознания' } }] }],
         },
       },
-      room_rules: ['падение'],
+      grants: ['падение'],
     };
     const sheet = { id: 'воин', systemId: 'порог', name: 'Воин', values: { хиты: 5 }, has: [], effects: [] };
 
@@ -678,7 +678,7 @@ describe('отдых и плата ячейкой', () => {
           on: [{ on: 'moment:long-rest', steps: [{ type: 'apply', target: { tag: 'ячейки' }, direction: 'set', value: { expr: '1' } }] }],
         },
       },
-      room_rules: ['сон'],
+      grants: ['сон'],
       records: { чары: { kind: 'action', label: 'Чары', props: [], bindings: [{ label: 'Стрела', effect: 'стрела', args: {} }] } },
     };
     const book = { records: [{ id: 'стрела', rk: 'чары', label: 'Стрела', props: {} }] };

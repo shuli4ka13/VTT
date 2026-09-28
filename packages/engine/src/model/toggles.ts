@@ -55,7 +55,7 @@ const amountsAfterCheck = (steps: Step[]): { check: Step; amount: Step }[] => {
 const DOUBLER = /\?\s*2\s*:\s*1\s*$/;
 
 export function critOf(system: System): CritChoice {
-  if ((system.room_rules ?? []).includes(CRIT_RULE) && system.effects[CRIT_RULE]) return 'explode';
+  if ((system.grants ?? []).includes(CRIT_RULE) && system.effects[CRIT_RULE]) return 'explode';
   const doubled = Object.values(system.effects).some(effect =>
     (effect.steps ?? []).some(step => isDoubling(step as Record<string, unknown>)));
   return doubled ? 'double' : 'off';
@@ -103,7 +103,7 @@ export function setCrit(draft: System, choice: CritChoice): void {
     }
   }
   delete draft.effects[CRIT_RULE];
-  draft.room_rules = (draft.room_rules ?? []).filter(id => id !== CRIT_RULE);
+  draft.grants = (draft.grants ?? []).filter(id => id !== CRIT_RULE);
   if (draft.roll_edits?.[CRIT_EDIT]) delete draft.roll_edits[CRIT_EDIT];
 
   if (choice === 'double') {
@@ -120,7 +120,7 @@ export function setCrit(draft: System, choice: CritChoice): void {
       description: 'Кость проверки на максимуме кидается ещё раз, результат прибавляется.',
       modifiers: [{ kind: 'roll', target: ANY_ROLL, edit: CRIT_EDIT, condition: null }],
     };
-    draft.room_rules = [...(draft.room_rules ?? []), CRIT_RULE];
+    draft.grants = [...(draft.grants ?? []), CRIT_RULE];
   }
 }
 

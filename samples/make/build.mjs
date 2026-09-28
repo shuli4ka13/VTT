@@ -25,7 +25,7 @@ const world = {
     initiative: { die: { constant: 'lead_die' }, bonus: { expr: '@initiative' }, tags: INITIATIVE_TAGS },
     effects: { ...effects(), ...calledEffects() },
     records: records(),
-    room_rules: ROOM_RULES,
+    grants: ROOM_RULES,
     mannequins: mannequins(),
   },
   compendium: compendium(),

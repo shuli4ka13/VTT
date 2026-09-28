@@ -378,7 +378,7 @@ export function offers(
 ): Offer[] {
   const out: Offer[] = [];
   const occasion = { kind: 'action' as const, ...WINDOWS[window], ask: true, effect: envelope.effect, emitted };
-  for (const { effect, handler, heard, key } of listening(system, sheet, occasion, { compendium, room: false })) {
+  for (const { effect, handler, heard, key } of listening(system, sheet, occasion, { compendium })) {
     const owner = `реакция «${effect.label || key}»`;
     const ctx = { pass: newPass(system, sheet, { compendium }), results: withEvent(results, heard), owner };
     let fits: boolean;

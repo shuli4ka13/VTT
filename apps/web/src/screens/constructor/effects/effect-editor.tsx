@@ -81,7 +81,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
             <DangerButton size="sm" onConfirm={() => {
               editSystem(draft => {
                 delete draft.effects[id];
-                draft.room_rules = (draft.room_rules ?? []).filter(x => x !== id);
+                draft.grants = (draft.grants ?? []).filter(x => x !== id);
               });
               pick({ activeEffectId: null });
             }}>

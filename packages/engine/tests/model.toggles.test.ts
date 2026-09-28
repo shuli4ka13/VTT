@@ -20,7 +20,7 @@ group('тогл крита пишет данные, а не код', () => {
     setCrit(system, 'explode');
     eq(critOf(system), 'explode');
     ok(Boolean(system.roll_edits?.[CRIT_EDIT]));
-    ok((system.room_rules ?? []).includes(CRIT_RULE));
+    ok((system.grants ?? []).includes(CRIT_RULE));
     ok(!Object.values(system.effects).some(e => (e.steps ?? []).some(s => (s as Record<string, unknown>).double)), 'удвоение снято');
     eq(errorsOf(lintSystem(system)).length, 0);
 

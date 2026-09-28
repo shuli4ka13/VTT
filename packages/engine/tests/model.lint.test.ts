@@ -61,7 +61,7 @@ group('линт: висячие ссылки называются словами
     const system = bare();
     system.initiative = { die: { constant: 'нет_кости' }, tags: ['нет_броска'] } as never;
     system.fields.push({ tag: 'lvl', label: 'Ур', value: { kind: 'formula', expr: 'таблица("нет_таблицы", #hp)' } } as never);
-    system.room_rules = ['нет_правила'];
+    system.grants = ['нет_правила'];
     system.effects.buff = { label: 'y', activation: 'passive', modifiers: [{ kind: 'roll', target: 'roll:any', edit: 'нет_правки' }] } as never;
     const found = errorTexts(system).join('\n');
     for (const key of ['кости «нет_кости»', 'метки броска «нет_броска»', 'таблицы «нет_таблицы»', 'эффекта «нет_правила»', 'правки броска «нет_правки»']) {
@@ -222,7 +222,7 @@ group('ссылки и слушатели', () => {
     const refs = referencesOf(SAMPLE_SYSTEMS[0] as System);
     ok(refs.some(r => r.kind === 'effect' && r.from.tab === 'records'));
     ok(refs.some(r => r.kind === 'constant' && r.from.section === 'initiative'));
-    ok(refs.some(r => r.kind === 'effect' && r.from.section === 'room_rules'));
+    ok(refs.some(r => r.kind === 'effect' && r.from.section === 'grants'));
   });
 
   test('listenerOf разбирает три вида слушателя и пустоту', () => {

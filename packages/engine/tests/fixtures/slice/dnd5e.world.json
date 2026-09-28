@@ -1446,7 +1446,7 @@
         ]
       }
     },
-    "room_rules": [
+    "grants": [
       "battle_start",
       "battle_end",
       "turn_refresh",

@@ -279,7 +279,7 @@ export const system = z.object({
   groups: z.record(z.string(), groupSpec).optional(),
   effects: z.record(z.string(), effect),
 
-  room_rules: z.array(z.string()).optional(),
+  grants: z.array(z.string()).optional(),
   records: z.record(z.string(), recordKind).optional(),
   constants: z.record(z.string(), systemConstant).optional(),
   tables: z.record(z.string(), table).optional(),

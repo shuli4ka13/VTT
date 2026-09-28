@@ -1,6 +1,6 @@
 import { compile } from '../formula/index.ts';
 import { assertTarget, incomingTagOf, ANY_ROLL } from './targets.ts';
-import { roomEffects, wornEffects, activationOf } from './effects.ts';
+import { wornEffects, activationOf } from './effects.ts';
 import { EngineError } from './errors.ts';
 import { anyRowSays } from './tables.ts';
 import { findRecord, kindOfRecord, sheetKindOf } from '../model/owned.ts';
@@ -9,7 +9,7 @@ import type { System, Sheet, Compendium, Modifier, RollEdit } from '../model/typ
 import type { Pass } from './calc.ts';
 
 export interface ModifierSource {
-  type: 'room' | 'item' | 'kind' | 'effect' | 'claim';
+  type: 'item' | 'kind' | 'effect' | 'claim';
   id: string;
   label?: string;
   modifiers: Modifier[];
@@ -57,11 +57,6 @@ export function collectModifiers(
 
 function sourcesOf(system: System, sheet: Sheet, compendium: Compendium): ModifierSource[] {
   const sources: ModifierSource[] = [];
-
-  for (const { id, effect } of roomEffects(system)) {
-    if (activationOf(effect) !== 'passive') continue;
-    sources.push({ type: 'room', id, label: effect.label || id, modifiers: effect.modifiers || [] });
-  }
 
   const own = sheetKindOf(system, sheet);
   if (own?.modifiers?.length) {
