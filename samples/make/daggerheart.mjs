@@ -234,6 +234,7 @@ function effects() {
         { key: 'damage_die', label: 'Кость урона', kind: 'dice' },
         { key: 'die_size', label: 'Граней на кости урона', kind: 'number' },
         { key: 'damage_bonus', label: 'Прибавка к урону', kind: 'number' },
+        { key: 'extra_die', label: 'Ещё кость урона, худшая отбрасывается (1 — да)', kind: 'number' },
       ],
       steps: [
         {
@@ -244,7 +245,7 @@ function effects() {
         { type: 'compare', value: { expr: `${HIT} ? 1 : 0` }, versus: { expr: '1' }, breakIf: 'less', note: 'промах' },
         {
           id: 'урон', type: 'amount', source: 'item',
-          fixed: { expr: `кинуть(@damage_die, @отправитель.proficiency) + @damage_bonus + (${CRIT} ? @отправитель.proficiency * @die_size : 0)` },
+          fixed: { expr: `кинуть(@damage_die, @отправитель.proficiency + @extra_die, @отправитель.proficiency) + @damage_bonus + (${CRIT} ? @отправитель.proficiency * @die_size : 0)` },
         },
         { type: 'emit', event: 'damage', args: { amount: { expr: '@урон' } } },
       ],
@@ -380,11 +381,12 @@ const records = () => ({
       { key: 'die_size', label: 'Граней на кости', kind: 'number' },
       { key: 'damage_bonus', label: 'Прибавка к урону', kind: 'number' },
       { key: 'attack_bonus', label: 'Прибавка к атаке', kind: 'number' },
+      { key: 'extra_die', label: 'Ещё кость урона, худшая отбрасывается (1 — да)', kind: 'number' },
       { key: 'damage_kind', label: 'Вид урона', kind: 'choice', from: 'damage_kinds' },
     ],
     bindings: [{
       label: 'Атака', effect: 'hero_attack',
-      args: { trait: { prop: 'trait' }, attack_bonus: { prop: 'attack_bonus' }, damage_die: { prop: 'damage_die' }, die_size: { prop: 'die_size' }, damage_bonus: { prop: 'damage_bonus' } },
+      args: { trait: { prop: 'trait' }, attack_bonus: { prop: 'attack_bonus' }, damage_die: { prop: 'damage_die' }, die_size: { prop: 'die_size' }, damage_bonus: { prop: 'damage_bonus' }, extra_die: { prop: 'extra_die' } },
     }],
   },
   armor: {
@@ -406,7 +408,7 @@ const records = () => ({
 const weapon = (id, label, en, trait, range, sides, bonus, burden, kind = 'физический', feature = '', extra = {}) => ({
   id, rk: 'weapon', label,
   description: `${en}. ${TRAIT[trait][0].toUpperCase()}${TRAIT[trait].slice(1)}, ${range}, к${sides}${bonus ? ` + ${bonus}` : ''} ${kind === 'физический' ? 'физ.' : 'маг.'}, ${burden}.${feature ? ` ${feature}` : ''}`,
-  props: { trait: TRAIT[trait], range, damage_die: `1d${sides}`, die_size: sides, damage_bonus: bonus, attack_bonus: extra.attack ?? 0, damage_kind: kind },
+  props: { trait: TRAIT[trait], range, damage_die: `1d${sides}`, die_size: sides, damage_bonus: bonus, attack_bonus: extra.attack ?? 0, extra_die: extra.extraDie ?? 0, damage_kind: kind },
   ...(extra.modifiers ? { modifiers: extra.modifiers } : {}),
 });
 const armor = (id, label, en, major, severe, score, feature = '', modifiers = []) => ({
@@ -427,7 +429,7 @@ const compendium = () => ({
     weapon('broadsword', 'Палаш', 'Broadsword', 'Agility', 'вплотную', 8, 0, ONE, 'физический', 'Надёжный: +1 к броскам атаки.', { attack: 1 }),
     weapon('longsword', 'Длинный меч', 'Longsword', 'Agility', 'вплотную', 8, 3, TWO),
     weapon('battleaxe', 'Боевой топор', 'Battleaxe', 'Strength', 'вплотную', 10, 3, TWO),
-    weapon('greatsword', 'Двуручный меч', 'Greatsword', 'Strength', 'вплотную', 10, 3, TWO, 'физический', 'Массивный: −1 к уклонению; при попадании ещё кость урона, худшая отбрасывается (в образце не считается).', { modifiers: [mod('evasion', -1)] }),
+    weapon('greatsword', 'Двуручный меч', 'Greatsword', 'Strength', 'вплотную', 10, 3, TWO, 'физический', 'Массивный: −1 к уклонению; при попадании ещё кость урона, худшая отбрасывается.', { modifiers: [mod('evasion', -1)], extraDie: 1 }),
     weapon('mace', 'Булава', 'Mace', 'Strength', 'вплотную', 8, 1, ONE),
     weapon('warhammer', 'Боевой молот', 'Warhammer', 'Strength', 'вплотную', 12, 3, TWO, 'физический', 'Тяжёлый: −1 к уклонению.', { modifiers: [mod('evasion', -1)] }),
     weapon('dagger', 'Кинжал', 'Dagger', 'Finesse', 'вплотную', 8, 1, ONE),
@@ -448,7 +450,7 @@ const compendium = () => ({
     weapon('dualstaff', 'Двойной посох', 'Dualstaff', 'Instinct', 'далеко', 6, 3, TWO, 'магический'),
     weapon('scepter', 'Скипетр', 'Scepter', 'Presence', 'далеко', 6, 0, TWO, 'магический', 'Разносторонний: можно и как Присутствие, вплотную, к8.'),
     weapon('wand', 'Жезл', 'Wand', 'Knowledge', 'далеко', 6, 1, ONE, 'магический'),
-    weapon('greatstaff', 'Великий посох', 'Greatstaff', 'Knowledge', 'очень далеко', 6, 0, TWO, 'магический', 'Мощный: при попадании ещё кость урона, худшая отбрасывается (в образце не считается).'),
+    weapon('greatstaff', 'Великий посох', 'Greatstaff', 'Knowledge', 'очень далеко', 6, 0, TWO, 'магический', 'Мощный: при попадании ещё кость урона, худшая отбрасывается.', { extraDie: 1 }),
     weapon('shortsword', 'Короткий меч', 'Shortsword (вторичное)', 'Agility', 'вплотную', 8, 0, ONE, 'физический', 'Парное: +2 к урону основного оружия вплотную.'),
     weapon('round_shield', 'Круглый щит', 'Round Shield (вторичное)', 'Strength', 'вплотную', 4, 0, ONE, 'физический', 'Защитный: +1 к броне.', { modifiers: [mod('armor_score', 1)] }),
     weapon('tower_shield', 'Ростовой щит', 'Tower Shield (вторичное)', 'Strength', 'вплотную', 6, 0, ONE, 'физический', 'Заслон: +2 к броне, −1 к уклонению.', { modifiers: [mod('armor_score', 2), mod('evasion', -1)] }),

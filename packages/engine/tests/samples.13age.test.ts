@@ -53,3 +53,21 @@ group('13th Age: кость эскалации на столе', () => {
     eq(of(out.sheets, 'orc').values.hp, 30 - (4 + 4));
   });
 });
+
+group('13th Age: толпа — урон переходит с одного на следующего', () => {
+  test('удар по одному гоблину из толпы снимает хиты толпы; стоящих становится меньше', async () => {
+    const { exchange } = await import('../src/events/exchange.ts');
+    const { PLAYABLE_WORLDS } = await import('../src/model/systems.ts');
+    const { calc, newPass } = await import('../src/engine/calc.ts');
+    const world = PLAYABLE_WORLDS.find(w => (w.system as { id: string }).id === '13age')!;
+    const sheets = JSON.parse(JSON.stringify(world.sheets));
+    const out = exchange({
+      system: world.system as never, compendium: world.compendium as never, die: () => 20, sheets,
+      actionId: 'longsword:0', fromId: 'kai', toId: 'goblin_mook_1',
+    });
+    const mob = out.sheets.find((s: { id: string }) => s.id === 'goblin_mob')!;
+    const left = Number(mob.values.hp);
+    eq(left < 15, true, `хиты толпы: ${left}`);
+    eq(calc(world.system as never, mob, 'mooks_left', newPass(world.system as never, mob)), Math.ceil(Math.max(0, left) / 5));
+  });
+});

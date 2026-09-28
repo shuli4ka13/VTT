@@ -198,7 +198,8 @@
           "min": 0,
           "max": "@hp_max"
         },
-        "control": "bar"
+        "control": "bar",
+        "lives": "group"
       },
       {
         "tag": "escalation",
@@ -266,6 +267,28 @@
           "max": 1
         },
         "control": "toggle"
+      },
+      {
+        "tag": "mook_hp",
+        "label": "Хиты одного в толпе",
+        "group": "Толпа",
+        "lives": "group",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0
+        }
+      },
+      {
+        "tag": "mooks_left",
+        "label": "Сколько в толпе стоит",
+        "group": "Толпа",
+        "lives": "group",
+        "value": {
+          "kind": "formula",
+          "expr": "@mook_hp > 0 ? ceil(max(0, @hp) / @mook_hp) : 1"
+        }
       }
     ],
     "groups": {
@@ -280,7 +303,8 @@
       "Снаряжение": {},
       "Приёмы": {},
       "В бою": {},
-      "Правила комнаты": {}
+      "Правила комнаты": {},
+      "Толпа": {}
     },
     "constants": {
       "lead_die": {
@@ -1019,6 +1043,80 @@
         }
       ],
       "effects": []
+    },
+    {
+      "id": "goblin_mob",
+      "systemId": "13age",
+      "name": "Толпа гоблинов (пример)",
+      "values": {
+        "hp": 15,
+        "mook_hp": 5
+      },
+      "has": [],
+      "effects": []
+    },
+    {
+      "id": "goblin_mook_1",
+      "systemId": "13age",
+      "of": "противник",
+      "name": "Гоблин из толпы №1",
+      "values": {
+        "str": 10,
+        "dex": 14,
+        "level": 1,
+        "ac": 16,
+        "pd": 14,
+        "md": 10
+      },
+      "has": [
+        {
+          "of": "goblin_spear"
+        }
+      ],
+      "effects": [],
+      "group": "goblin_mob"
+    },
+    {
+      "id": "goblin_mook_2",
+      "systemId": "13age",
+      "of": "противник",
+      "name": "Гоблин из толпы №2",
+      "values": {
+        "str": 10,
+        "dex": 14,
+        "level": 1,
+        "ac": 16,
+        "pd": 14,
+        "md": 10
+      },
+      "has": [
+        {
+          "of": "goblin_spear"
+        }
+      ],
+      "effects": [],
+      "group": "goblin_mob"
+    },
+    {
+      "id": "goblin_mook_3",
+      "systemId": "13age",
+      "of": "противник",
+      "name": "Гоблин из толпы №3",
+      "values": {
+        "str": 10,
+        "dex": 14,
+        "level": 1,
+        "ac": 16,
+        "pd": 14,
+        "md": 10
+      },
+      "has": [
+        {
+          "of": "goblin_spear"
+        }
+      ],
+      "effects": [],
+      "group": "goblin_mob"
     },
     {
       "id": "стол",

@@ -5,7 +5,7 @@ import type { Resolve } from '../model/types.ts';
 export type Value = number | boolean | string;
 
 export interface Tools {
-  roll?: (notation: string, times: number) => number;
+  roll?: (notation: string, times: number, keep?: number) => number;
   table?: (name: string, key: Value | Value[], column: string | null) => Value;
 }
 
@@ -78,7 +78,11 @@ const FUNCTIONS: Record<string, Fn> = {
       if (!Number.isFinite(times)) {
         throw new FormulaRuntimeError('второй аргумент «кинуть» — сколько раз, должен быть числом');
       }
-      return tools.roll(notation, times);
+      const keep = args.length > 2 ? Number(args[2]) : undefined;
+      if (keep !== undefined && (!Number.isInteger(keep) || keep === 0)) {
+        throw new FormulaRuntimeError('третий аргумент «кинуть» — сколько костей оставить: число лучших, со знаком минус — худших');
+      }
+      return tools.roll(notation, times, keep);
     },
   },
 };

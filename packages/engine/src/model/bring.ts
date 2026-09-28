@@ -79,7 +79,8 @@ export function dependencies(donor: System): (part: Part) => Part[] {
     const owner = ownerOf(ref.from);
     if (!owner) continue;
     const dotted = ref.kind === 'step' && donor.fields.some(f => f.tag === ref.key);
-    const kind = ref.kind === 'roll' ? 'table' : dotted ? 'field' : REF_PARTS[ref.kind];
+    const counter = ref.kind === 'field' && !donor.fields.some(f => f.tag === ref.key) && Boolean(donor.effects?.[ref.key]);
+    const kind = ref.kind === 'roll' ? 'table' : dotted ? 'field' : counter ? 'effect' : REF_PARTS[ref.kind];
     const key = ref.kind === 'roll' ? rows.get(ref.key) : ref.key;
     if (!kind || !key) continue;
     const list = byOwner.get(partKey(owner)) ?? [];

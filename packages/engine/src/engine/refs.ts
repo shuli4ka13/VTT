@@ -268,9 +268,12 @@ function waitsForStep(expr: string, ctx: RefContext): boolean {
 export function toolsOf(system: System, pass: Pass, owner: string, die?: Die): Tools {
   return {
     ...(die ? {
-      roll: (notation: string, times: number) => {
+      roll: (notation: string, times: number, keep?: number) => {
         const written = times > 1 ? multiplyNotation(notation, times) : notation;
-        return rollNotation(written, die).total;
+        const rolled = rollNotation(written, die);
+        if (keep === undefined) return rolled.total;
+        const sorted = [...rolled.rolls].sort((a, b) => (keep > 0 ? b - a : a - b));
+        return sorted.slice(0, Math.abs(keep)).reduce((sum, value) => sum + value, 0);
       },
     } : {}),
     table: (name, key, column) => {

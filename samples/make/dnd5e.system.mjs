@@ -264,7 +264,7 @@ export function fields() {
   out.push(stored('attacks_per_action', 'Атак за действие', 'Атака', 'number', 1, { min: 1, max: 4, control: 'stepper' }));
 
   for (const [tag, label] of TURN_FIELDS) {
-    out.push(stored(tag, label, 'В бою', 'number', 1, { min: 0, max: 1, control: 'pips' }));
+    out.push(stored(tag, label, 'В бою', 'number', 1, { min: 0, max: tag === 'turn_action' ? 2 : 1, control: 'pips' }));
   }
   out.push(stored('turn_attacks', 'Атак осталось', 'В бою', 'number', 0, { min: 0, max: 4, control: 'pips' }));
   out.push({ ...stored('battle', 'Идёт бой', 'В бою', 'number', 0, { min: 0, max: 1, control: 'toggle' }), lives: 'desk' });

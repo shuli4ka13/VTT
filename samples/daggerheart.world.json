@@ -1617,6 +1617,11 @@
             "key": "damage_bonus",
             "label": "Прибавка к урону",
             "kind": "number"
+          },
+          {
+            "key": "extra_die",
+            "label": "Ещё кость урона, худшая отбрасывается (1 — да)",
+            "kind": "number"
           }
         ],
         "steps": [
@@ -1656,7 +1661,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть(@damage_die, @отправитель.proficiency) + @damage_bonus + (@бросок.parts.надежда == @бросок.parts.страх ? @отправитель.proficiency * @die_size : 0)"
+              "expr": "кинуть(@damage_die, @отправитель.proficiency + @extra_die, @отправитель.proficiency) + @damage_bonus + (@бросок.parts.надежда == @бросок.parts.страх ? @отправитель.proficiency * @die_size : 0)"
             }
           },
           {
@@ -2942,6 +2947,11 @@
             "kind": "number"
           },
           {
+            "key": "extra_die",
+            "label": "Ещё кость урона, худшая отбрасывается (1 — да)",
+            "kind": "number"
+          },
+          {
             "key": "damage_kind",
             "label": "Вид урона",
             "kind": "choice",
@@ -2967,6 +2977,9 @@
               },
               "damage_bonus": {
                 "prop": "damage_bonus"
+              },
+              "extra_die": {
+                "prop": "extra_die"
               }
             }
           }
@@ -3092,6 +3105,7 @@
           "die_size": 8,
           "damage_bonus": 0,
           "attack_bonus": 1,
+          "extra_die": 0,
           "damage_kind": "физический"
         }
       },
@@ -3107,6 +3121,7 @@
           "die_size": 8,
           "damage_bonus": 3,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "физический"
         }
       },
@@ -3122,6 +3137,7 @@
           "die_size": 10,
           "damage_bonus": 3,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "физический"
         }
       },
@@ -3129,7 +3145,7 @@
         "id": "greatsword",
         "rk": "weapon",
         "label": "Двуручный меч",
-        "description": "Greatsword. Сила, вплотную, к10 + 3 физ., двуручное. Массивный: −1 к уклонению; при попадании ещё кость урона, худшая отбрасывается (в образце не считается).",
+        "description": "Greatsword. Сила, вплотную, к10 + 3 физ., двуручное. Массивный: −1 к уклонению; при попадании ещё кость урона, худшая отбрасывается.",
         "props": {
           "trait": "сила",
           "range": "вплотную",
@@ -3137,6 +3153,7 @@
           "die_size": 10,
           "damage_bonus": 3,
           "attack_bonus": 0,
+          "extra_die": 1,
           "damage_kind": "физический"
         },
         "modifiers": [
@@ -3162,6 +3179,7 @@
           "die_size": 8,
           "damage_bonus": 1,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "физический"
         }
       },
@@ -3177,6 +3195,7 @@
           "die_size": 12,
           "damage_bonus": 3,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "физический"
         },
         "modifiers": [
@@ -3202,6 +3221,7 @@
           "die_size": 8,
           "damage_bonus": 1,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "физический"
         }
       },
@@ -3217,6 +3237,7 @@
           "die_size": 10,
           "damage_bonus": 3,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "физический"
         }
       },
@@ -3232,6 +3253,7 @@
           "die_size": 8,
           "damage_bonus": 1,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "физический"
         }
       },
@@ -3247,6 +3269,7 @@
           "die_size": 8,
           "damage_bonus": 0,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "физический"
         }
       },
@@ -3262,6 +3285,7 @@
           "die_size": 10,
           "damage_bonus": 2,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "физический"
         },
         "modifiers": [
@@ -3287,6 +3311,7 @@
           "die_size": 10,
           "damage_bonus": 2,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "физический"
         },
         "modifiers": [
@@ -3312,6 +3337,7 @@
           "die_size": 6,
           "damage_bonus": 3,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "физический"
         }
       },
@@ -3327,6 +3353,7 @@
           "die_size": 6,
           "damage_bonus": 1,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "физический"
         }
       },
@@ -3342,6 +3369,7 @@
           "die_size": 8,
           "damage_bonus": 3,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "физический"
         },
         "modifiers": [
@@ -3367,6 +3395,7 @@
           "die_size": 10,
           "damage_bonus": 3,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "магический"
         }
       },
@@ -3382,6 +3411,7 @@
           "die_size": 8,
           "damage_bonus": 1,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "магический"
         }
       },
@@ -3397,6 +3427,7 @@
           "die_size": 10,
           "damage_bonus": 1,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "магический"
         }
       },
@@ -3412,6 +3443,7 @@
           "die_size": 10,
           "damage_bonus": 0,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "магический"
         }
       },
@@ -3427,6 +3459,7 @@
           "die_size": 8,
           "damage_bonus": 0,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "магический"
         }
       },
@@ -3442,6 +3475,7 @@
           "die_size": 8,
           "damage_bonus": 1,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "магический"
         }
       },
@@ -3457,6 +3491,7 @@
           "die_size": 6,
           "damage_bonus": 3,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "магический"
         }
       },
@@ -3472,6 +3507,7 @@
           "die_size": 6,
           "damage_bonus": 0,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "магический"
         }
       },
@@ -3487,6 +3523,7 @@
           "die_size": 6,
           "damage_bonus": 1,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "магический"
         }
       },
@@ -3494,7 +3531,7 @@
         "id": "greatstaff",
         "rk": "weapon",
         "label": "Великий посох",
-        "description": "Greatstaff. Знание, очень далеко, к6 маг., двуручное. Мощный: при попадании ещё кость урона, худшая отбрасывается (в образце не считается).",
+        "description": "Greatstaff. Знание, очень далеко, к6 маг., двуручное. Мощный: при попадании ещё кость урона, худшая отбрасывается.",
         "props": {
           "trait": "знание",
           "range": "очень далеко",
@@ -3502,6 +3539,7 @@
           "die_size": 6,
           "damage_bonus": 0,
           "attack_bonus": 0,
+          "extra_die": 1,
           "damage_kind": "магический"
         }
       },
@@ -3517,6 +3555,7 @@
           "die_size": 8,
           "damage_bonus": 0,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "физический"
         }
       },
@@ -3532,6 +3571,7 @@
           "die_size": 4,
           "damage_bonus": 0,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "физический"
         },
         "modifiers": [
@@ -3557,6 +3597,7 @@
           "die_size": 6,
           "damage_bonus": 0,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "физический"
         },
         "modifiers": [
@@ -3590,6 +3631,7 @@
           "die_size": 8,
           "damage_bonus": 0,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "физический"
         }
       },
@@ -3605,6 +3647,7 @@
           "die_size": 6,
           "damage_bonus": 0,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "физический"
         }
       },
@@ -3620,6 +3663,7 @@
           "die_size": 6,
           "damage_bonus": 0,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "физический"
         }
       },
@@ -3635,6 +3679,7 @@
           "die_size": 6,
           "damage_bonus": 1,
           "attack_bonus": 0,
+          "extra_die": 0,
           "damage_kind": "физический"
         }
       },

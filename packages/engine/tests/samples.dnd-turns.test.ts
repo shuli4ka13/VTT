@@ -51,6 +51,12 @@ group('действия хода — поля листа, а не отдельн
     eq(value(out.sheets, 'turn_attacks'), 0);
   });
 
+  test('«Ускорение» даёт ещё одно действие в начале хода', () => {
+    const spent = hit(table(1)).map(s => (s.id === 'arven' ? { ...s, effects: [...(s.effects ?? []), { effectId: 'hasted' }] } : s));
+    const out = fireMoments([{ moment: 'turn-start', sheetId: 'arven' }], spent, { system, compendium, die: () => 1 });
+    eq(value(out.sheets, 'turn_action'), 2);
+  });
+
   test('начало боя отмечает бой на столе, конец — снимает', () => {
     const started = fireMoments([{ moment: 'combat-start', sheetId: 'arven' }], table(0), { system, compendium, die: () => 1 });
     eq(started.sheets.find(s => s.id === 'стол')!.values.battle, 1);

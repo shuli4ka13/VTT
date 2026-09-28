@@ -520,7 +520,7 @@ function conditions() {
       [roll(['атака'], 'bane'), roll(['спасбросок'], 'bane')], { kind: 'permanent' }),
     guided: passive('Указание', '+1к4 к одной проверке характеристики.', [roll(['проверка'], 'guidance')], { kind: 'permanent' }),
     resisted: passive('Сопротивление', '+1к4 к одному спасброску.', [roll(['спасбросок'], 'guidance')], { kind: 'permanent' }),
-    hasted: passive('Ускорен', '+2 к классу брони, скорость вдвое, преимущество на спасброски Ловкости. Лишнее действие разрешает ведущий.',
+    hasted: passive('Ускорен', '+2 к классу брони, скорость вдвое, преимущество на спасброски Ловкости, ещё одно действие на ход (атака одним оружием, рывок, отход, засада или предмет — следит ведущий).',
       [value('ac', 'add', 2), value('speed', 'mul', 2), roll(['спасбросок', 'ловкость'], 'advantage')], { kind: 'permanent' }),
     slowed: passive('Замедлен', '−2 к классу брони и спасброскам Ловкости, скорость вдвое меньше. Наложенное заклинанием: в конце хода — спасбросок Мудрости против запомненной сложности.',
       [value('ac', 'add', -2), value('speed', 'mul', 0.5), { kind: 'roll', target: 'roll:any', tags: ['спасбросок', 'ловкость'], op: 'add', value: -2, condition: null }],
@@ -638,7 +638,9 @@ function lifecycle() {
 function roomRules() {
   const when = (level, modifier) => ({ ...modifier, condition: `@exhaustion >= ${level}` });
   const refresh = [
-    ...TURN_FIELDS.map(([tag]) => change(tag, 'set', { const: 1 })),
+    ...TURN_FIELDS.map(([tag]) => (tag === 'turn_action'
+      ? change(tag, 'set', { expr: '1 + min(1, @hasted)' })
+      : change(tag, 'set', { const: 1 }))),
     change('turn_attacks', 'set', { const: 0 }),
   ];
   const onMoment = (label, description, moment, steps) => ({
