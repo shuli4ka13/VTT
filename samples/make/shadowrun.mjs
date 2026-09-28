@@ -380,11 +380,24 @@ function effects() {
   };
 }
 
+const setTo = (target, expr) => ({ kind: 'value', target, op: 'set', value: { expr }, stacking: 'override', condition: null });
+
 const RANGE_PROPS = RANGES.map((range, at) => ({ key: `ar${at + 1}`, label: `АТК: ${range}`, kind: 'number' }));
 const RANGE_ARGS = Object.fromEntries(RANGES.map((_, at) => [`ar${at + 1}`, { prop: `ar${at + 1}` }]));
 
 const records = () => ({
   runner: { kind: 'sheet', label: 'Раннер', icon: '🕶', group: 'Листы', hint: 'Лист игрока: все блоки.' },
+  grunt: {
+    kind: 'sheet', label: 'Пешка', icon: '👥', group: 'Листы',
+    hint: 'Пешка из отряда (стр. 203): одна шкала на оба вида урона, 8 + ⌈больше из Воли и Тела / 2⌉, штраф за каждые 2 ячейки.',
+    blocks: ['Характеристики', 'Навыки', 'Наборы кубиков', 'Защита', 'Счётчики', 'Инициатива'],
+    modifiers: [
+      setTo('physical_max', '8 + ceil(max(@willpower, @body) / 2)'),
+      setTo('physical_total', '@physical + @stun'),
+      setTo('knocked_out', 'нет'),
+      setTo('wound_mod', '0 - floor(min(@physical + @stun, @physical_max) / 2)'),
+    ],
+  },
   opponent: {
     kind: 'sheet', label: 'Противник', icon: '👤', group: 'Листы', hint: 'Лист противника: характеристики, навыки, защита, счётчики.',
     blocks: ['Характеристики', 'Навыки', 'Наборы кубиков', 'Защита', 'Счётчики', 'Инициатива'],
@@ -516,12 +529,12 @@ const sheets = () => [
   sheet('humanis', 'Головорез из «Хуманиса» (ПР 0)', 'opponent', {
     body: 2, agility: 2, reaction: 2, strength: 2, willpower: 2, logic: 2, intuition: 2, charisma: 1, athletics: 1, close_combat: 3, influence: 1,
   }, ['club']),
-  { ...sheet('fiveeyes', 'Член мотобанды «Пятиглазые» №1', 'opponent', {
+  { ...sheet('fiveeyes', 'Член мотобанды «Пятиглазые» №1', 'grunt', {
     body: 2, agility: 2, reaction: 2, strength: 2, willpower: 2, logic: 2, intuition: 2, charisma: 1,
     athletics: 2, close_combat: 3, perception: 1, piloting: 2, firearms: 2, influence: 3,
   }, ['bike_chain', 'streetline', 'gang_jacket']), group: 'fiveeyes_squad' },
   { id: 'fiveeyes_squad', systemId: 'shadowrun6', name: 'Отряд «Пятиглазые» (ПР 1)', values: { edge_left: 1 }, has: [], effects: [] },
-  { ...sheet('fiveeyes_2', 'Член мотобанды «Пятиглазые» №2', 'opponent', {
+  { ...sheet('fiveeyes_2', 'Член мотобанды «Пятиглазые» №2', 'grunt', {
     body: 2, agility: 2, reaction: 2, strength: 2, willpower: 2, logic: 2, intuition: 2, charisma: 1,
     athletics: 2, close_combat: 3, perception: 1, piloting: 2, firearms: 2, influence: 3,
   }, ['bike_chain', 'streetline', 'gang_jacket']), group: 'fiveeyes_squad' },

@@ -3025,6 +3025,63 @@
         "group": "Листы",
         "hint": "Лист игрока: все блоки."
       },
+      "grunt": {
+        "kind": "sheet",
+        "label": "Пешка",
+        "icon": "👥",
+        "group": "Листы",
+        "hint": "Пешка из отряда (стр. 203): одна шкала на оба вида урона, 8 + ⌈больше из Воли и Тела / 2⌉, штраф за каждые 2 ячейки.",
+        "blocks": [
+          "Характеристики",
+          "Навыки",
+          "Наборы кубиков",
+          "Защита",
+          "Счётчики",
+          "Инициатива"
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "physical_max",
+            "op": "set",
+            "value": {
+              "expr": "8 + ceil(max(@willpower, @body) / 2)"
+            },
+            "stacking": "override",
+            "condition": null
+          },
+          {
+            "kind": "value",
+            "target": "physical_total",
+            "op": "set",
+            "value": {
+              "expr": "@physical + @stun"
+            },
+            "stacking": "override",
+            "condition": null
+          },
+          {
+            "kind": "value",
+            "target": "knocked_out",
+            "op": "set",
+            "value": {
+              "expr": "нет"
+            },
+            "stacking": "override",
+            "condition": null
+          },
+          {
+            "kind": "value",
+            "target": "wound_mod",
+            "op": "set",
+            "value": {
+              "expr": "0 - floor(min(@physical + @stun, @physical_max) / 2)"
+            },
+            "stacking": "override",
+            "condition": null
+          }
+        ]
+      },
       "opponent": {
         "kind": "sheet",
         "label": "Противник",
@@ -4450,7 +4507,7 @@
     {
       "id": "fiveeyes",
       "systemId": "shadowrun6",
-      "of": "opponent",
+      "of": "grunt",
       "name": "Член мотобанды «Пятиглазые» №1",
       "values": {
         "body": 2,
@@ -4495,7 +4552,7 @@
     {
       "id": "fiveeyes_2",
       "systemId": "shadowrun6",
-      "of": "opponent",
+      "of": "grunt",
       "name": "Член мотобанды «Пятиглазые» №2",
       "values": {
         "body": 2,

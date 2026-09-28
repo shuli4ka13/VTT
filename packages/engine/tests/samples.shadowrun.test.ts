@@ -130,3 +130,15 @@ group('Shadowrun 6: отряд пешек', () => {
     eq(calc(system, second, 'edge_left', newPass(system, second, { compendium, shared: out.sheets.filter(s => s.id === 'fiveeyes_squad') })), 1, 'общий запас Преимущества = ПР отряда');
   });
 });
+
+group('Shadowrun 6: пешка — тип листа переопределяет формулы', () => {
+  test('одна шкала на оба вида урона, 8 + ⌈max(Воля, Тело)/2⌉, штраф за каждые 2 ячейки', () => {
+    const grunt = sheetOf('fiveeyes', { stun: 3, physical: 2 });
+    delete (grunt as { group?: string }).group;
+    eq(computed(grunt, 'physical_max'), 9, 'как СС 9 в блоке «Пятиглазых», стр. 205');
+    eq(computed(grunt, 'physical_total'), 5);
+    eq(computed(grunt, 'wound_mod'), -2);
+    eq(computed(grunt, 'knocked_out'), false);
+    eq(computed(sheetOf('razor', { stun: 3, physical: 2 }), 'wound_mod'), -1, 'у раннера — по-старому');
+  });
+});
