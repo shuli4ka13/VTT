@@ -2,12 +2,16 @@ import { group, test, eq, ok } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { exchange } from '../src/events/exchange.ts';
 import { rollCheck, fieldCheck } from '../src/engine/check.ts';
+import { calc, newPass } from '../src/engine/calc.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const sr = PLAYABLE_WORLDS.find(w => (w.system as System).id === 'shadowrun5')!;
 const system = sr.system as System;
 const compendium = sr.compendium as Compendium;
-const sheetOf = (id: string) => structuredClone(sr.sheets.find(s => s.id === id)!) as Sheet;
+const sheetOf = (id: string, values: Record<string, unknown> = {}) => {
+  const sheet = structuredClone(sr.sheets.find(s => s.id === id)!) as Sheet;
+  return { ...sheet, values: { ...sheet.values, ...values } } as Sheet;
+};
 const wears = (sheet: Sheet | undefined, id: string) => (sheet?.effects ?? []).some(e => e.effectId === id);
 
 const dice = (...runs: [number, number][]) => {
@@ -61,5 +65,33 @@ group('Shadowrun: выстрел', () => {
     const guard = out.sheets.find(s => s.id === 'guard')!;
     eq(guard.values.physical ?? 0, 0);
     eq(guard.values.stun ?? 0, 0);
+  });
+});
+
+group('Shadowrun: сверено с книгой', () => {
+  const computed = (sheet: Sheet, tag: string) => calc(system, sheet, tag, newPass(system, sheet, { compendium }));
+
+  test('без навыка по умолчанию нельзя — пул 0; можно — атрибут минус один', () => {
+    const razor = sheetOf('razor');
+    eq(computed(razor, 'locksmith_pool'), 0, 'взлом замков без навыка не бросают');
+    eq(computed(razor, 'hacking_pool'), 1);
+  });
+
+  test('тролль: кожная броня +1, шлем прибавляется, но не больше Силы', () => {
+    eq(computed(sheetOf('hammer'), 'armor'), 9 + 2 + 1);
+  });
+
+  test('оглушающий сверх трека переливается в физический по две клетки за одну; штраф за раны по обоим трекам', () => {
+    const hurt = sheetOf('razor', { stun: 14, physical: 3 });
+    eq(computed(hurt, 'stun_overflow'), 2, 'трек 10, лишних 4');
+    eq(computed(hurt, 'physical_total'), 5);
+    eq(computed(hurt, 'wound_mod'), -4, '5 физических → −1, 10 оглушающих → −3');
+  });
+
+  test('урон, равный броне, остаётся физическим', () => {
+    const out = shoot('silk', 'ganger', 'colt_america_l36:0', dice([2, 6], [4, 1], [6, 1], [13, 1]));
+    const ganger = out.sheets.find(s => s.id === 'ganger')!;
+    eq(ganger.values.physical, 9, 'урон 7 + 2 успеха = 9 при броне 9');
+    eq(ganger.values.stun ?? 0, 0);
   });
 });

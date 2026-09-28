@@ -4,6 +4,7 @@
     "id": "shadowrun5",
     "name": "Shadowrun 5",
     "groups": {
+      "Личное дело": {},
       "Атрибуты": {},
       "Особые": {},
       "Пределы": {},
@@ -13,12 +14,64 @@
       "Состояние": {},
       "Инициатива": {},
       "Атака": {},
+      "Грань": {},
       "Состояния": {},
       "Правила комнаты": {},
       "Листы": {},
-      "Снаряжение": {}
+      "Снаряжение": {},
+      "Приёмы": {},
+      "Навыки: бой": {
+        "parent": "Навыки"
+      },
+      "Пулы: бой": {
+        "parent": "Пулы"
+      },
+      "Навыки: тело": {
+        "parent": "Навыки"
+      },
+      "Пулы: тело": {
+        "parent": "Пулы"
+      },
+      "Навыки: общение": {
+        "parent": "Навыки"
+      },
+      "Пулы: общение": {
+        "parent": "Пулы"
+      },
+      "Навыки: техника": {
+        "parent": "Навыки"
+      },
+      "Пулы: техника": {
+        "parent": "Пулы"
+      },
+      "Навыки: транспорт": {
+        "parent": "Навыки"
+      },
+      "Пулы: транспорт": {
+        "parent": "Пулы"
+      },
+      "Навыки: магия": {
+        "parent": "Навыки"
+      },
+      "Пулы: магия": {
+        "parent": "Пулы"
+      },
+      "Пулы: атрибуты": {
+        "parent": "Пулы"
+      }
     },
     "fields": [
+      {
+        "tag": "metatype",
+        "label": "Метатип",
+        "group": "Личное дело",
+        "value": {
+          "kind": "stored",
+          "type": "choice",
+          "from": "metatypes",
+          "default": "человек"
+        }
+      },
       {
         "tag": "body",
         "label": "Тело",
@@ -28,7 +81,7 @@
           "type": "number",
           "default": 3,
           "min": 1,
-          "max": 9
+          "max": 10
         }
       },
       {
@@ -40,7 +93,7 @@
           "type": "number",
           "default": 3,
           "min": 1,
-          "max": 9
+          "max": 10
         }
       },
       {
@@ -52,7 +105,7 @@
           "type": "number",
           "default": 3,
           "min": 1,
-          "max": 9
+          "max": 10
         }
       },
       {
@@ -64,7 +117,7 @@
           "type": "number",
           "default": 3,
           "min": 1,
-          "max": 9
+          "max": 10
         }
       },
       {
@@ -76,7 +129,7 @@
           "type": "number",
           "default": 3,
           "min": 1,
-          "max": 9
+          "max": 10
         }
       },
       {
@@ -88,7 +141,7 @@
           "type": "number",
           "default": 3,
           "min": 1,
-          "max": 9
+          "max": 10
         }
       },
       {
@@ -100,7 +153,7 @@
           "type": "number",
           "default": 3,
           "min": 1,
-          "max": 9
+          "max": 10
         }
       },
       {
@@ -112,7 +165,7 @@
           "type": "number",
           "default": 3,
           "min": 1,
-          "max": 9
+          "max": 10
         }
       },
       {
@@ -136,7 +189,8 @@
           "type": "number",
           "default": 2,
           "min": 0
-        }
+        },
+        "control": "pips"
       },
       {
         "tag": "essence",
@@ -158,7 +212,8 @@
           "kind": "stored",
           "type": "number",
           "default": 0,
-          "min": 0
+          "min": 0,
+          "max": 6
         }
       },
       {
@@ -185,195 +240,843 @@
         "group": "Пределы",
         "value": {
           "kind": "formula",
-          "expr": "ceil((@charisma * 2 + @willpower + @essence) / 3)"
+          "expr": "ceil((@charisma * 2 + @willpower + round(@essence)) / 3)"
         }
       },
       {
-        "tag": "pistols",
-        "label": "Пистолеты",
-        "group": "Навыки",
+        "tag": "archery",
+        "label": "Стрельба из лука",
+        "group": "Навыки: бой",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": 12
+          "max": 13
         }
       },
       {
         "tag": "automatics",
-        "label": "Автоматы",
-        "group": "Навыки",
+        "label": "Автоматическое оружие",
+        "group": "Навыки: бой",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": 12
-        }
-      },
-      {
-        "tag": "longarms",
-        "label": "Длинноствольное",
-        "group": "Навыки",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 12
+          "max": 13
         }
       },
       {
         "tag": "blades",
         "label": "Клинки",
-        "group": "Навыки",
+        "group": "Навыки: бой",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": 12
+          "max": 13
+        }
+      },
+      {
+        "tag": "clubs",
+        "label": "Дубинки",
+        "group": "Навыки: бой",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "exotic_melee",
+        "label": "Экзотическое оружие ближнего боя",
+        "group": "Навыки: бой",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "exotic_ranged",
+        "label": "Экзотическое стрелковое оружие",
+        "group": "Навыки: бой",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "heavy_weapons",
+        "label": "Тяжёлое оружие",
+        "group": "Навыки: бой",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "longarms",
+        "label": "Длинноствольное оружие",
+        "group": "Навыки: бой",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "pistols",
+        "label": "Пистолеты",
+        "group": "Навыки: бой",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "throwing",
+        "label": "Метательное оружие",
+        "group": "Навыки: бой",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
         }
       },
       {
         "tag": "unarmed",
         "label": "Рукопашный бой",
-        "group": "Навыки",
+        "group": "Навыки: бой",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": 12
+          "max": 13
         }
       },
       {
-        "tag": "sneaking",
-        "label": "Скрытность",
-        "group": "Навыки",
+        "tag": "disguise",
+        "label": "Маскировка",
+        "group": "Навыки: тело",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": 12
+          "max": 13
+        }
+      },
+      {
+        "tag": "diving",
+        "label": "Ныряние",
+        "group": "Навыки: тело",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "escape_artist",
+        "label": "Выпутывание",
+        "group": "Навыки: тело",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "free_fall",
+        "label": "Свободное падение",
+        "group": "Навыки: тело",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
         }
       },
       {
         "tag": "gymnastics",
         "label": "Гимнастика",
-        "group": "Навыки",
+        "group": "Навыки: тело",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": 12
+          "max": 13
         }
       },
       {
-        "tag": "running",
-        "label": "Бег",
-        "group": "Навыки",
+        "tag": "palming",
+        "label": "Ловкость рук",
+        "group": "Навыки: тело",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": 12
+          "max": 13
         }
       },
       {
         "tag": "perception",
         "label": "Восприятие",
-        "group": "Навыки",
+        "group": "Навыки: тело",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": 12
+          "max": 13
+        }
+      },
+      {
+        "tag": "running",
+        "label": "Бег",
+        "group": "Навыки: тело",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "sneaking",
+        "label": "Скрытность",
+        "group": "Навыки: тело",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "survival",
+        "label": "Выживание",
+        "group": "Навыки: тело",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "swimming",
+        "label": "Плавание",
+        "group": "Навыки: тело",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "tracking",
+        "label": "Выслеживание",
+        "group": "Навыки: тело",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
         }
       },
       {
         "tag": "con",
         "label": "Обман",
-        "group": "Навыки",
+        "group": "Навыки: общение",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": 12
+          "max": 13
         }
       },
       {
         "tag": "etiquette",
         "label": "Этикет",
-        "group": "Навыки",
+        "group": "Навыки: общение",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": 12
+          "max": 13
+        }
+      },
+      {
+        "tag": "impersonation",
+        "label": "Перевоплощение",
+        "group": "Навыки: общение",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "instruction",
+        "label": "Обучение",
+        "group": "Навыки: общение",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "intimidation",
+        "label": "Запугивание",
+        "group": "Навыки: общение",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "leadership",
+        "label": "Лидерство",
+        "group": "Навыки: общение",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
         }
       },
       {
         "tag": "negotiation",
         "label": "Переговоры",
-        "group": "Навыки",
+        "group": "Навыки: общение",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": 12
+          "max": 13
         }
       },
       {
-        "tag": "computer",
-        "label": "Компьютер",
-        "group": "Навыки",
+        "tag": "performance",
+        "label": "Выступление",
+        "group": "Навыки: общение",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": 12
+          "max": 13
         }
       },
       {
-        "tag": "hacking",
-        "label": "Хакинг",
-        "group": "Навыки",
+        "tag": "aeronautics_mechanic",
+        "label": "Механика: авиация",
+        "group": "Навыки: техника",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": 12
+          "max": 13
+        }
+      },
+      {
+        "tag": "automotive_mechanic",
+        "label": "Механика: автомобили",
+        "group": "Навыки: техника",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "industrial_mechanic",
+        "label": "Механика: промышленная",
+        "group": "Навыки: техника",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "nautical_mechanic",
+        "label": "Механика: суда",
+        "group": "Навыки: техника",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "animal_handling",
+        "label": "Обращение с животными",
+        "group": "Навыки: техника",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "armorer",
+        "label": "Оружейное дело",
+        "group": "Навыки: техника",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "artisan",
+        "label": "Ремесло",
+        "group": "Навыки: техника",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "biotechnology",
+        "label": "Биотехнологии",
+        "group": "Навыки: техника",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "cybertechnology",
+        "label": "Кибертехнологии",
+        "group": "Навыки: техника",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
         }
       },
       {
         "tag": "first_aid",
         "label": "Первая помощь",
-        "group": "Навыки",
+        "group": "Навыки: техника",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": 12
+          "max": 13
         }
       },
       {
-        "tag": "pistols_pool",
-        "label": "Пистолеты: пул",
-        "group": "Пулы",
+        "tag": "medicine",
+        "label": "Медицина",
+        "group": "Навыки: техника",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "chemistry",
+        "label": "Химия",
+        "group": "Навыки: техника",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "computer",
+        "label": "Компьютер",
+        "group": "Навыки: техника",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "hardware",
+        "label": "Железо",
+        "group": "Навыки: техника",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "software",
+        "label": "Программы",
+        "group": "Навыки: техника",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "cybercombat",
+        "label": "Кибербой",
+        "group": "Навыки: техника",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "electronic_warfare",
+        "label": "Радиоэлектронная борьба",
+        "group": "Навыки: техника",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "hacking",
+        "label": "Хакинг",
+        "group": "Навыки: техника",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "demolitions",
+        "label": "Взрывное дело",
+        "group": "Навыки: техника",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "forgery",
+        "label": "Подделка",
+        "group": "Навыки: техника",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "locksmith",
+        "label": "Взлом замков",
+        "group": "Навыки: техника",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "navigation",
+        "label": "Навигация",
+        "group": "Навыки: техника",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "gunnery",
+        "label": "Бортовое оружие",
+        "group": "Навыки: транспорт",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "pilot_aerospace",
+        "label": "Пилотирование: аэрокосмос",
+        "group": "Навыки: транспорт",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "pilot_aircraft",
+        "label": "Пилотирование: воздух",
+        "group": "Навыки: транспорт",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "pilot_ground",
+        "label": "Пилотирование: наземный",
+        "group": "Навыки: транспорт",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "pilot_walker",
+        "label": "Пилотирование: шагоходы",
+        "group": "Навыки: транспорт",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "pilot_watercraft",
+        "label": "Пилотирование: вода",
+        "group": "Навыки: транспорт",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "spellcasting",
+        "label": "Колдовство",
+        "group": "Навыки: магия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "counterspelling",
+        "label": "Контрзаклинания",
+        "group": "Навыки: магия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "ritual_spellcasting",
+        "label": "Ритуалы",
+        "group": "Навыки: магия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "summoning",
+        "label": "Призыв",
+        "group": "Навыки: магия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "banishing",
+        "label": "Изгнание",
+        "group": "Навыки: магия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "binding",
+        "label": "Связывание",
+        "group": "Навыки: магия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "alchemy",
+        "label": "Алхимия",
+        "group": "Навыки: магия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "assensing",
+        "label": "Ясновидение",
+        "group": "Навыки: магия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "astral_combat",
+        "label": "Астральный бой",
+        "group": "Навыки: магия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "arcana",
+        "label": "Арканы",
+        "group": "Навыки: магия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 13
+        }
+      },
+      {
+        "tag": "archery_pool",
+        "label": "Стрельба из лука: пул",
+        "group": "Пулы: бой",
         "roll": {
-          "label": "Проверка: Пистолеты",
+          "label": "Проверка: Стрельба из лука",
           "die": {
             "constant": "pool"
           },
@@ -384,15 +1087,15 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@pistols > 0 ? @pistols + @agility : @agility - 1) + @wound_mod)"
+          "expr": "max(0, (@archery > 0 ? @archery + @agility : @agility - 1) + @wound_mod)"
         }
       },
       {
         "tag": "automatics_pool",
-        "label": "Автоматы: пул",
-        "group": "Пулы",
+        "label": "Автоматическое оружие: пул",
+        "group": "Пулы: бой",
         "roll": {
-          "label": "Проверка: Автоматы",
+          "label": "Проверка: Автоматическое оружие",
           "die": {
             "constant": "pool"
           },
@@ -407,28 +1110,9 @@
         }
       },
       {
-        "tag": "longarms_pool",
-        "label": "Длинноствольное: пул",
-        "group": "Пулы",
-        "roll": {
-          "label": "Проверка: Длинноствольное",
-          "die": {
-            "constant": "pool"
-          },
-          "pool": true,
-          "tags": [
-            "проверка"
-          ]
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "max(0, (@longarms > 0 ? @longarms + @agility : @agility - 1) + @wound_mod)"
-        }
-      },
-      {
         "tag": "blades_pool",
         "label": "Клинки: пул",
-        "group": "Пулы",
+        "group": "Пулы: бой",
         "roll": {
           "label": "Проверка: Клинки",
           "die": {
@@ -445,9 +1129,142 @@
         }
       },
       {
+        "tag": "clubs_pool",
+        "label": "Дубинки: пул",
+        "group": "Пулы: бой",
+        "roll": {
+          "label": "Проверка: Дубинки",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@clubs > 0 ? @clubs + @agility : @agility - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "exotic_melee_pool",
+        "label": "Экзотическое оружие ближнего боя: пул",
+        "group": "Пулы: бой",
+        "roll": {
+          "label": "Проверка: Экзотическое оружие ближнего боя",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@exotic_melee > 0 ? @exotic_melee + @agility : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "exotic_ranged_pool",
+        "label": "Экзотическое стрелковое оружие: пул",
+        "group": "Пулы: бой",
+        "roll": {
+          "label": "Проверка: Экзотическое стрелковое оружие",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@exotic_ranged > 0 ? @exotic_ranged + @agility : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "heavy_weapons_pool",
+        "label": "Тяжёлое оружие: пул",
+        "group": "Пулы: бой",
+        "roll": {
+          "label": "Проверка: Тяжёлое оружие",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@heavy_weapons > 0 ? @heavy_weapons + @agility : @agility - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "longarms_pool",
+        "label": "Длинноствольное оружие: пул",
+        "group": "Пулы: бой",
+        "roll": {
+          "label": "Проверка: Длинноствольное оружие",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@longarms > 0 ? @longarms + @agility : @agility - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "pistols_pool",
+        "label": "Пистолеты: пул",
+        "group": "Пулы: бой",
+        "roll": {
+          "label": "Проверка: Пистолеты",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@pistols > 0 ? @pistols + @agility : @agility - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "throwing_pool",
+        "label": "Метательное оружие: пул",
+        "group": "Пулы: бой",
+        "roll": {
+          "label": "Проверка: Метательное оружие",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@throwing > 0 ? @throwing + @agility : @agility - 1) + @wound_mod)"
+        }
+      },
+      {
         "tag": "unarmed_pool",
         "label": "Рукопашный бой: пул",
-        "group": "Пулы",
+        "group": "Пулы: бой",
         "roll": {
           "label": "Проверка: Рукопашный бой",
           "die": {
@@ -464,11 +1281,11 @@
         }
       },
       {
-        "tag": "sneaking_pool",
-        "label": "Скрытность: пул",
-        "group": "Пулы",
+        "tag": "disguise_pool",
+        "label": "Маскировка: пул",
+        "group": "Пулы: тело",
         "roll": {
-          "label": "Проверка: Скрытность",
+          "label": "Проверка: Маскировка",
           "die": {
             "constant": "pool"
           },
@@ -479,13 +1296,70 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@sneaking > 0 ? @sneaking + @agility : @agility - 1) + @wound_mod)"
+          "expr": "max(0, (@disguise > 0 ? @disguise + @intuition : @intuition - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "diving_pool",
+        "label": "Ныряние: пул",
+        "group": "Пулы: тело",
+        "roll": {
+          "label": "Проверка: Ныряние",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@diving > 0 ? @diving + @body : @body - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "escape_artist_pool",
+        "label": "Выпутывание: пул",
+        "group": "Пулы: тело",
+        "roll": {
+          "label": "Проверка: Выпутывание",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@escape_artist > 0 ? @escape_artist + @agility : @agility - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "free_fall_pool",
+        "label": "Свободное падение: пул",
+        "group": "Пулы: тело",
+        "roll": {
+          "label": "Проверка: Свободное падение",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@free_fall > 0 ? @free_fall + @body : @body - 1) + @wound_mod)"
         }
       },
       {
         "tag": "gymnastics_pool",
         "label": "Гимнастика: пул",
-        "group": "Пулы",
+        "group": "Пулы: тело",
         "roll": {
           "label": "Проверка: Гимнастика",
           "die": {
@@ -502,11 +1376,11 @@
         }
       },
       {
-        "tag": "running_pool",
-        "label": "Бег: пул",
-        "group": "Пулы",
+        "tag": "palming_pool",
+        "label": "Ловкость рук: пул",
+        "group": "Пулы: тело",
         "roll": {
-          "label": "Проверка: Бег",
+          "label": "Проверка: Ловкость рук",
           "die": {
             "constant": "pool"
           },
@@ -517,13 +1391,13 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@running > 0 ? @running + @strength : @strength - 1) + @wound_mod)"
+          "expr": "max(0, (@palming > 0 ? @palming + @agility : 0) + @wound_mod)"
         }
       },
       {
         "tag": "perception_pool",
         "label": "Восприятие: пул",
-        "group": "Пулы",
+        "group": "Пулы: тело",
         "roll": {
           "label": "Проверка: Восприятие",
           "die": {
@@ -540,9 +1414,104 @@
         }
       },
       {
+        "tag": "running_pool",
+        "label": "Бег: пул",
+        "group": "Пулы: тело",
+        "roll": {
+          "label": "Проверка: Бег",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@running > 0 ? @running + @strength : @strength - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "sneaking_pool",
+        "label": "Скрытность: пул",
+        "group": "Пулы: тело",
+        "roll": {
+          "label": "Проверка: Скрытность",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@sneaking > 0 ? @sneaking + @agility : @agility - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "survival_pool",
+        "label": "Выживание: пул",
+        "group": "Пулы: тело",
+        "roll": {
+          "label": "Проверка: Выживание",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@survival > 0 ? @survival + @willpower : @willpower - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "swimming_pool",
+        "label": "Плавание: пул",
+        "group": "Пулы: тело",
+        "roll": {
+          "label": "Проверка: Плавание",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@swimming > 0 ? @swimming + @strength : @strength - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "tracking_pool",
+        "label": "Выслеживание: пул",
+        "group": "Пулы: тело",
+        "roll": {
+          "label": "Проверка: Выслеживание",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@tracking > 0 ? @tracking + @intuition : @intuition - 1) + @wound_mod)"
+        }
+      },
+      {
         "tag": "con_pool",
         "label": "Обман: пул",
-        "group": "Пулы",
+        "group": "Пулы: общение",
         "roll": {
           "label": "Проверка: Обман",
           "die": {
@@ -561,7 +1530,7 @@
       {
         "tag": "etiquette_pool",
         "label": "Этикет: пул",
-        "group": "Пулы",
+        "group": "Пулы: общение",
         "roll": {
           "label": "Проверка: Этикет",
           "die": {
@@ -578,9 +1547,85 @@
         }
       },
       {
+        "tag": "impersonation_pool",
+        "label": "Перевоплощение: пул",
+        "group": "Пулы: общение",
+        "roll": {
+          "label": "Проверка: Перевоплощение",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@impersonation > 0 ? @impersonation + @charisma : @charisma - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "instruction_pool",
+        "label": "Обучение: пул",
+        "group": "Пулы: общение",
+        "roll": {
+          "label": "Проверка: Обучение",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@instruction > 0 ? @instruction + @charisma : @charisma - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "intimidation_pool",
+        "label": "Запугивание: пул",
+        "group": "Пулы: общение",
+        "roll": {
+          "label": "Проверка: Запугивание",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@intimidation > 0 ? @intimidation + @charisma : @charisma - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "leadership_pool",
+        "label": "Лидерство: пул",
+        "group": "Пулы: общение",
+        "roll": {
+          "label": "Проверка: Лидерство",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@leadership > 0 ? @leadership + @charisma : @charisma - 1) + @wound_mod)"
+        }
+      },
+      {
         "tag": "negotiation_pool",
         "label": "Переговоры: пул",
-        "group": "Пулы",
+        "group": "Пулы: общение",
         "roll": {
           "label": "Проверка: Переговоры",
           "die": {
@@ -597,11 +1642,11 @@
         }
       },
       {
-        "tag": "computer_pool",
-        "label": "Компьютер: пул",
-        "group": "Пулы",
+        "tag": "performance_pool",
+        "label": "Выступление: пул",
+        "group": "Пулы: общение",
         "roll": {
-          "label": "Проверка: Компьютер",
+          "label": "Проверка: Выступление",
           "die": {
             "constant": "pool"
           },
@@ -612,15 +1657,15 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@computer > 0 ? @computer + @logic : @logic - 1) + @wound_mod)"
+          "expr": "max(0, (@performance > 0 ? @performance + @charisma : @charisma - 1) + @wound_mod)"
         }
       },
       {
-        "tag": "hacking_pool",
-        "label": "Хакинг: пул",
-        "group": "Пулы",
+        "tag": "aeronautics_mechanic_pool",
+        "label": "Механика: авиация: пул",
+        "group": "Пулы: техника",
         "roll": {
-          "label": "Проверка: Хакинг",
+          "label": "Проверка: Механика: авиация",
           "die": {
             "constant": "pool"
           },
@@ -631,13 +1676,165 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@hacking > 0 ? @hacking + @logic : @logic - 1) + @wound_mod)"
+          "expr": "max(0, (@aeronautics_mechanic > 0 ? @aeronautics_mechanic + @logic : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "automotive_mechanic_pool",
+        "label": "Механика: автомобили: пул",
+        "group": "Пулы: техника",
+        "roll": {
+          "label": "Проверка: Механика: автомобили",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@automotive_mechanic > 0 ? @automotive_mechanic + @logic : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "industrial_mechanic_pool",
+        "label": "Механика: промышленная: пул",
+        "group": "Пулы: техника",
+        "roll": {
+          "label": "Проверка: Механика: промышленная",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@industrial_mechanic > 0 ? @industrial_mechanic + @logic : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "nautical_mechanic_pool",
+        "label": "Механика: суда: пул",
+        "group": "Пулы: техника",
+        "roll": {
+          "label": "Проверка: Механика: суда",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@nautical_mechanic > 0 ? @nautical_mechanic + @logic : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "animal_handling_pool",
+        "label": "Обращение с животными: пул",
+        "group": "Пулы: техника",
+        "roll": {
+          "label": "Проверка: Обращение с животными",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@animal_handling > 0 ? @animal_handling + @charisma : @charisma - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "armorer_pool",
+        "label": "Оружейное дело: пул",
+        "group": "Пулы: техника",
+        "roll": {
+          "label": "Проверка: Оружейное дело",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@armorer > 0 ? @armorer + @logic : @logic - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "artisan_pool",
+        "label": "Ремесло: пул",
+        "group": "Пулы: техника",
+        "roll": {
+          "label": "Проверка: Ремесло",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@artisan > 0 ? @artisan + @intuition : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "biotechnology_pool",
+        "label": "Биотехнологии: пул",
+        "group": "Пулы: техника",
+        "roll": {
+          "label": "Проверка: Биотехнологии",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@biotechnology > 0 ? @biotechnology + @logic : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "cybertechnology_pool",
+        "label": "Кибертехнологии: пул",
+        "group": "Пулы: техника",
+        "roll": {
+          "label": "Проверка: Кибертехнологии",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@cybertechnology > 0 ? @cybertechnology + @logic : 0) + @wound_mod)"
         }
       },
       {
         "tag": "first_aid_pool",
         "label": "Первая помощь: пул",
-        "group": "Пулы",
+        "group": "Пулы: техника",
         "roll": {
           "label": "Проверка: Первая помощь",
           "die": {
@@ -654,9 +1851,541 @@
         }
       },
       {
+        "tag": "medicine_pool",
+        "label": "Медицина: пул",
+        "group": "Пулы: техника",
+        "roll": {
+          "label": "Проверка: Медицина",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@medicine > 0 ? @medicine + @logic : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "chemistry_pool",
+        "label": "Химия: пул",
+        "group": "Пулы: техника",
+        "roll": {
+          "label": "Проверка: Химия",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@chemistry > 0 ? @chemistry + @logic : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "computer_pool",
+        "label": "Компьютер: пул",
+        "group": "Пулы: техника",
+        "roll": {
+          "label": "Проверка: Компьютер",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@computer > 0 ? @computer + @logic : @logic - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "hardware_pool",
+        "label": "Железо: пул",
+        "group": "Пулы: техника",
+        "roll": {
+          "label": "Проверка: Железо",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@hardware > 0 ? @hardware + @logic : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "software_pool",
+        "label": "Программы: пул",
+        "group": "Пулы: техника",
+        "roll": {
+          "label": "Проверка: Программы",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@software > 0 ? @software + @logic : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "cybercombat_pool",
+        "label": "Кибербой: пул",
+        "group": "Пулы: техника",
+        "roll": {
+          "label": "Проверка: Кибербой",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@cybercombat > 0 ? @cybercombat + @logic : @logic - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "electronic_warfare_pool",
+        "label": "Радиоэлектронная борьба: пул",
+        "group": "Пулы: техника",
+        "roll": {
+          "label": "Проверка: Радиоэлектронная борьба",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@electronic_warfare > 0 ? @electronic_warfare + @logic : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "hacking_pool",
+        "label": "Хакинг: пул",
+        "group": "Пулы: техника",
+        "roll": {
+          "label": "Проверка: Хакинг",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@hacking > 0 ? @hacking + @logic : @logic - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "demolitions_pool",
+        "label": "Взрывное дело: пул",
+        "group": "Пулы: техника",
+        "roll": {
+          "label": "Проверка: Взрывное дело",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@demolitions > 0 ? @demolitions + @logic : @logic - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "forgery_pool",
+        "label": "Подделка: пул",
+        "group": "Пулы: техника",
+        "roll": {
+          "label": "Проверка: Подделка",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@forgery > 0 ? @forgery + @logic : @logic - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "locksmith_pool",
+        "label": "Взлом замков: пул",
+        "group": "Пулы: техника",
+        "roll": {
+          "label": "Проверка: Взлом замков",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@locksmith > 0 ? @locksmith + @agility : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "navigation_pool",
+        "label": "Навигация: пул",
+        "group": "Пулы: техника",
+        "roll": {
+          "label": "Проверка: Навигация",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@navigation > 0 ? @navigation + @intuition : @intuition - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "gunnery_pool",
+        "label": "Бортовое оружие: пул",
+        "group": "Пулы: транспорт",
+        "roll": {
+          "label": "Проверка: Бортовое оружие",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@gunnery > 0 ? @gunnery + @agility : @agility - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "pilot_aerospace_pool",
+        "label": "Пилотирование: аэрокосмос: пул",
+        "group": "Пулы: транспорт",
+        "roll": {
+          "label": "Проверка: Пилотирование: аэрокосмос",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@pilot_aerospace > 0 ? @pilot_aerospace + @reaction : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "pilot_aircraft_pool",
+        "label": "Пилотирование: воздух: пул",
+        "group": "Пулы: транспорт",
+        "roll": {
+          "label": "Проверка: Пилотирование: воздух",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@pilot_aircraft > 0 ? @pilot_aircraft + @reaction : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "pilot_ground_pool",
+        "label": "Пилотирование: наземный: пул",
+        "group": "Пулы: транспорт",
+        "roll": {
+          "label": "Проверка: Пилотирование: наземный",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@pilot_ground > 0 ? @pilot_ground + @reaction : @reaction - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "pilot_walker_pool",
+        "label": "Пилотирование: шагоходы: пул",
+        "group": "Пулы: транспорт",
+        "roll": {
+          "label": "Проверка: Пилотирование: шагоходы",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@pilot_walker > 0 ? @pilot_walker + @reaction : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "pilot_watercraft_pool",
+        "label": "Пилотирование: вода: пул",
+        "group": "Пулы: транспорт",
+        "roll": {
+          "label": "Проверка: Пилотирование: вода",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@pilot_watercraft > 0 ? @pilot_watercraft + @reaction : @reaction - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "spellcasting_pool",
+        "label": "Колдовство: пул",
+        "group": "Пулы: магия",
+        "roll": {
+          "label": "Проверка: Колдовство",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@spellcasting > 0 ? @spellcasting + @magic : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "counterspelling_pool",
+        "label": "Контрзаклинания: пул",
+        "group": "Пулы: магия",
+        "roll": {
+          "label": "Проверка: Контрзаклинания",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@counterspelling > 0 ? @counterspelling + @magic : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "ritual_spellcasting_pool",
+        "label": "Ритуалы: пул",
+        "group": "Пулы: магия",
+        "roll": {
+          "label": "Проверка: Ритуалы",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@ritual_spellcasting > 0 ? @ritual_spellcasting + @magic : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "summoning_pool",
+        "label": "Призыв: пул",
+        "group": "Пулы: магия",
+        "roll": {
+          "label": "Проверка: Призыв",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@summoning > 0 ? @summoning + @magic : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "banishing_pool",
+        "label": "Изгнание: пул",
+        "group": "Пулы: магия",
+        "roll": {
+          "label": "Проверка: Изгнание",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@banishing > 0 ? @banishing + @magic : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "binding_pool",
+        "label": "Связывание: пул",
+        "group": "Пулы: магия",
+        "roll": {
+          "label": "Проверка: Связывание",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@binding > 0 ? @binding + @magic : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "alchemy_pool",
+        "label": "Алхимия: пул",
+        "group": "Пулы: магия",
+        "roll": {
+          "label": "Проверка: Алхимия",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@alchemy > 0 ? @alchemy + @magic : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "assensing_pool",
+        "label": "Ясновидение: пул",
+        "group": "Пулы: магия",
+        "roll": {
+          "label": "Проверка: Ясновидение",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@assensing > 0 ? @assensing + @intuition : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "astral_combat_pool",
+        "label": "Астральный бой: пул",
+        "group": "Пулы: магия",
+        "roll": {
+          "label": "Проверка: Астральный бой",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@astral_combat > 0 ? @astral_combat + @willpower : 0) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "arcana_pool",
+        "label": "Арканы: пул",
+        "group": "Пулы: магия",
+        "roll": {
+          "label": "Проверка: Арканы",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@arcana > 0 ? @arcana + @logic : 0) + @wound_mod)"
+        }
+      },
+      {
         "tag": "composure",
         "label": "Самообладание",
-        "group": "Пулы",
+        "group": "Пулы: атрибуты",
         "roll": {
           "label": "Самообладание",
           "die": {
@@ -675,7 +2404,7 @@
       {
         "tag": "judge_intentions",
         "label": "Чтение намерений",
-        "group": "Пулы",
+        "group": "Пулы: атрибуты",
         "roll": {
           "label": "Чтение намерений",
           "die": {
@@ -694,7 +2423,7 @@
       {
         "tag": "memory",
         "label": "Память",
-        "group": "Пулы",
+        "group": "Пулы: атрибуты",
         "roll": {
           "label": "Память",
           "die": {
@@ -713,7 +2442,7 @@
       {
         "tag": "lift_carry",
         "label": "Поднять и нести",
-        "group": "Пулы",
+        "group": "Пулы: атрибуты",
         "roll": {
           "label": "Поднять и нести",
           "die": {
@@ -730,14 +2459,34 @@
         }
       },
       {
-        "tag": "armor",
-        "label": "Броня",
+        "tag": "armor_worn",
+        "label": "Броня: надетое",
         "group": "Защита",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0
+        }
+      },
+      {
+        "tag": "armor_extra",
+        "label": "Броня: аксессуары (+)",
+        "group": "Защита",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0
+        }
+      },
+      {
+        "tag": "armor",
+        "label": "Броня",
+        "group": "Защита",
+        "value": {
+          "kind": "formula",
+          "expr": "@armor_worn + min(@armor_extra, @strength) + (@metatype != \"\" ? таблица(\"metatypes\", @metatype, \"dermal\") : 0)"
         }
       },
       {
@@ -766,6 +2515,15 @@
         "value": {
           "kind": "formula",
           "expr": "@body + @armor"
+        }
+      },
+      {
+        "tag": "reach",
+        "label": "Досягаемость (природная)",
+        "group": "Защита",
+        "value": {
+          "kind": "formula",
+          "expr": "(@metatype != \"\" ? таблица(\"metatypes\", @metatype, \"reach\") : 0)"
         }
       },
       {
@@ -809,12 +2567,30 @@
         }
       },
       {
+        "tag": "stun_overflow",
+        "label": "Перелив оглушающего в физический",
+        "group": "Состояние",
+        "value": {
+          "kind": "formula",
+          "expr": "floor(max(0, @stun - @stun_max) / 2)"
+        }
+      },
+      {
+        "tag": "physical_total",
+        "label": "Физический урон с переливом",
+        "group": "Состояние",
+        "value": {
+          "kind": "formula",
+          "expr": "@physical + @stun_overflow"
+        }
+      },
+      {
         "tag": "wound_mod",
         "label": "Штраф за раны",
         "group": "Состояние",
         "value": {
           "kind": "formula",
-          "expr": "0 - floor(@physical / 3) - floor(@stun / 3)"
+          "expr": "0 - floor(min(@physical_total, @physical_max) / 3) - floor(min(@stun, @stun_max) / 3)"
         }
       },
       {
@@ -832,7 +2608,16 @@
         "group": "Состояние",
         "value": {
           "kind": "formula",
-          "expr": "@physical >= @physical_max"
+          "expr": "@physical_total >= @physical_max"
+        }
+      },
+      {
+        "tag": "is_dead",
+        "label": "Перелив сверх Тела",
+        "group": "Состояние",
+        "value": {
+          "kind": "formula",
+          "expr": "@physical_total > @physical_max + @body"
         }
       },
       {
@@ -841,7 +2626,7 @@
         "group": "Состояние",
         "value": {
           "kind": "formula",
-          "expr": "все(@stun < @stun_max, @physical < @physical_max)"
+          "expr": "все(@stun < @stun_max, @physical_total < @physical_max)"
         }
       },
       {
@@ -922,6 +2707,89 @@
           }
         ]
       },
+      "metatypes": {
+        "label": "Метатипы",
+        "key": "word",
+        "columns": [
+          {
+            "key": "en",
+            "label": "В книге",
+            "kind": "text"
+          },
+          {
+            "key": "ranges",
+            "label": "Атрибуты (мин.–макс.)",
+            "kind": "text"
+          },
+          {
+            "key": "dermal",
+            "label": "Кожная броня",
+            "kind": "number"
+          },
+          {
+            "key": "reach",
+            "label": "Досягаемость",
+            "kind": "number"
+          },
+          {
+            "key": "traits",
+            "label": "Расовые черты",
+            "kind": "text"
+          }
+        ],
+        "rows": [
+          {
+            "value": "человек",
+            "cells": {
+              "en": "Human",
+              "ranges": "1–6 всё; Грань 2–7",
+              "dermal": 0,
+              "reach": 0,
+              "traits": ""
+            }
+          },
+          {
+            "value": "эльф",
+            "cells": {
+              "en": "Elf",
+              "ranges": "Ловкость 2–7, Харизма 3–8",
+              "dermal": 0,
+              "reach": 0,
+              "traits": "Зрение при слабом свете"
+            }
+          },
+          {
+            "value": "дворф",
+            "cells": {
+              "en": "Dwarf",
+              "ranges": "Тело 3–8, Реакция 1–5, Сила 3–8, Сила воли 2–7",
+              "dermal": 0,
+              "reach": 0,
+              "traits": "Термографическое зрение; +2 кости против патогенов и токсинов"
+            }
+          },
+          {
+            "value": "орк",
+            "cells": {
+              "en": "Ork",
+              "ranges": "Тело 4–9, Сила 3–8, Харизма 1–5, Логика 1–5",
+              "dermal": 0,
+              "reach": 0,
+              "traits": "Зрение при слабом свете"
+            }
+          },
+          {
+            "value": "тролль",
+            "cells": {
+              "en": "Troll",
+              "ranges": "Тело 5–10, Ловкость 1–5, Сила 5–10, Харизма 1–4, Интуиция 1–5, Логика 1–5",
+              "dermal": 1,
+              "reach": 1,
+              "traits": "Термографическое зрение; досягаемость +1; кожная броня +1"
+            }
+          }
+        ]
+      },
       "damage_kinds": {
         "label": "Вид урона",
         "key": "word",
@@ -959,27 +2827,63 @@
         ],
         "rows": [
           {
-            "value": "пистолеты",
+            "value": "стрельба из лука",
             "cells": {
-              "pool": "@pistols_pool"
+              "pool": "@archery_pool"
             }
           },
           {
-            "value": "автоматы",
+            "value": "автоматическое оружие",
             "cells": {
               "pool": "@automatics_pool"
-            }
-          },
-          {
-            "value": "длинноствольное",
-            "cells": {
-              "pool": "@longarms_pool"
             }
           },
           {
             "value": "клинки",
             "cells": {
               "pool": "@blades_pool"
+            }
+          },
+          {
+            "value": "дубинки",
+            "cells": {
+              "pool": "@clubs_pool"
+            }
+          },
+          {
+            "value": "экзотическое оружие ближнего боя",
+            "cells": {
+              "pool": "@exotic_melee_pool"
+            }
+          },
+          {
+            "value": "экзотическое стрелковое оружие",
+            "cells": {
+              "pool": "@exotic_ranged_pool"
+            }
+          },
+          {
+            "value": "тяжёлое оружие",
+            "cells": {
+              "pool": "@heavy_weapons_pool"
+            }
+          },
+          {
+            "value": "длинноствольное оружие",
+            "cells": {
+              "pool": "@longarms_pool"
+            }
+          },
+          {
+            "value": "пистолеты",
+            "cells": {
+              "pool": "@pistols_pool"
+            }
+          },
+          {
+            "value": "метательное оружие",
+            "cells": {
+              "pool": "@throwing_pool"
             }
           },
           {
@@ -991,7 +2895,17 @@
         ]
       }
     },
-    "roll_edits": {},
+    "roll_edits": {
+      "second_chance": {
+        "label": "Второй шанс: перебросить всё без успеха",
+        "ops": [
+          {
+            "op": "reroll",
+            "n": 4
+          }
+        ]
+      }
+    },
     "initiative": {
       "die": {
         "constant": "init_die"
@@ -1008,7 +2922,7 @@
         "label": "Выстрел",
         "group": "Атака",
         "activation": "manual",
-        "description": "Ловкость + навык оружия против Реакции + Интуиции цели. Успехов атаки засчитывается не больше точности оружия. Чистые успехи прибавляются к урону; цель сопротивляется Телом + Бронёй с учётом пробития. Урон, не превысивший броню, становится оглушающим.",
+        "description": "Ловкость + навык оружия против Реакции + Интуиции цели. Успехов засчитывается не больше точности оружия (Грань снимает предел и добавляет кости). Чистые успехи прибавляются к урону; ничья — касание без урона. Цель сопротивляется «Тело + Броня с пробитием»; урон меньше брони становится оглушающим.",
         "params": [
           {
             "key": "attack_pool",
@@ -1034,6 +2948,47 @@
             "key": "physical_hit",
             "label": "Урон физический (1) или оглушающий (0)",
             "kind": "number"
+          },
+          {
+            "key": "push",
+            "label": "Выжать предел за Грань: 1 — да",
+            "kind": "number",
+            "optional": true,
+            "ask": {
+              "by": "actor",
+              "min": 0,
+              "max": 1
+            }
+          }
+        ],
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "expr": "@edge_left"
+            },
+            "versus": {
+              "expr": "1"
+            },
+            "breakIf": "less",
+            "note": "Грани не осталось",
+            "when": {
+              "expr": "или(@push, 0) >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "edge_left"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "-1"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "или(@push, 0) >= 1"
+            }
           }
         ],
         "steps": [
@@ -1045,7 +3000,7 @@
                 "constant": "pool"
               },
               "count": {
-                "expr": "@attack_pool"
+                "expr": "@attack_pool + (или(@push, 0) >= 1 ? @отправитель.edge : 0)"
               },
               "tags": [
                 "атака"
@@ -1070,13 +3025,13 @@
           {
             "type": "compare",
             "value": {
-              "expr": "min(@атака.natural, @accuracy) - @атака.versusNatural"
+              "expr": "(или(@push, 0) >= 1 ? @атака.natural : min(@атака.natural, @accuracy)) - @атака.versusNatural"
             },
             "versus": {
               "expr": "1"
             },
             "breakIf": "less",
-            "note": "промах: успехов атаки с учётом точности не больше, чем у защиты"
+            "note": "промах: успехов атаки с учётом точности не больше, чем у защиты (ничья — касание без урона)"
           },
           {
             "id": "сопротивление",
@@ -1105,11 +3060,11 @@
             },
             "direction": "add",
             "value": {
-              "expr": "max(0, @dv + min(@атака.natural, @accuracy) - @атака.versusNatural - @сопротивление.natural)"
+              "expr": "max(0, @dv + (или(@push, 0) >= 1 ? @атака.natural : min(@атака.natural, @accuracy)) - @атака.versusNatural - @сопротивление.natural)"
             },
             "targetModifiers": false,
             "when": {
-              "expr": "все(@physical_hit >= 1, @dv + min(@атака.natural, @accuracy) - @атака.versusNatural > @получатель.armor + @ap)"
+              "expr": "все(@physical_hit >= 1, @dv + (или(@push, 0) >= 1 ? @атака.natural : min(@атака.natural, @accuracy)) - @атака.versusNatural >= @получатель.armor + @ap)"
             }
           },
           {
@@ -1119,11 +3074,11 @@
             },
             "direction": "add",
             "value": {
-              "expr": "max(0, @dv + min(@атака.natural, @accuracy) - @атака.versusNatural - @сопротивление.natural)"
+              "expr": "max(0, @dv + (или(@push, 0) >= 1 ? @атака.natural : min(@атака.natural, @accuracy)) - @атака.versusNatural - @сопротивление.natural)"
             },
             "targetModifiers": false,
             "when": {
-              "expr": "не(все(@physical_hit >= 1, @dv + min(@атака.natural, @accuracy) - @атака.versusNatural > @получатель.armor + @ap))"
+              "expr": "не(все(@physical_hit >= 1, @dv + (или(@push, 0) >= 1 ? @атака.natural : min(@атака.natural, @accuracy)) - @атака.versusNatural >= @получатель.armor + @ap))"
             }
           }
         ]
@@ -1132,7 +3087,7 @@
         "label": "Удар",
         "group": "Атака",
         "activation": "manual",
-        "description": "Ловкость + навык ближнего боя против Реакции + Интуиции цели. Урон оружия ближнего боя идёт от Силы. Дальше — как у выстрела.",
+        "description": "Ловкость + навык ближнего боя против Реакции + Интуиции цели. Урон оружия от Силы. Досягаемость в образце не учитывается. Дальше — как у выстрела.",
         "params": [
           {
             "key": "attack_pool",
@@ -1158,6 +3113,47 @@
             "key": "physical_hit",
             "label": "Урон физический (1) или оглушающий (0)",
             "kind": "number"
+          },
+          {
+            "key": "push",
+            "label": "Выжать предел за Грань: 1 — да",
+            "kind": "number",
+            "optional": true,
+            "ask": {
+              "by": "actor",
+              "min": 0,
+              "max": 1
+            }
+          }
+        ],
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "expr": "@edge_left"
+            },
+            "versus": {
+              "expr": "1"
+            },
+            "breakIf": "less",
+            "note": "Грани не осталось",
+            "when": {
+              "expr": "или(@push, 0) >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "edge_left"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "-1"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "или(@push, 0) >= 1"
+            }
           }
         ],
         "steps": [
@@ -1169,7 +3165,7 @@
                 "constant": "pool"
               },
               "count": {
-                "expr": "@attack_pool"
+                "expr": "@attack_pool + (или(@push, 0) >= 1 ? @отправитель.edge : 0)"
               },
               "tags": [
                 "атака"
@@ -1194,13 +3190,13 @@
           {
             "type": "compare",
             "value": {
-              "expr": "min(@атака.natural, @accuracy) - @атака.versusNatural"
+              "expr": "(или(@push, 0) >= 1 ? @атака.natural : min(@атака.natural, @accuracy)) - @атака.versusNatural"
             },
             "versus": {
               "expr": "1"
             },
             "breakIf": "less",
-            "note": "промах: успехов атаки с учётом точности не больше, чем у защиты"
+            "note": "промах: успехов атаки с учётом точности не больше, чем у защиты (ничья — касание без урона)"
           },
           {
             "id": "сопротивление",
@@ -1229,11 +3225,11 @@
             },
             "direction": "add",
             "value": {
-              "expr": "max(0, @dv + min(@атака.natural, @accuracy) - @атака.versusNatural - @сопротивление.natural)"
+              "expr": "max(0, @dv + (или(@push, 0) >= 1 ? @атака.natural : min(@атака.natural, @accuracy)) - @атака.versusNatural - @сопротивление.natural)"
             },
             "targetModifiers": false,
             "when": {
-              "expr": "все(@physical_hit >= 1, @dv + min(@атака.natural, @accuracy) - @атака.versusNatural > @получатель.armor + @ap)"
+              "expr": "все(@physical_hit >= 1, @dv + (или(@push, 0) >= 1 ? @атака.natural : min(@атака.natural, @accuracy)) - @атака.versusNatural >= @получатель.armor + @ap)"
             }
           },
           {
@@ -1243,12 +3239,114 @@
             },
             "direction": "add",
             "value": {
-              "expr": "max(0, @dv + min(@атака.natural, @accuracy) - @атака.versusNatural - @сопротивление.natural)"
+              "expr": "max(0, @dv + (или(@push, 0) >= 1 ? @атака.natural : min(@атака.natural, @accuracy)) - @атака.versusNatural - @сопротивление.natural)"
             },
             "targetModifiers": false,
             "when": {
-              "expr": "не(все(@physical_hit >= 1, @dv + min(@атака.natural, @accuracy) - @атака.versusNatural > @получатель.armor + @ap))"
+              "expr": "не(все(@physical_hit >= 1, @dv + (или(@push, 0) >= 1 ? @атака.natural : min(@атака.natural, @accuracy)) - @атака.versusNatural >= @получатель.armor + @ap))"
             }
+          }
+        ]
+      },
+      "second_chance": {
+        "label": "Грань: второй шанс",
+        "group": "Грань",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Увидел свой бросок — за очко Грани перебрасываешь все кости без успеха. Сбой не отменяет.",
+        "params": [],
+        "on": [
+          {
+            "on": "*",
+            "role": "sender",
+            "phase": "before",
+            "ask": true,
+            "claims": [
+              "second_chance"
+            ],
+            "self": [
+              {
+                "type": "compare",
+                "value": {
+                  "expr": "@edge_left"
+                },
+                "versus": {
+                  "expr": "1"
+                },
+                "breakIf": "less",
+                "note": "Грани не осталось"
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "edge_left"
+                },
+                "direction": "add",
+                "value": {
+                  "expr": "-1"
+                },
+                "targetModifiers": false
+              }
+            ],
+            "steps": []
+          }
+        ]
+      },
+      "glitch": {
+        "label": "Сбой",
+        "group": "Правила комнаты",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "params": [],
+        "description": "Больше половины костей атаки легли единицами — сбой: ведущий добавляет осложнение.",
+        "on": [
+          {
+            "on": "ranged_attack",
+            "role": "sender",
+            "if": {
+              "expr": "все(@атака.atMin * 2 > @атака.rolled, @атака.natural >= 1)"
+            },
+            "steps": []
+          },
+          {
+            "on": "melee_attack",
+            "role": "sender",
+            "if": {
+              "expr": "все(@атака.atMin * 2 > @атака.rolled, @атака.natural >= 1)"
+            },
+            "steps": []
+          }
+        ]
+      },
+      "critical_glitch": {
+        "label": "Критический сбой",
+        "group": "Правила комнаты",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "params": [],
+        "description": "Сбой без единого успеха — критический сбой: беда.",
+        "on": [
+          {
+            "on": "ranged_attack",
+            "role": "sender",
+            "if": {
+              "expr": "все(@атака.atMin * 2 > @атака.rolled, @атака.natural == 0)"
+            },
+            "steps": []
+          },
+          {
+            "on": "melee_attack",
+            "role": "sender",
+            "if": {
+              "expr": "все(@атака.atMin * 2 > @атака.rolled, @атака.natural == 0)"
+            },
+            "steps": []
           }
         ]
       },
@@ -1259,7 +3357,7 @@
         "duration": {
           "kind": "permanent"
         },
-        "description": "Оглушающий трек полон: персонаж без сознания, пока не восстановит хотя бы одну клетку.",
+        "description": "Оглушающий трек полон: персонаж без сознания.",
         "modifiers": []
       },
       "bleeding": {
@@ -1269,7 +3367,17 @@
         "duration": {
           "kind": "permanent"
         },
-        "description": "Физический трек полон: персонаж без сознания и умирает, если урон перейдёт сверх Тела. Следит ведущий.",
+        "description": "Физический трек полон: без сознания; каждые (Тело) минут без помощи — ещё клетка урона.",
+        "modifiers": []
+      },
+      "dead": {
+        "label": "Мёртв",
+        "group": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Физический урон перелился сверх трека больше, чем на Тело.",
         "modifiers": []
       },
       "knock_out": {
@@ -1320,6 +3428,37 @@
           }
         ]
       },
+      "die": {
+        "label": "Смерть",
+        "group": "Правила комнаты",
+        "description": "Перелив физического урона больше Тела — «Мёртв».",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "params": [],
+        "on": [
+          {
+            "on": "field:is_dead",
+            "steps": [
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "bleeding"
+                }
+              },
+              {
+                "type": "status",
+                "mode": "apply",
+                "effect": {
+                  "const": "dead"
+                }
+              }
+            ]
+          }
+        ]
+      },
       "come_to": {
         "label": "Приходит в себя",
         "group": "Правила комнаты",
@@ -1350,6 +3489,25 @@
             ]
           }
         ]
+      },
+      "rest_edge": {
+        "label": "Восстановить Грань",
+        "group": "Грань",
+        "activation": "manual",
+        "description": "После 8 часов сна — очко Грани обратно, не больше рейтинга.",
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "edge_left"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "@edge_left < @edge ? 1 : 0"
+            },
+            "targetModifiers": false
+          }
+        ]
       }
     },
     "records": {
@@ -1365,11 +3523,11 @@
         "label": "Противник",
         "icon": "👤",
         "group": "Листы",
-        "hint": "Лист противника: атрибуты, навыки, защита, состояние.",
+        "hint": "Лист противника: атрибуты, навыки боя, защита, состояние.",
         "blocks": [
           "Атрибуты",
-          "Навыки",
-          "Пулы",
+          "Навыки: бой",
+          "Пулы: бой",
           "Защита",
           "Состояние",
           "Инициатива",
@@ -1440,7 +3598,7 @@
         "label": "Оружие ближнего боя",
         "icon": "🗡",
         "group": "Снаряжение",
-        "hint": "Урон — Сила плюс прибавка оружия, если оружие бьёт силой.",
+        "hint": "Урон — Сила плюс прибавка, если оружие бьёт силой.",
         "props": [
           {
             "key": "accuracy",
@@ -1504,20 +3662,38 @@
         "label": "Броня",
         "icon": "🧥",
         "group": "Снаряжение",
-        "hint": "Значение брони прибавляется к защите листа.",
+        "hint": "Из надетого работает самое сильное; аксессуары с «+» прибавляются, но не больше Силы.",
         "props": [
           {
             "key": "rating",
             "label": "Броня",
             "kind": "number"
+          },
+          {
+            "key": "accessory",
+            "label": "Аксессуар «+» (1 — да)",
+            "kind": "number"
           }
         ]
+      },
+      "edge_action": {
+        "kind": "action",
+        "label": "Грань",
+        "icon": "✦",
+        "group": "Приёмы",
+        "hint": "Траты и восстановление Грани.",
+        "props": [],
+        "bindings": []
       }
     },
     "grants": [
       "knock_out",
       "bleed_out",
-      "come_to"
+      "die",
+      "come_to",
+      "second_chance",
+      "glitch",
+      "critical_glitch"
     ],
     "mannequins": [
       {
@@ -1561,14 +3737,14 @@
   "compendium": {
     "records": [
       {
-        "id": "ares_predator_v",
+        "id": "ares_light_fire_70",
         "rk": "firearm",
-        "label": "Ares Predator V",
-        "description": "Тяжёлый пистолет: точность 5, урон 8 физ., пробитие −1.",
+        "label": "Ares Light Fire 70",
+        "description": "Лёгкий пистолет. Точность 7, урон 6P, пробитие —. SA, 16(c).",
         "props": {
-          "accuracy": 5,
-          "dv": 8,
-          "ap": -1,
+          "accuracy": 7,
+          "dv": 6,
+          "ap": 0,
           "damage_kind": "физический",
           "skill": "пистолеты"
         }
@@ -1577,7 +3753,7 @@
         "id": "colt_america_l36",
         "rk": "firearm",
         "label": "Colt America L36",
-        "description": "Лёгкий пистолет: точность 7, урон 7 физ.",
+        "description": "Лёгкий пистолет. Точность 7, урон 7P, пробитие —. SA, 11(c).",
         "props": {
           "accuracy": 7,
           "dv": 7,
@@ -1587,36 +3763,257 @@
         }
       },
       {
+        "id": "fichetti_security_600",
+        "rk": "firearm",
+        "label": "Fichetti Security 600",
+        "description": "Лёгкий пистолет. Точность 6, урон 7P, пробитие —. SA, 30(c), складной приклад, ЛЦУ.",
+        "props": {
+          "accuracy": 6,
+          "dv": 7,
+          "ap": 0,
+          "damage_kind": "физический",
+          "skill": "пистолеты"
+        }
+      },
+      {
+        "id": "ares_predator_v",
+        "rk": "firearm",
+        "label": "Ares Predator V",
+        "description": "Тяжёлый пистолет. Точность 5, урон 8P, пробитие -1. SA, 15(c), смартган.",
+        "props": {
+          "accuracy": 5,
+          "dv": 8,
+          "ap": -1,
+          "damage_kind": "физический",
+          "skill": "пистолеты"
+        }
+      },
+      {
+        "id": "browning_ultra_power",
+        "rk": "firearm",
+        "label": "Browning Ultra-Power",
+        "description": "Тяжёлый пистолет. Точность 5, урон 8P, пробитие -1. SA, 10(c), ЛЦУ.",
+        "props": {
+          "accuracy": 5,
+          "dv": 8,
+          "ap": -1,
+          "damage_kind": "физический",
+          "skill": "пистолеты"
+        }
+      },
+      {
+        "id": "remington_roomsweeper",
+        "rk": "firearm",
+        "label": "Remington Roomsweeper",
+        "description": "Тяжёлый пистолет. Точность 4, урон 7P, пробитие -1. SA, 8(m).",
+        "props": {
+          "accuracy": 4,
+          "dv": 7,
+          "ap": -1,
+          "damage_kind": "физический",
+          "skill": "пистолеты"
+        }
+      },
+      {
+        "id": "ruger_super_warhawk",
+        "rk": "firearm",
+        "label": "Ruger Super Warhawk",
+        "description": "Тяжёлый пистолет. Точность 5, урон 9P, пробитие -2. SS, 6(cy).",
+        "props": {
+          "accuracy": 5,
+          "dv": 9,
+          "ap": -2,
+          "damage_kind": "физический",
+          "skill": "пистолеты"
+        }
+      },
+      {
+        "id": "ceska_black_scorpion",
+        "rk": "firearm",
+        "label": "Ceska Black Scorpion",
+        "description": "Пистолет-пулемёт. Точность 5, урон 6P, пробитие —. SA/BF, 35(c).",
+        "props": {
+          "accuracy": 5,
+          "dv": 6,
+          "ap": 0,
+          "damage_kind": "физический",
+          "skill": "автоматическое оружие"
+        }
+      },
+      {
+        "id": "steyr_tmp",
+        "rk": "firearm",
+        "label": "Steyr TMP",
+        "description": "Пистолет-пулемёт. Точность 4, урон 7P, пробитие —. SA/BF/FA, 30(c).",
+        "props": {
+          "accuracy": 4,
+          "dv": 7,
+          "ap": 0,
+          "damage_kind": "физический",
+          "skill": "автоматическое оружие"
+        }
+      },
+      {
+        "id": "hk_227",
+        "rk": "firearm",
+        "label": "HK-227",
+        "description": "Пистолет-пулемёт. Точность 5, урон 7P, пробитие —. SA/BF/FA, 28(c), смартган, глушитель.",
+        "props": {
+          "accuracy": 5,
+          "dv": 7,
+          "ap": 0,
+          "damage_kind": "физический",
+          "skill": "автоматическое оружие"
+        }
+      },
+      {
+        "id": "ingram_smartgun_x",
+        "rk": "firearm",
+        "label": "Ingram Smartgun X",
+        "description": "Пистолет-пулемёт. Точность 4, урон 8P, пробитие —. BF/FA, 32(c), смартган, газоотвод 2.",
+        "props": {
+          "accuracy": 4,
+          "dv": 8,
+          "ap": 0,
+          "damage_kind": "физический",
+          "skill": "автоматическое оружие"
+        }
+      },
+      {
         "id": "ak_97",
         "rk": "firearm",
         "label": "AK-97",
-        "description": "Штурмовая винтовка: точность 5, урон 10 физ., пробитие −2.",
+        "description": "Штурмовая винтовка. Точность 5, урон 10P, пробитие -2. SA/BF/FA, 38(c).",
         "props": {
           "accuracy": 5,
           "dv": 10,
           "ap": -2,
           "damage_kind": "физический",
-          "skill": "автоматы"
+          "skill": "автоматическое оружие"
+        }
+      },
+      {
+        "id": "ares_alpha",
+        "rk": "firearm",
+        "label": "Ares Alpha",
+        "description": "Штурмовая винтовка. Точность 5, урон 11P, пробитие -2. SA/BF/FA, отдача 2, 42(c), смартган.",
+        "props": {
+          "accuracy": 5,
+          "dv": 11,
+          "ap": -2,
+          "damage_kind": "физический",
+          "skill": "автоматическое оружие"
+        }
+      },
+      {
+        "id": "fn_har",
+        "rk": "firearm",
+        "label": "FN HAR",
+        "description": "Штурмовая винтовка. Точность 5, урон 10P, пробитие -2. SA/BF/FA, 35(c), ЛЦУ, газоотвод 2.",
+        "props": {
+          "accuracy": 5,
+          "dv": 10,
+          "ap": -2,
+          "damage_kind": "физический",
+          "skill": "автоматическое оружие"
         }
       },
       {
         "id": "defiance_t250",
         "rk": "firearm",
         "label": "Defiance T-250",
-        "description": "Дробовик: точность 4, урон 10 физ., пробитие −1.",
+        "description": "Дробовик. Точность 4, урон 10P, пробитие -1. SS/SA, 5(m).",
         "props": {
           "accuracy": 4,
           "dv": 10,
           "ap": -1,
           "damage_kind": "физический",
-          "skill": "длинноствольное"
+          "skill": "длинноствольное оружие"
+        }
+      },
+      {
+        "id": "enfield_as7",
+        "rk": "firearm",
+        "label": "Enfield AS-7",
+        "description": "Дробовик. Точность 4, урон 13P, пробитие -1. SA/BF, 10(c), ЛЦУ.",
+        "props": {
+          "accuracy": 4,
+          "dv": 13,
+          "ap": -1,
+          "damage_kind": "физический",
+          "skill": "длинноствольное оружие"
+        }
+      },
+      {
+        "id": "ares_desert_strike",
+        "rk": "firearm",
+        "label": "Ares Desert Strike",
+        "description": "Снайперская винтовка. Точность 7, урон 13P, пробитие -4. SA, 14(c).",
+        "props": {
+          "accuracy": 7,
+          "dv": 13,
+          "ap": -4,
+          "damage_kind": "физический",
+          "skill": "длинноствольное оружие"
+        }
+      },
+      {
+        "id": "remington_950",
+        "rk": "firearm",
+        "label": "Remington 950",
+        "description": "Снайперская винтовка. Точность 7, урон 12P, пробитие -4. SS, 5(m).",
+        "props": {
+          "accuracy": 7,
+          "dv": 12,
+          "ap": -4,
+          "damage_kind": "физический",
+          "skill": "длинноствольное оружие"
+        }
+      },
+      {
+        "id": "ruger_101",
+        "rk": "firearm",
+        "label": "Ruger 101",
+        "description": "Снайперская винтовка. Точность 6, урон 11P, пробитие -3. SA, 8(m).",
+        "props": {
+          "accuracy": 6,
+          "dv": 11,
+          "ap": -3,
+          "damage_kind": "физический",
+          "skill": "длинноствольное оружие"
+        }
+      },
+      {
+        "id": "yamaha_pulsar",
+        "rk": "firearm",
+        "label": "Yamaha Pulsar",
+        "description": "Тазер. Точность 5, урон 7S, пробитие -5. SA, 4(m), электрический.",
+        "props": {
+          "accuracy": 5,
+          "dv": 7,
+          "ap": -5,
+          "damage_kind": "оглушающий",
+          "skill": "пистолеты"
+        }
+      },
+      {
+        "id": "defiance_ex_shocker",
+        "rk": "firearm",
+        "label": "Defiance EX Shocker",
+        "description": "Тазер. Точность 4, урон 9S, пробитие -5. SS, 4(m), электрический.",
+        "props": {
+          "accuracy": 4,
+          "dv": 9,
+          "ap": -5,
+          "damage_kind": "оглушающий",
+          "skill": "пистолеты"
         }
       },
       {
         "id": "katana",
         "rk": "melee",
         "label": "Катана",
-        "description": "Точность 7, урон Сила + 3 физ., пробитие −3.",
+        "description": "Точность 7, урон (Сила + 3)P, пробитие -3. Досягаемость 1.",
         "props": {
           "accuracy": 7,
           "strength_based": 1,
@@ -1627,10 +4024,38 @@
         }
       },
       {
+        "id": "sword",
+        "rk": "melee",
+        "label": "Меч",
+        "description": "Точность 6, урон (Сила + 3)P, пробитие -2. Досягаемость 1.",
+        "props": {
+          "accuracy": 6,
+          "strength_based": 1,
+          "dv_bonus": 3,
+          "ap": -2,
+          "damage_kind": "физический",
+          "skill": "клинки"
+        }
+      },
+      {
+        "id": "combat_axe",
+        "rk": "melee",
+        "label": "Боевой топор",
+        "description": "Точность 4, урон (Сила + 5)P, пробитие -4. Досягаемость 2.",
+        "props": {
+          "accuracy": 4,
+          "strength_based": 1,
+          "dv_bonus": 5,
+          "ap": -4,
+          "damage_kind": "физический",
+          "skill": "клинки"
+        }
+      },
+      {
         "id": "combat_knife",
         "rk": "melee",
         "label": "Боевой нож",
-        "description": "Точность 6, урон Сила + 2 физ., пробитие −3.",
+        "description": "Точность 6, урон (Сила + 2)P, пробитие -3.",
         "props": {
           "accuracy": 6,
           "strength_based": 1,
@@ -1641,24 +4066,94 @@
         }
       },
       {
+        "id": "knife",
+        "rk": "melee",
+        "label": "Нож",
+        "description": "Точность 5, урон (Сила + 1)P, пробитие -1.",
+        "props": {
+          "accuracy": 5,
+          "strength_based": 1,
+          "dv_bonus": 1,
+          "ap": -1,
+          "damage_kind": "физический",
+          "skill": "клинки"
+        }
+      },
+      {
+        "id": "survival_knife",
+        "rk": "melee",
+        "label": "Нож выживания",
+        "description": "Точность 5, урон (Сила + 2)P, пробитие -1.",
+        "props": {
+          "accuracy": 5,
+          "strength_based": 1,
+          "dv_bonus": 2,
+          "ap": -1,
+          "damage_kind": "физический",
+          "skill": "клинки"
+        }
+      },
+      {
+        "id": "club",
+        "rk": "melee",
+        "label": "Дубинка",
+        "description": "Точность 4, урон (Сила + 3)P, пробитие —. Досягаемость 1. Вид урона по данным Chummer — физический; сверьте с книгой.",
+        "props": {
+          "accuracy": 4,
+          "strength_based": 1,
+          "dv_bonus": 3,
+          "ap": 0,
+          "damage_kind": "физический",
+          "skill": "дубинки"
+        }
+      },
+      {
+        "id": "staff",
+        "rk": "melee",
+        "label": "Посох",
+        "description": "Точность 6, урон (Сила + 3)P, пробитие —. Досягаемость 2.",
+        "props": {
+          "accuracy": 6,
+          "strength_based": 1,
+          "dv_bonus": 3,
+          "ap": 0,
+          "damage_kind": "физический",
+          "skill": "дубинки"
+        }
+      },
+      {
+        "id": "telescoping_staff",
+        "rk": "melee",
+        "label": "Телескопический посох",
+        "description": "Точность 4, урон (Сила + 2)P, пробитие —. Досягаемость 2.",
+        "props": {
+          "accuracy": 4,
+          "strength_based": 1,
+          "dv_bonus": 2,
+          "ap": 0,
+          "damage_kind": "физический",
+          "skill": "дубинки"
+        }
+      },
+      {
         "id": "stun_baton",
         "rk": "melee",
         "label": "Шоковая дубинка",
-        "description": "Точность 4, урон 9 огл., пробитие −5; урон не от Силы.",
+        "description": "Точность 4, урон 9S, пробитие -5. Досягаемость 1, электрическая, урон не от Силы.",
         "props": {
           "accuracy": 4,
           "strength_based": 0,
           "dv_bonus": 9,
           "ap": -5,
           "damage_kind": "оглушающий",
-          "skill": "клинки"
+          "skill": "дубинки"
         }
       },
       {
         "id": "fists",
         "rk": "melee",
-        "label": "Кулаки",
-        "description": "Урон Сила огл.; точность по книге — физический предел, здесь вписана числом.",
+        "label": "Безоружная атака",
+        "description": "Точность 5, урон (Сила)S, пробитие —. Урон (Сила)S; точность по книге — физический предел, здесь вписана числом.",
         "props": {
           "accuracy": 5,
           "strength_based": 1,
@@ -1669,19 +4164,74 @@
         }
       },
       {
-        "id": "armor_jacket",
-        "rk": "armor",
-        "label": "Бронекуртка",
-        "description": "Броня 12.",
+        "id": "shock_gloves",
+        "rk": "melee",
+        "label": "Шоковые перчатки",
+        "description": "Точность 5, урон 8S, пробитие -5. Электрические; точность по книге — физический предел.",
         "props": {
-          "rating": 12
+          "accuracy": 5,
+          "strength_based": 0,
+          "dv_bonus": 8,
+          "ap": -5,
+          "damage_kind": "оглушающий",
+          "skill": "рукопашный бой"
+        }
+      },
+      {
+        "id": "clothing",
+        "rk": "armor",
+        "label": "Одежда",
+        "description": "Броня 0.",
+        "props": {
+          "rating": 0,
+          "accessory": 0
         },
         "modifiers": [
           {
             "kind": "value",
-            "target": "armor",
+            "target": "armor_worn",
             "op": "add",
-            "value": 12,
+            "value": 0,
+            "stacking": "max",
+            "condition": null
+          }
+        ]
+      },
+      {
+        "id": "armor_clothing",
+        "rk": "armor",
+        "label": "Бронированная одежда",
+        "description": "Броня 6.",
+        "props": {
+          "rating": 6,
+          "accessory": 0
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "armor_worn",
+            "op": "add",
+            "value": 6,
+            "stacking": "max",
+            "condition": null
+          }
+        ]
+      },
+      {
+        "id": "actioneer",
+        "rk": "armor",
+        "label": "Деловой костюм Actioneer",
+        "description": "Броня 8.",
+        "props": {
+          "rating": 8,
+          "accessory": 0
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "armor_worn",
+            "op": "add",
+            "value": 8,
             "stacking": "max",
             "condition": null
           }
@@ -1693,12 +4243,13 @@
         "label": "Бронежилет",
         "description": "Броня 9.",
         "props": {
-          "rating": 9
+          "rating": 9,
+          "accessory": 0
         },
         "modifiers": [
           {
             "kind": "value",
-            "target": "armor",
+            "target": "armor_worn",
             "op": "add",
             "value": 9,
             "stacking": "max",
@@ -1712,16 +4263,149 @@
         "label": "Бронированный плащ",
         "description": "Броня 9.",
         "props": {
-          "rating": 9
+          "rating": 9,
+          "accessory": 0
         },
         "modifiers": [
           {
             "kind": "value",
-            "target": "armor",
+            "target": "armor_worn",
             "op": "add",
             "value": 9,
             "stacking": "max",
             "condition": null
+          }
+        ]
+      },
+      {
+        "id": "urban_explorer",
+        "rk": "armor",
+        "label": "Комбинезон Urban Explorer",
+        "description": "Броня 9.",
+        "props": {
+          "rating": 9,
+          "accessory": 0
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "armor_worn",
+            "op": "add",
+            "value": 9,
+            "stacking": "max",
+            "condition": null
+          }
+        ]
+      },
+      {
+        "id": "chameleon_suit",
+        "rk": "armor",
+        "label": "Костюм-хамелеон",
+        "description": "Броня 9.",
+        "props": {
+          "rating": 9,
+          "accessory": 0
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "armor_worn",
+            "op": "add",
+            "value": 9,
+            "stacking": "max",
+            "condition": null
+          }
+        ]
+      },
+      {
+        "id": "armor_jacket",
+        "rk": "armor",
+        "label": "Бронекуртка",
+        "description": "Броня 12.",
+        "props": {
+          "rating": 12,
+          "accessory": 0
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "armor_worn",
+            "op": "add",
+            "value": 12,
+            "stacking": "max",
+            "condition": null
+          }
+        ]
+      },
+      {
+        "id": "full_body_armor",
+        "rk": "armor",
+        "label": "Полный бронекостюм",
+        "description": "Броня 15.",
+        "props": {
+          "rating": 15,
+          "accessory": 0
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "armor_worn",
+            "op": "add",
+            "value": 15,
+            "stacking": "max",
+            "condition": null
+          }
+        ]
+      },
+      {
+        "id": "helmet",
+        "rk": "armor",
+        "label": "Шлем",
+        "description": "Броня +2.",
+        "props": {
+          "rating": 2,
+          "accessory": 1
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "armor_extra",
+            "op": "add",
+            "value": 2,
+            "stacking": "sum",
+            "condition": null
+          }
+        ]
+      },
+      {
+        "id": "ballistic_shield",
+        "rk": "armor",
+        "label": "Баллистический щит",
+        "description": "Броня +6.",
+        "props": {
+          "rating": 6,
+          "accessory": 1
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "armor_extra",
+            "op": "add",
+            "value": 6,
+            "stacking": "sum",
+            "condition": null
+          }
+        ]
+      },
+      {
+        "id": "edge_rest",
+        "rk": "edge_action",
+        "label": "Восстановить Грань",
+        "bindings": [
+          {
+            "label": "Восстановить Грань",
+            "effect": "rest_edge",
+            "args": {}
           }
         ]
       }
@@ -1734,6 +4418,7 @@
       "of": "runner",
       "name": "Бритва",
       "values": {
+        "metatype": "орк",
         "body": 5,
         "agility": 6,
         "reaction": 5,
@@ -1749,7 +4434,8 @@
         "blades": 5,
         "unarmed": 3,
         "perception": 3,
-        "sneaking": 3
+        "sneaking": 3,
+        "gymnastics": 2
       },
       "has": [
         {
@@ -1760,6 +4446,9 @@
         },
         {
           "of": "armor_jacket"
+        },
+        {
+          "of": "edge_rest"
         }
       ],
       "effects": []
@@ -1770,6 +4459,7 @@
       "of": "runner",
       "name": "Шёлк",
       "values": {
+        "metatype": "эльф",
         "body": 3,
         "agility": 3,
         "reaction": 3,
@@ -1792,6 +4482,50 @@
         },
         {
           "of": "lined_coat"
+        },
+        {
+          "of": "edge_rest"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "hammer",
+      "systemId": "shadowrun5",
+      "of": "runner",
+      "name": "Молот",
+      "values": {
+        "metatype": "тролль",
+        "body": 9,
+        "agility": 4,
+        "reaction": 4,
+        "strength": 8,
+        "willpower": 4,
+        "logic": 2,
+        "intuition": 3,
+        "charisma": 2,
+        "edge": 2,
+        "edge_left": 2,
+        "clubs": 5,
+        "unarmed": 5,
+        "automatics": 3,
+        "intimidation": 4
+      },
+      "has": [
+        {
+          "of": "staff"
+        },
+        {
+          "of": "ak_97"
+        },
+        {
+          "of": "armor_vest"
+        },
+        {
+          "of": "helmet"
+        },
+        {
+          "of": "edge_rest"
         }
       ],
       "effects": []
@@ -1800,7 +4534,7 @@
       "id": "ganger",
       "systemId": "shadowrun5",
       "of": "opponent",
-      "name": "Бандит",
+      "name": "Бандит (пример)",
       "values": {
         "body": 4,
         "agility": 4,
@@ -1831,7 +4565,7 @@
       "id": "guard",
       "systemId": "shadowrun5",
       "of": "opponent",
-      "name": "Охранник корпорации",
+      "name": "Охранник корпорации (пример)",
       "values": {
         "body": 4,
         "agility": 4,
