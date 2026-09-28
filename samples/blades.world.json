@@ -454,7 +454,7 @@
       },
       "zero_rating_rule": {
         "label": "Бросок без рейтинга",
-        "group": "Правила комнаты",
+        "group": "Общие правила",
         "activation": "passive",
         "duration": {
           "kind": "permanent"

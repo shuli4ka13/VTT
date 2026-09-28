@@ -25,8 +25,7 @@ export function sheets() {
       gp: 120, sp: 40,
     }, ['chain_mail', 'shield_item', 'longsword', 'handaxe'],
     ['trait_extra_attack', 'trait_improved_crit', 'trait_style_defense', 'feature_second_wind',
-      'feature_action_surge', 'feature_hit_die', 'trait_inspiration',
-      'act_dodge', 'act_dash', 'act_disengage', 'act_help']),
+      'feature_action_surge', 'feature_hit_die', 'trait_inspiration']),
 
     sheet('mirra', 'Мирра', 'pc', {
       race: 'тифлинг', class_name: 'чародей', subclass: 'Драконья кровь',
@@ -43,8 +42,7 @@ export function sheets() {
     }, ['leather', 'dagger', 'arcane_focus'],
     ['fire_bolt', 'light', 'prestidigitation', 'magic_missile', 'burning_hands',
       'fireball', 'haste', 'hold_person', 'misty_step', 'mage_armor',
-      'trait_shield_spell', 'trait_rebuke', 'trait_darkvision', 'trait_infernal',
-      'act_dodge', 'act_dash', 'act_disengage']),
+      'trait_shield_spell', 'trait_rebuke', 'trait_darkvision', 'trait_infernal']),
 
     sheet('doran', 'Доран', 'pc', {
       race: 'дварф', class_name: 'жрец', subclass: 'Домен жизни',
@@ -60,7 +58,7 @@ export function sheets() {
     }, ['scale_mail', 'shield_item', 'mace', 'holy_symbol'],
     ['sacred_flame', 'guidance_cantrip', 'cure_wounds', 'healing_word', 'bless_spell',
       'lesser_restoration', 'aid', 'feature_turn_undead', 'feature_hit_die',
-      'trait_darkvision', 'trait_dwarf_resilience', 'act_dodge', 'act_help']),
+      'trait_darkvision', 'trait_dwarf_resilience']),
 
     sheet('sil', 'Силь', 'pc', {
       race: 'полурослик', class_name: 'плут', subclass: 'Вор',
@@ -74,8 +72,7 @@ export function sheets() {
       luck_max: 3, luck_left: 3,
       gp: 150,
     }, ['studded_leather', 'rapier', 'shortbow', 'dagger', 'thieves_tools'],
-    ['feature_sneak', 'trait_uncanny', 'trait_lucky_halfling', 'feat_lucky', 'feature_hit_die',
-      'act_dodge', 'act_dash', 'act_disengage', 'act_hide']),
+    ['feature_sneak', 'trait_uncanny', 'trait_lucky_halfling', 'feat_lucky', 'feature_hit_die']),
 
     sheet('goblin', 'Гоблин-налётчик', 'npc', {
       race: 'гоблин', alignment: 'Нейтрально-злой',
@@ -83,7 +80,7 @@ export function sheets() {
       level: 1, darkvision: 60,
       hp_max: 7, hp_current: 7, hit_dice_left: 1,
       ac_base: 15,
-    }, [], ['goblin_scimitar', 'act_hide', 'act_disengage']),
+    }, [], ['goblin_scimitar']),
 
     sheet('orc', 'Орк-воин', 'npc', {
       race: 'орк', alignment: 'Хаотично-злой',
@@ -91,7 +88,7 @@ export function sheets() {
       level: 2, darkvision: 60,
       hp_max: 15, hp_current: 15, hit_dice_left: 2,
       ac_base: 13,
-    }, [], ['orc_greataxe', 'act_dash']),
+    }, [], ['orc_greataxe']),
 
     sheet('ogre', 'Огр', 'npc', {
       race: 'огр', alignment: 'Хаотично-злой',

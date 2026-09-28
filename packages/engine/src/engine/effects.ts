@@ -117,7 +117,7 @@ export function wornEffects(
   for (const id of grantedTo(system, sheet, compendium)) {
     if (out.some(worn => worn.id === id)) continue;
     const effect = findEffect(system, id);
-    if (!effect) continue;
+    if (!effect || isPipeline(effect)) continue;
     out.push({ id, effect, entry: { effectId: id } });
   }
   return out;

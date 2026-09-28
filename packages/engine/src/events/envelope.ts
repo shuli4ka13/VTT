@@ -7,13 +7,13 @@ import { burnsUse, spendUse } from './durations.ts';
 export { spendUse } from './durations.ts';
 import { findRecord, heldBy, isItem, kindOfRecord, entryOf, propsOf } from '../model/owned.ts';
 export { propsOf } from '../model/owned.ts';
-import { requireEffect, findEffect, isPipeline } from '../engine/effects.ts';
+import { requireEffect, findEffect, isPipeline, grantedTo } from '../engine/effects.ts';
 import { listening, subscriberByKey, hears, runsAtOther, withSteps } from './bus.ts';
 import type { Role, Phase } from './bus.ts';
 import { EngineError } from '../engine/errors.ts';
 import { incomingRollModifiers } from '../engine/modifiers.ts';
 import { holderOf } from './bonds.ts';
-import { withShared, changedShared } from './desk.ts';
+import { withShared, changedShared, isDesk } from './desk.ts';
 import { refusalWords } from './refusal.ts';
 import type { Clock } from '../engine/clock.ts';
 import type {
@@ -85,15 +85,41 @@ export function bindingsOf(record: CompendiumRecord, system: System): Binding[] 
   return kindOfRecord(system, record)?.bindings ?? [];
 }
 
+export const GRANTED_ACTION = '+';
+
+function grantedAction(id: string, system: System): Action | null {
+  const effect = findEffect(system, id);
+  if (!effect || !isPipeline(effect)) return null;
+  const label = effect.label || id;
+  return {
+    id: `${GRANTED_ACTION}${id}`,
+    label,
+    record: { id: `${GRANTED_ACTION}${id}`, label, ...(effect.description ? { description: effect.description } : {}) },
+    binding: { effect: id },
+    effect: id,
+  };
+}
+
 export function availableActions(
   sheet: Sheet, { system, compendium }: { system: System; compendium: Compendium },
 ): Action[] {
-  return heldBy(sheet, compendium).flatMap(({ record }) => actionsOfRecord(record, system, isItem(system, record)));
+  const own = heldBy(sheet, compendium).flatMap(({ record }) => actionsOfRecord(record, system, isItem(system, record)));
+  if (isDesk(sheet)) return own;
+  const granted = grantedTo(system, sheet, compendium)
+    .map(id => grantedAction(id, system))
+    .filter((action): action is Action => action !== null && !own.some(o => o.effect === action.effect));
+  return [...own, ...granted];
 }
 
 export function actionOf(
   actionId: string, { system, compendium }: { system: System; compendium: Compendium },
 ): Action {
+  if (String(actionId).startsWith(GRANTED_ACTION)) {
+    const id = String(actionId).slice(GRANTED_ACTION.length);
+    const action = grantedAction(id, system);
+    if (!action) throw new EngineError(`эффекта-кнопки «${id}» в системе нет`);
+    return action;
+  }
   const at = String(actionId).lastIndexOf(':');
   const recordId = at > 0 ? String(actionId).slice(0, at) : String(actionId);
   const index = at > 0 ? Number(String(actionId).slice(at + 1)) : 0;

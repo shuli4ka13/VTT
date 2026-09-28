@@ -271,12 +271,7 @@ function features() {
 function combatActions() {
   const act = (id, label, description, effect) => ({ id, rk: 'action_basic', label, description, props: {}, effect });
   return [
-    act('act_dodge', 'Уклонение', 'По тебе бьют с помехой до начала твоего хода.', 'dodge'),
-    act('act_dash', 'Рывок', 'Скорость на этот ход удваивается.', 'dash'),
-    act('act_disengage', 'Отход', 'Передвижение не провоцирует атак.', 'disengage'),
-    act('act_hide', 'Засада', 'Скрытность против пассивной внимательности.', 'hide'),
     act('act_smite_note', 'Заклинание: состояние без концентрации', 'Для заклинаний, которые вешают состояние и не требуют концентрации.', 'spell_condition'),
-    act('act_help', 'Помощь', 'Союзник получает преимущество на следующий бросок.', 'help'),
   ];
 }
 

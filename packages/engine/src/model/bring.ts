@@ -1,9 +1,9 @@
-import { referencesOf, formulaDeps } from './references.ts';
+import { referencesOf, formulaDeps, LISTEN } from './references.ts';
 import type { Reference, Where } from './references.ts';
 import { basedOn } from './inherit.ts';
 import type { System } from './types.ts';
 
-export type PartKind = 'field' | 'group' | 'effect' | 'table' | 'constant' | 'rollEdit' | 'recordKind';
+export type PartKind = 'field' | 'group' | 'effect' | 'table' | 'constant' | 'rollEdit' | 'recordKind' | 'record';
 
 export interface Part { kind: PartKind; key: string }
 
@@ -21,6 +21,7 @@ const ownerOf = (where: Where): Part | null => {
   if (where.tab === 'sheet' && where.field) return { kind: 'field', key: where.field };
   if (where.tab === 'effects' && where.effect) return { kind: 'effect', key: where.effect };
   if (where.tab === 'records' && where.kind) return { kind: 'recordKind', key: where.kind };
+  if (where.tab === 'book' && where.record) return { kind: 'record', key: where.record };
   return null;
 };
 
@@ -77,7 +78,7 @@ export function dependencies(donor: System): (part: Part) => Part[] {
   const rows = rowTables(donor);
   for (const ref of referencesOf(donor)) {
     const owner = ownerOf(ref.from);
-    if (!owner) continue;
+    if (!owner || ref.scope === LISTEN) continue;
     const dotted = ref.kind === 'step' && donor.fields.some(f => f.tag === ref.key);
     const counter = ref.kind === 'field' && !donor.fields.some(f => f.tag === ref.key) && Boolean(donor.effects?.[ref.key]);
     const kind = ref.kind === 'roll' ? 'table' : dotted ? 'field' : counter ? 'effect' : REF_PARTS[ref.kind];
@@ -124,6 +125,7 @@ const exists = (system: System, part: Part): boolean => {
     case 'constant': return Boolean(system.constants?.[part.key]);
     case 'rollEdit': return Boolean(system.roll_edits?.[part.key]);
     case 'recordKind': return Boolean(system.records?.[part.key]);
+    case 'record': return (system.library ?? []).some(record => record.id === part.key);
   }
 };
 
@@ -156,6 +158,7 @@ function copyPart(target: System, donor: System, part: Part): void {
     case 'constant': (target.constants ??= {})[part.key] = clone(donor.constants![part.key]!); return;
     case 'rollEdit': (target.roll_edits ??= {})[part.key] = clone(donor.roll_edits![part.key]!); return;
     case 'recordKind': (target.records ??= {})[part.key] = clone(donor.records![part.key]!); return;
+    case 'record': (target.library ??= []).push(clone(donor.library!.find(record => record.id === part.key)!)); return;
   }
 }
 

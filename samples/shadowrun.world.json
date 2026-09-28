@@ -18,7 +18,7 @@
       "Лечение": {},
       "Действия": {},
       "Состояния": {},
-      "Правила комнаты": {},
+      "Общие правила": {},
       "Листы": {},
       "Снаряжение": {},
       "Приёмы": {}
@@ -2197,7 +2197,7 @@
       },
       "edge_gain": {
         "label": "Преимущество за значение атаки",
-        "group": "Правила комнаты",
+        "group": "Общие правила",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -2338,7 +2338,7 @@
       },
       "round_edge": {
         "label": "Новый раунд: предел Преимущества",
-        "group": "Правила комнаты",
+        "group": "Общие правила",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -2366,7 +2366,7 @@
       },
       "turn_actions": {
         "label": "Начало хода: действия",
-        "group": "Правила комнаты",
+        "group": "Общие правила",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -2405,7 +2405,7 @@
       },
       "battle_start": {
         "label": "Начало боя",
-        "group": "Правила комнаты",
+        "group": "Общие правила",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -2433,7 +2433,7 @@
       },
       "battle_end": {
         "label": "Конец боя",
-        "group": "Правила комнаты",
+        "group": "Общие правила",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -2566,7 +2566,7 @@
       },
       "glitch": {
         "label": "Сбой",
-        "group": "Правила комнаты",
+        "group": "Общие правила",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -2586,7 +2586,7 @@
       },
       "critical_glitch": {
         "label": "Критический сбой",
-        "group": "Правила комнаты",
+        "group": "Общие правила",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -2908,7 +2908,7 @@
       },
       "knock_out": {
         "label": "Потеря сознания",
-        "group": "Правила комнаты",
+        "group": "Общие правила",
         "description": "Счётчик оглушения полон — «Без сознания».",
         "activation": "passive",
         "duration": {
@@ -2932,7 +2932,7 @@
       },
       "bleed_out": {
         "label": "Тяжёлое ранение",
-        "group": "Правила комнаты",
+        "group": "Общие правила",
         "description": "Счётчик здоровья полон — «Тяжело ранен».",
         "activation": "passive",
         "duration": {
@@ -2956,7 +2956,7 @@
       },
       "die": {
         "label": "Смерть",
-        "group": "Правила комнаты",
+        "group": "Общие правила",
         "description": "Критический урон достиг Тело × 2 — «Мёртв».",
         "activation": "passive",
         "duration": {
@@ -2987,7 +2987,7 @@
       },
       "come_to": {
         "label": "Приходит в себя",
-        "group": "Правила комнаты",
+        "group": "Общие правила",
         "description": "Оба счётчика снова не полны — состояния сняты.",
         "activation": "passive",
         "duration": {

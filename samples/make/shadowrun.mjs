@@ -263,7 +263,7 @@ function effects() {
   });
 
   const onField = (label, description, tag, steps) => ({
-    label, group: 'Правила комнаты', description, activation: 'passive', duration: { kind: 'permanent' }, params: [],
+    label, group: 'Общие правила', description, activation: 'passive', duration: { kind: 'permanent' }, params: [],
     on: [{ on: `field:${tag}`, steps }],
   });
   const state = (label, description, modifiers = [], extra = {}) => ({
@@ -271,7 +271,7 @@ function effects() {
   });
   const penalty = value => ({ kind: 'value', target: 'condition_mod', op: 'add', value, stacking: 'sum', condition: null });
   const note = (label, description, when) => ({
-    label, group: 'Правила комнаты', activation: 'passive', duration: { kind: 'permanent' }, params: [], description,
+    label, group: 'Общие правила', activation: 'passive', duration: { kind: 'permanent' }, params: [], description,
     on: ['ranged_attack'].map(on => ({ on, role: 'sender', if: { expr: when }, steps: [] })),
   });
   const recover = (label, description, pool, tag) => ({
@@ -286,7 +286,7 @@ function effects() {
     ranged_attack: attack('Атаковать',
       'Навык оружия + Проворство против Реакции + Интуиции цели. Значение атаки оружия на дистанции против значения защиты цели: у кого больше на 4 — тому очко Преимущества. Попадание при успехах не меньше, чем у защиты; чистые успехи — к урону, при ничьей — базовый урон. Сопротивление — Тело. Урон больше Тела — «Распластан».'),
     edge_gain: {
-      label: 'Преимущество за значение атаки', group: 'Правила комнаты', activation: 'passive', duration: { kind: 'permanent' }, params: [],
+      label: 'Преимущество за значение атаки', group: 'Общие правила', activation: 'passive', duration: { kind: 'permanent' }, params: [],
       description: 'Значение атаки больше значения защиты цели на 4 и больше — очко Преимущества атакующему (не больше 7).',
       on: ['ranged_attack'].map(on => ({
         on, to: 'other', if: { expr: '@атк - @defense_rating >= 4' },
@@ -304,22 +304,22 @@ function effects() {
       on: [{ on: '*', role: 'sender', phase: 'before', ask: true, claims: ['push_edge'], self: payEdge(4), steps: [] }],
     },
     round_edge: {
-      label: 'Новый раунд: предел Преимущества', group: 'Правила комнаты', activation: 'passive', duration: { kind: 'permanent' }, params: [],
+      label: 'Новый раунд: предел Преимущества', group: 'Общие правила', activation: 'passive', duration: { kind: 'permanent' }, params: [],
       description: 'В начале раунда счётчик полученного за раунд Преимущества обнуляется.',
       on: [{ on: 'moment:round-start', steps: [change('edge_gained', 'set', '0')] }],
     },
     turn_actions: {
-      label: 'Начало хода: действия', group: 'Правила комнаты', activation: 'passive', duration: { kind: 'permanent' }, params: [],
+      label: 'Начало хода: действия', group: 'Общие правила', activation: 'passive', duration: { kind: 'permanent' }, params: [],
       description: 'Одно сложное и одно простое действие, плюс простое за каждый кубик инициативы (не больше пяти простых).',
       on: [{ on: 'moment:turn-start', steps: [change('simple_left', 'set', 'min(5, 1 + @init_dice)'), change('complex_left', 'set', '1')] }],
     },
     battle_start: {
-      label: 'Начало боя', group: 'Правила комнаты', activation: 'passive', duration: { kind: 'permanent' }, params: [],
+      label: 'Начало боя', group: 'Общие правила', activation: 'passive', duration: { kind: 'permanent' }, params: [],
       description: 'Бой пошёл: действия считаются.',
       on: [{ on: 'moment:combat-start', steps: [change('battle', 'set', '1')] }],
     },
     battle_end: {
-      label: 'Конец боя', group: 'Правила комнаты', activation: 'passive', duration: { kind: 'permanent' }, params: [],
+      label: 'Конец боя', group: 'Общие правила', activation: 'passive', duration: { kind: 'permanent' }, params: [],
       description: 'Вне боя действия не считаются.',
       on: [{ on: 'moment:combat-end', steps: [change('battle', 'set', '0')] }],
     },
@@ -565,7 +565,7 @@ const world = {
     id: 'shadowrun6',
     name: 'Shadowrun: Шестой мир',
     groups: Object.fromEntries(['Стол', 'Личное дело', 'Характеристики', 'Особые', 'Навыки', 'Наборы кубиков', 'Защита', 'Счётчики', 'Инициатива',
-      'Атака', 'Преимущество', 'Лечение', 'Действия', 'Состояния', 'Правила комнаты', 'Листы', 'Снаряжение', 'Приёмы'].map(name => [name, {}])),
+      'Атака', 'Преимущество', 'Лечение', 'Действия', 'Состояния', 'Общие правила', 'Листы', 'Снаряжение', 'Приёмы'].map(name => [name, {}])),
     fields: fields(),
     constants: constants(),
     tables: tables(),

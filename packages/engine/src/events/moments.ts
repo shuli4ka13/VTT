@@ -9,7 +9,7 @@ import { EngineError } from '../engine/errors.ts';
 import { effectLabelOf } from './envelope.ts';
 import { sharedOf, isShared } from './desk.ts';
 import type { Report, WorldContext } from './envelope.ts';
-import type { Sheet, Effect, Handler, Step, WornEffect } from '../model/types.ts';
+import type { Sheet, System, Effect, Handler, Step, WornEffect } from '../model/types.ts';
 
 
 export const MOMENTS = {
@@ -24,6 +24,10 @@ export const MOMENTS = {
 } as const;
 
 export type MomentKey = keyof typeof MOMENTS;
+
+export const heardMoments = (system: System): Set<MomentKey> =>
+  new Set(Object.values(system.effects ?? {}).flatMap(effect => (effect.on ?? []).map(handler => momentOf(handler.on)))
+    .filter((key): key is MomentKey => key !== null));
 
 export const isMoment = (on: string | undefined): boolean =>
   Boolean(on && on.startsWith(MOMENT_PREFIX));

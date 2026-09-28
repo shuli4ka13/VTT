@@ -43,9 +43,9 @@ group('линт: висячие ссылки называются словами
     ok(errorTexts(system).some(t => t.includes('общего эффекта «нету»')), errorTexts(system).join('|'));
   });
 
-  test('слушатель эффекта, которого нет', () => {
+  test('подписка на эффект, которого пока нет, — не ошибка: сработает, когда он появится', () => {
     const system = withEffect('t', { activation: 'passive', on: [{ on: 'нет_эффекта', to: 'other', steps: [] }] });
-    ok(errorTexts(system).some(t => t.includes('эффекта «нет_эффекта»')), errorTexts(system).join('|'));
+    ok(!errorTexts(system).some(t => t.includes('нет_эффекта')), errorTexts(system).join('|'));
   });
 
   test('привязка типа записи к несуществующему эффекту', () => {
@@ -57,7 +57,7 @@ group('линт: висячие ссылки называются словами
     eq(problem?.where.kind, 'weapon');
   });
 
-  test('кость инициативы, таблица поля, правило комнаты, правка броска', () => {
+  test('кость инициативы, таблица поля, правило для всех, правка броска', () => {
     const system = bare();
     system.initiative = { die: { constant: 'нет_кости' }, tags: ['нет_броска'] } as never;
     system.fields.push({ tag: 'lvl', label: 'Ур', value: { kind: 'formula', expr: 'таблица("нет_таблицы", #hp)' } } as never);

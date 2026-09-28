@@ -90,3 +90,24 @@ describe('стол нельзя закрепить за игроком', () => {
     await expect(rooms.claimSheet(me, roomId, 'стол')).rejects.toThrow(/стол общий/);
   });
 });
+
+describe('система без компендиума доходит до игры', () => {
+  it('кнопка, выданная всем, жмётся за столом, а встроенные записи едут в мир', async () => {
+    const token = (await http().post('/auth/login').send({ name: 'Автор' })).body.token as string;
+    const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
+    const own = { ...system, grants: ['удар'], library: [{ id: 'меч', rk: 'приём', label: 'Меч', props: {} }] };
+    const systemId = (await as(http().post('/systems')).send({ title: 'сама', system: own })).body.id;
+    const pub = await as(http().post(`/systems/${systemId}/publish`)).send({});
+    if (pub.status !== 201) throw new Error(JSON.stringify(pub.body));
+    const bare = (id: string) => ({ id, systemId: 'стол', name: id, values: {}, has: [], effects: [] });
+    const worldId = (await as(http().post('/worlds')).send({ title: 'Мир', systemId, compendiumIds: [], sheets: [bare('бьёт'), bare('держит')] })).body.id;
+
+    const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол' })).body.id as string;
+    const room = (await as(http().get(`/rooms/${roomId}`))).body;
+    expect(room.compendium.records.map((r: { id: string }) => r.id)).toEqual(['меч']);
+    const act = await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: '+удар', fromId: 'бьёт', toId: 'держит' });
+    if (act.status !== 201) throw new Error(JSON.stringify(act.body));
+    const after = (await as(http().get(`/rooms/${roomId}`))).body;
+    expect(after.sheets.find((s: { id: string }) => s.id === 'держит').values.хп).toBe(18);
+  });
+});

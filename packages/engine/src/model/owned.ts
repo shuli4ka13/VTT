@@ -2,6 +2,12 @@ import type { Compendium, CompendiumRecord, Owned, RecordKind, Sheet, System } f
 
 export const recordsOf = (compendium: Compendium | null | undefined): CompendiumRecord[] => compendium?.records ?? [];
 
+export function withLibrary(system: System, compendium: Compendium | null | undefined): Compendium {
+  const own = recordsOf(compendium);
+  const ids = new Set(own.map(record => record.id));
+  return { ...compendium, records: [...(system.library ?? []).filter(record => !ids.has(record.id)), ...own] };
+}
+
 export const findRecord = (compendium: Compendium | null | undefined, id: string): CompendiumRecord | undefined =>
   recordsOf(compendium).find(record => record.id === id);
 

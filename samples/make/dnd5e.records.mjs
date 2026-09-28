@@ -1,4 +1,4 @@
-import { DEATH_RULES } from './dnd5e.effects.mjs';
+import { DEATH_RULES, BASIC_ACTIONS } from './dnd5e.effects.mjs';
 
 
 const prop = (key, label, kind, extra = {}) => ({ key, label, kind, ...extra });
@@ -25,12 +25,13 @@ export function records() {
     персонаж: {
       kind: 'sheet', label: 'Персонаж', icon: '🧙', group: 'Бестиарий',
       hint: 'Лист героя: все блоки. На нуле хитов падает без сознания и делает спасброски от смерти.',
-      grants: DEATH_RULES,
+      grants: [...DEATH_RULES, ...BASIC_ACTIONS],
     },
     противник: {
       kind: 'sheet', label: 'Противник', icon: '👹', group: 'Бестиарий',
       hint: 'Лист противника: без личного дела, магии, ресурсов класса и богатства. Спасбросков от смерти нет — что с ним на нуле хитов, решает ведущий.',
       blocks: ['Характеристики', 'Модификаторы', 'Прогрессия', 'Спасброски', 'Навыки', 'Чувства и движение', 'Защита', 'Здоровье', 'В бою', 'Стойкость к урону'],
+      grants: BASIC_ACTIONS,
     },
     weapon: {
       kind: 'item', label: 'Оружие', icon: '⚔', group: 'Снаряжение',
@@ -188,7 +189,7 @@ export function records() {
     },
     action_basic: {
       kind: 'action', label: 'Действие в бою', icon: '◆', group: 'Действия в бою',
-      hint: 'Уклонение, рывок, отход, засада, помощь.',
+      hint: 'Действие, которое есть не у всех: его дают класс, черта или предмет.',
       props: [],
     },
     monster_attack: {

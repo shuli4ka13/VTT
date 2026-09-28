@@ -15,6 +15,8 @@ export const EVENT_RESULTS = ['event', 'event_amount', 'event_incoming'] as cons
 
 export const SEED_RESULTS = ['worn', 'moment', 'field'] as const;
 
+export const LISTEN = 'listen';
+
 export type Tab = 'sheet' | 'rules' | 'effects' | 'records' | 'book';
 
 export interface Where {
@@ -229,8 +231,15 @@ export function listenerOf(
   return { kind: 'effect', key: on };
 }
 
+function typedRefs(spec: { kind?: string; from?: string }, from: Where, out: Reference[]): void {
+  if (!spec.from) return;
+  if (spec.kind === 'choice') out.push({ kind: 'table', key: spec.from, from });
+  if (spec.kind === 'record') out.push({ kind: 'recordKind', key: spec.from, from });
+}
+
 function effectRefs(system: System, id: string, effect: Effect, out: Reference[]): void {
   const params = new Set((effect.params ?? []).map(p => p.key));
+  for (const param of effect.params ?? []) typedRefs(param, { tab: 'effects', effect: id, part: 'params', key: param.key }, out);
   const called = calledOf(system).some(([key]) => key === id);
   out.push(...chainRefs(effect.steps ?? [], step => ({ tab: 'effects', effect: id, step }), params, called));
   out.push(...chainRefs(effect.self ?? [], step => ({ tab: 'effects', effect: id, step, part: 'self' }), params, false));
@@ -240,15 +249,21 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
     out.push(...chainRefs(handler.steps ?? [], step => ({ tab: 'effects', effect: id, handler: index, step }), params, heard.kind === 'event'));
     out.push(...chainRefs(handler.self ?? [], step => ({ tab: 'effects', effect: id, handler: index, step, part: 'self' }), params, false));
     if (heard.kind === 'event') out.push({ kind: 'event', key: heard.key!, from: head });
-    if (heard.kind === 'effect' || heard.kind === 'gained' || heard.kind === 'lost') out.push({ kind: 'effect', key: heard.key!, from: head });
+    if (heard.kind === 'effect') out.push({ kind: 'effect', key: heard.key!, from: head, scope: LISTEN });
+    if (heard.kind === 'gained' || heard.kind === 'lost') out.push({ kind: 'effect', key: heard.key!, from: head });
     if (heard.kind === 'field') out.push({ kind: 'field', key: heard.key!, from: head });
     if (handler.if) {
       const found: Reference[] = [];
       exprRefs(handler.if.expr, head, { params, earlier: new Set(), eventChain: heard.kind === 'event' }, found);
       const listened = heard.kind === 'effect' ? system.effects[heard.key!] : undefined;
       const listenedSteps = new Set((listened?.steps ?? []).map(s => s.id).filter(Boolean));
+      const absent = heard.kind === 'effect' && !listened;
       for (const ref of found) {
         if (ref.kind === 'field' && listenedSteps.has(ref.key)) continue;
+        if (absent && (ref.kind === 'field' || ref.kind === 'step') && !system.fields.some(f => f.tag === ref.key)) {
+          out.push({ ...ref, scope: LISTEN });
+          continue;
+        }
         if (ref.kind !== 'step') { out.push(ref); continue; }
         if (listened && !(listened.steps ?? []).some(s => s.id === ref.key)) {
           out.push({ ...ref, scope: `listened:${heard.key}` });
@@ -283,6 +298,7 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
 
   for (const [kind, spec] of Object.entries(system.records ?? {})) {
     const own = new Set((spec.props ?? []).map(p => p.key));
+    for (const prop of spec.props ?? []) typedRefs(prop, { tab: 'records', kind, part: 'props', key: prop.key }, out);
     (spec.bindings ?? []).forEach((binding, index) => {
       const from: Where = { tab: 'records', kind, part: 'bindings', binding: index };
       if (binding.effect) out.push({ kind: 'effect', key: binding.effect, from });
@@ -318,11 +334,13 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
     for (const tag of system.initiative.tags ?? []) out.push({ kind: 'roll', key: tag, from });
   }
 
-  for (const list of [recordsOf(compendium)]) {
+  const records = new Map([...(system.library ?? []), ...recordsOf(compendium)].map(record => [record.id, record]));
+  for (const list of [[...records.values()]]) {
     for (const record of list) {
       const from: Where = { tab: 'book', record: record.id };
       if (record.rk) out.push({ kind: 'recordKind', key: String(record.rk), from });
       for (const id of record.grants ?? []) out.push({ kind: 'effect', key: id, from });
+      for (const binding of record.bindings ?? []) if (binding.effect) out.push({ kind: 'effect', key: binding.effect, from });
       modifierRefs(record.modifiers, from, out);
     }
   }

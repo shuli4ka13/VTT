@@ -298,6 +298,7 @@ export const system = z.object({
   }).passthrough().optional(),
 
   mannequins: z.array(z.lazy(() => sheet)).optional(),
+  library: z.array(z.lazy(() => compendiumRecord)).optional(),
 }).passthrough();
 
 export const storedValue = z.union([z.number(), z.string(), z.boolean(), z.null()]);

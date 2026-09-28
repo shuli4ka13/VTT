@@ -11,6 +11,7 @@ import { DESK, RECEIVER, SENDER } from '../engine/owners.ts';
 import {
   referencesOf, declaredOf, chainRefs, listenerOf,
   type Where, type Reference, type RefKind, type Declared,
+  LISTEN,
 } from './references.ts';
 
 export type Level = 'error' | 'warn';
@@ -84,6 +85,7 @@ function ownerText(ref: Reference, system: System): string | null {
 }
 
 function danglingText(ref: Reference, declared: Declared): string | null {
+  if (ref.scope === LISTEN) return null;
   if (ref.kind === 'param') {
     return ref.scope === 'missing' ? `потребность «${ref.key}» эффектом не объявлена` : null;
   }
@@ -423,6 +425,11 @@ export function lintCompendium(system: System, compendium: Compendium): Problem[
 
 export const errorsOf = (problems: Problem[]): Problem[] => problems.filter(p => p.level === 'error');
 
+const SECTION_WORDS: Record<string, string> = {
+  grants: 'действуют на всех', initiative: 'инициатива', roll_edits: 'правки броска',
+  tables: 'таблицы', constants: 'кости', groups: 'блоки',
+};
+
 const quoted = (label: string | undefined, key: string): string => `«${label || key}»`;
 
 export function describeWhere(where: Where, system: System, compendium?: Compendium): string {
@@ -440,21 +447,21 @@ export function describeWhere(where: Where, system: System, compendium?: Compend
     if (where.part === 'detach') parts.push('при спадании');
     if (where.part === 'modifiers') parts.push('модификаторы');
     if (where.part === 'cost') parts.push('чего стоит');
+    if (where.part === 'params') parts.push(`что приходит ${quoted(system.effects[where.effect ?? '']?.params?.find(p => p.key === where.key)?.label, where.key ?? '')}`);
   } else if (where.tab === 'rules') {
     parts.push(TABS.rules);
-    if (where.section === 'grants') parts.push('правила комнаты');
-    else if (where.section === 'initiative') parts.push('инициатива');
-    else if (where.section) parts.push(where.section);
+    if (where.section) parts.push(SECTION_WORDS[where.section] ?? where.section);
     if (where.step !== undefined) parts.push(`${STEP.one} ${where.step + 1}`);
   } else if (where.tab === 'records') {
     parts.push(TABS.records);
     if (where.kind) parts.push(quoted(system.records?.[where.kind]?.label, where.kind));
     if (where.binding !== undefined) parts.push(`привязка ${where.binding + 1}`);
     else if (where.part === 'modifiers') parts.push('модификаторы');
+    else if (where.part === 'props') parts.push(`свойство ${quoted(system.records?.[where.kind ?? '']?.props?.find(p => p.key === where.key)?.label, where.key ?? '')}`);
   } else if (where.tab === 'book') {
     parts.push('Компендиум');
     if (where.record) {
-      const found = recordsOf(compendium).find(r => r.id === where.record);
+      const found = [...recordsOf(compendium), ...system.library ?? []].find(r => r.id === where.record);
       parts.push(`запись ${quoted(found?.label, where.record)}`);
     }
   }

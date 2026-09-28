@@ -187,7 +187,7 @@ function spells() {
   return {
     taken_rule: {
       label: 'Что доходит до меня',
-      group: 'Правила комнаты',
+      group: 'Общие правила',
       description: 'Один раз на все типы урона: сколько доходит — сказано на листе. Иммунитет, сопротивление, уязвимость выставляются там же.',
       activation: 'passive',
       duration: { kind: 'permanent' },
@@ -644,7 +644,7 @@ function roomRules() {
     change('turn_attacks', 'set', { const: 0 }),
   ];
   const onMoment = (label, description, moment, steps) => ({
-    label, group: 'Правила комнаты', description, activation: 'passive', duration: { kind: 'permanent' },
+    label, group: 'Общие правила', description, activation: 'passive', duration: { kind: 'permanent' },
     params: [], on: [{ on: `moment:${moment}`, steps }],
   });
   return {
@@ -653,7 +653,7 @@ function roomRules() {
     battle_end: onMoment('Конец боя', 'Вне боя действия не считаются.', 'combat-end', [change('battle', 'set', { const: 0 })]),
     turn_refresh: onMoment('Начало хода', 'Действие, бонусное, реакция и «раз за ход» — снова по одному.', 'turn-start', refresh),
     exhaustion_rule: {
-      label: 'Истощение', group: 'Правила комнаты', activation: 'passive', duration: { kind: 'permanent' },
+      label: 'Истощение', group: 'Общие правила', activation: 'passive', duration: { kind: 'permanent' },
       description: 'Шесть ступеней: помеха на проверки, скорость вдвое меньше, помеха на атаки и спасброски, максимум хитов вдвое меньше, скорость ноль. Шестая — смерть, её объявляет ведущий.',
       on: [{ on: 'moment:long-rest', steps: [change('exhaustion', 'subtract', { const: 1 })] }],
       modifiers: [
@@ -679,3 +679,5 @@ export const ROOM_RULES = [
 ];
 
 export const DEATH_RULES = ['fall', 'wake', 'death_now', 'stabilize'];
+
+export const BASIC_ACTIONS = ['dodge', 'dash', 'disengage', 'hide', 'help'];

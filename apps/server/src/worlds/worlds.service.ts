@@ -6,6 +6,7 @@ import { worlds, users } from '../db/schema.ts';
 import { world as W } from '@vtt/schema';
 import type { Compendium, Sheet, World, WorldSummary } from '@vtt/schema';
 import { CatalogService } from '../catalog/catalog.service.ts';
+import { withLibrary } from '@vtt/engine/model/owned';
 
 @Injectable()
 export class WorldsService {
@@ -58,8 +59,8 @@ export class WorldsService {
     const row = rows[0];
     if (!row) throw new NotFoundException(`мира «${id}» на сервере нет`);
     const system = await this.catalog.playableSystem(row.systemId);
-    const compendium = await this.mergeCompendiums(
-      row.systemId, JSON.parse(row.compendiumIds) as string[]);
+    const compendium = withLibrary(system.system, await this.mergeCompendiums(
+      row.systemId, JSON.parse(row.compendiumIds) as string[]));
     return { system: system.system, compendium,
       sheets: JSON.parse(row.sheets) as Sheet[] };
   }

@@ -35,10 +35,10 @@
     "take": [
       {
         "block": "Навыки"
-      },
-      {
-        "effect": "hide"
       }
+    ],
+    "grants": [
+      "hide"
     ]
   },
   {
@@ -48,7 +48,25 @@
     "hint": "Хиты, временные хиты, кости хитов, класс брони.",
     "take": [
       {
-        "block": "Здоровье"
+        "field": "hp_max"
+      },
+      {
+        "field": "hp_current"
+      },
+      {
+        "field": "hp_temp"
+      },
+      {
+        "field": "hit_die"
+      },
+      {
+        "field": "hit_dice_left"
+      },
+      {
+        "field": "down"
+      },
+      {
+        "field": "up"
       },
       {
         "block": "Защита"
@@ -94,24 +112,16 @@
     "take": [
       {
         "block": "В бою"
-      },
-      {
-        "effect": "dodge"
-      },
-      {
-        "effect": "dash"
-      },
-      {
-        "effect": "disengage"
-      },
-      {
-        "effect": "help"
       }
     ],
     "grants": [
       "battle_start",
       "battle_end",
-      "turn_refresh"
+      "turn_refresh",
+      "dodge",
+      "dash",
+      "disengage",
+      "help"
     ]
   },
   {
@@ -130,7 +140,20 @@
     "donor": "dnd5e",
     "label": "Спасброски от смерти",
     "hint": "На нуле хитов — без сознания и спасброски от смерти, три успеха — стабилен, три провала — мёртв. Вешается на всех; перенесите в тип листа, если противникам не нужно.",
-    "take": [],
+    "take": [
+      {
+        "field": "death_ok"
+      },
+      {
+        "field": "death_fail"
+      },
+      {
+        "field": "is_dead"
+      },
+      {
+        "field": "is_stable"
+      }
+    ],
     "grants": [
       "fall",
       "wake",
@@ -143,13 +166,10 @@
     "donor": "dnd5e",
     "label": "Отдых",
     "hint": "Долгий отдых возвращает хиты и половину костей хитов; кости хитов тратятся на коротком. Ячейки, ресурсы и истощение возвращают себя сами, если они есть в системе.",
-    "take": [
-      {
-        "effect": "spend_hit_die"
-      }
-    ],
+    "take": [],
     "grants": [
-      "long_rest"
+      "long_rest",
+      "spend_hit_die"
     ]
   },
   {
@@ -157,7 +177,11 @@
     "donor": "dnd5e",
     "label": "Истощение",
     "hint": "Уровни истощения со штрафом к броскам.",
-    "take": [],
+    "take": [
+      {
+        "field": "exhaustion"
+      }
+    ],
     "grants": [
       "exhaustion_rule"
     ]
@@ -197,10 +221,19 @@
     "id": "dnd-weapons",
     "donor": "dnd5e",
     "label": "Оружие D&D",
-    "hint": "Тип записи «Оружие»: кость и тип урона, способ атаки, свойства; удар с попаданием и уроном.",
+    "hint": "Тип записи «Оружие»: кость и тип урона, способ атаки, свойства; удар с попаданием и уроном. С ним приходят длинный меч, кинжал и короткий лук.",
     "take": [
       {
         "recordKind": "weapon"
+      },
+      {
+        "record": "longsword"
+      },
+      {
+        "record": "dagger"
+      },
+      {
+        "record": "shortbow"
       }
     ]
   },
@@ -225,31 +258,55 @@
         "block": "Черты"
       },
       {
-        "effect": "action_roll"
-      },
-      {
         "rollEdit": "advantage"
       }
     ],
     "grants": [
-      "duality"
+      "duality",
+      "action_roll"
     ]
   },
   {
     "id": "dh-thresholds",
     "donor": "daggerheart",
     "label": "Пороги урона и бронеслоты",
-    "hint": "Урон против порогов серьёзного и тяжёлого: одна, две или три клетки хитов; бронеслот снимает одну. Последний хит — смертельный ход.",
+    "hint": "Урон против порогов серьёзного и тяжёлого: одна, две или три клетки хитов; бронеслот снимает одну. Последний хит — смертельный ход. С ним приходят кожаный доспех и кольчуга.",
     "take": [
       {
         "effect": "damage"
       },
       {
         "recordKind": "armor"
+      },
+      {
+        "record": "leather"
+      },
+      {
+        "record": "chainmail"
       }
     ],
     "grants": [
       "last_hp"
+    ]
+  },
+  {
+    "id": "dh-weapons",
+    "donor": "daggerheart",
+    "label": "Оружие Daggerheart",
+    "hint": "Тип записи «Оружие»: черта атаки, дальность, кость урона с мастерством. С ним приходят длинный меч, кинжал и короткий лук.",
+    "take": [
+      {
+        "recordKind": "weapon"
+      },
+      {
+        "record": "longsword"
+      },
+      {
+        "record": "dagger"
+      },
+      {
+        "record": "shortbow"
+      }
     ]
   },
   {
@@ -294,35 +351,38 @@
     "take": [
       {
         "block": "Особые"
-      },
-      {
-        "effect": "second_wind"
-      },
-      {
-        "effect": "shrug_off"
-      },
-      {
-        "effect": "scene_start"
       }
     ],
     "grants": [
       "edge_gain",
       "reroll_failures",
       "glitch",
-      "critical_glitch"
+      "critical_glitch",
+      "second_wind",
+      "shrug_off",
+      "scene_start"
     ]
   },
   {
     "id": "sr-weapons",
     "donor": "shadowrun6",
     "label": "Оружие и броня Shadowrun 6",
-    "hint": "Пять значений атаки по дистанциям, режимы стрельбы, сопротивление Телом, вид урона по оружию, «Распластан» и «Электрошок».",
+    "hint": "Пять значений атаки по дистанциям, режимы стрельбы, сопротивление Телом, вид урона по оружию, «Распластан» и «Электрошок». С ним приходят боевой нож, «Арес Предатор VI» и армированная куртка.",
     "take": [
       {
         "recordKind": "weapon"
       },
       {
         "recordKind": "armor"
+      },
+      {
+        "record": "combat_knife"
+      },
+      {
+        "record": "predator_vi"
+      },
+      {
+        "record": "armor_jacket"
       }
     ]
   }

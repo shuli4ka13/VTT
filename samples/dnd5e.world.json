@@ -2222,7 +2222,7 @@
       "Лечение": {
         "parent": "Механика"
       },
-      "Правила комнаты": {
+      "Общие правила": {
         "parent": "Механика"
       },
       "Вызываемые": {
@@ -3961,7 +3961,7 @@
       },
       "taken_rule": {
         "label": "Что доходит до меня",
-        "group": "Правила комнаты",
+        "group": "Общие правила",
         "description": "Один раз на все типы урона: сколько доходит — сказано на листе. Иммунитет, сопротивление, уязвимость выставляются там же.",
         "activation": "passive",
         "duration": {
@@ -8379,7 +8379,7 @@
       },
       "battle_start": {
         "label": "Начало боя",
-        "group": "Правила комнаты",
+        "group": "Общие правила",
         "description": "Бой пошёл: стоимость действий считается, у всех полный запас.",
         "activation": "passive",
         "duration": {
@@ -8462,7 +8462,7 @@
       },
       "battle_end": {
         "label": "Конец боя",
-        "group": "Правила комнаты",
+        "group": "Общие правила",
         "description": "Вне боя действия не считаются.",
         "activation": "passive",
         "duration": {
@@ -8490,7 +8490,7 @@
       },
       "turn_refresh": {
         "label": "Начало хода",
-        "group": "Правила комнаты",
+        "group": "Общие правила",
         "description": "Действие, бонусное, реакция и «раз за ход» — снова по одному.",
         "activation": "passive",
         "duration": {
@@ -8562,7 +8562,7 @@
       },
       "exhaustion_rule": {
         "label": "Истощение",
-        "group": "Правила комнаты",
+        "group": "Общие правила",
         "activation": "passive",
         "duration": {
           "kind": "permanent"
@@ -9215,7 +9215,12 @@
           "fall",
           "wake",
           "death_now",
-          "stabilize"
+          "stabilize",
+          "dodge",
+          "dash",
+          "disengage",
+          "hide",
+          "help"
         ]
       },
       "противник": {
@@ -9235,6 +9240,13 @@
           "Здоровье",
           "В бою",
           "Стойкость к урону"
+        ],
+        "grants": [
+          "dodge",
+          "dash",
+          "disengage",
+          "hide",
+          "help"
         ]
       },
       "weapon": {
@@ -10055,7 +10067,7 @@
         "label": "Действие в бою",
         "icon": "◆",
         "group": "Действия в бою",
-        "hint": "Уклонение, рывок, отход, засада, помощь.",
+        "hint": "Действие, которое есть не у всех: его дают класс, черта или предмет.",
         "props": []
       },
       "monster_attack": {
@@ -12175,62 +12187,6 @@
         ]
       },
       {
-        "id": "act_dodge",
-        "rk": "action_basic",
-        "label": "Уклонение",
-        "description": "По тебе бьют с помехой до начала твоего хода.",
-        "props": {},
-        "bindings": [
-          {
-            "label": "Уклонение",
-            "effect": "dodge",
-            "args": {}
-          }
-        ]
-      },
-      {
-        "id": "act_dash",
-        "rk": "action_basic",
-        "label": "Рывок",
-        "description": "Скорость на этот ход удваивается.",
-        "props": {},
-        "bindings": [
-          {
-            "label": "Рывок",
-            "effect": "dash",
-            "args": {}
-          }
-        ]
-      },
-      {
-        "id": "act_disengage",
-        "rk": "action_basic",
-        "label": "Отход",
-        "description": "Передвижение не провоцирует атак.",
-        "props": {},
-        "bindings": [
-          {
-            "label": "Отход",
-            "effect": "disengage",
-            "args": {}
-          }
-        ]
-      },
-      {
-        "id": "act_hide",
-        "rk": "action_basic",
-        "label": "Засада",
-        "description": "Скрытность против пассивной внимательности.",
-        "props": {},
-        "bindings": [
-          {
-            "label": "Засада",
-            "effect": "hide",
-            "args": {}
-          }
-        ]
-      },
-      {
         "id": "act_smite_note",
         "rk": "action_basic",
         "label": "Заклинание: состояние без концентрации",
@@ -12240,20 +12196,6 @@
           {
             "label": "Заклинание: состояние без концентрации",
             "effect": "spell_condition",
-            "args": {}
-          }
-        ]
-      },
-      {
-        "id": "act_help",
-        "rk": "action_basic",
-        "label": "Помощь",
-        "description": "Союзник получает преимущество на следующий бросок.",
-        "props": {},
-        "bindings": [
-          {
-            "label": "Помощь",
-            "effect": "help",
             "args": {}
           }
         ]
@@ -12427,18 +12369,6 @@
         },
         {
           "of": "trait_inspiration"
-        },
-        {
-          "of": "act_dodge"
-        },
-        {
-          "of": "act_dash"
-        },
-        {
-          "of": "act_disengage"
-        },
-        {
-          "of": "act_help"
         }
       ],
       "effects": []
@@ -12529,15 +12459,6 @@
         },
         {
           "of": "trait_infernal"
-        },
-        {
-          "of": "act_dodge"
-        },
-        {
-          "of": "act_dash"
-        },
-        {
-          "of": "act_disengage"
         }
       ],
       "effects": []
@@ -12623,12 +12544,6 @@
         },
         {
           "of": "trait_dwarf_resilience"
-        },
-        {
-          "of": "act_dodge"
-        },
-        {
-          "of": "act_help"
         }
       ],
       "effects": []
@@ -12695,18 +12610,6 @@
         },
         {
           "of": "feature_hit_die"
-        },
-        {
-          "of": "act_dodge"
-        },
-        {
-          "of": "act_dash"
-        },
-        {
-          "of": "act_disengage"
-        },
-        {
-          "of": "act_hide"
         }
       ],
       "effects": []
@@ -12735,12 +12638,6 @@
       "has": [
         {
           "of": "goblin_scimitar"
-        },
-        {
-          "of": "act_hide"
-        },
-        {
-          "of": "act_disengage"
         }
       ],
       "effects": []
@@ -12769,9 +12666,6 @@
       "has": [
         {
           "of": "orc_greataxe"
-        },
-        {
-          "of": "act_dash"
         }
       ],
       "effects": []

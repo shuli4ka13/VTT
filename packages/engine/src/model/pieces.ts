@@ -1,12 +1,12 @@
 import piecesData from '../../../../samples/pieces.json' with { type: 'json' };
-import { SAMPLE_SYSTEMS } from './systems.ts';
+import { SAMPLE_WORLDS } from './systems.ts';
 import { blockParts, bringIn } from './bring.ts';
 import type { Brought, Part } from './bring.ts';
 import type { System } from './types.ts';
 
 export type Root =
   | { block: string } | { effects: string } | { effect: string }
-  | { recordKind: string } | { rollEdit: string } | { table: string };
+  | { recordKind: string } | { rollEdit: string } | { table: string } | { record: string } | { field: string };
 
 export interface Piece {
   id: string;
@@ -19,7 +19,11 @@ export interface Piece {
 
 export const PIECES: Piece[] = piecesData as Piece[];
 
-export const donorOf = (piece: Piece): System | undefined => SAMPLE_SYSTEMS.find(system => system.id === piece.donor);
+export function donorOf(piece: Piece): System | undefined {
+  const world = SAMPLE_WORLDS.find(w => w.system.id === piece.donor);
+  if (!world) return undefined;
+  return { ...world.system, library: [...world.system.library ?? [], ...world.compendium.records ?? []] };
+}
 
 export function rootsOf(donor: System, piece: Piece): Part[] {
   return piece.take.flatMap((root): Part[] => {
@@ -30,6 +34,8 @@ export function rootsOf(donor: System, piece: Piece): Part[] {
     if ('effect' in root) return [{ kind: 'effect', key: root.effect }];
     if ('recordKind' in root) return [{ kind: 'recordKind', key: root.recordKind }];
     if ('rollEdit' in root) return [{ kind: 'rollEdit', key: root.rollEdit }];
+    if ('record' in root) return [{ kind: 'record', key: root.record }];
+    if ('field' in root) return [{ kind: 'field', key: root.field }];
     return [{ kind: 'table', key: root.table }];
   });
 }
