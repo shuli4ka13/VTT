@@ -337,7 +337,7 @@
       },
       {
         "tag": "hp_extra",
-        "label": "Хиты: клеток сверх класса (у противника — все)",
+        "label": "Хиты: дополнительные клетки",
         "group": "Здоровье",
         "value": {
           "kind": "stored",
@@ -369,7 +369,7 @@
       },
       {
         "tag": "stress_extra",
-        "label": "Стресс: клеток сверх шести (у противника — все)",
+        "label": "Стресс: дополнительные клетки",
         "group": "Здоровье",
         "value": {
           "kind": "stored",
@@ -384,7 +384,7 @@
         "group": "Здоровье",
         "value": {
           "kind": "formula",
-          "expr": "(@class != \"\" ? 6 : 0) + (@ancestry != \"\" ? таблица(\"ancestries\", @ancestry, \"stress_bonus\") : 0) + @stress_extra"
+          "expr": "6 + (@ancestry != \"\" ? таблица(\"ancestries\", @ancestry, \"stress_bonus\") : 0) + @stress_extra"
         }
       },
       {
@@ -460,6 +460,28 @@
           "type": "number",
           "default": 11,
           "min": 1
+        }
+      },
+      {
+        "tag": "adversary_hp",
+        "label": "Хиты противника",
+        "group": "Противник",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 3,
+          "min": 1
+        }
+      },
+      {
+        "tag": "adversary_stress",
+        "label": "Стресс противника",
+        "group": "Противник",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 2,
+          "min": 0
         }
       },
       {
@@ -2831,11 +2853,53 @@
         "label": "Противник",
         "icon": "👹",
         "group": "Листы",
-        "hint": "Сложность, пороги, хиты и Стресс, модификатор атаки.",
+        "hint": "Сложность, пороги, хиты и Стресс, модификатор атаки — числами из блока противника, без класса и уровня.",
         "blocks": [
           "Пороги урона",
           "Здоровье",
           "Противник"
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "hp_max",
+            "op": "set",
+            "value": {
+              "expr": "@adversary_hp"
+            },
+            "stacking": "override",
+            "condition": null
+          },
+          {
+            "kind": "value",
+            "target": "stress_max",
+            "op": "set",
+            "value": {
+              "expr": "@adversary_stress"
+            },
+            "stacking": "override",
+            "condition": null
+          },
+          {
+            "kind": "value",
+            "target": "major",
+            "op": "set",
+            "value": {
+              "expr": "@major_base"
+            },
+            "stacking": "override",
+            "condition": null
+          },
+          {
+            "kind": "value",
+            "target": "severe",
+            "op": "set",
+            "value": {
+              "expr": "@severe_base"
+            },
+            "stacking": "override",
+            "condition": null
+          }
         ]
       },
       "weapon": {
@@ -4437,12 +4501,11 @@
       "of": "adversary",
       "name": "Разбойник Зазубренного ножа",
       "values": {
-        "level": 0,
         "difficulty": 12,
         "major_base": 8,
         "severe_base": 14,
-        "hp_extra": 5,
-        "stress_extra": 3,
+        "adversary_hp": 5,
+        "adversary_stress": 3,
         "attack_mod": 1
       },
       "has": [
@@ -4458,12 +4521,11 @@
       "of": "adversary",
       "name": "Шестёрка Зазубренного ножа",
       "values": {
-        "level": 0,
         "difficulty": 9,
         "major_base": 0,
         "severe_base": 0,
-        "hp_extra": 1,
-        "stress_extra": 1,
+        "adversary_hp": 1,
+        "adversary_stress": 1,
         "attack_mod": -2
       },
       "has": [
@@ -4479,12 +4541,11 @@
       "of": "adversary",
       "name": "Снайпер Зазубренного ножа",
       "values": {
-        "level": 0,
         "difficulty": 13,
         "major_base": 4,
         "severe_base": 7,
-        "hp_extra": 3,
-        "stress_extra": 2,
+        "adversary_hp": 3,
+        "adversary_stress": 2,
         "attack_mod": -1
       },
       "has": [
@@ -4500,12 +4561,11 @@
       "of": "adversary",
       "name": "Костолом Зазубренного ножа",
       "values": {
-        "level": 0,
         "difficulty": 12,
         "major_base": 7,
         "severe_base": 14,
-        "hp_extra": 7,
-        "stress_extra": 4,
+        "adversary_hp": 7,
+        "adversary_stress": 4,
         "attack_mod": -3
       },
       "has": [
@@ -4521,12 +4581,11 @@
       "of": "adversary",
       "name": "Медведь",
       "values": {
-        "level": 0,
         "difficulty": 14,
         "major_base": 9,
         "severe_base": 17,
-        "hp_extra": 7,
-        "stress_extra": 2,
+        "adversary_hp": 7,
+        "adversary_stress": 2,
         "attack_mod": 1
       },
       "has": [
@@ -4542,12 +4601,11 @@
       "of": "adversary",
       "name": "Лютый волк",
       "values": {
-        "level": 0,
         "difficulty": 12,
         "major_base": 5,
         "severe_base": 9,
-        "hp_extra": 4,
-        "stress_extra": 3,
+        "adversary_hp": 4,
+        "adversary_stress": 3,
         "attack_mod": 2
       },
       "has": [
@@ -4563,12 +4621,11 @@
       "of": "adversary",
       "name": "Пещерный огр",
       "values": {
-        "level": 0,
         "difficulty": 13,
         "major_base": 8,
         "severe_base": 15,
-        "hp_extra": 8,
-        "stress_extra": 3,
+        "adversary_hp": 8,
+        "adversary_stress": 3,
         "attack_mod": 1
       },
       "has": [
@@ -4584,12 +4641,11 @@
       "of": "adversary",
       "name": "Стражник с клинком",
       "values": {
-        "level": 0,
         "difficulty": 12,
         "major_base": 5,
         "severe_base": 9,
-        "hp_extra": 5,
-        "stress_extra": 2,
+        "adversary_hp": 5,
+        "adversary_stress": 2,
         "attack_mod": 1
       },
       "has": [

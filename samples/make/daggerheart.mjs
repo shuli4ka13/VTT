@@ -94,11 +94,11 @@ function fields() {
   out.push(formula('severe', 'Порог тяжёлого урона', 'Пороги урона',
     `@severe_base > 0 ? @severe_base + @level + ${ofAncestry('threshold_proficiency')} * @proficiency : 2 * @level`));
 
-  out.push(stored('hp_extra', 'Хиты: клеток сверх класса (у противника — все)', 'Здоровье', 0, { min: 0 }));
+  out.push(stored('hp_extra', 'Хиты: дополнительные клетки', 'Здоровье', 0, { min: 0 }));
   out.push(formula('hp_max', 'Хиты: клеток', 'Здоровье', `${ofClass('hp', 0)} + ${ofAncestry('hp_bonus')} + @hp_extra`));
   out.push(stored('hp', 'Хиты отмечены', 'Здоровье', 0, { min: 0, control: 'pips' }));
-  out.push(stored('stress_extra', 'Стресс: клеток сверх шести (у противника — все)', 'Здоровье', 0, { min: 0 }));
-  out.push(formula('stress_max', 'Стресс: клеток', 'Здоровье', `(@class != "" ? 6 : 0) + ${ofAncestry('stress_bonus')} + @stress_extra`));
+  out.push(stored('stress_extra', 'Стресс: дополнительные клетки', 'Здоровье', 0, { min: 0 }));
+  out.push(formula('stress_max', 'Стресс: клеток', 'Здоровье', `6 + ${ofAncestry('stress_bonus')} + @stress_extra`));
   out.push(stored('stress', 'Стресс отмечен', 'Здоровье', 0, { min: 0, control: 'pips' }));
   out.push(formula('down', 'Последний хит отмечен', 'Здоровье', 'все(@hp_max > 0, @hp >= @hp_max)'));
   out.push(formula('stress_full', 'Весь Стресс отмечен', 'Здоровье', 'все(@stress_max > 0, @stress >= @stress_max)'));
@@ -108,6 +108,8 @@ function fields() {
   out.push(stored('scars', 'Шрамы (вычеркнутые клетки Надежды)', 'Надежда', 0, { min: 0, max: 6 }));
 
   out.push(stored('difficulty', 'Сложность', 'Противник', 11, { min: 1 }));
+  out.push(stored('adversary_hp', 'Хиты противника', 'Противник', 3, { min: 1 }));
+  out.push(stored('adversary_stress', 'Стресс противника', 'Противник', 2, { min: 0 }));
   out.push(stored('attack_mod', 'Модификатор атаки', 'Противник', 1));
 
   out.push(stored('fear', 'Страх ведущего', 'Стол', 0, { min: 0, max: 12, lives: 'desk' }));
@@ -355,11 +357,19 @@ function effects() {
   };
 }
 
+const setTo = (target, expr) => ({ kind: 'value', target, op: 'set', value: { expr }, stacking: 'override', condition: null });
+
 const records = () => ({
   hero: { kind: 'sheet', label: 'Герой', icon: '🗡', group: 'Листы', hint: 'Лист игрока.', grants: ['duality', 'last_hp', 'stress_limit', 'stress_relief'] },
   adversary: {
-    kind: 'sheet', label: 'Противник', icon: '👹', group: 'Листы', hint: 'Сложность, пороги, хиты и Стресс, модификатор атаки.',
+    kind: 'sheet', label: 'Противник', icon: '👹', group: 'Листы', hint: 'Сложность, пороги, хиты и Стресс, модификатор атаки — числами из блока противника, без класса и уровня.',
     blocks: ['Пороги урона', 'Здоровье', 'Противник'],
+    modifiers: [
+      setTo('hp_max', '@adversary_hp'),
+      setTo('stress_max', '@adversary_stress'),
+      setTo('major', '@major_base'),
+      setTo('severe', '@severe_base'),
+    ],
   },
   weapon: {
     kind: 'item', label: 'Оружие', icon: '⚔', group: 'Снаряжение', hint: 'Черта, дистанция, кость урона и прибавка.',
@@ -499,7 +509,7 @@ const sheet = (id, name, of, values, has) => ({ id, systemId: 'daggerheart', of,
 const HERO_ACTIONS = ['act', 'armor_slot', 'short_tend', 'short_stress', 'short_armor', 'prepare', 'long_tend', 'long_stress', 'long_armor', 'death_blaze', 'death_avoid', 'death_risk'];
 
 const adversary = (id, name, difficulty, major, severe, hp, stress, attack, moveId) => sheet(id, name, 'adversary', {
-  level: 0, difficulty, major_base: major, severe_base: severe, hp_extra: hp, stress_extra: stress, attack_mod: attack,
+  difficulty, major_base: major, severe_base: severe, adversary_hp: hp, adversary_stress: stress, attack_mod: attack,
 }, [moveId]);
 
 const ADVERSARY_BOOK = [

@@ -121,3 +121,14 @@ group('Daggerheart: смертельные ходы', () => {
     eq(valueOf(out, 'bran', 'hp'), 2);
   });
 });
+
+group('Daggerheart: противник — тип листа переопределяет формулы героя', () => {
+  test('хиты, Стресс и пороги — числами из блока, без класса и уровня', () => {
+    const bandit = sheetOf('bandit');
+    eq(computed(bandit, 'hp_max'), 5);
+    eq(computed(bandit, 'stress_max'), 3);
+    eq(computed(bandit, 'major'), 8, 'порог без прибавки уровня');
+    eq(computed(bandit, 'severe'), 14);
+    eq(computed(sheetOf('bran'), 'major'), 8, 'у героя по-прежнему основа доспеха + уровень');
+  });
+});
