@@ -5,13 +5,14 @@ import { rollCheck, fieldCheck } from '../src/engine/check.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
-const sr = PLAYABLE_WORLDS.find(w => (w.system as System).id === 'shadowrun5')!;
+const sr = PLAYABLE_WORLDS.find(w => (w.system as System).id === 'shadowrun6')!;
 const system = sr.system as System;
 const compendium = sr.compendium as Compendium;
 const sheetOf = (id: string, values: Record<string, unknown> = {}) => {
   const sheet = structuredClone(sr.sheets.find(s => s.id === id)!) as Sheet;
   return { ...sheet, values: { ...sheet.values, ...values } } as Sheet;
 };
+const computed = (sheet: Sheet, tag: string) => calc(system, sheet, tag, newPass(system, sheet, { compendium }));
 const wears = (sheet: Sheet | undefined, id: string) => (sheet?.effects ?? []).some(e => e.effectId === id);
 
 const dice = (...runs: [number, number][]) => {
@@ -19,79 +20,69 @@ const dice = (...runs: [number, number][]) => {
   return () => tape.shift() ?? 1;
 };
 
-const shoot = (from: string, to: string, action: string, die: () => number) => exchange({
-  system, compendium, die, sheets: [sheetOf(from), sheetOf(to)], actionId: action, fromId: from, toId: to,
+const shoot = (from: Sheet, to: Sheet, action: string, die: () => number, дистанция = 'близкая') => exchange({
+  system, compendium, die, sheets: [from, to], actionId: action, fromId: from.id, toId: to.id, inputs: { дистанция },
 });
+const after = (out: ReturnType<typeof exchange>, id: string) => out.sheets.find(s => s.id === id)!;
 
-group('Shadowrun: пул к6, успехи на 5–6', () => {
-  test('навык с листа — пул из навыка и атрибута, считаются успехи', () => {
-    const check = fieldCheck(system, 'pistols_pool');
-    const out = rollCheck(system, sheetOf('razor'), check, { compendium, die: dice([4, 6], [8, 2]), owner: check.label });
-    eq(out.rolled.rolls.length, 12, 'Пистолеты 6 + Ловкость 6');
+group('Shadowrun 6: наборы и значения по книге', () => {
+  test('навык с листа — набор «навык + характеристика», успехи на 5–6', () => {
+    const check = fieldCheck(system, 'firearms_pool');
+    const out = rollCheck(system, sheetOf('razor'), check, { compendium, die: dice([4, 6], [7, 2]), owner: check.label });
+    eq(out.rolled.rolls.length, 11, 'Стрельба 6 + Проворство 5');
     eq(out.total, 4);
   });
 
-  test('без навыка — атрибут минус один', () => {
-    const check = fieldCheck(system, 'hacking_pool');
-    eq(rollCheck(system, sheetOf('razor'), check, { compendium, die: dice(), owner: check.label }).rolled.rolls.length, 1);
+  test('без изучения: Атлетика — характеристика − 1, Взлом — нельзя', () => {
+    eq(computed(sheetOf('silk'), 'athletics_pool'), 2);
+    eq(computed(sheetOf('silk'), 'cracking_pool'), 0);
+  });
+
+  test('значение защиты = Тело + броня; тролль +1 за подкожные наросты; шлем сверху', () => {
+    eq(computed(sheetOf('lone_star'), 'defense_rating'), 6, 'как в блоке патрульного, стр. 207');
+    eq(computed(sheetOf('fiveeyes'), 'defense_rating'), 3, 'как в блоке мотобанды, стр. 205');
+    eq(computed(sheetOf('hammer'), 'defense_rating'), 8 + 3 + 1 + 1);
+  });
+
+  test('счётчики: ⌈Тело/2⌉ + 8 и Живучесть орка; перелив оглушения в физический, физического — в критический', () => {
+    eq(computed(sheetOf('razor'), 'physical_max'), 12, '8 + 3 + Живучесть 1');
+    const hurt = sheetOf('humanis', { stun: 12, physical: 8 });
+    eq(computed(hurt, 'stun_overflow'), 3);
+    eq(computed(hurt, 'critical'), 2);
+    eq(computed(hurt, 'is_dead'), false);
+    eq(computed(sheetOf('humanis', { stun: 12, physical: 10 }), 'is_dead'), true, 'Тело 2 × 2 = 4 критических');
   });
 });
 
-group('Shadowrun: выстрел', () => {
-  test('защиту и сопротивление бросает цель своими пулами', () => {
-    const out = shoot('razor', 'guard', 'ares_predator_v:0', dice([12, 6], [8, 1], [15, 1]));
-    const trace = JSON.stringify(out.reports);
-    ok(trace.includes('"rolls":[1,1,1,1,1,1,1,1]'), 'защита цели: Реакция 4 + Интуиция 4 = 8 костей');
-    ok(trace.includes(`"rolls":[${Array(15).fill(1).join(',')}]`), 'сопротивление: Тело 4 + Броня 12 − пробитие 1 = 15 костей');
+group('Shadowrun 6: атака', () => {
+  test('попадание: чистые успехи к урону, сопротивление Телом, вид урона по оружию', () => {
+    const out = shoot(sheetOf('razor'), sheetOf('lone_star'), 'predator_vi:0', dice([11, 6], [6, 1], [3, 1]));
+    eq(after(out, 'lone_star').values.physical, 3 + 11);
+    ok(wears(after(out, 'lone_star'), 'prone'), 'урон больше Тела — «Распластан»');
   });
 
-  test('успехов засчитывается не больше точности; чистые успехи в урон; физический трек заполнен — «При смерти»', () => {
-    const out = shoot('razor', 'guard', 'ares_predator_v:0', dice([12, 6], [8, 1], [15, 1]));
-    const guard = out.sheets.find(s => s.id === 'guard')!;
-    eq(guard.values.physical, 13, 'урон 8 + 5 чистых успехов (точность 5), сопротивление без успехов');
-    ok(wears(guard, 'bleeding'));
+  test('ничья — базовый урон', () => {
+    const out = shoot(sheetOf('silk'), sheetOf('humanis'), 'colt_l36:0', dice([2, 6], [4, 1], [2, 6], [2, 1], [2, 1]));
+    eq(after(out, 'humanis').values.physical, 2);
   });
 
-  test('урон не пробил броню — становится оглушающим', () => {
-    const out = shoot('silk', 'guard', 'colt_america_l36:0', dice([3, 6], [3, 1], [8, 1], [16, 1]));
-    const guard = out.sheets.find(s => s.id === 'guard')!;
-    eq(guard.values.physical ?? 0, 0);
-    eq(guard.values.stun, 10, 'урон 7 + 3 успеха = 10, броня 12 — оглушающий');
-    ok(wears(guard, 'unconscious'), 'оглушающий трек 10 из 10');
+  test('оглушающая дубинка: оглушающий урон и «Электрошок»', () => {
+    const out = shoot(sheetOf('lone_star'), sheetOf('humanis'), 'stun_baton:0', dice([7, 6], [4, 1], [2, 1]), 'вплотную');
+    eq(after(out, 'humanis').values.stun, 5 + 7);
+    ok(wears(after(out, 'humanis'), 'shocked'));
   });
 
-  test('защита набрала столько же — промах', () => {
-    const out = shoot('silk', 'guard', 'colt_america_l36:0', dice([2, 6], [4, 1], [2, 5], [6, 1]));
-    const guard = out.sheets.find(s => s.id === 'guard')!;
-    eq(guard.values.physical ?? 0, 0);
-    eq(guard.values.stun ?? 0, 0);
-  });
-});
-
-group('Shadowrun: сверено с книгой', () => {
-  const computed = (sheet: Sheet, tag: string) => calc(system, sheet, tag, newPass(system, sheet, { compendium }));
-
-  test('без навыка по умолчанию нельзя — пул 0; можно — атрибут минус один', () => {
-    const razor = sheetOf('razor');
-    eq(computed(razor, 'locksmith_pool'), 0, 'взлом замков без навыка не бросают');
-    eq(computed(razor, 'hacking_pool'), 1);
+  test('значение атаки выше защиты на 4 — очко Преимущества атакующему; на дистанции «—» стрелять нельзя', () => {
+    const razor = sheetOf('razor', { edge_left: 0 });
+    const out = shoot(razor, sheetOf('humanis'), 'predator_vi:0', dice([11, 1], [4, 1]));
+    eq(after(out, 'razor').values.edge_left, 1, 'АТК 10 против ЗЩТ 2');
+    const far = shoot(sheetOf('razor'), sheetOf('humanis'), 'predator_vi:0', dice(), 'дальняя');
+    eq(after(far, 'humanis').values.physical ?? 0, 0);
   });
 
-  test('тролль: кожная броня +1, шлем прибавляется, но не больше Силы', () => {
-    eq(computed(sheetOf('hammer'), 'armor'), 9 + 2 + 1);
-  });
-
-  test('оглушающий сверх трека переливается в физический по две клетки за одну; штраф за раны по обоим трекам', () => {
-    const hurt = sheetOf('razor', { stun: 14, physical: 3 });
-    eq(computed(hurt, 'stun_overflow'), 2, 'трек 10, лишних 4');
-    eq(computed(hurt, 'physical_total'), 5);
-    eq(computed(hurt, 'wound_mod'), -4, '5 физических → −1, 10 оглушающих → −3');
-  });
-
-  test('урон, равный броне, остаётся физическим', () => {
-    const out = shoot('silk', 'ganger', 'colt_america_l36:0', dice([2, 6], [4, 1], [6, 1], [13, 1]));
-    const ganger = out.sheets.find(s => s.id === 'ganger')!;
-    eq(ganger.values.physical, 9, 'урон 7 + 2 успеха = 9 при броне 9');
-    eq(ganger.values.stun ?? 0, 0);
+  test('защита выше атаки на 4 — очко Преимущества защитнику', () => {
+    const guard = sheetOf('swat', { edge_left: 0 });
+    const out = shoot(sheetOf('fiveeyes'), guard, 'streetline:0', dice([4, 1], [8, 1]));
+    eq(after(out, 'swat').values.edge_left, 1, 'АТК 8 против ЗЩТ 14');
   });
 });

@@ -246,7 +246,9 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
       const found: Reference[] = [];
       exprRefs(handler.if.expr, head, { params, earlier: new Set(), eventChain: heard.kind === 'event' }, found);
       const listened = heard.kind === 'effect' ? system.effects[heard.key!] : undefined;
+      const listenedSteps = new Set((listened?.steps ?? []).map(s => s.id).filter(Boolean));
       for (const ref of found) {
+        if (ref.kind === 'field' && listenedSteps.has(ref.key)) continue;
         if (ref.kind !== 'step') { out.push(ref); continue; }
         if (listened && !(listened.steps ?? []).some(s => s.id === ref.key)) {
           out.push({ ...ref, scope: `listened:${heard.key}` });

@@ -299,6 +299,15 @@ function replyFrom(
   };
 }
 
+function holdsQuietly(condition: Parameters<typeof holdsNow>[0], ctx: Parameters<typeof holdsNow>[1]): boolean {
+  try {
+    return holdsNow(condition, ctx);
+  } catch (err) {
+    if (!(err instanceof EngineError)) throw err;
+    return false;
+  }
+}
+
 function fireTriggers(
   envelope: Envelope,
   out: { sheet: Sheet; results: Record<string, unknown>; emitted: EmittedEvent[] },
@@ -314,7 +323,7 @@ function fireTriggers(
   for (const { id, effect, handler, heard } of listening(ctx.system, sheet, occasion, { compendium: ctx.compendium })) {
     const results = withEvent(out.results, heard);
     const owner = `триггер «${effect.label || id}»`;
-    if (!holdsNow(handler.if, { pass: newPass(ctx.system, sheet, { compendium: ctx.compendium }), results, owner })) continue;
+    if (!holdsQuietly(handler.if, { pass: newPass(ctx.system, sheet, { compendium: ctx.compendium }), results, owner })) continue;
 
     const body = withSteps(effect, handler.steps);
     if (runsAtOther(handler)) {
@@ -351,7 +360,7 @@ export function fireOutgoing(
   for (const { id, effect, handler, heard } of listening(ctx.system, sheet, occasion, { compendium: ctx.compendium })) {
     const results = withEvent(outcome.results, heard);
     const owner = `триггер «${effect.label || id}»`;
-    if (!holdsNow(handler.if, { pass: newPass(ctx.system, sheet, { compendium: ctx.compendium }), results, owner })) continue;
+    if (!holdsQuietly(handler.if, { pass: newPass(ctx.system, sheet, { compendium: ctx.compendium }), results, owner })) continue;
 
     const body = withSteps(effect, handler.steps);
     if (runsAtOther(handler)) {

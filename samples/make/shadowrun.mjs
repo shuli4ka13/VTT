@@ -2,60 +2,41 @@ import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const ATTRIBUTES = [
-  ['body', 'Тело'], ['agility', 'Ловкость'], ['reaction', 'Реакция'], ['strength', 'Сила'],
-  ['willpower', 'Сила воли'], ['logic', 'Логика'], ['intuition', 'Интуиция'], ['charisma', 'Харизма'],
+  ['body', 'Тело'], ['agility', 'Проворство'], ['reaction', 'Реакция'], ['strength', 'Сила'],
+  ['willpower', 'Воля'], ['logic', 'Логика'], ['intuition', 'Интуиция'], ['charisma', 'Харизма'],
 ];
 
 const SKILLS = [
-  ['Бой', [
-    ['archery', 'Стрельба из лука', 'agility', true], ['automatics', 'Автоматическое оружие', 'agility', true],
-    ['blades', 'Клинки', 'agility', true], ['clubs', 'Дубинки', 'agility', true],
-    ['exotic_melee', 'Экзотическое оружие ближнего боя', 'agility', false], ['exotic_ranged', 'Экзотическое стрелковое оружие', 'agility', false],
-    ['heavy_weapons', 'Тяжёлое оружие', 'agility', true], ['longarms', 'Длинноствольное оружие', 'agility', true],
-    ['pistols', 'Пистолеты', 'agility', true], ['throwing', 'Метательное оружие', 'agility', true],
-    ['unarmed', 'Рукопашный бой', 'agility', true],
-  ]],
-  ['Тело', [
-    ['disguise', 'Маскировка', 'intuition', true], ['diving', 'Ныряние', 'body', true], ['escape_artist', 'Выпутывание', 'agility', true],
-    ['free_fall', 'Свободное падение', 'body', true], ['gymnastics', 'Гимнастика', 'agility', true], ['palming', 'Ловкость рук', 'agility', false],
-    ['perception', 'Восприятие', 'intuition', true], ['running', 'Бег', 'strength', true], ['sneaking', 'Скрытность', 'agility', true],
-    ['survival', 'Выживание', 'willpower', true], ['swimming', 'Плавание', 'strength', true], ['tracking', 'Выслеживание', 'intuition', true],
-  ]],
-  ['Общение', [
-    ['con', 'Обман', 'charisma', true], ['etiquette', 'Этикет', 'charisma', true], ['impersonation', 'Перевоплощение', 'charisma', true],
-    ['instruction', 'Обучение', 'charisma', true], ['intimidation', 'Запугивание', 'charisma', true], ['leadership', 'Лидерство', 'charisma', true],
-    ['negotiation', 'Переговоры', 'charisma', true], ['performance', 'Выступление', 'charisma', true],
-  ]],
-  ['Техника', [
-    ['aeronautics_mechanic', 'Механика: авиация', 'logic', false], ['automotive_mechanic', 'Механика: автомобили', 'logic', false],
-    ['industrial_mechanic', 'Механика: промышленная', 'logic', false], ['nautical_mechanic', 'Механика: суда', 'logic', false],
-    ['animal_handling', 'Обращение с животными', 'charisma', true], ['armorer', 'Оружейное дело', 'logic', true], ['artisan', 'Ремесло', 'intuition', false],
-    ['biotechnology', 'Биотехнологии', 'logic', false], ['cybertechnology', 'Кибертехнологии', 'logic', false], ['first_aid', 'Первая помощь', 'logic', true],
-    ['medicine', 'Медицина', 'logic', false], ['chemistry', 'Химия', 'logic', false], ['computer', 'Компьютер', 'logic', true],
-    ['hardware', 'Железо', 'logic', false], ['software', 'Программы', 'logic', false], ['cybercombat', 'Кибербой', 'logic', true],
-    ['electronic_warfare', 'Радиоэлектронная борьба', 'logic', false], ['hacking', 'Хакинг', 'logic', true], ['demolitions', 'Взрывное дело', 'logic', true],
-    ['forgery', 'Подделка', 'logic', true], ['locksmith', 'Взлом замков', 'agility', false], ['navigation', 'Навигация', 'intuition', true],
-  ]],
-  ['Транспорт', [
-    ['gunnery', 'Бортовое оружие', 'agility', true], ['pilot_aerospace', 'Пилотирование: аэрокосмос', 'reaction', false],
-    ['pilot_aircraft', 'Пилотирование: воздух', 'reaction', false], ['pilot_ground', 'Пилотирование: наземный', 'reaction', true],
-    ['pilot_walker', 'Пилотирование: шагоходы', 'reaction', false], ['pilot_watercraft', 'Пилотирование: вода', 'reaction', true],
-  ]],
-  ['Магия', [
-    ['spellcasting', 'Колдовство', 'magic', false], ['counterspelling', 'Контрзаклинания', 'magic', false],
-    ['ritual_spellcasting', 'Ритуалы', 'magic', false], ['summoning', 'Призыв', 'magic', false], ['banishing', 'Изгнание', 'magic', false],
-    ['binding', 'Связывание', 'magic', false], ['alchemy', 'Алхимия', 'magic', false], ['assensing', 'Ясновидение', 'intuition', false],
-    ['astral_combat', 'Астральный бой', 'willpower', false], ['arcana', 'Арканы', 'logic', false],
-  ]],
+  ['astral', 'Астрал', 'intuition', false],
+  ['athletics', 'Атлетика', 'agility', true],
+  ['biotech', 'Биотехнологии', 'logic', false],
+  ['close_combat', 'Ближний бой', 'agility', true],
+  ['cracking', 'Взлом', 'logic', false],
+  ['perception', 'Внимание', 'intuition', true],
+  ['conjuring', 'Воплощение', 'magic', false],
+  ['enchanting', 'Зачарование', 'magic', false],
+  ['engineering', 'Инженерное дело', 'logic', true],
+  ['sorcery', 'Колдовство', 'magic', false],
+  ['tasking', 'Многозадачность', 'resonance', false],
+  ['con', 'Обман', 'charisma', true],
+  ['outdoors', 'Ориентирование', 'intuition', true],
+  ['piloting', 'Пилотирование', 'reaction', true],
+  ['stealth', 'Скрытность', 'agility', true],
+  ['firearms', 'Стрельба', 'agility', true],
+  ['influence', 'Убеждение', 'charisma', true],
+  ['exotic_weapons', 'Экзотическое оружие', 'agility', false],
+  ['electronics', 'Электроника', 'logic', true],
 ];
 
 const METATYPES = [
-  ['человек', 'Human', '1–6 всё; Грань 2–7', 0, 0, ''],
-  ['эльф', 'Elf', 'Ловкость 2–7, Харизма 3–8', 0, 0, 'Зрение при слабом свете'],
-  ['дворф', 'Dwarf', 'Тело 3–8, Реакция 1–5, Сила 3–8, Сила воли 2–7', 0, 0, 'Термографическое зрение; +2 кости против патогенов и токсинов'],
-  ['орк', 'Ork', 'Тело 4–9, Сила 3–8, Харизма 1–5, Логика 1–5', 0, 0, 'Зрение при слабом свете'],
-  ['тролль', 'Troll', 'Тело 5–10, Ловкость 1–5, Сила 5–10, Харизма 1–4, Интуиция 1–5, Логика 1–5', 1, 1, 'Термографическое зрение; досягаемость +1; кожная броня +1'],
+  ['человек', 'Преимущество 1–7, остальное 1–6', 0, 0, ''],
+  ['дварф', 'Тело 1–7, Реакция 1–5, Сила 1–8, Воля 1–7', 0, 0, 'Инфразрение; Устойчивость к токсинам'],
+  ['эльф', 'Проворство 1–7, Харизма 1–8', 0, 0, 'Сумеречное зрение'],
+  ['орк', 'Тело 1–8, Сила 1–8, Харизма 1–5', 1, 0, 'Живучесть 1; Сумеречное зрение'],
+  ['тролль', 'Тело 1–9, Проворство 1–5, Сила 1–9, Харизма 1–5', 2, 1, 'Живучесть 2; Инфразрение; Подкожные наросты (+1 к защите, безоружный урон физический)'],
 ];
+
+const RANGES = ['вплотную', 'близкая', 'средняя', 'дальняя', 'экстремальная'];
 
 const POOL_DIE = { constant: 'pool' };
 
@@ -66,61 +47,56 @@ const stored = (tag, label, group, def, extra = {}) => {
 const formula = (tag, label, group, expr, roll) => ({ tag, label, group, ...(roll ? { roll } : {}), value: { kind: 'formula', expr } });
 const pool = label => ({ label, die: POOL_DIE, pool: true, tags: ['проверка'] });
 const ofMeta = column => `(@metatype != "" ? таблица("metatypes", @metatype, "${column}") : 0)`;
+const PENALTY = '@wound_mod + @condition_mod';
 
 function fields() {
   const out = [];
   out.push({ tag: 'metatype', label: 'Метатип', group: 'Личное дело', value: { kind: 'stored', type: 'choice', from: 'metatypes', default: 'человек' } });
-  for (const [tag, label] of ATTRIBUTES) out.push(stored(tag, label, 'Атрибуты', 3, { min: 1, max: 10 }));
-  out.push(stored('edge', 'Грань', 'Особые', 2, { min: 1, max: 7 }));
-  out.push(stored('edge_left', 'Грань: осталось', 'Особые', 2, { min: 0, control: 'pips' }));
+  for (const [tag, label] of ATTRIBUTES) out.push(stored(tag, label, 'Характеристики', 3, { min: 0, max: 13 }));
+  out.push(stored('edge', 'Преимущество (характеристика)', 'Особые', 2, { min: 1, max: 7 }));
+  out.push(stored('edge_left', 'Очки Преимущества', 'Особые', 2, { min: 0, max: 7, control: 'pips' }));
   out.push(stored('essence', 'Сущность', 'Особые', 6, { min: 0, max: 6 }));
-  out.push(stored('magic', 'Магия', 'Особые', 0, { min: 0, max: 6 }));
+  out.push(stored('magic', 'Магия', 'Особые', 0, { min: 0 }));
+  out.push(stored('resonance', 'Резонанс', 'Особые', 0, { min: 0 }));
 
-  out.push(formula('physical_limit', 'Физический предел', 'Пределы', 'ceil((@strength * 2 + @body + @reaction) / 3)'));
-  out.push(formula('mental_limit', 'Ментальный предел', 'Пределы', 'ceil((@logic * 2 + @intuition + @willpower) / 3)'));
-  out.push(formula('social_limit', 'Социальный предел', 'Пределы', 'ceil((@charisma * 2 + @willpower + round(@essence)) / 3)'));
-
-  for (const [group, skills] of SKILLS) {
-    for (const [tag, label] of skills) out.push(stored(tag, label, `Навыки: ${group.toLowerCase()}`, 0, { min: 0, max: 13 }));
+  for (const [tag, label] of SKILLS) out.push(stored(tag, label, 'Навыки', 0, { min: 0, max: 10 }));
+  for (const [tag, label, attribute, untrained] of SKILLS) {
+    out.push(formula(`${tag}_pool`, `${label}: набор`, 'Наборы кубиков',
+      `max(0, (@${tag} > 0 ? @${tag} + @${attribute} : ${untrained ? `@${attribute} - 1` : '0'}) + ${PENALTY})`,
+      pool(`Проверка: ${label}`)));
   }
-  for (const [group, skills] of SKILLS) {
-    for (const [tag, label, attribute, fallback] of skills) {
-      const untrained = fallback ? `@${attribute} - 1` : '0';
-      out.push(formula(`${tag}_pool`, `${label}: пул`, `Пулы: ${group.toLowerCase()}`,
-        `max(0, (@${tag} > 0 ? @${tag} + @${attribute} : ${untrained}) + @wound_mod)`,
-        pool(`Проверка: ${label}`)));
-    }
-  }
-  out.push(formula('composure', 'Самообладание', 'Пулы: атрибуты', 'max(0, @charisma + @willpower + @wound_mod)', pool('Самообладание')));
-  out.push(formula('judge_intentions', 'Чтение намерений', 'Пулы: атрибуты', 'max(0, @charisma + @intuition + @wound_mod)', pool('Чтение намерений')));
-  out.push(formula('memory', 'Память', 'Пулы: атрибуты', 'max(0, @logic + @willpower + @wound_mod)', pool('Память')));
-  out.push(formula('lift_carry', 'Поднять и нести', 'Пулы: атрибуты', 'max(0, @body + @strength + @wound_mod)', pool('Поднять и нести')));
+  out.push(formula('composure', 'Самообладание', 'Наборы кубиков', `max(0, @willpower + @charisma + ${PENALTY})`, pool('Самообладание')));
+  out.push(formula('judge_intentions', 'Проницательность', 'Наборы кубиков', `max(0, @willpower + @intuition + ${PENALTY})`, pool('Проницательность')));
+  out.push(formula('memory', 'Память', 'Наборы кубиков', `max(0, @logic + @intuition + ${PENALTY})`, pool('Память')));
+  out.push(formula('lift_carry', 'Поднятие тяжестей', 'Наборы кубиков', `max(0, @body + @strength + ${PENALTY})`, pool('Поднятие тяжестей')));
 
   out.push(stored('armor_worn', 'Броня: надетое', 'Защита', 0, { min: 0 }));
-  out.push(stored('armor_extra', 'Броня: аксессуары (+)', 'Защита', 0, { min: 0 }));
-  out.push(formula('armor', 'Броня', 'Защита', `@armor_worn + min(@armor_extra, @strength) + ${ofMeta('dermal')}`));
-  out.push(formula('defense_pool', 'Защита: пул', 'Защита', 'max(0, @reaction + @intuition + @wound_mod)', pool('Защита')));
-  out.push(formula('soak_pool', 'Сопротивление урону: пул', 'Защита', '@body + @armor'));
-  out.push(formula('reach', 'Досягаемость (природная)', 'Защита', ofMeta('reach')));
+  out.push(stored('armor_extra', 'Броня: шлем, щит, накладки', 'Защита', 0, { min: 0 }));
+  out.push(stored('armor_natural', 'Броня: аугментации (кожные пластины)', 'Защита', 0, { min: 0 }));
+  out.push(stored('cover', 'Укрытие (0–4)', 'Защита', 0, { min: 0, max: 4 }));
+  out.push(formula('defense_rating', 'Значение защиты', 'Защита',
+    `@body + @armor_worn + @armor_extra + @armor_natural + ${ofMeta('dermal')} + @cover`));
+  out.push(formula('defense_pool', 'Защита: набор (Реакция + Интуиция)', 'Защита', `max(0, @reaction + @intuition + @cover + ${PENALTY})`, pool('Защита')));
+  out.push(formula('unarmed_rating', 'Значение атаки без оружия', 'Защита', '@strength + @reaction'));
 
-  out.push(formula('physical_max', 'Физический трек: клеток', 'Состояние', '8 + ceil(@body / 2)'));
-  out.push(stored('physical', 'Физический урон', 'Состояние', 0, { min: 0 }));
-  out.push(formula('stun_max', 'Оглушающий трек: клеток', 'Состояние', '8 + ceil(@willpower / 2)'));
-  out.push(stored('stun', 'Оглушающий урон', 'Состояние', 0, { min: 0 }));
-  out.push(formula('stun_overflow', 'Перелив оглушающего в физический', 'Состояние', 'floor(max(0, @stun - @stun_max) / 2)'));
-  out.push(formula('physical_total', 'Физический урон с переливом', 'Состояние', '@physical + @stun_overflow'));
-  out.push(formula('wound_mod', 'Штраф за раны', 'Состояние',
-    '0 - floor(min(@physical_total, @physical_max) / 3) - floor(min(@stun, @stun_max) / 3)'));
-  out.push(formula('knocked_out', 'Оглушающий трек полон', 'Состояние', '@stun >= @stun_max'));
-  out.push(formula('bleeding_out', 'Физический трек полон', 'Состояние', '@physical_total >= @physical_max'));
-  out.push(formula('is_dead', 'Перелив сверх Тела', 'Состояние', '@physical_total > @physical_max + @body'));
-  out.push(formula('conscious', 'В сознании', 'Состояние', 'все(@stun < @stun_max, @physical_total < @physical_max)'));
+  out.push(formula('physical_max', 'Счётчик здоровья: ячеек', 'Счётчики', `8 + ceil(@body / 2) + ${ofMeta('toughness')}`));
+  out.push(stored('physical', 'Физический урон', 'Счётчики', 0, { min: 0 }));
+  out.push(formula('stun_max', 'Счётчик оглушения: ячеек', 'Счётчики', '8 + ceil(@willpower / 2)'));
+  out.push(stored('stun', 'Оглушающий урон', 'Счётчики', 0, { min: 0 }));
+  out.push(formula('stun_overflow', 'Лишний оглушающий — в физический', 'Счётчики', 'max(0, @stun - @stun_max)'));
+  out.push(formula('physical_total', 'Физический урон с переливом', 'Счётчики', '@physical + @stun_overflow'));
+  out.push(formula('critical', 'Критический урон', 'Счётчики', 'max(0, @physical_total - @physical_max)'));
+  out.push(formula('wound_mod', 'Штраф за раны', 'Счётчики',
+    '0 - floor(min(@stun, @stun_max) / 3) - floor(min(@physical_total, @physical_max) / 3)'));
+  out.push(stored('condition_mod', 'Штраф от состояний', 'Счётчики', 0));
+  out.push(formula('knocked_out', 'Счётчик оглушения полон', 'Счётчики', '@stun >= @stun_max'));
+  out.push(formula('bleeding_out', 'Счётчик здоровья полон', 'Счётчики', '@physical_total >= @physical_max'));
+  out.push(formula('is_dead', 'Критический урон достиг Тело × 2', 'Счётчики', '@critical >= @body * 2'));
+  out.push(formula('conscious', 'В сознании', 'Счётчики', 'все(@stun < @stun_max, @physical_total < @physical_max)'));
 
-  out.push(formula('initiative', 'Инициатива', 'Инициатива', '@reaction + @intuition + @wound_mod'));
+  out.push(formula('initiative', 'Уровень инициативы', 'Инициатива', `@reaction + @intuition + ${PENALTY}`));
   return out;
 }
-
-const skillWord = label => label.toLowerCase();
 
 const tables = () => ({
   rolls: {
@@ -129,19 +105,32 @@ const tables = () => ({
     rows: [
       { value: 'проверка', cells: { успех: 'есть успехи', провал: 'ни одного успеха' } },
       { value: 'атака', cells: { успех: 'попадание', провал: 'промах' } },
-      { value: 'защита' },
-      { value: 'сопротивление' },
-      { value: 'инициатива' },
+      { value: 'защита' }, { value: 'сопротивление' }, { value: 'инициатива' }, { value: 'лечение' },
     ],
   },
   metatypes: {
     label: 'Метатипы', key: 'word',
     columns: [
-      { key: 'en', label: 'В книге', kind: 'text' }, { key: 'ranges', label: 'Атрибуты (мин.–макс.)', kind: 'text' },
-      { key: 'dermal', label: 'Кожная броня', kind: 'number' }, { key: 'reach', label: 'Досягаемость', kind: 'number' },
-      { key: 'traits', label: 'Расовые черты', kind: 'text' },
+      { key: 'ranges', label: 'Пределы характеристик (стр. 65)', kind: 'text' },
+      { key: 'toughness', label: 'Живучесть: ячеек здоровья', kind: 'number' },
+      { key: 'dermal', label: 'Подкожные наросты: к защите', kind: 'number' },
+      { key: 'traits', label: 'Расовые качества', kind: 'text' },
     ],
-    rows: METATYPES.map(([value, en, ranges, dermal, reach, traits]) => ({ value, cells: { en, ranges, dermal, reach, traits } })),
+    rows: METATYPES.map(([value, ranges, toughness, dermal, traits]) => ({ value, cells: { ranges, toughness, dermal, traits } })),
+  },
+  ranges: {
+    label: 'Дистанции', key: 'word',
+    columns: [{ key: 'meters', label: 'Метры', kind: 'text' }],
+    rows: RANGES.map((value, at) => ({ value, cells: { meters: ['0–3', '4–50', '51–250', '251–500', '501+'][at] } })),
+  },
+  fire_modes: {
+    label: 'Режимы стрельбы', key: 'word',
+    columns: [{ key: 'ar', label: 'К значению атаки', kind: 'number' }, { key: 'dv', label: 'К урону', kind: 'number' }],
+    rows: [
+      { value: 'одиночный выстрел', cells: { ar: 0, dv: 0 } },
+      { value: 'короткая очередь', cells: { ar: -2, dv: 1 } },
+      { value: 'длинная очередь', cells: { ar: -4, dv: 2 } },
+    ],
   },
   damage_kinds: {
     label: 'Вид урона', key: 'word',
@@ -150,60 +139,96 @@ const tables = () => ({
   },
   weapon_skills: {
     label: 'Навык оружия', key: 'word',
-    columns: [{ key: 'pool', label: 'Пул', kind: 'expr' }],
-    rows: SKILLS[0][1].map(([tag, label]) => ({ value: skillWord(label), cells: { pool: `@${tag}_pool` } })),
+    columns: [{ key: 'pool', label: 'Набор', kind: 'expr' }],
+    rows: [['стрельба', 'firearms'], ['ближний бой', 'close_combat'], ['атлетика', 'athletics'], ['экзотическое оружие', 'exotic_weapons']]
+      .map(([value, tag]) => ({ value, cells: { pool: `@${tag}_pool` } })),
+  },
+  adversaries: {
+    label: 'Противники из книги (стр. 204–210)', key: 'word',
+    columns: ['ПР', 'Т', 'П', 'Р', 'С', 'В', 'Л', 'И', 'Х', 'ЗЩТ', 'Инициатива', 'Счётчик'].map((label, at) => ({ key: `c${at}`, label, kind: 'text' })),
+    rows: ADVERSARY_BOOK.map(([value, ...cells]) => ({ value, cells: Object.fromEntries(cells.map((cell, at) => [`c${at}`, cell])) })),
   },
 });
 
+const ADVERSARY_BOOK = [
+  ['Головорез из «Хуманиса»', '0', '2', '2', '2', '2', '2', '2', '2', '1', '2', '4 + 1к6', '9'],
+  ['Шаман «Заботы о Терре!»', '0', '1', '2', '3', '2', '3', '2', '2', '2', '1', '5 + 1к6', '10'],
+  ['Член мотобанды «Пятиглазые»', '1', '2', '2', '2', '2', '2', '2', '2', '1', '3', '4 + 1к6', '9'],
+  ['Мафиози-коллектор', '1', '2(3)', '2', '2', '2', '2', '2', '2', '1', '7', '4 + 1к6', '10'],
+  ['Громила «Сынов Саурона» (орк)', '2', '3', '2', '2', '4', '2', '1', '2', '1', '5', '4 + 1к6', '10'],
+  ['Сборщик данных «Тесаков»', '2', '3', '2', '3', '1', '4', '4', '4', '1', '4', '6 + 1к6', '12'],
+  ['Риггер «Минутмен Секьюрити»', '3', '2', '3', '4(5)', '2', '4', '4', '4', '1', '5', '9 + 1к6', '13'],
+  ['Патрульный «Одинокой звезды»', '3', '3', '3', '3', '3', '3', '2', '3', '2', '6', '6 + 1к6', '10'],
+  ['Солдат мафии', '4', '3', '2', '2', '3', '2', '1', '2', '1', '5', '4 + 1к6', '10'],
+  ['Мастер клинка якудзы', '4', '3', '5(6)', '4(5)', '3', '3', '2', '3', '2', '6', '8 + 2к6', '14'],
+  ['Боевой маг «Одинокой звезды»', '5', '3', '4', '4', '2', '4', '4', '4', '4', '10', '8 + 1к6', '10'],
+  ['Офицер спецназа «Одинокой звезды»', '5', '4', '3(4)', '4(5)', '3(4)', '4', '2', '4', '3', '14(16)', '9 + 2к6', '15'],
+  ['Офицер ООР «Доквагона»', '6', '4', '4(6)', '5(7)', '4(6)', '5', '3', '4', '3', '14', '11 + 3к6', '11'],
+  ['Красный самурай «Ренраку»', '7', '5', '5(8)', '5(7)', '4(7)', '4', '4', '5', '4', '16', '12 + 3к6', '11'],
+];
+
 const constants = () => ({
-  pool: { label: 'пул к6', kind: 'die', dice: [{ count: 1, sides: 6 }], read: { kind: 'count', atLeast: 5 } },
+  pool: { label: 'набор к6', kind: 'die', dice: [{ count: 1, sides: 6 }], read: { kind: 'count', atLeast: 5 } },
   init_die: { label: 'к6 инициативы', kind: 'die', dice: [{ count: 1, sides: 6 }] },
 });
 
 const rollEdits = () => ({
-  second_chance: { label: 'Второй шанс: перебросить всё без успеха', ops: [{ op: 'reroll', n: 4 }] },
+  reroll_failures: { label: 'Преимущество: перебросить все неуспехи', ops: [{ op: 'reroll', n: 4 }] },
 });
 
-const add = (tag, expr, when) => ({ type: 'apply', target: { tag }, direction: 'add', value: { expr }, targetModifiers: false, ...(when ? { when: { expr: when } } : {}) });
+const change = (tag, direction, expr, when) => ({
+  type: 'apply', target: { tag }, direction, value: { expr }, targetModifiers: false, ...(when ? { when: { expr: when } } : {}),
+});
 const hang = id => ({ type: 'status', mode: 'apply', effect: { const: id } });
 const drop = id => ({ type: 'status', mode: 'remove', effect: { const: id } });
+const payEdge = n => [
+  { type: 'compare', value: { expr: '@edge_left' }, versus: { expr: String(n) }, breakIf: 'less', note: `нужно ${n} очк. Преимущества` },
+  change('edge_left', 'subtract', String(n)),
+];
 
-const PUSHED = 'или(@push, 0) >= 1';
-const HITS = `(${PUSHED} ? @атака.natural : min(@атака.natural, @accuracy))`;
-const NET = `${HITS} - @атака.versusNatural`;
-const MODIFIED_DV = `@dv + ${NET}`;
-const TAKEN = `max(0, ${MODIFIED_DV} - @сопротивление.natural)`;
-const STAYS_PHYSICAL = `все(@physical_hit >= 1, ${MODIFIED_DV} >= @получатель.armor + @ap)`;
+const MODE = 'или(@режим, "одиночный выстрел")';
+const RATING = `(@дистанция == "вплотную" ? @ar1 : (@дистанция == "близкая" ? @ar2 : (@дистанция == "средняя" ? @ar3 : (@дистанция == "дальняя" ? @ar4 : @ar5))))`;
+const BONUS_HIT = 'или(@успех_за_преимущество, 0) >= 1 ? 1 : 0';
+const NET = `@атака.natural + (${BONUS_HIT}) - @атака.versusNatural`;
+const DV = `@dv + таблица("fire_modes", ${MODE}, "dv") + ${NET}`;
+const TAKEN = `max(0, ${DV} - @сопротивление.natural)`;
 
 function effects() {
   const attack = (label, description) => ({
     label, group: 'Атака', activation: 'manual', description,
     params: [
-      { key: 'attack_pool', label: 'Пул атаки', kind: 'number' },
-      { key: 'accuracy', label: 'Точность (предел)', kind: 'number' },
-      { key: 'dv', label: 'Урон оружия', kind: 'number' },
-      { key: 'ap', label: 'Пробитие брони', kind: 'number' },
+      { key: 'attack_pool', label: 'Набор атаки', kind: 'number' },
+      ...RANGES.map((range, at) => ({ key: `ar${at + 1}`, label: `Значение атаки: ${range}`, kind: 'number' })),
+      { key: 'dv', label: 'Базовый урон', kind: 'number' },
       { key: 'physical_hit', label: 'Урон физический (1) или оглушающий (0)', kind: 'number' },
-      { key: 'push', label: 'Выжать предел за Грань: 1 — да', kind: 'number', optional: true, ask: { by: 'actor', min: 0, max: 1 } },
+      { key: 'electric', label: 'Электрический урон (1 — да)', kind: 'number' },
+      { key: 'дистанция', label: 'Дистанция', kind: 'choice', from: 'ranges', ask: { by: 'actor' } },
+      { key: 'режим', label: 'Режим стрельбы', kind: 'choice', from: 'fire_modes', optional: true, ask: { by: 'actor' } },
+      { key: 'успех_за_преимущество', label: '+1 успех за 3 очка Преимущества: 1 — да', kind: 'number', optional: true, ask: { by: 'actor', min: 0, max: 1 } },
     ],
     self: [
-      { type: 'compare', value: { expr: '@edge_left' }, versus: { expr: '1' }, breakIf: 'less', note: 'Грани не осталось', when: { expr: PUSHED } },
-      add('edge_left', '-1', PUSHED),
+      { type: 'compare', value: { expr: '@edge_left' }, versus: { expr: '3' }, breakIf: 'less', note: 'нужно 3 очка Преимущества', when: { expr: `(${BONUS_HIT}) >= 1` } },
+      change('edge_left', 'subtract', '3', `(${BONUS_HIT}) >= 1`),
     ],
     steps: [
+      { id: 'атк', type: 'amount', source: 'item', fixed: { expr: `${RATING} + таблица("fire_modes", ${MODE}, "ar")` } },
+      { type: 'compare', value: { expr: '@атк' }, versus: { expr: '1' }, breakIf: 'less', note: 'на этой дистанции оружие не бьёт' },
+      change('edge_left', 'add', 'min(1, 7 - @edge_left)', '@атк - @получатель.defense_rating <= -4'),
       {
         id: 'атака', type: 'threshold',
-        roll: { die: POOL_DIE, count: { expr: `@attack_pool + (${PUSHED} ? @отправитель.edge : 0)` }, tags: ['атака'] },
-        versus: { roll: { die: POOL_DIE, count: { expr: '@получатель.defense_pool' }, tags: ['защита'] } }, successWhen: 'over', continueOn: 'always',
+        roll: { die: POOL_DIE, count: { expr: '@attack_pool' }, tags: ['атака'] },
+        versus: { roll: { die: POOL_DIE, count: { expr: '@получатель.defense_pool' }, tags: ['защита'] } }, successWhen: 'atLeast', continueOn: 'always',
       },
-      { type: 'compare', value: { expr: NET }, versus: { expr: '1' }, breakIf: 'less', note: 'промах: успехов атаки с учётом точности не больше, чем у защиты (ничья — касание без урона)' },
+      { type: 'compare', value: { expr: NET }, versus: { expr: '0' }, breakIf: 'less', note: 'промах: успехов атаки меньше, чем у защиты' },
       {
         id: 'сопротивление', type: 'threshold', side: 'target',
-        roll: { die: POOL_DIE, count: { expr: 'max(0, @получатель.body + max(0, @получатель.armor + @ap))' }, tags: ['сопротивление'] },
+        roll: { die: POOL_DIE, count: { expr: '@получатель.body' }, tags: ['сопротивление'] },
         versus: { expr: '0' }, continueOn: 'always',
       },
-      add('physical', TAKEN, STAYS_PHYSICAL),
-      add('stun', TAKEN, `не(${STAYS_PHYSICAL})`),
+      change('physical', 'add', TAKEN, '@physical_hit >= 1'),
+      change('stun', 'add', TAKEN, '@physical_hit < 1'),
+      { ...hang('shocked'), when: { expr: `все(@electric >= 1, ${TAKEN} >= 1)` } },
+      { ...hang('prone'), when: { expr: `${TAKEN} > @получатель.body` } },
     ],
   });
 
@@ -211,211 +236,254 @@ function effects() {
     label, group: 'Правила комнаты', description, activation: 'passive', duration: { kind: 'permanent' }, params: [],
     on: [{ on: `field:${tag}`, steps }],
   });
-  const state = (label, description) => ({ label, group: 'Состояния', activation: 'passive', duration: { kind: 'permanent' }, description, modifiers: [] });
+  const state = (label, description, modifiers = [], extra = {}) => ({
+    label, group: 'Состояния', activation: 'passive', duration: { kind: 'permanent' }, description, modifiers, ...extra,
+  });
+  const penalty = value => ({ kind: 'value', target: 'condition_mod', op: 'add', value, stacking: 'sum', condition: null });
   const note = (label, description, when) => ({
     label, group: 'Правила комнаты', activation: 'passive', duration: { kind: 'permanent' }, params: [], description,
-    on: [{ on: 'ranged_attack', role: 'sender', if: { expr: when }, steps: [] }, { on: 'melee_attack', role: 'sender', if: { expr: when }, steps: [] }],
+    on: ['ranged_attack'].map(on => ({ on, role: 'sender', if: { expr: when }, steps: [] })),
+  });
+  const recover = (label, description, pool, tag) => ({
+    label, group: 'Лечение', activation: 'manual', description,
+    steps: [
+      { id: 'заживление', type: 'threshold', roll: { die: POOL_DIE, count: { expr: pool }, tags: ['лечение'] }, versus: { expr: '0' }, continueOn: 'always' },
+      change(tag, 'subtract', `min(@${tag}, @заживление.natural)`),
+    ],
   });
 
   return {
-    ranged_attack: attack('Выстрел',
-      'Ловкость + навык оружия против Реакции + Интуиции цели. Успехов засчитывается не больше точности оружия (Грань снимает предел и добавляет кости). Чистые успехи прибавляются к урону; ничья — касание без урона. Цель сопротивляется «Тело + Броня с пробитием»; урон меньше брони становится оглушающим.'),
-    melee_attack: attack('Удар',
-      'Ловкость + навык ближнего боя против Реакции + Интуиции цели. Урон оружия от Силы. Досягаемость в образце не учитывается. Дальше — как у выстрела.'),
-    second_chance: {
-      label: 'Грань: второй шанс', group: 'Грань', activation: 'passive', duration: { kind: 'permanent' },
-      description: 'Увидел свой бросок — за очко Грани перебрасываешь все кости без успеха. Сбой не отменяет.',
-      params: [],
-      on: [{
-        on: '*', role: 'sender', phase: 'before', ask: true, claims: ['second_chance'],
-        self: [
-          { type: 'compare', value: { expr: '@edge_left' }, versus: { expr: '1' }, breakIf: 'less', note: 'Грани не осталось' },
-          add('edge_left', '-1'),
-        ],
-        steps: [],
-      }],
+    ranged_attack: attack('Атаковать',
+      'Навык оружия + Проворство против Реакции + Интуиции цели. Значение атаки оружия на дистанции против значения защиты цели: у кого больше на 4 — тому очко Преимущества. Попадание при успехах не меньше, чем у защиты; чистые успехи — к урону, при ничьей — базовый урон. Сопротивление — Тело. Урон больше Тела — «Распластан».'),
+    edge_gain: {
+      label: 'Преимущество за значение атаки', group: 'Правила комнаты', activation: 'passive', duration: { kind: 'permanent' }, params: [],
+      description: 'Значение атаки больше значения защиты цели на 4 и больше — очко Преимущества атакующему (не больше 7).',
+      on: ['ranged_attack'].map(on => ({
+        on, to: 'other', if: { expr: '@атк - @defense_rating >= 4' }, steps: [change('edge_left', 'add', 'min(1, 7 - @edge_left)')],
+      })),
     },
-    glitch: note('Сбой', 'Больше половины костей атаки легли единицами — сбой: ведущий добавляет осложнение.',
-      'все(@атака.atMin * 2 > @атака.rolled, @атака.natural >= 1)'),
-    critical_glitch: note('Критический сбой', 'Сбой без единого успеха — критический сбой: беда.',
-      'все(@атака.atMin * 2 > @атака.rolled, @атака.natural == 0)'),
-    unconscious: state('Без сознания', 'Оглушающий трек полон: персонаж без сознания.'),
-    bleeding: state('При смерти', 'Физический трек полон: без сознания; каждые (Тело) минут без помощи — ещё клетка урона.'),
-    dead: state('Мёртв', 'Физический урон перелился сверх трека больше, чем на Тело.'),
-    knock_out: onField('Потеря сознания', 'Оглушающий трек заполнился — «Без сознания».', 'knocked_out', [hang('unconscious')]),
-    bleed_out: onField('Тяжёлое ранение', 'Физический трек заполнился — «При смерти».', 'bleeding_out', [hang('bleeding')]),
-    die: onField('Смерть', 'Перелив физического урона больше Тела — «Мёртв».', 'is_dead', [drop('bleeding'), hang('dead')]),
-    come_to: onField('Приходит в себя', 'Оба трека снова не полны — состояния сняты.', 'conscious', [drop('unconscious'), drop('bleeding')]),
-    rest_edge: {
-      label: 'Восстановить Грань', group: 'Грань', activation: 'manual',
-      description: 'После 8 часов сна — очко Грани обратно, не больше рейтинга.',
-      steps: [add('edge_left', '@edge_left < @edge ? 1 : 0')],
+    reroll_failures: {
+      label: 'Преимущество: перебросить все неуспехи', group: 'Преимущество', activation: 'passive', duration: { kind: 'permanent' }, params: [],
+      description: 'Увидел свой бросок — за 4 очка Преимущества перебросить все кубики с 1–4. После сбоя нельзя.',
+      on: [{ on: '*', role: 'sender', phase: 'before', ask: true, claims: ['reroll_failures'], self: payEdge(4), steps: [] }],
     },
+    second_wind: {
+      label: 'Второе дыхание', group: 'Преимущество', activation: 'manual',
+      description: 'За 3 очка Преимущества — освободить 1 ячейку оглушения.',
+      self: payEdge(3), steps: [change('stun', 'subtract', 'min(@stun, 1)')],
+    },
+    shrug_off: {
+      label: 'Ранен не так сильно', group: 'Преимущество', activation: 'manual',
+      description: 'За 4 очка Преимущества — освободить 1 ячейку здоровья.',
+      self: payEdge(4), steps: [change('physical', 'subtract', 'min(@physical, 1)')],
+    },
+    scene_start: {
+      label: 'Начало сцены', group: 'Преимущество', activation: 'manual',
+      description: 'В начале сцены очков Преимущества — сколько характеристика Преимущество.',
+      steps: [change('edge_left', 'set', '@edge')],
+    },
+    glitch: note('Сбой', 'Единицы больше чем на половине кубиков атаки — сбой.', 'все(@атака.atMin * 2 > @атака.rolled, @атака.natural >= 1)'),
+    critical_glitch: note('Критический сбой', 'Сбой без единого успеха.', 'все(@атака.atMin * 2 > @атака.rolled, @атака.natural == 0)'),
+    first_aid: {
+      label: 'Первая помощь', group: 'Лечение', activation: 'manual',
+      description: 'Биотехнологии + Логика, порог 5 − Сущность цели, в течение минуты после боя. Чистый успех — 1 оглушающий, два — 1 физический.',
+      params: [{ key: 'healer_pool', label: 'Набор', kind: 'number' }],
+      steps: [
+        {
+          id: 'помощь', type: 'threshold', roll: { die: POOL_DIE, count: { expr: '@healer_pool' }, tags: ['лечение'] },
+          versus: { expr: 'max(0, floor(5 - @получатель.essence))' }, continueOn: 'always',
+        },
+        change('stun', 'subtract', 'min(@получатель.stun, max(0, @помощь.margin))', '@помощь.success'),
+        change('physical', 'subtract', 'min(@получатель.physical, floor(max(0, @помощь.margin - @получатель.stun) / 2))', '@помощь.success'),
+      ],
+    },
+    rest_hour: recover('Час отдыха', 'Тело + Воля: каждый успех — 1 оглушающий.', '@body + @willpower', 'stun'),
+    rest_day: recover('День отдыха', 'Тело + Тело: каждый успех — 1 физический.', '@body * 2', 'physical'),
+    prone: state('Распластан', 'Перемещение 2 м; +2 к защите от дальних атак со средней дистанции, −2 против вплотную и близкой; −4 к ближнему бою. Снимается действием «Встать».'),
+    shocked: state('Электрошок', '−2 к инициативе, нельзя делать Рывок, −1 ко всем наборам; 2 раунда.', [penalty(-1)],
+      { duration: { kind: 'rounds', max: 2 } }),
+    dazed: state('Ошеломление', 'Показатель инициативы −4, нельзя получать и тратить Преимущество.'),
+    chilled: state('Заморозка', '−4 к инициативе, −1 ко всем наборам, кроме сопротивления урону.', [penalty(-1)], { duration: { kind: 'rounds', max: 3 } }),
+    fatigued: state('Утомление I', '−2 ко всем наборам, кроме сопротивления урону.', [penalty(-2)]),
+    frightened: state('Испуг', '−4 к проверкам против источника или для защиты от него.'),
+    stand_up: { label: 'Встать', group: 'Действия', activation: 'manual', description: 'Простое действие: снять «Распластан».', steps: [drop('prone')] },
+    unconscious: state('Без сознания', 'Полон счётчик оглушения.'),
+    bleeding: state('Тяжело ранен', 'Полон счётчик здоровья: без сознания, дальше урон критический.'),
+    dead: state('Мёртв', 'Критический урон достиг Тело × 2.'),
+    knock_out: onField('Потеря сознания', 'Счётчик оглушения полон — «Без сознания».', 'knocked_out', [hang('unconscious')]),
+    bleed_out: onField('Тяжёлое ранение', 'Счётчик здоровья полон — «Тяжело ранен».', 'bleeding_out', [hang('bleeding')]),
+    die: onField('Смерть', 'Критический урон достиг Тело × 2 — «Мёртв».', 'is_dead', [drop('bleeding'), hang('dead')]),
+    come_to: onField('Приходит в себя', 'Оба счётчика снова не полны — состояния сняты.', 'conscious', [drop('unconscious'), drop('bleeding')]),
   };
 }
+
+const RANGE_PROPS = RANGES.map((range, at) => ({ key: `ar${at + 1}`, label: `АТК: ${range}`, kind: 'number' }));
+const RANGE_ARGS = Object.fromEntries(RANGES.map((_, at) => [`ar${at + 1}`, { prop: `ar${at + 1}` }]));
 
 const records = () => ({
   runner: { kind: 'sheet', label: 'Раннер', icon: '🕶', group: 'Листы', hint: 'Лист игрока: все блоки.' },
   opponent: {
-    kind: 'sheet', label: 'Противник', icon: '👤', group: 'Листы', hint: 'Лист противника: атрибуты, навыки боя, защита, состояние.',
-    blocks: ['Атрибуты', 'Навыки: бой', 'Пулы: бой', 'Защита', 'Состояние', 'Инициатива', 'Пределы'],
+    kind: 'sheet', label: 'Противник', icon: '👤', group: 'Листы', hint: 'Лист противника: характеристики, навыки, защита, счётчики.',
+    blocks: ['Характеристики', 'Навыки', 'Наборы кубиков', 'Защита', 'Счётчики', 'Инициатива'],
   },
-  firearm: {
-    kind: 'item', label: 'Огнестрельное оружие', icon: '🔫', group: 'Снаряжение', hint: 'Точность, урон, пробитие и навык.',
+  weapon: {
+    kind: 'item', label: 'Оружие', icon: '🔫', group: 'Снаряжение', hint: 'Базовый урон, вид, пять значений атаки по дистанциям и навык.',
     props: [
-      { key: 'accuracy', label: 'Точность', kind: 'number' },
-      { key: 'dv', label: 'Урон', kind: 'number' },
-      { key: 'ap', label: 'Пробитие', kind: 'number' },
+      { key: 'dv', label: 'Базовый урон', kind: 'number' },
       { key: 'damage_kind', label: 'Вид урона', kind: 'choice', from: 'damage_kinds' },
+      { key: 'electric', label: 'Электрический (1 — да)', kind: 'number' },
+      ...RANGE_PROPS,
       { key: 'skill', label: 'Навык', kind: 'choice', from: 'weapon_skills' },
     ],
     bindings: [{
-      label: 'Выстрел', effect: 'ranged_attack',
+      label: 'Атаковать', effect: 'ranged_attack',
       args: {
         attack_pool: { expr: 'таблица("weapon_skills", @skill, "pool")' },
-        accuracy: { prop: 'accuracy' }, dv: { prop: 'dv' }, ap: { prop: 'ap' },
-        physical_hit: { expr: 'таблица("damage_kinds", @damage_kind, "physical")' },
-      },
-    }],
-  },
-  melee: {
-    kind: 'item', label: 'Оружие ближнего боя', icon: '🗡', group: 'Снаряжение', hint: 'Урон — Сила плюс прибавка, если оружие бьёт силой.',
-    props: [
-      { key: 'accuracy', label: 'Точность', kind: 'number' },
-      { key: 'strength_based', label: 'Урон от Силы (1 — да, 0 — нет)', kind: 'number' },
-      { key: 'dv_bonus', label: 'Урон: прибавка', kind: 'number' },
-      { key: 'ap', label: 'Пробитие', kind: 'number' },
-      { key: 'damage_kind', label: 'Вид урона', kind: 'choice', from: 'damage_kinds' },
-      { key: 'skill', label: 'Навык', kind: 'choice', from: 'weapon_skills' },
-    ],
-    bindings: [{
-      label: 'Удар', effect: 'melee_attack',
-      args: {
-        attack_pool: { expr: 'таблица("weapon_skills", @skill, "pool")' },
-        accuracy: { prop: 'accuracy' }, dv: { expr: '(@strength_based >= 1 ? @strength : 0) + @dv_bonus' }, ap: { prop: 'ap' },
+        ...RANGE_ARGS,
+        dv: { prop: 'dv' }, electric: { prop: 'electric' },
         physical_hit: { expr: 'таблица("damage_kinds", @damage_kind, "physical")' },
       },
     }],
   },
   armor: {
-    kind: 'item', label: 'Броня', icon: '🧥', group: 'Снаряжение', hint: 'Из надетого работает самое сильное; аксессуары с «+» прибавляются, но не больше Силы.',
-    props: [{ key: 'rating', label: 'Броня', kind: 'number' }, { key: 'accessory', label: 'Аксессуар «+» (1 — да)', kind: 'number' }],
+    kind: 'item', label: 'Броня', icon: '🧥', group: 'Снаряжение', hint: 'Прибавка к значению защиты. Броня не складывается, шлемы и щиты — сверху.',
+    props: [{ key: 'rating', label: 'К значению защиты', kind: 'number' }, { key: 'accessory', label: 'Шлем или щит (1 — да)', kind: 'number' }],
   },
-  edge_action: {
-    kind: 'action', label: 'Грань', icon: '✦', group: 'Приёмы', hint: 'Траты и восстановление Грани.', props: [], bindings: [],
-  },
+  action: { kind: 'action', label: 'Действие', icon: '✦', group: 'Приёмы', hint: 'Преимущество, лечение, простые действия.', props: [], bindings: [] },
 });
 
 const P = 'физический';
 const S = 'оглушающий';
-const gun = (id, label, category, accuracy, dv, ap, skill, extra, kind = P) => ({
-  id, rk: 'firearm', label,
-  description: `${category}. Точность ${accuracy}, урон ${dv}${kind === P ? 'P' : 'S'}, пробитие ${ap || '—'}. ${extra}`.trim(),
-  props: { accuracy, dv, ap, damage_kind: kind, skill },
+const weapon = (id, label, group, dv, kind, ars, skill, extra = '', electric = 0) => ({
+  id, rk: 'weapon', label,
+  description: `${group}. Урон ${dv}${kind === P ? 'ф' : 'о'}${electric ? '(э)' : ''}, АТК ${ars.map(a => a || '—').join('/')}. ${extra}`.trim(),
+  props: { dv, damage_kind: kind, electric, ...Object.fromEntries(ars.map((a, at) => [`ar${at + 1}`, a])), skill },
 });
-const blade = (id, label, accuracy, bonus, ap, extra, { kind = P, skill = 'клинки', strength = 1 } = {}) => ({
-  id, rk: 'melee', label,
-  description: `Точность ${accuracy}, урон ${strength ? `(Сила${bonus ? ` + ${bonus}` : ''})` : bonus}${kind === P ? 'P' : 'S'}, пробитие ${ap || '—'}. ${extra ?? ''}`.trim(),
-  props: { accuracy, strength_based: strength, dv_bonus: bonus, ap, damage_kind: kind, skill },
-});
+const gun = (id, label, group, dv, ars, extra, kind = P, electric = 0) => weapon(id, label, group, dv, kind, ars, 'стрельба', extra, electric);
+const melee = (id, label, group, dv, kind, ar, extra = '', electric = 0) => weapon(id, label, group, dv, kind, [ar, 0, 0, 0, 0], 'ближний бой', extra, electric);
 const armor = (id, label, rating, extra = '', accessory = false) => ({
-  id, rk: 'armor', label, description: `Броня ${accessory ? '+' : ''}${rating}. ${extra}`.trim(), props: { rating, accessory: accessory ? 1 : 0 },
+  id, rk: 'armor', label, description: `Значение защиты +${rating}. ${extra}`.trim(), props: { rating, accessory: accessory ? 1 : 0 },
   modifiers: [accessory
     ? { kind: 'value', target: 'armor_extra', op: 'add', value: rating, stacking: 'sum', condition: null }
     : { kind: 'value', target: 'armor_worn', op: 'add', value: rating, stacking: 'max', condition: null }],
 });
-const action = (id, label, effect) => ({ id, rk: 'edge_action', label, bindings: [{ label, effect, args: {} }] });
+const action = (id, label, effect) => ({ id, rk: 'action', label, bindings: [{ label, effect, args: {} }] });
 
 const compendium = () => ({
   records: [
-    gun('ares_light_fire_70', 'Ares Light Fire 70', 'Лёгкий пистолет', 7, 6, 0, 'пистолеты', 'SA, 16(c).'),
-    gun('colt_america_l36', 'Colt America L36', 'Лёгкий пистолет', 7, 7, 0, 'пистолеты', 'SA, 11(c).'),
-    gun('fichetti_security_600', 'Fichetti Security 600', 'Лёгкий пистолет', 6, 7, 0, 'пистолеты', 'SA, 30(c), складной приклад, ЛЦУ.'),
-    gun('ares_predator_v', 'Ares Predator V', 'Тяжёлый пистолет', 5, 8, -1, 'пистолеты', 'SA, 15(c), смартган.'),
-    gun('browning_ultra_power', 'Browning Ultra-Power', 'Тяжёлый пистолет', 5, 8, -1, 'пистолеты', 'SA, 10(c), ЛЦУ.'),
-    gun('remington_roomsweeper', 'Remington Roomsweeper', 'Тяжёлый пистолет', 4, 7, -1, 'пистолеты', 'SA, 8(m).'),
-    gun('ruger_super_warhawk', 'Ruger Super Warhawk', 'Тяжёлый пистолет', 5, 9, -2, 'пистолеты', 'SS, 6(cy).'),
-    gun('ceska_black_scorpion', 'Ceska Black Scorpion', 'Пистолет-пулемёт', 5, 6, 0, 'автоматическое оружие', 'SA/BF, 35(c).'),
-    gun('steyr_tmp', 'Steyr TMP', 'Пистолет-пулемёт', 4, 7, 0, 'автоматическое оружие', 'SA/BF/FA, 30(c).'),
-    gun('hk_227', 'HK-227', 'Пистолет-пулемёт', 5, 7, 0, 'автоматическое оружие', 'SA/BF/FA, 28(c), смартган, глушитель.'),
-    gun('ingram_smartgun_x', 'Ingram Smartgun X', 'Пистолет-пулемёт', 4, 8, 0, 'автоматическое оружие', 'BF/FA, 32(c), смартган, газоотвод 2.'),
-    gun('ak_97', 'AK-97', 'Штурмовая винтовка', 5, 10, -2, 'автоматическое оружие', 'SA/BF/FA, 38(c).'),
-    gun('ares_alpha', 'Ares Alpha', 'Штурмовая винтовка', 5, 11, -2, 'автоматическое оружие', 'SA/BF/FA, отдача 2, 42(c), смартган.'),
-    gun('fn_har', 'FN HAR', 'Штурмовая винтовка', 5, 10, -2, 'автоматическое оружие', 'SA/BF/FA, 35(c), ЛЦУ, газоотвод 2.'),
-    gun('defiance_t250', 'Defiance T-250', 'Дробовик', 4, 10, -1, 'длинноствольное оружие', 'SS/SA, 5(m).'),
-    gun('enfield_as7', 'Enfield AS-7', 'Дробовик', 4, 13, -1, 'длинноствольное оружие', 'SA/BF, 10(c), ЛЦУ.'),
-    gun('ares_desert_strike', 'Ares Desert Strike', 'Снайперская винтовка', 7, 13, -4, 'длинноствольное оружие', 'SA, 14(c).'),
-    gun('remington_950', 'Remington 950', 'Снайперская винтовка', 7, 12, -4, 'длинноствольное оружие', 'SS, 5(m).'),
-    gun('ruger_101', 'Ruger 101', 'Снайперская винтовка', 6, 11, -3, 'длинноствольное оружие', 'SA, 8(m).'),
-    gun('yamaha_pulsar', 'Yamaha Pulsar', 'Тазер', 5, 7, -5, 'пистолеты', 'SA, 4(m), электрический.', S),
-    gun('defiance_ex_shocker', 'Defiance EX Shocker', 'Тазер', 4, 9, -5, 'пистолеты', 'SS, 4(m), электрический.', S),
-    blade('katana', 'Катана', 7, 3, -3, 'Досягаемость 1.'),
-    blade('sword', 'Меч', 6, 3, -2, 'Досягаемость 1.'),
-    blade('combat_axe', 'Боевой топор', 4, 5, -4, 'Досягаемость 2.'),
-    blade('combat_knife', 'Боевой нож', 6, 2, -3),
-    blade('knife', 'Нож', 5, 1, -1),
-    blade('survival_knife', 'Нож выживания', 5, 2, -1),
-    blade('club', 'Дубинка', 4, 3, 0, 'Досягаемость 1. Вид урона по данным Chummer — физический; сверьте с книгой.', { skill: 'дубинки' }),
-    blade('staff', 'Посох', 6, 3, 0, 'Досягаемость 2.', { skill: 'дубинки' }),
-    blade('telescoping_staff', 'Телескопический посох', 4, 2, 0, 'Досягаемость 2.', { skill: 'дубинки' }),
-    blade('stun_baton', 'Шоковая дубинка', 4, 9, -5, 'Досягаемость 1, электрическая, урон не от Силы.', { kind: S, skill: 'дубинки', strength: 0 }),
-    blade('fists', 'Безоружная атака', 5, 0, 0, 'Урон (Сила)S; точность по книге — физический предел, здесь вписана числом.', { kind: S, skill: 'рукопашный бой' }),
-    blade('shock_gloves', 'Шоковые перчатки', 5, 8, -5, 'Электрические; точность по книге — физический предел.', { kind: S, skill: 'рукопашный бой', strength: 0 }),
-    armor('clothing', 'Одежда', 0),
-    armor('armor_clothing', 'Бронированная одежда', 6),
-    armor('actioneer', 'Деловой костюм Actioneer', 8),
-    armor('armor_vest', 'Бронежилет', 9),
-    armor('lined_coat', 'Бронированный плащ', 9),
-    armor('urban_explorer', 'Комбинезон Urban Explorer', 9),
-    armor('chameleon_suit', 'Костюм-хамелеон', 9),
-    armor('armor_jacket', 'Бронекуртка', 12),
-    armor('full_body_armor', 'Полный бронекостюм', 15),
-    armor('helmet', 'Шлем', 2, '', true),
-    armor('ballistic_shield', 'Баллистический щит', 6, '', true),
-    action('edge_rest', 'Восстановить Грань', 'rest_edge'),
+    melee('combat_knife', 'Боевой нож', 'Клинки (стр. 249)', 3, P, 8, 'Можно метнуть: близкая 2, до 20 м.'),
+    melee('combat_axe', 'Боевой топор', 'Клинки (стр. 249)', 5, P, 9),
+    melee('katana', 'Катана', 'Клинки (стр. 249)', 4, P, 10),
+    melee('spear', 'Копьё', 'Клинки (стр. 249)', 4, P, 8),
+    melee('sword', 'Меч', 'Клинки (стр. 249)', 3, P, 9),
+    melee('knife', 'Нож', 'Клинки (стр. 249)', 2, P, 6),
+    melee('club', 'Дубинка', 'Дробящее (стр. 249)', 3, S, 6),
+    melee('stun_baton', 'Оглушающая дубинка', 'Дробящее (стр. 249)', 5, S, 6, '', 1),
+    melee('staff', 'Посох', 'Дробящее (стр. 249)', 4, S, 8),
+    melee('sap', 'Слеппер', 'Дробящее (стр. 249)', 2, S, 6),
+    melee('telescoping_staff', 'Телескопический посох', 'Дробящее (стр. 249)', 4, S, 8),
+    melee('knucks', 'Кастет', 'Безоружное (стр. 250)', 3, P, 6),
+    melee('bike_chain', 'Мотоциклетная цепь', 'Безоружное (стр. 250)', 2, S, 5),
+    melee('shock_gloves', 'Электрошоковые перчатки', 'Безоружное (стр. 250)', 4, S, 5, '', 1),
+    weapon('throwing_knives', 'Метательные ножи', 'Метательное (стр. 250)', 2, P, [10, 9, 3, 0, 0], 'атлетика'),
+    weapon('shuriken', 'Метательные звёздочки', 'Метательное (стр. 250)', 2, P, [9, 11, 5, 0, 0], 'атлетика'),
+    gun('super_shock', '«Дефайанс Супер Шок»', 'Шокер (стр. 250)', 6, [10, 6, 0, 0, 0], 'ОВ, 4(м), до 20 м.', S, 1),
+    gun('pulsar', '«Ямаха Пульсар I»', 'Шокер (стр. 250)', 4, [9, 9, 0, 0, 0], 'ОВ, 4(м), до 50 м.', S, 1),
+    gun('streetline', '«Стритлайн Спешл»', 'Карманный пистолет (стр. 252)', 2, [8, 8, 0, 0, 0], 'ОВ, 6(о).'),
+    gun('palm_pistol', '«Вальтер Палм Пистол»', 'Карманный пистолет (стр. 252)', 2, [12, 7, 0, 0, 0], 'ОВ/ДО, 6(л).'),
+    gun('light_fire_70', '«Арес Лайт Фаер 70»', 'Лёгкий пистолет (стр. 252)', 2, [10, 7, 6, 0, 0], 'КО, 16(о).'),
+    gun('beretta_101t', '«Беретта 101Т»', 'Лёгкий пистолет (стр. 252)', 2, [9, 8, 6, 0, 0], 'КО, 21(о).'),
+    gun('colt_l36', '«Кольт Америка L36»', 'Лёгкий пистолет (стр. 252)', 2, [8, 8, 6, 0, 0], 'КО, 11(о).'),
+    gun('security_600', '«Фичетти Секьюрити 600»', 'Лёгкий пистолет (стр. 252)', 2, [10, 9, 6, 0, 0], 'КО, 30(о).'),
+    gun('black_scorpion', '«Ческа Блэк Скорпион»', 'Автоматический пистолет (стр. 253)', 2, [10, 9, 8, 0, 0], 'КО/ДО, 35(о).'),
+    gun('predator_vi', '«Арес Предатор VI»', 'Тяжёлый пистолет (стр. 254)', 3, [10, 10, 8, 0, 0], 'КО/ДО, 15(о).'),
+    gun('ultra_power', '«Браунинг Ультра Пауэр»', 'Тяжёлый пистолет (стр. 254)', 3, [10, 9, 6, 0, 0], 'КО, 10(о).'),
+    gun('manhunter', '«Кольт Мэнхантер»', 'Тяжёлый пистолет (стр. 254)', 3, [11, 9, 7, 0, 0], 'КО, 14(о).'),
+    gun('super_warhawk', '«Ругер Супер Вархок»', 'Тяжёлый пистолет (стр. 254)', 4, [8, 11, 8, 0, 0], 'КО, 6(б).'),
+    gun('ingram_xi', '«Инграм Смартган XI»', 'Пистолет-пулемёт (стр. 254)', 3, [11, 9, 6, 0, 0], 'КО/ДО, 32(о).'),
+    gun('hk_227', '«ХК-227»', 'Пистолет-пулемёт (стр. 254)', 3, [10, 11, 8, 0, 0], 'КО/ДО, 28(о).'),
+    gun('uzi_v', '«Узи V»', 'Пистолет-пулемёт (стр. 254)', 3, [8, 8, 7, 0, 0], 'КО/ДО/НО, 24(о).'),
+    gun('t250', '«Дефайанс Т-250»', 'Дробовик (стр. 255)', 4, [7, 10, 6, 0, 0], 'ОВ/КО, 5(м).'),
+    gun('roomsweeper', '«Ремингтон Румсвипер»', 'Дробовик (стр. 255)', 5, [9, 8, 4, 0, 0], 'КО, 8(м).'),
+    gun('ak_97', 'АК-97', 'Винтовка (стр. 256)', 5, [4, 11, 9, 7, 1], 'КО/ДО/НО, 38(о).'),
+    gun('ares_alpha', '«Арес Альфа»', 'Винтовка (стр. 256)', 4, [4, 10, 9, 7, 2], 'КО/ДО/НО, 42(о).'),
+    gun('colt_m23', '«Кольт М23»', 'Винтовка (стр. 256)', 4, [5, 8, 8, 8, 1], 'КО/ДО/НО, 40(о).'),
+    gun('desert_strike', '«Арес Дезерт Страйк»', 'Снайперская винтовка (стр. 256)', 5, [3, 10, 10, 10, 10], 'КО, 14(о).'),
+    gun('ruger_101', '«Ругер 101»', 'Снайперская винтовка (стр. 256)', 5, [2, 6, 10, 12, 11], 'КО, 8(м).'),
+    gun('ingram_valiant', '«Инграм Вэлиант»', 'Лёгкий пулемёт (стр. 257)', 4, [2, 11, 12, 7, 3], 'КО/ДО/НО, 50(о).'),
+    armor('synth_leather', 'Синтекожаная куртка', 1),
+    armor('armor_clothing', 'Армированная одежда', 2),
+    armor('actioneer', 'Боевой деловой костюм', 2),
+    armor('chameleon_suit', 'Костюм-хамелеон', 2, 'Очко Преимущества на Скрытность.'),
+    armor('armor_vest', 'Бронежилет', 3),
+    armor('lined_coat', 'Пальто с подкладом', 3),
+    armor('urban_explorer', 'Комбинезон городского исследователя', 3),
+    armor('armor_jacket', 'Армированная куртка', 4),
+    armor('full_body_armor', 'Доспех полной защиты', 5),
+    armor('gang_jacket', 'Бандитская куртка', 1, 'Встречается в блоках противников (стр. 205), в таблице брони её нет.'),
+    armor('helmet', 'Шлем', 1, '', true),
+    armor('full_body_helmet', 'Шлем доспеха полной защиты', 2, '', true),
+    armor('ballistic_shield', 'Баллистический щит', 2, '', true),
+    action('act_scene', 'Начало сцены', 'scene_start'),
+    action('act_second_wind', 'Второе дыхание (3 Преимущества)', 'second_wind'),
+    action('act_shrug', 'Ранен не так сильно (4 Преимущества)', 'shrug_off'),
+    action('act_stand', 'Встать', 'stand_up'),
+    action('act_rest_hour', 'Час отдыха', 'rest_hour'),
+    action('act_rest_day', 'День отдыха', 'rest_day'),
+    { id: 'act_first_aid', rk: 'action', label: 'Первая помощь', bindings: [{ label: 'Первая помощь', effect: 'first_aid', args: { healer_pool: { expr: '@biotech_pool' } } }] },
   ],
 });
 
-const sheet = (id, name, of, values, has) => ({ id, systemId: 'shadowrun5', of, name, values, has: has.map(o => ({ of: o })), effects: [] });
+const sheet = (id, name, of, values, has) => ({ id, systemId: 'shadowrun6', of, name, values, has: has.map(o => ({ of: o })), effects: [] });
+const RUNNER_ACTIONS = ['act_scene', 'act_second_wind', 'act_shrug', 'act_stand', 'act_rest_hour', 'act_rest_day', 'act_first_aid'];
 
 const sheets = () => [
   sheet('razor', 'Бритва', 'runner', {
-    metatype: 'орк', body: 5, agility: 6, reaction: 5, strength: 4, willpower: 3, logic: 2, intuition: 4, charisma: 2,
-    edge: 3, edge_left: 3, essence: 2.5, pistols: 6, blades: 5, unarmed: 3, perception: 3, sneaking: 3, gymnastics: 2,
-  }, ['ares_predator_v', 'katana', 'armor_jacket', 'edge_rest']),
+    metatype: 'орк', body: 5, agility: 5, reaction: 4, strength: 4, willpower: 3, logic: 2, intuition: 4, charisma: 2,
+    edge: 3, edge_left: 3, essence: 5, firearms: 6, close_combat: 5, athletics: 3, perception: 3, stealth: 3,
+  }, ['predator_vi', 'katana', 'armor_jacket', ...RUNNER_ACTIONS]),
   sheet('silk', 'Шёлк', 'runner', {
-    metatype: 'эльф', body: 3, agility: 3, reaction: 3, strength: 2, willpower: 4, logic: 3, intuition: 4, charisma: 6,
-    edge: 4, edge_left: 4, con: 6, etiquette: 5, negotiation: 5, pistols: 3, perception: 4,
-  }, ['colt_america_l36', 'lined_coat', 'edge_rest']),
+    metatype: 'эльф', body: 2, agility: 3, reaction: 3, strength: 2, willpower: 4, logic: 3, intuition: 4, charisma: 6,
+    edge: 4, edge_left: 4, con: 6, influence: 6, firearms: 3, perception: 4, biotech: 2,
+  }, ['colt_l36', 'lined_coat', ...RUNNER_ACTIONS]),
   sheet('hammer', 'Молот', 'runner', {
-    metatype: 'тролль', body: 9, agility: 4, reaction: 4, strength: 8, willpower: 4, logic: 2, intuition: 3, charisma: 2,
-    edge: 2, edge_left: 2, clubs: 5, unarmed: 5, automatics: 3, intimidation: 4,
-  }, ['staff', 'ak_97', 'armor_vest', 'helmet', 'edge_rest']),
-  sheet('ganger', 'Бандит (пример)', 'opponent', {
-    body: 4, agility: 4, reaction: 3, strength: 4, willpower: 3, logic: 2, intuition: 3, charisma: 2,
-    pistols: 3, blades: 3, unarmed: 3,
-  }, ['colt_america_l36', 'combat_knife', 'armor_vest']),
-  sheet('guard', 'Охранник корпорации (пример)', 'opponent', {
-    body: 4, agility: 4, reaction: 4, strength: 3, willpower: 3, logic: 3, intuition: 4, charisma: 3,
-    automatics: 4, unarmed: 3, perception: 3,
-  }, ['ak_97', 'stun_baton', 'armor_jacket']),
+    metatype: 'тролль', body: 8, agility: 3, reaction: 3, strength: 8, willpower: 3, logic: 2, intuition: 3, charisma: 2,
+    edge: 2, edge_left: 2, close_combat: 5, firearms: 3, athletics: 4, influence: 3,
+  }, ['staff', 'ak_97', 'armor_vest', 'helmet', ...RUNNER_ACTIONS]),
+  sheet('humanis', 'Головорез из «Хуманиса» (ПР 0)', 'opponent', {
+    body: 2, agility: 2, reaction: 2, strength: 2, willpower: 2, logic: 2, intuition: 2, charisma: 1, athletics: 1, close_combat: 3, influence: 1,
+  }, ['club']),
+  sheet('fiveeyes', 'Член мотобанды «Пятиглазые» (ПР 1)', 'opponent', {
+    body: 2, agility: 2, reaction: 2, strength: 2, willpower: 2, logic: 2, intuition: 2, charisma: 1,
+    athletics: 2, close_combat: 3, perception: 1, piloting: 2, firearms: 2, influence: 3,
+  }, ['bike_chain', 'streetline', 'gang_jacket']),
+  sheet('sauron', 'Громила «Сынов Саурона» (ПР 2)', 'opponent', {
+    metatype: 'орк', body: 3, agility: 2, reaction: 2, strength: 4, willpower: 2, logic: 1, intuition: 2, charisma: 1,
+    athletics: 2, close_combat: 4, perception: 3, firearms: 3, influence: 5,
+  }, ['beretta_101t', 'knucks', 'armor_clothing']),
+  sheet('lone_star', 'Патрульный «Одинокой звезды» (ПР 3)', 'opponent', {
+    body: 3, agility: 3, reaction: 3, strength: 3, willpower: 3, logic: 2, intuition: 3, charisma: 2,
+    athletics: 1, biotech: 1, close_combat: 4, perception: 4, con: 1, piloting: 2, firearms: 4, influence: 2, electronics: 1,
+  }, ['colt_l36', 'stun_baton', 'armor_vest']),
+  sheet('mafia', 'Солдат мафии (ПР 4)', 'opponent', {
+    body: 3, agility: 2, reaction: 2, strength: 3, willpower: 2, logic: 1, intuition: 2, charisma: 1,
+    athletics: 3, biotech: 2, close_combat: 5, perception: 4, con: 3, piloting: 1, firearms: 4, influence: 4,
+  }, ['beretta_101t', 'sap', 'armor_clothing']),
+  sheet('swat', 'Офицер спецназа «Одинокой звезды» (ПР 5)', 'opponent', {
+    body: 4, agility: 4, reaction: 5, strength: 4, willpower: 4, logic: 2, intuition: 4, charisma: 3, essence: 3, armor_natural: 3,
+    athletics: 3, biotech: 2, close_combat: 4, perception: 4, con: 2, outdoors: 2, piloting: 2, stealth: 4, firearms: 6, influence: 3, electronics: 2,
+  }, ['colt_m23', 'manhunter', 'stun_baton', 'full_body_armor', 'full_body_helmet']),
 ];
 
-const mannequin = (id, name) => ({ id, systemId: 'shadowrun5', name, values: { body: 4, agility: 4, reaction: 4, strength: 4, willpower: 4, logic: 4, intuition: 4, charisma: 4, pistols: 4 }, has: [], effects: [] });
-
-const skillGroups = SKILLS.flatMap(([group]) => [[`Навыки: ${group.toLowerCase()}`, { parent: 'Навыки' }], [`Пулы: ${group.toLowerCase()}`, { parent: 'Пулы' }]]);
+const mannequin = (id, name) => ({ id, systemId: 'shadowrun6', name, values: { body: 4, agility: 4, reaction: 4, strength: 4, willpower: 4, logic: 4, intuition: 4, charisma: 4, edge_left: 7, firearms: 4, biotech: 2 }, has: [], effects: [] });
 
 const world = {
-  title: 'Shadowrun 5',
+  title: 'Shadowrun: Шестой мир',
   system: {
-    id: 'shadowrun5',
-    name: 'Shadowrun 5',
-    groups: {
-      ...Object.fromEntries(['Личное дело', 'Атрибуты', 'Особые', 'Пределы', 'Навыки', 'Пулы', 'Защита', 'Состояние', 'Инициатива',
-        'Атака', 'Грань', 'Состояния', 'Правила комнаты', 'Листы', 'Снаряжение', 'Приёмы'].map(name => [name, {}])),
-      ...Object.fromEntries(skillGroups),
-      'Пулы: атрибуты': { parent: 'Пулы' },
-    },
+    id: 'shadowrun6',
+    name: 'Shadowrun: Шестой мир',
+    groups: Object.fromEntries(['Личное дело', 'Характеристики', 'Особые', 'Навыки', 'Наборы кубиков', 'Защита', 'Счётчики', 'Инициатива',
+      'Атака', 'Преимущество', 'Лечение', 'Действия', 'Состояния', 'Правила комнаты', 'Листы', 'Снаряжение', 'Приёмы'].map(name => [name, {}])),
     fields: fields(),
     constants: constants(),
     tables: tables(),
@@ -423,7 +491,7 @@ const world = {
     initiative: { die: { constant: 'init_die' }, bonus: { expr: '@initiative' }, tags: ['инициатива'] },
     effects: effects(),
     records: records(),
-    grants: ['knock_out', 'bleed_out', 'die', 'come_to', 'second_chance', 'glitch', 'critical_glitch'],
+    grants: ['knock_out', 'bleed_out', 'die', 'come_to', 'edge_gain', 'reroll_failures', 'glitch', 'critical_glitch'],
     mannequins: [mannequin('манекен-а', 'Манекен А'), mannequin('манекен-б', 'Манекен Б')],
   },
   compendium: compendium(),
@@ -432,4 +500,4 @@ const world = {
 
 const out = fileURLToPath(new URL('../shadowrun.world.json', import.meta.url));
 writeFileSync(out, `${JSON.stringify(world, null, 2)}\n`);
-console.log(`Shadowrun: полей ${world.system.fields.length}, эффектов ${Object.keys(world.system.effects).length}, записей ${world.compendium.records.length}, листов ${world.sheets.length}`);
+console.log(`Shadowrun 6: полей ${world.system.fields.length}, эффектов ${Object.keys(world.system.effects).length}, записей ${world.compendium.records.length}, листов ${world.sheets.length}`);
