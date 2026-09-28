@@ -106,7 +106,7 @@ function rollSide(text: string, system: System, asName?: NameRef): RollSide | nu
   for (const text of tagTexts.filter(Boolean)) {
     const name = bareName(text);
     const input = name && asName ? asName(name) : null;
-    const tag = name && words.has(name) ? name : input && 'param' in (input as object) ? input : null;
+    const tag = name && words.has(name) ? name : input && 'param' in (input as object) ? input : !name && text.includes('"') ? tailRef(text) : null;
     if (!tag) {
       return { roll: { tags: [] }, owner, error: `после кости в «кинуть(…)» — метки через @: строки таблиц или входы, а «${text}» не из них` };
     }
