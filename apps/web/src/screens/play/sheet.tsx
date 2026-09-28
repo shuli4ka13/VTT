@@ -11,7 +11,7 @@ import { Lobby } from './lobby.tsx';
 import type { Sheet, System, RoomState } from '@vtt/schema';
 import { availableActions } from '@vtt/engine/events/envelope';
 import { recordsOf, isItem, sheetKinds, sheetKindOf, shownOn } from '@vtt/engine/model/owned';
-import { deskSystemOf, groupSystemOf, sheetSystemOf } from '@vtt/engine/engine/calc';
+import { deskSystemOf, groupSystemOf, sheetSystemOf, livesOn } from '@vtt/engine/engine/calc';
 import { isGroup, sharedOf } from '@vtt/engine/events/desk';
 import { isDesk as atDesk } from '@vtt/engine/engine/owners';
 
@@ -59,7 +59,8 @@ export function SheetScreen() {
                 </List>
               )}
             <div className="stack stack--tight">
-              <Input value={newName} onChange={setNewName} placeholder="имя нового листа" />
+              <Input value={newName} onChange={setNewName} placeholder="имя нового листа"
+                onKeyDown={e => { if (e.key === 'Enter' && newName.trim()) create(); }} />
               {kinds.length ? (
                 <Select
                   value={newOf}
@@ -90,13 +91,14 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   const reader = useReader(isDesk || asGroup ? system : room.system as System, sheet, room.compendium, isDesk || asGroup ? null : shared);
   const kinds = sheetKinds(room.system as System);
   const kind = sheetKindOf(room.system as System, sheet);
+  const hasGroups = (room.system as System).fields.some(field => livesOn(field) === 'group');
   const only = kind?.blocks?.length ? system.fields.filter(shownOn(room.system as System, sheet)).map(f => f.tag) : undefined;
 
   return (
     <>
       {isDesk ? <span className="faint">общий стол комнаты — видят все, правит ведущий</span> : <ClaimRow room={room} sheet={sheet} />}
-      {!isDesk && !asGroup ? (
-        <Field label="Группа" hint="Поля группы — общий счётчик отряда, Жара банды — хранятся на листе группы.">
+      {!isDesk && !asGroup && hasGroups ? (
+        <Field label="Группа">
           <Select
             value={sheet.group ?? ''}
             options={[['', '— не в группе —'], ...room.sheets
@@ -290,15 +292,6 @@ function SidePanel({ room, sheet }: { room: RoomState; sheet: Sheet }) {
           )}
       </Fold>
 
-      {room.system.grants?.length ? (
-        <Fold title="Действует на всех" count={room.system.grants.length}>
-          <div className="inline inline--tight">
-            {room.system.grants.map(id => (
-              <Chip key={id}>{room.system.effects[id]?.label ?? id}</Chip>
-            ))}
-          </div>
-        </Fold>
-      ) : null}
     </>
   );
 }

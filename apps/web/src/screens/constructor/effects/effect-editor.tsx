@@ -107,9 +107,23 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
               ),
             },
             {
-              key: 'group', label: 'Блок', width: 170, hint: 'Тот же, что у полей листа и типов записей',
+              key: 'everyone', label: 'У кого есть', width: 190,
+              node: (
+                <Select
+                  value={(system.grants ?? []).includes(id) ? 'all' : 'given'}
+                  options={[['given', pipeline ? 'даёт запись или тип' : 'на кого повесили'], ['all', 'у всех листов']] as const}
+                  onChange={next => editSystem(draft => {
+                    const rest = (draft.grants ?? []).filter(x => x !== id);
+                    draft.grants = next === 'all' ? [...rest, id] : rest;
+                  })}
+                />
+              ),
+            },
+            {
+              key: 'group', label: 'Блок', width: 170,
               node: (
                 <BlockPick
+                  of="effects"
                   system={system} value={effect.group}
                   onChange={next => edit(draft => { if (next) draft.group = next; else delete draft.group; })}
                 />

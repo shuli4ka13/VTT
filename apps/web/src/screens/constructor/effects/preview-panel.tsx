@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useWorld } from '../../../store/world.ts';
+import { useWorld, useBook } from '../../../store/world.ts';
 import { Card, CardHead, Select, Verdict, Empty, Segmented } from '../../../ui/primitives.tsx';
 import { SheetView } from '../../../sheet/sheet-view.tsx';
 import { useReader } from '../../../engine/use-calc.ts';
@@ -11,7 +11,7 @@ const DICE_OPTIONS = (Object.keys(DICE_MODES) as DiceMode[]).map(key => [key, DI
 
 export function PreviewPanel({ effectId }: { effectId: string | null }) {
   const system = useWorld(s => s.system);
-  const compendium = useWorld(s => s.compendium);
+  const compendium = useBook();
   const [tab, setTab] = useState<'donors' | 'trial'>('donors');
   const [dice, setDice] = useState<DiceMode>('avg');
 

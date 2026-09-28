@@ -80,7 +80,7 @@ const holds = <T,>(node: BlockNode<T>, active: (item: T) => boolean): boolean =>
 const count = <T,>(node: BlockNode<T>): number =>
   node.items.length + node.children.reduce((sum, child) => sum + count(child), 0);
 
-export function BlockBranches<T>({ list, nodes, depth = 0, onPickBlock, activeBlock, render, addTo, lineage, isActive }: {
+export function BlockBranches<T>({ list, nodes, depth = 0, onPickBlock, activeBlock, render, addTo, lineage, isActive, isFresh }: {
   list: string;
   nodes: BlockNode<T>[];
   depth?: number;
@@ -90,6 +90,7 @@ export function BlockBranches<T>({ list, nodes, depth = 0, onPickBlock, activeBl
   addTo?: (name: string) => void;
   lineage?: Lineage<T>;
   isActive?: (item: T) => boolean;
+  isFresh?: (item: T) => boolean;
 }) {
   const opened = useOpened(s => s.opened);
   const toggle = useOpened(s => s.toggle);
@@ -97,7 +98,8 @@ export function BlockBranches<T>({ list, nodes, depth = 0, onPickBlock, activeBl
     <>
       {nodes.map(node => {
         const key = `list|${list}|${node.name}`;
-        const open = Boolean(opened[key]) || (isActive ? holds(node, isActive) : false) || node.name === activeBlock;
+        const open = Boolean(opened[key]) || (isActive ? holds(node, isActive) : false) || node.name === activeBlock
+          || (isFresh ? holds(node, isFresh) : false);
         return (
           <div key={node.name} className={depth ? 'list__nest' : undefined}>
             <ListGroup>
@@ -139,6 +141,7 @@ export function BlockBranches<T>({ list, nodes, depth = 0, onPickBlock, activeBl
                   list={list} nodes={node.children} depth={depth + 1} activeBlock={activeBlock}
                   onPickBlock={onPickBlock} render={render} addTo={addTo} lineage={lineage}
                   {...(isActive ? { isActive } : {})}
+                  {...(isFresh ? { isFresh } : {})}
                 />
               </>
             ) : null}

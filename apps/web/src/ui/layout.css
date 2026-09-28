@@ -48,7 +48,7 @@
 }
 .worldbar .spacer { flex: 1; min-width: var(--s-3); }
 .worldbar__name { width: clamp(140px, 18vw, 240px); }
-.worldbar__note { font-size: var(--fs-2); max-width: 40ch; }
+.worldbar__note { font-size: var(--fs-2); max-width: 32ch; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 0 1 auto; }
 .worldbar__books { display: flex; gap: var(--s-2); flex-wrap: wrap; font-size: var(--fs-2); }
 .appbar { position: relative; z-index: 30; flex: none; background: var(--surface); border-bottom: 1px solid var(--border); }
 .appbar__row { display: flex; align-items: center; gap: var(--s-3); height: var(--header-h); padding: 0 var(--s-5); white-space: nowrap; }
@@ -180,6 +180,26 @@
   background: var(--accent-soft);
   border-color: var(--accent);
 }
+.list__item--fresh { animation: fresh-glow 2.4s ease-out; }
+@keyframes fresh-glow {
+  from { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+  to { background: transparent; box-shadow: inset 3px 0 0 transparent; }
+}
+@media (prefers-reduced-motion: reduce) { .list__item--fresh { animation: none; box-shadow: inset 3px 0 0 var(--accent); } }
+
+.fresh {
+  display: flex; flex-direction: column; gap: var(--s-2);
+  padding: var(--s-3); border-radius: var(--r-2);
+  border: 1px solid var(--accent); background: var(--accent-soft);
+}
+.fresh__head { display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); }
+.fresh__row { font-size: var(--fs-2); line-height: 1.5; }
+.linkish {
+  background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; font: inherit;
+  text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+.linkish:hover { color: var(--accent-hover); }
+
 .list__icon { flex: none; width: 20px; text-align: center; color: var(--text-muted); }
 .list__body { min-width: 0; flex: 1; }
 .list__name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

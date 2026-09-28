@@ -417,7 +417,7 @@ describe('Словари: кости, правки броска, таблицы'
 
 });
 
-describe('Тоглы: крит и броня пишутся данными', () => {
+describe('Быстрые настройки: крит и броня пишутся данными', () => {
   beforeEach(() => {
     useWorld.setState(state => ({
       ...state,
@@ -435,7 +435,7 @@ describe('Тоглы: крит и броня пишутся данными', () 
 
   it('«взрывная кость» заводит правку и правило комнаты, «нет» убирает', () => {
     renderOpen(<RulesTab />);
-    открыть('Тоглы');
+    открыть('Быстрые настройки');
     fireEvent.click(screen.getByText('взрывная кость'));
     expect(useWorld.getState().system.grants).toContain('crit_explode_rule');
     expect(useWorld.getState().system.roll_edits?.crit_explode).toBeTruthy();
@@ -445,7 +445,7 @@ describe('Тоглы: крит и броня пишутся данными', () 
 
   it('броня «порог» ложится в вызываемый эффект урона после подтверждения', () => {
     renderOpen(<RulesTab />);
-    открыть('Тоглы');
+    открыть('Быстрые настройки');
     const armor = [...document.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'броня'))!;
     fireEvent.change(armor, { target: { value: 'броня' } });
     const hp = [...document.querySelectorAll('select')].filter(el => [...el.options].some(o => o.value === 'хиты')).at(-1)!;

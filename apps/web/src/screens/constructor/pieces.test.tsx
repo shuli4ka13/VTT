@@ -8,7 +8,7 @@ import { world as W } from '@vtt/schema';
 import { PIECES } from '@vtt/engine/model/pieces';
 import { lintSystem, errorsOf } from '@vtt/engine/model/lint';
 
-describe('стартовые блоки на пустом листе', () => {
+describe('куски на пустом листе', () => {
   beforeEach(() => {
     useWorld.setState(state => ({ ...state, system: emptySystem(), activeFieldTag: null, activeGroupName: null }));
   });
@@ -16,8 +16,20 @@ describe('стартовые блоки на пустом листе', () => {
 
   it('пустой лист предлагает все куски систем', () => {
     renderOpen(<SheetTab />);
-    const buttons = screen.getAllByRole('button').map(b => b.textContent ?? '');
-    for (const piece of PIECES) expect(buttons, piece.label).toContain(piece.label);
+    const titles = [...document.querySelectorAll('.card--pick .card__title')].map(node => node.textContent ?? '');
+    for (const piece of PIECES) expect(titles, piece.label).toContain(piece.label);
+  });
+
+  it('после вставки видно, что пришло, и вставку можно отменить', () => {
+    renderOpen(<SheetTab />);
+    fireEvent.click(screen.getAllByText('Характеристики к20')[0]!);
+    expect(screen.getByText('что пришло')).toBeTruthy();
+    expect(screen.getAllByText('Сила').length).toBeGreaterThan(0);
+    expect(document.querySelector('.list__item--fresh')).toBeTruthy();
+
+    fireEvent.click(screen.getByText('отменить'));
+    expect(useWorld.getState().system.fields).toEqual([]);
+    expect(screen.queryByText('что пришло')).toBeNull();
   });
 
   it('клик по куску кладёт его со всем, от чего он зависит, и система остаётся без ошибок', () => {

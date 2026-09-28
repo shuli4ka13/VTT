@@ -22,7 +22,6 @@ const AUTHOR_ONLY = [
   'constructor/effects/launch-card.tsx',
   'constructor/effects/chain.tsx',
   'constructor/effects/params-editor.tsx',
-  'constructor/effects/room-rules.tsx',
   'constructor/effects/cards/group-card.tsx',
   'constructor/effects/cards/check-body.tsx',
   'constructor/effects/cards/change-body.tsx',

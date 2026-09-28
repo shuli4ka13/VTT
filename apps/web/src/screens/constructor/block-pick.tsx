@@ -6,16 +6,31 @@ import type { System } from '@vtt/schema';
 
 const depthOf = (system: System, name: string): number => groupChain(system, name).length - 1;
 
-export function BlockPick({ system, value, onChange }: {
+export type BlockOf = 'fields' | 'effects' | 'records';
+
+function usedBy(system: System, of: BlockOf): Set<string> {
+  const groups = of === 'fields' ? system.fields.map(f => f.group)
+    : of === 'effects' ? Object.values(system.effects).map(e => e.group)
+      : Object.values(system.records ?? {}).map(k => k.group);
+  return new Set(groups.filter((g): g is string => Boolean(g)).flatMap(g => groupChain(system, g)));
+}
+
+export const fieldBlocks = (system: System): string[] =>
+  [...usedBy(system, 'fields')].sort((a, b) => a.localeCompare(b, 'ru'));
+
+export function BlockPick({ system, value, onChange, of }: {
   system: System;
   value: string | undefined;
   onChange: (next: string | undefined) => void;
+  of: BlockOf;
 }) {
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState('');
 
+  const mine = usedBy(system, of);
+  const others = new Set((['fields', 'effects', 'records'] as const).filter(o => o !== of).flatMap(o => [...usedBy(system, o)]));
   const names = blockNames(system)
-    .filter(name => name !== NO_BLOCK)
+    .filter(name => name !== NO_BLOCK && (name === value || mine.has(name) || !others.has(name)))
     .sort((a, b) => a.localeCompare(b, 'ru'));
 
   const add = () => {

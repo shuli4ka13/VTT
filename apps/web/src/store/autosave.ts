@@ -99,6 +99,8 @@ function schedule(): void {
 }
 
 useWorld.subscribe(schedule);
+if (useWorld.persist.hasHydrated()) schedule();
+else useWorld.persist.onFinishHydration(() => schedule());
 
 if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => {

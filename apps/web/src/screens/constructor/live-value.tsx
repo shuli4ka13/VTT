@@ -25,15 +25,15 @@ export function LiveValue({ system, compendium, tag, source }: {
   return (
     <div className="stack stack--tight live">
       <span className={`live__value ${value.bad ? 'field__error' : ''}`} title={value.title}>
-        = {value.text}
-        <Tip text="Манекен — пробный лист с значениями по умолчанию; так автор видит формулу в числах, не заводя персонажа."><span className="faint"> на манекене</span></Tip>
+        = {value.text}{' '}
+        <Tip text="Манекен — пробный лист с значениями по умолчанию; так автор видит формулу в числах, не заводя персонажа."><span className="faint">на манекене</span></Tip>
       </span>
       {words && words !== source ? <span className="faint">{words}</span> : null}
       {deps.length ? (
         <div className="inline inline--tight">
           <span className="faint">Зависит от:</span>
           {deps.map(dep => (
-            <Chip key={dep}>{system.fields.find(field => field.tag === dep)?.label ?? dep}</Chip>
+            <Chip key={dep}>{formulaAsLabels(system, `@${dep}`)}</Chip>
           ))}
         </div>
       ) : null}

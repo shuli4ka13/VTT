@@ -1,9 +1,11 @@
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { world as W } from '@vtt/schema';
 import type { System, Compendium, Sheet, Effect, Field } from '@vtt/schema';
 import { lazyStorage } from './lazy-storage.ts';
 import { blockOf } from '@vtt/engine/model/blocks';
+import { withLibrary } from '@vtt/engine/model/owned';
 
 export type WorkMode = 'system' | 'compendium';
 
@@ -214,3 +216,9 @@ export function freeId(taken: Iterable<string>, base: string): string {
 }
 
 export const randomTag = (): string => Math.random().toString(36).slice(2, 8);
+
+export function useBook(): Compendium {
+  const system = useWorld(s => s.system);
+  const compendium = useWorld(s => s.compendium);
+  return useMemo(() => withLibrary(system, compendium), [system, compendium]);
+}

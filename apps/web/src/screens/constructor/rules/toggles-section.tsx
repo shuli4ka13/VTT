@@ -39,7 +39,7 @@ export function TogglesSection({ system, editSystem }: Props) {
   return (
     <Card>
       <CardHead
-        title="Тоглы"
+        title="Быстрые настройки"
         sub="Переключатели, которые пишут данные за вас. Что именно записалось — видно на вкладке «Эффекты»."
       />
 

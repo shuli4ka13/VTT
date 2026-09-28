@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { useRoom } from '../../store/room.ts';
 import { tableSocket } from '../../api/socket.ts';
 import { ActionForm } from './action-form.tsx';
@@ -8,6 +9,7 @@ import { Lobby } from './lobby.tsx';
 import { useSession } from '../../store/session.ts';
 import type { RoomState, Sheet, System } from '@vtt/schema';
 import { availableActions } from '@vtt/engine/events/envelope';
+import { heardMoments } from '@vtt/engine/events/moments';
 import { isDesk } from '@vtt/engine/engine/owners';
 import { deskSystemOf } from '@vtt/engine/engine/calc';
 import { useReader } from '../../engine/use-calc.ts';
@@ -93,6 +95,9 @@ function RoomTable({ room }: { room: RoomState }) {
                   </>
                 }
               />
+              {people.length ? null : (
+                <Empty title="За столом пока никого" action={<Link className="btn btn--sm" to="/play/sheet">Завести лист</Link>} />
+              )}
               <div className="tokens">
                 {people.map(sheet => (
                   <button
@@ -115,15 +120,15 @@ function RoomTable({ room }: { room: RoomState }) {
 
             {desk && deskFields.length ? <DeskPanel room={room} desk={desk} /> : null}
 
-            <Combat room={room} onError={setError} />
+            {people.length ? <Combat room={room} onError={setError} /> : null}
             {room.pending ? <Prompt room={room} onError={setError} /> : null}
-            <Actions
+            {people.length ? <Actions
               room={room}
               sender={sender}
               targets={targets}
               onError={setError}
               onClear={() => { setFrom(null); setTo([]); }}
-            />
+            /> : null}
           </>
         ),
       }}
@@ -161,6 +166,8 @@ function Combat({ room, onError }: { room: RoomState; onError: (message: string 
   const fighting = Boolean(clock && clock.round > 0 && clock.active);
   const waiting = Boolean(room.pending);
   const why = waiting ? 'стол ждёт ответа на вопрос ниже' : undefined;
+  const heard = heardMoments(room.system);
+  const rest = heard.has('long-rest') || heard.has('short-rest');
 
   return (
     <Card>
@@ -173,11 +180,13 @@ function Combat({ room, onError }: { room: RoomState; onError: (message: string 
                   <Button size="sm" variant="primary" disabled={waiting} title={why} onClick={() => send('next')}>Следующий ход</Button>
                   <Button size="sm" disabled={waiting} title={why} onClick={() => send('stop')}>Конец боя</Button>
                 </>
-              : <Button size="sm" variant="primary" disabled={waiting} title={why} onClick={() => send('start')}>Инициатива</Button>}
-            {fighting ? null : (
+              : <Button size="sm" variant="primary" disabled={waiting} title={why} onClick={() => send('start')}>{room.system.initiative ? 'Инициатива' : 'Начать бой'}</Button>}
+            {fighting || !rest ? null : (
               <>
-                <Button size="sm" variant="ghost" disabled={waiting} title={why ?? 'Будит эффекты «на коротком отдыхе»'} onClick={() => send('short-rest')}>Короткий отдых</Button>
-                <Button size="sm" variant="ghost" disabled={waiting} title={why ?? 'Будит эффекты короткого и долгого отдыха'} onClick={() => send('long-rest')}>Долгий отдых</Button>
+                {heard.has('short-rest')
+                  ? <Button size="sm" variant="ghost" disabled={waiting} title={why} onClick={() => send('short-rest')}>Короткий отдых</Button>
+                  : null}
+                <Button size="sm" variant="ghost" disabled={waiting} title={why} onClick={() => send('long-rest')}>Долгий отдых</Button>
               </>
             )}
             <Button size="sm" variant="ghost" disabled={waiting} title={why} onClick={() => send('scene')}>Закрыть сцену</Button>

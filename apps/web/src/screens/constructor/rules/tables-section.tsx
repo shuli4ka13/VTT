@@ -8,7 +8,7 @@ import { ValueEditor } from '../../../ui/value-editor.tsx';
 import { newTable } from '../factory.ts';
 import { inUse, usersOf } from '../usage.ts';
 import type { UsageIndex } from '../usage.ts';
-import { freeId } from '../../../store/world.ts';
+import { freeId, useBook } from '../../../store/world.ts';
 import { listUsers } from '@vtt/engine/model/lists';
 import { isRange, keyOf } from '@vtt/engine/model/tables';
 import { rowUsers, renameRow, renameRowInBook } from '@vtt/engine/model/integrity';
@@ -240,7 +240,7 @@ function Rows({ id, table, system, edit, editSystem }: {
   edit: (change: (draft: Table) => void) => void;
   editSystem: EditSystem;
 }) {
-  const compendium = useWorld(s => s.compendium);
+  const compendium = useBook();
   const editCompendium = useWorld(s => s.editCompendium);
   const rename = (from: unknown, to: unknown) => {
     editSystem(draft => renameRow(draft, id, from, to));

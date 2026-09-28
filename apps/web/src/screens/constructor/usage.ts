@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { referencesOf } from '@vtt/engine/model/references';
 import type { Where, RefKind } from '@vtt/engine/model/references';
 import type { System, Compendium } from '@vtt/schema';
-import { useWorld } from '../../store/world.ts';
+import { useWorld, useBook } from '../../store/world.ts';
 import { whereLabel } from './problems.ts';
 
 export type UsageIndex = Map<string, Where[]>;
@@ -22,7 +22,7 @@ export function usageIndex(system: System, compendium?: Compendium): UsageIndex 
 
 export function useUsage(): UsageIndex {
   const system = useWorld(s => s.system);
-  const compendium = useWorld(s => s.compendium);
+  const compendium = useBook();
   return useMemo(() => usageIndex(system, compendium), [system, compendium]);
 }
 

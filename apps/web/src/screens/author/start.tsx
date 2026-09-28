@@ -91,7 +91,7 @@ export function SystemStart() {
         <button type="button" className={`role${mode === 'blank' ? ' role--active' : ''}`}
           onClick={() => setMode('blank')}>
           <span className="role__name">Начать с нуля</span>
-          <span className="role__hint">Пустой лист: поля, словари и эффекты заводите сами.</span>
+          <span className="role__hint">Пустая система: берёте готовые куски или заводите всё сами.</span>
         </button>
       </div>
 

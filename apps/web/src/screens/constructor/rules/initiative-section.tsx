@@ -17,7 +17,7 @@ export function InitiativeSection({ system, editSystem }: Props) {
     <Card>
       <CardHead
         title="Инициатива"
-        sub="Чем решается порядок ходов в бою. Обычный бросок системы: правила комнаты и правки бросков действуют и на него."
+        sub="Чем решается порядок ходов в бою. Обычный бросок системы: правки броска действуют и на него."
       />
       <div className="stack stack--tight">
         <div className="dict-row">

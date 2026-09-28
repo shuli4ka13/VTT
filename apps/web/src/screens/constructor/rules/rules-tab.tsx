@@ -31,7 +31,7 @@ const SECTIONS: Section[] = [
   { key: 'blocks', label: 'Блоки', count: system => blockNames(system).length },
   { key: 'initiative', label: 'Инициатива', lint: 'initiative', count: system => (system.initiative ? 1 : 0) },
   {
-    key: 'toggles', label: 'Тоглы',
+    key: 'toggles', label: 'Быстрые настройки',
     count: system => [
       critOf(system) !== 'off',
       calledOf(system).some(([key]) => armorOf(system, key).choice !== 'none'),

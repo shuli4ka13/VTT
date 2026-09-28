@@ -3,7 +3,7 @@ import { lintSystem, describeWhere } from '@vtt/engine/model/lint';
 import type { Problem } from '@vtt/engine/model/lint';
 import type { Where } from '@vtt/engine/model/references';
 import type { System } from '@vtt/schema';
-import { useWorld } from '../../store/world.ts';
+import { useWorld, useBook } from '../../store/world.ts';
 import type { WorldState } from '../../store/world.ts';
 import { STEP } from '../../words.ts';
 import { flattenSystem } from '@vtt/engine/model/inherit';
@@ -12,7 +12,7 @@ export type { Problem };
 
 export function useProblems(): Problem[] {
   const system = useWorld(s => s.system);
-  const compendium = useWorld(s => s.compendium);
+  const compendium = useBook();
   const mode = useWorld(s => s.origin.mode);
   const book = mode === 'compendium' || compendium.records?.length
     ? compendium : undefined;

@@ -1,11 +1,10 @@
 import { choiceTables } from '@vtt/engine/model/tables';
-import { useWorld, freeId, slugOf } from '../../store/world.ts';
+import { useWorld, freeId, slugOf, useBook } from '../../store/world.ts';
 import { useUsage, usersOf } from './usage.ts';
 import { LiveValue } from './live-value.tsx';
 import { optionsOf, choiceTableOf } from '@vtt/engine/model/lists';
 import { kindsFor } from '@vtt/engine/words/kinds';
 import { FieldPreview } from './field-preview.tsx';
-import { Starters } from './starters.tsx';
 import { CONTROLS } from '../../sheet/controls/index.tsx';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
 import { useLookupPane } from './lookup-panel.tsx';
@@ -15,6 +14,7 @@ import {
 import { FormulaInput, formulaAsLabels } from '../../ui/formula.tsx';
 import { compile } from '@vtt/engine/formula';
 import { DonorPalette } from './donors.tsx';
+import { useFreshKeys } from '../../store/fresh.ts';
 import { newField } from './factory.ts';
 import { GroupEditor } from './group-editor.tsx';
 import { BlockPick } from './block-pick.tsx';
@@ -58,6 +58,7 @@ export function SheetTab() {
 
 
   const right = useLookupPane({ head: 'Готовое из образцов', body: <DonorPalette kind="blocks" /> });
+  const freshFields = useFreshKeys('field');
 
   return (
     <Columns
@@ -65,17 +66,14 @@ export function SheetTab() {
         head: 'Блоки и поля',
         tools: <Button size="sm" onClick={() => addField('Новый блок')}>+ блок</Button>,
         body: tree.length === 0
-          ? <Empty
-              title="Лист пуст"
-              hint="Начните с готового куска — он приедет со всем, от чего зависит: поля, таблицы, эффекты, правила. Или заведите поле сами кнопкой выше."
-              action={<Starters />}
-            />
+          ? <Empty title="Лист пуст" hint="Возьмите готовый кусок справа или заведите поле кнопкой «+ блок»." />
           : (
             <List>
               <BlockBranches
                 list="sheet"
                 nodes={tree}
                 isActive={field => field.tag === activeTag}
+                isFresh={field => freshFields.has(field.tag)}
                 activeBlock={active ? null : activeGroup}
                 onPickBlock={name => pick({ activeGroupName: name, activeFieldTag: null })}
                 addTo={addField}
@@ -86,6 +84,7 @@ export function SheetTab() {
                     name={field.label}
                     meta={metaOf(system, field.value, field)}
                     active={field.tag === activeTag}
+                    fresh={freshFields.has(field.tag)}
                     onClick={() => pick({ activeFieldTag: field.tag, activeGroupName: null })}
                   />
                 )}
@@ -109,7 +108,7 @@ export function SheetTab() {
 }
 
 function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
-  const compendium = useWorld(s => s.compendium);
+  const compendium = useBook();
   const editSystem = useWorld(s => s.editSystem);
   const editField = useWorld(s => s.editField);
   const pick = useWorld(s => s.pick);
@@ -183,6 +182,7 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
           </Field>
           <Field label="Блок">
             <BlockPick
+              of="fields"
               system={system}
               value={field.group}
               onChange={next => edit(draft => {

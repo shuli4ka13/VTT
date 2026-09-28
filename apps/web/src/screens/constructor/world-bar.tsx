@@ -44,7 +44,7 @@ export function SystemBar() {
     try {
       const saved = await publishSystem(origin.systemId);
       rememberVersion({ system: saved.updatedAt });
-      setNote({ text: 'система опубликована — партия увидит эту версию', bad: false });
+      setNote({ text: 'опубликовано', bad: false });
     } catch (err) { fail(err); }
   };
 
@@ -65,7 +65,7 @@ export function SystemBar() {
 
       <span className="spacer" />
 
-      {note ? <span className={`worldbar__note ${note.bad ? 'field__error' : 'muted'}`}>{note.text}</span> : null}
+      {note ? <span className={`worldbar__note ${note.bad ? 'field__error' : 'muted'}`} title={note.text}>{note.text}</span> : null}
       <span className="muted">{name}</span>
       <ProblemsButton />
       <Button size="sm" variant="primary" onClick={() => void publish()}

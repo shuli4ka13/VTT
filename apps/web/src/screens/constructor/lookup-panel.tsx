@@ -1,4 +1,4 @@
-import { useWorld } from '../../store/world.ts';
+import { useWorld, useBook } from '../../store/world.ts';
 import { useLookup } from '../../store/lookup.ts';
 import type { Looked } from '../../store/lookup.ts';
 import { Button, Card, CardHead } from '../../ui/primitives.tsx';
@@ -25,7 +25,7 @@ export function useLookupPane(pane?: Pane): Pane | undefined {
 
 function LookupPanel({ at }: { at: Looked }) {
   const system = useWorld(s => s.system);
-  const compendium = useWorld(s => s.compendium);
+  const compendium = useBook();
   const effectId = useWorld(s => (s.activeTab === 'effects' ? s.activeEffectId : null));
   const pick = useWorld(s => s.pick);
   const usage = useUsage();

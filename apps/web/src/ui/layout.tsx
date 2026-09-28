@@ -81,15 +81,16 @@ export function List({ children }: { children: ReactNode }) {
   return <div className="list">{children}</div>;
 }
 
-export function ListItem({ icon, name, meta, active, onClick }: {
+export function ListItem({ icon, name, meta, active, fresh, onClick }: {
   icon?: ReactNode;
   name: ReactNode;
   meta?: ReactNode;
   active?: boolean;
+  fresh?: boolean;
   onClick: () => void;
 }) {
   return (
-    <button type="button" className="list__item" aria-current={active} onClick={onClick}>
+    <button type="button" className={`list__item${fresh ? ' list__item--fresh' : ''}`} aria-current={active} onClick={onClick}>
       {icon ? <span className="list__icon" aria-hidden>{icon}</span> : null}
       <span className="list__body">
         <span className="list__name">{name}</span>

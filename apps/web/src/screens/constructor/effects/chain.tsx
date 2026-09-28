@@ -22,7 +22,6 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
   lane?: Lane;
   onMoveLane?: (indices: number[], to: Lane) => void;
 }) {
-  const editSystem = useWorld(s => s.editSystem);
   const pick = useWorld(s => s.pick);
   const onOpenEffect = (id: string) => pick({ activeEffectId: id });
   const [removed, setRemoved] = useState<{ text: string; before: Step[] } | null>(null);
@@ -132,7 +131,7 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
             onFold={() => toggleFold(foldKey(group))}
             onMoveLane={onMoveLane ? to => onMoveLane(group.indices, to) : undefined}
             problemAction={donorFix ? (
-              <Button size="sm" onClick={() => copyDonorBlock(editSystem, donorFix.donor, donorFix.group)}>
+              <Button size="sm" onClick={() => copyDonorBlock(donorFix.donor, donorFix.group)}>
                 {`взять блок «${donorFix.group}» из «${donorFix.donor.name}»`}
               </Button>
             ) : undefined}

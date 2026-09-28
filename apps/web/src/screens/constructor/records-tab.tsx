@@ -3,16 +3,16 @@ import { choiceTables } from '@vtt/engine/model/tables';
 import { useWorld, freeId } from '../../store/world.ts';
 import { ModifiersEditor } from './modifiers.tsx';
 import { MultiChoice } from '../../ui/multi-choice.tsx';
-import { blockNames } from '@vtt/engine/model/blocks';
 import { newRecordKind, newBinding, newProp } from './factory.ts';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
 import { useLookupPane } from './lookup-panel.tsx';
 import {
-  Card, CardHead, Field, Input, Select, Button, Empty, Verdict, Chip, DangerButton, LabelInput,
+  Card, CardHead, Field, Input, Select, Button, Empty, Verdict, Chip, DangerButton, LabelInput, Fold,
 } from '../../ui/primitives.tsx';
 import type { System, RecordKind, Binding, Param, Effect, ValueKind } from '@vtt/schema';
 import { SlotInput } from './slot-input.tsx';
-import { BlockPick } from './block-pick.tsx';
+import { BlockPick, fieldBlocks } from './block-pick.tsx';
+import { calledOf } from '@vtt/engine/engine/effects';
 import { blockOf } from '@vtt/engine/model/blocks';
 import { listOf } from '@vtt/engine/model/lists';
 import { blockTree, BlockBranches } from './block-tree.tsx';
@@ -30,16 +30,17 @@ function SheetKindCards({ kind, system, edit }: {
   edit: (change: (draft: RecordKind) => void) => void;
 }) {
   const editSystem = useWorld(s => s.editSystem);
-  const blocks = blockNames(system).map(name => ({ value: name, label: name }));
-  const passive = Object.entries(system.effects)
-    .filter(([, effect]) => (effect.activation ?? 'manual') === 'passive')
+  const blocks = fieldBlocks(system).map(name => ({ value: name, label: name }));
+  const called = new Set(calledOf(system).map(([key]) => key));
+  const given = Object.entries(system.effects)
+    .filter(([key]) => !called.has(key))
     .map(([key, effect]) => ({ value: key, label: effect.label || key }));
   return (
     <>
       <Card>
         <CardHead
           title="Какие блоки на листе этого типа"
-          sub="Пусто — все блоки. Вложенный блок виден вместе со своим родителем. Считает движок все поля; род решает, что показать."
+          sub="Пусто — все блоки."
         />
         <MultiChoice
           value={kind.blocks ?? []}
@@ -52,12 +53,12 @@ function SheetKindCards({ kind, system, edit }: {
       </Card>
       <Card>
         <CardHead
-          title="Что висит на каждом листе этого типа"
-          sub="Как правило комнаты, но только для листов этого типа: спасброски от смерти — персонажам, а противникам нет."
+          title="Что есть у каждого листа этого типа"
+          sub="Правила и кнопки: спасброски от смерти — персонажам, рывок — всем, кто ходит."
         />
         <MultiChoice
           value={kind.grants ?? []}
-          options={passive}
+          options={given}
           onChange={next => edit(draft => {
             const list = (Array.isArray(next) ? next : []).map(String);
             if (list.length) draft.grants = list; else delete draft.grants;
@@ -160,6 +161,31 @@ export function RecordsTab() {
   );
 }
 
+function BuiltIn({ kindId, system }: { kindId: string; system: System }) {
+  const editSystem = useWorld(s => s.editSystem);
+  const records = (system.library ?? []).filter(record => record.rk === kindId);
+  if (!records.length) return null;
+
+  return (
+    <Fold title="Едут вместе с системой" count={records.length}>
+      <div className="inline inline--tight">
+        {records.map(record => (
+          <Chip
+            key={record.id}
+            {...(record.description ? { title: record.description } : {})}
+            onRemove={() => editSystem(draft => {
+              draft.library = (draft.library ?? []).filter(r => r.id !== record.id);
+              if (!draft.library.length) delete draft.library;
+            })}
+          >
+            {record.label ?? record.id}
+          </Chip>
+        ))}
+      </div>
+    </Fold>
+  );
+}
+
 function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system: System }) {
   const editSystem = useWorld(s => s.editSystem);
   const pick = useWorld(s => s.pick);
@@ -193,6 +219,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
           </Field>
           <Field label="Блок">
             <BlockPick
+              of="records"
               system={system}
               value={kind.group}
               onChange={next => edit(draft => {
@@ -220,6 +247,8 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
           <Input value={kind.hint ?? ''} onChange={next => edit(draft => { draft.hint = next; })} />
         </Field>
       </Card>
+
+      {kind.kind === 'sheet' ? null : <BuiltIn kindId={id} system={system} />}
 
       {kind.kind === 'sheet' ? <SheetKindCards kind={kind} system={system} edit={edit} /> : (
         <>

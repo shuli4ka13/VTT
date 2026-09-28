@@ -3,12 +3,12 @@ import { blockTree, BlockBranches } from '../block-tree.tsx';
 import { blockOf } from '@vtt/engine/model/blocks';
 import { newEffect } from '../factory.ts';
 import { Columns, List, ListItem } from '../../../ui/layout.tsx';
+import { useFreshKeys } from '../../../store/fresh.ts';
 import { useLookupPane } from '../lookup-panel.tsx';
 import { Button, Empty } from '../../../ui/primitives.tsx';
 import { PreviewPanel } from './preview-panel.tsx';
 import { CREATE_KINDS } from './words.ts';
 import { EffectEditor } from './effect-editor.tsx';
-import { RoomRules } from './room-rules.tsx';
 import { newCalled } from '../factory.ts';
 import { launchOf, LAUNCHES } from '@vtt/engine/model/effect-kinds';
 import type { LaunchKind } from '@vtt/engine/model/effect-kinds';
@@ -45,6 +45,8 @@ export function EffectsTab() {
   };
 
   const right = useLookupPane({ head: 'Рядом', body: <PreviewPanel effectId={activeId} /> });
+  const freshEffects = useFreshKeys('effect');
+  const everyone = new Set(system.grants ?? []);
 
   return (
     <Columns
@@ -65,6 +67,7 @@ export function EffectsTab() {
                     list="effects"
                     nodes={tree}
                     isActive={([id]) => id === activeId}
+                    isFresh={([id]) => freshEffects.has(id)}
                     addTo={addTo}
                     lineage={{
                       keyOf: ([id]) => id,
@@ -74,8 +77,9 @@ export function EffectsTab() {
                       <ListItem
                         key={id}
                         name={effect.label ?? id}
-                        meta={metaOf(effect, called.has(id))}
+                        meta={metaOf(effect, called.has(id), everyone.has(id))}
                         active={id === activeId}
+                        fresh={freshEffects.has(id)}
                         onClick={() => pick({ activeEffectId: id })}
                       />
                     )}
@@ -94,8 +98,6 @@ export function EffectsTab() {
                 + вызываемый
               </Button>
             </div>
-
-            <RoomRules system={system} />
           </>
         ),
       }}
@@ -112,8 +114,8 @@ export function EffectsTab() {
   );
 }
 
-const metaOf = (effect: Effect, called: boolean) => {
-  const kind = called ? 'вызывают другие' : LAUNCHES[launchOf(effect).kind].label;
+const metaOf = (effect: Effect, called: boolean, everyone: boolean) => {
+  const kind = `${called ? 'вызывают другие' : LAUNCHES[launchOf(effect).kind].label}${everyone ? ' · у всех' : ''}`;
   const idle = !effect.steps?.length && !effect.self?.length && !effect.modifiers?.length
     && !(effect.on ?? []).some(handler => handler.steps?.length || handler.self?.length || handler.claims?.length);
   return idle ? `${kind.toLowerCase()} · ничего не делает` : kind.toLowerCase();
