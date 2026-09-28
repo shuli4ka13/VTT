@@ -155,10 +155,24 @@ export function resolveRoll(
 
   return {
     tags,
-    edits: surviving.map(key => ({ ...dictionary[key]!, label: dictionary[key]!.label || key })),
+    edits: surviving.map(key => withValues({ ...dictionary[key]!, label: dictionary[key]!.label || key }, pass)),
     bonus,
     sources: mods.map(m => ({ ...m.source, edit: m.edit })),
   };
+}
+
+const isFormula = (value: unknown): value is { expr: string } =>
+  Boolean(value && typeof value === 'object' && 'expr' in (value as object));
+
+function withValues(edit: RollEdit & { label: string }, pass: Pass): RollEdit & { label: string } {
+  if (!(edit.ops ?? []).some(op => Object.values(op).some(isFormula))) return edit;
+  const ops = edit.ops.map(op => Object.fromEntries(Object.entries(op).map(([key, value]) => {
+    if (!isFormula(value)) return [key, value];
+    const number = Number(compile(value.expr).evaluate(pass.resolve));
+    if (!Number.isFinite(number)) throw new EngineError(`правка броска «${edit.label}»: «${key}» — формула «${value.expr}» дала не число`);
+    return [key, number];
+  })) as typeof op);
+  return { ...edit, ops };
 }
 
 const rollBucket = (pass: Pass, target: string): SourcedModifier[] =>

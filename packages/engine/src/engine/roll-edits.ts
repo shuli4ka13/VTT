@@ -153,6 +153,17 @@ const PRIMITIVES: Record<string, ClaimPrimitive | ResultPrimitive> = {
       const limit = num(op.limit, 10);
       const down = String(op.at ?? 'max') === 'min';
       const part = partOf(op);
+      if (op.apart) {
+        const out = [...dice];
+        let guard = 0;
+        for (let at = 0; at < out.length && guard < limit * Math.max(1, dice.length); at += 1) {
+          const entry = out[at]!;
+          if (!inPart(entry.name, part) || entry.value !== entry.sides) continue;
+          out.push({ ...entry, value: die(entry.sides) });
+          guard += 1;
+        }
+        return out;
+      }
       return dice.map(entry => {
         if (!inPart(entry.name, part)) return entry;
         const trigger = down ? 1 : entry.sides;
@@ -221,6 +232,7 @@ export const editPalette = (): { key: string; label: string; op: RollEditOp }[] 
   { key: 'shiftDegree', label: 'сдвинуть степень успеха', op: { op: 'shiftDegree', by: 1 } },
   { key: 'explodeUp', label: 'взрывать на максимуме', op: { op: 'explode' } },
   { key: 'explodeDown', label: 'взрывать на единице', op: { op: 'explode', at: 'min' } },
+  { key: 'explodeApart', label: 'подрыв: на максимуме — ещё одна кость отдельно', op: { op: 'explode', apart: true } },
   { key: 'flipLow', label: 'перевернуть цифры в меньшую', op: { op: 'flip', prefer: 'low' } },
   { key: 'flipHigh', label: 'перевернуть цифры в большую', op: { op: 'flip', prefer: 'high' } },
   { key: 'rerollLow', label: 'перебросить кости не выше…', op: { op: 'reroll', n: 1 } },
@@ -228,7 +240,7 @@ export const editPalette = (): { key: string; label: string; op: RollEditOp }[] 
 
 export const paletteKeyOf = (op: RollEditOp): string =>
   op.op === 'bonusDie' && op.minus ? 'penaltyDie'
-    : op.op === 'explode' ? (String(op.at ?? 'max') === 'min' ? 'explodeDown' : 'explodeUp')
+    : op.op === 'explode' ? (op.apart ? 'explodeApart' : String(op.at ?? 'max') === 'min' ? 'explodeDown' : 'explodeUp')
     : op.op === 'flip' ? (String(op.prefer ?? 'low') === 'high' ? 'flipHigh' : 'flipLow')
       : op.op === 'reroll' ? 'rerollLow'
         : String(op.op);

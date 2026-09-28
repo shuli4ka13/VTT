@@ -4,6 +4,7 @@
     "id": "shadowrun6",
     "name": "Shadowrun: Шестой мир",
     "groups": {
+      "Стол": {},
       "Личное дело": {},
       "Характеристики": {},
       "Особые": {},
@@ -154,6 +155,18 @@
           "max": 7
         },
         "control": "pips"
+      },
+      {
+        "tag": "edge_gained",
+        "label": "Преимущества получено за раунд (не больше 2)",
+        "group": "Особые",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 2
+        }
       },
       {
         "tag": "essence",
@@ -1066,6 +1079,55 @@
           "kind": "formula",
           "expr": "@reaction + @intuition + @wound_mod + @condition_mod"
         }
+      },
+      {
+        "tag": "init_dice",
+        "label": "Кубиков инициативы",
+        "group": "Инициатива",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1,
+          "min": 1,
+          "max": 5
+        }
+      },
+      {
+        "tag": "simple_left",
+        "label": "Простых действий осталось",
+        "group": "Инициатива",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 2,
+          "min": 0,
+          "max": 5
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "complex_left",
+        "label": "Сложных действий осталось",
+        "group": "Инициатива",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1,
+          "min": 0,
+          "max": 1
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "battle",
+        "label": "Идёт бой",
+        "group": "Стол",
+        "desk": true,
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0
+        }
       }
     ],
     "constants": {
@@ -1290,6 +1352,89 @@
             "cells": {
               "ar": -4,
               "dv": 2
+            }
+          }
+        ]
+      },
+      "edge_actions": {
+        "label": "Действия Преимущества при атаке (стр. 48–49)",
+        "key": "word",
+        "columns": [
+          {
+            "key": "cost",
+            "label": "Цена",
+            "kind": "number"
+          },
+          {
+            "key": "dv",
+            "label": "К урону",
+            "kind": "number"
+          },
+          {
+            "key": "pool",
+            "label": "К набору",
+            "kind": "number"
+          },
+          {
+            "key": "knockout",
+            "label": "Вырубить (1 — да)",
+            "kind": "number"
+          },
+          {
+            "key": "text",
+            "label": "По книге",
+            "kind": "text"
+          }
+        ],
+        "rows": [
+          {
+            "value": "нет",
+            "cells": {
+              "cost": 0,
+              "dv": 0,
+              "pool": 0,
+              "knockout": 0,
+              "text": ""
+            }
+          },
+          {
+            "value": "Метко попасть",
+            "cells": {
+              "cost": 0,
+              "dv": 2,
+              "pool": -4,
+              "knockout": 0,
+              "text": "Простое действие: +2 к урону за −4 к набору."
+            }
+          },
+          {
+            "value": "Пырнуть",
+            "cells": {
+              "cost": 1,
+              "dv": 2,
+              "pool": -2,
+              "knockout": 0,
+              "text": "Штраф «Метко попасть» снижается до −2."
+            }
+          },
+          {
+            "value": "Вырубить ударом",
+            "cells": {
+              "cost": 2,
+              "dv": 0,
+              "pool": 0,
+              "knockout": 1,
+              "text": "Ближний бой: урон больше Воли — счётчик оглушения полон."
+            }
+          },
+          {
+            "value": "Метко попасть в жизненно важную часть",
+            "cells": {
+              "cost": 5,
+              "dv": 3,
+              "pool": 0,
+              "knockout": 0,
+              "text": "+3 к урону."
             }
           }
         ]
@@ -1672,6 +1817,21 @@
             "n": 4
           }
         ]
+      },
+      "push_edge": {
+        "label": "Преимущество: добавить характеристику к набору с подрывом шестёрок",
+        "ops": [
+          {
+            "op": "addDie",
+            "count": {
+              "expr": "@edge"
+            }
+          },
+          {
+            "op": "explode",
+            "apart": true
+          }
+        ]
       }
     },
     "initiative": {
@@ -1766,6 +1926,16 @@
               "min": 0,
               "max": 1
             }
+          },
+          {
+            "key": "приём",
+            "label": "Приём",
+            "kind": "choice",
+            "from": "edge_actions",
+            "optional": true,
+            "ask": {
+              "by": "actor"
+            }
           }
         ],
         "self": [
@@ -1796,6 +1966,56 @@
             "when": {
               "expr": "(или(@успех_за_преимущество, 0) >= 1 ? 1 : 0) >= 1"
             }
+          },
+          {
+            "type": "compare",
+            "value": {
+              "expr": "@edge_left"
+            },
+            "versus": {
+              "expr": "таблица(\"edge_actions\", или(@приём, \"нет\"), \"cost\")"
+            },
+            "breakIf": "less",
+            "note": "на приём не хватает Преимущества"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "edge_left"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "таблица(\"edge_actions\", или(@приём, \"нет\"), \"cost\")"
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "compare",
+            "value": {
+              "expr": "@complex_left"
+            },
+            "versus": {
+              "expr": "1"
+            },
+            "breakIf": "less",
+            "note": "сложное действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "complex_left"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "1"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
           }
         ],
         "steps": [
@@ -1825,11 +2045,25 @@
             },
             "direction": "add",
             "value": {
-              "expr": "min(1, 7 - @edge_left)"
+              "expr": "1"
             },
             "targetModifiers": false,
             "when": {
-              "expr": "@атк - @получатель.defense_rating <= -4"
+              "expr": "все(@атк - @получатель.defense_rating <= -4, все(@получатель.edge_left < 7, @получатель.edge_gained < 2))"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "edge_gained"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "1"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "все(@атк - @получатель.defense_rating <= -4, все(@получатель.edge_left < 7, @получатель.edge_gained < 2))"
             }
           },
           {
@@ -1840,7 +2074,7 @@
                 "constant": "pool"
               },
               "count": {
-                "expr": "@attack_pool"
+                "expr": "max(0, @attack_pool + таблица(\"edge_actions\", или(@приём, \"нет\"), \"pool\"))"
               },
               "tags": [
                 "атака"
@@ -1900,7 +2134,7 @@
             },
             "direction": "add",
             "value": {
-              "expr": "max(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + @атака.natural + (или(@успех_за_преимущество, 0) >= 1 ? 1 : 0) - @атака.versusNatural - @сопротивление.natural)"
+              "expr": "max(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + таблица(\"edge_actions\", или(@приём, \"нет\"), \"dv\") + @атака.natural + (или(@успех_за_преимущество, 0) >= 1 ? 1 : 0) - @атака.versusNatural - @сопротивление.natural)"
             },
             "targetModifiers": false,
             "when": {
@@ -1914,7 +2148,7 @@
             },
             "direction": "add",
             "value": {
-              "expr": "max(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + @атака.natural + (или(@успех_за_преимущество, 0) >= 1 ? 1 : 0) - @атака.versusNatural - @сопротивление.natural)"
+              "expr": "max(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + таблица(\"edge_actions\", или(@приём, \"нет\"), \"dv\") + @атака.natural + (или(@успех_за_преимущество, 0) >= 1 ? 1 : 0) - @атака.versusNatural - @сопротивление.natural)"
             },
             "targetModifiers": false,
             "when": {
@@ -1928,7 +2162,7 @@
               "const": "shocked"
             },
             "when": {
-              "expr": "все(@electric >= 1, max(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + @атака.natural + (или(@успех_за_преимущество, 0) >= 1 ? 1 : 0) - @атака.versusNatural - @сопротивление.natural) >= 1)"
+              "expr": "все(@electric >= 1, max(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + таблица(\"edge_actions\", или(@приём, \"нет\"), \"dv\") + @атака.natural + (или(@успех_за_преимущество, 0) >= 1 ? 1 : 0) - @атака.versusNatural - @сопротивление.natural) >= 1)"
             }
           },
           {
@@ -1938,7 +2172,21 @@
               "const": "prone"
             },
             "when": {
-              "expr": "max(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + @атака.natural + (или(@успех_за_преимущество, 0) >= 1 ? 1 : 0) - @атака.versusNatural - @сопротивление.natural) > @получатель.body"
+              "expr": "max(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + таблица(\"edge_actions\", или(@приём, \"нет\"), \"dv\") + @атака.natural + (или(@успех_за_преимущество, 0) >= 1 ? 1 : 0) - @атака.versusNatural - @сопротивление.natural) > @получатель.body"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "stun"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "@получатель.stun_max"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "все(таблица(\"edge_actions\", или(@приём, \"нет\"), \"knockout\") >= 1, max(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + таблица(\"edge_actions\", или(@приём, \"нет\"), \"dv\") + @атака.natural + (или(@успех_за_преимущество, 0) >= 1 ? 1 : 0) - @атака.versusNatural - @сопротивление.natural) > @получатель.willpower)"
             }
           }
         ]
@@ -1967,9 +2215,26 @@
                 },
                 "direction": "add",
                 "value": {
-                  "expr": "min(1, 7 - @edge_left)"
+                  "expr": "1"
                 },
-                "targetModifiers": false
+                "targetModifiers": false,
+                "when": {
+                  "expr": "все(@получатель.edge_left < 7, @получатель.edge_gained < 2)"
+                }
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "edge_gained"
+                },
+                "direction": "add",
+                "value": {
+                  "expr": "1"
+                },
+                "targetModifiers": false,
+                "when": {
+                  "expr": "все(@получатель.edge_left < 7, @получатель.edge_gained < 2)"
+                }
               }
             ]
           }
@@ -2018,6 +2283,175 @@
               }
             ],
             "steps": []
+          }
+        ]
+      },
+      "push_edge": {
+        "label": "Преимущество: добавить к набору",
+        "group": "Преимущество",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "params": [],
+        "description": "Увидел свой бросок — за 4 очка Преимущества добавить к набору характеристику Преимущество; шестёрки подрываются: каждая даёт ещё кубик.",
+        "on": [
+          {
+            "on": "*",
+            "role": "sender",
+            "phase": "before",
+            "ask": true,
+            "claims": [
+              "push_edge"
+            ],
+            "self": [
+              {
+                "type": "compare",
+                "value": {
+                  "expr": "@edge_left"
+                },
+                "versus": {
+                  "expr": "4"
+                },
+                "breakIf": "less",
+                "note": "нужно 4 очк. Преимущества"
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "edge_left"
+                },
+                "direction": "subtract",
+                "value": {
+                  "expr": "4"
+                },
+                "targetModifiers": false
+              }
+            ],
+            "steps": []
+          }
+        ]
+      },
+      "round_edge": {
+        "label": "Новый раунд: предел Преимущества",
+        "group": "Правила комнаты",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "params": [],
+        "description": "В начале раунда счётчик полученного за раунд Преимущества обнуляется.",
+        "on": [
+          {
+            "on": "moment:round-start",
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "edge_gained"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "0"
+                },
+                "targetModifiers": false
+              }
+            ]
+          }
+        ]
+      },
+      "turn_actions": {
+        "label": "Начало хода: действия",
+        "group": "Правила комнаты",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "params": [],
+        "description": "Одно сложное и одно простое действие, плюс простое за каждый кубик инициативы (не больше пяти простых).",
+        "on": [
+          {
+            "on": "moment:turn-start",
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "simple_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "min(5, 1 + @init_dice)"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "complex_left"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "1"
+                },
+                "targetModifiers": false
+              }
+            ]
+          }
+        ]
+      },
+      "battle_start": {
+        "label": "Начало боя",
+        "group": "Правила комнаты",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "params": [],
+        "description": "Бой пошёл: действия считаются.",
+        "on": [
+          {
+            "on": "moment:combat-start",
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "battle"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "1"
+                },
+                "targetModifiers": false
+              }
+            ]
+          }
+        ]
+      },
+      "battle_end": {
+        "label": "Конец боя",
+        "group": "Правила комнаты",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "params": [],
+        "description": "Вне боя действия не считаются.",
+        "on": [
+          {
+            "on": "moment:combat-end",
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "battle"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "0"
+                },
+                "targetModifiers": false
+              }
+            ]
           }
         ]
       },
@@ -2398,6 +2832,36 @@
         "group": "Действия",
         "activation": "manual",
         "description": "Простое действие: снять «Распластан».",
+        "self": [
+          {
+            "type": "compare",
+            "value": {
+              "expr": "@simple_left"
+            },
+            "versus": {
+              "expr": "1"
+            },
+            "breakIf": "less",
+            "note": "простых действий не осталось",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "simple_left"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "1"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
+        ],
         "steps": [
           {
             "type": "status",
@@ -2699,6 +3163,11 @@
       "come_to",
       "edge_gain",
       "reroll_failures",
+      "push_edge",
+      "round_edge",
+      "turn_actions",
+      "battle_start",
+      "battle_end",
       "glitch",
       "critical_glitch"
     ],
@@ -4160,6 +4629,16 @@
           "of": "full_body_helmet"
         }
       ],
+      "effects": []
+    },
+    {
+      "id": "стол",
+      "systemId": "shadowrun6",
+      "name": "Стол",
+      "values": {
+        "battle": 0
+      },
+      "has": [],
       "effects": []
     }
   ]

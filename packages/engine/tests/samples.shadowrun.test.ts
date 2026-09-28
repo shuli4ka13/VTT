@@ -86,3 +86,33 @@ group('Shadowrun 6: атака', () => {
     eq(after(out, 'swat').values.edge_left, 1, 'АТК 8 против ЗЩТ 14');
   });
 });
+
+group('Shadowrun 6: Преимущество и действия', () => {
+  const desk = (battle: number) => ({ id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: { battle }, has: [], effects: [] }) as unknown as Sheet;
+  const hit = (from: Sheet, to: Sheet, action: string, die: () => number, inputs: Record<string, unknown>, battle = 0) => exchange({
+    system, compendium, die, sheets: [from, to, desk(battle)], actionId: action, fromId: from.id, toId: to.id,
+    inputs: { дистанция: 'близкая', ...inputs } as never,
+  });
+
+  test('не больше 2 очков Преимущества за раунд', () => {
+    const razor = sheetOf('razor', { edge_left: 0, edge_gained: 2 });
+    const out = hit(razor, sheetOf('humanis'), 'predator_vi:0', dice([11, 1], [4, 1]), {});
+    eq(after(out, 'razor').values.edge_left, 0);
+  });
+
+  test('«Вырубить ударом» за 2 очка: урон больше Воли — счётчик оглушения полон', () => {
+    const out = hit(sheetOf('lone_star', { edge_left: 2 }), sheetOf('humanis'), 'stun_baton:0', dice([7, 6], [4, 1], [2, 1]),
+      { дистанция: 'вплотную', приём: 'Вырубить ударом' });
+    eq(after(out, 'lone_star').values.edge_left, 1, 'заплатил 2, получил 1 за АТК 6 против ЗЩТ 2');
+    eq(after(out, 'humanis').values.stun, 9);
+    ok(wears(after(out, 'humanis'), 'unconscious'));
+  });
+
+  test('в бою атака тратит сложное действие; второго нет', () => {
+    const first = hit(sheetOf('razor', { complex_left: 1 }), sheetOf('humanis'), 'predator_vi:0', dice(), {}, 1);
+    eq(after(first, 'razor').values.complex_left, 0);
+    let refused = '';
+    try { hit(sheetOf('razor', { complex_left: 0 }), sheetOf('humanis'), 'predator_vi:0', dice(), {}, 1); } catch (err) { refused = (err as Error).message; }
+    ok(refused.includes('сложное действие'), refused);
+  });
+});

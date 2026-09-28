@@ -55,6 +55,7 @@ function fields() {
   for (const [tag, label] of ATTRIBUTES) out.push(stored(tag, label, 'Характеристики', 3, { min: 0, max: 13 }));
   out.push(stored('edge', 'Преимущество (характеристика)', 'Особые', 2, { min: 1, max: 7 }));
   out.push(stored('edge_left', 'Очки Преимущества', 'Особые', 2, { min: 0, max: 7, control: 'pips' }));
+  out.push(stored('edge_gained', 'Преимущества получено за раунд (не больше 2)', 'Особые', 0, { min: 0, max: 2 }));
   out.push(stored('essence', 'Сущность', 'Особые', 6, { min: 0, max: 6 }));
   out.push(stored('magic', 'Магия', 'Особые', 0, { min: 0 }));
   out.push(stored('resonance', 'Резонанс', 'Особые', 0, { min: 0 }));
@@ -95,6 +96,10 @@ function fields() {
   out.push(formula('conscious', 'В сознании', 'Счётчики', 'все(@stun < @stun_max, @physical_total < @physical_max)'));
 
   out.push(formula('initiative', 'Уровень инициативы', 'Инициатива', `@reaction + @intuition + ${PENALTY}`));
+  out.push(stored('init_dice', 'Кубиков инициативы', 'Инициатива', 1, { min: 1, max: 5 }));
+  out.push(stored('simple_left', 'Простых действий осталось', 'Инициатива', 2, { min: 0, max: 5, control: 'pips' }));
+  out.push(stored('complex_left', 'Сложных действий осталось', 'Инициатива', 1, { min: 0, max: 1, control: 'pips' }));
+  out.push({ tag: 'battle', label: 'Идёт бой', group: 'Стол', desk: true, value: { kind: 'stored', type: 'number', default: 0 } });
   return out;
 }
 
@@ -130,6 +135,21 @@ const tables = () => ({
       { value: 'одиночный выстрел', cells: { ar: 0, dv: 0 } },
       { value: 'короткая очередь', cells: { ar: -2, dv: 1 } },
       { value: 'длинная очередь', cells: { ar: -4, dv: 2 } },
+    ],
+  },
+  edge_actions: {
+    label: 'Действия Преимущества при атаке (стр. 48–49)', key: 'word',
+    columns: [
+      { key: 'cost', label: 'Цена', kind: 'number' }, { key: 'dv', label: 'К урону', kind: 'number' },
+      { key: 'pool', label: 'К набору', kind: 'number' }, { key: 'knockout', label: 'Вырубить (1 — да)', kind: 'number' },
+      { key: 'text', label: 'По книге', kind: 'text' },
+    ],
+    rows: [
+      { value: 'нет', cells: { cost: 0, dv: 0, pool: 0, knockout: 0, text: '' } },
+      { value: 'Метко попасть', cells: { cost: 0, dv: 2, pool: -4, knockout: 0, text: 'Простое действие: +2 к урону за −4 к набору.' } },
+      { value: 'Пырнуть', cells: { cost: 1, dv: 2, pool: -2, knockout: 0, text: 'Штраф «Метко попасть» снижается до −2.' } },
+      { value: 'Вырубить ударом', cells: { cost: 2, dv: 0, pool: 0, knockout: 1, text: 'Ближний бой: урон больше Воли — счётчик оглушения полон.' } },
+      { value: 'Метко попасть в жизненно важную часть', cells: { cost: 5, dv: 3, pool: 0, knockout: 0, text: '+3 к урону.' } },
     ],
   },
   damage_kinds: {
@@ -174,6 +194,7 @@ const constants = () => ({
 
 const rollEdits = () => ({
   reroll_failures: { label: 'Преимущество: перебросить все неуспехи', ops: [{ op: 'reroll', n: 4 }] },
+  push_edge: { label: 'Преимущество: добавить характеристику к набору с подрывом шестёрок', ops: [{ op: 'addDie', count: { expr: '@edge' } }, { op: 'explode', apart: true }] },
 });
 
 const change = (tag, direction, expr, when) => ({
@@ -186,11 +207,13 @@ const payEdge = n => [
   change('edge_left', 'subtract', String(n)),
 ];
 
+const GAIN = 'все(@получатель.edge_left < 7, @получатель.edge_gained < 2)';
 const MODE = 'или(@режим, "одиночный выстрел")';
 const RATING = `(@дистанция == "вплотную" ? @ar1 : (@дистанция == "близкая" ? @ar2 : (@дистанция == "средняя" ? @ar3 : (@дистанция == "дальняя" ? @ar4 : @ar5))))`;
 const BONUS_HIT = 'или(@успех_за_преимущество, 0) >= 1 ? 1 : 0';
 const NET = `@атака.natural + (${BONUS_HIT}) - @атака.versusNatural`;
-const DV = `@dv + таблица("fire_modes", ${MODE}, "dv") + ${NET}`;
+const MOVE = 'или(@приём, "нет")';
+const DV = `@dv + таблица("fire_modes", ${MODE}, "dv") + таблица("edge_actions", ${MOVE}, "dv") + ${NET}`;
 const TAKEN = `max(0, ${DV} - @сопротивление.natural)`;
 
 function effects() {
@@ -205,18 +228,24 @@ function effects() {
       { key: 'дистанция', label: 'Дистанция', kind: 'choice', from: 'ranges', ask: { by: 'actor' } },
       { key: 'режим', label: 'Режим стрельбы', kind: 'choice', from: 'fire_modes', optional: true, ask: { by: 'actor' } },
       { key: 'успех_за_преимущество', label: '+1 успех за 3 очка Преимущества: 1 — да', kind: 'number', optional: true, ask: { by: 'actor', min: 0, max: 1 } },
+      { key: 'приём', label: 'Приём', kind: 'choice', from: 'edge_actions', optional: true, ask: { by: 'actor' } },
     ],
     self: [
       { type: 'compare', value: { expr: '@edge_left' }, versus: { expr: '3' }, breakIf: 'less', note: 'нужно 3 очка Преимущества', when: { expr: `(${BONUS_HIT}) >= 1` } },
       change('edge_left', 'subtract', '3', `(${BONUS_HIT}) >= 1`),
+      { type: 'compare', value: { expr: '@edge_left' }, versus: { expr: `таблица("edge_actions", ${MOVE}, "cost")` }, breakIf: 'less', note: 'на приём не хватает Преимущества' },
+      change('edge_left', 'subtract', `таблица("edge_actions", ${MOVE}, "cost")`),
+      { type: 'compare', value: { expr: '@complex_left' }, versus: { expr: '1' }, breakIf: 'less', note: 'сложное действие на этом ходу уже потрачено', when: { expr: '@стол.battle >= 1' } },
+      change('complex_left', 'subtract', '1', '@стол.battle >= 1'),
     ],
     steps: [
       { id: 'атк', type: 'amount', source: 'item', fixed: { expr: `${RATING} + таблица("fire_modes", ${MODE}, "ar")` } },
       { type: 'compare', value: { expr: '@атк' }, versus: { expr: '1' }, breakIf: 'less', note: 'на этой дистанции оружие не бьёт' },
-      change('edge_left', 'add', 'min(1, 7 - @edge_left)', '@атк - @получатель.defense_rating <= -4'),
+      change('edge_left', 'add', '1', `все(@атк - @получатель.defense_rating <= -4, ${GAIN})`),
+      change('edge_gained', 'add', '1', `все(@атк - @получатель.defense_rating <= -4, ${GAIN})`),
       {
         id: 'атака', type: 'threshold',
-        roll: { die: POOL_DIE, count: { expr: '@attack_pool' }, tags: ['атака'] },
+        roll: { die: POOL_DIE, count: { expr: `max(0, @attack_pool + таблица("edge_actions", ${MOVE}, "pool"))` }, tags: ['атака'] },
         versus: { roll: { die: POOL_DIE, count: { expr: '@получатель.defense_pool' }, tags: ['защита'] } }, successWhen: 'atLeast', continueOn: 'always',
       },
       { type: 'compare', value: { expr: NET }, versus: { expr: '0' }, breakIf: 'less', note: 'промах: успехов атаки меньше, чем у защиты' },
@@ -229,6 +258,7 @@ function effects() {
       change('stun', 'add', TAKEN, '@physical_hit < 1'),
       { ...hang('shocked'), when: { expr: `все(@electric >= 1, ${TAKEN} >= 1)` } },
       { ...hang('prone'), when: { expr: `${TAKEN} > @получатель.body` } },
+      change('stun', 'set', '@получатель.stun_max', `все(таблица("edge_actions", ${MOVE}, "knockout") >= 1, ${TAKEN} > @получатель.willpower)`),
     ],
   });
 
@@ -259,13 +289,39 @@ function effects() {
       label: 'Преимущество за значение атаки', group: 'Правила комнаты', activation: 'passive', duration: { kind: 'permanent' }, params: [],
       description: 'Значение атаки больше значения защиты цели на 4 и больше — очко Преимущества атакующему (не больше 7).',
       on: ['ranged_attack'].map(on => ({
-        on, to: 'other', if: { expr: '@атк - @defense_rating >= 4' }, steps: [change('edge_left', 'add', 'min(1, 7 - @edge_left)')],
+        on, to: 'other', if: { expr: '@атк - @defense_rating >= 4' },
+        steps: [change('edge_left', 'add', '1', GAIN), change('edge_gained', 'add', '1', GAIN)],
       })),
     },
     reroll_failures: {
       label: 'Преимущество: перебросить все неуспехи', group: 'Преимущество', activation: 'passive', duration: { kind: 'permanent' }, params: [],
       description: 'Увидел свой бросок — за 4 очка Преимущества перебросить все кубики с 1–4. После сбоя нельзя.',
       on: [{ on: '*', role: 'sender', phase: 'before', ask: true, claims: ['reroll_failures'], self: payEdge(4), steps: [] }],
+    },
+    push_edge: {
+      label: 'Преимущество: добавить к набору', group: 'Преимущество', activation: 'passive', duration: { kind: 'permanent' }, params: [],
+      description: 'Увидел свой бросок — за 4 очка Преимущества добавить к набору характеристику Преимущество; шестёрки подрываются: каждая даёт ещё кубик.',
+      on: [{ on: '*', role: 'sender', phase: 'before', ask: true, claims: ['push_edge'], self: payEdge(4), steps: [] }],
+    },
+    round_edge: {
+      label: 'Новый раунд: предел Преимущества', group: 'Правила комнаты', activation: 'passive', duration: { kind: 'permanent' }, params: [],
+      description: 'В начале раунда счётчик полученного за раунд Преимущества обнуляется.',
+      on: [{ on: 'moment:round-start', steps: [change('edge_gained', 'set', '0')] }],
+    },
+    turn_actions: {
+      label: 'Начало хода: действия', group: 'Правила комнаты', activation: 'passive', duration: { kind: 'permanent' }, params: [],
+      description: 'Одно сложное и одно простое действие, плюс простое за каждый кубик инициативы (не больше пяти простых).',
+      on: [{ on: 'moment:turn-start', steps: [change('simple_left', 'set', 'min(5, 1 + @init_dice)'), change('complex_left', 'set', '1')] }],
+    },
+    battle_start: {
+      label: 'Начало боя', group: 'Правила комнаты', activation: 'passive', duration: { kind: 'permanent' }, params: [],
+      description: 'Бой пошёл: действия считаются.',
+      on: [{ on: 'moment:combat-start', steps: [change('battle', 'set', '1')] }],
+    },
+    battle_end: {
+      label: 'Конец боя', group: 'Правила комнаты', activation: 'passive', duration: { kind: 'permanent' }, params: [],
+      description: 'Вне боя действия не считаются.',
+      on: [{ on: 'moment:combat-end', steps: [change('battle', 'set', '0')] }],
     },
     second_wind: {
       label: 'Второе дыхание', group: 'Преимущество', activation: 'manual',
@@ -306,7 +362,14 @@ function effects() {
     chilled: state('Заморозка', '−4 к инициативе, −1 ко всем наборам, кроме сопротивления урону.', [penalty(-1)], { duration: { kind: 'rounds', max: 3 } }),
     fatigued: state('Утомление I', '−2 ко всем наборам, кроме сопротивления урону.', [penalty(-2)]),
     frightened: state('Испуг', '−4 к проверкам против источника или для защиты от него.'),
-    stand_up: { label: 'Встать', group: 'Действия', activation: 'manual', description: 'Простое действие: снять «Распластан».', steps: [drop('prone')] },
+    stand_up: {
+      label: 'Встать', group: 'Действия', activation: 'manual', description: 'Простое действие: снять «Распластан».',
+      self: [
+        { type: 'compare', value: { expr: '@simple_left' }, versus: { expr: '1' }, breakIf: 'less', note: 'простых действий не осталось', when: { expr: '@стол.battle >= 1' } },
+        change('simple_left', 'subtract', '1', '@стол.battle >= 1'),
+      ],
+      steps: [drop('prone')],
+    },
     unconscious: state('Без сознания', 'Полон счётчик оглушения.'),
     bleeding: state('Тяжело ранен', 'Полон счётчик здоровья: без сознания, дальше урон критический.'),
     dead: state('Мёртв', 'Критический урон достиг Тело × 2.'),
@@ -473,6 +536,7 @@ const sheets = () => [
     body: 4, agility: 4, reaction: 5, strength: 4, willpower: 4, logic: 2, intuition: 4, charisma: 3, essence: 3, armor_natural: 3,
     athletics: 3, biotech: 2, close_combat: 4, perception: 4, con: 2, outdoors: 2, piloting: 2, stealth: 4, firearms: 6, influence: 3, electronics: 2,
   }, ['colt_m23', 'manhunter', 'stun_baton', 'full_body_armor', 'full_body_helmet']),
+  { id: 'стол', systemId: 'shadowrun6', name: 'Стол', values: { battle: 0 }, has: [], effects: [] },
 ];
 
 const mannequin = (id, name) => ({ id, systemId: 'shadowrun6', name, values: { body: 4, agility: 4, reaction: 4, strength: 4, willpower: 4, logic: 4, intuition: 4, charisma: 4, edge_left: 7, firearms: 4, biotech: 2 }, has: [], effects: [] });
@@ -482,7 +546,7 @@ const world = {
   system: {
     id: 'shadowrun6',
     name: 'Shadowrun: Шестой мир',
-    groups: Object.fromEntries(['Личное дело', 'Характеристики', 'Особые', 'Навыки', 'Наборы кубиков', 'Защита', 'Счётчики', 'Инициатива',
+    groups: Object.fromEntries(['Стол', 'Личное дело', 'Характеристики', 'Особые', 'Навыки', 'Наборы кубиков', 'Защита', 'Счётчики', 'Инициатива',
       'Атака', 'Преимущество', 'Лечение', 'Действия', 'Состояния', 'Правила комнаты', 'Листы', 'Снаряжение', 'Приёмы'].map(name => [name, {}])),
     fields: fields(),
     constants: constants(),
@@ -491,7 +555,7 @@ const world = {
     initiative: { die: { constant: 'init_die' }, bonus: { expr: '@initiative' }, tags: ['инициатива'] },
     effects: effects(),
     records: records(),
-    grants: ['knock_out', 'bleed_out', 'die', 'come_to', 'edge_gain', 'reroll_failures', 'glitch', 'critical_glitch'],
+    grants: ['knock_out', 'bleed_out', 'die', 'come_to', 'edge_gain', 'reroll_failures', 'push_edge', 'round_edge', 'turn_actions', 'battle_start', 'battle_end', 'glitch', 'critical_glitch'],
     mannequins: [mannequin('манекен-а', 'Манекен А'), mannequin('манекен-б', 'Манекен Б')],
   },
   compendium: compendium(),

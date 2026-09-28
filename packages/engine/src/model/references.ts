@@ -302,6 +302,15 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
 
   for (const id of system.grants ?? []) out.push({ kind: 'effect', key: id, from: { tab: 'rules', section: 'grants', key: id } });
 
+  for (const [key, edit] of Object.entries(system.roll_edits ?? {})) {
+    const from: Where = { tab: 'rules', section: 'roll_edits', key };
+    for (const op of edit.ops ?? []) {
+      for (const value of Object.values(op)) {
+        if (value && typeof value === 'object' && 'expr' in value) exprRefs(String((value as { expr: unknown }).expr), from, noScope, out);
+      }
+    }
+  }
+
   if (system.initiative) {
     const from: Where = { tab: 'rules', section: 'initiative' };
     if (system.initiative.die?.constant) out.push({ kind: 'constant', key: system.initiative.die.constant, from });
