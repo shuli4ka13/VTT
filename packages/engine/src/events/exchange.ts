@@ -91,8 +91,9 @@ export function deliver({
 
   const sender = live(fromId);
   if (sender && !envelope.reply) {
-    const out = fireOutgoing(envelope, { results: main.results, emitted: main.report.emitted }, { sheet: sender, targetId: toId }, ctx);
+    const out = fireOutgoing(envelope, { results: main.results, emitted: main.report.emitted }, { sheet: sender, targetId: toId }, { ...ctx, desk: desk() });
     put(out.sheet);
+    if (out.desk) put(out.desk);
     for (const report of out.reactions) reports.push({ fromId, toId: fromId, report });
     for (const reply of out.replies) {
       const target = live(String(reply.to));

@@ -59,6 +59,7 @@ export const field = z.object({
   roll: z.object({
     label: z.string().optional(),
     die: z.object({ constant: z.string().min(1) }).optional(),
+    pool: z.boolean().optional(),
     tags: z.array(z.string().min(1)).optional(),
   }).passthrough().optional(),
   value: fieldValue,

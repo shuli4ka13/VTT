@@ -1,0 +1,1862 @@
+{
+  "title": "Shadowrun 5",
+  "system": {
+    "id": "shadowrun5",
+    "name": "Shadowrun 5",
+    "groups": {
+      "Атрибуты": {},
+      "Особые": {},
+      "Пределы": {},
+      "Навыки": {},
+      "Пулы": {},
+      "Защита": {},
+      "Состояние": {},
+      "Инициатива": {},
+      "Атака": {},
+      "Состояния": {},
+      "Правила комнаты": {},
+      "Листы": {},
+      "Снаряжение": {}
+    },
+    "fields": [
+      {
+        "tag": "body",
+        "label": "Тело",
+        "group": "Атрибуты",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 3,
+          "min": 1,
+          "max": 9
+        }
+      },
+      {
+        "tag": "agility",
+        "label": "Ловкость",
+        "group": "Атрибуты",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 3,
+          "min": 1,
+          "max": 9
+        }
+      },
+      {
+        "tag": "reaction",
+        "label": "Реакция",
+        "group": "Атрибуты",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 3,
+          "min": 1,
+          "max": 9
+        }
+      },
+      {
+        "tag": "strength",
+        "label": "Сила",
+        "group": "Атрибуты",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 3,
+          "min": 1,
+          "max": 9
+        }
+      },
+      {
+        "tag": "willpower",
+        "label": "Сила воли",
+        "group": "Атрибуты",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 3,
+          "min": 1,
+          "max": 9
+        }
+      },
+      {
+        "tag": "logic",
+        "label": "Логика",
+        "group": "Атрибуты",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 3,
+          "min": 1,
+          "max": 9
+        }
+      },
+      {
+        "tag": "intuition",
+        "label": "Интуиция",
+        "group": "Атрибуты",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 3,
+          "min": 1,
+          "max": 9
+        }
+      },
+      {
+        "tag": "charisma",
+        "label": "Харизма",
+        "group": "Атрибуты",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 3,
+          "min": 1,
+          "max": 9
+        }
+      },
+      {
+        "tag": "edge",
+        "label": "Грань",
+        "group": "Особые",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 2,
+          "min": 1,
+          "max": 7
+        }
+      },
+      {
+        "tag": "edge_left",
+        "label": "Грань: осталось",
+        "group": "Особые",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 2,
+          "min": 0
+        }
+      },
+      {
+        "tag": "essence",
+        "label": "Сущность",
+        "group": "Особые",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 6,
+          "min": 0,
+          "max": 6
+        }
+      },
+      {
+        "tag": "magic",
+        "label": "Магия",
+        "group": "Особые",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0
+        }
+      },
+      {
+        "tag": "physical_limit",
+        "label": "Физический предел",
+        "group": "Пределы",
+        "value": {
+          "kind": "formula",
+          "expr": "ceil((@strength * 2 + @body + @reaction) / 3)"
+        }
+      },
+      {
+        "tag": "mental_limit",
+        "label": "Ментальный предел",
+        "group": "Пределы",
+        "value": {
+          "kind": "formula",
+          "expr": "ceil((@logic * 2 + @intuition + @willpower) / 3)"
+        }
+      },
+      {
+        "tag": "social_limit",
+        "label": "Социальный предел",
+        "group": "Пределы",
+        "value": {
+          "kind": "formula",
+          "expr": "ceil((@charisma * 2 + @willpower + @essence) / 3)"
+        }
+      },
+      {
+        "tag": "pistols",
+        "label": "Пистолеты",
+        "group": "Навыки",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 12
+        }
+      },
+      {
+        "tag": "automatics",
+        "label": "Автоматы",
+        "group": "Навыки",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 12
+        }
+      },
+      {
+        "tag": "longarms",
+        "label": "Длинноствольное",
+        "group": "Навыки",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 12
+        }
+      },
+      {
+        "tag": "blades",
+        "label": "Клинки",
+        "group": "Навыки",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 12
+        }
+      },
+      {
+        "tag": "unarmed",
+        "label": "Рукопашный бой",
+        "group": "Навыки",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 12
+        }
+      },
+      {
+        "tag": "sneaking",
+        "label": "Скрытность",
+        "group": "Навыки",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 12
+        }
+      },
+      {
+        "tag": "gymnastics",
+        "label": "Гимнастика",
+        "group": "Навыки",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 12
+        }
+      },
+      {
+        "tag": "running",
+        "label": "Бег",
+        "group": "Навыки",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 12
+        }
+      },
+      {
+        "tag": "perception",
+        "label": "Восприятие",
+        "group": "Навыки",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 12
+        }
+      },
+      {
+        "tag": "con",
+        "label": "Обман",
+        "group": "Навыки",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 12
+        }
+      },
+      {
+        "tag": "etiquette",
+        "label": "Этикет",
+        "group": "Навыки",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 12
+        }
+      },
+      {
+        "tag": "negotiation",
+        "label": "Переговоры",
+        "group": "Навыки",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 12
+        }
+      },
+      {
+        "tag": "computer",
+        "label": "Компьютер",
+        "group": "Навыки",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 12
+        }
+      },
+      {
+        "tag": "hacking",
+        "label": "Хакинг",
+        "group": "Навыки",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 12
+        }
+      },
+      {
+        "tag": "first_aid",
+        "label": "Первая помощь",
+        "group": "Навыки",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 12
+        }
+      },
+      {
+        "tag": "pistols_pool",
+        "label": "Пистолеты: пул",
+        "group": "Пулы",
+        "roll": {
+          "label": "Проверка: Пистолеты",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@pistols > 0 ? @pistols + @agility : @agility - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "automatics_pool",
+        "label": "Автоматы: пул",
+        "group": "Пулы",
+        "roll": {
+          "label": "Проверка: Автоматы",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@automatics > 0 ? @automatics + @agility : @agility - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "longarms_pool",
+        "label": "Длинноствольное: пул",
+        "group": "Пулы",
+        "roll": {
+          "label": "Проверка: Длинноствольное",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@longarms > 0 ? @longarms + @agility : @agility - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "blades_pool",
+        "label": "Клинки: пул",
+        "group": "Пулы",
+        "roll": {
+          "label": "Проверка: Клинки",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@blades > 0 ? @blades + @agility : @agility - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "unarmed_pool",
+        "label": "Рукопашный бой: пул",
+        "group": "Пулы",
+        "roll": {
+          "label": "Проверка: Рукопашный бой",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@unarmed > 0 ? @unarmed + @agility : @agility - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "sneaking_pool",
+        "label": "Скрытность: пул",
+        "group": "Пулы",
+        "roll": {
+          "label": "Проверка: Скрытность",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@sneaking > 0 ? @sneaking + @agility : @agility - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "gymnastics_pool",
+        "label": "Гимнастика: пул",
+        "group": "Пулы",
+        "roll": {
+          "label": "Проверка: Гимнастика",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@gymnastics > 0 ? @gymnastics + @agility : @agility - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "running_pool",
+        "label": "Бег: пул",
+        "group": "Пулы",
+        "roll": {
+          "label": "Проверка: Бег",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@running > 0 ? @running + @strength : @strength - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "perception_pool",
+        "label": "Восприятие: пул",
+        "group": "Пулы",
+        "roll": {
+          "label": "Проверка: Восприятие",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@perception > 0 ? @perception + @intuition : @intuition - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "con_pool",
+        "label": "Обман: пул",
+        "group": "Пулы",
+        "roll": {
+          "label": "Проверка: Обман",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@con > 0 ? @con + @charisma : @charisma - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "etiquette_pool",
+        "label": "Этикет: пул",
+        "group": "Пулы",
+        "roll": {
+          "label": "Проверка: Этикет",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@etiquette > 0 ? @etiquette + @charisma : @charisma - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "negotiation_pool",
+        "label": "Переговоры: пул",
+        "group": "Пулы",
+        "roll": {
+          "label": "Проверка: Переговоры",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@negotiation > 0 ? @negotiation + @charisma : @charisma - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "computer_pool",
+        "label": "Компьютер: пул",
+        "group": "Пулы",
+        "roll": {
+          "label": "Проверка: Компьютер",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@computer > 0 ? @computer + @logic : @logic - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "hacking_pool",
+        "label": "Хакинг: пул",
+        "group": "Пулы",
+        "roll": {
+          "label": "Проверка: Хакинг",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@hacking > 0 ? @hacking + @logic : @logic - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "first_aid_pool",
+        "label": "Первая помощь: пул",
+        "group": "Пулы",
+        "roll": {
+          "label": "Проверка: Первая помощь",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, (@first_aid > 0 ? @first_aid + @logic : @logic - 1) + @wound_mod)"
+        }
+      },
+      {
+        "tag": "composure",
+        "label": "Самообладание",
+        "group": "Пулы",
+        "roll": {
+          "label": "Самообладание",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, @charisma + @willpower + @wound_mod)"
+        }
+      },
+      {
+        "tag": "judge_intentions",
+        "label": "Чтение намерений",
+        "group": "Пулы",
+        "roll": {
+          "label": "Чтение намерений",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, @charisma + @intuition + @wound_mod)"
+        }
+      },
+      {
+        "tag": "memory",
+        "label": "Память",
+        "group": "Пулы",
+        "roll": {
+          "label": "Память",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, @logic + @willpower + @wound_mod)"
+        }
+      },
+      {
+        "tag": "lift_carry",
+        "label": "Поднять и нести",
+        "group": "Пулы",
+        "roll": {
+          "label": "Поднять и нести",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, @body + @strength + @wound_mod)"
+        }
+      },
+      {
+        "tag": "armor",
+        "label": "Броня",
+        "group": "Защита",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0
+        }
+      },
+      {
+        "tag": "defense_pool",
+        "label": "Защита: пул",
+        "group": "Защита",
+        "roll": {
+          "label": "Защита",
+          "die": {
+            "constant": "pool"
+          },
+          "pool": true,
+          "tags": [
+            "проверка"
+          ]
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "max(0, @reaction + @intuition + @wound_mod)"
+        }
+      },
+      {
+        "tag": "soak_pool",
+        "label": "Сопротивление урону: пул",
+        "group": "Защита",
+        "value": {
+          "kind": "formula",
+          "expr": "@body + @armor"
+        }
+      },
+      {
+        "tag": "physical_max",
+        "label": "Физический трек: клеток",
+        "group": "Состояние",
+        "value": {
+          "kind": "formula",
+          "expr": "8 + ceil(@body / 2)"
+        }
+      },
+      {
+        "tag": "physical",
+        "label": "Физический урон",
+        "group": "Состояние",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0
+        }
+      },
+      {
+        "tag": "stun_max",
+        "label": "Оглушающий трек: клеток",
+        "group": "Состояние",
+        "value": {
+          "kind": "formula",
+          "expr": "8 + ceil(@willpower / 2)"
+        }
+      },
+      {
+        "tag": "stun",
+        "label": "Оглушающий урон",
+        "group": "Состояние",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0
+        }
+      },
+      {
+        "tag": "wound_mod",
+        "label": "Штраф за раны",
+        "group": "Состояние",
+        "value": {
+          "kind": "formula",
+          "expr": "0 - floor(@physical / 3) - floor(@stun / 3)"
+        }
+      },
+      {
+        "tag": "knocked_out",
+        "label": "Оглушающий трек полон",
+        "group": "Состояние",
+        "value": {
+          "kind": "formula",
+          "expr": "@stun >= @stun_max"
+        }
+      },
+      {
+        "tag": "bleeding_out",
+        "label": "Физический трек полон",
+        "group": "Состояние",
+        "value": {
+          "kind": "formula",
+          "expr": "@physical >= @physical_max"
+        }
+      },
+      {
+        "tag": "conscious",
+        "label": "В сознании",
+        "group": "Состояние",
+        "value": {
+          "kind": "formula",
+          "expr": "все(@stun < @stun_max, @physical < @physical_max)"
+        }
+      },
+      {
+        "tag": "initiative",
+        "label": "Инициатива",
+        "group": "Инициатива",
+        "value": {
+          "kind": "formula",
+          "expr": "@reaction + @intuition + @wound_mod"
+        }
+      }
+    ],
+    "constants": {
+      "pool": {
+        "label": "пул к6",
+        "kind": "die",
+        "dice": [
+          {
+            "count": 1,
+            "sides": 6
+          }
+        ],
+        "read": {
+          "kind": "count",
+          "atLeast": 5
+        }
+      },
+      "init_die": {
+        "label": "к6 инициативы",
+        "kind": "die",
+        "dice": [
+          {
+            "count": 1,
+            "sides": 6
+          }
+        ]
+      }
+    },
+    "tables": {
+      "rolls": {
+        "label": "Броски",
+        "key": "word",
+        "columns": [
+          {
+            "key": "успех",
+            "label": "Успех",
+            "kind": "text"
+          },
+          {
+            "key": "провал",
+            "label": "Провал",
+            "kind": "text"
+          }
+        ],
+        "rows": [
+          {
+            "value": "проверка",
+            "cells": {
+              "успех": "есть успехи",
+              "провал": "ни одного успеха"
+            }
+          },
+          {
+            "value": "атака",
+            "cells": {
+              "успех": "попадание",
+              "провал": "промах"
+            }
+          },
+          {
+            "value": "защита"
+          },
+          {
+            "value": "сопротивление"
+          },
+          {
+            "value": "инициатива"
+          }
+        ]
+      },
+      "damage_kinds": {
+        "label": "Вид урона",
+        "key": "word",
+        "columns": [
+          {
+            "key": "physical",
+            "label": "Физический",
+            "kind": "number"
+          }
+        ],
+        "rows": [
+          {
+            "value": "физический",
+            "cells": {
+              "physical": 1
+            }
+          },
+          {
+            "value": "оглушающий",
+            "cells": {
+              "physical": 0
+            }
+          }
+        ]
+      },
+      "weapon_skills": {
+        "label": "Навык оружия",
+        "key": "word",
+        "columns": [
+          {
+            "key": "pool",
+            "label": "Пул",
+            "kind": "expr"
+          }
+        ],
+        "rows": [
+          {
+            "value": "пистолеты",
+            "cells": {
+              "pool": "@pistols_pool"
+            }
+          },
+          {
+            "value": "автоматы",
+            "cells": {
+              "pool": "@automatics_pool"
+            }
+          },
+          {
+            "value": "длинноствольное",
+            "cells": {
+              "pool": "@longarms_pool"
+            }
+          },
+          {
+            "value": "клинки",
+            "cells": {
+              "pool": "@blades_pool"
+            }
+          },
+          {
+            "value": "рукопашный бой",
+            "cells": {
+              "pool": "@unarmed_pool"
+            }
+          }
+        ]
+      }
+    },
+    "roll_edits": {},
+    "initiative": {
+      "die": {
+        "constant": "init_die"
+      },
+      "bonus": {
+        "expr": "@initiative"
+      },
+      "tags": [
+        "инициатива"
+      ]
+    },
+    "effects": {
+      "ranged_attack": {
+        "label": "Выстрел",
+        "group": "Атака",
+        "activation": "manual",
+        "description": "Ловкость + навык оружия против Реакции + Интуиции цели. Успехов атаки засчитывается не больше точности оружия. Чистые успехи прибавляются к урону; цель сопротивляется Телом + Бронёй с учётом пробития. Урон, не превысивший броню, становится оглушающим.",
+        "params": [
+          {
+            "key": "attack_pool",
+            "label": "Пул атаки",
+            "kind": "number"
+          },
+          {
+            "key": "accuracy",
+            "label": "Точность (предел)",
+            "kind": "number"
+          },
+          {
+            "key": "dv",
+            "label": "Урон оружия",
+            "kind": "number"
+          },
+          {
+            "key": "ap",
+            "label": "Пробитие брони",
+            "kind": "number"
+          },
+          {
+            "key": "physical_hit",
+            "label": "Урон физический (1) или оглушающий (0)",
+            "kind": "number"
+          }
+        ],
+        "steps": [
+          {
+            "id": "атака",
+            "type": "threshold",
+            "roll": {
+              "die": {
+                "constant": "pool"
+              },
+              "count": {
+                "expr": "@attack_pool"
+              },
+              "tags": [
+                "атака"
+              ]
+            },
+            "versus": {
+              "roll": {
+                "die": {
+                  "constant": "pool"
+                },
+                "count": {
+                  "expr": "@получатель.defense_pool"
+                },
+                "tags": [
+                  "защита"
+                ]
+              }
+            },
+            "successWhen": "over",
+            "continueOn": "always"
+          },
+          {
+            "type": "compare",
+            "value": {
+              "expr": "min(@атака.natural, @accuracy) - @атака.versusNatural"
+            },
+            "versus": {
+              "expr": "1"
+            },
+            "breakIf": "less",
+            "note": "промах: успехов атаки с учётом точности не больше, чем у защиты"
+          },
+          {
+            "id": "сопротивление",
+            "type": "threshold",
+            "side": "target",
+            "roll": {
+              "die": {
+                "constant": "pool"
+              },
+              "count": {
+                "expr": "max(0, @получатель.body + max(0, @получатель.armor + @ap))"
+              },
+              "tags": [
+                "сопротивление"
+              ]
+            },
+            "versus": {
+              "expr": "0"
+            },
+            "continueOn": "always"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "physical"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "max(0, @dv + min(@атака.natural, @accuracy) - @атака.versusNatural - @сопротивление.natural)"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "все(@physical_hit >= 1, @dv + min(@атака.natural, @accuracy) - @атака.versusNatural > @получатель.armor + @ap)"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "stun"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "max(0, @dv + min(@атака.natural, @accuracy) - @атака.versusNatural - @сопротивление.natural)"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "не(все(@physical_hit >= 1, @dv + min(@атака.natural, @accuracy) - @атака.versusNatural > @получатель.armor + @ap))"
+            }
+          }
+        ]
+      },
+      "melee_attack": {
+        "label": "Удар",
+        "group": "Атака",
+        "activation": "manual",
+        "description": "Ловкость + навык ближнего боя против Реакции + Интуиции цели. Урон оружия ближнего боя идёт от Силы. Дальше — как у выстрела.",
+        "params": [
+          {
+            "key": "attack_pool",
+            "label": "Пул атаки",
+            "kind": "number"
+          },
+          {
+            "key": "accuracy",
+            "label": "Точность (предел)",
+            "kind": "number"
+          },
+          {
+            "key": "dv",
+            "label": "Урон оружия",
+            "kind": "number"
+          },
+          {
+            "key": "ap",
+            "label": "Пробитие брони",
+            "kind": "number"
+          },
+          {
+            "key": "physical_hit",
+            "label": "Урон физический (1) или оглушающий (0)",
+            "kind": "number"
+          }
+        ],
+        "steps": [
+          {
+            "id": "атака",
+            "type": "threshold",
+            "roll": {
+              "die": {
+                "constant": "pool"
+              },
+              "count": {
+                "expr": "@attack_pool"
+              },
+              "tags": [
+                "атака"
+              ]
+            },
+            "versus": {
+              "roll": {
+                "die": {
+                  "constant": "pool"
+                },
+                "count": {
+                  "expr": "@получатель.defense_pool"
+                },
+                "tags": [
+                  "защита"
+                ]
+              }
+            },
+            "successWhen": "over",
+            "continueOn": "always"
+          },
+          {
+            "type": "compare",
+            "value": {
+              "expr": "min(@атака.natural, @accuracy) - @атака.versusNatural"
+            },
+            "versus": {
+              "expr": "1"
+            },
+            "breakIf": "less",
+            "note": "промах: успехов атаки с учётом точности не больше, чем у защиты"
+          },
+          {
+            "id": "сопротивление",
+            "type": "threshold",
+            "side": "target",
+            "roll": {
+              "die": {
+                "constant": "pool"
+              },
+              "count": {
+                "expr": "max(0, @получатель.body + max(0, @получатель.armor + @ap))"
+              },
+              "tags": [
+                "сопротивление"
+              ]
+            },
+            "versus": {
+              "expr": "0"
+            },
+            "continueOn": "always"
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "physical"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "max(0, @dv + min(@атака.natural, @accuracy) - @атака.versusNatural - @сопротивление.natural)"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "все(@physical_hit >= 1, @dv + min(@атака.natural, @accuracy) - @атака.versusNatural > @получатель.armor + @ap)"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "stun"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "max(0, @dv + min(@атака.natural, @accuracy) - @атака.versusNatural - @сопротивление.natural)"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "не(все(@physical_hit >= 1, @dv + min(@атака.natural, @accuracy) - @атака.versusNatural > @получатель.armor + @ap))"
+            }
+          }
+        ]
+      },
+      "unconscious": {
+        "label": "Без сознания",
+        "group": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Оглушающий трек полон: персонаж без сознания, пока не восстановит хотя бы одну клетку.",
+        "modifiers": []
+      },
+      "bleeding": {
+        "label": "При смерти",
+        "group": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Физический трек полон: персонаж без сознания и умирает, если урон перейдёт сверх Тела. Следит ведущий.",
+        "modifiers": []
+      },
+      "knock_out": {
+        "label": "Потеря сознания",
+        "group": "Правила комнаты",
+        "description": "Оглушающий трек заполнился — «Без сознания».",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "params": [],
+        "on": [
+          {
+            "on": "field:knocked_out",
+            "steps": [
+              {
+                "type": "status",
+                "mode": "apply",
+                "effect": {
+                  "const": "unconscious"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "bleed_out": {
+        "label": "Тяжёлое ранение",
+        "group": "Правила комнаты",
+        "description": "Физический трек заполнился — «При смерти».",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "params": [],
+        "on": [
+          {
+            "on": "field:bleeding_out",
+            "steps": [
+              {
+                "type": "status",
+                "mode": "apply",
+                "effect": {
+                  "const": "bleeding"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "come_to": {
+        "label": "Приходит в себя",
+        "group": "Правила комнаты",
+        "description": "Оба трека снова не полны — состояния сняты.",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "params": [],
+        "on": [
+          {
+            "on": "field:conscious",
+            "steps": [
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "unconscious"
+                }
+              },
+              {
+                "type": "status",
+                "mode": "remove",
+                "effect": {
+                  "const": "bleeding"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "records": {
+      "runner": {
+        "kind": "sheet",
+        "label": "Раннер",
+        "icon": "🕶",
+        "group": "Листы",
+        "hint": "Лист игрока: все блоки."
+      },
+      "opponent": {
+        "kind": "sheet",
+        "label": "Противник",
+        "icon": "👤",
+        "group": "Листы",
+        "hint": "Лист противника: атрибуты, навыки, защита, состояние.",
+        "blocks": [
+          "Атрибуты",
+          "Навыки",
+          "Пулы",
+          "Защита",
+          "Состояние",
+          "Инициатива",
+          "Пределы"
+        ]
+      },
+      "firearm": {
+        "kind": "item",
+        "label": "Огнестрельное оружие",
+        "icon": "🔫",
+        "group": "Снаряжение",
+        "hint": "Точность, урон, пробитие и навык.",
+        "props": [
+          {
+            "key": "accuracy",
+            "label": "Точность",
+            "kind": "number"
+          },
+          {
+            "key": "dv",
+            "label": "Урон",
+            "kind": "number"
+          },
+          {
+            "key": "ap",
+            "label": "Пробитие",
+            "kind": "number"
+          },
+          {
+            "key": "damage_kind",
+            "label": "Вид урона",
+            "kind": "choice",
+            "from": "damage_kinds"
+          },
+          {
+            "key": "skill",
+            "label": "Навык",
+            "kind": "choice",
+            "from": "weapon_skills"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Выстрел",
+            "effect": "ranged_attack",
+            "args": {
+              "attack_pool": {
+                "expr": "таблица(\"weapon_skills\", @skill, \"pool\")"
+              },
+              "accuracy": {
+                "prop": "accuracy"
+              },
+              "dv": {
+                "prop": "dv"
+              },
+              "ap": {
+                "prop": "ap"
+              },
+              "physical_hit": {
+                "expr": "таблица(\"damage_kinds\", @damage_kind, \"physical\")"
+              }
+            }
+          }
+        ]
+      },
+      "melee": {
+        "kind": "item",
+        "label": "Оружие ближнего боя",
+        "icon": "🗡",
+        "group": "Снаряжение",
+        "hint": "Урон — Сила плюс прибавка оружия, если оружие бьёт силой.",
+        "props": [
+          {
+            "key": "accuracy",
+            "label": "Точность",
+            "kind": "number"
+          },
+          {
+            "key": "strength_based",
+            "label": "Урон от Силы (1 — да, 0 — нет)",
+            "kind": "number"
+          },
+          {
+            "key": "dv_bonus",
+            "label": "Урон: прибавка",
+            "kind": "number"
+          },
+          {
+            "key": "ap",
+            "label": "Пробитие",
+            "kind": "number"
+          },
+          {
+            "key": "damage_kind",
+            "label": "Вид урона",
+            "kind": "choice",
+            "from": "damage_kinds"
+          },
+          {
+            "key": "skill",
+            "label": "Навык",
+            "kind": "choice",
+            "from": "weapon_skills"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Удар",
+            "effect": "melee_attack",
+            "args": {
+              "attack_pool": {
+                "expr": "таблица(\"weapon_skills\", @skill, \"pool\")"
+              },
+              "accuracy": {
+                "prop": "accuracy"
+              },
+              "dv": {
+                "expr": "(@strength_based >= 1 ? @strength : 0) + @dv_bonus"
+              },
+              "ap": {
+                "prop": "ap"
+              },
+              "physical_hit": {
+                "expr": "таблица(\"damage_kinds\", @damage_kind, \"physical\")"
+              }
+            }
+          }
+        ]
+      },
+      "armor": {
+        "kind": "item",
+        "label": "Броня",
+        "icon": "🧥",
+        "group": "Снаряжение",
+        "hint": "Значение брони прибавляется к защите листа.",
+        "props": [
+          {
+            "key": "rating",
+            "label": "Броня",
+            "kind": "number"
+          }
+        ]
+      }
+    },
+    "grants": [
+      "knock_out",
+      "bleed_out",
+      "come_to"
+    ],
+    "mannequins": [
+      {
+        "id": "манекен-а",
+        "systemId": "shadowrun5",
+        "name": "Манекен А",
+        "values": {
+          "body": 4,
+          "agility": 4,
+          "reaction": 4,
+          "strength": 4,
+          "willpower": 4,
+          "logic": 4,
+          "intuition": 4,
+          "charisma": 4,
+          "pistols": 4
+        },
+        "has": [],
+        "effects": []
+      },
+      {
+        "id": "манекен-б",
+        "systemId": "shadowrun5",
+        "name": "Манекен Б",
+        "values": {
+          "body": 4,
+          "agility": 4,
+          "reaction": 4,
+          "strength": 4,
+          "willpower": 4,
+          "logic": 4,
+          "intuition": 4,
+          "charisma": 4,
+          "pistols": 4
+        },
+        "has": [],
+        "effects": []
+      }
+    ]
+  },
+  "compendium": {
+    "records": [
+      {
+        "id": "ares_predator_v",
+        "rk": "firearm",
+        "label": "Ares Predator V",
+        "description": "Тяжёлый пистолет: точность 5, урон 8 физ., пробитие −1.",
+        "props": {
+          "accuracy": 5,
+          "dv": 8,
+          "ap": -1,
+          "damage_kind": "физический",
+          "skill": "пистолеты"
+        }
+      },
+      {
+        "id": "colt_america_l36",
+        "rk": "firearm",
+        "label": "Colt America L36",
+        "description": "Лёгкий пистолет: точность 7, урон 7 физ.",
+        "props": {
+          "accuracy": 7,
+          "dv": 7,
+          "ap": 0,
+          "damage_kind": "физический",
+          "skill": "пистолеты"
+        }
+      },
+      {
+        "id": "ak_97",
+        "rk": "firearm",
+        "label": "AK-97",
+        "description": "Штурмовая винтовка: точность 5, урон 10 физ., пробитие −2.",
+        "props": {
+          "accuracy": 5,
+          "dv": 10,
+          "ap": -2,
+          "damage_kind": "физический",
+          "skill": "автоматы"
+        }
+      },
+      {
+        "id": "defiance_t250",
+        "rk": "firearm",
+        "label": "Defiance T-250",
+        "description": "Дробовик: точность 4, урон 10 физ., пробитие −1.",
+        "props": {
+          "accuracy": 4,
+          "dv": 10,
+          "ap": -1,
+          "damage_kind": "физический",
+          "skill": "длинноствольное"
+        }
+      },
+      {
+        "id": "katana",
+        "rk": "melee",
+        "label": "Катана",
+        "description": "Точность 7, урон Сила + 3 физ., пробитие −3.",
+        "props": {
+          "accuracy": 7,
+          "strength_based": 1,
+          "dv_bonus": 3,
+          "ap": -3,
+          "damage_kind": "физический",
+          "skill": "клинки"
+        }
+      },
+      {
+        "id": "combat_knife",
+        "rk": "melee",
+        "label": "Боевой нож",
+        "description": "Точность 6, урон Сила + 2 физ., пробитие −3.",
+        "props": {
+          "accuracy": 6,
+          "strength_based": 1,
+          "dv_bonus": 2,
+          "ap": -3,
+          "damage_kind": "физический",
+          "skill": "клинки"
+        }
+      },
+      {
+        "id": "stun_baton",
+        "rk": "melee",
+        "label": "Шоковая дубинка",
+        "description": "Точность 4, урон 9 огл., пробитие −5; урон не от Силы.",
+        "props": {
+          "accuracy": 4,
+          "strength_based": 0,
+          "dv_bonus": 9,
+          "ap": -5,
+          "damage_kind": "оглушающий",
+          "skill": "клинки"
+        }
+      },
+      {
+        "id": "fists",
+        "rk": "melee",
+        "label": "Кулаки",
+        "description": "Урон Сила огл.; точность по книге — физический предел, здесь вписана числом.",
+        "props": {
+          "accuracy": 5,
+          "strength_based": 1,
+          "dv_bonus": 0,
+          "ap": 0,
+          "damage_kind": "оглушающий",
+          "skill": "рукопашный бой"
+        }
+      },
+      {
+        "id": "armor_jacket",
+        "rk": "armor",
+        "label": "Бронекуртка",
+        "description": "Броня 12.",
+        "props": {
+          "rating": 12
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "armor",
+            "op": "add",
+            "value": 12,
+            "stacking": "max",
+            "condition": null
+          }
+        ]
+      },
+      {
+        "id": "armor_vest",
+        "rk": "armor",
+        "label": "Бронежилет",
+        "description": "Броня 9.",
+        "props": {
+          "rating": 9
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "armor",
+            "op": "add",
+            "value": 9,
+            "stacking": "max",
+            "condition": null
+          }
+        ]
+      },
+      {
+        "id": "lined_coat",
+        "rk": "armor",
+        "label": "Бронированный плащ",
+        "description": "Броня 9.",
+        "props": {
+          "rating": 9
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "armor",
+            "op": "add",
+            "value": 9,
+            "stacking": "max",
+            "condition": null
+          }
+        ]
+      }
+    ]
+  },
+  "sheets": [
+    {
+      "id": "razor",
+      "systemId": "shadowrun5",
+      "of": "runner",
+      "name": "Бритва",
+      "values": {
+        "body": 5,
+        "agility": 6,
+        "reaction": 5,
+        "strength": 4,
+        "willpower": 3,
+        "logic": 2,
+        "intuition": 4,
+        "charisma": 2,
+        "edge": 3,
+        "edge_left": 3,
+        "essence": 2.5,
+        "pistols": 6,
+        "blades": 5,
+        "unarmed": 3,
+        "perception": 3,
+        "sneaking": 3
+      },
+      "has": [
+        {
+          "of": "ares_predator_v"
+        },
+        {
+          "of": "katana"
+        },
+        {
+          "of": "armor_jacket"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "silk",
+      "systemId": "shadowrun5",
+      "of": "runner",
+      "name": "Шёлк",
+      "values": {
+        "body": 3,
+        "agility": 3,
+        "reaction": 3,
+        "strength": 2,
+        "willpower": 4,
+        "logic": 3,
+        "intuition": 4,
+        "charisma": 6,
+        "edge": 4,
+        "edge_left": 4,
+        "con": 6,
+        "etiquette": 5,
+        "negotiation": 5,
+        "pistols": 3,
+        "perception": 4
+      },
+      "has": [
+        {
+          "of": "colt_america_l36"
+        },
+        {
+          "of": "lined_coat"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ganger",
+      "systemId": "shadowrun5",
+      "of": "opponent",
+      "name": "Бандит",
+      "values": {
+        "body": 4,
+        "agility": 4,
+        "reaction": 3,
+        "strength": 4,
+        "willpower": 3,
+        "logic": 2,
+        "intuition": 3,
+        "charisma": 2,
+        "pistols": 3,
+        "blades": 3,
+        "unarmed": 3
+      },
+      "has": [
+        {
+          "of": "colt_america_l36"
+        },
+        {
+          "of": "combat_knife"
+        },
+        {
+          "of": "armor_vest"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "guard",
+      "systemId": "shadowrun5",
+      "of": "opponent",
+      "name": "Охранник корпорации",
+      "values": {
+        "body": 4,
+        "agility": 4,
+        "reaction": 4,
+        "strength": 3,
+        "willpower": 3,
+        "logic": 3,
+        "intuition": 4,
+        "charisma": 3,
+        "automatics": 4,
+        "unarmed": 3,
+        "perception": 3
+      },
+      "has": [
+        {
+          "of": "ak_97"
+        },
+        {
+          "of": "stun_baton"
+        },
+        {
+          "of": "armor_jacket"
+        }
+      ],
+      "effects": []
+    }
+  ]
+}

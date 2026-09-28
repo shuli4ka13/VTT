@@ -253,12 +253,18 @@ function emittedBy(steps: Step[] | undefined): string[] {
 }
 
 function fieldRollProblems(system: System): Problem[] {
-  return system.fields
-    .filter(field => field.roll && !field.roll.die?.constant)
-    .map(field => ({
-      where: { tab: 'sheet' as const, field: field.tag }, level: 'error' as const,
-      text: `по полю «${field.label}» бросают, но кость не выбрана`,
-    }));
+  const out: Problem[] = [];
+  for (const field of system.fields) {
+    if (!field.roll) continue;
+    const where = { tab: 'sheet' as const, field: field.tag };
+    const die = field.roll.die?.constant;
+    if (!die) { out.push({ where, level: 'error', text: `по полю «${field.label}» бросают, но кость не выбрана` }); continue; }
+    const constant = system.constants?.[die];
+    if (field.roll.pool && constant?.kind === 'die' && (constant.dice ?? []).length !== 1) {
+      out.push({ where, level: 'error', text: `поле «${field.label}» задаёт число костей, а кость «${constant.label ?? die}» составная` });
+    }
+  }
+  return out;
 }
 
 function sheetKindProblems(system: System): Problem[] {

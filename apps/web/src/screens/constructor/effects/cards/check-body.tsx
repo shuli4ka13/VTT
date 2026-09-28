@@ -155,6 +155,7 @@ function CheckFormula({ step, context, edit }: { step: any; context: SlotContext
       const d = loose(target);
       d.roll = {
         die: parsed.roll.die,
+        ...(parsed.roll.count ? { count: parsed.roll.count } : {}),
         ...(parsed.roll.bonus ? { bonus: parsed.roll.bonus } : {}),
         ...(parsed.roll.tags.length ? { tags: parsed.roll.tags } : {}),
       };

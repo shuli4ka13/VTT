@@ -676,7 +676,9 @@ export class RoomsService {
       const named = edits.length ? ` (${edits.join(', ')})` : '';
       const shown = rolled.kept != null && rolled.rolls.length > 1
         ? `[${rolled.rolls.join(', ')}] → ${rolled.kept}` : `[${rolled.rolls.join(', ')}]`;
-      line = `${sheet.name} бросает «${check.label}»: ${shown}${named} + ${bonus} = ${total}`;
+      line = rolled.read === 'count'
+        ? `${sheet.name} бросает «${check.label}»: ${shown}${named} — успехов: ${total}`
+        : `${sheet.name} бросает «${check.label}»: ${shown}${named} + ${bonus} = ${total}`;
     } catch (err) {
       throw new BadRequestException((err as Error).message);
     }

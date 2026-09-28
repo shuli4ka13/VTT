@@ -390,6 +390,16 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
             />
           ) : null}
           {field.roll ? (
+            <Select
+              value={field.roll.pool ? 'pool' : 'bonus'}
+              options={[['bonus', 'поле — прибавка к кости'], ['pool', 'поле — число костей']] as const}
+              onChange={next => edit(draft => {
+                if (!draft.roll) return;
+                if (next === 'pool') draft.roll.pool = true; else delete draft.roll.pool;
+              })}
+            />
+          ) : null}
+          {field.roll ? (
             <RollTagsPick
               system={system}
               value={field.roll.tags}

@@ -23,17 +23,17 @@ const checksOf = (system: System) => Object.entries(system.effects ?? {}).flatMa
 });
 
 const lean = (step: Loose) => ({
-  roll: { die: step.roll?.die, ...(step.roll?.bonus ? { bonus: step.roll.bonus } : {}), tags: step.roll?.tags ?? [] },
+  roll: { die: step.roll?.die, ...(step.roll?.count ? { count: step.roll.count } : {}), ...(step.roll?.bonus ? { bonus: step.roll.bonus } : {}), tags: step.roll?.tags ?? [] },
   ...(step.side === 'target' ? { side: 'target' } : {}),
   successWhen: step.successWhen ?? 'atLeast',
   versus: step.versus?.roll
-    ? { roll: { die: step.versus.roll.die, ...(step.versus.roll.bonus ? { bonus: step.versus.roll.bonus } : {}), ...(step.versus.roll.tags?.length ? { tags: step.versus.roll.tags } : {}) } }
+    ? { roll: { die: step.versus.roll.die, ...(step.versus.roll.count ? { count: step.versus.roll.count } : {}), ...(step.versus.roll.bonus ? { bonus: step.versus.roll.bonus } : {}), ...(step.versus.roll.tags?.length ? { tags: step.versus.roll.tags } : {}) } }
     : step.versus,
 });
 
 const parsedLean = (parsed: Loose) => ({
   ...parsed,
-  roll: { die: parsed.roll.die, ...(parsed.roll.bonus ? { bonus: parsed.roll.bonus } : {}), tags: parsed.roll.tags },
+  roll: { die: parsed.roll.die, ...(parsed.roll.count ? { count: parsed.roll.count } : {}), ...(parsed.roll.bonus ? { bonus: parsed.roll.bonus } : {}), tags: parsed.roll.tags },
 });
 
 describe('проверка одной формулой', () => {

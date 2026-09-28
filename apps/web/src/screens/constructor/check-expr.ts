@@ -9,6 +9,7 @@ export type RollTag = string | SlotRef;
 
 export interface CheckRoll {
   die?: SlotRef;
+  count?: SlotRef;
   bonus?: SlotRef | null;
   tags: RollTag[];
 }
@@ -76,7 +77,11 @@ function rollSide(text: string, system: System, asName?: NameRef): RollSide | nu
   if (!t.startsWith(ROLL)) return null;
   const end = closing(t, ROLL.length - 1);
   if (end < 0) return { roll: { tags: [] }, owner: null, error: 'у «кинуть(» нет закрывающей скобки' };
-  const [dieText = '', ...tagTexts] = splitTop(t.slice(ROLL.length, end), ',');
+  const [head = '', ...tagTexts] = splitTop(t.slice(ROLL.length, end), ',');
+  const star = topStar(head);
+  const dieText = star < 0 ? head : head.slice(0, star).trim();
+  const count = star < 0 ? null : head.slice(star + 1).trim();
+  if (count === '') return { roll: { tags: [] }, owner: null, error: 'после «*» в «кинуть(…)» — сколько костей' };
   const rest = t.slice(end + 1).trim();
 
   let owner: string | null = null;
@@ -114,7 +119,17 @@ function rollSide(text: string, system: System, asName?: NameRef): RollSide | nu
     const tail = rest.startsWith('+') ? rest.slice(1).trim() : rest;
     bonus = tailRef(tail);
   }
-  return { roll: { die, bonus, tags }, owner };
+  return { roll: { die, ...(count ? { count: tailRef(count) } : {}), bonus, tags }, owner };
+}
+
+function topStar(text: string): number {
+  let depth = 0;
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === '(') depth++;
+    if (text[i] === ')') depth--;
+    if (depth === 0 && text[i] === '*') return i;
+  }
+  return -1;
 }
 
 export function parseCheck(text: string, system: System, asName?: NameRef): ParsedCheck | { error: string } {
@@ -128,7 +143,7 @@ export function parseCheck(text: string, system: System, asName?: NameRef): Pars
   const other = rollSide(cmp.right, system, asName);
   if (other?.error) return { error: other.error };
   const versus = other
-    ? { roll: { die: other.roll.die, ...(other.roll.bonus ? { bonus: other.roll.bonus } : {}), ...(other.roll.tags.length ? { tags: other.roll.tags } : {}) } }
+    ? { roll: { die: other.roll.die, ...(other.roll.count ? { count: other.roll.count } : {}), ...(other.roll.bonus ? { bonus: other.roll.bonus } : {}), ...(other.roll.tags.length ? { tags: other.roll.tags } : {}) } }
     : tailRef(cmp.right);
 
   return {
@@ -155,9 +170,10 @@ function rollText(roll: CheckRoll | undefined, owner: string | null): string {
   const head = !die ? '' : 'constant' in die
     ? `@${owner ? `${owner}.` : ''}${String(die.constant)}`
     : asDice(String(die.const ?? ''));
+  const many = roll?.count ? ` * ${refText(roll.count)}` : '';
   const kind = (roll?.tags ?? []).map(tag => `, ${typeof tag === 'string' ? `@${tag}` : refText(tag)}`).join('');
   const tail = refText(roll?.bonus);
-  return `${ROLL}${head}${kind})${tail ? (tail.startsWith('-') ? ` ${tail}` : ` + ${tail}`) : ''}`;
+  return `${ROLL}${head}${many}${kind})${tail ? (tail.startsWith('-') ? ` ${tail}` : ` + ${tail}`) : ''}`;
 }
 
 export function formatCheck(step: Record<string, unknown>): string {

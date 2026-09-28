@@ -15,6 +15,7 @@ export const STEP_WORDS = {
     hint: `Бросок против величины. Не вышло — цепочка обрывается. Кость пишется как ${diceExample}.`,
     slots: [
       { key: 'roll.die', label: 'Кость', kind: 'ref', main: true, required: true, allow: ['constant'] },
+      { key: 'roll.count', label: 'Сколько костей', kind: 'ref', allow: ['expr', 'const', 'param', 'prop', 'empty'] },
       {
         key: 'roll.bonus', label: 'Прибавка к броску', kind: 'ref', main: true,
         allow: ['expr', 'const', 'param', 'prop', 'empty'],

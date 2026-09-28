@@ -44,6 +44,15 @@ export function dieConstant(system: System, name: string): DieConstant {
 
 export type CountResolver = (ref: unknown, what: string) => number;
 
+export function withCount(def: DieConstant, count: unknown, owner: string): DieConstant {
+  if (count === undefined || count === null) return def;
+  const dice = def.dice ?? [];
+  if (dice.length !== 1) {
+    throw new EngineError(`${owner}: число костей задаёт проверка, а кость «${def.label ?? '?'}» составная — возьмите кость из одного вида`);
+  }
+  return { ...def, dice: [{ ...dice[0]!, count: count as never }] };
+}
+
 export function unfoldDice(def: DieConstant, resolveCount?: CountResolver): DieConstant {
   const dice = (def.dice || []).map(spec => {
     const raw = spec.count ?? 1;

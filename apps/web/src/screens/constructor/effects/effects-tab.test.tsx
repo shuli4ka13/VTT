@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
 import { renderOpen } from '../../../testing/render-open.tsx';
 import { EffectsTab } from './effects-tab.tsx';
 import { useWorld, emptySystem } from '../../../store/world.ts';
@@ -52,8 +52,9 @@ describe('EffectsTab: палитра трёх понятий', () => {
         && !['+ блок', '+ метки', '+ описание для игрока', '+ занимает', '+ какие метки бывают', '+ сколько висит', '+ на основе'].includes(t));
     expect(palette).toEqual(['+ проверка', '+ изменение', '+ таблица', '+ число']);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
-    expect(screen.getByText('1 · Проверка')).toBeTruthy();
-    expect(screen.queryByText(/порог/i)).toBeNull();
+    const card = screen.getByText('1 · Проверка').closest('.step-fold, .card') as HTMLElement;
+    expect(card).toBeTruthy();
+    expect(within(card).queryByText(/порог/i)).toBeNull();
   });
 
   it('шаги сворачиваются: одной строкой с пересказом, по одному и все сразу', () => {

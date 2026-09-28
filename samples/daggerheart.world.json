@@ -1,0 +1,1512 @@
+{
+  "title": "Daggerheart",
+  "system": {
+    "id": "daggerheart",
+    "name": "Daggerheart",
+    "groups": {
+      "Черты": {},
+      "Прогрессия": {},
+      "Защита": {},
+      "Здоровье": {},
+      "Надежда": {},
+      "Противник": {},
+      "Стол": {},
+      "Действия": {},
+      "Атака": {},
+      "Вызываемые": {},
+      "Правила": {},
+      "Состояния": {},
+      "Отдых": {},
+      "Листы": {},
+      "Снаряжение": {},
+      "Приёмы": {}
+    },
+    "fields": [
+      {
+        "tag": "agility",
+        "label": "Проворство",
+        "group": "Черты",
+        "roll": {
+          "label": "Бросок: Проворство",
+          "die": {
+            "constant": "duality"
+          },
+          "tags": [
+            "действие",
+            "проворство"
+          ]
+        },
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": -3,
+          "max": 6
+        }
+      },
+      {
+        "tag": "strength",
+        "label": "Сила",
+        "group": "Черты",
+        "roll": {
+          "label": "Бросок: Сила",
+          "die": {
+            "constant": "duality"
+          },
+          "tags": [
+            "действие",
+            "сила"
+          ]
+        },
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": -3,
+          "max": 6
+        }
+      },
+      {
+        "tag": "finesse",
+        "label": "Искусность",
+        "group": "Черты",
+        "roll": {
+          "label": "Бросок: Искусность",
+          "die": {
+            "constant": "duality"
+          },
+          "tags": [
+            "действие",
+            "искусность"
+          ]
+        },
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": -3,
+          "max": 6
+        }
+      },
+      {
+        "tag": "instinct",
+        "label": "Чутьё",
+        "group": "Черты",
+        "roll": {
+          "label": "Бросок: Чутьё",
+          "die": {
+            "constant": "duality"
+          },
+          "tags": [
+            "действие",
+            "чутьё"
+          ]
+        },
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": -3,
+          "max": 6
+        }
+      },
+      {
+        "tag": "presence",
+        "label": "Присутствие",
+        "group": "Черты",
+        "roll": {
+          "label": "Бросок: Присутствие",
+          "die": {
+            "constant": "duality"
+          },
+          "tags": [
+            "действие",
+            "присутствие"
+          ]
+        },
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": -3,
+          "max": 6
+        }
+      },
+      {
+        "tag": "knowledge",
+        "label": "Знание",
+        "group": "Черты",
+        "roll": {
+          "label": "Бросок: Знание",
+          "die": {
+            "constant": "duality"
+          },
+          "tags": [
+            "действие",
+            "знание"
+          ]
+        },
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": -3,
+          "max": 6
+        }
+      },
+      {
+        "tag": "level",
+        "label": "Уровень",
+        "group": "Прогрессия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1,
+          "min": 1,
+          "max": 10
+        }
+      },
+      {
+        "tag": "tier",
+        "label": "Ступень",
+        "group": "Прогрессия",
+        "value": {
+          "kind": "formula",
+          "expr": "@level >= 8 ? 4 : (@level >= 5 ? 3 : (@level >= 2 ? 2 : 1))"
+        }
+      },
+      {
+        "tag": "proficiency",
+        "label": "Мастерство",
+        "group": "Прогрессия",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 1,
+          "min": 1,
+          "max": 6
+        }
+      },
+      {
+        "tag": "evasion",
+        "label": "Уклонение",
+        "group": "Защита",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 10,
+          "min": 0
+        }
+      },
+      {
+        "tag": "armor_score",
+        "label": "Броня",
+        "group": "Защита",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0
+        }
+      },
+      {
+        "tag": "armor_marked",
+        "label": "Бронеслоты отмечены",
+        "group": "Защита",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "major_base",
+        "label": "Порог серьёзного урона: основа",
+        "group": "Защита",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0
+        }
+      },
+      {
+        "tag": "severe_base",
+        "label": "Порог тяжёлого урона: основа",
+        "group": "Защита",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0
+        }
+      },
+      {
+        "tag": "major",
+        "label": "Порог серьёзного урона",
+        "group": "Защита",
+        "value": {
+          "kind": "formula",
+          "expr": "@major_base + @level"
+        }
+      },
+      {
+        "tag": "severe",
+        "label": "Порог тяжёлого урона",
+        "group": "Защита",
+        "value": {
+          "kind": "formula",
+          "expr": "@severe_base + @level"
+        }
+      },
+      {
+        "tag": "hp_max",
+        "label": "Хиты: клеток",
+        "group": "Здоровье",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 6,
+          "min": 1
+        }
+      },
+      {
+        "tag": "hp",
+        "label": "Хиты отмечены",
+        "group": "Здоровье",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "stress_max",
+        "label": "Стресс: клеток",
+        "group": "Здоровье",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 6,
+          "min": 1
+        }
+      },
+      {
+        "tag": "stress",
+        "label": "Стресс отмечен",
+        "group": "Здоровье",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "down",
+        "label": "Последний хит отмечен",
+        "group": "Здоровье",
+        "value": {
+          "kind": "formula",
+          "expr": "@hp >= @hp_max"
+        }
+      },
+      {
+        "tag": "hope",
+        "label": "Надежда",
+        "group": "Надежда",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 2,
+          "min": 0,
+          "max": 6
+        },
+        "control": "pips"
+      },
+      {
+        "tag": "difficulty",
+        "label": "Сложность",
+        "group": "Противник",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 12,
+          "min": 1
+        }
+      },
+      {
+        "tag": "attack_mod",
+        "label": "Модификатор атаки",
+        "group": "Противник",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0
+        }
+      },
+      {
+        "tag": "fear",
+        "label": "Страх ведущего",
+        "group": "Стол",
+        "desk": true,
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 12
+        }
+      }
+    ],
+    "constants": {
+      "duality": {
+        "label": "Кости двойственности",
+        "kind": "die",
+        "dice": [
+          {
+            "count": 1,
+            "sides": 12,
+            "name": "надежда"
+          },
+          {
+            "count": 1,
+            "sides": 12,
+            "name": "страх"
+          }
+        ]
+      },
+      "adversary_die": {
+        "label": "к20 противника",
+        "kind": "die",
+        "dice": [
+          {
+            "count": 1,
+            "sides": 20
+          }
+        ]
+      }
+    },
+    "tables": {
+      "rolls": {
+        "label": "Броски",
+        "key": "word",
+        "columns": [
+          {
+            "key": "успех",
+            "label": "Успех",
+            "kind": "text"
+          },
+          {
+            "key": "провал",
+            "label": "Провал",
+            "kind": "text"
+          }
+        ],
+        "rows": [
+          {
+            "value": "действие",
+            "cells": {
+              "успех": "успех",
+              "провал": "неудача"
+            }
+          },
+          {
+            "value": "атака",
+            "cells": {
+              "успех": "попадание",
+              "провал": "промах"
+            }
+          }
+        ]
+      },
+      "traits": {
+        "label": "Черты",
+        "key": "word",
+        "columns": [
+          {
+            "key": "value",
+            "label": "Значение",
+            "kind": "expr"
+          }
+        ],
+        "rows": [
+          {
+            "value": "проворство",
+            "cells": {
+              "value": "@agility"
+            }
+          },
+          {
+            "value": "сила",
+            "cells": {
+              "value": "@strength"
+            }
+          },
+          {
+            "value": "искусность",
+            "cells": {
+              "value": "@finesse"
+            }
+          },
+          {
+            "value": "чутьё",
+            "cells": {
+              "value": "@instinct"
+            }
+          },
+          {
+            "value": "присутствие",
+            "cells": {
+              "value": "@presence"
+            }
+          },
+          {
+            "value": "знание",
+            "cells": {
+              "value": "@knowledge"
+            }
+          }
+        ]
+      }
+    },
+    "roll_edits": {
+      "advantage": {
+        "label": "Преимущество: +1к6",
+        "ops": [
+          {
+            "op": "bonusDie",
+            "sides": 6
+          }
+        ],
+        "canceledBy": "disadvantage"
+      },
+      "disadvantage": {
+        "label": "Помеха: −1к6",
+        "ops": [
+          {
+            "op": "bonusDie",
+            "sides": 6,
+            "minus": true
+          }
+        ],
+        "canceledBy": "advantage"
+      }
+    },
+    "effects": {
+      "action_roll": {
+        "label": "Бросок действия",
+        "group": "Действия",
+        "activation": "manual",
+        "description": "Кости двойственности + черта против сложности, которую называет ведущий. Крит — одинаковые значения на костях: успех при любом итоге.",
+        "params": [
+          {
+            "key": "trait",
+            "label": "Черта",
+            "kind": "choice",
+            "from": "traits",
+            "ask": {
+              "by": "actor"
+            }
+          },
+          {
+            "key": "сложность",
+            "label": "Сложность",
+            "kind": "number",
+            "ask": {
+              "by": "gm",
+              "min": 1,
+              "max": 30
+            }
+          }
+        ],
+        "steps": [
+          {
+            "id": "бросок",
+            "type": "threshold",
+            "roll": {
+              "die": {
+                "constant": "duality"
+              },
+              "bonus": {
+                "expr": "таблица(\"traits\", @trait, \"value\")"
+              },
+              "tags": [
+                "действие",
+                {
+                  "param": "trait"
+                }
+              ]
+            },
+            "versus": {
+              "expr": "@сложность"
+            },
+            "continueOn": "always"
+          }
+        ]
+      },
+      "hero_attack": {
+        "label": "Атака героя",
+        "group": "Атака",
+        "activation": "manual",
+        "description": "Кости двойственности + черта оружия против сложности противника. Попал — кости урона по числу мастерства плюс прибавка оружия; на крите сверху максимум костей урона.",
+        "params": [
+          {
+            "key": "trait",
+            "label": "Черта оружия",
+            "kind": "choice",
+            "from": "traits"
+          },
+          {
+            "key": "damage_die",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "die_size",
+            "label": "Граней на кости урона",
+            "kind": "number"
+          },
+          {
+            "key": "damage_bonus",
+            "label": "Прибавка к урону",
+            "kind": "number"
+          }
+        ],
+        "steps": [
+          {
+            "id": "бросок",
+            "type": "threshold",
+            "roll": {
+              "die": {
+                "constant": "duality"
+              },
+              "bonus": {
+                "expr": "таблица(\"traits\", @trait, \"value\")"
+              },
+              "tags": [
+                "атака"
+              ]
+            },
+            "versus": {
+              "expr": "@получатель.difficulty"
+            },
+            "continueOn": "always"
+          },
+          {
+            "type": "compare",
+            "value": {
+              "expr": "любое(@бросок.success, @бросок.parts.надежда == @бросок.parts.страх) ? 1 : 0"
+            },
+            "versus": {
+              "expr": "1"
+            },
+            "breakIf": "less",
+            "note": "промах"
+          },
+          {
+            "id": "урон",
+            "type": "amount",
+            "source": "item",
+            "fixed": {
+              "expr": "кинуть(@damage_die, @отправитель.proficiency) + @damage_bonus + (@бросок.parts.надежда == @бросок.parts.страх ? @отправитель.proficiency * @die_size : 0)"
+            }
+          },
+          {
+            "type": "emit",
+            "event": "damage",
+            "args": {
+              "amount": {
+                "expr": "@урон"
+              }
+            }
+          }
+        ]
+      },
+      "adversary_attack": {
+        "label": "Атака противника",
+        "group": "Атака",
+        "activation": "manual",
+        "description": "к20 + модификатор атаки против уклонения героя. Попал — урон, вписанный в приём.",
+        "params": [
+          {
+            "key": "damage_dice",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "damage_bonus",
+            "label": "Прибавка к урону",
+            "kind": "number"
+          }
+        ],
+        "steps": [
+          {
+            "id": "удар",
+            "type": "threshold",
+            "roll": {
+              "die": {
+                "constant": "adversary_die"
+              },
+              "bonus": {
+                "expr": "@attack_mod"
+              },
+              "tags": [
+                "атака"
+              ]
+            },
+            "versus": {
+              "expr": "@получатель.evasion"
+            }
+          },
+          {
+            "id": "урон",
+            "type": "amount",
+            "source": "item",
+            "fixed": {
+              "expr": "кинуть(@damage_dice) + @damage_bonus"
+            }
+          },
+          {
+            "type": "emit",
+            "event": "damage",
+            "args": {
+              "amount": {
+                "expr": "@урон"
+              }
+            }
+          }
+        ]
+      },
+      "damage": {
+        "label": "Урон",
+        "group": "Вызываемые",
+        "description": "Урон сравнивается с порогами: ниже серьёзного — одна клетка хитов, от серьёзного — две, от тяжёлого — три. Если есть свободный бронеслот, он отмечается и снимает одну клетку; по книге это выбор игрока, в образце — всегда.",
+        "params": [
+          {
+            "key": "amount",
+            "label": "Сколько урона",
+            "kind": "number",
+            "role": "amount"
+          }
+        ],
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "hp"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "max(0, (@event.amount >= @severe ? 3 : (@event.amount >= @major ? 2 : (@event.amount >= 1 ? 1 : 0))) - (все(@armor_marked < @armor_score, (@event.amount >= @severe ? 3 : (@event.amount >= @major ? 2 : (@event.amount >= 1 ? 1 : 0))) >= 1) ? 1 : 0))"
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "armor_marked"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "1"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "все(@armor_marked < @armor_score, (@event.amount >= @severe ? 3 : (@event.amount >= @major ? 2 : (@event.amount >= 1 ? 1 : 0))) >= 1)"
+            }
+          }
+        ]
+      },
+      "duality": {
+        "label": "Двойственность",
+        "group": "Правила",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "После броска двойственности: больше выпало на Надежде — герой получает Надежду; на Страхе — ведущий получает Страх; одинаково — крит: Надежда и минус один Стресс.",
+        "on": [
+          {
+            "on": "action_roll",
+            "role": "sender",
+            "if": {
+              "expr": "@бросок.parts.надежда > @бросок.parts.страх"
+            },
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "hope"
+                },
+                "direction": "add",
+                "value": {
+                  "expr": "1"
+                },
+                "targetModifiers": false
+              }
+            ]
+          },
+          {
+            "on": "action_roll",
+            "role": "sender",
+            "if": {
+              "expr": "@бросок.parts.страх > @бросок.parts.надежда"
+            },
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "fear"
+                },
+                "direction": "add",
+                "value": {
+                  "expr": "1"
+                },
+                "targetModifiers": false
+              }
+            ]
+          },
+          {
+            "on": "action_roll",
+            "role": "sender",
+            "if": {
+              "expr": "@бросок.parts.надежда == @бросок.parts.страх"
+            },
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "hope"
+                },
+                "direction": "add",
+                "value": {
+                  "expr": "1"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "stress"
+                },
+                "direction": "subtract",
+                "value": {
+                  "expr": "1"
+                },
+                "targetModifiers": false,
+                "when": {
+                  "expr": "@stress >= 1"
+                }
+              }
+            ]
+          },
+          {
+            "on": "hero_attack",
+            "role": "sender",
+            "if": {
+              "expr": "@бросок.parts.надежда > @бросок.parts.страх"
+            },
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "hope"
+                },
+                "direction": "add",
+                "value": {
+                  "expr": "1"
+                },
+                "targetModifiers": false
+              }
+            ]
+          },
+          {
+            "on": "hero_attack",
+            "role": "sender",
+            "if": {
+              "expr": "@бросок.parts.страх > @бросок.parts.надежда"
+            },
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "fear"
+                },
+                "direction": "add",
+                "value": {
+                  "expr": "1"
+                },
+                "targetModifiers": false
+              }
+            ]
+          },
+          {
+            "on": "hero_attack",
+            "role": "sender",
+            "if": {
+              "expr": "@бросок.parts.надежда == @бросок.parts.страх"
+            },
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "hope"
+                },
+                "direction": "add",
+                "value": {
+                  "expr": "1"
+                },
+                "targetModifiers": false
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "stress"
+                },
+                "direction": "subtract",
+                "value": {
+                  "expr": "1"
+                },
+                "targetModifiers": false,
+                "when": {
+                  "expr": "@stress >= 1"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "death_move": {
+        "label": "Смертельный ход",
+        "group": "Состояния",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Отмечен последний хит: игрок выбирает смертельный ход — «Сгореть во славе», «Избежать смерти» или «Рискнуть всем». Решает стол.",
+        "modifiers": []
+      },
+      "last_hp": {
+        "label": "Последний хит",
+        "group": "Правила",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "params": [],
+        "description": "Отмечен последний хит — «Смертельный ход».",
+        "on": [
+          {
+            "on": "field:down",
+            "steps": [
+              {
+                "type": "status",
+                "mode": "apply",
+                "effect": {
+                  "const": "death_move"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "long_rest": {
+        "label": "Долгий отдых",
+        "group": "Отдых",
+        "activation": "manual",
+        "description": "Все хиты, весь Стресс и все бронеслоты свободны. Остальное из списка дел на отдыхе решает стол.",
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "hp"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "0"
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "stress"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "0"
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "armor_marked"
+            },
+            "direction": "set",
+            "value": {
+              "expr": "0"
+            },
+            "targetModifiers": false
+          }
+        ]
+      },
+      "tend_wounds": {
+        "label": "Перевязать раны",
+        "group": "Отдых",
+        "activation": "manual",
+        "description": "Дело короткого отдыха: освободить 1к4 + ступень клеток хитов.",
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "hp"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "min(@hp, кинуть(\"1к4\") + @tier)"
+            },
+            "targetModifiers": false
+          }
+        ]
+      }
+    },
+    "records": {
+      "hero": {
+        "kind": "sheet",
+        "label": "Герой",
+        "icon": "🗡",
+        "group": "Листы",
+        "hint": "Лист игрока.",
+        "grants": [
+          "duality",
+          "last_hp"
+        ]
+      },
+      "adversary": {
+        "kind": "sheet",
+        "label": "Противник",
+        "icon": "👹",
+        "group": "Листы",
+        "hint": "Сложность, пороги, хиты и Стресс, модификатор атаки.",
+        "blocks": [
+          "Защита",
+          "Здоровье",
+          "Противник"
+        ]
+      },
+      "weapon": {
+        "kind": "item",
+        "label": "Оружие",
+        "icon": "⚔",
+        "group": "Снаряжение",
+        "hint": "Черта, кость урона и прибавка.",
+        "props": [
+          {
+            "key": "trait",
+            "label": "Черта",
+            "kind": "choice",
+            "from": "traits"
+          },
+          {
+            "key": "damage_die",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "die_size",
+            "label": "Граней на кости",
+            "kind": "number"
+          },
+          {
+            "key": "damage_bonus",
+            "label": "Прибавка к урону",
+            "kind": "number"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Атака",
+            "effect": "hero_attack",
+            "args": {
+              "trait": {
+                "prop": "trait"
+              },
+              "damage_die": {
+                "prop": "damage_die"
+              },
+              "die_size": {
+                "prop": "die_size"
+              },
+              "damage_bonus": {
+                "prop": "damage_bonus"
+              }
+            }
+          }
+        ]
+      },
+      "armor": {
+        "kind": "item",
+        "label": "Доспех",
+        "icon": "🛡",
+        "group": "Снаряжение",
+        "hint": "Основа порогов и число бронеслотов.",
+        "props": [
+          {
+            "key": "major",
+            "label": "Основа порога серьёзного",
+            "kind": "number"
+          },
+          {
+            "key": "severe",
+            "label": "Основа порога тяжёлого",
+            "kind": "number"
+          },
+          {
+            "key": "score",
+            "label": "Броня",
+            "kind": "number"
+          }
+        ]
+      },
+      "adversary_move": {
+        "kind": "action",
+        "label": "Приём противника",
+        "icon": "👹",
+        "group": "Приёмы",
+        "hint": "Урон вписан в приём.",
+        "props": [
+          {
+            "key": "damage_dice",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "damage_bonus",
+            "label": "Прибавка",
+            "kind": "number"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Атака",
+            "effect": "adversary_attack",
+            "args": {
+              "damage_dice": {
+                "prop": "damage_dice"
+              },
+              "damage_bonus": {
+                "prop": "damage_bonus"
+              }
+            }
+          }
+        ]
+      },
+      "action": {
+        "kind": "action",
+        "label": "Действие",
+        "icon": "🎲",
+        "group": "Приёмы",
+        "hint": "Бросок действия и отдых.",
+        "props": [],
+        "bindings": []
+      }
+    },
+    "mannequins": [
+      {
+        "id": "манекен-а",
+        "systemId": "daggerheart",
+        "name": "Манекен А",
+        "values": {
+          "agility": 1,
+          "strength": 1,
+          "finesse": 1,
+          "instinct": 1,
+          "presence": 1,
+          "knowledge": 1,
+          "evasion": 10,
+          "hp_max": 6,
+          "difficulty": 12
+        },
+        "has": [],
+        "effects": []
+      },
+      {
+        "id": "манекен-б",
+        "systemId": "daggerheart",
+        "name": "Манекен Б",
+        "values": {
+          "agility": 1,
+          "strength": 1,
+          "finesse": 1,
+          "instinct": 1,
+          "presence": 1,
+          "knowledge": 1,
+          "evasion": 10,
+          "hp_max": 6,
+          "difficulty": 12
+        },
+        "has": [],
+        "effects": []
+      }
+    ]
+  },
+  "compendium": {
+    "records": [
+      {
+        "id": "broadsword",
+        "rk": "weapon",
+        "label": "Палаш",
+        "description": "Проворство, ближний бой, к8.",
+        "props": {
+          "trait": "проворство",
+          "damage_die": "1d8",
+          "die_size": 8,
+          "damage_bonus": 0
+        }
+      },
+      {
+        "id": "longsword",
+        "rk": "weapon",
+        "label": "Длинный меч",
+        "description": "Проворство, ближний бой, к8 + 3, двуручный.",
+        "props": {
+          "trait": "проворство",
+          "damage_die": "1d8",
+          "die_size": 8,
+          "damage_bonus": 3
+        }
+      },
+      {
+        "id": "dagger",
+        "rk": "weapon",
+        "label": "Кинжал",
+        "description": "Искусность, ближний бой, к8 + 1.",
+        "props": {
+          "trait": "искусность",
+          "damage_die": "1d8",
+          "die_size": 8,
+          "damage_bonus": 1
+        }
+      },
+      {
+        "id": "shortbow",
+        "rk": "weapon",
+        "label": "Короткий лук",
+        "description": "Проворство, далеко, к6 + 3, двуручный.",
+        "props": {
+          "trait": "проворство",
+          "damage_die": "1d6",
+          "die_size": 6,
+          "damage_bonus": 3
+        }
+      },
+      {
+        "id": "gambeson",
+        "rk": "armor",
+        "label": "Стёганка",
+        "description": "Пороги 5/11 + уровень, броня 3.",
+        "props": {
+          "major": 5,
+          "severe": 11,
+          "score": 3
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "major_base",
+            "op": "add",
+            "value": 5,
+            "stacking": "max",
+            "condition": null
+          },
+          {
+            "kind": "value",
+            "target": "severe_base",
+            "op": "add",
+            "value": 11,
+            "stacking": "max",
+            "condition": null
+          },
+          {
+            "kind": "value",
+            "target": "armor_score",
+            "op": "add",
+            "value": 3,
+            "stacking": "max",
+            "condition": null
+          }
+        ]
+      },
+      {
+        "id": "leather",
+        "rk": "armor",
+        "label": "Кожаный доспех",
+        "description": "Пороги 6/13 + уровень, броня 3.",
+        "props": {
+          "major": 6,
+          "severe": 13,
+          "score": 3
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "major_base",
+            "op": "add",
+            "value": 6,
+            "stacking": "max",
+            "condition": null
+          },
+          {
+            "kind": "value",
+            "target": "severe_base",
+            "op": "add",
+            "value": 13,
+            "stacking": "max",
+            "condition": null
+          },
+          {
+            "kind": "value",
+            "target": "armor_score",
+            "op": "add",
+            "value": 3,
+            "stacking": "max",
+            "condition": null
+          }
+        ]
+      },
+      {
+        "id": "chainmail",
+        "rk": "armor",
+        "label": "Кольчуга",
+        "description": "Пороги 7/15 + уровень, броня 4.",
+        "props": {
+          "major": 7,
+          "severe": 15,
+          "score": 4
+        },
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "major_base",
+            "op": "add",
+            "value": 7,
+            "stacking": "max",
+            "condition": null
+          },
+          {
+            "kind": "value",
+            "target": "severe_base",
+            "op": "add",
+            "value": 15,
+            "stacking": "max",
+            "condition": null
+          },
+          {
+            "kind": "value",
+            "target": "armor_score",
+            "op": "add",
+            "value": 4,
+            "stacking": "max",
+            "condition": null
+          }
+        ]
+      },
+      {
+        "id": "bandit_knife",
+        "rk": "adversary_move",
+        "label": "Нож разбойника",
+        "description": "Урон 1к8 + 1.",
+        "props": {
+          "damage_dice": "1d8",
+          "damage_bonus": 1
+        }
+      },
+      {
+        "id": "brute_club",
+        "rk": "adversary_move",
+        "label": "Дубина громилы",
+        "description": "Урон 1к10 + 3.",
+        "props": {
+          "damage_dice": "1d10",
+          "damage_bonus": 3
+        }
+      },
+      {
+        "id": "act",
+        "rk": "action",
+        "label": "Бросок действия",
+        "bindings": [
+          {
+            "label": "Бросок действия",
+            "effect": "action_roll",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "id": "rest_long",
+        "rk": "action",
+        "label": "Долгий отдых",
+        "bindings": [
+          {
+            "label": "Долгий отдых",
+            "effect": "long_rest",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "id": "rest_tend",
+        "rk": "action",
+        "label": "Перевязать раны",
+        "bindings": [
+          {
+            "label": "Перевязать раны",
+            "effect": "tend_wounds",
+            "args": {}
+          }
+        ]
+      }
+    ]
+  },
+  "sheets": [
+    {
+      "id": "bran",
+      "systemId": "daggerheart",
+      "of": "hero",
+      "name": "Бран",
+      "values": {
+        "agility": 2,
+        "strength": 1,
+        "finesse": 0,
+        "instinct": 1,
+        "presence": 0,
+        "knowledge": -1,
+        "level": 1,
+        "proficiency": 1,
+        "evasion": 11,
+        "hp_max": 6,
+        "stress_max": 6,
+        "hope": 2
+      },
+      "has": [
+        {
+          "of": "longsword"
+        },
+        {
+          "of": "chainmail"
+        },
+        {
+          "of": "act"
+        },
+        {
+          "of": "rest_long"
+        },
+        {
+          "of": "rest_tend"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "ilse",
+      "systemId": "daggerheart",
+      "of": "hero",
+      "name": "Ильзе",
+      "values": {
+        "agility": 1,
+        "strength": -1,
+        "finesse": 2,
+        "instinct": 1,
+        "presence": 0,
+        "knowledge": 0,
+        "level": 1,
+        "proficiency": 1,
+        "evasion": 12,
+        "hp_max": 6,
+        "stress_max": 6,
+        "hope": 2
+      },
+      "has": [
+        {
+          "of": "dagger"
+        },
+        {
+          "of": "shortbow"
+        },
+        {
+          "of": "leather"
+        },
+        {
+          "of": "act"
+        },
+        {
+          "of": "rest_long"
+        },
+        {
+          "of": "rest_tend"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "bandit",
+      "systemId": "daggerheart",
+      "of": "adversary",
+      "name": "Разбойник",
+      "values": {
+        "difficulty": 12,
+        "attack_mod": 1,
+        "major_base": 7,
+        "severe_base": 13,
+        "hp_max": 4,
+        "stress_max": 3,
+        "evasion": 12
+      },
+      "has": [
+        {
+          "of": "bandit_knife"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "brute",
+      "systemId": "daggerheart",
+      "of": "adversary",
+      "name": "Громила",
+      "values": {
+        "difficulty": 11,
+        "attack_mod": 2,
+        "major_base": 9,
+        "severe_base": 16,
+        "hp_max": 6,
+        "stress_max": 3,
+        "evasion": 10
+      },
+      "has": [
+        {
+          "of": "brute_club"
+        }
+      ],
+      "effects": []
+    },
+    {
+      "id": "стол",
+      "systemId": "daggerheart",
+      "name": "Стол",
+      "values": {
+        "fear": 0
+      },
+      "has": [],
+      "effects": []
+    }
+  ]
+}
