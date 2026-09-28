@@ -3,8 +3,9 @@ import { useWorld } from '../../store/world.ts';
 import { Select, Empty } from '../../ui/primitives.tsx';
 import type { System, Effect } from '@vtt/schema';
 import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
-import { compile } from '@vtt/engine/formula';
-import { tablesIn } from '@vtt/engine/model/references';
+import { bringIn, blockParts, closure } from '@vtt/engine/model/bring';
+import type { Brought, Part, PartKind } from '@vtt/engine/model/bring';
+import { PIECES, bringPiece, donorOf } from '@vtt/engine/model/pieces';
 import { groupChain, subtreeNames } from './groups.ts';
 import { launchOf, LAUNCHES } from '@vtt/engine/model/effect-kinds';
 
@@ -16,6 +17,10 @@ export function DonorPalette({ kind }: { kind: 'blocks' | 'effects' }) {
 
   return (
     <div className="stack">
+      <div className="stack stack--tight">
+        <span className="field__label">Куски систем</span>
+        <Pieces />
+      </div>
       <Select
         value={donorId}
         options={[['*', 'все системы'], ...DONORS.map(d => [d.id ?? '', d.name ?? ''] as const)] as never}
@@ -39,32 +44,52 @@ export function findDonorBlock(tag: string): { donor: System; group: string } | 
   return null;
 }
 
-export function copyDonorBlock(
-  editSystem: (edit: (draft: System) => void) => void,
-  donor: System,
-  group: string,
-): void {
-  const order = orderedBlocks(donor, neededBlocks(donor, subtreeNames(donor, group)));
-  editSystem(draft => {
-    const present = new Set(draft.fields.map(f => f.tag));
-    for (const block of order) {
-      for (const link of groupChain(donor, block)) {
-        const spec = donor.groups?.[link];
-        if (spec && !draft.groups?.[link]) (draft.groups ??= {})[link] = structuredClone(spec);
-      }
-      for (const field of donor.fields.filter(f => (f.group ?? 'Без блока') === block)) {
-        if (present.has(field.tag)) continue;
-        draft.fields.push(structuredClone(field));
-        present.add(field.tag);
+type EditSystem = (edit: (draft: System) => void) => void;
 
-        for (const table of field.value.kind === 'formula' ? tablesIn(field.value.expr) : []) {
-          if (!donor.tables?.[table]) continue;
-          draft.tables = draft.tables ?? {};
-          draft.tables[table] ??= structuredClone(donor.tables[table]!);
-        }
-      }
-    }
-  });
+const into = (editSystem: EditSystem, bring: (system: System) => Brought): void =>
+  editSystem(draft => { Object.assign(draft, bring(draft).system); });
+
+export function copyDonorBlock(editSystem: EditSystem, donor: System, group: string): void {
+  into(editSystem, system => bringIn(system, donor, blockParts(donor, group)));
+}
+
+const PART_WORDS: Record<PartKind, string> = {
+  field: 'полей', group: 'блоков', effect: 'эффектов', table: 'таблиц',
+  constant: 'костей', rollEdit: 'правок броска', recordKind: 'типов записей',
+};
+
+export const broughtWords = (parts: Part[]): string => {
+  const counts = new Map<PartKind, number>();
+  for (const part of parts) counts.set(part.kind, (counts.get(part.kind) ?? 0) + 1);
+  return [...counts].map(([kind, n]) => `${PART_WORDS[kind]}: ${n}`).join(' · ');
+};
+
+export function Pieces() {
+  const system = useWorld(s => s.system);
+  const editSystem = useWorld(s => s.editSystem);
+  const pieces = useMemo(
+    () => PIECES.filter(piece => donorOf(piece)).map(piece => ({ piece, added: bringPiece(system, piece).added })),
+    [system],
+  );
+
+  return (
+    <div className="palette">
+      {pieces.map(({ piece, added }) => (
+        <button
+          key={piece.id}
+          type="button"
+          className="card card--pick"
+          title={piece.hint}
+          disabled={!added.length}
+          onClick={() => into(editSystem, current => bringPiece(current, piece))}
+          style={added.length ? undefined : { opacity: 0.5, cursor: 'default' }}
+        >
+          <span className="card__title" style={{ fontSize: 'var(--fs-4)' }}>{piece.label}</span>
+          <span className="card__sub">{added.length ? `добавит ${broughtWords(added)}` : 'уже в системе'}</span>
+        </button>
+      ))}
+    </div>
+  );
 }
 
 function Blocks({ donor }: { donor: System }) {
@@ -91,8 +116,9 @@ function Blocks({ donor }: { donor: System }) {
         const fields = donor.fields.filter(f => inside.has(f.group ?? 'Без блока'));
         const already = fields.every(f => have.has(f.tag));
         const brings = [...new Set(
-          orderedBlocks(donor, neededBlocks(donor, subtreeNames(donor, group)))
-            .map(block => groupChain(donor, block).at(-1)!),
+          closure(donor, blockParts(donor, group))
+            .filter(part => part.kind === 'field')
+            .map(part => groupChain(donor, donor.fields.find(f => f.tag === part.key)?.group ?? 'Без блока').at(-1)!),
         )];
 
         return (
@@ -116,61 +142,6 @@ function Blocks({ donor }: { donor: System }) {
   );
 }
 
-function neededBlocks(donor: System, seeds: string[]): Set<string> {
-  const blockOf = new Map(donor.fields.map(f => [f.tag, f.group ?? 'Без блока']));
-  const need = new Set(seeds);
-  const queue = [...seeds];
-
-  while (queue.length) {
-    const current = queue.shift()!;
-    for (const tag of blockDeps(donor, current)) {
-      const block = blockOf.get(tag);
-      if (!block || need.has(block)) continue;
-      need.add(block);
-      queue.push(block);
-    }
-  }
-  return need;
-}
-
-function blockDeps(donor: System, group: string): string[] {
-  const out: string[] = [];
-  for (const field of donor.fields) {
-    if ((field.group ?? 'Без блока') !== group) continue;
-    const source = field.value.kind === 'formula' ? field.value.expr : '';
-    if (!source) continue;
-    out.push(...depsOf(source));
-  }
-  return out;
-}
-
-function depsOf(source: string): readonly string[] {
-  try {
-    return compile(source).deps;
-  } catch {
-    return [];
-  }
-}
-
-function orderedBlocks(donor: System, blocks: Set<string>): string[] {
-  const blockOf = new Map(donor.fields.map(f => [f.tag, f.group ?? 'Без блока']));
-  const done: string[] = [];
-  const seen = new Set<string>();
-
-  const visit = (block: string) => {
-    if (seen.has(block)) return;
-    seen.add(block);
-    for (const tag of blockDeps(donor, block)) {
-      const dependency = blockOf.get(tag);
-      if (dependency && dependency !== block && blocks.has(dependency)) visit(dependency);
-    }
-    done.push(block);
-  };
-
-  for (const block of blocks) visit(block);
-  return done;
-}
-
 function Effects({ donor }: { donor: System }) {
   const system = useWorld(s => s.system);
   const editSystem = useWorld(s => s.editSystem);
@@ -179,30 +150,8 @@ function Effects({ donor }: { donor: System }) {
   const list = Object.entries(donor.effects);
   if (!list.length) return <Empty title="У этого донора эффектов нет" />;
 
-  const copy = (id: string, effect: Effect) => {
-    editSystem(draft => {
-      draft.effects[id] = structuredClone(effect);
-
-      const text = JSON.stringify(effect);
-      for (const [name, constant] of Object.entries(donor.constants ?? {})) {
-        if (text.includes(`"constant":"${name}"`)) {
-          draft.constants = draft.constants ?? {};
-          draft.constants[name] ??= structuredClone(constant);
-        }
-      }
-
-      const bringEdit = (key: string) => {
-        const edit = donor.roll_edits?.[key];
-        if (!edit) return;
-        draft.roll_edits = draft.roll_edits ?? {};
-        if (draft.roll_edits[key]) return;
-        draft.roll_edits[key] = structuredClone(edit);
-        if (edit.canceledBy) bringEdit(edit.canceledBy);
-      };
-      for (const mod of effect.modifiers ?? []) {
-        if (mod.kind === 'roll' && mod.edit) bringEdit(mod.edit);
-      }
-    });
+  const copy = (id: string) => {
+    into(editSystem, current => bringIn(current, donor, [{ kind: 'effect', key: id }]));
     pick({ activeEffectId: id });
   };
 
@@ -216,7 +165,7 @@ function Effects({ donor }: { donor: System }) {
             type="button"
             className="card card--pick"
             disabled={already}
-            onClick={() => copy(id, effect)}
+            onClick={() => copy(id)}
             style={already ? { opacity: 0.5, cursor: 'default' } : undefined}
           >
             <span className="card__title" style={{ fontSize: 'var(--fs-4)' }}>{effect.label ?? id}</span>

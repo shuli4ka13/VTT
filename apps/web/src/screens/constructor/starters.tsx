@@ -1,48 +1,23 @@
 import { useWorld } from '../../store/world.ts';
 import { Button } from '../../ui/primitives.tsx';
-import { copyDonorBlock } from './donors.tsx';
-import { subtreeNames } from './groups.ts';
-import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
-import type { System } from '@vtt/schema';
-
-const DONORS = SAMPLE_SYSTEMS as System[];
-
-export interface Starter { label: string; donor: string; group: string }
-
-export const STARTERS: Starter[] = [
-  { label: 'Характеристики к20', donor: 'dnd5e', group: 'Характеристики' },
-  { label: 'Навыки D&D', donor: 'dnd5e', group: 'Навыки' },
-  { label: 'Здоровье', donor: 'dnd5e', group: 'Здоровье' },
-  { label: 'Защита', donor: 'dnd5e', group: 'Защита' },
-  { label: 'Ячейки заклинаний', donor: 'dnd5e', group: 'Ячейки заклинаний' },
-  { label: 'Навыки RED', donor: 'cp-slice', group: 'Навыки' },
-];
-
-export const startersOf = (): Starter[] =>
-  STARTERS.filter(starter => {
-    const donor = DONORS.find(d => d.id === starter.donor);
-    if (!donor) return false;
-    const inside = new Set(subtreeNames(donor, starter.group));
-    return donor.fields.some(field => inside.has(field.group ?? 'Без блока'));
-  });
+import { PIECES, bringPiece, donorOf } from '@vtt/engine/model/pieces';
 
 export function Starters() {
+  const system = useWorld(s => s.system);
   const editSystem = useWorld(s => s.editSystem);
-  const starters = startersOf();
-  if (!starters.length) return null;
+  const pieces = PIECES.filter(piece => donorOf(piece) && bringPiece(system, piece).added.length);
+  if (!pieces.length) return null;
 
   return (
     <div className="inline inline--tight">
-      {starters.map(starter => (
+      {pieces.map(piece => (
         <Button
-          key={starter.label}
+          key={piece.id}
           size="sm"
-          onClick={() => {
-            const donor = DONORS.find(d => d.id === starter.donor)!;
-            copyDonorBlock(editSystem, donor, starter.group);
-          }}
+          title={piece.hint}
+          onClick={() => editSystem(draft => { Object.assign(draft, bringPiece(draft, piece).system); })}
         >
-          {starter.label}
+          {piece.label}
         </Button>
       ))}
     </div>

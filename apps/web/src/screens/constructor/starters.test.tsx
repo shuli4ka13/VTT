@@ -4,8 +4,9 @@ import { screen, fireEvent, cleanup } from '@testing-library/react';
 import { renderOpen } from '../../testing/render-open.tsx';
 import { useWorld, emptySystem } from '../../store/world.ts';
 import { SheetTab } from './sheet-tab.tsx';
-import { startersOf } from './starters.tsx';
 import { world as W } from '@vtt/schema';
+import { PIECES } from '@vtt/engine/model/pieces';
+import { lintSystem, errorsOf } from '@vtt/engine/model/lint';
 
 describe('стартовые блоки на пустом листе', () => {
   beforeEach(() => {
@@ -13,20 +14,22 @@ describe('стартовые блоки на пустом листе', () => {
   });
   afterEach(() => { cleanup(); });
 
-  it('каждый стартовый блок есть в образце, из которого его берут', () => {
-    expect(startersOf().map(s => s.label)).toEqual(['Характеристики к20', 'Навыки D&D', 'Здоровье', 'Защита', 'Ячейки заклинаний', 'Навыки RED']);
+  it('пустой лист предлагает все куски систем', () => {
+    renderOpen(<SheetTab />);
+    const buttons = screen.getAllByRole('button').map(b => b.textContent ?? '');
+    for (const piece of PIECES) expect(buttons, piece.label).toContain(piece.label);
   });
 
-  it('клик по стартовому блоку кладёт поля и оставляет систему верной', () => {
+  it('клик по куску кладёт его со всем, от чего он зависит, и система остаётся без ошибок', () => {
     renderOpen(<SheetTab />);
     expect(screen.getByText('Лист пуст')).toBeTruthy();
 
-    fireEvent.click(screen.getByText('Характеристики к20'));
+    fireEvent.click(screen.getAllByText('Характеристики к20')[0]!);
 
     const system = useWorld.getState().system;
-    expect(system.fields.length).toBeGreaterThan(3);
     expect(system.fields.some(f => f.group === 'Характеристики')).toBe(true);
     expect(W.system.safeParse(system).success).toBe(true);
+    expect(errorsOf(lintSystem(system)).map(p => p.text)).toEqual([]);
   });
 
   it('вычисляемое поле в списке помечено и читается формулой словами', () => {

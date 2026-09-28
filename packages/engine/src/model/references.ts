@@ -211,6 +211,8 @@ function modifierRefs(list: Modifier[] | undefined, from: Where, out: Reference[
     if (typeof mod.condition === 'string' && mod.condition.trim()) {
       exprRefs(mod.condition, from, { params: new Set(), earlier: new Set(), eventChain: false }, out);
     }
+    const where = (mod as { where?: { table?: unknown } }).where;
+    if (where && typeof where.table === 'string' && where.table) out.push({ kind: 'table', key: where.table, from, scope: 'condition' });
   }
 }
 

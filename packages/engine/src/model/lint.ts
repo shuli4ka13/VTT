@@ -391,6 +391,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
 
   const chainOf = (where: Where): Step[] | undefined => stepsAt(system, where);
   const refs = referencesOf(system, compendium).filter(ref => {
+    if (ref.scope === 'condition') return false;
     if (ref.kind !== 'field' || ref.from.step === undefined) return true;
     const steps = chainOf(ref.from);
     return !(steps && earlierIds(steps, ref.from.step).has(ref.key));
