@@ -26,9 +26,7 @@ import { settle as settleSheets } from '@vtt/engine/events/settle';
 import { runSelfTrack, selfRefusal } from '@vtt/engine/events/self';
 import { deskOf } from '@vtt/engine/events/desk';
 import { DESK_ID, isDesk } from '@vtt/engine/engine/owners';
-import { resolveRoll } from '@vtt/engine/engine/modifiers';
-import { newPass, calc } from '@vtt/engine/engine/calc';
-import { rollLead, dieConstant } from '@vtt/engine/engine/lead-die';
+import { rollCheck, fieldCheck } from '@vtt/engine/engine/check';
 import {
   idleClock, startCombat, stopCombat, nextTurn, rollInitiative, expiryOf, inCombat,
 } from '@vtt/engine/engine/clock';
@@ -659,11 +657,11 @@ export class RoomsService {
     await this.assertMaySheet(roomId, userId, sheetId);
 
     const { system, compendium } = this.worldOf(room);
-    const field = system.fields.find(f => f.tag === tag);
-    if (!field) throw new BadRequestException(`система не объявляет поля «${tag}»`);
-    if (!field.roll) throw new BadRequestException(`по полю «${field.label}» не бросают — включите броски в конструкторе`);
-    if (!system.initiative?.die?.constant) {
-      throw new BadRequestException('в системе не объявлена кость — броски с листа делать нечем');
+    let check: ReturnType<typeof fieldCheck>;
+    try {
+      check = fieldCheck(system, tag);
+    } catch (err) {
+      throw new BadRequestException((err as Error).message);
     }
 
     const rows = await this.db.select().from(roomSheets)
@@ -674,15 +672,11 @@ export class RoomsService {
 
     let line: string;
     try {
-      const pass = newPass(system, sheet, { compendium });
-      const resolution = resolveRoll(system, sheet, field.roll.tags ?? [], pass);
-      const bonus = Number(calc(system, sheet, tag, pass) ?? 0);
-      const rolled = rollLead(dieConstant(system, system.initiative.die.constant), this.die, resolution.edits);
-      const total = rolled.total + bonus + resolution.bonus;
-      const edits = resolution.edits.length ? ` (${resolution.edits.map(edit => edit.label).join(', ')})` : '';
+      const { rolled, bonus, total, edits } = rollCheck(system, sheet, check, { compendium, die: this.die, owner: check.label });
+      const named = edits.length ? ` (${edits.join(', ')})` : '';
       const shown = rolled.kept != null && rolled.rolls.length > 1
         ? `[${rolled.rolls.join(', ')}] → ${rolled.kept}` : `[${rolled.rolls.join(', ')}]`;
-      line = `${sheet.name} бросает «${field.roll.label ?? field.label}»: ${shown}${edits} + ${bonus + resolution.bonus} = ${total}`;
+      line = `${sheet.name} бросает «${check.label}»: ${shown}${named} + ${bonus} = ${total}`;
     } catch (err) {
       throw new BadRequestException((err as Error).message);
     }

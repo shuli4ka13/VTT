@@ -281,7 +281,10 @@
           "label": "Проверка: Концентрация",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -309,7 +312,10 @@
           "label": "Проверка: Спрятать / найти",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -337,7 +343,10 @@
           "label": "Проверка: Чтение по губам",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -365,7 +374,10 @@
           "label": "Проверка: Внимательность",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -393,7 +405,10 @@
           "label": "Проверка: Выслеживание",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -421,7 +436,10 @@
           "label": "Проверка: Атлетика",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -449,7 +467,10 @@
           "label": "Проверка: Гибкость",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -477,7 +498,10 @@
           "label": "Проверка: Танец",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -505,7 +529,10 @@
           "label": "Проверка: Выносливость",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -533,7 +560,10 @@
           "label": "Проверка: Стойкость к пыткам и наркотикам",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -561,7 +591,10 @@
           "label": "Проверка: Скрытность",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -589,7 +622,10 @@
           "label": "Проверка: Вождение",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -617,7 +653,10 @@
           "label": "Проверка: Пилотирование: воздух",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -645,7 +684,10 @@
           "label": "Проверка: Пилотирование: море",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -673,7 +715,10 @@
           "label": "Проверка: Верховая езда",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -701,7 +746,10 @@
           "label": "Проверка: Бухгалтерия",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -729,7 +777,10 @@
           "label": "Проверка: Обращение с животными",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -757,7 +808,10 @@
           "label": "Проверка: Бюрократия",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -785,7 +839,10 @@
           "label": "Проверка: Бизнес",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -813,7 +870,10 @@
           "label": "Проверка: Сочинительство",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -841,7 +901,10 @@
           "label": "Проверка: Криминология",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -869,7 +932,10 @@
           "label": "Проверка: Криптография",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -897,7 +963,10 @@
           "label": "Проверка: Дедукция",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -925,7 +994,10 @@
           "label": "Проверка: Образование",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -953,7 +1025,10 @@
           "label": "Проверка: Азартные игры",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -981,7 +1056,10 @@
           "label": "Проверка: Язык",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1009,7 +1087,10 @@
           "label": "Проверка: Поиск информации",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1037,7 +1118,10 @@
           "label": "Проверка: Знаток района",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1065,7 +1149,10 @@
           "label": "Проверка: Наука",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1093,7 +1180,10 @@
           "label": "Проверка: Тактика",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1121,7 +1211,10 @@
           "label": "Проверка: Выживание в глуши",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1149,7 +1242,10 @@
           "label": "Проверка: Рукопашный бой",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1177,7 +1273,10 @@
           "label": "Проверка: Уклонение",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1205,7 +1304,10 @@
           "label": "Проверка: Боевые искусства",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1233,7 +1335,10 @@
           "label": "Проверка: Холодное оружие",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1261,7 +1366,10 @@
           "label": "Проверка: Актёрство",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1289,7 +1397,10 @@
           "label": "Проверка: Игра на инструменте",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1317,7 +1428,10 @@
           "label": "Проверка: Стрельба из лука",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1345,7 +1459,10 @@
           "label": "Проверка: Автоматический огонь",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1373,7 +1490,10 @@
           "label": "Проверка: Пистолеты",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1401,7 +1521,10 @@
           "label": "Проверка: Тяжёлое оружие",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1429,7 +1552,10 @@
           "label": "Проверка: Длинноствольное",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1457,7 +1583,10 @@
           "label": "Проверка: Подкуп",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1485,7 +1614,10 @@
           "label": "Проверка: Разговор",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1513,7 +1645,10 @@
           "label": "Проверка: Понимание людей",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1541,7 +1676,10 @@
           "label": "Проверка: Допрос",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1569,7 +1707,10 @@
           "label": "Проверка: Убеждение",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1597,7 +1738,10 @@
           "label": "Проверка: Уход за собой",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1625,7 +1769,10 @@
           "label": "Проверка: Знание улиц",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1653,7 +1800,10 @@
           "label": "Проверка: Торговля",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1681,7 +1831,10 @@
           "label": "Проверка: Стиль и гардероб",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1709,7 +1862,10 @@
           "label": "Проверка: Авиатехника",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1737,7 +1893,10 @@
           "label": "Проверка: Общая техника",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1765,7 +1924,10 @@
           "label": "Проверка: Кибертехника",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1793,7 +1955,10 @@
           "label": "Проверка: Подрывное дело",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1821,7 +1986,10 @@
           "label": "Проверка: Электроника и охранные системы",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1849,7 +2017,10 @@
           "label": "Проверка: Первая помощь",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1877,7 +2048,10 @@
           "label": "Проверка: Подделка",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1905,7 +2079,10 @@
           "label": "Проверка: Автотехника",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1933,7 +2110,10 @@
           "label": "Проверка: Рисунок и скульптура",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1961,7 +2141,10 @@
           "label": "Проверка: Парамедик",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1989,7 +2172,10 @@
           "label": "Проверка: Фото и видео",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -2017,7 +2203,10 @@
           "label": "Проверка: Взлом замков",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -2045,7 +2234,10 @@
           "label": "Проверка: Карманная кража",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -2073,7 +2265,10 @@
           "label": "Проверка: Морская техника",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -2101,7 +2296,10 @@
           "label": "Проверка: Оружейное дело",
           "tags": [
             "проверка"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",

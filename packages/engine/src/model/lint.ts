@@ -252,6 +252,15 @@ function emittedBy(steps: Step[] | undefined): string[] {
   return out;
 }
 
+function fieldRollProblems(system: System): Problem[] {
+  return system.fields
+    .filter(field => field.roll && !field.roll.die?.constant)
+    .map(field => ({
+      where: { tab: 'sheet' as const, field: field.tag }, level: 'error' as const,
+      text: `по полю «${field.label}» бросают, но кость не выбрана`,
+    }));
+}
+
 function sheetKindProblems(system: System): Problem[] {
   const out: Problem[] = [];
   const known = new Set(blockNames(system));
@@ -396,6 +405,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...paramProblems(system));
   out.push(...orphanProblems(system, compendium));
   out.push(...sheetKindProblems(system));
+  out.push(...fieldRollProblems(system));
   out.push(...danglingRows(system, compendium).map(d => ({ where: d.where, level: 'error' as const, text: d.text })));
   return out;
 }

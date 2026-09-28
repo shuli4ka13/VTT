@@ -56,7 +56,11 @@ export const field = z.object({
   tag,
   label: z.string(),
   group: z.string().optional(),
-  roll: z.object({ label: z.string().optional(), tags: z.array(z.string().min(1)).optional() }).passthrough().optional(),
+  roll: z.object({
+    label: z.string().optional(),
+    die: z.object({ constant: z.string().min(1) }).optional(),
+    tags: z.array(z.string().min(1)).optional(),
+  }).passthrough().optional(),
   value: fieldValue,
 
   control: control.optional(),

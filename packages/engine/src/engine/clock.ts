@@ -1,8 +1,5 @@
 import { durationOf, findEffect } from './effects.ts';
-import { newPass } from './calc.ts';
-import { resolveRoll } from './modifiers.ts';
-import { dieConstant, rollLead, unfoldDice } from './lead-die.ts';
-import { packRef, resolveNumber, resolveOptionalNumber } from './refs.ts';
+import { rollCheck } from './check.ts';
 import { EngineError } from './errors.ts';
 import { isDesk } from './owners.ts';
 import type { System, Sheet, Effect, WornEffect, Compendium, Die } from '../model/types.ts';
@@ -53,13 +50,8 @@ export function rollInitiative(
   if (!spec) return { order: fighters.map(s => s.id), rolls: [] };
 
   const rolls = fighters.map((sheet): InitiativeRoll => {
-    const pass = newPass(system, sheet, { compendium });
-    const ctx = { pass, owner: 'инициатива' };
-    const mods = resolveRoll(system, sheet, spec.tags ?? [], pass);
-    const def = unfoldDice(dieConstant(system, spec.die.constant), (ref, what) => resolveNumber(packRef(ref, ctx), ctx, what));
-    const rolled = rollLead(def, die, mods.edits);
-    const bonus = spec.bonus ? (resolveOptionalNumber(packRef(spec.bonus, ctx), ctx, 'бонус инициативы') ?? 0) : 0;
-    return { sheetId: sheet.id, rolls: rolled.rolls, total: rolled.total + bonus + mods.bonus, edits: rolled.edits };
+    const checked = rollCheck(system, sheet, spec, { compendium, die, owner: 'инициатива' });
+    return { sheetId: sheet.id, rolls: checked.rolled.rolls, total: checked.total, edits: checked.rolled.edits };
   });
 
   const order = [...rolls].sort((a, b) => b.total - a.total).map(r => r.sheetId);

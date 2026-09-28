@@ -182,11 +182,13 @@ const RACES = [
 export const TAKEN = DAMAGE_TAGS
   .map((tag, at) => [`taken_${at}`, tag]);
 
+const LEAD_DIE = { constant: 'lead_die' };
+
 const stored = (tag, label, group, type, def, extra = {}) => {
   const { control, roll, options, optionsFrom, ...bounds } = extra;
   return {
     tag, label, group,
-    ...(roll ? { roll } : {}),
+    ...(roll ? { roll: { ...roll, die: LEAD_DIE } } : {}),
     value: { kind: 'stored', type, default: def, ...bounds },
     ...(control ? { control } : {}),
     ...(options ? { options } : {}),
@@ -194,7 +196,7 @@ const stored = (tag, label, group, type, def, extra = {}) => {
   };
 };
 const formula = (tag, label, group, expr, roll) => ({
-  tag, label, group, ...(roll ? { roll } : {}), value: { kind: 'formula', expr },
+  tag, label, group, ...(roll ? { roll: { ...roll, die: LEAD_DIE } } : {}), value: { kind: 'formula', expr },
 });
 const lookup = (tag, label, group, table, arg, column) =>
   ({ tag, label, group, value: { kind: 'table', table, arg, ...(column ? { column } : {}) } });

@@ -22,6 +22,7 @@ import { effectiveDefault, sameValue } from './groups.ts';
 import { blockTree, BlockBranches } from './block-tree.tsx';
 import type { Field as FieldModel, FieldValue, System } from '@vtt/schema';
 import { RollTagsPick } from './roll-tags-pick.tsx';
+import { dieEntries } from './rules/dice-section.tsx';
 import { tableCallOf, writeTableCall } from '@vtt/engine/model/amounts';
 import type { TableCall } from '@vtt/engine/model/amounts';
 
@@ -372,11 +373,22 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
             size="sm"
             variant={field.roll ? 'primary' : undefined}
             onClick={() => edit(draft => {
-              draft.roll = draft.roll ? undefined : { label: `Проверка: ${draft.label}` };
+              const first = dieEntries(system)[0]?.[0];
+              draft.roll = draft.roll ? undefined : { label: `Проверка: ${draft.label}`, ...(first ? { die: { constant: first } } : {}) };
             })}
           >
             {field.roll ? 'Броски включены' : 'Включить броски'}
           </Button>
+          {field.roll ? (
+            <Select
+              value={field.roll.die?.constant ?? ''}
+              options={[['', '— какой костью —'], ...dieEntries(system).map(([key, c]) => [key, c.label || key] as const)] as never}
+              onChange={key => edit(draft => {
+                if (!draft.roll) return;
+                if (key) draft.roll.die = { constant: key }; else delete draft.roll.die;
+              })}
+            />
+          ) : null}
           {field.roll ? (
             <RollTagsPick
               system={system}

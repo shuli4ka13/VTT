@@ -137,7 +137,10 @@
           "tags": [
             "проверка",
             "сила"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -153,7 +156,10 @@
           "tags": [
             "проверка",
             "ловкость"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -169,7 +175,10 @@
           "tags": [
             "проверка",
             "телосложение"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -185,7 +194,10 @@
           "tags": [
             "проверка",
             "интеллект"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -201,7 +213,10 @@
           "tags": [
             "проверка",
             "мудрость"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -217,7 +232,10 @@
           "tags": [
             "проверка",
             "харизма"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -301,7 +319,10 @@
           "tags": [
             "спасбросок",
             "сила"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -339,7 +360,10 @@
           "tags": [
             "спасбросок",
             "ловкость"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -377,7 +401,10 @@
           "tags": [
             "спасбросок",
             "телосложение"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -415,7 +442,10 @@
           "tags": [
             "спасбросок",
             "интеллект"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -453,7 +483,10 @@
           "tags": [
             "спасбросок",
             "мудрость"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -491,7 +524,10 @@
           "tags": [
             "спасбросок",
             "харизма"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -521,7 +557,10 @@
             "проверка",
             "сила",
             "атлетика"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -551,7 +590,10 @@
             "проверка",
             "ловкость",
             "акробатика"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -581,7 +623,10 @@
             "проверка",
             "ловкость",
             "ловкость_рук"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -611,7 +656,10 @@
             "проверка",
             "ловкость",
             "скрытность"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -641,7 +689,10 @@
             "проверка",
             "интеллект",
             "магия"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -671,7 +722,10 @@
             "проверка",
             "интеллект",
             "история"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -701,7 +755,10 @@
             "проверка",
             "интеллект",
             "анализ"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -731,7 +788,10 @@
             "проверка",
             "интеллект",
             "природа"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -761,7 +821,10 @@
             "проверка",
             "интеллект",
             "религия"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -791,7 +854,10 @@
             "проверка",
             "мудрость",
             "уход_за_животными"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -821,7 +887,10 @@
             "проверка",
             "мудрость",
             "проницательность"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -851,7 +920,10 @@
             "проверка",
             "мудрость",
             "медицина"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -881,7 +953,10 @@
             "проверка",
             "мудрость",
             "внимательность"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -911,7 +986,10 @@
             "проверка",
             "мудрость",
             "выживание"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -941,7 +1019,10 @@
             "проверка",
             "харизма",
             "обман"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -971,7 +1052,10 @@
             "проверка",
             "харизма",
             "запугивание"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1001,7 +1085,10 @@
             "проверка",
             "харизма",
             "выступление"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1031,7 +1118,10 @@
             "проверка",
             "харизма",
             "убеждение"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
@@ -1048,7 +1138,10 @@
             "проверка",
             "ловкость",
             "инициатива"
-          ]
+          ],
+          "die": {
+            "constant": "lead_die"
+          }
         },
         "value": {
           "kind": "formula",
