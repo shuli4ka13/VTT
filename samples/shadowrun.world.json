@@ -154,7 +154,8 @@
           "min": 0,
           "max": 7
         },
-        "control": "pips"
+        "control": "pips",
+        "lives": "group"
       },
       {
         "tag": "edge_gained",
@@ -166,7 +167,8 @@
           "default": 0,
           "min": 0,
           "max": 2
-        }
+        },
+        "lives": "group"
       },
       {
         "tag": "essence",
@@ -967,7 +969,8 @@
           "type": "number",
           "default": 0,
           "min": 0
-        }
+        },
+        "lives": "group"
       },
       {
         "tag": "stun_max",
@@ -987,7 +990,8 @@
           "type": "number",
           "default": 0,
           "min": 0
-        }
+        },
+        "lives": "group"
       },
       {
         "tag": "stun_overflow",
@@ -1122,7 +1126,7 @@
         "tag": "battle",
         "label": "Идёт бой",
         "group": "Стол",
-        "desk": true,
+        "lives": "desk",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -4447,7 +4451,7 @@
       "id": "fiveeyes",
       "systemId": "shadowrun6",
       "of": "opponent",
-      "name": "Член мотобанды «Пятиглазые» (ПР 1)",
+      "name": "Член мотобанды «Пятиглазые» №1",
       "values": {
         "body": 2,
         "agility": 2,
@@ -4475,7 +4479,53 @@
           "of": "gang_jacket"
         }
       ],
+      "effects": [],
+      "group": "fiveeyes_squad"
+    },
+    {
+      "id": "fiveeyes_squad",
+      "systemId": "shadowrun6",
+      "name": "Отряд «Пятиглазые» (ПР 1)",
+      "values": {
+        "edge_left": 1
+      },
+      "has": [],
       "effects": []
+    },
+    {
+      "id": "fiveeyes_2",
+      "systemId": "shadowrun6",
+      "of": "opponent",
+      "name": "Член мотобанды «Пятиглазые» №2",
+      "values": {
+        "body": 2,
+        "agility": 2,
+        "reaction": 2,
+        "strength": 2,
+        "willpower": 2,
+        "logic": 2,
+        "intuition": 2,
+        "charisma": 1,
+        "athletics": 2,
+        "close_combat": 3,
+        "perception": 1,
+        "piloting": 2,
+        "firearms": 2,
+        "influence": 3
+      },
+      "has": [
+        {
+          "of": "bike_chain"
+        },
+        {
+          "of": "streetline"
+        },
+        {
+          "of": "gang_jacket"
+        }
+      ],
+      "effects": [],
+      "group": "fiveeyes_squad"
     },
     {
       "id": "sauron",

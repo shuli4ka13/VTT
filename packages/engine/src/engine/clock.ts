@@ -46,7 +46,7 @@ export function rollInitiative(
   system: System, sheets: Sheet[], compendium: Compendium, die: Die,
 ): { order: string[]; rolls: InitiativeRoll[] } {
   const spec = system.initiative;
-  const fighters = sheets.filter(sheet => !isDesk(sheet));
+  const fighters = sheets.filter(sheet => !isDesk(sheet) && !sheets.some(other => other.group === sheet.id));
   if (!spec) return { order: fighters.map(s => s.id), rolls: [] };
 
   const rolls = fighters.map((sheet): InitiativeRoll => {

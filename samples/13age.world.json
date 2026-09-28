@@ -203,6 +203,7 @@
       {
         "tag": "escalation",
         "label": "Кость эскалации",
+        "lives": "desk",
         "group": "Стол",
         "value": {
           "kind": "stored",
@@ -211,8 +212,7 @@
           "min": 0,
           "max": 6
         },
-        "control": "stepper",
-        "desk": true
+        "control": "stepper"
       },
       {
         "tag": "turn_standard",
@@ -256,6 +256,7 @@
       {
         "tag": "battle",
         "label": "Идёт бой",
+        "lives": "desk",
         "group": "В бою",
         "value": {
           "kind": "stored",
@@ -264,8 +265,7 @@
           "min": 0,
           "max": 1
         },
-        "control": "toggle",
-        "desk": true
+        "control": "toggle"
       }
     ],
     "groups": {

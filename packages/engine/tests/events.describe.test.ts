@@ -89,7 +89,7 @@ group('журнал говорит словами стола, а не движк
 group('журнал называет чужие и общие поля словами', () => {
   test('поле отправителя, получателя и стола — подпись с хозяином, выход шага — его подпись', () => {
     const owned = { ...system,
-      fields: [...system.fields, { tag: 'эскалация', label: 'Кость эскалации', desk: true, value: { kind: 'stored', type: 'number', default: 0 } }],
+      fields: [...system.fields, { tag: 'эскалация', label: 'Кость эскалации', lives: 'desk', value: { kind: 'stored', type: 'number', default: 0 } }],
       effects: { шаблон: { label: 'Удар', steps: [
         { id: 'п', type: 'threshold', roll: { tags: ['атака'], bonus: { expr: '@отправитель.хиты + @стол.эскалация' } }, versus: { expr: '@получатель.броня' } },
         { id: 'в', type: 'amount', fixed: { expr: '@п.natural >= 20 ? 2 : 1' } },

@@ -69,7 +69,7 @@ const stepsAt = (system: System, where: Where): Step[] | undefined => {
 function ownerText(ref: Reference, system: System): string | null {
   if (ref.kind === 'field' && ref.scope === 'plain') {
     const field = system.fields.find(f => f.tag === ref.key);
-    return field?.desk ? `поле «${field.label}» лежит на столе — пишите @стол.${field.tag}` : null;
+    return field?.lives === 'desk' ? `поле «${field.label}» лежит на столе — пишите @стол.${field.tag}` : null;
   }
   if (ref.kind !== 'field' || !ref.scope?.startsWith('owner:')) return null;
   const owner = ref.scope.slice('owner:'.length);
@@ -78,8 +78,8 @@ function ownerText(ref: Reference, system: System): string | null {
   if (owner === RECEIVER && ref.from.part === 'self') {
     return `в шагах отправителя получателя нет — они идут один раз до всех целей; пишите @отправитель.${field.tag}`;
   }
-  if (field.desk && owner !== DESK) return `поле «${field.label}» лежит на столе, а не на листе ${owner === SENDER ? 'отправителя' : 'получателя'} — пишите @стол.${field.tag}`;
-  if (!field.desk && owner === DESK) return `поле «${field.label}» лежит на листе персонажа, а не на столе — пишите @отправитель.${field.tag} или @получатель.${field.tag}`;
+  if (field.lives === 'desk' && owner !== DESK) return `поле «${field.label}» лежит на столе, а не на листе ${owner === SENDER ? 'отправителя' : 'получателя'} — пишите @стол.${field.tag}`;
+  if (field.lives !== 'desk' && owner === DESK) return `поле «${field.label}» лежит на листе персонажа, а не на столе — пишите @отправитель.${field.tag} или @получатель.${field.tag}`;
   return null;
 }
 

@@ -176,6 +176,7 @@
       {
         "tag": "alarm",
         "label": "Часы тревоги",
+        "lives": "desk",
         "group": "Стол",
         "value": {
           "kind": "stored",
@@ -184,13 +185,13 @@
           "min": 0,
           "max": 8
         },
-        "control": "pips",
-        "desk": true
+        "control": "pips"
       },
       {
         "tag": "heat",
         "label": "Жар банды",
-        "group": "Стол",
+        "lives": "group",
+        "group": "Банда",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -198,8 +199,55 @@
           "min": 0,
           "max": 9
         },
-        "control": "stepper",
-        "desk": true
+        "control": "stepper"
+      },
+      {
+        "tag": "rep",
+        "label": "Репутация",
+        "group": "Банда",
+        "lives": "group",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0
+        }
+      },
+      {
+        "tag": "coin",
+        "label": "Монеты банды",
+        "group": "Банда",
+        "lives": "group",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 2,
+          "min": 0
+        }
+      },
+      {
+        "tag": "wanted",
+        "label": "Уровень розыска",
+        "group": "Банда",
+        "lives": "group",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0
+        }
+      },
+      {
+        "tag": "tier",
+        "label": "Ярус",
+        "group": "Банда",
+        "lives": "group",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0
+        }
       }
     ],
     "groups": {
@@ -359,7 +407,7 @@
         "label": "Залечь на дно",
         "group": "Банда",
         "activation": "manual",
-        "description": "Тревога сбрасывается, жар банды растёт.",
+        "description": "Тревога на столе сбрасывается, жар банды растёт.",
         "steps": [
           {
             "type": "apply",
@@ -380,7 +428,7 @@
             "direction": "set",
             "targetModifiers": false,
             "value": {
-              "expr": "min(9, @стол.heat + 1)"
+              "expr": "min(9, @heat + 1)"
             }
           }
         ]
@@ -534,7 +582,8 @@
           "of": "lay_low"
         }
       ],
-      "effects": []
+      "effects": [],
+      "group": "crew"
     },
     {
       "id": "mira",
@@ -571,6 +620,21 @@
           "of": "lay_low"
         }
       ],
+      "effects": [],
+      "group": "crew"
+    },
+    {
+      "id": "crew",
+      "systemId": "blades",
+      "name": "Банда «Вороны»",
+      "values": {
+        "heat": 1,
+        "rep": 0,
+        "coin": 2,
+        "wanted": 0,
+        "tier": 0
+      },
+      "has": [],
       "effects": []
     },
     {
@@ -578,8 +642,7 @@
       "systemId": "blades",
       "name": "Стол",
       "values": {
-        "alarm": 0,
-        "heat": 1
+        "alarm": 0
       },
       "has": [],
       "effects": []

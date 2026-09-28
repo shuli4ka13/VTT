@@ -13,6 +13,7 @@ import type { Role, Phase } from './bus.ts';
 import { EngineError } from '../engine/errors.ts';
 import { incomingRollModifiers } from '../engine/modifiers.ts';
 import { holderOf } from './bonds.ts';
+import { withShared, changedShared } from './desk.ts';
 import { refusalWords } from './refusal.ts';
 import type { Clock } from '../engine/clock.ts';
 import type {
@@ -36,7 +37,7 @@ export interface WorldContext {
 
   clock?: Clock | null;
 
-  desk?: Sheet | null;
+  shared?: Sheet[] | null;
 }
 
 export interface Envelope {
@@ -76,7 +77,7 @@ export interface ReceiveResult {
 
   results: Record<string, unknown>;
 
-  desk?: Sheet;
+  shared?: Sheet[];
 }
 
 export function bindingsOf(record: CompendiumRecord, system: System): Binding[] {
@@ -132,7 +133,7 @@ export interface SendOptions {
 
 export function send(
   actionId: string,
-  { system, sheet, compendium, die, against, claims, inputs, kept, desk }: WorldContext & { sheet: Sheet } & SendOptions,
+  { system, sheet, compendium, die, against, claims, inputs, kept, shared }: WorldContext & { sheet: Sheet } & SendOptions,
 ): Envelope {
   const action = actionOf(actionId, { system, compendium });
 
@@ -153,7 +154,7 @@ export function send(
     ...(targetPass ? { against: (tags: readonly string[]) => incomingRollModifiers(tags, targetPass) } : {}),
     ...(claims?.length ? { claims } : {}),
     ...(kept?.length ? { kept } : {}),
-  }, { system, compendium, die, desk });
+  }, { system, compendium, die, shared });
 
   return {
     kind: 'effect',
@@ -167,24 +168,24 @@ export function send(
 
 export function receive(
   envelope: Envelope,
-  { system, sheet, compendium, die, claims, clock, desk }: WorldContext & { sheet: Sheet } & { claims?: string[] },
+  { system, sheet, compendium, die, claims, clock, shared }: WorldContext & { sheet: Sheet } & { claims?: string[] },
 ): ReceiveResult {
   const holder = findEffect(system, envelope.effect);
-  const early: { sheet: Sheet; reactions: Report[]; spent: string[]; desk?: Sheet | null } = envelope.reply
+  const early: { sheet: Sheet; reactions: Report[]; spent: string[]; shared?: Sheet[] } = envelope.reply
     ? { sheet, reactions: [], spent: [] }
-    : fireBefore(envelope, sheet, { system, compendium, die, clock, desk });
-  const deskBefore = early.desk ?? desk;
+    : fireBefore(envelope, sheet, { system, compendium, die, clock, shared });
+  const sharedBefore = withShared(shared ?? [], early.shared);
   const out = runCall(envelope.steps || [], {
     sheet: early.sheet, owner: `конверт «${envelope.label}»`, source: envelope.from,
     ...(claims?.length ? { claims } : {}),
     ...(holder?.bond ? { bond: { from: envelope.from, by: holderOf(envelope.effect, holder)! } } : {}),
-  }, { system, compendium, die, clock, desk: deskBefore });
+  }, { system, compendium, die, clock, shared: sharedBefore });
 
-  const deskAfter = out.desk ?? deskBefore;
-  const fired: { sheet: Sheet; replies: Envelope[]; spent: string[]; reactions: Report[]; desk?: Sheet | null } = envelope.reply
+  const sharedAfter = withShared(sharedBefore, out.shared);
+  const fired: { sheet: Sheet; replies: Envelope[]; spent: string[]; reactions: Report[]; shared?: Sheet[] } = envelope.reply
     ? { sheet: out.sheet, replies: [], spent: [], reactions: [] }
-    : fireTriggers(envelope, out, { system, compendium, die, clock, desk: deskAfter });
-  const deskFinal = fired.desk ?? deskAfter;
+    : fireTriggers(envelope, out, { system, compendium, die, clock, shared: sharedAfter });
+  const sharedChanged = changedShared(withShared(sharedAfter, fired.shared), shared);
   const reactions = [...early.reactions, ...fired.reactions];
   const answered: Envelope[] = (out.answers ?? []).map(call => ({
     kind: 'effect', effect: call.event, from: sheet.id, to: envelope.from, reply: true, action: call.event,
@@ -196,7 +197,7 @@ export function receive(
     sheet: fired.sheet,
     replies: [...answered, ...fired.replies],
     results: out.results,
-    ...(deskFinal && deskFinal !== desk ? { desk: deskFinal } : {}),
+    ...(sharedChanged.length ? { shared: sharedChanged } : {}),
     report: {
       kind: envelope.kind,
       effect: envelope.effect,
@@ -218,11 +219,11 @@ export function receive(
 
 function fireBefore(
   envelope: Envelope, sheet: Sheet, ctx: WorldContext,
-): { sheet: Sheet; reactions: Report[]; spent: string[]; desk?: Sheet | null } {
+): { sheet: Sheet; reactions: Report[]; spent: string[]; shared?: Sheet[] } {
   const reactions: Report[] = [];
   const spent: string[] = [];
   let current = sheet;
-  let desk = ctx.desk ?? null;
+  let shared = [...(ctx.shared ?? [])];
 
   const occasion = { kind: 'action' as const, role: 'target' as const, phase: 'before' as const, ask: false, effect: envelope.effect, emitted: [] };
   for (const { id, effect, handler } of listening(ctx.system, sheet, occasion, { compendium: ctx.compendium })) {
@@ -237,9 +238,9 @@ function fireBefore(
     }
     if (!fits) continue;
 
-    const done = runOnSelf(id, withSteps(effect, handler.steps), current, {}, owner, { ...ctx, desk });
+    const done = runOnSelf(id, withSteps(effect, handler.steps), current, {}, owner, { ...ctx, shared });
     current = done.sheet;
-    if (done.desk) desk = done.desk;
+    shared = withShared(shared, done.shared);
     reactions.push(done.report);
     if (burnsUse(effect)) {
       current = spendUse(current, id);
@@ -247,7 +248,7 @@ function fireBefore(
     }
   }
 
-  return { sheet: current, reactions, spent, ...(desk && desk !== ctx.desk ? { desk } : {}) };
+  return { sheet: current, reactions, spent, ...(changedShared(shared, ctx.shared).length ? { shared: changedShared(shared, ctx.shared) } : {}) };
 }
 
 export function senderResults(envelope: Envelope): Record<string, unknown> {
@@ -263,15 +264,15 @@ function withEvent(results: Record<string, unknown>, heard: EmittedEvent | undef
 
 function runOnSelf(
   id: string, effect: Effect, sheet: Sheet, results: Record<string, unknown>, owner: string,
-  { system, compendium, die, clock, desk }: WorldContext, label?: string,
-): { sheet: Sheet; report: Report; desk?: Sheet | null } {
-  const world = { system, compendium, die, clock, desk };
+  { system, compendium, die, clock, shared }: WorldContext, label?: string,
+): { sheet: Sheet; report: Report; shared?: Sheet[] } {
+  const world = { system, compendium, die, clock, shared };
   const call = { effectId: id, effect, sheet, owner, args: (effect.args || {}) as Record<string, unknown>, props: null, seed: results };
   const packed = packCall(call, world);
   const done = runCall(packed, { sheet, owner, seed: results }, world);
   return {
     sheet: done.sheet,
-    ...(done.desk ? { desk: done.desk } : {}),
+    ...(done.shared ? { shared: done.shared } : {}),
     report: {
       kind: 'effect', effect: id, from: sheet.id, label: label || effect.label || id,
       reply: false, trace: done.trace, stopped: done.stopped,
@@ -312,12 +313,12 @@ function fireTriggers(
   envelope: Envelope,
   out: { sheet: Sheet; results: Record<string, unknown>; emitted: EmittedEvent[] },
   ctx: WorldContext,
-): { sheet: Sheet; replies: Envelope[]; spent: string[]; reactions: Report[]; desk?: Sheet | null } {
+): { sheet: Sheet; replies: Envelope[]; spent: string[]; reactions: Report[]; shared?: Sheet[] } {
   const replies: Envelope[] = [];
   const spent: string[] = [];
   const reactions: Report[] = [];
   let sheet = out.sheet;
-  let desk = ctx.desk ?? null;
+  let shared = [...(ctx.shared ?? [])];
 
   const occasion = { kind: 'action' as const, role: 'target' as const, phase: 'after' as const, ask: false, effect: envelope.effect, emitted: out.emitted };
   for (const { id, effect, handler, heard } of listening(ctx.system, sheet, occasion, { compendium: ctx.compendium })) {
@@ -329,9 +330,9 @@ function fireTriggers(
     if (runsAtOther(handler)) {
       replies.push(replyFrom(id, body, sheet, envelope.from, results, owner, ctx));
     } else {
-      const done = runOnSelf(id, body, sheet, results, owner, { ...ctx, desk });
+      const done = runOnSelf(id, body, sheet, results, owner, { ...ctx, shared });
       sheet = done.sheet;
-      if (done.desk) desk = done.desk;
+      shared = withShared(shared, done.shared);
       reactions.push(done.report);
     }
 
@@ -341,7 +342,7 @@ function fireTriggers(
     }
   }
 
-  return { sheet, replies, spent, reactions, ...(desk && desk !== ctx.desk ? { desk } : {}) };
+  return { sheet, replies, spent, reactions, ...(changedShared(shared, ctx.shared).length ? { shared: changedShared(shared, ctx.shared) } : {}) };
 }
 
 export function fireOutgoing(
@@ -349,12 +350,12 @@ export function fireOutgoing(
   outcome: { results: Record<string, unknown>; emitted: EmittedEvent[] },
   { sheet: sender, targetId }: { sheet: Sheet; targetId: string },
   ctx: WorldContext,
-): { sheet: Sheet; replies: Envelope[]; spent: string[]; reactions: Report[]; desk?: Sheet | null } {
+): { sheet: Sheet; replies: Envelope[]; spent: string[]; reactions: Report[]; shared?: Sheet[] } {
   const replies: Envelope[] = [];
   const spent: string[] = [];
   const reactions: Report[] = [];
   let sheet = sender;
-  let desk = ctx.desk ?? null;
+  let shared = [...(ctx.shared ?? [])];
 
   const occasion = { kind: 'action' as const, role: 'sender' as const, phase: 'after' as const, ask: false, effect: envelope.effect, emitted: outcome.emitted };
   for (const { id, effect, handler, heard } of listening(ctx.system, sheet, occasion, { compendium: ctx.compendium })) {
@@ -366,9 +367,9 @@ export function fireOutgoing(
     if (runsAtOther(handler)) {
       replies.push(replyFrom(id, body, sheet, targetId, results, owner, ctx));
     } else {
-      const done = runOnSelf(id, body, sheet, results, owner, { ...ctx, desk });
+      const done = runOnSelf(id, body, sheet, results, owner, { ...ctx, shared });
       sheet = done.sheet;
-      if (done.desk) desk = done.desk;
+      shared = withShared(shared, done.shared);
       reactions.push(done.report);
     }
 
@@ -378,7 +379,7 @@ export function fireOutgoing(
     }
   }
 
-  return { sheet, replies, spent, reactions, ...(desk && desk !== ctx.desk ? { desk } : {}) };
+  return { sheet, replies, spent, reactions, ...(changedShared(shared, ctx.shared).length ? { shared: changedShared(shared, ctx.shared) } : {}) };
 }
 
 export interface Offer { id: string; label: string; cost?: string; claims: string[] }

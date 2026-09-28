@@ -7,7 +7,7 @@ import type { Clock } from '../engine/clock.ts';
 import { listening, subscribers, withSteps, MOMENT_PREFIX, FIELD_PREFIX } from './bus.ts';
 import { EngineError } from '../engine/errors.ts';
 import { effectLabelOf } from './envelope.ts';
-import { deskOf, isDesk } from './desk.ts';
+import { sharedOf, isShared } from './desk.ts';
 import type { Report, WorldContext } from './envelope.ts';
 import type { Sheet, Effect, Handler, Step, WornEffect } from '../model/types.ts';
 
@@ -50,7 +50,7 @@ export type TurnOp = 'start' | 'next' | 'stop' | 'scene' | 'short-rest' | 'long-
 
 export function momentsOfTurn(op: TurnOp, before: Clock, after: Clock, sheets: Sheet[]): MomentEvent[] {
   const everyone = (moment: MomentKey): MomentEvent[] =>
-    sheets.filter(sheet => !isDesk(sheet)).map(sheet => ({ moment, sheetId: sheet.id }));
+    sheets.filter(sheet => !isShared(sheet, sheets)).map(sheet => ({ moment, sheetId: sheet.id }));
   if (op === 'start') {
     return [
       ...everyone('combat-start'),
@@ -91,14 +91,13 @@ export function fire(firing: Firing, sheets: Sheet[], world: WorldContext): { sh
   const { id, effect, owner, seed, handler } = firing;
   if (handler && !holds(handler, live, seed, owner, world)) return null;
 
-  const here = { ...world, desk: deskOf(sheets) ?? world.desk ?? null };
+  const here = { ...world, shared: sharedOf(world.system, sheets) };
   const call = { effectId: id, effect: withSteps(effect, firing.steps), sheet: live, owner, args: {}, props: null, seed };
   const done = runCall(packCall(call, here), { sheet: live, owner, seed }, here);
   let next = done.sheet;
   if (handler && burnsUse(effect)) next = spendUse(next, id);
-  const desk = done.desk;
   return {
-    sheets: sheets.map(s => (s.id === next.id ? next : desk && s.id === desk.id ? desk : s)),
+    sheets: sheets.map(s => (s.id === next.id ? next : done.shared?.find(u => u.id === s.id) ?? s)),
     fired: {
       sheetId: firing.sheetId,
       report: {

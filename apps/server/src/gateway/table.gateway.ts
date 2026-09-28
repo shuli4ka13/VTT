@@ -192,6 +192,25 @@ export class TableGateway {
     }
   }
 
+  @SubscribeMessage('sheet:group')
+  async setSheetGroup(@MessageBody() raw: unknown, @ConnectedSocket() socket: WebSocket) {
+    const guest = this.guestOf(socket);
+    if (!guest) return this.fail(socket, 'сначала войдите в комнату');
+
+    const parsed = api.clientMessage.safeParse({ type: 'sheet:group', ...(raw as object) });
+    if (!parsed.success || parsed.data.type !== 'sheet:group') {
+      return this.fail(socket, 'группа листа не проходит схему');
+    }
+
+    const { roomId, sheetId, group } = parsed.data;
+    try {
+      const delta = await this.roomsService.setSheetGroup(guest.userId, roomId, sheetId, group);
+      this.broadcast(roomId, { type: 'room:delta', delta });
+    } catch (err) {
+      this.fail(socket, (err as Error).message);
+    }
+  }
+
   @SubscribeMessage('sheet:belong')
   async setBelonging(@MessageBody() raw: unknown, @ConnectedSocket() socket: WebSocket) {
     const guest = this.guestOf(socket);

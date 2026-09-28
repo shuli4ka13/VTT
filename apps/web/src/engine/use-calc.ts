@@ -17,7 +17,7 @@ export interface Reader {
   rollOf: (tags: string[]) => RollResolution | null;
 }
 
-export function useReader(system: System, sheet: Sheet | null, compendium: Compendium, desk?: Sheet | null): Reader {
+export function useReader(system: System, sheet: Sheet | null, compendium: Compendium, shared?: readonly Sheet[] | null): Reader {
   return useMemo(() => {
     if (!sheet) {
       const idle: Reader = {
@@ -29,8 +29,8 @@ export function useReader(system: System, sheet: Sheet | null, compendium: Compe
 
     let pass: Pass;
     try {
-      const table = desk !== undefined ? desk : hasDesk(system) ? blankDesk(system) : null;
-      pass = newPass(system, sheet, { compendium, desk: table });
+      const common = shared !== undefined ? shared : hasDesk(system) ? [blankDesk(system)] : null;
+      pass = newPass(system, sheet, { compendium, shared: common });
     } catch (err) {
 
       const message = (err as Error).message;
@@ -53,7 +53,7 @@ export function useReader(system: System, sheet: Sheet | null, compendium: Compe
     };
     return reader;
 
-  }, [system, sheet, compendium, desk]);
+  }, [system, sheet, compendium, shared]);
 }
 
 export function show(value: Computed): { text: string; title?: string; bad: boolean } {

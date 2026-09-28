@@ -733,3 +733,39 @@ describe('лист заводят с типом из системы', () => {
     await expect(rooms.createSheet(me, roomId, 'Дракон', 'дракон')).rejects.toThrow('нет типа листа «дракон»');
   });
 });
+
+describe('группа листов за столом', () => {
+  it('ведущий ставит лист в группу, урон по участнику пишется в лист группы', async () => {
+    const token = (await http().post('/auth/login').send({ name: 'Ведущий отряда' })).body.token as string;
+    const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
+    const me = (await as(http().get('/auth/me'))).body.userId as string;
+
+    const system = {
+      id: 'отряды', name: 'С отрядами',
+      fields: [{ tag: 'урон', label: 'Урон отряда', lives: 'group', value: { kind: 'stored', type: 'number', default: 0 } }],
+      effects: { удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'apply', target: { tag: 'урон' }, direction: 'add', value: { expr: '3' } }] } },
+      records: { приём: { kind: 'action', label: 'Приём', props: [], bindings: [] } },
+    };
+    const book = { records: [{ id: 'удар', rk: 'приём', label: 'Удар', bindings: [{ label: 'Удар', effect: 'удар', args: {} }] }] };
+    const sheet = (id: string) => ({ id, systemId: 'отряды', name: id, values: {}, has: [{ of: 'удар' }], effects: [] });
+
+    const systemId = (await as(http().post('/systems')).send({ title: 'С отрядами', system })).body.id;
+    const bookId = (await as(http().post('/compendiums')).send({ title: 'Книга отрядов', systemId, compendium: book })).body.id;
+    await as(http().post(`/systems/${systemId}/publish`)).send({}).expect(201);
+    await as(http().post(`/compendiums/${bookId}/publish`)).send({}).expect(201);
+    const worldId = (await as(http().post('/worlds')).send({
+      title: 'Мир отрядов', systemId, compendiumIds: [bookId], sheets: [sheet('герой'), sheet('гоблин'), sheet('отряд')],
+    })).body.id;
+    const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол отрядов' })).body.id as string;
+    const rooms = app.get(RoomsService);
+
+    const joined = await rooms.setSheetGroup(me, roomId, 'гоблин', 'отряд');
+    expect(joined.log.map(e => e.text).join(' ')).toContain('в группе «отряд»');
+    await expect(rooms.setSheetGroup(me, roomId, 'отряд', 'гоблин')).rejects.toThrow('группа для других');
+
+    await rooms.act(me, { roomId, actionId: 'удар:0', fromId: 'герой', toId: 'гоблин' });
+    const state = (await as(http().get(`/rooms/${roomId}`))).body.sheets as { id: string; values: Record<string, number> }[];
+    expect(state.find(s => s.id === 'отряд')!.values.урон).toBe(3);
+    expect(state.find(s => s.id === 'гоблин')!.values.урон).toBeUndefined();
+  });
+});

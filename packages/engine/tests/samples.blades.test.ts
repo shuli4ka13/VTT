@@ -13,6 +13,7 @@ const queue = (...values: number[]) => () => values.shift() ?? 1;
 const act = (sheets: Sheet[], actionId: string, who: string, ...dice: number[]) =>
   exchange({ system, compendium: book, die: queue(...dice), sheets, actionId, fromId: who, toId: who });
 const desk = (sheets: Sheet[]) => sheets.find(s => s.id === 'стол')!.values;
+const crew = (sheets: Sheet[]) => sheets.find(s => s.id === 'crew')!.values;
 
 group('Blades: эффекты крутят часы на столе', () => {
   test('образец чист для проверок конструктора', () => {
@@ -35,11 +36,13 @@ group('Blades: эффекты крутят часы на столе', () => {
     eq(desk(sheets).alarm, 8);
   });
 
-  test('«Залечь на дно» сбрасывает тревогу и греет банду', () => {
+  test('«Залечь на дно» сбрасывает тревогу на столе и греет банду — Жар один на всю банду', () => {
     let sheets = act(fresh(), 'act_skirmish:0', 'vex', 3, 1).sheets;
     sheets = act(sheets, 'lay_low:0', 'mira').sheets;
     eq(desk(sheets).alarm, 0);
-    eq(desk(sheets).heat, 2);
+    eq(crew(sheets).heat, 2);
+    sheets = act(sheets, 'lay_low:0', 'vex').sheets;
+    eq(crew(sheets).heat, 3, 'Векс греет ту же банду, что и Мира');
   });
 
   test('пул берётся по рейтингу бросающего: у Миры в скрытности 3 кости', () => {

@@ -2645,7 +2645,7 @@
       {
         "tag": "battle",
         "label": "Идёт бой",
-        "desk": true,
+        "lives": "desk",
         "value": {
           "kind": "stored",
           "type": "number",

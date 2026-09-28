@@ -34,7 +34,7 @@ function RoomTable({ room }: { room: RoomState }) {
   const targets = room.sheets.filter(s => to.includes(s.id));
   const people = room.sheets.filter(s => !isDesk(s));
   const desk = room.sheets.find(isDesk) ?? null;
-  const deskFields = room.system.fields.filter(f => f.desk);
+  const deskFields = room.system.fields.filter(f => f.lives === 'desk');
 
   return (
     <Columns
@@ -87,7 +87,7 @@ function RoomTable({ room }: { room: RoomState }) {
                     >
                       <option value="">— ничего —</option>
                       {room.system.fields
-                        .filter(f => !f.desk && f.value.kind === 'stored' && f.value.type === 'number')
+                        .filter(f => f.lives !== 'desk' && f.value.kind === 'stored' && f.value.type === 'number')
                         .map(f => <option key={f.tag} value={f.tag}>{f.label}</option>)}
                     </select>
                   </>

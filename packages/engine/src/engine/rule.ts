@@ -1,7 +1,7 @@
 import { whoseOf } from '../events/durations.ts';
 import { stepModule } from './steps/index.ts';
 import { rolledSoFar } from './rolled.ts';
-import { findField } from './calc.ts';
+import { findField, holderIdOf, livesOn } from './calc.ts';
 import { requireEffect, stackingOf, usesMax } from './effects.ts';
 import { packRef, resolveRef } from './refs.ts';
 import { EngineError } from './errors.ts';
@@ -26,7 +26,7 @@ export interface RuleReport {
 
   emitted: EmittedEvent[];
 
-  desk?: Sheet;
+  shared?: Sheet[];
 
   answers?: { event: string; args: Record<string, unknown> }[];
 }
@@ -73,9 +73,22 @@ export function guardHolds(guard: unknown, ctx: StepContext): boolean {
 export function resolveRule(steps: StepData[], ctx: StepContext): RuleReport {
 
   const values: Record<string, StoredValue> = { ...ctx.sheet.values };
-  const deskValues: Record<string, StoredValue> | null = ctx.desk ? { ...ctx.desk.values } : null;
-  let deskTouched = false;
-  const onDesk = (tag: string): boolean => Boolean(findField(ctx.system, tag)?.desk);
+  const holders = new Map<string, Record<string, StoredValue>>();
+  const touchedHolders = new Set<string>();
+  const holderOf = (tag: string): Record<string, StoredValue> | null => {
+    const field = findField(ctx.system, tag);
+    const id = holderIdOf(field, ctx.sheet);
+    if (!id || id === ctx.sheet.id) return null;
+    if (holders.has(id)) return holders.get(id)!;
+    const sheet = (ctx.shared ?? []).find(s => s.id === id);
+    if (!sheet) {
+      if (livesOn(field) === 'group') return null;
+      throw new EngineError(`${who(ctx)}: поле «${tag}» лежит на столе, а стола здесь нет`);
+    }
+    const copy = { ...sheet.values };
+    holders.set(id, copy);
+    return copy;
+  };
   const worn: WornEffect[] = [...(ctx.sheet.effects || [])];
   const changes: Change[] = [];
   const effects: string[] = [];
@@ -84,9 +97,9 @@ export function resolveRule(steps: StepData[], ctx: StepContext): RuleReport {
   const trace: Record<string, unknown>[] = [];
 
   const read = (tag: string): unknown => {
-    if (onDesk(tag)) {
-      if (!deskValues) throw new EngineError(`${who(ctx)}: поле «${tag}» лежит на столе, а стола здесь нет`);
-      if (Object.prototype.hasOwnProperty.call(deskValues, tag)) return deskValues[tag];
+    const held = holderOf(tag);
+    if (held) {
+      if (Object.prototype.hasOwnProperty.call(held, tag)) return held[tag];
       const field = findField(ctx.system, tag)!;
       return field.value.kind === 'stored' ? field.value.default : undefined;
     }
@@ -100,7 +113,12 @@ export function resolveRule(steps: StepData[], ctx: StepContext): RuleReport {
     const from = read(tag);
     if (Object.is(from, to)) return;
     changes.push({ tag, from, to });
-    if (onDesk(tag) && deskValues) { deskValues[tag] = to; deskTouched = true; return; }
+    const held = holderOf(tag);
+    if (held) {
+      held[tag] = to;
+      touchedHolders.add(holderIdOf(findField(ctx.system, tag), ctx.sheet)!);
+      return;
+    }
     values[tag] = to;
   };
 
@@ -193,7 +211,12 @@ export function resolveRule(steps: StepData[], ctx: StepContext): RuleReport {
   const sheet = touched ? { ...ctx.sheet, values, effects: worn } : ctx.sheet;
   return {
     sheet, changes, effects, removed, results, trace, stopped, emitted,
-    ...(deskTouched && ctx.desk && deskValues ? { desk: { ...ctx.desk, values: deskValues } } : {}),
+    ...(touchedHolders.size ? {
+      shared: [...touchedHolders].map(id => {
+        const sheet = (ctx.shared ?? []).find(s => s.id === id)!;
+        return { ...sheet, values: holders.get(id)! };
+      }),
+    } : {}),
     ...(answers.length ? { answers } : {}),
   };
 }

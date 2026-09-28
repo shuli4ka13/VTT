@@ -7,9 +7,9 @@ export class SheetShapeError extends Error {
   }
 }
 
-const TOP_KEYS = ['id', 'systemId', 'of', 'name', 'values', 'has', 'effects'];
+const TOP_KEYS = ['id', 'systemId', 'of', 'group', 'name', 'values', 'has', 'effects'];
 
-const OPTIONAL_KEYS = ['of'];
+const OPTIONAL_KEYS = ['of', 'group'];
 
 const isScalar = (v: unknown) => v === null || ['number', 'boolean', 'string'].includes(typeof v);
 
@@ -95,6 +95,7 @@ export function deserializeSheet(json: string): Sheet {
     id: parsed.id,
     systemId: parsed.systemId,
     ...(typeof parsed.of === 'string' ? { of: parsed.of } : {}),
+    ...(typeof parsed.group === 'string' ? { group: parsed.group } : {}),
     name: parsed.name,
     values: sortKeys(parsed.values) as Sheet['values'],
     has: parsed.has.map((e: { values?: object }) => ({ ...e, ...(e.values ? { values: { ...e.values } } : {}) })),

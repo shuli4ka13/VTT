@@ -9,7 +9,7 @@ import type { Sheet, System } from '../model/types.ts';
 export interface SelfRun {
   sheet: Sheet;
   report: Report | null;
-  desk?: Sheet;
+  shared?: Sheet[];
 }
 
 export function selfRefusal(run: SelfRun, world: { system: System }, label: string): string | null {
@@ -42,7 +42,7 @@ export function runSelfTrack(
 
   return {
     sheet: done.sheet,
-    ...(done.desk ? { desk: done.desk } : {}),
+    ...(done.shared ? { shared: done.shared } : {}),
     report: {
       kind: 'self', effect: action.effect, from: sheet.id, label: action.label,
       reply: false, trace: done.trace, stopped: done.stopped,

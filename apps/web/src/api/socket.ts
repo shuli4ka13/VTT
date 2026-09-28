@@ -73,6 +73,10 @@ export class TableSocket {
     this.send('sheet:of', { roomId, sheetId, of });
   }
 
+  setSheetGroup(roomId: string, sheetId: string, group: string | null): void {
+    this.send('sheet:group', { roomId, sheetId, group });
+  }
+
   setBelonging(
     roomId: string, sheetId: string,
     list: 'has' | 'effects', id: string, on: boolean, off?: boolean,

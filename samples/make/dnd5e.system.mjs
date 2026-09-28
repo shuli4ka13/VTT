@@ -267,7 +267,7 @@ export function fields() {
     out.push(stored(tag, label, 'В бою', 'number', 1, { min: 0, max: 1, control: 'pips' }));
   }
   out.push(stored('turn_attacks', 'Атак осталось', 'В бою', 'number', 0, { min: 0, max: 4, control: 'pips' }));
-  out.push({ ...stored('battle', 'Идёт бой', 'В бою', 'number', 0, { min: 0, max: 1, control: 'toggle' }), desk: true });
+  out.push({ ...stored('battle', 'Идёт бой', 'В бою', 'number', 0, { min: 0, max: 1, control: 'toggle' }), lives: 'desk' });
   out.push(stored('crit_from', 'Крит на костях от', 'Атака', 'number', 20, { min: 18, max: 20 }));
   out.push(formula('sneak_dice', 'Костей скрытой атаки', 'Атака', 'ceil(@level / 2)'));
 

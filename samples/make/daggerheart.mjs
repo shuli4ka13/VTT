@@ -55,9 +55,9 @@ const COMMUNITIES = [
 ];
 
 const stored = (tag, label, group, def, extra = {}) => {
-  const { control, desk, roll, ...bounds } = extra;
+  const { control, lives, roll, ...bounds } = extra;
   return {
-    tag, label, group, ...(roll ? { roll } : {}), ...(desk ? { desk } : {}),
+    tag, label, group, ...(roll ? { roll } : {}), ...(lives ? { lives } : {}),
     value: { kind: 'stored', type: 'number', default: def, ...bounds }, ...(control ? { control } : {}),
   };
 };
@@ -110,7 +110,7 @@ function fields() {
   out.push(stored('difficulty', 'Сложность', 'Противник', 11, { min: 1 }));
   out.push(stored('attack_mod', 'Модификатор атаки', 'Противник', 1));
 
-  out.push(stored('fear', 'Страх ведущего', 'Стол', 0, { min: 0, max: 12, desk: true }));
+  out.push(stored('fear', 'Страх ведущего', 'Стол', 0, { min: 0, max: 12, lives: 'desk' }));
   return out;
 }
 

@@ -44,7 +44,7 @@ export interface StepContext extends RefContext {
 
   sender?: Record<string, unknown>;
 
-  desk?: Sheet | null;
+  shared?: readonly Sheet[] | null;
 
   answer?: (call: { event: string; args: Record<string, unknown> }) => void;
 

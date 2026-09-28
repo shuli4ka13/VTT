@@ -274,7 +274,7 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
     if (field.roll?.die?.constant) out.push({ kind: 'constant', key: field.roll.die.constant, from });
     if (field.value.kind === 'formula') exprRefs(field.value.expr, from, noScope, out);
     if (field.value.kind === 'stored' && field.value.type === 'choice') out.push({ kind: 'table', key: field.value.from ?? '', from });
-    if (field.desk) {
+    if (field.lives === 'desk') {
       for (const ref of out) if (ref.from === from && ref.scope === 'plain') delete ref.scope;
     }
   }

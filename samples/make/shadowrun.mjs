@@ -54,8 +54,8 @@ function fields() {
   out.push({ tag: 'metatype', label: 'Метатип', group: 'Личное дело', value: { kind: 'stored', type: 'choice', from: 'metatypes', default: 'человек' } });
   for (const [tag, label] of ATTRIBUTES) out.push(stored(tag, label, 'Характеристики', 3, { min: 0, max: 13 }));
   out.push(stored('edge', 'Преимущество (характеристика)', 'Особые', 2, { min: 1, max: 7 }));
-  out.push(stored('edge_left', 'Очки Преимущества', 'Особые', 2, { min: 0, max: 7, control: 'pips' }));
-  out.push(stored('edge_gained', 'Преимущества получено за раунд (не больше 2)', 'Особые', 0, { min: 0, max: 2 }));
+  out.push({ ...stored('edge_left', 'Очки Преимущества', 'Особые', 2, { min: 0, max: 7, control: 'pips' }), lives: 'group' });
+  out.push({ ...stored('edge_gained', 'Преимущества получено за раунд (не больше 2)', 'Особые', 0, { min: 0, max: 2 }), lives: 'group' });
   out.push(stored('essence', 'Сущность', 'Особые', 6, { min: 0, max: 6 }));
   out.push(stored('magic', 'Магия', 'Особые', 0, { min: 0 }));
   out.push(stored('resonance', 'Резонанс', 'Особые', 0, { min: 0 }));
@@ -81,9 +81,9 @@ function fields() {
   out.push(formula('unarmed_rating', 'Значение атаки без оружия', 'Защита', '@strength + @reaction'));
 
   out.push(formula('physical_max', 'Счётчик здоровья: ячеек', 'Счётчики', `8 + ceil(@body / 2) + ${ofMeta('toughness')}`));
-  out.push(stored('physical', 'Физический урон', 'Счётчики', 0, { min: 0 }));
+  out.push({ ...stored('physical', 'Физический урон', 'Счётчики', 0, { min: 0 }), lives: 'group' });
   out.push(formula('stun_max', 'Счётчик оглушения: ячеек', 'Счётчики', '8 + ceil(@willpower / 2)'));
-  out.push(stored('stun', 'Оглушающий урон', 'Счётчики', 0, { min: 0 }));
+  out.push({ ...stored('stun', 'Оглушающий урон', 'Счётчики', 0, { min: 0 }), lives: 'group' });
   out.push(formula('stun_overflow', 'Лишний оглушающий — в физический', 'Счётчики', 'max(0, @stun - @stun_max)'));
   out.push(formula('physical_total', 'Физический урон с переливом', 'Счётчики', '@physical + @stun_overflow'));
   out.push(formula('critical', 'Критический урон', 'Счётчики', 'max(0, @physical_total - @physical_max)'));
@@ -99,7 +99,7 @@ function fields() {
   out.push(stored('init_dice', 'Кубиков инициативы', 'Инициатива', 1, { min: 1, max: 5 }));
   out.push(stored('simple_left', 'Простых действий осталось', 'Инициатива', 2, { min: 0, max: 5, control: 'pips' }));
   out.push(stored('complex_left', 'Сложных действий осталось', 'Инициатива', 1, { min: 0, max: 1, control: 'pips' }));
-  out.push({ tag: 'battle', label: 'Идёт бой', group: 'Стол', desk: true, value: { kind: 'stored', type: 'number', default: 0 } });
+  out.push({ tag: 'battle', label: 'Идёт бой', group: 'Стол', lives: 'desk', value: { kind: 'stored', type: 'number', default: 0 } });
   return out;
 }
 
@@ -516,10 +516,15 @@ const sheets = () => [
   sheet('humanis', 'Головорез из «Хуманиса» (ПР 0)', 'opponent', {
     body: 2, agility: 2, reaction: 2, strength: 2, willpower: 2, logic: 2, intuition: 2, charisma: 1, athletics: 1, close_combat: 3, influence: 1,
   }, ['club']),
-  sheet('fiveeyes', 'Член мотобанды «Пятиглазые» (ПР 1)', 'opponent', {
+  { ...sheet('fiveeyes', 'Член мотобанды «Пятиглазые» №1', 'opponent', {
     body: 2, agility: 2, reaction: 2, strength: 2, willpower: 2, logic: 2, intuition: 2, charisma: 1,
     athletics: 2, close_combat: 3, perception: 1, piloting: 2, firearms: 2, influence: 3,
-  }, ['bike_chain', 'streetline', 'gang_jacket']),
+  }, ['bike_chain', 'streetline', 'gang_jacket']), group: 'fiveeyes_squad' },
+  { id: 'fiveeyes_squad', systemId: 'shadowrun6', name: 'Отряд «Пятиглазые» (ПР 1)', values: { edge_left: 1 }, has: [], effects: [] },
+  { ...sheet('fiveeyes_2', 'Член мотобанды «Пятиглазые» №2', 'opponent', {
+    body: 2, agility: 2, reaction: 2, strength: 2, willpower: 2, logic: 2, intuition: 2, charisma: 1,
+    athletics: 2, close_combat: 3, perception: 1, piloting: 2, firearms: 2, influence: 3,
+  }, ['bike_chain', 'streetline', 'gang_jacket']), group: 'fiveeyes_squad' },
   sheet('sauron', 'Громила «Сынов Саурона» (ПР 2)', 'opponent', {
     metatype: 'орк', body: 3, agility: 2, reaction: 2, strength: 4, willpower: 2, logic: 1, intuition: 2, charisma: 1,
     athletics: 2, close_combat: 4, perception: 3, firearms: 3, influence: 5,

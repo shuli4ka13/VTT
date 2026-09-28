@@ -116,3 +116,17 @@ group('Shadowrun 6: Преимущество и действия', () => {
     ok(refused.includes('сложное действие'), refused);
   });
 });
+
+group('Shadowrun 6: отряд пешек', () => {
+  test('счётчик урона и Преимущество у отряда общие: урон по одному виден у другого', () => {
+    const sheets = [sheetOf('razor'), sheetOf('fiveeyes'), sheetOf('fiveeyes_2'), sheetOf('fiveeyes_squad')];
+    const out = exchange({
+      system, compendium, die: dice([11, 6], [6, 1], [2, 1]), sheets, actionId: 'predator_vi:0', fromId: 'razor', toId: 'fiveeyes',
+      inputs: { дистанция: 'близкая' },
+    });
+    eq(after(out, 'fiveeyes_squad').values.physical, 3 + 11);
+    const second = after(out, 'fiveeyes_2');
+    eq(calc(system, second, 'physical', newPass(system, second, { compendium, shared: out.sheets.filter(s => s.id === 'fiveeyes_squad') })), 14);
+    eq(calc(system, second, 'edge_left', newPass(system, second, { compendium, shared: out.sheets.filter(s => s.id === 'fiveeyes_squad') })), 1, 'общий запас Преимущества = ПР отряда');
+  });
+});

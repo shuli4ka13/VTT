@@ -66,7 +66,7 @@ export const field = z.object({
 
   control: control.optional(),
 
-  desk: z.boolean().optional(),
+  lives: z.enum(['desk', 'group']).optional(),
 }).passthrough();
 
 export const diceTerm = z.object({
@@ -317,6 +317,7 @@ export const sheet = z.object({
   id: z.string().min(1),
   systemId: z.string(),
   of: z.string().min(1).optional(),
+  group: z.string().min(1).optional(),
   name: z.string(),
   values: z.record(z.string(), storedValue),
 

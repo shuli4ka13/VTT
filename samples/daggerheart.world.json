@@ -476,7 +476,7 @@
         "tag": "fear",
         "label": "Страх ведущего",
         "group": "Стол",
-        "desk": true,
+        "lives": "desk",
         "value": {
           "kind": "stored",
           "type": "number",

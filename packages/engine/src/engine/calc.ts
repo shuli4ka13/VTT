@@ -2,7 +2,7 @@ import { compile } from '../formula/index.ts';
 import { UnknownTagError, CycleError, EngineError } from './errors.ts';
 import { toolsOf } from './refs.ts';
 import { referencedTable, splitPath, walk } from './navigate.ts';
-import { ownerOf, DESK } from './owners.ts';
+import { ownerOf, DESK, DESK_ID } from './owners.ts';
 import { collectModifiers, applyValueModifiers } from './modifiers.ts';
 import { wornEffects } from './effects.ts';
 import type { CollectedModifiers } from './modifiers.ts';
@@ -19,17 +19,25 @@ export interface Pass {
   resolve: Resolve;
 
   desk?: Pass;
+  group?: Pass;
 }
 
 export interface PassOptions {
   compendium?: Compendium;
   modifiers?: CollectedModifiers;
-  desk?: Sheet | null;
+  shared?: readonly Sheet[] | null;
 }
 
-export const deskSystemOf = (system: System): System => ({ ...system, fields: system.fields.filter(f => f.desk) });
+export const livesOn = (field: Pick<Field, 'lives'> | null | undefined): 'sheet' | 'desk' | 'group' => field?.lives ?? 'sheet';
 
-export const sheetSystemOf = (system: System): System => ({ ...system, fields: system.fields.filter(f => !f.desk) });
+export const deskSystemOf = (system: System): System => ({ ...system, fields: system.fields.filter(f => livesOn(f) === 'desk') });
+
+export const groupSystemOf = (system: System): System => ({ ...system, fields: system.fields.filter(f => livesOn(f) === 'group') });
+
+export const sheetSystemOf = (system: System): System => ({ ...system, fields: system.fields.filter(f => livesOn(f) !== 'desk') });
+
+export const holderIdOf = (field: Pick<Field, 'lives'> | null | undefined, sheet: Pick<Sheet, 'group'>): string | null =>
+  livesOn(field) === 'desk' ? DESK_ID : livesOn(field) === 'group' && sheet.group ? sheet.group : null;
 
 export function findField(system: System, tag: string): Field | null {
   return system.fields.find(f => f.tag === tag) || null;
@@ -48,7 +56,12 @@ export function newPass(system: System, sheet: Sheet, options: PassOptions = {})
     resolve: () => undefined,
   };
 
-  if (options.desk) pass.desk = newPass(deskSystemOf(system), options.desk);
+  const deskSheet = options.shared?.find(s => s.id === DESK_ID);
+  if (deskSheet && sheet.id !== DESK_ID) pass.desk = newPass(deskSystemOf(system), deskSheet);
+  const groupSheet = sheet.group ? options.shared?.find(s => s.id === sheet.group) : undefined;
+  if (groupSheet && groupSheet.id !== sheet.id) {
+    pass.group = newPass(system, groupSheet, { compendium: options.compendium, shared: options.shared?.filter(s => s.id !== groupSheet.id) });
+  }
 
   pass.resolve = tag => {
     const owned = ownerOf(tag);
@@ -77,6 +90,7 @@ export const wornCount = (system: System, sheet: Sheet, id: string, compendium?:
 export function calc(system: System, sheet: Sheet, tag: string, pass: Pass = newPass(system, sheet)): unknown {
   const field = findField(system, tag);
   if (!field) throw new UnknownTagError(tag, pass.path[pass.path.length - 1]);
+  if (livesOn(field) === 'group' && pass.group) return calc(system, pass.group.sheet, tag, pass.group);
 
   if (pass.memo.has(tag)) return pass.memo.get(tag);
   if (pass.visiting.has(tag)) throw new CycleError([...pass.path, tag]);

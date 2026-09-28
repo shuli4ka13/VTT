@@ -1450,7 +1450,7 @@
           "max": 1
         },
         "control": "toggle",
-        "desk": true
+        "lives": "desk"
       },
       {
         "tag": "crit_from",

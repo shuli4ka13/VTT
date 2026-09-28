@@ -139,11 +139,11 @@ export function explainName(
       : value.kind === 'table' ? `по таблице «${system.tables?.[value.table]?.label ?? value.table}»`
         : `хранится, по умолчанию ${String(value.default ?? '—')}`;
     return {
-      kind: field.desk ? 'поле стола' : 'поле листа',
+      kind: field.lives === 'desk' ? 'поле стола' : field.lives === 'group' ? 'поле группы' : 'поле листа',
       title: field.label ?? field.tag,
       facts: [...ownerFact, ['как получается', how]],
       from: [value.kind === 'stored' ? 'вписывают на листе или меняют эффекты' : 'считается само из других полей'],
-      shown: [field.desk ? 'на листе стола' : `на листе, блок «${field.group ?? 'без блока'}»`],
+      shown: [field.lives === 'desk' ? 'на листе стола' : field.lives === 'group' ? 'на листе группы, если лист в группе; иначе на своём' : `на листе, блок «${field.group ?? 'без блока'}»`],
       users: usersBy(usage, 'field', field.tag, system),
       field: field.tag,
       go: { label: 'открыть на вкладке «Лист»', pick: { activeTab: 'sheet', activeFieldTag: field.tag } },

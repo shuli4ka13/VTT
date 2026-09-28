@@ -13,7 +13,7 @@ const system = {
   id: 'стол', name: 'стол',
   fields: [
     { tag: 'хп', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
-    { tag: 'страх', label: 'Страх', desk: true, value: { kind: 'stored', type: 'number', default: 0 } },
+    { tag: 'страх', label: 'Страх', lives: 'desk', value: { kind: 'stored', type: 'number', default: 0 } },
   ],
   effects: {
     удар: {

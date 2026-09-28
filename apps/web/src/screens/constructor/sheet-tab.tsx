@@ -173,11 +173,12 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
               }}
             />
           </Field>
-          <Field label="Где лежит" hint={field.desk ? 'Одно значение на всю комнату: кость эскалации, пул Страха, часы. В формулах эффектов — @стол.…' : undefined}>
+          <Field label="Где лежит" hint={field.lives === 'desk' ? 'Одно значение на всю комнату: кость эскалации, пул Страха, часы. В формулах эффектов — @стол.…'
+            : field.lives === 'group' ? 'Одно значение на группу листов: общий счётчик отряда, Жара банды. Лист без группы хранит своё.' : undefined}>
             <Select
-              value={field.desk ? 'desk' : 'sheet'}
-              options={[['sheet', 'на листе персонажа'], ['desk', 'на столе — одно на всю комнату']] as const}
-              onChange={next => edit(draft => { if (next === 'desk') draft.desk = true; else delete draft.desk; })}
+              value={field.lives ?? 'sheet'}
+              options={[['sheet', 'на листе персонажа'], ['group', 'в группе — одно на отряд или банду'], ['desk', 'на столе — одно на всю комнату']] as const}
+              onChange={next => edit(draft => { if (next === 'sheet') delete draft.lives; else draft.lives = next; })}
             />
           </Field>
           <Field label="Блок">
@@ -433,7 +434,8 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
 const TYPE_WORDS: Record<string, string> = { number: 'число', text: 'текст', boolean: 'да / нет' };
 
 const storedWords = (system: System, field: FieldModel): string => {
-  if (field.desk) return `на столе · ${TYPE_WORDS[(field.value as { type: string }).type] ?? ''}`;
+  if (field.lives === 'group') return `в группе · ${TYPE_WORDS[(field.value as { type: string }).type] ?? ''}`;
+  if (field.lives === 'desk') return `на столе · ${TYPE_WORDS[(field.value as { type: string }).type] ?? ''}`;
   const table = choiceTableOf(field);
   const from = table ? system.tables?.[table]?.label || table : '';
   const shape = field.control ? CONTROLS[field.control].toLowerCase() : '';

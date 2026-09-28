@@ -145,7 +145,7 @@ describe('панель «Стол»', () => {
     members: [{ userId: 'u', name: 'Я', role }],
     system: {
       id: 'x', name: 'x', effects: {},
-      fields: [{ tag: 'страх', label: 'Страх', desk: true, value: { kind: 'stored', type: 'number', default: 0 } }],
+      fields: [{ tag: 'страх', label: 'Страх', lives: 'desk', value: { kind: 'stored', type: 'number', default: 0 } }],
     },
     sheets: [
       { id: 'а', systemId: 'x', name: 'Арвен', values: {}, has: [], effects: [] },

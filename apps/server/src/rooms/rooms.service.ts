@@ -24,7 +24,7 @@ import { fireMoments, describeMoment, momentsOfTurn } from '@vtt/engine/events/m
 import { releaseHolder } from '@vtt/engine/events/bonds';
 import { settle as settleSheets } from '@vtt/engine/events/settle';
 import { runSelfTrack, selfRefusal } from '@vtt/engine/events/self';
-import { deskOf } from '@vtt/engine/events/desk';
+import { deskOf, sharedOf } from '@vtt/engine/events/desk';
 import { DESK_ID, isDesk } from '@vtt/engine/engine/owners';
 import { rollCheck, fieldCheck } from '@vtt/engine/engine/check';
 import {
@@ -85,7 +85,7 @@ export class RoomsService {
       compendium: JSON.stringify(world.compendium),
       createdAt: this.now(),
     });
-    const deskFields = world.system.fields.filter(field => field.desk);
+    const deskFields = world.system.fields.filter(field => field.lives === 'desk');
     const withDesk = deskFields.length && !deskOf(world.sheets)
       ? [...world.sheets, { id: DESK_ID, systemId: world.system.id, name: 'Стол', values: {}, has: [], effects: [] } as Sheet]
       : world.sheets;
@@ -178,6 +178,10 @@ export class RoomsService {
 
   setSheetKind(userId: string, roomId: string, sheetId: string, of: string | null): Promise<RoomDelta> {
     return this.inTurn(roomId, () => this.runSetSheetKind(userId, roomId, sheetId, of));
+  }
+
+  setSheetGroup(userId: string, roomId: string, sheetId: string, group: string | null): Promise<RoomDelta> {
+    return this.inTurn(roomId, () => this.runSetSheetGroup(userId, roomId, sheetId, group));
   }
 
   claimSheet(userId: string, roomId: string, sheetId: string | null): Promise<RoomDelta> {
@@ -285,7 +289,7 @@ export class RoomsService {
 
     const clock = await this.clockOf(intent.roomId);
     let envelope: Envelope;
-    let own: { sheet: Sheet; report: Report | null; desk?: Sheet } | null = null;
+    let own: { sheet: Sheet; report: Report | null; shared?: Sheet[] } | null = null;
     try {
       const from = sheets.find(s => s.id === intent.fromId);
       const to = sheets.find(s => s.id === intent.toId);
@@ -296,11 +300,11 @@ export class RoomsService {
       if (trouble) throw new BadRequestException(trouble);
       const inputs = normalizeInputs(asked, intent.inputs);
       envelope = send(intent.actionId, {
-        system, compendium, die: this.die, clock, sheet: from, against: to, claims: intent.edits ?? [], desk: deskOf(sheets),
+        system, compendium, die: this.die, clock, sheet: from, against: to, claims: intent.edits ?? [], shared: sharedOf(system, sheets),
         ...(Object.keys(inputs).length ? { inputs } : {}),
       });
       own = runSelfTrack(intent.actionId, from, {
-        system, compendium, die: this.die, clock, desk: deskOf(sheets),
+        system, compendium, die: this.die, clock, shared: sharedOf(system, sheets),
         ...(Object.keys(inputs).length ? { inputs } : {}),
       });
       const refused = selfRefusal(own, { system }, envelope.label);
@@ -310,7 +314,7 @@ export class RoomsService {
       throw new BadRequestException((err as Error).message);
     }
     const afterOwn = own?.report
-      ? sheets.map(s => (s.id === own!.sheet.id ? own!.sheet : own!.desk && s.id === own!.desk.id ? own!.desk : s))
+      ? sheets.map(s => (s.id === own!.sheet.id ? own!.sheet : own!.shared?.find(u => u.id === s.id) ?? s))
       : sheets;
     const shared = sharedHolderOf(system, envelope.effect);
     const released = shared ? releaseHolder(system, afterOwn, intent.fromId, shared) : { sheets: afterOwn, broken: [] };
@@ -374,7 +378,7 @@ export class RoomsService {
           const target = sheetOf(targets[at]!);
           const taped = tapeDie(this.die);
           const dry = receive(state.envelope, {
-            ...ctx, die: taped.die, sheet: target, claims: claimsFor(target.id), desk: deskOf(sheets),
+            ...ctx, die: taped.die, sheet: target, claims: claimsFor(target.id), shared: sharedOf(system, sheets),
           });
           const results = dry.results;
           tapes[target.id] = taped.tape;
@@ -496,10 +500,10 @@ export class RoomsService {
       for (const reply of reacted.replies) {
         const target = sheets.find(s => s.id === reply.to);
         if (!target) continue;
-        const back = receive(reply, { system, compendium, die: this.die, clock, sheet: target, desk: deskOf(sheets) });
-        sheets = sheets.map(s => (s.id === back.sheet.id ? back.sheet : back.desk && s.id === back.desk.id ? back.desk : s));
+        const back = receive(reply, { system, compendium, die: this.die, clock, sheet: target, shared: sharedOf(system, sheets) });
+        sheets = sheets.map(s => (s.id === back.sheet.id ? back.sheet : back.shared?.find(u => u.id === s.id) ?? s));
         if (back.sheet !== target) changed.push(back.sheet);
-        if (back.desk) changed.push(back.desk);
+        changed.push(...back.shared ?? []);
         lines.push(describeEntry({ fromId: asked.id, toId: target.id, report: back.report }, system, sheets));
       }
       if (!intent.chosen.length) lines.push(`${asked.name} пропускает реакцию`);
@@ -520,7 +524,7 @@ export class RoomsService {
         const asked = asksOf(record.intent.actionId, { system, compendium });
         const inputs = normalizeInputs(asked, record.intent.inputs);
         envelope = send(record.intent.actionId, {
-          system, compendium, die: this.die, clock, sheet: from, against: to, claims, desk: deskOf(sheets),
+          system, compendium, die: this.die, clock, sheet: from, against: to, claims, shared: sharedOf(system, sheets),
           ...(Object.keys(inputs).length ? { inputs } : {}),
           kept: envelope.steps,
         });
@@ -649,6 +653,39 @@ export class RoomsService {
     }
     const touched = await this.persistSheets(roomId, before, settled, [next]);
     const log = lines.length ? await this.appendLog(roomId, lines) : [];
+    return { roomId, sheets: touched, log };
+  }
+
+  private async runSetSheetGroup(userId: string, roomId: string, sheetId: string, group: string | null): Promise<RoomDelta> {
+    const room = await this.requireRoom(roomId);
+    await this.assertMaySheet(roomId, userId, sheetId);
+    const { system, compendium } = this.worldOf(room);
+    const before = (await this.db.select().from(roomSheets).where(eq(roomSheets.roomId, roomId)))
+      .map(entry => JSON.parse(entry.data) as Sheet);
+    const sheet = before.find(entry => entry.id === sheetId);
+    if (!sheet) throw new NotFoundException(`в комнате нет листа «${sheetId}»`);
+    if (group !== null) {
+      const holder = before.find(entry => entry.id === group);
+      if (!holder) throw new BadRequestException(`в комнате нет листа «${group}»`);
+      if (group === sheetId) throw new BadRequestException('лист не может быть группой самому себе');
+      if (isDesk(holder)) throw new BadRequestException('стол и так общий для всех — группой его не назначают');
+      if (before.some(entry => entry.group === sheetId)) throw new BadRequestException(`«${sheet.name}» — группа для других листов, в группу её не поставить`);
+      if (holder.group) throw new BadRequestException(`«${holder.name}» сам состоит в группе — группы не вкладываются`);
+    }
+    const { group: _was, ...rest } = sheet;
+    void _was;
+    const next: Sheet = group === null ? rest : { ...rest, group };
+
+    const lines: string[] = [group === null ? `«${sheet.name}» вышел из группы` : `«${sheet.name}» теперь в группе «${before.find(entry => entry.id === group)!.name}»`];
+    let settled = before.map(entry => (entry.id === sheetId ? next : entry));
+    try {
+      const world = { system, compendium, die: this.die, clock: await this.clockOf(roomId) };
+      settled = this.settle(world, before, settled, lines);
+    } catch (err) {
+      throw new BadRequestException((err as Error).message);
+    }
+    const touched = await this.persistSheets(roomId, before, settled, [next]);
+    const log = await this.appendLog(roomId, lines);
     return { roomId, sheets: touched, log };
   }
 

@@ -6,8 +6,8 @@ const system = {
   id: 'стол', name: 'стол',
   fields: [
     { tag: 'хп', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
-    { tag: 'эскалация', label: 'Кость эскалации', desk: true, value: { kind: 'stored', type: 'number', default: 0 } },
-    { tag: 'страх', label: 'Страх', desk: true, value: { kind: 'stored', type: 'number', default: 0 } },
+    { tag: 'эскалация', label: 'Кость эскалации', lives: 'desk', value: { kind: 'stored', type: 'number', default: 0 } },
+    { tag: 'страх', label: 'Страх', lives: 'desk', value: { kind: 'stored', type: 'number', default: 0 } },
   ],
   effects: {
     удар: {
@@ -49,7 +49,7 @@ group('стол — третий участник с полями', () => {
   });
 
   test('у системы без полей стола чтение со стола — внятная ошибка', () => {
-    const plain = { ...system, fields: system.fields.filter(f => !f.desk) } as System;
+    const plain = { ...system, fields: system.fields.filter(f => f.lives !== 'desk') } as System;
     let why = '';
     try {
       exchange({ system: plain, compendium: book, die: () => 1, sheets: [pc('бьёт'), pc('держит')], actionId: 'удар:0', fromId: 'бьёт', toId: 'держит' });
@@ -76,7 +76,7 @@ group('проверки конструктора про стол', () => {
 group('стол в формулах листа', () => {
   const withSheetFormula = (expr: string, desk = false) => {
     const next = JSON.parse(JSON.stringify(system)) as System;
-    next.fields.push({ tag: 'атака', label: 'Атака', ...(desk ? { desk: true } : {}), value: { kind: 'formula', expr } } as never);
+    next.fields.push({ tag: 'атака', label: 'Атака', ...(desk ? { lives: 'desk' } : {}), value: { kind: 'formula', expr } } as never);
     return next;
   };
 
@@ -84,7 +84,7 @@ group('стол в формулах листа', () => {
     const { calc, newPass } = await import('../src/engine/calc.ts');
     const s = withSheetFormula('5 + @стол.эскалация');
     const hero = pc('герой');
-    eq(calc(s, hero, 'атака', newPass(s, hero, { desk: desk({ эскалация: 3 }) })), 8);
+    eq(calc(s, hero, 'атака', newPass(s, hero, { shared: [desk({ эскалация: 3 })] })), 8);
   });
 
   test('поле стола без @стол в формуле листа — ошибка словами', async () => {

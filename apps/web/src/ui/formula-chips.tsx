@@ -134,9 +134,9 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
     : null);
 
   const fields = useMemo(() => {
-    const desk = system.fields.filter(f => f.desk).map(f => ({ tag: `${DESK}.${f.tag}`, label: f.label ?? f.tag, group: 'стол' }));
+    const desk = system.fields.filter(f => f.lives === 'desk').map(f => ({ tag: `${DESK}.${f.tag}`, label: f.label ?? f.tag, group: 'стол' }));
     const sheet = [
-      ...system.fields.filter(f => !f.desk).map(f => ({ tag: f.tag, label: f.label ?? f.tag, via: false })),
+      ...system.fields.filter(f => f.lives !== 'desk').map(f => ({ tag: f.tag, label: f.label ?? f.tag, via: false })),
       ...[...paths].map(([tag, label]) => ({ tag, label, via: true })),
     ];
     const offered = new Set((extraOptions ?? []).map(o => o.name).filter(Boolean));

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRoom } from '../../store/room.ts';
 import { tableSocket } from '../../api/socket.ts';
 import { useReader } from '../../engine/use-calc.ts';
@@ -11,7 +11,8 @@ import { Lobby } from './lobby.tsx';
 import type { Sheet, System, RoomState } from '@vtt/schema';
 import { availableActions } from '@vtt/engine/events/envelope';
 import { recordsOf, isItem, sheetKinds, sheetKindOf, shownOn } from '@vtt/engine/model/owned';
-import { deskSystemOf, sheetSystemOf } from '@vtt/engine/engine/calc';
+import { deskSystemOf, groupSystemOf, sheetSystemOf } from '@vtt/engine/engine/calc';
+import { isGroup, sharedOf } from '@vtt/engine/events/desk';
 import { isDesk as atDesk } from '@vtt/engine/engine/owners';
 
 export function SheetScreen() {
@@ -50,7 +51,7 @@ export function SheetScreen() {
                     <ListItem
                       key={item.id}
                       name={item.name ?? item.id}
-                      meta={atDesk(item) ? 'общий для всех' : sheetKindOf(room.system as System, item)?.label ?? 'лист'}
+                      meta={atDesk(item) ? 'общий для всех' : isGroup(item, room.sheets) ? 'группа' : sheetKindOf(room.system as System, item)?.label ?? 'лист'}
                       active={item.id === mySheetId}
                       onClick={() => pickSheet(item.id)}
                     />
@@ -83,9 +84,10 @@ export function SheetScreen() {
 
 function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   const isDesk = atDesk(sheet);
-  const desk = room.sheets.find(atDesk) ?? null;
-  const system = isDesk ? deskSystemOf(room.system as System) : sheetSystemOf(room.system as System);
-  const reader = useReader(isDesk ? system : room.system as System, sheet, room.compendium, isDesk ? null : desk);
+  const asGroup = !isDesk && isGroup(sheet, room.sheets);
+  const shared = useMemo(() => sharedOf(room.system as System, room.sheets), [room.system, room.sheets]);
+  const system = isDesk ? deskSystemOf(room.system as System) : asGroup ? groupSystemOf(room.system as System) : sheetSystemOf(room.system as System);
+  const reader = useReader(isDesk || asGroup ? system : room.system as System, sheet, room.compendium, isDesk || asGroup ? null : shared);
   const kinds = sheetKinds(room.system as System);
   const kind = sheetKindOf(room.system as System, sheet);
   const only = kind?.blocks?.length ? system.fields.filter(shownOn(room.system as System, sheet)).map(f => f.tag) : undefined;
@@ -93,6 +95,17 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   return (
     <>
       {isDesk ? <span className="faint">общий стол комнаты — видят все, правит ведущий</span> : <ClaimRow room={room} sheet={sheet} />}
+      {!isDesk && !asGroup ? (
+        <Field label="Группа" hint="Поля группы — общий счётчик отряда, Жара банды — хранятся на листе группы.">
+          <Select
+            value={sheet.group ?? ''}
+            options={[['', '— не в группе —'], ...room.sheets
+              .filter(other => other.id !== sheet.id && !atDesk(other) && !other.group)
+              .map(other => [other.id, other.name ?? other.id] as const)] as never}
+            onChange={next => tableSocket.setSheetGroup(room.id, sheet.id, next || null)}
+          />
+        </Field>
+      ) : null}
       {!isDesk && kinds.length ? (
         <Field label="Тип листа">
           <Select
