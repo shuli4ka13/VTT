@@ -53,7 +53,7 @@ group('пробный прогон эффекта на манекенах', () =
     throws(() => trial({ system, effectId: 'нету', from: a, to: a }), 'нету');
   });
 
-  test('образцы аргументов по виду потребности', () => {
+  test('образцы аргументов по виду входы', () => {
     const system = SAMPLE_WORLDS[0]!.system as System;
     eq(sampleArg('dice', system), '1к6');
     eq(sampleArg('number', system), 1);

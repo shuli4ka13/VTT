@@ -31,7 +31,7 @@ describe('normalizeDice', () => {
 describe('optionsFor', () => {
   it('собирает поля, запись, результаты и кости; prop не предлагает', () => {
     const groups = new Set(optionsFor(ctx, undefined, []).map(o => o.group));
-    expect(groups).toEqual(new Set(['Поля листа', 'Из записи', 'Результаты шагов', 'Кости']));
+    expect(groups).toEqual(new Set(['Поля листа', 'Входы эффекта', 'Результаты шагов', 'Кости']));
     expect(new Set(optionsFor(ctx, undefined, [], 'target').map(o => o.group))).toContain('Поля цели');
     expect(optionsFor(ctx, ['tag'], [], 'target')[0]!.name).toBe('получатель.armor');
   });
@@ -146,7 +146,7 @@ describe('SlotInput', () => {
     expect(screen.queryByLabelText('убрать')).toBeNull();
   });
 
-  it('пункт «новая потребность» зовёт колбэк и коммитит его ref', () => {
+  it('пункт «новая вход» зовёт колбэк и коммитит его ref', () => {
     let got: unknown = null;
     render(<SlotInput value={undefined} onChange={next => { got = next; }} context={ctx}
       onCreateFromRecord={() => ({ param: 'новая' })} />);

@@ -1,7 +1,7 @@
 import { group, test, eq, ok } from './harness.ts';
 import { kindsFor, KIND_LABEL, isReference } from '../src/words/kinds.ts';
 
-group('один словарь видов на таблицы, свойства записей и потребности эффекта', () => {
+group('один словарь видов на таблицы, свойства записей и входы эффекта', () => {
   test('у одного вида одна подпись везде', () => {
     for (const place of ['table', 'prop', 'param'] as const) {
       for (const [kind, label] of kindsFor(place)) eq(label, KIND_LABEL[kind], `${place}: ${kind}`);

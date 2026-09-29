@@ -34,7 +34,7 @@ const sheet = (id: string): Sheet => ({ id, systemId: 'x', name: id, values: { h
 group('значение, которое называет человек за столом', () => {
   const asked = asksOf('ствол:0', { system, compendium });
 
-  test('спрашиваются только объявленные и не закрытые записью потребности', () => {
+  test('спрашиваются только объявленные и не закрытые записью входы', () => {
     eq(asked.map(p => p.key).join(','), 'дистанция,прицел');
     eq(asked[0]!.ask.by, 'actor');
     eq(asked[1]!.ask.by, 'gm');

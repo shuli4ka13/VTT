@@ -43,7 +43,7 @@ describe('changeReadback', () => {
     const amount = { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'p_1' }, bonus: { expr: '#power_mod' } } as unknown as Step;
     const apply = { type: 'apply', target: { tag: 'wounds' }, direction: 'subtract', value: { expr: '@dmg' } } as unknown as Step;
     expect(joinReadback(changeReadback(apply, amount, system, effect)))
-      .toBe('Цель теряет ⟨кость урона — из записи⟩ + Мод Силы из «Текущие хиты».');
+      .toBe('Цель теряет ⟨вход «кость урона»⟩ + Мод Силы из «Текущие хиты».');
   });
 
   it('состояние по id читается лейблом', () => {

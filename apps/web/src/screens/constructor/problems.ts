@@ -68,7 +68,7 @@ export function pathWords(issue: string, system: System): string {
     if (key === 'tables' && named) { words.push(`таблица ${labelOf(system.tables, named)}`); i++; continue; }
     if (key === 'fields' && index !== null) { words.push(`поле «${system.fields[index]?.label ?? index + 1}»`); i++; continue; }
     if ((key === 'steps' || key === 'receive') && index !== null) { words.push(`${STEP.one} ${index + 1}`); i++; continue; }
-    if (key === 'bindings' && index !== null) { words.push(`привязка ${index + 1}`); i++; continue; }
+    if (key === 'bindings' && index !== null) { words.push(`кнопка ${index + 1}`); i++; continue; }
     if (key === 'modifiers' && index !== null) { words.push(`модификатор ${index + 1}`); i++; continue; }
     if (key === 'params' && index !== null) { words.push(`вход ${index + 1}`); i++; continue; }
     if (key === 'on' && index !== null) { words.push(`«когда» №${index + 1}`); i++; continue; }

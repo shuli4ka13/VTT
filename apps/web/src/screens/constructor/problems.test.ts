@@ -21,7 +21,7 @@ describe('пути схемы переводятся в слова экрана'
   });
 
   it('незнакомое — как есть, но с переводом сообщения', () => {
-    expect(pathWords('records.weapon.bindings.1.args: Required', system)).toBe('тип записи «Оружие» · привязка 2 · что берёт из записи: не заполнено');
+    expect(pathWords('records.weapon.bindings.1.args: Required', system)).toBe('тип записи «Оружие» · кнопка 2 · что отправляем: не заполнено');
     expect(pathWords('без двоеточия', system)).toBe('без двоеточия');
   });
 });
@@ -43,6 +43,6 @@ describe('адрес проблемы открывает нужное место
   it('подпись места — словами системы', () => {
     expect(whereLabel({ tab: 'effects', effect: 'hit', step: 0 }, system)).toBe('Эффекты · эффект «Удар» · шаг 1');
     expect(whereLabel({ tab: 'rules', section: 'grants' }, system)).toBe('Правила · действуют на всех');
-    expect(whereLabel({ tab: 'records', kind: 'weapon', binding: 0 }, system)).toBe('Типы записей · «Оружие» · привязка 1');
+    expect(whereLabel({ tab: 'records', kind: 'weapon', binding: 0 }, system)).toBe('Типы записей · «Оружие» · кнопка 1');
   });
 });

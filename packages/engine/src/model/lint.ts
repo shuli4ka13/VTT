@@ -474,7 +474,7 @@ export function describeWhere(where: Where, system: System, compendium?: Compend
   } else if (where.tab === 'records') {
     parts.push(TABS.records);
     if (where.kind) parts.push(quoted(system.records?.[where.kind]?.label, where.kind));
-    if (where.binding !== undefined) parts.push(`привязка ${where.binding + 1}`);
+    if (where.binding !== undefined) parts.push(`кнопка ${where.binding + 1}`);
     else if (where.part === 'modifiers') parts.push('модификаторы');
     else if (where.part === 'props') parts.push(`свойство ${quoted(system.records?.[where.kind ?? '']?.props?.find(p => p.key === where.key)?.label, where.key ?? '')}`);
   } else if (where.tab === 'book') {

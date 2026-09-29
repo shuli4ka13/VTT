@@ -87,7 +87,7 @@ group('линт: висячие ссылки называются словами
     ok(errorTexts(system).some(t => t.includes('«нет» выше по цепочке нет')), errorTexts(system).join('|'));
   });
 
-  test('потребность, которую эффект не объявил', () => {
+  test('вход, которую эффект не объявил', () => {
     const system = withEffect('e', { params: [], steps: [{ type: 'apply', target: { tag: 'hp' }, value: { expr: '@dmg' } }] as Step[] });
     ok(errorTexts(system).some(t => t.includes('«dmg» — нет ни поля листа, ни входа эффекта')), errorTexts(system).join('|'));
   });
@@ -125,7 +125,7 @@ group('линт: чей лист в шагах отправителя', () => {
   });
 });
 
-group('линт: слушатели, круги, потребности', () => {
+group('линт: слушатели, круги, входы', () => {
   test('«когда» без «что случилось» — ошибка человеческим текстом', () => {
     const system = withEffect('t', { activation: 'passive', on: [{ on: '', to: 'other', steps: [] }] });
     const [problem] = errorsOf(lintSystem(system));
@@ -160,7 +160,7 @@ group('линт: слушатели, круги, потребности', () => 
     eq(errorTexts(system).length, 0);
   });
 
-  test('привязка не закрывает потребность эффекта', () => {
+  test('привязка не закрывает вход эффекта', () => {
     const system = withEffect('strike', { params: [{ key: 'dice', label: 'Кость урона' }], steps: [] });
     system.records = { weapon: { kind: 'item', label: 'Оружие', props: [], bindings: [{ label: 'Удар', effect: 'strike', args: {} }] } } as never;
     const [problem] = errorsOf(lintSystem(system));
@@ -168,7 +168,7 @@ group('линт: слушатели, круги, потребности', () => 
     eq(problem?.where.binding, 0);
   });
 
-  test('потребность, которую спрашивают за столом, привязка закрывать не обязана', () => {
+  test('вход, которую спрашивают за столом, привязка закрывать не обязана', () => {
     const system = withEffect('strike', { params: [{ key: 'дистанция', label: 'Дистанция', ask: { by: 'actor' } }], steps: [] });
     system.records = { weapon: { kind: 'item', label: 'Оружие', props: [], bindings: [{ label: 'Удар', effect: 'strike', args: {} }] } } as never;
     eq(errorTexts(system).join(''), '');

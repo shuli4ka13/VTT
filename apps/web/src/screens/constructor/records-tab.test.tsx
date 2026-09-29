@@ -5,7 +5,7 @@ import { RecordsTab } from './records-tab.tsx';
 import { useWorld } from '../../store/world.ts';
 import { optionsFor } from './slot-input.tsx';
 
-describe('RecordsTab: тип видит потребности эффекта', () => {
+describe('RecordsTab: тип видит входы эффекта', () => {
   beforeEach(() => {
     useWorld.setState(state => ({
       ...state,
@@ -26,7 +26,7 @@ describe('RecordsTab: тип видит потребности эффекта', 
     }));
   });
 
-  it('незакрытая потребность заводит свойство кнопкой и закрывается', () => {
+  it('незакрытая вход заводит свойство кнопкой и закрывается', () => {
     render(<RecordsTab />);
     expect(screen.getByText(/не закрыто/).textContent).toContain('Кость урона');
 
@@ -71,7 +71,7 @@ describe('RecordsTab: тип видит потребности эффекта', 
     }));
 
     const { container } = render(<RecordsTab />);
-    expect(container.querySelector('.need-fill'), 'незакрытая потребность нарисована').toBeTruthy();
+    expect(container.querySelector('.need-fill'), 'незакрытая вход нарисована').toBeTruthy();
 
     const system = useWorld.getState().system;
     const предложат = optionsFor({
@@ -252,7 +252,7 @@ describe('слот привязки подсказывает то, чем его
     expect(свой).toBeLessThan(чужой === -1 ? Number.MAX_SAFE_INTEGER : чужой);
   });
 
-  it('пустая потребность первым делом предлагает завести свойство — с видом и словарём', () => {
+  it('пустая вход первым делом предлагает завести свойство — с видом и словарём', () => {
     render(<RecordsTab />);
     const видно = набрать('Тип урона', '');
     expect(видно.some(t => t.includes('новое свойство «Тип урона»')), видно.join(' | ')).toBe(true);
