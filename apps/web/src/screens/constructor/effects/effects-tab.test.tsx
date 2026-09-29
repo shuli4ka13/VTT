@@ -21,7 +21,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
   it('свойства эффекта — одной строкой; у активируемого нет «сколько висит»', () => {
     renderOpen(<EffectsTab />);
     const heads = [...document.querySelectorAll('.sheet-grid__title')].map(h => h.textContent);
-    expect(heads).toEqual(expect.arrayContaining(['Как запускается', 'Блок', 'На основе', 'Описание для игрока']));
+    expect(heads).toEqual(expect.arrayContaining(['Как запускается', 'Блок', 'На основе', 'Описание']));
     expect(screen.queryByText('+ сколько висит')).toBeNull();
   });
 
