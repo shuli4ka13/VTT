@@ -93,7 +93,7 @@ export function optionsFor(ctx: SlotContext, allow: SlotKind[] | undefined, keep
   }
   if (ok('param')) {
     for (const p of ctx.effect.params ?? []) {
-      out.push({ group: 'Из записи', label: p.label ?? p.key, name: p.key, ...(keep.includes('param') ? { ref: { param: p.key } } : {}) });
+      out.push({ group: 'Входы эффекта', label: p.label ?? p.key, name: p.key, ...(keep.includes('param') ? { ref: { param: p.key } } : {}) });
     }
   }
   if (ok('table')) {
@@ -154,7 +154,7 @@ export function SlotInput({ value, onChange, context, allow, keep = [], placehol
   const options = useMemo(() => {
     const base = [...(extraOptions ?? []), ...optionsFor(context, allow, keep, side)];
     if (!onCreateFromRecord) return base;
-    const born: SlotOption = { group: 'Из записи', label: 'из записи → новая потребность…', synthetic: true };
+    const born: SlotOption = { group: 'Входы эффекта', label: 'новый вход…', synthetic: true };
     return [born, ...base];
   }, [context, allow, keep, side, extraOptions, onCreateFromRecord]);
 

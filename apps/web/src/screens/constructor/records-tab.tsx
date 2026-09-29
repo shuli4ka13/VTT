@@ -513,7 +513,7 @@ function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWi
           ) : null}
         </div>
       ) : effect ? (
-        <Chip>эффект ничего не берёт из записи</Chip>
+        <Chip>у эффекта нет входов</Chip>
       ) : null}
     </Card>
   );

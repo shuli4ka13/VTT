@@ -355,12 +355,9 @@ export function lonelyField(ref: unknown): string | null {
 
 function senderValue(name: string, ctx: RefContext): unknown {
   if ((ctx.paramDefs || []).some(p => p.key === name)) {
-    try {
-      const packed = packParam(name, true, ctx);
-      if (packed && typeof packed === 'object' && 'const' in (packed as AnyRef)) {
-        return (packed as AnyRef).const;
-      }
-    } catch { /* потребность посчитает получатель */ }
+    let packed: unknown = null;
+    try { packed = packParam(name, true, ctx); } catch { packed = null; }
+    if (packed && typeof packed === 'object' && 'const' in (packed as AnyRef)) return (packed as AnyRef).const;
   }
   try {
     return evaluate(`@${name}`, ctx);

@@ -32,7 +32,7 @@ const REAPPLY_OPTIONS = (Object.keys(REAPPLY) as (keyof typeof REAPPLY)[]).map(k
 
 const fromBase = (base: Effect): string => {
   const parts: string[] = [];
-  if (base.params?.length) parts.push(`потребностей: ${base.params.length}`);
+  if (base.params?.length) parts.push(`входов: ${base.params.length}`);
   if (base.self?.length) parts.push(`стоимость: ${base.self.length}`);
   if (base.steps?.length) parts.push(`шагов впереди: ${base.steps.length}`);
   if (base.modifiers?.length) parts.push(`правок: ${base.modifiers.length}`);

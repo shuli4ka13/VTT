@@ -37,7 +37,7 @@ const LEAF: Record<string, string> = {
   on: 'что случилось', effect: 'эффект', target: 'какое поле меняем', value: 'сколько', edit: 'правка броска',
   expr: 'формула', tag: 'поле', label: 'название', default: 'по умолчанию', die: 'кость', constant: 'кость',
   event: 'общий эффект', dice: 'кости', bonus: 'прибавка', versus: 'против чего', roll: 'бросок', type: 'тип',
-  kind: 'вид', args: 'что берёт из записи', props: 'свойства', ops: 'операции', ranges: 'строки таблицы',
+  kind: 'вид', args: 'что отправляем', props: 'свойства', ops: 'операции', ranges: 'строки таблицы',
 };
 
 const MESSAGES: [RegExp, string][] = [
@@ -70,7 +70,7 @@ export function pathWords(issue: string, system: System): string {
     if ((key === 'steps' || key === 'receive') && index !== null) { words.push(`${STEP.one} ${index + 1}`); i++; continue; }
     if (key === 'bindings' && index !== null) { words.push(`привязка ${index + 1}`); i++; continue; }
     if (key === 'modifiers' && index !== null) { words.push(`модификатор ${index + 1}`); i++; continue; }
-    if (key === 'params' && index !== null) { words.push(`потребность ${index + 1}`); i++; continue; }
+    if (key === 'params' && index !== null) { words.push(`вход ${index + 1}`); i++; continue; }
     if (key === 'on' && index !== null) { words.push(`«когда» №${index + 1}`); i++; continue; }
     if (/^\d+$/.test(key)) { words.push(`№${Number(key) + 1}`); continue; }
     words.push(LEAF[key] ?? key);

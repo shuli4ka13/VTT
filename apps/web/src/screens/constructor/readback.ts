@@ -57,7 +57,7 @@ export function refSegment(ref: unknown, system: System, effect: Effect, emptyAs
       const head = alone.split('.')[0]!;
       const field = ownerOf(alone)?.rest ?? alone;
       const declared = effect.params?.find(p => p.key === alone);
-      if (declared) return hole(`${declared.label ?? alone} — из записи`);
+      if (declared) return hole(`вход «${declared.label ?? alone}»`);
       if (head === 'event') return seg(EVENT_WORDS[alone] ?? 'присланное');
       if (alone === 'worn.carry') return seg('запомненного числа');
       if (system.fields.some(f => f.tag === field)) return seg(`«${labelOfTag(system, field)}»`);
@@ -71,9 +71,9 @@ export function refSegment(ref: unknown, system: System, effect: Effect, emptyAs
   if ('tag' in r) return seg(`«${labelOfTag(system, String(r.tag))}»`);
   if ('param' in r) {
     const declared = effect.params?.find(p => p.key === r.param);
-    return hole(`${declared?.label ?? String(r.param)} — из записи`);
+    return hole(`вход «${declared?.label ?? String(r.param)}»`);
   }
-  if ('prop' in r) return hole(`${String(r.prop)} — из записи`);
+  if ('prop' in r) return hole(`свойство записи «${String(r.prop)}»`);
   if ('constant' in r) {
     const name = String(r.constant);
     const reading = readingWord(system, name);

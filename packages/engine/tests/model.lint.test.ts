@@ -89,7 +89,7 @@ group('линт: висячие ссылки называются словами
 
   test('потребность, которую эффект не объявил', () => {
     const system = withEffect('e', { params: [], steps: [{ type: 'apply', target: { tag: 'hp' }, value: { expr: '@dmg' } }] as Step[] });
-    ok(errorTexts(system).some(t => t.includes('«dmg» — нет ни поля листа, ни потребности эффекта')), errorTexts(system).join('|'));
+    ok(errorTexts(system).some(t => t.includes('«dmg» — нет ни поля листа, ни входа эффекта')), errorTexts(system).join('|'));
   });
 
   test('условие срабатывания смотрит на шаг слушаемого эффекта', () => {
@@ -164,7 +164,7 @@ group('линт: слушатели, круги, потребности', () => 
     const system = withEffect('strike', { params: [{ key: 'dice', label: 'Кость урона' }], steps: [] });
     system.records = { weapon: { kind: 'item', label: 'Оружие', props: [], bindings: [{ label: 'Удар', effect: 'strike', args: {} }] } } as never;
     const [problem] = errorsOf(lintSystem(system));
-    ok(problem?.text.includes('не заполняет потребность «Кость урона»'), problem?.text);
+    ok(problem?.text.includes('не заполняет вход «Кость урона»'), problem?.text);
     eq(problem?.where.binding, 0);
   });
 

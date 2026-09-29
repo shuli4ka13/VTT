@@ -151,7 +151,7 @@ describe('SlotInput', () => {
     render(<SlotInput value={undefined} onChange={next => { got = next; }} context={ctx}
       onCreateFromRecord={() => ({ param: 'новая' })} />);
     typeAt('@');
-    fireEvent.mouseDown(screen.getByText(/новая потребность/));
+    fireEvent.mouseDown(screen.getByText(/новый вход/));
     fireEvent.keyDown([...document.querySelectorAll('input.chips__text')].at(-1)!, { key: 'Enter' });
     expect(got).toEqual({ param: 'новая' });
   });

@@ -88,7 +88,7 @@ function ownerText(ref: Reference, system: System): string | null {
 function danglingText(ref: Reference, declared: Declared): string | null {
   if (ref.scope === LISTEN) return null;
   if (ref.kind === 'param') {
-    return ref.scope === 'missing' ? `потребность «${ref.key}» эффектом не объявлена` : null;
+    return ref.scope === 'missing' ? `вход «${ref.key}» эффектом не объявлен` : null;
   }
   if (ref.kind === 'step') {
     if (ref.scope?.startsWith('listened:')) {
@@ -104,7 +104,7 @@ function danglingText(ref: Reference, declared: Declared): string | null {
     && (ref.scope === 'plain' || ref.scope?.startsWith('owner:'))) return null;
   if (ref.kind === 'field' && ref.scope === 'plain' && !declared.field.has(ref.key) && declared.prop.has(ref.key)) return null;
   if (ref.kind === 'field' && ref.scope === 'plain' && ref.from.tab === 'effects' && !declared.field.has(ref.key)) {
-    return `«${ref.key}» — нет ни поля листа, ни потребности эффекта с таким именем: заведите поле на вкладке «Лист» или потребность у эффекта`;
+    return `«${ref.key}» — нет ни поля листа, ни входа эффекта с таким именем: заведите поле на вкладке «Лист» или вход у эффекта`;
   }
   return declared[ref.kind].has(ref.key) ? null : NAMES[ref.kind](ref.key);
 }
@@ -350,7 +350,7 @@ function paramProblems(system: System): Problem[] {
       if (!fields.has(param.key)) continue;
       out.push({
         where: { tab: 'effects', effect: id }, level: 'error',
-        text: `потребность «${param.label ?? param.key}» названа как поле «${param.key}» — в формулах шага победит поле; переименуйте потребность`,
+        text: `вход «${param.label ?? param.key}» назван как поле «${param.key}» — в формулах шага победит поле; переименуйте вход`,
       });
     }
   }
@@ -367,7 +367,7 @@ function paramProblems(system: System): Problem[] {
           out.push({
             where: whereOf(index),
             level: 'error',
-            text: `вызов «${called.label ?? raw.event}» не заполняет его потребность «${param.label ?? param.key}»`,
+            text: `вызов «${called.label ?? raw.event}» не заполняет его вход «${param.label ?? param.key}»`,
           });
         }
       });
@@ -387,7 +387,7 @@ function paramProblems(system: System): Problem[] {
         if (param.ask) continue;
         out.push({
           where: { tab: 'records', kind, part: 'bindings', binding: index }, level: 'error',
-          text: `привязка «${binding.label ?? effect.label ?? binding.effect}» не заполняет потребность «${param.label ?? param.key}» эффекта «${effect.label ?? binding.effect}»`,
+          text: `кнопка «${binding.label ?? effect.label ?? binding.effect}» не заполняет вход «${param.label ?? param.key}» эффекта «${effect.label ?? binding.effect}»`,
         });
       }
     });

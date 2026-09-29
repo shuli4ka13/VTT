@@ -171,7 +171,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   if (onCreateFromRecord) {
     needs.push({
       group: 'из записи',
-      label: 'новая потребность…',
+      label: 'новый вход…',
       onPick: (insert: (piece: string) => string, bar: BarApi) => { bar.dismiss(); putIntoAmount(onCreateFromRecord(), insert); },
     });
   }
