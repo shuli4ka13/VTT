@@ -1,5 +1,4 @@
 import type { System, Modifier } from '@vtt/schema';
-import { useState } from 'react';
 import { Card, CardHead, Field, Input, Select, Button, Empty } from '../../ui/primitives.tsx';
 import { FormulaInput } from '../../ui/formula.tsx';
 import { targets } from '@vtt/engine/engine/targets';
@@ -62,7 +61,7 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
         )}
         <span className="spacer" />
         <Button size="sm" onClick={() => onEdit(draft => {
-          draft.push({ kind: 'value', target: valueTargets[0]?.tag ?? '', op: 'add', value: 1, stacking: 'sum', condition: null });
+          draft.push({ kind: 'value', target: valueTargets[0]?.tag ?? '', op: 'add', value: { expr: '1' }, stacking: 'sum' });
         })}>
           + правит значение
         </Button>
@@ -71,7 +70,7 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
           onClick={() => onEdit(draft => {
             draft.push({
               kind: 'roll', target: rollTargets[0]?.tag ?? '',
-              edit: edits[0]?.[0] ?? '', condition: null,
+              edit: edits[0]?.[0] ?? '',
             });
           })}
           disabled={rollTargets.length === 0 || (edits.length === 0 && !editSystem)}
@@ -115,10 +114,12 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
                 />
               </Field>
               <Field label="На сколько">
-                <DraftValue
-                  value={modifier.value}
-                  onCommit={next => onEdit(draft => {
-                    (draft[index] as { value: unknown }).value = next;
+                <FormulaInput
+                  where="модификатор · на сколько"
+                  system={system}
+                  value={modifier.value?.expr ?? ''}
+                  onChange={expr => onEdit(draft => {
+                    (draft[index] as { value: { expr: string } }).value = { expr };
                   })}
                 />
               </Field>
@@ -152,7 +153,7 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
               <Field label="С метками" hint="Бросок должен нести все метки. Пусто — любой бросок.">
                 <RollTagsPick
                   system={system}
-                  value={(modifier as { tags?: string[] }).tags}
+                  value={(modifier as { tags?: string[] }).tags }
                   onChange={tags => onEdit(draft => {
                     const d = draft[index] as { tags?: string[] };
                     if (tags.length) d.tags = tags; else delete d.tags;
@@ -184,9 +185,10 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
             <FormulaInput
               where="модификатор · только когда"
               system={system}
-              value={modifier.condition ?? ''}
-              onChange={condition => onEdit(draft => {
-                (draft[index] as { condition?: string | null }).condition = condition || null;
+              value={modifier.condition?.expr ?? ''}
+              onChange={expr => onEdit(draft => {
+                const d = draft[index] as { condition?: { expr: string } };
+                if (expr.trim()) d.condition = { expr }; else delete d.condition;
               })}
               placeholder="например: @тяжёлая броня"
             />
@@ -194,22 +196,6 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
         </Card>
       ))}
     </>
-  );
-}
-
-function DraftValue({ value, onCommit }: { value: unknown; onCommit: (next: unknown) => void }) {
-  const [draft, setDraft] = useState<string | null>(null);
-  return (
-    <Input
-      value={draft ?? String(value ?? '')}
-      onChange={text => {
-        setDraft(text);
-        if (/^-?\d+(\.\d+)?$/.test(text)) onCommit(Number(text));
-        else if (text === 'true' || text === 'false') onCommit(text === 'true');
-        else if (text.trim() !== '' && text !== '-') onCommit(text);
-      }}
-      onBlur={() => setDraft(null)}
-    />
   );
 }
 

@@ -48,7 +48,7 @@ group('критерии приёмки', () => {
         id: 'cloak-of-speed',
         label: 'Плащ скорости',
         slot: 'back',
-        modifiers: [{ kind: 'value', target: 'initiative', op: 'add', value: 2, stacking: 'sum', condition: null }],
+        modifiers: [{ kind: 'value', target: 'initiative', op: 'add', value: { expr: '2' }, stacking: 'sum' }],
       }],
       effects: compendium.effects,
     };

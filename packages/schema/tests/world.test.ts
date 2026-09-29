@@ -80,7 +80,8 @@ describe('схема стережёт инварианты, а не только
     const mod = (extra: object) =>
       W.modifier.safeParse({ kind: 'roll', target: 'attack_roll', ...extra }).success;
     expect(mod({ edit: 'преимущество' }), 'ссылка на запись словаря').toBe(true);
-    expect(mod({ op: 'add', value: 5 }), 'числовая прибавка — другая порода, но тоже roll').toBe(true);
+    expect(mod({ op: 'add', value: { expr: '5' } }), 'числовая прибавка — другая порода, но тоже roll').toBe(true);
+    expect(mod({ op: 'add', value: 5 }), 'значение модификатора — формула, голое число не принимается').toBe(false);
 
     expect(mod({ effect: 'advantage', method: 'rerollBest' }), 'старый мир не отвергается').toBe(true);
   });

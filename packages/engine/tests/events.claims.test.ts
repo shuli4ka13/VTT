@@ -19,7 +19,7 @@ const passive = (label: string, target: string, edit: string, condition: string 
     label, activation: 'passive', duration: { kind: 'permanent' },
     modifiers: [{
       kind: 'roll', target: incoming ? 'incoming:roll:any' : 'roll:any',
-      ...(tag === 'roll:any' ? {} : { tags: [tag] }), edit, condition,
+      ...(tag === 'roll:any' ? {} : { tags: [tag] }), edit, ...(condition ? { condition: { expr: condition } } : {}),
     }],
   };
 };

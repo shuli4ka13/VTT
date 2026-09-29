@@ -26,7 +26,7 @@ const TOUGH = {
     ...SYS.effects,
     tough: {
       label: 'Толстая кожа', activation: 'passive', duration: { kind: 'permanent' },
-      modifiers: [{ kind: 'value', target: 'incoming:hp_current', op: 'mul', value: 0.5, stacking: 'max', condition: null }],
+      modifiers: [{ kind: 'value', target: 'incoming:hp_current', op: 'mul', value: { expr: '0.5' }, stacking: 'max' }],
     },
   },
 };

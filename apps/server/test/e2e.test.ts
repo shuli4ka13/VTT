@@ -444,7 +444,7 @@ describe('публикация компендиума проверяется л�
     const book = await as(http().post('/compendiums')).send({
       title: 'Книга с дыркой', systemId: sys.body.id,
       compendium: {
-        records: [{ id: 'ring', rk: 'gear', label: 'Кольцо', props: {}, modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'нет_такой', condition: null }] }],
+        records: [{ id: 'ring', rk: 'gear', label: 'Кольцо', props: {}, modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'нет_такой' }] }],
       },
     }).expect(201);
     const rejected = await as(http().post(`/compendiums/${book.body.id}/publish`)).send({}).expect(400);

@@ -210,9 +210,9 @@ function modifierRefs(list: Modifier[] | undefined, from: Where, out: Reference[
       for (const tag of (mod as { tags?: string[] }).tags ?? []) out.push({ kind: 'roll', key: tag, from });
       if (mod.edit) out.push({ kind: 'rollEdit', key: String(mod.edit), from });
     }
-    if (typeof mod.condition === 'string' && mod.condition.trim()) {
-      exprRefs(mod.condition, from, { params: new Set(), earlier: new Set(), eventChain: false }, out);
-    }
+    const noScope = { params: new Set<string>(), earlier: new Set<string>(), eventChain: false };
+    if (mod.condition?.expr.trim()) exprRefs(mod.condition.expr, from, noScope, out);
+    if (mod.value?.expr.trim()) exprRefs(mod.value.expr, from, noScope, out);
     const where = (mod as { where?: { table?: unknown } }).where;
     if (where && typeof where.table === 'string' && where.table) out.push({ kind: 'table', key: where.table, from, scope: 'condition' });
   }

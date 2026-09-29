@@ -1983,8 +1983,7 @@
             "tags": [
               "герой"
             ],
-            "edit": "advantage",
-            "condition": null
+            "edit": "advantage"
           },
           {
             "kind": "roll",
@@ -1992,8 +1991,7 @@
             "tags": [
               "противник"
             ],
-            "edit": "gm_advantage",
-            "condition": null
+            "edit": "gm_advantage"
           }
         ]
       },
@@ -2012,8 +2010,7 @@
             "tags": [
               "герой"
             ],
-            "edit": "disadvantage",
-            "condition": null
+            "edit": "disadvantage"
           },
           {
             "kind": "roll",
@@ -2021,8 +2018,7 @@
             "tags": [
               "противник"
             ],
-            "edit": "gm_disadvantage",
-            "condition": null
+            "edit": "gm_disadvantage"
           }
         ]
       },
@@ -2653,8 +2649,9 @@
               "атака"
             ],
             "op": "add",
-            "value": 1,
-            "condition": null
+            "value": {
+              "expr": "1"
+            }
           }
         ],
         "on": [
@@ -2736,9 +2733,10 @@
             "kind": "value",
             "target": "evasion",
             "op": "add",
-            "value": 2,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "2"
+            },
+            "stacking": "sum"
           }
         ],
         "on": [
@@ -2832,9 +2830,10 @@
             "kind": "value",
             "target": "difficulty",
             "op": "add",
-            "value": -2,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "-2"
+            },
+            "stacking": "sum"
           }
         ]
       }
@@ -2872,8 +2871,7 @@
             "value": {
               "expr": "@adversary_hp"
             },
-            "stacking": "override",
-            "condition": null
+            "stacking": "override"
           },
           {
             "kind": "value",
@@ -2882,8 +2880,7 @@
             "value": {
               "expr": "@adversary_stress"
             },
-            "stacking": "override",
-            "condition": null
+            "stacking": "override"
           },
           {
             "kind": "value",
@@ -2892,8 +2889,7 @@
             "value": {
               "expr": "@major_base"
             },
-            "stacking": "override",
-            "condition": null
+            "stacking": "override"
           },
           {
             "kind": "value",
@@ -2902,8 +2898,7 @@
             "value": {
               "expr": "@severe_base"
             },
-            "stacking": "override",
-            "condition": null
+            "stacking": "override"
           }
         ]
       },
@@ -3161,9 +3156,10 @@
             "kind": "value",
             "target": "evasion",
             "op": "add",
-            "value": -1,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "-1"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -3203,9 +3199,10 @@
             "kind": "value",
             "target": "evasion",
             "op": "add",
-            "value": -1,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "-1"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -3293,9 +3290,10 @@
             "kind": "value",
             "target": "finesse",
             "op": "add",
-            "value": -1,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "-1"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -3319,9 +3317,10 @@
             "kind": "value",
             "target": "finesse",
             "op": "add",
-            "value": -1,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "-1"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -3377,9 +3376,10 @@
             "kind": "value",
             "target": "finesse",
             "op": "add",
-            "value": -1,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "-1"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -3579,9 +3579,10 @@
             "kind": "value",
             "target": "armor_score",
             "op": "add",
-            "value": 1,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "1"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -3605,17 +3606,19 @@
             "kind": "value",
             "target": "armor_score",
             "op": "add",
-            "value": 2,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "2"
+            },
+            "stacking": "sum"
           },
           {
             "kind": "value",
             "target": "evasion",
             "op": "add",
-            "value": -1,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "-1"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -3698,33 +3701,37 @@
             "kind": "value",
             "target": "major_base",
             "op": "add",
-            "value": 5,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "5"
+            },
+            "stacking": "sum"
           },
           {
             "kind": "value",
             "target": "severe_base",
             "op": "add",
-            "value": 11,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "11"
+            },
+            "stacking": "sum"
           },
           {
             "kind": "value",
             "target": "armor_score",
             "op": "add",
-            "value": 3,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "3"
+            },
+            "stacking": "sum"
           },
           {
             "kind": "value",
             "target": "evasion",
             "op": "add",
-            "value": 1,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "1"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -3743,25 +3750,28 @@
             "kind": "value",
             "target": "major_base",
             "op": "add",
-            "value": 6,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "6"
+            },
+            "stacking": "sum"
           },
           {
             "kind": "value",
             "target": "severe_base",
             "op": "add",
-            "value": 13,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "13"
+            },
+            "stacking": "sum"
           },
           {
             "kind": "value",
             "target": "armor_score",
             "op": "add",
-            "value": 3,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "3"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -3780,33 +3790,37 @@
             "kind": "value",
             "target": "major_base",
             "op": "add",
-            "value": 7,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "7"
+            },
+            "stacking": "sum"
           },
           {
             "kind": "value",
             "target": "severe_base",
             "op": "add",
-            "value": 15,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "15"
+            },
+            "stacking": "sum"
           },
           {
             "kind": "value",
             "target": "armor_score",
             "op": "add",
-            "value": 4,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "4"
+            },
+            "stacking": "sum"
           },
           {
             "kind": "value",
             "target": "evasion",
             "op": "add",
-            "value": -1,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "-1"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -3825,41 +3839,46 @@
             "kind": "value",
             "target": "major_base",
             "op": "add",
-            "value": 8,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "8"
+            },
+            "stacking": "sum"
           },
           {
             "kind": "value",
             "target": "severe_base",
             "op": "add",
-            "value": 17,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "17"
+            },
+            "stacking": "sum"
           },
           {
             "kind": "value",
             "target": "armor_score",
             "op": "add",
-            "value": 4,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "4"
+            },
+            "stacking": "sum"
           },
           {
             "kind": "value",
             "target": "evasion",
             "op": "add",
-            "value": -2,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "-2"
+            },
+            "stacking": "sum"
           },
           {
             "kind": "value",
             "target": "agility",
             "op": "add",
-            "value": -1,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "-1"
+            },
+            "stacking": "sum"
           }
         ]
       },

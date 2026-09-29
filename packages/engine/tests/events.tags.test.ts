@@ -106,11 +106,11 @@ group('вызываемый эффект как провод: отправите
 group('сопротивления по тегам', () => {
   const resist = world({
     огнеупор: passive('Сопротивление огню', [
-      { kind: 'value', target: 'event:урон', op: 'mul', value: 0.5, stacking: 'max', tags: ['огонь'] }]),
+      { kind: 'value', target: 'event:урон', op: 'mul', value: { expr: '0.5' }, stacking: 'max', tags: ['огонь'] }]),
     броня: passive('Тяжёлая броня', [
-      { kind: 'value', target: 'event:урон', op: 'add', value: -3, stacking: 'sum', notTags: ['магический'] }]),
+      { kind: 'value', target: 'event:урон', op: 'add', value: { expr: '-3' }, stacking: 'sum', notTags: ['магический'] }]),
     камень: passive('Каменная кожа', [
-      { kind: 'value', target: 'incoming:хп', op: 'mul', value: 0.5, stacking: 'max' }]),
+      { kind: 'value', target: 'incoming:хп', op: 'mul', value: { expr: '0.5' }, stacking: 'max' }]),
   });
 
   test('сопротивление огню половинит огонь и молчит на рубящий', () => {

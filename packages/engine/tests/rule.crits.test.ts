@@ -74,7 +74,7 @@ group('криты и глитчи собираются автором', () => {
       effects: {
         всегда: {
           label: 'Взрывные кости', activation: 'passive', duration: { kind: 'permanent' },
-          modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['проверка'], edit: 'взрыв', condition: null }],
+          modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['проверка'], edit: 'взрыв' }],
         },
       },
     };

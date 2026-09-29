@@ -31,7 +31,7 @@ const system = {
 const book = {
   records: [
     { id: 'меч', rk: 'оружие', label: 'Меч', props: { урон: 5 } },
-    { id: 'щит', rk: 'щит', label: 'Щит', props: {}, grants: ['зоркость'], modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: 2 }] },
+    { id: 'щит', rk: 'щит', label: 'Щит', props: {}, grants: ['зоркость'], modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: { expr: '2' } }] },
   ],
 } as unknown as Compendium;
 
@@ -75,7 +75,7 @@ group('тип листа — как запись, которую лист нос
       ...system.records,
       противник: {
         kind: 'sheet', label: 'Противник', blocks: ['Защита'], grants: ['зоркость'],
-        modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: 1 }],
+        modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: { expr: '1' } }],
       },
     },
   } as unknown as System;

@@ -15,12 +15,12 @@ const sys: any = {
       kind: 'item', label: 'Тяжёлый доспех',
       props: [], bindings: [],
 
-      modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['скрытность'], edit: 'помеха', condition: null }],
+      modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['скрытность'], edit: 'помеха' }],
     },
     лёгкий: { kind: 'item', label: 'Лёгкий доспех', props: [], bindings: [] },
     кольцо: {
       kind: 'item', label: 'Кольцо', props: [], bindings: [],
-      modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: 1, stacking: 'sum', condition: null }],
+      modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: { expr: '1' }, stacking: 'sum' }],
     },
   },
   effects: {},
@@ -69,7 +69,7 @@ group('модификаторы рода', () => {
     const book = {
       ...compendium,
       records: [...(compendium.records.map((i: any) => i.id === 'кольчуга'
-        ? { ...i, modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: 6, stacking: 'sum', condition: null }] }
+        ? { ...i, modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: { expr: '6' }, stacking: 'sum' }] }
         : i))],
     };
     const sheet = hero(['кольчуга']);

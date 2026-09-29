@@ -512,7 +512,6 @@
           {
             "kind": "roll",
             "target": "roll:any",
-            "condition": null,
             "edit": "disadvantage",
             "tags": [
               "атака"
@@ -535,9 +534,10 @@
             "kind": "value",
             "target": "event:damage",
             "op": "mul",
-            "value": 0.5,
+            "value": {
+              "expr": "0.5"
+            },
             "stacking": "max",
-            "condition": null,
             "notTags": [
               "магический"
             ]
@@ -559,9 +559,10 @@
             "kind": "value",
             "target": "event:damage",
             "op": "mul",
-            "value": 0.5,
+            "value": {
+              "expr": "0.5"
+            },
             "stacking": "max",
-            "condition": null,
             "tags": [
               "огонь"
             ]
@@ -583,8 +584,7 @@
             "kind": "roll",
             "target": "roll:any",
             "edit": "bless",
-            "stacking": "sum",
-            "condition": null
+            "stacking": "sum"
           }
         ],
         "steps": [],
@@ -664,9 +664,10 @@
             "kind": "value",
             "target": "ac",
             "op": "add",
-            "value": 5,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "5"
+            },
+            "stacking": "sum"
           }
         ],
         "steps": [],
@@ -722,7 +723,6 @@
           {
             "kind": "roll",
             "target": "incoming:roll:any",
-            "condition": null,
             "edit": "advantage",
             "tags": [
               "атака"
@@ -731,7 +731,6 @@
           {
             "kind": "roll",
             "target": "roll:any",
-            "condition": null,
             "edit": "disadvantage",
             "tags": [
               "атака"
@@ -752,7 +751,9 @@
           {
             "kind": "roll",
             "target": "roll:any",
-            "condition": "#armor_heavy",
+            "condition": {
+              "expr": "#armor_heavy"
+            },
             "edit": "disadvantage",
             "tags": [
               "проверка"
@@ -773,7 +774,9 @@
           {
             "kind": "roll",
             "target": "roll:any",
-            "condition": "#prof_bonus >= 4",
+            "condition": {
+              "expr": "#prof_bonus >= 4"
+            },
             "edit": "advantage",
             "tags": [
               "проверка"
@@ -2761,17 +2764,19 @@
             "kind": "value",
             "target": "ac_base",
             "op": "set",
-            "value": 16,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "16"
+            },
+            "stacking": "override"
           },
           {
             "kind": "value",
             "target": "armor_heavy",
             "op": "set",
-            "value": true,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "да"
+            },
+            "stacking": "override"
           }
         ]
       },

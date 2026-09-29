@@ -13,7 +13,7 @@ const system = {
     },
     благословлён: {
       label: 'Благословлён', activation: 'passive', duration: { kind: 'permanent' },
-      modifiers: [{ kind: 'value', target: 'бонус', op: 'add', value: 2, stacking: 'sum', condition: null }],
+      modifiers: [{ kind: 'value', target: 'бонус', op: 'add', value: { expr: '2' }, stacking: 'sum' }],
     },
   },
   records: {

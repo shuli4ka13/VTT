@@ -110,7 +110,7 @@ group('выдача у типа предмета', () => {
   test('надел вещь — висит то, что выдаёт её тип, снял — ушло', () => {
     const system = {
       id: 's', name: 's', fields: [{ tag: 'ac', label: 'КБ', value: { kind: 'stored', type: 'number', default: 10 } }],
-      effects: { shield_rule: { label: 'Щит', activation: 'passive', modifiers: [{ kind: 'value', target: 'ac', op: 'add', value: 2 }] } },
+      effects: { shield_rule: { label: 'Щит', activation: 'passive', modifiers: [{ kind: 'value', target: 'ac', op: 'add', value: { expr: '2' } }] } },
       records: { shield: { kind: 'item', label: 'Щит', grants: ['shield_rule'] } },
     } as unknown as System;
     const compendium = { records: [{ id: 'buckler', rk: 'shield', label: 'Баклер' }] } as Compendium;

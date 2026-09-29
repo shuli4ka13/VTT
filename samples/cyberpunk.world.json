@@ -2906,7 +2906,6 @@
             "kind": "roll",
             "target": "roll:any",
             "edit": "advantage",
-            "condition": null,
             "tags": [
               "атака"
             ]
@@ -2957,8 +2956,12 @@
             "kind": "roll",
             "target": "roll:any",
             "op": "add",
-            "value": -2,
-            "condition": "@seriously"
+            "value": {
+              "expr": "-2"
+            },
+            "condition": {
+              "expr": "@seriously"
+            }
           }
         ],
         "group": "Состояния"

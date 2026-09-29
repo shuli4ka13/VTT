@@ -2766,9 +2766,10 @@
             "kind": "value",
             "target": "condition_mod",
             "op": "add",
-            "value": -1,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "-1"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -2796,9 +2797,10 @@
             "kind": "value",
             "target": "condition_mod",
             "op": "add",
-            "value": -1,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "-1"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -2815,9 +2817,10 @@
             "kind": "value",
             "target": "condition_mod",
             "op": "add",
-            "value": -2,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "-2"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -3047,8 +3050,7 @@
             "value": {
               "expr": "8 + ceil(max(@willpower, @body) / 2)"
             },
-            "stacking": "override",
-            "condition": null
+            "stacking": "override"
           },
           {
             "kind": "value",
@@ -3057,8 +3059,7 @@
             "value": {
               "expr": "@physical + @stun"
             },
-            "stacking": "override",
-            "condition": null
+            "stacking": "override"
           },
           {
             "kind": "value",
@@ -3067,8 +3068,7 @@
             "value": {
               "expr": "нет"
             },
-            "stacking": "override",
-            "condition": null
+            "stacking": "override"
           },
           {
             "kind": "value",
@@ -3077,8 +3077,7 @@
             "value": {
               "expr": "0 - floor(min(@physical + @stun, @physical_max) / 2)"
             },
-            "stacking": "override",
-            "condition": null
+            "stacking": "override"
           }
         ]
       },
@@ -3971,9 +3970,10 @@
             "kind": "value",
             "target": "armor_worn",
             "op": "add",
-            "value": 1,
-            "stacking": "max",
-            "condition": null
+            "value": {
+              "expr": "1"
+            },
+            "stacking": "max"
           }
         ]
       },
@@ -3991,9 +3991,10 @@
             "kind": "value",
             "target": "armor_worn",
             "op": "add",
-            "value": 2,
-            "stacking": "max",
-            "condition": null
+            "value": {
+              "expr": "2"
+            },
+            "stacking": "max"
           }
         ]
       },
@@ -4011,9 +4012,10 @@
             "kind": "value",
             "target": "armor_worn",
             "op": "add",
-            "value": 2,
-            "stacking": "max",
-            "condition": null
+            "value": {
+              "expr": "2"
+            },
+            "stacking": "max"
           }
         ]
       },
@@ -4031,9 +4033,10 @@
             "kind": "value",
             "target": "armor_worn",
             "op": "add",
-            "value": 2,
-            "stacking": "max",
-            "condition": null
+            "value": {
+              "expr": "2"
+            },
+            "stacking": "max"
           }
         ]
       },
@@ -4051,9 +4054,10 @@
             "kind": "value",
             "target": "armor_worn",
             "op": "add",
-            "value": 3,
-            "stacking": "max",
-            "condition": null
+            "value": {
+              "expr": "3"
+            },
+            "stacking": "max"
           }
         ]
       },
@@ -4071,9 +4075,10 @@
             "kind": "value",
             "target": "armor_worn",
             "op": "add",
-            "value": 3,
-            "stacking": "max",
-            "condition": null
+            "value": {
+              "expr": "3"
+            },
+            "stacking": "max"
           }
         ]
       },
@@ -4091,9 +4096,10 @@
             "kind": "value",
             "target": "armor_worn",
             "op": "add",
-            "value": 3,
-            "stacking": "max",
-            "condition": null
+            "value": {
+              "expr": "3"
+            },
+            "stacking": "max"
           }
         ]
       },
@@ -4111,9 +4117,10 @@
             "kind": "value",
             "target": "armor_worn",
             "op": "add",
-            "value": 4,
-            "stacking": "max",
-            "condition": null
+            "value": {
+              "expr": "4"
+            },
+            "stacking": "max"
           }
         ]
       },
@@ -4131,9 +4138,10 @@
             "kind": "value",
             "target": "armor_worn",
             "op": "add",
-            "value": 5,
-            "stacking": "max",
-            "condition": null
+            "value": {
+              "expr": "5"
+            },
+            "stacking": "max"
           }
         ]
       },
@@ -4151,9 +4159,10 @@
             "kind": "value",
             "target": "armor_worn",
             "op": "add",
-            "value": 1,
-            "stacking": "max",
-            "condition": null
+            "value": {
+              "expr": "1"
+            },
+            "stacking": "max"
           }
         ]
       },
@@ -4171,9 +4180,10 @@
             "kind": "value",
             "target": "armor_extra",
             "op": "add",
-            "value": 1,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "1"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -4191,9 +4201,10 @@
             "kind": "value",
             "target": "armor_extra",
             "op": "add",
-            "value": 2,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "2"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -4211,9 +4222,10 @@
             "kind": "value",
             "target": "armor_extra",
             "op": "add",
-            "value": 2,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "2"
+            },
+            "stacking": "sum"
           }
         ]
       },

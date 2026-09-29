@@ -134,7 +134,7 @@ group('бросок несёт несколько меток, одна прих�
     },
     roll_edits: { помеха: { label: 'Помеха', ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }] } },
     effects: {
-      опутан: { label: 'Опутан', activation: 'passive', modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['спас', 'лов'], edit: 'помеха', condition: null }] },
+      опутан: { label: 'Опутан', activation: 'passive', modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['спас', 'лов'], edit: 'помеха' }] },
       шар: {
         label: 'Шар', activation: 'manual',
         params: [{ key: 'чем', label: 'Чем спасаются', kind: 'choice', from: 'черты' }],
@@ -208,7 +208,7 @@ group('запись выдаёт эффект владельцу', () => {
   const sys = {
     id: 'g', name: 'g',
     fields: [{ tag: 'кд', label: 'Класс брони', value: { kind: 'stored', type: 'number', default: 10 } }],
-    effects: { стойка: { label: 'Оборонительная стойка', activation: 'passive', modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: 1, stacking: 'sum', condition: null }] } },
+    effects: { стойка: { label: 'Оборонительная стойка', activation: 'passive', modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: { expr: '1' }, stacking: 'sum' }] } },
     records: { черта: { kind: 'action', label: 'Черта', props: [], bindings: [] } },
   } as unknown as System;
   const feats = { records: [{ id: 'оборона', rk: 'черта', label: 'Боевой стиль: оборона', props: {}, grants: ['стойка'] }] } as unknown as Compendium;
@@ -241,7 +241,7 @@ group('наложенное помнит число, штрафная кость
         on: [{ on: 'moment:turn-start', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@worn.carry' } }] }],
       },
       поджечь: { label: 'Поджечь', activation: 'manual', steps: [{ type: 'status', mode: 'apply', effect: { const: 'горит' }, carry: { expr: '4' } }] },
-      порченый: { label: 'Порченый', activation: 'passive', modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'порча', condition: null }] },
+      порченый: { label: 'Порченый', activation: 'passive', modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'порча' }] },
       удар: {
         label: 'Удар', activation: 'manual',
         steps: [

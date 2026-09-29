@@ -118,7 +118,7 @@ export function setCrit(draft: System, choice: CritChoice): void {
     draft.effects[CRIT_RULE] = {
       label: 'Взрывная кость', activation: 'passive', duration: { kind: 'permanent' },
       description: 'Кость проверки на максимуме кидается ещё раз, результат прибавляется.',
-      modifiers: [{ kind: 'roll', target: ANY_ROLL, edit: CRIT_EDIT, condition: null }],
+      modifiers: [{ kind: 'roll', target: ANY_ROLL, edit: CRIT_EDIT }],
     };
     draft.grants = [...(draft.grants ?? []), CRIT_RULE];
   }

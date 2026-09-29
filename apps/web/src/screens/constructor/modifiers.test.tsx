@@ -11,7 +11,7 @@ const system = {
   effects: {},
 } as unknown as System;
 
-const rollMod = [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'фора', condition: null }] as Modifier[];
+const rollMod = [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'фора' }] as Modifier[];
 
 const optionsOf = (select: HTMLSelectElement) => [...select.options].map(o => o.textContent);
 
@@ -62,7 +62,7 @@ describe('один редактор — шесть механизмов', () => 
   it('с правом писать в систему список правок предлагает готовые механизмы, выбор заводит их в словарь', () => {
     const draft = structuredClone({ ...system, roll_edits: {} }) as unknown as System;
     const editSystem = vi.fn((change: (d: System) => void) => change(draft));
-    const mods = [{ kind: 'roll', target: 'attack_roll', edit: '', condition: null }] as Modifier[];
+    const mods = [{ kind: 'roll', target: 'attack_roll', edit: '' }] as Modifier[];
     const onEdit = vi.fn((change: (d: Modifier[]) => void) => change(mods));
     render(<ModifiersEditor system={draft} modifiers={mods} onEdit={onEdit} editSystem={editSystem} />);
 
@@ -83,7 +83,7 @@ describe('один редактор — шесть механизмов', () => 
   });
 
   it('у значения есть пол и потолок', () => {
-    const valueMod = [{ kind: 'value', target: 'ac', op: 'add', value: 1, stacking: 'sum', condition: null }] as Modifier[];
+    const valueMod = [{ kind: 'value', target: 'ac', op: 'add', value: { expr: '1' }, stacking: 'sum' }] as Modifier[];
     render(<ModifiersEditor system={system} modifiers={valueMod} onEdit={vi.fn()} />);
     const how = screen.getByDisplayValue('прибавить') as HTMLSelectElement;
     expect(optionsOf(how)).toEqual(['прибавить', 'умножить', 'задать', 'не меньше', 'не больше']);

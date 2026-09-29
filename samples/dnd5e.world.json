@@ -3976,7 +3976,6 @@
               "expr": "@taken_0.mult"
             },
             "stacking": "sum",
-            "condition": null,
             "tags": [
               "рубящий"
             ]
@@ -3989,7 +3988,6 @@
               "expr": "@taken_1.mult"
             },
             "stacking": "sum",
-            "condition": null,
             "tags": [
               "колющий"
             ]
@@ -4002,7 +4000,6 @@
               "expr": "@taken_2.mult"
             },
             "stacking": "sum",
-            "condition": null,
             "tags": [
               "дробящий"
             ]
@@ -4015,7 +4012,6 @@
               "expr": "@taken_3.mult"
             },
             "stacking": "sum",
-            "condition": null,
             "tags": [
               "огонь"
             ]
@@ -4028,7 +4024,6 @@
               "expr": "@taken_4.mult"
             },
             "stacking": "sum",
-            "condition": null,
             "tags": [
               "холод"
             ]
@@ -4041,7 +4036,6 @@
               "expr": "@taken_5.mult"
             },
             "stacking": "sum",
-            "condition": null,
             "tags": [
               "молния"
             ]
@@ -4054,7 +4048,6 @@
               "expr": "@taken_6.mult"
             },
             "stacking": "sum",
-            "condition": null,
             "tags": [
               "гром"
             ]
@@ -4067,7 +4060,6 @@
               "expr": "@taken_7.mult"
             },
             "stacking": "sum",
-            "condition": null,
             "tags": [
               "кислота"
             ]
@@ -4080,7 +4072,6 @@
               "expr": "@taken_8.mult"
             },
             "stacking": "sum",
-            "condition": null,
             "tags": [
               "яд"
             ]
@@ -4093,7 +4084,6 @@
               "expr": "@taken_9.mult"
             },
             "stacking": "sum",
-            "condition": null,
             "tags": [
               "некротический"
             ]
@@ -4106,7 +4096,6 @@
               "expr": "@taken_10.mult"
             },
             "stacking": "sum",
-            "condition": null,
             "tags": [
               "излучение"
             ]
@@ -4119,7 +4108,6 @@
               "expr": "@taken_11.mult"
             },
             "stacking": "sum",
-            "condition": null,
             "tags": [
               "психический"
             ]
@@ -4132,7 +4120,6 @@
               "expr": "@taken_12.mult"
             },
             "stacking": "sum",
-            "condition": null,
             "tags": [
               "силовой"
             ]
@@ -5475,9 +5462,10 @@
             "kind": "value",
             "target": "speed",
             "op": "mul",
-            "value": 2,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "2"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -5560,8 +5548,7 @@
             "tags": [
               "атака"
             ],
-            "edit": "advantage",
-            "condition": null
+            "edit": "advantage"
           }
         ]
       },
@@ -5607,8 +5594,7 @@
             "tags": [
               "атака"
             ],
-            "edit": "advantage",
-            "condition": null
+            "edit": "advantage"
           },
           {
             "kind": "roll",
@@ -5616,8 +5602,7 @@
             "tags": [
               "проверка"
             ],
-            "edit": "advantage",
-            "condition": null
+            "edit": "advantage"
           }
         ]
       },
@@ -5974,8 +5959,7 @@
             "tags": [
               "атака"
             ],
-            "edit": "disadvantage",
-            "condition": null
+            "edit": "disadvantage"
           },
           {
             "kind": "roll",
@@ -5983,8 +5967,7 @@
             "tags": [
               "атака"
             ],
-            "edit": "advantage",
-            "condition": null
+            "edit": "advantage"
           }
         ],
         "on": [
@@ -6064,8 +6047,7 @@
             "tags": [
               "атака"
             ],
-            "edit": "disadvantage",
-            "condition": null
+            "edit": "disadvantage"
           },
           {
             "kind": "roll",
@@ -6073,8 +6055,7 @@
             "tags": [
               "проверка"
             ],
-            "edit": "disadvantage",
-            "condition": null
+            "edit": "disadvantage"
           }
         ],
         "on": [
@@ -6130,9 +6111,10 @@
             "kind": "value",
             "target": "speed",
             "op": "set",
-            "value": 0,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "0"
+            },
+            "stacking": "override"
           }
         ]
       },
@@ -6172,8 +6154,7 @@
             "tags": [
               "атака"
             ],
-            "edit": "advantage",
-            "condition": null
+            "edit": "advantage"
           },
           {
             "kind": "roll",
@@ -6181,8 +6162,7 @@
             "tags": [
               "атака"
             ],
-            "edit": "disadvantage",
-            "condition": null
+            "edit": "disadvantage"
           }
         ]
       },
@@ -6202,8 +6182,7 @@
             "tags": [
               "атака"
             ],
-            "edit": "advantage",
-            "condition": null
+            "edit": "advantage"
           },
           {
             "kind": "roll",
@@ -6212,8 +6191,7 @@
               "спасбросок",
               "сила"
             ],
-            "edit": "auto_fail",
-            "condition": null
+            "edit": "auto_fail"
           },
           {
             "kind": "roll",
@@ -6222,16 +6200,16 @@
               "спасбросок",
               "ловкость"
             ],
-            "edit": "auto_fail",
-            "condition": null
+            "edit": "auto_fail"
           },
           {
             "kind": "value",
             "target": "speed",
             "op": "set",
-            "value": 0,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "0"
+            },
+            "stacking": "override"
           }
         ],
         "grants": [
@@ -6292,8 +6270,7 @@
             "tags": [
               "атака"
             ],
-            "edit": "advantage",
-            "condition": null
+            "edit": "advantage"
           },
           {
             "kind": "roll",
@@ -6302,8 +6279,7 @@
               "спасбросок",
               "сила"
             ],
-            "edit": "auto_fail",
-            "condition": null
+            "edit": "auto_fail"
           },
           {
             "kind": "roll",
@@ -6312,24 +6288,25 @@
               "спасбросок",
               "ловкость"
             ],
-            "edit": "auto_fail",
-            "condition": null
+            "edit": "auto_fail"
           },
           {
             "kind": "value",
             "target": "speed",
             "op": "set",
-            "value": 0,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "0"
+            },
+            "stacking": "override"
           },
           {
             "kind": "value",
             "target": "event:damage",
             "op": "mul",
-            "value": 0.5,
-            "stacking": "max",
-            "condition": null
+            "value": {
+              "expr": "0.5"
+            },
+            "stacking": "max"
           }
         ],
         "grants": [
@@ -6352,8 +6329,7 @@
             "tags": [
               "атака"
             ],
-            "edit": "disadvantage",
-            "condition": null
+            "edit": "disadvantage"
           },
           {
             "kind": "roll",
@@ -6361,8 +6337,7 @@
             "tags": [
               "проверка"
             ],
-            "edit": "disadvantage",
-            "condition": null
+            "edit": "disadvantage"
           }
         ]
       },
@@ -6382,8 +6357,7 @@
             "tags": [
               "атака"
             ],
-            "edit": "advantage",
-            "condition": null
+            "edit": "advantage"
           },
           {
             "kind": "roll",
@@ -6391,8 +6365,7 @@
             "tags": [
               "атака"
             ],
-            "edit": "disadvantage",
-            "condition": null
+            "edit": "disadvantage"
           }
         ]
       },
@@ -6410,9 +6383,10 @@
             "kind": "value",
             "target": "speed",
             "op": "set",
-            "value": 0,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "0"
+            },
+            "stacking": "override"
           },
           {
             "kind": "roll",
@@ -6420,8 +6394,7 @@
             "tags": [
               "атака"
             ],
-            "edit": "disadvantage",
-            "condition": null
+            "edit": "disadvantage"
           },
           {
             "kind": "roll",
@@ -6429,8 +6402,7 @@
             "tags": [
               "атака"
             ],
-            "edit": "advantage",
-            "condition": null
+            "edit": "advantage"
           },
           {
             "kind": "roll",
@@ -6439,8 +6411,7 @@
               "спасбросок",
               "ловкость"
             ],
-            "edit": "disadvantage",
-            "condition": null
+            "edit": "disadvantage"
           }
         ],
         "on": [
@@ -6498,8 +6469,7 @@
             "tags": [
               "атака"
             ],
-            "edit": "advantage",
-            "condition": null
+            "edit": "advantage"
           },
           {
             "kind": "roll",
@@ -6508,8 +6478,7 @@
               "спасбросок",
               "сила"
             ],
-            "edit": "auto_fail",
-            "condition": null
+            "edit": "auto_fail"
           },
           {
             "kind": "roll",
@@ -6518,8 +6487,7 @@
               "спасбросок",
               "ловкость"
             ],
-            "edit": "auto_fail",
-            "condition": null
+            "edit": "auto_fail"
           }
         ],
         "grants": [
@@ -6542,8 +6510,7 @@
             "tags": [
               "атака"
             ],
-            "edit": "advantage",
-            "condition": null
+            "edit": "advantage"
           },
           {
             "kind": "roll",
@@ -6552,8 +6519,7 @@
               "спасбросок",
               "сила"
             ],
-            "edit": "auto_fail",
-            "condition": null
+            "edit": "auto_fail"
           },
           {
             "kind": "roll",
@@ -6562,16 +6528,16 @@
               "спасбросок",
               "ловкость"
             ],
-            "edit": "auto_fail",
-            "condition": null
+            "edit": "auto_fail"
           },
           {
             "kind": "value",
             "target": "speed",
             "op": "set",
-            "value": 0,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "0"
+            },
+            "stacking": "override"
           }
         ],
         "grants": [
@@ -6601,9 +6567,10 @@
             "kind": "value",
             "target": "death_ok",
             "op": "set",
-            "value": 3,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "3"
+            },
+            "stacking": "override"
           }
         ]
       },
@@ -6621,9 +6588,10 @@
             "kind": "value",
             "target": "speed",
             "op": "set",
-            "value": 0,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "0"
+            },
+            "stacking": "override"
           }
         ]
       },
@@ -6645,8 +6613,7 @@
             "tags": [
               "атака"
             ],
-            "edit": "disadvantage",
-            "condition": null
+            "edit": "disadvantage"
           },
           {
             "kind": "roll",
@@ -6655,8 +6622,7 @@
               "спасбросок",
               "ловкость"
             ],
-            "edit": "advantage",
-            "condition": null
+            "edit": "advantage"
           }
         ]
       },
@@ -6678,8 +6644,7 @@
             "tags": [
               "атака"
             ],
-            "edit": "advantage",
-            "condition": null
+            "edit": "advantage"
           },
           {
             "kind": "roll",
@@ -6687,8 +6652,7 @@
             "tags": [
               "атака"
             ],
-            "edit": "advantage",
-            "condition": null
+            "edit": "advantage"
           }
         ]
       },
@@ -6710,16 +6674,16 @@
             "value": {
               "expr": "@rage_damage"
             },
-            "stacking": "sum",
-            "condition": null
+            "stacking": "sum"
           },
           {
             "kind": "value",
             "target": "event:damage",
             "op": "mul",
-            "value": 0.5,
+            "value": {
+              "expr": "0.5"
+            },
             "stacking": "max",
-            "condition": null,
             "where": {
               "table": "damage_types",
               "column": "nature",
@@ -6732,8 +6696,7 @@
             "tags": [
               "сила"
             ],
-            "edit": "advantage",
-            "condition": null
+            "edit": "advantage"
           }
         ]
       },
@@ -6753,9 +6716,10 @@
             "kind": "value",
             "target": "ac",
             "op": "add",
-            "value": 5,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "5"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -6773,9 +6737,10 @@
             "kind": "value",
             "target": "event:damage",
             "op": "mul",
-            "value": 0.5,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "0.5"
+            },
+            "stacking": "sum"
           }
         ],
         "on": [
@@ -6809,8 +6774,7 @@
             "tags": [
               "атака"
             ],
-            "edit": "bless",
-            "condition": null
+            "edit": "bless"
           },
           {
             "kind": "roll",
@@ -6818,8 +6782,7 @@
             "tags": [
               "спасбросок"
             ],
-            "edit": "bless",
-            "condition": null
+            "edit": "bless"
           }
         ]
       },
@@ -6839,8 +6802,7 @@
             "tags": [
               "атака"
             ],
-            "edit": "bane",
-            "condition": null
+            "edit": "bane"
           },
           {
             "kind": "roll",
@@ -6848,8 +6810,7 @@
             "tags": [
               "спасбросок"
             ],
-            "edit": "bane",
-            "condition": null
+            "edit": "bane"
           }
         ]
       },
@@ -6869,8 +6830,7 @@
             "tags": [
               "проверка"
             ],
-            "edit": "guidance",
-            "condition": null
+            "edit": "guidance"
           }
         ]
       },
@@ -6890,8 +6850,7 @@
             "tags": [
               "спасбросок"
             ],
-            "edit": "guidance",
-            "condition": null
+            "edit": "guidance"
           }
         ]
       },
@@ -6909,17 +6868,19 @@
             "kind": "value",
             "target": "ac",
             "op": "add",
-            "value": 2,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "2"
+            },
+            "stacking": "sum"
           },
           {
             "kind": "value",
             "target": "speed",
             "op": "mul",
-            "value": 2,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "2"
+            },
+            "stacking": "sum"
           },
           {
             "kind": "roll",
@@ -6928,8 +6889,7 @@
               "спасбросок",
               "ловкость"
             ],
-            "edit": "advantage",
-            "condition": null
+            "edit": "advantage"
           }
         ]
       },
@@ -6947,17 +6907,19 @@
             "kind": "value",
             "target": "ac",
             "op": "add",
-            "value": -2,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "-2"
+            },
+            "stacking": "sum"
           },
           {
             "kind": "value",
             "target": "speed",
             "op": "mul",
-            "value": 0.5,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "0.5"
+            },
+            "stacking": "sum"
           },
           {
             "kind": "roll",
@@ -6967,8 +6929,9 @@
               "ловкость"
             ],
             "op": "add",
-            "value": -2,
-            "condition": null
+            "value": {
+              "expr": "-2"
+            }
           }
         ],
         "on": [
@@ -7026,8 +6989,7 @@
             "tags": [
               "атака"
             ],
-            "edit": "advantage",
-            "condition": null
+            "edit": "advantage"
           }
         ]
       },
@@ -7047,8 +7009,7 @@
             "tags": [
               "атака"
             ],
-            "edit": "disadvantage",
-            "condition": null
+            "edit": "disadvantage"
           }
         ]
       },
@@ -7066,9 +7027,10 @@
             "kind": "value",
             "target": "ac_base",
             "op": "set",
-            "value": 13,
-            "stacking": "max",
-            "condition": null
+            "value": {
+              "expr": "13"
+            },
+            "stacking": "max"
           }
         ]
       },
@@ -7086,9 +7048,10 @@
             "kind": "value",
             "target": "hp_max",
             "op": "add",
-            "value": 5,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "5"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -7106,9 +7069,10 @@
             "kind": "value",
             "target": "event:damage",
             "op": "mul",
-            "value": 0.5,
+            "value": {
+              "expr": "0.5"
+            },
             "stacking": "max",
-            "condition": null,
             "tags": [
               "огонь"
             ]
@@ -7129,9 +7093,10 @@
             "kind": "value",
             "target": "event:damage",
             "op": "mul",
-            "value": 0.5,
+            "value": {
+              "expr": "0.5"
+            },
             "stacking": "max",
-            "condition": null,
             "tags": [
               "яд"
             ]
@@ -7152,9 +7117,10 @@
             "kind": "value",
             "target": "event:damage",
             "op": "mul",
-            "value": 0.5,
+            "value": {
+              "expr": "0.5"
+            },
             "stacking": "max",
-            "condition": null,
             "where": {
               "table": "damage_types",
               "column": "nature",
@@ -7180,9 +7146,10 @@
             "kind": "value",
             "target": "event:damage",
             "op": "mul",
-            "value": 2,
+            "value": {
+              "expr": "2"
+            },
             "stacking": "sum",
-            "condition": null,
             "tags": [
               "огонь"
             ]
@@ -7203,9 +7170,10 @@
             "kind": "value",
             "target": "event:damage",
             "op": "mul",
-            "value": 0,
+            "value": {
+              "expr": "0"
+            },
             "stacking": "sum",
-            "condition": null,
             "tags": [
               "яд"
             ]
@@ -7226,9 +7194,10 @@
             "kind": "value",
             "target": "attacks_per_action",
             "op": "add",
-            "value": 1,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "1"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -7246,9 +7215,10 @@
             "kind": "value",
             "target": "crit_from",
             "op": "set",
-            "value": 19,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "19"
+            },
+            "stacking": "override"
           }
         ]
       },
@@ -7266,9 +7236,10 @@
             "kind": "value",
             "target": "ac",
             "op": "add",
-            "value": 1,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "1"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -7286,17 +7257,19 @@
             "kind": "value",
             "target": "cell:wield.ближний бой — Сила.damage",
             "op": "add",
-            "value": 2,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "2"
+            },
+            "stacking": "sum"
           },
           {
             "kind": "value",
             "target": "cell:wield.фехтовальное — Сила или Ловкость.damage",
             "op": "add",
-            "value": 2,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "2"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -7314,9 +7287,10 @@
             "kind": "value",
             "target": "cell:wield.дальний бой — Ловкость.attack",
             "op": "add",
-            "value": 2,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "2"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -7337,8 +7311,7 @@
             "value": {
               "expr": "10 + @con_mod"
             },
-            "stacking": "max",
-            "condition": null
+            "stacking": "max"
           }
         ]
       },
@@ -7359,8 +7332,7 @@
             "value": {
               "expr": "10 + @wis_mod"
             },
-            "stacking": "max",
-            "condition": null
+            "stacking": "max"
           }
         ]
       },
@@ -7381,8 +7353,7 @@
               "спасбросок",
               "ловкость"
             ],
-            "edit": "advantage",
-            "condition": null
+            "edit": "advantage"
           }
         ]
       },
@@ -7402,8 +7373,7 @@
             "tags": [
               "инициатива"
             ],
-            "edit": "advantage",
-            "condition": null
+            "edit": "advantage"
           }
         ]
       },
@@ -7423,8 +7393,7 @@
             "tags": [
               "проверка"
             ],
-            "edit": "reliable",
-            "condition": null
+            "edit": "reliable"
           }
         ]
       },
@@ -7441,8 +7410,7 @@
           {
             "kind": "roll",
             "target": "roll:any",
-            "edit": "lucky",
-            "condition": null
+            "edit": "lucky"
           }
         ]
       },
@@ -7460,9 +7428,10 @@
             "kind": "value",
             "target": "darkvision",
             "op": "set",
-            "value": 60,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "60"
+            },
+            "stacking": "override"
           }
         ]
       },
@@ -7480,9 +7449,10 @@
             "kind": "value",
             "target": "event:damage",
             "op": "mul",
-            "value": 0.5,
+            "value": {
+              "expr": "0.5"
+            },
             "stacking": "max",
-            "condition": null,
             "tags": [
               "яд"
             ]
@@ -7503,9 +7473,10 @@
             "kind": "value",
             "target": "event:damage",
             "op": "mul",
-            "value": 0.5,
+            "value": {
+              "expr": "0.5"
+            },
             "stacking": "max",
-            "condition": null,
             "tags": [
               "огонь"
             ]
@@ -7526,9 +7497,10 @@
             "kind": "value",
             "target": "initiative",
             "op": "add",
-            "value": 5,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "5"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -7549,8 +7521,7 @@
             "value": {
               "expr": "2 * @level"
             },
-            "stacking": "sum",
-            "condition": null
+            "stacking": "sum"
           }
         ]
       },
@@ -7568,9 +7539,10 @@
             "kind": "value",
             "target": "speed",
             "op": "add",
-            "value": 10,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "10"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -7588,9 +7560,10 @@
             "kind": "value",
             "target": "passive_perception",
             "op": "add",
-            "value": 5,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "5"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -7611,8 +7584,7 @@
               "спасбросок",
               "телосложение"
             ],
-            "edit": "advantage",
-            "condition": null
+            "edit": "advantage"
           }
         ]
       },
@@ -7630,9 +7602,10 @@
             "kind": "value",
             "target": "ac",
             "op": "add",
-            "value": 1,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "1"
+            },
+            "stacking": "sum"
           },
           {
             "kind": "roll",
@@ -7641,8 +7614,9 @@
               "спасбросок"
             ],
             "op": "add",
-            "value": 1,
-            "condition": null
+            "value": {
+              "expr": "1"
+            }
           }
         ]
       },
@@ -8594,15 +8568,21 @@
               "проверка"
             ],
             "edit": "disadvantage",
-            "condition": "@exhaustion >= 1"
+            "condition": {
+              "expr": "@exhaustion >= 1"
+            }
           },
           {
             "kind": "value",
             "target": "speed",
             "op": "mul",
-            "value": 0.5,
+            "value": {
+              "expr": "0.5"
+            },
             "stacking": "sum",
-            "condition": "@exhaustion >= 2"
+            "condition": {
+              "expr": "@exhaustion >= 2"
+            }
           },
           {
             "kind": "roll",
@@ -8611,7 +8591,9 @@
               "атака"
             ],
             "edit": "disadvantage",
-            "condition": "@exhaustion >= 3"
+            "condition": {
+              "expr": "@exhaustion >= 3"
+            }
           },
           {
             "kind": "roll",
@@ -8620,23 +8602,33 @@
               "спасбросок"
             ],
             "edit": "disadvantage",
-            "condition": "@exhaustion >= 3"
+            "condition": {
+              "expr": "@exhaustion >= 3"
+            }
           },
           {
             "kind": "value",
             "target": "hp_max",
             "op": "mul",
-            "value": 0.5,
+            "value": {
+              "expr": "0.5"
+            },
             "stacking": "sum",
-            "condition": "@exhaustion >= 4"
+            "condition": {
+              "expr": "@exhaustion >= 4"
+            }
           },
           {
             "kind": "value",
             "target": "speed",
             "op": "set",
-            "value": 0,
+            "value": {
+              "expr": "0"
+            },
             "stacking": "override",
-            "condition": "@exhaustion >= 5"
+            "condition": {
+              "expr": "@exhaustion >= 5"
+            }
           }
         ]
       },
@@ -10651,17 +10643,19 @@
             "kind": "value",
             "target": "cell:wield.*.attack",
             "op": "add",
-            "value": 1,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "1"
+            },
+            "stacking": "sum"
           },
           {
             "kind": "value",
             "target": "cell:wield.*.damage",
             "op": "add",
-            "value": 1,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "1"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -10679,9 +10673,10 @@
             "kind": "value",
             "target": "ac_base",
             "op": "set",
-            "value": 11,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "11"
+            },
+            "stacking": "override"
           }
         ]
       },
@@ -10699,9 +10694,10 @@
             "kind": "value",
             "target": "ac_base",
             "op": "set",
-            "value": 11,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "11"
+            },
+            "stacking": "override"
           }
         ]
       },
@@ -10719,9 +10715,10 @@
             "kind": "value",
             "target": "ac_base",
             "op": "set",
-            "value": 12,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "12"
+            },
+            "stacking": "override"
           }
         ]
       },
@@ -10739,9 +10736,10 @@
             "kind": "value",
             "target": "ac_base",
             "op": "set",
-            "value": 12,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "12"
+            },
+            "stacking": "override"
           }
         ]
       },
@@ -10759,9 +10757,10 @@
             "kind": "value",
             "target": "ac_base",
             "op": "set",
-            "value": 13,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "13"
+            },
+            "stacking": "override"
           }
         ]
       },
@@ -10779,9 +10778,10 @@
             "kind": "value",
             "target": "ac_base",
             "op": "set",
-            "value": 14,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "14"
+            },
+            "stacking": "override"
           }
         ]
       },
@@ -10799,9 +10799,10 @@
             "kind": "value",
             "target": "ac_base",
             "op": "set",
-            "value": 14,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "14"
+            },
+            "stacking": "override"
           }
         ]
       },
@@ -10819,9 +10820,10 @@
             "kind": "value",
             "target": "ac_base",
             "op": "set",
-            "value": 15,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "15"
+            },
+            "stacking": "override"
           }
         ]
       },
@@ -10839,17 +10841,19 @@
             "kind": "value",
             "target": "ac_base",
             "op": "set",
-            "value": 14,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "14"
+            },
+            "stacking": "override"
           },
           {
             "kind": "value",
             "target": "armor_heavy",
             "op": "set",
-            "value": true,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "да"
+            },
+            "stacking": "override"
           }
         ]
       },
@@ -10867,17 +10871,19 @@
             "kind": "value",
             "target": "ac_base",
             "op": "set",
-            "value": 16,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "16"
+            },
+            "stacking": "override"
           },
           {
             "kind": "value",
             "target": "armor_heavy",
             "op": "set",
-            "value": true,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "да"
+            },
+            "stacking": "override"
           }
         ]
       },
@@ -10895,17 +10901,19 @@
             "kind": "value",
             "target": "ac_base",
             "op": "set",
-            "value": 17,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "17"
+            },
+            "stacking": "override"
           },
           {
             "kind": "value",
             "target": "armor_heavy",
             "op": "set",
-            "value": true,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "да"
+            },
+            "stacking": "override"
           }
         ]
       },
@@ -10923,17 +10931,19 @@
             "kind": "value",
             "target": "ac_base",
             "op": "set",
-            "value": 18,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "18"
+            },
+            "stacking": "override"
           },
           {
             "kind": "value",
             "target": "armor_heavy",
             "op": "set",
-            "value": true,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "да"
+            },
+            "stacking": "override"
           }
         ]
       },
@@ -10950,9 +10960,10 @@
             "kind": "value",
             "target": "ac",
             "op": "add",
-            "value": 2,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "2"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -10981,9 +10992,10 @@
             "kind": "value",
             "target": "ac",
             "op": "add",
-            "value": 1,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "1"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -11000,9 +11012,10 @@
             "kind": "value",
             "target": "con",
             "op": "set",
-            "value": 19,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "19"
+            },
+            "stacking": "override"
           }
         ]
       },
@@ -11019,9 +11032,10 @@
             "kind": "value",
             "target": "str",
             "op": "set",
-            "value": 21,
-            "stacking": "override",
-            "condition": null
+            "value": {
+              "expr": "21"
+            },
+            "stacking": "override"
           }
         ]
       },
@@ -11038,9 +11052,10 @@
             "kind": "value",
             "target": "speed",
             "op": "mul",
-            "value": 2,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "2"
+            },
+            "stacking": "sum"
           }
         ]
       },
@@ -11069,9 +11084,10 @@
             "kind": "value",
             "target": "darkvision",
             "op": "set",
-            "value": 60,
-            "stacking": "max",
-            "condition": null
+            "value": {
+              "expr": "60"
+            },
+            "stacking": "max"
           }
         ]
       },
@@ -11088,9 +11104,10 @@
             "kind": "value",
             "target": "ac",
             "op": "add",
-            "value": 2,
-            "stacking": "sum",
-            "condition": null
+            "value": {
+              "expr": "2"
+            },
+            "stacking": "sum"
           }
         ]
       },

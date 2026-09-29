@@ -467,8 +467,7 @@
             "tags": [
               "нулевой"
             ],
-            "edit": "zero_rating",
-            "condition": null
+            "edit": "zero_rating"
           }
         ]
       }

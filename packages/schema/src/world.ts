@@ -142,9 +142,9 @@ export const valueModifier = z.object({
   kind: z.literal('value'),
   target: z.string(),
   op: z.string(),
-  value: z.unknown(),
+  value: formula,
   stacking: z.string().optional(),
-  condition: z.string().nullable().optional(),
+  condition: formula.optional(),
 
   tags: z.array(z.string().min(1)).optional(),
   notTags: z.array(z.string().min(1)).optional(),
@@ -162,9 +162,9 @@ export const rollModifier = z.object({
   tags: z.array(z.string().min(1)).optional(),
   edit: z.string().optional(),
   op: z.string().optional(),
-  value: z.unknown().optional(),
+  value: formula.optional(),
   stacking: z.string().optional(),
-  condition: z.string().nullable().optional(),
+  condition: formula.optional(),
 }).passthrough();
 
 export const modifier = z.discriminatedUnion('kind', [valueModifier, rollModifier]);

@@ -41,7 +41,7 @@ group('степени успеха', () => {
       ...sys.effects,
       [id]: {
         label: id, activation: 'passive', duration: { kind: 'permanent' },
-        modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['ход'], edit, condition: null }],
+        modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['ход'], edit }],
       },
     },
   });

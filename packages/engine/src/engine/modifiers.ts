@@ -196,7 +196,7 @@ export function claimedModifiers(system: System, keys: string[]): SourcedModifie
           Object.keys(dictionary).join(', ') || '(пусто)'}`);
     }
     return {
-      kind: 'roll' as const, target: ANY_ROLL, edit: key, condition: null,
+      kind: 'roll' as const, target: ANY_ROLL, edit: key,
       source: { type: 'claim' as const, id: key, label: edit.label || key, modifiers: [] },
     };
   });
@@ -215,20 +215,17 @@ function tagsMatch(mod: SourcedModifier, tags: string[], system: System): boolea
 
 function conditionHolds(mod: SourcedModifier, pass: Pass): boolean {
   if (!mod.condition) return true;
-  const result = compile(mod.condition).evaluate(pass.resolve);
+  const result = compile(mod.condition.expr).evaluate(pass.resolve);
   if (typeof result !== 'boolean') {
     throw new EngineError(
-      `условие «${mod.condition}» источника «${mod.source.label}» должно давать логическое значение`);
+      `условие «${mod.condition.expr}» источника «${mod.source.label}» должно давать да или нет`);
   }
   return result;
 }
 
 function valueOf(mod: SourcedModifier, pass: Pass): unknown {
-  const raw = (mod as { value?: unknown }).value;
-  if (raw && typeof raw === 'object' && 'expr' in raw) {
-    return compile((raw as { expr: string }).expr).evaluate(pass.resolve);
-  }
-  return raw;
+  const raw = (mod as { value?: { expr: string } }).value;
+  return raw ? compile(raw.expr).evaluate(pass.resolve) : undefined;
 }
 
 function totalOf(mods: SourcedModifier[], pass: Pass, tag: string, seed = 0): number {
