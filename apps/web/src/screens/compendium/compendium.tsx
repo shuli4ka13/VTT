@@ -1,3 +1,4 @@
+import { bindingsOf } from '@vtt/engine/events/envelope';
 import { recordsOf, isItem, propsNeeded } from '@vtt/engine/model/owned';
 import { TABS } from '../../words.ts';
 import { useWorld, freeId, randomTag } from '../../store/world.ts';
@@ -113,7 +114,7 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
     pick({ activeRecordId: null });
   };
 
-  const bindings = kind?.bindings ?? [];
+  const bindings = bindingsOf(record, system);
 
   const mustFill = propsNeeded(system, kind, bindings);
   const hangable = Object.entries(system.effects)

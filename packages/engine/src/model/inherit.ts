@@ -30,10 +30,12 @@ const byKey = <T extends { key: string }>(base: T[], own: T[]): T[] => {
   return out;
 };
 
-const byOrder = (base: Binding[], own: Binding[]): Binding[] => own.map((item, at) => {
+export const byOrder = (base: Binding[], own: Binding[]): Binding[] => own.map((item, at) => {
   const was = base[at];
   return was ? { ...was, ...item, args: { ...(was.args ?? {}), ...(item.args ?? {}) } } : item;
 }).concat(base.slice(own.length));
+
+const union = (base: string[] | undefined, own: string[] | undefined): string[] => [...new Set([...(base ?? []), ...(own ?? [])])];
 
 function dropEmpty(holder: Loose, keys: string[]): void {
   for (const key of keys) {
@@ -49,8 +51,12 @@ function mergeEffect(base: Effect, own: Effect): Effect {
   merged.modifiers = [...(base.modifiers ?? []), ...(own.modifiers ?? [])] as Modifier[];
   merged.self = o.self === undefined ? base.self : ([...(base.self ?? []), ...(own.self ?? [])] as Step[]);
   merged.steps = [...(base.steps ?? []), ...(own.steps ?? [])] as Step[];
+  merged.on = [...(base.on ?? []), ...(own.on ?? [])];
+  merged.attach = [...(base.attach ?? []), ...(own.attach ?? [])] as Step[];
+  merged.detach = [...(base.detach ?? []), ...(own.detach ?? [])] as Step[];
+  merged.grants = union(base.grants, own.grants);
 
-  dropEmpty(merged, ['params', 'modifiers', 'self', 'steps']);
+  dropEmpty(merged, ['params', 'modifiers', 'self', 'steps', 'on', 'attach', 'detach', 'grants']);
   return merged as Effect;
 }
 
@@ -59,8 +65,10 @@ function mergeKind(base: RecordKind, own: RecordKind): RecordKind {
   merged.props = byKey((base.props ?? []) as { key: string }[], (own.props ?? []) as { key: string }[]);
   merged.bindings = byOrder((base.bindings ?? []) as Binding[], (own.bindings ?? []) as Binding[]);
   merged.modifiers = [...(base.modifiers ?? []), ...(own.modifiers ?? [])] as Modifier[];
+  merged.grants = union(base.grants, own.grants);
+  merged.blocks = union(base.blocks, own.blocks);
 
-  dropEmpty(merged, ['props', 'bindings', 'modifiers']);
+  dropEmpty(merged, ['props', 'bindings', 'modifiers', 'grants', 'blocks']);
   return merged as RecordKind;
 }
 

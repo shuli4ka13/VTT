@@ -8,6 +8,7 @@ export { spendUse } from './durations.ts';
 import { findRecord, heldBy, isItem, kindOfRecord, entryOf, propsOf, argsWithProps, propKeysOf } from '../model/owned.ts';
 export { propsOf } from '../model/owned.ts';
 import { requireEffect, findEffect, isPipeline, grantedTo } from '../engine/effects.ts';
+import { byOrder } from '../model/inherit.ts';
 import { listening, subscriberByKey, hears, runsAtOther, withSteps } from './bus.ts';
 import type { Role, Phase } from './bus.ts';
 import { EngineError } from '../engine/errors.ts';
@@ -81,8 +82,7 @@ export interface ReceiveResult {
 }
 
 export function bindingsOf(record: CompendiumRecord, system: System): Binding[] {
-  if (record.bindings?.length) return record.bindings;
-  return kindOfRecord(system, record)?.bindings ?? [];
+  return byOrder(kindOfRecord(system, record)?.bindings ?? [], record.bindings ?? []);
 }
 
 export const GRANTED_ACTION = '+';

@@ -6,6 +6,7 @@ import { and, desc, eq, or } from 'drizzle-orm';
 import { world as schemas } from '@vtt/schema';
 import { lintSystem, lintCompendium, errorsOf, describeWhere } from '@vtt/engine/model/lint';
 import { propsNeeded } from '@vtt/engine/model/owned';
+import { bindingsOf } from '@vtt/engine/events/envelope';
 import { flattenSystem } from '@vtt/engine/model/inherit';
 import type { Compendium, System } from '@vtt/schema';
 import { DB, CLOCK, IDS } from '../common/tokens.ts';
@@ -180,7 +181,7 @@ export class CatalogService {
   private assertRecordsFilled(system: System, compendium: Compendium): void {
     for (const record of compendium.records ?? []) {
       const kind = system.records?.[String(record.rk)];
-      const bindings = [...(kind?.bindings ?? []), ...(record.bindings ?? [])];
+      const bindings = bindingsOf(record, system);
       for (const key of propsNeeded(system, kind, bindings)) {
         const value = record.props?.[key];
         if (value === undefined || value === '') {
