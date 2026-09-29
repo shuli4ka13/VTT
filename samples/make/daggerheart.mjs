@@ -6,6 +6,7 @@ import { fieldRollsOf } from './convert/field-rolls.ts';
 import { namesOf } from './convert/names.ts';
 import { spendOf } from './convert/spend.ts';
 import { addressesOf } from './convert/addresses.ts';
+import { statsOf } from './convert/stats.ts';
 
 const TRAITS = [
   ['agility', 'Проворство', 'Agility'], ['strength', 'Сила', 'Strength'], ['finesse', 'Искусность', 'Finesse'],
@@ -613,5 +614,5 @@ const world = {
 };
 
 const out = fileURLToPath(new URL('../daggerheart.world.json', import.meta.url));
-writeFileSync(out, `${JSON.stringify(addressesOf(spendOf(namesOf(fieldRollsOf(argsOf(modifiersOf(world)))))), null, 2)}\n`);
+writeFileSync(out, `${JSON.stringify(statsOf(addressesOf(spendOf(namesOf(fieldRollsOf(argsOf(modifiersOf(world))))))), null, 2)}\n`);
 console.log(`Daggerheart: полей ${world.system.fields.length}, эффектов ${Object.keys(world.system.effects).length}, записей ${world.compendium.records.length}, листов ${world.sheets.length}`);

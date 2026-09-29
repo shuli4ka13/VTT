@@ -249,15 +249,6 @@
         }
       },
       {
-        "tag": "tier",
-        "label": "Ступень",
-        "group": "Прогрессия",
-        "value": {
-          "kind": "formula",
-          "expr": "если(@level >= 8, 4, если(@level >= 5, 3, если(@level >= 2, 2, 1)))"
-        }
-      },
-      {
         "tag": "proficiency",
         "label": "Мастерство",
         "group": "Прогрессия",
@@ -277,15 +268,6 @@
           "kind": "stored",
           "type": "number",
           "default": 0
-        }
-      },
-      {
-        "tag": "evasion",
-        "label": "Уклонение",
-        "group": "Уклонение и броня",
-        "value": {
-          "kind": "formula",
-          "expr": "если(@class != \"\", таблица(\"classes\", @class, \"evasion\"), 10) + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"evasion_bonus\"), 0) + @evasion_bonus"
         }
       },
       {
@@ -336,24 +318,6 @@
         }
       },
       {
-        "tag": "major",
-        "label": "Порог серьёзного урона",
-        "group": "Пороги урона",
-        "value": {
-          "kind": "formula",
-          "expr": "если(@major_base > 0, @major_base + @level + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"threshold_proficiency\"), 0) * @proficiency, @level)"
-        }
-      },
-      {
-        "tag": "severe",
-        "label": "Порог тяжёлого урона",
-        "group": "Пороги урона",
-        "value": {
-          "kind": "formula",
-          "expr": "если(@severe_base > 0, @severe_base + @level + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"threshold_proficiency\"), 0) * @proficiency, 2 * @level)"
-        }
-      },
-      {
         "tag": "hp_extra",
         "label": "Хиты: дополнительные клетки",
         "group": "Здоровье",
@@ -362,15 +326,6 @@
           "type": "number",
           "default": 0,
           "min": 0
-        }
-      },
-      {
-        "tag": "hp_max",
-        "label": "Хиты: клеток",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "если(@class != \"\", таблица(\"classes\", @class, \"hp\"), 0) + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"hp_bonus\"), 0) + @hp_extra"
         }
       },
       {
@@ -397,15 +352,6 @@
         }
       },
       {
-        "tag": "stress_max",
-        "label": "Стресс: клеток",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "6 + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"stress_bonus\"), 0) + @stress_extra"
-        }
-      },
-      {
         "tag": "stress",
         "label": "Стресс отмечен",
         "group": "Здоровье",
@@ -416,33 +362,6 @@
           "min": 0
         },
         "control": "pips"
-      },
-      {
-        "tag": "down",
-        "label": "Последний хит отмечен",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "все(@hp_max > 0, @hp >= @hp_max)"
-        }
-      },
-      {
-        "tag": "stress_full",
-        "label": "Весь Стресс отмечен",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "все(@stress_max > 0, @stress >= @stress_max)"
-        }
-      },
-      {
-        "tag": "stress_free",
-        "label": "Есть свободный Стресс",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "@stress < @stress_max"
-        }
       },
       {
         "tag": "hope",
@@ -523,6 +442,132 @@
           "default": 0,
           "min": 0,
           "max": 12
+        }
+      },
+      {
+        "tag": "stats.tier.value",
+        "label": "Ступень",
+        "group": "Прогрессия",
+        "value": {
+          "kind": "formula",
+          "expr": "если(@level >= 8, 4, если(@level >= 5, 3, если(@level >= 2, 2, 1)))"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "tier",
+          "column": "value"
+        }
+      },
+      {
+        "tag": "stats.evasion.value",
+        "label": "Уклонение",
+        "group": "Уклонение и броня",
+        "value": {
+          "kind": "formula",
+          "expr": "если(@class != \"\", таблица(\"classes\", @class, \"evasion\"), 10) + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"evasion_bonus\"), 0) + @evasion_bonus"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "evasion",
+          "column": "value"
+        }
+      },
+      {
+        "tag": "stats.major.value",
+        "label": "Порог серьёзного урона",
+        "group": "Пороги урона",
+        "value": {
+          "kind": "formula",
+          "expr": "если(@major_base > 0, @major_base + @level + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"threshold_proficiency\"), 0) * @proficiency, @level)"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "major",
+          "column": "value"
+        }
+      },
+      {
+        "tag": "stats.severe.value",
+        "label": "Порог тяжёлого урона",
+        "group": "Пороги урона",
+        "value": {
+          "kind": "formula",
+          "expr": "если(@severe_base > 0, @severe_base + @level + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"threshold_proficiency\"), 0) * @proficiency, 2 * @level)"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "severe",
+          "column": "value"
+        }
+      },
+      {
+        "tag": "stats.hp_max.value",
+        "label": "Хиты: клеток",
+        "group": "Здоровье",
+        "value": {
+          "kind": "formula",
+          "expr": "если(@class != \"\", таблица(\"classes\", @class, \"hp\"), 0) + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"hp_bonus\"), 0) + @hp_extra"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "hp_max",
+          "column": "value"
+        }
+      },
+      {
+        "tag": "stats.stress_max.value",
+        "label": "Стресс: клеток",
+        "group": "Здоровье",
+        "value": {
+          "kind": "formula",
+          "expr": "6 + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"stress_bonus\"), 0) + @stress_extra"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "stress_max",
+          "column": "value"
+        }
+      },
+      {
+        "tag": "stats.down.value",
+        "label": "Последний хит отмечен",
+        "group": "Здоровье",
+        "value": {
+          "kind": "formula",
+          "expr": "все(@stats.hp_max.value > 0, @hp >= @stats.hp_max.value)"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "down",
+          "column": "value"
+        }
+      },
+      {
+        "tag": "stats.stress_full.value",
+        "label": "Весь Стресс отмечен",
+        "group": "Здоровье",
+        "value": {
+          "kind": "formula",
+          "expr": "все(@stats.stress_max.value > 0, @stress >= @stats.stress_max.value)"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "stress_full",
+          "column": "value"
+        }
+      },
+      {
+        "tag": "stats.stress_free.value",
+        "label": "Есть свободный Стресс",
+        "group": "Здоровье",
+        "value": {
+          "kind": "formula",
+          "expr": "@stress < @stats.stress_max.value"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "stress_free",
+          "column": "value"
         }
       }
     ],
@@ -1472,6 +1517,110 @@
             }
           }
         ]
+      },
+      "stats": {
+        "label": "Показатели",
+        "key": "word",
+        "columns": [
+          {
+            "key": "value",
+            "label": "Значение",
+            "kind": "number"
+          }
+        ],
+        "rows": [
+          {
+            "value": "tier",
+            "label": "Ступень",
+            "group": "Прогрессия",
+            "cells": {
+              "value": {
+                "expr": "если(@level >= 8, 4, если(@level >= 5, 3, если(@level >= 2, 2, 1)))"
+              }
+            }
+          },
+          {
+            "value": "evasion",
+            "label": "Уклонение",
+            "group": "Уклонение и броня",
+            "cells": {
+              "value": {
+                "expr": "если(@class != \"\", таблица(\"classes\", @class, \"evasion\"), 10) + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"evasion_bonus\"), 0) + @evasion_bonus"
+              }
+            }
+          },
+          {
+            "value": "major",
+            "label": "Порог серьёзного урона",
+            "group": "Пороги урона",
+            "cells": {
+              "value": {
+                "expr": "если(@major_base > 0, @major_base + @level + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"threshold_proficiency\"), 0) * @proficiency, @level)"
+              }
+            }
+          },
+          {
+            "value": "severe",
+            "label": "Порог тяжёлого урона",
+            "group": "Пороги урона",
+            "cells": {
+              "value": {
+                "expr": "если(@severe_base > 0, @severe_base + @level + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"threshold_proficiency\"), 0) * @proficiency, 2 * @level)"
+              }
+            }
+          },
+          {
+            "value": "hp_max",
+            "label": "Хиты: клеток",
+            "group": "Здоровье",
+            "cells": {
+              "value": {
+                "expr": "если(@class != \"\", таблица(\"classes\", @class, \"hp\"), 0) + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"hp_bonus\"), 0) + @hp_extra"
+              }
+            }
+          },
+          {
+            "value": "stress_max",
+            "label": "Стресс: клеток",
+            "group": "Здоровье",
+            "cells": {
+              "value": {
+                "expr": "6 + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"stress_bonus\"), 0) + @stress_extra"
+              }
+            }
+          },
+          {
+            "value": "down",
+            "label": "Последний хит отмечен",
+            "group": "Здоровье",
+            "cells": {
+              "value": {
+                "expr": "все(@stats.hp_max.value > 0, @hp >= @stats.hp_max.value)"
+              }
+            }
+          },
+          {
+            "value": "stress_full",
+            "label": "Весь Стресс отмечен",
+            "group": "Здоровье",
+            "cells": {
+              "value": {
+                "expr": "все(@stats.stress_max.value > 0, @stress >= @stats.stress_max.value)"
+              }
+            }
+          },
+          {
+            "value": "stress_free",
+            "label": "Есть свободный Стресс",
+            "group": "Здоровье",
+            "cells": {
+              "value": {
+                "expr": "@stress < @stats.stress_max.value"
+              }
+            }
+          }
+        ],
+        "sheet": {}
       }
     },
     "roll_edits": {
@@ -1739,7 +1888,7 @@
               ]
             },
             "versus": {
-              "expr": "@получатель.evasion"
+              "expr": "@получатель.stats.evasion.value"
             }
           },
           {
@@ -1781,7 +1930,7 @@
             },
             "direction": "add",
             "value": {
-              "expr": "если(@event.amount >= @severe, 3, если(@event.amount >= @major, 2, если(@event.amount >= 1, 1, 0)))"
+              "expr": "если(@event.amount >= @stats.severe.value, 3, если(@event.amount >= @stats.major.value, 2, если(@event.amount >= 1, 1, 0)))"
             },
             "targetModifiers": false
           }
@@ -2073,7 +2222,7 @@
         "description": "Отмечен последний Стресс — «Уязвим», пока не снят хотя бы один.",
         "on": [
           {
-            "on": "field:stress_full",
+            "on": "field:stats.stress_full.value",
             "steps": [
               {
                 "type": "status",
@@ -2097,7 +2246,7 @@
         "description": "Есть свободный Стресс — «Уязвим» от Стресса снят.",
         "on": [
           {
-            "on": "field:stress_free",
+            "on": "field:stats.stress_free.value",
             "steps": [
               {
                 "type": "status",
@@ -2131,7 +2280,7 @@
         "description": "Отмечен последний хит — «Смертельный ход».",
         "on": [
           {
-            "on": "field:down",
+            "on": "field:stats.down.value",
             "steps": [
               {
                 "type": "status",
@@ -2335,7 +2484,7 @@
             },
             "direction": "subtract",
             "value": {
-              "expr": "меньшее из(@hp, кинуть(\"1к4\") + @tier)"
+              "expr": "меньшее из(@hp, кинуть(\"1к4\") + @stats.tier.value)"
             },
             "targetModifiers": false
           },
@@ -2361,7 +2510,7 @@
             },
             "direction": "subtract",
             "value": {
-              "expr": "меньшее из(@stress, кинуть(\"1к4\") + @tier)"
+              "expr": "меньшее из(@stress, кинуть(\"1к4\") + @stats.tier.value)"
             },
             "targetModifiers": false
           }
@@ -2380,7 +2529,7 @@
             },
             "direction": "subtract",
             "value": {
-              "expr": "меньшее из(@armor_marked, кинуть(\"1к4\") + @tier)"
+              "expr": "меньшее из(@armor_marked, кинуть(\"1к4\") + @stats.tier.value)"
             },
             "targetModifiers": false
           }
@@ -2737,7 +2886,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "evasion",
+            "target": "stats.evasion.value",
             "op": "add",
             "value": {
               "expr": "2"
@@ -2916,7 +3065,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "hp_max",
+            "target": "stats.hp_max.value",
             "op": "set",
             "value": {
               "expr": "@adversary_hp"
@@ -2925,7 +3074,7 @@
           },
           {
             "kind": "value",
-            "target": "stress_max",
+            "target": "stats.stress_max.value",
             "op": "set",
             "value": {
               "expr": "@adversary_stress"
@@ -2934,7 +3083,7 @@
           },
           {
             "kind": "value",
-            "target": "major",
+            "target": "stats.major.value",
             "op": "set",
             "value": {
               "expr": "@major_base"
@@ -2943,7 +3092,7 @@
           },
           {
             "kind": "value",
-            "target": "severe",
+            "target": "stats.severe.value",
             "op": "set",
             "value": {
               "expr": "@severe_base"
@@ -3176,7 +3325,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "evasion",
+            "target": "stats.evasion.value",
             "op": "add",
             "value": {
               "expr": "-1"
@@ -3219,7 +3368,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "evasion",
+            "target": "stats.evasion.value",
             "op": "add",
             "value": {
               "expr": "-1"
@@ -3635,7 +3784,7 @@
           },
           {
             "kind": "value",
-            "target": "evasion",
+            "target": "stats.evasion.value",
             "op": "add",
             "value": {
               "expr": "-1"
@@ -3748,7 +3897,7 @@
           },
           {
             "kind": "value",
-            "target": "evasion",
+            "target": "stats.evasion.value",
             "op": "add",
             "value": {
               "expr": "1"
@@ -3837,7 +3986,7 @@
           },
           {
             "kind": "value",
-            "target": "evasion",
+            "target": "stats.evasion.value",
             "op": "add",
             "value": {
               "expr": "-1"
@@ -3886,7 +4035,7 @@
           },
           {
             "kind": "value",
-            "target": "evasion",
+            "target": "stats.evasion.value",
             "op": "add",
             "value": {
               "expr": "-2"

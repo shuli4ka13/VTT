@@ -24,18 +24,18 @@ const act = (die: () => number, bran: Sheet = sheetOf('bran'), опыт = 0) => 
 group('Daggerheart: герой по SRD', () => {
   test('класс, происхождение и доспех считают уклонение, хиты, Стресс и пороги', () => {
     const bran = sheetOf('bran');
-    eq(computed(bran, 'evasion'), 10, 'Воин 11, кольчуга −1');
-    eq(computed(bran, 'hp_max'), 6);
-    eq(computed(bran, 'stress_max'), 7, 'человек: +1 клетка Стресса');
-    eq(computed(bran, 'major'), 8, 'кольчуга 7 + уровень 1');
-    eq(computed(bran, 'severe'), 16);
-    eq(computed(sheetOf('toma'), 'major'), 9, 'галапа: + мастерство к порогам');
+    eq(computed(bran, 'stats.evasion.value'), 10, 'Воин 11, кольчуга −1');
+    eq(computed(bran, 'stats.hp_max.value'), 6);
+    eq(computed(bran, 'stats.stress_max.value'), 7, 'человек: +1 клетка Стресса');
+    eq(computed(bran, 'stats.major.value'), 8, 'кольчуга 7 + уровень 1');
+    eq(computed(bran, 'stats.severe.value'), 16);
+    eq(computed(sheetOf('toma'), 'stats.major.value'), 9, 'галапа: + мастерство к порогам');
   });
 
   test('без доспеха пороги — уровень и двойной уровень', () => {
     const bare = { ...sheetOf('bran'), has: [] } as Sheet;
-    eq(computed(bare, 'major'), 1);
-    eq(computed(bare, 'severe'), 2);
+    eq(computed(bare, 'stats.major.value'), 1);
+    eq(computed(bare, 'stats.severe.value'), 2);
   });
 });
 
@@ -125,11 +125,11 @@ group('Daggerheart: смертельные ходы', () => {
 group('Daggerheart: противник — тип листа переопределяет формулы героя', () => {
   test('хиты, Стресс и пороги — числами из блока, без класса и уровня', () => {
     const bandit = sheetOf('bandit');
-    eq(computed(bandit, 'hp_max'), 5);
-    eq(computed(bandit, 'stress_max'), 3);
-    eq(computed(bandit, 'major'), 8, 'порог без прибавки уровня');
-    eq(computed(bandit, 'severe'), 14);
-    eq(computed(sheetOf('bran'), 'major'), 8, 'у героя по-прежнему основа доспеха + уровень');
+    eq(computed(bandit, 'stats.hp_max.value'), 5);
+    eq(computed(bandit, 'stats.stress_max.value'), 3);
+    eq(computed(bandit, 'stats.major.value'), 8, 'порог без прибавки уровня');
+    eq(computed(bandit, 'stats.severe.value'), 14);
+    eq(computed(sheetOf('bran'), 'stats.major.value'), 8, 'у героя по-прежнему основа доспеха + уровень');
   });
 });
 

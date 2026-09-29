@@ -1,11 +1,10 @@
-import { useWorld, useBook } from '../../store/world.ts';
-import { LiveValue } from './live-value.tsx';
+import { useWorld } from '../../store/world.ts';
 import { BlockPick } from './block-pick.tsx';
 import { CONTROLS } from '../../sheet/controls/index.tsx';
-import { Card, CardHead, Field, Input, Select, Button, Fold, DangerButton, Chip } from '../../ui/primitives.tsx';
+import { Card, CardHead, Field, Input, Select, Button, DangerButton, Chip } from '../../ui/primitives.tsx';
 import { isRange } from '@vtt/engine/model/tables';
-import { rowKeyOf, cellSource, onSheet, viewOf } from '@vtt/engine/model/sheet-columns';
-import type { Field as FieldModel, System, TableViewColumn } from '@vtt/schema';
+import { cellSource, liveColumnsOf, onSheet, viewOf } from '@vtt/engine/model/sheet-columns';
+import type { System, TableColumn, TableViewColumn } from '@vtt/schema';
 
 export const sheetTables = (system: System): [string, string][] =>
   Object.entries(system.tables ?? {})
@@ -26,45 +25,56 @@ export function placeOnSheet(draft: System, tableId: string): void {
 
 const parseStart = (text: string): number | string => (/^-?\d+(\.\d+)?$/.test(text) ? Number(text) : text);
 
-export function TableFieldEditor({ field, system }: { field: FieldModel; system: System }) {
-  const compendium = useBook();
+export function TableOnSheet({ tableId, system }: { tableId: string; system: System }) {
   const editSystem = useWorld(s => s.editSystem);
   const pick = useWorld(s => s.pick);
-  const cell = field.cell!;
-  const table = system.tables?.[cell.table];
-  const column = table?.columns?.find(c => c.key === cell.column);
-  if (!table || !column || !onSheet(table)) return null;
+  const table = system.tables?.[tableId];
+  if (!table || !onSheet(table)) return null;
+  const columns = liveColumnsOf(table);
   const count = (table.rows ?? []).length;
-  const row = (table.rows ?? []).find(r => rowKeyOf(r) === cell.row);
+
+  return (
+    <>
+      <Card>
+        <CardHead
+          title={table.label || tableId}
+          sub={<Chip>таблица · {count} строк</Chip>}
+          actions={<>
+            <Button size="sm" onClick={() => pick({ activeTab: 'dictionaries', activeTableId: tableId })}>Открыть таблицу</Button>
+            <DangerButton size="sm" onConfirm={() => {
+              editSystem(draft => { const target = draft.tables?.[tableId]; if (target) delete target.sheet; });
+              pick({ activeFieldTag: null });
+            }}>Убрать с листа</DangerButton>
+          </>}
+        />
+      </Card>
+      {columns.map(column => <ColumnOnSheet key={column.key} tableId={tableId} column={column} system={system} />)}
+    </>
+  );
+}
+
+function ColumnOnSheet({ tableId, column, system }: { tableId: string; column: TableColumn; system: System }) {
+  const editSystem = useWorld(s => s.editSystem);
+  const table = system.tables![tableId]!;
   const view = viewOf(table, column.key);
+  const stored = (table.rows ?? []).some(row => cellSource(column, row).kind === 'input');
+  const first = system.fields.find(f => f.cell?.table === tableId && f.cell.column === column.key);
 
   const setView = (change: (v: TableViewColumn) => void) => editSystem(draft => {
-    const target = draft.tables?.[cell.table];
+    const target = draft.tables?.[tableId];
     if (!target?.sheet) return;
     const columns = (target.sheet.columns ??= {});
-    const own = (columns[cell.column] ??= {});
+    const own = (columns[column.key] ??= {});
     change(own);
-    if (!Object.keys(own).length) delete columns[cell.column];
+    if (!Object.keys(own).length) delete columns[column.key];
   });
-  const stored = field.value.kind === 'stored';
 
   return (
     <Card>
-      <CardHead
-        title={field.label || field.tag}
-        sub={<Chip>таблица «{table.label || cell.table}» · строка «{row?.label ?? cell.row}»</Chip>}
-        actions={<>
-          <Button size="sm" onClick={() => pick({ activeTab: 'dictionaries', activeTableId: cell.table })}>Открыть таблицу</Button>
-          <DangerButton size="sm" onConfirm={() => {
-            editSystem(draft => { const target = draft.tables?.[cell.table]; if (target) delete target.sheet; });
-            pick({ activeFieldTag: null });
-          }}>Убрать таблицу с листа</DangerButton>
-        </>}
-      />
-      <span className="faint">«{column.label || column.key}» — для всех {count} строк</span>
+      <CardHead title={column.label || column.key} sub={<Chip>{stored ? 'вводит игрок' : 'считается'}</Chip>} />
       <div className="row">
         <Field label="Блок">
-          <BlockPick of="fields" system={system} value={field.group}
+          <BlockPick of="fields" system={system} value={view.group ?? table.sheet?.group}
             onChange={next => setView(v => { if (next) v.group = next; else delete v.group; })} />
         </Field>
         {stored ? (
@@ -83,23 +93,11 @@ export function TableFieldEditor({ field, system }: { field: FieldModel; system:
               onChange={text => setView(v => { if (!text.trim()) delete v.start; else v.start = parseStart(text); })} />
           </Field>
         ) : null}
+        <Field label="Подпись">
+          <Input value={view.label ?? ''} placeholder={first?.label ?? ''}
+            onChange={next => setView(v => { if (next.trim()) v.label = next; else delete v.label; })} />
+        </Field>
       </div>
-      {stored ? null : (
-        <>
-          <span className="faint">считается формулой — она правится в таблице</span>
-          {field.value.kind === 'formula'
-            ? <LiveValue system={system} compendium={compendium} tag={field.tag} source={field.value.expr} />
-            : null}
-        </>
-      )}
-      <Fold title="ещё">
-        <div className="row">
-          <Field label="Подпись">
-            <Input value={view.label ?? ''} placeholder={field.label}
-              onChange={next => setView(v => { if (next.trim()) v.label = next; else delete v.label; })} />
-          </Field>
-        </div>
-      </Fold>
     </Card>
   );
 }

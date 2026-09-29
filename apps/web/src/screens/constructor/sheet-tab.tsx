@@ -13,12 +13,14 @@ import {
   Card, CardHead, Field, Input, Select, Button, Empty, Fold, Verdict, Chip, DangerButton, NumInput,
   LabelInput,
 } from '../../ui/primitives.tsx';
-import { FormulaInput, formulaAsLabels } from '../../ui/formula.tsx';
+import { formulaAsLabels } from '../../ui/formula.tsx';
 import { compile } from '@vtt/engine/formula';
 import { DonorPalette } from './donors.tsx';
 import { useFreshKeys } from '../../store/fresh.ts';
 import { newField } from './factory.ts';
-import { TableFieldEditor, placeOnSheet, sheetTables } from './table-field.tsx';
+import { TableOnSheet, placeOnSheet, sheetTables } from './table-field.tsx';
+import { SheetSample } from './sheet-sample.tsx';
+import { moveToTable, movable } from '@vtt/engine/model/rename';
 import { GroupEditor } from './group-editor.tsx';
 import { BlockPick } from './block-pick.tsx';
 import { effectiveDefault, sameValue } from './groups.ts';
@@ -26,19 +28,7 @@ import { blockTree, BlockBranches } from './block-tree.tsx';
 import type { Field as FieldModel, FieldValue, System } from '@vtt/schema';
 import { RollTagsPick } from './roll-tags-pick.tsx';
 import { dieEntries } from './rules/dice-section.tsx';
-import { tableCallOf, writeTableCall } from '@vtt/engine/model/amounts';
-import type { TableCall } from '@vtt/engine/model/amounts';
-
-const KINDS = [
-  ['stored', 'вводит игрок'],
-  ['formula', 'считается формулой'],
-  ['table', 'берётся из таблицы'],
-] as const;
-
-type ValueMode = typeof KINDS[number][0];
-
-const modeOf = (value: FieldValue): ValueMode =>
-  (value.kind === 'formula' && tableCallOf(value.expr) ? 'table' : value.kind);
+import { tableCallOf } from '@vtt/engine/model/amounts';
 
 const TYPES = kindsFor('field');
 
@@ -50,8 +40,18 @@ export function SheetTab() {
 
   const activeGroup = useWorld(s => s.activeGroupName);
 
-  const tree = blockTree<FieldModel>(system, system.fields, field => field.group);
+  const seen = new Set<string>();
+  const listed = system.fields.filter(field => {
+    if (!field.cell) return true;
+    const key = `${field.cell.table}|${field.group ?? ''}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  const tree = blockTree<FieldModel>(system, listed, field => field.group);
   const active = system.fields.find(f => f.tag === activeTag) ?? null;
+  const same = (a: FieldModel, b: FieldModel | null) => Boolean(b && (a.tag === b.tag
+    || (a.cell && b.cell && a.cell.table === b.cell.table && a.group === b.group)));
 
   const addField = (group: string) => {
     const made = newField(system, group);
@@ -70,6 +70,7 @@ export function SheetTab() {
         head: 'Блоки и поля',
         tools: (
           <>
+            <Button size="sm" variant={active || activeGroup ? undefined : 'primary'} onClick={() => pick({ activeFieldTag: null, activeGroupName: null })}>образец</Button>
             <Button size="sm" onClick={() => addField('Новый блок')}>+ блок</Button>
             {tables.length ? (
               <Select value="" options={[['', '+ из таблицы'], ...tables] as never} onChange={id => {
@@ -87,12 +88,22 @@ export function SheetTab() {
               <BlockBranches
                 list="sheet"
                 nodes={tree}
-                isActive={field => field.tag === activeTag}
+                isActive={field => same(field, active)}
                 isFresh={field => freshFields.has(field.tag)}
                 activeBlock={active ? null : activeGroup}
                 onPickBlock={name => pick({ activeGroupName: name, activeFieldTag: null })}
                 addTo={addField}
-                render={field => (
+                render={field => (field.cell ? (
+                  <ListItem
+                    key={field.tag}
+                    icon="▦"
+                    name={system.tables?.[field.cell.table]?.label || field.cell.table}
+                    meta={`таблица · ${(system.tables?.[field.cell.table]?.rows ?? []).length} строк`}
+                    active={same(field, active)}
+                    fresh={freshFields.has(field.tag)}
+                    onClick={() => pick({ activeFieldTag: field.tag, activeGroupName: null })}
+                  />
+                ) : (
                   <ListItem
                     key={field.tag}
                     icon={field.value.kind === 'stored' ? undefined : '='}
@@ -102,20 +113,19 @@ export function SheetTab() {
                     fresh={freshFields.has(field.tag)}
                     onClick={() => pick({ activeFieldTag: field.tag, activeGroupName: null })}
                   />
-                )}
+                ))}
               />
             </List>
           ),
       }}
       main={{
-        body: active
-          ? <FieldEditor field={active} system={system} />
-          : activeGroup
-            ? <GroupEditor name={activeGroup} system={system} />
-            : <Empty
-                title="Выберите поле слева"
-                hint="Или добавьте новое. Поле — это то, что бывает у персонажа: характеристика, навык, ресурс. Клик по заголовку блока откроет его настройки."
-              />,
+        body: active?.cell
+          ? <TableOnSheet tableId={active.cell.table} system={system} />
+          : active
+            ? <FieldEditor field={active} system={system} />
+            : activeGroup
+              ? <GroupEditor name={activeGroup} system={system} />
+              : <SheetSample system={system} />,
       }}
       right={right}
     />
@@ -126,28 +136,18 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
   const compendium = useBook();
   const editSystem = useWorld(s => s.editSystem);
   const editField = useWorld(s => s.editField);
+  const editCompendium = useWorld(s => s.editCompendium);
   const pick = useWorld(s => s.pick);
 
   const edit = (change: (draft: FieldModel) => void) => editField(field.tag, change);
 
-  const setKind = (kind: ValueMode) => edit(draft => {
-    draft.value = kind === 'stored' ? { kind: 'stored', type: 'number', default: 0 }
-      : kind === 'formula' ? { kind: 'formula', expr: '' }
-        : { kind: 'formula', expr: writeTableCall({ table: Object.keys(system.tables ?? {})[0] ?? '', arg: '', column: null }) };
-  });
-  const lookup = field.value.kind === 'formula' ? tableCallOf(field.value.expr) : null;
   const from = choiceTableOf(field);
-  const setLookup = (change: Partial<TableCall>) => edit(draft => {
-    const now = draft.value.kind === 'formula' ? tableCallOf(draft.value.expr) : null;
-    if (now) draft.value = { kind: 'formula', expr: writeTableCall({ ...now, ...change }) };
-  });
 
   const usage = useUsage();
   const users = usersOf(usage, 'field', field.tag, system);
   const preset = effectiveDefault(system, field.group ?? 'Без блока');
   const follows = preset !== undefined && sameValue(field.value, preset);
 
-  if (field.cell) return <TableFieldEditor field={field} system={system} />;
 
   return (
     <>
@@ -206,9 +206,6 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
             </Field>
           ) : null}
 
-          <Field label="Откуда значение">
-            <Select value={modeOf(field.value)} options={KINDS} onChange={setKind} />
-          </Field>
         </div>
         {follows ? (
           <p className="faint">
@@ -320,53 +317,23 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
         </Card>
       ) : null}
 
-      {field.value.kind === 'formula' && !lookup ? (
+      {field.value.kind === 'formula' ? (
         <Card>
-          <CardHead title="Значение считает движок" />
-          <Field label="Правило">
-            <FormulaInput
-              where={`${field.label || field.tag} · правило`}
-              system={system}
-              value={field.value.expr}
-              onChange={expr => edit(draft => { if (draft.value.kind === 'formula') draft.value.expr = expr; })}
-            />
-          </Field>
+          <CardHead title="Формула на листе" />
+          <Verdict tone="warn">Формулы живут в таблицах правил — лист только показывает.</Verdict>
           <LiveValue system={system} compendium={compendium} tag={field.tag} source={field.value.expr} />
-        </Card>
-      ) : null}
-
-      {lookup ? (
-        <Card>
-          <CardHead title="Значение берётся из таблицы" />
-          <div className="row">
-            <Field label="Таблица" needed={!lookup.table}>
-              <Select
-                value={lookup.table}
-                options={[['', '— какая таблица —'], ...Object.entries(system.tables ?? {})
-                  .map(([key, table]) => [key, table.label ?? key] as const)] as never}
-                onChange={next => setLookup({ table: next, column: null })}
-              />
-            </Field>
-            {(system.tables?.[lookup.table]?.columns ?? []).length > 1 ? (
-              <Field label="Колонка">
-                <Select
-                  value={lookup.column ?? 'value'}
-                  options={(system.tables?.[lookup.table]?.columns ?? []).map(c => [c.key, c.label || c.key] as const) as never}
-                  onChange={next => setLookup({ column: next === 'value' ? null : next })}
-                />
-              </Field>
-            ) : null}
-          </div>
-          <Field label="По чему искать строку" needed={!lookup.arg.trim()}>
-            <FormulaInput
-              where={`${field.label || field.tag} · по чему искать`}
-              system={system}
-              value={lookup.arg}
-              onChange={arg => setLookup({ arg })}
-              placeholder="например: @уровень"
-            />
-          </Field>
-          <LiveValue system={system} compendium={compendium} tag={field.tag} source={field.value.kind === 'formula' ? field.value.expr : ''} />
+          {movable(field) ? (
+            <div className="inline">
+              <Button size="sm" variant="primary" onClick={() => {
+                const state = useWorld.getState();
+                const moved = moveToTable(state.system, state.compendium, field.tag);
+                if (!moved) return;
+                editSystem(draft => { Object.assign(draft, moved.system); });
+                if (moved.compendium) editCompendium(draft => { Object.assign(draft, moved.compendium); });
+                pick({ activeFieldTag: moved.address });
+              }}>Перенести в таблицу «Показатели»</Button>
+            </div>
+          ) : null}
         </Card>
       ) : null}
 

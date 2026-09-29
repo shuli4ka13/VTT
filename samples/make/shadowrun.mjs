@@ -6,6 +6,7 @@ import { fieldRollsOf } from './convert/field-rolls.ts';
 import { namesOf } from './convert/names.ts';
 import { spendOf } from './convert/spend.ts';
 import { addressesOf } from './convert/addresses.ts';
+import { statsOf } from './convert/stats.ts';
 import { withTableFields } from '../../packages/engine/src/model/sheet-columns.ts';
 
 const ATTRIBUTES = [
@@ -591,8 +592,7 @@ const world = {
   sheets: sheets(),
 };
 
-const done = addressesOf(spendOf(namesOf(fieldRollsOf(argsOf(modifiersOf(world))))));
-done.system = withTableFields(done.system);
+const done = statsOf(addressesOf(spendOf(namesOf(fieldRollsOf(argsOf(modifiersOf(world)))))));
 
 const out = fileURLToPath(new URL('../shadowrun.world.json', import.meta.url));
 writeFileSync(out, `${JSON.stringify(done, null, 2)}\n`);

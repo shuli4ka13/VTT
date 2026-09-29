@@ -1,35 +1,11 @@
+import { renameDeep, renameValues } from '../../../packages/engine/src/model/rename.ts';
+
 type Loose = Record<string, any>;
 
 const rowKey = (row: Loose): string => String(row.key ?? row.value ?? '');
 
 const fillKey = (template: string, row: Loose): string =>
   template.replace(/\{key\}/g, rowKey(row)).replace(/\{value\}/g, String(row.value ?? ''));
-
-const NAME = '[\\p{L}\\p{N}_]';
-
-function renameText(text: string, names: [string, string][]): string {
-  let out = text;
-  for (const [from, to] of names) {
-    const re = new RegExp(`@((?:отправитель|получатель|стол)\\.)?${from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?!${NAME})`, 'gu');
-    out = out.replace(re, (_, owner: string | undefined) => `@${owner ?? ''}${to}`);
-  }
-  return out;
-}
-
-const EXACT_KEYS = new Set(['tag', 'target', 'field']);
-
-function renameDeep(value: unknown, names: [string, string][], map: Map<string, string>, key?: string): unknown {
-  if (typeof value === 'string') {
-    if (key && EXACT_KEYS.has(key) && map.has(value)) return map.get(value);
-    if (value.startsWith('field:') && map.has(value.slice(6))) return `field:${map.get(value.slice(6))}`;
-    return value.includes('@') ? renameText(value, names) : value;
-  }
-  if (Array.isArray(value)) return value.map(item => renameDeep(item, names, map));
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(Object.entries(value as Loose).map(([k, v]) => [k, renameDeep(v, names, map, k)]));
-  }
-  return value;
-}
 
 function table(id: string, t: Loose, map: Map<string, string>): Loose {
   const columns: Loose[] = t.columns ?? [];
@@ -83,15 +59,11 @@ function table(id: string, t: Loose, map: Map<string, string>): Loose {
 export function addressesOf(world: Loose): Loose {
   const map = new Map<string, string>();
   const tables = Object.fromEntries(Object.entries(world.system.tables ?? {}).map(([id, t]) => [id, table(id, t as Loose, map)]));
-  const names = [...map.entries()].sort((a, b) => b[0].length - a[0].length);
-  const system = renameDeep({ ...world.system, tables }, names, map) as Loose;
-  const rekey = (sheet: Loose): Loose => ({
-    ...sheet,
-    values: Object.fromEntries(Object.entries(sheet.values ?? {}).map(([k, v]) => [map.get(k) ?? k, v])),
-  });
+  const system = renameDeep({ ...world.system, tables }, map) as Loose;
+  const rekey = (sheet: Loose): Loose => renameValues(sheet, map);
   if (Array.isArray(system.mannequins)) system.mannequins = system.mannequins.map(rekey);
   const out: Loose = { ...world, system };
-  if (world.compendium) out.compendium = renameDeep(world.compendium, names, map);
-  if (Array.isArray(world.sheets)) out.sheets = (renameDeep(world.sheets, names, map) as Loose[]).map(rekey);
+  if (world.compendium) out.compendium = renameDeep(world.compendium, map);
+  if (Array.isArray(world.sheets)) out.sheets = (renameDeep(world.sheets, map) as Loose[]).map(rekey);
   return out;
 }

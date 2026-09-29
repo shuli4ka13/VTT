@@ -128713,7 +128713,7 @@ exports[`золотые трассы: daggerheart > bandit → bandit · bandit_
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -128968,7 +128968,7 @@ exports[`золотые трассы: daggerheart > bandit → bandit · bandit_
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -129214,7 +129214,7 @@ exports[`золотые трассы: daggerheart > bandit → bandit · bandit_
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -129429,7 +129429,7 @@ exports[`золотые трассы: daggerheart > bandit → bandit · bandit_
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -129644,7 +129644,7 @@ exports[`золотые трассы: daggerheart > bandit → bandit · bandit_
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -129859,7 +129859,7 @@ exports[`золотые трассы: daggerheart > bandit → bandit · bandit_
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -130083,7 +130083,7 @@ exports[`золотые трассы: daggerheart > bandit → bear · bandit_da
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -130338,7 +130338,7 @@ exports[`золотые трассы: daggerheart > bandit → bear · bandit_da
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -130584,7 +130584,7 @@ exports[`золотые трассы: daggerheart > bandit → bear · bandit_da
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -130799,7 +130799,7 @@ exports[`золотые трассы: daggerheart > bandit → bear · bandit_da
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -131014,7 +131014,7 @@ exports[`золотые трассы: daggerheart > bandit → bear · bandit_da
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -131229,7 +131229,7 @@ exports[`золотые трассы: daggerheart > bandit → bear · bandit_da
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -131453,7 +131453,7 @@ exports[`золотые трассы: daggerheart > bandit → bladed_guard · b
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -131708,7 +131708,7 @@ exports[`золотые трассы: daggerheart > bandit → bladed_guard · b
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -131954,7 +131954,7 @@ exports[`золотые трассы: daggerheart > bandit → bladed_guard · b
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -132169,7 +132169,7 @@ exports[`золотые трассы: daggerheart > bandit → bladed_guard · b
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -132384,7 +132384,7 @@ exports[`золотые трассы: daggerheart > bandit → bladed_guard · b
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -132599,7 +132599,7 @@ exports[`золотые трассы: daggerheart > bandit → bladed_guard · b
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -132823,7 +132823,7 @@ exports[`золотые трассы: daggerheart > bandit → bran · bandit_da
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -133078,7 +133078,7 @@ exports[`золотые трассы: daggerheart > bandit → bran · bandit_da
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -133324,7 +133324,7 @@ exports[`золотые трассы: daggerheart > bandit → bran · bandit_da
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -133539,7 +133539,7 @@ exports[`золотые трассы: daggerheart > bandit → bran · bandit_da
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -133754,7 +133754,7 @@ exports[`золотые трассы: daggerheart > bandit → bran · bandit_da
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -133969,7 +133969,7 @@ exports[`золотые трассы: daggerheart > bandit → bran · bandit_da
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -134193,7 +134193,7 @@ exports[`золотые трассы: daggerheart > bandit → cave_ogre · band
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -134448,7 +134448,7 @@ exports[`золотые трассы: daggerheart > bandit → cave_ogre · band
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -134694,7 +134694,7 @@ exports[`золотые трассы: daggerheart > bandit → cave_ogre · band
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -134909,7 +134909,7 @@ exports[`золотые трассы: daggerheart > bandit → cave_ogre · band
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -135124,7 +135124,7 @@ exports[`золотые трассы: daggerheart > bandit → cave_ogre · band
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -135339,7 +135339,7 @@ exports[`золотые трассы: daggerheart > bandit → cave_ogre · band
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -135563,7 +135563,7 @@ exports[`золотые трассы: daggerheart > bandit → dire_wolf · band
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -135818,7 +135818,7 @@ exports[`золотые трассы: daggerheart > bandit → dire_wolf · band
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -136064,7 +136064,7 @@ exports[`золотые трассы: daggerheart > bandit → dire_wolf · band
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -136279,7 +136279,7 @@ exports[`золотые трассы: daggerheart > bandit → dire_wolf · band
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -136494,7 +136494,7 @@ exports[`золотые трассы: daggerheart > bandit → dire_wolf · band
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -136709,7 +136709,7 @@ exports[`золотые трассы: daggerheart > bandit → dire_wolf · band
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -136933,7 +136933,7 @@ exports[`золотые трассы: daggerheart > bandit → ilse · bandit_da
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -137188,7 +137188,7 @@ exports[`золотые трассы: daggerheart > bandit → ilse · bandit_da
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -137434,7 +137434,7 @@ exports[`золотые трассы: daggerheart > bandit → ilse · bandit_da
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -137649,7 +137649,7 @@ exports[`золотые трассы: daggerheart > bandit → ilse · bandit_da
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -137864,7 +137864,7 @@ exports[`золотые трассы: daggerheart > bandit → ilse · bandit_da
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -138079,7 +138079,7 @@ exports[`золотые трассы: daggerheart > bandit → ilse · bandit_da
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -138303,7 +138303,7 @@ exports[`золотые трассы: daggerheart > bandit → kneebreaker · ba
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -138558,7 +138558,7 @@ exports[`золотые трассы: daggerheart > bandit → kneebreaker · ba
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -138804,7 +138804,7 @@ exports[`золотые трассы: daggerheart > bandit → kneebreaker · ba
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -139019,7 +139019,7 @@ exports[`золотые трассы: daggerheart > bandit → kneebreaker · ba
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -139234,7 +139234,7 @@ exports[`золотые трассы: daggerheart > bandit → kneebreaker · ba
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -139449,7 +139449,7 @@ exports[`золотые трассы: daggerheart > bandit → kneebreaker · ba
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -139673,7 +139673,7 @@ exports[`золотые трассы: daggerheart > bandit → lackey · bandit_
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -139928,7 +139928,7 @@ exports[`золотые трассы: daggerheart > bandit → lackey · bandit_
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -140174,7 +140174,7 @@ exports[`золотые трассы: daggerheart > bandit → lackey · bandit_
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -140389,7 +140389,7 @@ exports[`золотые трассы: daggerheart > bandit → lackey · bandit_
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -140604,7 +140604,7 @@ exports[`золотые трассы: daggerheart > bandit → lackey · bandit_
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -140819,7 +140819,7 @@ exports[`золотые трассы: daggerheart > bandit → lackey · bandit_
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -141043,7 +141043,7 @@ exports[`золотые трассы: daggerheart > bandit → sniper · bandit_
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -141298,7 +141298,7 @@ exports[`золотые трассы: daggerheart > bandit → sniper · bandit_
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -141544,7 +141544,7 @@ exports[`золотые трассы: daggerheart > bandit → sniper · bandit_
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -141759,7 +141759,7 @@ exports[`золотые трассы: daggerheart > bandit → sniper · bandit_
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -141974,7 +141974,7 @@ exports[`золотые трассы: daggerheart > bandit → sniper · bandit_
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -142189,7 +142189,7 @@ exports[`золотые трассы: daggerheart > bandit → sniper · bandit_
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -142413,7 +142413,7 @@ exports[`золотые трассы: daggerheart > bandit → toma · bandit_da
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -142668,7 +142668,7 @@ exports[`золотые трассы: daggerheart > bandit → toma · bandit_da
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -142914,7 +142914,7 @@ exports[`золотые трассы: daggerheart > bandit → toma · bandit_da
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -143129,7 +143129,7 @@ exports[`золотые трассы: daggerheart > bandit → toma · bandit_da
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -143344,7 +143344,7 @@ exports[`золотые трассы: daggerheart > bandit → toma · bandit_da
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -143559,7 +143559,7 @@ exports[`золотые трассы: daggerheart > bandit → toma · bandit_da
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -143783,7 +143783,7 @@ exports[`золотые трассы: daggerheart > bear → bandit · bear_claw
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -144038,7 +144038,7 @@ exports[`золотые трассы: daggerheart > bear → bandit · bear_claw
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -144284,7 +144284,7 @@ exports[`золотые трассы: daggerheart > bear → bandit · bear_claw
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -144499,7 +144499,7 @@ exports[`золотые трассы: daggerheart > bear → bandit · bear_claw
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -144714,7 +144714,7 @@ exports[`золотые трассы: daggerheart > bear → bandit · bear_claw
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -144929,7 +144929,7 @@ exports[`золотые трассы: daggerheart > bear → bandit · bear_claw
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -145153,7 +145153,7 @@ exports[`золотые трассы: daggerheart > bear → bear · bear_claws:
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -145408,7 +145408,7 @@ exports[`золотые трассы: daggerheart > bear → bear · bear_claws:
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -145654,7 +145654,7 @@ exports[`золотые трассы: daggerheart > bear → bear · bear_claws:
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -145869,7 +145869,7 @@ exports[`золотые трассы: daggerheart > bear → bear · bear_claws:
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -146084,7 +146084,7 @@ exports[`золотые трассы: daggerheart > bear → bear · bear_claws:
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -146299,7 +146299,7 @@ exports[`золотые трассы: daggerheart > bear → bear · bear_claws:
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -146523,7 +146523,7 @@ exports[`золотые трассы: daggerheart > bear → bladed_guard · bea
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -146778,7 +146778,7 @@ exports[`золотые трассы: daggerheart > bear → bladed_guard · bea
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -147024,7 +147024,7 @@ exports[`золотые трассы: daggerheart > bear → bladed_guard · bea
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -147239,7 +147239,7 @@ exports[`золотые трассы: daggerheart > bear → bladed_guard · bea
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -147454,7 +147454,7 @@ exports[`золотые трассы: daggerheart > bear → bladed_guard · bea
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -147669,7 +147669,7 @@ exports[`золотые трассы: daggerheart > bear → bladed_guard · bea
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -147893,7 +147893,7 @@ exports[`золотые трассы: daggerheart > bear → bran · bear_claws:
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -148148,7 +148148,7 @@ exports[`золотые трассы: daggerheart > bear → bran · bear_claws:
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -148394,7 +148394,7 @@ exports[`золотые трассы: daggerheart > bear → bran · bear_claws:
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -148609,7 +148609,7 @@ exports[`золотые трассы: daggerheart > bear → bran · bear_claws:
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -148824,7 +148824,7 @@ exports[`золотые трассы: daggerheart > bear → bran · bear_claws:
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -149039,7 +149039,7 @@ exports[`золотые трассы: daggerheart > bear → bran · bear_claws:
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -149263,7 +149263,7 @@ exports[`золотые трассы: daggerheart > bear → cave_ogre · bear_c
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -149518,7 +149518,7 @@ exports[`золотые трассы: daggerheart > bear → cave_ogre · bear_c
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -149764,7 +149764,7 @@ exports[`золотые трассы: daggerheart > bear → cave_ogre · bear_c
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -149979,7 +149979,7 @@ exports[`золотые трассы: daggerheart > bear → cave_ogre · bear_c
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -150194,7 +150194,7 @@ exports[`золотые трассы: daggerheart > bear → cave_ogre · bear_c
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -150409,7 +150409,7 @@ exports[`золотые трассы: daggerheart > bear → cave_ogre · bear_c
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -150633,7 +150633,7 @@ exports[`золотые трассы: daggerheart > bear → dire_wolf · bear_c
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -150888,7 +150888,7 @@ exports[`золотые трассы: daggerheart > bear → dire_wolf · bear_c
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -151134,7 +151134,7 @@ exports[`золотые трассы: daggerheart > bear → dire_wolf · bear_c
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -151349,7 +151349,7 @@ exports[`золотые трассы: daggerheart > bear → dire_wolf · bear_c
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -151564,7 +151564,7 @@ exports[`золотые трассы: daggerheart > bear → dire_wolf · bear_c
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -151779,7 +151779,7 @@ exports[`золотые трассы: daggerheart > bear → dire_wolf · bear_c
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -152003,7 +152003,7 @@ exports[`золотые трассы: daggerheart > bear → ilse · bear_claws:
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -152258,7 +152258,7 @@ exports[`золотые трассы: daggerheart > bear → ilse · bear_claws:
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -152504,7 +152504,7 @@ exports[`золотые трассы: daggerheart > bear → ilse · bear_claws:
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -152719,7 +152719,7 @@ exports[`золотые трассы: daggerheart > bear → ilse · bear_claws:
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -152934,7 +152934,7 @@ exports[`золотые трассы: daggerheart > bear → ilse · bear_claws:
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -153149,7 +153149,7 @@ exports[`золотые трассы: daggerheart > bear → ilse · bear_claws:
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -153373,7 +153373,7 @@ exports[`золотые трассы: daggerheart > bear → kneebreaker · bear
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -153628,7 +153628,7 @@ exports[`золотые трассы: daggerheart > bear → kneebreaker · bear
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -153874,7 +153874,7 @@ exports[`золотые трассы: daggerheart > bear → kneebreaker · bear
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -154089,7 +154089,7 @@ exports[`золотые трассы: daggerheart > bear → kneebreaker · bear
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -154304,7 +154304,7 @@ exports[`золотые трассы: daggerheart > bear → kneebreaker · bear
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -154519,7 +154519,7 @@ exports[`золотые трассы: daggerheart > bear → kneebreaker · bear
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -154743,7 +154743,7 @@ exports[`золотые трассы: daggerheart > bear → lackey · bear_claw
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -154998,7 +154998,7 @@ exports[`золотые трассы: daggerheart > bear → lackey · bear_claw
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -155244,7 +155244,7 @@ exports[`золотые трассы: daggerheart > bear → lackey · bear_claw
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -155459,7 +155459,7 @@ exports[`золотые трассы: daggerheart > bear → lackey · bear_claw
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -155674,7 +155674,7 @@ exports[`золотые трассы: daggerheart > bear → lackey · bear_claw
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -155889,7 +155889,7 @@ exports[`золотые трассы: daggerheart > bear → lackey · bear_claw
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -156113,7 +156113,7 @@ exports[`золотые трассы: daggerheart > bear → sniper · bear_claw
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -156368,7 +156368,7 @@ exports[`золотые трассы: daggerheart > bear → sniper · bear_claw
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -156614,7 +156614,7 @@ exports[`золотые трассы: daggerheart > bear → sniper · bear_claw
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -156829,7 +156829,7 @@ exports[`золотые трассы: daggerheart > bear → sniper · bear_claw
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -157044,7 +157044,7 @@ exports[`золотые трассы: daggerheart > bear → sniper · bear_claw
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -157259,7 +157259,7 @@ exports[`золотые трассы: daggerheart > bear → sniper · bear_claw
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -157483,7 +157483,7 @@ exports[`золотые трассы: daggerheart > bear → toma · bear_claws:
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -157738,7 +157738,7 @@ exports[`золотые трассы: daggerheart > bear → toma · bear_claws:
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -157984,7 +157984,7 @@ exports[`золотые трассы: daggerheart > bear → toma · bear_claws:
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -158199,7 +158199,7 @@ exports[`золотые трассы: daggerheart > bear → toma · bear_claws:
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -158414,7 +158414,7 @@ exports[`золотые трассы: daggerheart > bear → toma · bear_claws:
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -158629,7 +158629,7 @@ exports[`золотые трассы: daggerheart > bear → toma · bear_claws:
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -158853,7 +158853,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → bandit · g
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -159108,7 +159108,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → bandit · g
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -159354,7 +159354,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → bandit · g
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -159569,7 +159569,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → bandit · g
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -159784,7 +159784,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → bandit · g
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -159999,7 +159999,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → bandit · g
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -160223,7 +160223,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → bear · gua
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -160478,7 +160478,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → bear · gua
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -160724,7 +160724,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → bear · gua
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -160939,7 +160939,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → bear · gua
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -161154,7 +161154,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → bear · gua
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -161369,7 +161369,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → bear · gua
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -161593,7 +161593,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → bladed_guar
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -161848,7 +161848,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → bladed_guar
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -162094,7 +162094,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → bladed_guar
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -162309,7 +162309,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → bladed_guar
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -162524,7 +162524,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → bladed_guar
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -162739,7 +162739,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → bladed_guar
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -162963,7 +162963,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → bran · gua
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -163218,7 +163218,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → bran · gua
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -163464,7 +163464,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → bran · gua
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -163679,7 +163679,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → bran · gua
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -163894,7 +163894,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → bran · gua
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -164109,7 +164109,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → bran · gua
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -164333,7 +164333,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → cave_ogre �
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -164588,7 +164588,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → cave_ogre �
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -164834,7 +164834,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → cave_ogre �
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -165049,7 +165049,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → cave_ogre �
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -165264,7 +165264,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → cave_ogre �
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -165479,7 +165479,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → cave_ogre �
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -165703,7 +165703,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → dire_wolf �
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -165958,7 +165958,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → dire_wolf �
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -166204,7 +166204,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → dire_wolf �
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -166419,7 +166419,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → dire_wolf �
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -166634,7 +166634,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → dire_wolf �
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -166849,7 +166849,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → dire_wolf �
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -167073,7 +167073,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → ilse · gua
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -167328,7 +167328,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → ilse · gua
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -167574,7 +167574,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → ilse · gua
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -167789,7 +167789,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → ilse · gua
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -168004,7 +168004,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → ilse · gua
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -168219,7 +168219,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → ilse · gua
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -168443,7 +168443,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → kneebreaker
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -168698,7 +168698,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → kneebreaker
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -168944,7 +168944,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → kneebreaker
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -169159,7 +169159,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → kneebreaker
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -169374,7 +169374,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → kneebreaker
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -169589,7 +169589,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → kneebreaker
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -169813,7 +169813,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → lackey · g
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -170068,7 +170068,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → lackey · g
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -170314,7 +170314,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → lackey · g
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -170529,7 +170529,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → lackey · g
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -170744,7 +170744,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → lackey · g
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -170959,7 +170959,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → lackey · g
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -171183,7 +171183,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → sniper · g
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -171438,7 +171438,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → sniper · g
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -171684,7 +171684,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → sniper · g
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -171899,7 +171899,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → sniper · g
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -172114,7 +172114,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → sniper · g
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -172329,7 +172329,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → sniper · g
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -172553,7 +172553,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → toma · gua
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -172808,7 +172808,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → toma · gua
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -173054,7 +173054,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → toma · gua
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -173269,7 +173269,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → toma · gua
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -173484,7 +173484,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → toma · gua
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -173699,7 +173699,7 @@ exports[`золотые трассы: daggerheart > bladed_guard → toma · gua
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -336041,7 +336041,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → bandit · cave
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -336296,7 +336296,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → bandit · cave
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -336542,7 +336542,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → bandit · cave
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -336757,7 +336757,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → bandit · cave
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -336972,7 +336972,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → bandit · cave
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -337187,7 +337187,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → bandit · cave
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -337411,7 +337411,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → bear · cave_o
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -337666,7 +337666,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → bear · cave_o
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -337912,7 +337912,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → bear · cave_o
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -338127,7 +338127,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → bear · cave_o
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -338342,7 +338342,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → bear · cave_o
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -338557,7 +338557,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → bear · cave_o
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -338781,7 +338781,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → bladed_guard �
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -339036,7 +339036,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → bladed_guard �
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -339282,7 +339282,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → bladed_guard �
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -339497,7 +339497,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → bladed_guard �
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -339712,7 +339712,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → bladed_guard �
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -339927,7 +339927,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → bladed_guard �
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -340151,7 +340151,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → bran · cave_o
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -340406,7 +340406,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → bran · cave_o
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -340652,7 +340652,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → bran · cave_o
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -340867,7 +340867,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → bran · cave_o
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -341082,7 +341082,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → bran · cave_o
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -341297,7 +341297,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → bran · cave_o
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -341521,7 +341521,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → cave_ogre · c
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -341776,7 +341776,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → cave_ogre · c
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -342022,7 +342022,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → cave_ogre · c
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -342237,7 +342237,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → cave_ogre · c
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -342452,7 +342452,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → cave_ogre · c
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -342667,7 +342667,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → cave_ogre · c
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -342891,7 +342891,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → dire_wolf · c
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -343146,7 +343146,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → dire_wolf · c
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -343392,7 +343392,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → dire_wolf · c
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -343607,7 +343607,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → dire_wolf · c
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -343822,7 +343822,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → dire_wolf · c
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -344037,7 +344037,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → dire_wolf · c
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -344261,7 +344261,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → ilse · cave_o
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -344516,7 +344516,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → ilse · cave_o
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -344762,7 +344762,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → ilse · cave_o
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -344977,7 +344977,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → ilse · cave_o
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -345192,7 +345192,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → ilse · cave_o
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -345407,7 +345407,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → ilse · cave_o
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -345631,7 +345631,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → kneebreaker ·
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -345886,7 +345886,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → kneebreaker ·
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -346132,7 +346132,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → kneebreaker ·
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -346347,7 +346347,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → kneebreaker ·
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -346562,7 +346562,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → kneebreaker ·
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -346777,7 +346777,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → kneebreaker ·
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -347001,7 +347001,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → lackey · cave
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -347256,7 +347256,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → lackey · cave
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -347502,7 +347502,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → lackey · cave
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -347717,7 +347717,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → lackey · cave
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -347932,7 +347932,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → lackey · cave
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -348147,7 +348147,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → lackey · cave
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -348371,7 +348371,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → sniper · cave
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -348626,7 +348626,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → sniper · cave
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -348872,7 +348872,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → sniper · cave
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -349087,7 +349087,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → sniper · cave
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -349302,7 +349302,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → sniper · cave
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -349517,7 +349517,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → sniper · cave
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -349741,7 +349741,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → toma · cave_o
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -349996,7 +349996,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → toma · cave_o
             "total": 21,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -350242,7 +350242,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → toma · cave_o
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -350457,7 +350457,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → toma · cave_o
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -350672,7 +350672,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → toma · cave_o
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -350887,7 +350887,7 @@ exports[`золотые трассы: daggerheart > cave_ogre → toma · cave_o
             "total": 5,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -351111,7 +351111,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → bandit · wolf
             "total": 22,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -351366,7 +351366,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → bandit · wolf
             "total": 22,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -351612,7 +351612,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → bandit · wolf
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -351827,7 +351827,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → bandit · wolf
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -352042,7 +352042,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → bandit · wolf
             "total": 6,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -352257,7 +352257,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → bandit · wolf
             "total": 6,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -352481,7 +352481,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → bear · wolf_c
             "total": 22,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -352736,7 +352736,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → bear · wolf_c
             "total": 22,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -352982,7 +352982,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → bear · wolf_c
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -353197,7 +353197,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → bear · wolf_c
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -353412,7 +353412,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → bear · wolf_c
             "total": 6,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -353627,7 +353627,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → bear · wolf_c
             "total": 6,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -353851,7 +353851,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → bladed_guard �
             "total": 22,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -354106,7 +354106,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → bladed_guard �
             "total": 22,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -354352,7 +354352,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → bladed_guard �
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -354567,7 +354567,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → bladed_guard �
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -354782,7 +354782,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → bladed_guard �
             "total": 6,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -354997,7 +354997,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → bladed_guard �
             "total": 6,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -355221,7 +355221,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → bran · wolf_c
             "total": 22,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -355476,7 +355476,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → bran · wolf_c
             "total": 22,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -355722,7 +355722,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → bran · wolf_c
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -355937,7 +355937,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → bran · wolf_c
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -356152,7 +356152,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → bran · wolf_c
             "total": 6,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -356367,7 +356367,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → bran · wolf_c
             "total": 6,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -356591,7 +356591,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → cave_ogre · w
             "total": 22,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -356846,7 +356846,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → cave_ogre · w
             "total": 22,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -357092,7 +357092,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → cave_ogre · w
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -357307,7 +357307,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → cave_ogre · w
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -357522,7 +357522,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → cave_ogre · w
             "total": 6,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -357737,7 +357737,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → cave_ogre · w
             "total": 6,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -357961,7 +357961,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → dire_wolf · w
             "total": 22,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -358216,7 +358216,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → dire_wolf · w
             "total": 22,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -358462,7 +358462,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → dire_wolf · w
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -358677,7 +358677,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → dire_wolf · w
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -358892,7 +358892,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → dire_wolf · w
             "total": 6,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -359107,7 +359107,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → dire_wolf · w
             "total": 6,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -359331,7 +359331,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → ilse · wolf_c
             "total": 22,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -359586,7 +359586,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → ilse · wolf_c
             "total": 22,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -359832,7 +359832,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → ilse · wolf_c
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -360047,7 +360047,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → ilse · wolf_c
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -360262,7 +360262,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → ilse · wolf_c
             "total": 6,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -360477,7 +360477,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → ilse · wolf_c
             "total": 6,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -360701,7 +360701,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → kneebreaker ·
             "total": 22,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -360956,7 +360956,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → kneebreaker ·
             "total": 22,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -361202,7 +361202,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → kneebreaker ·
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -361417,7 +361417,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → kneebreaker ·
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -361632,7 +361632,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → kneebreaker ·
             "total": 6,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -361847,7 +361847,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → kneebreaker ·
             "total": 6,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -362071,7 +362071,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → lackey · wolf
             "total": 22,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -362326,7 +362326,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → lackey · wolf
             "total": 22,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -362572,7 +362572,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → lackey · wolf
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -362787,7 +362787,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → lackey · wolf
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -363002,7 +363002,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → lackey · wolf
             "total": 6,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -363217,7 +363217,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → lackey · wolf
             "total": 6,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -363441,7 +363441,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → sniper · wolf
             "total": 22,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -363696,7 +363696,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → sniper · wolf
             "total": 22,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -363942,7 +363942,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → sniper · wolf
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -364157,7 +364157,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → sniper · wolf
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -364372,7 +364372,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → sniper · wolf
             "total": 6,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -364587,7 +364587,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → sniper · wolf
             "total": 6,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -364811,7 +364811,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → toma · wolf_c
             "total": 22,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -365066,7 +365066,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → toma · wolf_c
             "total": 22,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -365312,7 +365312,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → toma · wolf_c
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -365527,7 +365527,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → toma · wolf_c
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -365742,7 +365742,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → toma · wolf_c
             "total": 6,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -365957,7 +365957,7 @@ exports[`золотые трассы: daggerheart > dire_wolf → toma · wolf_c
             "total": 6,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -548649,7 +548649,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → bandit · kn
             "total": 17,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -548904,7 +548904,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → bandit · kn
             "total": 17,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -549150,7 +549150,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → bandit · kn
             "total": -2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -549365,7 +549365,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → bandit · kn
             "total": -2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -549580,7 +549580,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → bandit · kn
             "total": 1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -549795,7 +549795,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → bandit · kn
             "total": 1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -550019,7 +550019,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → bear · knee
             "total": 17,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -550274,7 +550274,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → bear · knee
             "total": 17,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -550520,7 +550520,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → bear · knee
             "total": -2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -550735,7 +550735,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → bear · knee
             "total": -2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -550950,7 +550950,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → bear · knee
             "total": 1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -551165,7 +551165,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → bear · knee
             "total": 1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -551389,7 +551389,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → bladed_guard
             "total": 17,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -551644,7 +551644,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → bladed_guard
             "total": 17,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -551890,7 +551890,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → bladed_guard
             "total": -2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -552105,7 +552105,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → bladed_guard
             "total": -2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -552320,7 +552320,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → bladed_guard
             "total": 1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -552535,7 +552535,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → bladed_guard
             "total": 1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -552759,7 +552759,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → bran · knee
             "total": 17,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -553014,7 +553014,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → bran · knee
             "total": 17,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -553260,7 +553260,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → bran · knee
             "total": -2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -553475,7 +553475,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → bran · knee
             "total": -2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -553690,7 +553690,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → bran · knee
             "total": 1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -553905,7 +553905,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → bran · knee
             "total": 1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -554129,7 +554129,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → cave_ogre ·
             "total": 17,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -554384,7 +554384,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → cave_ogre ·
             "total": 17,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -554630,7 +554630,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → cave_ogre ·
             "total": -2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -554845,7 +554845,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → cave_ogre ·
             "total": -2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -555060,7 +555060,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → cave_ogre ·
             "total": 1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -555275,7 +555275,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → cave_ogre ·
             "total": 1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -555499,7 +555499,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → dire_wolf ·
             "total": 17,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -555754,7 +555754,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → dire_wolf ·
             "total": 17,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -556000,7 +556000,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → dire_wolf ·
             "total": -2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -556215,7 +556215,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → dire_wolf ·
             "total": -2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -556430,7 +556430,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → dire_wolf ·
             "total": 1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -556645,7 +556645,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → dire_wolf ·
             "total": 1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -556869,7 +556869,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → ilse · knee
             "total": 17,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -557124,7 +557124,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → ilse · knee
             "total": 17,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -557370,7 +557370,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → ilse · knee
             "total": -2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -557585,7 +557585,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → ilse · knee
             "total": -2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -557800,7 +557800,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → ilse · knee
             "total": 1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -558015,7 +558015,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → ilse · knee
             "total": 1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -558239,7 +558239,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → kneebreaker 
             "total": 17,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -558494,7 +558494,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → kneebreaker 
             "total": 17,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -558740,7 +558740,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → kneebreaker 
             "total": -2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -558955,7 +558955,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → kneebreaker 
             "total": -2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -559170,7 +559170,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → kneebreaker 
             "total": 1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -559385,7 +559385,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → kneebreaker 
             "total": 1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -559609,7 +559609,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → lackey · kn
             "total": 17,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -559864,7 +559864,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → lackey · kn
             "total": 17,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -560110,7 +560110,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → lackey · kn
             "total": -2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -560325,7 +560325,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → lackey · kn
             "total": -2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -560540,7 +560540,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → lackey · kn
             "total": 1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -560755,7 +560755,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → lackey · kn
             "total": 1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -560979,7 +560979,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → sniper · kn
             "total": 17,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -561234,7 +561234,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → sniper · kn
             "total": 17,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -561480,7 +561480,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → sniper · kn
             "total": -2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -561695,7 +561695,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → sniper · kn
             "total": -2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -561910,7 +561910,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → sniper · kn
             "total": 1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -562125,7 +562125,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → sniper · kn
             "total": 1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -562349,7 +562349,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → toma · knee
             "total": 17,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -562604,7 +562604,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → toma · knee
             "total": 17,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -562850,7 +562850,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → toma · knee
             "total": -2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -563065,7 +563065,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → toma · knee
             "total": -2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -563280,7 +563280,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → toma · knee
             "total": 1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -563495,7 +563495,7 @@ exports[`золотые трассы: daggerheart > kneebreaker → toma · knee
             "total": 1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -563719,7 +563719,7 @@ exports[`золотые трассы: daggerheart > lackey → bandit · lackey_
             "total": 18,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -563974,7 +563974,7 @@ exports[`золотые трассы: daggerheart > lackey → bandit · lackey_
             "total": 18,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -564220,7 +564220,7 @@ exports[`золотые трассы: daggerheart > lackey → bandit · lackey_
             "total": -1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -564435,7 +564435,7 @@ exports[`золотые трассы: daggerheart > lackey → bandit · lackey_
             "total": -1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -564650,7 +564650,7 @@ exports[`золотые трассы: daggerheart > lackey → bandit · lackey_
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -564865,7 +564865,7 @@ exports[`золотые трассы: daggerheart > lackey → bandit · lackey_
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -565089,7 +565089,7 @@ exports[`золотые трассы: daggerheart > lackey → bear · lackey_da
             "total": 18,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -565344,7 +565344,7 @@ exports[`золотые трассы: daggerheart > lackey → bear · lackey_da
             "total": 18,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -565590,7 +565590,7 @@ exports[`золотые трассы: daggerheart > lackey → bear · lackey_da
             "total": -1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -565805,7 +565805,7 @@ exports[`золотые трассы: daggerheart > lackey → bear · lackey_da
             "total": -1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -566020,7 +566020,7 @@ exports[`золотые трассы: daggerheart > lackey → bear · lackey_da
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -566235,7 +566235,7 @@ exports[`золотые трассы: daggerheart > lackey → bear · lackey_da
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -566459,7 +566459,7 @@ exports[`золотые трассы: daggerheart > lackey → bladed_guard · l
             "total": 18,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -566714,7 +566714,7 @@ exports[`золотые трассы: daggerheart > lackey → bladed_guard · l
             "total": 18,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -566960,7 +566960,7 @@ exports[`золотые трассы: daggerheart > lackey → bladed_guard · l
             "total": -1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -567175,7 +567175,7 @@ exports[`золотые трассы: daggerheart > lackey → bladed_guard · l
             "total": -1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -567390,7 +567390,7 @@ exports[`золотые трассы: daggerheart > lackey → bladed_guard · l
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -567605,7 +567605,7 @@ exports[`золотые трассы: daggerheart > lackey → bladed_guard · l
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -567829,7 +567829,7 @@ exports[`золотые трассы: daggerheart > lackey → bran · lackey_da
             "total": 18,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -568084,7 +568084,7 @@ exports[`золотые трассы: daggerheart > lackey → bran · lackey_da
             "total": 18,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -568330,7 +568330,7 @@ exports[`золотые трассы: daggerheart > lackey → bran · lackey_da
             "total": -1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -568545,7 +568545,7 @@ exports[`золотые трассы: daggerheart > lackey → bran · lackey_da
             "total": -1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -568760,7 +568760,7 @@ exports[`золотые трассы: daggerheart > lackey → bran · lackey_da
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -568975,7 +568975,7 @@ exports[`золотые трассы: daggerheart > lackey → bran · lackey_da
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -569199,7 +569199,7 @@ exports[`золотые трассы: daggerheart > lackey → cave_ogre · lack
             "total": 18,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -569454,7 +569454,7 @@ exports[`золотые трассы: daggerheart > lackey → cave_ogre · lack
             "total": 18,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -569700,7 +569700,7 @@ exports[`золотые трассы: daggerheart > lackey → cave_ogre · lack
             "total": -1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -569915,7 +569915,7 @@ exports[`золотые трассы: daggerheart > lackey → cave_ogre · lack
             "total": -1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -570130,7 +570130,7 @@ exports[`золотые трассы: daggerheart > lackey → cave_ogre · lack
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -570345,7 +570345,7 @@ exports[`золотые трассы: daggerheart > lackey → cave_ogre · lack
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -570569,7 +570569,7 @@ exports[`золотые трассы: daggerheart > lackey → dire_wolf · lack
             "total": 18,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -570824,7 +570824,7 @@ exports[`золотые трассы: daggerheart > lackey → dire_wolf · lack
             "total": 18,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -571070,7 +571070,7 @@ exports[`золотые трассы: daggerheart > lackey → dire_wolf · lack
             "total": -1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -571285,7 +571285,7 @@ exports[`золотые трассы: daggerheart > lackey → dire_wolf · lack
             "total": -1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -571500,7 +571500,7 @@ exports[`золотые трассы: daggerheart > lackey → dire_wolf · lack
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -571715,7 +571715,7 @@ exports[`золотые трассы: daggerheart > lackey → dire_wolf · lack
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -571939,7 +571939,7 @@ exports[`золотые трассы: daggerheart > lackey → ilse · lackey_da
             "total": 18,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -572194,7 +572194,7 @@ exports[`золотые трассы: daggerheart > lackey → ilse · lackey_da
             "total": 18,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -572440,7 +572440,7 @@ exports[`золотые трассы: daggerheart > lackey → ilse · lackey_da
             "total": -1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -572655,7 +572655,7 @@ exports[`золотые трассы: daggerheart > lackey → ilse · lackey_da
             "total": -1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -572870,7 +572870,7 @@ exports[`золотые трассы: daggerheart > lackey → ilse · lackey_da
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -573085,7 +573085,7 @@ exports[`золотые трассы: daggerheart > lackey → ilse · lackey_da
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -573309,7 +573309,7 @@ exports[`золотые трассы: daggerheart > lackey → kneebreaker · la
             "total": 18,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -573564,7 +573564,7 @@ exports[`золотые трассы: daggerheart > lackey → kneebreaker · la
             "total": 18,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -573810,7 +573810,7 @@ exports[`золотые трассы: daggerheart > lackey → kneebreaker · la
             "total": -1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -574025,7 +574025,7 @@ exports[`золотые трассы: daggerheart > lackey → kneebreaker · la
             "total": -1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -574240,7 +574240,7 @@ exports[`золотые трассы: daggerheart > lackey → kneebreaker · la
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -574455,7 +574455,7 @@ exports[`золотые трассы: daggerheart > lackey → kneebreaker · la
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -574679,7 +574679,7 @@ exports[`золотые трассы: daggerheart > lackey → lackey · lackey_
             "total": 18,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -574934,7 +574934,7 @@ exports[`золотые трассы: daggerheart > lackey → lackey · lackey_
             "total": 18,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -575180,7 +575180,7 @@ exports[`золотые трассы: daggerheart > lackey → lackey · lackey_
             "total": -1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -575395,7 +575395,7 @@ exports[`золотые трассы: daggerheart > lackey → lackey · lackey_
             "total": -1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -575610,7 +575610,7 @@ exports[`золотые трассы: daggerheart > lackey → lackey · lackey_
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -575825,7 +575825,7 @@ exports[`золотые трассы: daggerheart > lackey → lackey · lackey_
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -576049,7 +576049,7 @@ exports[`золотые трассы: daggerheart > lackey → sniper · lackey_
             "total": 18,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -576304,7 +576304,7 @@ exports[`золотые трассы: daggerheart > lackey → sniper · lackey_
             "total": 18,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -576550,7 +576550,7 @@ exports[`золотые трассы: daggerheart > lackey → sniper · lackey_
             "total": -1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -576765,7 +576765,7 @@ exports[`золотые трассы: daggerheart > lackey → sniper · lackey_
             "total": -1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -576980,7 +576980,7 @@ exports[`золотые трассы: daggerheart > lackey → sniper · lackey_
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -577195,7 +577195,7 @@ exports[`золотые трассы: daggerheart > lackey → sniper · lackey_
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -577419,7 +577419,7 @@ exports[`золотые трассы: daggerheart > lackey → toma · lackey_da
             "total": 18,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -577674,7 +577674,7 @@ exports[`золотые трассы: daggerheart > lackey → toma · lackey_da
             "total": 18,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -577920,7 +577920,7 @@ exports[`золотые трассы: daggerheart > lackey → toma · lackey_da
             "total": -1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -578135,7 +578135,7 @@ exports[`золотые трассы: daggerheart > lackey → toma · lackey_da
             "total": -1,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -578350,7 +578350,7 @@ exports[`золотые трассы: daggerheart > lackey → toma · lackey_da
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -578565,7 +578565,7 @@ exports[`золотые трассы: daggerheart > lackey → toma · lackey_da
             "total": 2,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -578789,7 +578789,7 @@ exports[`золотые трассы: daggerheart > sniper → bandit · sniper_
             "total": 19,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -579044,7 +579044,7 @@ exports[`золотые трассы: daggerheart > sniper → bandit · sniper_
             "total": 19,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -579290,7 +579290,7 @@ exports[`золотые трассы: daggerheart > sniper → bandit · sniper_
             "total": 0,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -579505,7 +579505,7 @@ exports[`золотые трассы: daggerheart > sniper → bandit · sniper_
             "total": 0,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -579720,7 +579720,7 @@ exports[`золотые трассы: daggerheart > sniper → bandit · sniper_
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -579935,7 +579935,7 @@ exports[`золотые трассы: daggerheart > sniper → bandit · sniper_
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -580159,7 +580159,7 @@ exports[`золотые трассы: daggerheart > sniper → bear · sniper_sh
             "total": 19,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -580414,7 +580414,7 @@ exports[`золотые трассы: daggerheart > sniper → bear · sniper_sh
             "total": 19,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -580660,7 +580660,7 @@ exports[`золотые трассы: daggerheart > sniper → bear · sniper_sh
             "total": 0,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -580875,7 +580875,7 @@ exports[`золотые трассы: daggerheart > sniper → bear · sniper_sh
             "total": 0,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -581090,7 +581090,7 @@ exports[`золотые трассы: daggerheart > sniper → bear · sniper_sh
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -581305,7 +581305,7 @@ exports[`золотые трассы: daggerheart > sniper → bear · sniper_sh
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -581529,7 +581529,7 @@ exports[`золотые трассы: daggerheart > sniper → bladed_guard · s
             "total": 19,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -581784,7 +581784,7 @@ exports[`золотые трассы: daggerheart > sniper → bladed_guard · s
             "total": 19,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -582030,7 +582030,7 @@ exports[`золотые трассы: daggerheart > sniper → bladed_guard · s
             "total": 0,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -582245,7 +582245,7 @@ exports[`золотые трассы: daggerheart > sniper → bladed_guard · s
             "total": 0,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -582460,7 +582460,7 @@ exports[`золотые трассы: daggerheart > sniper → bladed_guard · s
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -582675,7 +582675,7 @@ exports[`золотые трассы: daggerheart > sniper → bladed_guard · s
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -582899,7 +582899,7 @@ exports[`золотые трассы: daggerheart > sniper → bran · sniper_sh
             "total": 19,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -583154,7 +583154,7 @@ exports[`золотые трассы: daggerheart > sniper → bran · sniper_sh
             "total": 19,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -583400,7 +583400,7 @@ exports[`золотые трассы: daggerheart > sniper → bran · sniper_sh
             "total": 0,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -583615,7 +583615,7 @@ exports[`золотые трассы: daggerheart > sniper → bran · sniper_sh
             "total": 0,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -583830,7 +583830,7 @@ exports[`золотые трассы: daggerheart > sniper → bran · sniper_sh
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -584045,7 +584045,7 @@ exports[`золотые трассы: daggerheart > sniper → bran · sniper_sh
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -584269,7 +584269,7 @@ exports[`золотые трассы: daggerheart > sniper → cave_ogre · snip
             "total": 19,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -584524,7 +584524,7 @@ exports[`золотые трассы: daggerheart > sniper → cave_ogre · snip
             "total": 19,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -584770,7 +584770,7 @@ exports[`золотые трассы: daggerheart > sniper → cave_ogre · snip
             "total": 0,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -584985,7 +584985,7 @@ exports[`золотые трассы: daggerheart > sniper → cave_ogre · snip
             "total": 0,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -585200,7 +585200,7 @@ exports[`золотые трассы: daggerheart > sniper → cave_ogre · snip
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -585415,7 +585415,7 @@ exports[`золотые трассы: daggerheart > sniper → cave_ogre · snip
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -585639,7 +585639,7 @@ exports[`золотые трассы: daggerheart > sniper → dire_wolf · snip
             "total": 19,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -585894,7 +585894,7 @@ exports[`золотые трассы: daggerheart > sniper → dire_wolf · snip
             "total": 19,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -586140,7 +586140,7 @@ exports[`золотые трассы: daggerheart > sniper → dire_wolf · snip
             "total": 0,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -586355,7 +586355,7 @@ exports[`золотые трассы: daggerheart > sniper → dire_wolf · snip
             "total": 0,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -586570,7 +586570,7 @@ exports[`золотые трассы: daggerheart > sniper → dire_wolf · snip
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -586785,7 +586785,7 @@ exports[`золотые трассы: daggerheart > sniper → dire_wolf · snip
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -587009,7 +587009,7 @@ exports[`золотые трассы: daggerheart > sniper → ilse · sniper_sh
             "total": 19,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -587264,7 +587264,7 @@ exports[`золотые трассы: daggerheart > sniper → ilse · sniper_sh
             "total": 19,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -587510,7 +587510,7 @@ exports[`золотые трассы: daggerheart > sniper → ilse · sniper_sh
             "total": 0,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -587725,7 +587725,7 @@ exports[`золотые трассы: daggerheart > sniper → ilse · sniper_sh
             "total": 0,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -587940,7 +587940,7 @@ exports[`золотые трассы: daggerheart > sniper → ilse · sniper_sh
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -588155,7 +588155,7 @@ exports[`золотые трассы: daggerheart > sniper → ilse · sniper_sh
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 13,
             },
           },
@@ -588379,7 +588379,7 @@ exports[`золотые трассы: daggerheart > sniper → kneebreaker · sn
             "total": 19,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -588634,7 +588634,7 @@ exports[`золотые трассы: daggerheart > sniper → kneebreaker · sn
             "total": 19,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -588880,7 +588880,7 @@ exports[`золотые трассы: daggerheart > sniper → kneebreaker · sn
             "total": 0,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -589095,7 +589095,7 @@ exports[`золотые трассы: daggerheart > sniper → kneebreaker · sn
             "total": 0,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -589310,7 +589310,7 @@ exports[`золотые трассы: daggerheart > sniper → kneebreaker · sn
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -589525,7 +589525,7 @@ exports[`золотые трассы: daggerheart > sniper → kneebreaker · sn
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -589749,7 +589749,7 @@ exports[`золотые трассы: daggerheart > sniper → lackey · sniper_
             "total": 19,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -590004,7 +590004,7 @@ exports[`золотые трассы: daggerheart > sniper → lackey · sniper_
             "total": 19,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -590250,7 +590250,7 @@ exports[`золотые трассы: daggerheart > sniper → lackey · sniper_
             "total": 0,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -590465,7 +590465,7 @@ exports[`золотые трассы: daggerheart > sniper → lackey · sniper_
             "total": 0,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -590680,7 +590680,7 @@ exports[`золотые трассы: daggerheart > sniper → lackey · sniper_
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -590895,7 +590895,7 @@ exports[`золотые трассы: daggerheart > sniper → lackey · sniper_
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -591119,7 +591119,7 @@ exports[`золотые трассы: daggerheart > sniper → sniper · sniper_
             "total": 19,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -591374,7 +591374,7 @@ exports[`золотые трассы: daggerheart > sniper → sniper · sniper_
             "total": 19,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -591620,7 +591620,7 @@ exports[`золотые трассы: daggerheart > sniper → sniper · sniper_
             "total": 0,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -591835,7 +591835,7 @@ exports[`золотые трассы: daggerheart > sniper → sniper · sniper_
             "total": 0,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -592050,7 +592050,7 @@ exports[`золотые трассы: daggerheart > sniper → sniper · sniper_
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -592265,7 +592265,7 @@ exports[`золотые трассы: daggerheart > sniper → sniper · sniper_
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 10,
             },
           },
@@ -592489,7 +592489,7 @@ exports[`золотые трассы: daggerheart > sniper → toma · sniper_sh
             "total": 19,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -592744,7 +592744,7 @@ exports[`золотые трассы: daggerheart > sniper → toma · sniper_sh
             "total": 19,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -592990,7 +592990,7 @@ exports[`золотые трассы: daggerheart > sniper → toma · sniper_sh
             "total": 0,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -593205,7 +593205,7 @@ exports[`золотые трассы: daggerheart > sniper → toma · sniper_sh
             "total": 0,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -593420,7 +593420,7 @@ exports[`золотые трассы: daggerheart > sniper → toma · sniper_sh
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },
@@ -593635,7 +593635,7 @@ exports[`золотые трассы: daggerheart > sniper → toma · sniper_sh
             "total": 3,
             "type": "threshold",
             "versus": {
-              "tag": "evasion",
+              "tag": "stats.evasion.value",
               "value": 8,
             },
           },

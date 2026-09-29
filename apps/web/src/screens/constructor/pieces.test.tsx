@@ -44,7 +44,7 @@ describe('куски на пустом листе', () => {
     expect(errorsOf(lintSystem(system)).map(p => p.text)).toEqual([]);
   });
 
-  it('вычисляемое поле в списке помечено и читается формулой словами', () => {
+  it('таблица на листе — одна строка списка, формул в списке нет', () => {
     renderOpen(<SheetTab />);
     fireEvent.click(screen.getAllByText('Защита')[0]!);
     cleanup();
@@ -53,7 +53,8 @@ describe('куски на пустом листе', () => {
     const kinds = useWorld.getState().system.fields.map(f => f.value.kind);
     expect(kinds, metas.join(' | ')).toContain('formula');
     expect(metas.some(text => text.startsWith('вводит игрок')), metas.join(' | ')).toBe(true);
-    expect(metas.some(text => text.startsWith('= ')), metas.join(' | ')).toBe(true);
+    expect(metas.some(text => text.startsWith('таблица · ')), metas.join(' | ')).toBe(true);
+    expect(metas.some(text => text.startsWith('= ')), metas.join(' | ')).toBe(false);
   });
 });
 
