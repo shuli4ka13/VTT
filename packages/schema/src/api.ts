@@ -26,6 +26,7 @@ export const systemSummary = z.object({
   id: z.string(), title: z.string(), systemName: z.string(),
   authorName: z.string(), updatedAt: z.string(),
   status: publishState,
+  mine: z.boolean().optional(),
 });
 
 export const publishedSystem = z.object({

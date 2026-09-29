@@ -1,14 +1,25 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useWorld, emptySystem } from '../../store/world.ts';
-import { Button, Card, CardHead, Empty, Input, Verdict } from '../../ui/primitives.tsx';
+import { Button, Card, CardHead, Empty, Fold, Input, Verdict } from '../../ui/primitives.tsx';
 import { listSystems, getSystem, createSystem } from '../../api/client.ts';
 import { rememberVersion } from '../../store/autosave.ts';
 import type { SystemSummary } from '@vtt/schema';
 
 type Mode = 'edit' | 'copy' | 'blank' | null;
 
-const when = (iso: string): string => new Date(iso).toLocaleDateString('ru-RU');
+const when = (iso: string): string => {
+  const at = new Date(iso);
+  return `${at.toLocaleDateString('ru-RU')}, ${at.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`;
+};
+
+export function copyTitle(title: string, taken: readonly string[]): string {
+  const base = `${title.replace(/ — копия(?: \d+)?$/u, '')} — копия`;
+  if (!taken.includes(base)) return base;
+  let n = 2;
+  while (taken.includes(`${base} ${n}`)) n += 1;
+  return `${base} ${n}`;
+}
 
 function Status({ status }: { status: 'draft' | 'published' }) {
   return status === 'published'
@@ -53,7 +64,7 @@ export function SystemStart() {
   const open = async (summary: SystemSummary) => {
     if (mode === 'copy') {
       const saved = await getSystem(summary.id);
-      return start(`${saved.title} — копия`, saved.system);
+      return start(copyTitle(saved.title, systems.map(item => item.title)), saved.system);
     }
     setBusy(true);
     try {
@@ -69,6 +80,10 @@ export function SystemStart() {
       setTrouble((err as Error).message);
     } finally { setBusy(false); }
   };
+
+  const shown = mode === 'edit' ? systems.filter(item => item.mine !== false) : systems;
+  const main = mode === 'copy' ? shown.filter(item => item.status === 'published') : shown;
+  const drafts = mode === 'copy' ? shown.filter(item => item.status !== 'published') : [];
 
   return (
     <div className="start__scroll"><div className="start">
@@ -115,24 +130,40 @@ export function SystemStart() {
             title={mode === 'edit' ? 'Что открыть' : 'С чего снять копию'}
             sub={mode === 'copy' ? 'Копия сохранится отдельной системой: правки не заденут исходную.' : undefined}
           />
-          {systems.length === 0
+          {shown.length === 0
             ? <Empty title="Систем пока нет" hint="Начните с нуля — она появится здесь сразу после создания." />
             : (
-              <div className="start__list">
-                {systems.map(item => (
-                  <button key={item.id} type="button" className="start__item"
-                    disabled={busy} onClick={() => void open(item)}>
-                    <span className="start__item-head">
-                      <span className="start__item-name">{item.title}</span>
-                      <Status status={item.status} />
-                    </span>
-                    <span className="start__item-meta">{item.authorName} · {when(item.updatedAt)}</span>
-                  </button>
-                ))}
-              </div>
+              <>
+                <SystemList items={main} busy={busy} onOpen={item => void open(item)} />
+                {drafts.length ? (
+                  <Fold title="Ваши черновики" count={drafts.length}>
+                    <SystemList items={drafts} busy={busy} onOpen={item => void open(item)} />
+                  </Fold>
+                ) : null}
+              </>
             )}
         </Card>
       ) : null}
     </div></div>
+  );
+}
+
+function SystemList({ items, busy, onOpen }: {
+  items: SystemSummary[];
+  busy: boolean;
+  onOpen: (item: SystemSummary) => void;
+}) {
+  return (
+    <div className="start__list">
+      {items.map(item => (
+        <button key={item.id} type="button" className="start__item" disabled={busy} onClick={() => onOpen(item)}>
+          <span className="start__item-head">
+            <span className="start__item-name">{item.title}</span>
+            <Status status={item.status} />
+          </span>
+          <span className="start__item-meta">{item.mine ? '' : `${item.authorName} · `}{when(item.updatedAt)}</span>
+        </button>
+      ))}
+    </div>
   );
 }

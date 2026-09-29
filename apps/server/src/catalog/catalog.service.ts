@@ -111,7 +111,8 @@ export class CatalogService {
       const data = JSON.parse(row.data) as System;
       return { id: row.id, title: row.title, systemName: data.name ?? data.id,
         authorName: await this.author(row.ownerId), updatedAt: row.updatedAt,
-        status: row.status === 'published' ? 'published' as const : 'draft' as const };
+        status: row.status === 'published' ? 'published' as const : 'draft' as const,
+        mine: row.ownerId === viewerId };
     }));
   }
 
