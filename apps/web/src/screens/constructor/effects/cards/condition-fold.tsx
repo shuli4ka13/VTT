@@ -118,7 +118,7 @@ export function ConditionFold({ group, earlier, edit, context }: {
         </Field>
 
         {custom || (written !== null && !written.trim()) ? (
-          <Field label="условие" hint="Верно — шаг делается, нет — пропускается.">
+          <Field label="Условие" hint="Верно — шаг делается, нет — пропускается.">
             <FormulaField
               value={written ?? ''}
               system={system}
@@ -132,7 +132,7 @@ export function ConditionFold({ group, earlier, edit, context }: {
         ) : null}
 
         {when?.ref && kind === 'boolean' ? (
-          <Field label="исход">
+          <Field label="Исход">
             <Select
               value={when.not ? 'no' : 'yes'}
               options={[['yes', 'да'], ['no', 'нет']] as const}
@@ -143,14 +143,14 @@ export function ConditionFold({ group, earlier, edit, context }: {
 
         {when?.ref && kind === 'tags' ? (
           <>
-            <Field label="есть метка" hint="Пусто — любая.">
+            <Field label="Есть метка" hint="Пусто — любая.">
               <Select
                 value={when.has ?? ''}
                 options={[['', '— любая —'], ...tagged.map(t => [t, t] as const)] as never}
                 onChange={next => keep({ ...(next ? { has: next } : {}), where: when.where, not: when.not })}
               />
             </Field>
-            <Field label="где у метки" hint="Смотрит в строку метки в таблице: один факт вместо перечня меток.">
+            <Field label="Где у метки" hint="Смотрит в строку метки в таблице: один факт вместо перечня меток.">
               <div className="inline inline--tight">
                 <Select
                   value={when.where?.table ?? ''}
@@ -184,7 +184,7 @@ export function ConditionFold({ group, earlier, edit, context }: {
                 ) : null}
               </div>
             </Field>
-            <Field label="исход">
+            <Field label="Исход">
               <Select
                 value={when.not ? 'no' : 'yes'}
                 options={[['yes', 'так и есть'], ['no', 'не так']] as const}
@@ -196,14 +196,14 @@ export function ConditionFold({ group, earlier, edit, context }: {
 
         {when?.ref && kind === 'number' ? (
           <>
-            <Field label="не меньше" hint="Пусто — нижней границы нет.">
+            <Field label="Не меньше" hint="Пусто — нижней границы нет.">
               <SlotInput
                 where="условие · не меньше"
                 value={bound(when.atLeast)} context={context} allow={['tag', 'param', 'ref']}
                 onChange={next => keep({ atLeast: next && 'expr' in next ? next.expr : undefined, atMost: when.atMost })}
               />
             </Field>
-            <Field label="не больше" hint="Пусто — верхней границы нет.">
+            <Field label="Не больше" hint="Пусто — верхней границы нет.">
               <SlotInput
                 where="условие · не больше"
                 value={bound(when.atMost)} context={context} allow={['tag', 'param', 'ref']}
@@ -215,13 +215,13 @@ export function ConditionFold({ group, earlier, edit, context }: {
 
         {when?.ref && kind === 'text' ? (
           <>
-            <Field label="ступень" hint="Как она названа в таблице степеней.">
+            <Field label="Ступень" hint="Как она названа в таблице степеней.">
               <Input
                 value={when.has ?? ''}
                 onChange={next => keep({ has: next, not: when.not })}
               />
             </Field>
-            <Field label="исход">
+            <Field label="Исход">
               <Select
                 value={when.not ? 'no' : 'yes'}
                 options={[['yes', 'она и есть'], ['no', 'любая другая']] as const}

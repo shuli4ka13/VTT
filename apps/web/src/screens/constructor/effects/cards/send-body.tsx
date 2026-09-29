@@ -74,7 +74,7 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect, canAns
             add: () => edit(at, draft => { loose(draft).strict = true; }),
             drop: () => edit(at, draft => { delete loose(draft).strict; }),
             node: (
-              <Field label="если вызванный оборвался" hint="«Оборваться тоже» — для платы: нет ячейки, значит и заклинания нет.">
+              <Field label="Если вызванный оборвался" hint="«Оборваться тоже» — для платы: нет ячейки, значит и заклинания нет.">
                 <Select
                   value={step.strict ? 'true' : 'false'}
                   options={[['false', 'идти дальше'], ['true', 'оборваться тоже']] as const}

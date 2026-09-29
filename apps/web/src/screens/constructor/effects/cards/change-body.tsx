@@ -207,7 +207,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
     <>
       {}
       <Field
-        label="что меняется"
+        label="Что меняется"
         needed={!target}
         hint={target ? undefined : 'Поле листа, которое этот шаг поменяет.'}
       >
@@ -229,7 +229,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
 
       {}
       <Field
-        label="станет"
+        label="Станет"
         error={trouble}
         hint="Обычная математика. У каждого поля подписано, чьё оно: отправителя или получателя. Щелчок по подписи меняет хозяина."
       >
@@ -323,7 +323,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
               add: () => edit(applyIndex, draft => { (draft as any).targetModifiers = false; }),
               drop: () => edit(applyIndex, draft => { (draft as any).targetModifiers = true; }),
               node: (
-                <Field label="правки цели" hint="Всё, что у цели правит приходящее число: её состояния, черты, поля.">
+                <Field label="Правки цели" hint="Всё, что у цели правит приходящее число: её состояния, черты, поля.">
                   <Select
                     value={String(step.targetModifiers ?? true)}
                     options={[['true', 'слушаются'], ['false', 'не слушаются']] as const}
@@ -344,14 +344,14 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
               величина сохранена — вернётся, если снова выбрать «поле»
             </span>
           ) : null}
-          <Field label="что делаем">
+          <Field label="Что делаем">
             <Select
               value={String(step.mode ?? 'apply')}
               options={[['apply', 'вешаем'], ['remove', 'снимаем']] as const}
               onChange={next => edit(applyIndex, draft => { (draft as any).mode = next; })}
             />
           </Field>
-          <Field label="какое">
+          <Field label="Какое">
             <SlotInput
               where="изменение · какое"
               value={step.effect} context={context} extraOptions={statusOptions} keep={['const', 'param']}

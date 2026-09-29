@@ -198,7 +198,7 @@ describe('ссылка на результат шага', () => {
 
   it('слот «какое превышение» предлагает выходы проверки поимённо', () => {
     renderOpen(<EffectsTab />);
-    const label = screen.getByText('какое превышение');
+    const label = screen.getByText('Какое превышение');
     const input = label.parentElement!.querySelector('.chips__text') as HTMLInputElement;
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: '@', selectionStart: 1 } });

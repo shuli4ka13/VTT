@@ -56,7 +56,7 @@ export function NumberBody({ step, context, edit, onAddParam }: {
 
   if (source === 'margin') {
     return (
-      <Field label="какое превышение">
+      <Field label="Какое превышение">
         <SlotInput
           where="число · какое превышение"
           value={slotOf(read, 'margin')} context={context} allow={['ref']}
@@ -97,7 +97,7 @@ export function NumberBody({ step, context, edit, onAddParam }: {
       )) : null}
 
       {source !== 'item' ? (
-        <Field label="откуда">
+        <Field label="Откуда">
           <Select
             value={String(source)}
             options={[['item', 'формулой'], ['margin', 'превышение проверки']] as const}
