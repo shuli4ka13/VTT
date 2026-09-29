@@ -118,11 +118,13 @@ describe('EffectsTab: палитра трёх понятий', () => {
     expect(effect.params!.length).toBe(1);
   });
 
-  it('входы — таблицей: без подсказок в строке, флажки в конце, «правят сопротивления» только у числа', () => {
+  it('входы — таблицей: редкое под «ещё», флажки в конце, «правят сопротивления» только у числа', () => {
     renderOpen(<EffectsTab />);
     fireEvent.click(screen.getByText('+ вход'));
     expect(screen.queryByText('Чей лист')).toBeNull();
     expect(screen.queryByText(/можно числом или формулой/)).toBeNull();
+    expect(screen.queryByLabelText('«Новый вход» правят сопротивления'), 'редкое спрятано').toBeNull();
+    fireEvent.click(screen.getByText('ещё'));
     const heads = [...document.querySelectorAll('.sheet-grid__title')].map(h => h.textContent);
     expect(heads.slice(-2)).toEqual(['Правят сопротивления', 'Обязателен']);
     expect(screen.getByLabelText('«Новый вход» правят сопротивления')).toBeTruthy();

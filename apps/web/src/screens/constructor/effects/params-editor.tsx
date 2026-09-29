@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { kindsFor } from '@vtt/engine/words/kinds';
 import { choiceTables } from '@vtt/engine/model/tables';
 import { ASKABLE } from '@vtt/engine/model/asks';
@@ -25,6 +26,8 @@ const COLUMNS: GridColumn[] = [
   { key: 'required', label: 'Обязателен', width: 100 },
 ];
 
+const RARE = ['hint', 'main', 'required'];
+
 type Loose = Param & { role?: string; optional?: boolean };
 
 export function ParamsEditor({ effect, system, onEdit }: {
@@ -48,6 +51,9 @@ export function ParamsEditor({ effect, system, onEdit }: {
     }
   });
   const tables = choiceTables(system).map(([key, list]) => [key, list.label || key] as const);
+  const [more, setMore] = useState(false);
+  const full = more || params.some(p => p.ask?.hint || p.role === 'amount' || p.optional);
+  const columns = full ? COLUMNS : COLUMNS.filter(c => !RARE.includes(c.key));
 
   return (
     <Card>
@@ -59,11 +65,11 @@ export function ParamsEditor({ effect, system, onEdit }: {
           action={<Button size="sm" onClick={addParam}>+ вход</Button>}
         />
       ) : (
-        <SheetGrid id="params" columns={COLUMNS}>
+        <SheetGrid id={full ? 'params' : 'params-short'} columns={columns}>
           {params.map(param => {
             const kind = String(param.kind ?? 'number');
             const askable = (ASKABLE as readonly string[]).includes(kind);
-            return [
+            const cells = [
               <Input key={`${param.key}:label`} value={param.label ?? ''} onChange={next => change(param.key, t => { t.label = next; })} />,
               <Select
                 key={`${param.key}:kind`}
@@ -124,11 +130,19 @@ export function ParamsEditor({ effect, system, onEdit }: {
                 draft.params = (draft.params ?? []).filter(p => p.key !== param.key);
               })}>×</Button>,
             ];
+            return full ? cells : cells.filter((_, at) => at >= COLUMNS.length || !RARE.includes(COLUMNS[at]!.key));
           })}
         </SheetGrid>
       )}
 
-      {params.length ? <Button size="sm" onClick={addParam}>+ вход</Button> : null}
+      {params.length ? (
+        <div className="inline inline--tight">
+          <Button size="sm" onClick={addParam}>+ вход</Button>
+          {full && !more ? null : (
+            <Button size="sm" variant="ghost" onClick={() => setMore(!more)}>{more ? 'меньше' : 'ещё'}</Button>
+          )}
+        </div>
+      ) : null}
     </Card>
   );
 }
