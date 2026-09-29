@@ -234,7 +234,7 @@ function Columns({ id, table, system, edit }: {
                 onChange={next => set(i, c => { if (next) c.from = next; else delete c.from; })}
               />
             ) : <span key={`${column.key}:from`} className="faint">—</span>,
-            <Button key={`${column.key}:drop`} size="sm" variant="danger" title="убрать колонку" onClick={() => edit(draft => {
+            <Button key={`${column.key}:drop`} size="sm" variant="ghost" title="убрать колонку" onClick={() => edit(draft => {
               const gone = draft.columns?.[i]?.key;
               draft.columns?.splice(i, 1);
               if (gone) for (const row of draft.rows ?? []) delete row.cells?.[gone];
@@ -430,9 +430,9 @@ function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRe
           onChange={value => setCell(at, column.key, value)} />
       )))}
       {users.length ? (
-        <Button size="sm" variant="danger" disabled title={`строку используют: ${users.slice(0, 4).join('; ')}${users.length > 4 ? ` и ещё ${users.length - 4}` : ''}`}>×</Button>
+        <Button size="sm" variant="ghost" disabled title={`строку используют: ${users.slice(0, 4).join('; ')}${users.length > 4 ? ` и ещё ${users.length - 4}` : ''}`}>×</Button>
       ) : (
-        <Button size="sm" variant="danger" onClick={() => edit(draft => { draft.rows?.splice(at, 1); })}>×</Button>
+        <Button size="sm" variant="ghost" title="убрать строку" onClick={() => edit(draft => { draft.rows?.splice(at, 1); })}>×</Button>
       )}
     </>
   );

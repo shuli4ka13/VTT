@@ -120,7 +120,7 @@ export function ParamsEditor({ effect, system, onEdit }: {
                 checked={!param.optional}
                 onChange={e => change(param.key, t => { if (e.target.checked) delete t.optional; else t.optional = true; })}
               />,
-              <Button key={`${param.key}:drop`} size="sm" variant="danger" title="убрать вход" onClick={() => onEdit(draft => {
+              <Button key={`${param.key}:drop`} size="sm" variant="ghost" title="убрать вход" onClick={() => onEdit(draft => {
                 draft.params = (draft.params ?? []).filter(p => p.key !== param.key);
               })}>×</Button>,
             ];

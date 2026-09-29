@@ -1,5 +1,5 @@
 import type { System, Modifier } from '@vtt/schema';
-import { Card, CardHead, Field, Input, Select, Button, Empty, Fold } from '../../ui/primitives.tsx';
+import { Card, CardHead, Field, Input, Select, Button, Empty, Fold, DangerButton } from '../../ui/primitives.tsx';
 import { FormulaInput, formulaAsLabels } from '../../ui/formula.tsx';
 import { targets } from '@vtt/engine/engine/targets';
 import { installMethod, recipesToInstall } from '@vtt/engine/model/advantage-methods';
@@ -92,7 +92,7 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
           <CardHead
             title={modifier.kind === 'value' ? 'Правит значение' : 'Правит бросок'}
             actions={
-              <Button size="sm" variant="danger" onClick={() => onEdit(draft => { draft.splice(index, 1); })}>×</Button>
+              <DangerButton size="sm" onConfirm={() => onEdit(draft => { draft.splice(index, 1); })}>Удалить</DangerButton>
             }
           />
 

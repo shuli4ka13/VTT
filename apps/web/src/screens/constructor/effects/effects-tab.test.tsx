@@ -87,8 +87,8 @@ describe('EffectsTab: палитра трёх понятий', () => {
   it('убранный шаг можно вернуть', () => {
     renderOpen(<EffectsTab />);
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
-    fireEvent.click(screen.getByTitle('убрать шаг'));
-    fireEvent.click(screen.getByText('убрать'));
+    fireEvent.click(screen.getAllByText('Удалить').at(-1)!);
+    fireEvent.click(screen.getByText('точно убрать'));
     expect(useWorld.getState().system.effects.strike!.steps).toHaveLength(0);
     fireEvent.click(screen.getByText('вернуть шаг'));
     expect(useWorld.getState().system.effects.strike!.steps).toHaveLength(1);

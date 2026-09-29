@@ -1,4 +1,4 @@
-import { Card, CardHead, Field, Select, Chip, Button, Fold } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Field, Select, Chip, Fold, DangerButton } from '../../../ui/primitives.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import { registry } from '@vtt/engine/engine/steps/index';
 import { MOMENTS as TIMES } from '@vtt/engine/events/moments';
@@ -89,7 +89,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
       <CardHead
         title={`Когда №${index + 1}`}
         sub="Что случилось — и что эффект делает в ответ."
-        actions={<Button size="sm" variant="ghost" title="убрать это «когда»" onClick={onRemove}>×</Button>}
+        actions={<DangerButton size="sm" onConfirm={onRemove}>Удалить</DangerButton>}
       />
 
       <div className="row">

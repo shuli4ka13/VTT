@@ -1,6 +1,6 @@
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import type { System, Effect, Step, ValueKind } from '@vtt/schema';
-import { Card, CardHead, Verdict, Button, Chip } from '../../../../ui/primitives.tsx';
+import { Card, CardHead, Verdict, Button, Chip, DangerButton } from '../../../../ui/primitives.tsx';
 import type { CardGroup } from '../../cards.ts';
 import type { Segment } from '../../readback.ts';
 import { checkReadback, changeReadback, sendReadback, numberReadback } from '../../readback.ts';
@@ -61,14 +61,7 @@ export function GroupCard({
   const context: SlotContext = { system, effect, earlier };
   const step = group.step as any;
 
-  const [armed, setArmed] = useState(false);
-
-  const actions = armed ? (
-    <>
-      <Button size="sm" variant="danger" onClick={onDelete}>убрать</Button>
-      <Button size="sm" variant="ghost" onClick={() => setArmed(false)}>отмена</Button>
-    </>
-  ) : (
+  const actions = (
     <>
       {onMoveLane ? (
         <Chip
@@ -81,7 +74,7 @@ export function GroupCard({
       ) : null}
       <Button size="sm" variant="ghost" title="выше" disabled={!onMoveUp} onClick={onMoveUp}>↑</Button>
       <Button size="sm" variant="ghost" title="ниже" disabled={!onMoveDown} onClick={onMoveDown}>↓</Button>
-      <Button size="sm" variant="ghost" title="убрать шаг" onClick={() => setArmed(true)}>×</Button>
+      <DangerButton size="sm" onConfirm={onDelete}>Удалить</DangerButton>
     </>
   );
 

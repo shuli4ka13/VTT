@@ -369,9 +369,9 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
                   />
                 </Field>
                 <Field label=" ">
-                  <Button size="sm" variant="danger" onClick={() => edit(draft => {
+                  <Button size="sm" variant="ghost" title="убрать свойство" onClick={() => edit(draft => {
                     draft.props = (draft.props ?? []).filter(p => p.key !== prop.key);
-                  })}>Убрать</Button>
+                  })}>×</Button>
                 </Field>
               </div>
               <span className="faint">{propDestiny(system, kind, prop.key)}</span>
@@ -426,7 +426,7 @@ function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWi
     <Card tone="flat">
       <CardHead
         title={<LabelInput value={binding.label ?? ''} placeholder="как назвать кнопку" onCommit={label => onEdit(draft => { draft.label = label; })} />}
-        actions={<DangerButton size="sm" onConfirm={onDelete}>Убрать</DangerButton>}
+        actions={<DangerButton size="sm" onConfirm={onDelete}>Удалить</DangerButton>}
       />
       <CallEditor
         system={system}
