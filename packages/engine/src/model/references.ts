@@ -42,6 +42,7 @@ export interface Reference {
   key: string;
   from: Where;
   scope?: string;
+  path?: string;
 }
 
 export interface Declared {
@@ -155,9 +156,10 @@ export function exprRefs(source: string, from: Where, scope: ChainScope, out: Re
   for (const dep of deps) {
     const owned = ownerOf(dep);
     if (owned) {
-      const head = owned.rest.split('.')[0]!;
+      const parts = owned.rest.split('.');
+      const head = parts[0]!;
       if (owned.rest.includes('.') && scope.params.has(head)) continue;
-      out.push({ kind: 'field', key: head, from, scope: `owner:${owned.owner}` });
+      out.push({ kind: 'field', key: head, from, scope: `owner:${owned.owner}`, ...(parts.length > 1 ? { path: owned.rest } : {}) });
       continue;
     }
     if (scope.earlier.has(dep) || scope.params.has(dep)) continue;
@@ -173,7 +175,7 @@ export function exprRefs(source: string, from: Where, scope: ChainScope, out: Re
       if (scope.earlier.has(head) || scope.params.has(head)) continue;
       if ((SEED_RESULTS as readonly string[]).includes(head)) continue;
       if (scope.eventChain && (EVENT_RESULTS as readonly string[]).includes(head)) continue;
-      out.push({ kind: 'step', key: head, from, scope: 'dotted' });
+      out.push({ kind: 'step', key: head, from, scope: 'dotted', path: dep });
       continue;
     }
     out.push({ kind: 'field', key: dep, from, scope: 'plain' });
@@ -283,6 +285,21 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
   for (const key of effect.grants ?? []) out.push({ kind: 'effect', key, from: { tab: 'effects', effect: id, part: 'grants' } });
 }
 
+export function withAddresses(system: System, refs: Reference[]): Reference[] {
+  const fields = new Set(system.fields.map(f => f.tag));
+  const tables: Reference[] = [];
+  for (const ref of refs) {
+    if (!ref.path) continue;
+    const head = ref.path.split('.')[0]!;
+    if (fields.has(head) || !system.tables?.[head]) continue;
+    ref.kind = 'field';
+    ref.key = ref.path;
+    if (ref.scope === 'dotted') ref.scope = 'address';
+    tables.push({ kind: 'table', key: head, from: ref.from });
+  }
+  return tables.length ? [...refs, ...tables] : refs;
+}
+
 export function referencesOf(system: System, compendium?: Compendium): Reference[] {
   const out: Reference[] = [];
   const noScope: ChainScope = { params: new Set(), earlier: new Set(), eventChain: false };
@@ -349,5 +366,5 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
     }
   }
 
-  return out;
+  return withAddresses(system, out);
 }

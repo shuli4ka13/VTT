@@ -2,7 +2,7 @@ import { compile } from '../formula/index.ts';
 import { applyValueModifiers } from './modifiers.ts';
 import { lookupCell, rowOf } from './tables.ts';
 import { VALUE_COLUMN, isRange } from '../model/tables.ts';
-import { cellTag, withRow } from '../model/sheet-columns.ts';
+import { addressOf, cellSource, isLive, withRow } from '../model/sheet-columns.ts';
 import type { System, Table } from '../model/types.ts';
 import type { Pass } from './calc.ts';
 
@@ -36,18 +36,14 @@ export function readCell(
 ): unknown {
   const table = system.tables?.[tableId];
   const spec = (table?.columns ?? []).find(c => c.key === column);
-  if (spec?.sheet) {
-    const row = rowOf(system, tableId, input, forTag);
-    return row ? pass.resolve(cellTag(system, tableId, row, spec)) : null;
-  }
-  const found = lookupCell(system, tableId, input, column, forTag);
-  const raw = spec?.expr ?? found;
-  const kind = spec?.kind;
-  if (!table || kind !== 'expr' || typeof raw !== 'string') return raw;
+  const row = table && spec ? rowOf(system, tableId, input, forTag) : undefined;
+  if (!table || !spec || !row) return lookupCell(system, tableId, input, column, forTag);
+  if (isLive(table, spec, row)) return pass.resolve(addressOf(tableId, row, column));
+  const source = cellSource(spec, row);
+  if (source.kind === 'value') return source.value;
+  if (source.kind === 'input') return undefined;
 
-  const row = rowOf(system, tableId, input, forTag);
-  const base = compile(row ? withRow(system, tableId, row, raw) : raw).evaluate(pass.resolve);
-  const key = row ? rowKeyOf(table, input) : String(input);
-  const own = applyValueModifiers(base, cellTagOf(tableId, key, column), pass);
+  const base = compile(withRow(system, tableId, row, source.expr)).evaluate(pass.resolve);
+  const own = applyValueModifiers(base, cellTagOf(tableId, rowKeyOf(table, input), column), pass);
   return applyValueModifiers(own, columnTagOf(tableId, column), pass);
 }

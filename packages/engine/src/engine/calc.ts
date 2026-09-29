@@ -1,7 +1,7 @@
 import { compile } from '../formula/index.ts';
 import { UnknownTagError, CycleError, EngineError } from './errors.ts';
 import { toolsOf } from './refs.ts';
-import { referencedTable, splitPath, walk } from './navigate.ts';
+import { referencedTable, resolveAddress, splitPath, walk } from './navigate.ts';
 import { ownerOf, DESK, DESK_ID } from './owners.ts';
 import { collectModifiers, applyValueModifiers } from './modifiers.ts';
 import { wornEffects } from './effects.ts';
@@ -69,8 +69,11 @@ export function newPass(system: System, sheet: Sheet, options: PassOptions = {})
       if (!pass.desk) throw new EngineError(`стола нет — «${owned.rest}» читать неоткуда`);
       return pass.desk.resolve(owned.rest);
     }
-    if (!findField(system, tag) && system.effects?.[tag]) return wornCount(system, sheet, tag, options.compendium);
-    const split = findField(system, tag) ? null : splitPath(tag);
+    const field = findField(system, tag);
+    if (!field && system.effects?.[tag]) return wornCount(system, sheet, tag, options.compendium);
+    const address = field ? null : resolveAddress(system, pass, tag);
+    if (address) return address.value;
+    const split = field ? null : splitPath(tag);
     const table = split ? referencedTable(system, split.head) : undefined;
     if (split && table) {
       return walk(system, pass, table, calc(system, sheet, split.head, pass), split.path, `поле «${split.head}»`);

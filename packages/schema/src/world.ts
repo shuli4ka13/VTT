@@ -107,12 +107,17 @@ export const dieConstant = z.object({
 
 export const tableValue = z.union([z.number(), z.string(), z.boolean()]);
 
-export const sheetColumn = z.object({
-  tag: z.string().min(1),
-  label: z.string(),
+export const tableViewColumn = z.object({
+  label: z.string().optional(),
   group: z.string().optional(),
   roll: z.lazy(() => rollSpec.partial()).optional(),
   control: control.optional(),
+  start: z.union([z.number(), z.string(), z.boolean()]).optional(),
+});
+
+export const tableView = z.object({
+  group: z.string().optional(),
+  columns: z.record(z.string(), tableViewColumn).optional(),
 });
 
 export const tableColumn = z.object({
@@ -120,10 +125,8 @@ export const tableColumn = z.object({
   label: z.string().optional(),
   ...typed,
   expr: z.string().optional(),
-  start: z.union([z.number(), z.string(), z.boolean()]).optional(),
   min: bound.optional(),
   max: bound.optional(),
-  sheet: sheetColumn.optional(),
 });
 
 export const tableRow = z.object({
@@ -147,6 +150,7 @@ export const table = z.object({
   columns: z.array(tableColumn).optional(),
   rows: z.array(tableRow).optional(),
   otherwise: tableValue.optional(),
+  sheet: tableView.optional(),
 }).passthrough();
 
 export const rollEditOp = z.object({ op: z.string().min(1) }).passthrough();
@@ -377,6 +381,8 @@ export type RollEdit = z.infer<typeof rollEdit>;
 export type Table = z.infer<typeof table>;
 export type TableColumn = z.infer<typeof tableColumn>;
 export type TableRow = z.infer<typeof tableRow>;
+export type TableView = z.infer<typeof tableView>;
+export type TableViewColumn = z.infer<typeof tableViewColumn>;
 export type TableKey = z.infer<typeof tableKey>;
 export type Activation = z.infer<typeof activation>;
 export type DurationKind = z.infer<typeof durationKind>;

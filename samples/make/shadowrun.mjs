@@ -5,6 +5,7 @@ import { argsOf } from './convert/args.ts';
 import { fieldRollsOf } from './convert/field-rolls.ts';
 import { namesOf } from './convert/names.ts';
 import { spendOf } from './convert/spend.ts';
+import { addressesOf } from './convert/addresses.ts';
 import { withTableFields } from '../../packages/engine/src/model/sheet-columns.ts';
 
 const ATTRIBUTES = [
@@ -590,8 +591,9 @@ const world = {
   sheets: sheets(),
 };
 
-world.system = withTableFields(world.system);
+const done = addressesOf(spendOf(namesOf(fieldRollsOf(argsOf(modifiersOf(world))))));
+done.system = withTableFields(done.system);
 
 const out = fileURLToPath(new URL('../shadowrun.world.json', import.meta.url));
-writeFileSync(out, `${JSON.stringify(spendOf(namesOf(fieldRollsOf(argsOf(modifiersOf(world))))), null, 2)}\n`);
-console.log(`Shadowrun 6: полей ${world.system.fields.length}, эффектов ${Object.keys(world.system.effects).length}, записей ${world.compendium.records.length}, листов ${world.sheets.length}`);
+writeFileSync(out, `${JSON.stringify(done, null, 2)}\n`);
+console.log(`Shadowrun 6: полей ${done.system.fields.length}, эффектов ${Object.keys(world.system.effects).length}, записей ${world.compendium.records.length}, листов ${world.sheets.length}`);

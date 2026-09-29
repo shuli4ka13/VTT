@@ -270,7 +270,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "concentration",
+        "tag": "skills.concentration.rank",
         "group": "Навыки — внимание",
         "cell": {
           "table": "skills",
@@ -289,14 +289,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@concentration_total"
+            "expr": "@skills.concentration.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@will + @concentration"
+          "expr": "@will + @skills.concentration.rank"
         },
-        "tag": "concentration_total",
+        "tag": "skills.concentration.total",
         "group": "Навыки — внимание",
         "cell": {
           "table": "skills",
@@ -314,7 +314,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "conceal_reveal",
+        "tag": "skills.conceal_reveal.rank",
         "group": "Навыки — внимание",
         "cell": {
           "table": "skills",
@@ -333,14 +333,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@conceal_reveal_total"
+            "expr": "@skills.conceal_reveal.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@int + @conceal_reveal"
+          "expr": "@int + @skills.conceal_reveal.rank"
         },
-        "tag": "conceal_reveal_total",
+        "tag": "skills.conceal_reveal.total",
         "group": "Навыки — внимание",
         "cell": {
           "table": "skills",
@@ -358,7 +358,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "lip_reading",
+        "tag": "skills.lip_reading.rank",
         "group": "Навыки — внимание",
         "cell": {
           "table": "skills",
@@ -377,14 +377,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@lip_reading_total"
+            "expr": "@skills.lip_reading.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@int + @lip_reading"
+          "expr": "@int + @skills.lip_reading.rank"
         },
-        "tag": "lip_reading_total",
+        "tag": "skills.lip_reading.total",
         "group": "Навыки — внимание",
         "cell": {
           "table": "skills",
@@ -402,7 +402,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "perception",
+        "tag": "skills.perception.rank",
         "group": "Навыки — внимание",
         "cell": {
           "table": "skills",
@@ -421,14 +421,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@perception_total"
+            "expr": "@skills.perception.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@int + @perception"
+          "expr": "@int + @skills.perception.rank"
         },
-        "tag": "perception_total",
+        "tag": "skills.perception.total",
         "group": "Навыки — внимание",
         "cell": {
           "table": "skills",
@@ -446,7 +446,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "tracking",
+        "tag": "skills.tracking.rank",
         "group": "Навыки — внимание",
         "cell": {
           "table": "skills",
@@ -465,14 +465,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@tracking_total"
+            "expr": "@skills.tracking.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@int + @tracking"
+          "expr": "@int + @skills.tracking.rank"
         },
-        "tag": "tracking_total",
+        "tag": "skills.tracking.total",
         "group": "Навыки — внимание",
         "cell": {
           "table": "skills",
@@ -490,7 +490,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "athletics",
+        "tag": "skills.athletics.rank",
         "group": "Навыки — тело",
         "cell": {
           "table": "skills",
@@ -509,14 +509,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@athletics_total"
+            "expr": "@skills.athletics.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@dex + @athletics"
+          "expr": "@dex + @skills.athletics.rank"
         },
-        "tag": "athletics_total",
+        "tag": "skills.athletics.total",
         "group": "Навыки — тело",
         "cell": {
           "table": "skills",
@@ -534,7 +534,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "contortionist",
+        "tag": "skills.contortionist.rank",
         "group": "Навыки — тело",
         "cell": {
           "table": "skills",
@@ -553,14 +553,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@contortionist_total"
+            "expr": "@skills.contortionist.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@dex + @contortionist"
+          "expr": "@dex + @skills.contortionist.rank"
         },
-        "tag": "contortionist_total",
+        "tag": "skills.contortionist.total",
         "group": "Навыки — тело",
         "cell": {
           "table": "skills",
@@ -578,7 +578,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "dance",
+        "tag": "skills.dance.rank",
         "group": "Навыки — тело",
         "cell": {
           "table": "skills",
@@ -597,14 +597,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@dance_total"
+            "expr": "@skills.dance.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@dex + @dance"
+          "expr": "@dex + @skills.dance.rank"
         },
-        "tag": "dance_total",
+        "tag": "skills.dance.total",
         "group": "Навыки — тело",
         "cell": {
           "table": "skills",
@@ -622,7 +622,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "endurance",
+        "tag": "skills.endurance.rank",
         "group": "Навыки — тело",
         "cell": {
           "table": "skills",
@@ -641,14 +641,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@endurance_total"
+            "expr": "@skills.endurance.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@will + @endurance"
+          "expr": "@will + @skills.endurance.rank"
         },
-        "tag": "endurance_total",
+        "tag": "skills.endurance.total",
         "group": "Навыки — тело",
         "cell": {
           "table": "skills",
@@ -666,7 +666,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "resist_torture",
+        "tag": "skills.resist_torture.rank",
         "group": "Навыки — тело",
         "cell": {
           "table": "skills",
@@ -685,14 +685,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@resist_torture_total"
+            "expr": "@skills.resist_torture.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@will + @resist_torture"
+          "expr": "@will + @skills.resist_torture.rank"
         },
-        "tag": "resist_torture_total",
+        "tag": "skills.resist_torture.total",
         "group": "Навыки — тело",
         "cell": {
           "table": "skills",
@@ -710,7 +710,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "stealth",
+        "tag": "skills.stealth.rank",
         "group": "Навыки — тело",
         "cell": {
           "table": "skills",
@@ -729,14 +729,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@stealth_total"
+            "expr": "@skills.stealth.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@dex + @stealth"
+          "expr": "@dex + @skills.stealth.rank"
         },
-        "tag": "stealth_total",
+        "tag": "skills.stealth.total",
         "group": "Навыки — тело",
         "cell": {
           "table": "skills",
@@ -754,7 +754,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "drive_land",
+        "tag": "skills.drive_land.rank",
         "group": "Навыки — управление",
         "cell": {
           "table": "skills",
@@ -773,14 +773,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@drive_land_total"
+            "expr": "@skills.drive_land.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@ref + @drive_land"
+          "expr": "@ref + @skills.drive_land.rank"
         },
-        "tag": "drive_land_total",
+        "tag": "skills.drive_land.total",
         "group": "Навыки — управление",
         "cell": {
           "table": "skills",
@@ -798,7 +798,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "pilot_air",
+        "tag": "skills.pilot_air.rank",
         "group": "Навыки — управление",
         "cell": {
           "table": "skills",
@@ -817,14 +817,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@pilot_air_total"
+            "expr": "@skills.pilot_air.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@ref + @pilot_air"
+          "expr": "@ref + @skills.pilot_air.rank"
         },
-        "tag": "pilot_air_total",
+        "tag": "skills.pilot_air.total",
         "group": "Навыки — управление",
         "cell": {
           "table": "skills",
@@ -842,7 +842,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "pilot_sea",
+        "tag": "skills.pilot_sea.rank",
         "group": "Навыки — управление",
         "cell": {
           "table": "skills",
@@ -861,14 +861,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@pilot_sea_total"
+            "expr": "@skills.pilot_sea.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@ref + @pilot_sea"
+          "expr": "@ref + @skills.pilot_sea.rank"
         },
-        "tag": "pilot_sea_total",
+        "tag": "skills.pilot_sea.total",
         "group": "Навыки — управление",
         "cell": {
           "table": "skills",
@@ -886,7 +886,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "riding",
+        "tag": "skills.riding.rank",
         "group": "Навыки — управление",
         "cell": {
           "table": "skills",
@@ -905,14 +905,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@riding_total"
+            "expr": "@skills.riding.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@ref + @riding"
+          "expr": "@ref + @skills.riding.rank"
         },
-        "tag": "riding_total",
+        "tag": "skills.riding.total",
         "group": "Навыки — управление",
         "cell": {
           "table": "skills",
@@ -930,7 +930,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "accounting",
+        "tag": "skills.accounting.rank",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -949,14 +949,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@accounting_total"
+            "expr": "@skills.accounting.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@int + @accounting"
+          "expr": "@int + @skills.accounting.rank"
         },
-        "tag": "accounting_total",
+        "tag": "skills.accounting.total",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -974,7 +974,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "animal_handling",
+        "tag": "skills.animal_handling.rank",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -993,14 +993,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@animal_handling_total"
+            "expr": "@skills.animal_handling.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@int + @animal_handling"
+          "expr": "@int + @skills.animal_handling.rank"
         },
-        "tag": "animal_handling_total",
+        "tag": "skills.animal_handling.total",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1018,7 +1018,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "bureaucracy",
+        "tag": "skills.bureaucracy.rank",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1037,14 +1037,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@bureaucracy_total"
+            "expr": "@skills.bureaucracy.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@int + @bureaucracy"
+          "expr": "@int + @skills.bureaucracy.rank"
         },
-        "tag": "bureaucracy_total",
+        "tag": "skills.bureaucracy.total",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1062,7 +1062,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "business",
+        "tag": "skills.business.rank",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1081,14 +1081,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@business_total"
+            "expr": "@skills.business.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@int + @business"
+          "expr": "@int + @skills.business.rank"
         },
-        "tag": "business_total",
+        "tag": "skills.business.total",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1106,7 +1106,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "composition",
+        "tag": "skills.composition.rank",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1125,14 +1125,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@composition_total"
+            "expr": "@skills.composition.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@int + @composition"
+          "expr": "@int + @skills.composition.rank"
         },
-        "tag": "composition_total",
+        "tag": "skills.composition.total",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1150,7 +1150,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "criminology",
+        "tag": "skills.criminology.rank",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1169,14 +1169,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@criminology_total"
+            "expr": "@skills.criminology.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@int + @criminology"
+          "expr": "@int + @skills.criminology.rank"
         },
-        "tag": "criminology_total",
+        "tag": "skills.criminology.total",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1194,7 +1194,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "cryptography",
+        "tag": "skills.cryptography.rank",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1213,14 +1213,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@cryptography_total"
+            "expr": "@skills.cryptography.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@int + @cryptography"
+          "expr": "@int + @skills.cryptography.rank"
         },
-        "tag": "cryptography_total",
+        "tag": "skills.cryptography.total",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1238,7 +1238,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "deduction",
+        "tag": "skills.deduction.rank",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1257,14 +1257,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@deduction_total"
+            "expr": "@skills.deduction.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@int + @deduction"
+          "expr": "@int + @skills.deduction.rank"
         },
-        "tag": "deduction_total",
+        "tag": "skills.deduction.total",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1282,7 +1282,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "education",
+        "tag": "skills.education.rank",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1301,14 +1301,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@education_total"
+            "expr": "@skills.education.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@int + @education"
+          "expr": "@int + @skills.education.rank"
         },
-        "tag": "education_total",
+        "tag": "skills.education.total",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1326,7 +1326,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "gamble",
+        "tag": "skills.gamble.rank",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1345,14 +1345,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@gamble_total"
+            "expr": "@skills.gamble.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@int + @gamble"
+          "expr": "@int + @skills.gamble.rank"
         },
-        "tag": "gamble_total",
+        "tag": "skills.gamble.total",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1370,7 +1370,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "language",
+        "tag": "skills.language.rank",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1389,14 +1389,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@language_total"
+            "expr": "@skills.language.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@int + @language"
+          "expr": "@int + @skills.language.rank"
         },
-        "tag": "language_total",
+        "tag": "skills.language.total",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1414,7 +1414,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "library_search",
+        "tag": "skills.library_search.rank",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1433,14 +1433,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@library_search_total"
+            "expr": "@skills.library_search.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@int + @library_search"
+          "expr": "@int + @skills.library_search.rank"
         },
-        "tag": "library_search_total",
+        "tag": "skills.library_search.total",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1458,7 +1458,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "local_expert",
+        "tag": "skills.local_expert.rank",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1477,14 +1477,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@local_expert_total"
+            "expr": "@skills.local_expert.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@int + @local_expert"
+          "expr": "@int + @skills.local_expert.rank"
         },
-        "tag": "local_expert_total",
+        "tag": "skills.local_expert.total",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1502,7 +1502,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "science",
+        "tag": "skills.science.rank",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1521,14 +1521,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@science_total"
+            "expr": "@skills.science.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@int + @science"
+          "expr": "@int + @skills.science.rank"
         },
-        "tag": "science_total",
+        "tag": "skills.science.total",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1546,7 +1546,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "tactics",
+        "tag": "skills.tactics.rank",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1565,14 +1565,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@tactics_total"
+            "expr": "@skills.tactics.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@int + @tactics"
+          "expr": "@int + @skills.tactics.rank"
         },
-        "tag": "tactics_total",
+        "tag": "skills.tactics.total",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1590,7 +1590,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "wilderness_survival",
+        "tag": "skills.wilderness_survival.rank",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1609,14 +1609,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@wilderness_survival_total"
+            "expr": "@skills.wilderness_survival.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@int + @wilderness_survival"
+          "expr": "@int + @skills.wilderness_survival.rank"
         },
-        "tag": "wilderness_survival_total",
+        "tag": "skills.wilderness_survival.total",
         "group": "Навыки — образование",
         "cell": {
           "table": "skills",
@@ -1634,7 +1634,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "brawling",
+        "tag": "skills.brawling.rank",
         "group": "Навыки — бой",
         "cell": {
           "table": "skills",
@@ -1653,14 +1653,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@brawling_total"
+            "expr": "@skills.brawling.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@dex + @brawling"
+          "expr": "@dex + @skills.brawling.rank"
         },
-        "tag": "brawling_total",
+        "tag": "skills.brawling.total",
         "group": "Навыки — бой",
         "cell": {
           "table": "skills",
@@ -1678,7 +1678,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "evasion",
+        "tag": "skills.evasion.rank",
         "group": "Навыки — бой",
         "cell": {
           "table": "skills",
@@ -1697,14 +1697,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@evasion_total"
+            "expr": "@skills.evasion.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@dex + @evasion"
+          "expr": "@dex + @skills.evasion.rank"
         },
-        "tag": "evasion_total",
+        "tag": "skills.evasion.total",
         "group": "Навыки — бой",
         "cell": {
           "table": "skills",
@@ -1722,7 +1722,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "martial_arts",
+        "tag": "skills.martial_arts.rank",
         "group": "Навыки — бой",
         "cell": {
           "table": "skills",
@@ -1741,14 +1741,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@martial_arts_total"
+            "expr": "@skills.martial_arts.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@dex + @martial_arts"
+          "expr": "@dex + @skills.martial_arts.rank"
         },
-        "tag": "martial_arts_total",
+        "tag": "skills.martial_arts.total",
         "group": "Навыки — бой",
         "cell": {
           "table": "skills",
@@ -1766,7 +1766,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "melee_weapon",
+        "tag": "skills.melee_weapon.rank",
         "group": "Навыки — бой",
         "cell": {
           "table": "skills",
@@ -1785,14 +1785,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@melee_weapon_total"
+            "expr": "@skills.melee_weapon.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@dex + @melee_weapon"
+          "expr": "@dex + @skills.melee_weapon.rank"
         },
-        "tag": "melee_weapon_total",
+        "tag": "skills.melee_weapon.total",
         "group": "Навыки — бой",
         "cell": {
           "table": "skills",
@@ -1810,7 +1810,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "acting",
+        "tag": "skills.acting.rank",
         "group": "Навыки — выступление",
         "cell": {
           "table": "skills",
@@ -1829,14 +1829,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@acting_total"
+            "expr": "@skills.acting.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@cool + @acting"
+          "expr": "@cool + @skills.acting.rank"
         },
-        "tag": "acting_total",
+        "tag": "skills.acting.total",
         "group": "Навыки — выступление",
         "cell": {
           "table": "skills",
@@ -1854,7 +1854,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "play_instrument",
+        "tag": "skills.play_instrument.rank",
         "group": "Навыки — выступление",
         "cell": {
           "table": "skills",
@@ -1873,14 +1873,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@play_instrument_total"
+            "expr": "@skills.play_instrument.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@tech + @play_instrument"
+          "expr": "@tech + @skills.play_instrument.rank"
         },
-        "tag": "play_instrument_total",
+        "tag": "skills.play_instrument.total",
         "group": "Навыки — выступление",
         "cell": {
           "table": "skills",
@@ -1898,7 +1898,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "archery",
+        "tag": "skills.archery.rank",
         "group": "Навыки — стрельба",
         "cell": {
           "table": "skills",
@@ -1917,14 +1917,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@archery_total"
+            "expr": "@skills.archery.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@ref + @archery"
+          "expr": "@ref + @skills.archery.rank"
         },
-        "tag": "archery_total",
+        "tag": "skills.archery.total",
         "group": "Навыки — стрельба",
         "cell": {
           "table": "skills",
@@ -1942,7 +1942,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "autofire",
+        "tag": "skills.autofire.rank",
         "group": "Навыки — стрельба",
         "cell": {
           "table": "skills",
@@ -1961,14 +1961,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@autofire_total"
+            "expr": "@skills.autofire.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@ref + @autofire"
+          "expr": "@ref + @skills.autofire.rank"
         },
-        "tag": "autofire_total",
+        "tag": "skills.autofire.total",
         "group": "Навыки — стрельба",
         "cell": {
           "table": "skills",
@@ -1986,7 +1986,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "handgun",
+        "tag": "skills.handgun.rank",
         "group": "Навыки — стрельба",
         "cell": {
           "table": "skills",
@@ -2005,14 +2005,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@handgun_total"
+            "expr": "@skills.handgun.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@ref + @handgun"
+          "expr": "@ref + @skills.handgun.rank"
         },
-        "tag": "handgun_total",
+        "tag": "skills.handgun.total",
         "group": "Навыки — стрельба",
         "cell": {
           "table": "skills",
@@ -2030,7 +2030,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "heavy_weapons",
+        "tag": "skills.heavy_weapons.rank",
         "group": "Навыки — стрельба",
         "cell": {
           "table": "skills",
@@ -2049,14 +2049,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@heavy_weapons_total"
+            "expr": "@skills.heavy_weapons.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@ref + @heavy_weapons"
+          "expr": "@ref + @skills.heavy_weapons.rank"
         },
-        "tag": "heavy_weapons_total",
+        "tag": "skills.heavy_weapons.total",
         "group": "Навыки — стрельба",
         "cell": {
           "table": "skills",
@@ -2074,7 +2074,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "shoulder_arms",
+        "tag": "skills.shoulder_arms.rank",
         "group": "Навыки — стрельба",
         "cell": {
           "table": "skills",
@@ -2093,14 +2093,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@shoulder_arms_total"
+            "expr": "@skills.shoulder_arms.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@ref + @shoulder_arms"
+          "expr": "@ref + @skills.shoulder_arms.rank"
         },
-        "tag": "shoulder_arms_total",
+        "tag": "skills.shoulder_arms.total",
         "group": "Навыки — стрельба",
         "cell": {
           "table": "skills",
@@ -2118,7 +2118,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "bribery",
+        "tag": "skills.bribery.rank",
         "group": "Навыки — общение",
         "cell": {
           "table": "skills",
@@ -2137,14 +2137,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@bribery_total"
+            "expr": "@skills.bribery.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@cool + @bribery"
+          "expr": "@cool + @skills.bribery.rank"
         },
-        "tag": "bribery_total",
+        "tag": "skills.bribery.total",
         "group": "Навыки — общение",
         "cell": {
           "table": "skills",
@@ -2162,7 +2162,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "conversation",
+        "tag": "skills.conversation.rank",
         "group": "Навыки — общение",
         "cell": {
           "table": "skills",
@@ -2181,14 +2181,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@conversation_total"
+            "expr": "@skills.conversation.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@emp + @conversation"
+          "expr": "@emp + @skills.conversation.rank"
         },
-        "tag": "conversation_total",
+        "tag": "skills.conversation.total",
         "group": "Навыки — общение",
         "cell": {
           "table": "skills",
@@ -2206,7 +2206,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "human_perception",
+        "tag": "skills.human_perception.rank",
         "group": "Навыки — общение",
         "cell": {
           "table": "skills",
@@ -2225,14 +2225,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@human_perception_total"
+            "expr": "@skills.human_perception.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@emp + @human_perception"
+          "expr": "@emp + @skills.human_perception.rank"
         },
-        "tag": "human_perception_total",
+        "tag": "skills.human_perception.total",
         "group": "Навыки — общение",
         "cell": {
           "table": "skills",
@@ -2250,7 +2250,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "interrogation",
+        "tag": "skills.interrogation.rank",
         "group": "Навыки — общение",
         "cell": {
           "table": "skills",
@@ -2269,14 +2269,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@interrogation_total"
+            "expr": "@skills.interrogation.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@cool + @interrogation"
+          "expr": "@cool + @skills.interrogation.rank"
         },
-        "tag": "interrogation_total",
+        "tag": "skills.interrogation.total",
         "group": "Навыки — общение",
         "cell": {
           "table": "skills",
@@ -2294,7 +2294,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "persuasion",
+        "tag": "skills.persuasion.rank",
         "group": "Навыки — общение",
         "cell": {
           "table": "skills",
@@ -2313,14 +2313,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@persuasion_total"
+            "expr": "@skills.persuasion.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@cool + @persuasion"
+          "expr": "@cool + @skills.persuasion.rank"
         },
-        "tag": "persuasion_total",
+        "tag": "skills.persuasion.total",
         "group": "Навыки — общение",
         "cell": {
           "table": "skills",
@@ -2338,7 +2338,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "personal_grooming",
+        "tag": "skills.personal_grooming.rank",
         "group": "Навыки — общение",
         "cell": {
           "table": "skills",
@@ -2357,14 +2357,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@personal_grooming_total"
+            "expr": "@skills.personal_grooming.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@cool + @personal_grooming"
+          "expr": "@cool + @skills.personal_grooming.rank"
         },
-        "tag": "personal_grooming_total",
+        "tag": "skills.personal_grooming.total",
         "group": "Навыки — общение",
         "cell": {
           "table": "skills",
@@ -2382,7 +2382,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "streetwise",
+        "tag": "skills.streetwise.rank",
         "group": "Навыки — общение",
         "cell": {
           "table": "skills",
@@ -2401,14 +2401,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@streetwise_total"
+            "expr": "@skills.streetwise.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@cool + @streetwise"
+          "expr": "@cool + @skills.streetwise.rank"
         },
-        "tag": "streetwise_total",
+        "tag": "skills.streetwise.total",
         "group": "Навыки — общение",
         "cell": {
           "table": "skills",
@@ -2426,7 +2426,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "trading",
+        "tag": "skills.trading.rank",
         "group": "Навыки — общение",
         "cell": {
           "table": "skills",
@@ -2445,14 +2445,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@trading_total"
+            "expr": "@skills.trading.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@cool + @trading"
+          "expr": "@cool + @skills.trading.rank"
         },
-        "tag": "trading_total",
+        "tag": "skills.trading.total",
         "group": "Навыки — общение",
         "cell": {
           "table": "skills",
@@ -2470,7 +2470,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "wardrobe",
+        "tag": "skills.wardrobe.rank",
         "group": "Навыки — общение",
         "cell": {
           "table": "skills",
@@ -2489,14 +2489,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@wardrobe_total"
+            "expr": "@skills.wardrobe.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@cool + @wardrobe"
+          "expr": "@cool + @skills.wardrobe.rank"
         },
-        "tag": "wardrobe_total",
+        "tag": "skills.wardrobe.total",
         "group": "Навыки — общение",
         "cell": {
           "table": "skills",
@@ -2514,7 +2514,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "air_vehicle_tech",
+        "tag": "skills.air_vehicle_tech.rank",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -2533,14 +2533,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@air_vehicle_tech_total"
+            "expr": "@skills.air_vehicle_tech.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@tech + @air_vehicle_tech"
+          "expr": "@tech + @skills.air_vehicle_tech.rank"
         },
-        "tag": "air_vehicle_tech_total",
+        "tag": "skills.air_vehicle_tech.total",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -2558,7 +2558,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "basic_tech",
+        "tag": "skills.basic_tech.rank",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -2577,14 +2577,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@basic_tech_total"
+            "expr": "@skills.basic_tech.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@tech + @basic_tech"
+          "expr": "@tech + @skills.basic_tech.rank"
         },
-        "tag": "basic_tech_total",
+        "tag": "skills.basic_tech.total",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -2602,7 +2602,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "cybertech",
+        "tag": "skills.cybertech.rank",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -2621,14 +2621,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@cybertech_total"
+            "expr": "@skills.cybertech.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@tech + @cybertech"
+          "expr": "@tech + @skills.cybertech.rank"
         },
-        "tag": "cybertech_total",
+        "tag": "skills.cybertech.total",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -2646,7 +2646,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "demolitions",
+        "tag": "skills.demolitions.rank",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -2665,14 +2665,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@demolitions_total"
+            "expr": "@skills.demolitions.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@tech + @demolitions"
+          "expr": "@tech + @skills.demolitions.rank"
         },
-        "tag": "demolitions_total",
+        "tag": "skills.demolitions.total",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -2690,7 +2690,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "electronics",
+        "tag": "skills.electronics.rank",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -2709,14 +2709,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@electronics_total"
+            "expr": "@skills.electronics.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@tech + @electronics"
+          "expr": "@tech + @skills.electronics.rank"
         },
-        "tag": "electronics_total",
+        "tag": "skills.electronics.total",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -2734,7 +2734,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "first_aid",
+        "tag": "skills.first_aid.rank",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -2753,14 +2753,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@first_aid_total"
+            "expr": "@skills.first_aid.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@tech + @first_aid"
+          "expr": "@tech + @skills.first_aid.rank"
         },
-        "tag": "first_aid_total",
+        "tag": "skills.first_aid.total",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -2778,7 +2778,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "forgery",
+        "tag": "skills.forgery.rank",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -2797,14 +2797,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@forgery_total"
+            "expr": "@skills.forgery.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@tech + @forgery"
+          "expr": "@tech + @skills.forgery.rank"
         },
-        "tag": "forgery_total",
+        "tag": "skills.forgery.total",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -2822,7 +2822,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "land_vehicle_tech",
+        "tag": "skills.land_vehicle_tech.rank",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -2841,14 +2841,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@land_vehicle_tech_total"
+            "expr": "@skills.land_vehicle_tech.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@tech + @land_vehicle_tech"
+          "expr": "@tech + @skills.land_vehicle_tech.rank"
         },
-        "tag": "land_vehicle_tech_total",
+        "tag": "skills.land_vehicle_tech.total",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -2866,7 +2866,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "paint_draw",
+        "tag": "skills.paint_draw.rank",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -2885,14 +2885,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@paint_draw_total"
+            "expr": "@skills.paint_draw.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@tech + @paint_draw"
+          "expr": "@tech + @skills.paint_draw.rank"
         },
-        "tag": "paint_draw_total",
+        "tag": "skills.paint_draw.total",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -2910,7 +2910,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "paramedic",
+        "tag": "skills.paramedic.rank",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -2929,14 +2929,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@paramedic_total"
+            "expr": "@skills.paramedic.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@tech + @paramedic"
+          "expr": "@tech + @skills.paramedic.rank"
         },
-        "tag": "paramedic_total",
+        "tag": "skills.paramedic.total",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -2954,7 +2954,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "photography",
+        "tag": "skills.photography.rank",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -2973,14 +2973,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@photography_total"
+            "expr": "@skills.photography.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@tech + @photography"
+          "expr": "@tech + @skills.photography.rank"
         },
-        "tag": "photography_total",
+        "tag": "skills.photography.total",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -2998,7 +2998,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "pick_lock",
+        "tag": "skills.pick_lock.rank",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -3017,14 +3017,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@pick_lock_total"
+            "expr": "@skills.pick_lock.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@tech + @pick_lock"
+          "expr": "@tech + @skills.pick_lock.rank"
         },
-        "tag": "pick_lock_total",
+        "tag": "skills.pick_lock.total",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -3042,7 +3042,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "pick_pocket",
+        "tag": "skills.pick_pocket.rank",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -3061,14 +3061,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@pick_pocket_total"
+            "expr": "@skills.pick_pocket.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@tech + @pick_pocket"
+          "expr": "@tech + @skills.pick_pocket.rank"
         },
-        "tag": "pick_pocket_total",
+        "tag": "skills.pick_pocket.total",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -3086,7 +3086,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "sea_vehicle_tech",
+        "tag": "skills.sea_vehicle_tech.rank",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -3105,14 +3105,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@sea_vehicle_tech_total"
+            "expr": "@skills.sea_vehicle_tech.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@tech + @sea_vehicle_tech"
+          "expr": "@tech + @skills.sea_vehicle_tech.rank"
         },
-        "tag": "sea_vehicle_tech_total",
+        "tag": "skills.sea_vehicle_tech.total",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -3130,7 +3130,7 @@
           "max": 10
         },
         "control": "stepper",
-        "tag": "weaponstech",
+        "tag": "skills.weaponstech.rank",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -3149,14 +3149,14 @@
             "constant": "lead_die"
           },
           "bonus": {
-            "expr": "@weaponstech_total"
+            "expr": "@skills.weaponstech.total"
           }
         },
         "value": {
           "kind": "formula",
-          "expr": "@tech + @weaponstech"
+          "expr": "@tech + @skills.weaponstech.rank"
         },
-        "tag": "weaponstech_total",
+        "tag": "skills.weaponstech.total",
         "group": "Навыки — техника",
         "cell": {
           "table": "skills",
@@ -3561,36 +3561,14 @@
           {
             "key": "rank",
             "label": "Ранг",
-            "sheet": {
-              "tag": "{key}",
-              "label": "{label}",
-              "control": "stepper"
-            },
             "kind": "number",
-            "start": "{start}",
             "min": 0,
             "max": 10
           },
           {
             "key": "total",
             "label": "Всего",
-            "sheet": {
-              "tag": "{key}_total",
-              "label": "{label} — всего",
-              "roll": {
-                "label": "Проверка: {label}",
-                "tags": [
-                  "проверка"
-                ],
-                "die": {
-                  "constant": "lead_die"
-                },
-                "bonus": {
-                  "expr": "@{key}_total"
-                }
-              }
-            },
-            "kind": "expr",
+            "kind": "number",
             "expr": "@строка.stat + @строка.rank"
           }
         ],
@@ -4255,7 +4233,31 @@
               "start": 0
             }
           }
-        ]
+        ],
+        "sheet": {
+          "columns": {
+            "rank": {
+              "label": "{label}",
+              "control": "stepper",
+              "start": "{start}"
+            },
+            "total": {
+              "label": "{label} — всего",
+              "roll": {
+                "label": "Проверка: {label}",
+                "tags": [
+                  "проверка"
+                ],
+                "die": {
+                  "constant": "lead_die"
+                },
+                "bonus": {
+                  "expr": "@строка.total"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "initiative": {
@@ -4354,7 +4356,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "@отправитель.handgun_total"
+              "expr": "@отправитель.skills.handgun.total"
             },
             "bonus": {
               "expr": "@spend_luck"
@@ -5004,12 +5006,12 @@
         "luck": 6,
         "move": 6,
         "body": 7,
-        "handgun": 6,
-        "brawling": 3,
-        "evasion": 4,
-        "perception": 3,
-        "stealth": 2,
-        "persuasion": 3,
+        "skills.handgun.rank": 6,
+        "skills.brawling.rank": 3,
+        "skills.evasion.rank": 4,
+        "skills.perception.rank": 3,
+        "skills.stealth.rank": 2,
+        "skills.persuasion.rank": 3,
         "hp": 45
       },
       "has": [
@@ -5046,12 +5048,12 @@
         "luck": 6,
         "move": 6,
         "body": 5,
-        "handgun": 3,
-        "brawling": 3,
-        "evasion": 4,
-        "perception": 3,
-        "stealth": 2,
-        "persuasion": 3,
+        "skills.handgun.rank": 3,
+        "skills.brawling.rank": 3,
+        "skills.evasion.rank": 4,
+        "skills.perception.rank": 3,
+        "skills.stealth.rank": 2,
+        "skills.persuasion.rank": 3,
         "hp": 40
       },
       "has": [

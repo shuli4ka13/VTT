@@ -20,7 +20,7 @@ const ORDER: Kind[] = ['number', 'text', 'boolean', 'expr', 'dice', 'choice', 'e
 
 const ALLOWED: Record<KindPlace, Kind[]> = {
   field: ['number', 'text', 'boolean', 'choice'],
-  table: ['number', 'text', 'boolean', 'expr', 'dice', 'choice', 'effect', 'tag'],
+  table: ['number', 'text', 'boolean', 'dice', 'choice', 'effect', 'tag'],
   prop: ['number', 'text', 'boolean', 'expr', 'dice', 'choice', 'effect', 'record'],
   param: ['number', 'text', 'boolean', 'dice', 'choice', 'effect', 'tag'],
 };

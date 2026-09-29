@@ -27,15 +27,15 @@ const after = (out: ReturnType<typeof exchange>, id: string) => out.sheets.find(
 
 group('Shadowrun 6: наборы и значения по книге', () => {
   test('навык с листа — набор «навык + характеристика», успехи на 5–6', () => {
-    const check = fieldCheck(system, 'firearms_pool');
+    const check = fieldCheck(system, 'skills.firearms.pool');
     const out = rollCheck(system, sheetOf('razor'), check, { compendium, die: dice([4, 6], [7, 2]), owner: check.label });
     eq(out.rolled.rolls.length, 11, 'Стрельба 6 + Проворство 5');
     eq(out.total, 4);
   });
 
   test('без изучения: Атлетика — характеристика − 1, Взлом — нельзя', () => {
-    eq(computed(sheetOf('silk'), 'athletics_pool'), 2);
-    eq(computed(sheetOf('silk'), 'cracking_pool'), 0);
+    eq(computed(sheetOf('silk'), 'skills.athletics.pool'), 2);
+    eq(computed(sheetOf('silk'), 'skills.cracking.pool'), 0);
   });
 
   test('значение защиты = Тело + броня; тролль +1 за подкожные наросты; шлем сверху', () => {

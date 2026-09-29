@@ -47,10 +47,10 @@ group('кусок добавляется, а не заменяет', () => {
   });
 
   test('своё одноимённое остаётся своим — кусок его не перезаписывает', () => {
-    const mine = { ...empty(), fields: [{ tag: 'str', label: 'Моя сила', value: { kind: 'stored', type: 'number', default: 3 } }] } as unknown as System;
+    const mine = { ...empty(), fields: [{ tag: 'level', label: 'Мой уровень', value: { kind: 'stored', type: 'number', default: 3 } }] } as unknown as System;
     const out = bringPiece(mine, abilities);
-    ok(out.kept.some(p => p.kind === 'field' && p.key === 'str'));
-    deepEq(out.system.fields.find(f => f.tag === 'str')!.label, 'Моя сила');
+    ok(out.kept.some(p => p.kind === 'field' && p.key === 'level'));
+    deepEq(out.system.fields.find(f => f.tag === 'level')!.label, 'Мой уровень');
   });
 
   test('правила куска включаются для всех листов системы', () => {

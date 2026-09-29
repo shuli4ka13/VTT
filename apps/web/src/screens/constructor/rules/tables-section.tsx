@@ -1,5 +1,5 @@
 import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
-import { ROW } from '@vtt/engine/model/sheet-columns';
+import { ROW, isFormulaCell, onSheet } from '@vtt/engine/model/sheet-columns';
 import { Card, CardHead, Field, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Empty, LabelInput } from '../../../ui/primitives.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import { SheetGrid } from '../../../ui/sheet-grid.tsx';
@@ -33,8 +33,6 @@ const blankRow = (key: TableKey): TableRow =>
       : { value: '', cells: {} });
 
 const COLUMN_KINDS = kindsFor('table');
-
-const ON_SHEET = ['number', 'text', 'boolean', 'choice', 'expr'];
 
 const parseFree = (text: string): number | string | boolean =>
   /^-?\d+(\.\d+)?$/.test(text) ? Number(text)
@@ -181,8 +179,7 @@ export function rowNames(system: System, tableId: string): Map<string, string> {
 }
 
 const kindLabel = (column: TableColumn): string =>
-  (column.kind === 'expr' ? (column.expr !== undefined ? 'одна формула' : 'формула у строки')
-    : column.sheet ? `${kindWord(column.kind)} · у персонажа` : kindWord(column.kind));
+  `${kindWord(column.kind)}${column.expr !== undefined ? ' · формула' : ''}`;
 
 function ColumnCard({ id, table, column, system, edit, onClose }: {
   id: string;
@@ -197,7 +194,6 @@ function ColumnCard({ id, table, column, system, edit, onClose }: {
     const c = draft.columns?.find(x => x.key === column.key);
     if (c) change(c);
   });
-  const shared = column.expr !== undefined;
   const name = column.label || column.key;
 
   return (
@@ -209,6 +205,7 @@ function ColumnCard({ id, table, column, system, edit, onClose }: {
             edit(draft => {
               draft.columns = (draft.columns ?? []).filter(c => c.key !== column.key);
               for (const row of draft.rows ?? []) delete row.cells?.[column.key];
+              delete draft.sheet?.columns?.[column.key];
             });
             onClose();
           }}>Удалить</DangerButton>
@@ -223,8 +220,6 @@ function ColumnCard({ id, table, column, system, edit, onClose }: {
             onChange={next => set(c => {
               c.kind = next as NonNullable<TableColumn['kind']>;
               if (next !== 'choice') { delete c.from; delete c.many; }
-              if (next !== 'expr') delete c.expr;
-              if (!ON_SHEET.includes(next)) delete c.sheet;
             })}
           />
         </Field>
@@ -246,41 +241,41 @@ function ColumnCard({ id, table, column, system, edit, onClose }: {
             </Field>
           </>
         ) : null}
-        {column.kind === 'expr' ? (
-          <Field label="Формула">
-            <Select
-              value={shared ? 'one' : 'each'}
-              options={[['one', 'одна на все строки'], ['each', 'своя у каждой строки']] as const}
-              onChange={next => set(c => { if (next === 'one') c.expr = c.expr ?? ''; else delete c.expr; })}
-            />
-          </Field>
-        ) : null}
-        {column.sheet && column.kind !== 'expr' ? (
-          <Field label="Сначала">
-            <Input value={column.start === undefined ? '' : String(column.start)}
-              onChange={text => set(c => {
-                if (!text.trim()) delete c.start;
-                else c.start = /^-?\d+(\.\d+)?$/.test(text) ? Number(text) : text;
-              })} />
-          </Field>
-        ) : null}
       </div>
-      {column.kind === 'expr' && shared ? (
+      <Field label="Формула для всех строк">
         <FormulaField
           value={column.expr ?? ''}
           system={system}
           where={`${table.label || id} · ${name}`}
           extraNames={rowNames(system, id)}
-          placeholder="формула для всех строк"
-          onChange={next => set(c => { c.expr = next; })}
+          placeholder="нет — у строк свои значения"
+          onChange={next => set(c => { if (next.trim()) c.expr = next; else delete c.expr; })}
         />
+      </Field>
+      {column.kind === 'number' ? (
+        <Fold title="ещё">
+          <div className="row">
+            <Field label="Не ниже">
+              <Input mono value={column.min === undefined ? '' : String(column.min)}
+                onChange={text => set(c => {
+                  if (!text.trim()) delete c.min; else c.min = /^-?\d+$/.test(text) ? Number(text) : text;
+                })} />
+            </Field>
+            <Field label="Не выше">
+              <Input mono value={column.max === undefined ? '' : String(column.max)}
+                onChange={text => set(c => {
+                  if (!text.trim()) delete c.max; else c.max = /^-?\d+$/.test(text) ? Number(text) : text;
+                })} />
+            </Field>
+          </div>
+        </Fold>
       ) : null}
     </Card>
   );
 }
 
 const defaultWidth = (column?: TableColumn): number =>
-  (!column ? 200 : column.kind === 'expr' ? 240 : column.kind === 'choice' && column.many ? 220 : 150);
+  (!column ? 200 : column.expr !== undefined ? 200 : column.kind === 'choice' && column.many ? 220 : 150);
 
 function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
   picked: string | null;
@@ -311,8 +306,8 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
     else (row.cells ??= {})[column] = value;
   });
 
-  const perSheet = columns.some(c => c.sheet);
-  const lead = byRange ? ['от', 'до'] : [key === 'number' ? 'число' : 'слово', 'как показать', ...(perSheet ? ['имя в формулах'] : [])];
+  const placed = onSheet(table);
+  const lead = byRange ? ['от', 'до'] : [key === 'number' ? 'число' : 'слово', 'как показать', ...(placed ? ['имя в формулах'] : [])];
   const gridColumns: GridColumn[] = [
     ...lead.map(name => ({ key: `:${name}`, label: name, width: byRange ? 90 : defaultWidth() })),
     ...columns.map(c => ({
@@ -334,7 +329,7 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
       <SheetGrid id={`table.${id}`} columns={gridColumns} tailHead={<Button size="sm" variant="ghost" title="добавить колонку" onClick={addColumn}>+</Button>}>
           {rows.map((row, i) => (
             <RowCells
-              key={i} row={row} at={i} rowKey={key} columns={columns} system={system} perSheet={perSheet}
+              key={i} row={row} at={i} rowKey={key} columns={columns} system={system} placed={placed}
               users={key === 'range' ? [] : rowUsers(system, id, row.value, compendium).map(u => u.text)}
               onRename={to => rename(row.value, to)} taken={next => taken(next, i)}
               edit={edit} setCell={setCell} names={names}
@@ -357,8 +352,58 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
   );
 }
 
-function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRename, taken, where, perSheet, names }: {
-  perSheet: boolean;
+const TYPED = ['number', 'text', 'dice'];
+
+function CellEditor({ column, value, system, where, names, placed, onChange }: {
+  column: TableColumn;
+  value: unknown;
+  system: System;
+  where: string;
+  names: Map<string, string>;
+  placed: boolean;
+  onChange: (value: unknown) => void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  if (isFormulaCell(value)) {
+    return (
+      <FormulaField
+        value={value.expr}
+        system={system}
+        where={where}
+        extraNames={names}
+        placeholder="пусто — клетка очистится"
+        onChange={next => onChange(next.trim() ? { expr: next } : undefined)}
+      />
+    );
+  }
+  const empty = value === undefined || value === '';
+  const hint = column.expr !== undefined ? '= как у колонки' : placed ? 'вводит игрок' : '';
+  if (!TYPED.includes(column.kind ?? 'text')) {
+    return <ValueEditor type={column} value={empty ? '' : value} system={system} onChange={next => onChange(next === '' ? undefined : next)} />;
+  }
+  const commit = () => {
+    if (draft === null) return;
+    const text = draft.trim();
+    setDraft(null);
+    if (!text) onChange(undefined);
+    else if (text.startsWith('=')) onChange({ expr: text.slice(1).trim() });
+    else if (column.kind === 'number') onChange(/^-?\d+(\.\d+)?$/.test(text) ? Number(text) : { expr: text });
+    else onChange(text);
+  };
+  return (
+    <Input
+      value={draft ?? (empty ? '' : String(value))}
+      mono={column.kind !== 'text'}
+      placeholder={hint}
+      onChange={setDraft}
+      onBlur={commit}
+      onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+    />
+  );
+}
+
+function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRename, taken, where, placed, names }: {
+  placed: boolean;
   names: Map<string, string>;
   row: TableRow;
   at: number;
@@ -389,30 +434,24 @@ function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRe
             placeholder="как в списке"
             onChange={next => set(r => { if (next.trim()) r.label = next; else delete r.label; })}
           />
-          {perSheet ? (
+          {placed ? (
             <Input mono value={row.key ?? ''} placeholder={String(row.value ?? '')}
               onChange={next => set(r => { if (next.trim()) r.key = next.trim(); else delete r.key; })} />
           ) : null}
         </>
       )}
-      {columns.map(column => (column.sheet && column.kind !== 'expr' ? (
-        <span key={column.key} />
-      ) : column.kind === 'expr' && column.expr !== undefined ? (
-        <span key={column.key} />
-      ) : column.kind === 'expr' ? (
-        <FormulaField
+      {columns.map(column => (
+        <CellEditor
           key={column.key}
-          value={String(cells[column.key] ?? '')}
+          column={column}
+          value={cells[column.key]}
           system={system}
           where={where(column)}
-          extraNames={names}
-          placeholder="формула"
-          onChange={value => setCell(at, column.key, value.trim() ? value : undefined)}
+          names={names}
+          placed={placed}
+          onChange={value => setCell(at, column.key, value)}
         />
-      ) : (
-        <ValueEditor key={column.key} type={column} value={cells[column.key]} system={system}
-          onChange={value => setCell(at, column.key, value)} />
-      )))}
+      ))}
       {users.length ? (
         <Button size="sm" variant="ghost" disabled title={`строку используют: ${users.slice(0, 4).join('; ')}${users.length > 4 ? ` и ещё ${users.length - 4}` : ''}`}>×</Button>
       ) : (

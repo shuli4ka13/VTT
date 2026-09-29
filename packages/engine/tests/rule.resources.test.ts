@@ -128,8 +128,8 @@ group('бросок несёт несколько меток, одна прих�
       rolls: { label: 'Броски', key: 'word', rows: [{ value: 'спас' }] },
       черты: {
         label: 'Характеристики', key: 'word',
-        columns: [{ key: 'спас', label: 'Спасбросок', kind: 'expr' }],
-        rows: [{ value: 'лов', cells: { спас: '@спас_лов' } }],
+        columns: [{ key: 'спас', label: 'Спасбросок', kind: 'number' }],
+        rows: [{ value: 'лов', cells: { спас: { expr: '@спас_лов' } } }],
       },
     },
     roll_edits: { помеха: { label: 'Помеха', ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }] } },

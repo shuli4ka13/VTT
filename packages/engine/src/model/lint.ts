@@ -10,7 +10,7 @@ import { MOMENTS } from '../events/moments.ts';
 import { TABS, STEP } from '../words/glossary.ts';
 import { DESK, RECEIVER, SENDER } from '../engine/owners.ts';
 import {
-  referencesOf, declaredOf, chainRefs, listenerOf,
+  referencesOf, declaredOf, chainRefs, listenerOf, withAddresses,
   type Where, type Reference, type RefKind, type Declared,
   LISTEN,
 } from './references.ts';
@@ -103,6 +103,7 @@ function danglingText(ref: Reference, declared: Declared): string | null {
   if (ref.kind === 'field' && !declared.field.has(ref.key) && declared.effect.has(ref.key)
     && (ref.scope === 'plain' || ref.scope?.startsWith('owner:'))) return null;
   if (ref.kind === 'field' && ref.scope === 'plain' && !declared.field.has(ref.key) && declared.prop.has(ref.key)) return null;
+  if (ref.kind === 'field' && ref.path === ref.key && declared.table.has(ref.key.split('.')[0]!)) return null;
   if (ref.kind === 'field' && ref.scope === 'plain' && ref.from.tab === 'effects' && !declared.field.has(ref.key)) {
     return `«${ref.key}» — нет ни поля листа, ни входа эффекта с таким именем: заведите поле на вкладке «Лист» или вход у эффекта`;
   }
@@ -167,7 +168,7 @@ export function lintStep(step: Step, system: System, effect: Effect, earlier: Ea
   const declared = declaredOf(system);
   const params = new Set(paramsOf(system, effect).map(p => p.key));
   const known = new Set(earlier.map(e => e.id));
-  const refs = chainRefs([step], () => where, params, inChain)
+  const refs = withAddresses(system, chainRefs([step], () => where, params, inChain))
     .filter(ref => !(ref.kind === 'step' && known.has(ref.key)))
     .filter(ref => !(ref.kind === 'field' && known.has(ref.key)));
   const [first] = refProblems(refs, declared, () => false, system);

@@ -384,8 +384,8 @@ describe('Словари: кости, правки броска, таблицы'
         fields: [{ tag: 'сила', label: 'Сила', value: { kind: 'stored', type: 'number', default: 0 } }],
         tables: { wield: {
           label: 'Способ атаки', key: 'word',
-          columns: [{ key: 'attack', label: 'Бонус атаки', kind: 'expr' }],
-          rows: [{ value: 'ближний бой', cells: { attack: '@сила + 2' } }],
+          columns: [{ key: 'attack', label: 'Бонус атаки', kind: 'number' }],
+          rows: [{ value: 'ближний бой', cells: { attack: { expr: '@сила + 2' } } }],
         } },
       },
       activeEffectId: null,
@@ -403,7 +403,7 @@ describe('Словари: кости, правки броска, таблицы'
     expect(document.querySelector('.formula-field--spot')).not.toBeNull();
     const tail = [...bar.querySelectorAll('input.chips__text')].at(-1) as HTMLInputElement;
     fireEvent.change(tail, { target: { value: ' + 3' } });
-    expect(useWorld.getState().system.tables!.wield!.rows![0]!.cells!.attack).toBe('@сила + 3');
+    expect(useWorld.getState().system.tables!.wield!.rows![0]!.cells!.attack).toEqual({ expr: '@сила + 3' });
 
     const grid = screen.getByLabelText('ширина колонки «Бонус атаки»').closest('.sheet-grid') as HTMLElement;
     const before = grid.style.gridTemplateColumns;

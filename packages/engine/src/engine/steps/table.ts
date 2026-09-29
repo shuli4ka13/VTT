@@ -1,4 +1,3 @@
-import { lookupCell } from '../tables.ts';
 import { readCell } from '../cells.ts';
 import { VALUE_COLUMN } from '../../model/tables.ts';
 import { rollNotation } from '../dice.ts';
@@ -57,10 +56,7 @@ export function resolve(step: StepData, ctx: StepContext) {
   }
 
   const column = typeof step.column === 'string' && step.column ? step.column : VALUE_COLUMN;
-  const perSheet = ctx.system.tables?.[table]?.columns?.find(c => c.key === column)?.sheet;
-  const result = perSheet
-    ? readCell(ctx.system, ctx.pass, table, value, column, ctx.owner)
-    : lookupCell(ctx.system, table, value, column, ctx.owner);
+  const result = readCell(ctx.system, ctx.pass, table, value, column, ctx.owner);
 
   return {
     value: result,

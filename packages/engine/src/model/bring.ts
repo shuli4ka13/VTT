@@ -1,6 +1,7 @@
 import { referencesOf, formulaDeps, LISTEN } from './references.ts';
 import type { Reference, Where } from './references.ts';
 import { basedOn } from './inherit.ts';
+import { isFormulaCell } from './sheet-columns.ts';
 import type { System } from './types.ts';
 
 export type PartKind = 'field' | 'group' | 'effect' | 'table' | 'constant' | 'rollEdit' | 'recordKind' | 'record';
@@ -42,11 +43,14 @@ function tableDeps(system: System, key: string): Part[] {
     if (from && system.records?.[from]) out.push({ kind: 'recordKind', key: from });
     for (const row of table.rows ?? []) {
       const cell = (row.cells ?? {})[column.key];
+      if (isFormulaCell(cell)) {
+        for (const tag of formulaDeps(cell.expr) ?? []) out.push({ kind: 'field', key: tag });
+        continue;
+      }
       for (const value of Array.isArray(cell) ? cell : [cell]) {
         if (typeof value !== 'string' || !value) continue;
         if (column.kind === 'effect') out.push({ kind: 'effect', key: value });
         if (column.kind === 'tag') out.push({ kind: 'field', key: value });
-        if (column.kind === 'expr') for (const tag of formulaDeps(value) ?? []) out.push({ kind: 'field', key: tag });
       }
     }
   }
@@ -79,10 +83,15 @@ export function dependencies(donor: System): (part: Part) => Part[] {
   for (const ref of referencesOf(donor)) {
     const owner = ownerOf(ref.from);
     if (!owner || ref.scope === LISTEN) continue;
-    const dotted = ref.kind === 'step' && donor.fields.some(f => f.tag === ref.key);
-    const counter = ref.kind === 'field' && !donor.fields.some(f => f.tag === ref.key) && Boolean(donor.effects?.[ref.key]);
-    const kind = ref.kind === 'roll' ? 'table' : dotted ? 'field' : counter ? 'effect' : REF_PARTS[ref.kind];
-    const key = ref.kind === 'roll' ? rows.get(ref.key) : ref.key;
+    const has = (tag: string) => donor.fields.some(f => f.tag === tag);
+    const head = ref.key.split('.')[0]!;
+    const dotted = ref.kind === 'step' && has(ref.key);
+    const pathed = ref.kind === 'field' && ref.key.includes('.') && !has(ref.key);
+    const toTable = (pathed || (ref.kind === 'step' && !dotted)) && Boolean(donor.tables?.[head]);
+    const toField = pathed && !toTable && has(head);
+    const counter = ref.kind === 'field' && !has(ref.key) && Boolean(donor.effects?.[ref.key]);
+    const kind = ref.kind === 'roll' || toTable ? 'table' : dotted || toField ? 'field' : counter ? 'effect' : REF_PARTS[ref.kind];
+    const key = ref.kind === 'roll' ? rows.get(ref.key) : toTable || toField ? head : ref.key;
     if (!kind || !key) continue;
     const list = byOwner.get(partKey(owner)) ?? [];
     list.push({ kind, key });

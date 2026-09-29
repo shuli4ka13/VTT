@@ -1,5 +1,5 @@
 import { EngineError } from '../engine/errors.ts';
-import type { System, Table, TableRow, TableColumn, Field } from './types.ts';
+import type { System, Table, TableRow, TableColumn, TableViewColumn, Field } from './types.ts';
 
 export interface CellMark { table: string; row: string; column: string }
 
@@ -7,8 +7,35 @@ type Loose = Record<string, unknown>;
 
 export const rowKeyOf = (row: TableRow): string => String(row.key ?? row.value ?? '');
 
-export const sheetColumnsOf = (table: Table | undefined): TableColumn[] =>
-  (table?.columns ?? []).filter(column => Boolean(column.sheet));
+export const addressOf = (table: string, row: TableRow | string, column: string): string =>
+  `${table}.${typeof row === 'string' ? row : rowKeyOf(row)}.${column}`;
+
+export const isFormulaCell = (value: unknown): value is { expr: string } =>
+  Boolean(value && typeof value === 'object' && !Array.isArray(value) && typeof (value as Loose).expr === 'string');
+
+export type CellSource =
+  | { kind: 'value'; value: unknown }
+  | { kind: 'formula'; expr: string }
+  | { kind: 'input' };
+
+export function cellSource(column: TableColumn, row: TableRow): CellSource {
+  const cell = (row.cells ?? {})[column.key];
+  if (isFormulaCell(cell)) return { kind: 'formula', expr: cell.expr };
+  if (cell !== undefined && cell !== '') return { kind: 'value', value: cell };
+  if (column.expr !== undefined) return { kind: 'formula', expr: column.expr };
+  return { kind: 'input' };
+}
+
+export const onSheet = (table: Table | undefined): boolean => Boolean(table?.sheet);
+
+export const isLive = (table: Table | undefined, column: TableColumn, row: TableRow): boolean =>
+  onSheet(table) && cellSource(column, row).kind !== 'value';
+
+export const liveColumnsOf = (table: Table | undefined): TableColumn[] =>
+  (onSheet(table) ? table!.columns ?? [] : []).filter(column => (table!.rows ?? []).some(row => isLive(table, column, row)));
+
+export const viewOf = (table: Table | undefined, column: string): TableViewColumn =>
+  table?.sheet?.columns?.[column] ?? {};
 
 function token(system: System, table: Table, row: TableRow, name: string): string {
   if (name === 'key') return rowKeyOf(row);
@@ -17,7 +44,7 @@ function token(system: System, table: Table, row: TableRow, name: string): strin
   const [head, tail] = name.split('.');
   const column = (table.columns ?? []).find(c => c.key === head);
   const cell = (row.cells ?? {})[head!];
-  if (!column || cell === undefined) {
+  if (!column || cell === undefined || isFormulaCell(cell)) {
     throw new EngineError(`таблица «${table.label ?? ''}»: в шаблоне «{${name}}» — у строки «${row.label ?? row.value}» нет такой ячейки`);
   }
   if (!tail) return typeof cell === 'boolean' ? (cell ? 'да' : 'нет') : String(cell);
@@ -47,20 +74,6 @@ const STORED = ['number', 'text', 'boolean', 'choice'];
 
 const ZERO: Record<string, unknown> = { number: 0, text: '', boolean: false, choice: '' };
 
-export function columnValue(column: TableColumn, own?: unknown): Loose {
-  if (column.kind === 'expr') {
-    return { kind: 'formula', expr: column.expr ?? String(own ?? '') };
-  }
-  const type = STORED.includes(column.kind ?? '') ? column.kind! : 'number';
-  return {
-    kind: 'stored', type,
-    ...(column.from ? { from: column.from } : {}),
-    default: column.start ?? ZERO[type],
-    ...(column.min !== undefined ? { min: column.min } : {}),
-    ...(column.max !== undefined ? { max: column.max } : {}),
-  };
-}
-
 export const ROW = 'строка';
 
 const ROW_REF = new RegExp(`@${ROW}((?:\\.[\\p{L}\\p{N}_]+)*)`, 'gu');
@@ -75,18 +88,19 @@ function rowPath(system: System, tableId: string, row: TableRow, path: string[])
   const column = (table.columns ?? []).find(c => c.key === head);
   const where = `таблица «${table.label || tableId}», строка «${row.label ?? row.value}»`;
   if (!column) throw new EngineError(`${where}: колонки «${head}» нет`);
-  if (column.sheet) {
-    if (rest.length) throw new EngineError(`${where}: «${column.label || head}» — поле листа, дальше идти некуда`);
-    return `@${cellTag(system, tableId, row, column)}`;
+  if (isLive(table, column, row)) return `@${addressOf(tableId, row, column.key)}${rest.length ? `.${rest.join('.')}` : ''}`;
+  const source = cellSource(column, row);
+  if (source.kind === 'formula') {
+    if (rest.length) throw new EngineError(`${where}: «${column.label || head}» — формула, дальше идти некуда`);
+    return `(${withRow(system, tableId, row, source.expr)})`;
   }
-  const cell = (row.cells ?? {})[head!];
+  const cell = source.kind === 'value' ? source.value : undefined;
   if (column.kind === 'choice' && rest.length) {
     const target = (system.tables?.[column.from ?? '']?.rows ?? []).find(r => String(r.value) === String(cell));
     if (!target) throw new EngineError(`${where}: «${String(cell)}» нет в таблице «${column.from}»`);
     return rowPath(system, column.from!, target, rest);
   }
   if (column.kind === 'tag') return `@${String(cell)}${rest.length ? `.${rest.join('.')}` : ''}`;
-  if (column.kind === 'expr') return `(${withRow(system, tableId, row, String(cell ?? column.expr ?? ''))})`;
   if (rest.length) throw new EngineError(`${where}: «${column.label || head}» — не ссылка, дальше идти некуда`);
   return literal(cell);
 }
@@ -94,25 +108,53 @@ function rowPath(system: System, tableId: string, row: TableRow, path: string[])
 export const withRow = (system: System, tableId: string, row: TableRow, expr: string): string =>
   expr.replace(ROW_REF, (_, tail: string) => rowPath(system, tableId, row, tail ? tail.slice(1).split('.') : []));
 
-export const cellTag = (system: System, tableId: string, row: TableRow, column: TableColumn): string => {
-  const table = system.tables![tableId]!;
-  return fill(system, table, row, String((column.sheet as Loose).tag));
-};
+function rowRefs(system: System, tableId: string, row: TableRow, value: unknown): unknown {
+  if (typeof value === 'string') return value.includes(`@${ROW}`) ? withRow(system, tableId, row, value) : value;
+  if (Array.isArray(value)) return value.map(item => rowRefs(system, tableId, row, item));
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value as Loose).map(([k, v]) => [k, rowRefs(system, tableId, row, v)]));
+  }
+  return value;
+}
+
+export const defaultLabel = (column: TableColumn, first: boolean): string =>
+  (first ? '{label}' : `${column.label || column.key}: {label}`);
+
+function storedOf(system: System, table: Table, row: TableRow, column: TableColumn, start: unknown): Loose {
+  const kind = column.kind ?? 'number';
+  const type = STORED.includes(kind) ? kind : 'text';
+  return deep(system, table, row, {
+    kind: 'stored', type,
+    ...(column.from && type === 'choice' ? { from: column.from } : {}),
+    default: start ?? ZERO[type],
+    ...(column.min !== undefined ? { min: column.min } : {}),
+    ...(column.max !== undefined ? { max: column.max } : {}),
+  }) as Loose;
+}
 
 export function tableFields(system: System, tableId: string): Field[] {
   const table = system.tables?.[tableId];
-  const columns = sheetColumnsOf(table);
+  const columns = liveColumnsOf(table);
   if (!table || !columns.length) return [];
   const out: Field[] = [];
   for (const row of table.rows ?? []) {
-    for (const column of columns) {
-      const { tag, group, ...spec } = column.sheet as Loose;
-      const raw = columnValue(column, (row.cells ?? {})[column.key]);
-      const value = raw.kind === 'formula' ? { ...raw, expr: withRow(system, tableId, row, String(raw.expr)) } : raw;
+    for (const [at, column] of columns.entries()) {
+      const source = cellSource(column, row);
+      if (source.kind === 'value') continue;
+      const view = viewOf(table, column.key);
+      const tag = addressOf(tableId, row, column.key);
+      const value = source.kind === 'formula'
+        ? { kind: 'formula', expr: withRow(system, tableId, row, source.expr) }
+        : storedOf(system, table, row, column, view.start);
+      const group = row.group ?? (view.group !== undefined ? fill(system, table, row, view.group) : table.sheet?.group);
+      const roll = view.roll ? rowRefs(system, tableId, row, deep(system, table, row, view.roll)) as Loose : undefined;
       out.push({
-        ...(deep(system, table, row, { ...spec, value }) as Loose),
-        tag: fill(system, table, row, String(tag)),
-        ...(group || row.group ? { group: String(row.group ?? deep(system, table, row, group)) } : {}),
+        tag,
+        label: fill(system, table, row, view.label ?? defaultLabel(column, at === 0)),
+        ...(group ? { group } : {}),
+        ...(roll ? { roll } : {}),
+        ...(view.control ? { control: view.control } : {}),
+        value,
         cell: { table: tableId, row: rowKeyOf(row), column: column.key },
       } as unknown as Field);
     }

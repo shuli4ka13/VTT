@@ -613,44 +613,56 @@
           {
             "key": "value",
             "label": "Значение",
-            "kind": "expr"
+            "kind": "number"
           }
         ],
         "rows": [
           {
             "value": "проворство",
             "cells": {
-              "value": "@agility"
+              "value": {
+                "expr": "@agility"
+              }
             }
           },
           {
             "value": "сила",
             "cells": {
-              "value": "@strength"
+              "value": {
+                "expr": "@strength"
+              }
             }
           },
           {
             "value": "искусность",
             "cells": {
-              "value": "@finesse"
+              "value": {
+                "expr": "@finesse"
+              }
             }
           },
           {
             "value": "чутьё",
             "cells": {
-              "value": "@instinct"
+              "value": {
+                "expr": "@instinct"
+              }
             }
           },
           {
             "value": "присутствие",
             "cells": {
-              "value": "@presence"
+              "value": {
+                "expr": "@presence"
+              }
             }
           },
           {
             "value": "знание",
             "cells": {
-              "value": "@knowledge"
+              "value": {
+                "expr": "@knowledge"
+              }
             }
           }
         ]

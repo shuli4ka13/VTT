@@ -13,7 +13,7 @@
           "min": 3,
           "max": 24
         },
-        "tag": "str",
+        "tag": "abilities.str.score",
         "group": "Характеристики",
         "cell": {
           "table": "abilities",
@@ -25,9 +25,9 @@
         "label": "Модификатор: Сила",
         "value": {
           "kind": "formula",
-          "expr": "округлить вниз((@str - 10) / 2)"
+          "expr": "округлить вниз((@abilities.str.score - 10) / 2)"
         },
-        "tag": "str_mod",
+        "tag": "abilities.str.mod",
         "group": "Модификаторы",
         "cell": {
           "table": "abilities",
@@ -44,7 +44,7 @@
           "min": 3,
           "max": 24
         },
-        "tag": "con",
+        "tag": "abilities.con.score",
         "group": "Характеристики",
         "cell": {
           "table": "abilities",
@@ -56,9 +56,9 @@
         "label": "Модификатор: Телосложение",
         "value": {
           "kind": "formula",
-          "expr": "округлить вниз((@con - 10) / 2)"
+          "expr": "округлить вниз((@abilities.con.score - 10) / 2)"
         },
-        "tag": "con_mod",
+        "tag": "abilities.con.mod",
         "group": "Модификаторы",
         "cell": {
           "table": "abilities",
@@ -75,7 +75,7 @@
           "min": 3,
           "max": 24
         },
-        "tag": "dex",
+        "tag": "abilities.dex.score",
         "group": "Характеристики",
         "cell": {
           "table": "abilities",
@@ -87,9 +87,9 @@
         "label": "Модификатор: Ловкость",
         "value": {
           "kind": "formula",
-          "expr": "округлить вниз((@dex - 10) / 2)"
+          "expr": "округлить вниз((@abilities.dex.score - 10) / 2)"
         },
-        "tag": "dex_mod",
+        "tag": "abilities.dex.mod",
         "group": "Модификаторы",
         "cell": {
           "table": "abilities",
@@ -106,7 +106,7 @@
           "min": 3,
           "max": 24
         },
-        "tag": "int",
+        "tag": "abilities.int.score",
         "group": "Характеристики",
         "cell": {
           "table": "abilities",
@@ -118,9 +118,9 @@
         "label": "Модификатор: Интеллект",
         "value": {
           "kind": "formula",
-          "expr": "округлить вниз((@int - 10) / 2)"
+          "expr": "округлить вниз((@abilities.int.score - 10) / 2)"
         },
-        "tag": "int_mod",
+        "tag": "abilities.int.mod",
         "group": "Модификаторы",
         "cell": {
           "table": "abilities",
@@ -137,7 +137,7 @@
           "min": 3,
           "max": 24
         },
-        "tag": "wis",
+        "tag": "abilities.wis.score",
         "group": "Характеристики",
         "cell": {
           "table": "abilities",
@@ -149,9 +149,9 @@
         "label": "Модификатор: Мудрость",
         "value": {
           "kind": "formula",
-          "expr": "округлить вниз((@wis - 10) / 2)"
+          "expr": "округлить вниз((@abilities.wis.score - 10) / 2)"
         },
-        "tag": "wis_mod",
+        "tag": "abilities.wis.mod",
         "group": "Модификаторы",
         "cell": {
           "table": "abilities",
@@ -168,7 +168,7 @@
           "min": 3,
           "max": 24
         },
-        "tag": "cha",
+        "tag": "abilities.cha.score",
         "group": "Характеристики",
         "cell": {
           "table": "abilities",
@@ -180,9 +180,9 @@
         "label": "Модификатор: Харизма",
         "value": {
           "kind": "formula",
-          "expr": "округлить вниз((@cha - 10) / 2)"
+          "expr": "округлить вниз((@abilities.cha.score - 10) / 2)"
         },
-        "tag": "cha_mod",
+        "tag": "abilities.cha.mod",
         "group": "Модификаторы",
         "cell": {
           "table": "abilities",
@@ -387,27 +387,35 @@
           {
             "key": "attack",
             "label": "Бонус атаки",
-            "kind": "expr"
+            "kind": "number"
           },
           {
             "key": "damage",
             "label": "Прибавка к урону",
-            "kind": "expr"
+            "kind": "number"
           }
         ],
         "rows": [
           {
             "value": "ближний бой — Сила",
             "cells": {
-              "attack": "@str_mod",
-              "damage": "@str_mod"
+              "attack": {
+                "expr": "@abilities.str.mod"
+              },
+              "damage": {
+                "expr": "@abilities.str.mod"
+              }
             }
           },
           {
             "value": "дальний бой — Ловкость",
             "cells": {
-              "attack": "@dex_mod",
-              "damage": "@dex_mod"
+              "attack": {
+                "expr": "@abilities.dex.mod"
+              },
+              "damage": {
+                "expr": "@abilities.dex.mod"
+              }
             }
           }
         ]
@@ -428,25 +436,14 @@
           {
             "key": "score",
             "label": "Значение",
-            "sheet": {
-              "tag": "{key}",
-              "label": "{label}",
-              "group": "Характеристики"
-            },
             "kind": "number",
-            "start": 10,
             "min": 3,
             "max": 24
           },
           {
             "key": "mod",
             "label": "Модификатор",
-            "sheet": {
-              "tag": "{key}_mod",
-              "label": "Модификатор: {label}",
-              "group": "Модификаторы"
-            },
-            "kind": "expr",
+            "kind": "number",
             "expr": "округлить вниз((@строка.score - 10) / 2)"
           }
         ],
@@ -481,7 +478,20 @@
             "key": "cha",
             "label": "Харизма"
           }
-        ]
+        ],
+        "sheet": {
+          "columns": {
+            "score": {
+              "label": "{label}",
+              "group": "Характеристики",
+              "start": 10
+            },
+            "mod": {
+              "label": "Модификатор: {label}",
+              "group": "Модификаторы"
+            }
+          }
+        }
       }
     },
     "initiative": {
@@ -489,7 +499,7 @@
         "constant": "lead_die"
       },
       "bonus": {
-        "expr": "@dex_mod + @level"
+        "expr": "@abilities.dex.mod + @level"
       }
     },
     "effects": {
@@ -1048,12 +1058,12 @@
       "of": "персонаж",
       "name": "Кай",
       "values": {
-        "str": 18,
-        "con": 14,
-        "dex": 12,
-        "int": 10,
-        "wis": 12,
-        "cha": 10,
+        "abilities.str.score": 18,
+        "abilities.con.score": 14,
+        "abilities.dex.score": 12,
+        "abilities.int.score": 10,
+        "abilities.wis.score": 12,
+        "abilities.cha.score": 10,
         "level": 2,
         "ac": 17,
         "pd": 14,
@@ -1080,12 +1090,12 @@
       "of": "персонаж",
       "name": "Лея",
       "values": {
-        "str": 10,
-        "con": 12,
-        "dex": 18,
-        "int": 12,
-        "wis": 14,
-        "cha": 10,
+        "abilities.str.score": 10,
+        "abilities.con.score": 12,
+        "abilities.dex.score": 18,
+        "abilities.int.score": 12,
+        "abilities.wis.score": 14,
+        "abilities.cha.score": 10,
         "level": 2,
         "ac": 15,
         "pd": 15,
@@ -1115,8 +1125,8 @@
       "of": "противник",
       "name": "Гоблин",
       "values": {
-        "str": 10,
-        "dex": 14,
+        "abilities.str.score": 10,
+        "abilities.dex.score": 14,
         "level": 1,
         "ac": 16,
         "pd": 14,
@@ -1137,8 +1147,8 @@
       "of": "противник",
       "name": "Орк-берсерк",
       "values": {
-        "str": 16,
-        "dex": 10,
+        "abilities.str.score": 16,
+        "abilities.dex.score": 10,
         "level": 2,
         "ac": 16,
         "pd": 15,
@@ -1170,8 +1180,8 @@
       "of": "противник",
       "name": "Гоблин из толпы №1",
       "values": {
-        "str": 10,
-        "dex": 14,
+        "abilities.str.score": 10,
+        "abilities.dex.score": 14,
         "level": 1,
         "ac": 16,
         "pd": 14,
@@ -1191,8 +1201,8 @@
       "of": "противник",
       "name": "Гоблин из толпы №2",
       "values": {
-        "str": 10,
-        "dex": 14,
+        "abilities.str.score": 10,
+        "abilities.dex.score": 14,
         "level": 1,
         "ac": 16,
         "pd": 14,
@@ -1212,8 +1222,8 @@
       "of": "противник",
       "name": "Гоблин из толпы №3",
       "values": {
-        "str": 10,
-        "dex": 14,
+        "abilities.str.score": 10,
+        "abilities.dex.score": 14,
         "level": 1,
         "ac": 16,
         "pd": 14,

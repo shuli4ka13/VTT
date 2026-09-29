@@ -1,6 +1,7 @@
 import { readCell } from './cells.ts';
 import { EngineError } from './errors.ts';
-import { tableOf } from '../model/tables.ts';
+import { tableOf, isRange } from '../model/tables.ts';
+import { rowKeyOf } from '../model/sheet-columns.ts';
 import { choiceTableOf } from '../model/lists.ts';
 import type { System, Param } from '../model/types.ts';
 import type { Pass } from './calc.ts';
@@ -51,4 +52,20 @@ export function walk(
     value = cell;
   }
   return value;
+}
+
+export function resolveAddress(system: System, pass: Pass, name: string): { value: unknown } | null {
+  const [tableId, rowKey, column, ...rest] = name.split('.');
+  const table = tableId ? system.tables?.[tableId] : undefined;
+  if (!table || rowKey === undefined || isRange(table) || system.fields.some(f => f.tag === tableId)) return null;
+  const row = (table.rows ?? []).find(r => rowKeyOf(r) === rowKey) ?? (table.rows ?? []).find(r => String(r.value) === rowKey);
+  if (!row) throw new EngineError(`«${name}»: в таблице «${table.label || tableId}» нет строки «${rowKey}»`);
+  if (!column) return { value: row.value };
+  const cell = readCell(system, pass, tableId!, row.value, column, name);
+  if (!rest.length) return { value: cell };
+  const spec = (table.columns ?? []).find(c => c.key === column);
+  if (spec?.kind !== 'choice' || !spec.from) {
+    throw new EngineError(`«${name}»: колонка «${spec?.label || column}» не из таблицы — дальше «${rest.join('.')}» идти некуда`);
+  }
+  return { value: walk(system, pass, spec.from, cell, rest, `«${name}»`) };
 }

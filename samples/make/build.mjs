@@ -16,6 +16,7 @@ import { argsOf } from './convert/args.ts';
 import { fieldRollsOf } from './convert/field-rolls.ts';
 import { namesOf } from './convert/names.ts';
 import { spendOf } from './convert/spend.ts';
+import { addressesOf } from './convert/addresses.ts';
 import { withTableFields } from '../../packages/engine/src/model/sheet-columns.ts';
 
 const world = {
@@ -38,6 +39,7 @@ const world = {
   sheets: sheets(),
 };
 
+Object.assign(world, addressesOf(world));
 world.system = withTableFields(world.system);
 world.system = unifyCalls(unifyAmounts(world.system));
 Object.assign(world, unifySides({ system: world.system, compendium: world.compendium }));

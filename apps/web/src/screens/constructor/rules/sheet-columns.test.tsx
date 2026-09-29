@@ -11,34 +11,35 @@ const withTable = (): System => ({
       label: 'Характеристики',
       columns: [],
       rows: [{ value: 'сила', key: 'str', label: 'Сила' }, { value: 'ловкость', key: 'dex', label: 'Ловкость' }],
+      sheet: { group: 'Характеристики' },
     },
   },
 });
 
-describe('колонка таблицы, своя у каждого листа', () => {
+describe('таблица на листе', () => {
   beforeEach(() => { useWorld.setState(state => ({ ...state, system: withTable() })); });
 
   it('новая колонка сразу даёт поле на каждой строке, правка формулы колонки меняет все поля', () => {
     const { editRules } = useWorld.getState();
     editRules(draft => {
       draft.tables!.abilities!.columns = [
-        { key: 'score', label: 'Значение', kind: 'number', start: 10, sheet: { tag: '{key}', label: '{label}', group: 'Характеристики' } },
-        { key: 'mod', label: 'Модификатор', kind: 'expr', expr: '@строка.score', sheet: { tag: '{key}_mod', label: 'Модификатор: {label}' } },
+        { key: 'score', label: 'Значение', kind: 'number' },
+        { key: 'mod', label: 'Модификатор', kind: 'number', expr: '@строка.score' },
       ];
     });
-    expect(useWorld.getState().system.fields.map(f => f.tag)).toEqual(['str', 'str_mod', 'dex', 'dex_mod']);
+    expect(useWorld.getState().system.fields.map(f => f.tag)).toEqual(['abilities.str.score', 'abilities.str.mod', 'abilities.dex.score', 'abilities.dex.mod']);
 
     editRules(draft => {
       draft.tables!.abilities!.columns![1]!.expr = 'округлить вниз((@строка.score - 10) / 2)';
     });
     const mods = useWorld.getState().system.fields.filter(f => f.cell?.column === 'mod');
-    expect(mods.map(f => (f.value as { expr: string }).expr)).toEqual(['округлить вниз((@str - 10) / 2)', 'округлить вниз((@dex - 10) / 2)']);
+    expect(mods.map(f => (f.value as { expr: string }).expr)).toEqual(['округлить вниз((@abilities.str.score - 10) / 2)', 'округлить вниз((@abilities.dex.score - 10) / 2)']);
   });
 
   it('новая строка таблицы — новые поля на листе', () => {
     const { editRules } = useWorld.getState();
     editRules(draft => {
-      draft.tables!.abilities!.columns = [{ key: 'score', label: 'Значение', kind: 'number', start: 10, sheet: { tag: '{key}', label: '{label}' } }];
+      draft.tables!.abilities!.columns = [{ key: 'score', label: 'Значение', kind: 'number' }];
     });
     editRules(draft => { draft.tables!.abilities!.rows!.push({ value: 'мудрость', key: 'wis', label: 'Мудрость' }); });
     expect(useWorld.getState().system.fields.map(f => f.label)).toEqual(['Сила', 'Ловкость', 'Мудрость']);
@@ -47,11 +48,21 @@ describe('колонка таблицы, своя у каждого листа',
   it('«+ из таблицы» на вкладке «Лист»: пустая таблица получает колонку «Значение», формулы идут следом', () => {
     const { editSystem } = useWorld.getState();
     editSystem(draft => {
-      draft.tables!.abilities!.columns = [{ key: 'mod', label: 'Модификатор', kind: 'expr', expr: 'округлить вниз((@строка.value - 10) / 2)' }];
+      delete draft.tables!.abilities!.sheet;
+      draft.tables!.abilities!.columns = [{ key: 'mod', label: 'Модификатор', kind: 'number', expr: 'округлить вниз((@строка.value - 10) / 2)' }];
       placeOnSheet(draft, 'abilities');
     });
     const fields = useWorld.getState().system.fields;
-    expect(fields.map(f => f.tag)).toEqual(['str', 'str_mod', 'dex', 'dex_mod']);
+    expect(fields.map(f => f.tag)).toEqual(['abilities.str.value', 'abilities.str.mod', 'abilities.dex.value', 'abilities.dex.mod']);
     expect(fields.map(f => f.label)).toEqual(['Сила', 'Модификатор: Сила', 'Ловкость', 'Модификатор: Ловкость']);
+  });
+
+  it('вписанное в клетку значение — одно на всех, поля не даёт', () => {
+    const { editRules } = useWorld.getState();
+    editRules(draft => {
+      draft.tables!.abilities!.columns = [{ key: 'score', label: 'Значение', kind: 'number' }];
+      draft.tables!.abilities!.rows![0]!.cells = { score: 12 };
+    });
+    expect(useWorld.getState().system.fields.map(f => f.tag)).toEqual(['abilities.dex.score']);
   });
 });

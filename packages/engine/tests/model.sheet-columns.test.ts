@@ -11,57 +11,77 @@ const base = {
     abilities: {
       label: 'Характеристики',
       columns: [
-        { key: 'score', label: 'Значение', kind: 'number', start: 10, sheet: { tag: '{key}', label: '{label}', group: 'Характеристики' } },
-        { key: 'mod', label: 'Модификатор', kind: 'expr', expr: 'округлить вниз((@строка.score - 10) / 2)', sheet: { tag: '{key}_mod', label: 'Модификатор: {label}', group: 'Модификаторы' } },
+        { key: 'score', label: 'Значение', kind: 'number' },
+        { key: 'mod', label: 'Модификатор', kind: 'number', expr: 'округлить вниз((@строка.score - 10) / 2)' },
       ],
       rows: [{ value: 'сила', key: 'str', label: 'Сила' }, { value: 'ловкость', key: 'dex', label: 'Ловкость' }],
+      sheet: { group: 'Характеристики', columns: { score: { start: 10 }, mod: { label: 'Модификатор: {label}', group: 'Модификаторы' } } },
     },
     skills: {
       label: 'Навыки',
       columns: [
         { key: 'ability', label: 'Характеристика', kind: 'choice', from: 'abilities' },
-        { key: 'total', label: 'Навык', kind: 'expr', expr: '@строка.ability.mod + 1', sheet: { tag: '{key}', label: '{label}', group: 'Навыки' } },
+        { key: 'total', label: 'Навык', kind: 'number', expr: '@строка.ability.mod + 1' },
       ],
       rows: [{ value: 'атлетика', key: 'athletics', label: 'Атлетика', cells: { ability: 'сила' } }],
+      sheet: { group: 'Навыки' },
     },
   },
 } as unknown as System;
 
-const sheet = { id: 'h', systemId: 's', name: 'h', values: { str: 16 }, has: [], effects: [] } as Sheet;
+const sheet = { id: 'h', systemId: 's', name: 'h', values: { 'abilities.str.score': 16 }, has: [], effects: [] } as Sheet;
 
-group('колонка таблицы, своя у каждого листа', () => {
+group('таблица на листе: пустая клетка — ввод, формула — считается, значение — одно на всех', () => {
   const system = withTableFields(base);
-  const at = (tag: string) => calc(system, sheet, tag, newPass(system, sheet));
+  const at = (tag: string, on: System = system) => calc(on, sheet, tag, newPass(on, sheet));
 
-  test('формула колонки пишется один раз — поля по строкам появляются сами', () => {
-    deepEq(system.fields.map(f => f.tag), ['level', 'str', 'str_mod', 'dex', 'dex_mod', 'athletics']);
-    eq(system.fields.find(f => f.tag === 'dex_mod')!.label, 'Модификатор: Ловкость');
-    eq(at('str_mod'), 3);
+  test('поле зовётся адресом клетки, а формула колонки пишется один раз', () => {
+    deepEq(system.fields.map(f => f.tag), ['level', 'abilities.str.score', 'abilities.str.mod', 'abilities.dex.score', 'abilities.dex.mod', 'skills.athletics.total']);
+    eq(system.fields.find(f => f.tag === 'abilities.dex.mod')!.label, 'Модификатор: Ловкость');
+    eq(at('abilities.str.mod'), 3);
+    eq(at('abilities.dex.score'), 10);
   });
 
-  test('без общей формулы у каждой строки своя, ссылка «строка» — на соседнюю колонку', () => {
+  test('своя формула в клетке перебивает формулу колонки', () => {
     const own = structuredClone(base) as System;
-    const abilities = own.tables!.abilities!;
-    delete abilities.columns![1]!.expr;
-    abilities.rows![0]!.cells = { mod: '@строка.score - 10' };
-    abilities.rows![1]!.cells = { mod: '@строка.score * 2' };
+    own.tables!.abilities!.rows![1]!.cells = { mod: { expr: '@строка.score * 2' } };
     const built = withTableFields(own);
-    deepEq(built.fields.filter(f => f.cell?.column === 'mod').map(f => (f.value as { expr: string }).expr), ['@str - 10', '@dex * 2']);
+    deepEq(built.fields.filter(f => f.cell?.column === 'mod').map(f => (f.value as { expr: string }).expr),
+      ['округлить вниз((@abilities.str.score - 10) / 2)', '@abilities.dex.score * 2']);
   });
 
-  test('строка ссылается на строку другой таблицы: навык берёт модификатор своей характеристики', () => {
-    eq(at('athletics'), 4);
+  test('вписанное значение не становится полем — оно одинаковое у всех', () => {
+    const fixed = structuredClone(base) as System;
+    fixed.tables!.abilities!.rows![1]!.cells = { score: 14 };
+    const built = withTableFields(fixed);
+    ok(!built.fields.some(f => f.tag === 'abilities.dex.score'));
+    eq(at('abilities.dex.mod', built), 2);
   });
 
-  test('таблица по-прежнему таблица: поиск по слову читает ячейку с листа', () => {
+  test('без листа пустая клетка — просто пусто, полей нет', () => {
+    const off = structuredClone(base) as System;
+    delete off.tables!.skills!.sheet;
+    const built = withTableFields(off);
+    ok(!built.fields.some(f => f.cell?.table === 'skills'));
+    const reader = { ...built, fields: [...built.fields, { tag: 'x', label: 'x', value: { kind: 'formula', expr: '@skills.athletics.total' } }] } as System;
+    eq(at('x', reader), 4);
+  });
+
+  test('адрес идёт по ссылке: навык → характеристика → модификатор', () => {
+    eq(at('skills.athletics.total'), 4);
+    const withPath = { ...system, fields: [...system.fields, { tag: 'via', label: 'через ссылку', value: { kind: 'formula', expr: '@skills.athletics.ability.mod' } }] } as System;
+    eq(at('via', withPath), 3);
+  });
+
+  test('выбор строки на листе по-прежнему ведёт в таблицу', () => {
     const withLookup = { ...system, fields: [...system.fields, { tag: 'pick', label: 'Выбор', value: { kind: 'stored', type: 'choice', from: 'abilities', default: 'сила' } }, { tag: 'picked', label: 'Модификатор выбранной', value: { kind: 'formula', expr: '@pick.mod' } }] } as System;
-    eq(calc(withLookup, sheet, 'picked', newPass(withLookup, sheet)), 3);
+    eq(at('picked', withLookup), 3);
   });
 
   test('повторная сборка ничего не меняет, а правка поля в обход таблицы — ошибка проверки', () => {
     ok(withTableFields(system) === system);
     deepEq(errorsOf(lintSystem(system)).map(e => e.text), []);
-    const broken = { ...system, fields: system.fields.map(f => (f.tag === 'str_mod' ? { ...f, label: 'руками' } : f)) } as System;
+    const broken = { ...system, fields: system.fields.map(f => (f.tag === 'abilities.str.mod' ? { ...f, label: 'руками' } : f)) } as System;
     ok(errorsOf(lintSystem(broken)).some(e => e.text.includes('разошлись')));
   });
 });

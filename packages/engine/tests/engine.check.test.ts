@@ -13,8 +13,8 @@ const seven = () => 7;
 
 group('проверка — одна на всё: шаг, бросок с листа, инициатива', () => {
   test('бросок поля — проверка, где прибавка — само поле', () => {
-    const check = fieldCheck(system, 'dex_mod');
-    eq(check.bonus?.expr, '@dex_mod');
+    const check = fieldCheck(system, 'abilities.dex.mod');
+    eq(check.bonus?.expr, '@abilities.dex.mod');
     const out = rollCheck(system, arven, check, { compendium, die: seven, owner: check.label });
     eq(out.total, 7 + out.bonus);
   });
@@ -26,8 +26,8 @@ group('проверка — одна на всё: шаг, бросок с лис
   });
 
   test('бросок без кости: у стола — отказ словами, у автора — ошибка линта', () => {
-    const bare = { ...system, fields: system.fields.map(f => (f.tag === 'dex_mod' ? { ...f, roll: { label: 'Ловкость' } } : f)) } as System;
-    throws(() => fieldCheck(bare, 'dex_mod'), 'кость не выбрана');
-    ok(lintSystem(bare).some(p => p.level === 'error' && p.where.field === 'dex_mod' && p.text.includes('кость не выбрана')));
+    const bare = { ...system, fields: system.fields.map(f => (f.tag === 'abilities.dex.mod' ? { ...f, roll: { label: 'Ловкость' } } : f)) } as System;
+    throws(() => fieldCheck(bare, 'abilities.dex.mod'), 'кость не выбрана');
+    ok(lintSystem(bare).some(p => p.level === 'error' && p.where.field === 'abilities.dex.mod' && p.text.includes('кость не выбрана')));
   });
 });

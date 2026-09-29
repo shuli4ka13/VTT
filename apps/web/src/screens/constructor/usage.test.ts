@@ -16,7 +16,7 @@ describe('индекс использования вместо поиска по
 
   it('кто смотрит на поле — подписи экрана без повторов', () => {
     const index = usageIndex(dnd, book);
-    const users = usersOf(index, 'field', 'dex_mod', dnd);
+    const users = usersOf(index, 'field', 'abilities.dex.mod', dnd);
     expect(users.length).toBeGreaterThan(0);
     expect(new Set(users).size).toBe(users.length);
     expect(users.some(u => u.startsWith('Лист · поле'))).toBe(true);

@@ -9,14 +9,15 @@ const depsOf = (expr: string): string[] => {
   try { return [...compile(expr).deps]; } catch { return []; }
 };
 
+const known = (fields: Set<string>, dep: string): boolean => fields.has(dep) || fields.has(dep.split('.')[0]!);
+
 const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export function withOwners(expr: string, fields: Set<string>, ownerFor: (name: string) => Owner): string {
   let out = expr;
   for (const dep of depsOf(expr)) {
     if (ownerOf(dep)) continue;
-    const head = dep.split('.')[0]!;
-    if (!fields.has(head)) continue;
+    if (!known(fields, dep)) continue;
     out = out.replace(
       new RegExp(`([@#])${escape(dep)}(?![\\p{L}\\p{N}_.])`, 'gu'),
       (_, mark: string) => `${mark}${owned(ownerFor(dep), dep)}`,
@@ -29,7 +30,7 @@ const isSlot = (value: Loose): boolean =>
   typeof value.expr === 'string' && Object.keys(value).every(key => ['expr', 'of', 'sender', 'optional'].includes(key));
 
 const unowned = (expr: string, fields: Set<string>): boolean =>
-  depsOf(expr).some(dep => !ownerOf(dep) && fields.has(dep.split('.')[0]!));
+  depsOf(expr).some(dep => !ownerOf(dep) && known(fields, dep));
 
 const hasLegacy = (value: unknown, fields: Set<string>): boolean => {
   if (!value || typeof value !== 'object') return false;
