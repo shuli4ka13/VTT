@@ -1,4 +1,4 @@
-import { Card, CardHead, Field, Select, Chip, Button } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Field, Select, Chip, Button, Fold } from '../../../ui/primitives.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import { registry } from '@vtt/engine/engine/steps/index';
 import { MOMENTS as TIMES } from '@vtt/engine/events/moments';
@@ -126,8 +126,9 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
           </Field>
         )}
 
+        <Fold title="Только если" summary={formula !== null ? `если ${formula}` : picked ? `если ${conditions.find(([ref]) => ref === picked)?.[1] ?? picked}` : 'всегда'}>
         <Field
-          label="Только если"
+          label="Делать"
           hint={formula !== null ? 'Сработает, только когда формула верна.'
             : isMoment ? 'У времени, поля и появления эффекта нет исходов — выберите «формулой…», если нужно условие.'
               : conditions.length ? undefined : 'У того, что слушаем, нет шагов с исходом «да/нет» — сработает всегда.'}
@@ -153,6 +154,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
             />
           ) : null}
         </Field>
+        </Fold>
 
         {isMoment || !aims ? null : (
           <Field label="Кому" hint="Куда уходит цепочка шагов этого «когда».">

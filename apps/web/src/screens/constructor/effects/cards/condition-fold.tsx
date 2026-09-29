@@ -81,7 +81,6 @@ export function ConditionFold({ group, earlier, edit, context }: {
     ...(tagged.length ? [{ ref: EVENT_TAGS, label: EVENT_TAGS_LABEL }] : []),
     ...outputRefs(earlier).filter(o => o.kind === 'boolean' || o.kind === 'number' || o.kind === 'text'),
   ];
-  if (!outputs.length && written === null) return null;
   const setAll = (change: (draft: WhenStep) => void) =>
     group.indices.forEach((_, k) => edit(k, draft => change(draft as WhenStep)));
   const put = (next: When | null) => setAll(draft => {
@@ -104,9 +103,9 @@ export function ConditionFold({ group, earlier, edit, context }: {
   const bound = (value: string | undefined) => (value === undefined ? null : { expr: value });
 
   return (
-    <Fold title="Делать этот шаг" summary={summary}>
+    <Fold title="Только если" summary={summary}>
       <div className="row">
-        <Field label="делать" hint="Смотрит на исход шага выше. Не сошлось — этот шаг пропускается, цепочка идёт дальше.">
+        <Field label="Делать" hint="Не сошлось — этот шаг пропускается, цепочка идёт дальше.">
           <Select
             value={custom ? BY_FORMULA : when?.ref ?? ''}
             options={[['', 'всегда'], ...outputs.map(o => [o.ref, `если ${o.label}`] as const), [BY_FORMULA, 'формулой…']] as never}

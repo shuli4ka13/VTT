@@ -107,24 +107,25 @@ describe('GroupCard', () => {
 describe('GroupCard: условие выполнения шага', () => {
   const earlier = [{ id: 'hit', type: 'threshold', at: 1, title: 'Проверка' }];
 
-  it('когда выше есть проверка с исходом да/нет, у шага появляется «Делать этот шаг»', () => {
+  it('когда выше есть проверка с исходом да/нет, «Только если» предлагает её исход', () => {
     const steps = [{ type: 'apply', direction: 'subtract', targetModifiers: true, value: { expr: '4' } }] as unknown as Step[];
     const group = groupSteps(steps)[0]!;
     const apply = steps[0] as any;
     render(<GroupCard group={group} position={2} system={system} effect={effect}
       earlier={earlier} problem={null} edit={(_, change) => change(apply as never)} onDelete={() => {}} />);
-    expect(screen.getByText('Делать этот шаг')).toBeTruthy();
+    expect(screen.getByText('Только если')).toBeTruthy();
     const selects = [...document.querySelectorAll('select')] as HTMLSelectElement[];
     const picker = selects.find(el => [...el.options].some(o => o.value === 'hit.success'))!;
     fireEvent.change(picker, { target: { value: 'hit.success' } });
     expect(apply.when).toEqual({ expr: '@hit.success' });
   });
 
-  it('без проверок выше секции условия нет', () => {
+  it('без проверок выше условие всё равно задаётся — формулой', () => {
     const group = groupSteps(attackSteps())[0]!;
     render(<GroupCard group={group} position={1} system={system} effect={effect}
       earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
-    expect(screen.queryByText('Когда выполнять')).toBeNull();
+    const picker = [...document.querySelectorAll('select')].find(el => [...el.options].some(o => o.textContent === 'формулой…'));
+    expect(picker).toBeTruthy();
   });
 });
 

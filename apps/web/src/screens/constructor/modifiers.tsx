@@ -1,6 +1,6 @@
 import type { System, Modifier } from '@vtt/schema';
-import { Card, CardHead, Field, Input, Select, Button, Empty } from '../../ui/primitives.tsx';
-import { FormulaInput } from '../../ui/formula.tsx';
+import { Card, CardHead, Field, Input, Select, Button, Empty, Fold } from '../../ui/primitives.tsx';
+import { FormulaInput, formulaAsLabels } from '../../ui/formula.tsx';
 import { targets } from '@vtt/engine/engine/targets';
 import { installMethod, recipesToInstall } from '@vtt/engine/model/advantage-methods';
 import { tagsOf, tagTablesOf, listOf as rowsFrom } from '@vtt/engine/model/lists';
@@ -178,10 +178,8 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
             </div>
           )}
 
-          <Field
-            label="Только когда"
-            hint="Условие на листе владельца. Пусто — всегда."
-          >
+          <Fold title="Только если" summary={modifier.condition?.expr ? `если ${formulaAsLabels(system, modifier.condition.expr)}` : 'всегда'}>
+          <Field label="Условие" hint="На листе владельца. Пусто — всегда.">
             <FormulaInput
               where="модификатор · только когда"
               system={system}
@@ -193,6 +191,7 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
               placeholder="например: @тяжёлая броня"
             />
           </Field>
+          </Fold>
         </Card>
       ))}
     </>
