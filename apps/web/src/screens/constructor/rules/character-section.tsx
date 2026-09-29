@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { useWorld, useBook, freeId, slugOf } from '../../../store/world.ts';
+import { freeGroupName, renameGroup } from '../groups.ts';
+import { sheetKinds } from '@vtt/engine/model/owned';
 import { LiveValue } from '../live-value.tsx';
-import { Card, CardHead, Button, Field, Select, Chip, Empty } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Button, Field, Select, Chip, Empty, LabelInput, DangerButton } from '../../../ui/primitives.tsx';
 import { ColumnCard } from './column-card.tsx';
 import type { ColumnPatch } from './column-card.tsx';
 import { newField } from '../factory.ts';
@@ -8,7 +11,6 @@ import { usersOf } from '../usage.ts';
 import type { UsageIndex } from '../usage.ts';
 import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
 import { choiceTables } from '@vtt/engine/model/tables';
-import { onSheet } from '@vtt/engine/model/sheet-columns';
 import { NO_BLOCK } from '@vtt/engine/model/blocks';
 import type { Field as FieldModel, System, ValueKind } from '@vtt/schema';
 import type { WorldState } from '../../../store/world.ts';
@@ -127,51 +129,88 @@ export function CharacterSection({ system, editSystem, usage, onTable }: {
 }) {
   const picked = useWorld(s => s.activeFieldTag);
   const pick = useWorld(s => s.pick);
+  const [of, setOf] = useState('');
+  const kinds = sheetKinds(system);
+  const kind = of ? system.records?.[of] : undefined;
   const columns = system.fields.filter(isCharacterColumn);
   const active = columns.find(f => f.tag === picked) ?? null;
-  const blocks = new Map<string, FieldModel[]>();
-  for (const field of columns) {
+
+  const blocks = new Map<string, { fields: FieldModel[]; tables: string[] }>();
+  for (const field of system.fields) {
     const name = field.group ?? NO_BLOCK;
-    blocks.set(name, [...blocks.get(name) ?? [], field]);
+    const entry = blocks.get(name) ?? { fields: [], tables: [] };
+    if (!field.cell) entry.fields.push(field);
+    else if (!entry.tables.includes(field.cell.table)) entry.tables.push(field.cell.table);
+    blocks.set(name, entry);
   }
-  const tables = Object.entries(system.tables ?? {}).filter(([, table]) => onSheet(table));
+  const names = [...blocks.keys()];
+  const shown = (block: string) => !kind?.blocks || kind.blocks.includes(block);
+  const toggle = (block: string) => editSystem(draft => {
+    const target = draft.records?.[of];
+    if (!target) return;
+    const now = target.blocks ?? names;
+    const next = now.includes(block) ? now.filter(b => b !== block) : [...now, block];
+    if (names.every(name => next.includes(name))) delete target.blocks; else target.blocks = next;
+  });
+
   const add = (group: string) => {
     const made = newField(system, group);
     editSystem(draft => { draft.fields.push(made.value); });
     pick({ activeFieldTag: made.key });
   };
+  const addType = () => {
+    const key = freeId(Object.keys(system.records ?? {}), 'лист');
+    editSystem(draft => { (draft.records ??= {})[key] = { kind: 'sheet', label: 'Новый тип листа' }; });
+    setOf(key);
+  };
 
   return (
     <Card>
-      <CardHead title="Персонаж" actions={<Button size="sm" onClick={() => add(NO_BLOCK)}>+ колонка</Button>} />
-      {active ? <FieldColumnCard field={active} system={system} usage={usage} onClose={() => pick({ activeFieldTag: null })} /> : null}
-      {columns.length === 0 ? <Empty title="У персонажа пока нет колонок" /> : null}
-      {[...blocks].map(([block, fields]) => (
-        <div key={block} className="stack stack--tight">
-          <span className="field__label">{block}</span>
-          <div className="inline inline--tight">
-            {fields.map(field => (
-              <Button key={field.tag} size="sm" variant={field.tag === picked ? 'primary' : 'ghost'}
-                title={kindOf(field)} onClick={() => pick({ activeFieldTag: field.tag === picked ? null : field.tag })}>
-                {field.label}{field.value.kind === 'formula' ? ' =' : ''}
-              </Button>
-            ))}
-            <Button size="sm" variant="ghost" title={`колонка в блоке «${block}»`} onClick={() => add(block)}>+</Button>
-          </div>
-        </div>
-      ))}
-      {tables.length ? (
-        <div className="stack stack--tight">
-          <span className="field__label">Таблицы у персонажа</span>
-          <div className="inline inline--tight">
-            {tables.map(([id, table]) => (
-              <Button key={id} size="sm" variant="ghost" onClick={() => onTable(id)}>
-                ▦ {table.label || id} · {(table.rows ?? []).length}
-              </Button>
-            ))}
-          </div>
+      <CardHead title="Листы" actions={<Button size="sm" onClick={() => add(freeGroupName(system, 'Новый блок'))}>+ блок</Button>} />
+      <div className="inline inline--tight">
+        <Button size="sm" variant={of ? 'ghost' : 'primary'} onClick={() => setOf('')}>все блоки</Button>
+        {kinds.map(([key, k]) => (
+          <Button key={key} size="sm" variant={of === key ? 'primary' : 'ghost'} onClick={() => setOf(key)}>{k.label ?? key}</Button>
+        ))}
+        <Button size="sm" variant="ghost" onClick={addType}>+ тип листа</Button>
+      </div>
+      {kind ? (
+        <div className="inline inline--tight">
+          <LabelInput value={kind.label ?? ''} placeholder="как зовётся тип листа"
+            onCommit={label => editSystem(draft => { const target = draft.records?.[of]; if (target) target.label = label; })} />
+          <DangerButton size="sm" onConfirm={() => { editSystem(draft => { delete draft.records?.[of]; }); setOf(''); }}>Удалить тип</DangerButton>
         </div>
       ) : null}
+      {active ? <FieldColumnCard field={active} system={system} usage={usage} onClose={() => pick({ activeFieldTag: null })} /> : null}
+      {names.length === 0 ? <Empty title="Лист пока пуст" /> : null}
+      {names.map(block => {
+        const { fields, tables } = blocks.get(block)!;
+        const on = shown(block);
+        return (
+          <div key={block} className={`stack stack--tight${on ? '' : ' faint'}`}>
+            <div className="inline inline--tight">
+              {kind ? (
+                <input type="checkbox" checked={on} title={on ? 'есть на этом листе' : 'нет на этом листе'} onChange={() => toggle(block)} />
+              ) : null}
+              <LabelInput value={block} onCommit={next => editSystem(draft => renameGroup(draft, block, next))} />
+            </div>
+            <div className="inline inline--tight">
+              {fields.map(field => (
+                <Button key={field.tag} size="sm" variant={field.tag === picked ? 'primary' : 'ghost'}
+                  title={kindOf(field)} onClick={() => pick({ activeFieldTag: field.tag === picked ? null : field.tag })}>
+                  {field.label}{field.value.kind === 'formula' ? ' =' : ''}
+                </Button>
+              ))}
+              {tables.map(id => (
+                <Button key={id} size="sm" variant="ghost" title="таблица" onClick={() => onTable(id)}>
+                  ▦ {system.tables?.[id]?.label || id} · {(system.tables?.[id]?.rows ?? []).length}
+                </Button>
+              ))}
+              <Button size="sm" variant="ghost" title={`колонка в блоке «${block}»`} onClick={() => add(block)}>+</Button>
+            </div>
+          </div>
+        );
+      })}
     </Card>
   );
 }

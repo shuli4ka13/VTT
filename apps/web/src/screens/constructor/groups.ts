@@ -127,6 +127,16 @@ export function renameGroup(draft: System, from: string, to: string): void {
       if (other.parent === from) other.parent = clean;
     }
   }
+  for (const table of Object.values(draft.tables ?? {})) {
+    if (table.sheet?.group === from) table.sheet.group = clean;
+    for (const view of [...Object.values(table.sheet?.columns ?? {}), ...Object.values(table.sheet?.cells ?? {})]) {
+      if (view.group === from) view.group = clean;
+    }
+    for (const row of table.rows ?? []) if (row.group === from) row.group = clean;
+  }
+  for (const kind of Object.values(draft.records ?? {})) {
+    if (kind.blocks) kind.blocks = kind.blocks.map(block => (block === from ? clean : block));
+  }
 }
 
 export function freeGroupName(system: System, base: string): string {
