@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useWorld, emptySystem } from '../../../store/world.ts';
+import { placeOnSheet } from '../table-field.tsx';
 import type { System } from '@vtt/schema';
 
 const withTable = (): System => ({
@@ -21,15 +22,14 @@ describe('колонка таблицы, своя у каждого листа',
     const { editRules } = useWorld.getState();
     editRules(draft => {
       draft.tables!.abilities!.columns = [
-        { key: 'score', label: 'Значение', sheet: { tag: '{key}', label: '{label}', group: 'Характеристики', value: { kind: 'stored', type: 'number', default: 10 } } },
-        { key: 'mod', label: 'Модификатор', sheet: { tag: '{key}_mod', label: 'Модификатор: {label}', value: { kind: 'formula', expr: '@{key}' } } },
+        { key: 'score', label: 'Значение', kind: 'number', start: 10, sheet: { tag: '{key}', label: '{label}', group: 'Характеристики' } },
+        { key: 'mod', label: 'Модификатор', kind: 'expr', expr: '@{key}', sheet: { tag: '{key}_mod', label: 'Модификатор: {label}' } },
       ];
     });
     expect(useWorld.getState().system.fields.map(f => f.tag)).toEqual(['str', 'str_mod', 'dex', 'dex_mod']);
 
     editRules(draft => {
-      const sheet = draft.tables!.abilities!.columns![1]!.sheet!;
-      sheet.value = { kind: 'formula', expr: 'floor((@{key} - 10) / 2)' };
+      draft.tables!.abilities!.columns![1]!.expr = 'floor((@{key} - 10) / 2)';
     });
     const mods = useWorld.getState().system.fields.filter(f => f.cell?.column === 'mod');
     expect(mods.map(f => (f.value as { expr: string }).expr)).toEqual(['floor((@str - 10) / 2)', 'floor((@dex - 10) / 2)']);
@@ -38,9 +38,20 @@ describe('колонка таблицы, своя у каждого листа',
   it('новая строка таблицы — новые поля на листе', () => {
     const { editRules } = useWorld.getState();
     editRules(draft => {
-      draft.tables!.abilities!.columns = [{ key: 'score', label: 'Значение', sheet: { tag: '{key}', label: '{label}', value: { kind: 'stored', type: 'number', default: 10 } } }];
+      draft.tables!.abilities!.columns = [{ key: 'score', label: 'Значение', kind: 'number', start: 10, sheet: { tag: '{key}', label: '{label}' } }];
     });
     editRules(draft => { draft.tables!.abilities!.rows!.push({ value: 'мудрость', key: 'wis', label: 'Мудрость' }); });
     expect(useWorld.getState().system.fields.map(f => f.label)).toEqual(['Сила', 'Ловкость', 'Мудрость']);
+  });
+
+  it('«+ из таблицы» на вкладке «Лист»: пустая таблица получает колонку «Значение», формулы идут следом', () => {
+    const { editSystem } = useWorld.getState();
+    editSystem(draft => {
+      draft.tables!.abilities!.columns = [{ key: 'mod', label: 'Модификатор', kind: 'expr', expr: 'floor((@{key} - 10) / 2)' }];
+      placeOnSheet(draft, 'abilities');
+    });
+    const fields = useWorld.getState().system.fields;
+    expect(fields.map(f => f.tag)).toEqual(['str', 'str_mod', 'dex', 'dex_mod']);
+    expect(fields.map(f => f.label)).toEqual(['Сила', 'Модификатор: Сила', 'Ловкость', 'Модификатор: Ловкость']);
   });
 });

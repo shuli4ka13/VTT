@@ -431,15 +431,12 @@
             "sheet": {
               "tag": "{key}",
               "label": "{label}",
-              "group": "Характеристики",
-              "value": {
-                "kind": "stored",
-                "type": "number",
-                "default": 10,
-                "min": 3,
-                "max": 24
-              }
-            }
+              "group": "Характеристики"
+            },
+            "kind": "number",
+            "start": 10,
+            "min": 3,
+            "max": 24
           },
           {
             "key": "mod",
@@ -447,12 +444,10 @@
             "sheet": {
               "tag": "{key}_mod",
               "label": "Модификатор: {label}",
-              "group": "Модификаторы",
-              "value": {
-                "kind": "formula",
-                "expr": "floor((@{key} - 10) / 2)"
-              }
-            }
+              "group": "Модификаторы"
+            },
+            "kind": "expr",
+            "expr": "floor((@{key} - 10) / 2)"
           }
         ],
         "rows": [

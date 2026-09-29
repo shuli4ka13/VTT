@@ -100,14 +100,12 @@ export const lists = () => ({
   abilities: {
     label: 'Характеристики', key: 'word',
     columns: [
-      { key: 'score', label: 'Значение', sheet: {
+      { key: 'score', label: 'Значение', kind: 'number', start: 10, min: 1, max: 30, sheet: {
         tag: '{key}', label: '{label}', group: 'Характеристики',
-        value: { kind: 'stored', type: 'number', default: 10, min: 1, max: 30 },
       } },
-      { key: 'mod', label: 'Модификатор', sheet: {
+      { key: 'mod', label: 'Модификатор', kind: 'expr', expr: 'floor((@{key} - 10) / 2)', sheet: {
         tag: '{key}_mod', label: 'Модификатор: {label}', group: 'Модификаторы',
         roll: { label: 'Проверка: {label}', tags: ['проверка', '{value}'], die: LEAD_DIE, bonus: { expr: '@{key}_mod' } },
-        value: { kind: 'formula', expr: 'floor((@{key} - 10) / 2)' },
       } },
     ],
     rows: ABILITIES.map(([tag, label]) => ({ value: ABILITY_WORD[tag], key: tag, label })),
@@ -115,18 +113,15 @@ export const lists = () => ({
   saves: {
     label: 'Спасброски', key: 'word',
     columns: [
-      { key: 'extra', label: 'Владение сверх класса', sheet: {
-        tag: '{key}_save_extra', label: 'Владение сверх класса: спасбросок {label}', group: 'Спасброски',
-        value: { kind: 'stored', type: 'number', default: 0, min: 0, max: 1 }, control: 'ring',
+      { key: 'extra', label: 'Владение сверх класса', kind: 'number', start: 0, min: 0, max: 1, sheet: {
+        tag: '{key}_save_extra', label: 'Владение сверх класса: спасбросок {label}', group: 'Спасброски', control: 'ring',
       } },
-      { key: 'prof', label: 'Владение', sheet: {
+      { key: 'prof', label: 'Владение', kind: 'expr', expr: 'max(@{key}_save_extra, есть(@class_name.saves, "{value}") ? 1 : 0)', sheet: {
         tag: '{key}_save_prof', label: 'Владение: спасбросок {label}', group: 'Спасброски',
-        value: { kind: 'formula', expr: 'max(@{key}_save_extra, есть(@class_name.saves, "{value}") ? 1 : 0)' },
       } },
-      { key: 'save', label: 'Спасбросок', sheet: {
+      { key: 'save', label: 'Спасбросок', kind: 'expr', expr: '@{key}_mod + @{key}_save_prof * @prof_bonus', sheet: {
         tag: '{key}_save', label: 'Спасбросок: {label}', group: 'Спасброски',
         roll: { label: 'Спасбросок: {label}', tags: ['спасбросок', '{value}'], die: LEAD_DIE, bonus: { expr: '@{key}_save' } },
-        value: { kind: 'formula', expr: '@{key}_mod + @{key}_save_prof * @prof_bonus' },
       } },
     ],
     rows: ABILITIES.map(([tag, label]) => ({ value: ABILITY_WORD[tag], key: tag, label })),
@@ -135,14 +130,12 @@ export const lists = () => ({
     label: 'Навыки', key: 'word',
     columns: [
       { key: 'ability', label: 'Характеристика', kind: 'choice', from: 'abilities' },
-      { key: 'prof', label: 'Владение', sheet: {
-        tag: '{key}_prof', label: 'Владение: {label}',
-        value: { kind: 'stored', type: 'number', default: 0, min: 0, max: 2 }, control: 'ring',
+      { key: 'prof', label: 'Владение', kind: 'number', start: 0, min: 0, max: 2, sheet: {
+        tag: '{key}_prof', label: 'Владение: {label}', control: 'ring',
       } },
-      { key: 'total', label: 'Навык', sheet: {
+      { key: 'total', label: 'Навык', kind: 'expr', expr: '@{ability.key}_mod + @{key}_prof * @prof_bonus', sheet: {
         tag: '{key}', label: '{label}',
         roll: { label: 'Проверка: {label}', tags: ['проверка', '{ability}', '{value}'], die: LEAD_DIE, bonus: { expr: '@{key}' } },
-        value: { kind: 'formula', expr: '@{ability.key}_mod + @{key}_prof * @prof_bonus' },
       } },
     ],
     rows: SKILLS.map(([tag, label, a]) => ({ value: skillWord(label), key: tag, label, group: SKILL_GROUP[a], cells: { ability: ABILITY_WORD[a] } })),

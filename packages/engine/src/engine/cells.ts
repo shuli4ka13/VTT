@@ -40,7 +40,8 @@ export function readCell(
     const row = rowOf(system, tableId, input, forTag);
     return row ? pass.resolve(cellTag(system, tableId, row, spec)) : null;
   }
-  const raw = lookupCell(system, tableId, input, column, forTag);
+  const found = lookupCell(system, tableId, input, column, forTag);
+  const raw = (found === undefined || found === '') && spec?.expr ? spec.expr : found;
   const kind = spec?.kind;
   if (!table || kind !== 'expr' || typeof raw !== 'string') return raw;
 

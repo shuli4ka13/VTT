@@ -18,6 +18,7 @@ import { compile } from '@vtt/engine/formula';
 import { DonorPalette } from './donors.tsx';
 import { useFreshKeys } from '../../store/fresh.ts';
 import { newField } from './factory.ts';
+import { TableFieldEditor, placeOnSheet, sheetTables } from './table-field.tsx';
 import { GroupEditor } from './group-editor.tsx';
 import { BlockPick } from './block-pick.tsx';
 import { effectiveDefault, sameValue } from './groups.ts';
@@ -59,6 +60,7 @@ export function SheetTab() {
   };
 
 
+  const tables = sheetTables(system);
   const right = useLookupPane({ head: 'Готовое из образцов', body: <DonorPalette kind="blocks" /> });
   const freshFields = useFreshKeys('field');
 
@@ -66,7 +68,18 @@ export function SheetTab() {
     <Columns
       left={{
         head: 'Блоки и поля',
-        tools: <Button size="sm" onClick={() => addField('Новый блок')}>+ блок</Button>,
+        tools: (
+          <>
+            <Button size="sm" onClick={() => addField('Новый блок')}>+ блок</Button>
+            {tables.length ? (
+              <Select value="" options={[['', '+ из таблицы'], ...tables] as never} onChange={id => {
+                if (!id) return;
+                editSystem(draft => placeOnSheet(draft, id));
+                pick({ activeFieldTag: null, activeGroupName: null });
+              }} />
+            ) : null}
+          </>
+        ),
         body: tree.length === 0
           ? <Empty title="Лист пуст" hint="Возьмите готовый кусок справа или заведите поле кнопкой «+ блок»." />
           : (
@@ -134,22 +147,7 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
   const preset = effectiveDefault(system, field.group ?? 'Без блока');
   const follows = preset !== undefined && sameValue(field.value, preset);
 
-  if (field.cell) {
-    const table = system.tables?.[field.cell.table];
-    const column = table?.columns?.find(c => c.key === field.cell!.column);
-    return (
-      <Card>
-        <CardHead
-          title={field.label || field.tag}
-          sub={`Колонка «${column?.label ?? field.cell.column}» таблицы «${table?.label ?? field.cell.table}» — правится там, сразу для всех строк.`}
-          actions={<Button size="sm" onClick={() => pick({ activeTab: 'dictionaries', activeTableId: field.cell!.table })}>Открыть таблицу</Button>}
-        />
-        {field.value.kind === 'formula'
-          ? <LiveValue system={system} compendium={compendium} tag={field.tag} source={field.value.expr} />
-          : null}
-      </Card>
-    );
-  }
+  if (field.cell) return <TableFieldEditor field={field} system={system} />;
 
   return (
     <>

@@ -3564,15 +3564,12 @@
             "sheet": {
               "tag": "{key}",
               "label": "{label}",
-              "value": {
-                "kind": "stored",
-                "type": "number",
-                "default": "{start}",
-                "min": 0,
-                "max": 10
-              },
               "control": "stepper"
-            }
+            },
+            "kind": "number",
+            "start": "{start}",
+            "min": 0,
+            "max": 10
           },
           {
             "key": "total",
@@ -3591,12 +3588,10 @@
                 "bonus": {
                   "expr": "@{key}_total"
                 }
-              },
-              "value": {
-                "kind": "formula",
-                "expr": "@{stat} + @{key}"
               }
-            }
+            },
+            "kind": "expr",
+            "expr": "@{stat} + @{key}"
           }
         ],
         "rows": [

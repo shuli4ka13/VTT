@@ -11,16 +11,16 @@ const base = {
     abilities: {
       label: 'Характеристики',
       columns: [
-        { key: 'score', label: 'Значение', sheet: { tag: '{key}', label: '{label}', group: 'Характеристики', value: { kind: 'stored', type: 'number', default: 10 } } },
-        { key: 'mod', label: 'Модификатор', sheet: { tag: '{key}_mod', label: 'Модификатор: {label}', group: 'Модификаторы', value: { kind: 'formula', expr: 'floor((@{key} - 10) / 2)' } } },
+        { key: 'score', label: 'Значение', kind: 'number', start: 10, sheet: { tag: '{key}', label: '{label}', group: 'Характеристики' } },
+        { key: 'mod', label: 'Модификатор', kind: 'expr', expr: 'floor((@{key} - 10) / 2)', sheet: { tag: '{key}_mod', label: 'Модификатор: {label}', group: 'Модификаторы' } },
       ],
-      rows: [{ value: 'сила', key: 'str', label: 'Сила' }, { value: 'ловкость', key: 'dex', label: 'Ловкость' }],
+      rows: [{ value: 'сила', key: 'str', label: 'Сила' }, { value: 'ловкость', key: 'dex', label: 'Ловкость', cells: { mod: '@{key} - 10' } }],
     },
     skills: {
       label: 'Навыки',
       columns: [
         { key: 'ability', label: 'Характеристика', kind: 'choice', from: 'abilities' },
-        { key: 'total', label: 'Навык', sheet: { tag: '{key}', label: '{label}', group: 'Навыки', value: { kind: 'formula', expr: '@{ability.key}_mod + 1' } } },
+        { key: 'total', label: 'Навык', kind: 'expr', expr: '@{ability.key}_mod + 1', sheet: { tag: '{key}', label: '{label}', group: 'Навыки' } },
       ],
       rows: [{ value: 'атлетика', key: 'athletics', label: 'Атлетика', cells: { ability: 'сила' } }],
     },
@@ -37,6 +37,11 @@ group('колонка таблицы, своя у каждого листа', ()
     deepEq(system.fields.map(f => f.tag), ['level', 'str', 'str_mod', 'dex', 'dex_mod', 'athletics']);
     eq(system.fields.find(f => f.tag === 'dex_mod')!.label, 'Модификатор: Ловкость');
     eq(at('str_mod'), 3);
+  });
+
+  test('формула одна на колонку, но у строки может быть своя', () => {
+    eq(at('str_mod'), 3);
+    eq(calc(system, { ...sheet, values: { dex: 14 } }, 'dex_mod', newPass(system, { ...sheet, values: { dex: 14 } })), 4);
   });
 
   test('строка ссылается на строку другой таблицы: навык берёт модификатор своей характеристики', () => {

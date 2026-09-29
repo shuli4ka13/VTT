@@ -111,15 +111,18 @@ export const sheetColumn = z.object({
   tag: z.string().min(1),
   label: z.string(),
   group: z.string().optional(),
-  value: fieldValue,
   roll: z.lazy(() => rollSpec.partial()).optional(),
   control: control.optional(),
-}).passthrough();
+});
 
 export const tableColumn = z.object({
   key: z.string().min(1),
   label: z.string().optional(),
   ...typed,
+  expr: z.string().optional(),
+  start: z.union([z.number(), z.string(), z.boolean()]).optional(),
+  min: bound.optional(),
+  max: bound.optional(),
   sheet: sheetColumn.optional(),
 });
 

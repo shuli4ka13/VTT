@@ -163,13 +163,12 @@ const tables = () => ({
     columns: [
       { key: 'attribute', label: 'Характеристика', kind: 'text' },
       { key: 'untrained', label: 'Без обучения', kind: 'boolean' },
-      { key: 'rank', label: 'Ранг', sheet: {
-        tag: '{key}', label: '{label}', group: 'Навыки', value: { kind: 'stored', type: 'number', default: 0, min: 0, max: 10 },
+      { key: 'rank', label: 'Ранг', kind: 'number', start: 0, min: 0, max: 10, sheet: {
+        tag: '{key}', label: '{label}', group: 'Навыки',
       } },
-      { key: 'pool', label: 'Набор', sheet: {
+      { key: 'pool', label: 'Набор', kind: 'expr', expr: `max(0, (@{key} > 0 ? @{key} + @{attribute} : ({untrained} ? @{attribute} - 1 : 0)) + ${PENALTY})`, sheet: {
         tag: '{key}_pool', label: '{label}: набор', group: 'Наборы кубиков',
         roll: { label: 'Проверка: {label}', die: POOL_DIE, count: { expr: '@{key}_pool' }, tags: ['проверка'] },
-        value: { kind: 'formula', expr: `max(0, (@{key} > 0 ? @{key} + @{attribute} : ({untrained} ? @{attribute} - 1 : 0)) + ${PENALTY})` },
       } },
     ],
     rows: SKILLS.map(([tag, label, attribute, untrained]) => ({ value: label.toLowerCase(), key: tag, label, cells: { attribute, untrained } })),

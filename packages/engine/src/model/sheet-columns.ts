@@ -43,6 +43,24 @@ function deep(system: System, table: Table, row: TableRow, value: unknown): unkn
   return value;
 }
 
+const STORED = ['number', 'text', 'boolean', 'choice'];
+
+const ZERO: Record<string, unknown> = { number: 0, text: '', boolean: false, choice: '' };
+
+export function columnValue(column: TableColumn, own?: unknown): Loose {
+  if (column.kind === 'expr') {
+    return { kind: 'formula', expr: own !== undefined && own !== '' ? String(own) : column.expr ?? '' };
+  }
+  const type = STORED.includes(column.kind ?? '') ? column.kind! : 'number';
+  return {
+    kind: 'stored', type,
+    ...(column.from ? { from: column.from } : {}),
+    default: column.start ?? ZERO[type],
+    ...(column.min !== undefined ? { min: column.min } : {}),
+    ...(column.max !== undefined ? { max: column.max } : {}),
+  };
+}
+
 export const cellTag = (system: System, tableId: string, row: TableRow, column: TableColumn): string => {
   const table = system.tables![tableId]!;
   return fill(system, table, row, String((column.sheet as Loose).tag));
@@ -56,8 +74,9 @@ export function tableFields(system: System, tableId: string): Field[] {
   for (const row of table.rows ?? []) {
     for (const column of columns) {
       const { tag, group, ...spec } = column.sheet as Loose;
+      const value = columnValue(column, (row.cells ?? {})[column.key]);
       out.push({
-        ...(deep(system, table, row, spec) as Loose),
+        ...(deep(system, table, row, { ...spec, value }) as Loose),
         tag: fill(system, table, row, String(tag)),
         ...(group || row.group ? { group: String(row.group ?? deep(system, table, row, group)) } : {}),
         cell: { table: tableId, row: rowKeyOf(row), column: column.key },

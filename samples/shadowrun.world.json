@@ -1723,22 +1723,21 @@
           {
             "key": "rank",
             "label": "Ранг",
+            "kind": "number",
+            "start": 0,
+            "min": 0,
+            "max": 10,
             "sheet": {
               "tag": "{key}",
               "label": "{label}",
-              "group": "Навыки",
-              "value": {
-                "kind": "stored",
-                "type": "number",
-                "default": 0,
-                "min": 0,
-                "max": 10
-              }
+              "group": "Навыки"
             }
           },
           {
             "key": "pool",
             "label": "Набор",
+            "kind": "expr",
+            "expr": "max(0, (@{key} > 0 ? @{key} + @{attribute} : ({untrained} ? @{attribute} - 1 : 0)) + @wound_mod + @condition_mod)",
             "sheet": {
               "tag": "{key}_pool",
               "label": "{label}: набор",
@@ -1754,10 +1753,6 @@
                 "tags": [
                   "проверка"
                 ]
-              },
-              "value": {
-                "kind": "formula",
-                "expr": "max(0, (@{key} > 0 ? @{key} + @{attribute} : ({untrained} ? @{attribute} - 1 : 0)) + @wound_mod + @condition_mod)"
               }
             }
           }
