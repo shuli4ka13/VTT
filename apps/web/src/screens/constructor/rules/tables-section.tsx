@@ -1,7 +1,9 @@
 import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
 import { ROW, isFormulaCell, onSheet } from '@vtt/engine/model/sheet-columns';
-import { Card, CardHead, Field, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Empty, LabelInput } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Empty } from '../../../ui/primitives.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
+import { ColumnCard } from './column-card.tsx';
+import type { ColumnPatch } from './column-card.tsx';
 import { SheetGrid } from '../../../ui/sheet-grid.tsx';
 import { FieldRow } from '../../../ui/field-row.tsx';
 import type { GridColumn } from '../../../ui/sheet-grid.tsx';
@@ -155,7 +157,7 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
       {broken ? <Verdict tone="warn">диапазоны перекрываются или дырявы</Verdict> : null}
 
       {picked && columns.some(c => c.key === picked) ? (
-        <ColumnCard id={id} table={table} column={columns.find(c => c.key === picked)!} system={system} edit={edit} onClose={() => setPicked(null)} />
+        <TableColumnCard id={id} table={table} column={columns.find(c => c.key === picked)!} system={system} edit={edit} onClose={() => setPicked(null)} />
       ) : null}
 
       <Rows id={id} table={table} system={system} edit={edit} editSystem={editSystem} picked={picked} onPick={setPicked} />
@@ -181,7 +183,7 @@ export function rowNames(system: System, tableId: string): Map<string, string> {
 const kindLabel = (column: TableColumn): string =>
   `${kindWord(column.kind)}${column.expr !== undefined ? ' · формула' : ''}`;
 
-function ColumnCard({ id, table, column, system, edit, onClose }: {
+function TableColumnCard({ id, table, column, system, edit, onClose }: {
   id: string;
   table: Table;
   column: TableColumn;
@@ -189,89 +191,49 @@ function ColumnCard({ id, table, column, system, edit, onClose }: {
   edit: (change: (draft: Table) => void) => void;
   onClose: () => void;
 }) {
-  const others = Object.entries(system.tables ?? {}).filter(([key]) => key !== id);
   const set = (change: (c: TableColumn) => void) => edit(draft => {
     const c = draft.columns?.find(x => x.key === column.key);
     if (c) change(c);
   });
+  const others = Object.entries(system.tables ?? {}).filter(([key]) => key !== id)
+    .map(([key, t]) => [key, t.label || key] as [string, string]);
   const name = column.label || column.key;
 
   return (
-    <Card>
-      <CardHead
-        title={<LabelInput value={column.label ?? ''} placeholder="как зовётся колонка" onCommit={next => set(c => { c.label = next; })} />}
-        actions={<>
-          <DangerButton size="sm" onConfirm={() => {
-            edit(draft => {
-              draft.columns = (draft.columns ?? []).filter(c => c.key !== column.key);
-              for (const row of draft.rows ?? []) delete row.cells?.[column.key];
-              delete draft.sheet?.columns?.[column.key];
-            });
-            onClose();
-          }}>Удалить</DangerButton>
-          <Button size="sm" variant="ghost" title="свернуть" onClick={onClose}>×</Button>
-        </>}
-      />
-      <div className="row">
-        <Field label="Тип">
-          <Select
-            value={column.kind ?? 'text'}
-            options={COLUMN_KINDS as never}
-            onChange={next => set(c => {
-              c.kind = next as NonNullable<TableColumn['kind']>;
-              if (next !== 'choice') { delete c.from; delete c.many; }
-            })}
-          />
-        </Field>
-        {column.kind === 'choice' ? (
-          <>
-            <Field label="Из таблицы">
-              <Select
-                value={column.from ?? ''}
-                options={[['', '— какая —'], ...others.map(([key, t]) => [key, t.label || key] as const)] as never}
-                onChange={next => set(c => { if (next) c.from = next; else delete c.from; })}
-              />
-            </Field>
-            <Field label="Сколько значений">
-              <Select
-                value={column.many ? 'many' : 'one'}
-                options={[['one', 'одно'], ['many', 'несколько']] as const}
-                onChange={next => set(c => { if (next === 'many') c.many = true; else delete c.many; })}
-              />
-            </Field>
-          </>
-        ) : null}
-      </div>
-      <Field label="Формула для всех строк">
-        <FormulaField
-          value={column.expr ?? ''}
-          system={system}
-          where={`${table.label || id} · ${name}`}
-          extraNames={rowNames(system, id)}
-          placeholder="нет — у строк свои значения"
-          onChange={next => set(c => { if (next.trim()) c.expr = next; else delete c.expr; })}
-        />
-      </Field>
-      {column.kind === 'number' ? (
-        <Fold title="ещё">
-          <div className="row">
-            <Field label="Не ниже">
-              <Input mono value={column.min === undefined ? '' : String(column.min)}
-                onChange={text => set(c => {
-                  if (!text.trim()) delete c.min; else c.min = /^-?\d+$/.test(text) ? Number(text) : text;
-                })} />
-            </Field>
-            <Field label="Не выше">
-              <Input mono value={column.max === undefined ? '' : String(column.max)}
-                onChange={text => set(c => {
-                  if (!text.trim()) delete c.max; else c.max = /^-?\d+$/.test(text) ? Number(text) : text;
-                })} />
-            </Field>
-          </div>
-        </Fold>
-      ) : null}
-    </Card>
+    <ColumnCard
+      column={{ label: column.label ?? '', kind: column.kind ?? 'text', from: column.from, many: column.many, expr: column.expr, min: column.min, max: column.max }}
+      kinds={COLUMN_KINDS}
+      tables={others}
+      many
+      formulaHint="Формула для всех строк"
+      where={`${table.label || id} · ${name}`}
+      names={rowNames(system, id)}
+      system={system}
+      onChange={patch => set(c => applyPatch(c, patch))}
+      onDelete={() => {
+        edit(draft => {
+          draft.columns = (draft.columns ?? []).filter(c => c.key !== column.key);
+          for (const row of draft.rows ?? []) delete row.cells?.[column.key];
+          delete draft.sheet?.columns?.[column.key];
+        });
+        onClose();
+      }}
+      onClose={onClose}
+    />
   );
+}
+
+function applyPatch(c: TableColumn, patch: ColumnPatch): void {
+  if (patch.label !== undefined) c.label = patch.label;
+  if (patch.kind !== undefined) {
+    c.kind = patch.kind;
+    if (patch.kind !== 'choice') { delete c.from; delete c.many; }
+  }
+  if (patch.from !== undefined) { if (patch.from) c.from = patch.from; else delete c.from; }
+  if (patch.many !== undefined) { if (patch.many) c.many = true; else delete c.many; }
+  if (patch.expr !== undefined) { if (patch.expr !== null) c.expr = patch.expr; else delete c.expr; }
+  if (patch.min !== undefined) { if (patch.min !== null) c.min = patch.min; else delete c.min; }
+  if (patch.max !== undefined) { if (patch.max !== null) c.max = patch.max; else delete c.max; }
 }
 
 const defaultWidth = (column?: TableColumn): number =>

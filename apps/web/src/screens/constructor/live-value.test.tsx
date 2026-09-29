@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, cleanup, act } from '@testing-library/react';
 import { useWorld, emptySystem } from '../../store/world.ts';
-import { SheetTab } from './sheet-tab.tsx';
+import { RulesTab } from './rules/rules-tab.tsx';
 import type { System } from '@vtt/schema';
 
 const system = (): System => ({
@@ -13,14 +13,14 @@ const system = (): System => ({
   ],
 } as System);
 
-describe('живое значение под формулой', () => {
+describe('живое значение под формулой колонки персонажа', () => {
   beforeEach(() => {
     useWorld.setState(state => ({ ...state, system: system(), activeFieldTag: 'мод', activeGroupName: null }));
   });
   afterEach(() => { cleanup(); });
 
   it('считает формулу на манекене, пересказывает её словами и называет зависимости', () => {
-    render(<SheetTab />);
+    render(<RulesTab />);
     expect(document.body.textContent).toContain('= 2');
     expect(document.body.textContent).toContain('(Сила - 10) / 2');
     expect(screen.getByText('Зависит от:')).toBeTruthy();
@@ -28,7 +28,7 @@ describe('живое значение под формулой', () => {
   });
 
   it('правка формулы меняет «= N» сразу', () => {
-    render(<SheetTab />);
+    render(<RulesTab />);
     expect(document.body.textContent).toContain('= 2');
 
     act(() => {
@@ -40,7 +40,7 @@ describe('живое значение под формулой', () => {
   });
 
   it('сломанная формула не роняет экран, а показывает прочерк', () => {
-    render(<SheetTab />);
+    render(<RulesTab />);
     act(() => {
       useWorld.getState().editField('мод', draft => {
         if (draft.value.kind === 'formula') draft.value.expr = '#нет_такого + 1';

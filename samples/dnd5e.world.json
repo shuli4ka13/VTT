@@ -334,255 +334,12 @@
         "control": "stepper"
       },
       {
-        "tag": "stats.prof_bonus.value",
+        "tag": "prof_bonus",
         "label": "Бонус мастерства",
         "group": "Прогрессия",
         "value": {
           "kind": "formula",
           "expr": "таблица(\"levels\", @level, \"prof\")"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "prof_bonus",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.initiative.value",
-        "label": "Инициатива",
-        "group": "Чувства и движение",
-        "roll": {
-          "label": "Инициатива",
-          "tags": [
-            "проверка",
-            "ловкость",
-            "инициатива"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@stats.initiative.value"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.dex.mod"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "initiative",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.passive_perception.value",
-        "label": "Пассивная внимательность",
-        "group": "Чувства и движение",
-        "value": {
-          "kind": "formula",
-          "expr": "10 + @skills.perception.total"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "passive_perception",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.speed.value",
-        "label": "Скорость, футов",
-        "group": "Чувства и движение",
-        "value": {
-          "kind": "formula",
-          "expr": "или(@race.speed, 30)"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "speed",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.ac_dex.value",
-        "label": "Ловкость в классе брони",
-        "group": "Защита",
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.dex.mod"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "ac_dex",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.ac.value",
-        "label": "Класс брони",
-        "group": "Защита",
-        "value": {
-          "kind": "formula",
-          "expr": "@ac_base + если(@armor_heavy, 0, @stats.ac_dex.value)"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "ac",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.hit_die.value",
-        "label": "Кость хитов",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "или(@class_name.hit_die, @race.size.hit_die, \"1к8\")"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "hit_die",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.down.value",
-        "label": "Без сил",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "@hp_current <= 0"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "down",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.up.value",
-        "label": "На ногах",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "@hp_current > 0"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "up",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.is_dead.value",
-        "label": "Три провала",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "@death_fail >= 3"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "is_dead",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.is_stable.value",
-        "label": "Три успеха",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "@death_ok >= 3"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "is_stable",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.sneak_dice.value",
-        "label": "Костей скрытой атаки",
-        "group": "Атака",
-        "value": {
-          "kind": "formula",
-          "expr": "округлить вверх(@level / 2)"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "sneak_dice",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.spell_mod.value",
-        "label": "Заклинательный модификатор",
-        "group": "Магия",
-        "value": {
-          "kind": "formula",
-          "expr": "или(@class_name.spell_ability.mod, @abilities.cha.mod)"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "spell_mod",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.spell_dc.value",
-        "label": "Сложность заклинаний",
-        "group": "Магия",
-        "value": {
-          "kind": "formula",
-          "expr": "8 + @stats.prof_bonus.value + @stats.spell_mod.value"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "spell_dc",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.spell_attack.value",
-        "label": "Атака заклинанием",
-        "group": "Магия",
-        "value": {
-          "kind": "formula",
-          "expr": "@stats.prof_bonus.value + @stats.spell_mod.value"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "spell_attack",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.cantrip_dice.value",
-        "label": "Костей заговора",
-        "group": "Магия",
-        "value": {
-          "kind": "formula",
-          "expr": "таблица(\"levels\", @level, \"cantrips\")"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "cantrip_dice",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.rage_damage.value",
-        "label": "Урон ярости",
-        "group": "Ресурсы класса",
-        "value": {
-          "kind": "formula",
-          "expr": "таблица(\"levels\", @level, \"rage\")"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "rage_damage",
-          "column": "value"
         }
       },
       {
@@ -660,7 +417,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.str.mod + @saves.str.prof * @stats.prof_bonus.value"
+          "expr": "@abilities.str.mod + @saves.str.prof * @prof_bonus"
         },
         "cell": {
           "table": "saves",
@@ -719,7 +476,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.dex.mod + @saves.dex.prof * @stats.prof_bonus.value"
+          "expr": "@abilities.dex.mod + @saves.dex.prof * @prof_bonus"
         },
         "cell": {
           "table": "saves",
@@ -778,7 +535,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.con.mod + @saves.con.prof * @stats.prof_bonus.value"
+          "expr": "@abilities.con.mod + @saves.con.prof * @prof_bonus"
         },
         "cell": {
           "table": "saves",
@@ -837,7 +594,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.int.mod + @saves.int.prof * @stats.prof_bonus.value"
+          "expr": "@abilities.int.mod + @saves.int.prof * @prof_bonus"
         },
         "cell": {
           "table": "saves",
@@ -896,7 +653,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.wis.mod + @saves.wis.prof * @stats.prof_bonus.value"
+          "expr": "@abilities.wis.mod + @saves.wis.prof * @prof_bonus"
         },
         "cell": {
           "table": "saves",
@@ -955,7 +712,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.cha.mod + @saves.cha.prof * @stats.prof_bonus.value"
+          "expr": "@abilities.cha.mod + @saves.cha.prof * @prof_bonus"
         },
         "cell": {
           "table": "saves",
@@ -1001,7 +758,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.str.mod + @skills.athletics.prof * @stats.prof_bonus.value"
+          "expr": "@abilities.str.mod + @skills.athletics.prof * @prof_bonus"
         },
         "cell": {
           "table": "skills",
@@ -1047,7 +804,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.dex.mod + @skills.acrobatics.prof * @stats.prof_bonus.value"
+          "expr": "@abilities.dex.mod + @skills.acrobatics.prof * @prof_bonus"
         },
         "cell": {
           "table": "skills",
@@ -1093,7 +850,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.dex.mod + @skills.sleight_of_hand.prof * @stats.prof_bonus.value"
+          "expr": "@abilities.dex.mod + @skills.sleight_of_hand.prof * @prof_bonus"
         },
         "cell": {
           "table": "skills",
@@ -1139,7 +896,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.dex.mod + @skills.stealth.prof * @stats.prof_bonus.value"
+          "expr": "@abilities.dex.mod + @skills.stealth.prof * @prof_bonus"
         },
         "cell": {
           "table": "skills",
@@ -1185,7 +942,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.int.mod + @skills.arcana.prof * @stats.prof_bonus.value"
+          "expr": "@abilities.int.mod + @skills.arcana.prof * @prof_bonus"
         },
         "cell": {
           "table": "skills",
@@ -1231,7 +988,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.int.mod + @skills.history.prof * @stats.prof_bonus.value"
+          "expr": "@abilities.int.mod + @skills.history.prof * @prof_bonus"
         },
         "cell": {
           "table": "skills",
@@ -1277,7 +1034,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.int.mod + @skills.investigation.prof * @stats.prof_bonus.value"
+          "expr": "@abilities.int.mod + @skills.investigation.prof * @prof_bonus"
         },
         "cell": {
           "table": "skills",
@@ -1323,7 +1080,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.int.mod + @skills.nature.prof * @stats.prof_bonus.value"
+          "expr": "@abilities.int.mod + @skills.nature.prof * @prof_bonus"
         },
         "cell": {
           "table": "skills",
@@ -1369,7 +1126,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.int.mod + @skills.religion.prof * @stats.prof_bonus.value"
+          "expr": "@abilities.int.mod + @skills.religion.prof * @prof_bonus"
         },
         "cell": {
           "table": "skills",
@@ -1415,7 +1172,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.wis.mod + @skills.animal_handling.prof * @stats.prof_bonus.value"
+          "expr": "@abilities.wis.mod + @skills.animal_handling.prof * @prof_bonus"
         },
         "cell": {
           "table": "skills",
@@ -1461,7 +1218,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.wis.mod + @skills.insight.prof * @stats.prof_bonus.value"
+          "expr": "@abilities.wis.mod + @skills.insight.prof * @prof_bonus"
         },
         "cell": {
           "table": "skills",
@@ -1507,7 +1264,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.wis.mod + @skills.medicine.prof * @stats.prof_bonus.value"
+          "expr": "@abilities.wis.mod + @skills.medicine.prof * @prof_bonus"
         },
         "cell": {
           "table": "skills",
@@ -1553,7 +1310,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.wis.mod + @skills.perception.prof * @stats.prof_bonus.value"
+          "expr": "@abilities.wis.mod + @skills.perception.prof * @prof_bonus"
         },
         "cell": {
           "table": "skills",
@@ -1599,7 +1356,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.wis.mod + @skills.survival.prof * @stats.prof_bonus.value"
+          "expr": "@abilities.wis.mod + @skills.survival.prof * @prof_bonus"
         },
         "cell": {
           "table": "skills",
@@ -1645,7 +1402,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.cha.mod + @skills.deception.prof * @stats.prof_bonus.value"
+          "expr": "@abilities.cha.mod + @skills.deception.prof * @prof_bonus"
         },
         "cell": {
           "table": "skills",
@@ -1691,7 +1448,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.cha.mod + @skills.intimidation.prof * @stats.prof_bonus.value"
+          "expr": "@abilities.cha.mod + @skills.intimidation.prof * @prof_bonus"
         },
         "cell": {
           "table": "skills",
@@ -1737,7 +1494,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.cha.mod + @skills.performance.prof * @stats.prof_bonus.value"
+          "expr": "@abilities.cha.mod + @skills.performance.prof * @prof_bonus"
         },
         "cell": {
           "table": "skills",
@@ -1783,12 +1540,53 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.cha.mod + @skills.persuasion.prof * @stats.prof_bonus.value"
+          "expr": "@abilities.cha.mod + @skills.persuasion.prof * @prof_bonus"
         },
         "cell": {
           "table": "skills",
           "row": "persuasion",
           "column": "total"
+        }
+      },
+      {
+        "tag": "initiative",
+        "label": "Инициатива",
+        "group": "Чувства и движение",
+        "roll": {
+          "label": "Инициатива",
+          "tags": [
+            "проверка",
+            "ловкость",
+            "инициатива"
+          ],
+          "die": {
+            "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@initiative"
+          }
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "@abilities.dex.mod"
+        }
+      },
+      {
+        "tag": "passive_perception",
+        "label": "Пассивная внимательность",
+        "group": "Чувства и движение",
+        "value": {
+          "kind": "formula",
+          "expr": "10 + @skills.perception.total"
+        }
+      },
+      {
+        "tag": "speed",
+        "label": "Скорость, футов",
+        "group": "Чувства и движение",
+        "value": {
+          "kind": "formula",
+          "expr": "или(@race.speed, 30)"
         }
       },
       {
@@ -1835,6 +1633,24 @@
         "control": "toggle"
       },
       {
+        "tag": "ac_dex",
+        "label": "Ловкость в классе брони",
+        "group": "Защита",
+        "value": {
+          "kind": "formula",
+          "expr": "@abilities.dex.mod"
+        }
+      },
+      {
+        "tag": "ac",
+        "label": "Класс брони",
+        "group": "Защита",
+        "value": {
+          "kind": "formula",
+          "expr": "@ac_base + если(@armor_heavy, 0, @ac_dex)"
+        }
+      },
+      {
         "tag": "hp_max",
         "label": "Максимум хитов",
         "group": "Здоровье",
@@ -1869,6 +1685,15 @@
           "min": 0
         },
         "control": "stepper"
+      },
+      {
+        "tag": "hit_die",
+        "label": "Кость хитов",
+        "group": "Здоровье",
+        "value": {
+          "kind": "formula",
+          "expr": "или(@class_name.hit_die, @race.size.hit_die, \"1к8\")"
+        }
       },
       {
         "tag": "hit_dice_left",
@@ -1921,6 +1746,42 @@
           "max": 6
         },
         "control": "stepper"
+      },
+      {
+        "tag": "down",
+        "label": "Без сил",
+        "group": "Здоровье",
+        "value": {
+          "kind": "formula",
+          "expr": "@hp_current <= 0"
+        }
+      },
+      {
+        "tag": "up",
+        "label": "На ногах",
+        "group": "Здоровье",
+        "value": {
+          "kind": "formula",
+          "expr": "@hp_current > 0"
+        }
+      },
+      {
+        "tag": "is_dead",
+        "label": "Три провала",
+        "group": "Здоровье",
+        "value": {
+          "kind": "formula",
+          "expr": "@death_fail >= 3"
+        }
+      },
+      {
+        "tag": "is_stable",
+        "label": "Три успеха",
+        "group": "Здоровье",
+        "value": {
+          "kind": "formula",
+          "expr": "@death_ok >= 3"
+        }
       },
       {
         "tag": "attacks_per_action",
@@ -2027,6 +1888,42 @@
         }
       },
       {
+        "tag": "sneak_dice",
+        "label": "Костей скрытой атаки",
+        "group": "Атака",
+        "value": {
+          "kind": "formula",
+          "expr": "округлить вверх(@level / 2)"
+        }
+      },
+      {
+        "tag": "spell_mod",
+        "label": "Заклинательный модификатор",
+        "group": "Магия",
+        "value": {
+          "kind": "formula",
+          "expr": "или(@class_name.spell_ability.mod, @abilities.cha.mod)"
+        }
+      },
+      {
+        "tag": "spell_dc",
+        "label": "Сложность заклинаний",
+        "group": "Магия",
+        "value": {
+          "kind": "formula",
+          "expr": "8 + @prof_bonus + @spell_mod"
+        }
+      },
+      {
+        "tag": "spell_attack",
+        "label": "Атака заклинанием",
+        "group": "Магия",
+        "value": {
+          "kind": "formula",
+          "expr": "@prof_bonus + @spell_mod"
+        }
+      },
+      {
         "tag": "caster_level",
         "label": "Уровень заклинателя",
         "group": "Магия",
@@ -2038,6 +1935,15 @@
           "max": 20
         },
         "control": "stepper"
+      },
+      {
+        "tag": "cantrip_dice",
+        "label": "Костей заговора",
+        "group": "Магия",
+        "value": {
+          "kind": "formula",
+          "expr": "таблица(\"levels\", @level, \"cantrips\")"
+        }
       },
       {
         "tag": "slots.1.max",
@@ -2702,6 +2608,15 @@
         }
       },
       {
+        "tag": "rage_damage",
+        "label": "Урон ярости",
+        "group": "Ресурсы класса",
+        "value": {
+          "kind": "formula",
+          "expr": "таблица(\"levels\", @level, \"rage\")"
+        }
+      },
+      {
         "tag": "superiority_die",
         "label": "Кость превосходства",
         "group": "Ресурсы класса",
@@ -3000,214 +2915,6 @@
       }
     },
     "tables": {
-      "stats": {
-        "label": "Показатели",
-        "key": "word",
-        "columns": [
-          {
-            "key": "value",
-            "label": "Значение",
-            "kind": "number"
-          }
-        ],
-        "rows": [
-          {
-            "value": "prof_bonus",
-            "label": "Бонус мастерства",
-            "group": "Прогрессия",
-            "cells": {
-              "value": {
-                "expr": "таблица(\"levels\", @level, \"prof\")"
-              }
-            }
-          },
-          {
-            "value": "initiative",
-            "label": "Инициатива",
-            "group": "Чувства и движение",
-            "cells": {
-              "value": {
-                "expr": "@abilities.dex.mod"
-              }
-            }
-          },
-          {
-            "value": "passive_perception",
-            "label": "Пассивная внимательность",
-            "group": "Чувства и движение",
-            "cells": {
-              "value": {
-                "expr": "10 + @skills.perception.total"
-              }
-            }
-          },
-          {
-            "value": "speed",
-            "label": "Скорость, футов",
-            "group": "Чувства и движение",
-            "cells": {
-              "value": {
-                "expr": "или(@race.speed, 30)"
-              }
-            }
-          },
-          {
-            "value": "ac_dex",
-            "label": "Ловкость в классе брони",
-            "group": "Защита",
-            "cells": {
-              "value": {
-                "expr": "@abilities.dex.mod"
-              }
-            }
-          },
-          {
-            "value": "ac",
-            "label": "Класс брони",
-            "group": "Защита",
-            "cells": {
-              "value": {
-                "expr": "@ac_base + если(@armor_heavy, 0, @stats.ac_dex.value)"
-              }
-            }
-          },
-          {
-            "value": "hit_die",
-            "label": "Кость хитов",
-            "group": "Здоровье",
-            "cells": {
-              "value": {
-                "expr": "или(@class_name.hit_die, @race.size.hit_die, \"1к8\")"
-              }
-            }
-          },
-          {
-            "value": "down",
-            "label": "Без сил",
-            "group": "Здоровье",
-            "cells": {
-              "value": {
-                "expr": "@hp_current <= 0"
-              }
-            }
-          },
-          {
-            "value": "up",
-            "label": "На ногах",
-            "group": "Здоровье",
-            "cells": {
-              "value": {
-                "expr": "@hp_current > 0"
-              }
-            }
-          },
-          {
-            "value": "is_dead",
-            "label": "Три провала",
-            "group": "Здоровье",
-            "cells": {
-              "value": {
-                "expr": "@death_fail >= 3"
-              }
-            }
-          },
-          {
-            "value": "is_stable",
-            "label": "Три успеха",
-            "group": "Здоровье",
-            "cells": {
-              "value": {
-                "expr": "@death_ok >= 3"
-              }
-            }
-          },
-          {
-            "value": "sneak_dice",
-            "label": "Костей скрытой атаки",
-            "group": "Атака",
-            "cells": {
-              "value": {
-                "expr": "округлить вверх(@level / 2)"
-              }
-            }
-          },
-          {
-            "value": "spell_mod",
-            "label": "Заклинательный модификатор",
-            "group": "Магия",
-            "cells": {
-              "value": {
-                "expr": "или(@class_name.spell_ability.mod, @abilities.cha.mod)"
-              }
-            }
-          },
-          {
-            "value": "spell_dc",
-            "label": "Сложность заклинаний",
-            "group": "Магия",
-            "cells": {
-              "value": {
-                "expr": "8 + @stats.prof_bonus.value + @stats.spell_mod.value"
-              }
-            }
-          },
-          {
-            "value": "spell_attack",
-            "label": "Атака заклинанием",
-            "group": "Магия",
-            "cells": {
-              "value": {
-                "expr": "@stats.prof_bonus.value + @stats.spell_mod.value"
-              }
-            }
-          },
-          {
-            "value": "cantrip_dice",
-            "label": "Костей заговора",
-            "group": "Магия",
-            "cells": {
-              "value": {
-                "expr": "таблица(\"levels\", @level, \"cantrips\")"
-              }
-            }
-          },
-          {
-            "value": "rage_damage",
-            "label": "Урон ярости",
-            "group": "Ресурсы класса",
-            "cells": {
-              "value": {
-                "expr": "таблица(\"levels\", @level, \"rage\")"
-              }
-            }
-          }
-        ],
-        "sheet": {
-          "columns": {
-            "value": {
-              "label": "{label}"
-            }
-          },
-          "cells": {
-            "initiative.value": {
-              "roll": {
-                "label": "Инициатива",
-                "tags": [
-                  "проверка",
-                  "ловкость",
-                  "инициатива"
-                ],
-                "die": {
-                  "constant": "lead_die"
-                },
-                "bonus": {
-                  "expr": "@строка.value"
-                }
-              }
-            }
-          }
-        }
-      },
       "slots": {
         "label": "Ячейки по кругам",
         "key": "word",
@@ -4070,7 +3777,7 @@
             "value": "ближний бой — Сила",
             "cells": {
               "attack": {
-                "expr": "@abilities.str.mod + @stats.prof_bonus.value"
+                "expr": "@abilities.str.mod + @prof_bonus"
               },
               "damage": {
                 "expr": "@abilities.str.mod"
@@ -4081,7 +3788,7 @@
             "value": "фехтовальное — Сила или Ловкость",
             "cells": {
               "attack": {
-                "expr": "большее из(@abilities.str.mod, @abilities.dex.mod) + @stats.prof_bonus.value"
+                "expr": "большее из(@abilities.str.mod, @abilities.dex.mod) + @prof_bonus"
               },
               "damage": {
                 "expr": "большее из(@abilities.str.mod, @abilities.dex.mod)"
@@ -4092,7 +3799,7 @@
             "value": "дальний бой — Ловкость",
             "cells": {
               "attack": {
-                "expr": "@abilities.dex.mod + @stats.prof_bonus.value"
+                "expr": "@abilities.dex.mod + @prof_bonus"
               },
               "damage": {
                 "expr": "@abilities.dex.mod"
@@ -4247,7 +3954,7 @@
             "key": "save",
             "label": "Спасбросок",
             "kind": "number",
-            "expr": "@строка.ability.mod + @строка.prof * @stats.prof_bonus.value"
+            "expr": "@строка.ability.mod + @строка.prof * @prof_bonus"
           }
         ],
         "rows": [
@@ -4353,7 +4060,7 @@
             "key": "total",
             "label": "Навык",
             "kind": "number",
-            "expr": "@строка.ability.mod + @строка.prof * @stats.prof_bonus.value"
+            "expr": "@строка.ability.mod + @строка.prof * @prof_bonus"
           }
         ],
         "rows": [
@@ -4997,7 +4704,7 @@
         "constant": "lead_die"
       },
       "bonus": {
-        "expr": "@stats.initiative.value"
+        "expr": "@initiative"
       },
       "tags": [
         "проверка",
@@ -5056,7 +4763,7 @@
               ]
             },
             "versus": {
-              "expr": "@получатель.stats.ac.value"
+              "expr": "@получатель.ac"
             }
           },
           {
@@ -5151,7 +4858,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть('1d6', @отправитель.stats.sneak_dice.value)"
+              "expr": "кинуть('1d6', @отправитель.sneak_dice)"
             }
           },
           {
@@ -5476,14 +5183,14 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "@отправитель.stats.spell_attack.value"
+                "expr": "@отправитель.spell_attack"
               },
               "tags": [
                 "атака"
               ]
             },
             "versus": {
-              "expr": "@получатель.stats.ac.value"
+              "expr": "@получатель.ac"
             }
           },
           {
@@ -5491,7 +5198,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть(@damage_die, ((@отправитель.stats.cantrip_dice.value) * (если(@hit.natural >= @отправитель.crit_from, 2, 1))))"
+              "expr": "кинуть(@damage_die, ((@отправитель.cantrip_dice) * (если(@hit.natural >= @отправитель.crit_from, 2, 1))))"
             }
           },
           {
@@ -5568,7 +5275,7 @@
               ]
             },
             "versus": {
-              "expr": "@отправитель.stats.spell_dc.value"
+              "expr": "@отправитель.spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -5578,7 +5285,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть(@damage_die, @отправитель.stats.cantrip_dice.value)"
+              "expr": "кинуть(@damage_die, @отправитель.cantrip_dice)"
             }
           },
           {
@@ -5671,14 +5378,14 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "@отправитель.stats.spell_attack.value"
+                "expr": "@отправитель.spell_attack"
               },
               "tags": [
                 "атака"
               ]
             },
             "versus": {
-              "expr": "@получатель.stats.ac.value"
+              "expr": "@получатель.ac"
             }
           },
           {
@@ -5776,7 +5483,7 @@
               ]
             },
             "versus": {
-              "expr": "@отправитель.stats.spell_dc.value"
+              "expr": "@отправитель.spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "always"
@@ -5882,7 +5589,7 @@
               ]
             },
             "versus": {
-              "expr": "@отправитель.stats.spell_dc.value"
+              "expr": "@отправитель.spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -6033,7 +5740,7 @@
               ]
             },
             "versus": {
-              "expr": "@отправитель.stats.spell_dc.value"
+              "expr": "@отправитель.spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -6045,7 +5752,7 @@
               "param": "status"
             },
             "carry": {
-              "expr": "@отправитель.stats.spell_dc.value"
+              "expr": "@отправитель.spell_dc"
             }
           }
         ],
@@ -6097,7 +5804,7 @@
               ]
             },
             "versus": {
-              "expr": "@отправитель.stats.spell_dc.value"
+              "expr": "@отправитель.spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -6109,7 +5816,7 @@
               "param": "status"
             },
             "carry": {
-              "expr": "@отправитель.stats.spell_dc.value"
+              "expr": "@отправитель.spell_dc"
             }
           }
         ],
@@ -6220,7 +5927,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть(@heal_die, (@dice_count + (@slot - @spell_level) * @dice_up)) + @отправитель.stats.spell_mod.value"
+              "expr": "кинуть(@heal_die, (@dice_count + (@slot - @spell_level) * @dice_up)) + @отправитель.spell_mod"
             }
           },
           {
@@ -6608,7 +6315,7 @@
               ]
             },
             "versus": {
-              "expr": "@отправитель.stats.spell_dc.value"
+              "expr": "@отправитель.spell_dc"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -6703,7 +6410,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "stats.speed.value",
+            "target": "speed",
             "op": "mul",
             "value": {
               "expr": "2"
@@ -6752,7 +6459,7 @@
               ]
             },
             "versus": {
-              "expr": "@получатель.stats.passive_perception.value"
+              "expr": "@получатель.passive_perception"
             },
             "successWhen": "atLeast",
             "continueOn": "success"
@@ -6878,7 +6585,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть(@отправитель.stats.hit_die.value) + @отправитель.abilities.con.mod"
+              "expr": "кинуть(@отправитель.hit_die) + @отправитель.abilities.con.mod"
             }
           },
           {
@@ -6988,7 +6695,7 @@
                   ]
                 },
                 "versus": {
-                  "expr": "@отправитель.stats.spell_dc.value"
+                  "expr": "@отправитель.spell_dc"
                 },
                 "successWhen": "atLeast",
                 "continueOn": "always"
@@ -7333,7 +7040,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "stats.speed.value",
+            "target": "speed",
             "op": "set",
             "value": {
               "expr": "0"
@@ -7428,7 +7135,7 @@
           },
           {
             "kind": "value",
-            "target": "stats.speed.value",
+            "target": "speed",
             "op": "set",
             "value": {
               "expr": "0"
@@ -7516,7 +7223,7 @@
           },
           {
             "kind": "value",
-            "target": "stats.speed.value",
+            "target": "speed",
             "op": "set",
             "value": {
               "expr": "0"
@@ -7605,7 +7312,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "stats.speed.value",
+            "target": "speed",
             "op": "set",
             "value": {
               "expr": "0"
@@ -7756,7 +7463,7 @@
           },
           {
             "kind": "value",
-            "target": "stats.speed.value",
+            "target": "speed",
             "op": "set",
             "value": {
               "expr": "0"
@@ -7810,7 +7517,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "stats.speed.value",
+            "target": "speed",
             "op": "set",
             "value": {
               "expr": "0"
@@ -7896,7 +7603,7 @@
             "target": "cell:wield.ближний бой — Сила.damage",
             "op": "add",
             "value": {
-              "expr": "@stats.rage_damage.value"
+              "expr": "@rage_damage"
             },
             "stacking": "sum"
           },
@@ -7938,7 +7645,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "stats.ac.value",
+            "target": "ac",
             "op": "add",
             "value": {
               "expr": "5"
@@ -8090,7 +7797,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "stats.ac.value",
+            "target": "ac",
             "op": "add",
             "value": {
               "expr": "2"
@@ -8099,7 +7806,7 @@
           },
           {
             "kind": "value",
-            "target": "stats.speed.value",
+            "target": "speed",
             "op": "mul",
             "value": {
               "expr": "2"
@@ -8129,7 +7836,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "stats.ac.value",
+            "target": "ac",
             "op": "add",
             "value": {
               "expr": "-2"
@@ -8138,7 +7845,7 @@
           },
           {
             "kind": "value",
-            "target": "stats.speed.value",
+            "target": "speed",
             "op": "mul",
             "value": {
               "expr": "0.5"
@@ -8458,7 +8165,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "stats.ac.value",
+            "target": "ac",
             "op": "add",
             "value": {
               "expr": "1"
@@ -8719,7 +8426,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "stats.initiative.value",
+            "target": "initiative",
             "op": "add",
             "value": {
               "expr": "5"
@@ -8761,7 +8468,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "stats.speed.value",
+            "target": "speed",
             "op": "add",
             "value": {
               "expr": "10"
@@ -8782,7 +8489,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "stats.passive_perception.value",
+            "target": "passive_perception",
             "op": "add",
             "value": {
               "expr": "5"
@@ -8824,7 +8531,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "stats.ac.value",
+            "target": "ac",
             "op": "add",
             "value": {
               "expr": "1"
@@ -8994,7 +8701,7 @@
         "params": [],
         "on": [
           {
-            "on": "field:stats.down.value",
+            "on": "field:down",
             "steps": [
               {
                 "type": "status",
@@ -9025,7 +8732,7 @@
         "params": [],
         "on": [
           {
-            "on": "field:stats.up.value",
+            "on": "field:up",
             "steps": [
               {
                 "type": "status",
@@ -9112,7 +8819,7 @@
         "params": [],
         "on": [
           {
-            "on": "field:stats.is_dead.value",
+            "on": "field:is_dead",
             "steps": [
               {
                 "type": "status",
@@ -9143,7 +8850,7 @@
         "params": [],
         "on": [
           {
-            "on": "field:stats.is_stable.value",
+            "on": "field:is_stable",
             "steps": [
               {
                 "type": "status",
@@ -9174,7 +8881,7 @@
         "params": [],
         "on": [
           {
-            "on": "field:stats.down.value",
+            "on": "field:down",
             "steps": [
               {
                 "type": "compare",
@@ -9799,7 +9506,7 @@
           },
           {
             "kind": "value",
-            "target": "stats.speed.value",
+            "target": "speed",
             "op": "mul",
             "value": {
               "expr": "0.5"
@@ -9845,7 +9552,7 @@
           },
           {
             "kind": "value",
-            "target": "stats.speed.value",
+            "target": "speed",
             "op": "set",
             "value": {
               "expr": "0"
@@ -12039,7 +11746,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "stats.ac.value",
+            "target": "ac",
             "op": "add",
             "value": {
               "expr": "2"
@@ -12071,7 +11778,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "stats.ac.value",
+            "target": "ac",
             "op": "add",
             "value": {
               "expr": "1"
@@ -12131,7 +11838,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "stats.speed.value",
+            "target": "speed",
             "op": "mul",
             "value": {
               "expr": "2"
@@ -12183,7 +11890,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "stats.ac.value",
+            "target": "ac",
             "op": "add",
             "value": {
               "expr": "2"

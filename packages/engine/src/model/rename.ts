@@ -1,4 +1,4 @@
-import type { System, Compendium, Sheet, Field, Table } from './types.ts';
+import type { Sheet } from './types.ts';
 
 type Loose = Record<string, unknown>;
 
@@ -34,66 +34,3 @@ export const renameValues = <S extends Pick<Sheet, 'values'>>(sheet: S, map: Map
   ...sheet,
   values: Object.fromEntries(Object.entries(sheet.values ?? {}).map(([k, v]) => [map.get(k) ?? k, v])),
 });
-
-export const STATS_TABLE = 'stats';
-
-const freeKey = (taken: string[], base: string): string => {
-  let key = base;
-  for (let n = 2; taken.includes(key); n++) key = `${base}_${n}`;
-  return key;
-};
-
-export const movable = (field: Field): boolean =>
-  field.value.kind === 'formula' && !field.cell && !field.lives;
-
-const statsTable = (): Table => ({
-  label: 'Показатели', key: 'word',
-  columns: [{ key: 'value', label: 'Значение', kind: 'number' }],
-  rows: [],
-  sheet: {},
-});
-
-export function statsTableOf(system: System): string {
-  const fits = (table: Table | undefined) => Boolean(table?.sheet && (table.columns ?? []).some(c => c.key === 'value'));
-  if (fits(system.tables?.[STATS_TABLE])) return STATS_TABLE;
-  const own = Object.entries(system.tables ?? {}).find(([, table]) => table.label === 'Показатели' && fits(table));
-  return own ? own[0] : freeKey(Object.keys(system.tables ?? {}), STATS_TABLE);
-}
-
-export function moveToTable(
-  system: System, compendium: Compendium | null, tag: string,
-): { system: System; compendium: Compendium | null; address: string } | null {
-  const field = system.fields.find(f => f.tag === tag);
-  if (!field || !movable(field) || field.value.kind !== 'formula') return null;
-  const tableId = statsTableOf(system);
-  const address = `${tableId}.${tag}.value`;
-  const map = new Map([[tag, address]]);
-  const tables = { ...(system.tables ?? {}) };
-  const table: Table = JSON.parse(JSON.stringify(tables[tableId] ?? statsTable()));
-  const selfRef = new Map([[tag, 'строка.value']]);
-  (table.rows ??= []).push({
-    value: tag,
-    label: field.label,
-    ...(field.group ? { group: field.group } : {}),
-    cells: { value: { expr: field.value.expr } },
-  });
-  const view = { ...(field.roll ? { roll: renameDeep(field.roll, selfRef) } : {}), ...(field.control ? { control: field.control } : {}) };
-  if (Object.keys(view).length) (table.sheet ??= {}).cells = { ...table.sheet?.cells, [`${tag}.value`]: view };
-  tables[tableId] = table;
-  for (const [id, other] of Object.entries(tables)) {
-    const named = (other.columns ?? []).filter(c => c.kind === 'tag').map(c => c.key);
-    if (!named.some(key => (other.rows ?? []).some(row => (row.cells ?? {})[key] === tag))) continue;
-    tables[id] = {
-      ...other,
-      rows: (other.rows ?? []).map(row => (named.some(key => (row.cells ?? {})[key] === tag)
-        ? { ...row, cells: Object.fromEntries(Object.entries(row.cells ?? {}).map(([k, v]) => [k, named.includes(k) && v === tag ? address : v])) }
-        : row)),
-    };
-  }
-  const rest = { ...system, fields: system.fields.filter(f => f.tag !== tag), tables };
-  return {
-    system: renameDeep(rest, map),
-    compendium: compendium ? renameDeep(compendium, map) : null,
-    address,
-  };
-}

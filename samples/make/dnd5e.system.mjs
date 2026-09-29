@@ -226,10 +226,15 @@ const stored = (tag, label, group, type, def, extra = {}) => {
     ...(optionsFrom ? { optionsFrom } : {}),
   };
 };
+const formula = (tag, label, group, expr, roll) => ({
+  tag, label, group, ...(roll ? { roll: { ...roll, die: LEAD_DIE } } : {}), value: { kind: 'formula', expr },
+});
 const place = table => ({
   tag: `__${table}`, label: '', value: { kind: 'stored', type: 'number', default: 0 },
   cell: { table, row: '_', column: '_' },
 });
+const lookup = (tag, label, group, table, arg, column) =>
+  ({ tag, label, group, value: { kind: 'table', table, arg, ...(column ? { column } : {}) } });
 
 export function fields() {
   const out = [];
@@ -243,26 +248,36 @@ export function fields() {
   out.push(place('abilities'));
 
   out.push(stored('level', 'Уровень', 'Прогрессия', 'number', 1, { min: 1, max: 20, control: 'stepper' }));
-  out.push(place('stats'));
+  out.push(lookup('prof_bonus', 'Бонус мастерства', 'Прогрессия', 'levels', '@level', 'prof'));
   out.push(stored('inspiration', 'Вдохновение', 'Прогрессия', 'number', 0, { min: 0, max: 1, control: 'pips' }));
   out.push(stored('xp', 'Опыт', 'Прогрессия', 'number', 0, { min: 0 }));
 
   out.push(place('saves'));
   out.push(place('skills'));
 
+  out.push(formula('initiative', 'Инициатива', 'Чувства и движение', '@dex_mod', { label: 'Инициатива', tags: INITIATIVE_TAGS }));
+  out.push(formula('passive_perception', 'Пассивная внимательность', 'Чувства и движение', '10 + @perception'));
+  out.push(formula('speed', 'Скорость, футов', 'Чувства и движение', 'или(@race.speed, 30)'));
   out.push(stored('darkvision', 'Тёмное зрение, футов', 'Чувства и движение', 'number', 0, { min: 0 }));
   out.push(stored('languages', 'Языки', 'Чувства и движение', 'text', 'Общий'));
 
   out.push(stored('ac_base', 'База доспеха', 'Защита', 'number', 10, { min: 0 }));
   out.push(stored('armor_heavy', 'Доспех тяжёлый', 'Защита', 'boolean', false, { control: 'toggle' }));
+  out.push(formula('ac_dex', 'Ловкость в классе брони', 'Защита', '@dex_mod'));
+  out.push(formula('ac', 'Класс брони', 'Защита', '@ac_base + если(@armor_heavy, 0, @ac_dex)'));
 
   out.push(stored('hp_max', 'Максимум хитов', 'Здоровье', 'number', 8, { min: 1 }));
   out.push(stored('hp_current', 'Хиты', 'Здоровье', 'number', 8, { min: 0, max: '@hp_max', control: 'bar' }));
   out.push(stored('hp_temp', 'Временные хиты', 'Здоровье', 'number', 0, { min: 0, control: 'stepper' }));
+  out.push(formula('hit_die', 'Кость хитов', 'Здоровье', 'или(@class_name.hit_die, @race.size.hit_die, "1к8")'));
   out.push(stored('hit_dice_left', 'Костей хитов осталось', 'Здоровье', 'number', 1, { min: 0, max: '@level', control: 'stepper' }));
   out.push(stored('death_ok', 'Спасброски от смерти: успехи', 'Здоровье', 'number', 0, { min: 0, max: 3, control: 'pips' }));
   out.push(stored('death_fail', 'Спасброски от смерти: провалы', 'Здоровье', 'number', 0, { min: 0, max: 3, control: 'pips' }));
   out.push(stored('exhaustion', 'Истощение', 'Здоровье', 'number', 0, { min: 0, max: 6, control: 'stepper' }));
+  out.push(formula('down', 'Без сил', 'Здоровье', '@hp_current <= 0'));
+  out.push(formula('up', 'На ногах', 'Здоровье', '@hp_current > 0'));
+  out.push(formula('is_dead', 'Три провала', 'Здоровье', '@death_fail >= 3'));
+  out.push(formula('is_stable', 'Три успеха', 'Здоровье', '@death_ok >= 3'));
 
   out.push(stored('attacks_per_action', 'Атак за действие', 'Атака', 'number', 1, { min: 1, max: 4, control: 'stepper' }));
 
@@ -272,11 +287,17 @@ export function fields() {
   out.push(stored('turn_attacks', 'Атак осталось', 'В бою', 'number', 0, { min: 0, max: 4, control: 'pips' }));
   out.push({ ...stored('battle', 'Идёт бой', 'В бою', 'number', 0, { min: 0, max: 1, control: 'toggle' }), lives: 'desk' });
   out.push(stored('crit_from', 'Крит на костях от', 'Атака', 'number', 20, { min: 18, max: 20 }));
+  out.push(formula('sneak_dice', 'Костей скрытой атаки', 'Атака', 'округлить вверх(@level / 2)'));
 
+  out.push(formula('spell_mod', 'Заклинательный модификатор', 'Магия', 'или(@class_name.spell_ability.mod, @cha_mod)'));
+  out.push(formula('spell_dc', 'Сложность заклинаний', 'Магия', '8 + @prof_bonus + @spell_mod'));
+  out.push(formula('spell_attack', 'Атака заклинанием', 'Магия', '@prof_bonus + @spell_mod'));
   out.push(stored('caster_level', 'Уровень заклинателя', 'Магия', 'number', 0, { min: 0, max: 20, control: 'stepper' }));
+  out.push(lookup('cantrip_dice', 'Костей заговора', 'Магия', 'levels', '@level', 'cantrips'));
 
   out.push(place('slots'));
   out.push(place('resources'));
+  out.push(lookup('rage_damage', 'Урон ярости', 'Ресурсы класса', 'levels', '@level', 'rage'));
   out.push(stored('superiority_die', 'Кость превосходства', 'Ресурсы класса', 'text', '1к8', { control: 'die' }));
 
   for (const [tag, label] of [['gp', 'Золотые'], ['sp', 'Серебряные'], ['cp', 'Медные']]) {
@@ -340,34 +361,8 @@ const LEVELS = Array.from({ length: 20 }, (_, at) => at + 1);
 const step = (level, bounds) => bounds.find(([upTo]) => level <= upTo)[1];
 const CIRCLES = Array.from({ length: 9 }, (_, at) => at + 1);
 
-const STATS = [
-  ['prof_bonus', 'Бонус мастерства', 'Прогрессия', 'таблица("levels", @level, "prof")'],
-  ['initiative', 'Инициатива', 'Чувства и движение', '@dex_mod'],
-  ['passive_perception', 'Пассивная внимательность', 'Чувства и движение', '10 + @perception'],
-  ['speed', 'Скорость, футов', 'Чувства и движение', 'или(@race.speed, 30)'],
-  ['ac_dex', 'Ловкость в классе брони', 'Защита', '@dex_mod'],
-  ['ac', 'Класс брони', 'Защита', '@ac_base + если(@armor_heavy, 0, @ac_dex)'],
-  ['hit_die', 'Кость хитов', 'Здоровье', 'или(@class_name.hit_die, @race.size.hit_die, "1к8")'],
-  ['down', 'Без сил', 'Здоровье', '@hp_current <= 0'],
-  ['up', 'На ногах', 'Здоровье', '@hp_current > 0'],
-  ['is_dead', 'Три провала', 'Здоровье', '@death_fail >= 3'],
-  ['is_stable', 'Три успеха', 'Здоровье', '@death_ok >= 3'],
-  ['sneak_dice', 'Костей скрытой атаки', 'Атака', 'округлить вверх(@level / 2)'],
-  ['spell_mod', 'Заклинательный модификатор', 'Магия', 'или(@class_name.spell_ability.mod, @cha_mod)'],
-  ['spell_dc', 'Сложность заклинаний', 'Магия', '8 + @prof_bonus + @spell_mod'],
-  ['spell_attack', 'Атака заклинанием', 'Магия', '@prof_bonus + @spell_mod'],
-  ['cantrip_dice', 'Костей заговора', 'Магия', 'таблица("levels", @level, "cantrips")'],
-  ['rage_damage', 'Урон ярости', 'Ресурсы класса', 'таблица("levels", @level, "rage")'],
-];
-
 export function tables() {
   return {
-    stats: {
-      label: 'Показатели', key: 'word',
-      columns: [{ key: 'value', label: 'Значение', kind: 'expr', sheet: { tag: '{key}', label: '{label}' } }],
-      rows: STATS.map(([key, label, group, expr]) => ({ value: key, label, group, cells: { value: expr } })),
-      sheet: { cells: { 'initiative.value': { roll: { label: 'Инициатива', tags: INITIATIVE_TAGS, die: LEAD_DIE, bonus: { expr: '@строка.value' } } } } },
-    },
     slots: {
       label: 'Ячейки по кругам', key: 'word',
       columns: [

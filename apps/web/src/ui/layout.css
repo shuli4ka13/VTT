@@ -352,3 +352,10 @@
 
 .start__item--row { cursor: default; }
 .start__item-actions { display: flex; gap: var(--s-2); margin-top: var(--s-2); }
+
+.sheet-pick { border-radius: var(--r-2); padding: var(--s-1); margin: calc(-1 * var(--s-1)); cursor: pointer; }
+.sheet-pick:hover { background: var(--surface-2); }
+.sheet-pick--on { box-shadow: inset 0 0 0 1px var(--accent); background: var(--accent-soft); }
+.sheet-table { display: grid; gap: var(--s-2) var(--s-3); align-items: center; }
+.sheet-table .field__label:empty { display: none; }
+.sheet-table__row { color: var(--text); font-size: var(--fs-3); }

@@ -239,7 +239,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "большее из(0, если(@skills.astral.rank > 0, @skills.astral.rank + @intuition, если(нет, @intuition - 1, 0)) + @stats.wound_mod.value + @condition_mod)"
+          "expr": "большее из(0, если(@skills.astral.rank > 0, @skills.astral.rank + @intuition, если(нет, @intuition - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "cell": {
           "table": "skills",
@@ -282,7 +282,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "большее из(0, если(@skills.athletics.rank > 0, @skills.athletics.rank + @agility, если(да, @agility - 1, 0)) + @stats.wound_mod.value + @condition_mod)"
+          "expr": "большее из(0, если(@skills.athletics.rank > 0, @skills.athletics.rank + @agility, если(да, @agility - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "cell": {
           "table": "skills",
@@ -325,7 +325,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "большее из(0, если(@skills.biotech.rank > 0, @skills.biotech.rank + @logic, если(нет, @logic - 1, 0)) + @stats.wound_mod.value + @condition_mod)"
+          "expr": "большее из(0, если(@skills.biotech.rank > 0, @skills.biotech.rank + @logic, если(нет, @logic - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "cell": {
           "table": "skills",
@@ -368,7 +368,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "большее из(0, если(@skills.close_combat.rank > 0, @skills.close_combat.rank + @agility, если(да, @agility - 1, 0)) + @stats.wound_mod.value + @condition_mod)"
+          "expr": "большее из(0, если(@skills.close_combat.rank > 0, @skills.close_combat.rank + @agility, если(да, @agility - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "cell": {
           "table": "skills",
@@ -411,7 +411,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "большее из(0, если(@skills.cracking.rank > 0, @skills.cracking.rank + @logic, если(нет, @logic - 1, 0)) + @stats.wound_mod.value + @condition_mod)"
+          "expr": "большее из(0, если(@skills.cracking.rank > 0, @skills.cracking.rank + @logic, если(нет, @logic - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "cell": {
           "table": "skills",
@@ -454,7 +454,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "большее из(0, если(@skills.perception.rank > 0, @skills.perception.rank + @intuition, если(да, @intuition - 1, 0)) + @stats.wound_mod.value + @condition_mod)"
+          "expr": "большее из(0, если(@skills.perception.rank > 0, @skills.perception.rank + @intuition, если(да, @intuition - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "cell": {
           "table": "skills",
@@ -497,7 +497,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "большее из(0, если(@skills.conjuring.rank > 0, @skills.conjuring.rank + @magic, если(нет, @magic - 1, 0)) + @stats.wound_mod.value + @condition_mod)"
+          "expr": "большее из(0, если(@skills.conjuring.rank > 0, @skills.conjuring.rank + @magic, если(нет, @magic - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "cell": {
           "table": "skills",
@@ -540,7 +540,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "большее из(0, если(@skills.enchanting.rank > 0, @skills.enchanting.rank + @magic, если(нет, @magic - 1, 0)) + @stats.wound_mod.value + @condition_mod)"
+          "expr": "большее из(0, если(@skills.enchanting.rank > 0, @skills.enchanting.rank + @magic, если(нет, @magic - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "cell": {
           "table": "skills",
@@ -583,7 +583,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "большее из(0, если(@skills.engineering.rank > 0, @skills.engineering.rank + @logic, если(да, @logic - 1, 0)) + @stats.wound_mod.value + @condition_mod)"
+          "expr": "большее из(0, если(@skills.engineering.rank > 0, @skills.engineering.rank + @logic, если(да, @logic - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "cell": {
           "table": "skills",
@@ -626,7 +626,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "большее из(0, если(@skills.sorcery.rank > 0, @skills.sorcery.rank + @magic, если(нет, @magic - 1, 0)) + @stats.wound_mod.value + @condition_mod)"
+          "expr": "большее из(0, если(@skills.sorcery.rank > 0, @skills.sorcery.rank + @magic, если(нет, @magic - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "cell": {
           "table": "skills",
@@ -669,7 +669,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "большее из(0, если(@skills.tasking.rank > 0, @skills.tasking.rank + @resonance, если(нет, @resonance - 1, 0)) + @stats.wound_mod.value + @condition_mod)"
+          "expr": "большее из(0, если(@skills.tasking.rank > 0, @skills.tasking.rank + @resonance, если(нет, @resonance - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "cell": {
           "table": "skills",
@@ -712,7 +712,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "большее из(0, если(@skills.con.rank > 0, @skills.con.rank + @charisma, если(да, @charisma - 1, 0)) + @stats.wound_mod.value + @condition_mod)"
+          "expr": "большее из(0, если(@skills.con.rank > 0, @skills.con.rank + @charisma, если(да, @charisma - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "cell": {
           "table": "skills",
@@ -755,7 +755,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "большее из(0, если(@skills.outdoors.rank > 0, @skills.outdoors.rank + @intuition, если(да, @intuition - 1, 0)) + @stats.wound_mod.value + @condition_mod)"
+          "expr": "большее из(0, если(@skills.outdoors.rank > 0, @skills.outdoors.rank + @intuition, если(да, @intuition - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "cell": {
           "table": "skills",
@@ -798,7 +798,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "большее из(0, если(@skills.piloting.rank > 0, @skills.piloting.rank + @reaction, если(да, @reaction - 1, 0)) + @stats.wound_mod.value + @condition_mod)"
+          "expr": "большее из(0, если(@skills.piloting.rank > 0, @skills.piloting.rank + @reaction, если(да, @reaction - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "cell": {
           "table": "skills",
@@ -841,7 +841,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "большее из(0, если(@skills.stealth.rank > 0, @skills.stealth.rank + @agility, если(да, @agility - 1, 0)) + @stats.wound_mod.value + @condition_mod)"
+          "expr": "большее из(0, если(@skills.stealth.rank > 0, @skills.stealth.rank + @agility, если(да, @agility - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "cell": {
           "table": "skills",
@@ -884,7 +884,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "большее из(0, если(@skills.firearms.rank > 0, @skills.firearms.rank + @agility, если(да, @agility - 1, 0)) + @stats.wound_mod.value + @condition_mod)"
+          "expr": "большее из(0, если(@skills.firearms.rank > 0, @skills.firearms.rank + @agility, если(да, @agility - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "cell": {
           "table": "skills",
@@ -927,7 +927,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "большее из(0, если(@skills.influence.rank > 0, @skills.influence.rank + @charisma, если(да, @charisma - 1, 0)) + @stats.wound_mod.value + @condition_mod)"
+          "expr": "большее из(0, если(@skills.influence.rank > 0, @skills.influence.rank + @charisma, если(да, @charisma - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "cell": {
           "table": "skills",
@@ -970,7 +970,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "большее из(0, если(@skills.exotic_weapons.rank > 0, @skills.exotic_weapons.rank + @agility, если(нет, @agility - 1, 0)) + @stats.wound_mod.value + @condition_mod)"
+          "expr": "большее из(0, если(@skills.exotic_weapons.rank > 0, @skills.exotic_weapons.rank + @agility, если(нет, @agility - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "cell": {
           "table": "skills",
@@ -1013,12 +1013,96 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "большее из(0, если(@skills.electronics.rank > 0, @skills.electronics.rank + @logic, если(да, @logic - 1, 0)) + @stats.wound_mod.value + @condition_mod)"
+          "expr": "большее из(0, если(@skills.electronics.rank > 0, @skills.electronics.rank + @logic, если(да, @logic - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "cell": {
           "table": "skills",
           "row": "electronics",
           "column": "pool"
+        }
+      },
+      {
+        "tag": "composure",
+        "label": "Самообладание",
+        "group": "Наборы кубиков",
+        "roll": {
+          "label": "Самообладание",
+          "die": {
+            "constant": "pool"
+          },
+          "tags": [
+            "проверка"
+          ],
+          "count": {
+            "expr": "@composure"
+          }
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "большее из(0, @willpower + @charisma + @wound_mod + @condition_mod)"
+        }
+      },
+      {
+        "tag": "judge_intentions",
+        "label": "Проницательность",
+        "group": "Наборы кубиков",
+        "roll": {
+          "label": "Проницательность",
+          "die": {
+            "constant": "pool"
+          },
+          "tags": [
+            "проверка"
+          ],
+          "count": {
+            "expr": "@judge_intentions"
+          }
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "большее из(0, @willpower + @intuition + @wound_mod + @condition_mod)"
+        }
+      },
+      {
+        "tag": "memory",
+        "label": "Память",
+        "group": "Наборы кубиков",
+        "roll": {
+          "label": "Память",
+          "die": {
+            "constant": "pool"
+          },
+          "tags": [
+            "проверка"
+          ],
+          "count": {
+            "expr": "@memory"
+          }
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "большее из(0, @logic + @intuition + @wound_mod + @condition_mod)"
+        }
+      },
+      {
+        "tag": "lift_carry",
+        "label": "Поднятие тяжестей",
+        "group": "Наборы кубиков",
+        "roll": {
+          "label": "Поднятие тяжестей",
+          "die": {
+            "constant": "pool"
+          },
+          "tags": [
+            "проверка"
+          ],
+          "count": {
+            "expr": "@lift_carry"
+          }
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "большее из(0, @body + @strength + @wound_mod + @condition_mod)"
         }
       },
       {
@@ -1067,6 +1151,54 @@
         }
       },
       {
+        "tag": "defense_rating",
+        "label": "Значение защиты",
+        "group": "Защита",
+        "value": {
+          "kind": "formula",
+          "expr": "@body + @armor_worn + @armor_extra + @armor_natural + если(@metatype != \"\", таблица(\"metatypes\", @metatype, \"dermal\"), 0) + @cover"
+        }
+      },
+      {
+        "tag": "defense_pool",
+        "label": "Защита: набор (Реакция + Интуиция)",
+        "group": "Защита",
+        "roll": {
+          "label": "Защита",
+          "die": {
+            "constant": "pool"
+          },
+          "tags": [
+            "проверка"
+          ],
+          "count": {
+            "expr": "@defense_pool"
+          }
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "большее из(0, @reaction + @intuition + @cover + @wound_mod + @condition_mod)"
+        }
+      },
+      {
+        "tag": "unarmed_rating",
+        "label": "Значение атаки без оружия",
+        "group": "Защита",
+        "value": {
+          "kind": "formula",
+          "expr": "@strength + @reaction"
+        }
+      },
+      {
+        "tag": "physical_max",
+        "label": "Счётчик здоровья: ячеек",
+        "group": "Счётчики",
+        "value": {
+          "kind": "formula",
+          "expr": "8 + округлить вверх(@body / 2) + если(@metatype != \"\", таблица(\"metatypes\", @metatype, \"toughness\"), 0)"
+        }
+      },
+      {
         "tag": "physical",
         "label": "Физический урон",
         "group": "Счётчики",
@@ -1077,6 +1209,15 @@
           "min": 0
         },
         "lives": "group"
+      },
+      {
+        "tag": "stun_max",
+        "label": "Счётчик оглушения: ячеек",
+        "group": "Счётчики",
+        "value": {
+          "kind": "formula",
+          "expr": "8 + округлить вверх(@willpower / 2)"
+        }
       },
       {
         "tag": "stun",
@@ -1091,6 +1232,42 @@
         "lives": "group"
       },
       {
+        "tag": "stun_overflow",
+        "label": "Лишний оглушающий — в физический",
+        "group": "Счётчики",
+        "value": {
+          "kind": "formula",
+          "expr": "большее из(0, @stun - @stun_max)"
+        }
+      },
+      {
+        "tag": "physical_total",
+        "label": "Физический урон с переливом",
+        "group": "Счётчики",
+        "value": {
+          "kind": "formula",
+          "expr": "@physical + @stun_overflow"
+        }
+      },
+      {
+        "tag": "critical",
+        "label": "Критический урон",
+        "group": "Счётчики",
+        "value": {
+          "kind": "formula",
+          "expr": "большее из(0, @physical_total - @physical_max)"
+        }
+      },
+      {
+        "tag": "wound_mod",
+        "label": "Штраф за раны",
+        "group": "Счётчики",
+        "value": {
+          "kind": "formula",
+          "expr": "0 - округлить вниз(меньшее из(@stun, @stun_max) / 3) - округлить вниз(меньшее из(@physical_total, @physical_max) / 3)"
+        }
+      },
+      {
         "tag": "condition_mod",
         "label": "Штраф от состояний",
         "group": "Счётчики",
@@ -1098,6 +1275,51 @@
           "kind": "stored",
           "type": "number",
           "default": 0
+        }
+      },
+      {
+        "tag": "knocked_out",
+        "label": "Счётчик оглушения полон",
+        "group": "Счётчики",
+        "value": {
+          "kind": "formula",
+          "expr": "@stun >= @stun_max"
+        }
+      },
+      {
+        "tag": "bleeding_out",
+        "label": "Счётчик здоровья полон",
+        "group": "Счётчики",
+        "value": {
+          "kind": "formula",
+          "expr": "@physical_total >= @physical_max"
+        }
+      },
+      {
+        "tag": "is_dead",
+        "label": "Критический урон достиг Тело × 2",
+        "group": "Счётчики",
+        "value": {
+          "kind": "formula",
+          "expr": "@critical >= @body * 2"
+        }
+      },
+      {
+        "tag": "conscious",
+        "label": "В сознании",
+        "group": "Счётчики",
+        "value": {
+          "kind": "formula",
+          "expr": "все(@stun < @stun_max, @physical_total < @physical_max)"
+        }
+      },
+      {
+        "tag": "initiative",
+        "label": "Уровень инициативы",
+        "group": "Инициатива",
+        "value": {
+          "kind": "formula",
+          "expr": "@reaction + @intuition + @wound_mod + @condition_mod"
         }
       },
       {
@@ -1147,318 +1369,6 @@
           "kind": "stored",
           "type": "number",
           "default": 0
-        }
-      },
-      {
-        "tag": "stats.composure.value",
-        "label": "Самообладание",
-        "group": "Наборы кубиков",
-        "roll": {
-          "label": "Самообладание",
-          "die": {
-            "constant": "pool"
-          },
-          "tags": [
-            "проверка"
-          ],
-          "count": {
-            "expr": "@stats.composure.value"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "большее из(0, @willpower + @charisma + @stats.wound_mod.value + @condition_mod)"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "composure",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.judge_intentions.value",
-        "label": "Проницательность",
-        "group": "Наборы кубиков",
-        "roll": {
-          "label": "Проницательность",
-          "die": {
-            "constant": "pool"
-          },
-          "tags": [
-            "проверка"
-          ],
-          "count": {
-            "expr": "@stats.judge_intentions.value"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "большее из(0, @willpower + @intuition + @stats.wound_mod.value + @condition_mod)"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "judge_intentions",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.memory.value",
-        "label": "Память",
-        "group": "Наборы кубиков",
-        "roll": {
-          "label": "Память",
-          "die": {
-            "constant": "pool"
-          },
-          "tags": [
-            "проверка"
-          ],
-          "count": {
-            "expr": "@stats.memory.value"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "большее из(0, @logic + @intuition + @stats.wound_mod.value + @condition_mod)"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "memory",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.lift_carry.value",
-        "label": "Поднятие тяжестей",
-        "group": "Наборы кубиков",
-        "roll": {
-          "label": "Поднятие тяжестей",
-          "die": {
-            "constant": "pool"
-          },
-          "tags": [
-            "проверка"
-          ],
-          "count": {
-            "expr": "@stats.lift_carry.value"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "большее из(0, @body + @strength + @stats.wound_mod.value + @condition_mod)"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "lift_carry",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.defense_rating.value",
-        "label": "Значение защиты",
-        "group": "Защита",
-        "value": {
-          "kind": "formula",
-          "expr": "@body + @armor_worn + @armor_extra + @armor_natural + если(@metatype != \"\", таблица(\"metatypes\", @metatype, \"dermal\"), 0) + @cover"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "defense_rating",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.defense_pool.value",
-        "label": "Защита: набор (Реакция + Интуиция)",
-        "group": "Защита",
-        "roll": {
-          "label": "Защита",
-          "die": {
-            "constant": "pool"
-          },
-          "tags": [
-            "проверка"
-          ],
-          "count": {
-            "expr": "@stats.defense_pool.value"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "большее из(0, @reaction + @intuition + @cover + @stats.wound_mod.value + @condition_mod)"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "defense_pool",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.unarmed_rating.value",
-        "label": "Значение атаки без оружия",
-        "group": "Защита",
-        "value": {
-          "kind": "formula",
-          "expr": "@strength + @reaction"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "unarmed_rating",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.physical_max.value",
-        "label": "Счётчик здоровья: ячеек",
-        "group": "Счётчики",
-        "value": {
-          "kind": "formula",
-          "expr": "8 + округлить вверх(@body / 2) + если(@metatype != \"\", таблица(\"metatypes\", @metatype, \"toughness\"), 0)"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "physical_max",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.stun_max.value",
-        "label": "Счётчик оглушения: ячеек",
-        "group": "Счётчики",
-        "value": {
-          "kind": "formula",
-          "expr": "8 + округлить вверх(@willpower / 2)"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "stun_max",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.stun_overflow.value",
-        "label": "Лишний оглушающий — в физический",
-        "group": "Счётчики",
-        "value": {
-          "kind": "formula",
-          "expr": "большее из(0, @stun - @stats.stun_max.value)"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "stun_overflow",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.physical_total.value",
-        "label": "Физический урон с переливом",
-        "group": "Счётчики",
-        "value": {
-          "kind": "formula",
-          "expr": "@physical + @stats.stun_overflow.value"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "physical_total",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.critical.value",
-        "label": "Критический урон",
-        "group": "Счётчики",
-        "value": {
-          "kind": "formula",
-          "expr": "большее из(0, @stats.physical_total.value - @stats.physical_max.value)"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "critical",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.wound_mod.value",
-        "label": "Штраф за раны",
-        "group": "Счётчики",
-        "value": {
-          "kind": "formula",
-          "expr": "0 - округлить вниз(меньшее из(@stun, @stats.stun_max.value) / 3) - округлить вниз(меньшее из(@stats.physical_total.value, @stats.physical_max.value) / 3)"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "wound_mod",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.knocked_out.value",
-        "label": "Счётчик оглушения полон",
-        "group": "Счётчики",
-        "value": {
-          "kind": "formula",
-          "expr": "@stun >= @stats.stun_max.value"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "knocked_out",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.bleeding_out.value",
-        "label": "Счётчик здоровья полон",
-        "group": "Счётчики",
-        "value": {
-          "kind": "formula",
-          "expr": "@stats.physical_total.value >= @stats.physical_max.value"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "bleeding_out",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.is_dead.value",
-        "label": "Критический урон достиг Тело × 2",
-        "group": "Счётчики",
-        "value": {
-          "kind": "formula",
-          "expr": "@stats.critical.value >= @body * 2"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "is_dead",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.conscious.value",
-        "label": "В сознании",
-        "group": "Счётчики",
-        "value": {
-          "kind": "formula",
-          "expr": "все(@stun < @stats.stun_max.value, @stats.physical_total.value < @stats.physical_max.value)"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "conscious",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.initiative.value",
-        "label": "Уровень инициативы",
-        "group": "Инициатива",
-        "value": {
-          "kind": "formula",
-          "expr": "@reaction + @intuition + @stats.wound_mod.value + @condition_mod"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "initiative",
-          "column": "value"
         }
       }
     ],
@@ -1821,7 +1731,7 @@
             "key": "pool",
             "label": "Набор",
             "kind": "number",
-            "expr": "большее из(0, если(@строка.rank > 0, @строка.rank + @строка.attribute, если(@строка.untrained, @строка.attribute - 1, 0)) + @stats.wound_mod.value + @condition_mod)"
+            "expr": "большее из(0, если(@строка.rank > 0, @строка.rank + @строка.attribute, если(@строка.untrained, @строка.attribute - 1, 0)) + @wound_mod + @condition_mod)"
           }
         ],
         "rows": [
@@ -2328,273 +2238,6 @@
             }
           }
         ]
-      },
-      "stats": {
-        "label": "Показатели",
-        "key": "word",
-        "columns": [
-          {
-            "key": "value",
-            "label": "Значение",
-            "kind": "number"
-          }
-        ],
-        "rows": [
-          {
-            "value": "composure",
-            "label": "Самообладание",
-            "group": "Наборы кубиков",
-            "cells": {
-              "value": {
-                "expr": "большее из(0, @willpower + @charisma + @stats.wound_mod.value + @condition_mod)"
-              }
-            }
-          },
-          {
-            "value": "judge_intentions",
-            "label": "Проницательность",
-            "group": "Наборы кубиков",
-            "cells": {
-              "value": {
-                "expr": "большее из(0, @willpower + @intuition + @stats.wound_mod.value + @condition_mod)"
-              }
-            }
-          },
-          {
-            "value": "memory",
-            "label": "Память",
-            "group": "Наборы кубиков",
-            "cells": {
-              "value": {
-                "expr": "большее из(0, @logic + @intuition + @stats.wound_mod.value + @condition_mod)"
-              }
-            }
-          },
-          {
-            "value": "lift_carry",
-            "label": "Поднятие тяжестей",
-            "group": "Наборы кубиков",
-            "cells": {
-              "value": {
-                "expr": "большее из(0, @body + @strength + @stats.wound_mod.value + @condition_mod)"
-              }
-            }
-          },
-          {
-            "value": "defense_rating",
-            "label": "Значение защиты",
-            "group": "Защита",
-            "cells": {
-              "value": {
-                "expr": "@body + @armor_worn + @armor_extra + @armor_natural + если(@metatype != \"\", таблица(\"metatypes\", @metatype, \"dermal\"), 0) + @cover"
-              }
-            }
-          },
-          {
-            "value": "defense_pool",
-            "label": "Защита: набор (Реакция + Интуиция)",
-            "group": "Защита",
-            "cells": {
-              "value": {
-                "expr": "большее из(0, @reaction + @intuition + @cover + @stats.wound_mod.value + @condition_mod)"
-              }
-            }
-          },
-          {
-            "value": "unarmed_rating",
-            "label": "Значение атаки без оружия",
-            "group": "Защита",
-            "cells": {
-              "value": {
-                "expr": "@strength + @reaction"
-              }
-            }
-          },
-          {
-            "value": "physical_max",
-            "label": "Счётчик здоровья: ячеек",
-            "group": "Счётчики",
-            "cells": {
-              "value": {
-                "expr": "8 + округлить вверх(@body / 2) + если(@metatype != \"\", таблица(\"metatypes\", @metatype, \"toughness\"), 0)"
-              }
-            }
-          },
-          {
-            "value": "stun_max",
-            "label": "Счётчик оглушения: ячеек",
-            "group": "Счётчики",
-            "cells": {
-              "value": {
-                "expr": "8 + округлить вверх(@willpower / 2)"
-              }
-            }
-          },
-          {
-            "value": "stun_overflow",
-            "label": "Лишний оглушающий — в физический",
-            "group": "Счётчики",
-            "cells": {
-              "value": {
-                "expr": "большее из(0, @stun - @stats.stun_max.value)"
-              }
-            }
-          },
-          {
-            "value": "physical_total",
-            "label": "Физический урон с переливом",
-            "group": "Счётчики",
-            "cells": {
-              "value": {
-                "expr": "@physical + @stats.stun_overflow.value"
-              }
-            }
-          },
-          {
-            "value": "critical",
-            "label": "Критический урон",
-            "group": "Счётчики",
-            "cells": {
-              "value": {
-                "expr": "большее из(0, @stats.physical_total.value - @stats.physical_max.value)"
-              }
-            }
-          },
-          {
-            "value": "wound_mod",
-            "label": "Штраф за раны",
-            "group": "Счётчики",
-            "cells": {
-              "value": {
-                "expr": "0 - округлить вниз(меньшее из(@stun, @stats.stun_max.value) / 3) - округлить вниз(меньшее из(@stats.physical_total.value, @stats.physical_max.value) / 3)"
-              }
-            }
-          },
-          {
-            "value": "knocked_out",
-            "label": "Счётчик оглушения полон",
-            "group": "Счётчики",
-            "cells": {
-              "value": {
-                "expr": "@stun >= @stats.stun_max.value"
-              }
-            }
-          },
-          {
-            "value": "bleeding_out",
-            "label": "Счётчик здоровья полон",
-            "group": "Счётчики",
-            "cells": {
-              "value": {
-                "expr": "@stats.physical_total.value >= @stats.physical_max.value"
-              }
-            }
-          },
-          {
-            "value": "is_dead",
-            "label": "Критический урон достиг Тело × 2",
-            "group": "Счётчики",
-            "cells": {
-              "value": {
-                "expr": "@stats.critical.value >= @body * 2"
-              }
-            }
-          },
-          {
-            "value": "conscious",
-            "label": "В сознании",
-            "group": "Счётчики",
-            "cells": {
-              "value": {
-                "expr": "все(@stun < @stats.stun_max.value, @stats.physical_total.value < @stats.physical_max.value)"
-              }
-            }
-          },
-          {
-            "value": "initiative",
-            "label": "Уровень инициативы",
-            "group": "Инициатива",
-            "cells": {
-              "value": {
-                "expr": "@reaction + @intuition + @stats.wound_mod.value + @condition_mod"
-              }
-            }
-          }
-        ],
-        "sheet": {
-          "cells": {
-            "composure.value": {
-              "roll": {
-                "label": "Самообладание",
-                "die": {
-                  "constant": "pool"
-                },
-                "tags": [
-                  "проверка"
-                ],
-                "count": {
-                  "expr": "@строка.value"
-                }
-              }
-            },
-            "judge_intentions.value": {
-              "roll": {
-                "label": "Проницательность",
-                "die": {
-                  "constant": "pool"
-                },
-                "tags": [
-                  "проверка"
-                ],
-                "count": {
-                  "expr": "@строка.value"
-                }
-              }
-            },
-            "memory.value": {
-              "roll": {
-                "label": "Память",
-                "die": {
-                  "constant": "pool"
-                },
-                "tags": [
-                  "проверка"
-                ],
-                "count": {
-                  "expr": "@строка.value"
-                }
-              }
-            },
-            "lift_carry.value": {
-              "roll": {
-                "label": "Поднятие тяжестей",
-                "die": {
-                  "constant": "pool"
-                },
-                "tags": [
-                  "проверка"
-                ],
-                "count": {
-                  "expr": "@строка.value"
-                }
-              }
-            },
-            "defense_pool.value": {
-              "roll": {
-                "label": "Защита",
-                "die": {
-                  "constant": "pool"
-                },
-                "tags": [
-                  "проверка"
-                ],
-                "count": {
-                  "expr": "@строка.value"
-                }
-              }
-            }
-          }
-        }
       }
     },
     "roll_edits": {
@@ -2628,7 +2271,7 @@
         "constant": "init_die"
       },
       "bonus": {
-        "expr": "@stats.initiative.value"
+        "expr": "@initiative"
       },
       "tags": [
         "инициатива"
@@ -2832,7 +2475,7 @@
             },
             "targetModifiers": false,
             "when": {
-              "expr": "все(@атк - @получатель.stats.defense_rating.value <= -4, все(@получатель.edge_left < 7, @получатель.edge_gained < 2))"
+              "expr": "все(@атк - @получатель.defense_rating <= -4, все(@получатель.edge_left < 7, @получатель.edge_gained < 2))"
             }
           },
           {
@@ -2846,7 +2489,7 @@
             },
             "targetModifiers": false,
             "when": {
-              "expr": "все(@атк - @получатель.stats.defense_rating.value <= -4, все(@получатель.edge_left < 7, @получатель.edge_gained < 2))"
+              "expr": "все(@атк - @получатель.defense_rating <= -4, все(@получатель.edge_left < 7, @получатель.edge_gained < 2))"
             }
           },
           {
@@ -2869,7 +2512,7 @@
                   "constant": "pool"
                 },
                 "count": {
-                  "expr": "@получатель.stats.defense_pool.value"
+                  "expr": "@получатель.defense_pool"
                 },
                 "tags": [
                   "защита"
@@ -2965,7 +2608,7 @@
             },
             "direction": "set",
             "value": {
-              "expr": "@получатель.stats.stun_max.value"
+              "expr": "@получатель.stun_max"
             },
             "targetModifiers": false,
             "when": {
@@ -2988,7 +2631,7 @@
             "on": "ranged_attack",
             "to": "other",
             "if": {
-              "expr": "@атк - @stats.defense_rating.value >= 4"
+              "expr": "@атк - @defense_rating >= 4"
             },
             "steps": [
               {
@@ -3675,7 +3318,7 @@
         "params": [],
         "on": [
           {
-            "on": "field:stats.knocked_out.value",
+            "on": "field:knocked_out",
             "steps": [
               {
                 "type": "status",
@@ -3699,7 +3342,7 @@
         "params": [],
         "on": [
           {
-            "on": "field:stats.bleeding_out.value",
+            "on": "field:bleeding_out",
             "steps": [
               {
                 "type": "status",
@@ -3723,7 +3366,7 @@
         "params": [],
         "on": [
           {
-            "on": "field:stats.is_dead.value",
+            "on": "field:is_dead",
             "steps": [
               {
                 "type": "status",
@@ -3754,7 +3397,7 @@
         "params": [],
         "on": [
           {
-            "on": "field:stats.conscious.value",
+            "on": "field:conscious",
             "steps": [
               {
                 "type": "status",
@@ -3850,7 +3493,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "stats.physical_max.value",
+            "target": "physical_max",
             "op": "set",
             "value": {
               "expr": "8 + округлить вверх(большее из(@willpower, @body) / 2)"
@@ -3859,7 +3502,7 @@
           },
           {
             "kind": "value",
-            "target": "stats.physical_total.value",
+            "target": "physical_total",
             "op": "set",
             "value": {
               "expr": "@physical + @stun"
@@ -3868,7 +3511,7 @@
           },
           {
             "kind": "value",
-            "target": "stats.knocked_out.value",
+            "target": "knocked_out",
             "op": "set",
             "value": {
               "expr": "нет"
@@ -3877,10 +3520,10 @@
           },
           {
             "kind": "value",
-            "target": "stats.wound_mod.value",
+            "target": "wound_mod",
             "op": "set",
             "value": {
-              "expr": "0 - округлить вниз(меньшее из(@physical + @stun, @stats.physical_max.value) / 2)"
+              "expr": "0 - округлить вниз(меньшее из(@physical + @stun, @physical_max) / 2)"
             },
             "stacking": "override"
           }

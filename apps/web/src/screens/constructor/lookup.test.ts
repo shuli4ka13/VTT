@@ -9,12 +9,12 @@ const explain = (name: string, effect: string | null = null) => explainName(dnd,
 
 describe('откуда это: щелчок по фишке объясняет имя', () => {
   it('поле листа: как получается, где видно, кто пользуется, чей лист', () => {
-    const told = explain('получатель.stats.ac.value');
+    const told = explain('получатель.ac');
     expect(told.kind).toBe('поле листа');
     expect(told.facts).toContainEqual(['чьё', 'лист получателя']);
     expect(told.shown[0]).toMatch(/^на листе, блок/);
     expect(told.users.length).toBeGreaterThan(0);
-    expect(told.go?.pick).toEqual({ activeTab: 'sheet', activeFieldTag: 'stats.ac.value' });
+    expect(told.go?.pick).toEqual({ activeTab: 'sheet', activeFieldTag: 'ac' });
   });
 
   it('вход эффекта: кто и что передаёт', () => {

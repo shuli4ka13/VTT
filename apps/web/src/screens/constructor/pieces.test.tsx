@@ -25,7 +25,6 @@ describe('куски на пустом листе', () => {
     fireEvent.click(screen.getAllByText('Характеристики к20')[0]!);
     expect(screen.getByText('что пришло')).toBeTruthy();
     expect(screen.getAllByText('Сила').length).toBeGreaterThan(0);
-    expect(document.querySelector('.list__item--fresh')).toBeTruthy();
 
     fireEvent.click(screen.getByText('отменить'));
     expect(useWorld.getState().system.fields).toEqual([]);
@@ -34,7 +33,6 @@ describe('куски на пустом листе', () => {
 
   it('клик по куску кладёт его со всем, от чего он зависит, и система остаётся без ошибок', () => {
     renderOpen(<SheetTab />);
-    expect(screen.getByText('Лист пуст')).toBeTruthy();
 
     fireEvent.click(screen.getAllByText('Характеристики к20')[0]!);
 
@@ -44,17 +42,12 @@ describe('куски на пустом листе', () => {
     expect(errorsOf(lintSystem(system)).map(p => p.text)).toEqual([]);
   });
 
-  it('таблица на листе — одна строка списка, формул в списке нет', () => {
+  it('образец показывает посчитанное, а не формулы', () => {
     renderOpen(<SheetTab />);
     fireEvent.click(screen.getAllByText('Защита')[0]!);
-    cleanup();
-    renderOpen(<SheetTab />);
-    const metas = [...document.querySelectorAll('.list__meta')].map(node => node.textContent ?? '');
-    const kinds = useWorld.getState().system.fields.map(f => f.value.kind);
-    expect(kinds, metas.join(' | ')).toContain('formula');
-    expect(metas.some(text => text.startsWith('вводит игрок')), metas.join(' | ')).toBe(true);
-    expect(metas.some(text => text.startsWith('таблица · ')), metas.join(' | ')).toBe(true);
-    expect(metas.some(text => text.startsWith('= ')), metas.join(' | ')).toBe(false);
+    expect(useWorld.getState().system.fields.some(f => f.value.kind === 'formula')).toBe(true);
+    expect(screen.getAllByText('Класс брони').length).toBeGreaterThan(0);
+    expect(document.body.textContent).not.toContain('@');
   });
 });
 

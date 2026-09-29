@@ -10,12 +10,13 @@ import { TablesSection } from './tables-section.tsx';
 import { InitiativeSection } from './initiative-section.tsx';
 import { TogglesSection } from './toggles-section.tsx';
 import { BlocksSection } from './blocks-section.tsx';
+import { CharacterSection, isCharacterColumn } from './character-section.tsx';
 import { critOf, armorOf } from '@vtt/engine/model/toggles';
 import type { System } from '@vtt/schema';
 import { calledOf } from '@vtt/engine/engine/effects';
 import { blockNames } from '@vtt/engine/model/blocks';
 
-type SectionKey = 'dice' | 'edits' | 'tables' | 'blocks' | 'initiative' | 'toggles';
+type SectionKey = 'character' | 'dice' | 'edits' | 'tables' | 'blocks' | 'initiative' | 'toggles';
 
 interface Section {
   key: SectionKey;
@@ -25,6 +26,7 @@ interface Section {
 }
 
 const SECTIONS: Section[] = [
+  { key: 'character', label: 'Персонаж', count: system => system.fields.filter(isCharacterColumn).length },
   { key: 'dice', label: 'Кости', count: system => dieEntries(system).length },
   { key: 'edits', label: 'Правки броска', count: system => Object.keys(system.roll_edits ?? {}).length },
   { key: 'tables', label: 'Таблицы', count: system => Object.keys(system.tables ?? {}).length },
@@ -45,7 +47,8 @@ export function RulesTab() {
   const usage = useUsage();
   const problems = useProblems();
   const wantedTable = useWorld(s => s.activeTableId);
-  const [section, setSection] = useState<SectionKey>(wantedTable ? 'tables' : 'dice');
+  const pick = useWorld(s => s.pick);
+  const [section, setSection] = useState<SectionKey>(wantedTable ? 'tables' : 'character');
 
   const broken = new Set(
     problems.filter(p => p.where.tab === 'rules' && p.where.section).map(p => p.where.section),
@@ -78,6 +81,10 @@ export function RulesTab() {
       main={{
         body: (
           <>
+            {section === 'character' ? (
+              <CharacterSection system={system} editSystem={editSystem} usage={usage}
+                onTable={id => { pick({ activeTableId: id }); setSection('tables'); }} />
+            ) : null}
             {section === 'dice' ? <DiceSection system={system} editSystem={editSystem} usage={usage} /> : null}
             {section === 'edits' ? <RollEditsSection system={system} editSystem={editSystem} usage={usage} /> : null}
             {section === 'tables' ? <TablesSection system={system} editSystem={editSystem} usage={usage} /> : null}

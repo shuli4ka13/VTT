@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { SheetTab } from './sheet-tab.tsx';
+import { RulesTab } from './rules/rules-tab.tsx';
 import { useWorld } from '../../store/world.ts';
 
-describe('SheetTab: человеческие теги', () => {
+describe('колонка персонажа: человеческие теги', () => {
   beforeEach(() => {
     useWorld.setState(state => ({
       ...state,
@@ -20,8 +20,8 @@ describe('SheetTab: человеческие теги', () => {
   });
 
   it('пока поле девственно, тег следует за названием', () => {
-    render(<SheetTab />);
-    const name = screen.getByPlaceholderText('как зовётся поле');
+    render(<RulesTab />);
+    const name = screen.getByPlaceholderText('как зовётся колонка');
     fireEvent.change(name, { target: { value: 'Урон' } });
     fireEvent.blur(name);
     const field = useWorld.getState().system.fields[0]!;
@@ -41,8 +41,8 @@ describe('SheetTab: человеческие теги', () => {
       },
       activeFieldTag: 'урон',
     }));
-    render(<SheetTab />);
-    const name = screen.getByPlaceholderText('как зовётся поле');
+    render(<RulesTab />);
+    const name = screen.getByPlaceholderText('как зовётся колонка');
     fireEvent.change(name, { target: { value: 'Повреждения' } });
     fireEvent.blur(name);
     const field = useWorld.getState().system.fields[0]!;

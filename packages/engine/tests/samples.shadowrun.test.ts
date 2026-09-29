@@ -39,18 +39,18 @@ group('Shadowrun 6: наборы и значения по книге', () => {
   });
 
   test('значение защиты = Тело + броня; тролль +1 за подкожные наросты; шлем сверху', () => {
-    eq(computed(sheetOf('lone_star'), 'stats.defense_rating.value'), 6, 'как в блоке патрульного, стр. 207');
-    eq(computed(sheetOf('fiveeyes'), 'stats.defense_rating.value'), 3, 'как в блоке мотобанды, стр. 205');
-    eq(computed(sheetOf('hammer'), 'stats.defense_rating.value'), 8 + 3 + 1 + 1);
+    eq(computed(sheetOf('lone_star'), 'defense_rating'), 6, 'как в блоке патрульного, стр. 207');
+    eq(computed(sheetOf('fiveeyes'), 'defense_rating'), 3, 'как в блоке мотобанды, стр. 205');
+    eq(computed(sheetOf('hammer'), 'defense_rating'), 8 + 3 + 1 + 1);
   });
 
   test('счётчики: ⌈Тело/2⌉ + 8 и Живучесть орка; перелив оглушения в физический, физического — в критический', () => {
-    eq(computed(sheetOf('razor'), 'stats.physical_max.value'), 12, '8 + 3 + Живучесть 1');
+    eq(computed(sheetOf('razor'), 'physical_max'), 12, '8 + 3 + Живучесть 1');
     const hurt = sheetOf('humanis', { stun: 12, physical: 8 });
-    eq(computed(hurt, 'stats.stun_overflow.value'), 3);
-    eq(computed(hurt, 'stats.critical.value'), 2);
-    eq(computed(hurt, 'stats.is_dead.value'), false);
-    eq(computed(sheetOf('humanis', { stun: 12, physical: 10 }), 'stats.is_dead.value'), true, 'Тело 2 × 2 = 4 критических');
+    eq(computed(hurt, 'stun_overflow'), 3);
+    eq(computed(hurt, 'critical'), 2);
+    eq(computed(hurt, 'is_dead'), false);
+    eq(computed(sheetOf('humanis', { stun: 12, physical: 10 }), 'is_dead'), true, 'Тело 2 × 2 = 4 критических');
   });
 });
 
@@ -135,10 +135,10 @@ group('Shadowrun 6: пешка — тип листа переопределяе�
   test('одна шкала на оба вида урона, 8 + ⌈большее из(Воля, Тело)/2⌉, штраф за каждые 2 ячейки', () => {
     const grunt = sheetOf('fiveeyes', { stun: 3, physical: 2 });
     delete (grunt as { group?: string }).group;
-    eq(computed(grunt, 'stats.physical_max.value'), 9, 'как СС 9 в блоке «Пятиглазых», стр. 205');
-    eq(computed(grunt, 'stats.physical_total.value'), 5);
-    eq(computed(grunt, 'stats.wound_mod.value'), -2);
-    eq(computed(grunt, 'stats.knocked_out.value'), false);
-    eq(computed(sheetOf('razor', { stun: 3, physical: 2 }), 'stats.wound_mod.value'), -1, 'у раннера — по-старому');
+    eq(computed(grunt, 'physical_max'), 9, 'как СС 9 в блоке «Пятиглазых», стр. 205');
+    eq(computed(grunt, 'physical_total'), 5);
+    eq(computed(grunt, 'wound_mod'), -2);
+    eq(computed(grunt, 'knocked_out'), false);
+    eq(computed(sheetOf('razor', { stun: 3, physical: 2 }), 'wound_mod'), -1, 'у раннера — по-старому');
   });
 });

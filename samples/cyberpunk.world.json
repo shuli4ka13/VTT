@@ -145,6 +145,24 @@
         }
       },
       {
+        "tag": "emp",
+        "label": "Эмпатия",
+        "group": "Характеристики",
+        "value": {
+          "kind": "formula",
+          "expr": "округлить вниз(@humanity / 10)"
+        }
+      },
+      {
+        "tag": "hp_max",
+        "label": "Максимум хитов",
+        "group": "Состояние",
+        "value": {
+          "kind": "formula",
+          "expr": "10 + 5 * округлить вверх((@body + @will) / 2)"
+        }
+      },
+      {
         "tag": "hp",
         "label": "Хиты",
         "group": "Состояние",
@@ -153,9 +171,18 @@
           "type": "number",
           "default": 45,
           "min": 0,
-          "max": "@stats.hp_max.value"
+          "max": "@hp_max"
         },
         "control": "bar"
+      },
+      {
+        "tag": "wound_at",
+        "label": "Порог серьёзной раны",
+        "group": "Состояние",
+        "value": {
+          "kind": "formula",
+          "expr": "округлить вверх(@hp_max / 2)"
+        }
       },
       {
         "tag": "luck_left",
@@ -178,6 +205,24 @@
           "kind": "stored",
           "type": "text",
           "default": ""
+        }
+      },
+      {
+        "tag": "seriously",
+        "label": "Тяжело ранен",
+        "group": "Состояние",
+        "value": {
+          "kind": "formula",
+          "expr": "@hp <= @wound_at"
+        }
+      },
+      {
+        "tag": "mortal",
+        "label": "При смерти",
+        "group": "Состояние",
+        "value": {
+          "kind": "formula",
+          "expr": "@hp <= 0"
         }
       },
       {
@@ -2141,7 +2186,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@stats.emp.value + @skills.conversation.rank"
+          "expr": "@emp + @skills.conversation.rank"
         },
         "tag": "skills.conversation.total",
         "group": "Навыки — общение",
@@ -2185,7 +2230,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@stats.emp.value + @skills.human_perception.rank"
+          "expr": "@emp + @skills.human_perception.rank"
         },
         "tag": "skills.human_perception.total",
         "group": "Навыки — общение",
@@ -3158,76 +3203,6 @@
           "max": 1
         },
         "control": "toggle"
-      },
-      {
-        "tag": "stats.emp.value",
-        "label": "Эмпатия",
-        "group": "Характеристики",
-        "value": {
-          "kind": "formula",
-          "expr": "округлить вниз(@humanity / 10)"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "emp",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.hp_max.value",
-        "label": "Максимум хитов",
-        "group": "Состояние",
-        "value": {
-          "kind": "formula",
-          "expr": "10 + 5 * округлить вверх((@body + @will) / 2)"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "hp_max",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.wound_at.value",
-        "label": "Порог серьёзной раны",
-        "group": "Состояние",
-        "value": {
-          "kind": "formula",
-          "expr": "округлить вверх(@stats.hp_max.value / 2)"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "wound_at",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.seriously.value",
-        "label": "Тяжело ранен",
-        "group": "Состояние",
-        "value": {
-          "kind": "formula",
-          "expr": "@hp <= @stats.wound_at.value"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "seriously",
-          "column": "value"
-        }
-      },
-      {
-        "tag": "stats.mortal.value",
-        "label": "При смерти",
-        "group": "Состояние",
-        "value": {
-          "kind": "formula",
-          "expr": "@hp <= 0"
-        },
-        "cell": {
-          "table": "stats",
-          "row": "mortal",
-          "column": "value"
-        }
       }
     ],
     "groups": {
@@ -4034,7 +4009,7 @@
             "label": "Разговор",
             "group": "Навыки — общение",
             "cells": {
-              "stat": "stats.emp.value",
+              "stat": "emp",
               "start": 0
             }
           },
@@ -4044,7 +4019,7 @@
             "label": "Понимание людей",
             "group": "Навыки — общение",
             "cells": {
-              "stat": "stats.emp.value",
+              "stat": "emp",
               "start": 0
             }
           },
@@ -4283,70 +4258,6 @@
             }
           }
         }
-      },
-      "stats": {
-        "label": "Показатели",
-        "key": "word",
-        "columns": [
-          {
-            "key": "value",
-            "label": "Значение",
-            "kind": "number"
-          }
-        ],
-        "rows": [
-          {
-            "value": "emp",
-            "label": "Эмпатия",
-            "group": "Характеристики",
-            "cells": {
-              "value": {
-                "expr": "округлить вниз(@humanity / 10)"
-              }
-            }
-          },
-          {
-            "value": "hp_max",
-            "label": "Максимум хитов",
-            "group": "Состояние",
-            "cells": {
-              "value": {
-                "expr": "10 + 5 * округлить вверх((@body + @will) / 2)"
-              }
-            }
-          },
-          {
-            "value": "wound_at",
-            "label": "Порог серьёзной раны",
-            "group": "Состояние",
-            "cells": {
-              "value": {
-                "expr": "округлить вверх(@stats.hp_max.value / 2)"
-              }
-            }
-          },
-          {
-            "value": "seriously",
-            "label": "Тяжело ранен",
-            "group": "Состояние",
-            "cells": {
-              "value": {
-                "expr": "@hp <= @stats.wound_at.value"
-              }
-            }
-          },
-          {
-            "value": "mortal",
-            "label": "При смерти",
-            "group": "Состояние",
-            "cells": {
-              "value": {
-                "expr": "@hp <= 0"
-              }
-            }
-          }
-        ],
-        "sheet": {}
       }
     },
     "initiative": {
@@ -4622,7 +4533,7 @@
               "expr": "-2"
             },
             "condition": {
-              "expr": "@stats.seriously.value"
+              "expr": "@seriously"
             }
           }
         ],
@@ -4642,7 +4553,7 @@
           {
             "on": "moment:turn-start",
             "if": {
-              "expr": "@stats.mortal.value"
+              "expr": "@mortal"
             },
             "steps": [
               {

@@ -21,7 +21,7 @@ group('проверка — одна на всё: шаг, бросок с лис
 
   test('инициатива D&D — та же проверка, что бросок поля «Инициатива»', () => {
     const initiative = rollInitiative(system, [arven], compendium, seven).rolls[0]!.total;
-    const field = fieldCheck(system, 'stats.initiative.value');
+    const field = fieldCheck(system, 'initiative');
     eq(rollCheck(system, arven, field, { compendium, die: seven, owner: field.label }).total, initiative);
   });
 

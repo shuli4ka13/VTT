@@ -20,7 +20,7 @@ export function setSample(draft: System, tag: string, value: StoredValue): void 
   if (field.value.kind === 'stored') field.value.default = value as string | number | boolean;
 }
 
-export function SheetSample({ system }: { system: System }) {
+export function SheetSample({ system, picked, onPick }: { system: System; picked?: string | null; onPick?: (tag: string) => void }) {
   const compendium = useBook();
   const editSystem = useWorld(s => s.editSystem);
   const kinds = sheetKinds(system);
@@ -52,6 +52,8 @@ export function SheetSample({ system }: { system: System }) {
         reader={reader}
         only={only}
         badge="образец"
+        {...(onPick ? { onPick } : {})}
+        picked={picked ?? null}
         onChange={(tag, value) => editSystem(draft => setSample(draft, tag, value))}
       />
     </>

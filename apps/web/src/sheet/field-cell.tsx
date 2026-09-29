@@ -6,17 +6,19 @@ import type { Reader } from '../engine/use-calc.ts';
 import type { Sheet, System, Field as FieldModel, StoredValue } from '@vtt/schema';
 import { optionsOf } from '@vtt/engine/model/lists';
 
-export function FieldCell({ field, system, sheet, reader, onChange, onRoll }: {
+export function FieldCell({ field: whole, system, sheet, reader, onChange, onRoll, bare }: {
   field: FieldModel;
+  bare?: boolean;
   system: System;
   sheet: Sheet;
   reader: Reader;
   onChange?: (tag: string, value: StoredValue) => void;
   onRoll?: (tag: string) => void;
 }) {
+  const field = bare ? { ...whole, label: '' } : whole;
   const roll = field.roll && onRoll
     ? (
-      <Button size="sm" title={field.roll.label ?? `Проверка: ${field.label}`} onClick={() => onRoll(field.tag)}>
+      <Button size="sm" title={field.roll.label ?? `Проверка: ${whole.label}`} onClick={() => onRoll(field.tag)}>
         бросить
       </Button>
     )
@@ -110,7 +112,7 @@ function Shown({ label, text, title, bad, roll }: {
 
 function boundOf(bound: unknown, reader: Reader): number | undefined {
   if (typeof bound !== 'string') return undefined;
-  const tag = /^[@#]([\p{L}\p{N}_-]+)$/u.exec(bound.trim())?.[1];
+  const tag = /^[@#]([\p{L}\p{N}_.-]+)$/u.exec(bound.trim())?.[1];
   if (!tag) return undefined;
   const value = reader.valueOf(tag);
   return value.ok && typeof value.value === 'number' ? value.value : undefined;

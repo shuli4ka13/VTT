@@ -1,9 +1,9 @@
 import { useWorld } from '../../store/world.ts';
 import { BlockPick } from './block-pick.tsx';
 import { CONTROLS } from '../../sheet/controls/index.tsx';
-import { Card, CardHead, Field, Input, Select, Button, DangerButton, Chip } from '../../ui/primitives.tsx';
+import { Card, CardHead, Field, Input, Select, Chip } from '../../ui/primitives.tsx';
 import { isRange } from '@vtt/engine/model/tables';
-import { cellSource, liveColumnsOf, onSheet, viewOf } from '@vtt/engine/model/sheet-columns';
+import { cellSource, onSheet, viewOf } from '@vtt/engine/model/sheet-columns';
 import type { System, TableColumn, TableViewColumn } from '@vtt/schema';
 
 export const sheetTables = (system: System): [string, string][] =>
@@ -25,35 +25,7 @@ export function placeOnSheet(draft: System, tableId: string): void {
 
 const parseStart = (text: string): number | string => (/^-?\d+(\.\d+)?$/.test(text) ? Number(text) : text);
 
-export function TableOnSheet({ tableId, system }: { tableId: string; system: System }) {
-  const editSystem = useWorld(s => s.editSystem);
-  const pick = useWorld(s => s.pick);
-  const table = system.tables?.[tableId];
-  if (!table || !onSheet(table)) return null;
-  const columns = liveColumnsOf(table);
-  const count = (table.rows ?? []).length;
-
-  return (
-    <>
-      <Card>
-        <CardHead
-          title={table.label || tableId}
-          sub={<Chip>таблица · {count} строк</Chip>}
-          actions={<>
-            <Button size="sm" onClick={() => pick({ activeTab: 'dictionaries', activeTableId: tableId })}>Открыть таблицу</Button>
-            <DangerButton size="sm" onConfirm={() => {
-              editSystem(draft => { const target = draft.tables?.[tableId]; if (target) delete target.sheet; });
-              pick({ activeFieldTag: null });
-            }}>Убрать с листа</DangerButton>
-          </>}
-        />
-      </Card>
-      {columns.map(column => <ColumnOnSheet key={column.key} tableId={tableId} column={column} system={system} />)}
-    </>
-  );
-}
-
-function ColumnOnSheet({ tableId, column, system }: { tableId: string; column: TableColumn; system: System }) {
+export function ColumnOnSheet({ tableId, column, system }: { tableId: string; column: TableColumn; system: System }) {
   const editSystem = useWorld(s => s.editSystem);
   const table = system.tables![tableId]!;
   const view = viewOf(table, column.key);
