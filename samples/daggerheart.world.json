@@ -2539,26 +2539,20 @@
         ],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "expr": "@hope"
-            },
-            "versus": {
-              "expr": "3"
-            },
-            "breakIf": "less",
-            "note": "нужно 3 Надежды"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "hope"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "3"
-            },
-            "targetModifiers": false
+            "type": "emit",
+            "event": "spend",
+            "strict": true,
+            "args": {
+              "what": {
+                "expr": "@hope"
+              },
+              "amount": {
+                "expr": "3"
+              },
+              "note": {
+                "expr": "\"нужно 3 Надежды\""
+              }
+            }
           }
         ]
       },
@@ -2589,26 +2583,20 @@
         ],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "expr": "@hope"
-            },
-            "versus": {
-              "expr": "3"
-            },
-            "breakIf": "less",
-            "note": "нужно 3 Надежды"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "hope"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "3"
-            },
-            "targetModifiers": false
+            "type": "emit",
+            "event": "spend",
+            "strict": true,
+            "args": {
+              "what": {
+                "expr": "@hope"
+              },
+              "amount": {
+                "expr": "3"
+              },
+              "note": {
+                "expr": "\"нужно 3 Надежды\""
+              }
+            }
           }
         ]
       },
@@ -2628,26 +2616,20 @@
         ],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "expr": "@hope"
-            },
-            "versus": {
-              "expr": "3"
-            },
-            "breakIf": "less",
-            "note": "нужно 3 Надежды"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "hope"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "3"
-            },
-            "targetModifiers": false
+            "type": "emit",
+            "event": "spend",
+            "strict": true,
+            "args": {
+              "what": {
+                "expr": "@hope"
+              },
+              "amount": {
+                "expr": "3"
+              },
+              "note": {
+                "expr": "\"нужно 3 Надежды\""
+              }
+            }
           }
         ]
       },
@@ -2715,26 +2697,20 @@
         ],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "expr": "@hope"
-            },
-            "versus": {
-              "expr": "3"
-            },
-            "breakIf": "less",
-            "note": "нужно 3 Надежды"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "hope"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "3"
-            },
-            "targetModifiers": false
+            "type": "emit",
+            "event": "spend",
+            "strict": true,
+            "args": {
+              "what": {
+                "expr": "@hope"
+              },
+              "amount": {
+                "expr": "3"
+              },
+              "note": {
+                "expr": "\"нужно 3 Надежды\""
+              }
+            }
           }
         ]
       },
@@ -2812,26 +2788,20 @@
         ],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "expr": "@hope"
-            },
-            "versus": {
-              "expr": "3"
-            },
-            "breakIf": "less",
-            "note": "нужно 3 Надежды"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "hope"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "3"
-            },
-            "targetModifiers": false
+            "type": "emit",
+            "event": "spend",
+            "strict": true,
+            "args": {
+              "what": {
+                "expr": "@hope"
+              },
+              "amount": {
+                "expr": "3"
+              },
+              "note": {
+                "expr": "\"нужно 3 Надежды\""
+              }
+            }
           }
         ]
       },
@@ -2852,6 +2822,56 @@
               "expr": "-2"
             },
             "stacking": "sum"
+          }
+        ]
+      },
+      "spend": {
+        "label": "Потратить",
+        "group": "Вызываемые",
+        "description": "Проверить, что запаса хватает, и отнять. Не хватает — действие обрывается.",
+        "activation": "manual",
+        "params": [
+          {
+            "key": "what",
+            "label": "Что тратим",
+            "kind": "tag"
+          },
+          {
+            "key": "amount",
+            "label": "Сколько",
+            "kind": "number"
+          },
+          {
+            "key": "note",
+            "label": "Если не хватает",
+            "kind": "text",
+            "optional": true
+          }
+        ],
+        "steps": [
+          {
+            "type": "compare",
+            "value": {
+              "expr": "@what"
+            },
+            "versus": {
+              "expr": "@amount"
+            },
+            "breakIf": "less",
+            "note": {
+              "expr": "@note"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "param": "what"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "@amount"
+            },
+            "targetModifiers": false
           }
         ]
       }

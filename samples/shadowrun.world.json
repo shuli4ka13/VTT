@@ -2403,26 +2403,20 @@
             }
           },
           {
-            "type": "compare",
-            "value": {
-              "expr": "@edge_left"
-            },
-            "versus": {
-              "expr": "таблица(\"edge_actions\", или(@приём, \"нет\"), \"cost\")"
-            },
-            "breakIf": "less",
-            "note": "на приём не хватает Преимущества"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "edge_left"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "таблица(\"edge_actions\", или(@приём, \"нет\"), \"cost\")"
-            },
-            "targetModifiers": false
+            "type": "emit",
+            "event": "spend",
+            "strict": true,
+            "args": {
+              "what": {
+                "expr": "@edge_left"
+              },
+              "amount": {
+                "expr": "таблица(\"edge_actions\", или(@приём, \"нет\"), \"cost\")"
+              },
+              "note": {
+                "expr": "\"на приём не хватает Преимущества\""
+              }
+            }
           },
           {
             "type": "compare",
@@ -2694,26 +2688,20 @@
             ],
             "self": [
               {
-                "type": "compare",
-                "value": {
-                  "expr": "@edge_left"
-                },
-                "versus": {
-                  "expr": "4"
-                },
-                "breakIf": "less",
-                "note": "нужно 4 очк. Преимущества"
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "tag": "edge_left"
-                },
-                "direction": "subtract",
-                "value": {
-                  "expr": "4"
-                },
-                "targetModifiers": false
+                "type": "emit",
+                "event": "spend",
+                "strict": true,
+                "args": {
+                  "what": {
+                    "expr": "@edge_left"
+                  },
+                  "amount": {
+                    "expr": "4"
+                  },
+                  "note": {
+                    "expr": "\"нужно 4 очк. Преимущества\""
+                  }
+                }
               }
             ],
             "steps": [],
@@ -2740,26 +2728,20 @@
             ],
             "self": [
               {
-                "type": "compare",
-                "value": {
-                  "expr": "@edge_left"
-                },
-                "versus": {
-                  "expr": "4"
-                },
-                "breakIf": "less",
-                "note": "нужно 4 очк. Преимущества"
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "tag": "edge_left"
-                },
-                "direction": "subtract",
-                "value": {
-                  "expr": "4"
-                },
-                "targetModifiers": false
+                "type": "emit",
+                "event": "spend",
+                "strict": true,
+                "args": {
+                  "what": {
+                    "expr": "@edge_left"
+                  },
+                  "amount": {
+                    "expr": "4"
+                  },
+                  "note": {
+                    "expr": "\"нужно 4 очк. Преимущества\""
+                  }
+                }
               }
             ],
             "steps": [],
@@ -2897,26 +2879,20 @@
         "description": "За 3 очка Преимущества — освободить 1 ячейку оглушения.",
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "expr": "@edge_left"
-            },
-            "versus": {
-              "expr": "3"
-            },
-            "breakIf": "less",
-            "note": "нужно 3 очк. Преимущества"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "edge_left"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "3"
-            },
-            "targetModifiers": false
+            "type": "emit",
+            "event": "spend",
+            "strict": true,
+            "args": {
+              "what": {
+                "expr": "@edge_left"
+              },
+              "amount": {
+                "expr": "3"
+              },
+              "note": {
+                "expr": "\"нужно 3 очк. Преимущества\""
+              }
+            }
           }
         ],
         "steps": [
@@ -2940,26 +2916,20 @@
         "description": "За 4 очка Преимущества — освободить 1 ячейку здоровья.",
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "expr": "@edge_left"
-            },
-            "versus": {
-              "expr": "4"
-            },
-            "breakIf": "less",
-            "note": "нужно 4 очк. Преимущества"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "edge_left"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "4"
-            },
-            "targetModifiers": false
+            "type": "emit",
+            "event": "spend",
+            "strict": true,
+            "args": {
+              "what": {
+                "expr": "@edge_left"
+              },
+              "amount": {
+                "expr": "4"
+              },
+              "note": {
+                "expr": "\"нужно 4 очк. Преимущества\""
+              }
+            }
           }
         ],
         "steps": [
@@ -3447,6 +3417,56 @@
                 }
               }
             ]
+          }
+        ]
+      },
+      "spend": {
+        "label": "Потратить",
+        "group": "Вызываемые",
+        "description": "Проверить, что запаса хватает, и отнять. Не хватает — действие обрывается.",
+        "activation": "manual",
+        "params": [
+          {
+            "key": "what",
+            "label": "Что тратим",
+            "kind": "tag"
+          },
+          {
+            "key": "amount",
+            "label": "Сколько",
+            "kind": "number"
+          },
+          {
+            "key": "note",
+            "label": "Если не хватает",
+            "kind": "text",
+            "optional": true
+          }
+        ],
+        "steps": [
+          {
+            "type": "compare",
+            "value": {
+              "expr": "@what"
+            },
+            "versus": {
+              "expr": "@amount"
+            },
+            "breakIf": "less",
+            "note": {
+              "expr": "@note"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "param": "what"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "@amount"
+            },
+            "targetModifiers": false
           }
         ]
       }

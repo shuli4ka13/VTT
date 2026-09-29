@@ -1,4 +1,4 @@
-import { packRef, resolveRef } from '../refs.ts';
+import { packRef, resolveRef, lonelyField } from '../refs.ts';
 import { applyValueModifiers } from '../modifiers.ts';
 import { eventTagOf } from '../targets.ts';
 import { requireCalled } from '../effects.ts';
@@ -41,9 +41,12 @@ export function traceLine(t: any, h: any) {
 export function pack(step: StepData, ctx: StepContext) {
   const id = String(step.event ?? '');
   requireCalled(ctx.system, id, who(ctx));
+  const params = ctx.system.effects[id]?.params ?? [];
   const args = step.args && typeof step.args === 'object'
-    ? Object.fromEntries(Object.entries(step.args as Record<string, unknown>)
-      .map(([key, ref]) => [key, packRef(ref, ctx)]))
+    ? Object.fromEntries(Object.entries(step.args as Record<string, unknown>).map(([key, ref]) => {
+      const field = params.find(p => p.key === key)?.kind === 'tag' ? lonelyField(ref) : null;
+      return [key, field ? { const: field } : packRef(ref, ctx)];
+    }))
     : undefined;
   return {
     event: id,

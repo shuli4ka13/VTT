@@ -185,6 +185,7 @@ function fromArgs(key: string, ctx: RefContext): unknown {
   if ('expr' in arg) {
     const source = String((arg as AnyRef).expr);
     const decl = (ctx.paramDefs || []).find(p => p.key === key);
+    if (decl?.kind === 'tag') return lonelyField(arg) ?? evaluate(source, inRecord(ctx));
     return !decl || decl.kind === 'number' ? recordNamesInline(source, ctx) : evaluate(source, inRecord(ctx));
   }
   throw new EngineError(
@@ -380,6 +381,7 @@ function namedValue(name: string, ctx: RefContext): unknown {
     throw new EngineError(`${who(ctx)}: параметр «${name}» не заполнен`);
   }
   if (typeof value === 'object') return undefined;
+  if (decl.kind === 'tag' && typeof value === 'string') return ctx.pass.resolve(value);
   return isFormula(decl, value) ? evaluate(value, inRecord(ctx)) : value;
 }
 

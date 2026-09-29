@@ -1,4 +1,4 @@
-import { packRef, resolveNumber, lonelyField } from '../refs.ts';
+import { packRef, resolveNumber, resolveRef, lonelyField } from '../refs.ts';
 import { EngineError } from '../errors.ts';
 import type { StepData, StepContext } from './index.ts';
 import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
@@ -45,8 +45,13 @@ export function pack(step: StepData, ctx: StepContext) {
     ...(of ? { of } : {}),
     ...(against ? { against } : {}),
     breakIf,
-    ...(typeof step.note === 'string' && step.note.trim() ? { note: step.note.trim() } : {}),
+    ...noteOf(step.note, ctx),
   };
+}
+
+function noteOf(note: unknown, ctx: StepContext): { note?: string } {
+  const text = note && typeof note === 'object' ? resolveRef(packRef(note, ctx), ctx) : note;
+  return typeof text === 'string' && text.trim() ? { note: text.trim() } : {};
 }
 
 export function resolve(step: StepData, ctx: StepContext) {

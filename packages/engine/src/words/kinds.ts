@@ -22,7 +22,7 @@ const ALLOWED: Record<KindPlace, Kind[]> = {
   field: ['number', 'text', 'boolean', 'choice'],
   table: ['number', 'text', 'boolean', 'expr', 'dice', 'choice', 'effect', 'tag'],
   prop: ['number', 'text', 'boolean', 'expr', 'dice', 'choice', 'effect', 'record'],
-  param: ['number', 'text', 'boolean', 'dice', 'choice', 'effect'],
+  param: ['number', 'text', 'boolean', 'dice', 'choice', 'effect', 'tag'],
 };
 
 export const kindsFor = (place: KindPlace): readonly (readonly [Kind, string])[] =>

@@ -5682,26 +5682,20 @@
             "strict": true
           },
           {
-            "type": "compare",
-            "value": {
-              "expr": "@second_wind_left"
-            },
-            "versus": {
-              "expr": "1"
-            },
-            "breakIf": "less",
-            "note": "второе дыхание уже потрачено"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "second_wind_left"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "1"
-            },
-            "targetModifiers": false
+            "type": "emit",
+            "event": "spend",
+            "strict": true,
+            "args": {
+              "what": {
+                "expr": "@second_wind_left"
+              },
+              "amount": {
+                "expr": "1"
+              },
+              "note": {
+                "expr": "\"второе дыхание уже потрачено\""
+              }
+            }
           },
           {
             "id": "amt",
@@ -5733,26 +5727,20 @@
         "steps": [],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "expr": "@action_surge_left"
-            },
-            "versus": {
-              "expr": "1"
-            },
-            "breakIf": "less",
-            "note": "всплеск действий уже потрачен"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "action_surge_left"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "1"
-            },
-            "targetModifiers": false
+            "type": "emit",
+            "event": "spend",
+            "strict": true,
+            "args": {
+              "what": {
+                "expr": "@action_surge_left"
+              },
+              "amount": {
+                "expr": "1"
+              },
+              "note": {
+                "expr": "\"всплеск действий уже потрачен\""
+              }
+            }
           },
           {
             "type": "apply",
@@ -5784,26 +5772,20 @@
             "strict": true
           },
           {
-            "type": "compare",
-            "value": {
-              "expr": "@rages_left"
-            },
-            "versus": {
-              "expr": "1"
-            },
-            "breakIf": "less",
-            "note": "ярости на сегодня кончились"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "rages_left"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "1"
-            },
-            "targetModifiers": false
+            "type": "emit",
+            "event": "spend",
+            "strict": true,
+            "args": {
+              "what": {
+                "expr": "@rages_left"
+              },
+              "amount": {
+                "expr": "1"
+              },
+              "note": {
+                "expr": "\"ярости на сегодня кончились\""
+              }
+            }
           },
           {
             "type": "status",
@@ -5853,26 +5835,20 @@
             "strict": true
           },
           {
-            "type": "compare",
-            "value": {
-              "expr": "@bardic_left"
-            },
-            "versus": {
-              "expr": "1"
-            },
-            "breakIf": "less",
-            "note": "вдохновение на сегодня кончилось"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "bardic_left"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "1"
-            },
-            "targetModifiers": false
+            "type": "emit",
+            "event": "spend",
+            "strict": true,
+            "args": {
+              "what": {
+                "expr": "@bardic_left"
+              },
+              "amount": {
+                "expr": "1"
+              },
+              "note": {
+                "expr": "\"вдохновение на сегодня кончилось\""
+              }
+            }
           }
         ]
       },
@@ -5914,26 +5890,20 @@
             "strict": true
           },
           {
-            "type": "compare",
-            "value": {
-              "expr": "@lay_on_hands_left"
-            },
-            "versus": {
-              "expr": "@amount"
-            },
-            "breakIf": "less",
-            "note": "в запасе наложения рук столько нет"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "lay_on_hands_left"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "@amount"
-            },
-            "targetModifiers": false
+            "type": "emit",
+            "event": "spend",
+            "strict": true,
+            "args": {
+              "what": {
+                "expr": "@lay_on_hands_left"
+              },
+              "amount": {
+                "expr": "@amount"
+              },
+              "note": {
+                "expr": "\"в запасе наложения рук столько нет\""
+              }
+            }
           }
         ]
       },
@@ -5981,26 +5951,20 @@
             "strict": true
           },
           {
-            "type": "compare",
-            "value": {
-              "expr": "@channel_left"
-            },
-            "versus": {
-              "expr": "1"
-            },
-            "breakIf": "less",
-            "note": "божественный канал уже потрачен"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "channel_left"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "1"
-            },
-            "targetModifiers": false
+            "type": "emit",
+            "event": "spend",
+            "strict": true,
+            "args": {
+              "what": {
+                "expr": "@channel_left"
+              },
+              "amount": {
+                "expr": "1"
+              },
+              "note": {
+                "expr": "\"божественный канал уже потрачен\""
+              }
+            }
           }
         ]
       },
@@ -6217,26 +6181,20 @@
         "steps": [],
         "self": [
           {
-            "type": "compare",
-            "value": {
-              "expr": "@hit_dice_left"
-            },
-            "versus": {
-              "expr": "1"
-            },
-            "breakIf": "less",
-            "note": "костей хитов не осталось"
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "hit_dice_left"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "1"
-            },
-            "targetModifiers": false
+            "type": "emit",
+            "event": "spend",
+            "strict": true,
+            "args": {
+              "what": {
+                "expr": "@hit_dice_left"
+              },
+              "amount": {
+                "expr": "1"
+              },
+              "note": {
+                "expr": "\"костей хитов не осталось\""
+              }
+            }
           },
           {
             "id": "amt",
@@ -6449,26 +6407,20 @@
             ],
             "self": [
               {
-                "type": "compare",
-                "value": {
-                  "expr": "@inspiration"
-                },
-                "versus": {
-                  "expr": "1"
-                },
-                "breakIf": "less",
-                "note": "вдохновения нет"
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "tag": "inspiration"
-                },
-                "direction": "subtract",
-                "value": {
-                  "expr": "1"
-                },
-                "targetModifiers": false
+                "type": "emit",
+                "event": "spend",
+                "strict": true,
+                "args": {
+                  "what": {
+                    "expr": "@inspiration"
+                  },
+                  "amount": {
+                    "expr": "1"
+                  },
+                  "note": {
+                    "expr": "\"вдохновения нет\""
+                  }
+                }
               }
             ],
             "steps": [],
@@ -6495,26 +6447,20 @@
             ],
             "self": [
               {
-                "type": "compare",
-                "value": {
-                  "expr": "@luck_left"
-                },
-                "versus": {
-                  "expr": "1"
-                },
-                "breakIf": "less",
-                "note": "очки удачи кончились"
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "tag": "luck_left"
-                },
-                "direction": "subtract",
-                "value": {
-                  "expr": "1"
-                },
-                "targetModifiers": false
+                "type": "emit",
+                "event": "spend",
+                "strict": true,
+                "args": {
+                  "what": {
+                    "expr": "@luck_left"
+                  },
+                  "amount": {
+                    "expr": "1"
+                  },
+                  "note": {
+                    "expr": "\"очки удачи кончились\""
+                  }
+                }
               }
             ],
             "steps": [],
@@ -9794,6 +9740,56 @@
             "when": {
               "expr": "@event.amount == 9"
             }
+          }
+        ]
+      },
+      "spend": {
+        "label": "Потратить",
+        "group": "Вызываемые",
+        "description": "Проверить, что запаса хватает, и отнять. Не хватает — действие обрывается.",
+        "activation": "manual",
+        "params": [
+          {
+            "key": "what",
+            "label": "Что тратим",
+            "kind": "tag"
+          },
+          {
+            "key": "amount",
+            "label": "Сколько",
+            "kind": "number"
+          },
+          {
+            "key": "note",
+            "label": "Если не хватает",
+            "kind": "text",
+            "optional": true
+          }
+        ],
+        "steps": [
+          {
+            "type": "compare",
+            "value": {
+              "expr": "@what"
+            },
+            "versus": {
+              "expr": "@amount"
+            },
+            "breakIf": "less",
+            "note": {
+              "expr": "@note"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "param": "what"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "@amount"
+            },
+            "targetModifiers": false
           }
         ]
       }

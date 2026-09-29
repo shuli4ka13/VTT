@@ -15,6 +15,7 @@ import { modifiersOf } from './convert/modifiers.ts';
 import { argsOf } from './convert/args.ts';
 import { fieldRollsOf } from './convert/field-rolls.ts';
 import { namesOf } from './convert/names.ts';
+import { spendOf } from './convert/spend.ts';
 import { withTableFields } from '../../packages/engine/src/model/sheet-columns.ts';
 
 const world = {
@@ -47,6 +48,7 @@ Object.assign(world, modifiersOf(world));
 Object.assign(world, argsOf(world));
 Object.assign(world, fieldRollsOf(world));
 Object.assign(world, namesOf(world));
+Object.assign(world, spendOf(world));
 world.system = withTableFields(world.system);
 
 const out = fileURLToPath(new URL('../dnd5e.world.json', import.meta.url));
