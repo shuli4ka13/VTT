@@ -3,7 +3,7 @@ import { useWorld, freeId, slugOf, useBook } from '../../store/world.ts';
 import { useUsage, usersOf } from './usage.ts';
 import { LiveValue } from './live-value.tsx';
 import { optionsOf, choiceTableOf } from '@vtt/engine/model/lists';
-import { kindsFor } from '@vtt/engine/words/kinds';
+import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
 import { FieldPreview } from './field-preview.tsx';
 import { CONTROLS } from '../../sheet/controls/index.tsx';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
@@ -241,7 +241,7 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
               />
             </Field>
             {from ? (
-              <Field label="Из какой таблицы">
+              <Field label="Из таблицы">
                 <div className="inline inline--tight">
                   <Select
                     value={from}
@@ -416,12 +416,12 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
         </div>
       </Card>
 
-      <Fold title="ещё" summary={field.lives === 'desk' ? 'одно на стол' : field.lives === 'group' ? 'одно на группу' : undefined}>
-        <Field label="Сколько значений" hint={field.lives === 'desk' ? 'Одно на всю комнату: кость эскалации, Страх ведущего. В формулах эффектов — @стол.…'
+      <Fold title="ещё" summary={field.lives === 'desk' ? 'общее на столе' : field.lives === 'group' ? 'общее у группы' : undefined}>
+        <Field label="Чьё значение" hint={field.lives === 'desk' ? 'Одно на всю комнату: кость эскалации, Страх ведущего. В формулах эффектов — @стол.…'
           : field.lives === 'group' ? 'Одно на группу листов: общий счётчик отряда, Жар банды. Лист без группы хранит своё.' : undefined}>
           <Select
             value={field.lives ?? 'sheet'}
-            options={[['sheet', 'своё у каждого листа'], ['group', 'одно на группу — отряд, банду'], ['desk', 'одно на стол — на всю комнату']] as const}
+            options={[['sheet', 'своё у каждого листа'], ['group', 'общее у группы — отряда, банды'], ['desk', 'общее на столе — одно на комнату']] as const}
             onChange={next => edit(draft => { if (next === 'sheet') delete draft.lives; else draft.lives = next; })}
           />
         </Field>
@@ -445,21 +445,20 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
   );
 }
 
-const TYPE_WORDS: Record<string, string> = { number: 'число', text: 'текст', boolean: 'да / нет' };
 
 const storedWords = (system: System, field: FieldModel): string => {
-  if (field.lives === 'group') return `в группе · ${TYPE_WORDS[(field.value as { type: string }).type] ?? ''}`;
-  if (field.lives === 'desk') return `на столе · ${TYPE_WORDS[(field.value as { type: string }).type] ?? ''}`;
+  if (field.lives === 'group') return `в группе · ${kindWord((field.value as { type: string }).type)}`;
+  if (field.lives === 'desk') return `на столе · ${kindWord((field.value as { type: string }).type)}`;
   const table = choiceTableOf(field);
   const from = table ? system.tables?.[table]?.label || table : '';
   const shape = field.control ? CONTROLS[field.control].toLowerCase() : '';
   if (from) return `выбирает игрок · из «${from}»${shape ? ` · ${shape}` : ''}`;
   const value = field.value as { type: string };
-  return `вводит игрок · ${TYPE_WORDS[value.type] ?? value.type}${shape ? ` · ${shape}` : ''}`;
+  return `вводит игрок · ${kindWord(value.type)}${shape ? ` · ${shape}` : ''}`;
 };
 
 const metaOf = (system: System, value: FieldValue, field?: FieldModel) => {
-  if (value.kind === 'stored') return field ? storedWords(system, field) : `вводит игрок · ${TYPE_WORDS[value.type] ?? value.type}`;
+  if (value.kind === 'stored') return field ? storedWords(system, field) : `вводит игрок · ${kindWord(value.type)}`;
   const lookup = tableCallOf(value.expr);
   if (lookup) return `= таблица «${system.tables?.[lookup.table]?.label || lookup.table || '—'}»`;
   return value.expr ? `= ${formulaAsLabels(system, value.expr)}` : '= формула не дописана';

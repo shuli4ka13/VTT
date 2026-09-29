@@ -177,7 +177,7 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
 const COLUMN_GRID: GridColumn[] = [
   { key: 'label', label: 'Колонка', width: 170 },
   { key: 'kind', label: 'Тип', width: 130 },
-  { key: 'many', label: 'Сколько', width: 120, hint: 'для «из таблицы»: одно значение или несколько' },
+  { key: 'many', label: 'Сколько значений', width: 150, hint: 'для «из таблицы»: одно значение или несколько' },
   { key: 'from', label: 'Из таблицы', width: 150, hint: 'для «из таблицы»: из какой' },
 ];
 

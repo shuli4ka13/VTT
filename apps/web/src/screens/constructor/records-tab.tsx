@@ -343,7 +343,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
                   </Field>
                 ) : null}
                 {String(prop.kind) === 'choice' ? (
-                  <Field label="Из какой таблицы" needed={!prop.from}>
+                  <Field label="Из таблицы" needed={!prop.from}>
                     <Select
                       value={String(prop.from ?? '')}
                       options={[['', '— какая таблица —'],
