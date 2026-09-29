@@ -10,12 +10,11 @@ import {
   Card, CardHead, Field, Input, Select, Button, Empty, Verdict, Chip, DangerButton, LabelInput, Fold,
 } from '../../ui/primitives.tsx';
 import type { System, RecordKind, Binding, Param, Effect, ValueKind } from '@vtt/schema';
-import { SlotInput } from './slot-input.tsx';
+import { CallEditor } from './call-editor.tsx';
 import { BlockPick, fieldBlocks } from './block-pick.tsx';
 import { calledOf } from '@vtt/engine/engine/effects';
 import { argsWithProps, propKeysOf } from '@vtt/engine/model/owned';
 import { blockOf } from '@vtt/engine/model/blocks';
-import { listOf } from '@vtt/engine/model/lists';
 import { blockTree, BlockBranches } from './block-tree.tsx';
 import { freeGroupName } from './groups.ts';
 
@@ -425,96 +424,39 @@ function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWi
   onFillWithProp: (param: Param) => void;
 }) {
   const effect = system.effects[binding.effect];
-  const params = effect?.params ?? [];
   const implicit = new Set((recordKind.props ?? []).map(prop => prop.key));
-  const isClosed = (key: string) => {
-    const value = binding.args?.[key];
-    return (value !== undefined && value !== null) || implicit.has(key);
-  };
-  const unclosed = params.filter(param => !isClosed(param.key) && !param.optional && !param.ask);
+  const closed = (key: string) => binding.args?.[key] !== undefined || implicit.has(key);
+  const buttons = Object.entries(system.effects).filter(([, e]) => (e.activation ?? 'manual') !== 'passive');
 
   return (
     <Card tone="flat">
-      <div className="row">
-        <Field label="Как назвать кнопку" hint="То, что игрок увидит на листе.">
-          <Input value={binding.label ?? ''} onChange={label => onEdit(draft => { draft.label = label; })} />
-        </Field>
-        <Field label="Какой эффект применяется" needed={!binding.effect}>
-          <Select
-            value={binding.effect}
-            options={[['', '— какой эффект —'],
-              ...Object.entries(system.effects)
-                .filter(([, e]) => (e.activation ?? 'manual') !== 'passive')
-                .map(([key, e]) => [key, e.label ?? key] as const)] as never}
-            onChange={next => onEdit(draft => { draft.effect = next; })}
-          />
-        </Field>
-        <Field label=" ">
-          <Button size="sm" variant="danger" onClick={onDelete}>Убрать</Button>
-        </Field>
-      </div>
-
-      {params.length ? (
-        <div className="stack stack--tight">
-          <span className="field__label">Что отправляем в «{effect?.label || binding.effect}» — его «Что приходит»</span>
-          {params.map(param => (
-            <div key={param.key} className={`need-fill ${isClosed(param.key) ? 'need-fill--ok' : ''}`}>
-              <Field label={param.label ?? param.key}>
-                <SlotInput
-                  where={`${binding.label || effect?.label || binding.effect} · ${param.label ?? param.key}`}
-                  value={binding.args?.[param.key] as never}
-                  context={{ system, effect: effect ?? ({ label: '' } as Effect), earlier: [], recordKind }}
-                  allow={['prop', 'expr', 'const', 'table', 'empty']}
-                  placeholder="число или формула — или выберите ниже"
-                  extraOptions={[
-                    ...(isClosed(param.key) ? [] : [{
-                      group: 'Завести',
-                      label: `новое свойство «${param.label ?? param.key}»`,
-                      ref: { prop: '' } as never,
-                      synthetic: true,
-                      onPick: () => onFillWithProp(param),
-                    }]),
-                    ...(listOf(system, param.from) ?? []).map(option => ({
-                      group: (system.tables?.[String(param.from)]?.label) || 'из таблицы',
-                      label: option.label ?? String(option.value),
-                      ref: { expr: JSON.stringify(String(option.value)) } as never,
-                    })),
-                  ]}
-                  onChange={next => onEdit(draft => {
-                    draft.args ??= {};
-                    if (next) draft.args[param.key] = next as never;
-                    else delete draft.args[param.key];
-                  })}
-                />
-              </Field>
-              {!isClosed(param.key) ? (
-                <div className="inline inline--tight need-fill__ways">
-                  <span className="faint">взять:</span>
-                  {sourcesFor(param, recordKind, system).map(source => (
-                    <Button
-                      key={source.label} size="sm" variant="ghost"
-                      onClick={() => onEdit(draft => { draft.args ??= {}; draft.args[param.key] = source.ref as never; })}
-                    >
-                      {source.label}
-                    </Button>
-                  ))}
-                  <Button size="sm" onClick={() => onFillWithProp(param)}>
-                    + новое свойство «{param.label ?? param.key}»
-                  </Button>
-                </div>
-              ) : null}
-              {asksAtTable(param, isClosed(param.key))}
-            </div>
-          ))}
-          {unclosed.length ? (
-            <Verdict tone="bad">
-              не закрыто: {unclosed.map(param => param.label ?? param.key).join(', ')}
-            </Verdict>
-          ) : null}
-        </div>
-      ) : effect ? (
-        <Chip>у эффекта нет входов</Chip>
-      ) : null}
+      <CardHead
+        title={<LabelInput value={binding.label ?? ''} placeholder="как назвать кнопку" onCommit={label => onEdit(draft => { draft.label = label; })} />}
+        actions={<DangerButton size="sm" onConfirm={onDelete}>Убрать</DangerButton>}
+      />
+      <CallEditor
+        system={system}
+        effect={binding.effect}
+        effects={buttons}
+        onEffect={next => onEdit(draft => { draft.effect = next; })}
+        args={binding.args as Record<string, unknown> | undefined}
+        fromProps={implicit}
+        context={{ system, effect: effect ?? ({ label: '' } as Effect), earlier: [], recordKind }}
+        where={binding.label || effect?.label || binding.effect}
+        allow={['prop', 'expr', 'const', 'table', 'empty']}
+        onArg={(key, next) => onEdit(draft => {
+          draft.args ??= {};
+          if (next) draft.args[key] = next as never; else delete draft.args[key];
+          if (!Object.keys(draft.args).length) delete draft.args;
+        })}
+        extraFor={param => [
+          ...(closed(param.key) ? [] : [{
+            group: 'Завести', label: `новое свойство «${param.label ?? param.key}»`,
+            ref: { expr: '' } as never, synthetic: true, onPick: () => onFillWithProp(param),
+          }]),
+          ...sourcesFor(param, recordKind, system).map(source => ({ group: 'Свойства записи', label: source.label, ref: source.ref as never })),
+        ]}
+      />
     </Card>
   );
 }
@@ -545,11 +487,6 @@ function sourcesFor(param: Param, kind: RecordKind, system: System): { label: st
         ref: { expr: `@${prop.key}.${column.key}` },
       })));
   return [...own, ...viaTable];
-}
-
-function asksAtTable(param: Param, closed: boolean) {
-  if (closed || !param.ask) return null;
-  return <span className="faint need-fill__ways">{`не заполните — спросят ${param.ask.by === 'gm' ? 'ведущего' : 'игрока'} за столом`}</span>;
 }
 
 function propDestiny(system: System, kind: RecordKind, propKey: string): string {

@@ -89,7 +89,7 @@ export function propsNeeded(system: System, kind: RecordKind | undefined, bindin
     for (const param of system.effects[binding.effect]?.params ?? []) {
       const arg = args[param.key] as { expr?: string } | undefined;
       if (param.optional || !arg?.expr) continue;
-      let deps: readonly string[] = [];
+      let deps: readonly string[];
       try { deps = compile(arg.expr).deps; } catch { continue; }
       for (const dep of deps) if (props.has(dep)) out.add(dep);
     }

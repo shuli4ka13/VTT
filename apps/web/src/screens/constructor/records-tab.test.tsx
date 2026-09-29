@@ -5,6 +5,15 @@ import { RecordsTab } from './records-tab.tsx';
 import { useWorld } from '../../store/world.ts';
 import { optionsFor } from './slot-input.tsx';
 
+const строкаВхода = (подпись: string) => [...document.querySelectorAll('.pair')].find(el => el.textContent?.includes(подпись))!;
+
+const набрать = (подпись: string, текст: string) => {
+  const поле = [...строкаВхода(подпись).querySelectorAll('input.chips__text')].at(-1) as HTMLInputElement;
+  fireEvent.focus(поле);
+  fireEvent.change(поле, { target: { value: `@${текст}`, selectionStart: текст.length + 1 } });
+  return [...document.querySelectorAll('.slot__option')].map(o => o.textContent?.trim() ?? '');
+};
+
 describe('RecordsTab: тип видит входы эффекта', () => {
   beforeEach(() => {
     useWorld.setState(state => ({
@@ -26,17 +35,18 @@ describe('RecordsTab: тип видит входы эффекта', () => {
     }));
   });
 
-  it('незакрытая вход заводит свойство кнопкой и закрывается', () => {
+  it('незаполненный вход заводит свойство из подсказки и берёт его сам', () => {
     render(<RecordsTab />);
-    expect(screen.getByText(/не закрыто/).textContent).toContain('Кость урона');
+    expect(строкаВхода('Кость урона').textContent).toContain('не заполнено');
 
-    fireEvent.click(screen.getByText('+ новое свойство «Кость урона»'));
+    набрать('Кость урона', '');
+    fireEvent.mouseDown([...document.querySelectorAll('.slot__option')].find(o => o.textContent?.includes('новое свойство'))!);
 
     const kind = useWorld.getState().system.records!.weapon!;
     expect(kind.props!.some(p => p.label === 'Кость урона' && p.kind === 'dice')).toBe(true);
     expect(kind.props![0]!.key).toBe('кость');
     expect((kind.bindings![0] as any).args?.['кость']).toBeUndefined();
-    expect(screen.queryByText(/не закрыто/)).toBeNull();
+    expect(строкаВхода('Кость урона').textContent).toContain('берётся из свойства');
   });
 
   it('на экране нет слов «дырка», «параметр», «привязка»', () => {
@@ -71,7 +81,7 @@ describe('RecordsTab: тип видит входы эффекта', () => {
     }));
 
     const { container } = render(<RecordsTab />);
-    expect(container.querySelector('.need-fill'), 'незакрытая вход нарисована').toBeTruthy();
+    expect(container.querySelector('.pair'), 'вход нарисован').toBeTruthy();
 
     const system = useWorld.getState().system;
     const предложат = optionsFor({
@@ -227,15 +237,6 @@ describe('слот привязки подсказывает то, чем его
     useWorld.setState(state => ({ ...state, system: { ...state.system, ...система() }, activeRecordKind: 'weapon' }));
   });
 
-  const набрать = (подпись: string, текст: string) => {
-    const строка = [...document.querySelectorAll('.need-fill')]
-      .find(el => el.textContent?.includes(подпись))!;
-    const поле = [...строка.querySelectorAll('input.chips__text')].at(-1) as HTMLInputElement;
-    fireEvent.focus(поле);
-    fireEvent.change(поле, { target: { value: `@${текст}`, selectionStart: текст.length + 1 } });
-    return [...document.querySelectorAll('.slot__option')].map(o => o.textContent?.trim() ?? '');
-  };
-
   it('свойства записи и таблицы предлагаются, а не только поля', () => {
     render(<RecordsTab />);
     const видно = набрать('Бонус атаки', 'чем');
@@ -252,7 +253,7 @@ describe('слот привязки подсказывает то, чем его
     expect(свой).toBeLessThan(чужой === -1 ? Number.MAX_SAFE_INTEGER : чужой);
   });
 
-  it('пустая вход первым делом предлагает завести свойство — с видом и словарём', () => {
+  it('пустой вход первым делом предлагает завести свойство — с видом и словарём', () => {
     render(<RecordsTab />);
     const видно = набрать('Тип урона', '');
     expect(видно.some(t => t.includes('новое свойство «Тип урона»')), видно.join(' | ')).toBe(true);
