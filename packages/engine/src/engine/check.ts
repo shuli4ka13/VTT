@@ -40,10 +40,12 @@ export function fieldCheck(system: System, tag: string): Check & { label: string
   if (!field.roll) throw new EngineError(`по полю «${field.label}» не бросают — включите броски в конструкторе`);
   const constant = (field.roll as { die?: { constant?: string } }).die?.constant;
   if (!constant) throw new EngineError(`по полю «${field.label}» бросают, но кость не выбрана`);
+  const { label, count, bonus, tags } = field.roll;
   return {
-    label: field.roll.label ?? field.label,
+    label: label ?? field.label,
     die: { constant },
-    ...(field.roll.pool ? { count: { expr: `@${tag}` } } : { bonus: { expr: `@${tag}` } }),
-    ...(field.roll.tags?.length ? { tags: field.roll.tags } : {}),
+    ...(count ? { count } : {}),
+    ...(bonus ? { bonus } : {}),
+    ...(tags?.length ? { tags } : {}),
   };
 }

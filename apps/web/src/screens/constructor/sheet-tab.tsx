@@ -375,7 +375,7 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
             variant={field.roll ? 'primary' : undefined}
             onClick={() => edit(draft => {
               const first = dieEntries(system)[0]?.[0];
-              draft.roll = draft.roll ? undefined : { label: `Проверка: ${draft.label}`, ...(first ? { die: { constant: first } } : {}) };
+              draft.roll = draft.roll ? undefined : { label: `Проверка: ${draft.label}`, ...(first ? { die: { constant: first } } : {}), bonus: { expr: `@${draft.tag}` } };
             })}
           >
             {field.roll ? 'Броски включены' : 'Включить броски'}
@@ -392,11 +392,12 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
           ) : null}
           {field.roll ? (
             <Select
-              value={field.roll.pool ? 'pool' : 'bonus'}
+              value={field.roll.count ? 'pool' : 'bonus'}
               options={[['bonus', 'поле — прибавка к кости'], ['pool', 'поле — число костей']] as const}
               onChange={next => edit(draft => {
                 if (!draft.roll) return;
-                if (next === 'pool') draft.roll.pool = true; else delete draft.roll.pool;
+                const self = { expr: `@${draft.tag}` };
+                if (next === 'pool') { draft.roll.count = self; delete draft.roll.bonus; } else { draft.roll.bonus = self; delete draft.roll.count; }
               })}
             />
           ) : null}

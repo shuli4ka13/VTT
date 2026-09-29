@@ -13,6 +13,7 @@ import { typesOf } from './convert/types.ts';
 import { ownedOf } from './convert/owned.ts';
 import { modifiersOf } from './convert/modifiers.ts';
 import { argsOf } from './convert/args.ts';
+import { fieldRollsOf } from './convert/field-rolls.ts';
 
 const world = {
   title: 'D&D 5e',
@@ -41,6 +42,7 @@ Object.assign(world, typesOf({ system: world.system }));
 Object.assign(world, ownedOf(world));
 Object.assign(world, modifiersOf(world));
 Object.assign(world, argsOf(world));
+Object.assign(world, fieldRollsOf(world));
 
 const out = fileURLToPath(new URL('../dnd5e.world.json', import.meta.url));
 writeFileSync(out, `${JSON.stringify(world, null, 2)}\n`);

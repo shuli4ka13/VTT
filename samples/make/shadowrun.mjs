@@ -2,6 +2,7 @@ import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { modifiersOf } from './convert/modifiers.ts';
 import { argsOf } from './convert/args.ts';
+import { fieldRollsOf } from './convert/field-rolls.ts';
 
 const ATTRIBUTES = [
   ['body', 'Тело'], ['agility', 'Проворство'], ['reaction', 'Реакция'], ['strength', 'Сила'],
@@ -583,5 +584,5 @@ const world = {
 };
 
 const out = fileURLToPath(new URL('../shadowrun.world.json', import.meta.url));
-writeFileSync(out, `${JSON.stringify(argsOf(modifiersOf(world)), null, 2)}\n`);
+writeFileSync(out, `${JSON.stringify(fieldRollsOf(argsOf(modifiersOf(world))), null, 2)}\n`);
 console.log(`Shadowrun 6: полей ${world.system.fields.length}, эффектов ${Object.keys(world.system.effects).length}, записей ${world.compendium.records.length}, листов ${world.sheets.length}`);

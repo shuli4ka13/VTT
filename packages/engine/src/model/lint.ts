@@ -262,7 +262,7 @@ function fieldRollProblems(system: System): Problem[] {
     const die = field.roll.die?.constant;
     if (!die) { out.push({ where, level: 'error', text: `по полю «${field.label}» бросают, но кость не выбрана` }); continue; }
     const constant = system.constants?.[die];
-    if (field.roll.pool && constant?.kind === 'die' && (constant.dice ?? []).length !== 1) {
+    if (field.roll.count && constant?.kind === 'die' && (constant.dice ?? []).length !== 1) {
       out.push({ where, level: 'error', text: `поле «${field.label}» задаёт число костей, а кость «${constant.label ?? die}» составная` });
     }
   }

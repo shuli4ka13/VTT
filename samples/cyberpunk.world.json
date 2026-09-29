@@ -284,6 +284,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@concentration_total"
           }
         },
         "value": {
@@ -315,6 +318,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@conceal_reveal_total"
           }
         },
         "value": {
@@ -346,6 +352,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@lip_reading_total"
           }
         },
         "value": {
@@ -377,6 +386,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@perception_total"
           }
         },
         "value": {
@@ -408,6 +420,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@tracking_total"
           }
         },
         "value": {
@@ -439,6 +454,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@athletics_total"
           }
         },
         "value": {
@@ -470,6 +488,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@contortionist_total"
           }
         },
         "value": {
@@ -501,6 +522,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@dance_total"
           }
         },
         "value": {
@@ -532,6 +556,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@endurance_total"
           }
         },
         "value": {
@@ -563,6 +590,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@resist_torture_total"
           }
         },
         "value": {
@@ -594,6 +624,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@stealth_total"
           }
         },
         "value": {
@@ -625,6 +658,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@drive_land_total"
           }
         },
         "value": {
@@ -656,6 +692,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@pilot_air_total"
           }
         },
         "value": {
@@ -687,6 +726,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@pilot_sea_total"
           }
         },
         "value": {
@@ -718,6 +760,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@riding_total"
           }
         },
         "value": {
@@ -749,6 +794,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@accounting_total"
           }
         },
         "value": {
@@ -780,6 +828,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@animal_handling_total"
           }
         },
         "value": {
@@ -811,6 +862,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@bureaucracy_total"
           }
         },
         "value": {
@@ -842,6 +896,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@business_total"
           }
         },
         "value": {
@@ -873,6 +930,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@composition_total"
           }
         },
         "value": {
@@ -904,6 +964,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@criminology_total"
           }
         },
         "value": {
@@ -935,6 +998,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@cryptography_total"
           }
         },
         "value": {
@@ -966,6 +1032,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@deduction_total"
           }
         },
         "value": {
@@ -997,6 +1066,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@education_total"
           }
         },
         "value": {
@@ -1028,6 +1100,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@gamble_total"
           }
         },
         "value": {
@@ -1059,6 +1134,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@language_total"
           }
         },
         "value": {
@@ -1090,6 +1168,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@library_search_total"
           }
         },
         "value": {
@@ -1121,6 +1202,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@local_expert_total"
           }
         },
         "value": {
@@ -1152,6 +1236,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@science_total"
           }
         },
         "value": {
@@ -1183,6 +1270,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@tactics_total"
           }
         },
         "value": {
@@ -1214,6 +1304,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@wilderness_survival_total"
           }
         },
         "value": {
@@ -1245,6 +1338,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@brawling_total"
           }
         },
         "value": {
@@ -1276,6 +1372,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@evasion_total"
           }
         },
         "value": {
@@ -1307,6 +1406,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@martial_arts_total"
           }
         },
         "value": {
@@ -1338,6 +1440,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@melee_weapon_total"
           }
         },
         "value": {
@@ -1369,6 +1474,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@acting_total"
           }
         },
         "value": {
@@ -1400,6 +1508,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@play_instrument_total"
           }
         },
         "value": {
@@ -1431,6 +1542,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@archery_total"
           }
         },
         "value": {
@@ -1462,6 +1576,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@autofire_total"
           }
         },
         "value": {
@@ -1493,6 +1610,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@handgun_total"
           }
         },
         "value": {
@@ -1524,6 +1644,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@heavy_weapons_total"
           }
         },
         "value": {
@@ -1555,6 +1678,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@shoulder_arms_total"
           }
         },
         "value": {
@@ -1586,6 +1712,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@bribery_total"
           }
         },
         "value": {
@@ -1617,6 +1746,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@conversation_total"
           }
         },
         "value": {
@@ -1648,6 +1780,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@human_perception_total"
           }
         },
         "value": {
@@ -1679,6 +1814,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@interrogation_total"
           }
         },
         "value": {
@@ -1710,6 +1848,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@persuasion_total"
           }
         },
         "value": {
@@ -1741,6 +1882,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@personal_grooming_total"
           }
         },
         "value": {
@@ -1772,6 +1916,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@streetwise_total"
           }
         },
         "value": {
@@ -1803,6 +1950,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@trading_total"
           }
         },
         "value": {
@@ -1834,6 +1984,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@wardrobe_total"
           }
         },
         "value": {
@@ -1865,6 +2018,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@air_vehicle_tech_total"
           }
         },
         "value": {
@@ -1896,6 +2052,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@basic_tech_total"
           }
         },
         "value": {
@@ -1927,6 +2086,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@cybertech_total"
           }
         },
         "value": {
@@ -1958,6 +2120,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@demolitions_total"
           }
         },
         "value": {
@@ -1989,6 +2154,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@electronics_total"
           }
         },
         "value": {
@@ -2020,6 +2188,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@first_aid_total"
           }
         },
         "value": {
@@ -2051,6 +2222,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@forgery_total"
           }
         },
         "value": {
@@ -2082,6 +2256,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@land_vehicle_tech_total"
           }
         },
         "value": {
@@ -2113,6 +2290,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@paint_draw_total"
           }
         },
         "value": {
@@ -2144,6 +2324,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@paramedic_total"
           }
         },
         "value": {
@@ -2175,6 +2358,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@photography_total"
           }
         },
         "value": {
@@ -2206,6 +2392,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@pick_lock_total"
           }
         },
         "value": {
@@ -2237,6 +2426,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@pick_pocket_total"
           }
         },
         "value": {
@@ -2268,6 +2460,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@sea_vehicle_tech_total"
           }
         },
         "value": {
@@ -2299,6 +2494,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@weaponstech_total"
           }
         },
         "value": {

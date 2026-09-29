@@ -52,16 +52,18 @@ export const fieldOption = z.object({
   label: z.string().min(1),
 });
 
+export const rollSpec = z.object({
+  die: z.object({ constant: z.string().min(1) }),
+  count: formula.optional(),
+  bonus: formula.optional(),
+  tags: z.array(z.string().min(1)).optional(),
+}).passthrough();
+
 export const field = z.object({
   tag,
   label: z.string(),
   group: z.string().optional(),
-  roll: z.object({
-    label: z.string().optional(),
-    die: z.object({ constant: z.string().min(1) }).optional(),
-    pool: z.boolean().optional(),
-    tags: z.array(z.string().min(1)).optional(),
-  }).passthrough().optional(),
+  roll: z.lazy(() => rollSpec.partial({ die: true }).extend({ label: z.string().optional() })).optional(),
   value: fieldValue,
 
   control: control.optional(),
@@ -288,11 +290,7 @@ export const system = z.object({
   roll_edits: z.record(z.string(), rollEdit).optional(),
   advantage: z.object({ methods: z.record(z.string(), z.boolean()).optional() }).passthrough().optional(),
 
-  initiative: z.object({
-    die: z.object({ constant: z.string().min(1) }),
-    bonus: slotRef.optional(),
-    tags: z.array(z.string().min(1)).optional(),
-  }).passthrough().optional(),
+  initiative: z.lazy(() => rollSpec).optional(),
 
   mannequins: z.array(z.lazy(() => sheet)).optional(),
   library: z.array(z.lazy(() => compendiumRecord)).optional(),
@@ -349,6 +347,7 @@ export const world = z.object({
 
 export type SlotRef = z.infer<typeof slotRef>;
 export type Formula = z.infer<typeof formula>;
+export type RollSpec = z.infer<typeof rollSpec>;
 export type ValueKind = z.infer<typeof valueKind>;
 export type RefSide = z.infer<typeof refSide>;
 export type Tag = z.infer<typeof tag>;

@@ -1669,6 +1669,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@str"
           }
         },
         "value": {
@@ -1688,6 +1691,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@dex"
           }
         },
         "value": {
@@ -1707,6 +1713,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@con"
           }
         },
         "value": {
@@ -1726,6 +1735,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@int"
           }
         },
         "value": {
@@ -1745,6 +1757,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@wis"
           }
         },
         "value": {
@@ -1764,6 +1779,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@cha"
           }
         },
         "value": {
@@ -1894,6 +1912,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@athletics"
           }
         },
         "value": {
@@ -1925,6 +1946,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@acrobatics"
           }
         },
         "value": {
@@ -1956,6 +1980,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@sleight_of_hand"
           }
         },
         "value": {
@@ -1987,6 +2014,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@stealth"
           }
         },
         "value": {
@@ -2018,6 +2048,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@arcana"
           }
         },
         "value": {
@@ -2049,6 +2082,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@history"
           }
         },
         "value": {
@@ -2080,6 +2116,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@investigation"
           }
         },
         "value": {
@@ -2111,6 +2150,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@nature"
           }
         },
         "value": {
@@ -2142,6 +2184,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@religion"
           }
         },
         "value": {
@@ -2173,6 +2218,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@animal_handling"
           }
         },
         "value": {
@@ -2204,6 +2252,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@insight"
           }
         },
         "value": {
@@ -2235,6 +2286,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@medicine"
           }
         },
         "value": {
@@ -2266,6 +2320,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@perception"
           }
         },
         "value": {
@@ -2297,6 +2354,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@survival"
           }
         },
         "value": {
@@ -2328,6 +2388,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@deception"
           }
         },
         "value": {
@@ -2359,6 +2422,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@intimidation"
           }
         },
         "value": {
@@ -2390,6 +2456,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@performance"
           }
         },
         "value": {
@@ -2421,6 +2490,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@persuasion"
           }
         },
         "value": {
@@ -2482,6 +2554,9 @@
           ],
           "die": {
             "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@dex_save"
           }
         },
         "value": {

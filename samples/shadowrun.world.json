@@ -441,10 +441,12 @@
           "die": {
             "constant": "pool"
           },
-          "pool": true,
           "tags": [
             "проверка"
-          ]
+          ],
+          "count": {
+            "expr": "@astral_pool"
+          }
         },
         "value": {
           "kind": "formula",
@@ -460,10 +462,12 @@
           "die": {
             "constant": "pool"
           },
-          "pool": true,
           "tags": [
             "проверка"
-          ]
+          ],
+          "count": {
+            "expr": "@athletics_pool"
+          }
         },
         "value": {
           "kind": "formula",
@@ -479,10 +483,12 @@
           "die": {
             "constant": "pool"
           },
-          "pool": true,
           "tags": [
             "проверка"
-          ]
+          ],
+          "count": {
+            "expr": "@biotech_pool"
+          }
         },
         "value": {
           "kind": "formula",
@@ -498,10 +504,12 @@
           "die": {
             "constant": "pool"
           },
-          "pool": true,
           "tags": [
             "проверка"
-          ]
+          ],
+          "count": {
+            "expr": "@close_combat_pool"
+          }
         },
         "value": {
           "kind": "formula",
@@ -517,10 +525,12 @@
           "die": {
             "constant": "pool"
           },
-          "pool": true,
           "tags": [
             "проверка"
-          ]
+          ],
+          "count": {
+            "expr": "@cracking_pool"
+          }
         },
         "value": {
           "kind": "formula",
@@ -536,10 +546,12 @@
           "die": {
             "constant": "pool"
           },
-          "pool": true,
           "tags": [
             "проверка"
-          ]
+          ],
+          "count": {
+            "expr": "@perception_pool"
+          }
         },
         "value": {
           "kind": "formula",
@@ -555,10 +567,12 @@
           "die": {
             "constant": "pool"
           },
-          "pool": true,
           "tags": [
             "проверка"
-          ]
+          ],
+          "count": {
+            "expr": "@conjuring_pool"
+          }
         },
         "value": {
           "kind": "formula",
@@ -574,10 +588,12 @@
           "die": {
             "constant": "pool"
           },
-          "pool": true,
           "tags": [
             "проверка"
-          ]
+          ],
+          "count": {
+            "expr": "@enchanting_pool"
+          }
         },
         "value": {
           "kind": "formula",
@@ -593,10 +609,12 @@
           "die": {
             "constant": "pool"
           },
-          "pool": true,
           "tags": [
             "проверка"
-          ]
+          ],
+          "count": {
+            "expr": "@engineering_pool"
+          }
         },
         "value": {
           "kind": "formula",
@@ -612,10 +630,12 @@
           "die": {
             "constant": "pool"
           },
-          "pool": true,
           "tags": [
             "проверка"
-          ]
+          ],
+          "count": {
+            "expr": "@sorcery_pool"
+          }
         },
         "value": {
           "kind": "formula",
@@ -631,10 +651,12 @@
           "die": {
             "constant": "pool"
           },
-          "pool": true,
           "tags": [
             "проверка"
-          ]
+          ],
+          "count": {
+            "expr": "@tasking_pool"
+          }
         },
         "value": {
           "kind": "formula",
@@ -650,10 +672,12 @@
           "die": {
             "constant": "pool"
           },
-          "pool": true,
           "tags": [
             "проверка"
-          ]
+          ],
+          "count": {
+            "expr": "@con_pool"
+          }
         },
         "value": {
           "kind": "formula",
@@ -669,10 +693,12 @@
           "die": {
             "constant": "pool"
           },
-          "pool": true,
           "tags": [
             "проверка"
-          ]
+          ],
+          "count": {
+            "expr": "@outdoors_pool"
+          }
         },
         "value": {
           "kind": "formula",
@@ -688,10 +714,12 @@
           "die": {
             "constant": "pool"
           },
-          "pool": true,
           "tags": [
             "проверка"
-          ]
+          ],
+          "count": {
+            "expr": "@piloting_pool"
+          }
         },
         "value": {
           "kind": "formula",
@@ -707,10 +735,12 @@
           "die": {
             "constant": "pool"
           },
-          "pool": true,
           "tags": [
             "проверка"
-          ]
+          ],
+          "count": {
+            "expr": "@stealth_pool"
+          }
         },
         "value": {
           "kind": "formula",
@@ -726,10 +756,12 @@
           "die": {
             "constant": "pool"
           },
-          "pool": true,
           "tags": [
             "проверка"
-          ]
+          ],
+          "count": {
+            "expr": "@firearms_pool"
+          }
         },
         "value": {
           "kind": "formula",
@@ -745,10 +777,12 @@
           "die": {
             "constant": "pool"
           },
-          "pool": true,
           "tags": [
             "проверка"
-          ]
+          ],
+          "count": {
+            "expr": "@influence_pool"
+          }
         },
         "value": {
           "kind": "formula",
@@ -764,10 +798,12 @@
           "die": {
             "constant": "pool"
           },
-          "pool": true,
           "tags": [
             "проверка"
-          ]
+          ],
+          "count": {
+            "expr": "@exotic_weapons_pool"
+          }
         },
         "value": {
           "kind": "formula",
@@ -783,10 +819,12 @@
           "die": {
             "constant": "pool"
           },
-          "pool": true,
           "tags": [
             "проверка"
-          ]
+          ],
+          "count": {
+            "expr": "@electronics_pool"
+          }
         },
         "value": {
           "kind": "formula",
@@ -802,10 +840,12 @@
           "die": {
             "constant": "pool"
           },
-          "pool": true,
           "tags": [
             "проверка"
-          ]
+          ],
+          "count": {
+            "expr": "@composure"
+          }
         },
         "value": {
           "kind": "formula",
@@ -821,10 +861,12 @@
           "die": {
             "constant": "pool"
           },
-          "pool": true,
           "tags": [
             "проверка"
-          ]
+          ],
+          "count": {
+            "expr": "@judge_intentions"
+          }
         },
         "value": {
           "kind": "formula",
@@ -840,10 +882,12 @@
           "die": {
             "constant": "pool"
           },
-          "pool": true,
           "tags": [
             "проверка"
-          ]
+          ],
+          "count": {
+            "expr": "@memory"
+          }
         },
         "value": {
           "kind": "formula",
@@ -859,10 +903,12 @@
           "die": {
             "constant": "pool"
           },
-          "pool": true,
           "tags": [
             "проверка"
-          ]
+          ],
+          "count": {
+            "expr": "@lift_carry"
+          }
         },
         "value": {
           "kind": "formula",
@@ -932,10 +978,12 @@
           "die": {
             "constant": "pool"
           },
-          "pool": true,
           "tags": [
             "проверка"
-          ]
+          ],
+          "count": {
+            "expr": "@defense_pool"
+          }
         },
         "value": {
           "kind": "formula",
