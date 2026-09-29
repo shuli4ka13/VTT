@@ -39,7 +39,7 @@ export function FieldCell({ field, system, sheet, reader, onChange, onRoll }: {
               min={typeof bounds?.min === 'number' ? bounds.min : undefined}
               max={typeof bounds?.max === 'number' ? bounds.max : boundOf(bounds?.max, reader)}
               options={optionsOf(system, field)}
-              onChange={next => onChange(field.tag, next)}
+              onChange={next => onChange(field.tag, field.value.kind === 'stored' && field.value.type === 'number' && typeof next === 'boolean' ? (next ? 1 : 0) : next)}
             />
             {roll}
           </div>

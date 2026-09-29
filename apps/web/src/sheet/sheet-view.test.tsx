@@ -33,6 +33,14 @@ describe('лист за столом', () => {
     expect(rolled).toEqual(['ловкость']);
   });
 
+  it('переключатель «да/нет» на числовом поле пишет 1 и 0, а не да/нет', () => {
+    const toggled = { fields: [{ tag: 'бой', label: 'Идёт бой', control: 'toggle', value: { kind: 'stored', type: 'number', default: 0 } }] } as unknown as System;
+    const written: unknown[] = [];
+    render(<SheetView system={toggled} sheet={{ ...sheet, values: { бой: 0 } } as Sheet} reader={reader} onChange={(_, value) => written.push(value)} />);
+    fireEvent.click(screen.getByText('нет'));
+    expect(written).toEqual([1]);
+  });
+
   it('вычисляемое поле не редактируется, а показывается', () => {
     render(<SheetView system={system} sheet={sheet} reader={reader} onChange={() => {}} />);
     const shown = [...document.querySelectorAll('.input--shown')].map(node => node.textContent);
