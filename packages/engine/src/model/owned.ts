@@ -1,4 +1,5 @@
-import type { Compendium, CompendiumRecord, Owned, RecordKind, Sheet, System } from './types.ts';
+import { compile } from '../formula/index.ts';
+import type { Binding, Compendium, CompendiumRecord, Owned, RecordKind, Sheet, System } from './types.ts';
 
 export const recordsOf = (compendium: Compendium | null | undefined): CompendiumRecord[] => compendium?.records ?? [];
 
@@ -67,4 +68,31 @@ export function shownOn(system: System, sheet: Sheet | null | undefined): (field
   const blocks = sheetKindOf(system, sheet)?.blocks;
   if (!blocks?.length) return () => true;
   return field => blockLine(system, field.group).some(block => blocks.includes(block));
+}
+
+export const propKeysOf = (kind: RecordKind | undefined): Set<string> => new Set((kind?.props ?? []).map(prop => prop.key));
+
+export function argsWithProps(system: System, binding: Binding, props: ReadonlySet<string>): Binding['args'] {
+  const params = system.effects[binding.effect]?.params ?? [];
+  const out = { ...binding.args };
+  for (const param of params) {
+    if (out[param.key] === undefined && props.has(param.key)) out[param.key] = { expr: `@${param.key}` };
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
+export function propsNeeded(system: System, kind: RecordKind | undefined, bindings: readonly Binding[]): Set<string> {
+  const props = propKeysOf(kind);
+  const out = new Set<string>();
+  for (const binding of bindings) {
+    const args = argsWithProps(system, binding, props) ?? {};
+    for (const param of system.effects[binding.effect]?.params ?? []) {
+      const arg = args[param.key] as { expr?: string } | undefined;
+      if (param.optional || !arg?.expr) continue;
+      let deps: readonly string[] = [];
+      try { deps = compile(arg.expr).deps; } catch { continue; }
+      for (const dep of deps) if (props.has(dep)) out.add(dep);
+    }
+  }
+  return out;
 }

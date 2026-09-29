@@ -525,7 +525,7 @@
             "event": "damage",
             "args": {
               "amount": {
-                "param": "hit_damage"
+                "expr": "@hit_damage"
               }
             }
           }
@@ -778,9 +778,6 @@
             "label": "Удар",
             "effect": "hero_attack",
             "args": {
-              "weapon_die": {
-                "prop": "weapon_die"
-              },
               "attack_with": {
                 "expr": "таблица(\"wield\", @wield, \"attack\")"
               },
@@ -812,15 +809,7 @@
         "bindings": [
           {
             "label": "Атаковать",
-            "effect": "monster_attack",
-            "args": {
-              "to_hit": {
-                "prop": "to_hit"
-              },
-              "hit_damage": {
-                "prop": "hit_damage"
-              }
-            }
+            "effect": "monster_attack"
           }
         ]
       },
@@ -912,8 +901,7 @@
         "bindings": [
           {
             "label": "Новый раунд",
-            "effect": "new_round",
-            "args": {}
+            "effect": "new_round"
           }
         ]
       },
@@ -925,8 +913,7 @@
         "bindings": [
           {
             "label": "Конец боя",
-            "effect": "end_battle",
-            "args": {}
+            "effect": "end_battle"
           }
         ]
       }

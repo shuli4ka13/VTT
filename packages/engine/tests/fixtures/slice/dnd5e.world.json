@@ -182,7 +182,7 @@
                 "expr": "@dmg"
               },
               "damage_type": {
-                "param": "damage_type"
+                "expr": "@damage_type"
               }
             }
           }
@@ -283,7 +283,7 @@
                 "expr": "@dmg"
               },
               "damage_type": {
-                "param": "damage_type"
+                "expr": "@damage_type"
               }
             }
           },
@@ -459,10 +459,10 @@
                 "expr": "@dmg"
               },
               "damage_type": {
-                "const": "огонь"
+                "expr": "\"огонь\""
               },
               "damage_source": {
-                "const": "магический"
+                "expr": "\"магический\""
               }
             }
           }
@@ -820,10 +820,10 @@
                     "expr": "@back"
                   },
                   "damage_type": {
-                    "const": "колющий"
+                    "expr": "\"колющий\""
                   },
                   "damage_source": {
-                    "const": "магический"
+                    "expr": "\"магический\""
                   }
                 }
               }
@@ -998,10 +998,10 @@
                 "expr": "@dmg"
               },
               "damage_type": {
-                "param": "damage_type"
+                "expr": "@damage_type"
               },
               "damage_source": {
-                "const": "магический"
+                "expr": "\"магический\""
               }
             }
           }
@@ -1275,10 +1275,10 @@
                     "expr": "@dmg"
                   },
                   "damage_type": {
-                    "const": "огонь"
+                    "expr": "\"огонь\""
                   },
                   "damage_source": {
-                    "const": "магический"
+                    "expr": "\"магический\""
                   }
                 }
               }
@@ -1480,15 +1480,7 @@
         "bindings": [
           {
             "label": "Атака",
-            "effect": "strike",
-            "args": {
-              "damage_dice": {
-                "prop": "damage_dice"
-              },
-              "damage_type": {
-                "prop": "damage_type"
-              }
-            }
+            "effect": "strike"
           }
         ]
       },
@@ -1540,16 +1532,7 @@
             "effect": "save",
             "args": {
               "save": {
-                "prop": "save_by"
-              },
-              "damage_dice": {
-                "prop": "damage_dice"
-              },
-              "status": {
-                "prop": "status"
-              },
-              "damage_type": {
-                "prop": "damage_type"
+                "expr": "@save_by"
               }
             }
           }
@@ -1576,15 +1559,7 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "heal",
-            "args": {
-              "heal_dice": {
-                "prop": "heal_dice"
-              },
-              "cure": {
-                "prop": "cure"
-              }
-            }
+            "effect": "heal"
           }
         ]
       },
@@ -1605,8 +1580,7 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "bless",
-            "args": {}
+            "effect": "bless"
           }
         ]
       },
@@ -1636,18 +1610,7 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "fireball",
-            "args": {
-              "save_by": {
-                "prop": "save_by"
-              },
-              "damage_dice": {
-                "prop": "damage_dice"
-              },
-              "damage_type": {
-                "prop": "damage_type"
-              }
-            }
+            "effect": "fireball"
           }
         ]
       },
@@ -2827,8 +2790,7 @@
         "bindings": [
           {
             "label": "Огненный снаряд",
-            "effect": "fire_bolt",
-            "args": {}
+            "effect": "fire_bolt"
           }
         ]
       },

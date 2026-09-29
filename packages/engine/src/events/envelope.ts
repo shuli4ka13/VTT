@@ -5,7 +5,7 @@ import { packCall, runCall } from './call.ts';
 import { holdsNow } from '../engine/refs.ts';
 import { burnsUse, spendUse } from './durations.ts';
 export { spendUse } from './durations.ts';
-import { findRecord, heldBy, isItem, kindOfRecord, entryOf, propsOf } from '../model/owned.ts';
+import { findRecord, heldBy, isItem, kindOfRecord, entryOf, propsOf, argsWithProps, propKeysOf } from '../model/owned.ts';
 export { propsOf } from '../model/owned.ts';
 import { requireEffect, findEffect, isPipeline, grantedTo } from '../engine/effects.ts';
 import { listening, subscriberByKey, hears, runsAtOther, withSteps } from './bus.ts';
@@ -138,15 +138,19 @@ export function actionOf(
 
 function actionsOfRecord(record: CompendiumRecord, system: System, fromItem: boolean): Action[] {
   const bindings = bindingsOf(record, system);
-  return bindings.map((binding, index): Action => ({
-    id: `${record.id}:${index}`,
-    label: fromItem || bindings.length > 1
-      ? `${record.label} · ${binding.label || 'Применение'}`
-      : String(record.label),
-    record,
-    binding,
-    effect: binding.effect,
-  }));
+  const props = propKeysOf(kindOfRecord(system, record));
+  return bindings.map((binding, index): Action => {
+    const args = argsWithProps(system, binding, props);
+    return {
+      id: `${record.id}:${index}`,
+      label: fromItem || bindings.length > 1
+        ? `${record.label} · ${binding.label || 'Применение'}`
+        : String(record.label),
+      record,
+      binding: { ...binding, ...(args ? { args } : {}) },
+      effect: binding.effect,
+    };
+  });
 }
 
 export interface SendOptions {

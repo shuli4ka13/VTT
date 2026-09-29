@@ -61,7 +61,7 @@ describe('CompendiumScreen: кость записи — формочкой, а �
           weapon: {
             kind: 'item', label: 'Оружие', group: 'Снаряжение',
             props: [{ key: 'damage_dice', label: 'Кость урона', kind: 'dice' }],
-            bindings: [{ label: 'Удар', effect: 'hit', args: { кость: { prop: 'damage_dice' } } }],
+            bindings: [{ label: 'Удар', effect: 'hit', args: { кость: { expr: '@damage_dice' } } }],
           },
         },
       },

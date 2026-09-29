@@ -34,7 +34,8 @@ describe('RecordsTab: тип видит потребности эффекта', 
 
     const kind = useWorld.getState().system.records!.weapon!;
     expect(kind.props!.some(p => p.label === 'Кость урона' && p.kind === 'dice')).toBe(true);
-    expect((kind.bindings![0] as any).args['кость']).toEqual({ prop: kind.props![0]!.key });
+    expect(kind.props![0]!.key).toBe('кость');
+    expect((kind.bindings![0] as any).args?.['кость']).toBeUndefined();
     expect(screen.queryByText(/не закрыто/)).toBeNull();
   });
 
@@ -135,7 +136,7 @@ describe('RecordsTab: свойство знает свою судьбу', () => 
               { key: 'damage_dice', label: 'Кость урона', kind: 'dice' },
               { key: 'вес', label: 'Вес', kind: 'number' },
             ],
-            bindings: [{ label: 'Удар', effect: 'hit', args: { кость: { prop: 'damage_dice' } } }],
+            bindings: [{ label: 'Удар', effect: 'hit', args: { кость: { expr: '@damage_dice' } } }],
           },
         },
       },
@@ -264,6 +265,7 @@ describe('слот привязки подсказывает то, чем его
     const свойство = kind.props!.find(p => p.label === 'Тип урона')!;
     expect(свойство.kind).toBe('choice');
     expect(свойство.from).toBe('damage_types');
-    expect((kind.bindings![0] as any).args.damage_type).toEqual({ prop: свойство.key });
+    expect(свойство.key).toBe('damage_type');
+    expect((kind.bindings![0] as any).args?.damage_type).toBeUndefined();
   });
 });

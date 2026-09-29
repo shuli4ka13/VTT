@@ -3803,10 +3803,10 @@
                 "expr": "@dmg"
               },
               "damage_type": {
-                "param": "damage_type"
+                "expr": "@damage_type"
               },
               "damage_source": {
-                "param": "damage_source"
+                "expr": "@damage_source"
               }
             }
           }
@@ -3849,10 +3849,10 @@
                     "expr": "@жар"
                   },
                   "damage_type": {
-                    "const": "огонь"
+                    "expr": "\"огонь\""
                   },
                   "damage_source": {
-                    "const": "магический"
+                    "expr": "\"магический\""
                   }
                 }
               }
@@ -3890,7 +3890,7 @@
                 "expr": "@dmg"
               },
               "damage_type": {
-                "param": "damage_type"
+                "expr": "@damage_type"
               }
             }
           }
@@ -3938,10 +3938,10 @@
                 "expr": "@dmg"
               },
               "damage_type": {
-                "const": "излучение"
+                "expr": "\"излучение\""
               },
               "damage_source": {
-                "const": "магический"
+                "expr": "\"магический\""
               }
             }
           }
@@ -3952,7 +3952,7 @@
             "event": "spell_slot",
             "args": {
               "circle": {
-                "param": "slot"
+                "expr": "@slot"
               }
             },
             "strict": true
@@ -4170,7 +4170,7 @@
             "event": "spell_slot",
             "args": {
               "circle": {
-                "param": "slot"
+                "expr": "@slot"
               }
             },
             "strict": true
@@ -4230,10 +4230,10 @@
                 "expr": "@dmg"
               },
               "damage_type": {
-                "param": "damage_type"
+                "expr": "@damage_type"
               },
               "damage_source": {
-                "const": "магический"
+                "expr": "\"магический\""
               }
             }
           }
@@ -4272,7 +4272,8 @@
           {
             "key": "status",
             "label": "Состояние при провале",
-            "kind": "effect"
+            "kind": "effect",
+            "optional": true
           }
         ],
         "steps": [
@@ -4290,7 +4291,7 @@
               "tags": [
                 "спасбросок",
                 {
-                  "param": "save_by"
+                  "expr": "@save_by"
                 }
               ]
             },
@@ -4316,10 +4317,10 @@
                 "expr": "@dmg"
               },
               "damage_type": {
-                "param": "damage_type"
+                "expr": "@damage_type"
               },
               "damage_source": {
-                "const": "магический"
+                "expr": "\"магический\""
               }
             }
           },
@@ -4385,7 +4386,8 @@
           {
             "key": "status",
             "label": "Состояние при попадании",
-            "kind": "effect"
+            "kind": "effect",
+            "optional": true
           }
         ],
         "steps": [
@@ -4423,10 +4425,10 @@
                 "expr": "@dmg"
               },
               "damage_type": {
-                "param": "damage_type"
+                "expr": "@damage_type"
               },
               "damage_source": {
-                "const": "магический"
+                "expr": "\"магический\""
               }
             }
           },
@@ -4497,7 +4499,7 @@
               "tags": [
                 "спасбросок",
                 {
-                  "param": "save_by"
+                  "expr": "@save_by"
                 }
               ]
             },
@@ -4531,10 +4533,10 @@
                 "expr": "@dmg"
               },
               "damage_type": {
-                "param": "damage_type"
+                "expr": "@damage_type"
               },
               "damage_source": {
-                "const": "магический"
+                "expr": "\"магический\""
               }
             }
           }
@@ -4584,7 +4586,8 @@
           {
             "key": "status",
             "label": "Состояние при провале",
-            "kind": "effect"
+            "kind": "effect",
+            "optional": true
           }
         ],
         "steps": [
@@ -4602,7 +4605,7 @@
               "tags": [
                 "спасбросок",
                 {
-                  "param": "save_by"
+                  "expr": "@save_by"
                 }
               ]
             },
@@ -4628,10 +4631,10 @@
                 "expr": "@dmg"
               },
               "damage_type": {
-                "param": "damage_type"
+                "expr": "@damage_type"
               },
               "damage_source": {
-                "const": "магический"
+                "expr": "\"магический\""
               }
             }
           },
@@ -4703,10 +4706,10 @@
                 "expr": "@dmg"
               },
               "damage_type": {
-                "param": "damage_type"
+                "expr": "@damage_type"
               },
               "damage_source": {
-                "const": "магический"
+                "expr": "\"магический\""
               }
             }
           }
@@ -4753,7 +4756,7 @@
               "tags": [
                 "спасбросок",
                 {
-                  "param": "save_by"
+                  "expr": "@save_by"
                 }
               ]
             },
@@ -4798,7 +4801,8 @@
           {
             "key": "status",
             "label": "Состояние",
-            "kind": "effect"
+            "kind": "effect",
+            "optional": true
           }
         ],
         "steps": [
@@ -4816,7 +4820,7 @@
               "tags": [
                 "спасбросок",
                 {
-                  "param": "save_by"
+                  "expr": "@save_by"
                 }
               ]
             },
@@ -4856,7 +4860,8 @@
           {
             "key": "status",
             "label": "Состояние",
-            "kind": "effect"
+            "kind": "effect",
+            "optional": true
           }
         ],
         "steps": [
@@ -4886,7 +4891,8 @@
           {
             "key": "status",
             "label": "Состояние",
-            "kind": "effect"
+            "kind": "effect",
+            "optional": true
           }
         ],
         "steps": [
@@ -4932,7 +4938,8 @@
           {
             "key": "cure",
             "label": "Что снимает",
-            "kind": "effect"
+            "kind": "effect",
+            "optional": true
           }
         ],
         "steps": [
@@ -4982,7 +4989,8 @@
           {
             "key": "cure",
             "label": "Что снимает",
-            "kind": "effect"
+            "kind": "effect",
+            "optional": true
           }
         ],
         "steps": [
@@ -5685,7 +5693,7 @@
                 "event": "spell_slot",
                 "args": {
                   "circle": {
-                    "const": 1
+                    "expr": "1"
                   }
                 },
                 "strict": true
@@ -5728,7 +5736,7 @@
                 "event": "spell_slot",
                 "args": {
                   "circle": {
-                    "const": 1
+                    "expr": "1"
                   }
                 },
                 "strict": true
@@ -5781,10 +5789,10 @@
                     "expr": "@dmg"
                   },
                   "damage_type": {
-                    "const": "огонь"
+                    "expr": "\"огонь\""
                   },
                   "damage_source": {
-                    "const": "магический"
+                    "expr": "\"магический\""
                   }
                 }
               }
@@ -9290,15 +9298,6 @@
             "label": "Удар",
             "effect": "strike",
             "args": {
-              "damage_dice": {
-                "prop": "damage_dice"
-              },
-              "damage_type": {
-                "prop": "damage_type"
-              },
-              "damage_source": {
-                "prop": "damage_source"
-              },
               "attack_with": {
                 "expr": "таблица(\"wield\", @wield, \"attack\")"
               },
@@ -9378,15 +9377,7 @@
         "bindings": [
           {
             "label": "Выпить",
-            "effect": "potion_heal",
-            "args": {
-              "heal_die": {
-                "prop": "heal_die"
-              },
-              "heal_bonus": {
-                "prop": "heal_bonus"
-              }
-            }
+            "effect": "potion_heal"
           }
         ]
       },
@@ -9431,15 +9422,7 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "cantrip_attack",
-            "args": {
-              "damage_die": {
-                "prop": "damage_die"
-              },
-              "damage_type": {
-                "prop": "damage_type"
-              }
-            }
+            "effect": "cantrip_attack"
           }
         ]
       },
@@ -9476,22 +9459,7 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "cantrip_save",
-            "args": {
-              "damage_die": {
-                "prop": "damage_die"
-              },
-              "damage_type": {
-                "prop": "damage_type"
-              },
-              "save_by": {
-                "prop": "save_by"
-              },
-              "status": {
-                "prop": "status",
-                "optional": true
-              }
-            }
+            "effect": "cantrip_save"
           }
         ]
       },
@@ -9505,8 +9473,7 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "cantrip_note",
-            "args": {}
+            "effect": "cantrip_note"
           }
         ]
       },
@@ -9552,28 +9519,7 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "spell_attack",
-            "args": {
-              "spell_level": {
-                "prop": "spell_level"
-              },
-              "damage_die": {
-                "prop": "damage_die"
-              },
-              "dice_count": {
-                "prop": "dice_count"
-              },
-              "dice_up": {
-                "prop": "dice_up"
-              },
-              "damage_type": {
-                "prop": "damage_type"
-              },
-              "status": {
-                "prop": "status",
-                "optional": true
-              }
-            }
+            "effect": "spell_attack"
           }
         ]
       },
@@ -9620,27 +9566,7 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "spell_save_half",
-            "args": {
-              "spell_level": {
-                "prop": "spell_level"
-              },
-              "save_by": {
-                "prop": "save_by"
-              },
-              "damage_die": {
-                "prop": "damage_die"
-              },
-              "dice_count": {
-                "prop": "dice_count"
-              },
-              "dice_up": {
-                "prop": "dice_up"
-              },
-              "damage_type": {
-                "prop": "damage_type"
-              }
-            }
+            "effect": "spell_save_half"
           }
         ]
       },
@@ -9692,31 +9618,7 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "spell_save_none",
-            "args": {
-              "spell_level": {
-                "prop": "spell_level"
-              },
-              "save_by": {
-                "prop": "save_by"
-              },
-              "damage_die": {
-                "prop": "damage_die"
-              },
-              "dice_count": {
-                "prop": "dice_count"
-              },
-              "dice_up": {
-                "prop": "dice_up"
-              },
-              "damage_type": {
-                "prop": "damage_type"
-              },
-              "status": {
-                "prop": "status",
-                "optional": true
-              }
-            }
+            "effect": "spell_save_none"
           }
         ]
       },
@@ -9762,27 +9664,7 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "spell_auto",
-            "args": {
-              "spell_level": {
-                "prop": "spell_level"
-              },
-              "damage_die": {
-                "prop": "damage_die"
-              },
-              "dice_count": {
-                "prop": "dice_count"
-              },
-              "dice_up": {
-                "prop": "dice_up"
-              },
-              "per_die": {
-                "prop": "per_die"
-              },
-              "damage_type": {
-                "prop": "damage_type"
-              }
-            }
+            "effect": "spell_auto"
           }
         ]
       },
@@ -9819,19 +9701,7 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "spell_condition_held",
-            "args": {
-              "spell_level": {
-                "prop": "spell_level"
-              },
-              "save_by": {
-                "prop": "save_by"
-              },
-              "status": {
-                "prop": "status",
-                "optional": true
-              }
-            }
+            "effect": "spell_condition_held"
           }
         ]
       },
@@ -9862,16 +9732,7 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "spell_buff_held",
-            "args": {
-              "spell_level": {
-                "prop": "spell_level"
-              },
-              "status": {
-                "prop": "status",
-                "optional": true
-              }
-            }
+            "effect": "spell_buff_held"
           }
         ]
       },
@@ -9896,16 +9757,7 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "spell_buff",
-            "args": {
-              "spell_level": {
-                "prop": "spell_level"
-              },
-              "status": {
-                "prop": "status",
-                "optional": true
-              }
-            }
+            "effect": "spell_buff"
           }
         ]
       },
@@ -9945,25 +9797,7 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "spell_heal",
-            "args": {
-              "spell_level": {
-                "prop": "spell_level"
-              },
-              "heal_die": {
-                "prop": "heal_die"
-              },
-              "dice_count": {
-                "prop": "dice_count"
-              },
-              "dice_up": {
-                "prop": "dice_up"
-              },
-              "cure": {
-                "prop": "cure",
-                "optional": true
-              }
-            }
+            "effect": "spell_heal"
           }
         ]
       },
@@ -9988,16 +9822,7 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "spell_cleanse",
-            "args": {
-              "spell_level": {
-                "prop": "spell_level"
-              },
-              "cure": {
-                "prop": "cure",
-                "optional": true
-              }
-            }
+            "effect": "spell_cleanse"
           }
         ]
       },
@@ -10017,12 +9842,7 @@
         "bindings": [
           {
             "label": "Сотворить",
-            "effect": "spell_note",
-            "args": {
-              "spell_level": {
-                "prop": "spell_level"
-              }
-            }
+            "effect": "spell_note"
           }
         ]
       },
@@ -10097,19 +9917,13 @@
             "effect": "strike",
             "args": {
               "attack_with": {
-                "prop": "to_hit"
+                "expr": "@to_hit"
               },
               "damage_with": {
-                "prop": "damage_bonus"
-              },
-              "damage_dice": {
-                "prop": "damage_dice"
-              },
-              "damage_type": {
-                "prop": "damage_type"
+                "expr": "@damage_bonus"
               },
               "damage_source": {
-                "const": "немагический"
+                "expr": "\"немагический\""
               }
             }
           }
@@ -11754,8 +11568,7 @@
         "bindings": [
           {
             "label": "Второе дыхание",
-            "effect": "second_wind",
-            "args": {}
+            "effect": "second_wind"
           }
         ]
       },
@@ -11770,8 +11583,7 @@
         "bindings": [
           {
             "label": "Всплеск действий",
-            "effect": "action_surge",
-            "args": {}
+            "effect": "action_surge"
           }
         ]
       },
@@ -11786,8 +11598,7 @@
         "bindings": [
           {
             "label": "Ярость",
-            "effect": "rage",
-            "args": {}
+            "effect": "rage"
           }
         ]
       },
@@ -11802,8 +11613,7 @@
         "bindings": [
           {
             "label": "Безрассудная атака",
-            "effect": "reckless_attack",
-            "args": {}
+            "effect": "reckless_attack"
           }
         ]
       },
@@ -11818,8 +11628,7 @@
         "bindings": [
           {
             "label": "Скрытая атака",
-            "effect": "sneak_attack",
-            "args": {}
+            "effect": "sneak_attack"
           }
         ]
       },
@@ -11834,8 +11643,7 @@
         "bindings": [
           {
             "label": "Наложение рук",
-            "effect": "lay_on_hands",
-            "args": {}
+            "effect": "lay_on_hands"
           }
         ]
       },
@@ -11850,8 +11658,7 @@
         "bindings": [
           {
             "label": "Божественная кара",
-            "effect": "divine_smite",
-            "args": {}
+            "effect": "divine_smite"
           }
         ]
       },
@@ -11866,8 +11673,7 @@
         "bindings": [
           {
             "label": "Бардовское вдохновение",
-            "effect": "bardic_inspiration",
-            "args": {}
+            "effect": "bardic_inspiration"
           }
         ]
       },
@@ -11882,8 +11688,7 @@
         "bindings": [
           {
             "label": "Изгнание нежити",
-            "effect": "turn_undead",
-            "args": {}
+            "effect": "turn_undead"
           }
         ]
       },
@@ -11898,8 +11703,7 @@
         "bindings": [
           {
             "label": "Потратить кость хитов",
-            "effect": "spend_hit_die",
-            "args": {}
+            "effect": "spend_hit_die"
           }
         ]
       },
@@ -12212,8 +12016,7 @@
         "bindings": [
           {
             "label": "Заклинание: состояние без концентрации",
-            "effect": "spell_condition",
-            "args": {}
+            "effect": "spell_condition"
           }
         ]
       },

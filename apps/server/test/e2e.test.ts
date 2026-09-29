@@ -395,7 +395,7 @@ describe('сквозной прогон стенда', () => {
           records: {
             weapon: { kind: 'item', label: 'Оружие',
               props: [{ key: 'dmg', label: 'Кость урона', kind: 'dice' }],
-              bindings: [{ label: 'Удар', effect: 'strike', args: { damage_dice: { prop: 'dmg' } } }] },
+              bindings: [{ label: 'Удар', effect: 'strike', args: { damage_dice: { expr: '@dmg' } } }] },
           },
         },
       })

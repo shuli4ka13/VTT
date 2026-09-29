@@ -227,16 +227,11 @@ describe('ссылки слотов не теряются при разборе'
 });
 
 describe('аргументы привязок — как их читает движок', () => {
-  it('готовое значение и { prop } проходят одинаково', () => {
-
-    const forms = [
-      { save: { prop: 'save_by' } },
-      { bonus: '#combat', difficulty: 12, source: 'item' },
-      { flag: true, nothing: null },
-    ];
-    for (const args of forms) {
-      const parsed = W.binding.parse({ effect: 'strike', args });
-      expect(parsed.args).toEqual(args);
+  it('аргумент — формула, как любое значение; старые формы не принимаются', () => {
+    const ok = { save: { expr: '@save_by' }, difficulty: { expr: '12' }, source: { expr: '"item"' } };
+    expect(W.binding.parse({ effect: 'strike', args: ok }).args).toEqual(ok);
+    for (const old of [{ save: { prop: 'save_by' } }, { difficulty: 12 }, { flag: true }]) {
+      expect(W.binding.safeParse({ effect: 'strike', args: old }).success).toBe(false);
     }
   });
 });

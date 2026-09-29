@@ -55,9 +55,10 @@ group('роды записей объявляет система', () => {
     ok(weapon.bindings.some(b => b.effect === 'strike'), 'к какому эффекту это привязать');
 
     const spell = system.records['attack-spell'];
-    const args = spell.bindings[0].args;
-    ok(Object.values(args).some(v => v && typeof v === 'object' && 'prop' in v),
-      'хотя бы один аргумент берётся из свойств самой записи');
+    const effect = system.effects[spell.bindings[0].effect];
+    const props = new Set((spell.props ?? []).map(p => p.key));
+    ok((effect.params ?? []).some(p => props.has(p.key) && !(spell.bindings[0].args ?? {})[p.key]),
+      'вход с тем же именем, что свойство записи, берёт его сам — аргумент не нужен');
   });
 
   test('свойства оружия по-прежнему при роде', () => {

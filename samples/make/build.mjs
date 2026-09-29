@@ -12,6 +12,7 @@ import { formulasOf } from './convert/formulas.ts';
 import { typesOf } from './convert/types.ts';
 import { ownedOf } from './convert/owned.ts';
 import { modifiersOf } from './convert/modifiers.ts';
+import { argsOf } from './convert/args.ts';
 
 const world = {
   title: 'D&D 5e',
@@ -39,6 +40,7 @@ Object.assign(world, formulasOf({ system: world.system, compendium: world.compen
 Object.assign(world, typesOf({ system: world.system }));
 Object.assign(world, ownedOf(world));
 Object.assign(world, modifiersOf(world));
+Object.assign(world, argsOf(world));
 
 const out = fileURLToPath(new URL('../dnd5e.world.json', import.meta.url));
 writeFileSync(out, `${JSON.stringify(world, null, 2)}\n`);

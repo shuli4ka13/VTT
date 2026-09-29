@@ -5,6 +5,7 @@ import {
 import { and, desc, eq, or } from 'drizzle-orm';
 import { world as schemas } from '@vtt/schema';
 import { lintSystem, lintCompendium, errorsOf, describeWhere } from '@vtt/engine/model/lint';
+import { propsNeeded } from '@vtt/engine/model/owned';
 import { flattenSystem } from '@vtt/engine/model/inherit';
 import type { Compendium, System } from '@vtt/schema';
 import { DB, CLOCK, IDS } from '../common/tokens.ts';
@@ -180,17 +181,12 @@ export class CatalogService {
     for (const record of compendium.records ?? []) {
       const kind = system.records?.[String(record.rk)];
       const bindings = [...(kind?.bindings ?? []), ...(record.bindings ?? [])];
-      for (const binding of bindings) {
-        for (const arg of Object.values(binding.args ?? {})) {
-          if (!arg || typeof arg !== 'object' || Array.isArray(arg)) continue;
-          const ref = arg as Record<string, unknown>;
-          if (typeof ref.prop !== 'string' || ref.optional === true) continue;
-          const value = record.props?.[ref.prop];
-          if (value === undefined || value === '') {
-            const label = kind?.props?.find(p => p.key === ref.prop)?.label ?? ref.prop;
-            throw new BadRequestException(
-              `запись «${record.label ?? record.id}»: не заполнено «${label}»`);
-          }
+      for (const key of propsNeeded(system, kind, bindings)) {
+        const value = record.props?.[key];
+        if (value === undefined || value === '') {
+          const label = kind?.props?.find(p => p.key === key)?.label ?? key;
+          throw new BadRequestException(
+            `запись «${record.label ?? record.id}»: не заполнено «${label}»`);
         }
       }
     }

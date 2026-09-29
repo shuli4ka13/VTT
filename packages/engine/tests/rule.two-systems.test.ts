@@ -141,7 +141,7 @@ group('две системы одними слотами', () => {
   });
 
   group('эффект живёт в системе, запись — только циферки', () => {
-    test('ни в одной записи компендиума нет шагов, аргументы — скаляры', () => {
+    test('ни в одной записи компендиума нет шагов, аргументы — формулы', () => {
       const books = [
         { system, compendium },
         { system: cyberpunk, compendium: cpCompendium },
@@ -154,9 +154,8 @@ group('две системы одними слотами', () => {
             checked++;
             for (const [key, value] of Object.entries(binding.args || {})) {
 
-              const scalar = ['string', 'number', 'boolean'].includes(typeof value);
-              ok(scalar || (value && typeof value === 'object' && 'prop' in value),
-                `${record.id}.${key}: аргумент — скаляр или { prop }, а не структура`);
+              ok(value && typeof value === 'object' && Object.keys(value).join() === 'expr',
+                `${record.id}.${key}: аргумент — формула { expr }, как любое значение`);
             }
           }
         }

@@ -3,7 +3,7 @@ import { registry } from '../engine/steps/index.ts';
 import { calledOf, chainsOfEffect } from '../engine/effects.ts';
 import { basedOn, paramsOf } from './inherit.ts';
 import { danglingRows } from './integrity.ts';
-import { recordsOf, sheetKinds } from './owned.ts';
+import { recordsOf, sheetKinds, argsWithProps, propKeysOf } from './owned.ts';
 import { blockNames } from './blocks.ts';
 import { MOMENTS } from '../events/moments.ts';
 import { TABS, STEP } from '../words/glossary.ts';
@@ -361,11 +361,13 @@ function paramProblems(system: System): Problem[] {
     .map(kind => basedOn(kind)).filter((key): key is string => Boolean(key)));
   for (const [kind, spec] of Object.entries(system.records ?? {})) {
     if (kindBases.has(kind)) continue;
+    const props = propKeysOf(spec);
     (spec.bindings ?? []).forEach((binding, index) => {
       const effect = system.effects[binding.effect];
       if (!effect) return;
+      const args = argsWithProps(system, binding, props) ?? {};
       for (const param of effect.params ?? []) {
-        if (binding.args?.[param.key] !== undefined) continue;
+        if (args[param.key] !== undefined) continue;
         if (param.ask) continue;
         out.push({
           where: { tab: 'records', kind, part: 'bindings', binding: index }, level: 'error',

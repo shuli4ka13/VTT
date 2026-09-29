@@ -3159,27 +3159,6 @@
               "attack_pool": {
                 "expr": "таблица(\"weapon_skills\", @skill, \"pool\")"
               },
-              "ar1": {
-                "prop": "ar1"
-              },
-              "ar2": {
-                "prop": "ar2"
-              },
-              "ar3": {
-                "prop": "ar3"
-              },
-              "ar4": {
-                "prop": "ar4"
-              },
-              "ar5": {
-                "prop": "ar5"
-              },
-              "dv": {
-                "prop": "dv"
-              },
-              "electric": {
-                "prop": "electric"
-              },
               "physical_hit": {
                 "expr": "таблица(\"damage_kinds\", @damage_kind, \"physical\")"
               }
@@ -4236,8 +4215,7 @@
         "bindings": [
           {
             "label": "Начало сцены",
-            "effect": "scene_start",
-            "args": {}
+            "effect": "scene_start"
           }
         ]
       },
@@ -4248,8 +4226,7 @@
         "bindings": [
           {
             "label": "Второе дыхание (3 Преимущества)",
-            "effect": "second_wind",
-            "args": {}
+            "effect": "second_wind"
           }
         ]
       },
@@ -4260,8 +4237,7 @@
         "bindings": [
           {
             "label": "Ранен не так сильно (4 Преимущества)",
-            "effect": "shrug_off",
-            "args": {}
+            "effect": "shrug_off"
           }
         ]
       },
@@ -4272,8 +4248,7 @@
         "bindings": [
           {
             "label": "Встать",
-            "effect": "stand_up",
-            "args": {}
+            "effect": "stand_up"
           }
         ]
       },
@@ -4284,8 +4259,7 @@
         "bindings": [
           {
             "label": "Час отдыха",
-            "effect": "rest_hour",
-            "args": {}
+            "effect": "rest_hour"
           }
         ]
       },
@@ -4296,8 +4270,7 @@
         "bindings": [
           {
             "label": "День отдыха",
-            "effect": "rest_day",
-            "args": {}
+            "effect": "rest_day"
           }
         ]
       },

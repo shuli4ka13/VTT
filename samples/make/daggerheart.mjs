@@ -1,6 +1,7 @@
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { modifiersOf } from './convert/modifiers.ts';
+import { argsOf } from './convert/args.ts';
 
 const TRAITS = [
   ['agility', 'Проворство', 'Agility'], ['strength', 'Сила', 'Strength'], ['finesse', 'Искусность', 'Finesse'],
@@ -608,5 +609,5 @@ const world = {
 };
 
 const out = fileURLToPath(new URL('../daggerheart.world.json', import.meta.url));
-writeFileSync(out, `${JSON.stringify(modifiersOf(world), null, 2)}\n`);
+writeFileSync(out, `${JSON.stringify(argsOf(modifiersOf(world)), null, 2)}\n`);
 console.log(`Daggerheart: полей ${world.system.fields.length}, эффектов ${Object.keys(world.system.effects).length}, записей ${world.compendium.records.length}, листов ${world.sheets.length}`);

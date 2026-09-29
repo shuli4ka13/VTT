@@ -489,12 +489,7 @@
         "bindings": [
           {
             "label": "Бросить",
-            "effect": "risky_action",
-            "args": {
-              "rating": {
-                "prop": "rating"
-              }
-            }
+            "effect": "risky_action"
           }
         ]
       },
@@ -567,8 +562,7 @@
         "bindings": [
           {
             "label": "Сопротивление",
-            "effect": "resist",
-            "args": {}
+            "effect": "resist"
           }
         ]
       },
@@ -580,8 +574,7 @@
         "bindings": [
           {
             "label": "Залечь на дно",
-            "effect": "lay_low",
-            "args": {}
+            "effect": "lay_low"
           }
         ]
       }

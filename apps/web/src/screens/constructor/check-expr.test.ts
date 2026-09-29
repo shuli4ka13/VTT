@@ -89,9 +89,9 @@ describe('проверка одной формулой', () => {
   it('метка может прийти входом', () => {
     const asName = (name: string) => (name === 'чем' ? ({ param: 'чем' } as never) : null);
     expect(parseCheck('кинуть(@lead, @атака, @чем) >= 10', system, asName)).toMatchObject({
-      roll: { tags: ['атака', { param: 'чем' }] },
+      roll: { tags: ['атака', { expr: '@чем' }] },
     });
-    expect(formatCheck({ roll: { die: { constant: 'lead' }, tags: ['атака', { param: 'чем' }] }, versus: { expr: '10' } }))
+    expect(formatCheck({ roll: { die: { constant: 'lead' }, tags: ['атака', { expr: '@чем' }] }, versus: { expr: '10' } }))
       .toBe('кинуть(@lead, @атака, @чем) >= 10');
   });
 });

@@ -1,4 +1,4 @@
-import { recordsOf, isItem } from '@vtt/engine/model/owned';
+import { recordsOf, isItem, propsNeeded } from '@vtt/engine/model/owned';
 import { TABS } from '../../words.ts';
 import { useWorld, freeId, randomTag } from '../../store/world.ts';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
@@ -115,17 +115,7 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
 
   const bindings = kind?.bindings ?? [];
 
-  const mustFill = new Set<string>();
-  for (const binding of bindings) {
-    for (const [key, arg] of Object.entries(binding.args ?? {})) {
-      const ref = arg as { prop?: string; optional?: boolean; by?: { prop?: string } };
-      if (ref?.optional) continue;
-      const need = (system.effects[binding.effect]?.params ?? []).find(p => p.key === key);
-      if (need?.optional) continue;
-      if (ref?.prop) mustFill.add(ref.prop);
-      if (ref?.by?.prop) mustFill.add(ref.by.prop);
-    }
-  }
+  const mustFill = propsNeeded(system, kind, bindings);
   const hangable = Object.entries(system.effects)
     .filter(([id, effect]) => (effect.activation ?? 'manual') !== 'manual' && !(record.grants ?? []).includes(id));
 

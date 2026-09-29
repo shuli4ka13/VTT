@@ -2,7 +2,7 @@ import { ownerOf, OWNER_WORDS } from '@vtt/engine/engine/owners';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
 import { splitPath } from '@vtt/engine/engine/navigate';
 import { choiceTableOf } from '@vtt/engine/model/lists';
-import { recordsOf } from '@vtt/engine/model/owned';
+import { recordsOf, argsWithProps, propKeysOf } from '@vtt/engine/model/owned';
 import { kindWord } from '@vtt/engine/words/kinds';
 import type { RefKind } from '@vtt/engine/model/references';
 import type { System, Compendium, Effect } from '@vtt/schema';
@@ -40,13 +40,16 @@ function stepsOf(effect: Effect | undefined): EarlierStep[] {
   return out;
 }
 
-const argText = (arg: unknown): string => {
+const argText = (arg: unknown, props: ReadonlySet<string> = new Set()): string => {
   if (arg === null || arg === undefined || arg === '') return '';
   if (typeof arg !== 'object') return String(arg);
   const a = arg as Loose;
   if ('prop' in a) return `свойство записи «${a.prop}»`;
   if ('const' in a) return String(a.const);
-  if ('expr' in a) return String(a.expr);
+  if ('expr' in a) {
+    const lone = /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String(a.expr));
+    return lone && props.has(lone[1]!) ? `свойство записи «${lone[1]}»` : String(a.expr);
+  }
   if ('table' in a) return `таблица «${a.table}» → ${a.column ?? 'значение'}`;
   if ('param' in a) return `вход «${a.param}»`;
   return JSON.stringify(a);
@@ -57,7 +60,8 @@ function callersOf(system: System, effectId: string, key: string): string[] {
   for (const [kindKey, kind] of Object.entries(system.records ?? {})) {
     for (const binding of kind.bindings ?? []) {
       if (binding.effect !== effectId) continue;
-      const text = argText(binding.args?.[key]);
+      const props = propKeysOf(kind);
+      const text = argText(argsWithProps(system, binding, props)?.[key], props);
       out.push(`тип записи «${kind.label ?? kindKey}»${binding.label ? ` · «${binding.label}»` : ''}: ${text || 'не передаёт'}`);
     }
   }

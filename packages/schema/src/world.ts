@@ -244,10 +244,7 @@ export const effect = z.object({
   grants: z.array(z.string().min(1)).optional(),
 }).passthrough();
 
-export const bindingArg = z.union([
-  slotRef,
-  z.string(), z.number(), z.boolean(), z.null(),
-]);
+export const bindingArg = formula;
 
 export const binding = z.object({
   label: z.string().optional(),

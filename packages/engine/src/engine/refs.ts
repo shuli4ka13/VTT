@@ -182,7 +182,11 @@ function fromArgs(key: string, ctx: RefContext): unknown {
   if (arg === null || typeof arg !== 'object') return arg;
   if ('prop' in arg) return (ctx.props || {})[String((arg as AnyRef).prop)];
   if ('const' in arg) return (arg as AnyRef).const;
-  if ('expr' in arg) return String((arg as AnyRef).expr);
+  if ('expr' in arg) {
+    const source = String((arg as AnyRef).expr);
+    const decl = (ctx.paramDefs || []).find(p => p.key === key);
+    return !decl || decl.kind === 'number' ? recordNamesInline(source, ctx) : evaluate(source, inRecord(ctx));
+  }
   throw new EngineError(
     `${who(ctx)}: аргумент «${key}» неизвестной формы ${JSON.stringify(arg)} — умею значение, { const }, { prop } или { expr }`);
 }
@@ -314,9 +318,10 @@ function evaluate(
       }
     }
     if (!isField(system, name)) {
+      if (ctx.recordScope && ctx.props && name in ctx.props) return recordValue(name, ctx);
+      if (ctx.recordScope && ctx.props && declaredProp(system, name)) return null;
       const named = namedValue(name, ctx);
       if (named !== undefined) return named;
-      if (ctx.recordScope && ctx.props && name in ctx.props) return recordValue(name, ctx);
       const split = splitPath(name);
       const table = split ? rows?.[split.head] ?? referencedTable(system, split.head, ctx.paramDefs) : undefined;
       if (split && table) return walk(system, ctx.pass, table, resolve(split.head), split.path, who(ctx));
@@ -377,6 +382,28 @@ function namedValue(name: string, ctx: RefContext): unknown {
   if (typeof value === 'object') return undefined;
   return isFormula(decl, value) ? evaluate(value, inRecord(ctx)) : value;
 }
+
+function recordNamesInline(expr: string, ctx: RefContext): string {
+  if (!ctx.props) return expr;
+  const props = ctx.props;
+  const text = (name: string): string => {
+    const value = props[name];
+    const formula = typeof value === 'string' && Object.values(ctx.pass.system.records ?? {})
+      .some(kind => (kind.props ?? []).some(prop => prop.key === name && prop.kind === 'expr'));
+    return formula ? String(value) : JSON.stringify(value ?? null);
+  };
+  const lone = /^\s*[@#]([\p{L}\p{N}_]+)\s*$/u.exec(expr);
+  if (lone && lone[1]! in props) return text(lone[1]!);
+  let out = expr;
+  for (const name of compile(expr).deps) {
+    if (ownerOf(name) || !(name in props)) continue;
+    out = out.replace(nameRegex(name), `(${text(name)})`);
+  }
+  return out;
+}
+
+const declaredProp = (system: System, name: string): boolean =>
+  Object.values(system.records ?? {}).some(kind => (kind.props ?? []).some(prop => prop.key === name));
 
 function recordValue(name: string, ctx: RefContext): unknown {
   const value = ctx.props![name];

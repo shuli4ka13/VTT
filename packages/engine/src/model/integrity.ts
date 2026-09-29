@@ -62,8 +62,12 @@ function choiceArgs(system: System, table: string): { where: Where; args: Loose;
   return out;
 }
 
-const constOf = (arg: unknown): unknown =>
-  (arg && typeof arg === 'object' && 'const' in (arg as Loose) ? (arg as Loose).const : undefined);
+const constOf = (arg: unknown): unknown => {
+  if (!arg || typeof arg !== 'object') return undefined;
+  if ('const' in (arg as Loose)) return (arg as Loose).const;
+  const text = /^\s*"([^"]*)"\s*$/.exec(String((arg as Loose).expr ?? ''));
+  return text ? text[1] : undefined;
+};
 
 interface StepCondition { where: Where; cond: Loose; rename: (to: unknown) => void }
 
@@ -274,7 +278,7 @@ export function renameRow(system: System, table: string, from: unknown, to: unkn
   }
   for (const { args, key } of choiceArgs(system, table)) {
     const value = constOf(args[key]);
-    if (holds(value, from)) args[key] = { const: swap(value, from, to) };
+    if (holds(value, from)) args[key] = { expr: JSON.stringify(swap(value, from, to)) };
   }
   for (const { cond, rename } of stepConditions(system).reverse()) {
     if (pointsAt(system, cond, table) && same(cond.is, from)) rename(to);

@@ -2834,10 +2834,10 @@
                 "expr": "@dmg"
               },
               "damage_type": {
-                "param": "damage_type"
+                "expr": "@damage_type"
               },
               "aim": {
-                "param": "aim"
+                "expr": "@aim"
               }
             }
           },
@@ -2852,10 +2852,10 @@
                 "expr": "@boom"
               },
               "damage_type": {
-                "param": "damage_type"
+                "expr": "@damage_type"
               },
               "aim": {
-                "param": "aim"
+                "expr": "@aim"
               }
             }
           }
@@ -2932,10 +2932,10 @@
                 "event": "damage",
                 "args": {
                   "amount": {
-                    "const": 2
+                    "expr": "2"
                   },
                   "damage_type": {
-                    "const": "кровотечение"
+                    "expr": "\"кровотечение\""
                   }
                 }
               }
@@ -3333,15 +3333,7 @@
         "bindings": [
           {
             "label": "Выстрелить",
-            "effect": "shoot",
-            "args": {
-              "damage_dice": {
-                "prop": "damage_dice"
-              },
-              "damage_type": {
-                "prop": "damage_type"
-              }
-            }
+            "effect": "shoot"
           }
         ]
       },

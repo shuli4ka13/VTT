@@ -13,6 +13,7 @@ import type { System, RecordKind, Binding, Param, Effect, ValueKind } from '@vtt
 import { SlotInput } from './slot-input.tsx';
 import { BlockPick, fieldBlocks } from './block-pick.tsx';
 import { calledOf } from '@vtt/engine/engine/effects';
+import { argsWithProps, propKeysOf } from '@vtt/engine/model/owned';
 import { blockOf } from '@vtt/engine/model/blocks';
 import { listOf } from '@vtt/engine/model/lists';
 import { blockTree, BlockBranches } from './block-tree.tsx';
@@ -284,14 +285,17 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
               onFillWithProp={param => edit(draft => {
                 draft.props ??= [];
                 const label = param.label ?? param.key;
-                const newKey = freeId(draft.props.map(p => p.key), label);
+                const taken = draft.props.map(p => p.key);
+                const newKey = taken.includes(param.key) ? freeId(taken, label) : param.key;
                 draft.props.push({
                   key: newKey, label, kind: param.kind ?? 'number',
                   ...(param.from ? { from: param.from } : {}),
                 });
-                const target = draft.bindings![index]!;
-                target.args ??= {};
-                target.args[param.key] = { prop: newKey };
+                if (newKey !== param.key) {
+                  const target = draft.bindings![index]!;
+                  target.args ??= {};
+                  target.args[param.key] = { expr: `@${newKey}` };
+                }
               })}
             />
           ))}
@@ -377,7 +381,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
                   })}>Убрать</Button>
                 </Field>
               </div>
-              <span className="faint">{propDestiny(kind, prop.key)}</span>
+              <span className="faint">{propDestiny(system, kind, prop.key)}</span>
             </div>
           ))}
       </Card>
@@ -422,9 +426,10 @@ function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWi
 }) {
   const effect = system.effects[binding.effect];
   const params = effect?.params ?? [];
+  const implicit = new Set((recordKind.props ?? []).map(prop => prop.key));
   const isClosed = (key: string) => {
     const value = binding.args?.[key];
-    return value !== undefined && value !== null;
+    return (value !== undefined && value !== null) || implicit.has(key);
   };
   const unclosed = params.filter(param => !isClosed(param.key) && !param.optional && !param.ask);
 
@@ -460,7 +465,6 @@ function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWi
                   value={binding.args?.[param.key] as never}
                   context={{ system, effect: effect ?? ({ label: '' } as Effect), earlier: [], recordKind }}
                   allow={['prop', 'expr', 'const', 'table', 'empty']}
-                  keep={['prop', 'const']}
                   placeholder="число или формула — или выберите ниже"
                   extraOptions={[
                     ...(isClosed(param.key) ? [] : [{
@@ -473,7 +477,7 @@ function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWi
                     ...(listOf(system, param.from) ?? []).map(option => ({
                       group: (system.tables?.[String(param.from)]?.label) || 'из таблицы',
                       label: option.label ?? String(option.value),
-                      ref: { const: String(option.value) } as never,
+                      ref: { expr: JSON.stringify(String(option.value)) } as never,
                     })),
                   ]}
                   onChange={next => onEdit(draft => {
@@ -530,7 +534,7 @@ function sourcesFor(param: Param, kind: RecordKind, system: System): { label: st
     .filter(prop => (want === 'choice'
       ? prop.kind === 'choice' && prop.from === param.from
       : (FITS[want] ?? []).includes(String(prop.kind ?? 'number'))))
-    .map(prop => ({ label: `свойство «${prop.label ?? prop.key}»`, ref: { prop: prop.key } }));
+    .map(prop => ({ label: `свойство «${prop.label ?? prop.key}»`, ref: { expr: `@${prop.key}` } }));
   if (want !== 'number') return own;
   const viaTable = props
     .filter(prop => prop.kind === 'choice' && prop.from && system.tables?.[prop.from]?.columns?.length)
@@ -548,10 +552,10 @@ function asksAtTable(param: Param, closed: boolean) {
   return <span className="faint need-fill__ways">{`не заполните — спросят ${param.ask.by === 'gm' ? 'ведущего' : 'игрока'} за столом`}</span>;
 }
 
-function propDestiny(kind: RecordKind, propKey: string): string {
+function propDestiny(system: System, kind: RecordKind, propKey: string): string {
   const buttons = (kind.bindings ?? [])
-    .filter(b => Object.values(b.args ?? {}).some(arg =>
-      arg !== null && typeof arg === 'object' && (arg as { prop?: string }).prop === propKey))
+    .filter(b => Object.values(argsWithProps(system, b, propKeysOf(kind)) ?? {}).some(arg =>
+      new RegExp(`[@#]${propKey}(?![\\p{L}\\p{N}_])`, 'u').test(String((arg as { expr?: string }).expr ?? ''))))
     .map(b => `«${b.label ?? 'Применение'}»`);
   return buttons.length
     ? `уходит в кнопку ${buttons.join(', ')}`
