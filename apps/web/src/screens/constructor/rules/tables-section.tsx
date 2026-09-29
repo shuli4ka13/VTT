@@ -183,7 +183,7 @@ export function rowNames(system: System, tableId: string): Map<string, string> {
 const kindLabel = (column: TableColumn): string =>
   `${kindWord(column.kind)}${column.expr !== undefined ? ' · формула' : ''}`;
 
-function TableColumnCard({ id, table, column, system, edit, onClose }: {
+export function TableColumnCard({ id, table, column, system, edit, onClose }: {
   id: string;
   table: Table;
   column: TableColumn;

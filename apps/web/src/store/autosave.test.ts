@@ -9,7 +9,7 @@ vi.mock('../api/client.ts', async () => {
 
 const { ApiError } = await import('../api/client.ts');
 const { useWorld } = await import('./world.ts');
-const { useAutosave, settle, saveLabel, rememberVersion } = await import('./autosave.ts');
+const { useAutosave, settle, saveLabel, rememberVersion, markClean } = await import('./autosave.ts');
 
 const edit = (name: string) => useWorld.getState().editSystem(draft => { draft.name = name; });
 
@@ -19,6 +19,14 @@ describe('автосохранение: автор всегда знает, со
     rememberVersion({ system: undefined });
     useWorld.getState().setOrigin({ mode: 'system', systemId: 'sys-1' });
     useAutosave.getState().set({ kind: 'idle' });
+  });
+
+  it('только что открытая система не сохраняется сама — вторая вкладка не получает «изменили в другом месте»', async () => {
+    edit('Открытая');
+    markClean();
+    expect(useAutosave.getState().state.kind).toBe('idle');
+    await settle();
+    expect(saveSystem).not.toHaveBeenCalled();
   });
 
   it('после правки статус сразу «есть несохранённые правки», после ответа сервера — «сохранено»', async () => {

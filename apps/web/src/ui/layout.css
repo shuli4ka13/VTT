@@ -359,3 +359,8 @@
 .sheet-table { display: grid; gap: var(--s-2) var(--s-3); align-items: center; }
 .sheet-table .field__label:empty { display: none; }
 .sheet-table__row { color: var(--text); font-size: var(--fs-3); }
+.block-name { background: transparent; border: 1px solid transparent; border-radius: var(--r-1); padding: var(--s-1) var(--s-2); font-weight: 600; font-size: var(--fs-4); min-width: 6ch; max-width: 100%; }
+.block-name:hover { border-color: var(--border); }
+.block-name:focus { border-color: var(--accent); background: var(--bg-sunken); outline: none; }
+.block-head__more { visibility: hidden; }
+.block-head:hover .block-head__more, .block-head:focus-within .block-head__more { visibility: visible; }

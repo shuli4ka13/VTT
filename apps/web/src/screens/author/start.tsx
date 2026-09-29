@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 import { useWorld, emptySystem } from '../../store/world.ts';
 import { Button, Card, CardHead, Empty, Fold, Input, Verdict } from '../../ui/primitives.tsx';
 import { listSystems, getSystem, createSystem } from '../../api/client.ts';
-import { rememberVersion } from '../../store/autosave.ts';
+import { rememberVersion, markClean } from '../../store/autosave.ts';
 import type { SystemSummary } from '@vtt/schema';
 
 type Mode = 'edit' | 'copy' | 'blank' | null;
@@ -75,6 +75,7 @@ export function SystemStart() {
         mode: 'system', systemId: saved.id, systemTitle: saved.title, systemMine: true,
         compendiumId: undefined, compendiumTitle: undefined,
       });
+      markClean();
       navigate('/author/system');
     } catch (err) {
       setTrouble((err as Error).message);

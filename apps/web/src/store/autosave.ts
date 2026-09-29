@@ -54,6 +54,22 @@ export const saveLabel = (state: SaveState, idle: string): string =>
         : state.kind === 'failed' ? `не сохранилось: ${[state.why, ...state.issues.slice(0, 2)].join(' · ')}`
           : idle;
 
+function snapshotOf(): string {
+  const { system, compendium, origin } = useWorld.getState();
+  const { mode, compendiumTitle } = origin;
+  const title = mode === 'system'
+    ? (system.name ?? 'Без имени')
+    : (compendiumTitle ?? 'Без имени');
+  return JSON.stringify({ mode, title, body: mode === 'system' ? system : compendium });
+}
+
+export function markClean(): void {
+  sent = snapshotOf();
+  pending = null;
+  if (timer) { clearTimeout(timer); timer = null; }
+  useAutosave.getState().set({ kind: 'idle' });
+}
+
 function schedule(): void {
   if (timer) { clearTimeout(timer); timer = null; }
   pending = null;
