@@ -6,6 +6,9 @@ export interface GridColumn {
   label: string;
   width: number;
   hint?: string;
+  sub?: string;
+  active?: boolean;
+  onClick?: () => void;
 }
 
 const MIN_WIDTH = 60;
@@ -33,17 +36,22 @@ function HeadCell({ column, width, onResize }: { column: GridColumn; width: numb
     window.addEventListener('pointerup', up);
   };
   return (
-    <div className="sheet-grid__head" title={column.hint ?? column.label}>
-      <span className="sheet-grid__title">{column.label}</span>
+    <div className={`sheet-grid__head${column.active ? ' sheet-grid__head--active' : ''}`} title={column.hint ?? column.label}>
+      {column.onClick ? (
+        <button type="button" className="sheet-grid__title sheet-grid__title--button" onClick={column.onClick}>
+          {column.label}{column.sub ? <span className="sheet-grid__sub">{column.sub}</span> : null}
+        </button>
+      ) : <span className="sheet-grid__title">{column.label}</span>}
       <span className="sheet-grid__grip" role="separator" aria-label={`ширина колонки «${column.label}»`} onPointerDown={drag} />
     </div>
   );
 }
 
-export function SheetGrid({ id, columns, tail = 40, children }: {
+export function SheetGrid({ id, columns, tail = 40, tailHead, children }: {
   id: string;
   columns: GridColumn[];
   tail?: number | null;
+  tailHead?: ReactNode;
   children: ReactNode;
 }) {
   const [widths, setWidth] = useWidths(id);
@@ -53,7 +61,7 @@ export function SheetGrid({ id, columns, tail = 40, children }: {
     <div className="sheet-scroll">
       <div className="sheet-grid" style={{ gridTemplateColumns: template }}>
         {columns.map(c => <HeadCell key={c.key} column={c} width={widthOf(c)} onResize={w => setWidth(c.key, w)} />)}
-        {tail ? <span /> : null}
+        {tail ? <span className="sheet-grid__head">{tailHead}</span> : null}
         {children}
       </div>
     </div>

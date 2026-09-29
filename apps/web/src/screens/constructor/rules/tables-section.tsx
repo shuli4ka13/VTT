@@ -1,5 +1,6 @@
-import { kindsFor } from '@vtt/engine/words/kinds';
-import { Card, CardHead, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Empty } from '../../../ui/primitives.tsx';
+import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
+import { ROW } from '@vtt/engine/model/sheet-columns';
+import { Card, CardHead, Field, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Empty, LabelInput } from '../../../ui/primitives.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import { SheetGrid } from '../../../ui/sheet-grid.tsx';
 import { FieldRow } from '../../../ui/field-row.tsx';
@@ -90,6 +91,7 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
     useWorld.getState().pick({ activeTableId: null });
   }, [wanted]);
   const held = users.length > 0 || inUse(usage, 'table', id);
+  const [picked, setPicked] = useState<string | null>(null);
   const broken = byRange && rangesBroken(rows);
 
   const edit = (change: (draft: Table) => void) => editSystem(draft => {
@@ -154,111 +156,135 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
 
       {broken ? <Verdict tone="warn">диапазоны перекрываются или дырявы</Verdict> : null}
 
-      <Columns id={id} table={table} system={system} edit={edit} />
+      {picked && columns.some(c => c.key === picked) ? (
+        <ColumnCard id={id} table={table} column={columns.find(c => c.key === picked)!} system={system} edit={edit} onClose={() => setPicked(null)} />
+      ) : null}
 
-      <Rows id={id} table={table} system={system} edit={edit} editSystem={editSystem} />
+      <Rows id={id} table={table} system={system} edit={edit} editSystem={editSystem} picked={picked} onPick={setPicked} />
     </Fold>
     </div>
   );
 }
 
-const COLUMN_GRID: GridColumn[] = [
-  { key: 'label', label: 'Колонка', width: 170 },
-  { key: 'kind', label: 'Тип', width: 130 },
-];
+export function rowNames(system: System, tableId: string): Map<string, string> {
+  const table = system.tables?.[tableId];
+  const out = new Map<string, string>([[ROW, 'эта строка']]);
+  for (const column of table?.columns ?? []) {
+    const name = column.label || column.key;
+    out.set(`${ROW}.${column.key}`, name);
+    if (column.kind !== 'choice' || !column.from) continue;
+    for (const other of system.tables?.[column.from]?.columns ?? []) {
+      out.set(`${ROW}.${column.key}.${other.key}`, `${name} · ${other.label || other.key}`);
+    }
+  }
+  return out;
+}
 
-const CHOICE_GRID: GridColumn[] = [
-  { key: 'many', label: 'Сколько значений', width: 150 },
-  { key: 'from', label: 'Из таблицы', width: 150 },
-];
+const kindLabel = (column: TableColumn): string =>
+  (column.kind === 'expr' ? (column.expr !== undefined ? 'одна формула' : 'формула у строки')
+    : column.sheet ? `${kindWord(column.kind)} · у персонажа` : kindWord(column.kind));
 
-const EXPR_GRID: GridColumn[] = [{ key: 'expr', label: 'Формула для всех строк', width: 320 }];
-
-function Columns({ id, table, system, edit }: {
+function ColumnCard({ id, table, column, system, edit, onClose }: {
   id: string;
   table: Table;
+  column: TableColumn;
   system: System;
   edit: (change: (draft: Table) => void) => void;
+  onClose: () => void;
 }) {
-  const columns = table.columns ?? [];
   const others = Object.entries(system.tables ?? {}).filter(([key]) => key !== id);
-  const set = (i: number, change: (c: TableColumn) => void) => edit(draft => { const c = draft.columns?.[i]; if (c) change(c); });
-  const choice = columns.some(c => c.kind === 'choice');
-  const formula = columns.some(c => c.kind === 'expr');
-  const grid = [...COLUMN_GRID, ...(choice ? CHOICE_GRID : []), ...(formula ? EXPR_GRID : [])];
+  const set = (change: (c: TableColumn) => void) => edit(draft => {
+    const c = draft.columns?.find(x => x.key === column.key);
+    if (c) change(c);
+  });
+  const shared = column.expr !== undefined;
+  const name = column.label || column.key;
 
   return (
-    <div className="stack stack--tight">
-      <span className="field__label">Колонки</span>
-      {columns.length ? (
-        <SheetGrid id={`table-columns${choice ? '-choice' : ''}${formula ? '-expr' : ''}`} columns={grid}>
-          {columns.map((column, i) => [
-            <Input
-              key={`${column.key}:label`}
-              value={column.label ?? ''}
-              placeholder="как зовётся"
-              onChange={next => set(i, c => { c.label = next; })}
-            />,
+    <Card>
+      <CardHead
+        title={<LabelInput value={column.label ?? ''} placeholder="как зовётся колонка" onCommit={next => set(c => { c.label = next; })} />}
+        actions={<>
+          <DangerButton size="sm" onConfirm={() => {
+            edit(draft => {
+              draft.columns = (draft.columns ?? []).filter(c => c.key !== column.key);
+              for (const row of draft.rows ?? []) delete row.cells?.[column.key];
+            });
+            onClose();
+          }}>Удалить</DangerButton>
+          <Button size="sm" variant="ghost" title="свернуть" onClick={onClose}>×</Button>
+        </>}
+      />
+      <div className="row">
+        <Field label="Тип">
+          <Select
+            value={column.kind ?? 'text'}
+            options={COLUMN_KINDS as never}
+            onChange={next => set(c => {
+              c.kind = next as NonNullable<TableColumn['kind']>;
+              if (next !== 'choice') { delete c.from; delete c.many; }
+              if (next !== 'expr') delete c.expr;
+              if (!ON_SHEET.includes(next)) delete c.sheet;
+            })}
+          />
+        </Field>
+        {column.kind === 'choice' ? (
+          <>
+            <Field label="Из таблицы">
+              <Select
+                value={column.from ?? ''}
+                options={[['', '— какая —'], ...others.map(([key, t]) => [key, t.label || key] as const)] as never}
+                onChange={next => set(c => { if (next) c.from = next; else delete c.from; })}
+              />
+            </Field>
+            <Field label="Сколько значений">
+              <Select
+                value={column.many ? 'many' : 'one'}
+                options={[['one', 'одно'], ['many', 'несколько']] as const}
+                onChange={next => set(c => { if (next === 'many') c.many = true; else delete c.many; })}
+              />
+            </Field>
+          </>
+        ) : null}
+        {column.kind === 'expr' ? (
+          <Field label="Формула">
             <Select
-              key={`${column.key}:kind`}
-              value={column.kind ?? 'text'}
-              options={COLUMN_KINDS as never}
-              onChange={next => set(i, c => {
-                c.kind = next as NonNullable<TableColumn['kind']>;
-                if (next !== 'choice') { delete c.from; delete c.many; }
-                if (next !== 'expr') delete c.expr;
-                if (!ON_SHEET.includes(next)) delete c.sheet;
-              })}
-            />,
-            ...(choice ? [
-              column.kind === 'choice' ? (
-                <Select
-                  key={`${column.key}:many`}
-                  value={column.many ? 'many' : 'one'}
-                  options={[['one', 'одно'], ['many', 'несколько']] as const}
-                  onChange={next => set(i, c => { if (next === 'many') c.many = true; else delete c.many; })}
-                />
-              ) : <span key={`${column.key}:many`} className="faint">—</span>,
-              column.kind === 'choice' ? (
-                <Select
-                  key={`${column.key}:from`}
-                  value={column.from ?? ''}
-                  options={[['', '— какая —'], ...others.map(([key, t]) => [key, t.label || key] as const)] as never}
-                  onChange={next => set(i, c => { if (next) c.from = next; else delete c.from; })}
-                />
-              ) : <span key={`${column.key}:from`} className="faint">—</span>,
-            ] : []),
-            ...(formula ? [
-              column.kind === 'expr' ? (
-                <Input
-                  key={`${column.key}:expr`}
-                  mono
-                  value={column.expr ?? ''}
-                  placeholder="пусто — у каждой строки своя"
-                  onChange={next => set(i, c => { if (next.trim()) c.expr = next; else delete c.expr; })}
-                />
-              ) : <span key={`${column.key}:expr`} className="faint">—</span>,
-            ] : []),
-            <Button key={`${column.key}:drop`} size="sm" variant="ghost" title="убрать колонку" onClick={() => edit(draft => {
-              const gone = draft.columns?.[i]?.key;
-              draft.columns?.splice(i, 1);
-              if (gone) for (const row of draft.rows ?? []) delete row.cells?.[gone];
-            })}>×</Button>,
-          ])}
-        </SheetGrid>
+              value={shared ? 'one' : 'each'}
+              options={[['one', 'одна на все строки'], ['each', 'своя у каждой строки']] as const}
+              onChange={next => set(c => { if (next === 'one') c.expr = c.expr ?? ''; else delete c.expr; })}
+            />
+          </Field>
+        ) : null}
+        {column.sheet && column.kind !== 'expr' ? (
+          <Field label="Сначала">
+            <Input value={column.start === undefined ? '' : String(column.start)}
+              onChange={text => set(c => {
+                if (!text.trim()) delete c.start;
+                else c.start = /^-?\d+(\.\d+)?$/.test(text) ? Number(text) : text;
+              })} />
+          </Field>
+        ) : null}
+      </div>
+      {column.kind === 'expr' && shared ? (
+        <FormulaField
+          value={column.expr ?? ''}
+          system={system}
+          where={`${table.label || id} · ${name}`}
+          extraNames={rowNames(system, id)}
+          placeholder="формула для всех строк"
+          onChange={next => set(c => { c.expr = next; })}
+        />
       ) : null}
-      <Button size="sm" onClick={() => edit(draft => {
-        const taken = (draft.columns ?? []).map(c => c.key);
-        (draft.columns ??= []).push({ key: freeId(taken, 'колонка'), label: '', kind: 'number' });
-      })}>+ колонка</Button>
-    </div>
+    </Card>
   );
 }
 
 const defaultWidth = (column?: TableColumn): number =>
   (!column ? 200 : column.kind === 'expr' ? 240 : column.kind === 'choice' && column.many ? 220 : 150);
 
-function Rows({ id, table, system, edit, editSystem }: {
+function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
+  picked: string | null;
+  onPick: (key: string | null) => void;
   id: string;
   table: Table;
   system: System;
@@ -289,20 +315,29 @@ function Rows({ id, table, system, edit, editSystem }: {
   const lead = byRange ? ['от', 'до'] : [key === 'number' ? 'число' : 'слово', 'как показать', ...(perSheet ? ['имя в формулах'] : [])];
   const gridColumns: GridColumn[] = [
     ...lead.map(name => ({ key: `:${name}`, label: name, width: byRange ? 90 : defaultWidth() })),
-    ...columns.map(c => ({ key: c.key, label: c.label || c.key, width: defaultWidth(c) })),
+    ...columns.map(c => ({
+      key: c.key, label: c.label || c.key, sub: kindLabel(c), width: defaultWidth(c),
+      active: picked === c.key, onClick: () => onPick(picked === c.key ? null : c.key),
+    })),
   ];
+  const addColumn = () => {
+    const key = freeId(columns.map(c => c.key), 'колонка');
+    edit(draft => { (draft.columns ??= []).push({ key, label: '', kind: 'number' }); });
+    onPick(key);
+  };
+  const names = rowNames(system, id);
 
   return (
     <div className="stack stack--tight">
       <span className="field__label">Строки</span>
 
-      <SheetGrid id={`table.${id}`} columns={gridColumns}>
+      <SheetGrid id={`table.${id}`} columns={gridColumns} tailHead={<Button size="sm" variant="ghost" title="добавить колонку" onClick={addColumn}>+</Button>}>
           {rows.map((row, i) => (
             <RowCells
               key={i} row={row} at={i} rowKey={key} columns={columns} system={system} perSheet={perSheet}
               users={key === 'range' ? [] : rowUsers(system, id, row.value, compendium).map(u => u.text)}
               onRename={to => rename(row.value, to)} taken={next => taken(next, i)}
-              edit={edit} setCell={setCell}
+              edit={edit} setCell={setCell} names={names}
               where={column => `${table.label || id} · «${String(row.value ?? `${row.from}–${row.to}`)}» · ${column.label || column.key}`}
             />
           ))}
@@ -322,8 +357,9 @@ function Rows({ id, table, system, edit, editSystem }: {
   );
 }
 
-function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRename, taken, where, perSheet }: {
+function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRename, taken, where, perSheet, names }: {
   perSheet: boolean;
+  names: Map<string, string>;
   row: TableRow;
   at: number;
   rowKey: TableKey;
@@ -360,23 +396,18 @@ function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRe
         </>
       )}
       {columns.map(column => (column.sheet && column.kind !== 'expr' ? (
-        <span key={column.key} className="faint">на листе</span>
-      ) : column.kind === 'expr' && column.sheet ? (
-        <Input
-          key={column.key}
-          mono
-          value={String(cells[column.key] ?? '')}
-          placeholder={column.expr ? column.expr.split('{key}').join(row.key ?? String(row.value ?? '')) : 'формула'}
-          onChange={value => setCell(at, column.key, value.trim() ? value : undefined)}
-        />
+        <span key={column.key} />
+      ) : column.kind === 'expr' && column.expr !== undefined ? (
+        <span key={column.key} />
       ) : column.kind === 'expr' ? (
         <FormulaField
           key={column.key}
           value={String(cells[column.key] ?? '')}
           system={system}
           where={where(column)}
-          placeholder={column.expr ?? 'формула'}
-          onChange={value => setCell(at, column.key, value)}
+          extraNames={names}
+          placeholder="формула"
+          onChange={value => setCell(at, column.key, value.trim() ? value : undefined)}
         />
       ) : (
         <ValueEditor key={column.key} type={column} value={cells[column.key]} system={system}
