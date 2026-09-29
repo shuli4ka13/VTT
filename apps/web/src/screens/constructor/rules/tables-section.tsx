@@ -300,7 +300,7 @@ function SheetColumn({ table, column, system, set }: {
               })} />
           </Field>
         )}
-        {first ? <span className="faint">для строки «{first.label}»: {first.value.kind === 'formula' ? formulaAsLabels(system, first.value.expr) : 'вводит игрок'}</span> : null}
+        {first ? <span className="faint">для строки «{(table.rows ?? []).find(r => (r.key ?? String(r.value)) === first.cell?.row)?.label ?? first.cell?.row}»: {first.value.kind === 'formula' ? formulaAsLabels(system, first.value.expr) : 'вводит игрок'}</span> : null}
         <Fold title="ещё">
           <Field label="Имя поля в формулах" hint={SHEET_HINT}>
             <Input mono value={sheet.tag} onChange={next => setSheet(s => { s.tag = next; })} />
