@@ -1,11 +1,12 @@
 import { bindingsOf } from '@vtt/engine/events/envelope';
+import { GrantsEditor } from '../constructor/grants-editor.tsx';
 import { recordsOf, isItem, propsNeeded } from '@vtt/engine/model/owned';
 import { TABS } from '../../words.ts';
 import { useWorld, freeId, randomTag } from '../../store/world.ts';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
 import { blockTree, BlockBranches } from '../constructor/block-tree.tsx';
 import {
-  Card, CardHead, Field, Select, Empty, Verdict, DangerButton, LabelInput, Chip,
+  Card, CardHead, Field, Empty, Verdict, DangerButton, LabelInput,
 } from '../../ui/primitives.tsx';
 import { ModifiersEditor } from '../constructor/modifiers.tsx';
 import { RecordView } from '../../sheet/record-view.tsx';
@@ -117,8 +118,6 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
   const bindings = bindingsOf(record, system);
 
   const mustFill = propsNeeded(system, kind, bindings);
-  const hangable = Object.entries(system.effects)
-    .filter(([id, effect]) => (effect.activation ?? 'manual') !== 'manual' && !(record.grants ?? []).includes(id));
 
   return (
     <>
@@ -180,31 +179,11 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
       {kind ? (
         <Card>
           <CardHead
-            title="Что висит на владельце"
-            sub="Пока запись надета или выучена, эти эффекты действуют сами."
+            title="Что даёт владельцу"
+            sub="Пока запись надета или выучена."
           />
-          <div className="inline inline--tight">
-            {(record.grants ?? []).map(id => (
-              <Chip
-                key={id}
-                active
-                onRemove={() => edit(draft => {
-                  const left = (draft.grants ?? []).filter(x => x !== id);
-                  if (left.length) draft.grants = left; else delete draft.grants;
-                })}
-              >
-                {system.effects[id]?.label ?? id}
-              </Chip>
-            ))}
-            {hangable.length ? (
-              <Select
-                value=""
-                options={[['', (record.grants?.length ? '+ ещё эффект…' : '+ повесить эффект…')],
-                  ...hangable.map(([id, effect]) => [id, effect.label ?? id] as const)] as never}
-                onChange={next => { if (next) edit(draft => { draft.grants = [...(draft.grants ?? []), next]; }); }}
-              />
-            ) : <span className="faint">В системе нет эффектов, которые висят или срабатывают сами.</span>}
-          </div>
+          <GrantsEditor system={system} value={record.grants}
+            onChange={next => edit(draft => { if (next) draft.grants = next; else delete draft.grants; })} />
         </Card>
       ) : null}
 

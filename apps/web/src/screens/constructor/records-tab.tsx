@@ -12,7 +12,7 @@ import {
 import type { System, RecordKind, Binding, Param, Effect, ValueKind } from '@vtt/schema';
 import { CallEditor } from './call-editor.tsx';
 import { BlockPick, fieldBlocks } from './block-pick.tsx';
-import { calledOf } from '@vtt/engine/engine/effects';
+import { GrantsEditor } from './grants-editor.tsx';
 import { argsWithProps, propKeysOf } from '@vtt/engine/model/owned';
 import { blockOf } from '@vtt/engine/model/blocks';
 import { blockTree, BlockBranches } from './block-tree.tsx';
@@ -31,10 +31,6 @@ function SheetKindCards({ kind, system, edit }: {
 }) {
   const editSystem = useWorld(s => s.editSystem);
   const blocks = fieldBlocks(system).map(name => ({ value: name, label: name }));
-  const called = new Set(calledOf(system).map(([key]) => key));
-  const given = Object.entries(system.effects)
-    .filter(([key]) => !called.has(key))
-    .map(([key, effect]) => ({ value: key, label: effect.label || key }));
   return (
     <>
       <Card>
@@ -53,17 +49,11 @@ function SheetKindCards({ kind, system, edit }: {
       </Card>
       <Card>
         <CardHead
-          title="Что есть у каждого листа этого типа"
-          sub="Правила и кнопки: спасброски от смерти — персонажам, рывок — всем, кто ходит."
+          title="Что даёт каждому листу этого типа"
+          sub="Спасброски от смерти — персонажам, рывок — всем, кто ходит."
         />
-        <MultiChoice
-          value={kind.grants ?? []}
-          options={given}
-          onChange={next => edit(draft => {
-            const list = (Array.isArray(next) ? next : []).map(String);
-            if (list.length) draft.grants = list; else delete draft.grants;
-          })}
-        />
+        <GrantsEditor system={system} value={kind.grants}
+          onChange={next => edit(draft => { if (next) draft.grants = next; else delete draft.grants; })} />
       </Card>
       <Card>
         <CardHead title="Что правит на каждом листе этого типа" />
@@ -298,6 +288,10 @@ function KindEditor({ id, kind, system }: { id: string; kind: RecordKind; system
               })}
             />
           ))}
+        <Field label="И как есть — висит или кнопкой под своим именем">
+          <GrantsEditor system={system} value={kind.grants}
+            onChange={next => edit(draft => { if (next) draft.grants = next; else delete draft.grants; })} />
+        </Field>
       </Card>
 
       <Card>

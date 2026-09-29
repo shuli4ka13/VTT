@@ -2,7 +2,6 @@ import { useWorld } from '../../../store/world.ts';
 import { newHandler, payStep } from '../factory.ts';
 import { Card, CardHead, Field, Input, Select, DangerButton, LabelInput, Button, Empty } from '../../../ui/primitives.tsx';
 import { FieldRow } from '../../../ui/field-row.tsx';
-import { MultiChoice } from '../../../ui/multi-choice.tsx';
 import { useOpened } from '../../../store/opened.ts';
 import { ModifiersEditor } from '../modifiers.tsx';
 import { LAUNCH_KINDS, launchHint } from './words.ts';
@@ -10,6 +9,7 @@ import { HandlerCard } from './handler-card.tsx';
 import { Chain, type Lane } from './chain.tsx';
 import { groupSteps } from '../cards.ts';
 import { BlockPick } from '../block-pick.tsx';
+import { GrantsEditor } from '../grants-editor.tsx';
 import { Extras } from './cards/extras.tsx';
 import { ParamsEditor } from './params-editor.tsx';
 import { launchOf, activationFor, DURATIONS, REAPPLY } from '@vtt/engine/model/effect-kinds';
@@ -156,18 +156,13 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
               drop: () => edit(draft => { delete draft.duration; delete draft.bond; delete draft.reapply; }),
               node: <Lifetime effect={effect} system={system} id={id} edit={edit} />,
             }, {
-              key: 'grants', label: 'что входит в него', on: !!effect.grants,
+              key: 'grants', label: 'что даёт', on: !!effect.grants,
               add: () => edit(draft => { draft.grants = []; }),
               drop: () => edit(draft => { delete draft.grants; }),
               node: (
-                <Field label="Входят в него" hint="Висят, пока висит этот эффект: «без сознания» включает «недееспособен».">
-                  <MultiChoice
-                    value={effect.grants ?? []}
-                    options={Object.entries(system.effects)
-                      .filter(([key, other]) => key !== id && (other.activation ?? 'manual') === 'passive')
-                      .map(([key, other]) => ({ value: key, label: other.label || key }))}
-                    onChange={next => edit(draft => { draft.grants = next; })}
-                  />
+                <Field label="Что даёт" hint="Есть, пока висит этот эффект: «без сознания» включает «недееспособен».">
+                  <GrantsEditor system={system} value={effect.grants} except={id}
+                    onChange={next => edit(draft => { draft.grants = next ?? []; })} />
                 </Field>
               ),
             }]}
