@@ -205,630 +205,820 @@
         }
       },
       {
-        "tag": "astral",
         "label": "Астрал",
-        "group": "Навыки",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
           "max": 10
-        }
-      },
-      {
-        "tag": "athletics",
-        "label": "Атлетика",
+        },
+        "tag": "astral",
         "group": "Навыки",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
+        "cell": {
+          "table": "skills",
+          "row": "astral",
+          "column": "rank"
         }
       },
       {
-        "tag": "biotech",
-        "label": "Биотехнологии",
-        "group": "Навыки",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
-      },
-      {
-        "tag": "close_combat",
-        "label": "Ближний бой",
-        "group": "Навыки",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
-      },
-      {
-        "tag": "cracking",
-        "label": "Взлом",
-        "group": "Навыки",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
-      },
-      {
-        "tag": "perception",
-        "label": "Внимание",
-        "group": "Навыки",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
-      },
-      {
-        "tag": "conjuring",
-        "label": "Воплощение",
-        "group": "Навыки",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
-      },
-      {
-        "tag": "enchanting",
-        "label": "Зачарование",
-        "group": "Навыки",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
-      },
-      {
-        "tag": "engineering",
-        "label": "Инженерное дело",
-        "group": "Навыки",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
-      },
-      {
-        "tag": "sorcery",
-        "label": "Колдовство",
-        "group": "Навыки",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
-      },
-      {
-        "tag": "tasking",
-        "label": "Многозадачность",
-        "group": "Навыки",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
-      },
-      {
-        "tag": "con",
-        "label": "Обман",
-        "group": "Навыки",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
-      },
-      {
-        "tag": "outdoors",
-        "label": "Ориентирование",
-        "group": "Навыки",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
-      },
-      {
-        "tag": "piloting",
-        "label": "Пилотирование",
-        "group": "Навыки",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
-      },
-      {
-        "tag": "stealth",
-        "label": "Скрытность",
-        "group": "Навыки",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
-      },
-      {
-        "tag": "firearms",
-        "label": "Стрельба",
-        "group": "Навыки",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
-      },
-      {
-        "tag": "influence",
-        "label": "Убеждение",
-        "group": "Навыки",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
-      },
-      {
-        "tag": "exotic_weapons",
-        "label": "Экзотическое оружие",
-        "group": "Навыки",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
-      },
-      {
-        "tag": "electronics",
-        "label": "Электроника",
-        "group": "Навыки",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
-      },
-      {
-        "tag": "astral_pool",
         "label": "Астрал: набор",
-        "group": "Наборы кубиков",
         "roll": {
           "label": "Проверка: Астрал",
           "die": {
             "constant": "pool"
           },
-          "tags": [
-            "проверка"
-          ],
           "count": {
             "expr": "@astral_pool"
-          }
+          },
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@astral > 0 ? @astral + @intuition : 0) + @wound_mod + @condition_mod)"
+          "expr": "max(0, (@astral > 0 ? @astral + @intuition : (нет ? @intuition - 1 : 0)) + @wound_mod + @condition_mod)"
+        },
+        "tag": "astral_pool",
+        "group": "Наборы кубиков",
+        "cell": {
+          "table": "skills",
+          "row": "astral",
+          "column": "pool"
         }
       },
       {
-        "tag": "athletics_pool",
+        "label": "Атлетика",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 10
+        },
+        "tag": "athletics",
+        "group": "Навыки",
+        "cell": {
+          "table": "skills",
+          "row": "athletics",
+          "column": "rank"
+        }
+      },
+      {
         "label": "Атлетика: набор",
-        "group": "Наборы кубиков",
         "roll": {
           "label": "Проверка: Атлетика",
           "die": {
             "constant": "pool"
           },
-          "tags": [
-            "проверка"
-          ],
           "count": {
             "expr": "@athletics_pool"
-          }
+          },
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@athletics > 0 ? @athletics + @agility : @agility - 1) + @wound_mod + @condition_mod)"
+          "expr": "max(0, (@athletics > 0 ? @athletics + @agility : (да ? @agility - 1 : 0)) + @wound_mod + @condition_mod)"
+        },
+        "tag": "athletics_pool",
+        "group": "Наборы кубиков",
+        "cell": {
+          "table": "skills",
+          "row": "athletics",
+          "column": "pool"
         }
       },
       {
-        "tag": "biotech_pool",
+        "label": "Биотехнологии",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 10
+        },
+        "tag": "biotech",
+        "group": "Навыки",
+        "cell": {
+          "table": "skills",
+          "row": "biotech",
+          "column": "rank"
+        }
+      },
+      {
         "label": "Биотехнологии: набор",
-        "group": "Наборы кубиков",
         "roll": {
           "label": "Проверка: Биотехнологии",
           "die": {
             "constant": "pool"
           },
-          "tags": [
-            "проверка"
-          ],
           "count": {
             "expr": "@biotech_pool"
-          }
+          },
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@biotech > 0 ? @biotech + @logic : 0) + @wound_mod + @condition_mod)"
+          "expr": "max(0, (@biotech > 0 ? @biotech + @logic : (нет ? @logic - 1 : 0)) + @wound_mod + @condition_mod)"
+        },
+        "tag": "biotech_pool",
+        "group": "Наборы кубиков",
+        "cell": {
+          "table": "skills",
+          "row": "biotech",
+          "column": "pool"
         }
       },
       {
-        "tag": "close_combat_pool",
+        "label": "Ближний бой",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 10
+        },
+        "tag": "close_combat",
+        "group": "Навыки",
+        "cell": {
+          "table": "skills",
+          "row": "close_combat",
+          "column": "rank"
+        }
+      },
+      {
         "label": "Ближний бой: набор",
-        "group": "Наборы кубиков",
         "roll": {
           "label": "Проверка: Ближний бой",
           "die": {
             "constant": "pool"
           },
-          "tags": [
-            "проверка"
-          ],
           "count": {
             "expr": "@close_combat_pool"
-          }
+          },
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@close_combat > 0 ? @close_combat + @agility : @agility - 1) + @wound_mod + @condition_mod)"
+          "expr": "max(0, (@close_combat > 0 ? @close_combat + @agility : (да ? @agility - 1 : 0)) + @wound_mod + @condition_mod)"
+        },
+        "tag": "close_combat_pool",
+        "group": "Наборы кубиков",
+        "cell": {
+          "table": "skills",
+          "row": "close_combat",
+          "column": "pool"
         }
       },
       {
-        "tag": "cracking_pool",
+        "label": "Взлом",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 10
+        },
+        "tag": "cracking",
+        "group": "Навыки",
+        "cell": {
+          "table": "skills",
+          "row": "cracking",
+          "column": "rank"
+        }
+      },
+      {
         "label": "Взлом: набор",
-        "group": "Наборы кубиков",
         "roll": {
           "label": "Проверка: Взлом",
           "die": {
             "constant": "pool"
           },
-          "tags": [
-            "проверка"
-          ],
           "count": {
             "expr": "@cracking_pool"
-          }
+          },
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@cracking > 0 ? @cracking + @logic : 0) + @wound_mod + @condition_mod)"
+          "expr": "max(0, (@cracking > 0 ? @cracking + @logic : (нет ? @logic - 1 : 0)) + @wound_mod + @condition_mod)"
+        },
+        "tag": "cracking_pool",
+        "group": "Наборы кубиков",
+        "cell": {
+          "table": "skills",
+          "row": "cracking",
+          "column": "pool"
         }
       },
       {
-        "tag": "perception_pool",
+        "label": "Внимание",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 10
+        },
+        "tag": "perception",
+        "group": "Навыки",
+        "cell": {
+          "table": "skills",
+          "row": "perception",
+          "column": "rank"
+        }
+      },
+      {
         "label": "Внимание: набор",
-        "group": "Наборы кубиков",
         "roll": {
           "label": "Проверка: Внимание",
           "die": {
             "constant": "pool"
           },
-          "tags": [
-            "проверка"
-          ],
           "count": {
             "expr": "@perception_pool"
-          }
+          },
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@perception > 0 ? @perception + @intuition : @intuition - 1) + @wound_mod + @condition_mod)"
+          "expr": "max(0, (@perception > 0 ? @perception + @intuition : (да ? @intuition - 1 : 0)) + @wound_mod + @condition_mod)"
+        },
+        "tag": "perception_pool",
+        "group": "Наборы кубиков",
+        "cell": {
+          "table": "skills",
+          "row": "perception",
+          "column": "pool"
         }
       },
       {
-        "tag": "conjuring_pool",
+        "label": "Воплощение",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 10
+        },
+        "tag": "conjuring",
+        "group": "Навыки",
+        "cell": {
+          "table": "skills",
+          "row": "conjuring",
+          "column": "rank"
+        }
+      },
+      {
         "label": "Воплощение: набор",
-        "group": "Наборы кубиков",
         "roll": {
           "label": "Проверка: Воплощение",
           "die": {
             "constant": "pool"
           },
-          "tags": [
-            "проверка"
-          ],
           "count": {
             "expr": "@conjuring_pool"
-          }
+          },
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@conjuring > 0 ? @conjuring + @magic : 0) + @wound_mod + @condition_mod)"
+          "expr": "max(0, (@conjuring > 0 ? @conjuring + @magic : (нет ? @magic - 1 : 0)) + @wound_mod + @condition_mod)"
+        },
+        "tag": "conjuring_pool",
+        "group": "Наборы кубиков",
+        "cell": {
+          "table": "skills",
+          "row": "conjuring",
+          "column": "pool"
         }
       },
       {
-        "tag": "enchanting_pool",
+        "label": "Зачарование",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 10
+        },
+        "tag": "enchanting",
+        "group": "Навыки",
+        "cell": {
+          "table": "skills",
+          "row": "enchanting",
+          "column": "rank"
+        }
+      },
+      {
         "label": "Зачарование: набор",
-        "group": "Наборы кубиков",
         "roll": {
           "label": "Проверка: Зачарование",
           "die": {
             "constant": "pool"
           },
-          "tags": [
-            "проверка"
-          ],
           "count": {
             "expr": "@enchanting_pool"
-          }
+          },
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@enchanting > 0 ? @enchanting + @magic : 0) + @wound_mod + @condition_mod)"
+          "expr": "max(0, (@enchanting > 0 ? @enchanting + @magic : (нет ? @magic - 1 : 0)) + @wound_mod + @condition_mod)"
+        },
+        "tag": "enchanting_pool",
+        "group": "Наборы кубиков",
+        "cell": {
+          "table": "skills",
+          "row": "enchanting",
+          "column": "pool"
         }
       },
       {
-        "tag": "engineering_pool",
+        "label": "Инженерное дело",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 10
+        },
+        "tag": "engineering",
+        "group": "Навыки",
+        "cell": {
+          "table": "skills",
+          "row": "engineering",
+          "column": "rank"
+        }
+      },
+      {
         "label": "Инженерное дело: набор",
-        "group": "Наборы кубиков",
         "roll": {
           "label": "Проверка: Инженерное дело",
           "die": {
             "constant": "pool"
           },
-          "tags": [
-            "проверка"
-          ],
           "count": {
             "expr": "@engineering_pool"
-          }
+          },
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@engineering > 0 ? @engineering + @logic : @logic - 1) + @wound_mod + @condition_mod)"
+          "expr": "max(0, (@engineering > 0 ? @engineering + @logic : (да ? @logic - 1 : 0)) + @wound_mod + @condition_mod)"
+        },
+        "tag": "engineering_pool",
+        "group": "Наборы кубиков",
+        "cell": {
+          "table": "skills",
+          "row": "engineering",
+          "column": "pool"
         }
       },
       {
-        "tag": "sorcery_pool",
+        "label": "Колдовство",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 10
+        },
+        "tag": "sorcery",
+        "group": "Навыки",
+        "cell": {
+          "table": "skills",
+          "row": "sorcery",
+          "column": "rank"
+        }
+      },
+      {
         "label": "Колдовство: набор",
-        "group": "Наборы кубиков",
         "roll": {
           "label": "Проверка: Колдовство",
           "die": {
             "constant": "pool"
           },
-          "tags": [
-            "проверка"
-          ],
           "count": {
             "expr": "@sorcery_pool"
-          }
+          },
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@sorcery > 0 ? @sorcery + @magic : 0) + @wound_mod + @condition_mod)"
+          "expr": "max(0, (@sorcery > 0 ? @sorcery + @magic : (нет ? @magic - 1 : 0)) + @wound_mod + @condition_mod)"
+        },
+        "tag": "sorcery_pool",
+        "group": "Наборы кубиков",
+        "cell": {
+          "table": "skills",
+          "row": "sorcery",
+          "column": "pool"
         }
       },
       {
-        "tag": "tasking_pool",
+        "label": "Многозадачность",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 10
+        },
+        "tag": "tasking",
+        "group": "Навыки",
+        "cell": {
+          "table": "skills",
+          "row": "tasking",
+          "column": "rank"
+        }
+      },
+      {
         "label": "Многозадачность: набор",
-        "group": "Наборы кубиков",
         "roll": {
           "label": "Проверка: Многозадачность",
           "die": {
             "constant": "pool"
           },
-          "tags": [
-            "проверка"
-          ],
           "count": {
             "expr": "@tasking_pool"
-          }
+          },
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@tasking > 0 ? @tasking + @resonance : 0) + @wound_mod + @condition_mod)"
+          "expr": "max(0, (@tasking > 0 ? @tasking + @resonance : (нет ? @resonance - 1 : 0)) + @wound_mod + @condition_mod)"
+        },
+        "tag": "tasking_pool",
+        "group": "Наборы кубиков",
+        "cell": {
+          "table": "skills",
+          "row": "tasking",
+          "column": "pool"
         }
       },
       {
-        "tag": "con_pool",
+        "label": "Обман",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 10
+        },
+        "tag": "con",
+        "group": "Навыки",
+        "cell": {
+          "table": "skills",
+          "row": "con",
+          "column": "rank"
+        }
+      },
+      {
         "label": "Обман: набор",
-        "group": "Наборы кубиков",
         "roll": {
           "label": "Проверка: Обман",
           "die": {
             "constant": "pool"
           },
-          "tags": [
-            "проверка"
-          ],
           "count": {
             "expr": "@con_pool"
-          }
+          },
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@con > 0 ? @con + @charisma : @charisma - 1) + @wound_mod + @condition_mod)"
+          "expr": "max(0, (@con > 0 ? @con + @charisma : (да ? @charisma - 1 : 0)) + @wound_mod + @condition_mod)"
+        },
+        "tag": "con_pool",
+        "group": "Наборы кубиков",
+        "cell": {
+          "table": "skills",
+          "row": "con",
+          "column": "pool"
         }
       },
       {
-        "tag": "outdoors_pool",
+        "label": "Ориентирование",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 10
+        },
+        "tag": "outdoors",
+        "group": "Навыки",
+        "cell": {
+          "table": "skills",
+          "row": "outdoors",
+          "column": "rank"
+        }
+      },
+      {
         "label": "Ориентирование: набор",
-        "group": "Наборы кубиков",
         "roll": {
           "label": "Проверка: Ориентирование",
           "die": {
             "constant": "pool"
           },
-          "tags": [
-            "проверка"
-          ],
           "count": {
             "expr": "@outdoors_pool"
-          }
+          },
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@outdoors > 0 ? @outdoors + @intuition : @intuition - 1) + @wound_mod + @condition_mod)"
+          "expr": "max(0, (@outdoors > 0 ? @outdoors + @intuition : (да ? @intuition - 1 : 0)) + @wound_mod + @condition_mod)"
+        },
+        "tag": "outdoors_pool",
+        "group": "Наборы кубиков",
+        "cell": {
+          "table": "skills",
+          "row": "outdoors",
+          "column": "pool"
         }
       },
       {
-        "tag": "piloting_pool",
+        "label": "Пилотирование",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 10
+        },
+        "tag": "piloting",
+        "group": "Навыки",
+        "cell": {
+          "table": "skills",
+          "row": "piloting",
+          "column": "rank"
+        }
+      },
+      {
         "label": "Пилотирование: набор",
-        "group": "Наборы кубиков",
         "roll": {
           "label": "Проверка: Пилотирование",
           "die": {
             "constant": "pool"
           },
-          "tags": [
-            "проверка"
-          ],
           "count": {
             "expr": "@piloting_pool"
-          }
+          },
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@piloting > 0 ? @piloting + @reaction : @reaction - 1) + @wound_mod + @condition_mod)"
+          "expr": "max(0, (@piloting > 0 ? @piloting + @reaction : (да ? @reaction - 1 : 0)) + @wound_mod + @condition_mod)"
+        },
+        "tag": "piloting_pool",
+        "group": "Наборы кубиков",
+        "cell": {
+          "table": "skills",
+          "row": "piloting",
+          "column": "pool"
         }
       },
       {
-        "tag": "stealth_pool",
+        "label": "Скрытность",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 10
+        },
+        "tag": "stealth",
+        "group": "Навыки",
+        "cell": {
+          "table": "skills",
+          "row": "stealth",
+          "column": "rank"
+        }
+      },
+      {
         "label": "Скрытность: набор",
-        "group": "Наборы кубиков",
         "roll": {
           "label": "Проверка: Скрытность",
           "die": {
             "constant": "pool"
           },
-          "tags": [
-            "проверка"
-          ],
           "count": {
             "expr": "@stealth_pool"
-          }
+          },
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@stealth > 0 ? @stealth + @agility : @agility - 1) + @wound_mod + @condition_mod)"
+          "expr": "max(0, (@stealth > 0 ? @stealth + @agility : (да ? @agility - 1 : 0)) + @wound_mod + @condition_mod)"
+        },
+        "tag": "stealth_pool",
+        "group": "Наборы кубиков",
+        "cell": {
+          "table": "skills",
+          "row": "stealth",
+          "column": "pool"
         }
       },
       {
-        "tag": "firearms_pool",
+        "label": "Стрельба",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 10
+        },
+        "tag": "firearms",
+        "group": "Навыки",
+        "cell": {
+          "table": "skills",
+          "row": "firearms",
+          "column": "rank"
+        }
+      },
+      {
         "label": "Стрельба: набор",
-        "group": "Наборы кубиков",
         "roll": {
           "label": "Проверка: Стрельба",
           "die": {
             "constant": "pool"
           },
-          "tags": [
-            "проверка"
-          ],
           "count": {
             "expr": "@firearms_pool"
-          }
+          },
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@firearms > 0 ? @firearms + @agility : @agility - 1) + @wound_mod + @condition_mod)"
+          "expr": "max(0, (@firearms > 0 ? @firearms + @agility : (да ? @agility - 1 : 0)) + @wound_mod + @condition_mod)"
+        },
+        "tag": "firearms_pool",
+        "group": "Наборы кубиков",
+        "cell": {
+          "table": "skills",
+          "row": "firearms",
+          "column": "pool"
         }
       },
       {
-        "tag": "influence_pool",
+        "label": "Убеждение",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 10
+        },
+        "tag": "influence",
+        "group": "Навыки",
+        "cell": {
+          "table": "skills",
+          "row": "influence",
+          "column": "rank"
+        }
+      },
+      {
         "label": "Убеждение: набор",
-        "group": "Наборы кубиков",
         "roll": {
           "label": "Проверка: Убеждение",
           "die": {
             "constant": "pool"
           },
-          "tags": [
-            "проверка"
-          ],
           "count": {
             "expr": "@influence_pool"
-          }
+          },
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@influence > 0 ? @influence + @charisma : @charisma - 1) + @wound_mod + @condition_mod)"
+          "expr": "max(0, (@influence > 0 ? @influence + @charisma : (да ? @charisma - 1 : 0)) + @wound_mod + @condition_mod)"
+        },
+        "tag": "influence_pool",
+        "group": "Наборы кубиков",
+        "cell": {
+          "table": "skills",
+          "row": "influence",
+          "column": "pool"
         }
       },
       {
-        "tag": "exotic_weapons_pool",
+        "label": "Экзотическое оружие",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 10
+        },
+        "tag": "exotic_weapons",
+        "group": "Навыки",
+        "cell": {
+          "table": "skills",
+          "row": "exotic_weapons",
+          "column": "rank"
+        }
+      },
+      {
         "label": "Экзотическое оружие: набор",
-        "group": "Наборы кубиков",
         "roll": {
           "label": "Проверка: Экзотическое оружие",
           "die": {
             "constant": "pool"
           },
-          "tags": [
-            "проверка"
-          ],
           "count": {
             "expr": "@exotic_weapons_pool"
-          }
+          },
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@exotic_weapons > 0 ? @exotic_weapons + @agility : 0) + @wound_mod + @condition_mod)"
+          "expr": "max(0, (@exotic_weapons > 0 ? @exotic_weapons + @agility : (нет ? @agility - 1 : 0)) + @wound_mod + @condition_mod)"
+        },
+        "tag": "exotic_weapons_pool",
+        "group": "Наборы кубиков",
+        "cell": {
+          "table": "skills",
+          "row": "exotic_weapons",
+          "column": "pool"
         }
       },
       {
-        "tag": "electronics_pool",
+        "label": "Электроника",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 0,
+          "min": 0,
+          "max": 10
+        },
+        "tag": "electronics",
+        "group": "Навыки",
+        "cell": {
+          "table": "skills",
+          "row": "electronics",
+          "column": "rank"
+        }
+      },
+      {
         "label": "Электроника: набор",
-        "group": "Наборы кубиков",
         "roll": {
           "label": "Проверка: Электроника",
           "die": {
             "constant": "pool"
           },
-          "tags": [
-            "проверка"
-          ],
           "count": {
             "expr": "@electronics_pool"
-          }
+          },
+          "tags": [
+            "проверка"
+          ]
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@electronics > 0 ? @electronics + @logic : @logic - 1) + @wound_mod + @condition_mod)"
+          "expr": "max(0, (@electronics > 0 ? @electronics + @logic : (да ? @logic - 1 : 0)) + @wound_mod + @condition_mod)"
+        },
+        "tag": "electronics_pool",
+        "group": "Наборы кубиков",
+        "cell": {
+          "table": "skills",
+          "row": "electronics",
+          "column": "pool"
         }
       },
       {
@@ -1516,39 +1706,232 @@
           }
         ]
       },
-      "weapon_skills": {
-        "label": "Навык оружия",
+      "skills": {
+        "label": "Навыки",
         "key": "word",
         "columns": [
           {
+            "key": "attribute",
+            "label": "Характеристика",
+            "kind": "text"
+          },
+          {
+            "key": "untrained",
+            "label": "Без обучения",
+            "kind": "boolean"
+          },
+          {
+            "key": "rank",
+            "label": "Ранг",
+            "sheet": {
+              "tag": "{key}",
+              "label": "{label}",
+              "group": "Навыки",
+              "value": {
+                "kind": "stored",
+                "type": "number",
+                "default": 0,
+                "min": 0,
+                "max": 10
+              }
+            }
+          },
+          {
             "key": "pool",
             "label": "Набор",
-            "kind": "expr"
+            "sheet": {
+              "tag": "{key}_pool",
+              "label": "{label}: набор",
+              "group": "Наборы кубиков",
+              "roll": {
+                "label": "Проверка: {label}",
+                "die": {
+                  "constant": "pool"
+                },
+                "count": {
+                  "expr": "@{key}_pool"
+                },
+                "tags": [
+                  "проверка"
+                ]
+              },
+              "value": {
+                "kind": "formula",
+                "expr": "max(0, (@{key} > 0 ? @{key} + @{attribute} : ({untrained} ? @{attribute} - 1 : 0)) + @wound_mod + @condition_mod)"
+              }
+            }
           }
         ],
         "rows": [
           {
-            "value": "стрельба",
+            "value": "астрал",
+            "key": "astral",
+            "label": "Астрал",
             "cells": {
-              "pool": "@firearms_pool"
-            }
-          },
-          {
-            "value": "ближний бой",
-            "cells": {
-              "pool": "@close_combat_pool"
+              "attribute": "intuition",
+              "untrained": false
             }
           },
           {
             "value": "атлетика",
+            "key": "athletics",
+            "label": "Атлетика",
             "cells": {
-              "pool": "@athletics_pool"
+              "attribute": "agility",
+              "untrained": true
+            }
+          },
+          {
+            "value": "биотехнологии",
+            "key": "biotech",
+            "label": "Биотехнологии",
+            "cells": {
+              "attribute": "logic",
+              "untrained": false
+            }
+          },
+          {
+            "value": "ближний бой",
+            "key": "close_combat",
+            "label": "Ближний бой",
+            "cells": {
+              "attribute": "agility",
+              "untrained": true
+            }
+          },
+          {
+            "value": "взлом",
+            "key": "cracking",
+            "label": "Взлом",
+            "cells": {
+              "attribute": "logic",
+              "untrained": false
+            }
+          },
+          {
+            "value": "внимание",
+            "key": "perception",
+            "label": "Внимание",
+            "cells": {
+              "attribute": "intuition",
+              "untrained": true
+            }
+          },
+          {
+            "value": "воплощение",
+            "key": "conjuring",
+            "label": "Воплощение",
+            "cells": {
+              "attribute": "magic",
+              "untrained": false
+            }
+          },
+          {
+            "value": "зачарование",
+            "key": "enchanting",
+            "label": "Зачарование",
+            "cells": {
+              "attribute": "magic",
+              "untrained": false
+            }
+          },
+          {
+            "value": "инженерное дело",
+            "key": "engineering",
+            "label": "Инженерное дело",
+            "cells": {
+              "attribute": "logic",
+              "untrained": true
+            }
+          },
+          {
+            "value": "колдовство",
+            "key": "sorcery",
+            "label": "Колдовство",
+            "cells": {
+              "attribute": "magic",
+              "untrained": false
+            }
+          },
+          {
+            "value": "многозадачность",
+            "key": "tasking",
+            "label": "Многозадачность",
+            "cells": {
+              "attribute": "resonance",
+              "untrained": false
+            }
+          },
+          {
+            "value": "обман",
+            "key": "con",
+            "label": "Обман",
+            "cells": {
+              "attribute": "charisma",
+              "untrained": true
+            }
+          },
+          {
+            "value": "ориентирование",
+            "key": "outdoors",
+            "label": "Ориентирование",
+            "cells": {
+              "attribute": "intuition",
+              "untrained": true
+            }
+          },
+          {
+            "value": "пилотирование",
+            "key": "piloting",
+            "label": "Пилотирование",
+            "cells": {
+              "attribute": "reaction",
+              "untrained": true
+            }
+          },
+          {
+            "value": "скрытность",
+            "key": "stealth",
+            "label": "Скрытность",
+            "cells": {
+              "attribute": "agility",
+              "untrained": true
+            }
+          },
+          {
+            "value": "стрельба",
+            "key": "firearms",
+            "label": "Стрельба",
+            "cells": {
+              "attribute": "agility",
+              "untrained": true
+            }
+          },
+          {
+            "value": "убеждение",
+            "key": "influence",
+            "label": "Убеждение",
+            "cells": {
+              "attribute": "charisma",
+              "untrained": true
             }
           },
           {
             "value": "экзотическое оружие",
+            "key": "exotic_weapons",
+            "label": "Экзотическое оружие",
             "cells": {
-              "pool": "@exotic_weapons_pool"
+              "attribute": "agility",
+              "untrained": false
+            }
+          },
+          {
+            "value": "электроника",
+            "key": "electronics",
+            "label": "Электроника",
+            "cells": {
+              "attribute": "logic",
+              "untrained": true
             }
           }
         ]
@@ -3196,7 +3579,7 @@
             "key": "skill",
             "label": "Навык",
             "kind": "choice",
-            "from": "weapon_skills"
+            "from": "skills"
           }
         ],
         "bindings": [
@@ -3205,7 +3588,7 @@
             "effect": "ranged_attack",
             "args": {
               "attack_pool": {
-                "expr": "таблица(\"weapon_skills\", @skill, \"pool\")"
+                "expr": "таблица(\"skills\", @skill, \"pool\")"
               },
               "physical_hit": {
                 "expr": "таблица(\"damage_kinds\", @damage_kind, \"physical\")"

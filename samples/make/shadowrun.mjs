@@ -4,6 +4,7 @@ import { modifiersOf } from './convert/modifiers.ts';
 import { argsOf } from './convert/args.ts';
 import { fieldRollsOf } from './convert/field-rolls.ts';
 import { namesOf } from './convert/names.ts';
+import { withTableFields } from '../../packages/engine/src/model/sheet-columns.ts';
 
 const ATTRIBUTES = [
   ['body', 'Тело'], ['agility', 'Проворство'], ['reaction', 'Реакция'], ['strength', 'Сила'],
@@ -64,12 +65,7 @@ function fields() {
   out.push(stored('magic', 'Магия', 'Особые', 0, { min: 0 }));
   out.push(stored('resonance', 'Резонанс', 'Особые', 0, { min: 0 }));
 
-  for (const [tag, label] of SKILLS) out.push(stored(tag, label, 'Навыки', 0, { min: 0, max: 10 }));
-  for (const [tag, label, attribute, untrained] of SKILLS) {
-    out.push(formula(`${tag}_pool`, `${label}: набор`, 'Наборы кубиков',
-      `max(0, (@${tag} > 0 ? @${tag} + @${attribute} : ${untrained ? `@${attribute} - 1` : '0'}) + ${PENALTY})`,
-      pool(`Проверка: ${label}`)));
-  }
+  out.push({ tag: '__skills', label: '', value: { kind: 'stored', type: 'number', default: 0 }, cell: { table: 'skills', row: '_', column: '_' } });
   out.push(formula('composure', 'Самообладание', 'Наборы кубиков', `max(0, @willpower + @charisma + ${PENALTY})`, pool('Самообладание')));
   out.push(formula('judge_intentions', 'Проницательность', 'Наборы кубиков', `max(0, @willpower + @intuition + ${PENALTY})`, pool('Проницательность')));
   out.push(formula('memory', 'Память', 'Наборы кубиков', `max(0, @logic + @intuition + ${PENALTY})`, pool('Память')));
@@ -161,11 +157,21 @@ const tables = () => ({
     columns: [{ key: 'physical', label: 'Физический', kind: 'number' }],
     rows: [{ value: 'физический', cells: { physical: 1 } }, { value: 'оглушающий', cells: { physical: 0 } }],
   },
-  weapon_skills: {
-    label: 'Навык оружия', key: 'word',
-    columns: [{ key: 'pool', label: 'Набор', kind: 'expr' }],
-    rows: [['стрельба', 'firearms'], ['ближний бой', 'close_combat'], ['атлетика', 'athletics'], ['экзотическое оружие', 'exotic_weapons']]
-      .map(([value, tag]) => ({ value, cells: { pool: `@${tag}_pool` } })),
+  skills: {
+    label: 'Навыки', key: 'word',
+    columns: [
+      { key: 'attribute', label: 'Характеристика', kind: 'text' },
+      { key: 'untrained', label: 'Без обучения', kind: 'boolean' },
+      { key: 'rank', label: 'Ранг', sheet: {
+        tag: '{key}', label: '{label}', group: 'Навыки', value: { kind: 'stored', type: 'number', default: 0, min: 0, max: 10 },
+      } },
+      { key: 'pool', label: 'Набор', sheet: {
+        tag: '{key}_pool', label: '{label}: набор', group: 'Наборы кубиков',
+        roll: { label: 'Проверка: {label}', die: POOL_DIE, count: { expr: '@{key}_pool' }, tags: ['проверка'] },
+        value: { kind: 'formula', expr: `max(0, (@{key} > 0 ? @{key} + @{attribute} : ({untrained} ? @{attribute} - 1 : 0)) + ${PENALTY})` },
+      } },
+    ],
+    rows: SKILLS.map(([tag, label, attribute, untrained]) => ({ value: label.toLowerCase(), key: tag, label, cells: { attribute, untrained } })),
   },
   adversaries: {
     label: 'Противники из книги (стр. 204–210)', key: 'word',
@@ -413,12 +419,12 @@ const records = () => ({
       { key: 'damage_kind', label: 'Вид урона', kind: 'choice', from: 'damage_kinds' },
       { key: 'electric', label: 'Электрический (1 — да)', kind: 'number' },
       ...RANGE_PROPS,
-      { key: 'skill', label: 'Навык', kind: 'choice', from: 'weapon_skills' },
+      { key: 'skill', label: 'Навык', kind: 'choice', from: 'skills' },
     ],
     bindings: [{
       label: 'Атаковать', effect: 'ranged_attack',
       args: {
-        attack_pool: { expr: 'таблица("weapon_skills", @skill, "pool")' },
+        attack_pool: { expr: 'таблица("skills", @skill, "pool")' },
         ...RANGE_ARGS,
         dv: { prop: 'dv' }, electric: { prop: 'electric' },
         physical_hit: { expr: 'таблица("damage_kinds", @damage_kind, "physical")' },
@@ -583,6 +589,8 @@ const world = {
   compendium: compendium(),
   sheets: sheets(),
 };
+
+world.system = withTableFields(world.system);
 
 const out = fileURLToPath(new URL('../shadowrun.world.json', import.meta.url));
 writeFileSync(out, `${JSON.stringify(namesOf(fieldRollsOf(argsOf(modifiersOf(world)))), null, 2)}\n`);

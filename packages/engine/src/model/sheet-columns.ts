@@ -20,7 +20,7 @@ function token(system: System, table: Table, row: TableRow, name: string): strin
   if (!column || cell === undefined) {
     throw new EngineError(`таблица «${table.label ?? ''}»: в шаблоне «{${name}}» — у строки «${row.label ?? row.value}» нет такой ячейки`);
   }
-  if (!tail) return String(cell);
+  if (!tail) return typeof cell === 'boolean' ? (cell ? 'да' : 'нет') : String(cell);
   const other = column.from ? system.tables?.[column.from] : undefined;
   const target = (other?.rows ?? []).find(r => String(r.value) === String(cell));
   if (!target || !other) throw new EngineError(`таблица «${table.label ?? ''}»: «{${name}}» — «${String(cell)}» нет в таблице «${column.from}»`);
@@ -31,7 +31,11 @@ const fill = (system: System, table: Table, row: TableRow, text: string): string
   text.replace(/\{([\p{L}\p{N}_.]+)\}/gu, (_, name: string) => token(system, table, row, name));
 
 function deep(system: System, table: Table, row: TableRow, value: unknown): unknown {
-  if (typeof value === 'string') return fill(system, table, row, value);
+  if (typeof value === 'string') {
+    const whole = /^\{([\p{L}\p{N}_]+)\}$/u.exec(value);
+    const raw = whole && !['key', 'value', 'label'].includes(whole[1]!) ? (row.cells ?? {})[whole[1]!] : undefined;
+    return typeof raw === 'number' || typeof raw === 'boolean' ? raw : fill(system, table, row, value);
+  }
   if (Array.isArray(value)) return value.map(item => deep(system, table, row, item));
   if (value && typeof value === 'object') {
     return Object.fromEntries(Object.entries(value as Loose).map(([k, v]) => [k, deep(system, table, row, v)]));
@@ -63,7 +67,15 @@ export function tableFields(system: System, tableId: string): Field[] {
   return out;
 }
 
-const same = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
+const sorted = (value: unknown): unknown => {
+  if (Array.isArray(value)) return value.map(sorted);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.keys(value as Loose).sort().map(key => [key, sorted((value as Loose)[key])]));
+  }
+  return value;
+};
+
+export const same = (a: unknown, b: unknown): boolean => JSON.stringify(sorted(a)) === JSON.stringify(sorted(b));
 
 export function withTableFields(system: System): System {
   const made = new Map<string, Field[]>();

@@ -5,129 +5,189 @@
     "name": "13th Age",
     "fields": [
       {
-        "tag": "str",
         "label": "Сила",
-        "group": "Характеристики",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 10,
           "min": 3,
           "max": 24
-        }
-      },
-      {
-        "tag": "con",
-        "label": "Телосложение",
+        },
+        "tag": "str",
         "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 10,
-          "min": 3,
-          "max": 24
+        "cell": {
+          "table": "abilities",
+          "row": "str",
+          "column": "score"
         }
       },
       {
-        "tag": "dex",
-        "label": "Ловкость",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 10,
-          "min": 3,
-          "max": 24
-        }
-      },
-      {
-        "tag": "int",
-        "label": "Интеллект",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 10,
-          "min": 3,
-          "max": 24
-        }
-      },
-      {
-        "tag": "wis",
-        "label": "Мудрость",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 10,
-          "min": 3,
-          "max": 24
-        }
-      },
-      {
-        "tag": "cha",
-        "label": "Харизма",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 10,
-          "min": 3,
-          "max": 24
-        }
-      },
-      {
-        "tag": "str_mod",
         "label": "Модификатор: Сила",
-        "group": "Модификаторы",
         "value": {
           "kind": "formula",
           "expr": "floor((@str - 10) / 2)"
+        },
+        "tag": "str_mod",
+        "group": "Модификаторы",
+        "cell": {
+          "table": "abilities",
+          "row": "str",
+          "column": "mod"
         }
       },
       {
-        "tag": "con_mod",
+        "label": "Телосложение",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 10,
+          "min": 3,
+          "max": 24
+        },
+        "tag": "con",
+        "group": "Характеристики",
+        "cell": {
+          "table": "abilities",
+          "row": "con",
+          "column": "score"
+        }
+      },
+      {
         "label": "Модификатор: Телосложение",
-        "group": "Модификаторы",
         "value": {
           "kind": "formula",
           "expr": "floor((@con - 10) / 2)"
+        },
+        "tag": "con_mod",
+        "group": "Модификаторы",
+        "cell": {
+          "table": "abilities",
+          "row": "con",
+          "column": "mod"
         }
       },
       {
-        "tag": "dex_mod",
+        "label": "Ловкость",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 10,
+          "min": 3,
+          "max": 24
+        },
+        "tag": "dex",
+        "group": "Характеристики",
+        "cell": {
+          "table": "abilities",
+          "row": "dex",
+          "column": "score"
+        }
+      },
+      {
         "label": "Модификатор: Ловкость",
-        "group": "Модификаторы",
         "value": {
           "kind": "formula",
           "expr": "floor((@dex - 10) / 2)"
+        },
+        "tag": "dex_mod",
+        "group": "Модификаторы",
+        "cell": {
+          "table": "abilities",
+          "row": "dex",
+          "column": "mod"
         }
       },
       {
-        "tag": "int_mod",
+        "label": "Интеллект",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 10,
+          "min": 3,
+          "max": 24
+        },
+        "tag": "int",
+        "group": "Характеристики",
+        "cell": {
+          "table": "abilities",
+          "row": "int",
+          "column": "score"
+        }
+      },
+      {
         "label": "Модификатор: Интеллект",
-        "group": "Модификаторы",
         "value": {
           "kind": "formula",
           "expr": "floor((@int - 10) / 2)"
+        },
+        "tag": "int_mod",
+        "group": "Модификаторы",
+        "cell": {
+          "table": "abilities",
+          "row": "int",
+          "column": "mod"
         }
       },
       {
-        "tag": "wis_mod",
+        "label": "Мудрость",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 10,
+          "min": 3,
+          "max": 24
+        },
+        "tag": "wis",
+        "group": "Характеристики",
+        "cell": {
+          "table": "abilities",
+          "row": "wis",
+          "column": "score"
+        }
+      },
+      {
         "label": "Модификатор: Мудрость",
-        "group": "Модификаторы",
         "value": {
           "kind": "formula",
           "expr": "floor((@wis - 10) / 2)"
+        },
+        "tag": "wis_mod",
+        "group": "Модификаторы",
+        "cell": {
+          "table": "abilities",
+          "row": "wis",
+          "column": "mod"
         }
       },
       {
-        "tag": "cha_mod",
+        "label": "Харизма",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 10,
+          "min": 3,
+          "max": 24
+        },
+        "tag": "cha",
+        "group": "Характеристики",
+        "cell": {
+          "table": "abilities",
+          "row": "cha",
+          "column": "score"
+        }
+      },
+      {
         "label": "Модификатор: Харизма",
-        "group": "Модификаторы",
         "value": {
           "kind": "formula",
           "expr": "floor((@cha - 10) / 2)"
+        },
+        "tag": "cha_mod",
+        "group": "Модификаторы",
+        "cell": {
+          "table": "abilities",
+          "row": "cha",
+          "column": "mod"
         }
       },
       {
@@ -358,6 +418,73 @@
         "rows": [
           {
             "value": "атака"
+          }
+        ]
+      },
+      "abilities": {
+        "label": "Характеристики",
+        "key": "word",
+        "columns": [
+          {
+            "key": "score",
+            "label": "Значение",
+            "sheet": {
+              "tag": "{key}",
+              "label": "{label}",
+              "group": "Характеристики",
+              "value": {
+                "kind": "stored",
+                "type": "number",
+                "default": 10,
+                "min": 3,
+                "max": 24
+              }
+            }
+          },
+          {
+            "key": "mod",
+            "label": "Модификатор",
+            "sheet": {
+              "tag": "{key}_mod",
+              "label": "Модификатор: {label}",
+              "group": "Модификаторы",
+              "value": {
+                "kind": "formula",
+                "expr": "floor((@{key} - 10) / 2)"
+              }
+            }
+          }
+        ],
+        "rows": [
+          {
+            "value": "сила",
+            "key": "str",
+            "label": "Сила"
+          },
+          {
+            "value": "телосложение",
+            "key": "con",
+            "label": "Телосложение"
+          },
+          {
+            "value": "ловкость",
+            "key": "dex",
+            "label": "Ловкость"
+          },
+          {
+            "value": "интеллект",
+            "key": "int",
+            "label": "Интеллект"
+          },
+          {
+            "value": "мудрость",
+            "key": "wis",
+            "label": "Мудрость"
+          },
+          {
+            "value": "харизма",
+            "key": "cha",
+            "label": "Харизма"
           }
         ]
       }
