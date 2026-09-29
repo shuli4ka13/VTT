@@ -6,6 +6,11 @@ import type { System, Compendium, Sheet, Effect, Field } from '@vtt/schema';
 import { lazyStorage } from './lazy-storage.ts';
 import { blockOf } from '@vtt/engine/model/blocks';
 import { withLibrary } from '@vtt/engine/model/owned';
+import { withTableFields } from '@vtt/engine/model/sheet-columns';
+
+const built = (system: System): System => {
+  try { return withTableFields(system); } catch { return system; }
+};
 
 export type WorkMode = 'system' | 'compendium';
 
@@ -90,7 +95,7 @@ export const useWorld = create<WorldState>()(persist(set => ({
   editSystem: edit => set(state => {
     const draft = structuredClone(state.system);
     edit(draft);
-    return { system: draft };
+    return { system: built(draft) };
   }),
 
   editEffect: (id, edit) => set(state => {
@@ -109,7 +114,7 @@ export const useWorld = create<WorldState>()(persist(set => ({
     edit(draft);
     const fields = [...state.system.fields];
     fields[at] = draft;
-    return { system: { ...state.system, fields } };
+    return { system: built({ ...state.system, fields }) };
   }),
 
   editRules: edit => set(state => {
@@ -119,7 +124,7 @@ export const useWorld = create<WorldState>()(persist(set => ({
     if (draft.effects !== effects || draft.fields !== fields) {
       throw new Error('editRules правит словари; эффекты и поля правят editEffect и editField');
     }
-    return { system: draft };
+    return { system: built(draft) };
   }),
 
   editCompendium: edit => set(state => {

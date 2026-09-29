@@ -2,6 +2,7 @@ import { compile } from '../formula/index.ts';
 import { applyValueModifiers } from './modifiers.ts';
 import { lookupCell, rowOf } from './tables.ts';
 import { VALUE_COLUMN, isRange } from '../model/tables.ts';
+import { cellTag } from '../model/sheet-columns.ts';
 import type { System, Table } from '../model/types.ts';
 import type { Pass } from './calc.ts';
 
@@ -33,9 +34,14 @@ const rowKeyOf = (table: Table, input: unknown): string => {
 export function readCell(
   system: System, pass: Pass, tableId: string, input: unknown, column = VALUE_COLUMN, forTag?: string,
 ): unknown {
-  const raw = lookupCell(system, tableId, input, column, forTag);
   const table = system.tables?.[tableId];
-  const kind = (table?.columns ?? []).find(c => c.key === column)?.kind;
+  const spec = (table?.columns ?? []).find(c => c.key === column);
+  if (spec?.sheet) {
+    const row = rowOf(system, tableId, input, forTag);
+    return row ? pass.resolve(cellTag(system, tableId, row, spec)) : null;
+  }
+  const raw = lookupCell(system, tableId, input, column, forTag);
+  const kind = spec?.kind;
   if (!table || kind !== 'expr' || typeof raw !== 'string') return raw;
 
   const base = compile(raw).evaluate(pass.resolve);

@@ -69,6 +69,8 @@ export const field = z.object({
   control: control.optional(),
 
   lives: z.enum(['desk', 'group']).optional(),
+
+  cell: z.object({ table: z.string().min(1), row: z.string().min(1), column: z.string().min(1) }).optional(),
 }).passthrough();
 
 export const diceTerm = z.object({
@@ -105,15 +107,27 @@ export const dieConstant = z.object({
 
 export const tableValue = z.union([z.number(), z.string(), z.boolean()]);
 
+export const sheetColumn = z.object({
+  tag: z.string().min(1),
+  label: z.string(),
+  group: z.string().optional(),
+  value: fieldValue,
+  roll: z.lazy(() => rollSpec.partial()).optional(),
+  control: control.optional(),
+}).passthrough();
+
 export const tableColumn = z.object({
   key: z.string().min(1),
   label: z.string().optional(),
   ...typed,
+  sheet: sheetColumn.optional(),
 });
 
 export const tableRow = z.object({
   value: tableValue.optional(),
   label: z.string().optional(),
+  key: z.string().min(1).optional(),
+  group: z.string().optional(),
 
   from: z.number().optional(),
   to: z.number().optional(),

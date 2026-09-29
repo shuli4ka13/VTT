@@ -97,20 +97,55 @@ export const lists = () => ({
       { value: 'инициатива' },
     ],
   },
-  skills: {
-    label: 'Навыки', key: 'word',
-    columns: [{ key: 'ability', label: 'Характеристика', kind: 'choice', from: 'abilities' }],
-    rows: SKILLS.map(([, label, a]) => ({ value: skillWord(label), cells: { ability: ABILITY_WORD[a] } })),
-  },
   abilities: {
     label: 'Характеристики', key: 'word',
-    columns: [{ key: 'mod', label: 'Модификатор', kind: 'expr' }],
-    rows: ABILITIES.map(([tag]) => ({ value: ABILITY_WORD[tag], cells: { mod: `@${tag}_mod` } })),
+    columns: [
+      { key: 'score', label: 'Значение', sheet: {
+        tag: '{key}', label: '{label}', group: 'Характеристики',
+        value: { kind: 'stored', type: 'number', default: 10, min: 1, max: 30 },
+      } },
+      { key: 'mod', label: 'Модификатор', sheet: {
+        tag: '{key}_mod', label: 'Модификатор: {label}', group: 'Модификаторы',
+        roll: { label: 'Проверка: {label}', tags: ['проверка', '{value}'], die: LEAD_DIE, bonus: { expr: '@{key}_mod' } },
+        value: { kind: 'formula', expr: 'floor((@{key} - 10) / 2)' },
+      } },
+    ],
+    rows: ABILITIES.map(([tag, label]) => ({ value: ABILITY_WORD[tag], key: tag, label })),
   },
   saves: {
     label: 'Спасброски', key: 'word',
-    columns: [{ key: 'save', label: 'Спасбросок', kind: 'expr' }],
-    rows: ABILITIES.map(([tag]) => ({ value: ABILITY_WORD[tag], cells: { save: `@${tag}_save` } })),
+    columns: [
+      { key: 'extra', label: 'Владение сверх класса', sheet: {
+        tag: '{key}_save_extra', label: 'Владение сверх класса: спасбросок {label}', group: 'Спасброски',
+        value: { kind: 'stored', type: 'number', default: 0, min: 0, max: 1 }, control: 'ring',
+      } },
+      { key: 'prof', label: 'Владение', sheet: {
+        tag: '{key}_save_prof', label: 'Владение: спасбросок {label}', group: 'Спасброски',
+        value: { kind: 'formula', expr: 'max(@{key}_save_extra, есть(@class_name.saves, "{value}") ? 1 : 0)' },
+      } },
+      { key: 'save', label: 'Спасбросок', sheet: {
+        tag: '{key}_save', label: 'Спасбросок: {label}', group: 'Спасброски',
+        roll: { label: 'Спасбросок: {label}', tags: ['спасбросок', '{value}'], die: LEAD_DIE, bonus: { expr: '@{key}_save' } },
+        value: { kind: 'formula', expr: '@{key}_mod + @{key}_save_prof * @prof_bonus' },
+      } },
+    ],
+    rows: ABILITIES.map(([tag, label]) => ({ value: ABILITY_WORD[tag], key: tag, label })),
+  },
+  skills: {
+    label: 'Навыки', key: 'word',
+    columns: [
+      { key: 'ability', label: 'Характеристика', kind: 'choice', from: 'abilities' },
+      { key: 'prof', label: 'Владение', sheet: {
+        tag: '{key}_prof', label: 'Владение: {label}',
+        value: { kind: 'stored', type: 'number', default: 0, min: 0, max: 2 }, control: 'ring',
+      } },
+      { key: 'total', label: 'Навык', sheet: {
+        tag: '{key}', label: '{label}',
+        roll: { label: 'Проверка: {label}', tags: ['проверка', '{ability}', '{value}'], die: LEAD_DIE, bonus: { expr: '@{key}' } },
+        value: { kind: 'formula', expr: '@{ability.key}_mod + @{key}_prof * @prof_bonus' },
+      } },
+    ],
+    rows: SKILLS.map(([tag, label, a]) => ({ value: skillWord(label), key: tag, label, group: SKILL_GROUP[a], cells: { ability: ABILITY_WORD[a] } })),
   },
   classes: {
     label: 'Классы', key: 'word',
@@ -200,6 +235,10 @@ const stored = (tag, label, group, type, def, extra = {}) => {
 const formula = (tag, label, group, expr, roll) => ({
   tag, label, group, ...(roll ? { roll: { ...roll, die: LEAD_DIE } } : {}), value: { kind: 'formula', expr },
 });
+const place = table => ({
+  tag: `__${table}`, label: '', value: { kind: 'stored', type: 'number', default: 0 },
+  cell: { table, row: '_', column: '_' },
+});
 const lookup = (tag, label, group, table, arg, column) =>
   ({ tag, label, group, value: { kind: 'table', table, arg, ...(column ? { column } : {}) } });
 
@@ -212,30 +251,15 @@ export function fields() {
     out.push(stored(tag, label, 'Личное дело', 'text', ''));
   }
 
-  for (const [a, label] of ABILITIES) out.push(stored(a, label, 'Характеристики', 'number', 10, { min: 1, max: 30 }));
-  for (const [a, label] of ABILITIES) {
-    out.push(formula(`${a}_mod`, `Модификатор: ${label}`, 'Модификаторы', `floor((@${a} - 10) / 2)`,
-      { label: `Проверка: ${label}`, tags: ['проверка', ABILITY_WORD[a]] }));
-  }
+  out.push(place('abilities'));
 
   out.push(stored('level', 'Уровень', 'Прогрессия', 'number', 1, { min: 1, max: 20, control: 'stepper' }));
   out.push(lookup('prof_bonus', 'Бонус мастерства', 'Прогрессия', 'levels', '@level', 'prof'));
   out.push(stored('inspiration', 'Вдохновение', 'Прогрессия', 'number', 0, { min: 0, max: 1, control: 'pips' }));
   out.push(stored('xp', 'Опыт', 'Прогрессия', 'number', 0, { min: 0 }));
 
-  for (const [a, label] of ABILITIES) {
-    out.push(stored(`${a}_save_extra`, `Владение сверх класса: спасбросок ${label}`, 'Спасброски', 'number', 0, { min: 0, max: 1, control: 'ring' }));
-    out.push(formula(`${a}_save_prof`, `Владение: спасбросок ${label}`, 'Спасброски',
-      `max(@${a}_save_extra, есть(@class_name.saves, "${ABILITY_WORD[a]}") ? 1 : 0)`));
-    out.push(formula(`${a}_save`, `Спасбросок: ${label}`, 'Спасброски', `@${a}_mod + @${a}_save_prof * @prof_bonus`,
-      { label: `Спасбросок: ${label}`, tags: ['спасбросок', ABILITY_WORD[a]] }));
-  }
-
-  for (const [tag, label, a] of SKILLS) {
-    out.push(stored(`${tag}_prof`, `Владение: ${label}`, SKILL_GROUP[a], 'number', 0, { min: 0, max: 2, control: 'ring' }));
-    out.push(formula(tag, label, SKILL_GROUP[a], `@${a}_mod + @${tag}_prof * @prof_bonus`,
-      { label: `Проверка: ${label}`, tags: ['проверка', ABILITY_WORD[a], skillWord(label)] }));
-  }
+  out.push(place('saves'));
+  out.push(place('skills'));
 
   out.push(formula('initiative', 'Инициатива', 'Чувства и движение', '@dex_mod', { label: 'Инициатива', tags: INITIATIVE_TAGS }));
   out.push(formula('passive_perception', 'Пассивная внимательность', 'Чувства и движение', '10 + @perception'));

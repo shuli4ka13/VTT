@@ -132,6 +132,23 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
   const preset = effectiveDefault(system, field.group ?? 'Без блока');
   const follows = preset !== undefined && sameValue(field.value, preset);
 
+  if (field.cell) {
+    const table = system.tables?.[field.cell.table];
+    const column = table?.columns?.find(c => c.key === field.cell!.column);
+    return (
+      <Card>
+        <CardHead
+          title={field.label || field.tag}
+          sub={`Колонка «${column?.label ?? field.cell.column}» таблицы «${table?.label ?? field.cell.table}» — правится там, сразу для всех строк.`}
+          actions={<Button size="sm" onClick={() => pick({ activeTab: 'dictionaries', activeTableId: field.cell!.table })}>Открыть таблицу</Button>}
+        />
+        {field.value.kind === 'formula'
+          ? <LiveValue system={system} compendium={compendium} tag={field.tag} source={field.value.expr} />
+          : null}
+      </Card>
+    );
+  }
+
   return (
     <>
       <Card>

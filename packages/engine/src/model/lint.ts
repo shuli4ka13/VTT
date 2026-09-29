@@ -4,6 +4,7 @@ import { calledOf, chainsOfEffect } from '../engine/effects.ts';
 import { basedOn, paramsOf } from './inherit.ts';
 import { danglingRows } from './integrity.ts';
 import { recordsOf, sheetKinds, argsWithProps, propKeysOf } from './owned.ts';
+import { withTableFields } from './sheet-columns.ts';
 import { blockNames } from './blocks.ts';
 import { MOMENTS } from '../events/moments.ts';
 import { TABS, STEP } from '../words/glossary.ts';
@@ -254,6 +255,21 @@ function emittedBy(steps: Step[] | undefined): string[] {
   return out;
 }
 
+function tableFieldProblems(system: System): Problem[] {
+  let built: System;
+  try { built = withTableFields(system); } catch (err) {
+    return [{ where: { tab: 'rules', section: 'tables' }, level: 'error', text: (err as Error).message }];
+  }
+  if (built === system) return [];
+  const tables = new Set([...system.fields, ...built.fields].map(f => f.cell?.table).filter((t): t is string => Boolean(t)));
+  return [...tables]
+    .filter(id => JSON.stringify(system.fields.filter(f => f.cell?.table === id)) !== JSON.stringify(built.fields.filter(f => f.cell?.table === id)))
+    .map(id => ({
+      where: { tab: 'rules', section: 'tables', key: id }, level: 'error' as const,
+      text: `поля таблицы «${system.tables?.[id]?.label ?? id}» разошлись с её колонками — их правили в обход таблицы`,
+    }));
+}
+
 function fieldRollProblems(system: System): Problem[] {
   const out: Problem[] = [];
   for (const field of system.fields) {
@@ -417,6 +433,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...orphanProblems(system, compendium));
   out.push(...sheetKindProblems(system));
   out.push(...fieldRollProblems(system));
+  out.push(...tableFieldProblems(system));
   out.push(...danglingRows(system, compendium).map(d => ({ where: d.where, level: 'error' as const, text: d.text })));
   return out;
 }

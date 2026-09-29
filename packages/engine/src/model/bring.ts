@@ -94,8 +94,12 @@ export function dependencies(donor: System): (part: Part) => Part[] {
     if (part.kind === 'field') {
       const field = donor.fields.find(f => f.tag === part.key);
       for (const group of groupLine(donor, field?.group)) out.push({ kind: 'group', key: group });
+      if (field?.cell) out.push({ kind: 'table', key: field.cell.table });
     }
-    if (part.kind === 'table') out.push(...tableDeps(donor, part.key));
+    if (part.kind === 'table') {
+      out.push(...tableDeps(donor, part.key));
+      for (const field of donor.fields) if (field.cell?.table === part.key) out.push({ kind: 'field', key: field.tag });
+    }
     if (part.kind === 'rollEdit') {
       const cancel = donor.roll_edits?.[part.key]?.canceledBy;
       if (cancel) out.push({ kind: 'rollEdit', key: cancel });

@@ -57,81 +57,24 @@
         }
       },
       {
-        "tag": "str",
         "label": "Сила",
-        "group": "Характеристики",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 10,
           "min": 1,
           "max": 30
-        }
-      },
-      {
-        "tag": "dex",
-        "label": "Ловкость",
+        },
+        "tag": "str",
         "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 10,
-          "min": 1,
-          "max": 30
+        "cell": {
+          "table": "abilities",
+          "row": "str",
+          "column": "score"
         }
       },
       {
-        "tag": "con",
-        "label": "Телосложение",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 10,
-          "min": 1,
-          "max": 30
-        }
-      },
-      {
-        "tag": "int",
-        "label": "Интеллект",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 10,
-          "min": 1,
-          "max": 30
-        }
-      },
-      {
-        "tag": "wis",
-        "label": "Мудрость",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 10,
-          "min": 1,
-          "max": 30
-        }
-      },
-      {
-        "tag": "cha",
-        "label": "Харизма",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 10,
-          "min": 1,
-          "max": 30
-        }
-      },
-      {
-        "tag": "str_mod",
         "label": "Модификатор: Сила",
-        "group": "Модификаторы",
         "roll": {
           "label": "Проверка: Сила",
           "tags": [
@@ -148,12 +91,34 @@
         "value": {
           "kind": "formula",
           "expr": "floor((@str - 10) / 2)"
+        },
+        "tag": "str_mod",
+        "group": "Модификаторы",
+        "cell": {
+          "table": "abilities",
+          "row": "str",
+          "column": "mod"
         }
       },
       {
-        "tag": "dex_mod",
+        "label": "Ловкость",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 10,
+          "min": 1,
+          "max": 30
+        },
+        "tag": "dex",
+        "group": "Характеристики",
+        "cell": {
+          "table": "abilities",
+          "row": "dex",
+          "column": "score"
+        }
+      },
+      {
         "label": "Модификатор: Ловкость",
-        "group": "Модификаторы",
         "roll": {
           "label": "Проверка: Ловкость",
           "tags": [
@@ -170,12 +135,34 @@
         "value": {
           "kind": "formula",
           "expr": "floor((@dex - 10) / 2)"
+        },
+        "tag": "dex_mod",
+        "group": "Модификаторы",
+        "cell": {
+          "table": "abilities",
+          "row": "dex",
+          "column": "mod"
         }
       },
       {
-        "tag": "con_mod",
+        "label": "Телосложение",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 10,
+          "min": 1,
+          "max": 30
+        },
+        "tag": "con",
+        "group": "Характеристики",
+        "cell": {
+          "table": "abilities",
+          "row": "con",
+          "column": "score"
+        }
+      },
+      {
         "label": "Модификатор: Телосложение",
-        "group": "Модификаторы",
         "roll": {
           "label": "Проверка: Телосложение",
           "tags": [
@@ -192,12 +179,34 @@
         "value": {
           "kind": "formula",
           "expr": "floor((@con - 10) / 2)"
+        },
+        "tag": "con_mod",
+        "group": "Модификаторы",
+        "cell": {
+          "table": "abilities",
+          "row": "con",
+          "column": "mod"
         }
       },
       {
-        "tag": "int_mod",
+        "label": "Интеллект",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 10,
+          "min": 1,
+          "max": 30
+        },
+        "tag": "int",
+        "group": "Характеристики",
+        "cell": {
+          "table": "abilities",
+          "row": "int",
+          "column": "score"
+        }
+      },
+      {
         "label": "Модификатор: Интеллект",
-        "group": "Модификаторы",
         "roll": {
           "label": "Проверка: Интеллект",
           "tags": [
@@ -214,12 +223,34 @@
         "value": {
           "kind": "formula",
           "expr": "floor((@int - 10) / 2)"
+        },
+        "tag": "int_mod",
+        "group": "Модификаторы",
+        "cell": {
+          "table": "abilities",
+          "row": "int",
+          "column": "mod"
         }
       },
       {
-        "tag": "wis_mod",
+        "label": "Мудрость",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 10,
+          "min": 1,
+          "max": 30
+        },
+        "tag": "wis",
+        "group": "Характеристики",
+        "cell": {
+          "table": "abilities",
+          "row": "wis",
+          "column": "score"
+        }
+      },
+      {
         "label": "Модификатор: Мудрость",
-        "group": "Модификаторы",
         "roll": {
           "label": "Проверка: Мудрость",
           "tags": [
@@ -236,12 +267,34 @@
         "value": {
           "kind": "formula",
           "expr": "floor((@wis - 10) / 2)"
+        },
+        "tag": "wis_mod",
+        "group": "Модификаторы",
+        "cell": {
+          "table": "abilities",
+          "row": "wis",
+          "column": "mod"
         }
       },
       {
-        "tag": "cha_mod",
+        "label": "Харизма",
+        "value": {
+          "kind": "stored",
+          "type": "number",
+          "default": 10,
+          "min": 1,
+          "max": 30
+        },
+        "tag": "cha",
+        "group": "Характеристики",
+        "cell": {
+          "table": "abilities",
+          "row": "cha",
+          "column": "score"
+        }
+      },
+      {
         "label": "Модификатор: Харизма",
-        "group": "Модификаторы",
         "roll": {
           "label": "Проверка: Харизма",
           "tags": [
@@ -258,6 +311,13 @@
         "value": {
           "kind": "formula",
           "expr": "floor((@cha - 10) / 2)"
+        },
+        "tag": "cha_mod",
+        "group": "Модификаторы",
+        "cell": {
+          "table": "abilities",
+          "row": "cha",
+          "column": "mod"
         }
       },
       {
@@ -307,9 +367,7 @@
         }
       },
       {
-        "tag": "str_save_extra",
         "label": "Владение сверх класса: спасбросок Сила",
-        "group": "Спасброски",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -317,21 +375,31 @@
           "min": 0,
           "max": 1
         },
-        "control": "ring"
-      },
-      {
-        "tag": "str_save_prof",
-        "label": "Владение: спасбросок Сила",
+        "control": "ring",
+        "tag": "str_save_extra",
         "group": "Спасброски",
-        "value": {
-          "kind": "formula",
-          "expr": "max(@str_save_extra, есть(@class_name.saves, \"сила\") ? 1 : 0)"
+        "cell": {
+          "table": "saves",
+          "row": "str",
+          "column": "extra"
         }
       },
       {
-        "tag": "str_save",
-        "label": "Спасбросок: Сила",
+        "label": "Владение: спасбросок Сила",
+        "value": {
+          "kind": "formula",
+          "expr": "max(@str_save_extra, есть(@class_name.saves, \"сила\") ? 1 : 0)"
+        },
+        "tag": "str_save_prof",
         "group": "Спасброски",
+        "cell": {
+          "table": "saves",
+          "row": "str",
+          "column": "prof"
+        }
+      },
+      {
+        "label": "Спасбросок: Сила",
         "roll": {
           "label": "Спасбросок: Сила",
           "tags": [
@@ -348,12 +416,17 @@
         "value": {
           "kind": "formula",
           "expr": "@str_mod + @str_save_prof * @prof_bonus"
+        },
+        "tag": "str_save",
+        "group": "Спасброски",
+        "cell": {
+          "table": "saves",
+          "row": "str",
+          "column": "save"
         }
       },
       {
-        "tag": "dex_save_extra",
         "label": "Владение сверх класса: спасбросок Ловкость",
-        "group": "Спасброски",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -361,21 +434,31 @@
           "min": 0,
           "max": 1
         },
-        "control": "ring"
-      },
-      {
-        "tag": "dex_save_prof",
-        "label": "Владение: спасбросок Ловкость",
+        "control": "ring",
+        "tag": "dex_save_extra",
         "group": "Спасброски",
-        "value": {
-          "kind": "formula",
-          "expr": "max(@dex_save_extra, есть(@class_name.saves, \"ловкость\") ? 1 : 0)"
+        "cell": {
+          "table": "saves",
+          "row": "dex",
+          "column": "extra"
         }
       },
       {
-        "tag": "dex_save",
-        "label": "Спасбросок: Ловкость",
+        "label": "Владение: спасбросок Ловкость",
+        "value": {
+          "kind": "formula",
+          "expr": "max(@dex_save_extra, есть(@class_name.saves, \"ловкость\") ? 1 : 0)"
+        },
+        "tag": "dex_save_prof",
         "group": "Спасброски",
+        "cell": {
+          "table": "saves",
+          "row": "dex",
+          "column": "prof"
+        }
+      },
+      {
+        "label": "Спасбросок: Ловкость",
         "roll": {
           "label": "Спасбросок: Ловкость",
           "tags": [
@@ -392,12 +475,17 @@
         "value": {
           "kind": "formula",
           "expr": "@dex_mod + @dex_save_prof * @prof_bonus"
+        },
+        "tag": "dex_save",
+        "group": "Спасброски",
+        "cell": {
+          "table": "saves",
+          "row": "dex",
+          "column": "save"
         }
       },
       {
-        "tag": "con_save_extra",
         "label": "Владение сверх класса: спасбросок Телосложение",
-        "group": "Спасброски",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -405,21 +493,31 @@
           "min": 0,
           "max": 1
         },
-        "control": "ring"
-      },
-      {
-        "tag": "con_save_prof",
-        "label": "Владение: спасбросок Телосложение",
+        "control": "ring",
+        "tag": "con_save_extra",
         "group": "Спасброски",
-        "value": {
-          "kind": "formula",
-          "expr": "max(@con_save_extra, есть(@class_name.saves, \"телосложение\") ? 1 : 0)"
+        "cell": {
+          "table": "saves",
+          "row": "con",
+          "column": "extra"
         }
       },
       {
-        "tag": "con_save",
-        "label": "Спасбросок: Телосложение",
+        "label": "Владение: спасбросок Телосложение",
+        "value": {
+          "kind": "formula",
+          "expr": "max(@con_save_extra, есть(@class_name.saves, \"телосложение\") ? 1 : 0)"
+        },
+        "tag": "con_save_prof",
         "group": "Спасброски",
+        "cell": {
+          "table": "saves",
+          "row": "con",
+          "column": "prof"
+        }
+      },
+      {
+        "label": "Спасбросок: Телосложение",
         "roll": {
           "label": "Спасбросок: Телосложение",
           "tags": [
@@ -436,12 +534,17 @@
         "value": {
           "kind": "formula",
           "expr": "@con_mod + @con_save_prof * @prof_bonus"
+        },
+        "tag": "con_save",
+        "group": "Спасброски",
+        "cell": {
+          "table": "saves",
+          "row": "con",
+          "column": "save"
         }
       },
       {
-        "tag": "int_save_extra",
         "label": "Владение сверх класса: спасбросок Интеллект",
-        "group": "Спасброски",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -449,21 +552,31 @@
           "min": 0,
           "max": 1
         },
-        "control": "ring"
-      },
-      {
-        "tag": "int_save_prof",
-        "label": "Владение: спасбросок Интеллект",
+        "control": "ring",
+        "tag": "int_save_extra",
         "group": "Спасброски",
-        "value": {
-          "kind": "formula",
-          "expr": "max(@int_save_extra, есть(@class_name.saves, \"интеллект\") ? 1 : 0)"
+        "cell": {
+          "table": "saves",
+          "row": "int",
+          "column": "extra"
         }
       },
       {
-        "tag": "int_save",
-        "label": "Спасбросок: Интеллект",
+        "label": "Владение: спасбросок Интеллект",
+        "value": {
+          "kind": "formula",
+          "expr": "max(@int_save_extra, есть(@class_name.saves, \"интеллект\") ? 1 : 0)"
+        },
+        "tag": "int_save_prof",
         "group": "Спасброски",
+        "cell": {
+          "table": "saves",
+          "row": "int",
+          "column": "prof"
+        }
+      },
+      {
+        "label": "Спасбросок: Интеллект",
         "roll": {
           "label": "Спасбросок: Интеллект",
           "tags": [
@@ -480,12 +593,17 @@
         "value": {
           "kind": "formula",
           "expr": "@int_mod + @int_save_prof * @prof_bonus"
+        },
+        "tag": "int_save",
+        "group": "Спасброски",
+        "cell": {
+          "table": "saves",
+          "row": "int",
+          "column": "save"
         }
       },
       {
-        "tag": "wis_save_extra",
         "label": "Владение сверх класса: спасбросок Мудрость",
-        "group": "Спасброски",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -493,21 +611,31 @@
           "min": 0,
           "max": 1
         },
-        "control": "ring"
-      },
-      {
-        "tag": "wis_save_prof",
-        "label": "Владение: спасбросок Мудрость",
+        "control": "ring",
+        "tag": "wis_save_extra",
         "group": "Спасброски",
-        "value": {
-          "kind": "formula",
-          "expr": "max(@wis_save_extra, есть(@class_name.saves, \"мудрость\") ? 1 : 0)"
+        "cell": {
+          "table": "saves",
+          "row": "wis",
+          "column": "extra"
         }
       },
       {
-        "tag": "wis_save",
-        "label": "Спасбросок: Мудрость",
+        "label": "Владение: спасбросок Мудрость",
+        "value": {
+          "kind": "formula",
+          "expr": "max(@wis_save_extra, есть(@class_name.saves, \"мудрость\") ? 1 : 0)"
+        },
+        "tag": "wis_save_prof",
         "group": "Спасброски",
+        "cell": {
+          "table": "saves",
+          "row": "wis",
+          "column": "prof"
+        }
+      },
+      {
+        "label": "Спасбросок: Мудрость",
         "roll": {
           "label": "Спасбросок: Мудрость",
           "tags": [
@@ -524,12 +652,17 @@
         "value": {
           "kind": "formula",
           "expr": "@wis_mod + @wis_save_prof * @prof_bonus"
+        },
+        "tag": "wis_save",
+        "group": "Спасброски",
+        "cell": {
+          "table": "saves",
+          "row": "wis",
+          "column": "save"
         }
       },
       {
-        "tag": "cha_save_extra",
         "label": "Владение сверх класса: спасбросок Харизма",
-        "group": "Спасброски",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -537,21 +670,31 @@
           "min": 0,
           "max": 1
         },
-        "control": "ring"
-      },
-      {
-        "tag": "cha_save_prof",
-        "label": "Владение: спасбросок Харизма",
+        "control": "ring",
+        "tag": "cha_save_extra",
         "group": "Спасброски",
-        "value": {
-          "kind": "formula",
-          "expr": "max(@cha_save_extra, есть(@class_name.saves, \"харизма\") ? 1 : 0)"
+        "cell": {
+          "table": "saves",
+          "row": "cha",
+          "column": "extra"
         }
       },
       {
-        "tag": "cha_save",
-        "label": "Спасбросок: Харизма",
+        "label": "Владение: спасбросок Харизма",
+        "value": {
+          "kind": "formula",
+          "expr": "max(@cha_save_extra, есть(@class_name.saves, \"харизма\") ? 1 : 0)"
+        },
+        "tag": "cha_save_prof",
         "group": "Спасброски",
+        "cell": {
+          "table": "saves",
+          "row": "cha",
+          "column": "prof"
+        }
+      },
+      {
+        "label": "Спасбросок: Харизма",
         "roll": {
           "label": "Спасбросок: Харизма",
           "tags": [
@@ -568,12 +711,17 @@
         "value": {
           "kind": "formula",
           "expr": "@cha_mod + @cha_save_prof * @prof_bonus"
+        },
+        "tag": "cha_save",
+        "group": "Спасброски",
+        "cell": {
+          "table": "saves",
+          "row": "cha",
+          "column": "save"
         }
       },
       {
-        "tag": "athletics_prof",
         "label": "Владение: Атлетика",
-        "group": "Навыки от силы",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -581,12 +729,17 @@
           "min": 0,
           "max": 2
         },
-        "control": "ring"
+        "control": "ring",
+        "tag": "athletics_prof",
+        "group": "Навыки от силы",
+        "cell": {
+          "table": "skills",
+          "row": "athletics",
+          "column": "prof"
+        }
       },
       {
-        "tag": "athletics",
         "label": "Атлетика",
-        "group": "Навыки от силы",
         "roll": {
           "label": "Проверка: Атлетика",
           "tags": [
@@ -604,12 +757,17 @@
         "value": {
           "kind": "formula",
           "expr": "@str_mod + @athletics_prof * @prof_bonus"
+        },
+        "tag": "athletics",
+        "group": "Навыки от силы",
+        "cell": {
+          "table": "skills",
+          "row": "athletics",
+          "column": "total"
         }
       },
       {
-        "tag": "acrobatics_prof",
         "label": "Владение: Акробатика",
-        "group": "Навыки от ловкости",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -617,12 +775,17 @@
           "min": 0,
           "max": 2
         },
-        "control": "ring"
+        "control": "ring",
+        "tag": "acrobatics_prof",
+        "group": "Навыки от ловкости",
+        "cell": {
+          "table": "skills",
+          "row": "acrobatics",
+          "column": "prof"
+        }
       },
       {
-        "tag": "acrobatics",
         "label": "Акробатика",
-        "group": "Навыки от ловкости",
         "roll": {
           "label": "Проверка: Акробатика",
           "tags": [
@@ -640,12 +803,17 @@
         "value": {
           "kind": "formula",
           "expr": "@dex_mod + @acrobatics_prof * @prof_bonus"
+        },
+        "tag": "acrobatics",
+        "group": "Навыки от ловкости",
+        "cell": {
+          "table": "skills",
+          "row": "acrobatics",
+          "column": "total"
         }
       },
       {
-        "tag": "sleight_of_hand_prof",
         "label": "Владение: Ловкость рук",
-        "group": "Навыки от ловкости",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -653,12 +821,17 @@
           "min": 0,
           "max": 2
         },
-        "control": "ring"
+        "control": "ring",
+        "tag": "sleight_of_hand_prof",
+        "group": "Навыки от ловкости",
+        "cell": {
+          "table": "skills",
+          "row": "sleight_of_hand",
+          "column": "prof"
+        }
       },
       {
-        "tag": "sleight_of_hand",
         "label": "Ловкость рук",
-        "group": "Навыки от ловкости",
         "roll": {
           "label": "Проверка: Ловкость рук",
           "tags": [
@@ -676,12 +849,17 @@
         "value": {
           "kind": "formula",
           "expr": "@dex_mod + @sleight_of_hand_prof * @prof_bonus"
+        },
+        "tag": "sleight_of_hand",
+        "group": "Навыки от ловкости",
+        "cell": {
+          "table": "skills",
+          "row": "sleight_of_hand",
+          "column": "total"
         }
       },
       {
-        "tag": "stealth_prof",
         "label": "Владение: Скрытность",
-        "group": "Навыки от ловкости",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -689,12 +867,17 @@
           "min": 0,
           "max": 2
         },
-        "control": "ring"
+        "control": "ring",
+        "tag": "stealth_prof",
+        "group": "Навыки от ловкости",
+        "cell": {
+          "table": "skills",
+          "row": "stealth",
+          "column": "prof"
+        }
       },
       {
-        "tag": "stealth",
         "label": "Скрытность",
-        "group": "Навыки от ловкости",
         "roll": {
           "label": "Проверка: Скрытность",
           "tags": [
@@ -712,12 +895,17 @@
         "value": {
           "kind": "formula",
           "expr": "@dex_mod + @stealth_prof * @prof_bonus"
+        },
+        "tag": "stealth",
+        "group": "Навыки от ловкости",
+        "cell": {
+          "table": "skills",
+          "row": "stealth",
+          "column": "total"
         }
       },
       {
-        "tag": "arcana_prof",
         "label": "Владение: Магия",
-        "group": "Навыки от интеллекта",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -725,12 +913,17 @@
           "min": 0,
           "max": 2
         },
-        "control": "ring"
+        "control": "ring",
+        "tag": "arcana_prof",
+        "group": "Навыки от интеллекта",
+        "cell": {
+          "table": "skills",
+          "row": "arcana",
+          "column": "prof"
+        }
       },
       {
-        "tag": "arcana",
         "label": "Магия",
-        "group": "Навыки от интеллекта",
         "roll": {
           "label": "Проверка: Магия",
           "tags": [
@@ -748,12 +941,17 @@
         "value": {
           "kind": "formula",
           "expr": "@int_mod + @arcana_prof * @prof_bonus"
+        },
+        "tag": "arcana",
+        "group": "Навыки от интеллекта",
+        "cell": {
+          "table": "skills",
+          "row": "arcana",
+          "column": "total"
         }
       },
       {
-        "tag": "history_prof",
         "label": "Владение: История",
-        "group": "Навыки от интеллекта",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -761,12 +959,17 @@
           "min": 0,
           "max": 2
         },
-        "control": "ring"
+        "control": "ring",
+        "tag": "history_prof",
+        "group": "Навыки от интеллекта",
+        "cell": {
+          "table": "skills",
+          "row": "history",
+          "column": "prof"
+        }
       },
       {
-        "tag": "history",
         "label": "История",
-        "group": "Навыки от интеллекта",
         "roll": {
           "label": "Проверка: История",
           "tags": [
@@ -784,12 +987,17 @@
         "value": {
           "kind": "formula",
           "expr": "@int_mod + @history_prof * @prof_bonus"
+        },
+        "tag": "history",
+        "group": "Навыки от интеллекта",
+        "cell": {
+          "table": "skills",
+          "row": "history",
+          "column": "total"
         }
       },
       {
-        "tag": "investigation_prof",
         "label": "Владение: Анализ",
-        "group": "Навыки от интеллекта",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -797,12 +1005,17 @@
           "min": 0,
           "max": 2
         },
-        "control": "ring"
+        "control": "ring",
+        "tag": "investigation_prof",
+        "group": "Навыки от интеллекта",
+        "cell": {
+          "table": "skills",
+          "row": "investigation",
+          "column": "prof"
+        }
       },
       {
-        "tag": "investigation",
         "label": "Анализ",
-        "group": "Навыки от интеллекта",
         "roll": {
           "label": "Проверка: Анализ",
           "tags": [
@@ -820,12 +1033,17 @@
         "value": {
           "kind": "formula",
           "expr": "@int_mod + @investigation_prof * @prof_bonus"
+        },
+        "tag": "investigation",
+        "group": "Навыки от интеллекта",
+        "cell": {
+          "table": "skills",
+          "row": "investigation",
+          "column": "total"
         }
       },
       {
-        "tag": "nature_prof",
         "label": "Владение: Природа",
-        "group": "Навыки от интеллекта",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -833,12 +1051,17 @@
           "min": 0,
           "max": 2
         },
-        "control": "ring"
+        "control": "ring",
+        "tag": "nature_prof",
+        "group": "Навыки от интеллекта",
+        "cell": {
+          "table": "skills",
+          "row": "nature",
+          "column": "prof"
+        }
       },
       {
-        "tag": "nature",
         "label": "Природа",
-        "group": "Навыки от интеллекта",
         "roll": {
           "label": "Проверка: Природа",
           "tags": [
@@ -856,12 +1079,17 @@
         "value": {
           "kind": "formula",
           "expr": "@int_mod + @nature_prof * @prof_bonus"
+        },
+        "tag": "nature",
+        "group": "Навыки от интеллекта",
+        "cell": {
+          "table": "skills",
+          "row": "nature",
+          "column": "total"
         }
       },
       {
-        "tag": "religion_prof",
         "label": "Владение: Религия",
-        "group": "Навыки от интеллекта",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -869,12 +1097,17 @@
           "min": 0,
           "max": 2
         },
-        "control": "ring"
+        "control": "ring",
+        "tag": "religion_prof",
+        "group": "Навыки от интеллекта",
+        "cell": {
+          "table": "skills",
+          "row": "religion",
+          "column": "prof"
+        }
       },
       {
-        "tag": "religion",
         "label": "Религия",
-        "group": "Навыки от интеллекта",
         "roll": {
           "label": "Проверка: Религия",
           "tags": [
@@ -892,12 +1125,17 @@
         "value": {
           "kind": "formula",
           "expr": "@int_mod + @religion_prof * @prof_bonus"
+        },
+        "tag": "religion",
+        "group": "Навыки от интеллекта",
+        "cell": {
+          "table": "skills",
+          "row": "religion",
+          "column": "total"
         }
       },
       {
-        "tag": "animal_handling_prof",
         "label": "Владение: Уход за животными",
-        "group": "Навыки от мудрости",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -905,12 +1143,17 @@
           "min": 0,
           "max": 2
         },
-        "control": "ring"
+        "control": "ring",
+        "tag": "animal_handling_prof",
+        "group": "Навыки от мудрости",
+        "cell": {
+          "table": "skills",
+          "row": "animal_handling",
+          "column": "prof"
+        }
       },
       {
-        "tag": "animal_handling",
         "label": "Уход за животными",
-        "group": "Навыки от мудрости",
         "roll": {
           "label": "Проверка: Уход за животными",
           "tags": [
@@ -928,12 +1171,17 @@
         "value": {
           "kind": "formula",
           "expr": "@wis_mod + @animal_handling_prof * @prof_bonus"
+        },
+        "tag": "animal_handling",
+        "group": "Навыки от мудрости",
+        "cell": {
+          "table": "skills",
+          "row": "animal_handling",
+          "column": "total"
         }
       },
       {
-        "tag": "insight_prof",
         "label": "Владение: Проницательность",
-        "group": "Навыки от мудрости",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -941,12 +1189,17 @@
           "min": 0,
           "max": 2
         },
-        "control": "ring"
+        "control": "ring",
+        "tag": "insight_prof",
+        "group": "Навыки от мудрости",
+        "cell": {
+          "table": "skills",
+          "row": "insight",
+          "column": "prof"
+        }
       },
       {
-        "tag": "insight",
         "label": "Проницательность",
-        "group": "Навыки от мудрости",
         "roll": {
           "label": "Проверка: Проницательность",
           "tags": [
@@ -964,12 +1217,17 @@
         "value": {
           "kind": "formula",
           "expr": "@wis_mod + @insight_prof * @prof_bonus"
+        },
+        "tag": "insight",
+        "group": "Навыки от мудрости",
+        "cell": {
+          "table": "skills",
+          "row": "insight",
+          "column": "total"
         }
       },
       {
-        "tag": "medicine_prof",
         "label": "Владение: Медицина",
-        "group": "Навыки от мудрости",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -977,12 +1235,17 @@
           "min": 0,
           "max": 2
         },
-        "control": "ring"
+        "control": "ring",
+        "tag": "medicine_prof",
+        "group": "Навыки от мудрости",
+        "cell": {
+          "table": "skills",
+          "row": "medicine",
+          "column": "prof"
+        }
       },
       {
-        "tag": "medicine",
         "label": "Медицина",
-        "group": "Навыки от мудрости",
         "roll": {
           "label": "Проверка: Медицина",
           "tags": [
@@ -1000,12 +1263,17 @@
         "value": {
           "kind": "formula",
           "expr": "@wis_mod + @medicine_prof * @prof_bonus"
+        },
+        "tag": "medicine",
+        "group": "Навыки от мудрости",
+        "cell": {
+          "table": "skills",
+          "row": "medicine",
+          "column": "total"
         }
       },
       {
-        "tag": "perception_prof",
         "label": "Владение: Внимательность",
-        "group": "Навыки от мудрости",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -1013,12 +1281,17 @@
           "min": 0,
           "max": 2
         },
-        "control": "ring"
+        "control": "ring",
+        "tag": "perception_prof",
+        "group": "Навыки от мудрости",
+        "cell": {
+          "table": "skills",
+          "row": "perception",
+          "column": "prof"
+        }
       },
       {
-        "tag": "perception",
         "label": "Внимательность",
-        "group": "Навыки от мудрости",
         "roll": {
           "label": "Проверка: Внимательность",
           "tags": [
@@ -1036,12 +1309,17 @@
         "value": {
           "kind": "formula",
           "expr": "@wis_mod + @perception_prof * @prof_bonus"
+        },
+        "tag": "perception",
+        "group": "Навыки от мудрости",
+        "cell": {
+          "table": "skills",
+          "row": "perception",
+          "column": "total"
         }
       },
       {
-        "tag": "survival_prof",
         "label": "Владение: Выживание",
-        "group": "Навыки от мудрости",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -1049,12 +1327,17 @@
           "min": 0,
           "max": 2
         },
-        "control": "ring"
+        "control": "ring",
+        "tag": "survival_prof",
+        "group": "Навыки от мудрости",
+        "cell": {
+          "table": "skills",
+          "row": "survival",
+          "column": "prof"
+        }
       },
       {
-        "tag": "survival",
         "label": "Выживание",
-        "group": "Навыки от мудрости",
         "roll": {
           "label": "Проверка: Выживание",
           "tags": [
@@ -1072,12 +1355,17 @@
         "value": {
           "kind": "formula",
           "expr": "@wis_mod + @survival_prof * @prof_bonus"
+        },
+        "tag": "survival",
+        "group": "Навыки от мудрости",
+        "cell": {
+          "table": "skills",
+          "row": "survival",
+          "column": "total"
         }
       },
       {
-        "tag": "deception_prof",
         "label": "Владение: Обман",
-        "group": "Навыки от харизмы",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -1085,12 +1373,17 @@
           "min": 0,
           "max": 2
         },
-        "control": "ring"
+        "control": "ring",
+        "tag": "deception_prof",
+        "group": "Навыки от харизмы",
+        "cell": {
+          "table": "skills",
+          "row": "deception",
+          "column": "prof"
+        }
       },
       {
-        "tag": "deception",
         "label": "Обман",
-        "group": "Навыки от харизмы",
         "roll": {
           "label": "Проверка: Обман",
           "tags": [
@@ -1108,12 +1401,17 @@
         "value": {
           "kind": "formula",
           "expr": "@cha_mod + @deception_prof * @prof_bonus"
+        },
+        "tag": "deception",
+        "group": "Навыки от харизмы",
+        "cell": {
+          "table": "skills",
+          "row": "deception",
+          "column": "total"
         }
       },
       {
-        "tag": "intimidation_prof",
         "label": "Владение: Запугивание",
-        "group": "Навыки от харизмы",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -1121,12 +1419,17 @@
           "min": 0,
           "max": 2
         },
-        "control": "ring"
+        "control": "ring",
+        "tag": "intimidation_prof",
+        "group": "Навыки от харизмы",
+        "cell": {
+          "table": "skills",
+          "row": "intimidation",
+          "column": "prof"
+        }
       },
       {
-        "tag": "intimidation",
         "label": "Запугивание",
-        "group": "Навыки от харизмы",
         "roll": {
           "label": "Проверка: Запугивание",
           "tags": [
@@ -1144,12 +1447,17 @@
         "value": {
           "kind": "formula",
           "expr": "@cha_mod + @intimidation_prof * @prof_bonus"
+        },
+        "tag": "intimidation",
+        "group": "Навыки от харизмы",
+        "cell": {
+          "table": "skills",
+          "row": "intimidation",
+          "column": "total"
         }
       },
       {
-        "tag": "performance_prof",
         "label": "Владение: Выступление",
-        "group": "Навыки от харизмы",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -1157,12 +1465,17 @@
           "min": 0,
           "max": 2
         },
-        "control": "ring"
+        "control": "ring",
+        "tag": "performance_prof",
+        "group": "Навыки от харизмы",
+        "cell": {
+          "table": "skills",
+          "row": "performance",
+          "column": "prof"
+        }
       },
       {
-        "tag": "performance",
         "label": "Выступление",
-        "group": "Навыки от харизмы",
         "roll": {
           "label": "Проверка: Выступление",
           "tags": [
@@ -1180,12 +1493,17 @@
         "value": {
           "kind": "formula",
           "expr": "@cha_mod + @performance_prof * @prof_bonus"
+        },
+        "tag": "performance",
+        "group": "Навыки от харизмы",
+        "cell": {
+          "table": "skills",
+          "row": "performance",
+          "column": "total"
         }
       },
       {
-        "tag": "persuasion_prof",
         "label": "Владение: Убеждение",
-        "group": "Навыки от харизмы",
         "value": {
           "kind": "stored",
           "type": "number",
@@ -1193,12 +1511,17 @@
           "min": 0,
           "max": 2
         },
-        "control": "ring"
+        "control": "ring",
+        "tag": "persuasion_prof",
+        "group": "Навыки от харизмы",
+        "cell": {
+          "table": "skills",
+          "row": "persuasion",
+          "column": "prof"
+        }
       },
       {
-        "tag": "persuasion",
         "label": "Убеждение",
-        "group": "Навыки от харизмы",
         "roll": {
           "label": "Проверка: Убеждение",
           "tags": [
@@ -1216,6 +1539,13 @@
         "value": {
           "kind": "formula",
           "expr": "@cha_mod + @persuasion_prof * @prof_bonus"
+        },
+        "tag": "persuasion",
+        "group": "Навыки от харизмы",
+        "cell": {
+          "table": "skills",
+          "row": "persuasion",
+          "column": "total"
         }
       },
       {
@@ -3148,6 +3478,180 @@
           }
         ]
       },
+      "abilities": {
+        "label": "Характеристики",
+        "key": "word",
+        "columns": [
+          {
+            "key": "score",
+            "label": "Значение",
+            "sheet": {
+              "tag": "{key}",
+              "label": "{label}",
+              "group": "Характеристики",
+              "value": {
+                "kind": "stored",
+                "type": "number",
+                "default": 10,
+                "min": 1,
+                "max": 30
+              }
+            }
+          },
+          {
+            "key": "mod",
+            "label": "Модификатор",
+            "sheet": {
+              "tag": "{key}_mod",
+              "label": "Модификатор: {label}",
+              "group": "Модификаторы",
+              "roll": {
+                "label": "Проверка: {label}",
+                "tags": [
+                  "проверка",
+                  "{value}"
+                ],
+                "die": {
+                  "constant": "lead_die"
+                },
+                "bonus": {
+                  "expr": "@{key}_mod"
+                }
+              },
+              "value": {
+                "kind": "formula",
+                "expr": "floor((@{key} - 10) / 2)"
+              }
+            }
+          }
+        ],
+        "rows": [
+          {
+            "value": "сила",
+            "key": "str",
+            "label": "Сила"
+          },
+          {
+            "value": "ловкость",
+            "key": "dex",
+            "label": "Ловкость"
+          },
+          {
+            "value": "телосложение",
+            "key": "con",
+            "label": "Телосложение"
+          },
+          {
+            "value": "интеллект",
+            "key": "int",
+            "label": "Интеллект"
+          },
+          {
+            "value": "мудрость",
+            "key": "wis",
+            "label": "Мудрость"
+          },
+          {
+            "value": "харизма",
+            "key": "cha",
+            "label": "Харизма"
+          }
+        ]
+      },
+      "saves": {
+        "label": "Спасброски",
+        "key": "word",
+        "columns": [
+          {
+            "key": "extra",
+            "label": "Владение сверх класса",
+            "sheet": {
+              "tag": "{key}_save_extra",
+              "label": "Владение сверх класса: спасбросок {label}",
+              "group": "Спасброски",
+              "value": {
+                "kind": "stored",
+                "type": "number",
+                "default": 0,
+                "min": 0,
+                "max": 1
+              },
+              "control": "ring"
+            }
+          },
+          {
+            "key": "prof",
+            "label": "Владение",
+            "sheet": {
+              "tag": "{key}_save_prof",
+              "label": "Владение: спасбросок {label}",
+              "group": "Спасброски",
+              "value": {
+                "kind": "formula",
+                "expr": "max(@{key}_save_extra, есть(@class_name.saves, \"{value}\") ? 1 : 0)"
+              }
+            }
+          },
+          {
+            "key": "save",
+            "label": "Спасбросок",
+            "sheet": {
+              "tag": "{key}_save",
+              "label": "Спасбросок: {label}",
+              "group": "Спасброски",
+              "roll": {
+                "label": "Спасбросок: {label}",
+                "tags": [
+                  "спасбросок",
+                  "{value}"
+                ],
+                "die": {
+                  "constant": "lead_die"
+                },
+                "bonus": {
+                  "expr": "@{key}_save"
+                }
+              },
+              "value": {
+                "kind": "formula",
+                "expr": "@{key}_mod + @{key}_save_prof * @prof_bonus"
+              }
+            }
+          }
+        ],
+        "rows": [
+          {
+            "value": "сила",
+            "key": "str",
+            "label": "Сила"
+          },
+          {
+            "value": "ловкость",
+            "key": "dex",
+            "label": "Ловкость"
+          },
+          {
+            "value": "телосложение",
+            "key": "con",
+            "label": "Телосложение"
+          },
+          {
+            "value": "интеллект",
+            "key": "int",
+            "label": "Интеллект"
+          },
+          {
+            "value": "мудрость",
+            "key": "wis",
+            "label": "Мудрость"
+          },
+          {
+            "value": "харизма",
+            "key": "cha",
+            "label": "Харизма"
+          }
+        ]
+      },
       "skills": {
         "label": "Навыки",
         "key": "word",
@@ -3157,213 +3661,211 @@
             "label": "Характеристика",
             "kind": "choice",
             "from": "abilities"
+          },
+          {
+            "key": "prof",
+            "label": "Владение",
+            "sheet": {
+              "tag": "{key}_prof",
+              "label": "Владение: {label}",
+              "value": {
+                "kind": "stored",
+                "type": "number",
+                "default": 0,
+                "min": 0,
+                "max": 2
+              },
+              "control": "ring"
+            }
+          },
+          {
+            "key": "total",
+            "label": "Навык",
+            "sheet": {
+              "tag": "{key}",
+              "label": "{label}",
+              "roll": {
+                "label": "Проверка: {label}",
+                "tags": [
+                  "проверка",
+                  "{ability}",
+                  "{value}"
+                ],
+                "die": {
+                  "constant": "lead_die"
+                },
+                "bonus": {
+                  "expr": "@{key}"
+                }
+              },
+              "value": {
+                "kind": "formula",
+                "expr": "@{ability.key}_mod + @{key}_prof * @prof_bonus"
+              }
+            }
           }
         ],
         "rows": [
           {
             "value": "атлетика",
+            "key": "athletics",
+            "label": "Атлетика",
+            "group": "Навыки от силы",
             "cells": {
               "ability": "сила"
             }
           },
           {
             "value": "акробатика",
+            "key": "acrobatics",
+            "label": "Акробатика",
+            "group": "Навыки от ловкости",
             "cells": {
               "ability": "ловкость"
             }
           },
           {
             "value": "ловкость_рук",
+            "key": "sleight_of_hand",
+            "label": "Ловкость рук",
+            "group": "Навыки от ловкости",
             "cells": {
               "ability": "ловкость"
             }
           },
           {
             "value": "скрытность",
+            "key": "stealth",
+            "label": "Скрытность",
+            "group": "Навыки от ловкости",
             "cells": {
               "ability": "ловкость"
             }
           },
           {
             "value": "магия",
+            "key": "arcana",
+            "label": "Магия",
+            "group": "Навыки от интеллекта",
             "cells": {
               "ability": "интеллект"
             }
           },
           {
             "value": "история",
+            "key": "history",
+            "label": "История",
+            "group": "Навыки от интеллекта",
             "cells": {
               "ability": "интеллект"
             }
           },
           {
             "value": "анализ",
+            "key": "investigation",
+            "label": "Анализ",
+            "group": "Навыки от интеллекта",
             "cells": {
               "ability": "интеллект"
             }
           },
           {
             "value": "природа",
+            "key": "nature",
+            "label": "Природа",
+            "group": "Навыки от интеллекта",
             "cells": {
               "ability": "интеллект"
             }
           },
           {
             "value": "религия",
+            "key": "religion",
+            "label": "Религия",
+            "group": "Навыки от интеллекта",
             "cells": {
               "ability": "интеллект"
             }
           },
           {
             "value": "уход_за_животными",
+            "key": "animal_handling",
+            "label": "Уход за животными",
+            "group": "Навыки от мудрости",
             "cells": {
               "ability": "мудрость"
             }
           },
           {
             "value": "проницательность",
+            "key": "insight",
+            "label": "Проницательность",
+            "group": "Навыки от мудрости",
             "cells": {
               "ability": "мудрость"
             }
           },
           {
             "value": "медицина",
+            "key": "medicine",
+            "label": "Медицина",
+            "group": "Навыки от мудрости",
             "cells": {
               "ability": "мудрость"
             }
           },
           {
             "value": "внимательность",
+            "key": "perception",
+            "label": "Внимательность",
+            "group": "Навыки от мудрости",
             "cells": {
               "ability": "мудрость"
             }
           },
           {
             "value": "выживание",
+            "key": "survival",
+            "label": "Выживание",
+            "group": "Навыки от мудрости",
             "cells": {
               "ability": "мудрость"
             }
           },
           {
             "value": "обман",
+            "key": "deception",
+            "label": "Обман",
+            "group": "Навыки от харизмы",
             "cells": {
               "ability": "харизма"
             }
           },
           {
             "value": "запугивание",
+            "key": "intimidation",
+            "label": "Запугивание",
+            "group": "Навыки от харизмы",
             "cells": {
               "ability": "харизма"
             }
           },
           {
             "value": "выступление",
+            "key": "performance",
+            "label": "Выступление",
+            "group": "Навыки от харизмы",
             "cells": {
               "ability": "харизма"
             }
           },
           {
             "value": "убеждение",
+            "key": "persuasion",
+            "label": "Убеждение",
+            "group": "Навыки от харизмы",
             "cells": {
               "ability": "харизма"
-            }
-          }
-        ]
-      },
-      "abilities": {
-        "label": "Характеристики",
-        "key": "word",
-        "columns": [
-          {
-            "key": "mod",
-            "label": "Модификатор",
-            "kind": "expr"
-          }
-        ],
-        "rows": [
-          {
-            "value": "сила",
-            "cells": {
-              "mod": "@str_mod"
-            }
-          },
-          {
-            "value": "ловкость",
-            "cells": {
-              "mod": "@dex_mod"
-            }
-          },
-          {
-            "value": "телосложение",
-            "cells": {
-              "mod": "@con_mod"
-            }
-          },
-          {
-            "value": "интеллект",
-            "cells": {
-              "mod": "@int_mod"
-            }
-          },
-          {
-            "value": "мудрость",
-            "cells": {
-              "mod": "@wis_mod"
-            }
-          },
-          {
-            "value": "харизма",
-            "cells": {
-              "mod": "@cha_mod"
-            }
-          }
-        ]
-      },
-      "saves": {
-        "label": "Спасброски",
-        "key": "word",
-        "columns": [
-          {
-            "key": "save",
-            "label": "Спасбросок",
-            "kind": "expr"
-          }
-        ],
-        "rows": [
-          {
-            "value": "сила",
-            "cells": {
-              "save": "@str_save"
-            }
-          },
-          {
-            "value": "ловкость",
-            "cells": {
-              "save": "@dex_save"
-            }
-          },
-          {
-            "value": "телосложение",
-            "cells": {
-              "save": "@con_save"
-            }
-          },
-          {
-            "value": "интеллект",
-            "cells": {
-              "save": "@int_save"
-            }
-          },
-          {
-            "value": "мудрость",
-            "cells": {
-              "save": "@wis_save"
-            }
-          },
-          {
-            "value": "харизма",
-            "cells": {
-              "save": "@cha_save"
             }
           }
         ]
