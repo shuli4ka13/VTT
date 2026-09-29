@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import type { System, Effect, Step, ValueKind } from '@vtt/schema';
-import { Card, CardHead, Verdict, Button } from '../../../../ui/primitives.tsx';
+import { Card, CardHead, Verdict, Button, Chip } from '../../../../ui/primitives.tsx';
 import type { CardGroup } from '../../cards.ts';
 import type { Segment } from '../../readback.ts';
 import { checkReadback, changeReadback, sendReadback, numberReadback } from '../../readback.ts';
@@ -70,6 +70,15 @@ export function GroupCard({
     </>
   ) : (
     <>
+      {onMoveLane ? (
+        <Chip
+          active={lane === 'sender'}
+          title={lane === 'sender'
+            ? 'Выполняется один раз за действие, у действующего, раньше шагов по целям — так платят: ячейка, заряд, удача. Нажмите — будет у каждой цели.'
+            : 'Выполняется у каждой цели. Нажмите — будет один раз за действие, у действующего.'}
+          onClick={() => onMoveLane(lane === 'sender' ? 'receiver' : 'sender')}
+        >раз за действие</Chip>
+      ) : null}
       <Button size="sm" variant="ghost" title="выше" disabled={!onMoveUp} onClick={onMoveUp}>↑</Button>
       <Button size="sm" variant="ghost" title="ниже" disabled={!onMoveDown} onClick={onMoveDown}>↓</Button>
       <Button size="sm" variant="ghost" title="убрать шаг" onClick={() => setArmed(true)}>×</Button>
@@ -118,7 +127,7 @@ export function GroupCard({
         />
         {problem ? <Verdict tone="bad" action={problemAction}>{problem.text}</Verdict> : null}
         {group.kind === 'check' ? <CheckBody step={step} context={context} edit={edit} system={system} /> : null}
-        {group.kind === 'change' ? <ChangeBody group={group} context={context} edit={edit} withNumber={withNumber} system={system} onAddParam={onAddParam} onOpenEffect={onOpenEffect} lane={lane} onMoveLane={onMoveLane} /> : null}
+        {group.kind === 'change' ? <ChangeBody group={group} context={context} edit={edit} withNumber={withNumber} system={system} onAddParam={onAddParam} onOpenEffect={onOpenEffect} lane={lane} /> : null}
         {group.kind === 'number'
           ? <NumberBody step={step} context={context} edit={edit} onAddParam={onAddParam} />
           : null}

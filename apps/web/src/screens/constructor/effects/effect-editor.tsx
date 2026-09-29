@@ -7,7 +7,8 @@ import { useOpened } from '../../../store/opened.ts';
 import { ModifiersEditor } from '../modifiers.tsx';
 import { LAUNCH_KINDS, launchHint } from './words.ts';
 import { HandlerCard } from './handler-card.tsx';
-import { Chain, CostPick, type Lane } from './chain.tsx';
+import { Chain, type Lane } from './chain.tsx';
+import { groupSteps } from '../cards.ts';
 import { BlockPick } from '../block-pick.tsx';
 import { Extras } from './cards/extras.tsx';
 import { ParamsEditor } from './params-editor.tsx';
@@ -178,11 +179,16 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
 
       {pipeline ? (
         <>
-          <SelfTrack effect={effect} system={system} edit={edit} onMoveLane={moveLane} />
           <Chain
             effect={effect} system={system} edit={edit}
             empty={idleWords(effect)}
             onMoveLane={moveLane}
+            startAt={groupSteps(effect.self ?? []).length}
+            lead={<SelfTrack effect={effect} system={system} edit={edit} onMoveLane={moveLane} />}
+            onAddCost={id => edit(draft => {
+              const taken = (draft.self ?? []).map(s => String(s.id ?? ''));
+              (draft.self ??= []).unshift(payStep(id, taken));
+            })}
           />
         </>
       ) : (
@@ -298,17 +304,17 @@ function Handlers({ id, effect, system, edit }: {
                 if (!draft.on.length) delete draft.on;
               })}
             />
-            {handler.confirm ? (
-              <SelfTrack
-                effect={carrier} system={system} edit={editCarrier} onMoveLane={moveLane}
-                title="Плата — списывается, если игрок согласился" lead="Чем платит:"
-              />
-            ) : null}
             <Chain
               effect={carrier} system={system} edit={editCarrier}
               title={`Что делает — когда №${index + 1}`}
               empty="шагов нет — отзывается, но ничего не делает"
               onMoveLane={moveLane}
+              startAt={groupSteps(carrier.self ?? []).length}
+              lead={<SelfTrack effect={carrier} system={system} edit={editCarrier} onMoveLane={moveLane} />}
+              {...(handler.confirm ? { onAddCost: (cost: string) => editCarrier(draft => {
+                const taken = (draft.self ?? []).map(s => String(s.id ?? ''));
+                (draft.self ??= []).unshift(payStep(cost, taken));
+              }) } : {})}
             />
           </div>
         );
@@ -410,24 +416,14 @@ function Lifetime({ effect, system, id, edit }: {
 
 
 
-function SelfTrack({ effect, system, edit, onMoveLane, title = 'У отправителя — один раз, до остальных шагов', lead = 'Чего стоит:' }: {
+function SelfTrack({ effect, system, edit, onMoveLane }: {
   effect: Effect;
   system: System;
   edit: (change: (draft: Effect) => void) => void;
   onMoveLane: (indices: number[], to: Lane) => void;
-  title?: string;
-  lead?: string;
 }) {
   const track = effect.self ?? [];
-  if (!track.length) {
-    return (
-      <div className="inline">
-        <span className="faint">{lead}</span>
-        <CostPick system={system} onPick={id => edit(draft => { draft.self = [payStep(id)]; })} />
-        <span className="faint">ничего — пока не выбрали</span>
-      </div>
-    );
-  }
+  if (!track.length) return null;
   const carrier = { ...effect, steps: track } as Effect;
 
   const editTrack = (change: (draft: Effect) => void) => edit(draft => {
@@ -437,15 +433,5 @@ function SelfTrack({ effect, system, edit, onMoveLane, title = 'У отправ�
     if (steps.length) draft.self = steps; else delete draft.self;
   });
 
-  return (
-    <Chain
-      effect={carrier}
-      system={system}
-      edit={editTrack}
-      lane="sender"
-      onMoveLane={onMoveLane}
-      title={title}
-      empty="у отправителя ничего не делается"
-    />
-  );
+  return <Chain effect={carrier} system={system} edit={editTrack} lane="sender" onMoveLane={onMoveLane} bare />;
 }

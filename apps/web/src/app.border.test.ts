@@ -42,7 +42,7 @@ const AUTHOR_ONLY = [
 
 const PLAY_SCREENS = ['screens/play/sheet.tsx', 'screens/play/table.tsx', 'screens/play/lobby.tsx'];
 
-const AUTHOR_MARKERS = ['Цепочка шагов', 'Библиотека эффектов', 'Что запись даёт владельцу', 'Готовое из образцов'];
+const AUTHOR_MARKERS = ['раз за действие', 'Библиотека эффектов', 'Что запись даёт владельцу', 'Готовое из образцов'];
 const PLAY_MARKERS = ['Кто действует?', 'За столом', 'Создать стол'];
 
 const sourceOf = (dirs: string[]): string =>

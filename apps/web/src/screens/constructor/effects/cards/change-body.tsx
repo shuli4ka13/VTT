@@ -253,7 +253,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   );
 }
 
-export function ChangeBody({ group, context, edit, withNumber, system, onAddParam, onOpenEffect, lane = 'receiver', onMoveLane }: {
+export function ChangeBody({ group, context, edit, withNumber, system, onAddParam, onOpenEffect, lane = 'receiver' }: {
   group: CardGroup;
   context: SlotContext;
   edit: EditFn;
@@ -262,7 +262,6 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
   onAddParam?: (label: string, kind: ValueKind) => string;
   onOpenEffect?: (id: string) => void;
   lane?: 'receiver' | 'sender';
-  onMoveLane?: (to: 'receiver' | 'sender') => void;
 }) {
   const step = group.step as any;
   const mode = step.type === 'status' ? 'status' : step.type === 'emit' ? 'emit' : 'apply';
@@ -303,17 +302,6 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
         })}
       />
 
-      {onMoveLane ? (
-        <Field label="чей лист" hint={lane === 'sender'
-          ? 'Шаг выполняется у отправителя один раз за действие и раньше остальных — так платят за действие: ячейка, заряд, удача.'
-          : 'Шаг выполняется у получателя — у каждой цели.'}>
-          <Select
-            value={lane}
-            options={[['receiver', 'получателя — у каждой цели'], ['sender', 'отправителя — один раз, до остальных шагов']] as const}
-            onChange={next => onMoveLane(next)}
-          />
-        </Field>
-      ) : null}
 
       {mode === 'emit' ? (
         <SendBody step={step} at={applyIndex} context={context} edit={edit} system={system}

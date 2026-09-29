@@ -279,7 +279,7 @@ describe('вызываемый эффект — обычный эффект', ()
   it('правится тем же редактором: те же шаги, а входы заводит автор', () => {
     renderOpen(<EffectsTab />);
     fireEvent.click(screen.getByText('+ вызываемый'));
-    expect(screen.getByText('Цепочка шагов')).toBeTruthy();
+    expect(screen.getByText('Шаги')).toBeTruthy();
     expect(screen.getByText('Что приходит')).toBeTruthy();
 
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
@@ -406,21 +406,20 @@ describe('шаг отправителя — один раз, до остальн
   });
   afterEach(() => { cleanup(); });
 
-  it('«чей лист: отправителя» переносит шаг в верхний блок и обратно', () => {
+  it('«раз за действие» в шапке шага переносит его в начало цепочки и обратно', () => {
     renderOpen(<EffectsTab />);
     fireEvent.click(screen.getAllByText('+ изменение')[0]!);
     expect(useWorld.getState().system.effects.снаряд!.steps).toHaveLength(1);
 
-    fireEvent.change(screen.getByDisplayValue('получателя — у каждой цели'), { target: { value: 'sender' } });
+    fireEvent.click(screen.getByText('раз за действие'));
     const moved = useWorld.getState().system.effects.снаряд!;
     expect(moved.self).toHaveLength(1);
     expect(moved.steps ?? []).toHaveLength(0);
-    expect(screen.getByText('У отправителя — один раз, до остальных шагов')).toBeTruthy();
+    expect(document.querySelector('.chip--on')?.textContent).toBe('раз за действие');
 
-    fireEvent.change(screen.getByDisplayValue('отправителя — один раз, до остальных шагов'), { target: { value: 'receiver' } });
+    fireEvent.click(screen.getByText('раз за действие'));
     const back = useWorld.getState().system.effects.снаряд!;
     expect(back.self).toBeUndefined();
     expect(back.steps).toHaveLength(1);
   });
 });
-

@@ -20,11 +20,12 @@ describe('стоимость эффекта — одним выбором', () =
   const lane = (steps: unknown[] = []) => {
     const effect = { label: 'Удар', steps } as unknown as Effect;
     render(<Chain effect={effect} system={useWorld.getState().system} lane="sender"
-      edit={change => change(effect)} />);
+      edit={change => change(effect)}
+      onAddCost={id => { (effect.steps ??= []).unshift({ id: 'стоимость', type: 'emit', event: id, strict: true } as never); }} />);
     return effect;
   };
 
-  it('в «У отправителя» выбор предлагает эффекты блока «Стоимость», выбранная встаёт первым шагом', () => {
+  it('выбор «+ стоимость» предлагает эффекты блока «Стоимость», выбранная встаёт первым шагом', () => {
     const effect = lane([{ type: 'apply', target: { tag: 'x' } }]);
     const pick = screen.getByDisplayValue('+ стоимость') as HTMLSelectElement;
     expect([...pick.options].map(o => o.textContent)).toEqual(['+ стоимость', 'Стоимость: действие', '+ новая стоимость…']);
@@ -46,17 +47,17 @@ describe('стоимость эффекта — одним выбором', () =
     expect(screen.queryByDisplayValue('+ стоимость')).toBeNull();
   });
 
-  it('у эффекта без стоимости выбор стоит строкой над цепочкой и заводит полосу отправителя', () => {
+  it('«+ стоимость» стоит рядом с остальными шагами и ставит плату первым шагом «раз за действие»', () => {
     const view = () => {
       const system = useWorld.getState().system;
       return <EffectEditor id="удар" effect={system.effects.удар!} system={system} />;
     };
     const { rerender } = render(view());
-    expect(screen.getByText('Чего стоит:')).toBeTruthy();
     fireEvent.change(screen.getByDisplayValue('+ стоимость'), { target: { value: 'cost_action' } });
     expect(useWorld.getState().system.effects.удар!.self).toEqual([{ id: 'стоимость', type: 'emit', event: 'cost_action', strict: true }]);
     rerender(view());
-    expect(screen.queryByText('Чего стоит:')).toBeNull();
+    expect(screen.getByText(/1 · Стоимость/)).toBeTruthy();
+    expect(document.querySelector('.chip--on')?.textContent).toBe('раз за действие');
   });
 
   it('шаг, зовущий эффект из блока «Стоимость», так и подписан', () => {

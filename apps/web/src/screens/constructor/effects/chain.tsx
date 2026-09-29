@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useWorld, freeId } from '../../../store/world.ts';
 import { STEP } from '../../../words.ts';
@@ -5,7 +6,7 @@ import { titleOf } from './words.ts';
 import { Button, Select, Verdict } from '../../../ui/primitives.tsx';
 import { problemOf } from '../step-card.tsx';
 import { groupSteps, moveGroup, removeSteps, BRICKS } from '../cards.ts';
-import { costsOf, newCost, payStep } from '../factory.ts';
+import { costsOf, newCost } from '../factory.ts';
 import { GroupCard } from './cards/group-card.tsx';
 import { useOpened } from '../../../store/opened.ts';
 import { findDonorBlock, copyDonorBlock } from '../donors.tsx';
@@ -13,7 +14,7 @@ import type { System, Effect, Step, ValueKind } from '@vtt/schema';
 
 export type Lane = 'receiver' | 'sender';
 
-export function Chain({ effect, system, edit, title = 'Цепочка шагов', empty = 'шагов ещё нет — эффект ничего не делает', lane = 'receiver', onMoveLane }: {
+export function Chain({ effect, system, edit, title = 'Шаги', empty = 'шагов ещё нет — эффект ничего не делает', lane = 'receiver', onMoveLane, bare = false, startAt = 0, lead, onAddCost }: {
   effect: Effect;
   system: System;
   edit: (change: (draft: Effect) => void) => void;
@@ -21,6 +22,10 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
   empty?: string;
   lane?: Lane;
   onMoveLane?: (indices: number[], to: Lane) => void;
+  bare?: boolean;
+  startAt?: number;
+  lead?: ReactNode;
+  onAddCost?: (id: string) => void;
 }) {
   const pick = useWorld(s => s.pick);
   const onOpenEffect = (id: string) => pick({ activeEffectId: id });
@@ -75,7 +80,7 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
 
   return (
     <>
-      <div className="inline">
+      {bare ? null : <div className="inline">
         <span className="screen-title" style={{ fontSize: 'var(--fs-5)' }}>{title}</span>
         <span className="spacer" />
         {cards.length > 1 ? (
@@ -89,7 +94,8 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
           : steps.length
             ? <Verdict tone="ok">эффект верный · {STEP.manyGen} {cards.length}</Verdict>
             : <Verdict tone="warn">{empty}</Verdict>}
-      </div>
+      </div>}
+      {lead}
 
       {removed ? (
         <Verdict
@@ -116,7 +122,7 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
           <GroupCard
             key={group.indices[0]}
             group={group}
-            position={at + 1}
+            position={startAt + at + 1}
             system={system}
             effect={effect}
             earlier={[
@@ -177,7 +183,7 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
         );
       })}
 
-      <div className="inline inline--tight">
+      {bare ? null : <div className="inline inline--tight">
         {BRICKS.map(b => (
           <Button key={b.key} size="sm" title={b.hint}
             onClick={() => edit(draft => {
@@ -187,13 +193,8 @@ export function Chain({ effect, system, edit, title = 'Цепочка шагов
             {b.label}
           </Button>
         ))}
-        {lane === 'sender' ? (
-          <CostPick system={system} onPick={id => edit(draft => {
-            const taken = (draft.steps ?? []).map(s => String(s.id ?? ''));
-            (draft.steps ??= []).unshift(payStep(id, taken));
-          })} />
-        ) : null}
-      </div>
+        {onAddCost ? <CostPick system={system} onPick={onAddCost} /> : null}
+      </div>}
     </>
   );
 }
