@@ -10,6 +10,7 @@ import { Columns, List, ListItem } from '../../ui/layout.tsx';
 import { useLookupPane } from './lookup-panel.tsx';
 import {
   Card, CardHead, Field, Input, Select, Button, Empty, Fold, Verdict, Chip, DangerButton, NumInput,
+  LabelInput,
 } from '../../ui/primitives.tsx';
 import { FormulaInput, formulaAsLabels } from '../../ui/formula.tsx';
 import { compile } from '@vtt/engine/formula';
@@ -153,7 +154,23 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
     <>
       <Card>
         <CardHead
-          title={field.label || 'Без имени'}
+          title={<LabelInput value={field.label} placeholder="как зовётся поле" onCommit={next => {
+            const state = useWorld.getState();
+            const world = JSON.stringify({ s: state.system, c: state.compendium, sh: state.sheets });
+            const virgin = (/^field(_\d+)?$/.test(field.tag) || field.tag === slugOf(field.label))
+              && world.split(`"${field.tag}"`).length - 1 <= 1
+              && !new RegExp(`[@#]${field.tag}(?![\\p{L}\\p{N}_])`, 'u').test(world);
+            if (virgin && slugOf(next)) {
+              const fresh = freeId(state.system.fields.filter(f => f.tag !== field.tag).map(f => f.tag), next);
+              editSystem(draft => {
+                const target = draft.fields.find(f => f.tag === field.tag);
+                if (target) { target.label = next; target.tag = fresh; }
+              });
+              pick({ activeFieldTag: fresh });
+            } else {
+              edit(draft => { draft.label = next; });
+            }
+          }} />}
           actions={
             <DangerButton size="sm" onConfirm={() => {
               editSystem(draft => { draft.fields = draft.fields.filter(f => f.tag !== field.tag); });
@@ -165,38 +182,6 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
         />
 
         <div className="row">
-          <Field label="Название">
-            <Input
-              value={field.label}
-              onChange={next => {
-
-                const state = useWorld.getState();
-                const world = JSON.stringify({ s: state.system, c: state.compendium, sh: state.sheets });
-                const virgin = (/^field(_\d+)?$/.test(field.tag) || field.tag === slugOf(field.label))
-                  && world.split(`"${field.tag}"`).length - 1 <= 1
-                  && !new RegExp(`[@#]${field.tag}(?![\\p{L}\\p{N}_])`, 'u').test(world);
-                if (virgin && slugOf(next)) {
-                  const fresh = freeId(
-                    state.system.fields.filter(f => f.tag !== field.tag).map(f => f.tag), next);
-                  editSystem(draft => {
-                    const target = draft.fields.find(f => f.tag === field.tag);
-                    if (target) { target.label = next; target.tag = fresh; }
-                  });
-                  pick({ activeFieldTag: fresh });
-                } else {
-                  edit(draft => { draft.label = next; });
-                }
-              }}
-            />
-          </Field>
-          <Field label="Где лежит" hint={field.lives === 'desk' ? 'Одно значение на всю комнату: кость эскалации, пул Страха, часы. В формулах эффектов — @стол.…'
-            : field.lives === 'group' ? 'Одно значение на группу листов: общий счётчик отряда, Жара банды. Лист без группы хранит своё.' : undefined}>
-            <Select
-              value={field.lives ?? 'sheet'}
-              options={[['sheet', 'на листе персонажа'], ['group', 'в группе — одно на отряд или банду'], ['desk', 'на столе — одно на всю комнату']] as const}
-              onChange={next => edit(draft => { if (next === 'sheet') delete draft.lives; else draft.lives = next; })}
-            />
-          </Field>
           <Field label="Блок">
             <BlockPick
               of="fields"
@@ -430,6 +415,17 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
           ) : null}
         </div>
       </Card>
+
+      <Fold title="ещё" summary={field.lives === 'desk' ? 'одно на стол' : field.lives === 'group' ? 'одно на группу' : undefined}>
+        <Field label="Сколько значений" hint={field.lives === 'desk' ? 'Одно на всю комнату: кость эскалации, Страх ведущего. В формулах эффектов — @стол.…'
+          : field.lives === 'group' ? 'Одно на группу листов: общий счётчик отряда, Жар банды. Лист без группы хранит своё.' : undefined}>
+          <Select
+            value={field.lives ?? 'sheet'}
+            options={[['sheet', 'своё у каждого листа'], ['group', 'одно на группу — отряд, банду'], ['desk', 'одно на стол — на всю комнату']] as const}
+            onChange={next => edit(draft => { if (next === 'sheet') delete draft.lives; else draft.lives = next; })}
+          />
+        </Field>
+      </Fold>
 
       <Fold title="Кто на это поле смотрит" count={users.length}>
         {users.length === 0

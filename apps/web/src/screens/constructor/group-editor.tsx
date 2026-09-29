@@ -2,7 +2,8 @@ import { useState } from 'react';
 import type { System, FieldValue } from '@vtt/schema';
 import { useWorld } from '../../store/world.ts';
 import {
-  Card, CardHead, Field, Input, Select, Button, NumInput, DangerButton, Verdict,
+  Card, CardHead, Field, Select, Button, NumInput, DangerButton, Verdict,
+  LabelInput,
 } from '../../ui/primitives.tsx';
 import { FormulaInput, formulaAsLabels } from '../../ui/formula.tsx';
 import {
@@ -72,7 +73,7 @@ export function GroupEditor({ name, system }: { name: string; system: System }) 
     <>
       <Card>
         <CardHead
-          title={name}
+          title={<LabelInput value={name} placeholder="как зовётся блок" onCommit={rename} />}
           actions={removable && spec ? (
             <DangerButton size="sm" onConfirm={() => {
               editSystem(draft => { if (draft.groups) delete draft.groups[name]; });
@@ -83,10 +84,7 @@ export function GroupEditor({ name, system }: { name: string; system: System }) 
           ) : undefined}
         />
         <div className="row">
-          <Field label="Название">
-            <Input value={name} onChange={rename} />
-          </Field>
-          <Field label="Внутри блока">
+          <Field label="Блок">
             <Select
               value={spec?.parent ?? ''}
               options={[['', '— сам по себе —'], ...parents.map(p => [p, p] as const)] as never}

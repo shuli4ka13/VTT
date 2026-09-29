@@ -21,7 +21,9 @@ describe('SheetTab: человеческие теги', () => {
 
   it('пока поле девственно, тег следует за названием', () => {
     render(<SheetTab />);
-    fireEvent.change(screen.getByLabelText('Название'), { target: { value: 'Урон' } });
+    const name = screen.getByPlaceholderText('как зовётся поле');
+    fireEvent.change(name, { target: { value: 'Урон' } });
+    fireEvent.blur(name);
     const field = useWorld.getState().system.fields[0]!;
     expect(field.label).toBe('Урон');
     expect(field.tag).toBe('урон');
@@ -40,7 +42,9 @@ describe('SheetTab: человеческие теги', () => {
       activeFieldTag: 'урон',
     }));
     render(<SheetTab />);
-    fireEvent.change(screen.getByLabelText('Название'), { target: { value: 'Повреждения' } });
+    const name = screen.getByPlaceholderText('как зовётся поле');
+    fireEvent.change(name, { target: { value: 'Повреждения' } });
+    fireEvent.blur(name);
     const field = useWorld.getState().system.fields[0]!;
     expect(field.label).toBe('Повреждения');
     expect(field.tag).toBe('урон');
