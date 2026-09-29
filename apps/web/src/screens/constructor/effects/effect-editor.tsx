@@ -136,7 +136,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
               ),
             },
             {
-              key: 'description', label: 'Описание для игрока', width: 320, hint: 'Текст на листе. На расчёт не влияет',
+              key: 'description', label: 'Описание', width: 320, hint: 'Текст на листе. На расчёт не влияет',
               node: (
                 <Input
                   value={effect.description ?? ''}
