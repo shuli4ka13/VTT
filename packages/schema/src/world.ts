@@ -118,6 +118,7 @@ export const tableViewColumn = z.object({
 export const tableView = z.object({
   group: z.string().optional(),
   columns: z.record(z.string(), tableViewColumn).optional(),
+  cells: z.record(z.string(), tableViewColumn).optional(),
 });
 
 export const tableColumn = z.object({

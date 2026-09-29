@@ -44,7 +44,7 @@ export function pack(step: StepData, ctx: StepContext) {
   const params = ctx.system.effects[id]?.params ?? [];
   const args = step.args && typeof step.args === 'object'
     ? Object.fromEntries(Object.entries(step.args as Record<string, unknown>).map(([key, ref]) => {
-      const field = params.find(p => p.key === key)?.kind === 'tag' ? lonelyField(ref) : null;
+      const field = params.find(p => p.key === key)?.kind === 'tag' ? lonelyField(ref, ctx.system) : null;
       return [key, field ? { const: field } : packRef(ref, ctx)];
     }))
     : undefined;

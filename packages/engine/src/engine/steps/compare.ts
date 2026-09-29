@@ -37,8 +37,8 @@ export function pack(step: StepData, ctx: StepContext) {
     throw new EngineError(
       `${ctx.owner || 'правило'}: неизвестное условие обрыва «${breakIf}» — умею: ${Object.keys(BREAKS).join(', ')}`);
   }
-  const of = lonelyField(step.value);
-  const against = lonelyField(step.versus);
+  const of = lonelyField(step.value, ctx.system);
+  const against = lonelyField(step.versus, ctx.system);
   return {
     value: packRef(step.value, ctx),
     versus: packRef(step.versus, ctx),

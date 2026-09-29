@@ -63,14 +63,14 @@ group('D&D: потерял сознание — концентрация пре�
 
 group('D&D: отдых — каждое правило возвращает своё', () => {
   test('долгий отдых: хиты, ячейки, ресурсы, истощение и спасброски от смерти возвращаются разными правилами', () => {
-    const tired = { ...sheetOf('mirra'), values: { ...sheetOf('mirra').values, hp_current: 1, slots_1: 0, luck_left: 0, exhaustion: 2, death_fail: 2 } };
+    const tired = { ...sheetOf('mirra'), values: { ...sheetOf('mirra').values, hp_current: 1, 'slots.1.left': 0, 'resources.luck.left': 0, exhaustion: 2, death_fail: 2 } };
     const out = fireMoments([{ moment: 'short-rest', sheetId: 'mirra' }, { moment: 'long-rest', sheetId: 'mirra' }], [tired], world(1) as never);
     const rested = out.sheets[0]!;
     const back = rested.values;
     const full = (tag: string) => calc(system, rested, tag, newPass(system, rested, { compendium: dnd.compendium }));
     eq(back.hp_current, full('hp_max'));
-    eq(back.slots_1, full('slots_1_max'));
-    eq(back.luck_left, full('luck_max'));
+    eq(back['slots.1.left'], full('slots.1.max'));
+    eq(back['resources.luck.left'], full('resources.luck.max'));
     eq(back.exhaustion, 1);
     eq(back.death_fail, 0);
     const rules = new Set(out.reports.map(r => r.report.effect));

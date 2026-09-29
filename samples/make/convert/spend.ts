@@ -19,7 +19,7 @@ const spendEffect = {
 };
 
 const lone = (ref: Loose | undefined): string | null => {
-  const m = /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String(ref?.expr ?? ''));
+  const m = /^\s*@([\p{L}\p{N}_.]+)\s*$/u.exec(String(ref?.expr ?? ''));
   return m ? m[1]! : null;
 };
 

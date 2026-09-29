@@ -146,7 +146,7 @@ export interface ArmorReading { choice: ArmorChoice; armor: string | null; hp: s
 export function armorOf(system: System, event: string): ArmorReading {
   const steps = (system.effects?.[event]?.steps ?? []) as Record<string, unknown>[];
   const first = steps[0];
-  const armorTag = lonelyField(first?.versus);
+  const armorTag = lonelyField(first?.versus, system);
   if (!first || first.type !== 'compare' || !armorTag) return { choice: 'none', armor: null, hp: null };
   const armor = armorTag;
   const applies = steps.filter(s => s.type === 'apply');

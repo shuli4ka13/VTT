@@ -164,7 +164,7 @@ export function pack(step: StepData, ctx: StepContext) {
     continueOn: step.continueOn || 'success',
     successWhen: step.successWhen || 'atLeast',
     versus: packVersus(step.versus, step.side || 'sender', ctx),
-    ...(lonelyField(step.versus) ? { against: lonelyField(step.versus) } : {}),
+    ...(lonelyField(step.versus, ctx.system) ? { against: lonelyField(step.versus, ctx.system) } : {}),
 
     ...(step.degrees && step.degrees.table ? { degrees: step.degrees } : {}),
   };

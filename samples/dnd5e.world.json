@@ -334,12 +334,255 @@
         "control": "stepper"
       },
       {
-        "tag": "prof_bonus",
+        "tag": "stats.prof_bonus.value",
         "label": "Бонус мастерства",
         "group": "Прогрессия",
         "value": {
           "kind": "formula",
           "expr": "таблица(\"levels\", @level, \"prof\")"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "prof_bonus",
+          "column": "value"
+        }
+      },
+      {
+        "tag": "stats.initiative.value",
+        "label": "Инициатива",
+        "group": "Чувства и движение",
+        "roll": {
+          "label": "Инициатива",
+          "tags": [
+            "проверка",
+            "ловкость",
+            "инициатива"
+          ],
+          "die": {
+            "constant": "lead_die"
+          },
+          "bonus": {
+            "expr": "@stats.initiative.value"
+          }
+        },
+        "value": {
+          "kind": "formula",
+          "expr": "@abilities.dex.mod"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "initiative",
+          "column": "value"
+        }
+      },
+      {
+        "tag": "stats.passive_perception.value",
+        "label": "Пассивная внимательность",
+        "group": "Чувства и движение",
+        "value": {
+          "kind": "formula",
+          "expr": "10 + @skills.perception.total"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "passive_perception",
+          "column": "value"
+        }
+      },
+      {
+        "tag": "stats.speed.value",
+        "label": "Скорость, футов",
+        "group": "Чувства и движение",
+        "value": {
+          "kind": "formula",
+          "expr": "или(@race.speed, 30)"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "speed",
+          "column": "value"
+        }
+      },
+      {
+        "tag": "stats.ac_dex.value",
+        "label": "Ловкость в классе брони",
+        "group": "Защита",
+        "value": {
+          "kind": "formula",
+          "expr": "@abilities.dex.mod"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "ac_dex",
+          "column": "value"
+        }
+      },
+      {
+        "tag": "stats.ac.value",
+        "label": "Класс брони",
+        "group": "Защита",
+        "value": {
+          "kind": "formula",
+          "expr": "@ac_base + если(@armor_heavy, 0, @stats.ac_dex.value)"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "ac",
+          "column": "value"
+        }
+      },
+      {
+        "tag": "stats.hit_die.value",
+        "label": "Кость хитов",
+        "group": "Здоровье",
+        "value": {
+          "kind": "formula",
+          "expr": "или(@class_name.hit_die, @race.size.hit_die, \"1к8\")"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "hit_die",
+          "column": "value"
+        }
+      },
+      {
+        "tag": "stats.down.value",
+        "label": "Без сил",
+        "group": "Здоровье",
+        "value": {
+          "kind": "formula",
+          "expr": "@hp_current <= 0"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "down",
+          "column": "value"
+        }
+      },
+      {
+        "tag": "stats.up.value",
+        "label": "На ногах",
+        "group": "Здоровье",
+        "value": {
+          "kind": "formula",
+          "expr": "@hp_current > 0"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "up",
+          "column": "value"
+        }
+      },
+      {
+        "tag": "stats.is_dead.value",
+        "label": "Три провала",
+        "group": "Здоровье",
+        "value": {
+          "kind": "formula",
+          "expr": "@death_fail >= 3"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "is_dead",
+          "column": "value"
+        }
+      },
+      {
+        "tag": "stats.is_stable.value",
+        "label": "Три успеха",
+        "group": "Здоровье",
+        "value": {
+          "kind": "formula",
+          "expr": "@death_ok >= 3"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "is_stable",
+          "column": "value"
+        }
+      },
+      {
+        "tag": "stats.sneak_dice.value",
+        "label": "Костей скрытой атаки",
+        "group": "Атака",
+        "value": {
+          "kind": "formula",
+          "expr": "округлить вверх(@level / 2)"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "sneak_dice",
+          "column": "value"
+        }
+      },
+      {
+        "tag": "stats.spell_mod.value",
+        "label": "Заклинательный модификатор",
+        "group": "Магия",
+        "value": {
+          "kind": "formula",
+          "expr": "или(@class_name.spell_ability.mod, @abilities.cha.mod)"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "spell_mod",
+          "column": "value"
+        }
+      },
+      {
+        "tag": "stats.spell_dc.value",
+        "label": "Сложность заклинаний",
+        "group": "Магия",
+        "value": {
+          "kind": "formula",
+          "expr": "8 + @stats.prof_bonus.value + @stats.spell_mod.value"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "spell_dc",
+          "column": "value"
+        }
+      },
+      {
+        "tag": "stats.spell_attack.value",
+        "label": "Атака заклинанием",
+        "group": "Магия",
+        "value": {
+          "kind": "formula",
+          "expr": "@stats.prof_bonus.value + @stats.spell_mod.value"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "spell_attack",
+          "column": "value"
+        }
+      },
+      {
+        "tag": "stats.cantrip_dice.value",
+        "label": "Костей заговора",
+        "group": "Магия",
+        "value": {
+          "kind": "formula",
+          "expr": "таблица(\"levels\", @level, \"cantrips\")"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "cantrip_dice",
+          "column": "value"
+        }
+      },
+      {
+        "tag": "stats.rage_damage.value",
+        "label": "Урон ярости",
+        "group": "Ресурсы класса",
+        "value": {
+          "kind": "formula",
+          "expr": "таблица(\"levels\", @level, \"rage\")"
+        },
+        "cell": {
+          "table": "stats",
+          "row": "rage_damage",
+          "column": "value"
         }
       },
       {
@@ -417,7 +660,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.str.mod + @saves.str.prof * @prof_bonus"
+          "expr": "@abilities.str.mod + @saves.str.prof * @stats.prof_bonus.value"
         },
         "cell": {
           "table": "saves",
@@ -476,7 +719,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.dex.mod + @saves.dex.prof * @prof_bonus"
+          "expr": "@abilities.dex.mod + @saves.dex.prof * @stats.prof_bonus.value"
         },
         "cell": {
           "table": "saves",
@@ -535,7 +778,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.con.mod + @saves.con.prof * @prof_bonus"
+          "expr": "@abilities.con.mod + @saves.con.prof * @stats.prof_bonus.value"
         },
         "cell": {
           "table": "saves",
@@ -594,7 +837,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.int.mod + @saves.int.prof * @prof_bonus"
+          "expr": "@abilities.int.mod + @saves.int.prof * @stats.prof_bonus.value"
         },
         "cell": {
           "table": "saves",
@@ -653,7 +896,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.wis.mod + @saves.wis.prof * @prof_bonus"
+          "expr": "@abilities.wis.mod + @saves.wis.prof * @stats.prof_bonus.value"
         },
         "cell": {
           "table": "saves",
@@ -712,7 +955,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.cha.mod + @saves.cha.prof * @prof_bonus"
+          "expr": "@abilities.cha.mod + @saves.cha.prof * @stats.prof_bonus.value"
         },
         "cell": {
           "table": "saves",
@@ -758,7 +1001,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.str.mod + @skills.athletics.prof * @prof_bonus"
+          "expr": "@abilities.str.mod + @skills.athletics.prof * @stats.prof_bonus.value"
         },
         "cell": {
           "table": "skills",
@@ -804,7 +1047,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.dex.mod + @skills.acrobatics.prof * @prof_bonus"
+          "expr": "@abilities.dex.mod + @skills.acrobatics.prof * @stats.prof_bonus.value"
         },
         "cell": {
           "table": "skills",
@@ -850,7 +1093,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.dex.mod + @skills.sleight_of_hand.prof * @prof_bonus"
+          "expr": "@abilities.dex.mod + @skills.sleight_of_hand.prof * @stats.prof_bonus.value"
         },
         "cell": {
           "table": "skills",
@@ -896,7 +1139,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.dex.mod + @skills.stealth.prof * @prof_bonus"
+          "expr": "@abilities.dex.mod + @skills.stealth.prof * @stats.prof_bonus.value"
         },
         "cell": {
           "table": "skills",
@@ -942,7 +1185,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.int.mod + @skills.arcana.prof * @prof_bonus"
+          "expr": "@abilities.int.mod + @skills.arcana.prof * @stats.prof_bonus.value"
         },
         "cell": {
           "table": "skills",
@@ -988,7 +1231,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.int.mod + @skills.history.prof * @prof_bonus"
+          "expr": "@abilities.int.mod + @skills.history.prof * @stats.prof_bonus.value"
         },
         "cell": {
           "table": "skills",
@@ -1034,7 +1277,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.int.mod + @skills.investigation.prof * @prof_bonus"
+          "expr": "@abilities.int.mod + @skills.investigation.prof * @stats.prof_bonus.value"
         },
         "cell": {
           "table": "skills",
@@ -1080,7 +1323,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.int.mod + @skills.nature.prof * @prof_bonus"
+          "expr": "@abilities.int.mod + @skills.nature.prof * @stats.prof_bonus.value"
         },
         "cell": {
           "table": "skills",
@@ -1126,7 +1369,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.int.mod + @skills.religion.prof * @prof_bonus"
+          "expr": "@abilities.int.mod + @skills.religion.prof * @stats.prof_bonus.value"
         },
         "cell": {
           "table": "skills",
@@ -1172,7 +1415,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.wis.mod + @skills.animal_handling.prof * @prof_bonus"
+          "expr": "@abilities.wis.mod + @skills.animal_handling.prof * @stats.prof_bonus.value"
         },
         "cell": {
           "table": "skills",
@@ -1218,7 +1461,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.wis.mod + @skills.insight.prof * @prof_bonus"
+          "expr": "@abilities.wis.mod + @skills.insight.prof * @stats.prof_bonus.value"
         },
         "cell": {
           "table": "skills",
@@ -1264,7 +1507,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.wis.mod + @skills.medicine.prof * @prof_bonus"
+          "expr": "@abilities.wis.mod + @skills.medicine.prof * @stats.prof_bonus.value"
         },
         "cell": {
           "table": "skills",
@@ -1310,7 +1553,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.wis.mod + @skills.perception.prof * @prof_bonus"
+          "expr": "@abilities.wis.mod + @skills.perception.prof * @stats.prof_bonus.value"
         },
         "cell": {
           "table": "skills",
@@ -1356,7 +1599,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.wis.mod + @skills.survival.prof * @prof_bonus"
+          "expr": "@abilities.wis.mod + @skills.survival.prof * @stats.prof_bonus.value"
         },
         "cell": {
           "table": "skills",
@@ -1402,7 +1645,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.cha.mod + @skills.deception.prof * @prof_bonus"
+          "expr": "@abilities.cha.mod + @skills.deception.prof * @stats.prof_bonus.value"
         },
         "cell": {
           "table": "skills",
@@ -1448,7 +1691,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.cha.mod + @skills.intimidation.prof * @prof_bonus"
+          "expr": "@abilities.cha.mod + @skills.intimidation.prof * @stats.prof_bonus.value"
         },
         "cell": {
           "table": "skills",
@@ -1494,7 +1737,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.cha.mod + @skills.performance.prof * @prof_bonus"
+          "expr": "@abilities.cha.mod + @skills.performance.prof * @stats.prof_bonus.value"
         },
         "cell": {
           "table": "skills",
@@ -1540,53 +1783,12 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "@abilities.cha.mod + @skills.persuasion.prof * @prof_bonus"
+          "expr": "@abilities.cha.mod + @skills.persuasion.prof * @stats.prof_bonus.value"
         },
         "cell": {
           "table": "skills",
           "row": "persuasion",
           "column": "total"
-        }
-      },
-      {
-        "tag": "initiative",
-        "label": "Инициатива",
-        "group": "Чувства и движение",
-        "roll": {
-          "label": "Инициатива",
-          "tags": [
-            "проверка",
-            "ловкость",
-            "инициатива"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@initiative"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.dex.mod"
-        }
-      },
-      {
-        "tag": "passive_perception",
-        "label": "Пассивная внимательность",
-        "group": "Чувства и движение",
-        "value": {
-          "kind": "formula",
-          "expr": "10 + @skills.perception.total"
-        }
-      },
-      {
-        "tag": "speed",
-        "label": "Скорость, футов",
-        "group": "Чувства и движение",
-        "value": {
-          "kind": "formula",
-          "expr": "или(@race.speed, 30)"
         }
       },
       {
@@ -1633,24 +1835,6 @@
         "control": "toggle"
       },
       {
-        "tag": "ac_dex",
-        "label": "Ловкость в классе брони",
-        "group": "Защита",
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.dex.mod"
-        }
-      },
-      {
-        "tag": "ac",
-        "label": "Класс брони",
-        "group": "Защита",
-        "value": {
-          "kind": "formula",
-          "expr": "@ac_base + если(@armor_heavy, 0, @ac_dex)"
-        }
-      },
-      {
         "tag": "hp_max",
         "label": "Максимум хитов",
         "group": "Здоровье",
@@ -1685,15 +1869,6 @@
           "min": 0
         },
         "control": "stepper"
-      },
-      {
-        "tag": "hit_die",
-        "label": "Кость хитов",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "или(@class_name.hit_die, @race.size.hit_die, \"1к8\")"
-        }
       },
       {
         "tag": "hit_dice_left",
@@ -1746,42 +1921,6 @@
           "max": 6
         },
         "control": "stepper"
-      },
-      {
-        "tag": "down",
-        "label": "Без сил",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "@hp_current <= 0"
-        }
-      },
-      {
-        "tag": "up",
-        "label": "На ногах",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "@hp_current > 0"
-        }
-      },
-      {
-        "tag": "is_dead",
-        "label": "Три провала",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "@death_fail >= 3"
-        }
-      },
-      {
-        "tag": "is_stable",
-        "label": "Три успеха",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "@death_ok >= 3"
-        }
       },
       {
         "tag": "attacks_per_action",
@@ -1888,42 +2027,6 @@
         }
       },
       {
-        "tag": "sneak_dice",
-        "label": "Костей скрытой атаки",
-        "group": "Атака",
-        "value": {
-          "kind": "formula",
-          "expr": "округлить вверх(@level / 2)"
-        }
-      },
-      {
-        "tag": "spell_mod",
-        "label": "Заклинательный модификатор",
-        "group": "Магия",
-        "value": {
-          "kind": "formula",
-          "expr": "или(@class_name.spell_ability.mod, @abilities.cha.mod)"
-        }
-      },
-      {
-        "tag": "spell_dc",
-        "label": "Сложность заклинаний",
-        "group": "Магия",
-        "value": {
-          "kind": "formula",
-          "expr": "8 + @prof_bonus + @spell_mod"
-        }
-      },
-      {
-        "tag": "spell_attack",
-        "label": "Атака заклинанием",
-        "group": "Магия",
-        "value": {
-          "kind": "formula",
-          "expr": "@prof_bonus + @spell_mod"
-        }
-      },
-      {
         "tag": "caster_level",
         "label": "Уровень заклинателя",
         "group": "Магия",
@@ -1937,214 +2040,295 @@
         "control": "stepper"
       },
       {
-        "tag": "cantrip_dice",
-        "label": "Костей заговора",
-        "group": "Магия",
-        "value": {
-          "kind": "formula",
-          "expr": "таблица(\"levels\", @level, \"cantrips\")"
-        }
-      },
-      {
-        "tag": "slots_1_max",
+        "tag": "slots.1.max",
         "label": "Всего ячеек 1-го круга",
         "group": "Ячейки заклинаний",
         "value": {
           "kind": "formula",
           "expr": "таблица(\"spell_slots\", @caster_level, \"круг_1\")"
+        },
+        "cell": {
+          "table": "slots",
+          "row": "1",
+          "column": "max"
         }
       },
       {
-        "tag": "slots_1",
+        "tag": "slots.1.left",
         "label": "Ячейки 1-го круга",
         "group": "Ячейки заклинаний",
+        "control": "pips",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "@slots_1_max"
+          "max": "@slots.1.max"
         },
-        "control": "pips"
+        "cell": {
+          "table": "slots",
+          "row": "1",
+          "column": "left"
+        }
       },
       {
-        "tag": "slots_2_max",
+        "tag": "slots.2.max",
         "label": "Всего ячеек 2-го круга",
         "group": "Ячейки заклинаний",
         "value": {
           "kind": "formula",
           "expr": "таблица(\"spell_slots\", @caster_level, \"круг_2\")"
+        },
+        "cell": {
+          "table": "slots",
+          "row": "2",
+          "column": "max"
         }
       },
       {
-        "tag": "slots_2",
+        "tag": "slots.2.left",
         "label": "Ячейки 2-го круга",
         "group": "Ячейки заклинаний",
+        "control": "pips",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "@slots_2_max"
+          "max": "@slots.2.max"
         },
-        "control": "pips"
+        "cell": {
+          "table": "slots",
+          "row": "2",
+          "column": "left"
+        }
       },
       {
-        "tag": "slots_3_max",
+        "tag": "slots.3.max",
         "label": "Всего ячеек 3-го круга",
         "group": "Ячейки заклинаний",
         "value": {
           "kind": "formula",
           "expr": "таблица(\"spell_slots\", @caster_level, \"круг_3\")"
+        },
+        "cell": {
+          "table": "slots",
+          "row": "3",
+          "column": "max"
         }
       },
       {
-        "tag": "slots_3",
+        "tag": "slots.3.left",
         "label": "Ячейки 3-го круга",
         "group": "Ячейки заклинаний",
+        "control": "pips",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "@slots_3_max"
+          "max": "@slots.3.max"
         },
-        "control": "pips"
+        "cell": {
+          "table": "slots",
+          "row": "3",
+          "column": "left"
+        }
       },
       {
-        "tag": "slots_4_max",
+        "tag": "slots.4.max",
         "label": "Всего ячеек 4-го круга",
         "group": "Ячейки заклинаний",
         "value": {
           "kind": "formula",
           "expr": "таблица(\"spell_slots\", @caster_level, \"круг_4\")"
+        },
+        "cell": {
+          "table": "slots",
+          "row": "4",
+          "column": "max"
         }
       },
       {
-        "tag": "slots_4",
+        "tag": "slots.4.left",
         "label": "Ячейки 4-го круга",
         "group": "Ячейки заклинаний",
+        "control": "pips",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "@slots_4_max"
+          "max": "@slots.4.max"
         },
-        "control": "pips"
+        "cell": {
+          "table": "slots",
+          "row": "4",
+          "column": "left"
+        }
       },
       {
-        "tag": "slots_5_max",
+        "tag": "slots.5.max",
         "label": "Всего ячеек 5-го круга",
         "group": "Ячейки заклинаний",
         "value": {
           "kind": "formula",
           "expr": "таблица(\"spell_slots\", @caster_level, \"круг_5\")"
+        },
+        "cell": {
+          "table": "slots",
+          "row": "5",
+          "column": "max"
         }
       },
       {
-        "tag": "slots_5",
+        "tag": "slots.5.left",
         "label": "Ячейки 5-го круга",
         "group": "Ячейки заклинаний",
+        "control": "pips",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "@slots_5_max"
+          "max": "@slots.5.max"
         },
-        "control": "pips"
+        "cell": {
+          "table": "slots",
+          "row": "5",
+          "column": "left"
+        }
       },
       {
-        "tag": "slots_6_max",
+        "tag": "slots.6.max",
         "label": "Всего ячеек 6-го круга",
         "group": "Ячейки заклинаний",
         "value": {
           "kind": "formula",
           "expr": "таблица(\"spell_slots\", @caster_level, \"круг_6\")"
+        },
+        "cell": {
+          "table": "slots",
+          "row": "6",
+          "column": "max"
         }
       },
       {
-        "tag": "slots_6",
+        "tag": "slots.6.left",
         "label": "Ячейки 6-го круга",
         "group": "Ячейки заклинаний",
+        "control": "pips",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "@slots_6_max"
+          "max": "@slots.6.max"
         },
-        "control": "pips"
+        "cell": {
+          "table": "slots",
+          "row": "6",
+          "column": "left"
+        }
       },
       {
-        "tag": "slots_7_max",
+        "tag": "slots.7.max",
         "label": "Всего ячеек 7-го круга",
         "group": "Ячейки заклинаний",
         "value": {
           "kind": "formula",
           "expr": "таблица(\"spell_slots\", @caster_level, \"круг_7\")"
+        },
+        "cell": {
+          "table": "slots",
+          "row": "7",
+          "column": "max"
         }
       },
       {
-        "tag": "slots_7",
+        "tag": "slots.7.left",
         "label": "Ячейки 7-го круга",
         "group": "Ячейки заклинаний",
+        "control": "pips",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "@slots_7_max"
+          "max": "@slots.7.max"
         },
-        "control": "pips"
+        "cell": {
+          "table": "slots",
+          "row": "7",
+          "column": "left"
+        }
       },
       {
-        "tag": "slots_8_max",
+        "tag": "slots.8.max",
         "label": "Всего ячеек 8-го круга",
         "group": "Ячейки заклинаний",
         "value": {
           "kind": "formula",
           "expr": "таблица(\"spell_slots\", @caster_level, \"круг_8\")"
+        },
+        "cell": {
+          "table": "slots",
+          "row": "8",
+          "column": "max"
         }
       },
       {
-        "tag": "slots_8",
+        "tag": "slots.8.left",
         "label": "Ячейки 8-го круга",
         "group": "Ячейки заклинаний",
+        "control": "pips",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "@slots_8_max"
+          "max": "@slots.8.max"
         },
-        "control": "pips"
+        "cell": {
+          "table": "slots",
+          "row": "8",
+          "column": "left"
+        }
       },
       {
-        "tag": "slots_9_max",
+        "tag": "slots.9.max",
         "label": "Всего ячеек 9-го круга",
         "group": "Ячейки заклинаний",
         "value": {
           "kind": "formula",
           "expr": "таблица(\"spell_slots\", @caster_level, \"круг_9\")"
+        },
+        "cell": {
+          "table": "slots",
+          "row": "9",
+          "column": "max"
         }
       },
       {
-        "tag": "slots_9",
+        "tag": "slots.9.left",
         "label": "Ячейки 9-го круга",
         "group": "Ячейки заклинаний",
+        "control": "pips",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "@slots_9_max"
+          "max": "@slots.9.max"
         },
-        "control": "pips"
+        "cell": {
+          "table": "slots",
+          "row": "9",
+          "column": "left"
+        }
       },
       {
-        "tag": "rages_max",
+        "tag": "resources.rages.max",
         "label": "Ярость: всего",
         "group": "Ресурсы класса",
         "value": {
@@ -2152,23 +2336,33 @@
           "type": "number",
           "default": 0,
           "min": 0
+        },
+        "cell": {
+          "table": "resources",
+          "row": "rages",
+          "column": "max"
         }
       },
       {
-        "tag": "rages_left",
+        "tag": "resources.rages.left",
         "label": "Ярость: осталось",
         "group": "Ресурсы класса",
+        "control": "stepper",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "@rages_max"
+          "max": "@resources.rages.max"
         },
-        "control": "stepper"
+        "cell": {
+          "table": "resources",
+          "row": "rages",
+          "column": "left"
+        }
       },
       {
-        "tag": "ki_max",
+        "tag": "resources.ki.max",
         "label": "Очки ци: всего",
         "group": "Ресурсы класса",
         "value": {
@@ -2176,23 +2370,33 @@
           "type": "number",
           "default": 0,
           "min": 0
+        },
+        "cell": {
+          "table": "resources",
+          "row": "ki",
+          "column": "max"
         }
       },
       {
-        "tag": "ki_left",
+        "tag": "resources.ki.left",
         "label": "Очки ци: осталось",
         "group": "Ресурсы класса",
+        "control": "stepper",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "@ki_max"
+          "max": "@resources.ki.max"
         },
-        "control": "stepper"
+        "cell": {
+          "table": "resources",
+          "row": "ki",
+          "column": "left"
+        }
       },
       {
-        "tag": "bardic_max",
+        "tag": "resources.bardic.max",
         "label": "Бардовское вдохновение: всего",
         "group": "Ресурсы класса",
         "value": {
@@ -2200,23 +2404,33 @@
           "type": "number",
           "default": 0,
           "min": 0
+        },
+        "cell": {
+          "table": "resources",
+          "row": "bardic",
+          "column": "max"
         }
       },
       {
-        "tag": "bardic_left",
+        "tag": "resources.bardic.left",
         "label": "Бардовское вдохновение: осталось",
         "group": "Ресурсы класса",
+        "control": "stepper",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "@bardic_max"
+          "max": "@resources.bardic.max"
         },
-        "control": "stepper"
+        "cell": {
+          "table": "resources",
+          "row": "bardic",
+          "column": "left"
+        }
       },
       {
-        "tag": "channel_max",
+        "tag": "resources.channel.max",
         "label": "Божественный канал: всего",
         "group": "Ресурсы класса",
         "value": {
@@ -2224,23 +2438,33 @@
           "type": "number",
           "default": 0,
           "min": 0
+        },
+        "cell": {
+          "table": "resources",
+          "row": "channel",
+          "column": "max"
         }
       },
       {
-        "tag": "channel_left",
+        "tag": "resources.channel.left",
         "label": "Божественный канал: осталось",
         "group": "Ресурсы класса",
+        "control": "stepper",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "@channel_max"
+          "max": "@resources.channel.max"
         },
-        "control": "stepper"
+        "cell": {
+          "table": "resources",
+          "row": "channel",
+          "column": "left"
+        }
       },
       {
-        "tag": "second_wind_max",
+        "tag": "resources.second_wind.max",
         "label": "Второе дыхание: всего",
         "group": "Ресурсы класса",
         "value": {
@@ -2248,23 +2472,33 @@
           "type": "number",
           "default": 0,
           "min": 0
+        },
+        "cell": {
+          "table": "resources",
+          "row": "second_wind",
+          "column": "max"
         }
       },
       {
-        "tag": "second_wind_left",
+        "tag": "resources.second_wind.left",
         "label": "Второе дыхание: осталось",
         "group": "Ресурсы класса",
+        "control": "stepper",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "@second_wind_max"
+          "max": "@resources.second_wind.max"
         },
-        "control": "stepper"
+        "cell": {
+          "table": "resources",
+          "row": "second_wind",
+          "column": "left"
+        }
       },
       {
-        "tag": "action_surge_max",
+        "tag": "resources.action_surge.max",
         "label": "Всплеск действий: всего",
         "group": "Ресурсы класса",
         "value": {
@@ -2272,23 +2506,33 @@
           "type": "number",
           "default": 0,
           "min": 0
+        },
+        "cell": {
+          "table": "resources",
+          "row": "action_surge",
+          "column": "max"
         }
       },
       {
-        "tag": "action_surge_left",
+        "tag": "resources.action_surge.left",
         "label": "Всплеск действий: осталось",
         "group": "Ресурсы класса",
+        "control": "stepper",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "@action_surge_max"
+          "max": "@resources.action_surge.max"
         },
-        "control": "stepper"
+        "cell": {
+          "table": "resources",
+          "row": "action_surge",
+          "column": "left"
+        }
       },
       {
-        "tag": "lay_on_hands_max",
+        "tag": "resources.lay_on_hands.max",
         "label": "Наложение рук: запас: всего",
         "group": "Ресурсы класса",
         "value": {
@@ -2296,23 +2540,33 @@
           "type": "number",
           "default": 0,
           "min": 0
+        },
+        "cell": {
+          "table": "resources",
+          "row": "lay_on_hands",
+          "column": "max"
         }
       },
       {
-        "tag": "lay_on_hands_left",
+        "tag": "resources.lay_on_hands.left",
         "label": "Наложение рук: запас: осталось",
         "group": "Ресурсы класса",
+        "control": "stepper",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "@lay_on_hands_max"
+          "max": "@resources.lay_on_hands.max"
         },
-        "control": "stepper"
+        "cell": {
+          "table": "resources",
+          "row": "lay_on_hands",
+          "column": "left"
+        }
       },
       {
-        "tag": "sorcery_max",
+        "tag": "resources.sorcery.max",
         "label": "Очки чародейства: всего",
         "group": "Ресурсы класса",
         "value": {
@@ -2320,23 +2574,33 @@
           "type": "number",
           "default": 0,
           "min": 0
+        },
+        "cell": {
+          "table": "resources",
+          "row": "sorcery",
+          "column": "max"
         }
       },
       {
-        "tag": "sorcery_left",
+        "tag": "resources.sorcery.left",
         "label": "Очки чародейства: осталось",
         "group": "Ресурсы класса",
+        "control": "stepper",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "@sorcery_max"
+          "max": "@resources.sorcery.max"
         },
-        "control": "stepper"
+        "cell": {
+          "table": "resources",
+          "row": "sorcery",
+          "column": "left"
+        }
       },
       {
-        "tag": "superiority_max",
+        "tag": "resources.superiority.max",
         "label": "Кости превосходства: всего",
         "group": "Ресурсы класса",
         "value": {
@@ -2344,23 +2608,33 @@
           "type": "number",
           "default": 0,
           "min": 0
+        },
+        "cell": {
+          "table": "resources",
+          "row": "superiority",
+          "column": "max"
         }
       },
       {
-        "tag": "superiority_left",
+        "tag": "resources.superiority.left",
         "label": "Кости превосходства: осталось",
         "group": "Ресурсы класса",
+        "control": "stepper",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "@superiority_max"
+          "max": "@resources.superiority.max"
         },
-        "control": "stepper"
+        "cell": {
+          "table": "resources",
+          "row": "superiority",
+          "column": "left"
+        }
       },
       {
-        "tag": "luck_max",
+        "tag": "resources.luck.max",
         "label": "Очки удачи: всего",
         "group": "Ресурсы класса",
         "value": {
@@ -2368,23 +2642,33 @@
           "type": "number",
           "default": 0,
           "min": 0
+        },
+        "cell": {
+          "table": "resources",
+          "row": "luck",
+          "column": "max"
         }
       },
       {
-        "tag": "luck_left",
+        "tag": "resources.luck.left",
         "label": "Очки удачи: осталось",
         "group": "Ресурсы класса",
+        "control": "stepper",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "@luck_max"
+          "max": "@resources.luck.max"
         },
-        "control": "stepper"
+        "cell": {
+          "table": "resources",
+          "row": "luck",
+          "column": "left"
+        }
       },
       {
-        "tag": "relentless_max",
+        "tag": "resources.relentless.max",
         "label": "Непоколебимая стойкость: всего",
         "group": "Ресурсы класса",
         "value": {
@@ -2392,28 +2676,29 @@
           "type": "number",
           "default": 0,
           "min": 0
+        },
+        "cell": {
+          "table": "resources",
+          "row": "relentless",
+          "column": "max"
         }
       },
       {
-        "tag": "relentless_left",
+        "tag": "resources.relentless.left",
         "label": "Непоколебимая стойкость: осталось",
         "group": "Ресурсы класса",
+        "control": "stepper",
         "value": {
           "kind": "stored",
           "type": "number",
           "default": 0,
           "min": 0,
-          "max": "@relentless_max"
+          "max": "@resources.relentless.max"
         },
-        "control": "stepper"
-      },
-      {
-        "tag": "rage_damage",
-        "label": "Урон ярости",
-        "group": "Ресурсы класса",
-        "value": {
-          "kind": "formula",
-          "expr": "таблица(\"levels\", @level, \"rage\")"
+        "cell": {
+          "table": "resources",
+          "row": "relentless",
+          "column": "left"
         }
       },
       {
@@ -2715,6 +3000,374 @@
       }
     },
     "tables": {
+      "stats": {
+        "label": "Показатели",
+        "key": "word",
+        "columns": [
+          {
+            "key": "value",
+            "label": "Значение",
+            "kind": "number"
+          }
+        ],
+        "rows": [
+          {
+            "value": "prof_bonus",
+            "label": "Бонус мастерства",
+            "group": "Прогрессия",
+            "cells": {
+              "value": {
+                "expr": "таблица(\"levels\", @level, \"prof\")"
+              }
+            }
+          },
+          {
+            "value": "initiative",
+            "label": "Инициатива",
+            "group": "Чувства и движение",
+            "cells": {
+              "value": {
+                "expr": "@abilities.dex.mod"
+              }
+            }
+          },
+          {
+            "value": "passive_perception",
+            "label": "Пассивная внимательность",
+            "group": "Чувства и движение",
+            "cells": {
+              "value": {
+                "expr": "10 + @skills.perception.total"
+              }
+            }
+          },
+          {
+            "value": "speed",
+            "label": "Скорость, футов",
+            "group": "Чувства и движение",
+            "cells": {
+              "value": {
+                "expr": "или(@race.speed, 30)"
+              }
+            }
+          },
+          {
+            "value": "ac_dex",
+            "label": "Ловкость в классе брони",
+            "group": "Защита",
+            "cells": {
+              "value": {
+                "expr": "@abilities.dex.mod"
+              }
+            }
+          },
+          {
+            "value": "ac",
+            "label": "Класс брони",
+            "group": "Защита",
+            "cells": {
+              "value": {
+                "expr": "@ac_base + если(@armor_heavy, 0, @stats.ac_dex.value)"
+              }
+            }
+          },
+          {
+            "value": "hit_die",
+            "label": "Кость хитов",
+            "group": "Здоровье",
+            "cells": {
+              "value": {
+                "expr": "или(@class_name.hit_die, @race.size.hit_die, \"1к8\")"
+              }
+            }
+          },
+          {
+            "value": "down",
+            "label": "Без сил",
+            "group": "Здоровье",
+            "cells": {
+              "value": {
+                "expr": "@hp_current <= 0"
+              }
+            }
+          },
+          {
+            "value": "up",
+            "label": "На ногах",
+            "group": "Здоровье",
+            "cells": {
+              "value": {
+                "expr": "@hp_current > 0"
+              }
+            }
+          },
+          {
+            "value": "is_dead",
+            "label": "Три провала",
+            "group": "Здоровье",
+            "cells": {
+              "value": {
+                "expr": "@death_fail >= 3"
+              }
+            }
+          },
+          {
+            "value": "is_stable",
+            "label": "Три успеха",
+            "group": "Здоровье",
+            "cells": {
+              "value": {
+                "expr": "@death_ok >= 3"
+              }
+            }
+          },
+          {
+            "value": "sneak_dice",
+            "label": "Костей скрытой атаки",
+            "group": "Атака",
+            "cells": {
+              "value": {
+                "expr": "округлить вверх(@level / 2)"
+              }
+            }
+          },
+          {
+            "value": "spell_mod",
+            "label": "Заклинательный модификатор",
+            "group": "Магия",
+            "cells": {
+              "value": {
+                "expr": "или(@class_name.spell_ability.mod, @abilities.cha.mod)"
+              }
+            }
+          },
+          {
+            "value": "spell_dc",
+            "label": "Сложность заклинаний",
+            "group": "Магия",
+            "cells": {
+              "value": {
+                "expr": "8 + @stats.prof_bonus.value + @stats.spell_mod.value"
+              }
+            }
+          },
+          {
+            "value": "spell_attack",
+            "label": "Атака заклинанием",
+            "group": "Магия",
+            "cells": {
+              "value": {
+                "expr": "@stats.prof_bonus.value + @stats.spell_mod.value"
+              }
+            }
+          },
+          {
+            "value": "cantrip_dice",
+            "label": "Костей заговора",
+            "group": "Магия",
+            "cells": {
+              "value": {
+                "expr": "таблица(\"levels\", @level, \"cantrips\")"
+              }
+            }
+          },
+          {
+            "value": "rage_damage",
+            "label": "Урон ярости",
+            "group": "Ресурсы класса",
+            "cells": {
+              "value": {
+                "expr": "таблица(\"levels\", @level, \"rage\")"
+              }
+            }
+          }
+        ],
+        "sheet": {
+          "columns": {
+            "value": {
+              "label": "{label}"
+            }
+          },
+          "cells": {
+            "initiative.value": {
+              "roll": {
+                "label": "Инициатива",
+                "tags": [
+                  "проверка",
+                  "ловкость",
+                  "инициатива"
+                ],
+                "die": {
+                  "constant": "lead_die"
+                },
+                "bonus": {
+                  "expr": "@строка.value"
+                }
+              }
+            }
+          }
+        }
+      },
+      "slots": {
+        "label": "Ячейки по кругам",
+        "key": "word",
+        "columns": [
+          {
+            "key": "max",
+            "label": "Всего",
+            "kind": "number",
+            "expr": "таблица(\"spell_slots\", @caster_level, @строка)"
+          },
+          {
+            "key": "left",
+            "label": "Осталось",
+            "kind": "number",
+            "min": 0,
+            "max": "@строка.max"
+          }
+        ],
+        "rows": [
+          {
+            "value": "круг_1",
+            "key": "1",
+            "label": "1-й круг"
+          },
+          {
+            "value": "круг_2",
+            "key": "2",
+            "label": "2-й круг"
+          },
+          {
+            "value": "круг_3",
+            "key": "3",
+            "label": "3-й круг"
+          },
+          {
+            "value": "круг_4",
+            "key": "4",
+            "label": "4-й круг"
+          },
+          {
+            "value": "круг_5",
+            "key": "5",
+            "label": "5-й круг"
+          },
+          {
+            "value": "круг_6",
+            "key": "6",
+            "label": "6-й круг"
+          },
+          {
+            "value": "круг_7",
+            "key": "7",
+            "label": "7-й круг"
+          },
+          {
+            "value": "круг_8",
+            "key": "8",
+            "label": "8-й круг"
+          },
+          {
+            "value": "круг_9",
+            "key": "9",
+            "label": "9-й круг"
+          }
+        ],
+        "sheet": {
+          "columns": {
+            "max": {
+              "label": "Всего ячеек {key}-го круга",
+              "group": "Ячейки заклинаний"
+            },
+            "left": {
+              "label": "Ячейки {key}-го круга",
+              "group": "Ячейки заклинаний",
+              "control": "pips",
+              "start": 0
+            }
+          }
+        }
+      },
+      "resources": {
+        "label": "Ресурсы класса",
+        "key": "word",
+        "columns": [
+          {
+            "key": "max",
+            "label": "Всего",
+            "kind": "number",
+            "min": 0
+          },
+          {
+            "key": "left",
+            "label": "Осталось",
+            "kind": "number",
+            "min": 0,
+            "max": "@строка.max"
+          }
+        ],
+        "rows": [
+          {
+            "value": "rages",
+            "label": "Ярость"
+          },
+          {
+            "value": "ki",
+            "label": "Очки ци"
+          },
+          {
+            "value": "bardic",
+            "label": "Бардовское вдохновение"
+          },
+          {
+            "value": "channel",
+            "label": "Божественный канал"
+          },
+          {
+            "value": "second_wind",
+            "label": "Второе дыхание"
+          },
+          {
+            "value": "action_surge",
+            "label": "Всплеск действий"
+          },
+          {
+            "value": "lay_on_hands",
+            "label": "Наложение рук: запас"
+          },
+          {
+            "value": "sorcery",
+            "label": "Очки чародейства"
+          },
+          {
+            "value": "superiority",
+            "label": "Кости превосходства"
+          },
+          {
+            "value": "luck",
+            "label": "Очки удачи"
+          },
+          {
+            "value": "relentless",
+            "label": "Непоколебимая стойкость"
+          }
+        ],
+        "sheet": {
+          "columns": {
+            "max": {
+              "label": "{label}: всего",
+              "group": "Ресурсы класса",
+              "start": 0
+            },
+            "left": {
+              "label": "{label}: осталось",
+              "group": "Ресурсы класса",
+              "control": "stepper",
+              "start": 0
+            }
+          }
+        }
+      },
       "levels": {
         "label": "Уровень персонажа",
         "key": "number",
@@ -3417,7 +4070,7 @@
             "value": "ближний бой — Сила",
             "cells": {
               "attack": {
-                "expr": "@abilities.str.mod + @prof_bonus"
+                "expr": "@abilities.str.mod + @stats.prof_bonus.value"
               },
               "damage": {
                 "expr": "@abilities.str.mod"
@@ -3428,7 +4081,7 @@
             "value": "фехтовальное — Сила или Ловкость",
             "cells": {
               "attack": {
-                "expr": "большее из(@abilities.str.mod, @abilities.dex.mod) + @prof_bonus"
+                "expr": "большее из(@abilities.str.mod, @abilities.dex.mod) + @stats.prof_bonus.value"
               },
               "damage": {
                 "expr": "большее из(@abilities.str.mod, @abilities.dex.mod)"
@@ -3439,7 +4092,7 @@
             "value": "дальний бой — Ловкость",
             "cells": {
               "attack": {
-                "expr": "@abilities.dex.mod + @prof_bonus"
+                "expr": "@abilities.dex.mod + @stats.prof_bonus.value"
               },
               "damage": {
                 "expr": "@abilities.dex.mod"
@@ -3594,7 +4247,7 @@
             "key": "save",
             "label": "Спасбросок",
             "kind": "number",
-            "expr": "@строка.ability.mod + @строка.prof * @prof_bonus"
+            "expr": "@строка.ability.mod + @строка.prof * @stats.prof_bonus.value"
           }
         ],
         "rows": [
@@ -3700,7 +4353,7 @@
             "key": "total",
             "label": "Навык",
             "kind": "number",
-            "expr": "@строка.ability.mod + @строка.prof * @prof_bonus"
+            "expr": "@строка.ability.mod + @строка.prof * @stats.prof_bonus.value"
           }
         ],
         "rows": [
@@ -4344,7 +4997,7 @@
         "constant": "lead_die"
       },
       "bonus": {
-        "expr": "@initiative"
+        "expr": "@stats.initiative.value"
       },
       "tags": [
         "проверка",
@@ -4403,7 +5056,7 @@
               ]
             },
             "versus": {
-              "expr": "@получатель.ac"
+              "expr": "@получатель.stats.ac.value"
             }
           },
           {
@@ -4498,7 +5151,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть('1d6', @отправитель.sneak_dice)"
+              "expr": "кинуть('1d6', @отправитель.stats.sneak_dice.value)"
             }
           },
           {
@@ -4823,14 +5476,14 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "@отправитель.spell_attack"
+                "expr": "@отправитель.stats.spell_attack.value"
               },
               "tags": [
                 "атака"
               ]
             },
             "versus": {
-              "expr": "@получатель.ac"
+              "expr": "@получатель.stats.ac.value"
             }
           },
           {
@@ -4838,7 +5491,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть(@damage_die, ((@отправитель.cantrip_dice) * (если(@hit.natural >= @отправитель.crit_from, 2, 1))))"
+              "expr": "кинуть(@damage_die, ((@отправитель.stats.cantrip_dice.value) * (если(@hit.natural >= @отправитель.crit_from, 2, 1))))"
             }
           },
           {
@@ -4915,7 +5568,7 @@
               ]
             },
             "versus": {
-              "expr": "@отправитель.spell_dc"
+              "expr": "@отправитель.stats.spell_dc.value"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -4925,7 +5578,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть(@damage_die, @отправитель.cantrip_dice)"
+              "expr": "кинуть(@damage_die, @отправитель.stats.cantrip_dice.value)"
             }
           },
           {
@@ -5018,14 +5671,14 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "@отправитель.spell_attack"
+                "expr": "@отправитель.stats.spell_attack.value"
               },
               "tags": [
                 "атака"
               ]
             },
             "versus": {
-              "expr": "@получатель.ac"
+              "expr": "@получатель.stats.ac.value"
             }
           },
           {
@@ -5123,7 +5776,7 @@
               ]
             },
             "versus": {
-              "expr": "@отправитель.spell_dc"
+              "expr": "@отправитель.stats.spell_dc.value"
             },
             "successWhen": "atLeast",
             "continueOn": "always"
@@ -5229,7 +5882,7 @@
               ]
             },
             "versus": {
-              "expr": "@отправитель.spell_dc"
+              "expr": "@отправитель.stats.spell_dc.value"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -5380,7 +6033,7 @@
               ]
             },
             "versus": {
-              "expr": "@отправитель.spell_dc"
+              "expr": "@отправитель.stats.spell_dc.value"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -5392,7 +6045,7 @@
               "param": "status"
             },
             "carry": {
-              "expr": "@отправитель.spell_dc"
+              "expr": "@отправитель.stats.spell_dc.value"
             }
           }
         ],
@@ -5444,7 +6097,7 @@
               ]
             },
             "versus": {
-              "expr": "@отправитель.spell_dc"
+              "expr": "@отправитель.stats.spell_dc.value"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -5456,7 +6109,7 @@
               "param": "status"
             },
             "carry": {
-              "expr": "@отправитель.spell_dc"
+              "expr": "@отправитель.stats.spell_dc.value"
             }
           }
         ],
@@ -5567,7 +6220,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть(@heal_die, (@dice_count + (@slot - @spell_level) * @dice_up)) + @отправитель.spell_mod"
+              "expr": "кинуть(@heal_die, (@dice_count + (@slot - @spell_level) * @dice_up)) + @отправитель.stats.spell_mod.value"
             }
           },
           {
@@ -5711,7 +6364,7 @@
             "strict": true,
             "args": {
               "what": {
-                "expr": "@second_wind_left"
+                "expr": "@resources.second_wind.left"
               },
               "amount": {
                 "expr": "1"
@@ -5756,7 +6409,7 @@
             "strict": true,
             "args": {
               "what": {
-                "expr": "@action_surge_left"
+                "expr": "@resources.action_surge.left"
               },
               "amount": {
                 "expr": "1"
@@ -5801,7 +6454,7 @@
             "strict": true,
             "args": {
               "what": {
-                "expr": "@rages_left"
+                "expr": "@resources.rages.left"
               },
               "amount": {
                 "expr": "1"
@@ -5864,7 +6517,7 @@
             "strict": true,
             "args": {
               "what": {
-                "expr": "@bardic_left"
+                "expr": "@resources.bardic.left"
               },
               "amount": {
                 "expr": "1"
@@ -5919,7 +6572,7 @@
             "strict": true,
             "args": {
               "what": {
-                "expr": "@lay_on_hands_left"
+                "expr": "@resources.lay_on_hands.left"
               },
               "amount": {
                 "expr": "@amount"
@@ -5955,7 +6608,7 @@
               ]
             },
             "versus": {
-              "expr": "@отправитель.spell_dc"
+              "expr": "@отправитель.stats.spell_dc.value"
             },
             "successWhen": "atLeast",
             "continueOn": "fail"
@@ -5980,7 +6633,7 @@
             "strict": true,
             "args": {
               "what": {
-                "expr": "@channel_left"
+                "expr": "@resources.channel.left"
               },
               "amount": {
                 "expr": "1"
@@ -6050,7 +6703,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "speed",
+            "target": "stats.speed.value",
             "op": "mul",
             "value": {
               "expr": "2"
@@ -6099,7 +6752,7 @@
               ]
             },
             "versus": {
-              "expr": "@получатель.passive_perception"
+              "expr": "@получатель.stats.passive_perception.value"
             },
             "successWhen": "atLeast",
             "continueOn": "success"
@@ -6225,7 +6878,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть(@отправитель.hit_die) + @отправитель.abilities.con.mod"
+              "expr": "кинуть(@отправитель.stats.hit_die.value) + @отправитель.abilities.con.mod"
             }
           },
           {
@@ -6335,7 +6988,7 @@
                   ]
                 },
                 "versus": {
-                  "expr": "@отправитель.spell_dc"
+                  "expr": "@отправитель.stats.spell_dc.value"
                 },
                 "successWhen": "atLeast",
                 "continueOn": "always"
@@ -6476,7 +7129,7 @@
                 "strict": true,
                 "args": {
                   "what": {
-                    "expr": "@luck_left"
+                    "expr": "@resources.luck.left"
                   },
                   "amount": {
                     "expr": "1"
@@ -6680,7 +7333,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "speed",
+            "target": "stats.speed.value",
             "op": "set",
             "value": {
               "expr": "0"
@@ -6775,7 +7428,7 @@
           },
           {
             "kind": "value",
-            "target": "speed",
+            "target": "stats.speed.value",
             "op": "set",
             "value": {
               "expr": "0"
@@ -6863,7 +7516,7 @@
           },
           {
             "kind": "value",
-            "target": "speed",
+            "target": "stats.speed.value",
             "op": "set",
             "value": {
               "expr": "0"
@@ -6952,7 +7605,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "speed",
+            "target": "stats.speed.value",
             "op": "set",
             "value": {
               "expr": "0"
@@ -7103,7 +7756,7 @@
           },
           {
             "kind": "value",
-            "target": "speed",
+            "target": "stats.speed.value",
             "op": "set",
             "value": {
               "expr": "0"
@@ -7157,7 +7810,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "speed",
+            "target": "stats.speed.value",
             "op": "set",
             "value": {
               "expr": "0"
@@ -7243,7 +7896,7 @@
             "target": "cell:wield.ближний бой — Сила.damage",
             "op": "add",
             "value": {
-              "expr": "@rage_damage"
+              "expr": "@stats.rage_damage.value"
             },
             "stacking": "sum"
           },
@@ -7285,7 +7938,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "ac",
+            "target": "stats.ac.value",
             "op": "add",
             "value": {
               "expr": "5"
@@ -7437,7 +8090,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "ac",
+            "target": "stats.ac.value",
             "op": "add",
             "value": {
               "expr": "2"
@@ -7446,7 +8099,7 @@
           },
           {
             "kind": "value",
-            "target": "speed",
+            "target": "stats.speed.value",
             "op": "mul",
             "value": {
               "expr": "2"
@@ -7476,7 +8129,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "ac",
+            "target": "stats.ac.value",
             "op": "add",
             "value": {
               "expr": "-2"
@@ -7485,7 +8138,7 @@
           },
           {
             "kind": "value",
-            "target": "speed",
+            "target": "stats.speed.value",
             "op": "mul",
             "value": {
               "expr": "0.5"
@@ -7805,7 +8458,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "ac",
+            "target": "stats.ac.value",
             "op": "add",
             "value": {
               "expr": "1"
@@ -8066,7 +8719,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "initiative",
+            "target": "stats.initiative.value",
             "op": "add",
             "value": {
               "expr": "5"
@@ -8108,7 +8761,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "speed",
+            "target": "stats.speed.value",
             "op": "add",
             "value": {
               "expr": "10"
@@ -8129,7 +8782,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "passive_perception",
+            "target": "stats.passive_perception.value",
             "op": "add",
             "value": {
               "expr": "5"
@@ -8171,7 +8824,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "ac",
+            "target": "stats.ac.value",
             "op": "add",
             "value": {
               "expr": "1"
@@ -8341,7 +8994,7 @@
         "params": [],
         "on": [
           {
-            "on": "field:down",
+            "on": "field:stats.down.value",
             "steps": [
               {
                 "type": "status",
@@ -8372,7 +9025,7 @@
         "params": [],
         "on": [
           {
-            "on": "field:up",
+            "on": "field:stats.up.value",
             "steps": [
               {
                 "type": "status",
@@ -8459,7 +9112,7 @@
         "params": [],
         "on": [
           {
-            "on": "field:is_dead",
+            "on": "field:stats.is_dead.value",
             "steps": [
               {
                 "type": "status",
@@ -8490,7 +9143,7 @@
         "params": [],
         "on": [
           {
-            "on": "field:is_stable",
+            "on": "field:stats.is_stable.value",
             "steps": [
               {
                 "type": "status",
@@ -8521,12 +9174,12 @@
         "params": [],
         "on": [
           {
-            "on": "field:down",
+            "on": "field:stats.down.value",
             "steps": [
               {
                 "type": "compare",
                 "value": {
-                  "expr": "@relentless_left"
+                  "expr": "@resources.relentless.left"
                 },
                 "versus": {
                   "expr": "1"
@@ -8547,7 +9200,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "relentless_left"
+                  "tag": "resources.relentless.left"
                 },
                 "direction": "subtract",
                 "value": {
@@ -8625,99 +9278,99 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "slots_1"
+                  "tag": "slots.1.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.slots_1_max"
+                  "expr": "@получатель.slots.1.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "slots_2"
+                  "tag": "slots.2.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.slots_2_max"
+                  "expr": "@получатель.slots.2.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "slots_3"
+                  "tag": "slots.3.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.slots_3_max"
+                  "expr": "@получатель.slots.3.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "slots_4"
+                  "tag": "slots.4.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.slots_4_max"
+                  "expr": "@получатель.slots.4.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "slots_5"
+                  "tag": "slots.5.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.slots_5_max"
+                  "expr": "@получатель.slots.5.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "slots_6"
+                  "tag": "slots.6.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.slots_6_max"
+                  "expr": "@получатель.slots.6.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "slots_7"
+                  "tag": "slots.7.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.slots_7_max"
+                  "expr": "@получатель.slots.7.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "slots_8"
+                  "tag": "slots.8.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.slots_8_max"
+                  "expr": "@получатель.slots.8.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "slots_9"
+                  "tag": "slots.9.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.slots_9_max"
+                  "expr": "@получатель.slots.9.max"
                 },
                 "targetModifiers": false
               }
@@ -8741,55 +9394,55 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "ki_left"
+                  "tag": "resources.ki.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.ki_max"
+                  "expr": "@получатель.resources.ki.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "channel_left"
+                  "tag": "resources.channel.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.channel_max"
+                  "expr": "@получатель.resources.channel.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "second_wind_left"
+                  "tag": "resources.second_wind.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.second_wind_max"
+                  "expr": "@получатель.resources.second_wind.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "action_surge_left"
+                  "tag": "resources.action_surge.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.action_surge_max"
+                  "expr": "@получатель.resources.action_surge.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "superiority_left"
+                  "tag": "resources.superiority.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.superiority_max"
+                  "expr": "@получатель.resources.superiority.max"
                 },
                 "targetModifiers": false
               }
@@ -8801,121 +9454,121 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "ki_left"
+                  "tag": "resources.ki.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.ki_max"
+                  "expr": "@получатель.resources.ki.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "channel_left"
+                  "tag": "resources.channel.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.channel_max"
+                  "expr": "@получатель.resources.channel.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "second_wind_left"
+                  "tag": "resources.second_wind.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.second_wind_max"
+                  "expr": "@получатель.resources.second_wind.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "action_surge_left"
+                  "tag": "resources.action_surge.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.action_surge_max"
+                  "expr": "@получатель.resources.action_surge.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "superiority_left"
+                  "tag": "resources.superiority.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.superiority_max"
+                  "expr": "@получатель.resources.superiority.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "rages_left"
+                  "tag": "resources.rages.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.rages_max"
+                  "expr": "@получатель.resources.rages.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "bardic_left"
+                  "tag": "resources.bardic.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.bardic_max"
+                  "expr": "@получатель.resources.bardic.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "lay_on_hands_left"
+                  "tag": "resources.lay_on_hands.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.lay_on_hands_max"
+                  "expr": "@получатель.resources.lay_on_hands.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "sorcery_left"
+                  "tag": "resources.sorcery.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.sorcery_max"
+                  "expr": "@получатель.resources.sorcery.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "luck_left"
+                  "tag": "resources.luck.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.luck_max"
+                  "expr": "@получатель.resources.luck.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "relentless_left"
+                  "tag": "resources.relentless.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.relentless_max"
+                  "expr": "@получатель.resources.relentless.max"
                 },
                 "targetModifiers": false
               }
@@ -9146,7 +9799,7 @@
           },
           {
             "kind": "value",
-            "target": "speed",
+            "target": "stats.speed.value",
             "op": "mul",
             "value": {
               "expr": "0.5"
@@ -9192,7 +9845,7 @@
           },
           {
             "kind": "value",
-            "target": "speed",
+            "target": "stats.speed.value",
             "op": "set",
             "value": {
               "expr": "0"
@@ -9508,7 +10161,7 @@
             "id": "есть_1",
             "type": "compare",
             "value": {
-              "expr": "@получатель.slots_1"
+              "expr": "@получатель.slots.1.left"
             },
             "versus": {
               "expr": "1"
@@ -9522,7 +10175,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "slots_1"
+              "tag": "slots.1.left"
             },
             "direction": "subtract",
             "value": {
@@ -9537,7 +10190,7 @@
             "id": "есть_2",
             "type": "compare",
             "value": {
-              "expr": "@получатель.slots_2"
+              "expr": "@получатель.slots.2.left"
             },
             "versus": {
               "expr": "1"
@@ -9551,7 +10204,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "slots_2"
+              "tag": "slots.2.left"
             },
             "direction": "subtract",
             "value": {
@@ -9566,7 +10219,7 @@
             "id": "есть_3",
             "type": "compare",
             "value": {
-              "expr": "@получатель.slots_3"
+              "expr": "@получатель.slots.3.left"
             },
             "versus": {
               "expr": "1"
@@ -9580,7 +10233,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "slots_3"
+              "tag": "slots.3.left"
             },
             "direction": "subtract",
             "value": {
@@ -9595,7 +10248,7 @@
             "id": "есть_4",
             "type": "compare",
             "value": {
-              "expr": "@получатель.slots_4"
+              "expr": "@получатель.slots.4.left"
             },
             "versus": {
               "expr": "1"
@@ -9609,7 +10262,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "slots_4"
+              "tag": "slots.4.left"
             },
             "direction": "subtract",
             "value": {
@@ -9624,7 +10277,7 @@
             "id": "есть_5",
             "type": "compare",
             "value": {
-              "expr": "@получатель.slots_5"
+              "expr": "@получатель.slots.5.left"
             },
             "versus": {
               "expr": "1"
@@ -9638,7 +10291,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "slots_5"
+              "tag": "slots.5.left"
             },
             "direction": "subtract",
             "value": {
@@ -9653,7 +10306,7 @@
             "id": "есть_6",
             "type": "compare",
             "value": {
-              "expr": "@получатель.slots_6"
+              "expr": "@получатель.slots.6.left"
             },
             "versus": {
               "expr": "1"
@@ -9667,7 +10320,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "slots_6"
+              "tag": "slots.6.left"
             },
             "direction": "subtract",
             "value": {
@@ -9682,7 +10335,7 @@
             "id": "есть_7",
             "type": "compare",
             "value": {
-              "expr": "@получатель.slots_7"
+              "expr": "@получатель.slots.7.left"
             },
             "versus": {
               "expr": "1"
@@ -9696,7 +10349,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "slots_7"
+              "tag": "slots.7.left"
             },
             "direction": "subtract",
             "value": {
@@ -9711,7 +10364,7 @@
             "id": "есть_8",
             "type": "compare",
             "value": {
-              "expr": "@получатель.slots_8"
+              "expr": "@получатель.slots.8.left"
             },
             "versus": {
               "expr": "1"
@@ -9725,7 +10378,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "slots_8"
+              "tag": "slots.8.left"
             },
             "direction": "subtract",
             "value": {
@@ -9740,7 +10393,7 @@
             "id": "есть_9",
             "type": "compare",
             "value": {
-              "expr": "@получатель.slots_9"
+              "expr": "@получатель.slots.9.left"
             },
             "versus": {
               "expr": "1"
@@ -9754,7 +10407,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "slots_9"
+              "tag": "slots.9.left"
             },
             "direction": "subtract",
             "value": {
@@ -10570,29 +11223,29 @@
           "caster_level": 5,
           "hp_max": 40,
           "hp_current": 40,
-          "slots_1": 4,
-          "slots_2": 3,
-          "slots_3": 2,
+          "slots.1.left": 4,
+          "slots.2.left": 3,
+          "slots.3.left": 2,
           "ac_base": 14,
           "skills.athletics.prof": 1,
           "skills.perception.prof": 1,
           "saves.con.extra": 1,
-          "second_wind_max": 1,
-          "second_wind_left": 1,
-          "rages_max": 3,
-          "rages_left": 3,
-          "channel_max": 1,
-          "channel_left": 1,
-          "bardic_max": 4,
-          "bardic_left": 4,
-          "lay_on_hands_max": 25,
-          "lay_on_hands_left": 25,
-          "luck_max": 3,
-          "luck_left": 3,
-          "action_surge_max": 1,
-          "action_surge_left": 1,
-          "relentless_max": 1,
-          "relentless_left": 1,
+          "resources.second_wind.max": 1,
+          "resources.second_wind.left": 1,
+          "resources.rages.max": 3,
+          "resources.rages.left": 3,
+          "resources.channel.max": 1,
+          "resources.channel.left": 1,
+          "resources.bardic.max": 4,
+          "resources.bardic.left": 4,
+          "resources.lay_on_hands.max": 25,
+          "resources.lay_on_hands.left": 25,
+          "resources.luck.max": 3,
+          "resources.luck.left": 3,
+          "resources.action_surge.max": 1,
+          "resources.action_surge.left": 1,
+          "resources.relentless.max": 1,
+          "resources.relentless.left": 1,
           "inspiration": 1,
           "hit_dice_left": 5
         },
@@ -11386,7 +12039,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "ac",
+            "target": "stats.ac.value",
             "op": "add",
             "value": {
               "expr": "2"
@@ -11418,7 +12071,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "ac",
+            "target": "stats.ac.value",
             "op": "add",
             "value": {
               "expr": "1"
@@ -11478,7 +12131,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "speed",
+            "target": "stats.speed.value",
             "op": "mul",
             "value": {
               "expr": "2"
@@ -11530,7 +12183,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "ac",
+            "target": "stats.ac.value",
             "op": "add",
             "value": {
               "expr": "2"
@@ -12763,10 +13416,10 @@
         "hp_temp": 0,
         "hit_dice_left": 5,
         "crit_from": 19,
-        "second_wind_max": 1,
-        "second_wind_left": 1,
-        "action_surge_max": 1,
-        "action_surge_left": 1,
+        "resources.second_wind.max": 1,
+        "resources.second_wind.left": 1,
+        "resources.action_surge.max": 1,
+        "resources.action_surge.left": 1,
         "gp": 120,
         "sp": 40
       },
@@ -12835,11 +13488,11 @@
         "hp_max": 33,
         "hp_current": 33,
         "hit_dice_left": 5,
-        "slots_1": 4,
-        "slots_2": 3,
-        "slots_3": 2,
-        "sorcery_max": 5,
-        "sorcery_left": 5,
+        "slots.1.left": 4,
+        "slots.2.left": 3,
+        "slots.3.left": 2,
+        "resources.sorcery.max": 5,
+        "resources.sorcery.left": 5,
         "gp": 95
       },
       "has": [
@@ -12926,11 +13579,11 @@
         "hp_max": 38,
         "hp_current": 38,
         "hit_dice_left": 5,
-        "slots_1": 4,
-        "slots_2": 3,
-        "slots_3": 2,
-        "channel_max": 1,
-        "channel_left": 1,
+        "slots.1.left": 4,
+        "slots.2.left": 3,
+        "slots.3.left": 2,
+        "resources.channel.max": 1,
+        "resources.channel.left": 1,
         "gp": 60
       },
       "has": [
@@ -13010,8 +13663,8 @@
         "hp_max": 33,
         "hp_current": 33,
         "hit_dice_left": 5,
-        "luck_max": 3,
-        "luck_left": 3,
+        "resources.luck.max": 3,
+        "resources.luck.left": 3,
         "gp": 150
       },
       "has": [

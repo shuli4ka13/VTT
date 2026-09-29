@@ -185,7 +185,7 @@ function fromArgs(key: string, ctx: RefContext): unknown {
   if ('expr' in arg) {
     const source = String((arg as AnyRef).expr);
     const decl = (ctx.paramDefs || []).find(p => p.key === key);
-    if (decl?.kind === 'tag') return lonelyField(arg) ?? evaluate(source, inRecord(ctx));
+    if (decl?.kind === 'tag') return lonelyField(arg, ctx.pass.system) ?? evaluate(source, inRecord(ctx));
     return !decl || decl.kind === 'number' ? recordNamesInline(source, ctx) : evaluate(source, inRecord(ctx));
   }
   throw new EngineError(
@@ -341,7 +341,7 @@ function evaluate(
   });
 }
 
-export function lonelyField(ref: unknown): string | null {
+export function lonelyField(ref: unknown, system?: System): string | null {
   if (!ref || typeof ref !== 'object') return null;
   const r = ref as AnyRef;
   if ('tag' in r) return String(r.tag);
@@ -350,7 +350,7 @@ export function lonelyField(ref: unknown): string | null {
   if (!exact) return null;
   const owned = ownerOf(exact[1]!);
   const name = owned ? owned.rest : exact[1]!;
-  return name.includes('.') ? null : name;
+  return !name.includes('.') || system?.fields.some(f => f.tag === name) ? name : null;
 }
 
 function senderValue(name: string, ctx: RefContext): unknown {

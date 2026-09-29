@@ -34,8 +34,10 @@ export const isLive = (table: Table | undefined, column: TableColumn, row: Table
 export const liveColumnsOf = (table: Table | undefined): TableColumn[] =>
   (onSheet(table) ? table!.columns ?? [] : []).filter(column => (table!.rows ?? []).some(row => isLive(table, column, row)));
 
-export const viewOf = (table: Table | undefined, column: string): TableViewColumn =>
-  table?.sheet?.columns?.[column] ?? {};
+export const viewOf = (table: Table | undefined, column: string, row?: TableRow): TableViewColumn => ({
+  ...table?.sheet?.columns?.[column],
+  ...(row ? table?.sheet?.cells?.[`${rowKeyOf(row)}.${column}`] : undefined),
+});
 
 function token(system: System, table: Table, row: TableRow, name: string): string {
   if (name === 'key') return rowKeyOf(row);
@@ -120,16 +122,16 @@ function rowRefs(system: System, tableId: string, row: TableRow, value: unknown)
 export const defaultLabel = (column: TableColumn, first: boolean): string =>
   (first ? '{label}' : `${column.label || column.key}: {label}`);
 
-function storedOf(system: System, table: Table, row: TableRow, column: TableColumn, start: unknown): Loose {
+function storedOf(system: System, tableId: string, table: Table, row: TableRow, column: TableColumn, start: unknown): Loose {
   const kind = column.kind ?? 'number';
   const type = STORED.includes(kind) ? kind : 'text';
-  return deep(system, table, row, {
+  return rowRefs(system, tableId, row, deep(system, table, row, {
     kind: 'stored', type,
     ...(column.from && type === 'choice' ? { from: column.from } : {}),
     default: start ?? ZERO[type],
     ...(column.min !== undefined ? { min: column.min } : {}),
     ...(column.max !== undefined ? { max: column.max } : {}),
-  }) as Loose;
+  })) as Loose;
 }
 
 export function tableFields(system: System, tableId: string): Field[] {
@@ -141,11 +143,11 @@ export function tableFields(system: System, tableId: string): Field[] {
     for (const [at, column] of columns.entries()) {
       const source = cellSource(column, row);
       if (source.kind === 'value') continue;
-      const view = viewOf(table, column.key);
+      const view = viewOf(table, column.key, row);
       const tag = addressOf(tableId, row, column.key);
       const value = source.kind === 'formula'
         ? { kind: 'formula', expr: withRow(system, tableId, row, source.expr) }
-        : storedOf(system, table, row, column, view.start);
+        : storedOf(system, tableId, table, row, column, view.start);
       const group = row.group ?? (view.group !== undefined ? fill(system, table, row, view.group) : table.sheet?.group);
       const roll = view.roll ? rowRefs(system, tableId, row, deep(system, table, row, view.roll)) as Loose : undefined;
       out.push({

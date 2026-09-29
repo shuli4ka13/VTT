@@ -74,7 +74,9 @@ function table(id: string, t: Loose, map: Map<string, string>): Loose {
   const result: Loose = { ...t, columns: out, rows };
   if (!t.columns) delete result.columns;
   if (!t.rows) delete result.rows;
+  if (t.sheet?.cells) view.cells = t.sheet.cells;
   if (placed) result.sheet = view;
+  else delete result.sheet;
   return result;
 }
 
