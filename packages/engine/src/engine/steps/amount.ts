@@ -1,6 +1,6 @@
 import { rollNotation, multiplyNotation } from '../dice.ts';
 import type { NotationRoll } from '../dice.ts';
-import { dieConstant } from '../lead-die.ts';
+import { dieText } from '../lead-die.ts';
 import { packRef, resolveRef, resolveOptionalNumber } from '../refs.ts';
 import { EngineError } from '../errors.ts';
 import type { StepData, StepContext } from './index.ts';
@@ -43,15 +43,7 @@ export function traceLine(t: any) {
 
 function diceRef(ref: unknown, ctx: StepContext): unknown {
   if (!ref || typeof ref !== 'object' || !('constant' in ref)) return ref;
-  const key = String((ref as { constant: unknown }).constant);
-  const die = dieConstant(ctx.system, key);
-  const terms = die.dice ?? [];
-  const first = terms[0];
-  if (terms.length !== 1 || !first || typeof first.count === 'object') {
-    throw new EngineError(
-      `${who(ctx)}: «${die.label || key}» — составная кость, а шаг «число» кидает одну; сложный бросок делает шаг «проверка»`);
-  }
-  return { const: `${first.count ?? 1}d${first.sides}` };
+  return { const: dieText(ctx.system, String((ref as { constant: unknown }).constant)) };
 }
 
 export function pack(step: StepData, ctx: StepContext) {

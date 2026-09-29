@@ -1,4 +1,4 @@
-import { heldBy, sheetKindOf } from '../model/owned.ts';
+import { heldBy, sheetKindOf, kindOfRecord } from '../model/owned.ts';
 import { EngineError } from './errors.ts';
 import type {
   System, Sheet, Compendium, Effect, Modifier, Step,
@@ -85,7 +85,9 @@ export const allSteps = (system: System): Step[] =>
 
 export function grantedTo(system: System, sheet: Sheet, compendium: Compendium | null | undefined): string[] {
   const granted = new Set<string>([
-    ...(compendium ? heldBy(sheet, compendium).flatMap(({ record }) => record.grants ?? []) : []),
+    ...(compendium ? heldBy(sheet, compendium).flatMap(({ record }) => [
+      ...kindOfRecord(system, record)?.grants ?? [], ...record.grants ?? [],
+    ]) : []),
     ...sheetKindOf(system, sheet)?.grants ?? [],
     ...system.grants ?? [],
   ]);

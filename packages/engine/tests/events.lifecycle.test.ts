@@ -1,4 +1,5 @@
-import { group, test, eq, deepEq, throws } from './harness.ts';
+import { group, test, eq, deepEq, throws, ok } from './harness.ts';
+import { grantedTo } from '../src/engine/effects.ts';
 import { exchange } from '../src/events/exchange.ts';
 import { fireLifecycle, lifecycleChanges } from '../src/events/lifecycle.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
@@ -102,5 +103,19 @@ group('подписка на чужое: «на мне появилось» и �
 
   test('слышит и выданное вещью', () => {
     eq(settle(hero(['сторож']), hero(['сторож'], [{ of: 'топор' }])).замечено, 1);
+  });
+});
+
+group('выдача у типа предмета', () => {
+  test('надел вещь — висит то, что выдаёт её тип, снял — ушло', () => {
+    const system = {
+      id: 's', name: 's', fields: [{ tag: 'ac', label: 'КБ', value: { kind: 'stored', type: 'number', default: 10 } }],
+      effects: { shield_rule: { label: 'Щит', activation: 'passive', modifiers: [{ kind: 'value', target: 'ac', op: 'add', value: 2 }] } },
+      records: { shield: { kind: 'item', label: 'Щит', grants: ['shield_rule'] } },
+    } as unknown as System;
+    const compendium = { records: [{ id: 'buckler', rk: 'shield', label: 'Баклер' }] } as Compendium;
+    const worn = { id: 'h', systemId: 's', name: 'h', values: {}, has: [{ of: 'buckler' }], effects: [] } as Sheet;
+    ok(grantedTo(system, worn, compendium).includes('shield_rule'));
+    ok(!grantedTo(system, { ...worn, has: [{ of: 'buckler', off: true }] }, compendium).includes('shield_rule'));
   });
 });

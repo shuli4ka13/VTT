@@ -1,3 +1,4 @@
+import { dieText } from './lead-die.ts';
 import { compile } from '../formula/index.ts';
 import type { Tools, Value } from '../formula/index.ts';
 import { EngineError } from './errors.ts';
@@ -38,7 +39,7 @@ export interface RefContext {
   recordScope?: boolean;
 }
 
-const FORMS = ['expr', 'const', 'param', 'prop', 'tag'];
+const FORMS = ['expr', 'const', 'param', 'prop', 'tag', 'constant'];
 
 type AnyRef = Record<string, unknown>;
 
@@ -54,6 +55,7 @@ export function packRef(ref: unknown, ctx: RefContext): unknown {
   if ('param' in r) return packParam(String(r.param), Boolean(r.optional), ctx);
   if ('prop' in r) return packProp(String(r.prop), Boolean(r.optional), ctx);
   if ('tag' in r) return { tag: r.tag };
+  if ('constant' in r) return { const: dieText(ctx.pass.system, String(r.constant)) };
 
   return unknownForm(r, ctx);
 }

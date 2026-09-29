@@ -126,3 +126,14 @@ function tallyOf(entries: RolledDie[]) {
     atMin: entries.filter(e => e.value === 1).length,
   };
 }
+
+export function dieText(system: System, name: string): string {
+  const die = dieConstant(system, name);
+  const terms = die.dice ?? [];
+  const first = terms[0];
+  if (terms.length !== 1 || !first || typeof first.count === 'object') {
+    throw new EngineError(
+      `«${die.label || name}» — составная кость, её бросает проверка, а числом её не записать`);
+  }
+  return `${first.count ?? 1}d${first.sides}`;
+}
