@@ -160,10 +160,10 @@ export function pack(step: StepData, ctx: StepContext) {
       `${ctx.owner || 'правило'}: порогу нужна кость — слот roll.die ссылается на константу системы, например { constant: 'lead_die' }`);
   }
   const base = {
-    side: step.side || 'source',
+    side: step.side || 'sender',
     continueOn: step.continueOn || 'success',
     successWhen: step.successWhen || 'atLeast',
-    versus: packVersus(step.versus, step.side || 'source', ctx),
+    versus: packVersus(step.versus, step.side || 'sender', ctx),
     ...(lonelyField(step.versus) ? { against: lonelyField(step.versus) } : {}),
 
     ...(step.degrees && step.degrees.table ? { degrees: step.degrees } : {}),

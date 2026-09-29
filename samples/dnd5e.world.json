@@ -5526,8 +5526,7 @@
             "mode": "apply",
             "effect": {
               "const": "hidden"
-            },
-            "side": "source"
+            }
           }
         ],
         "self": [

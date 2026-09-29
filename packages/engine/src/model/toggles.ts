@@ -42,7 +42,7 @@ const amountsAfterCheck = (steps: Step[]): { check: Step; amount: Step }[] => {
   for (const step of steps) {
     const s = step as Record<string, unknown>;
     if (step.type === 'threshold') {
-      check = (s.side ?? 'source') === 'source' && step.id ? step : null;
+      check = (s.side ?? 'sender') === 'sender' && step.id ? step : null;
       continue;
     }
     if (step.type !== 'amount' || !check) continue;

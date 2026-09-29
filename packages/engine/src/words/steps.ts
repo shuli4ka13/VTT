@@ -26,8 +26,8 @@ export const STEP_WORDS = {
       },
       { key: 'roll.tags', label: 'Метки броска', kind: 'roll', allow: [] },
       {
-        key: 'side', label: 'Кто бросает', kind: 'choice', options: ['source', 'target'], fallback: 'source',
-        choice: [['source', 'отправитель — это атака'], ['target', 'цель — это спасбросок']],
+        key: 'side', label: 'Кто бросает', kind: 'choice', options: ['sender', 'target'], fallback: 'sender',
+        choice: [['sender', 'отправитель — это атака'], ['target', 'цель — это спасбросок']],
       },
       {
         key: 'successWhen', label: 'Успех, если бросок', kind: 'choice', fallback: 'atLeast',

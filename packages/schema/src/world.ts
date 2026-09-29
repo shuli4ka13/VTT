@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const refSide = z.enum(['source', 'target']);
+export const refSide = z.enum(['sender', 'target']);
 
 export const formula = z.object({ expr: z.string() }).strict();
 

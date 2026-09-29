@@ -398,7 +398,7 @@ function features() {
       steps: [
         { id: 'sneak', type: 'threshold', roll: { die: DIE, bonus: { expr: '@stealth' }, tags: ['проверка', 'ловкость', 'скрытность'] },
           versus: { tag: 'passive_perception' }, successWhen: 'atLeast', continueOn: 'success' },
-        { type: 'status', mode: 'apply', effect: { const: 'hidden' }, side: 'source' },
+        { type: 'status', mode: 'apply', effect: { const: 'hidden' } },
       ],
     }),
     hidden: passive('Прячется', 'Тебя не видят: атаки по цели, которая тебя не видит, идут с преимуществом.',
