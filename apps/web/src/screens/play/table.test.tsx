@@ -60,7 +60,9 @@ describe('выбор целей на столе', () => {
 
     fireEvent.click(token('Арвен'));
     expect(token('Арвен').className).toContain('token--from');
-    expect(screen.getByText(/выберите цель/)).toBeTruthy();
+    expect(screen.getByText(/на себя — или выберите цель/)).toBeTruthy();
+    const act = document.querySelector('.card .btn--primary') as HTMLButtonElement | null;
+    if (act) expect(act.disabled, 'без цели действие идёт на себя').toBe(false);
 
     fireEvent.click(token('Мирра'));
     expect(token('Мирра').className).toContain('token--to');

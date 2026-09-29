@@ -298,7 +298,7 @@ function Actions({ room, sender, targets, onError, onClear }: {
         title={`${sender.name} действует`}
         badge={targets.length
           ? <span className="inline inline--tight">{targets.map(sheet => <Chip key={sheet.id}>по {sheet.name}</Chip>)}</span>
-          : <span className="faint">выберите цель — можно несколько</span>}
+          : <span className="faint">на себя — или выберите цель, можно несколько</span>}
         actions={<Button size="sm" variant="ghost" onClick={onClear}>сбросить выбор</Button>}
       />
       {edits.length && available.length ? (
@@ -328,12 +328,12 @@ function Actions({ room, sender, targets, onError, onClear }: {
                 compendium={room.compendium}
                 actionId={action.id}
                 label={action.label}
-                disabled={!targets.length || Boolean(room.pending)}
+                disabled={Boolean(room.pending)}
                 onAct={request => {
                   onError(null);
                   tableSocket.act({
                     roomId: room.id, actionId: request.actionId,
-                    fromId: sender.id, toId: targets[0]!.id,
+                    fromId: sender.id, toId: (targets[0] ?? sender).id,
                     ...(targets.length > 1 ? { toIds: targets.map(sheet => sheet.id) } : {}),
                     ...(request.inputs ? { inputs: request.inputs } : {}),
                     ...(mine.length ? { edits: mine } : {}),
