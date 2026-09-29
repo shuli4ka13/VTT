@@ -2,6 +2,7 @@ import { choiceTables } from '@vtt/engine/model/tables';
 import { useWorld, freeId, slugOf, useBook } from '../../store/world.ts';
 import { useUsage, usersOf } from './usage.ts';
 import { LiveValue } from './live-value.tsx';
+import { FormulaField } from '../../ui/formula-field.tsx';
 import { optionsOf, choiceTableOf } from '@vtt/engine/model/lists';
 import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
 import { FieldPreview } from './field-preview.tsx';
@@ -297,6 +298,7 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
               <Field label="Не ниже" hint="Пусто — границы нет. Число или формула."
                 error={boundProblem(field.value.min, system)}>
                 <BoundInput
+                  system={system} where={`${field.label} · не ниже`}
                   value={field.value.min}
                   invalid={Boolean(boundProblem(field.value.min, system))}
                   onChange={min => edit(draft => {
@@ -307,6 +309,7 @@ function FieldEditor({ field, system }: { field: FieldModel; system: System }) {
               <Field label="Не выше" hint="Потолок лечения — ссылка на поле максимума."
                 error={boundProblem(field.value.max, system)}>
                 <BoundInput
+                  system={system} where={`${field.label} · не выше`}
                   value={field.value.max}
                   invalid={Boolean(boundProblem(field.value.max, system))}
                   onChange={max => edit(draft => {
@@ -478,10 +481,12 @@ export function boundProblem(bound: number | string | undefined, system: System)
   }
 }
 
-function BoundInput({ value, invalid, onChange }: {
+function BoundInput({ value, invalid, onChange, system, where }: {
   value: number | string | undefined;
   invalid?: boolean;
   onChange: (next: number | string | undefined) => void;
+  system: System;
+  where: string;
 }) {
   const commit = (raw: string) => {
     const text = raw.trim();
@@ -489,12 +494,13 @@ function BoundInput({ value, invalid, onChange }: {
     onChange(/^-?\d+(\.\d+)?$/.test(text) ? Number(text) : text);
   };
   return (
-    <Input
+    <FormulaField
       value={value === undefined ? '' : String(value)}
-      mono
+      system={system}
+      where={where}
       invalid={invalid}
       placeholder="число или формула"
-      onChange={commit}
+      onCommit={commit}
     />
   );
 }

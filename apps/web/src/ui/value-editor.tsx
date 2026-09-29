@@ -4,6 +4,7 @@ import { recordsOf } from '@vtt/engine/model/owned';
 import { Input, NumInput, Select } from './primitives.tsx';
 import { MultiChoice } from './multi-choice.tsx';
 import { DiceProp } from './dice-prop.tsx';
+import { FormulaField } from './formula-field.tsx';
 
 export interface ValueType {
   kind?: ValueKind;
@@ -79,12 +80,8 @@ export function ValueEditor({ type, value, system, compendium, onlyWorn, except,
       />
     );
   }
-  return (
-    <Input
-      mono={kind === 'expr'}
-      placeholder={kind === 'expr' ? 'формула' : 'слово'}
-      value={String(value ?? '')}
-      onChange={onChange}
-    />
-  );
+  if (kind === 'expr') {
+    return <FormulaField value={String(value ?? '')} system={system} where="формула свойства" placeholder="формула" onCommit={onChange} />;
+  }
+  return <Input placeholder="слово" value={String(value ?? '')} onChange={onChange} />;
 }
