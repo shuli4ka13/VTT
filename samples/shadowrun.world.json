@@ -2306,7 +2306,6 @@
             "on": "*",
             "role": "sender",
             "phase": "before",
-            "ask": true,
             "claims": [
               "reroll_failures"
             ],
@@ -2334,7 +2333,8 @@
                 "targetModifiers": false
               }
             ],
-            "steps": []
+            "steps": [],
+            "confirm": true
           }
         ]
       },
@@ -2352,7 +2352,6 @@
             "on": "*",
             "role": "sender",
             "phase": "before",
-            "ask": true,
             "claims": [
               "push_edge"
             ],
@@ -2380,7 +2379,8 @@
                 "targetModifiers": false
               }
             ],
-            "steps": []
+            "steps": [],
+            "confirm": true
           }
         ]
       },

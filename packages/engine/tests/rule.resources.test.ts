@@ -252,7 +252,7 @@ group('наложенное помнит число, штрафная кость
       },
       парирование: {
         label: 'Парирование', activation: 'passive',
-        on: [{ on: '*', phase: 'before', ask: true, self: [
+        on: [{ on: '*', phase: 'before', confirm: true, self: [
           { type: 'compare', value: { expr: '@заряды' }, versus: { expr: '1' }, breakIf: 'less' },
           { type: 'apply', target: { tag: 'заряды' }, direction: 'subtract', value: { expr: '1' } },
         ], steps: [] }],

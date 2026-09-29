@@ -5557,7 +5557,6 @@
           "max": 1,
           "ends": "turn-end"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -5568,7 +5567,8 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "disengage": {
         "label": "Отход",
@@ -5640,7 +5640,6 @@
           "max": 1,
           "ends": "turn-start"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "roll",
@@ -5650,7 +5649,8 @@
             ],
             "edit": "advantage"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "help": {
         "label": "Помощь",
@@ -5686,7 +5686,6 @@
           "ends": "turn-start",
           "whose": "source"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "roll",
@@ -5704,7 +5703,8 @@
             ],
             "edit": "advantage"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "spend_hit_die": {
         "label": "Потратить кость хитов",
@@ -5773,7 +5773,6 @@
             "if": {
               "expr": "@hit.success"
             },
-            "ask": true,
             "self": [
               {
                 "type": "emit",
@@ -5799,7 +5798,8 @@
                   "const": "shield_up"
                 }
               }
-            ]
+            ],
+            "confirm": true
           }
         ]
       },
@@ -5816,7 +5816,6 @@
           {
             "on": "event:damage",
             "to": "other",
-            "ask": true,
             "self": [
               {
                 "type": "emit",
@@ -5888,7 +5887,8 @@
                   }
                 }
               }
-            ]
+            ],
+            "confirm": true
           }
         ]
       },
@@ -5908,7 +5908,6 @@
             "if": {
               "expr": "@hit.success"
             },
-            "ask": true,
             "self": [
               {
                 "type": "emit",
@@ -5924,7 +5923,8 @@
                   "const": "uncanny_up"
                 }
               }
-            ]
+            ],
+            "confirm": true
           }
         ]
       },
@@ -5945,7 +5945,6 @@
             "claims": [
               "advantage"
             ],
-            "ask": true,
             "self": [
               {
                 "type": "compare",
@@ -5970,7 +5969,8 @@
                 "targetModifiers": false
               }
             ],
-            "steps": []
+            "steps": [],
+            "confirm": true
           }
         ]
       },
@@ -5991,7 +5991,6 @@
             "claims": [
               "advantage"
             ],
-            "ask": true,
             "self": [
               {
                 "type": "compare",
@@ -6016,7 +6015,8 @@
                 "targetModifiers": false
               }
             ],
-            "steps": []
+            "steps": [],
+            "confirm": true
           }
         ]
       },
@@ -6038,8 +6038,8 @@
             "claims": [
               "bardic"
             ],
-            "ask": true,
-            "steps": []
+            "steps": [],
+            "confirm": true
           }
         ]
       },
@@ -6051,7 +6051,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "roll",
@@ -6107,7 +6106,8 @@
               }
             ]
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "charmed": {
         "label": "Очарован",
@@ -6117,8 +6117,8 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
-        "modifiers": []
+        "modifiers": [],
+        "reapply": "refresh"
       },
       "deafened": {
         "label": "Оглушён",
@@ -6128,8 +6128,8 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
-        "modifiers": []
+        "modifiers": [],
+        "reapply": "refresh"
       },
       "frightened": {
         "label": "Испуган",
@@ -6139,7 +6139,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "roll",
@@ -6195,7 +6194,8 @@
               }
             ]
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "grappled": {
         "label": "Схвачен",
@@ -6205,7 +6205,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -6216,7 +6215,8 @@
             },
             "stacking": "override"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "incapacitated": {
         "label": "Недееспособен",
@@ -6226,7 +6226,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [],
         "attach": [
           {
@@ -6236,7 +6235,8 @@
               "const": "concentration"
             }
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "invisible": {
         "label": "Невидим",
@@ -6246,7 +6246,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "roll",
@@ -6264,7 +6263,8 @@
             ],
             "edit": "disadvantage"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "paralyzed": {
         "label": "Парализован",
@@ -6274,7 +6274,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "roll",
@@ -6352,7 +6351,8 @@
               }
             ]
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "petrified": {
         "label": "Окаменел",
@@ -6362,7 +6362,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "roll",
@@ -6411,7 +6410,8 @@
         ],
         "grants": [
           "incapacitated"
-        ]
+        ],
+        "reapply": "refresh"
       },
       "poisoned": {
         "label": "Отравлен",
@@ -6421,7 +6421,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "roll",
@@ -6439,7 +6438,8 @@
             ],
             "edit": "disadvantage"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "prone": {
         "label": "Лежит",
@@ -6449,7 +6449,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "roll",
@@ -6467,7 +6466,8 @@
             ],
             "edit": "disadvantage"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "restrained": {
         "label": "Опутан",
@@ -6477,7 +6477,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -6551,7 +6550,8 @@
               }
             ]
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "stunned": {
         "label": "Ошеломлён",
@@ -6561,7 +6561,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "roll",
@@ -6592,7 +6591,8 @@
         ],
         "grants": [
           "incapacitated"
-        ]
+        ],
+        "reapply": "refresh"
       },
       "unconscious": {
         "label": "Без сознания",
@@ -6602,7 +6602,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "roll",
@@ -6651,7 +6650,8 @@
               "const": "prone"
             }
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "stable": {
         "label": "Стабилен",
@@ -6661,7 +6661,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -6672,7 +6671,8 @@
             },
             "stacking": "override"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "dead": {
         "label": "Мёртв",
@@ -6682,7 +6682,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -6693,7 +6692,8 @@
             },
             "stacking": "override"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "dodging": {
         "label": "Уклоняется",
@@ -6705,7 +6705,6 @@
           "max": 1,
           "ends": "turn-start"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "roll",
@@ -6724,7 +6723,8 @@
             ],
             "edit": "advantage"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "reckless": {
         "label": "Безрассуден",
@@ -6736,7 +6736,6 @@
           "max": 1,
           "ends": "turn-start"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "roll",
@@ -6754,7 +6753,8 @@
             ],
             "edit": "advantage"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "raging": {
         "label": "В ярости",
@@ -6765,7 +6765,6 @@
           "kind": "rounds",
           "max": 10
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -6798,7 +6797,8 @@
             ],
             "edit": "advantage"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "shield_up": {
         "label": "Под щитом",
@@ -6810,7 +6810,6 @@
           "max": 1,
           "ends": "turn-start"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -6821,7 +6820,8 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "uncanny_up": {
         "label": "Невероятное уклонение",
@@ -6831,7 +6831,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -6856,7 +6855,8 @@
               }
             ]
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "blessed": {
         "label": "Благословлён",
@@ -6866,7 +6866,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "roll",
@@ -6884,7 +6883,8 @@
             ],
             "edit": "bless"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "baned": {
         "label": "Под порчей",
@@ -6894,7 +6894,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "roll",
@@ -6912,7 +6911,8 @@
             ],
             "edit": "bane"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "guided": {
         "label": "Указание",
@@ -6922,7 +6922,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "roll",
@@ -6932,7 +6931,8 @@
             ],
             "edit": "guidance"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "resisted": {
         "label": "Сопротивление",
@@ -6942,7 +6942,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "roll",
@@ -6952,7 +6951,8 @@
             ],
             "edit": "guidance"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "hasted": {
         "label": "Ускорен",
@@ -6962,7 +6962,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -6991,7 +6990,8 @@
             ],
             "edit": "advantage"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "slowed": {
         "label": "Замедлен",
@@ -7001,7 +7001,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -7071,7 +7070,8 @@
               }
             ]
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "lit": {
         "label": "Подсвечен",
@@ -7081,7 +7081,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "roll",
@@ -7091,7 +7090,8 @@
             ],
             "edit": "advantage"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "blurred": {
         "label": "Размыт",
@@ -7101,7 +7101,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "roll",
@@ -7111,7 +7110,8 @@
             ],
             "edit": "disadvantage"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "mage_armored": {
         "label": "Доспех мага",
@@ -7121,7 +7121,6 @@
         "duration": {
           "kind": "scene"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -7132,7 +7131,8 @@
             },
             "stacking": "max"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "aided": {
         "label": "Подмога",
@@ -7142,7 +7142,6 @@
         "duration": {
           "kind": "scene"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -7153,7 +7152,8 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "fire_resistance": {
         "label": "Сопротивление огню",
@@ -7163,7 +7163,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -7177,7 +7176,8 @@
               "огонь"
             ]
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "poison_resistance": {
         "label": "Сопротивление яду",
@@ -7187,7 +7187,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -7201,7 +7200,8 @@
               "яд"
             ]
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "stoneskin": {
         "label": "Каменная кожа",
@@ -7211,7 +7211,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -7230,7 +7229,8 @@
               "магический"
             ]
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "fire_vulnerable": {
         "label": "Уязвимость к огню",
@@ -7240,7 +7240,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -7254,7 +7253,8 @@
               "огонь"
             ]
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "poison_immune": {
         "label": "Иммунитет к яду",
@@ -7264,7 +7264,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -7278,7 +7277,8 @@
               "яд"
             ]
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "extra_attack": {
         "label": "Дополнительная атака",
@@ -7288,7 +7288,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -7299,7 +7298,8 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "improved_critical": {
         "label": "Улучшенный критический удар",
@@ -7309,7 +7309,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -7320,7 +7319,8 @@
             },
             "stacking": "override"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "style_defense": {
         "label": "Боевой стиль: оборона",
@@ -7330,7 +7330,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -7341,7 +7340,8 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "style_dueling": {
         "label": "Боевой стиль: дуэлянт",
@@ -7351,7 +7351,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -7371,7 +7370,8 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "style_archery": {
         "label": "Боевой стиль: стрельба",
@@ -7381,7 +7381,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -7392,7 +7391,8 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "unarmored_barbarian": {
         "label": "Защита без доспехов: варвар",
@@ -7402,7 +7402,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -7413,7 +7412,8 @@
             },
             "stacking": "max"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "unarmored_monk": {
         "label": "Защита без доспехов: монах",
@@ -7423,7 +7423,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -7434,7 +7433,8 @@
             },
             "stacking": "max"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "danger_sense": {
         "label": "Чувство опасности",
@@ -7444,7 +7444,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "roll",
@@ -7455,7 +7454,8 @@
             ],
             "edit": "advantage"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "feral_instinct": {
         "label": "Дикий инстинкт",
@@ -7465,7 +7465,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "roll",
@@ -7475,7 +7474,8 @@
             ],
             "edit": "advantage"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "reliable_talent": {
         "label": "Надёжный талант",
@@ -7485,7 +7485,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "roll",
@@ -7495,7 +7494,8 @@
             ],
             "edit": "reliable"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "halfling_lucky": {
         "label": "Везучий",
@@ -7505,14 +7505,14 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "roll",
             "target": "roll:any",
             "edit": "lucky"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "darkvision_60": {
         "label": "Тёмное зрение",
@@ -7522,7 +7522,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -7533,7 +7532,8 @@
             },
             "stacking": "override"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "dwarven_resilience": {
         "label": "Дварфская стойкость",
@@ -7543,7 +7543,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -7557,7 +7556,8 @@
               "яд"
             ]
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "infernal_legacy": {
         "label": "Дьявольское наследие",
@@ -7567,7 +7567,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -7581,7 +7580,8 @@
               "огонь"
             ]
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "feat_alert": {
         "label": "Черта: бдительный",
@@ -7591,7 +7591,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -7602,7 +7601,8 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "feat_tough": {
         "label": "Черта: крепкий",
@@ -7612,7 +7612,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -7623,7 +7622,8 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "feat_mobile": {
         "label": "Черта: подвижный",
@@ -7633,7 +7633,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -7644,7 +7643,8 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "feat_observant": {
         "label": "Черта: наблюдательный",
@@ -7654,7 +7654,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -7665,7 +7664,8 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "feat_war_caster": {
         "label": "Черта: боевой заклинатель",
@@ -7675,7 +7675,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "roll",
@@ -7686,7 +7685,8 @@
             ],
             "edit": "advantage"
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "ring_protection": {
         "label": "Кольцо защиты",
@@ -7696,7 +7696,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "modifiers": [
           {
             "kind": "value",
@@ -7718,7 +7717,8 @@
               "expr": "1"
             }
           }
-        ]
+        ],
+        "reapply": "refresh"
       },
       "concentration": {
         "label": "Концентрация",

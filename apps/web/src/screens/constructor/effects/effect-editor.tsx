@@ -11,17 +11,10 @@ import { Chain, CostPick, type Lane } from './chain.tsx';
 import { BlockPick } from '../block-pick.tsx';
 import { Extras } from './cards/extras.tsx';
 import { ParamsEditor } from './params-editor.tsx';
-import { launchOf, activationFor } from '@vtt/engine/model/effect-kinds';
+import { launchOf, activationFor, DURATIONS, REAPPLY } from '@vtt/engine/model/effect-kinds';
 import type { System, Effect, Step } from '@vtt/schema';
 
-const DURATIONS = [
-  ['permanent', 'пока не снимут'],
-  ['uses', 'на N срабатываний'],
-  ['rounds', 'на N раундов боя'],
-  ['turns', 'на N ходов'],
-  ['combat', 'до конца боя'],
-  ['scene', 'до конца сцены'],
-] as const;
+const DURATION_OPTIONS = Object.entries(DURATIONS).map(([key, word]) => [key, word.label] as const);
 
 const COUNTED = new Set(['uses', 'rounds', 'turns']);
 
@@ -35,11 +28,7 @@ const WHOSE = [
   ['source', 'того, кто наложил'],
 ] as const;
 
-const STACKING = [
-  ['ignore', 'второй раз ничего не делает'],
-  ['refresh', 'обновляется'],
-  ['stack', 'копится'],
-] as const;
+const REAPPLY_OPTIONS = (Object.keys(REAPPLY) as (keyof typeof REAPPLY)[]).map(key => [key, REAPPLY[key].label] as const);
 
 const fromBase = (base: Effect): string => {
   const parts: string[] = [];
@@ -163,7 +152,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
             items={[{
               key: 'duration', label: 'сколько висит', on: !!effect.duration || !!effect.bond,
               add: () => edit(draft => { draft.duration = { kind: 'permanent' }; }),
-              drop: () => edit(draft => { delete draft.duration; delete draft.bond; delete draft.stacking; }),
+              drop: () => edit(draft => { delete draft.duration; delete draft.bond; delete draft.reapply; }),
               node: <Lifetime effect={effect} system={system} id={id} edit={edit} />,
             }, {
               key: 'grants', label: 'что входит в него', on: !!effect.grants,
@@ -309,7 +298,7 @@ function Handlers({ id, effect, system, edit }: {
                 if (!draft.on.length) delete draft.on;
               })}
             />
-            {handler.ask ? (
+            {handler.confirm ? (
               <SelfTrack
                 effect={carrier} system={system} edit={editCarrier} onMoveLane={moveLane}
                 title="Плата — списывается, если игрок согласился" lead="Чем платит:"
@@ -351,7 +340,7 @@ function Lifetime({ effect, system, id, edit }: {
       <Field label="Сколько висит">
         <Select
           value={held ? 'held' : kind}
-          options={[...DURATIONS, ['held', 'пока я держу']] as never}
+          options={[...DURATION_OPTIONS, ['held', 'пока я держу']] as never}
           onChange={next => edit(draft => {
             if (next === 'held') { draft.bond = true; draft.duration = { kind: 'permanent' }; return; }
             delete draft.bond;
@@ -410,9 +399,9 @@ function Lifetime({ effect, system, id, edit }: {
 
       <Field label="Если наложить второй раз">
         <Select
-          value={effect.stacking ?? 'ignore'}
-          options={STACKING}
-          onChange={next => edit(draft => { draft.stacking = next; })}
+          value={effect.reapply ?? 'ignore'}
+          options={REAPPLY_OPTIONS}
+          onChange={next => edit(draft => { draft.reapply = next; })}
         />
       </Field>
     </div>

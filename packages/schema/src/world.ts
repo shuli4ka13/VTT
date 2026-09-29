@@ -45,12 +45,12 @@ export const tag = z.string().min(1).refine(v => !v.includes(':'), {
   message: 'двоеточие в теге запрещено — им размечены выведенные мишени',
 });
 
-export const control = z.enum(['stepper', 'pips', 'toggle', 'ring', 'bar', 'die', 'choice']);
-
 export const fieldOption = z.object({
   value: z.union([z.number(), z.string(), z.boolean()]),
   label: z.string().min(1),
 });
+
+export const control = z.enum(['stepper', 'pips', 'toggle', 'ring', 'bar', 'die', 'choice']);
 
 export const rollSpec = z.object({
   die: z.object({ constant: z.string().min(1) }),
@@ -173,7 +173,7 @@ export const modifier = z.discriminatedUnion('kind', [valueModifier, rollModifie
 
 export const activation = z.enum(['manual', 'passive']);
 export const durationKind = z.enum(['permanent', 'uses', 'rounds', 'turns', 'combat', 'scene']);
-export const stacking = z.enum(['ignore', 'refresh', 'stack']);
+export const reapply = z.enum(['ignore', 'refresh', 'stack']);
 
 export const ask = z.object({
   by: z.enum(['actor', 'gm']).optional(),
@@ -212,7 +212,7 @@ export const handler = z.object({
   on: z.string(),
   role: z.enum(['target', 'sender']).optional(),
   phase: z.enum(['before', 'after']).optional(),
-  ask: z.boolean().optional(),
+  confirm: z.boolean().optional(),
   to: z.enum(['self', 'other']).optional(),
   if: guard.nullable().optional(),
   claims: z.array(z.string().min(1)).optional(),
@@ -234,7 +234,7 @@ export const effect = z.object({
     ends: z.enum(['turn-end', 'turn-start']).optional(),
     whose: z.enum(['own', 'source']).optional(),
   }).optional(),
-  stacking: stacking.optional(),
+  reapply: reapply.optional(),
   params: z.array(param).optional(),
   steps: z.array(step).optional(),
 
@@ -363,7 +363,7 @@ export type TableRow = z.infer<typeof tableRow>;
 export type TableKey = z.infer<typeof tableKey>;
 export type Activation = z.infer<typeof activation>;
 export type DurationKind = z.infer<typeof durationKind>;
-export type Stacking = z.infer<typeof stacking>;
+export type Reapply = z.infer<typeof reapply>;
 export type StoredValue = z.infer<typeof storedValue>;
 export type Field = z.infer<typeof field>;
 export type FieldValue = z.infer<typeof fieldValue>;

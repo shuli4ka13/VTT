@@ -506,7 +506,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "stacking": "refresh",
         "description": "Помеха на броски атаки.",
         "modifiers": [
           {
@@ -519,7 +518,8 @@
           }
         ],
         "steps": [],
-        "group": "Состояния"
+        "group": "Состояния",
+        "reapply": "refresh"
       },
       "stoneskin": {
         "label": "Каменная кожа",
@@ -602,7 +602,6 @@
         "on": [
           {
             "on": "*",
-            "ask": true,
             "phase": "before",
             "self": [
               {
@@ -645,7 +644,8 @@
                   "const": "shield_up"
                 }
               }
-            ]
+            ],
+            "confirm": true
           }
         ],
         "group": "Реакции"
@@ -685,7 +685,6 @@
         "on": [
           {
             "on": "*",
-            "ask": true,
             "role": "sender",
             "phase": "before",
             "if": {
@@ -706,7 +705,8 @@
                 },
                 "targetModifiers": false
               }
-            ]
+            ],
+            "confirm": true
           }
         ],
         "group": "Реакции"
@@ -1197,7 +1197,6 @@
         "on": [
           {
             "on": "event:damage",
-            "ask": true,
             "to": "other",
             "self": [
               {
@@ -1282,7 +1281,8 @@
                   }
                 }
               }
-            ]
+            ],
+            "confirm": true
           }
         ],
         "group": "Реакции"

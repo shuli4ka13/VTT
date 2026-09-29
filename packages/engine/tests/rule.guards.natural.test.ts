@@ -60,12 +60,12 @@ group('три вида запуска', () => {
     eq(launchOf({ activation: 'manual' }).kind, 'manual');
     eq(launchOf({ activation: 'passive' }).kind, 'passive');
     const triggered = launchOf({ activation: 'passive' , on: [{ on: '', to: 'other', steps: [] }] });
-    eq(triggered.kind, 'auto'); eq(triggered.ask, false); eq(triggered.moment, 'after');
-    const reaction = launchOf({ activation: 'passive' , on: [{ on: '', phase: 'before', ask: true, steps: [] }] });
-    eq(reaction.kind, 'auto'); eq(reaction.ask, true); eq(reaction.moment, 'before');
+    eq(triggered.kind, 'auto'); eq(triggered.confirm, false); eq(triggered.moment, 'after');
+    const reaction = launchOf({ activation: 'passive' , on: [{ on: '', phase: 'before', confirm: true, steps: [] }] });
+    eq(reaction.kind, 'auto'); eq(reaction.confirm, true); eq(reaction.moment, 'before');
     eq(activationFor(triggered), 'passive');
     eq(activationFor(reaction), 'passive');
-    eq(activationFor({ kind: 'manual', moment: 'after', ask: false }), 'manual');
+    eq(activationFor({ kind: 'manual', moment: 'after', confirm: false }), 'manual');
     ok(launchOf(undefined).kind === 'manual');
   });
 });

@@ -264,7 +264,7 @@ group('шаг «состояние»', () => {
 
   const withStacking = stacking => ({
     ...SYS,
-    effects: { ...SYS.effects, poisoned: { ...SYS.effects.poisoned, stacking } },
+    effects: { ...SYS.effects, poisoned: { ...SYS.effects.poisoned, reapply: stacking } },
   });
   const twice = sys => run([
     { type: 'status', effect: { const: 'poisoned' } },

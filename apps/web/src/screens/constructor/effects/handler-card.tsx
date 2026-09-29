@@ -41,24 +41,24 @@ const SEED_NAMES = new Map([['worn.carry', 'запомненное число']]
 export const momentOf = (handler: Handler): Moment => {
   const before = handler.phase === 'before';
   const sender = handler.role === 'sender';
-  if (handler.ask) return sender ? 'ask-sender' : before ? 'ask-target' : 'ask-after';
+  if (handler.confirm) return sender ? 'ask-sender' : before ? 'ask-target' : 'ask-after';
   if (sender) return 'after-out';
   return before ? 'before-in' : 'after-in';
 };
 
-const SHAPE: Record<Moment, Pick<Handler, 'role' | 'phase' | 'ask'>> = {
+const SHAPE: Record<Moment, Pick<Handler, 'role' | 'phase' | 'confirm'>> = {
   'after-in': {},
   'after-out': { role: 'sender' },
   'before-in': { phase: 'before' },
-  'ask-target': { phase: 'before', ask: true },
-  'ask-sender': { role: 'sender', phase: 'before', ask: true },
-  'ask-after': { ask: true },
+  'ask-target': { phase: 'before', confirm: true },
+  'ask-sender': { role: 'sender', phase: 'before', confirm: true },
+  'ask-after': { confirm: true },
 };
 
 const applyMoment = (draft: Handler, moment: Moment): void => {
-  delete draft.role; delete draft.phase; delete draft.ask;
+  delete draft.role; delete draft.phase; delete draft.confirm;
   Object.assign(draft, SHAPE[moment]);
-  if (!draft.on && SHAPE[moment].ask) draft.on = '*';
+  if (!draft.on && SHAPE[moment].confirm) draft.on = '*';
   if (moment === 'before-in' || moment === 'ask-target' || moment === 'ask-sender') delete draft.to;
   if (moment !== 'ask-sender') delete draft.claims;
 };
@@ -72,7 +72,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
   onRemove: () => void;
 }) {
   const moment = momentOf(handler);
-  const asks = handler.ask === true;
+  const asks = handler.confirm === true;
   const listened = handler.on;
   const anyAction = !listened || listened === '*';
   const isMoment = [MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX].some(prefix => listened?.startsWith(prefix));

@@ -1,24 +1,9 @@
-export const ACTIVATIONS = {
-  manual: {
-    label: 'Кнопкой',
-    icon: '⚔',
-    hint: 'Жмёшь сам или зовёт другой эффект: цепочка шагов.',
-    payload: 'steps',
-  },
-  passive: {
-    label: 'Висит',
-    icon: '✦',
-    hint: 'Висит на листе: правит цифры и броски, отзывается на то, что случилось.',
-    payload: 'modifiers',
-  },
-};
-
 export type LaunchKind = 'manual' | 'passive' | 'auto';
 
 export interface Launch {
   kind: LaunchKind;
   moment: 'before' | 'after';
-  ask: boolean;
+  confirm: boolean;
 }
 
 export const LAUNCHES: Record<LaunchKind, { label: string; hint: string }> = {
@@ -30,14 +15,14 @@ export const LAUNCHES: Record<LaunchKind, { label: string; hint: string }> = {
 type Launchable = {
   activation?: string | null;
   modifiers?: unknown[] | null;
-  on?: { phase?: string; ask?: boolean }[] | null;
+  on?: { phase?: string; confirm?: boolean }[] | null;
 } | null | undefined;
 
 export function launchOf(effect: Launchable): Launch {
-  if ((effect?.activation ?? 'manual') !== 'passive') return { kind: 'manual', moment: 'after', ask: false };
+  if ((effect?.activation ?? 'manual') !== 'passive') return { kind: 'manual', moment: 'after', confirm: false };
   const first = effect?.on?.[0];
-  if (!first || effect?.modifiers?.length) return { kind: 'passive', moment: 'after', ask: false };
-  return { kind: 'auto', moment: first.phase === 'before' ? 'before' : 'after', ask: first.ask === true };
+  if (!first || effect?.modifiers?.length) return { kind: 'passive', moment: 'after', confirm: false };
+  return { kind: 'auto', moment: first.phase === 'before' ? 'before' : 'after', confirm: first.confirm === true };
 }
 
 export function activationFor(launch: Launch): 'manual' | 'passive' {
@@ -45,40 +30,16 @@ export function activationFor(launch: Launch): 'manual' | 'passive' {
 }
 
 export const DURATIONS = {
-  permanent: {
-    label: 'Пока не снимут',
-    hint: 'Снимается рукой, шагом «состояние» в режиме «снять» или своим «когда». Выданное вещью живёт, пока вещь на листе.',
-    forActivations: ['passive'],
-  },
-  uses: {
-    label: 'Счётчик срабатываний',
-    hint: 'Сработал — минус один; на нуле спадает сам.',
-    forActivations: ['passive'],
-  },
-  rounds: {
-    label: 'Раунды боя',
-    hint: 'Спадает в начале раунда через N раундов. Вне боя висит, пока не снимут.',
-    forActivations: ['passive'],
-  },
-  turns: {
-    label: 'Ходы',
-    hint: 'Спадает в конце или начале N-го хода — своего или того, кто наложил. Вне боя висит, пока не снимут.',
-    forActivations: ['passive'],
-  },
-  combat: {
-    label: 'До конца боя',
-    hint: 'Спадает, когда бой кончился. Раунды и ходы тоже спадают с концом боя.',
-    forActivations: ['passive'],
-  },
-  scene: {
-    label: 'До конца сцены',
-    hint: 'Спадает, когда ведущий закрывает сцену.',
-    forActivations: ['passive'],
-  },
+  permanent: { label: 'пока не снимут', hint: 'Снимается рукой, шагом «состояние» в режиме «снять» или своим «когда». Выданное вещью живёт, пока вещь на листе.' },
+  uses: { label: 'на N срабатываний', hint: 'Сработал — минус один; на нуле спадает сам.' },
+  rounds: { label: 'на N раундов боя', hint: 'Спадает в начале раунда через N раундов. Вне боя висит, пока не снимут.' },
+  turns: { label: 'на N ходов', hint: 'Спадает в конце или начале N-го хода — своего или того, кто наложил. Вне боя висит, пока не снимут.' },
+  combat: { label: 'до конца боя', hint: 'Спадает, когда бой кончился. Раунды и ходы тоже спадают с концом боя.' },
+  scene: { label: 'до конца сцены', hint: 'Спадает, когда ведущий закрывает сцену.' },
 };
 
-export const STACKING = {
-  ignore: { label: 'Не накладывается повторно', hint: 'Уже висит — второй раз ничего не делает.' },
-  refresh: { label: 'Обновляется', hint: 'Повторное наложение сбрасывает счётчик заново.' },
-  stack: { label: 'Копится', hint: 'Каждое наложение — отдельная запись на листе.' },
+export const REAPPLY = {
+  ignore: { label: 'второй раз ничего не делает', hint: 'Уже висит — второй раз ничего не делает.' },
+  refresh: { label: 'обновляется', hint: 'Повторное наложение сбрасывает счётчик заново.' },
+  stack: { label: 'копится', hint: 'Каждое наложение — отдельная запись на листе.' },
 };

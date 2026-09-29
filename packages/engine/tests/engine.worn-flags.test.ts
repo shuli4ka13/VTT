@@ -9,7 +9,7 @@ const system = {
     { tag: 'кд', label: 'КД', value: { kind: 'formula', expr: '10 + (@отравлен >= 1 ? 0 : 2)' } },
   ],
   effects: {
-    отравлен: { label: 'Отравлен', activation: 'passive', stacking: 'stack', modifiers: [] },
+    отравлен: { label: 'Отравлен', activation: 'passive', reapply: 'stack', modifiers: [] },
     кольцо: { label: 'Кольцо', activation: 'passive', modifiers: [] },
   },
 } as unknown as System;

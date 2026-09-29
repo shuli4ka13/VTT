@@ -186,7 +186,7 @@ function cycleProblems(system: System): Problem[] {
     for (const called of chainsOfEffect(effect).flatMap(emitsOf)) link(effectNode(id), effectNode(called));
     for (const handler of effect.on ?? []) {
       for (const called of emitsOf(handler.steps)) link(effectNode(id), effectNode(called));
-      if (handler.ask) continue;
+      if (handler.confirm) continue;
       const heard = listenerOf(handler.on);
       if (heard.kind === 'event') link(effectNode(heard.key!), effectNode(id));
       if (heard.kind === 'effect') link(effectNode(heard.key!), effectNode(id));

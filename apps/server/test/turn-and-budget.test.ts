@@ -109,7 +109,7 @@ describe('пробный расчёт и итог бросают одни кос
       ...dnd,
       effects: {
         ...dnd.effects,
-        watch: { label: 'Настороже', activation: 'passive', duration: { kind: 'permanent' }, params: [], on: [{ on: '*', phase: 'before', ask: true, steps: [] }] },
+        watch: { label: 'Настороже', activation: 'passive', duration: { kind: 'permanent' }, params: [], on: [{ on: '*', phase: 'before', confirm: true, steps: [] }] },
       },
     };
     const token = (await http().post('/auth/login').send({ name: 'Страж' })).body.token as string;
@@ -392,7 +392,7 @@ describe('вопросы к человеку переживают пересбо
         },
         вдохновение: {
           label: 'Вдохновение', activation: 'passive',
-          on: [{ on: '*', role: 'sender', phase: 'before', ask: true, claims: ['плюс'], steps: [] }],
+          on: [{ on: '*', role: 'sender', phase: 'before', confirm: true, claims: ['плюс'], steps: [] }],
         },
       },
       records: { приём: { kind: 'action', label: 'Приём', props: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
@@ -448,7 +448,7 @@ describe('цель правит свой бросок, увидев его', () 
         },
         везение: {
           label: 'Везение', activation: 'passive',
-          on: [{ on: '*', phase: 'before', ask: true, claims: ['удача'], steps: [] }],
+          on: [{ on: '*', phase: 'before', confirm: true, claims: ['удача'], steps: [] }],
         },
       },
       records: { приём: { kind: 'action', label: 'Приём', props: [], bindings: [{ label: 'Залп', effect: 'залп', args: {} }] } },
@@ -607,7 +607,7 @@ describe('реакция после разрешения', () => {
         },
         возмездие: {
           label: 'Возмездие', activation: 'passive',
-          on: [{ on: 'удар', to: 'other', ask: true, steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '2' } }] }],
+          on: [{ on: 'удар', to: 'other', confirm: true, steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '2' } }] }],
         },
       },
       records: { приём: { kind: 'action', label: 'Приём', props: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },

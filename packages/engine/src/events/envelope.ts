@@ -255,7 +255,7 @@ function fireBefore(
   let current = sheet;
   let shared = [...(ctx.shared ?? [])];
 
-  const occasion = { kind: 'action' as const, role: 'target' as const, phase: 'before' as const, ask: false, effect: envelope.effect, emitted: [] };
+  const occasion = { kind: 'action' as const, role: 'target' as const, phase: 'before' as const, confirm: false, effect: envelope.effect, emitted: [] };
   for (const { id, effect, handler } of listening(ctx.system, sheet, occasion, { compendium: ctx.compendium })) {
     const owner = `триггер «${effect.label || id}»`;
     const refs = { pass: newPass(ctx.system, current, { compendium: ctx.compendium }), results: {}, owner };
@@ -350,7 +350,7 @@ function fireTriggers(
   let sheet = out.sheet;
   let shared = [...(ctx.shared ?? [])];
 
-  const occasion = { kind: 'action' as const, role: 'target' as const, phase: 'after' as const, ask: false, effect: envelope.effect, emitted: out.emitted };
+  const occasion = { kind: 'action' as const, role: 'target' as const, phase: 'after' as const, confirm: false, effect: envelope.effect, emitted: out.emitted };
   for (const { id, effect, handler, heard } of listening(ctx.system, sheet, occasion, { compendium: ctx.compendium })) {
     const results = withEvent(out.results, heard);
     const owner = `триггер «${effect.label || id}»`;
@@ -387,7 +387,7 @@ export function fireOutgoing(
   let sheet = sender;
   let shared = [...(ctx.shared ?? [])];
 
-  const occasion = { kind: 'action' as const, role: 'sender' as const, phase: 'after' as const, ask: false, effect: envelope.effect, emitted: outcome.emitted };
+  const occasion = { kind: 'action' as const, role: 'sender' as const, phase: 'after' as const, confirm: false, effect: envelope.effect, emitted: outcome.emitted };
   for (const { id, effect, handler, heard } of listening(ctx.system, sheet, occasion, { compendium: ctx.compendium })) {
     const results = withEvent(outcome.results, heard);
     const owner = `триггер «${effect.label || id}»`;
@@ -427,7 +427,7 @@ export function offers(
   emitted: EmittedEvent[] = [],
 ): Offer[] {
   const out: Offer[] = [];
-  const occasion = { kind: 'action' as const, ...WINDOWS[window], ask: true, effect: envelope.effect, emitted };
+  const occasion = { kind: 'action' as const, ...WINDOWS[window], confirm: true, effect: envelope.effect, emitted };
   for (const { effect, handler, heard, key } of listening(system, sheet, occasion, { compendium })) {
     const owner = `реакция «${effect.label || key}»`;
     const ctx = { pass: newPass(system, sheet, { compendium }), results: withEvent(results, heard), owner };

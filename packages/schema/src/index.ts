@@ -5,7 +5,7 @@ export type {
   SlotRef, Formula, ValueKind, RefSide, Tag, Field, FieldValue, Control, FieldOption, DiceTerm, DieConstant,
   SystemConstant, Table, TableColumn, TableRow, TableKey, RollEditOp, RollEdit, Modifier, Param,
   Step, Guard, Ask, Handler, Effect,
-  Activation, DurationKind, Stacking, Binding, RecordKind, System,
+  Activation, DurationKind, Reapply, Binding, RecordKind, System,
   StoredValue, WornEffect, Owned, Sheet, CompendiumRecord, Compendium, World,
 } from './world.ts';
 

@@ -2,7 +2,7 @@ import { whoseOf } from '../events/durations.ts';
 import { stepModule } from './steps/index.ts';
 import { rolledSoFar } from './rolled.ts';
 import { findField, holderIdOf, livesOn } from './calc.ts';
-import { requireEffect, stackingOf, usesMax } from './effects.ts';
+import { requireEffect, reapplyOf, usesMax } from './effects.ts';
 import { packRef, resolveRef } from './refs.ts';
 import { EngineError } from './errors.ts';
 import type { StepContext, StepData } from './steps/index.ts';
@@ -136,8 +136,8 @@ export function resolveRule(steps: StepData[], ctx: StepContext): RuleReport {
     if (max !== null) fresh.usesLeft = max;
 
     if (at < 0) worn.push(fresh);
-    else if (stackingOf(effect) === 'refresh') worn[at] = fresh;
-    else if (stackingOf(effect) === 'stack') worn.push(fresh);
+    else if (reapplyOf(effect) === 'refresh') worn[at] = fresh;
+    else if (reapplyOf(effect) === 'stack') worn.push(fresh);
     else return;
 
     if (!effects.includes(effectId)) effects.push(effectId);

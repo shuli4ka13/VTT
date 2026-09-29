@@ -14,7 +14,7 @@ const system = {
       on: [
         { on: 'moment:turn-start', steps: [hp('subtract', 3)] },
         { on: 'moment:turn-end', steps: [hp('add', 1)] },
-        { on: 'удар', phase: 'before', ask: true, steps: [] },
+        { on: 'удар', phase: 'before', confirm: true, steps: [] },
       ],
     },
     удар: { label: 'Удар', activation: 'manual', steps: [] },
@@ -43,8 +43,8 @@ group('шина: одно состояние — несколько подпис
   });
 
   test('действие будит только подписку с его ролью, фазой и вопросом', () => {
-    const asked = listening(system, sheet(), { kind: 'action', role: 'target', phase: 'before', ask: true, effect: 'удар', emitted: [] });
+    const asked = listening(system, sheet(), { kind: 'action', role: 'target', phase: 'before', confirm: true, effect: 'удар', emitted: [] });
     deepEq(asked.map(s => s.key), ['горит#2']);
-    eq(listening(system, sheet(), { kind: 'action', role: 'target', phase: 'after', ask: false, effect: 'удар', emitted: [] }).length, 0);
+    eq(listening(system, sheet(), { kind: 'action', role: 'target', phase: 'after', confirm: false, effect: 'удар', emitted: [] }).length, 0);
   });
 });

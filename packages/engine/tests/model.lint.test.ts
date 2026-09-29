@@ -132,7 +132,7 @@ group('линт: слушатели, круги, потребности', () => 
     ok(problem?.text.includes('не сказано, когда срабатывает'), problem?.text);
     eq(problem?.where.part, 'on');
     eq(problem?.where.handler, 0);
-    const noTrigger = withEffect('r', { activation: 'passive' , on: [{ on: '', phase: 'before', ask: true, steps: [] }] });
+    const noTrigger = withEffect('r', { activation: 'passive' , on: [{ on: '', phase: 'before', confirm: true, steps: [] }] });
     ok(errorTexts(noTrigger).some(t => t.includes('не сказано, когда срабатывает')));
   });
 

@@ -242,12 +242,12 @@ describe('три вида создания, два вида запуска', () 
     fireEvent.change(moment, { target: { value: 'ask-sender' } });
     const effect = Object.values(useWorld.getState().system.effects).at(-1)!;
     expect(effect.activation).toBe('passive');
-    expect(effect.on?.[0]).toMatchObject({ role: 'sender', phase: 'before', ask: true });
+    expect(effect.on?.[0]).toMatchObject({ role: 'sender', phase: 'before', confirm: true });
 
     fireEvent.change(moment, { target: { value: 'after-out' } });
     const again = Object.values(useWorld.getState().system.effects).at(-1)!.on![0]!;
     expect(again.role).toBe('sender');
-    expect(again.ask).toBeUndefined();
+    expect(again.confirm).toBeUndefined();
     expect(again.phase).toBeUndefined();
   });
 });

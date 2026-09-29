@@ -1,13 +1,14 @@
 import { heldBy, sheetKindOf, kindOfRecord } from '../model/owned.ts';
+import { DURATIONS, REAPPLY } from '../model/effect-kinds.ts';
 import { EngineError } from './errors.ts';
 import type {
   System, Sheet, Compendium, Effect, Modifier, Step,
-  Activation, DurationKind, Stacking, WornEffect,
+  Activation, DurationKind, Reapply, WornEffect,
 } from '../model/types.ts';
 
-const ACTIVATIONS: Activation[] = ['manual', 'passive'];
-const DURATIONS: DurationKind[] = ['permanent', 'uses', 'rounds', 'turns', 'combat', 'scene'];
-const STACKINGS: Stacking[] = ['ignore', 'refresh', 'stack'];
+const ACTIVATIONS = ['manual', 'passive'] as Activation[];
+const DURATION_KINDS = Object.keys(DURATIONS) as DurationKind[];
+const REAPPLIES = Object.keys(REAPPLY) as Reapply[];
 
 const pick = <T extends string>(value: unknown, allowed: T[], fallback: T): T =>
   (allowed.includes(value as T) ? value as T : fallback);
@@ -16,10 +17,10 @@ export const activationOf = (effect: Effect | null | undefined): Activation =>
   pick(effect && effect.activation, ACTIVATIONS, 'manual');
 
 export const durationOf = (effect: Effect | null | undefined): DurationKind =>
-  pick(effect && effect.duration && effect.duration.kind, DURATIONS, 'permanent');
+  pick(effect && effect.duration && effect.duration.kind, DURATION_KINDS, 'permanent');
 
-export const stackingOf = (effect: Effect | null | undefined): Stacking =>
-  pick(effect && effect.stacking, STACKINGS, 'ignore');
+export const reapplyOf = (effect: Effect | null | undefined): Reapply =>
+  pick(effect && effect.reapply, REAPPLIES, 'ignore');
 
 export const isPipeline = (effect: Effect | null | undefined): boolean => activationOf(effect) === 'manual';
 

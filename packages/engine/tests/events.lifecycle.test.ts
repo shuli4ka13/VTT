@@ -15,7 +15,7 @@ const system = {
   ],
   effects: {
     ярость: {
-      label: 'Ярость', activation: 'passive', duration: { kind: 'permanent' }, stacking: 'refresh',
+      label: 'Ярость', activation: 'passive', duration: { kind: 'permanent' }, reapply: 'refresh',
       attach: [add('ярость', 1)],
       detach: [add('усталость', 1)],
     },

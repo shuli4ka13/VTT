@@ -24,13 +24,13 @@ export type Occasion =
   | { kind: 'field'; tag: string }
   | { kind: 'gained'; effect: string }
   | { kind: 'lost'; effect: string }
-  | { kind: 'action'; role: Role; phase: Phase; ask: boolean; effect: string; emitted: EmittedEvent[] };
+  | { kind: 'action'; role: Role; phase: Phase; confirm: boolean; effect: string; emitted: EmittedEvent[] };
 
 export const handlerKey = (id: string, index: number): string => (index ? `${id}#${index}` : id);
 
 export const roleOf = (handler: Handler): Role => handler.role ?? 'target';
 export const phaseOf = (handler: Handler): Phase => handler.phase ?? 'after';
-export const asks = (handler: Handler): boolean => handler.ask === true;
+export const asks = (handler: Handler): boolean => handler.confirm === true;
 export const runsAtOther = (handler: Handler): boolean => handler.to === 'other';
 
 export const handlersOf = (effect: Effect | null | undefined): Handler[] => effect?.on ?? [];
@@ -71,7 +71,7 @@ export function listening(
       if (handler.on === `${prefix}${occasion.effect}`) out.push(sub);
       continue;
     }
-    if (roleOf(handler) !== occasion.role || phaseOf(handler) !== occasion.phase || asks(handler) !== occasion.ask) continue;
+    if (roleOf(handler) !== occasion.role || phaseOf(handler) !== occasion.phase || asks(handler) !== occasion.confirm) continue;
     const heard = hears(handler.on, occasion.effect, occasion.emitted);
     if (heard === null) continue;
     out.push(heard ? { ...sub, heard } : sub);
