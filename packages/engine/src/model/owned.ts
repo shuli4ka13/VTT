@@ -1,4 +1,5 @@
 import { compile } from '../formula/index.ts';
+import { paramsOf } from './inherit.ts';
 import type { Binding, Compendium, CompendiumRecord, Owned, RecordKind, Sheet, System } from './types.ts';
 
 export const recordsOf = (compendium: Compendium | null | undefined): CompendiumRecord[] => compendium?.records ?? [];
@@ -73,7 +74,8 @@ export function shownOn(system: System, sheet: Sheet | null | undefined): (field
 export const propKeysOf = (kind: RecordKind | undefined): Set<string> => new Set((kind?.props ?? []).map(prop => prop.key));
 
 export function argsWithProps(system: System, binding: Binding, props: ReadonlySet<string>): Binding['args'] {
-  const params = system.effects[binding.effect]?.params ?? [];
+  const effect = system.effects[binding.effect];
+  const params = effect ? paramsOf(system, effect) : [];
   const out = { ...binding.args };
   for (const param of params) {
     if (out[param.key] === undefined && props.has(param.key)) out[param.key] = { expr: `@${param.key}` };
@@ -86,7 +88,8 @@ export function propsNeeded(system: System, kind: RecordKind | undefined, bindin
   const out = new Set<string>();
   for (const binding of bindings) {
     const args = argsWithProps(system, binding, props) ?? {};
-    for (const param of system.effects[binding.effect]?.params ?? []) {
+    const effect = system.effects[binding.effect];
+    for (const param of effect ? paramsOf(system, effect) : []) {
       const arg = args[param.key] as { expr?: string } | undefined;
       if (param.optional || !arg?.expr) continue;
       let deps: readonly string[];

@@ -4,6 +4,7 @@ import { Field, Select } from '../../ui/primitives.tsx';
 import { SlotInput, type SlotOption } from './slot-input.tsx';
 import type { SlotContext, SlotKind } from './slots.tsx';
 import { listOf } from '@vtt/engine/model/lists';
+import { paramsOf } from '@vtt/engine/model/inherit';
 
 export interface CallInput {
   param: Param;
@@ -41,7 +42,7 @@ export function CallEditor({ system, effect, effects, onEffect, args, fromProps,
   children?: ReactNode;
 }) {
   const called = system.effects[effect];
-  const params = called?.params ?? [];
+  const params = called ? paramsOf(system, called) : [];
   const inputs: CallInput[] = params.map(param => ({
     param, value: args?.[param.key], fromProp: Boolean(fromProps?.has(param.key)),
   }));
