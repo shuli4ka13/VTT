@@ -3,8 +3,8 @@ import { compile, FormulaError } from '../src/formula/index.ts';
 
 group('интерфейс модуля формул', () => {
   test('compile возвращает дерево, зависимости и исходную строку', () => {
-    const f = compile('floor((#str - 10) / 2)');
-    eq(f.source, 'floor((#str - 10) / 2)');
+    const f = compile('округлить вниз((#str - 10) / 2)');
+    eq(f.source, 'округлить вниз((#str - 10) / 2)');
     deepEq(f.deps, ['str']);
     eq(f.ast.kind, 'Call');
   });

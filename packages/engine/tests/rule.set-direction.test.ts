@@ -35,7 +35,7 @@ group('направление «задать» и сопротивления ц�
       { type: 'apply', target: { tag: 'hp_current' }, direction: 'set',
         value: { expr: '@получатель.hp_current - #dmg' }, targetModifiers: true },
     ], stony);
-    eq(r.sheet.values.hp_current, 18, '22 − floor(8 × 0.5) = 18, а не floor(14 × 0.5) = 7');
+    eq(r.sheet.values.hp_current, 18, '22 − округлить вниз(8 × 0.5) = 18, а не округлить вниз(14 × 0.5) = 7');
     eq(r.trace[1]!.incoming, 8);
     eq(r.trace[1]!.amount, 4);
   });
@@ -63,7 +63,7 @@ group('направление «задать» и сопротивления ц�
       { type: 'apply', target: { tag: 'hp_current' }, direction: 'set',
         value: { expr: '30' }, targetModifiers: true },
     ], { ...stony, values: { ...stony.values, hp_max: 40 } });
-    eq(r.sheet.values.hp_current, 26, '22 + floor(8 × 0.5)');
+    eq(r.sheet.values.hp_current, 26, '22 + округлить вниз(8 × 0.5)');
   });
 
   test('текстовое поле «задать» по-прежнему просто присваивает', () => {

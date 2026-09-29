@@ -93,7 +93,7 @@ describe('FormulaChips', () => {
     input.setSelectionRange(0, 0);
     fireEvent.click(input);
     fireEvent.mouseDown(screen.getByText('округлить вниз'));
-    expect(value).toBe('floor()2 + 2');
+    expect(value).toBe('округлить вниз()2 + 2');
   });
 
   it('без флага calculator ряда операций нет и в фокусе', () => {

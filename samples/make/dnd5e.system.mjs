@@ -79,7 +79,7 @@ export const lists = () => ({
       { value: WIELD.melee,
         cells: { attack: '@str_mod + @prof_bonus', damage: '@str_mod' } },
       { value: WIELD.finesse,
-        cells: { attack: 'max(@str_mod, @dex_mod) + @prof_bonus', damage: 'max(@str_mod, @dex_mod)' } },
+        cells: { attack: 'большее из(@str_mod, @dex_mod) + @prof_bonus', damage: 'большее из(@str_mod, @dex_mod)' } },
       { value: WIELD.ranged,
         cells: { attack: '@dex_mod + @prof_bonus', damage: '@dex_mod' } },
     ],
@@ -103,7 +103,7 @@ export const lists = () => ({
       { key: 'score', label: 'Значение', kind: 'number', start: 10, min: 1, max: 30, sheet: {
         tag: '{key}', label: '{label}', group: 'Характеристики',
       } },
-      { key: 'mod', label: 'Модификатор', kind: 'expr', expr: 'floor((@{key} - 10) / 2)', sheet: {
+      { key: 'mod', label: 'Модификатор', kind: 'expr', expr: 'округлить вниз((@строка.score - 10) / 2)', sheet: {
         tag: '{key}_mod', label: 'Модификатор: {label}', group: 'Модификаторы',
         roll: { label: 'Проверка: {label}', tags: ['проверка', '{value}'], die: LEAD_DIE, bonus: { expr: '@{key}_mod' } },
       } },
@@ -113,18 +113,19 @@ export const lists = () => ({
   saves: {
     label: 'Спасброски', key: 'word',
     columns: [
+      { key: 'ability', label: 'Характеристика', kind: 'choice', from: 'abilities' },
       { key: 'extra', label: 'Владение сверх класса', kind: 'number', start: 0, min: 0, max: 1, sheet: {
         tag: '{key}_save_extra', label: 'Владение сверх класса: спасбросок {label}', group: 'Спасброски', control: 'ring',
       } },
-      { key: 'prof', label: 'Владение', kind: 'expr', expr: 'max(@{key}_save_extra, есть(@class_name.saves, "{value}") ? 1 : 0)', sheet: {
+      { key: 'prof', label: 'Владение', kind: 'expr', expr: 'большее из(@строка.extra, если(есть(@class_name.saves, @строка), 1, 0))', sheet: {
         tag: '{key}_save_prof', label: 'Владение: спасбросок {label}', group: 'Спасброски',
       } },
-      { key: 'save', label: 'Спасбросок', kind: 'expr', expr: '@{key}_mod + @{key}_save_prof * @prof_bonus', sheet: {
+      { key: 'save', label: 'Спасбросок', kind: 'expr', expr: '@строка.ability.mod + @строка.prof * @prof_bonus', sheet: {
         tag: '{key}_save', label: 'Спасбросок: {label}', group: 'Спасброски',
         roll: { label: 'Спасбросок: {label}', tags: ['спасбросок', '{value}'], die: LEAD_DIE, bonus: { expr: '@{key}_save' } },
       } },
     ],
-    rows: ABILITIES.map(([tag, label]) => ({ value: ABILITY_WORD[tag], key: tag, label })),
+    rows: ABILITIES.map(([tag, label]) => ({ value: ABILITY_WORD[tag], key: tag, label, cells: { ability: ABILITY_WORD[tag] } })),
   },
   skills: {
     label: 'Навыки', key: 'word',
@@ -133,7 +134,7 @@ export const lists = () => ({
       { key: 'prof', label: 'Владение', kind: 'number', start: 0, min: 0, max: 2, sheet: {
         tag: '{key}_prof', label: 'Владение: {label}', control: 'ring',
       } },
-      { key: 'total', label: 'Навык', kind: 'expr', expr: '@{ability.key}_mod + @{key}_prof * @prof_bonus', sheet: {
+      { key: 'total', label: 'Навык', kind: 'expr', expr: '@строка.ability.mod + @строка.prof * @prof_bonus', sheet: {
         tag: '{key}', label: '{label}',
         roll: { label: 'Проверка: {label}', tags: ['проверка', '{ability}', '{value}'], die: LEAD_DIE, bonus: { expr: '@{key}' } },
       } },
@@ -263,7 +264,7 @@ export function fields() {
   out.push(stored('ac_base', 'База доспеха', 'Защита', 'number', 10, { min: 0 }));
   out.push(stored('armor_heavy', 'Доспех тяжёлый', 'Защита', 'boolean', false, { control: 'toggle' }));
   out.push(formula('ac_dex', 'Ловкость в классе брони', 'Защита', '@dex_mod'));
-  out.push(formula('ac', 'Класс брони', 'Защита', '@ac_base + (@armor_heavy ? 0 : @ac_dex)'));
+  out.push(formula('ac', 'Класс брони', 'Защита', '@ac_base + если(@armor_heavy, 0, @ac_dex)'));
 
   out.push(stored('hp_max', 'Максимум хитов', 'Здоровье', 'number', 8, { min: 1 }));
   out.push(stored('hp_current', 'Хиты', 'Здоровье', 'number', 8, { min: 0, max: '@hp_max', control: 'bar' }));
@@ -286,7 +287,7 @@ export function fields() {
   out.push(stored('turn_attacks', 'Атак осталось', 'В бою', 'number', 0, { min: 0, max: 4, control: 'pips' }));
   out.push({ ...stored('battle', 'Идёт бой', 'В бою', 'number', 0, { min: 0, max: 1, control: 'toggle' }), lives: 'desk' });
   out.push(stored('crit_from', 'Крит на костях от', 'Атака', 'number', 20, { min: 18, max: 20 }));
-  out.push(formula('sneak_dice', 'Костей скрытой атаки', 'Атака', 'ceil(@level / 2)'));
+  out.push(formula('sneak_dice', 'Костей скрытой атаки', 'Атака', 'округлить вверх(@level / 2)'));
 
   out.push(formula('spell_mod', 'Заклинательный модификатор', 'Магия', 'или(@class_name.spell_ability.mod, @cha_mod)'));
   out.push(formula('spell_dc', 'Сложность заклинаний', 'Магия', '8 + @prof_bonus + @spell_mod'));

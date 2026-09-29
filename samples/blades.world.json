@@ -265,7 +265,7 @@
         "dice": [
           {
             "count": {
-              "expr": "max(1, @rating)"
+              "expr": "большее из(1, @rating)"
             },
             "sides": 6
           }
@@ -359,7 +359,7 @@
               "tags": [
                 "действие",
                 {
-                  "expr": "@rating == 0 ? \"нулевой\" : \"\""
+                  "expr": "если(@rating == 0, \"нулевой\", \"\")"
                 }
               ]
             },
@@ -381,7 +381,7 @@
             "direction": "set",
             "targetModifiers": false,
             "value": {
-              "expr": "min(8, @стол.alarm + 1)"
+              "expr": "меньшее из(8, @стол.alarm + 1)"
             },
             "when": {
               "expr": "есть(@бросок.degree, \"успех с последствием\")"
@@ -395,7 +395,7 @@
             "direction": "set",
             "targetModifiers": false,
             "value": {
-              "expr": "min(8, @стол.alarm + 2)"
+              "expr": "меньшее из(8, @стол.alarm + 2)"
             },
             "when": {
               "expr": "есть(@бросок.degree, \"провал\")"
@@ -447,7 +447,7 @@
             "direction": "set",
             "targetModifiers": false,
             "value": {
-              "expr": "min(9, @heat + 1)"
+              "expr": "меньшее из(9, @heat + 1)"
             }
           }
         ]

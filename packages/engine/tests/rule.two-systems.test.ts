@@ -87,7 +87,7 @@ group('две системы одними слотами', () => {
       };
       const env = send('healing-word', ctx5(mirra, queue(2)));
       const { sheet } = receive(env, ctx5(stonyWounded, queue()));
-      eq(sheet.values.hp_current, 35, 'все 5, а не floor(5/2): модификаторы цели выключены');
+      eq(sheet.values.hp_current, 35, 'все 5, а не округлить вниз(5/2): модификаторы цели выключены');
     });
   });
 

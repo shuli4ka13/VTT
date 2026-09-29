@@ -119,7 +119,7 @@ group('подписка на исходящее: вампиризм и метк�
       vampiric: {
         label: 'Вампиризм', activation: 'passive', duration: { kind: 'permanent' },
         on: [{ on: 'event:damage', role: 'sender', steps: [{ type: 'apply', target: { tag: 'hp_current' }, direction: 'add',
-          value: { expr: 'floor(#event_amount / 2)' }, targetModifiers: false }] }],
+          value: { expr: 'округлить вниз(#event_amount / 2)' }, targetModifiers: false }] }],
       },
       brand: {
         label: 'Метка охотника', activation: 'passive', duration: { kind: 'permanent' },

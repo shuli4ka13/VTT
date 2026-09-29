@@ -27,7 +27,7 @@ const save = continueOn => ({
   roll: { die: DIE, bonus: { expr: '@получатель.save_by.save' }, tags: ['спасбросок', { param: 'save_by' }] },
   versus: { expr: '@spell_dc' }, successWhen: 'atLeast', continueOn,
 });
-const CRIT = '@hit.natural >= @crit_from ? 2 : 1';
+const CRIT = 'если(@hit.natural >= @crit_from, 2, 1)';
 const crit = { ref: 'hit.natural', atLeast: { tag: 'crit_from' } };
 const SOURCES = ['магический', 'немагический'];
 const damageArg = tag => {
@@ -175,7 +175,7 @@ function attacks() {
         params: [P.slot],
         self: [spendSlot({ param: 'slot' })],
         steps: [
-          { id: 'dmg', type: 'amount', source: 'roll', dice: { const: '1d8' }, count: { expr: 'min(5, 1 + @slot)' } },
+          { id: 'dmg', type: 'amount', source: 'roll', dice: { const: '1d8' }, count: { expr: 'меньшее из(5, 1 + @slot)' } },
           damage({ ref: 'dmg' }, ['излучение', 'магический']),
         ],
       }),
@@ -581,7 +581,7 @@ function lifecycle() {
   const longRest = [
     reset('hp_current', '@hp_max'),
     change('hp_temp', 'set', { const: 0 }),
-    change('hit_dice_left', 'add', { expr: 'max(1, floor(@level / 2))', of: 'target' }),
+    change('hit_dice_left', 'add', { expr: 'большее из(1, округлить вниз(@level / 2))', of: 'target' }),
   ];
   const slotsBack = [];
   for (let n = 1; n <= 9; n++) slotsBack.push(reset(`slots_${n}`, `@slots_${n}_max`));
@@ -596,7 +596,7 @@ function lifecycle() {
       [
         {
           id: 'save', type: 'threshold', roll: { die: DIE, bonus: { expr: '@con_save' }, tags: ['спасбросок', 'телосложение'] },
-          versus: { expr: 'max(10, floor(@event_amount / 2))' }, successWhen: 'atLeast', continueOn: 'fail',
+          versus: { expr: 'большее из(10, округлить вниз(@event_amount / 2))' }, successWhen: 'atLeast', continueOn: 'fail',
         },
         drop('concentration'),
       ], { group: 'Заклинания', duration: { kind: 'permanent' } }),
@@ -639,7 +639,7 @@ function roomRules() {
   const when = (level, modifier) => ({ ...modifier, condition: `@exhaustion >= ${level}` });
   const refresh = [
     ...TURN_FIELDS.map(([tag]) => (tag === 'turn_action'
-      ? change(tag, 'set', { expr: '1 + min(1, @hasted)' })
+      ? change(tag, 'set', { expr: '1 + меньшее из(1, @hasted)' })
       : change(tag, 'set', { const: 1 }))),
     change('turn_attacks', 'set', { const: 0 }),
   ];

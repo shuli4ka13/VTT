@@ -92,7 +92,7 @@ group('журнал называет чужие и общие поля слов�
       fields: [...system.fields, { tag: 'эскалация', label: 'Кость эскалации', lives: 'desk', value: { kind: 'stored', type: 'number', default: 0 } }],
       effects: { шаблон: { label: 'Удар', steps: [
         { id: 'п', type: 'threshold', roll: { tags: ['атака'], bonus: { expr: '@отправитель.хиты + @стол.эскалация' } }, versus: { expr: '@получатель.броня' } },
-        { id: 'в', type: 'amount', fixed: { expr: '@п.natural >= 20 ? 2 : 1' } },
+        { id: 'в', type: 'amount', fixed: { expr: 'если(@п.natural >= 20, 2, 1)' } },
       ] } } } as unknown as System;
     const trace = [
       { type: 'threshold', step: 'п', rolls: [12], total: 25, bonus: 13, versus: { value: 15 }, success: true },

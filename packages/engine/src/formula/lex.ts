@@ -2,7 +2,7 @@ import { FormulaSyntaxError } from './errors.ts';
 
 export type TokenType =
   | 'number' | 'text' | 'ref' | 'ident' | 'op'
-  | 'lparen' | 'rparen' | 'comma' | 'question' | 'colon'
+  | 'lparen' | 'rparen' | 'comma'
   | 'eof';
 
 export interface Token {
@@ -16,8 +16,20 @@ export interface Token {
 const OPS_2 = ['==', '!=', '<=', '>='];
 const OPS_1 = ['+', '-', '*', '/', '<', '>'];
 const PUNCT: Record<string, TokenType> = {
-  '(': 'lparen', ')': 'rparen', ',': 'comma', '?': 'question', ':': 'colon',
+  '(': 'lparen', ')': 'rparen', ',': 'comma',
 };
+
+export const PHRASES = ['округлить вниз', 'округлить вверх', 'большее из', 'меньшее из'];
+
+function phraseAt(src: string, at: number): string | null {
+  for (const phrase of PHRASES) {
+    if (!src.startsWith(phrase, at)) continue;
+    let next = at + phrase.length;
+    while (next < src.length && /\s/.test(src[next]!)) next++;
+    if (src[next] === '(') return phrase;
+  }
+  return null;
+}
 
 const isDigit = (ch: string) => ch >= '0' && ch <= '9';
 
@@ -65,6 +77,13 @@ export function lex(source: unknown): Token[] {
       while (i < src.length && isNamePart(src[i]!)) i++;
       if (i === nameStart) throw new FormulaSyntaxError('после «@» ожидается имя', start);
       tokens.push({ type: 'ref', value: src.slice(nameStart, i), text: src.slice(start, i), pos: start });
+      continue;
+    }
+
+    const phrase = phraseAt(src, i);
+    if (phrase) {
+      tokens.push({ type: 'ident', value: phrase, text: phrase, pos: i });
+      i += phrase.length;
       continue;
     }
 

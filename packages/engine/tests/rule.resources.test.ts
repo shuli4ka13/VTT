@@ -36,7 +36,7 @@ const system = {
     скрытая: {
       label: 'Скрытая атака', activation: 'manual',
       steps: [
-        { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d6' }, count: { expr: 'ceil(#уровень / 2)' } },
+        { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d6' }, count: { expr: 'округлить вверх(#уровень / 2)' } },
         { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@урон' } },
       ],
     },

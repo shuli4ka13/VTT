@@ -254,7 +254,7 @@
         "group": "Прогрессия",
         "value": {
           "kind": "formula",
-          "expr": "@level >= 8 ? 4 : (@level >= 5 ? 3 : (@level >= 2 ? 2 : 1))"
+          "expr": "если(@level >= 8, 4, если(@level >= 5, 3, если(@level >= 2, 2, 1)))"
         }
       },
       {
@@ -285,7 +285,7 @@
         "group": "Уклонение и броня",
         "value": {
           "kind": "formula",
-          "expr": "(@class != \"\" ? таблица(\"classes\", @class, \"evasion\") : 10) + (@ancestry != \"\" ? таблица(\"ancestries\", @ancestry, \"evasion_bonus\") : 0) + @evasion_bonus"
+          "expr": "если(@class != \"\", таблица(\"classes\", @class, \"evasion\"), 10) + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"evasion_bonus\"), 0) + @evasion_bonus"
         }
       },
       {
@@ -341,7 +341,7 @@
         "group": "Пороги урона",
         "value": {
           "kind": "formula",
-          "expr": "@major_base > 0 ? @major_base + @level + (@ancestry != \"\" ? таблица(\"ancestries\", @ancestry, \"threshold_proficiency\") : 0) * @proficiency : @level"
+          "expr": "если(@major_base > 0, @major_base + @level + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"threshold_proficiency\"), 0) * @proficiency, @level)"
         }
       },
       {
@@ -350,7 +350,7 @@
         "group": "Пороги урона",
         "value": {
           "kind": "formula",
-          "expr": "@severe_base > 0 ? @severe_base + @level + (@ancestry != \"\" ? таблица(\"ancestries\", @ancestry, \"threshold_proficiency\") : 0) * @proficiency : 2 * @level"
+          "expr": "если(@severe_base > 0, @severe_base + @level + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"threshold_proficiency\"), 0) * @proficiency, 2 * @level)"
         }
       },
       {
@@ -370,7 +370,7 @@
         "group": "Здоровье",
         "value": {
           "kind": "formula",
-          "expr": "(@class != \"\" ? таблица(\"classes\", @class, \"hp\") : 0) + (@ancestry != \"\" ? таблица(\"ancestries\", @ancestry, \"hp_bonus\") : 0) + @hp_extra"
+          "expr": "если(@class != \"\", таблица(\"classes\", @class, \"hp\"), 0) + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"hp_bonus\"), 0) + @hp_extra"
         }
       },
       {
@@ -402,7 +402,7 @@
         "group": "Здоровье",
         "value": {
           "kind": "formula",
-          "expr": "6 + (@ancestry != \"\" ? таблица(\"ancestries\", @ancestry, \"stress_bonus\") : 0) + @stress_extra"
+          "expr": "6 + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"stress_bonus\"), 0) + @stress_extra"
         }
       },
       {
@@ -1666,7 +1666,7 @@
           {
             "type": "compare",
             "value": {
-              "expr": "любое(@бросок.success, @бросок.parts.надежда == @бросок.parts.страх) ? 1 : 0"
+              "expr": "если(любое(@бросок.success, @бросок.parts.надежда == @бросок.parts.страх), 1, 0)"
             },
             "versus": {
               "expr": "1"
@@ -1679,7 +1679,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть(@damage_die, @отправитель.proficiency + @extra_die, @отправитель.proficiency) + @damage_bonus + (@бросок.parts.надежда == @бросок.parts.страх ? @отправитель.proficiency * @die_size : 0)"
+              "expr": "кинуть(@damage_die, @отправитель.proficiency + @extra_die, @отправитель.proficiency) + @damage_bonus + если(@бросок.parts.надежда == @бросок.parts.страх, @отправитель.proficiency * @die_size, 0)"
             }
           },
           {
@@ -1769,7 +1769,7 @@
             },
             "direction": "add",
             "value": {
-              "expr": "@event.amount >= @severe ? 3 : (@event.amount >= @major ? 2 : (@event.amount >= 1 ? 1 : 0))"
+              "expr": "если(@event.amount >= @severe, 3, если(@event.amount >= @major, 2, если(@event.amount >= 1, 1, 0)))"
             },
             "targetModifiers": false
           }
@@ -2236,7 +2236,7 @@
             },
             "direction": "subtract",
             "value": {
-              "expr": "min(@hp, @бросок.parts.надежда)"
+              "expr": "меньшее из(@hp, @бросок.parts.надежда)"
             },
             "targetModifiers": false,
             "when": {
@@ -2323,7 +2323,7 @@
             },
             "direction": "subtract",
             "value": {
-              "expr": "min(@hp, кинуть(\"1к4\") + @tier)"
+              "expr": "меньшее из(@hp, кинуть(\"1к4\") + @tier)"
             },
             "targetModifiers": false
           },
@@ -2349,7 +2349,7 @@
             },
             "direction": "subtract",
             "value": {
-              "expr": "min(@stress, кинуть(\"1к4\") + @tier)"
+              "expr": "меньшее из(@stress, кинуть(\"1к4\") + @tier)"
             },
             "targetModifiers": false
           }
@@ -2368,7 +2368,7 @@
             },
             "direction": "subtract",
             "value": {
-              "expr": "min(@armor_marked, кинуть(\"1к4\") + @tier)"
+              "expr": "меньшее из(@armor_marked, кинуть(\"1к4\") + @tier)"
             },
             "targetModifiers": false
           }
@@ -2387,7 +2387,7 @@
             },
             "direction": "add",
             "value": {
-              "expr": "@вместе >= 1 ? 2 : 1"
+              "expr": "если(@вместе >= 1, 2, 1)"
             },
             "targetModifiers": false
           }
@@ -2532,7 +2532,7 @@
             },
             "direction": "subtract",
             "value": {
-              "expr": "min(@armor_marked, 2)"
+              "expr": "меньшее из(@armor_marked, 2)"
             },
             "targetModifiers": false
           }
@@ -2569,7 +2569,7 @@
             },
             "direction": "subtract",
             "value": {
-              "expr": "min(@hp, 1)"
+              "expr": "меньшее из(@hp, 1)"
             },
             "targetModifiers": false
           },

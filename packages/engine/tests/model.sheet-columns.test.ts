@@ -12,15 +12,15 @@ const base = {
       label: 'Характеристики',
       columns: [
         { key: 'score', label: 'Значение', kind: 'number', start: 10, sheet: { tag: '{key}', label: '{label}', group: 'Характеристики' } },
-        { key: 'mod', label: 'Модификатор', kind: 'expr', expr: 'floor((@{key} - 10) / 2)', sheet: { tag: '{key}_mod', label: 'Модификатор: {label}', group: 'Модификаторы' } },
+        { key: 'mod', label: 'Модификатор', kind: 'expr', expr: 'округлить вниз((@строка.score - 10) / 2)', sheet: { tag: '{key}_mod', label: 'Модификатор: {label}', group: 'Модификаторы' } },
       ],
-      rows: [{ value: 'сила', key: 'str', label: 'Сила' }, { value: 'ловкость', key: 'dex', label: 'Ловкость', cells: { mod: '@{key} - 10' } }],
+      rows: [{ value: 'сила', key: 'str', label: 'Сила' }, { value: 'ловкость', key: 'dex', label: 'Ловкость' }],
     },
     skills: {
       label: 'Навыки',
       columns: [
         { key: 'ability', label: 'Характеристика', kind: 'choice', from: 'abilities' },
-        { key: 'total', label: 'Навык', kind: 'expr', expr: '@{ability.key}_mod + 1', sheet: { tag: '{key}', label: '{label}', group: 'Навыки' } },
+        { key: 'total', label: 'Навык', kind: 'expr', expr: '@строка.ability.mod + 1', sheet: { tag: '{key}', label: '{label}', group: 'Навыки' } },
       ],
       rows: [{ value: 'атлетика', key: 'athletics', label: 'Атлетика', cells: { ability: 'сила' } }],
     },
@@ -39,9 +39,14 @@ group('колонка таблицы, своя у каждого листа', ()
     eq(at('str_mod'), 3);
   });
 
-  test('формула одна на колонку, но у строки может быть своя', () => {
-    eq(at('str_mod'), 3);
-    eq(calc(system, { ...sheet, values: { dex: 14 } }, 'dex_mod', newPass(system, { ...sheet, values: { dex: 14 } })), 4);
+  test('без общей формулы у каждой строки своя, ссылка «строка» — на соседнюю колонку', () => {
+    const own = structuredClone(base) as System;
+    const abilities = own.tables!.abilities!;
+    delete abilities.columns![1]!.expr;
+    abilities.rows![0]!.cells = { mod: '@строка.score - 10' };
+    abilities.rows![1]!.cells = { mod: '@строка.score * 2' };
+    const built = withTableFields(own);
+    deepEq(built.fields.filter(f => f.cell?.column === 'mod').map(f => (f.value as { expr: string }).expr), ['@str - 10', '@dex * 2']);
   });
 
   test('строка ссылается на строку другой таблицы: навык берёт модификатор своей характеристики', () => {

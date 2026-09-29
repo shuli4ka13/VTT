@@ -52,7 +52,7 @@ const amountsAfterCheck = (steps: Step[]): { check: Step; amount: Step }[] => {
   return out;
 };
 
-const DOUBLER = /\?\s*2\s*:\s*1\s*$/;
+const DOUBLER = /^если\(.*,\s*2\s*,\s*1\s*\)$/;
 
 export function critOf(system: System): CritChoice {
   if ((system.grants ?? []).includes(CRIT_RULE) && system.effects[CRIT_RULE]) return 'explode';
@@ -81,14 +81,14 @@ const withoutDoubler = (step: Record<string, unknown>): void => {
 };
 
 const withDoubler = (step: Record<string, unknown>, check: string): void => {
-  const crit = `@${check}.atMax >= 1 ? 2 : 1`;
+  const crit = `если(@${check}.atMax >= 1, 2, 1)`;
   const fixed = step.fixed as { expr?: unknown } | undefined;
   const call = findRoll(fixed?.expr);
   if (!call) {
     step.count = { expr: crit };
     return;
   }
-  const times = call.times ? `${tight(call.times)} * (${crit})` : `(${crit})`;
+  const times = call.times ? `${tight(call.times)} * ${crit}` : crit;
   step.fixed = { ...fixed, expr: writeRoll({ ...call, times }) };
 };
 

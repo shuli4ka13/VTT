@@ -52,7 +52,7 @@ const stored = (tag, label, group, def, extra = {}) => {
 };
 const formula = (tag, label, group, expr, roll) => ({ tag, label, group, ...(roll ? { roll } : {}), value: { kind: 'formula', expr } });
 const pool = label => ({ label, die: POOL_DIE, pool: true, tags: ['проверка'] });
-const ofMeta = column => `(@metatype != "" ? таблица("metatypes", @metatype, "${column}") : 0)`;
+const ofMeta = column => `если(@metatype != "", таблица("metatypes", @metatype, "${column}"), 0)`;
 const PENALTY = '@wound_mod + @condition_mod';
 
 function fields() {
@@ -67,10 +67,10 @@ function fields() {
   out.push(stored('resonance', 'Резонанс', 'Особые', 0, { min: 0 }));
 
   out.push({ tag: '__skills', label: '', value: { kind: 'stored', type: 'number', default: 0 }, cell: { table: 'skills', row: '_', column: '_' } });
-  out.push(formula('composure', 'Самообладание', 'Наборы кубиков', `max(0, @willpower + @charisma + ${PENALTY})`, pool('Самообладание')));
-  out.push(formula('judge_intentions', 'Проницательность', 'Наборы кубиков', `max(0, @willpower + @intuition + ${PENALTY})`, pool('Проницательность')));
-  out.push(formula('memory', 'Память', 'Наборы кубиков', `max(0, @logic + @intuition + ${PENALTY})`, pool('Память')));
-  out.push(formula('lift_carry', 'Поднятие тяжестей', 'Наборы кубиков', `max(0, @body + @strength + ${PENALTY})`, pool('Поднятие тяжестей')));
+  out.push(formula('composure', 'Самообладание', 'Наборы кубиков', `большее из(0, @willpower + @charisma + ${PENALTY})`, pool('Самообладание')));
+  out.push(formula('judge_intentions', 'Проницательность', 'Наборы кубиков', `большее из(0, @willpower + @intuition + ${PENALTY})`, pool('Проницательность')));
+  out.push(formula('memory', 'Память', 'Наборы кубиков', `большее из(0, @logic + @intuition + ${PENALTY})`, pool('Память')));
+  out.push(formula('lift_carry', 'Поднятие тяжестей', 'Наборы кубиков', `большее из(0, @body + @strength + ${PENALTY})`, pool('Поднятие тяжестей')));
 
   out.push(stored('armor_worn', 'Броня: надетое', 'Защита', 0, { min: 0 }));
   out.push(stored('armor_extra', 'Броня: шлем, щит, накладки', 'Защита', 0, { min: 0 }));
@@ -78,18 +78,18 @@ function fields() {
   out.push(stored('cover', 'Укрытие (0–4)', 'Защита', 0, { min: 0, max: 4 }));
   out.push(formula('defense_rating', 'Значение защиты', 'Защита',
     `@body + @armor_worn + @armor_extra + @armor_natural + ${ofMeta('dermal')} + @cover`));
-  out.push(formula('defense_pool', 'Защита: набор (Реакция + Интуиция)', 'Защита', `max(0, @reaction + @intuition + @cover + ${PENALTY})`, pool('Защита')));
+  out.push(formula('defense_pool', 'Защита: набор (Реакция + Интуиция)', 'Защита', `большее из(0, @reaction + @intuition + @cover + ${PENALTY})`, pool('Защита')));
   out.push(formula('unarmed_rating', 'Значение атаки без оружия', 'Защита', '@strength + @reaction'));
 
-  out.push(formula('physical_max', 'Счётчик здоровья: ячеек', 'Счётчики', `8 + ceil(@body / 2) + ${ofMeta('toughness')}`));
+  out.push(formula('physical_max', 'Счётчик здоровья: ячеек', 'Счётчики', `8 + округлить вверх(@body / 2) + ${ofMeta('toughness')}`));
   out.push({ ...stored('physical', 'Физический урон', 'Счётчики', 0, { min: 0 }), lives: 'group' });
-  out.push(formula('stun_max', 'Счётчик оглушения: ячеек', 'Счётчики', '8 + ceil(@willpower / 2)'));
+  out.push(formula('stun_max', 'Счётчик оглушения: ячеек', 'Счётчики', '8 + округлить вверх(@willpower / 2)'));
   out.push({ ...stored('stun', 'Оглушающий урон', 'Счётчики', 0, { min: 0 }), lives: 'group' });
-  out.push(formula('stun_overflow', 'Лишний оглушающий — в физический', 'Счётчики', 'max(0, @stun - @stun_max)'));
+  out.push(formula('stun_overflow', 'Лишний оглушающий — в физический', 'Счётчики', 'большее из(0, @stun - @stun_max)'));
   out.push(formula('physical_total', 'Физический урон с переливом', 'Счётчики', '@physical + @stun_overflow'));
-  out.push(formula('critical', 'Критический урон', 'Счётчики', 'max(0, @physical_total - @physical_max)'));
+  out.push(formula('critical', 'Критический урон', 'Счётчики', 'большее из(0, @physical_total - @physical_max)'));
   out.push(formula('wound_mod', 'Штраф за раны', 'Счётчики',
-    '0 - floor(min(@stun, @stun_max) / 3) - floor(min(@physical_total, @physical_max) / 3)'));
+    '0 - округлить вниз(меньшее из(@stun, @stun_max) / 3) - округлить вниз(меньшее из(@physical_total, @physical_max) / 3)'));
   out.push(stored('condition_mod', 'Штраф от состояний', 'Счётчики', 0));
   out.push(formula('knocked_out', 'Счётчик оглушения полон', 'Счётчики', '@stun >= @stun_max'));
   out.push(formula('bleeding_out', 'Счётчик здоровья полон', 'Счётчики', '@physical_total >= @physical_max'));
@@ -161,12 +161,12 @@ const tables = () => ({
   skills: {
     label: 'Навыки', key: 'word',
     columns: [
-      { key: 'attribute', label: 'Характеристика', kind: 'text' },
+      { key: 'attribute', label: 'Характеристика', kind: 'tag' },
       { key: 'untrained', label: 'Без обучения', kind: 'boolean' },
       { key: 'rank', label: 'Ранг', kind: 'number', start: 0, min: 0, max: 10, sheet: {
         tag: '{key}', label: '{label}', group: 'Навыки',
       } },
-      { key: 'pool', label: 'Набор', kind: 'expr', expr: `max(0, (@{key} > 0 ? @{key} + @{attribute} : ({untrained} ? @{attribute} - 1 : 0)) + ${PENALTY})`, sheet: {
+      { key: 'pool', label: 'Набор', kind: 'expr', expr: `большее из(0, если(@строка.rank > 0, @строка.rank + @строка.attribute, если(@строка.untrained, @строка.attribute - 1, 0)) + ${PENALTY})`, sheet: {
         tag: '{key}_pool', label: '{label}: набор', group: 'Наборы кубиков',
         roll: { label: 'Проверка: {label}', die: POOL_DIE, count: { expr: '@{key}_pool' }, tags: ['проверка'] },
       } },
@@ -219,12 +219,12 @@ const payEdge = n => [
 
 const GAIN = 'все(@получатель.edge_left < 7, @получатель.edge_gained < 2)';
 const MODE = 'или(@режим, "одиночный выстрел")';
-const RATING = `(@дистанция == "вплотную" ? @ar1 : (@дистанция == "близкая" ? @ar2 : (@дистанция == "средняя" ? @ar3 : (@дистанция == "дальняя" ? @ar4 : @ar5))))`;
-const BONUS_HIT = 'или(@успех_за_преимущество, 0) >= 1 ? 1 : 0';
+const RATING = `если(@дистанция == "вплотную", @ar1, если(@дистанция == "близкая", @ar2, если(@дистанция == "средняя", @ar3, если(@дистанция == "дальняя", @ar4, @ar5))))`;
+const BONUS_HIT = 'если(или(@успех_за_преимущество, 0) >= 1, 1, 0)';
 const NET = `@атака.natural + (${BONUS_HIT}) - @атака.versusNatural`;
 const MOVE = 'или(@приём, "нет")';
 const DV = `@dv + таблица("fire_modes", ${MODE}, "dv") + таблица("edge_actions", ${MOVE}, "dv") + ${NET}`;
-const TAKEN = `max(0, ${DV} - @сопротивление.natural)`;
+const TAKEN = `большее из(0, ${DV} - @сопротивление.natural)`;
 
 function effects() {
   const attack = (label, description) => ({
@@ -255,7 +255,7 @@ function effects() {
       change('edge_gained', 'add', '1', `все(@атк - @получатель.defense_rating <= -4, ${GAIN})`),
       {
         id: 'атака', type: 'threshold',
-        roll: { die: POOL_DIE, count: { expr: `max(0, @attack_pool + таблица("edge_actions", ${MOVE}, "pool"))` }, tags: ['атака'] },
+        roll: { die: POOL_DIE, count: { expr: `большее из(0, @attack_pool + таблица("edge_actions", ${MOVE}, "pool"))` }, tags: ['атака'] },
         versus: { roll: { die: POOL_DIE, count: { expr: '@получатель.defense_pool' }, tags: ['защита'] } }, successWhen: 'atLeast', continueOn: 'always',
       },
       { type: 'compare', value: { expr: NET }, versus: { expr: '0' }, breakIf: 'less', note: 'промах: успехов атаки меньше, чем у защиты' },
@@ -288,7 +288,7 @@ function effects() {
     label, group: 'Лечение', activation: 'manual', description,
     steps: [
       { id: 'заживление', type: 'threshold', roll: { die: POOL_DIE, count: { expr: pool }, tags: ['лечение'] }, versus: { expr: '0' }, continueOn: 'always' },
-      change(tag, 'subtract', `min(@${tag}, @заживление.natural)`),
+      change(tag, 'subtract', `меньшее из(@${tag}, @заживление.natural)`),
     ],
   });
 
@@ -321,7 +321,7 @@ function effects() {
     turn_actions: {
       label: 'Начало хода: действия', group: 'Общие правила', activation: 'passive', duration: { kind: 'permanent' }, params: [],
       description: 'Одно сложное и одно простое действие, плюс простое за каждый кубик инициативы (не больше пяти простых).',
-      on: [{ on: 'moment:turn-start', steps: [change('simple_left', 'set', 'min(5, 1 + @init_dice)'), change('complex_left', 'set', '1')] }],
+      on: [{ on: 'moment:turn-start', steps: [change('simple_left', 'set', 'меньшее из(5, 1 + @init_dice)'), change('complex_left', 'set', '1')] }],
     },
     battle_start: {
       label: 'Начало боя', group: 'Общие правила', activation: 'passive', duration: { kind: 'permanent' }, params: [],
@@ -336,12 +336,12 @@ function effects() {
     second_wind: {
       label: 'Второе дыхание', group: 'Преимущество', activation: 'manual',
       description: 'За 3 очка Преимущества — освободить 1 ячейку оглушения.',
-      self: payEdge(3), steps: [change('stun', 'subtract', 'min(@stun, 1)')],
+      self: payEdge(3), steps: [change('stun', 'subtract', 'меньшее из(@stun, 1)')],
     },
     shrug_off: {
       label: 'Ранен не так сильно', group: 'Преимущество', activation: 'manual',
       description: 'За 4 очка Преимущества — освободить 1 ячейку здоровья.',
-      self: payEdge(4), steps: [change('physical', 'subtract', 'min(@physical, 1)')],
+      self: payEdge(4), steps: [change('physical', 'subtract', 'меньшее из(@physical, 1)')],
     },
     scene_start: {
       label: 'Начало сцены', group: 'Преимущество', activation: 'manual',
@@ -357,10 +357,10 @@ function effects() {
       steps: [
         {
           id: 'помощь', type: 'threshold', roll: { die: POOL_DIE, count: { expr: '@healer_pool' }, tags: ['лечение'] },
-          versus: { expr: 'max(0, floor(5 - @получатель.essence))' }, continueOn: 'always',
+          versus: { expr: 'большее из(0, округлить вниз(5 - @получатель.essence))' }, continueOn: 'always',
         },
-        change('stun', 'subtract', 'min(@получатель.stun, max(0, @помощь.margin))', '@помощь.success'),
-        change('physical', 'subtract', 'min(@получатель.physical, floor(max(0, @помощь.margin - @получатель.stun) / 2))', '@помощь.success'),
+        change('stun', 'subtract', 'меньшее из(@получатель.stun, большее из(0, @помощь.margin))', '@помощь.success'),
+        change('physical', 'subtract', 'меньшее из(@получатель.physical, округлить вниз(большее из(0, @помощь.margin - @получатель.stun) / 2))', '@помощь.success'),
       ],
     },
     rest_hour: recover('Час отдыха', 'Тело + Воля: каждый успех — 1 оглушающий.', '@body + @willpower', 'stun'),
@@ -402,10 +402,10 @@ const records = () => ({
     hint: 'Пешка из отряда (стр. 203): одна шкала на оба вида урона, 8 + ⌈больше из Воли и Тела / 2⌉, штраф за каждые 2 ячейки.',
     blocks: ['Характеристики', 'Навыки', 'Наборы кубиков', 'Защита', 'Счётчики', 'Инициатива'],
     modifiers: [
-      setTo('physical_max', '8 + ceil(max(@willpower, @body) / 2)'),
+      setTo('physical_max', '8 + округлить вверх(большее из(@willpower, @body) / 2)'),
       setTo('physical_total', '@physical + @stun'),
       setTo('knocked_out', 'нет'),
-      setTo('wound_mod', '0 - floor(min(@physical + @stun, @physical_max) / 2)'),
+      setTo('wound_mod', '0 - округлить вниз(меньшее из(@physical + @stun, @physical_max) / 2)'),
     ],
   },
   opponent: {

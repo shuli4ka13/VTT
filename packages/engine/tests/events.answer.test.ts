@@ -22,7 +22,7 @@ const system = {
       label: 'Вампирское касание', activation: 'manual',
       steps: [
         { id: 'нанесено', type: 'emit', event: 'урон', args: { сколько: { const: 10 } } },
-        { type: 'emit', event: 'лечение', to: 'sender', args: { сколько: { expr: 'floor(@нанесено.amount / 2)' } } },
+        { type: 'emit', event: 'лечение', to: 'sender', args: { сколько: { expr: 'округлить вниз(@нанесено.amount / 2)' } } },
       ],
     },
   },

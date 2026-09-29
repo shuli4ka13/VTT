@@ -49,7 +49,7 @@ const ZERO: Record<string, unknown> = { number: 0, text: '', boolean: false, cho
 
 export function columnValue(column: TableColumn, own?: unknown): Loose {
   if (column.kind === 'expr') {
-    return { kind: 'formula', expr: own !== undefined && own !== '' ? String(own) : column.expr ?? '' };
+    return { kind: 'formula', expr: column.expr ?? String(own ?? '') };
   }
   const type = STORED.includes(column.kind ?? '') ? column.kind! : 'number';
   return {
@@ -60,6 +60,39 @@ export function columnValue(column: TableColumn, own?: unknown): Loose {
     ...(column.max !== undefined ? { max: column.max } : {}),
   };
 }
+
+export const ROW = 'строка';
+
+const ROW_REF = new RegExp(`@${ROW}((?:\\.[\\p{L}\\p{N}_]+)*)`, 'gu');
+
+const literal = (value: unknown): string =>
+  (typeof value === 'number' ? String(value) : typeof value === 'boolean' ? (value ? 'да' : 'нет') : JSON.stringify(String(value ?? '')));
+
+function rowPath(system: System, tableId: string, row: TableRow, path: string[]): string {
+  const table = system.tables![tableId]!;
+  if (!path.length) return literal(row.value);
+  const [head, ...rest] = path;
+  const column = (table.columns ?? []).find(c => c.key === head);
+  const where = `таблица «${table.label || tableId}», строка «${row.label ?? row.value}»`;
+  if (!column) throw new EngineError(`${where}: колонки «${head}» нет`);
+  if (column.sheet) {
+    if (rest.length) throw new EngineError(`${where}: «${column.label || head}» — поле листа, дальше идти некуда`);
+    return `@${cellTag(system, tableId, row, column)}`;
+  }
+  const cell = (row.cells ?? {})[head!];
+  if (column.kind === 'choice' && rest.length) {
+    const target = (system.tables?.[column.from ?? '']?.rows ?? []).find(r => String(r.value) === String(cell));
+    if (!target) throw new EngineError(`${where}: «${String(cell)}» нет в таблице «${column.from}»`);
+    return rowPath(system, column.from!, target, rest);
+  }
+  if (column.kind === 'tag') return `@${String(cell)}${rest.length ? `.${rest.join('.')}` : ''}`;
+  if (column.kind === 'expr') return `(${withRow(system, tableId, row, String(cell ?? column.expr ?? ''))})`;
+  if (rest.length) throw new EngineError(`${where}: «${column.label || head}» — не ссылка, дальше идти некуда`);
+  return literal(cell);
+}
+
+export const withRow = (system: System, tableId: string, row: TableRow, expr: string): string =>
+  expr.replace(ROW_REF, (_, tail: string) => rowPath(system, tableId, row, tail ? tail.slice(1).split('.') : []));
 
 export const cellTag = (system: System, tableId: string, row: TableRow, column: TableColumn): string => {
   const table = system.tables![tableId]!;
@@ -74,7 +107,8 @@ export function tableFields(system: System, tableId: string): Field[] {
   for (const row of table.rows ?? []) {
     for (const column of columns) {
       const { tag, group, ...spec } = column.sheet as Loose;
-      const value = columnValue(column, (row.cells ?? {})[column.key]);
+      const raw = columnValue(column, (row.cells ?? {})[column.key]);
+      const value = raw.kind === 'formula' ? { ...raw, expr: withRow(system, tableId, row, String(raw.expr)) } : raw;
       out.push({
         ...(deep(system, table, row, { ...spec, value }) as Loose),
         tag: fill(system, table, row, String(tag)),

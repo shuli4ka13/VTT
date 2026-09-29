@@ -70,8 +70,8 @@ const choice = (tag, label, group, from) => ({ tag, label, group, value: { kind:
 const text = (tag, label, group) => ({ tag, label, group, value: { kind: 'stored', type: 'text', default: '' } });
 const formula = (tag, label, group, expr) => ({ tag, label, group, value: { kind: 'formula', expr } });
 
-const ofClass = (column, otherwise) => `(@class != "" ? таблица("classes", @class, "${column}") : ${otherwise})`;
-const ofAncestry = column => `(@ancestry != "" ? таблица("ancestries", @ancestry, "${column}") : 0)`;
+const ofClass = (column, otherwise) => `если(@class != "", таблица("classes", @class, "${column}"), ${otherwise})`;
+const ofAncestry = column => `если(@ancestry != "", таблица("ancestries", @ancestry, "${column}"), 0)`;
 
 function fields() {
   const out = [];
@@ -84,7 +84,7 @@ function fields() {
     out.push(stored(tag, label, 'Черты', 0, { min: -3, max: 6, roll: { label: `Бросок: ${label}`, die: DUALITY, tags: ['действие', 'герой', label.toLowerCase()] } }));
   }
   out.push(stored('level', 'Уровень', 'Прогрессия', 1, { min: 0, max: 10 }));
-  out.push(formula('tier', 'Ступень', 'Прогрессия', '@level >= 8 ? 4 : (@level >= 5 ? 3 : (@level >= 2 ? 2 : 1))'));
+  out.push(formula('tier', 'Ступень', 'Прогрессия', 'если(@level >= 8, 4, если(@level >= 5, 3, если(@level >= 2, 2, 1)))'));
   out.push(stored('proficiency', 'Мастерство', 'Прогрессия', 1, { min: 1, max: 6 }));
 
   out.push(stored('evasion_bonus', 'Уклонение: прибавка', 'Уклонение и броня', 0));
@@ -95,9 +95,9 @@ function fields() {
   out.push(stored('major_base', 'Порог серьёзного: основа', 'Пороги урона', 0, { min: 0 }));
   out.push(stored('severe_base', 'Порог тяжёлого: основа', 'Пороги урона', 0, { min: 0 }));
   out.push(formula('major', 'Порог серьёзного урона', 'Пороги урона',
-    `@major_base > 0 ? @major_base + @level + ${ofAncestry('threshold_proficiency')} * @proficiency : @level`));
+    `если(@major_base > 0, @major_base + @level + ${ofAncestry('threshold_proficiency')} * @proficiency, @level)`));
   out.push(formula('severe', 'Порог тяжёлого урона', 'Пороги урона',
-    `@severe_base > 0 ? @severe_base + @level + ${ofAncestry('threshold_proficiency')} * @proficiency : 2 * @level`));
+    `если(@severe_base > 0, @severe_base + @level + ${ofAncestry('threshold_proficiency')} * @proficiency, 2 * @level)`));
 
   out.push(stored('hp_extra', 'Хиты: дополнительные клетки', 'Здоровье', 0, { min: 0 }));
   out.push(formula('hp_max', 'Хиты: клеток', 'Здоровье', `${ofClass('hp', 0)} + ${ofAncestry('hp_bonus')} + @hp_extra`));
@@ -197,7 +197,7 @@ const HOPE = '@бросок.parts.надежда > @бросок.parts.стра�
 const FEAR = '@бросок.parts.страх > @бросок.parts.надежда';
 const CRIT = '@бросок.parts.надежда == @бросок.parts.страх';
 const HIT = `любое(@бросок.success, ${CRIT})`;
-const MARKS = '@event.amount >= @severe ? 3 : (@event.amount >= @major ? 2 : (@event.amount >= 1 ? 1 : 0))';
+const MARKS = 'если(@event.amount >= @severe, 3, если(@event.amount >= @major, 2, если(@event.amount >= 1, 1, 0)))';
 
 const incoming = (tags, edit) => ({ kind: 'roll', target: 'incoming:roll:any', tags, edit, condition: null });
 const mod = (target, value) => ({ kind: 'value', target, op: 'add', value, stacking: 'sum', condition: null });
@@ -247,10 +247,10 @@ function effects() {
           roll: { die: DUALITY, bonus: { expr: 'таблица("traits", @trait, "value") + @attack_bonus' }, tags: ['атака', 'герой'] },
           versus: { expr: '@получатель.difficulty' }, continueOn: 'always',
         },
-        { type: 'compare', value: { expr: `${HIT} ? 1 : 0` }, versus: { expr: '1' }, breakIf: 'less', note: 'промах' },
+        { type: 'compare', value: { expr: `если(${HIT}, 1, 0)` }, versus: { expr: '1' }, breakIf: 'less', note: 'промах' },
         {
           id: 'урон', type: 'amount', source: 'item',
-          fixed: { expr: `кинуть(@damage_die, @отправитель.proficiency + @extra_die, @отправитель.proficiency) + @damage_bonus + (${CRIT} ? @отправитель.proficiency * @die_size : 0)` },
+          fixed: { expr: `кинуть(@damage_die, @отправитель.proficiency + @extra_die, @отправитель.proficiency) + @damage_bonus + если(${CRIT}, @отправитель.proficiency * @die_size, 0)` },
         },
         { type: 'emit', event: 'damage', args: { amount: { expr: '@урон' } } },
       ],
@@ -326,7 +326,7 @@ function effects() {
           id: 'бросок', type: 'threshold', roll: { die: DUALITY, tags: ['смерть'] },
           versus: { expr: '0' }, continueOn: 'always',
         },
-        change('hp', 'subtract', 'min(@hp, @бросок.parts.надежда)', HOPE),
+        change('hp', 'subtract', 'меньшее из(@hp, @бросок.parts.надежда)', HOPE),
         change('hp', 'set', '0', CRIT),
         change('stress', 'set', '0', CRIT),
         drop('death_move'),
@@ -334,10 +334,10 @@ function effects() {
       ]),
     dead: state('Мёртв', 'Герой ушёл за завесу смерти.'),
     unconscious: state('Без сознания', 'Не двигается и не действует, по нему нельзя атаковать. Приходит в себя, когда союзник снимет клетку хитов или после долгого отдыха.'),
-    tend_wounds: move('Перевязать раны', 'Отдых', 'Короткий отдых: снять 1к4 + ступень клеток хитов.', [change('hp', 'subtract', 'min(@hp, кинуть("1к4") + @tier)'), drop('unconscious')]),
-    clear_stress: move('Снять Стресс', 'Отдых', 'Короткий отдых: снять 1к4 + ступень Стресса.', [change('stress', 'subtract', 'min(@stress, кинуть("1к4") + @tier)')]),
-    repair_armor: move('Починить доспех', 'Отдых', 'Короткий отдых: освободить 1к4 + ступень бронеслотов.', [change('armor_marked', 'subtract', 'min(@armor_marked, кинуть("1к4") + @tier)')]),
-    prepare: move('Подготовиться', 'Отдых', 'Короткий или долгий отдых: получить Надежду; вместе с партией — по 2.', [change('hope', 'add', '@вместе >= 1 ? 2 : 1')],
+    tend_wounds: move('Перевязать раны', 'Отдых', 'Короткий отдых: снять 1к4 + ступень клеток хитов.', [change('hp', 'subtract', 'меньшее из(@hp, кинуть("1к4") + @tier)'), drop('unconscious')]),
+    clear_stress: move('Снять Стресс', 'Отдых', 'Короткий отдых: снять 1к4 + ступень Стресса.', [change('stress', 'subtract', 'меньшее из(@stress, кинуть("1к4") + @tier)')]),
+    repair_armor: move('Починить доспех', 'Отдых', 'Короткий отдых: освободить 1к4 + ступень бронеслотов.', [change('armor_marked', 'subtract', 'меньшее из(@armor_marked, кинуть("1к4") + @tier)')]),
+    prepare: move('Подготовиться', 'Отдых', 'Короткий или долгий отдых: получить Надежду; вместе с партией — по 2.', [change('hope', 'add', 'если(@вместе >= 1, 2, 1)')],
       { params: [{ key: 'вместе', label: 'С партией: 1 — да, 0 — нет', kind: 'number', ask: { by: 'actor', min: 0, max: 1 } }] }),
     tend_all: move('Залечить все раны', 'Отдых', 'Долгий отдых: снять все хиты.', [change('hp', 'set', '0'), drop('unconscious')]),
     clear_all_stress: move('Снять весь Стресс', 'Отдых', 'Долгий отдых: снять весь Стресс.', [change('stress', 'set', '0')]),
@@ -346,9 +346,9 @@ function effects() {
     gm_long_rest: move('Страх: долгий отдых', 'Ведущий', 'Партия на долгом отдыхе — ведущий получает 1к4 + число героев Страха.', [change('fear', 'add', 'кинуть("1к4") + @героев')],
       { params: [{ key: 'героев', label: 'Героев в партии', kind: 'number', ask: { by: 'gm', min: 1, max: 8 } }] }),
     frontline_tank: move('Frontline Tank', 'Способности Надежды', 'Страж: за 3 Надежды освободить 2 бронеслота.',
-      [change('armor_marked', 'subtract', 'min(@armor_marked, 2)')], { self: payHope(3) }),
+      [change('armor_marked', 'subtract', 'меньшее из(@armor_marked, 2)')], { self: payHope(3) }),
     life_support: move('Life Support', 'Способности Надежды', 'Серафим: за 3 Надежды снять клетку хитов у союзника в ближней дистанции.',
-      [change('hp', 'subtract', 'min(@hp, 1)'), drop('unconscious')], { self: payHope(3) }),
+      [change('hp', 'subtract', 'меньшее из(@hp, 1)'), drop('unconscious')], { self: payHope(3) }),
     no_mercy: move('No Mercy', 'Способности Надежды', 'Воин: за 3 Надежды +1 к броскам атаки до следующего отдыха.',
       [hang('merciless')], { self: payHope(3) }),
     merciless: state('Без пощады', '+1 к броскам атаки до следующего отдыха.',

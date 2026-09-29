@@ -25,7 +25,7 @@
         "label": "Модификатор: Сила",
         "value": {
           "kind": "formula",
-          "expr": "floor((@str - 10) / 2)"
+          "expr": "округлить вниз((@str - 10) / 2)"
         },
         "tag": "str_mod",
         "group": "Модификаторы",
@@ -56,7 +56,7 @@
         "label": "Модификатор: Телосложение",
         "value": {
           "kind": "formula",
-          "expr": "floor((@con - 10) / 2)"
+          "expr": "округлить вниз((@con - 10) / 2)"
         },
         "tag": "con_mod",
         "group": "Модификаторы",
@@ -87,7 +87,7 @@
         "label": "Модификатор: Ловкость",
         "value": {
           "kind": "formula",
-          "expr": "floor((@dex - 10) / 2)"
+          "expr": "округлить вниз((@dex - 10) / 2)"
         },
         "tag": "dex_mod",
         "group": "Модификаторы",
@@ -118,7 +118,7 @@
         "label": "Модификатор: Интеллект",
         "value": {
           "kind": "formula",
-          "expr": "floor((@int - 10) / 2)"
+          "expr": "округлить вниз((@int - 10) / 2)"
         },
         "tag": "int_mod",
         "group": "Модификаторы",
@@ -149,7 +149,7 @@
         "label": "Модификатор: Мудрость",
         "value": {
           "kind": "formula",
-          "expr": "floor((@wis - 10) / 2)"
+          "expr": "округлить вниз((@wis - 10) / 2)"
         },
         "tag": "wis_mod",
         "group": "Модификаторы",
@@ -180,7 +180,7 @@
         "label": "Модификатор: Харизма",
         "value": {
           "kind": "formula",
-          "expr": "floor((@cha - 10) / 2)"
+          "expr": "округлить вниз((@cha - 10) / 2)"
         },
         "tag": "cha_mod",
         "group": "Модификаторы",
@@ -347,7 +347,7 @@
         "lives": "group",
         "value": {
           "kind": "formula",
-          "expr": "@mook_hp > 0 ? ceil(max(0, @hp) / @mook_hp) : 1"
+          "expr": "если(@mook_hp > 0, округлить вверх(большее из(0, @hp) / @mook_hp), 1)"
         }
       }
     ],
@@ -447,7 +447,7 @@
               "group": "Модификаторы"
             },
             "kind": "expr",
-            "expr": "floor((@{key} - 10) / 2)"
+            "expr": "округлить вниз((@строка.score - 10) / 2)"
           }
         ],
         "rows": [
@@ -566,7 +566,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть(@weapon_die, @отправитель.level * (@hit.natural >= 20 ? 2 : 1)) + @damage_with"
+              "expr": "кинуть(@weapon_die, @отправитель.level * если(@hit.natural >= 20, 2, 1)) + @damage_with"
             },
             "when": {
               "expr": "@hit.success"
@@ -674,7 +674,7 @@
             "direction": "set",
             "targetModifiers": false,
             "value": {
-              "expr": "min(6, @стол.escalation + 1)"
+              "expr": "меньшее из(6, @стол.escalation + 1)"
             }
           }
         ]

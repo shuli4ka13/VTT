@@ -30,42 +30,42 @@ group('интерпретатор', () => {
       eq(run('#str + #dex', { str: 16, dex: 14 }), 30);
     });
     test('модификатор характеристики из 5e', () => {
-      eq(run('floor((#str - 10) / 2)', { str: 16 }), 3);
-      eq(run('floor((#str - 10) / 2)', { str: 7 }), -2);
+      eq(run('округлить вниз((#str - 10) / 2)', { str: 16 }), 3);
+      eq(run('округлить вниз((#str - 10) / 2)', { str: 7 }), -2);
     });
   });
 
   group('функции', () => {
     test('floor округляет вниз, в том числе отрицательные', () => {
-      eq(run('floor(1.9)'), 1);
-      eq(run('floor(-1.1)'), -2);
+      eq(run('округлить вниз(1.9)'), 1);
+      eq(run('округлить вниз(-1.1)'), -2);
     });
     test('ceil округляет вверх', () => {
-      eq(run('ceil(1.1)'), 2);
-      eq(run('ceil(-1.9)'), -1);
+      eq(run('округлить вверх(1.1)'), 2);
+      eq(run('округлить вверх(-1.9)'), -1);
     });
     test('round округляет по школьным правилам', () => {
-      eq(run('round(1.4)'), 1);
-      eq(run('round(1.5)'), 2);
+      eq(run('округлить(1.4)'), 1);
+      eq(run('округлить(1.5)'), 2);
     });
     test('abs убирает знак', () => {
-      eq(run('abs(-3)'), 3);
-      eq(run('abs(3)'), 3);
+      eq(run('модуль(-3)'), 3);
+      eq(run('модуль(3)'), 3);
     });
     test('min и max принимают два аргумента', () => {
-      eq(run('min(3, 5)'), 3);
-      eq(run('max(3, 5)'), 5);
+      eq(run('меньшее из(3, 5)'), 3);
+      eq(run('большее из(3, 5)'), 5);
     });
     test('min и max принимают больше двух аргументов', () => {
-      eq(run('min(4, 2, 9)'), 2);
-      eq(run('max(4, 2, 9)'), 9);
+      eq(run('меньшее из(4, 2, 9)'), 2);
+      eq(run('большее из(4, 2, 9)'), 9);
     });
     test('неизвестная функция — внятная ошибка с именем', () => {
       throws(() => run('sqrt(4)'), FormulaRuntimeError, 'sqrt');
     });
     test('floor требует ровно один аргумент', () => {
-      throws(() => run('floor(1, 2)'), FormulaRuntimeError);
-      throws(() => run('floor()'), FormulaRuntimeError);
+      throws(() => run('округлить вниз(1, 2)'), FormulaRuntimeError);
+      throws(() => run('округлить вниз()'), FormulaRuntimeError);
     });
   });
 
@@ -78,26 +78,26 @@ group('интерпретатор', () => {
       eq(run('2 == 2'), true);
       eq(run('2 != 2'), false);
     });
-    test('тернарный оператор выбирает ветку', () => {
-      eq(run('1 < 2 ? 10 : 20'), 10);
-      eq(run('1 > 2 ? 10 : 20'), 20);
+    test('«если» выбирает ветку', () => {
+      eq(run('если(1 < 2, 10, 20)'), 10);
+      eq(run('если(1 > 2, 10, 20)'), 20);
     });
     test('невыбранная ветка не вычисляется', () => {
 
-      eq(run('1 < 2 ? 10 : 1 / 0'), 10);
+      eq(run('если(1 < 2, 10, 1 / 0)'), 10);
     });
     test('логическое поле работает условием напрямую', () => {
-      eq(run('#heavy ? 0 : #dex_mod', { heavy: true, dex_mod: 2 }), 0);
-      eq(run('#heavy ? 0 : #dex_mod', { heavy: false, dex_mod: 2 }), 2);
+      eq(run('если(@heavy, 0, @dex_mod)', { heavy: true, dex_mod: 2 }), 0);
+      eq(run('если(@heavy, 0, @dex_mod)', { heavy: false, dex_mod: 2 }), 2);
     });
     test('число не является условием — числа и логика не смешиваются', () => {
-      throws(() => run('1 ? 10 : 20'), FormulaRuntimeError, 'логическ');
+      throws(() => run('если(1, 10, 20)'), FormulaRuntimeError, 'логическ');
     });
     test('арифметика с логическим значением — ошибка, а не тихое приведение к 1', () => {
       throws(() => run('#heavy + 1', { heavy: true }), FormulaRuntimeError);
     });
     test('класс брони: в тяжёлом доспехе Ловкость не прибавляется', () => {
-      const expr = '#ac_base + (#heavy ? 0 : #dex_mod)';
+      const expr = '@ac_base + если(@heavy, 0, @dex_mod)';
       eq(run(expr, { ac_base: 16, heavy: true, dex_mod: 3 }), 16);
       eq(run(expr, { ac_base: 12, heavy: false, dex_mod: 3 }), 15);
     });

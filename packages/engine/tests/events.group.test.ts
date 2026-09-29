@@ -10,7 +10,7 @@ const system = {
   fields: [
     { tag: 'сила', label: 'Сила', value: { kind: 'stored', type: 'number', default: 2 } },
     { tag: 'урон', label: 'Урон отряда', lives: 'group', value: { kind: 'stored', type: 'number', default: 0 } },
-    { tag: 'выбыло', label: 'Выбыло', lives: 'group', value: { kind: 'formula', expr: 'floor(@урон / 3)' } },
+    { tag: 'выбыло', label: 'Выбыло', lives: 'group', value: { kind: 'formula', expr: 'округлить вниз(@урон / 3)' } },
   ],
   effects: {
     удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'apply', target: { tag: 'урон' }, direction: 'add', value: { expr: '4' } }] },

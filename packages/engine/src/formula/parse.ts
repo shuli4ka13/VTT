@@ -16,19 +16,9 @@ export function parse(source: unknown): Node {
     peek().type === type && (value === undefined || peek().value === value);
   const advance = (): Token => tokens[i++]!;
 
-  const ast = parseConditional();
+  const ast = parseComparison();
   if (!at('eof')) throw new FormulaSyntaxError('лишний текст после конца выражения', peek().pos);
   return ast;
-
-  function parseConditional(): Node {
-    const test = parseComparison();
-    if (!at('question')) return test;
-    advance();
-    const then = parseConditional();
-    if (!at('colon')) throw new FormulaSyntaxError('в тернарном операторе ожидается «:»', peek().pos);
-    advance();
-    return { kind: 'Conditional', test, then, otherwise: parseConditional() };
-  }
 
   function parseComparison(): Node {
     const left = parseAdditive();
@@ -93,20 +83,24 @@ export function parse(source: unknown): Node {
       advance();
       const args: Node[] = [];
       if (!at('rparen')) {
-        args.push(parseConditional());
+        args.push(parseComparison());
         while (at('comma')) {
           advance();
-          args.push(parseConditional());
+          args.push(parseComparison());
         }
       }
       if (!at('rparen')) throw new FormulaSyntaxError('не закрыта скобка вызова функции', peek().pos);
       advance();
+      if (t.value === 'если') {
+        if (args.length !== 3) throw new FormulaSyntaxError('«если» ждёт три части: условие, что если да, что если нет', t.pos);
+        return { kind: 'Conditional', test: args[0]!, then: args[1]!, otherwise: args[2]! };
+      }
       return { kind: 'Call', name: String(t.value), args };
     }
 
     if (t.type === 'lparen') {
       advance();
-      const inner = parseConditional();
+      const inner = parseComparison();
       if (!at('rparen')) throw new FormulaSyntaxError('не закрыта скобка', peek().pos);
       advance();
       return inner;

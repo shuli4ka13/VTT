@@ -2,7 +2,7 @@ import { compile } from '../formula/index.ts';
 import { applyValueModifiers } from './modifiers.ts';
 import { lookupCell, rowOf } from './tables.ts';
 import { VALUE_COLUMN, isRange } from '../model/tables.ts';
-import { cellTag } from '../model/sheet-columns.ts';
+import { cellTag, withRow } from '../model/sheet-columns.ts';
 import type { System, Table } from '../model/types.ts';
 import type { Pass } from './calc.ts';
 
@@ -41,12 +41,12 @@ export function readCell(
     return row ? pass.resolve(cellTag(system, tableId, row, spec)) : null;
   }
   const found = lookupCell(system, tableId, input, column, forTag);
-  const raw = (found === undefined || found === '') && spec?.expr ? spec.expr : found;
+  const raw = spec?.expr ?? found;
   const kind = spec?.kind;
   if (!table || kind !== 'expr' || typeof raw !== 'string') return raw;
 
-  const base = compile(raw).evaluate(pass.resolve);
   const row = rowOf(system, tableId, input, forTag);
+  const base = compile(row ? withRow(system, tableId, row, raw) : raw).evaluate(pass.resolve);
   const key = row ? rowKeyOf(table, input) : String(input);
   const own = applyValueModifiers(base, cellTagOf(tableId, key, column), pass);
   return applyValueModifiers(own, columnTagOf(tableId, column), pass);

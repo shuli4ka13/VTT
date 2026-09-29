@@ -90,7 +90,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "floor((@str - 10) / 2)"
+          "expr": "округлить вниз((@str - 10) / 2)"
         },
         "tag": "str_mod",
         "group": "Модификаторы",
@@ -134,7 +134,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "floor((@dex - 10) / 2)"
+          "expr": "округлить вниз((@dex - 10) / 2)"
         },
         "tag": "dex_mod",
         "group": "Модификаторы",
@@ -178,7 +178,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "floor((@con - 10) / 2)"
+          "expr": "округлить вниз((@con - 10) / 2)"
         },
         "tag": "con_mod",
         "group": "Модификаторы",
@@ -222,7 +222,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "floor((@int - 10) / 2)"
+          "expr": "округлить вниз((@int - 10) / 2)"
         },
         "tag": "int_mod",
         "group": "Модификаторы",
@@ -266,7 +266,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "floor((@wis - 10) / 2)"
+          "expr": "округлить вниз((@wis - 10) / 2)"
         },
         "tag": "wis_mod",
         "group": "Модификаторы",
@@ -310,7 +310,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "floor((@cha - 10) / 2)"
+          "expr": "округлить вниз((@cha - 10) / 2)"
         },
         "tag": "cha_mod",
         "group": "Модификаторы",
@@ -388,7 +388,7 @@
         "label": "Владение: спасбросок Сила",
         "value": {
           "kind": "formula",
-          "expr": "max(@str_save_extra, есть(@class_name.saves, \"сила\") ? 1 : 0)"
+          "expr": "большее из(@str_save_extra, если(есть(@class_name.saves, \"сила\"), 1, 0))"
         },
         "tag": "str_save_prof",
         "group": "Спасброски",
@@ -447,7 +447,7 @@
         "label": "Владение: спасбросок Ловкость",
         "value": {
           "kind": "formula",
-          "expr": "max(@dex_save_extra, есть(@class_name.saves, \"ловкость\") ? 1 : 0)"
+          "expr": "большее из(@dex_save_extra, если(есть(@class_name.saves, \"ловкость\"), 1, 0))"
         },
         "tag": "dex_save_prof",
         "group": "Спасброски",
@@ -506,7 +506,7 @@
         "label": "Владение: спасбросок Телосложение",
         "value": {
           "kind": "formula",
-          "expr": "max(@con_save_extra, есть(@class_name.saves, \"телосложение\") ? 1 : 0)"
+          "expr": "большее из(@con_save_extra, если(есть(@class_name.saves, \"телосложение\"), 1, 0))"
         },
         "tag": "con_save_prof",
         "group": "Спасброски",
@@ -565,7 +565,7 @@
         "label": "Владение: спасбросок Интеллект",
         "value": {
           "kind": "formula",
-          "expr": "max(@int_save_extra, есть(@class_name.saves, \"интеллект\") ? 1 : 0)"
+          "expr": "большее из(@int_save_extra, если(есть(@class_name.saves, \"интеллект\"), 1, 0))"
         },
         "tag": "int_save_prof",
         "group": "Спасброски",
@@ -624,7 +624,7 @@
         "label": "Владение: спасбросок Мудрость",
         "value": {
           "kind": "formula",
-          "expr": "max(@wis_save_extra, есть(@class_name.saves, \"мудрость\") ? 1 : 0)"
+          "expr": "большее из(@wis_save_extra, если(есть(@class_name.saves, \"мудрость\"), 1, 0))"
         },
         "tag": "wis_save_prof",
         "group": "Спасброски",
@@ -683,7 +683,7 @@
         "label": "Владение: спасбросок Харизма",
         "value": {
           "kind": "formula",
-          "expr": "max(@cha_save_extra, есть(@class_name.saves, \"харизма\") ? 1 : 0)"
+          "expr": "большее из(@cha_save_extra, если(есть(@class_name.saves, \"харизма\"), 1, 0))"
         },
         "tag": "cha_save_prof",
         "group": "Спасброски",
@@ -1647,7 +1647,7 @@
         "group": "Защита",
         "value": {
           "kind": "formula",
-          "expr": "@ac_base + (@armor_heavy ? 0 : @ac_dex)"
+          "expr": "@ac_base + если(@armor_heavy, 0, @ac_dex)"
         }
       },
       {
@@ -1893,7 +1893,7 @@
         "group": "Атака",
         "value": {
           "kind": "formula",
-          "expr": "ceil(@level / 2)"
+          "expr": "округлить вверх(@level / 2)"
         }
       },
       {
@@ -3423,8 +3423,8 @@
           {
             "value": "фехтовальное — Сила или Ловкость",
             "cells": {
-              "attack": "max(@str_mod, @dex_mod) + @prof_bonus",
-              "damage": "max(@str_mod, @dex_mod)"
+              "attack": "большее из(@str_mod, @dex_mod) + @prof_bonus",
+              "damage": "большее из(@str_mod, @dex_mod)"
             }
           },
           {
@@ -3499,7 +3499,7 @@
             "key": "mod",
             "label": "Модификатор",
             "kind": "expr",
-            "expr": "floor((@{key} - 10) / 2)",
+            "expr": "округлить вниз((@строка.score - 10) / 2)",
             "sheet": {
               "tag": "{key}_mod",
               "label": "Модификатор: {label}",
@@ -3558,6 +3558,12 @@
         "key": "word",
         "columns": [
           {
+            "key": "ability",
+            "label": "Характеристика",
+            "kind": "choice",
+            "from": "abilities"
+          },
+          {
             "key": "extra",
             "label": "Владение сверх класса",
             "kind": "number",
@@ -3575,7 +3581,7 @@
             "key": "prof",
             "label": "Владение",
             "kind": "expr",
-            "expr": "max(@{key}_save_extra, есть(@class_name.saves, \"{value}\") ? 1 : 0)",
+            "expr": "большее из(@строка.extra, если(есть(@class_name.saves, @строка), 1, 0))",
             "sheet": {
               "tag": "{key}_save_prof",
               "label": "Владение: спасбросок {label}",
@@ -3586,7 +3592,7 @@
             "key": "save",
             "label": "Спасбросок",
             "kind": "expr",
-            "expr": "@{key}_mod + @{key}_save_prof * @prof_bonus",
+            "expr": "@строка.ability.mod + @строка.prof * @prof_bonus",
             "sheet": {
               "tag": "{key}_save",
               "label": "Спасбросок: {label}",
@@ -3611,32 +3617,50 @@
           {
             "value": "сила",
             "key": "str",
-            "label": "Сила"
+            "label": "Сила",
+            "cells": {
+              "ability": "сила"
+            }
           },
           {
             "value": "ловкость",
             "key": "dex",
-            "label": "Ловкость"
+            "label": "Ловкость",
+            "cells": {
+              "ability": "ловкость"
+            }
           },
           {
             "value": "телосложение",
             "key": "con",
-            "label": "Телосложение"
+            "label": "Телосложение",
+            "cells": {
+              "ability": "телосложение"
+            }
           },
           {
             "value": "интеллект",
             "key": "int",
-            "label": "Интеллект"
+            "label": "Интеллект",
+            "cells": {
+              "ability": "интеллект"
+            }
           },
           {
             "value": "мудрость",
             "key": "wis",
-            "label": "Мудрость"
+            "label": "Мудрость",
+            "cells": {
+              "ability": "мудрость"
+            }
           },
           {
             "value": "харизма",
             "key": "cha",
-            "label": "Харизма"
+            "label": "Харизма",
+            "cells": {
+              "ability": "харизма"
+            }
           }
         ]
       },
@@ -3667,7 +3691,7 @@
             "key": "total",
             "label": "Навык",
             "kind": "expr",
-            "expr": "@{ability.key}_mod + @{key}_prof * @prof_bonus",
+            "expr": "@строка.ability.mod + @строка.prof * @prof_bonus",
             "sheet": {
               "tag": "{key}",
               "label": "{label}",
@@ -4370,7 +4394,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть(@damage_dice, (@hit.natural >= @отправитель.crit_from ? 2 : 1)) + @damage_with"
+              "expr": "кинуть(@damage_dice, (если(@hit.natural >= @отправитель.crit_from, 2, 1))) + @damage_with"
             }
           },
           {
@@ -4505,7 +4529,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть('1d8', (min(5, 1 + @slot)))"
+              "expr": "кинуть('1d8', (меньшее из(5, 1 + @slot)))"
             }
           },
           {
@@ -4797,7 +4821,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть(@damage_die, ((@отправитель.cantrip_dice) * (@hit.natural >= @отправитель.crit_from ? 2 : 1)))"
+              "expr": "кинуть(@damage_die, ((@отправитель.cantrip_dice) * (если(@hit.natural >= @отправитель.crit_from, 2, 1))))"
             }
           },
           {
@@ -4992,7 +5016,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть(@damage_die, ((@dice_count + (@slot - @spell_level) * @dice_up) * (@hit.natural >= @отправитель.crit_from ? 2 : 1)))"
+              "expr": "кинуть(@damage_die, ((@dice_count + (@slot - @spell_level) * @dice_up) * (если(@hit.natural >= @отправитель.crit_from, 2, 1))))"
             }
           },
           {
@@ -8180,7 +8204,7 @@
                   ]
                 },
                 "versus": {
-                  "expr": "max(10, floor(@event_amount / 2))"
+                  "expr": "большее из(10, округлить вниз(@event_amount / 2))"
                 },
                 "successWhen": "atLeast",
                 "continueOn": "fail"
@@ -8560,7 +8584,7 @@
                 },
                 "direction": "add",
                 "value": {
-                  "expr": "max(1, floor(@получатель.level / 2))"
+                  "expr": "большее из(1, округлить вниз(@получатель.level / 2))"
                 },
                 "targetModifiers": false
               }
@@ -8913,7 +8937,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "1 + min(1, @hasted)"
+                  "expr": "1 + меньшее из(1, @hasted)"
                 },
                 "targetModifiers": false
               },
@@ -9013,7 +9037,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "1 + min(1, @hasted)"
+                  "expr": "1 + меньшее из(1, @hasted)"
                 },
                 "targetModifiers": false
               },

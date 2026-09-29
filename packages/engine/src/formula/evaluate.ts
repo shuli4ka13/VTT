@@ -16,12 +16,12 @@ interface Fn {
 }
 
 const FUNCTIONS: Record<string, Fn> = {
-  floor: { arity: 1, apply: args => Math.floor(args[0]!) },
-  ceil: { arity: 1, apply: args => Math.ceil(args[0]!) },
-  round: { arity: 1, apply: args => Math.round(args[0]!) },
-  abs: { arity: 1, apply: args => Math.abs(args[0]!) },
-  min: { arity: '1+', apply: args => Math.min(...args) },
-  max: { arity: '1+', apply: args => Math.max(...args) },
+  'округлить вниз': { arity: 1, apply: args => Math.floor(args[0]!) },
+  'округлить вверх': { arity: 1, apply: args => Math.ceil(args[0]!) },
+  округлить: { arity: 1, apply: args => Math.round(args[0]!) },
+  модуль: { arity: 1, apply: args => Math.abs(args[0]!) },
+  'меньшее из': { arity: '1+', apply: args => Math.min(...args) },
+  'большее из': { arity: '1+', apply: args => Math.max(...args) },
   есть: {
     arity: 2,
     apply: () => 0,

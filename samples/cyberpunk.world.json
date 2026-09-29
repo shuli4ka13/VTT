@@ -150,7 +150,7 @@
         "group": "Характеристики",
         "value": {
           "kind": "formula",
-          "expr": "floor(@humanity / 10)"
+          "expr": "округлить вниз(@humanity / 10)"
         }
       },
       {
@@ -159,7 +159,7 @@
         "group": "Состояние",
         "value": {
           "kind": "formula",
-          "expr": "10 + 5 * ceil((@body + @will) / 2)"
+          "expr": "10 + 5 * округлить вверх((@body + @will) / 2)"
         }
       },
       {
@@ -181,7 +181,7 @@
         "group": "Состояние",
         "value": {
           "kind": "formula",
-          "expr": "ceil(@hp_max / 2)"
+          "expr": "округлить вверх(@hp_max / 2)"
         }
       },
       {
@@ -3551,7 +3551,7 @@
           {
             "key": "stat",
             "label": "Характеристика",
-            "kind": "text"
+            "kind": "tag"
           },
           {
             "key": "start",
@@ -3591,7 +3591,7 @@
               }
             },
             "kind": "expr",
-            "expr": "@{stat} + @{key}"
+            "expr": "@строка.stat + @строка.rank"
           }
         ],
         "rows": [

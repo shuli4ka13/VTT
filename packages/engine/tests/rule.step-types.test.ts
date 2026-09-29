@@ -239,7 +239,7 @@ group('шаг «применить»', () => {
     const stony = { ...mirra, effects: [{ effectId: 'tough' }] };
     const out = run([{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { expr: '9' }, targetModifiers: true }],
       { sys: TOUGH, targetSys: TOUGH, targetSheet: stony });
-    eq(out.sheet.values.hp_current, 17, '21 минус floor(9/2)');
+    eq(out.sheet.values.hp_current, 17, '21 минус округлить вниз(9/2)');
     eq(out.trace[0].incoming, 9, 'в трассе видно, что пришло…');
     eq(out.trace[0].amount, 4, '…и что осталось после сопротивлений');
   });

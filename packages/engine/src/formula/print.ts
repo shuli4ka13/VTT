@@ -3,7 +3,7 @@ import type { Node } from './ast.ts';
 const RANK: Record<string, number> = { '==': 1, '!=': 1, '<': 1, '<=': 1, '>': 1, '>=': 1, '+': 2, '-': 2, '*': 3, '/': 3 };
 
 const rankOf = (node: Node): number => {
-  if (node.kind === 'Conditional') return 0;
+  if (node.kind === 'Conditional') return 5;
   if (node.kind === 'Binary') return RANK[node.op] ?? 0;
   if (node.kind === 'Unary') return 4;
   return 5;
@@ -31,7 +31,7 @@ export function printFormula(node: Node): string {
     }
     case 'Call': return `${node.name}(${node.args.map(printFormula).join(', ')})`;
     case 'Conditional':
-      return `${printFormula(node.test)} ? ${printFormula(node.then)} : ${printFormula(node.otherwise)}`;
+      return `если(${printFormula(node.test)}, ${printFormula(node.then)}, ${printFormula(node.otherwise)})`;
     default: return '';
   }
 }

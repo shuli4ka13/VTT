@@ -237,7 +237,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@astral > 0 ? @astral + @intuition : (нет ? @intuition - 1 : 0)) + @wound_mod + @condition_mod)"
+          "expr": "большее из(0, если(@astral > 0, @astral + @intuition, если(нет, @intuition - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "tag": "astral_pool",
         "group": "Наборы кубиков",
@@ -280,7 +280,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@athletics > 0 ? @athletics + @agility : (да ? @agility - 1 : 0)) + @wound_mod + @condition_mod)"
+          "expr": "большее из(0, если(@athletics > 0, @athletics + @agility, если(да, @agility - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "tag": "athletics_pool",
         "group": "Наборы кубиков",
@@ -323,7 +323,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@biotech > 0 ? @biotech + @logic : (нет ? @logic - 1 : 0)) + @wound_mod + @condition_mod)"
+          "expr": "большее из(0, если(@biotech > 0, @biotech + @logic, если(нет, @logic - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "tag": "biotech_pool",
         "group": "Наборы кубиков",
@@ -366,7 +366,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@close_combat > 0 ? @close_combat + @agility : (да ? @agility - 1 : 0)) + @wound_mod + @condition_mod)"
+          "expr": "большее из(0, если(@close_combat > 0, @close_combat + @agility, если(да, @agility - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "tag": "close_combat_pool",
         "group": "Наборы кубиков",
@@ -409,7 +409,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@cracking > 0 ? @cracking + @logic : (нет ? @logic - 1 : 0)) + @wound_mod + @condition_mod)"
+          "expr": "большее из(0, если(@cracking > 0, @cracking + @logic, если(нет, @logic - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "tag": "cracking_pool",
         "group": "Наборы кубиков",
@@ -452,7 +452,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@perception > 0 ? @perception + @intuition : (да ? @intuition - 1 : 0)) + @wound_mod + @condition_mod)"
+          "expr": "большее из(0, если(@perception > 0, @perception + @intuition, если(да, @intuition - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "tag": "perception_pool",
         "group": "Наборы кубиков",
@@ -495,7 +495,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@conjuring > 0 ? @conjuring + @magic : (нет ? @magic - 1 : 0)) + @wound_mod + @condition_mod)"
+          "expr": "большее из(0, если(@conjuring > 0, @conjuring + @magic, если(нет, @magic - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "tag": "conjuring_pool",
         "group": "Наборы кубиков",
@@ -538,7 +538,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@enchanting > 0 ? @enchanting + @magic : (нет ? @magic - 1 : 0)) + @wound_mod + @condition_mod)"
+          "expr": "большее из(0, если(@enchanting > 0, @enchanting + @magic, если(нет, @magic - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "tag": "enchanting_pool",
         "group": "Наборы кубиков",
@@ -581,7 +581,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@engineering > 0 ? @engineering + @logic : (да ? @logic - 1 : 0)) + @wound_mod + @condition_mod)"
+          "expr": "большее из(0, если(@engineering > 0, @engineering + @logic, если(да, @logic - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "tag": "engineering_pool",
         "group": "Наборы кубиков",
@@ -624,7 +624,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@sorcery > 0 ? @sorcery + @magic : (нет ? @magic - 1 : 0)) + @wound_mod + @condition_mod)"
+          "expr": "большее из(0, если(@sorcery > 0, @sorcery + @magic, если(нет, @magic - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "tag": "sorcery_pool",
         "group": "Наборы кубиков",
@@ -667,7 +667,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@tasking > 0 ? @tasking + @resonance : (нет ? @resonance - 1 : 0)) + @wound_mod + @condition_mod)"
+          "expr": "большее из(0, если(@tasking > 0, @tasking + @resonance, если(нет, @resonance - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "tag": "tasking_pool",
         "group": "Наборы кубиков",
@@ -710,7 +710,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@con > 0 ? @con + @charisma : (да ? @charisma - 1 : 0)) + @wound_mod + @condition_mod)"
+          "expr": "большее из(0, если(@con > 0, @con + @charisma, если(да, @charisma - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "tag": "con_pool",
         "group": "Наборы кубиков",
@@ -753,7 +753,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@outdoors > 0 ? @outdoors + @intuition : (да ? @intuition - 1 : 0)) + @wound_mod + @condition_mod)"
+          "expr": "большее из(0, если(@outdoors > 0, @outdoors + @intuition, если(да, @intuition - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "tag": "outdoors_pool",
         "group": "Наборы кубиков",
@@ -796,7 +796,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@piloting > 0 ? @piloting + @reaction : (да ? @reaction - 1 : 0)) + @wound_mod + @condition_mod)"
+          "expr": "большее из(0, если(@piloting > 0, @piloting + @reaction, если(да, @reaction - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "tag": "piloting_pool",
         "group": "Наборы кубиков",
@@ -839,7 +839,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@stealth > 0 ? @stealth + @agility : (да ? @agility - 1 : 0)) + @wound_mod + @condition_mod)"
+          "expr": "большее из(0, если(@stealth > 0, @stealth + @agility, если(да, @agility - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "tag": "stealth_pool",
         "group": "Наборы кубиков",
@@ -882,7 +882,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@firearms > 0 ? @firearms + @agility : (да ? @agility - 1 : 0)) + @wound_mod + @condition_mod)"
+          "expr": "большее из(0, если(@firearms > 0, @firearms + @agility, если(да, @agility - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "tag": "firearms_pool",
         "group": "Наборы кубиков",
@@ -925,7 +925,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@influence > 0 ? @influence + @charisma : (да ? @charisma - 1 : 0)) + @wound_mod + @condition_mod)"
+          "expr": "большее из(0, если(@influence > 0, @influence + @charisma, если(да, @charisma - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "tag": "influence_pool",
         "group": "Наборы кубиков",
@@ -968,7 +968,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@exotic_weapons > 0 ? @exotic_weapons + @agility : (нет ? @agility - 1 : 0)) + @wound_mod + @condition_mod)"
+          "expr": "большее из(0, если(@exotic_weapons > 0, @exotic_weapons + @agility, если(нет, @agility - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "tag": "exotic_weapons_pool",
         "group": "Наборы кубиков",
@@ -1011,7 +1011,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, (@electronics > 0 ? @electronics + @logic : (да ? @logic - 1 : 0)) + @wound_mod + @condition_mod)"
+          "expr": "большее из(0, если(@electronics > 0, @electronics + @logic, если(да, @logic - 1, 0)) + @wound_mod + @condition_mod)"
         },
         "tag": "electronics_pool",
         "group": "Наборы кубиков",
@@ -1039,7 +1039,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, @willpower + @charisma + @wound_mod + @condition_mod)"
+          "expr": "большее из(0, @willpower + @charisma + @wound_mod + @condition_mod)"
         }
       },
       {
@@ -1060,7 +1060,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, @willpower + @intuition + @wound_mod + @condition_mod)"
+          "expr": "большее из(0, @willpower + @intuition + @wound_mod + @condition_mod)"
         }
       },
       {
@@ -1081,7 +1081,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, @logic + @intuition + @wound_mod + @condition_mod)"
+          "expr": "большее из(0, @logic + @intuition + @wound_mod + @condition_mod)"
         }
       },
       {
@@ -1102,7 +1102,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, @body + @strength + @wound_mod + @condition_mod)"
+          "expr": "большее из(0, @body + @strength + @wound_mod + @condition_mod)"
         }
       },
       {
@@ -1156,7 +1156,7 @@
         "group": "Защита",
         "value": {
           "kind": "formula",
-          "expr": "@body + @armor_worn + @armor_extra + @armor_natural + (@metatype != \"\" ? таблица(\"metatypes\", @metatype, \"dermal\") : 0) + @cover"
+          "expr": "@body + @armor_worn + @armor_extra + @armor_natural + если(@metatype != \"\", таблица(\"metatypes\", @metatype, \"dermal\"), 0) + @cover"
         }
       },
       {
@@ -1177,7 +1177,7 @@
         },
         "value": {
           "kind": "formula",
-          "expr": "max(0, @reaction + @intuition + @cover + @wound_mod + @condition_mod)"
+          "expr": "большее из(0, @reaction + @intuition + @cover + @wound_mod + @condition_mod)"
         }
       },
       {
@@ -1195,7 +1195,7 @@
         "group": "Счётчики",
         "value": {
           "kind": "formula",
-          "expr": "8 + ceil(@body / 2) + (@metatype != \"\" ? таблица(\"metatypes\", @metatype, \"toughness\") : 0)"
+          "expr": "8 + округлить вверх(@body / 2) + если(@metatype != \"\", таблица(\"metatypes\", @metatype, \"toughness\"), 0)"
         }
       },
       {
@@ -1216,7 +1216,7 @@
         "group": "Счётчики",
         "value": {
           "kind": "formula",
-          "expr": "8 + ceil(@willpower / 2)"
+          "expr": "8 + округлить вверх(@willpower / 2)"
         }
       },
       {
@@ -1237,7 +1237,7 @@
         "group": "Счётчики",
         "value": {
           "kind": "formula",
-          "expr": "max(0, @stun - @stun_max)"
+          "expr": "большее из(0, @stun - @stun_max)"
         }
       },
       {
@@ -1255,7 +1255,7 @@
         "group": "Счётчики",
         "value": {
           "kind": "formula",
-          "expr": "max(0, @physical_total - @physical_max)"
+          "expr": "большее из(0, @physical_total - @physical_max)"
         }
       },
       {
@@ -1264,7 +1264,7 @@
         "group": "Счётчики",
         "value": {
           "kind": "formula",
-          "expr": "0 - floor(min(@stun, @stun_max) / 3) - floor(min(@physical_total, @physical_max) / 3)"
+          "expr": "0 - округлить вниз(меньшее из(@stun, @stun_max) / 3) - округлить вниз(меньшее из(@physical_total, @physical_max) / 3)"
         }
       },
       {
@@ -1713,7 +1713,7 @@
           {
             "key": "attribute",
             "label": "Характеристика",
-            "kind": "text"
+            "kind": "tag"
           },
           {
             "key": "untrained",
@@ -1737,7 +1737,7 @@
             "key": "pool",
             "label": "Набор",
             "kind": "expr",
-            "expr": "max(0, (@{key} > 0 ? @{key} + @{attribute} : ({untrained} ? @{attribute} - 1 : 0)) + @wound_mod + @condition_mod)",
+            "expr": "большее из(0, если(@строка.rank > 0, @строка.rank + @строка.attribute, если(@строка.untrained, @строка.attribute - 1, 0)) + @wound_mod + @condition_mod)",
             "sheet": {
               "tag": "{key}_pool",
               "label": "{label}: набор",
@@ -2380,7 +2380,7 @@
             "breakIf": "less",
             "note": "нужно 3 очка Преимущества",
             "when": {
-              "expr": "(или(@успех_за_преимущество, 0) >= 1 ? 1 : 0) >= 1"
+              "expr": "(если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) >= 1"
             }
           },
           {
@@ -2394,7 +2394,7 @@
             },
             "targetModifiers": false,
             "when": {
-              "expr": "(или(@успех_за_преимущество, 0) >= 1 ? 1 : 0) >= 1"
+              "expr": "(если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) >= 1"
             }
           },
           {
@@ -2448,7 +2448,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "(@дистанция == \"вплотную\" ? @ar1 : (@дистанция == \"близкая\" ? @ar2 : (@дистанция == \"средняя\" ? @ar3 : (@дистанция == \"дальняя\" ? @ar4 : @ar5)))) + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"ar\")"
+              "expr": "если(@дистанция == \"вплотную\", @ar1, если(@дистанция == \"близкая\", @ar2, если(@дистанция == \"средняя\", @ar3, если(@дистанция == \"дальняя\", @ar4, @ar5)))) + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"ar\")"
             }
           },
           {
@@ -2498,7 +2498,7 @@
                 "constant": "pool"
               },
               "count": {
-                "expr": "max(0, @attack_pool + таблица(\"edge_actions\", или(@приём, \"нет\"), \"pool\"))"
+                "expr": "большее из(0, @attack_pool + таблица(\"edge_actions\", или(@приём, \"нет\"), \"pool\"))"
               },
               "tags": [
                 "атака"
@@ -2523,7 +2523,7 @@
           {
             "type": "compare",
             "value": {
-              "expr": "@атака.natural + (или(@успех_за_преимущество, 0) >= 1 ? 1 : 0) - @атака.versusNatural"
+              "expr": "@атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака.versusNatural"
             },
             "versus": {
               "expr": "0"
@@ -2558,7 +2558,7 @@
             },
             "direction": "add",
             "value": {
-              "expr": "max(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + таблица(\"edge_actions\", или(@приём, \"нет\"), \"dv\") + @атака.natural + (или(@успех_за_преимущество, 0) >= 1 ? 1 : 0) - @атака.versusNatural - @сопротивление.natural)"
+              "expr": "большее из(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + таблица(\"edge_actions\", или(@приём, \"нет\"), \"dv\") + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака.versusNatural - @сопротивление.natural)"
             },
             "targetModifiers": false,
             "when": {
@@ -2572,7 +2572,7 @@
             },
             "direction": "add",
             "value": {
-              "expr": "max(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + таблица(\"edge_actions\", или(@приём, \"нет\"), \"dv\") + @атака.natural + (или(@успех_за_преимущество, 0) >= 1 ? 1 : 0) - @атака.versusNatural - @сопротивление.natural)"
+              "expr": "большее из(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + таблица(\"edge_actions\", или(@приём, \"нет\"), \"dv\") + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака.versusNatural - @сопротивление.natural)"
             },
             "targetModifiers": false,
             "when": {
@@ -2586,7 +2586,7 @@
               "const": "shocked"
             },
             "when": {
-              "expr": "все(@electric >= 1, max(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + таблица(\"edge_actions\", или(@приём, \"нет\"), \"dv\") + @атака.natural + (или(@успех_за_преимущество, 0) >= 1 ? 1 : 0) - @атака.versusNatural - @сопротивление.natural) >= 1)"
+              "expr": "все(@electric >= 1, большее из(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + таблица(\"edge_actions\", или(@приём, \"нет\"), \"dv\") + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака.versusNatural - @сопротивление.natural) >= 1)"
             }
           },
           {
@@ -2596,7 +2596,7 @@
               "const": "prone"
             },
             "when": {
-              "expr": "max(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + таблица(\"edge_actions\", или(@приём, \"нет\"), \"dv\") + @атака.natural + (или(@успех_за_преимущество, 0) >= 1 ? 1 : 0) - @атака.versusNatural - @сопротивление.natural) > @получатель.body"
+              "expr": "большее из(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + таблица(\"edge_actions\", или(@приём, \"нет\"), \"dv\") + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака.versusNatural - @сопротивление.natural) > @получатель.body"
             }
           },
           {
@@ -2610,7 +2610,7 @@
             },
             "targetModifiers": false,
             "when": {
-              "expr": "все(таблица(\"edge_actions\", или(@приём, \"нет\"), \"knockout\") >= 1, max(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + таблица(\"edge_actions\", или(@приём, \"нет\"), \"dv\") + @атака.natural + (или(@успех_за_преимущество, 0) >= 1 ? 1 : 0) - @атака.versusNatural - @сопротивление.natural) > @получатель.willpower)"
+              "expr": "все(таблица(\"edge_actions\", или(@приём, \"нет\"), \"knockout\") >= 1, большее из(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + таблица(\"edge_actions\", или(@приём, \"нет\"), \"dv\") + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака.versusNatural - @сопротивление.natural) > @получатель.willpower)"
             }
           }
         ]
@@ -2792,7 +2792,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "min(5, 1 + @init_dice)"
+                  "expr": "меньшее из(5, 1 + @init_dice)"
                 },
                 "targetModifiers": false
               },
@@ -2898,7 +2898,7 @@
             },
             "direction": "subtract",
             "value": {
-              "expr": "min(@stun, 1)"
+              "expr": "меньшее из(@stun, 1)"
             },
             "targetModifiers": false
           }
@@ -2935,7 +2935,7 @@
             },
             "direction": "subtract",
             "value": {
-              "expr": "min(@physical, 1)"
+              "expr": "меньшее из(@physical, 1)"
             },
             "targetModifiers": false
           }
@@ -3028,7 +3028,7 @@
               ]
             },
             "versus": {
-              "expr": "max(0, floor(5 - @получатель.essence))"
+              "expr": "большее из(0, округлить вниз(5 - @получатель.essence))"
             },
             "continueOn": "always"
           },
@@ -3039,7 +3039,7 @@
             },
             "direction": "subtract",
             "value": {
-              "expr": "min(@получатель.stun, max(0, @помощь.margin))"
+              "expr": "меньшее из(@получатель.stun, большее из(0, @помощь.margin))"
             },
             "targetModifiers": false,
             "when": {
@@ -3053,7 +3053,7 @@
             },
             "direction": "subtract",
             "value": {
-              "expr": "min(@получатель.physical, floor(max(0, @помощь.margin - @получатель.stun) / 2))"
+              "expr": "меньшее из(@получатель.physical, округлить вниз(большее из(0, @помощь.margin - @получатель.stun) / 2))"
             },
             "targetModifiers": false,
             "when": {
@@ -3094,7 +3094,7 @@
             },
             "direction": "subtract",
             "value": {
-              "expr": "min(@stun, @заживление.natural)"
+              "expr": "меньшее из(@stun, @заживление.natural)"
             },
             "targetModifiers": false
           }
@@ -3132,7 +3132,7 @@
             },
             "direction": "subtract",
             "value": {
-              "expr": "min(@physical, @заживление.natural)"
+              "expr": "меньшее из(@physical, @заживление.natural)"
             },
             "targetModifiers": false
           }
@@ -3494,7 +3494,7 @@
             "target": "physical_max",
             "op": "set",
             "value": {
-              "expr": "8 + ceil(max(@willpower, @body) / 2)"
+              "expr": "8 + округлить вверх(большее из(@willpower, @body) / 2)"
             },
             "stacking": "override"
           },
@@ -3521,7 +3521,7 @@
             "target": "wound_mod",
             "op": "set",
             "value": {
-              "expr": "0 - floor(min(@physical + @stun, @physical_max) / 2)"
+              "expr": "0 - округлить вниз(меньшее из(@physical + @stun, @physical_max) / 2)"
             },
             "stacking": "override"
           }

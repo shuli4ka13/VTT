@@ -32,11 +32,11 @@ group('лексер', () => {
   });
 
   test('вызов функции', () => {
-    deepEq(shape('floor(1.5)'), ['ident:floor', 'lparen:(', 'number:1.5', 'rparen:)']);
+    deepEq(shape('округлить вниз(1.5)'), ['ident:округлить вниз', 'lparen:(', 'number:1.5', 'rparen:)']);
   });
 
   test('запятая между аргументами', () => {
-    deepEq(shape('max(1, 2)'), ['ident:max', 'lparen:(', 'number:1', 'comma:,', 'number:2', 'rparen:)']);
+    deepEq(shape('большее из(1, 2)'), ['ident:большее из', 'lparen:(', 'number:1', 'comma:,', 'number:2', 'rparen:)']);
   });
 
   test('двухсимвольные сравнения не распадаются на одиночные', () => {
@@ -51,9 +51,14 @@ group('лексер', () => {
     deepEq(shape('1 > 2'), ['number:1', 'op:>', 'number:2']);
   });
 
-  test('тернарный оператор', () => {
-    deepEq(shape('1 ? 2 : 3'),
-      ['number:1', 'question:?', 'number:2', 'colon::', 'number:3']);
+  test('«если» — обычное имя функции, а знаки «?» и «:» формулам не нужны', () => {
+    deepEq(shape('если(1, 2, 3)'), ['ident:если', 'lparen:(', 'number:1', 'comma:,', 'number:2', 'comma:,', 'number:3', 'rparen:)']);
+    throws(() => lex('1 ? 2 : 3'), FormulaSyntaxError);
+  });
+
+  test('имя из двух слов читается целиком только перед скобкой', () => {
+    deepEq(shape('округлить вниз (1)'), ['ident:округлить вниз', 'lparen:(', 'number:1', 'rparen:)']);
+    deepEq(shape('округлить(1)'), ['ident:округлить', 'lparen:(', 'number:1', 'rparen:)']);
   });
 
   test('позиция токена указывает на начало в исходной строке', () => {
