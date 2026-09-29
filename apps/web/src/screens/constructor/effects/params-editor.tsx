@@ -3,7 +3,7 @@ import { kindsFor } from '@vtt/engine/words/kinds';
 import { choiceTables } from '@vtt/engine/model/tables';
 import { ASKABLE } from '@vtt/engine/model/asks';
 import { freeId } from '../../../store/world.ts';
-import { Card, CardHead, Input, Select, Button, Empty } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Input, Select, Button } from '../../../ui/primitives.tsx';
 import { SheetGrid } from '../../../ui/sheet-grid.tsx';
 import type { GridColumn } from '../../../ui/sheet-grid.tsx';
 import type { Effect, Param, System, ValueKind } from '@vtt/schema';
@@ -57,13 +57,12 @@ export function ParamsEditor({ effect, system, onEdit }: {
 
   return (
     <Card>
-      <CardHead title="Что приходит" sub="То, что у каждого вызова своё. Поля листов сюда не нужны — они пишутся прямо в шагах." />
+      <CardHead title="Что приходит" {...(params.length ? { sub: 'То, что у каждого вызова своё. Поля листов сюда не нужны — они пишутся прямо в шагах.' } : {})} />
       {params.length === 0 ? (
-        <Empty
-          title="Входов нет"
-          hint="Вход нужен, когда значение приносит тот, кто вызывает, или его говорят за столом."
-          action={<Button size="sm" onClick={addParam}>+ вход</Button>}
-        />
+        <div className="inline inline--tight">
+          <span className="faint">Ничего — эффект берёт всё с листов.</span>
+          <Button size="sm" onClick={addParam}>+ вход</Button>
+        </div>
       ) : (
         <SheetGrid id={full ? 'params' : 'params-short'} columns={columns}>
           {params.map(param => {

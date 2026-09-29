@@ -91,8 +91,8 @@ export function Chain({ effect, system, edit, title = 'Шаги', empty = 'ша�
         ) : null}
         {broken
           ? <Verdict tone="bad">{STEP.manyGen} со сломанными ссылками: {broken}</Verdict>
-          : steps.length
-            ? <Verdict tone="ok">эффект верный · {STEP.manyGen} {cards.length}</Verdict>
+          : steps.length || startAt
+            ? <Verdict tone="ok">эффект верный · {STEP.manyGen} {cards.length + startAt}</Verdict>
             : <Verdict tone="warn">{empty}</Verdict>}
       </div>}
       {lead}
