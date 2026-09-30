@@ -807,7 +807,6 @@
         "rows": [
           {
             "value": "астрал",
-            "key": "astral",
             "label": "Астрал",
             "cells": {
               "attribute": "intuition",
@@ -816,7 +815,6 @@
           },
           {
             "value": "атлетика",
-            "key": "athletics",
             "label": "Атлетика",
             "cells": {
               "attribute": "agility",
@@ -825,7 +823,6 @@
           },
           {
             "value": "биотехнологии",
-            "key": "biotech",
             "label": "Биотехнологии",
             "cells": {
               "attribute": "logic",
@@ -834,7 +831,6 @@
           },
           {
             "value": "ближний бой",
-            "key": "close_combat",
             "label": "Ближний бой",
             "cells": {
               "attribute": "agility",
@@ -843,7 +839,6 @@
           },
           {
             "value": "взлом",
-            "key": "cracking",
             "label": "Взлом",
             "cells": {
               "attribute": "logic",
@@ -852,7 +847,6 @@
           },
           {
             "value": "внимание",
-            "key": "perception",
             "label": "Внимание",
             "cells": {
               "attribute": "intuition",
@@ -861,7 +855,6 @@
           },
           {
             "value": "воплощение",
-            "key": "conjuring",
             "label": "Воплощение",
             "cells": {
               "attribute": "magic",
@@ -870,7 +863,6 @@
           },
           {
             "value": "зачарование",
-            "key": "enchanting",
             "label": "Зачарование",
             "cells": {
               "attribute": "magic",
@@ -879,7 +871,6 @@
           },
           {
             "value": "инженерное дело",
-            "key": "engineering",
             "label": "Инженерное дело",
             "cells": {
               "attribute": "logic",
@@ -888,7 +879,6 @@
           },
           {
             "value": "колдовство",
-            "key": "sorcery",
             "label": "Колдовство",
             "cells": {
               "attribute": "magic",
@@ -897,7 +887,6 @@
           },
           {
             "value": "многозадачность",
-            "key": "tasking",
             "label": "Многозадачность",
             "cells": {
               "attribute": "resonance",
@@ -906,7 +895,6 @@
           },
           {
             "value": "обман",
-            "key": "con",
             "label": "Обман",
             "cells": {
               "attribute": "charisma",
@@ -915,7 +903,6 @@
           },
           {
             "value": "ориентирование",
-            "key": "outdoors",
             "label": "Ориентирование",
             "cells": {
               "attribute": "intuition",
@@ -924,7 +911,6 @@
           },
           {
             "value": "пилотирование",
-            "key": "piloting",
             "label": "Пилотирование",
             "cells": {
               "attribute": "reaction",
@@ -933,7 +919,6 @@
           },
           {
             "value": "скрытность",
-            "key": "stealth",
             "label": "Скрытность",
             "cells": {
               "attribute": "agility",
@@ -942,7 +927,6 @@
           },
           {
             "value": "стрельба",
-            "key": "firearms",
             "label": "Стрельба",
             "cells": {
               "attribute": "agility",
@@ -951,7 +935,6 @@
           },
           {
             "value": "убеждение",
-            "key": "influence",
             "label": "Убеждение",
             "cells": {
               "attribute": "charisma",
@@ -960,7 +943,6 @@
           },
           {
             "value": "экзотическое оружие",
-            "key": "exotic_weapons",
             "label": "Экзотическое оружие",
             "cells": {
               "attribute": "agility",
@@ -969,7 +951,6 @@
           },
           {
             "value": "электроника",
-            "key": "electronics",
             "label": "Электроника",
             "cells": {
               "attribute": "logic",
@@ -2645,8 +2626,8 @@
           "intuition": 4,
           "charisma": 4,
           "edge_left": 7,
-          "skills.firearms.rank": 4,
-          "skills.biotech.rank": 2
+          "skills.стрельба.rank": 4,
+          "skills.биотехнологии.rank": 2
         },
         "has": [],
         "effects": []
@@ -2665,8 +2646,8 @@
           "intuition": 4,
           "charisma": 4,
           "edge_left": 7,
-          "skills.firearms.rank": 4,
-          "skills.biotech.rank": 2
+          "skills.стрельба.rank": 4,
+          "skills.биотехнологии.rank": 2
         },
         "has": [],
         "effects": []
@@ -3777,7 +3758,7 @@
             "effect": "first_aid",
             "args": {
               "healer_pool": {
-                "expr": "@skills.biotech.pool"
+                "expr": "@skills.биотехнологии.pool"
               }
             }
           }
@@ -3805,11 +3786,11 @@
         "edge": 3,
         "edge_left": 3,
         "essence": 5,
-        "skills.firearms.rank": 6,
-        "skills.close_combat.rank": 5,
-        "skills.athletics.rank": 3,
-        "skills.perception.rank": 3,
-        "skills.stealth.rank": 3
+        "skills.стрельба.rank": 6,
+        "skills.ближний_бой.rank": 5,
+        "skills.атлетика.rank": 3,
+        "skills.внимание.rank": 3,
+        "skills.скрытность.rank": 3
       },
       "has": [
         {
@@ -3862,11 +3843,11 @@
         "charisma": 6,
         "edge": 4,
         "edge_left": 4,
-        "skills.con.rank": 6,
-        "skills.influence.rank": 6,
-        "skills.firearms.rank": 3,
-        "skills.perception.rank": 4,
-        "skills.biotech.rank": 2
+        "skills.обман.rank": 6,
+        "skills.убеждение.rank": 6,
+        "skills.стрельба.rank": 3,
+        "skills.внимание.rank": 4,
+        "skills.биотехнологии.rank": 2
       },
       "has": [
         {
@@ -3916,10 +3897,10 @@
         "charisma": 2,
         "edge": 2,
         "edge_left": 2,
-        "skills.close_combat.rank": 5,
-        "skills.firearms.rank": 3,
-        "skills.athletics.rank": 4,
-        "skills.influence.rank": 3
+        "skills.ближний_бой.rank": 5,
+        "skills.стрельба.rank": 3,
+        "skills.атлетика.rank": 4,
+        "skills.убеждение.rank": 3
       },
       "has": [
         {
@@ -3972,9 +3953,9 @@
         "logic": 2,
         "intuition": 2,
         "charisma": 1,
-        "skills.athletics.rank": 1,
-        "skills.close_combat.rank": 3,
-        "skills.influence.rank": 1
+        "skills.атлетика.rank": 1,
+        "skills.ближний_бой.rank": 3,
+        "skills.убеждение.rank": 1
       },
       "has": [
         {
@@ -3997,12 +3978,12 @@
         "logic": 2,
         "intuition": 2,
         "charisma": 1,
-        "skills.athletics.rank": 2,
-        "skills.close_combat.rank": 3,
-        "skills.perception.rank": 1,
-        "skills.piloting.rank": 2,
-        "skills.firearms.rank": 2,
-        "skills.influence.rank": 3
+        "skills.атлетика.rank": 2,
+        "skills.ближний_бой.rank": 3,
+        "skills.внимание.rank": 1,
+        "skills.пилотирование.rank": 2,
+        "skills.стрельба.rank": 2,
+        "skills.убеждение.rank": 3
       },
       "has": [
         {
@@ -4042,12 +4023,12 @@
         "logic": 2,
         "intuition": 2,
         "charisma": 1,
-        "skills.athletics.rank": 2,
-        "skills.close_combat.rank": 3,
-        "skills.perception.rank": 1,
-        "skills.piloting.rank": 2,
-        "skills.firearms.rank": 2,
-        "skills.influence.rank": 3
+        "skills.атлетика.rank": 2,
+        "skills.ближний_бой.rank": 3,
+        "skills.внимание.rank": 1,
+        "skills.пилотирование.rank": 2,
+        "skills.стрельба.rank": 2,
+        "skills.убеждение.rank": 3
       },
       "has": [
         {
@@ -4078,11 +4059,11 @@
         "logic": 1,
         "intuition": 2,
         "charisma": 1,
-        "skills.athletics.rank": 2,
-        "skills.close_combat.rank": 4,
-        "skills.perception.rank": 3,
-        "skills.firearms.rank": 3,
-        "skills.influence.rank": 5
+        "skills.атлетика.rank": 2,
+        "skills.ближний_бой.rank": 4,
+        "skills.внимание.rank": 3,
+        "skills.стрельба.rank": 3,
+        "skills.убеждение.rank": 5
       },
       "has": [
         {
@@ -4111,15 +4092,15 @@
         "logic": 2,
         "intuition": 3,
         "charisma": 2,
-        "skills.athletics.rank": 1,
-        "skills.biotech.rank": 1,
-        "skills.close_combat.rank": 4,
-        "skills.perception.rank": 4,
-        "skills.con.rank": 1,
-        "skills.piloting.rank": 2,
-        "skills.firearms.rank": 4,
-        "skills.influence.rank": 2,
-        "skills.electronics.rank": 1
+        "skills.атлетика.rank": 1,
+        "skills.биотехнологии.rank": 1,
+        "skills.ближний_бой.rank": 4,
+        "skills.внимание.rank": 4,
+        "skills.обман.rank": 1,
+        "skills.пилотирование.rank": 2,
+        "skills.стрельба.rank": 4,
+        "skills.убеждение.rank": 2,
+        "skills.электроника.rank": 1
       },
       "has": [
         {
@@ -4148,14 +4129,14 @@
         "logic": 1,
         "intuition": 2,
         "charisma": 1,
-        "skills.athletics.rank": 3,
-        "skills.biotech.rank": 2,
-        "skills.close_combat.rank": 5,
-        "skills.perception.rank": 4,
-        "skills.con.rank": 3,
-        "skills.piloting.rank": 1,
-        "skills.firearms.rank": 4,
-        "skills.influence.rank": 4
+        "skills.атлетика.rank": 3,
+        "skills.биотехнологии.rank": 2,
+        "skills.ближний_бой.rank": 5,
+        "skills.внимание.rank": 4,
+        "skills.обман.rank": 3,
+        "skills.пилотирование.rank": 1,
+        "skills.стрельба.rank": 4,
+        "skills.убеждение.rank": 4
       },
       "has": [
         {
@@ -4186,17 +4167,17 @@
         "charisma": 3,
         "essence": 3,
         "armor_natural": 3,
-        "skills.athletics.rank": 3,
-        "skills.biotech.rank": 2,
-        "skills.close_combat.rank": 4,
-        "skills.perception.rank": 4,
-        "skills.con.rank": 2,
-        "skills.outdoors.rank": 2,
-        "skills.piloting.rank": 2,
-        "skills.stealth.rank": 4,
-        "skills.firearms.rank": 6,
-        "skills.influence.rank": 3,
-        "skills.electronics.rank": 2
+        "skills.атлетика.rank": 3,
+        "skills.биотехнологии.rank": 2,
+        "skills.ближний_бой.rank": 4,
+        "skills.внимание.rank": 4,
+        "skills.обман.rank": 2,
+        "skills.ориентирование.rank": 2,
+        "skills.пилотирование.rank": 2,
+        "skills.скрытность.rank": 4,
+        "skills.стрельба.rank": 6,
+        "skills.убеждение.rank": 3,
+        "skills.электроника.rank": 2
       },
       "has": [
         {

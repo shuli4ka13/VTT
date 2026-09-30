@@ -13,7 +13,7 @@ import {
   type Where, type Reference, type RefKind, type Declared,
   LISTEN,
 } from './references.ts';
-import { fieldsOf, fieldOf, fieldProblems } from './sheet-columns.ts';
+import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, rowKeyOf } from './sheet-columns.ts';
 
 export type Level = 'error' | 'warn';
 
@@ -276,6 +276,22 @@ function fieldNameProblems(system: System): Problem[] {
   return out;
 }
 
+function rowNameProblems(system: System): Problem[] {
+  const out: Problem[] = [];
+  for (const [id, table] of Object.entries(system.tables ?? {})) {
+    if (!onSheet(table) || isSingle(table)) continue;
+    const seen = new Set<string>();
+    for (const row of table.rows ?? []) {
+      const key = rowKeyOf(row);
+      if (seen.has(key)) {
+        out.push({ where: { tab: 'rules', section: 'tables', key: id }, level: 'error', text: `таблица «${table.label || id}»: строки зовутся одинаково — «${key}»; у клетки на листе имя одно` });
+      }
+      seen.add(key);
+    }
+  }
+  return out;
+}
+
 function fieldRollProblems(system: System): Problem[] {
   const out: Problem[] = [];
   for (const field of fieldsOf(system)) {
@@ -440,6 +456,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...sheetKindProblems(system));
   out.push(...fieldRollProblems(system));
   out.push(...fieldNameProblems(system));
+  out.push(...rowNameProblems(system));
   out.push(...tableFieldProblems(system));
   out.push(...danglingRows(system, compendium).map(d => ({ where: d.where, level: 'error' as const, text: d.text })));
   return out;

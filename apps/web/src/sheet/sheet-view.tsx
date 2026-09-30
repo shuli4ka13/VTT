@@ -5,7 +5,7 @@ import { FieldCell } from './field-cell.tsx';
 import type { Reader } from '../engine/use-calc.ts';
 import type { Sheet, System, StoredValue } from '@vtt/schema';
 import type { Field as FieldModel } from '@vtt/engine/model/types';
-import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { fieldsOf, rowKeyOf } from '@vtt/engine/model/sheet-columns';
 import { fieldsByBlock } from '@vtt/engine/model/blocks';
 
 export function SheetView({ system, sheet, reader, onChange, onRoll, badge, only, fields, onPick, picked }: {
@@ -89,7 +89,7 @@ function TableBlock({ system, tableId, fields, cell }: {
   const rows = [...new Set(fields.map(f => f.cell!.row))];
   const columns = [...new Set(fields.map(f => f.cell!.column))];
   const rowLabel = (key: string) => {
-    const row = (table?.rows ?? []).find(r => String(r.key ?? r.value) === key);
+    const row = (table?.rows ?? []).find(r => rowKeyOf(r) === key);
     return row?.label ?? String(row?.value ?? key);
   };
   const columnLabel = (key: string) => {

@@ -166,7 +166,7 @@
           {
             "key": "initiative",
             "label": "Инициатива",
-            "expr": "@abilities.dex.mod",
+            "expr": "@abilities.ловкость.mod",
             "roll": {
               "label": "Инициатива",
               "tags": [
@@ -186,7 +186,7 @@
           {
             "key": "passive_perception",
             "label": "Пассивная внимательность",
-            "expr": "10 + @skills.perception.total",
+            "expr": "10 + @skills.внимательность.total",
             "block": "Чувства и движение"
           },
           {
@@ -227,7 +227,7 @@
           {
             "key": "ac_dex",
             "label": "Ловкость в классе брони",
-            "expr": "@abilities.dex.mod",
+            "expr": "@abilities.ловкость.mod",
             "block": "Защита"
           },
           {
@@ -406,7 +406,7 @@
           {
             "key": "spell_mod",
             "label": "Заклинательный модификатор",
-            "expr": "или(@class_name.spell_ability.mod, @abilities.cha.mod)",
+            "expr": "или(@class_name.spell_ability.mod, @abilities.харизма.mod)",
             "block": "Магия"
           },
           {
@@ -633,47 +633,38 @@
         "rows": [
           {
             "value": "круг_1",
-            "key": "1",
             "label": "1-й круг"
           },
           {
             "value": "круг_2",
-            "key": "2",
             "label": "2-й круг"
           },
           {
             "value": "круг_3",
-            "key": "3",
             "label": "3-й круг"
           },
           {
             "value": "круг_4",
-            "key": "4",
             "label": "4-й круг"
           },
           {
             "value": "круг_5",
-            "key": "5",
             "label": "5-й круг"
           },
           {
             "value": "круг_6",
-            "key": "6",
             "label": "6-й круг"
           },
           {
             "value": "круг_7",
-            "key": "7",
             "label": "7-й круг"
           },
           {
             "value": "круг_8",
-            "key": "8",
             "label": "8-й круг"
           },
           {
             "value": "круг_9",
-            "key": "9",
             "label": "9-й круг"
           }
         ],
@@ -1454,10 +1445,10 @@
             "value": "ближний бой — Сила",
             "cells": {
               "attack": {
-                "expr": "@abilities.str.mod + @prof_bonus"
+                "expr": "@abilities.сила.mod + @prof_bonus"
               },
               "damage": {
-                "expr": "@abilities.str.mod"
+                "expr": "@abilities.сила.mod"
               }
             }
           },
@@ -1465,10 +1456,10 @@
             "value": "фехтовальное — Сила или Ловкость",
             "cells": {
               "attack": {
-                "expr": "большее из(@abilities.str.mod, @abilities.dex.mod) + @prof_bonus"
+                "expr": "большее из(@abilities.сила.mod, @abilities.ловкость.mod) + @prof_bonus"
               },
               "damage": {
-                "expr": "большее из(@abilities.str.mod, @abilities.dex.mod)"
+                "expr": "большее из(@abilities.сила.mod, @abilities.ловкость.mod)"
               }
             }
           },
@@ -1476,10 +1467,10 @@
             "value": "дальний бой — Ловкость",
             "cells": {
               "attack": {
-                "expr": "@abilities.dex.mod + @prof_bonus"
+                "expr": "@abilities.ловкость.mod + @prof_bonus"
               },
               "damage": {
-                "expr": "@abilities.dex.mod"
+                "expr": "@abilities.ловкость.mod"
               }
             }
           }
@@ -1566,32 +1557,26 @@
         "rows": [
           {
             "value": "сила",
-            "key": "str",
             "label": "Сила"
           },
           {
             "value": "ловкость",
-            "key": "dex",
             "label": "Ловкость"
           },
           {
             "value": "телосложение",
-            "key": "con",
             "label": "Телосложение"
           },
           {
             "value": "интеллект",
-            "key": "int",
             "label": "Интеллект"
           },
           {
             "value": "мудрость",
-            "key": "wis",
             "label": "Мудрость"
           },
           {
             "value": "харизма",
-            "key": "cha",
             "label": "Харизма"
           }
         ],
@@ -1651,7 +1636,6 @@
         "rows": [
           {
             "value": "сила",
-            "key": "str",
             "label": "Сила",
             "cells": {
               "ability": "сила"
@@ -1659,7 +1643,6 @@
           },
           {
             "value": "ловкость",
-            "key": "dex",
             "label": "Ловкость",
             "cells": {
               "ability": "ловкость"
@@ -1667,7 +1650,6 @@
           },
           {
             "value": "телосложение",
-            "key": "con",
             "label": "Телосложение",
             "cells": {
               "ability": "телосложение"
@@ -1675,7 +1657,6 @@
           },
           {
             "value": "интеллект",
-            "key": "int",
             "label": "Интеллект",
             "cells": {
               "ability": "интеллект"
@@ -1683,7 +1664,6 @@
           },
           {
             "value": "мудрость",
-            "key": "wis",
             "label": "Мудрость",
             "cells": {
               "ability": "мудрость"
@@ -1691,7 +1671,6 @@
           },
           {
             "value": "харизма",
-            "key": "cha",
             "label": "Харизма",
             "cells": {
               "ability": "харизма"
@@ -1745,7 +1724,6 @@
         "rows": [
           {
             "value": "атлетика",
-            "key": "athletics",
             "label": "Атлетика",
             "cells": {
               "ability": "сила"
@@ -1754,7 +1732,6 @@
           },
           {
             "value": "акробатика",
-            "key": "acrobatics",
             "label": "Акробатика",
             "cells": {
               "ability": "ловкость"
@@ -1763,7 +1740,6 @@
           },
           {
             "value": "ловкость_рук",
-            "key": "sleight_of_hand",
             "label": "Ловкость рук",
             "cells": {
               "ability": "ловкость"
@@ -1772,7 +1748,6 @@
           },
           {
             "value": "скрытность",
-            "key": "stealth",
             "label": "Скрытность",
             "cells": {
               "ability": "ловкость"
@@ -1781,7 +1756,6 @@
           },
           {
             "value": "магия",
-            "key": "arcana",
             "label": "Магия",
             "cells": {
               "ability": "интеллект"
@@ -1790,7 +1764,6 @@
           },
           {
             "value": "история",
-            "key": "history",
             "label": "История",
             "cells": {
               "ability": "интеллект"
@@ -1799,7 +1772,6 @@
           },
           {
             "value": "анализ",
-            "key": "investigation",
             "label": "Анализ",
             "cells": {
               "ability": "интеллект"
@@ -1808,7 +1780,6 @@
           },
           {
             "value": "природа",
-            "key": "nature",
             "label": "Природа",
             "cells": {
               "ability": "интеллект"
@@ -1817,7 +1788,6 @@
           },
           {
             "value": "религия",
-            "key": "religion",
             "label": "Религия",
             "cells": {
               "ability": "интеллект"
@@ -1826,7 +1796,6 @@
           },
           {
             "value": "уход_за_животными",
-            "key": "animal_handling",
             "label": "Уход за животными",
             "cells": {
               "ability": "мудрость"
@@ -1835,7 +1804,6 @@
           },
           {
             "value": "проницательность",
-            "key": "insight",
             "label": "Проницательность",
             "cells": {
               "ability": "мудрость"
@@ -1844,7 +1812,6 @@
           },
           {
             "value": "медицина",
-            "key": "medicine",
             "label": "Медицина",
             "cells": {
               "ability": "мудрость"
@@ -1853,7 +1820,6 @@
           },
           {
             "value": "внимательность",
-            "key": "perception",
             "label": "Внимательность",
             "cells": {
               "ability": "мудрость"
@@ -1862,7 +1828,6 @@
           },
           {
             "value": "выживание",
-            "key": "survival",
             "label": "Выживание",
             "cells": {
               "ability": "мудрость"
@@ -1871,7 +1836,6 @@
           },
           {
             "value": "обман",
-            "key": "deception",
             "label": "Обман",
             "cells": {
               "ability": "харизма"
@@ -1880,7 +1844,6 @@
           },
           {
             "value": "запугивание",
-            "key": "intimidation",
             "label": "Запугивание",
             "cells": {
               "ability": "харизма"
@@ -1889,7 +1852,6 @@
           },
           {
             "value": "выступление",
-            "key": "performance",
             "label": "Выступление",
             "cells": {
               "ability": "харизма"
@@ -1898,7 +1860,6 @@
           },
           {
             "value": "убеждение",
-            "key": "persuasion",
             "label": "Убеждение",
             "cells": {
               "ability": "харизма"
@@ -4664,7 +4625,7 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "@получатель.saves.wis.save"
+                "expr": "@получатель.saves.мудрость.save"
               },
               "tags": [
                 "спасбросок",
@@ -4807,7 +4768,7 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "@отправитель.skills.stealth.total"
+                "expr": "@отправитель.skills.скрытность.total"
               },
               "tags": [
                 "проверка",
@@ -4942,7 +4903,7 @@
             "type": "amount",
             "source": "item",
             "fixed": {
-              "expr": "кинуть(@отправитель.hit_die) + @отправитель.abilities.con.mod"
+              "expr": "кинуть(@отправитель.hit_die) + @отправитель.abilities.телосложение.mod"
             }
           },
           {
@@ -5044,7 +5005,7 @@
                     "constant": "lead_die"
                   },
                   "bonus": {
-                    "expr": "@получатель.saves.dex.save"
+                    "expr": "@получатель.saves.ловкость.save"
                   },
                   "tags": [
                     "спасбросок",
@@ -5273,7 +5234,7 @@
                     "constant": "lead_die"
                   },
                   "bonus": {
-                    "expr": "@отправитель.saves.con.save"
+                    "expr": "@отправитель.saves.телосложение.save"
                   },
                   "tags": [
                     "спасбросок",
@@ -5361,7 +5322,7 @@
                     "constant": "lead_die"
                   },
                   "bonus": {
-                    "expr": "@отправитель.saves.wis.save"
+                    "expr": "@отправитель.saves.мудрость.save"
                   },
                   "tags": [
                     "спасбросок",
@@ -5518,7 +5479,7 @@
                     "constant": "lead_die"
                   },
                   "bonus": {
-                    "expr": "@отправитель.saves.wis.save"
+                    "expr": "@отправитель.saves.мудрость.save"
                   },
                   "tags": [
                     "спасбросок",
@@ -5717,7 +5678,7 @@
                     "constant": "lead_die"
                   },
                   "bonus": {
-                    "expr": "@отправитель.saves.str.save"
+                    "expr": "@отправитель.saves.сила.save"
                   },
                   "tags": [
                     "спасбросок",
@@ -6237,7 +6198,7 @@
                     "constant": "lead_die"
                   },
                   "bonus": {
-                    "expr": "@отправитель.saves.wis.save"
+                    "expr": "@отправитель.saves.мудрость.save"
                   },
                   "tags": [
                     "спасбросок",
@@ -6597,7 +6558,7 @@
             "target": "ac_base",
             "op": "set",
             "value": {
-              "expr": "10 + @abilities.con.mod"
+              "expr": "10 + @abilities.телосложение.mod"
             },
             "stacking": "max"
           }
@@ -6618,7 +6579,7 @@
             "target": "ac_base",
             "op": "set",
             "value": {
-              "expr": "10 + @abilities.wis.mod"
+              "expr": "10 + @abilities.мудрость.mod"
             },
             "stacking": "max"
           }
@@ -6930,7 +6891,7 @@
                     "constant": "lead_die"
                   },
                   "bonus": {
-                    "expr": "@отправитель.saves.con.save"
+                    "expr": "@отправитель.saves.телосложение.save"
                   },
                   "tags": [
                     "спасбросок",
@@ -7342,99 +7303,99 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "slots.1.left"
+                  "tag": "slots.круг_1.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.slots.1.max"
+                  "expr": "@получатель.slots.круг_1.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "slots.2.left"
+                  "tag": "slots.круг_2.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.slots.2.max"
+                  "expr": "@получатель.slots.круг_2.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "slots.3.left"
+                  "tag": "slots.круг_3.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.slots.3.max"
+                  "expr": "@получатель.slots.круг_3.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "slots.4.left"
+                  "tag": "slots.круг_4.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.slots.4.max"
+                  "expr": "@получатель.slots.круг_4.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "slots.5.left"
+                  "tag": "slots.круг_5.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.slots.5.max"
+                  "expr": "@получатель.slots.круг_5.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "slots.6.left"
+                  "tag": "slots.круг_6.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.slots.6.max"
+                  "expr": "@получатель.slots.круг_6.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "slots.7.left"
+                  "tag": "slots.круг_7.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.slots.7.max"
+                  "expr": "@получатель.slots.круг_7.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "slots.8.left"
+                  "tag": "slots.круг_8.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.slots.8.max"
+                  "expr": "@получатель.slots.круг_8.max"
                 },
                 "targetModifiers": false
               },
               {
                 "type": "apply",
                 "target": {
-                  "tag": "slots.9.left"
+                  "tag": "slots.круг_9.left"
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "@получатель.slots.9.max"
+                  "expr": "@получатель.slots.круг_9.max"
                 },
                 "targetModifiers": false
               }
@@ -8225,7 +8186,7 @@
             "id": "есть_1",
             "type": "compare",
             "value": {
-              "expr": "@получатель.slots.1.left"
+              "expr": "@получатель.slots.круг_1.left"
             },
             "versus": {
               "expr": "1"
@@ -8239,7 +8200,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "slots.1.left"
+              "tag": "slots.круг_1.left"
             },
             "direction": "subtract",
             "value": {
@@ -8254,7 +8215,7 @@
             "id": "есть_2",
             "type": "compare",
             "value": {
-              "expr": "@получатель.slots.2.left"
+              "expr": "@получатель.slots.круг_2.left"
             },
             "versus": {
               "expr": "1"
@@ -8268,7 +8229,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "slots.2.left"
+              "tag": "slots.круг_2.left"
             },
             "direction": "subtract",
             "value": {
@@ -8283,7 +8244,7 @@
             "id": "есть_3",
             "type": "compare",
             "value": {
-              "expr": "@получатель.slots.3.left"
+              "expr": "@получатель.slots.круг_3.left"
             },
             "versus": {
               "expr": "1"
@@ -8297,7 +8258,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "slots.3.left"
+              "tag": "slots.круг_3.left"
             },
             "direction": "subtract",
             "value": {
@@ -8312,7 +8273,7 @@
             "id": "есть_4",
             "type": "compare",
             "value": {
-              "expr": "@получатель.slots.4.left"
+              "expr": "@получатель.slots.круг_4.left"
             },
             "versus": {
               "expr": "1"
@@ -8326,7 +8287,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "slots.4.left"
+              "tag": "slots.круг_4.left"
             },
             "direction": "subtract",
             "value": {
@@ -8341,7 +8302,7 @@
             "id": "есть_5",
             "type": "compare",
             "value": {
-              "expr": "@получатель.slots.5.left"
+              "expr": "@получатель.slots.круг_5.left"
             },
             "versus": {
               "expr": "1"
@@ -8355,7 +8316,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "slots.5.left"
+              "tag": "slots.круг_5.left"
             },
             "direction": "subtract",
             "value": {
@@ -8370,7 +8331,7 @@
             "id": "есть_6",
             "type": "compare",
             "value": {
-              "expr": "@получатель.slots.6.left"
+              "expr": "@получатель.slots.круг_6.left"
             },
             "versus": {
               "expr": "1"
@@ -8384,7 +8345,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "slots.6.left"
+              "tag": "slots.круг_6.left"
             },
             "direction": "subtract",
             "value": {
@@ -8399,7 +8360,7 @@
             "id": "есть_7",
             "type": "compare",
             "value": {
-              "expr": "@получатель.slots.7.left"
+              "expr": "@получатель.slots.круг_7.left"
             },
             "versus": {
               "expr": "1"
@@ -8413,7 +8374,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "slots.7.left"
+              "tag": "slots.круг_7.left"
             },
             "direction": "subtract",
             "value": {
@@ -8428,7 +8389,7 @@
             "id": "есть_8",
             "type": "compare",
             "value": {
-              "expr": "@получатель.slots.8.left"
+              "expr": "@получатель.slots.круг_8.left"
             },
             "versus": {
               "expr": "1"
@@ -8442,7 +8403,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "slots.8.left"
+              "tag": "slots.круг_8.left"
             },
             "direction": "subtract",
             "value": {
@@ -8457,7 +8418,7 @@
             "id": "есть_9",
             "type": "compare",
             "value": {
-              "expr": "@получатель.slots.9.left"
+              "expr": "@получатель.slots.круг_9.left"
             },
             "versus": {
               "expr": "1"
@@ -8471,7 +8432,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "slots.9.left"
+              "tag": "slots.круг_9.left"
             },
             "direction": "subtract",
             "value": {
@@ -8551,23 +8512,23 @@
         "systemId": "dnd5e",
         "name": "Манекен А",
         "values": {
-          "abilities.str.score": 16,
-          "abilities.dex.score": 14,
-          "abilities.con.score": 14,
-          "abilities.int.score": 12,
-          "abilities.wis.score": 12,
-          "abilities.cha.score": 10,
+          "abilities.сила.score": 16,
+          "abilities.ловкость.score": 14,
+          "abilities.телосложение.score": 14,
+          "abilities.интеллект.score": 12,
+          "abilities.мудрость.score": 12,
+          "abilities.харизма.score": 10,
           "level": 5,
           "caster_level": 5,
           "hp_max": 40,
           "hp_current": 40,
-          "slots.1.left": 4,
-          "slots.2.left": 3,
-          "slots.3.left": 2,
+          "slots.круг_1.left": 4,
+          "slots.круг_2.left": 3,
+          "slots.круг_3.left": 2,
           "ac_base": 14,
-          "skills.athletics.prof": 1,
-          "skills.perception.prof": 1,
-          "saves.con.extra": 1,
+          "skills.атлетика.prof": 1,
+          "skills.внимательность.prof": 1,
+          "saves.телосложение.extra": 1,
           "resources.second_wind.max": 1,
           "resources.second_wind.left": 1,
           "resources.rages.max": 3,
@@ -8595,12 +8556,12 @@
         "systemId": "dnd5e",
         "name": "Манекен Б",
         "values": {
-          "abilities.str.score": 12,
-          "abilities.dex.score": 12,
-          "abilities.con.score": 12,
-          "abilities.int.score": 10,
-          "abilities.wis.score": 10,
-          "abilities.cha.score": 10,
+          "abilities.сила.score": 12,
+          "abilities.ловкость.score": 12,
+          "abilities.телосложение.score": 12,
+          "abilities.интеллект.score": 10,
+          "abilities.мудрость.score": 10,
+          "abilities.харизма.score": 10,
           "level": 5,
           "hp_max": 40,
           "hp_current": 40,
@@ -9469,7 +9430,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "abilities.con.score",
+            "target": "abilities.телосложение.score",
             "op": "set",
             "value": {
               "expr": "19"
@@ -9489,7 +9450,7 @@
         "modifiers": [
           {
             "kind": "value",
-            "target": "abilities.str.score",
+            "target": "abilities.сила.score",
             "op": "set",
             "value": {
               "expr": "21"
@@ -10779,19 +10740,19 @@
         "subclass": "Чемпион",
         "background": "Солдат",
         "alignment": "Законно-добрая",
-        "abilities.str.score": 18,
-        "abilities.dex.score": 14,
-        "abilities.con.score": 16,
-        "abilities.int.score": 10,
-        "abilities.wis.score": 12,
-        "abilities.cha.score": 8,
+        "abilities.сила.score": 18,
+        "abilities.ловкость.score": 14,
+        "abilities.телосложение.score": 16,
+        "abilities.интеллект.score": 10,
+        "abilities.мудрость.score": 12,
+        "abilities.харизма.score": 8,
         "level": 5,
         "xp": 6500,
         "inspiration": 1,
-        "skills.athletics.prof": 1,
-        "skills.perception.prof": 1,
-        "skills.survival.prof": 1,
-        "skills.intimidation.prof": 2,
+        "skills.атлетика.prof": 1,
+        "skills.внимательность.prof": 1,
+        "skills.выживание.prof": 1,
+        "skills.запугивание.prof": 2,
         "languages": "Общий, Дварфский",
         "hp_max": 44,
         "hp_current": 44,
@@ -10853,26 +10814,26 @@
         "subclass": "Драконья кровь",
         "background": "Шарлатанка",
         "alignment": "Хаотично-нейтральная",
-        "abilities.str.score": 8,
-        "abilities.dex.score": 16,
-        "abilities.con.score": 14,
-        "abilities.int.score": 12,
-        "abilities.wis.score": 10,
-        "abilities.cha.score": 18,
+        "abilities.сила.score": 8,
+        "abilities.ловкость.score": 16,
+        "abilities.телосложение.score": 14,
+        "abilities.интеллект.score": 12,
+        "abilities.мудрость.score": 10,
+        "abilities.харизма.score": 18,
         "level": 5,
         "xp": 6500,
         "caster_level": 5,
-        "skills.arcana.prof": 1,
-        "skills.deception.prof": 1,
-        "skills.persuasion.prof": 2,
+        "skills.магия.prof": 1,
+        "skills.обман.prof": 1,
+        "skills.убеждение.prof": 2,
         "darkvision": 60,
         "languages": "Общий, Инфернальный",
         "hp_max": 33,
         "hp_current": 33,
         "hit_dice_left": 5,
-        "slots.1.left": 4,
-        "slots.2.left": 3,
-        "slots.3.left": 2,
+        "slots.круг_1.left": 4,
+        "slots.круг_2.left": 3,
+        "slots.круг_3.left": 2,
         "resources.sorcery.max": 5,
         "resources.sorcery.left": 5,
         "gp": 95
@@ -10943,27 +10904,27 @@
         "subclass": "Домен жизни",
         "background": "Прислужник",
         "alignment": "Нейтрально-добрый",
-        "abilities.str.score": 14,
-        "abilities.dex.score": 10,
-        "abilities.con.score": 16,
-        "abilities.int.score": 10,
-        "abilities.wis.score": 18,
-        "abilities.cha.score": 12,
+        "abilities.сила.score": 14,
+        "abilities.ловкость.score": 10,
+        "abilities.телосложение.score": 16,
+        "abilities.интеллект.score": 10,
+        "abilities.мудрость.score": 18,
+        "abilities.харизма.score": 12,
         "level": 5,
         "xp": 6500,
         "caster_level": 5,
-        "skills.medicine.prof": 1,
-        "skills.religion.prof": 1,
-        "skills.insight.prof": 1,
-        "skills.history.prof": 1,
+        "skills.медицина.prof": 1,
+        "skills.религия.prof": 1,
+        "skills.проницательность.prof": 1,
+        "skills.история.prof": 1,
         "darkvision": 60,
         "languages": "Общий, Дварфский",
         "hp_max": 38,
         "hp_current": 38,
         "hit_dice_left": 5,
-        "slots.1.left": 4,
-        "slots.2.left": 3,
-        "slots.3.left": 2,
+        "slots.круг_1.left": 4,
+        "slots.круг_2.left": 3,
+        "slots.круг_3.left": 2,
         "resources.channel.max": 1,
         "resources.channel.left": 1,
         "gp": 60
@@ -11028,19 +10989,19 @@
         "subclass": "Вор",
         "background": "Преступница",
         "alignment": "Хаотично-нейтральная",
-        "abilities.str.score": 10,
-        "abilities.dex.score": 18,
-        "abilities.con.score": 14,
-        "abilities.int.score": 14,
-        "abilities.wis.score": 12,
-        "abilities.cha.score": 12,
+        "abilities.сила.score": 10,
+        "abilities.ловкость.score": 18,
+        "abilities.телосложение.score": 14,
+        "abilities.интеллект.score": 14,
+        "abilities.мудрость.score": 12,
+        "abilities.харизма.score": 12,
         "level": 5,
         "xp": 6500,
-        "skills.acrobatics.prof": 1,
-        "skills.investigation.prof": 1,
-        "skills.perception.prof": 1,
-        "skills.stealth.prof": 2,
-        "skills.sleight_of_hand.prof": 2,
+        "skills.акробатика.prof": 1,
+        "skills.анализ.prof": 1,
+        "skills.внимательность.prof": 1,
+        "skills.скрытность.prof": 2,
+        "skills.ловкость_рук.prof": 2,
         "languages": "Общий, Воровской жаргон",
         "hp_max": 33,
         "hp_current": 33,
@@ -11091,12 +11052,12 @@
       "values": {
         "race": "гоблин",
         "alignment": "Нейтрально-злой",
-        "abilities.str.score": 8,
-        "abilities.dex.score": 14,
-        "abilities.con.score": 10,
-        "abilities.int.score": 10,
-        "abilities.wis.score": 8,
-        "abilities.cha.score": 8,
+        "abilities.сила.score": 8,
+        "abilities.ловкость.score": 14,
+        "abilities.телосложение.score": 10,
+        "abilities.интеллект.score": 10,
+        "abilities.мудрость.score": 8,
+        "abilities.харизма.score": 8,
         "level": 1,
         "darkvision": 60,
         "hp_max": 7,
@@ -11119,12 +11080,12 @@
       "values": {
         "race": "орк",
         "alignment": "Хаотично-злой",
-        "abilities.str.score": 16,
-        "abilities.dex.score": 12,
-        "abilities.con.score": 16,
-        "abilities.int.score": 7,
-        "abilities.wis.score": 11,
-        "abilities.cha.score": 10,
+        "abilities.сила.score": 16,
+        "abilities.ловкость.score": 12,
+        "abilities.телосложение.score": 16,
+        "abilities.интеллект.score": 7,
+        "abilities.мудрость.score": 11,
+        "abilities.харизма.score": 10,
         "level": 2,
         "darkvision": 60,
         "hp_max": 15,
@@ -11147,12 +11108,12 @@
       "values": {
         "race": "огр",
         "alignment": "Хаотично-злой",
-        "abilities.str.score": 19,
-        "abilities.dex.score": 8,
-        "abilities.con.score": 16,
-        "abilities.int.score": 5,
-        "abilities.wis.score": 7,
-        "abilities.cha.score": 7,
+        "abilities.сила.score": 19,
+        "abilities.ловкость.score": 8,
+        "abilities.телосложение.score": 16,
+        "abilities.интеллект.score": 5,
+        "abilities.мудрость.score": 7,
+        "abilities.харизма.score": 7,
         "level": 7,
         "darkvision": 60,
         "hp_max": 59,

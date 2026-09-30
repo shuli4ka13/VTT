@@ -60,7 +60,7 @@ export function resolveAddress(system: System, pass: Pass, name: string): { valu
   const [tableId, rowKey, column, ...rest] = name.split('.');
   const table = tableId ? system.tables?.[tableId] : undefined;
   if (!table || rowKey === undefined || isRange(table) || hasField(system, tableId)) return null;
-  const row = (table.rows ?? []).find(r => rowKeyOf(r) === rowKey) ?? (table.rows ?? []).find(r => String(r.value) === rowKey);
+  const row = (table.rows ?? []).find(r => rowKeyOf(r) === rowKey);
   if (!row) throw new EngineError(`«${name}»: в таблице «${table.label || tableId}» нет строки «${rowKey}»`);
   if (!column) return { value: row.value };
   const cell = readCell(system, pass, tableId!, row.value, column, name);

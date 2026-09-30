@@ -15,7 +15,7 @@ const base = {
         { key: 'score', label: 'Значение', kind: 'number', default: 10 },
         { key: 'mod', label: 'Модификатор', kind: 'number', expr: 'округлить вниз((@строка.score - 10) / 2)', title: 'Модификатор: {label}', block: 'Модификаторы' },
       ],
-      rows: [{ value: 'сила', key: 'str', label: 'Сила' }, { value: 'ловкость', key: 'dex', label: 'Ловкость' }],
+      rows: [{ value: 'сила', label: 'Сила' }, { value: 'ловкость', label: 'Ловкость' }],
     },
     skills: {
       label: 'Навыки', owner: 'sheet', block: 'Навыки',
@@ -23,12 +23,12 @@ const base = {
         { key: 'ability', label: 'Характеристика', kind: 'choice', from: 'abilities' },
         { key: 'total', label: 'Навык', kind: 'number', expr: '@строка.ability.mod + 1' },
       ],
-      rows: [{ value: 'атлетика', key: 'athletics', label: 'Атлетика', cells: { ability: 'сила' } }],
+      rows: [{ value: 'атлетика', label: 'Атлетика', cells: { ability: 'сила' } }],
     },
   },
 } as unknown as System;
 
-const sheet = { id: 'h', systemId: 's', name: 'h', values: { 'abilities.str.score': 16 }, has: [], effects: [] } as Sheet;
+const sheet = { id: 'h', systemId: 's', name: 'h', values: { 'abilities.сила.score': 16 }, has: [], effects: [] } as Sheet;
 
 const copy = (): System => structuredClone(base) as System;
 
@@ -36,17 +36,17 @@ group('таблица на листе: пустая клетка — ввод, �
   const at = (tag: string, on: System = base) => calc(on, sheet, tag, newPass(on, sheet));
 
   test('поля нигде не хранятся: это клетки таблиц, у которых есть владелец', () => {
-    deepEq(fieldsOf(base).map(f => f.tag), ['level', 'abilities.str.score', 'abilities.str.mod', 'abilities.dex.score', 'abilities.dex.mod', 'skills.athletics.total']);
+    deepEq(fieldsOf(base).map(f => f.tag), ['level', 'abilities.сила.score', 'abilities.сила.mod', 'abilities.ловкость.score', 'abilities.ловкость.mod', 'skills.атлетика.total']);
     ok(world.system.safeParse(base).success);
     ok(!world.system.safeParse({ ...base, fields: [] }).success, 'хранимых полей в системе быть не может');
   });
 
   test('поле зовётся адресом клетки, а формула колонки пишется один раз', () => {
-    eq(fieldOf(base, 'abilities.dex.mod')!.label, 'Модификатор: Ловкость');
-    eq(fieldOf(base, 'abilities.dex.mod')!.group, 'Модификаторы');
-    eq(fieldOf(base, 'abilities.dex.score')!.group, 'Характеристики');
-    eq(at('abilities.str.mod'), 3);
-    eq(at('abilities.dex.score'), 10);
+    eq(fieldOf(base, 'abilities.ловкость.mod')!.label, 'Модификатор: Ловкость');
+    eq(fieldOf(base, 'abilities.ловкость.mod')!.group, 'Модификаторы');
+    eq(fieldOf(base, 'abilities.ловкость.score')!.group, 'Характеристики');
+    eq(at('abilities.сила.mod'), 3);
+    eq(at('abilities.ловкость.score'), 10);
   });
 
   test('таблица листа из одной строки: колонка зовётся своим именем', () => {
@@ -60,45 +60,45 @@ group('таблица на листе: пустая клетка — ввод, �
     const own = copy();
     own.tables!.abilities!.rows![1]!.cells = { mod: { expr: '@строка.score * 2' } };
     deepEq(fieldsOf(own).filter(f => f.cell?.column === 'mod').map(f => (f.value as { expr: string }).expr),
-      ['округлить вниз((@abilities.str.score - 10) / 2)', '@abilities.dex.score * 2']);
+      ['округлить вниз((@abilities.сила.score - 10) / 2)', '@abilities.ловкость.score * 2']);
   });
 
   test('вид одной клетки лежит у строки и перебивает вид колонки', () => {
     const own = copy();
     own.tables!.abilities!.rows![0]!.view = { mod: { label: 'Мощь', block: 'Бой', roll: { die: { constant: 'к20' }, bonus: { expr: '@строка.mod' } } } };
-    const field = fieldOf(own, 'abilities.str.mod')!;
+    const field = fieldOf(own, 'abilities.сила.mod')!;
     eq(field.label, 'Мощь');
     eq(field.group, 'Бой');
-    eq(field.roll!.bonus!.expr, '@abilities.str.mod');
-    eq(fieldOf(own, 'abilities.dex.mod')!.label, 'Модификатор: Ловкость');
+    eq(field.roll!.bonus!.expr, '@abilities.сила.mod');
+    eq(fieldOf(own, 'abilities.ловкость.mod')!.label, 'Модификатор: Ловкость');
   });
 
   test('вписанное значение не становится полем — оно одинаковое у всех', () => {
     const fixed = copy();
     fixed.tables!.abilities!.rows![1]!.cells = { score: 14 };
-    ok(!hasField(fixed, 'abilities.dex.score'));
-    eq(at('abilities.dex.mod', fixed), 2);
+    ok(!hasField(fixed, 'abilities.ловкость.score'));
+    eq(at('abilities.ловкость.mod', fixed), 2);
   });
 
   test('без владельца таблица — справочник: пустая клетка просто пуста, полей нет', () => {
     const off = copy();
     delete off.tables!.skills!.owner;
     ok(!fieldsOf(off).some(f => f.cell?.table === 'skills'));
-    eq(at('x', withColumn(off, { key: 'x', label: 'x', expr: '@skills.athletics.total' })), 4);
+    eq(at('x', withColumn(off, { key: 'x', label: 'x', expr: '@skills.атлетика.total' })), 4);
   });
 
   test('владелец таблицы — стол или группа: клетки лежат там', () => {
     const shared = copy();
     shared.tables!.abilities!.owner = 'desk';
-    eq(fieldOf(shared, 'abilities.str.score')!.lives, 'desk');
+    eq(fieldOf(shared, 'abilities.сила.score')!.lives, 'desk');
     const grouped = copy();
     grouped.tables!.лист!.owner = 'group';
     eq(fieldOf(grouped, 'level')!.lives, 'group');
   });
 
   test('адрес идёт по ссылке: навык → характеристика → модификатор', () => {
-    eq(at('skills.athletics.total'), 4);
-    eq(at('via', withColumn(base, { key: 'via', label: 'через ссылку', expr: '@skills.athletics.ability.mod' })), 3);
+    eq(at('skills.атлетика.total'), 4);
+    eq(at('via', withColumn(base, { key: 'via', label: 'через ссылку', expr: '@skills.атлетика.ability.mod' })), 3);
   });
 
   test('выбор строки на листе по-прежнему ведёт в таблицу', () => {

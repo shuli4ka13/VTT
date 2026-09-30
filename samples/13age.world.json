@@ -185,10 +185,10 @@
             "value": "ближний бой — Сила",
             "cells": {
               "attack": {
-                "expr": "@abilities.str.mod"
+                "expr": "@abilities.сила.mod"
               },
               "damage": {
-                "expr": "@abilities.str.mod"
+                "expr": "@abilities.сила.mod"
               }
             }
           },
@@ -196,10 +196,10 @@
             "value": "дальний бой — Ловкость",
             "cells": {
               "attack": {
-                "expr": "@abilities.dex.mod"
+                "expr": "@abilities.ловкость.mod"
               },
               "damage": {
-                "expr": "@abilities.dex.mod"
+                "expr": "@abilities.ловкость.mod"
               }
             }
           }
@@ -240,32 +240,26 @@
         "rows": [
           {
             "value": "сила",
-            "key": "str",
             "label": "Сила"
           },
           {
             "value": "телосложение",
-            "key": "con",
             "label": "Телосложение"
           },
           {
             "value": "ловкость",
-            "key": "dex",
             "label": "Ловкость"
           },
           {
             "value": "интеллект",
-            "key": "int",
             "label": "Интеллект"
           },
           {
             "value": "мудрость",
-            "key": "wis",
             "label": "Мудрость"
           },
           {
             "value": "харизма",
-            "key": "cha",
             "label": "Харизма"
           }
         ],
@@ -348,7 +342,7 @@
         "constant": "lead_die"
       },
       "bonus": {
-        "expr": "@abilities.dex.mod + @level"
+        "expr": "@abilities.ловкость.mod + @level"
       }
     },
     "effects": {
@@ -837,12 +831,12 @@
       "of": "персонаж",
       "name": "Кай",
       "values": {
-        "abilities.str.score": 18,
-        "abilities.con.score": 14,
-        "abilities.dex.score": 12,
-        "abilities.int.score": 10,
-        "abilities.wis.score": 12,
-        "abilities.cha.score": 10,
+        "abilities.сила.score": 18,
+        "abilities.телосложение.score": 14,
+        "abilities.ловкость.score": 12,
+        "abilities.интеллект.score": 10,
+        "abilities.мудрость.score": 12,
+        "abilities.харизма.score": 10,
         "level": 2,
         "ac": 17,
         "pd": 14,
@@ -869,12 +863,12 @@
       "of": "персонаж",
       "name": "Лея",
       "values": {
-        "abilities.str.score": 10,
-        "abilities.con.score": 12,
-        "abilities.dex.score": 18,
-        "abilities.int.score": 12,
-        "abilities.wis.score": 14,
-        "abilities.cha.score": 10,
+        "abilities.сила.score": 10,
+        "abilities.телосложение.score": 12,
+        "abilities.ловкость.score": 18,
+        "abilities.интеллект.score": 12,
+        "abilities.мудрость.score": 14,
+        "abilities.харизма.score": 10,
         "level": 2,
         "ac": 15,
         "pd": 15,
@@ -904,8 +898,8 @@
       "of": "противник",
       "name": "Гоблин",
       "values": {
-        "abilities.str.score": 10,
-        "abilities.dex.score": 14,
+        "abilities.сила.score": 10,
+        "abilities.ловкость.score": 14,
         "level": 1,
         "ac": 16,
         "pd": 14,
@@ -926,8 +920,8 @@
       "of": "противник",
       "name": "Орк-берсерк",
       "values": {
-        "abilities.str.score": 16,
-        "abilities.dex.score": 10,
+        "abilities.сила.score": 16,
+        "abilities.ловкость.score": 10,
         "level": 2,
         "ac": 16,
         "pd": 15,
@@ -959,8 +953,8 @@
       "of": "противник",
       "name": "Гоблин из толпы №1",
       "values": {
-        "abilities.str.score": 10,
-        "abilities.dex.score": 14,
+        "abilities.сила.score": 10,
+        "abilities.ловкость.score": 14,
         "level": 1,
         "ac": 16,
         "pd": 14,
@@ -980,8 +974,8 @@
       "of": "противник",
       "name": "Гоблин из толпы №2",
       "values": {
-        "abilities.str.score": 10,
-        "abilities.dex.score": 14,
+        "abilities.сила.score": 10,
+        "abilities.ловкость.score": 14,
         "level": 1,
         "ac": 16,
         "pd": 14,
@@ -1001,8 +995,8 @@
       "of": "противник",
       "name": "Гоблин из толпы №3",
       "values": {
-        "abilities.str.score": 10,
-        "abilities.dex.score": 14,
+        "abilities.сила.score": 10,
+        "abilities.ловкость.score": 14,
         "level": 1,
         "ac": 16,
         "pd": 14,

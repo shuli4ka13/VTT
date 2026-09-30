@@ -13,7 +13,7 @@ import { kindWord } from '@vtt/engine/words/kinds';
 import type { System, Column } from '@vtt/schema';
 import type { Field as FieldModel, Holder } from '@vtt/engine/model/types';
 import type { WorldState } from '../../../store/world.ts';
-import { fieldsOf, withColumn } from '@vtt/engine/model/sheet-columns';
+import { fieldsOf, withColumn, rowKeyOf } from '@vtt/engine/model/sheet-columns';
 
 export const isCharacterColumn = (field: FieldModel): boolean => !field.cell;
 
@@ -141,7 +141,7 @@ export function CharacterSection({ system, editSystem }: {
               const table = system.tables?.[part.table];
               const all = (table?.rows ?? []).length;
               const rowName = (key: string) => {
-                const row = (table?.rows ?? []).find(r => String(r.key ?? r.value) === key);
+                const row = (table?.rows ?? []).find(r => rowKeyOf(r) === key);
                 return row?.label ?? String(row?.value ?? key);
               };
               return (

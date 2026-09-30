@@ -5,7 +5,9 @@ export type { CellMark };
 
 type Loose = Record<string, unknown>;
 
-export const rowKeyOf = (row: TableRow): string => String(row.key ?? row.value ?? '');
+export const slugOf = (value: unknown): string => String(value ?? '').replace(/[^\p{L}\p{N}_]+/gu, '_');
+
+export const rowKeyOf = (row: TableRow): string => slugOf(row.value);
 
 export const addressOf = (table: string, row: TableRow | string, column: string): string =>
   `${table}.${typeof row === 'string' ? row : rowKeyOf(row)}.${column}`;

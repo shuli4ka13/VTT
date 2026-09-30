@@ -11,7 +11,7 @@ const withTable = (): System => ({
     abilities: {
       label: 'Характеристики', owner: 'sheet', block: 'Характеристики',
       columns: [],
-      rows: [{ value: 'сила', key: 'str', label: 'Сила' }, { value: 'ловкость', key: 'dex', label: 'Ловкость' }],
+      rows: [{ value: 'сила', label: 'Сила' }, { value: 'ловкость', label: 'Ловкость' }],
     },
   },
 });
@@ -27,13 +27,13 @@ describe('таблица на листе', () => {
         { key: 'mod', label: 'Модификатор', kind: 'number', expr: '@строка.score' },
       ];
     });
-    expect(fieldsOf(useWorld.getState().system).map(f => f.tag)).toEqual(['abilities.str.score', 'abilities.str.mod', 'abilities.dex.score', 'abilities.dex.mod']);
+    expect(fieldsOf(useWorld.getState().system).map(f => f.tag)).toEqual(['abilities.сила.score', 'abilities.сила.mod', 'abilities.ловкость.score', 'abilities.ловкость.mod']);
 
     editRules(draft => {
       draft.tables!.abilities!.columns![1]!.expr = 'округлить вниз((@строка.score - 10) / 2)';
     });
     const mods = fieldsOf(useWorld.getState().system).filter(f => f.cell?.column === 'mod');
-    expect(mods.map(f => (f.value as { expr: string }).expr)).toEqual(['округлить вниз((@abilities.str.score - 10) / 2)', 'округлить вниз((@abilities.dex.score - 10) / 2)']);
+    expect(mods.map(f => (f.value as { expr: string }).expr)).toEqual(['округлить вниз((@abilities.сила.score - 10) / 2)', 'округлить вниз((@abilities.ловкость.score - 10) / 2)']);
   });
 
   it('новая строка таблицы — новые поля на листе', () => {
@@ -41,7 +41,7 @@ describe('таблица на листе', () => {
     editRules(draft => {
       draft.tables!.abilities!.columns = [{ key: 'score', label: 'Значение', kind: 'number' }];
     });
-    editRules(draft => { draft.tables!.abilities!.rows!.push({ value: 'мудрость', key: 'wis', label: 'Мудрость' }); });
+    editRules(draft => { draft.tables!.abilities!.rows!.push({ value: 'мудрость', label: 'Мудрость' }); });
     expect(fieldsOf(useWorld.getState().system).map(f => f.label)).toEqual(['Сила', 'Ловкость', 'Мудрость']);
   });
 
@@ -53,7 +53,7 @@ describe('таблица на листе', () => {
       placeOnSheet(draft, 'abilities');
     });
     const fields = fieldsOf(useWorld.getState().system);
-    expect(fields.map(f => f.tag)).toEqual(['abilities.str.value', 'abilities.str.mod', 'abilities.dex.value', 'abilities.dex.mod']);
+    expect(fields.map(f => f.tag)).toEqual(['abilities.сила.value', 'abilities.сила.mod', 'abilities.ловкость.value', 'abilities.ловкость.mod']);
     expect(fields.map(f => f.label)).toEqual(['Сила', 'Модификатор: Сила', 'Ловкость', 'Модификатор: Ловкость']);
   });
 
@@ -63,6 +63,6 @@ describe('таблица на листе', () => {
       draft.tables!.abilities!.columns = [{ key: 'score', label: 'Значение', kind: 'number' }];
       draft.tables!.abilities!.rows![0]!.cells = { score: 12 };
     });
-    expect(fieldsOf(useWorld.getState().system).map(f => f.tag)).toEqual(['abilities.dex.score']);
+    expect(fieldsOf(useWorld.getState().system).map(f => f.tag)).toEqual(['abilities.ловкость.score']);
   });
 });

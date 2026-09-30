@@ -109,7 +109,6 @@ export const groupSpec = z.object({
 export const tableRow = z.object({
   value: tableValue.optional(),
   label: z.string().optional(),
-  key: z.string().min(1).optional(),
   block: z.string().optional(),
 
   from: z.number().optional(),
