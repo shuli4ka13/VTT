@@ -7,6 +7,7 @@ import { useWorld, useBook } from '../../store/world.ts';
 import type { WorldState } from '../../store/world.ts';
 import { STEP } from '../../words.ts';
 import { flattenSystem } from '@vtt/engine/model/inherit';
+import { isSingle } from '@vtt/engine/model/sheet-columns';
 
 export type { Problem };
 
@@ -65,8 +66,15 @@ export function pathWords(issue: string, system: System): string {
     if (key === 'records' && named) { words.push(`тип записи ${labelOf(system.records, named)}`); i++; continue; }
     if (key === 'constants' && named) { words.push(`кость ${labelOf(system.constants, named)}`); i++; continue; }
     if (key === 'roll_edits' && named) { words.push(`правка броска ${labelOf(system.roll_edits, named)}`); i++; continue; }
-    if (key === 'tables' && named) { words.push(`таблица ${labelOf(system.tables, named)}`); i++; continue; }
-    if (key === 'fields' && index !== null) { words.push(`поле «${system.fields[index]?.label ?? index + 1}»`); i++; continue; }
+    if (key === 'tables' && named) {
+      const table = system.tables?.[named];
+      const at = path[i + 2] === 'columns' && /^\d+$/.test(path[i + 3] ?? '') ? Number(path[i + 3]) : null;
+      const column = at === null ? undefined : table?.columns?.[at];
+      if (!isSingle(table)) words.push(`таблица ${labelOf(system.tables, named)}`);
+      i++;
+      if (at !== null) { words.push(`${isSingle(table) ? 'поле' : 'колонка'} «${column?.label || column?.key || at + 1}»`); i += 2; }
+      continue;
+    }
     if ((key === 'steps' || key === 'receive') && index !== null) { words.push(`${STEP.one} ${index + 1}`); i++; continue; }
     if (key === 'bindings' && index !== null) { words.push(`кнопка ${index + 1}`); i++; continue; }
     if (key === 'modifiers' && index !== null) { words.push(`модификатор ${index + 1}`); i++; continue; }

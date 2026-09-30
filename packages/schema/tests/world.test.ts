@@ -56,7 +56,7 @@ describe('схема стережёт инварианты, а не только
 
   it('двоеточие в теге поля запрещено — им размечены выведенные мишени', () => {
     const bad = {
-      fields: [{ tag: 'check:str', label: 'Плохой', value: { kind: 'stored', type: 'number', default: 0 } }],
+      tables: { лист: { shape: 'single', columns: [{ key: 'check:str', label: 'Плохой', kind: 'number' }] } },
       effects: {},
     };
     expect(W.system.safeParse(bad).success).toBe(false);
@@ -238,7 +238,7 @@ describe('аргументы привязок — как их читает дв�
 
 describe('манекены системы', () => {
   it('система может хранить листы-манекены для предпросмотра, необязательно', () => {
-    const base = { name: 'x', fields: [], effects: {} };
+    const base = { name: 'x', tables: {}, effects: {} };
     expect(W.system.safeParse(base).success).toBe(true);
     const withDolls = {
       ...base,

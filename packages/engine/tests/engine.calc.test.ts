@@ -2,12 +2,13 @@ import { group, test, eq, ok, deepEq, throws } from './harness.ts';
 import { calc, calcAll, newPass, dependenciesOf } from '../src/engine/calc.ts';
 import { UnknownTagError, CycleError, TableError } from '../src/engine/errors.ts';
 import { system, arven, mirra } from './fixtures.ts';
+import { withColumn, fieldsOf } from '../src/model/sheet-columns.ts';
 
-const tinySystem = (fields, tables = {}) => ({ id: 'tiny', name: 'Крошечная', tables, rolls: [], fields, records: [] });
+const tinySystem = (columns, tables = {}) => ({ id: 'tiny', name: 'Крошечная', tables: { лист: { shape: 'single', columns }, ...tables }, rolls: [], records: [] });
 const tinySheet = values => ({ id: 't', systemId: 'tiny', name: 'Т', values, has: [], effects: [] });
 
-const stored = (tag, def) => ({ tag, label: tag, group: 'g', value: { kind: 'stored', type: typeof def, default: def } });
-const formula = (tag, expr) => ({ tag, label: tag, group: 'g', value: { kind: 'formula', expr } });
+const stored = (tag, def) => ({ key: tag, label: tag, kind: typeof def, default: def, block: 'g' });
+const formula = (tag, expr) => ({ key: tag, label: tag, expr: expr, block: 'g' });
 
 group('движок вычислений', () => {
   group('источники значения', () => {
@@ -39,7 +40,7 @@ group('движок вычислений', () => {
 
     test('аргумент таблицы — тоже формула, а не только прямая ссылка', () => {
       const sys = tinySystem(
-        [stored('n', 4), { tag: 'grade', label: 'grade', group: 'g', value: { kind: 'formula', expr: 'таблица("t", #n * 2)' } }],
+        [stored('n', 4), { key: 'grade', label: 'grade', expr: 'таблица("t", #n * 2)', block: 'g' }],
         { t: { label: 't', key: 'range', columns: [{ key: 'value', label: 'сколько', kind: 'text' }],
           rows: [{ from: 1, to: 7, cells: { value: 'мало' } }, { from: 8, to: 20, cells: { value: 'много' } }] } });
       eq(calc(sys, tinySheet({ n: 4 }), 'grade'), 'много');
@@ -74,10 +75,7 @@ group('движок вычислений', () => {
     });
 
     test('новый стат добавляется правкой данных, движок не меняется', () => {
-      const extended = {
-        ...system,
-        fields: [...system.fields, formula('initiative', '#dex_mod + #prof_bonus')],
-      };
+      const extended = withColumn(system, formula('initiative', '#dex_mod + #prof_bonus'));
       eq(calc(extended, mirra, 'initiative'), 6);
     });
   });
@@ -148,7 +146,7 @@ group('движок вычислений', () => {
   group('полный пересчёт', () => {
     test('calcAll возвращает значение для каждого объявленного поля', () => {
       const all = calcAll(system, arven);
-      eq(Object.keys(all).length, system.fields.length);
+      eq(Object.keys(all).length, fieldsOf(system).length);
       eq(all.str, 16);
       eq(all.athletics, 6);
       eq(all.spell_dc, 10);

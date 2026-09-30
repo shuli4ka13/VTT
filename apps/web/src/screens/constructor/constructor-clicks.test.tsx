@@ -10,6 +10,7 @@ import { RulesTab } from './rules/rules-tab.tsx';
 import { EffectsTab } from './effects/effects-tab.tsx';
 import { RecordsTab } from './records-tab.tsx';
 import type { System } from '@vtt/schema';
+import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 
 const BASES: [string, () => System][] = [
   ['пустая система', emptySystem],
@@ -51,7 +52,7 @@ const unexpected = (found: string[]): string[] => {
 const picksOf = (tab: string, system: System): Record<string, string | null>[] => {
   if (tab === 'Эффекты') return Object.keys(system.effects).map(id => ({ activeEffectId: id }));
   if (tab === 'Типы записей') return Object.keys(system.records ?? {}).map(id => ({ activeRecordKind: id }));
-  if (tab === 'Лист') return system.fields.map(f => ({ activeFieldTag: f.tag }));
+  if (tab === 'Лист') return fieldsOf(system).map(f => ({ activeFieldTag: f.tag }));
   return [{}];
 };
 

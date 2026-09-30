@@ -3,9 +3,10 @@ import { lintSystem, lintStep, errorsOf } from '../src/model/lint.ts';
 import { referencesOf, listenerOf } from '../src/model/references.ts';
 import { PLAYABLE_SYSTEMS as SAMPLE_SYSTEMS, PLAYABLE_WORLDS as SAMPLE_WORLDS } from '../src/model/systems.ts';
 import type { System, Effect, Step } from '../src/model/types.ts';
+import { withColumn } from '../src/model/sheet-columns.ts';
 
 const bare = (): System => ({
-  id: 'x', name: 'x', fields: [{ tag: 'hp', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 10 } }],
+  id: 'x', name: 'x', tables: { лист: { shape: 'single', columns: [{ key: 'hp', label: 'Хиты', kind: 'number', default: 10 }] } },
   effects: {}, constants: { d20: { kind: 'die', dice: [{ count: 1, sides: 20 }] } },
 }) as unknown as System;
 
@@ -60,7 +61,7 @@ group('линт: висячие ссылки называются словами
   test('кость инициативы, таблица поля, правило для всех, правка броска', () => {
     const system = bare();
     system.initiative = { die: { constant: 'нет_кости' }, tags: ['нет_броска'] } as never;
-    system.fields.push({ tag: 'lvl', label: 'Ур', value: { kind: 'formula', expr: 'таблица("нет_таблицы", #hp)' } } as never);
+    system.tables = withColumn(system, { key: 'lvl', label: 'Ур', expr: 'таблица("нет_таблицы", #hp)' }).tables;
     system.grants = ['нет_правила'];
     system.effects.buff = { label: 'y', activation: 'passive', modifiers: [{ kind: 'roll', target: 'roll:any', edit: 'нет_правки' }] } as never;
     const found = errorTexts(system).join('\n');

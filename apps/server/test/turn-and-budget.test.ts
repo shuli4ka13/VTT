@@ -146,7 +146,7 @@ describe('публикация проверяет систему линтом', 
     const token = (await http().post('/auth/login').send({ name: 'Автор' })).body.token as string;
     const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
     const system = {
-      name: 'Сломанная', fields: [],
+      name: 'Сломанная', tables: {},
       effects: { thorns: { label: 'Шипы', activation: 'passive', on: [{ on: '', to: 'other', steps: [] }] } },
     };
     const id = (await as(http().post('/systems')).send({ title: 'Сломанная', system })).body.id as string;
@@ -170,7 +170,7 @@ describe('значение, которое называет человек за 
 
     const system = {
       id: 'ask', name: 'Со спросом',
-      fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } }],
+      tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } },
       effects: {
         выстрел: {
           label: 'Выстрел', activation: 'manual',
@@ -237,7 +237,7 @@ describe('моменты хода', () => {
 
     const system = {
       id: 'яд', name: 'С ядом',
-      fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } }],
+      tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } },
       constants: { к20: { label: 'Кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
       initiative: { die: { constant: 'к20' } },
       effects: {
@@ -285,10 +285,10 @@ describe('ячейка тратится один раз на действие', 
 
     const system = {
       id: 'ячейки', name: 'С ячейками',
-      fields: [
-        { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
-        { tag: 'ячейки', label: 'Ячейки', value: { kind: 'stored', type: 'number', default: 3, min: 0 } },
-      ],
+      tables: { лист: { shape: 'single', columns: [
+        { key: 'хиты', label: 'Хиты', kind: 'number', default: 20 },
+        { key: 'ячейки', label: 'Ячейки', kind: 'number', default: 3, min: 0 },
+      ] } },
       effects: {
         шар: {
           label: 'Огненный шар', activation: 'manual',
@@ -335,10 +335,10 @@ describe('появилось и ушло с листа', () => {
     const add = (tag: string) => ({ type: 'apply', target: { tag }, direction: 'add', value: { expr: '1' } });
     const system = {
       id: 'вещи', name: 'С вещами',
-      fields: [
-        { tag: 'надето', label: 'Надето', value: { kind: 'stored', type: 'number', default: 0 } },
-        { tag: 'снято', label: 'Снято', value: { kind: 'stored', type: 'number', default: 0 } },
-      ],
+      tables: { лист: { shape: 'single', columns: [
+        { key: 'надето', label: 'Надето', kind: 'number' },
+        { key: 'снято', label: 'Снято', kind: 'number' },
+      ] } },
       effects: {
         заточка: { label: 'Заточка', activation: 'passive', attach: [add('надето')] },
         бафф: { label: 'Бафф', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [] },
@@ -378,7 +378,7 @@ describe('вопросы к человеку переживают пересбо
 
     const system = {
       id: 'вопросы', name: 'С вопросами',
-      fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } }],
+      tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } },
       constants: { к20: { label: 'Кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
       roll_edits: { плюс: { label: 'Плюс', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }] } },
       effects: {
@@ -435,7 +435,7 @@ describe('цель правит свой бросок, увидев его', () 
 
     const system = {
       id: 'спасение', name: 'Со спасброском',
-      fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } }],
+      tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } },
       constants: { к20: { label: 'Кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
       roll_edits: { удача: { label: 'Удача', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }] } },
       effects: {
@@ -491,10 +491,10 @@ describe('поле стало верным', () => {
 
     const system = {
       id: 'порог', name: 'С порогом',
-      fields: [
-        { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
-        { tag: 'без_сил', label: 'Без сил', value: { kind: 'formula', expr: '#хиты <= 0' } },
-      ],
+      tables: { лист: { shape: 'single', columns: [
+        { key: 'хиты', label: 'Хиты', kind: 'number', default: 20 },
+        { key: 'без_сил', label: 'Без сил', expr: '#хиты <= 0' },
+      ] } },
       effects: {
         без_сознания: { label: 'Без сознания', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [] },
         падение: {
@@ -562,7 +562,7 @@ describe('два сообщения стола сразу', () => {
 
     const system = {
       id: 'гонка', name: 'Гонка',
-      fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } }],
+      tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } },
       effects: { удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '5' } }] } },
       records: { приём: { kind: 'action', label: 'Приём', props: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
     };
@@ -595,7 +595,7 @@ describe('реакция после разрешения', () => {
 
     const system = {
       id: 'возмездие', name: 'С возмездием',
-      fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } }],
+      tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } },
       constants: { к20: { label: 'Кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
       effects: {
         удар: {
@@ -656,10 +656,10 @@ describe('отдых и плата ячейкой', () => {
 
     const system = {
       id: 'отдых', name: 'С отдыхом',
-      fields: [
-        { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
-        { tag: 'ячейки', label: 'Ячейки', value: { kind: 'stored', type: 'number', default: 1, min: 0 } },
-      ],
+      tables: { лист: { shape: 'single', columns: [
+        { key: 'хиты', label: 'Хиты', kind: 'number', default: 20 },
+        { key: 'ячейки', label: 'Ячейки', kind: 'number', default: 1, min: 0 },
+      ] } },
       effects: {
         ячейка: {
           label: 'Ячейка',
@@ -716,7 +716,7 @@ describe('лист заводят с типом из системы', () => {
 
     const system = {
       id: 'типы', name: 'С типами',
-      fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 5 } }],
+      tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 5 }] } },
       effects: {},
       records: { питомец: { kind: 'sheet', label: 'Питомец', hint: 'Зверь героя.' } },
     };
@@ -742,7 +742,9 @@ describe('группа листов за столом', () => {
 
     const system = {
       id: 'отряды', name: 'С отрядами',
-      fields: [{ tag: 'урон', label: 'Урон отряда', lives: 'group', value: { kind: 'stored', type: 'number', default: 0 } }],
+      tables: { группа: { shape: 'single', owner: 'group', columns: [
+    { key: 'урон', label: 'Урон отряда', kind: 'number' },
+  ] } },
       effects: { удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'apply', target: { tag: 'урон' }, direction: 'add', value: { expr: '3' } }] } },
       records: { приём: { kind: 'action', label: 'Приём', props: [], bindings: [] } },
     };

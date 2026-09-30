@@ -60,7 +60,7 @@ const durations = {
   щит: { label: 'Щит', activation: 'passive', duration: { kind: 'turns', max: 1, ends: 'turn-start' } },
   помощь: { label: 'Помощь', activation: 'passive', duration: { kind: 'turns', max: 1, ends: 'turn-start', whose: 'source' } },
 };
-const lapseWorld = (clock: Clock) => ({ system: { id: 'с', fields: [], effects: durations } as any, compendium: { records: [] }, die: () => 1, clock });
+const lapseWorld = (clock: Clock) => ({ system: { id: 'с', tables: {}, effects: durations } as any, compendium: { records: [] }, die: () => 1, clock });
 
 const turn = (op: TurnOp, before: Clock, sheets: any[]) => {
   const after = op === 'next' ? nextTurn(before) : op === 'stop' ? stopCombat() : before;

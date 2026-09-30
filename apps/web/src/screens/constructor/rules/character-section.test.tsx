@@ -4,13 +4,14 @@ import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { useWorld, emptySystem } from '../../../store/world.ts';
 import { RulesTab } from './rules-tab.tsx';
 import type { System } from '@vtt/schema';
+import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 
 const system = (): System => ({
   ...emptySystem(),
-  fields: [
-    { tag: 'hp', label: 'Хиты', group: 'Здоровье', value: { kind: 'stored', type: 'number', default: 0 } },
-    { tag: 'gold', label: 'Золото', group: 'Богатство', value: { kind: 'stored', type: 'number', default: 0 } },
-  ],
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'hp', label: 'Хиты', kind: 'number', block: 'Здоровье' },
+    { key: 'gold', label: 'Золото', kind: 'number', block: 'Богатство' },
+  ] } },
 } as System);
 
 describe('листы: блоки и типы', () => {
@@ -32,10 +33,10 @@ describe('листы: блоки и типы', () => {
   it('«+ блок» заводит блок с колонкой, название блока правится на месте', () => {
     render(<RulesTab />);
     fireEvent.click(screen.getByText('+ блок'));
-    expect(useWorld.getState().system.fields.some(f => f.group === 'Новый блок')).toBe(true);
+    expect(fieldsOf(useWorld.getState().system).some(f => f.group === 'Новый блок')).toBe(true);
     const name = screen.getByDisplayValue('Новый блок');
     fireEvent.change(name, { target: { value: 'Снаряжение' } });
     fireEvent.blur(name);
-    expect(useWorld.getState().system.fields.some(f => f.group === 'Снаряжение')).toBe(true);
+    expect(fieldsOf(useWorld.getState().system).some(f => f.group === 'Снаряжение')).toBe(true);
   });
 });

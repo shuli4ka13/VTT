@@ -4,7 +4,7 @@ import { toolsOf, } from '../src/engine/refs.ts';
 import { newPass } from '../src/engine/calc.ts';
 import type { System, Sheet } from '../src/model/types.ts';
 
-const system = { id: 'к', name: 'к', fields: [], effects: {} } as unknown as System;
+const system = { id: 'к', name: 'к', tables: {}, effects: {} } as unknown as System;
 const sheet = { id: 'а', systemId: 'к', name: 'а', values: {}, has: [], effects: [] } as unknown as Sheet;
 const run = (expr: string, ...faces: number[]) =>
   compile(expr).evaluate(() => undefined, toolsOf(system, newPass(system, sheet), 'проба', () => faces.shift() ?? 1));

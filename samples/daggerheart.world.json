@@ -26,506 +26,6 @@
       "Снаряжение": {},
       "Приёмы": {}
     },
-    "fields": [
-      {
-        "tag": "class",
-        "label": "Класс",
-        "group": "Личное дело",
-        "value": {
-          "kind": "stored",
-          "type": "choice",
-          "from": "classes",
-          "default": ""
-        }
-      },
-      {
-        "tag": "ancestry",
-        "label": "Происхождение",
-        "group": "Личное дело",
-        "value": {
-          "kind": "stored",
-          "type": "choice",
-          "from": "ancestries",
-          "default": ""
-        }
-      },
-      {
-        "tag": "community",
-        "label": "Община",
-        "group": "Личное дело",
-        "value": {
-          "kind": "stored",
-          "type": "choice",
-          "from": "communities",
-          "default": ""
-        }
-      },
-      {
-        "tag": "exp1",
-        "label": "Опыт 1 (+2)",
-        "group": "Личное дело",
-        "value": {
-          "kind": "stored",
-          "type": "text",
-          "default": ""
-        }
-      },
-      {
-        "tag": "exp2",
-        "label": "Опыт 2 (+2)",
-        "group": "Личное дело",
-        "value": {
-          "kind": "stored",
-          "type": "text",
-          "default": ""
-        }
-      },
-      {
-        "tag": "agility",
-        "label": "Проворство",
-        "group": "Черты",
-        "roll": {
-          "label": "Бросок: Проворство",
-          "die": {
-            "constant": "duality"
-          },
-          "tags": [
-            "действие",
-            "герой",
-            "проворство"
-          ],
-          "bonus": {
-            "expr": "@agility"
-          }
-        },
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": -3,
-          "max": 6
-        }
-      },
-      {
-        "tag": "strength",
-        "label": "Сила",
-        "group": "Черты",
-        "roll": {
-          "label": "Бросок: Сила",
-          "die": {
-            "constant": "duality"
-          },
-          "tags": [
-            "действие",
-            "герой",
-            "сила"
-          ],
-          "bonus": {
-            "expr": "@strength"
-          }
-        },
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": -3,
-          "max": 6
-        }
-      },
-      {
-        "tag": "finesse",
-        "label": "Искусность",
-        "group": "Черты",
-        "roll": {
-          "label": "Бросок: Искусность",
-          "die": {
-            "constant": "duality"
-          },
-          "tags": [
-            "действие",
-            "герой",
-            "искусность"
-          ],
-          "bonus": {
-            "expr": "@finesse"
-          }
-        },
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": -3,
-          "max": 6
-        }
-      },
-      {
-        "tag": "instinct",
-        "label": "Чутьё",
-        "group": "Черты",
-        "roll": {
-          "label": "Бросок: Чутьё",
-          "die": {
-            "constant": "duality"
-          },
-          "tags": [
-            "действие",
-            "герой",
-            "чутьё"
-          ],
-          "bonus": {
-            "expr": "@instinct"
-          }
-        },
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": -3,
-          "max": 6
-        }
-      },
-      {
-        "tag": "presence",
-        "label": "Присутствие",
-        "group": "Черты",
-        "roll": {
-          "label": "Бросок: Присутствие",
-          "die": {
-            "constant": "duality"
-          },
-          "tags": [
-            "действие",
-            "герой",
-            "присутствие"
-          ],
-          "bonus": {
-            "expr": "@presence"
-          }
-        },
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": -3,
-          "max": 6
-        }
-      },
-      {
-        "tag": "knowledge",
-        "label": "Знание",
-        "group": "Черты",
-        "roll": {
-          "label": "Бросок: Знание",
-          "die": {
-            "constant": "duality"
-          },
-          "tags": [
-            "действие",
-            "герой",
-            "знание"
-          ],
-          "bonus": {
-            "expr": "@knowledge"
-          }
-        },
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": -3,
-          "max": 6
-        }
-      },
-      {
-        "tag": "level",
-        "label": "Уровень",
-        "group": "Прогрессия",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 1,
-          "min": 0,
-          "max": 10
-        }
-      },
-      {
-        "tag": "tier",
-        "label": "Ступень",
-        "group": "Прогрессия",
-        "value": {
-          "kind": "formula",
-          "expr": "если(@level >= 8, 4, если(@level >= 5, 3, если(@level >= 2, 2, 1)))"
-        }
-      },
-      {
-        "tag": "proficiency",
-        "label": "Мастерство",
-        "group": "Прогрессия",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 1,
-          "min": 1,
-          "max": 6
-        }
-      },
-      {
-        "tag": "evasion_bonus",
-        "label": "Уклонение: прибавка",
-        "group": "Уклонение и броня",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0
-        }
-      },
-      {
-        "tag": "evasion",
-        "label": "Уклонение",
-        "group": "Уклонение и броня",
-        "value": {
-          "kind": "formula",
-          "expr": "если(@class != \"\", таблица(\"classes\", @class, \"evasion\"), 10) + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"evasion_bonus\"), 0) + @evasion_bonus"
-        }
-      },
-      {
-        "tag": "armor_score",
-        "label": "Броня",
-        "group": "Уклонение и броня",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 12
-        }
-      },
-      {
-        "tag": "armor_marked",
-        "label": "Бронеслоты отмечены",
-        "group": "Уклонение и броня",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 12
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "major_base",
-        "label": "Порог серьёзного: основа",
-        "group": "Пороги урона",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        }
-      },
-      {
-        "tag": "severe_base",
-        "label": "Порог тяжёлого: основа",
-        "group": "Пороги урона",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        }
-      },
-      {
-        "tag": "major",
-        "label": "Порог серьёзного урона",
-        "group": "Пороги урона",
-        "value": {
-          "kind": "formula",
-          "expr": "если(@major_base > 0, @major_base + @level + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"threshold_proficiency\"), 0) * @proficiency, @level)"
-        }
-      },
-      {
-        "tag": "severe",
-        "label": "Порог тяжёлого урона",
-        "group": "Пороги урона",
-        "value": {
-          "kind": "formula",
-          "expr": "если(@severe_base > 0, @severe_base + @level + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"threshold_proficiency\"), 0) * @proficiency, 2 * @level)"
-        }
-      },
-      {
-        "tag": "hp_extra",
-        "label": "Хиты: дополнительные клетки",
-        "group": "Здоровье",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        }
-      },
-      {
-        "tag": "hp_max",
-        "label": "Хиты: клеток",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "если(@class != \"\", таблица(\"classes\", @class, \"hp\"), 0) + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"hp_bonus\"), 0) + @hp_extra"
-        }
-      },
-      {
-        "tag": "hp",
-        "label": "Хиты отмечены",
-        "group": "Здоровье",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "stress_extra",
-        "label": "Стресс: дополнительные клетки",
-        "group": "Здоровье",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        }
-      },
-      {
-        "tag": "stress_max",
-        "label": "Стресс: клеток",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "6 + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"stress_bonus\"), 0) + @stress_extra"
-        }
-      },
-      {
-        "tag": "stress",
-        "label": "Стресс отмечен",
-        "group": "Здоровье",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "down",
-        "label": "Последний хит отмечен",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "все(@hp_max > 0, @hp >= @hp_max)"
-        }
-      },
-      {
-        "tag": "stress_full",
-        "label": "Весь Стресс отмечен",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "все(@stress_max > 0, @stress >= @stress_max)"
-        }
-      },
-      {
-        "tag": "stress_free",
-        "label": "Есть свободный Стресс",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "@stress < @stress_max"
-        }
-      },
-      {
-        "tag": "hope",
-        "label": "Надежда",
-        "group": "Надежда",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 2,
-          "min": 0,
-          "max": 6
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "scars",
-        "label": "Шрамы (вычеркнутые клетки Надежды)",
-        "group": "Надежда",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 6
-        }
-      },
-      {
-        "tag": "difficulty",
-        "label": "Сложность",
-        "group": "Противник",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 11,
-          "min": 1
-        }
-      },
-      {
-        "tag": "adversary_hp",
-        "label": "Хиты противника",
-        "group": "Противник",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 3,
-          "min": 1
-        }
-      },
-      {
-        "tag": "adversary_stress",
-        "label": "Стресс противника",
-        "group": "Противник",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 2,
-          "min": 0
-        }
-      },
-      {
-        "tag": "attack_mod",
-        "label": "Модификатор атаки",
-        "group": "Противник",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 1
-        }
-      },
-      {
-        "tag": "fear",
-        "label": "Страх ведущего",
-        "group": "Стол",
-        "lives": "desk",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 12
-        }
-      }
-    ],
     "constants": {
       "duality": {
         "label": "Кости двойственности",
@@ -565,6 +65,380 @@
       }
     },
     "tables": {
+      "лист": {
+        "label": "Лист",
+        "shape": "single",
+        "columns": [
+          {
+            "key": "class",
+            "label": "Класс",
+            "kind": "choice",
+            "from": "classes",
+            "block": "Личное дело"
+          },
+          {
+            "key": "ancestry",
+            "label": "Происхождение",
+            "kind": "choice",
+            "from": "ancestries",
+            "block": "Личное дело"
+          },
+          {
+            "key": "community",
+            "label": "Община",
+            "kind": "choice",
+            "from": "communities",
+            "block": "Личное дело"
+          },
+          {
+            "key": "exp1",
+            "label": "Опыт 1 (+2)",
+            "kind": "text",
+            "block": "Личное дело"
+          },
+          {
+            "key": "exp2",
+            "label": "Опыт 2 (+2)",
+            "kind": "text",
+            "block": "Личное дело"
+          },
+          {
+            "key": "agility",
+            "label": "Проворство",
+            "kind": "number",
+            "min": -3,
+            "max": 6,
+            "roll": {
+              "label": "Бросок: Проворство",
+              "die": {
+                "constant": "duality"
+              },
+              "tags": [
+                "действие",
+                "герой",
+                "проворство"
+              ],
+              "bonus": {
+                "expr": "@agility"
+              }
+            },
+            "block": "Черты"
+          },
+          {
+            "key": "strength",
+            "label": "Сила",
+            "kind": "number",
+            "min": -3,
+            "max": 6,
+            "roll": {
+              "label": "Бросок: Сила",
+              "die": {
+                "constant": "duality"
+              },
+              "tags": [
+                "действие",
+                "герой",
+                "сила"
+              ],
+              "bonus": {
+                "expr": "@strength"
+              }
+            },
+            "block": "Черты"
+          },
+          {
+            "key": "finesse",
+            "label": "Искусность",
+            "kind": "number",
+            "min": -3,
+            "max": 6,
+            "roll": {
+              "label": "Бросок: Искусность",
+              "die": {
+                "constant": "duality"
+              },
+              "tags": [
+                "действие",
+                "герой",
+                "искусность"
+              ],
+              "bonus": {
+                "expr": "@finesse"
+              }
+            },
+            "block": "Черты"
+          },
+          {
+            "key": "instinct",
+            "label": "Чутьё",
+            "kind": "number",
+            "min": -3,
+            "max": 6,
+            "roll": {
+              "label": "Бросок: Чутьё",
+              "die": {
+                "constant": "duality"
+              },
+              "tags": [
+                "действие",
+                "герой",
+                "чутьё"
+              ],
+              "bonus": {
+                "expr": "@instinct"
+              }
+            },
+            "block": "Черты"
+          },
+          {
+            "key": "presence",
+            "label": "Присутствие",
+            "kind": "number",
+            "min": -3,
+            "max": 6,
+            "roll": {
+              "label": "Бросок: Присутствие",
+              "die": {
+                "constant": "duality"
+              },
+              "tags": [
+                "действие",
+                "герой",
+                "присутствие"
+              ],
+              "bonus": {
+                "expr": "@presence"
+              }
+            },
+            "block": "Черты"
+          },
+          {
+            "key": "knowledge",
+            "label": "Знание",
+            "kind": "number",
+            "min": -3,
+            "max": 6,
+            "roll": {
+              "label": "Бросок: Знание",
+              "die": {
+                "constant": "duality"
+              },
+              "tags": [
+                "действие",
+                "герой",
+                "знание"
+              ],
+              "bonus": {
+                "expr": "@knowledge"
+              }
+            },
+            "block": "Черты"
+          },
+          {
+            "key": "level",
+            "label": "Уровень",
+            "kind": "number",
+            "default": 1,
+            "min": 0,
+            "max": 10,
+            "block": "Прогрессия"
+          },
+          {
+            "key": "tier",
+            "label": "Ступень",
+            "expr": "если(@level >= 8, 4, если(@level >= 5, 3, если(@level >= 2, 2, 1)))",
+            "block": "Прогрессия"
+          },
+          {
+            "key": "proficiency",
+            "label": "Мастерство",
+            "kind": "number",
+            "default": 1,
+            "min": 1,
+            "max": 6,
+            "block": "Прогрессия"
+          },
+          {
+            "key": "evasion_bonus",
+            "label": "Уклонение: прибавка",
+            "kind": "number",
+            "block": "Уклонение и броня"
+          },
+          {
+            "key": "evasion",
+            "label": "Уклонение",
+            "expr": "если(@class != \"\", таблица(\"classes\", @class, \"evasion\"), 10) + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"evasion_bonus\"), 0) + @evasion_bonus",
+            "block": "Уклонение и броня"
+          },
+          {
+            "key": "armor_score",
+            "label": "Броня",
+            "kind": "number",
+            "min": 0,
+            "max": 12,
+            "block": "Уклонение и броня"
+          },
+          {
+            "key": "armor_marked",
+            "label": "Бронеслоты отмечены",
+            "kind": "number",
+            "min": 0,
+            "max": 12,
+            "control": "pips",
+            "block": "Уклонение и броня"
+          },
+          {
+            "key": "major_base",
+            "label": "Порог серьёзного: основа",
+            "kind": "number",
+            "min": 0,
+            "block": "Пороги урона"
+          },
+          {
+            "key": "severe_base",
+            "label": "Порог тяжёлого: основа",
+            "kind": "number",
+            "min": 0,
+            "block": "Пороги урона"
+          },
+          {
+            "key": "major",
+            "label": "Порог серьёзного урона",
+            "expr": "если(@major_base > 0, @major_base + @level + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"threshold_proficiency\"), 0) * @proficiency, @level)",
+            "block": "Пороги урона"
+          },
+          {
+            "key": "severe",
+            "label": "Порог тяжёлого урона",
+            "expr": "если(@severe_base > 0, @severe_base + @level + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"threshold_proficiency\"), 0) * @proficiency, 2 * @level)",
+            "block": "Пороги урона"
+          },
+          {
+            "key": "hp_extra",
+            "label": "Хиты: дополнительные клетки",
+            "kind": "number",
+            "min": 0,
+            "block": "Здоровье"
+          },
+          {
+            "key": "hp_max",
+            "label": "Хиты: клеток",
+            "expr": "если(@class != \"\", таблица(\"classes\", @class, \"hp\"), 0) + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"hp_bonus\"), 0) + @hp_extra",
+            "block": "Здоровье"
+          },
+          {
+            "key": "hp",
+            "label": "Хиты отмечены",
+            "kind": "number",
+            "min": 0,
+            "control": "pips",
+            "block": "Здоровье"
+          },
+          {
+            "key": "stress_extra",
+            "label": "Стресс: дополнительные клетки",
+            "kind": "number",
+            "min": 0,
+            "block": "Здоровье"
+          },
+          {
+            "key": "stress_max",
+            "label": "Стресс: клеток",
+            "expr": "6 + если(@ancestry != \"\", таблица(\"ancestries\", @ancestry, \"stress_bonus\"), 0) + @stress_extra",
+            "block": "Здоровье"
+          },
+          {
+            "key": "stress",
+            "label": "Стресс отмечен",
+            "kind": "number",
+            "min": 0,
+            "control": "pips",
+            "block": "Здоровье"
+          },
+          {
+            "key": "down",
+            "label": "Последний хит отмечен",
+            "expr": "все(@hp_max > 0, @hp >= @hp_max)",
+            "block": "Здоровье"
+          },
+          {
+            "key": "stress_full",
+            "label": "Весь Стресс отмечен",
+            "expr": "все(@stress_max > 0, @stress >= @stress_max)",
+            "block": "Здоровье"
+          },
+          {
+            "key": "stress_free",
+            "label": "Есть свободный Стресс",
+            "expr": "@stress < @stress_max",
+            "block": "Здоровье"
+          },
+          {
+            "key": "hope",
+            "label": "Надежда",
+            "kind": "number",
+            "default": 2,
+            "min": 0,
+            "max": 6,
+            "control": "pips",
+            "block": "Надежда"
+          },
+          {
+            "key": "scars",
+            "label": "Шрамы (вычеркнутые клетки Надежды)",
+            "kind": "number",
+            "min": 0,
+            "max": 6,
+            "block": "Надежда"
+          },
+          {
+            "key": "difficulty",
+            "label": "Сложность",
+            "kind": "number",
+            "default": 11,
+            "min": 1,
+            "block": "Противник"
+          },
+          {
+            "key": "adversary_hp",
+            "label": "Хиты противника",
+            "kind": "number",
+            "default": 3,
+            "min": 1,
+            "block": "Противник"
+          },
+          {
+            "key": "adversary_stress",
+            "label": "Стресс противника",
+            "kind": "number",
+            "default": 2,
+            "min": 0,
+            "block": "Противник"
+          },
+          {
+            "key": "attack_mod",
+            "label": "Модификатор атаки",
+            "kind": "number",
+            "default": 1,
+            "block": "Противник"
+          }
+        ]
+      },
+      "стол": {
+        "label": "Стол",
+        "shape": "single",
+        "owner": "desk",
+        "columns": [
+          {
+            "key": "fear",
+            "label": "Страх ведущего",
+            "kind": "number",
+            "min": 0,
+            "max": 12,
+            "block": "Стол"
+          }
+        ]
+      },
       "rolls": {
         "label": "Броски",
         "key": "word",

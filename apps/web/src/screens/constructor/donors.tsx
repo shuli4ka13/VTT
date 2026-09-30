@@ -9,6 +9,7 @@ import type { Part, PartKind } from '@vtt/engine/model/bring';
 import { PIECES, bringPiece, donorOf } from '@vtt/engine/model/pieces';
 import { groupChain, subtreeNames } from './groups.ts';
 import { launchOf, LAUNCHES } from '@vtt/engine/model/effect-kinds';
+import { fieldsOf, fieldOf } from '@vtt/engine/model/sheet-columns';
 
 const DONORS = SAMPLE_SYSTEMS as System[];
 
@@ -39,7 +40,7 @@ export function DonorPalette({ kind }: { kind: 'blocks' | 'effects' }) {
 
 export function findDonorBlock(tag: string): { donor: System; group: string } | null {
   for (const donor of DONORS) {
-    const field = donor.fields.find(f => f.tag === tag);
+    const field = fieldOf(donor, tag);
     if (field) return { donor, group: field.group ?? 'Без блока' };
   }
   return null;
@@ -58,7 +59,7 @@ const PART_ORDER: PartKind[] = ['field', 'effect', 'record', 'recordKind', 'tabl
 
 function partLabel(system: System, part: Part): string {
   switch (part.kind) {
-    case 'field': return system.fields.find(f => f.tag === part.key)?.label ?? part.key;
+    case 'field': return fieldOf(system, part.key)?.label ?? part.key;
     case 'effect': return system.effects[part.key]?.label ?? part.key;
     case 'table': return system.tables?.[part.key]?.label ?? part.key;
     case 'constant': return system.constants?.[part.key]?.label ?? part.key;
@@ -144,25 +145,25 @@ function Blocks({ donor }: { donor: System }) {
 
   const blocks = useMemo(() => {
     const names = new Map<string, number>();
-    for (const field of donor.fields) {
+    for (const field of fieldsOf(donor)) {
       const key = groupChain(donor, field.group ?? 'Без блока').at(-1)!;
       names.set(key, (names.get(key) ?? 0) + 1);
     }
     return [...names];
   }, [donor]);
 
-  const have = new Set(system.fields.map(f => f.tag));
+  const have = new Set(fieldsOf(system).map(f => f.tag));
 
   return (
     <div className="palette">
       {blocks.map(([group, count]) => {
         const inside = new Set(subtreeNames(donor, group));
-        const fields = donor.fields.filter(f => inside.has(f.group ?? 'Без блока'));
+        const fields = fieldsOf(donor).filter(f => inside.has(f.group ?? 'Без блока'));
         const already = fields.every(f => have.has(f.tag));
         const brings = [...new Set(
           closure(donor, blockParts(donor, group))
             .filter(part => part.kind === 'field')
-            .map(part => groupChain(donor, donor.fields.find(f => f.tag === part.key)?.group ?? 'Без блока').at(-1)!),
+            .map(part => groupChain(donor, fieldOf(donor, part.key)?.group ?? 'Без блока').at(-1)!),
         )];
 
         return (

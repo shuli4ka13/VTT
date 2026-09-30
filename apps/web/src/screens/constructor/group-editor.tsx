@@ -1,56 +1,24 @@
-import { useState } from 'react';
-import type { System, FieldValue } from '@vtt/schema';
+import type { System } from '@vtt/schema';
 import { useWorld } from '../../store/world.ts';
-import {
-  Card, CardHead, Field, Select, Button, NumInput, DangerButton, Verdict,
-  LabelInput,
-} from '../../ui/primitives.tsx';
-import { FormulaInput, formulaAsLabels } from '../../ui/formula.tsx';
-import {
-  effectiveDefault, defaultSource, setGroupDefault, applyDefaultToAll,
-  renameGroup, freeGroupName, subtreeNames, groupChain,
-} from './groups.ts';
-
-const DEFAULT_KINDS = [
-  ['none', 'не задано'],
-  ['stored', 'число'],
-  ['formula', 'формула'],
-] as const;
-
-const describeValue = (system: System, value: FieldValue): string =>
-  value.kind === 'stored' ? `число ${String(value.default)}`
-    : `формула: ${formulaAsLabels(system, value.expr) || '—'}`;
+import { Card, CardHead, Field, Select, Button, DangerButton, LabelInput } from '../../ui/primitives.tsx';
+import { renameGroup, freeGroupName, subtreeNames, groupChain } from './groups.ts';
+import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 
 export function GroupEditor({ name, system }: { name: string; system: System }) {
   const editSystem = useWorld(s => s.editSystem);
   const pick = useWorld(s => s.pick);
-  const [applied, setApplied] = useState<number | null>(null);
 
   const spec = system.groups?.[name];
-  const own = spec?.default;
-  const inheritedFrom = own ? undefined : defaultSource(system, name);
-  const inherited = own ? undefined : effectiveDefault(system, name);
 
   const inside = new Set(subtreeNames(system, name));
-  const fieldCount = system.fields.filter(f => inside.has(f.group ?? 'Без блока')).length;
+  const fieldCount = fieldsOf(system).filter(f => inside.has(f.group ?? 'Без блока')).length;
   const children = Object.entries(system.groups ?? {})
     .filter(([, s]) => s.parent === name).map(([child]) => child);
 
   const parents = [...new Set([
     ...Object.keys(system.groups ?? {}),
-    ...system.fields.map(f => f.group ?? 'Без блока'),
+    ...fieldsOf(system).map(f => f.group ?? 'Без блока'),
   ])].filter(candidate => candidate !== name && !groupChain(system, candidate).includes(name));
-
-  const setDefault = (next: FieldValue | undefined) => {
-    setApplied(null);
-    editSystem(draft => setGroupDefault(draft, name, next));
-  };
-
-  const setKind = (kind: string) => {
-    if (kind === 'none') return setDefault(undefined);
-    if (kind === 'stored') return setDefault(own?.kind === 'stored' ? own : { kind: 'stored', type: 'number', default: 0 });
-    return setDefault(own?.kind === 'formula' ? own : { kind: 'formula', expr: '' });
-  };
 
   const rename = (next: string) => {
     const clean = next.trim();
@@ -99,64 +67,9 @@ export function GroupEditor({ name, system }: { name: string; system: System }) 
       </Card>
 
       <Card>
-        <CardHead title="Значение по умолчанию" />
-        <p className="faint">
-          Его получают новые поля блока. Поля, где стоит текущее умолчание, поменяются
-          вместе с ним; введённое вручную останется как есть.
-        </p>
-        <div className="row">
-          <Field label="Что по умолчанию">
-            <Select
-              value={own?.kind ?? 'none'}
-              options={DEFAULT_KINDS as never}
-              onChange={setKind}
-            />
-          </Field>
-          {own?.kind === 'stored' ? (
-            <Field label="Число">
-              <NumInput
-                value={Number(own.default ?? 0)}
-                onCommit={n => setDefault({ kind: 'stored', type: 'number', default: n })}
-              />
-            </Field>
-          ) : null}
-        </div>
-        {own?.kind === 'formula' ? (
-          <Field label="Формула">
-            <FormulaInput
-              where="формула блока"
-              system={system}
-              value={own.expr}
-              onChange={expr => setDefault({ kind: 'formula', expr })}
-            />
-          </Field>
-        ) : null}
-        {!own && inherited && inheritedFrom ? (
-          <p className="faint">Наследуется от «{inheritedFrom}»: {describeValue(system, inherited)}.</p>
-        ) : null}
-        {(own ?? inherited) && fieldCount > 0 ? (
-          <div className="inline">
-            <Button size="sm" onClick={() => {
-              let touched = 0;
-              editSystem(draft => { touched = applyDefaultToAll(draft, name); });
-              setApplied(touched);
-            }}>
-              Раздать умолчание всем полям ({fieldCount})
-            </Button>
-          </div>
-        ) : null}
-        {applied !== null ? (
-          <Verdict tone="ok">
-            {applied === 0 ? 'все поля уже с этим значением' : `переписано полей: ${applied}`}
-          </Verdict>
-        ) : null}
-      </Card>
-
-      <Card>
         <CardHead title="Подгруппы" />
         <p className="faint">
-          Подгруппа наследует умолчание блока, пока не задаст своё — например, «Навыки
-          от ловкости» внутри «Навыков» с формулой от Ловкости.
+          Блок в блоке: «Навыки от ловкости» внутри «Навыков».
         </p>
         <div className="inline">
           <Button size="sm" onClick={addSubgroup}>+ подгруппа</Button>

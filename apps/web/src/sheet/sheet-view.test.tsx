@@ -6,11 +6,11 @@ import type { System, Sheet } from '@vtt/schema';
 import type { Reader } from '../engine/use-calc.ts';
 
 const system = {
-  fields: [
-    { tag: 'ловкость', label: 'Ловкость', group: 'Характеристики', roll: { label: 'Проверка Ловкости' }, value: { kind: 'stored', type: 'number', default: 14 } },
-    { tag: 'хиты', label: 'Хиты', group: 'Здоровье', value: { kind: 'stored', type: 'number', default: 20 } },
-    { tag: 'броня', label: 'Броня', group: 'Здоровье', value: { kind: 'formula', expr: '10' } },
-  ],
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'ловкость', label: 'Ловкость', kind: 'number', default: 14, roll: { label: 'Проверка Ловкости' }, block: 'Характеристики' },
+    { key: 'хиты', label: 'Хиты', kind: 'number', default: 20, block: 'Здоровье' },
+    { key: 'броня', label: 'Броня', expr: '10', block: 'Здоровье' },
+  ] } },
 } as unknown as System;
 
 const sheet = { id: 'а', name: 'Арвен', values: { ловкость: 14, хиты: 17 } } as unknown as Sheet;
@@ -34,7 +34,7 @@ describe('лист за столом', () => {
   });
 
   it('переключатель «да/нет» на числовом поле пишет 1 и 0, а не да/нет', () => {
-    const toggled = { fields: [{ tag: 'бой', label: 'Идёт бой', control: 'toggle', value: { kind: 'stored', type: 'number', default: 0 } }] } as unknown as System;
+    const toggled = { tables: { лист: { shape: 'single', columns: [{ key: 'бой', label: 'Идёт бой', kind: 'number', control: 'toggle' }] } } } as unknown as System;
     const written: unknown[] = [];
     render(<SheetView system={toggled} sheet={{ ...sheet, values: { бой: 0 } } as Sheet} reader={reader} onChange={(_, value) => written.push(value)} />);
     fireEvent.click(screen.getByText('нет'));

@@ -4,11 +4,10 @@ import { resolveRoll } from '../src/engine/modifiers.ts';
 
 const sys: any = {
   id: 'рода-с-модификаторами',
-  fields: [
-    { tag: 'скрытность', label: 'Скрытность', value: { kind: 'stored', type: 'number', default: 3 },
-      roll: { label: 'Проверка: Скрытность', tags: ['скрытность'] } },
-    { tag: 'кд', label: 'Класс брони', value: { kind: 'stored', type: 'number', default: 10 } },
-  ],
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'скрытность', label: 'Скрытность', kind: 'number', default: 3, roll: { label: 'Проверка: Скрытность', tags: ['скрытность'] } },
+    { key: 'кд', label: 'Класс брони', kind: 'number', default: 10 },
+  ] } },
   roll_edits: { помеха: { label: 'Помеха', ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }] } },
   records: {
     тяжёлый: {

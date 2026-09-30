@@ -11,9 +11,10 @@ import { Lobby } from './lobby.tsx';
 import type { Sheet, System, RoomState } from '@vtt/schema';
 import { availableActions } from '@vtt/engine/events/envelope';
 import { recordsOf, isItem, sheetKinds, sheetKindOf, shownOn } from '@vtt/engine/model/owned';
-import { deskSystemOf, groupSystemOf, sheetSystemOf, livesOn } from '@vtt/engine/engine/calc';
+import { fieldsFor, livesOn } from '@vtt/engine/engine/calc';
 import { isGroup, sharedOf } from '@vtt/engine/events/desk';
 import { isDesk as atDesk } from '@vtt/engine/engine/owners';
+import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 
 export function SheetScreen() {
   const room = useRoom(s => s.room);
@@ -87,12 +88,14 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   const isDesk = atDesk(sheet);
   const asGroup = !isDesk && isGroup(sheet, room.sheets);
   const shared = useMemo(() => sharedOf(room.system as System, room.sheets), [room.system, room.sheets]);
-  const system = isDesk ? deskSystemOf(room.system as System) : asGroup ? groupSystemOf(room.system as System) : sheetSystemOf(room.system as System);
-  const reader = useReader(isDesk || asGroup ? system : room.system as System, sheet, room.compendium, isDesk || asGroup ? null : shared);
+  const system = room.system as System;
+  const scope = isDesk ? 'desk' : asGroup ? 'group' : 'sheet';
+  const fields = useMemo(() => fieldsFor(system, scope), [system, scope]);
+  const reader = useReader(system, sheet, room.compendium, isDesk || asGroup ? null : shared, isDesk ? 'desk' : undefined);
   const kinds = sheetKinds(room.system as System);
   const kind = sheetKindOf(room.system as System, sheet);
-  const hasGroups = (room.system as System).fields.some(field => livesOn(field) === 'group');
-  const only = kind?.blocks?.length ? system.fields.filter(shownOn(room.system as System, sheet)).map(f => f.tag) : undefined;
+  const hasGroups = fieldsOf(system).some(field => livesOn(field) === 'group');
+  const only = kind?.blocks?.length ? fields.filter(shownOn(system, sheet)).map(f => f.tag) : undefined;
 
   return (
     <>
@@ -119,6 +122,7 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
       ) : null}
       <SheetView
         system={system}
+        fields={fields}
         sheet={sheet}
         reader={reader}
         only={only}

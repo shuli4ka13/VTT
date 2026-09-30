@@ -1,19 +1,11 @@
-import type { System, Field, FieldValue } from '@vtt/schema';
+import type { System } from '@vtt/schema';
+import type { Field } from '@vtt/engine/model/types';
+import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 
 export interface GroupNode {
   name: string;
   fields: Field[];
   children: GroupNode[];
-}
-
-export function sameValue(a: FieldValue | undefined, b: FieldValue | undefined): boolean {
-  if (!a || !b || a.kind !== b.kind) return false;
-  if (a.kind === 'stored' && b.kind === 'stored') {
-    return a.type === b.type && a.default === b.default
-      && (a.min ?? null) === (b.min ?? null) && (a.max ?? null) === (b.max ?? null);
-  }
-  if (a.kind === 'formula' && b.kind === 'formula') return a.expr.trim() === b.expr.trim();
-  return false;
 }
 
 export function groupChain(system: System, name: string): string[] {
@@ -26,40 +18,23 @@ export function groupChain(system: System, name: string): string[] {
   return chain;
 }
 
-export function effectiveDefault(system: System, name: string | undefined): FieldValue | undefined {
-  if (name === undefined) return undefined;
-  for (const link of groupChain(system, name)) {
-    const spec = system.groups?.[link];
-    if (spec?.default) return spec.default;
-  }
-  return undefined;
-}
-
-export function defaultSource(system: System, name: string): string | undefined {
-  for (const link of groupChain(system, name)) {
-    if (system.groups?.[link]?.default) return link;
-  }
-  return undefined;
-}
-
 export function groupTree(system: System): GroupNode[] {
-  const fieldsOf = new Map<string, Field[]>();
+  const byName = new Map<string, Field[]>();
   const order: string[] = [];
   const remember = (name: string) => {
-    if (!fieldsOf.has(name)) {
-      fieldsOf.set(name, []);
+    if (!byName.has(name)) {
+      byName.set(name, []);
       order.push(name);
     }
   };
-  for (const field of system.fields) {
+  for (const name of Object.keys(system.groups ?? {})) remember(name);
+  for (const field of fieldsOf(system)) {
     const name = field.group ?? 'Без блока';
     remember(name);
-    fieldsOf.get(name)!.push(field);
+    byName.get(name)!.push(field);
   }
-  for (const name of Object.keys(system.groups ?? {})) remember(name);
-
   const nodes = new Map<string, GroupNode>();
-  for (const name of order) nodes.set(name, { name, fields: fieldsOf.get(name)!, children: [] });
+  for (const name of order) nodes.set(name, { name, fields: byName.get(name)!, children: [] });
 
   const roots: GroupNode[] = [];
   for (const name of order) {
@@ -77,46 +52,13 @@ export function groupTree(system: System): GroupNode[] {
 
 export function subtreeNames(system: System, name: string): string[] {
   const all = new Set([...Object.keys(system.groups ?? {}),
-    ...system.fields.map(f => f.group ?? 'Без блока')]);
+    ...fieldsOf(system).map(f => f.group ?? 'Без блока')]);
   return [...all].filter(candidate => groupChain(system, candidate).includes(name));
-}
-
-export function setGroupDefault(draft: System, name: string, next: FieldValue | undefined): void {
-  const before = new Map<string, FieldValue | undefined>();
-  for (const field of draft.fields) before.set(field.tag, effectiveDefault(draft, field.group ?? 'Без блока'));
-
-  const spec = { ...draft.groups?.[name] };
-  if (next) spec.default = structuredClone(next); else delete spec.default;
-  (draft.groups ??= {})[name] = spec;
-
-  for (const field of draft.fields) {
-    const was = before.get(field.tag);
-    const now = effectiveDefault(draft, field.group ?? 'Без блока');
-    if (!now || sameValue(was, now)) continue;
-    if (sameValue(field.value, was)) field.value = structuredClone(now);
-  }
-}
-
-export function applyDefaultToAll(draft: System, name: string): number {
-  const value = effectiveDefault(draft, name);
-  if (!value) return 0;
-  const inside = new Set(subtreeNames(draft, name));
-  let touched = 0;
-  for (const field of draft.fields) {
-    if (!inside.has(field.group ?? 'Без блока')) continue;
-    if (sameValue(field.value, value)) continue;
-    field.value = structuredClone(value);
-    touched += 1;
-  }
-  return touched;
 }
 
 export function renameGroup(draft: System, from: string, to: string): void {
   const clean = to.trim();
   if (!clean || clean === from) return;
-  for (const field of draft.fields) {
-    if ((field.group ?? 'Без блока') === from) field.group = clean;
-  }
   if (draft.groups) {
     const spec = draft.groups[from];
     if (spec) {
@@ -128,11 +70,12 @@ export function renameGroup(draft: System, from: string, to: string): void {
     }
   }
   for (const table of Object.values(draft.tables ?? {})) {
-    if (table.sheet?.group === from) table.sheet.group = clean;
-    for (const view of [...Object.values(table.sheet?.columns ?? {}), ...Object.values(table.sheet?.cells ?? {})]) {
-      if (view.group === from) view.group = clean;
+    if (table.block === from) table.block = clean;
+    for (const column of table.columns ?? []) if (column.block === from) column.block = clean;
+    for (const row of table.rows ?? []) {
+      if (row.block === from) row.block = clean;
+      for (const view of Object.values(row.view ?? {})) if (view.block === from) view.block = clean;
     }
-    for (const row of table.rows ?? []) if (row.group === from) row.group = clean;
   }
   for (const kind of Object.values(draft.records ?? {})) {
     if (kind.blocks) kind.blocks = kind.blocks.map(block => (block === from ? clean : block));
@@ -141,7 +84,7 @@ export function renameGroup(draft: System, from: string, to: string): void {
 
 export function freeGroupName(system: System, base: string): string {
   const taken = new Set([...Object.keys(system.groups ?? {}),
-    ...system.fields.map(f => f.group ?? 'Без блока')]);
+    ...fieldsOf(system).map(f => f.group ?? 'Без блока')]);
   if (!taken.has(base)) return base;
   for (let n = 2; ; n++) {
     const candidate = `${base} ${n}`;

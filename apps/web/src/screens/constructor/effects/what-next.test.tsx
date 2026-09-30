@@ -6,11 +6,11 @@ import { DRAWER_LEAVE_MS } from '../../../ui/primitives.tsx';
 import type { System } from '@vtt/schema';
 
 const system = {
-  fields: [
-    { tag: 'hp', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
-    { tag: 'taken_0', label: 'Рубящий', value: { kind: 'stored', type: 'number', default: 1 } },
-    { tag: 'taken_1', label: 'Огонь', value: { kind: 'stored', type: 'number', default: 1 } },
-  ],
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'hp', label: 'Хиты', kind: 'number', default: 20 },
+    { key: 'taken_0', label: 'Рубящий', kind: 'number', default: 1 },
+    { key: 'taken_1', label: 'Огонь', kind: 'number', default: 1 },
+  ] } },
   constants: {},
   effects: {
     damage: {

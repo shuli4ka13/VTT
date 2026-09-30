@@ -7,6 +7,7 @@ import { SheetTab } from './sheet-tab.tsx';
 import { world as W } from '@vtt/schema';
 import { PIECES } from '@vtt/engine/model/pieces';
 import { lintSystem, errorsOf } from '@vtt/engine/model/lint';
+import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 
 describe('куски на пустом листе', () => {
   beforeEach(() => {
@@ -27,7 +28,7 @@ describe('куски на пустом листе', () => {
     expect(screen.getAllByText('Сила').length).toBeGreaterThan(0);
 
     fireEvent.click(screen.getByText('отменить'));
-    expect(useWorld.getState().system.fields).toEqual([]);
+    expect(fieldsOf(useWorld.getState().system)).toEqual([]);
     expect(screen.queryByText('что пришло')).toBeNull();
   });
 
@@ -37,7 +38,7 @@ describe('куски на пустом листе', () => {
     fireEvent.click(screen.getAllByText('Характеристики к20')[0]!);
 
     const system = useWorld.getState().system;
-    expect(system.fields.some(f => f.group === 'Характеристики')).toBe(true);
+    expect(fieldsOf(system).some(f => f.group === 'Характеристики')).toBe(true);
     expect(W.system.safeParse(system).success).toBe(true);
     expect(errorsOf(lintSystem(system)).map(p => p.text)).toEqual([]);
   });
@@ -45,7 +46,7 @@ describe('куски на пустом листе', () => {
   it('образец показывает посчитанное, а не формулы', () => {
     renderOpen(<SheetTab />);
     fireEvent.click(screen.getAllByText('Защита')[0]!);
-    expect(useWorld.getState().system.fields.some(f => f.value.kind === 'formula')).toBe(true);
+    expect(fieldsOf(useWorld.getState().system).some(f => f.value.kind === 'formula')).toBe(true);
     expect(screen.getAllByText('Класс брони').length).toBeGreaterThan(0);
     expect(document.body.textContent).not.toContain('@');
   });
@@ -57,7 +58,7 @@ describe('вид поля на листе выбирается в констру
       ...state,
       system: {
         ...emptySystem(),
-        fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 10 } }],
+        tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 10 }] } },
       },
       activeFieldTag: 'хиты',
       activeGroupName: null,
@@ -71,10 +72,10 @@ describe('вид поля на листе выбирается в констру
     expect(picker).toBeTruthy();
 
     fireEvent.change(picker, { target: { value: 'bar' } });
-    expect(useWorld.getState().system.fields[0]!.control).toBe('bar');
+    expect(fieldsOf(useWorld.getState().system)[0]!.control).toBe('bar');
 
     fireEvent.change(picker, { target: { value: '' } });
-    expect('control' in useWorld.getState().system.fields[0]!).toBe(false);
+    expect('control' in useWorld.getState().system.tables!.лист!.columns![0]!).toBe(false);
   });
 
   it('у вычисляемого поля вида не спрашивают — его не правят руками', () => {
@@ -82,7 +83,7 @@ describe('вид поля на листе выбирается в констру
       ...state,
       system: {
         ...emptySystem(),
-        fields: [{ tag: 'мод', label: 'Мод', value: { kind: 'formula', expr: '1' } }],
+        tables: { лист: { shape: 'single', columns: [{ key: 'мод', label: 'Мод', expr: '1' }] } },
       },
       activeFieldTag: 'мод',
     }));

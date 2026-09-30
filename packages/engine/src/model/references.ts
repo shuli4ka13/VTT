@@ -10,6 +10,7 @@ import { recordsOf } from './owned.ts';
 
 export { EVENT_PREFIX, MOMENT_PREFIX, FIELD_PREFIX } from '../events/bus.ts';
 import { EVENT_PREFIX, MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX } from '../events/bus.ts';
+import { fieldsOf, hasField } from './sheet-columns.ts';
 
 export const EVENT_RESULTS = ['event', 'event_amount', 'event_incoming'] as const;
 
@@ -59,7 +60,7 @@ export interface Declared {
 
 export function declaredOf(system: System): Declared {
   return {
-    field: new Set(system.fields.map(f => f.tag)),
+    field: new Set(fieldsOf(system).map(f => f.tag)),
     effect: new Set(Object.keys(system.effects ?? {})),
     constant: new Set(Object.keys(system.constants ?? {})),
     table: new Set(Object.keys(system.tables ?? {})),
@@ -266,7 +267,7 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
       const absent = heard.kind === 'effect' && !listened;
       for (const ref of found) {
         if (ref.kind === 'field' && listenedSteps.has(ref.key)) continue;
-        if (absent && (ref.kind === 'field' || ref.kind === 'step') && !system.fields.some(f => f.tag === ref.key)) {
+        if (absent && (ref.kind === 'field' || ref.kind === 'step') && !hasField(system, ref.key)) {
           out.push({ ...ref, scope: LISTEN });
           continue;
         }
@@ -286,7 +287,7 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
 }
 
 export function withAddresses(system: System, refs: Reference[]): Reference[] {
-  const fields = new Set(system.fields.map(f => f.tag));
+  const fields = new Set(fieldsOf(system).map(f => f.tag));
   const tables: Reference[] = [];
   for (const ref of refs) {
     if (!ref.path) continue;
@@ -304,7 +305,7 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
   const out: Reference[] = [];
   const noScope: ChainScope = { params: new Set(), earlier: new Set(), eventChain: false };
 
-  for (const field of system.fields) {
+  for (const field of fieldsOf(system)) {
     const from: Where = { tab: 'sheet', field: field.tag };
     for (const tag of field.roll?.tags ?? []) out.push({ kind: 'roll', key: tag, from });
     if (field.roll?.die?.constant) out.push({ kind: 'constant', key: field.roll.die.constant, from });

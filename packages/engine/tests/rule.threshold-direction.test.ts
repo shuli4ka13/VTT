@@ -8,7 +8,7 @@ const queue = (...values) => { let i = 0; return () => values[i++] ?? 1; };
 const sys = {
   id: 'направление-успеха',
   constants: { lead_die: { label: 'Сотка', kind: 'die', dice: [{ count: 1, sides: 100 }] } },
-  fields: [],
+  tables: {},
 };
 const sheet = { id: 'испытуемый', values: {}, effects: [] };
 

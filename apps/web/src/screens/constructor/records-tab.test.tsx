@@ -102,11 +102,7 @@ describe('модификаторы типа', () => {
       ...state,
       system: {
         ...state.system,
-        fields: [{
-          tag: 'скрытность', label: 'Скрытность',
-          value: { kind: 'stored', type: 'number', default: 0 },
-          roll: { label: 'Проверка: Скрытность' },
-        }],
+        tables: { лист: { shape: 'single', columns: [{ key: 'скрытность', label: 'Скрытность', kind: 'number', roll: { label: 'Проверка: Скрытность' } }] } },
         roll_edits: { помеха: { label: 'Помеха', ops: [{ op: 'addDie' }] } },
         records: { тяжёлый: { kind: 'item', label: 'Тяжёлый доспех', props: [], bindings: [] } },
       },
@@ -200,12 +196,11 @@ describe('RecordsTab: свойство на лист или служебное',
 
 describe('слот привязки подсказывает то, чем его закрывают', () => {
   const система = () => ({
-    fields: [
-      { tag: 'atl', label: 'Атлетика', value: { kind: 'stored', type: 'number', default: 0 } },
-      { tag: 'atl_prof', label: 'Владение: Атлетика', value: { kind: 'stored', type: 'number', default: 0 } },
-    ],
     constants: {},
-    tables: {
+    tables: { лист: { shape: 'single', columns: [
+      { key: 'atl', label: 'Атлетика', kind: 'number' },
+      { key: 'atl_prof', label: 'Владение: Атлетика', kind: 'number' },
+    ] },
       damage_types: {
         label: 'Типы урона', key: 'word',
         rows: [{ value: 'рубящий', label: 'рубящий' }, { value: 'некротический', label: 'некротический' }],

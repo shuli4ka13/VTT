@@ -26,7 +26,8 @@ group('проверка — одна на всё: шаг, бросок с лис
   });
 
   test('бросок без кости: у стола — отказ словами, у автора — ошибка линта', () => {
-    const bare = { ...system, fields: system.fields.map(f => (f.tag === 'abilities.dex.mod' ? { ...f, roll: { label: 'Ловкость' } } : f)) } as System;
+    const abilities = system.tables!.abilities!;
+    const bare = { ...system, tables: { ...system.tables, abilities: { ...abilities, columns: abilities.columns!.map(c => (c.key === 'mod' ? { ...c, roll: { label: 'Ловкость' } } : c)) } } } as System;
     throws(() => fieldCheck(bare, 'abilities.dex.mod'), 'кость не выбрана');
     ok(lintSystem(bare).some(p => p.level === 'error' && p.where.field === 'abilities.dex.mod' && p.text.includes('кость не выбрана')));
   });

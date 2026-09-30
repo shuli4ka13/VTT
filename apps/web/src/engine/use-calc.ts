@@ -3,7 +3,7 @@ import type { System, Sheet, Compendium } from '@vtt/schema';
 import { newPass, calc } from '@vtt/engine/engine/calc';
 import { hasDesk, blankDesk } from '@vtt/engine/events/desk';
 import { resolveRoll } from '@vtt/engine/engine/modifiers';
-import type { Pass } from '@vtt/engine/engine/calc';
+import type { Pass, Scope } from '@vtt/engine/engine/calc';
 import type { RollResolution } from '@vtt/engine/engine/modifiers';
 
 export type Computed =
@@ -17,7 +17,7 @@ export interface Reader {
   rollOf: (tags: string[]) => RollResolution | null;
 }
 
-export function useReader(system: System, sheet: Sheet | null, compendium: Compendium, shared?: readonly Sheet[] | null): Reader {
+export function useReader(system: System, sheet: Sheet | null, compendium: Compendium, shared?: readonly Sheet[] | null, only?: Scope): Reader {
   return useMemo(() => {
     if (!sheet) {
       const idle: Reader = {
@@ -30,7 +30,7 @@ export function useReader(system: System, sheet: Sheet | null, compendium: Compe
     let pass: Pass;
     try {
       const common = shared !== undefined ? shared : hasDesk(system) ? [blankDesk(system)] : null;
-      pass = newPass(system, sheet, { compendium, shared: common });
+      pass = newPass(system, sheet, { compendium, shared: common, ...(only ? { only } : {}) });
     } catch (err) {
 
       const message = (err as Error).message;
@@ -53,7 +53,7 @@ export function useReader(system: System, sheet: Sheet | null, compendium: Compe
     };
     return reader;
 
-  }, [system, sheet, compendium, shared]);
+  }, [system, sheet, compendium, shared, only]);
 }
 
 export function show(value: Computed): { text: string; title?: string; bad: boolean } {

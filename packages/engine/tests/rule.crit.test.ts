@@ -6,10 +6,10 @@ import type { System, Sheet, Effect } from '../src/model/types.ts';
 
 const system = {
   id: 'x', name: 'x',
-  fields: [
-    { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 30 } },
-    { tag: 'броня', label: 'Броня', value: { kind: 'stored', type: 'number', default: 10 } },
-  ],
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'хиты', label: 'Хиты', kind: 'number', default: 30 },
+    { key: 'броня', label: 'Броня', kind: 'number', default: 10 },
+  ] } },
   effects: {},
   constants: { к20: { label: 'Кость проверки', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
 } as unknown as System;

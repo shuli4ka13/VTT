@@ -5,12 +5,11 @@ import type { System, Sheet, Effect } from '../src/model/types.ts';
 
 const system = {
   id: 'x', name: 'x',
-  fields: [
-    { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
-    { tag: 'травма', label: 'Травма', value: { kind: 'stored', type: 'text', default: '' } },
-  ],
   effects: {},
-  tables: {
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'хиты', label: 'Хиты', kind: 'number', default: 20 },
+    { key: 'травма', label: 'Травма', kind: 'text' },
+  ] },
     травмы: {
       label: 'Травмы', key: 'range', columns: [{ key: 'value', label: 'травма', kind: 'text' }],
       rows: [

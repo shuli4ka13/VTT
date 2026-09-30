@@ -3,7 +3,8 @@ import { Field, Input, Button, NumInput, Select } from '../ui/primitives.tsx';
 import { show } from '../engine/use-calc.ts';
 import { CONTROL_VIEWS } from './controls/index.tsx';
 import type { Reader } from '../engine/use-calc.ts';
-import type { Sheet, System, Field as FieldModel, StoredValue } from '@vtt/schema';
+import type { Sheet, System, StoredValue } from '@vtt/schema';
+import type { Field as FieldModel } from '@vtt/engine/model/types';
 import { optionsOf } from '@vtt/engine/model/lists';
 
 export function FieldCell({ field: whole, system, sheet, reader, onChange, onRoll, bare }: {

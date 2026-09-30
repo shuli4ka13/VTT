@@ -4,7 +4,7 @@ import type { System } from '@vtt/schema';
 
 const system = {
   name: 'x',
-  fields: [{ tag: 'hp', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 1 } }],
+  tables: { лист: { shape: 'single', columns: [{ key: 'hp', label: 'Хиты', kind: 'number', default: 1 }] } },
   effects: { hit: { label: 'Удар', activation: 'manual', steps: [] } },
 
   records: { weapon: { kind: 'item', label: 'Оружие' } },
@@ -16,7 +16,7 @@ describe('пути схемы переводятся в слова экрана'
   });
 
   it('поле по номеру — с подписью, срабатывание — словами', () => {
-    expect(pathWords('fields.0.label: Too small', system)).toBe('поле «Хиты» · название: пусто');
+    expect(pathWords('tables.лист.columns.0.label: Too small', system)).toBe('поле «Хиты» · название: пусто');
     expect(pathWords('effects.hit.on.0.on: Invalid input', system)).toBe('эффект «Удар» · «когда» №1 · что случилось: не то значение');
   });
 

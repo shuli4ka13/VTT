@@ -52,9 +52,8 @@ describe('проверка одной формулой', () => {
   });
 
   const system = {
-    fields: [{ tag: 'ac', label: 'КД' }],
     constants: { lead: { label: 'Ведущая', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
-    tables: { rolls: { label: 'Броски', key: 'word', rows: [{ value: 'атака' }, { value: 'ловкость' }] } },
+    tables: { лист: { shape: 'single', columns: [{ tag: 'ac', label: 'КД' }] }, rolls: { label: 'Броски', key: 'word', rows: [{ value: 'атака' }, { value: 'ловкость' }] } },
     effects: {},
   } as unknown as System;
 

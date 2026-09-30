@@ -7,6 +7,7 @@ import { collectModifiers, applyValueModifiers } from './modifiers.ts';
 import { wornEffects } from './effects.ts';
 import type { CollectedModifiers } from './modifiers.ts';
 import type { System, Sheet, Field, Compendium, Resolve } from '../model/types.ts';
+import { fieldsOf, fieldOf } from '../model/sheet-columns.ts';
 
 export interface Pass {
   system: System;
@@ -20,27 +21,30 @@ export interface Pass {
 
   desk?: Pass;
   group?: Pass;
+  only?: Scope;
 }
 
 export interface PassOptions {
   compendium?: Compendium;
   modifiers?: CollectedModifiers;
   shared?: readonly Sheet[] | null;
+  only?: Scope;
 }
 
 export const livesOn = (field: Pick<Field, 'lives'> | null | undefined): 'sheet' | 'desk' | 'group' => field?.lives ?? 'sheet';
 
-export const deskSystemOf = (system: System): System => ({ ...system, fields: system.fields.filter(f => livesOn(f) === 'desk') });
+export type Scope = 'sheet' | 'desk' | 'group';
 
-export const groupSystemOf = (system: System): System => ({ ...system, fields: system.fields.filter(f => livesOn(f) === 'group') });
+export const inScope = (field: Pick<Field, 'lives'>, scope: Scope): boolean =>
+  (scope === 'sheet' ? livesOn(field) !== 'desk' : livesOn(field) === scope);
 
-export const sheetSystemOf = (system: System): System => ({ ...system, fields: system.fields.filter(f => livesOn(f) !== 'desk') });
+export const fieldsFor = (system: System, scope: Scope): Field[] => fieldsOf(system).filter(field => inScope(field, scope));
 
 export const holderIdOf = (field: Pick<Field, 'lives'> | null | undefined, sheet: Pick<Sheet, 'group'>): string | null =>
   livesOn(field) === 'desk' ? DESK_ID : livesOn(field) === 'group' && sheet.group ? sheet.group : null;
 
 export function findField(system: System, tag: string): Field | null {
-  return system.fields.find(f => f.tag === tag) || null;
+  return fieldOf(system, tag) ?? null;
 }
 
 export function newPass(system: System, sheet: Sheet, options: PassOptions = {}): Pass {
@@ -54,10 +58,11 @@ export function newPass(system: System, sheet: Sheet, options: PassOptions = {})
     modifiers: null,
 
     resolve: () => undefined,
+    ...(options.only ? { only: options.only } : {}),
   };
 
   const deskSheet = options.shared?.find(s => s.id === DESK_ID);
-  if (deskSheet && sheet.id !== DESK_ID) pass.desk = newPass(deskSystemOf(system), deskSheet);
+  if (deskSheet && sheet.id !== DESK_ID) pass.desk = newPass(system, deskSheet, { only: 'desk' });
   const groupSheet = sheet.group ? options.shared?.find(s => s.id === sheet.group) : undefined;
   if (groupSheet && groupSheet.id !== sheet.id) {
     pass.group = newPass(system, groupSheet, { compendium: options.compendium, shared: options.shared?.filter(s => s.id !== groupSheet.id) });
@@ -92,7 +97,7 @@ export const wornCount = (system: System, sheet: Sheet, id: string, compendium?:
 
 export function calc(system: System, sheet: Sheet, tag: string, pass: Pass = newPass(system, sheet)): unknown {
   const field = findField(system, tag);
-  if (!field) throw new UnknownTagError(tag, pass.path[pass.path.length - 1]);
+  if (!field || (pass.only && !inScope(field, pass.only))) throw new UnknownTagError(tag, pass.path[pass.path.length - 1]);
   if (livesOn(field) === 'group' && pass.group) return calc(system, pass.group.sheet, tag, pass.group);
 
   if (pass.memo.has(tag)) return pass.memo.get(tag);
@@ -113,7 +118,7 @@ export function calc(system: System, sheet: Sheet, tag: string, pass: Pass = new
 
 export function calcAll(system: System, sheet: Sheet, pass: Pass = newPass(system, sheet)): Record<string, unknown> {
   const out: Record<string, unknown> = {};
-  for (const field of system.fields) out[field.tag] = calc(system, sheet, field.tag, pass);
+  for (const field of pass.only ? fieldsFor(system, pass.only) : fieldsOf(system)) out[field.tag] = calc(system, sheet, field.tag, pass);
   return out;
 }
 

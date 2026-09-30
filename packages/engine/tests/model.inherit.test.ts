@@ -3,7 +3,7 @@ import { flattenSystem, hasBases } from '../src/model/inherit.ts';
 import type { System } from '../src/model/types.ts';
 
 const sys = (effects: Record<string, unknown>, records: Record<string, unknown> = {}): System => ({
-  id: 'о', name: 'о', fields: [], effects, records,
+  id: 'о', name: 'о', tables: {}, effects, records,
 } as unknown as System);
 
 group('основа: эффект берёт у основы и дописывает своё', () => {

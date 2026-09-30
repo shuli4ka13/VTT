@@ -9,6 +9,7 @@ import type { SlotContext, SlotKind } from './slots.tsx';
 import { asDice } from '../../words.ts';
 import { SENDER, RECEIVER, owned } from '@vtt/engine/engine/owners';
 import { writeTableCall } from '@vtt/engine/model/amounts';
+import { fieldsOf, hasField } from '@vtt/engine/model/sheet-columns';
 
 export type Keep = 'const' | 'param' | 'prop' | 'tag' | 'constant';
 
@@ -109,7 +110,7 @@ export function optionsFor(ctx: SlotContext, allow: SlotKind[] | undefined, keep
     for (const o of outputRefs(ctx.earlier)) out.push({ group: 'Результаты шагов', label: o.label, name: o.ref });
   }
   if (ok('tag')) {
-    for (const f of ctx.system.fields) {
+    for (const f of fieldsOf(ctx.system)) {
       out.push(keep.includes('tag')
         ? { group: 'Поля листа', label: f.label ?? f.tag, name: f.tag, ref: { tag: f.tag } }
         : { group: side === 'target' ? 'Поля цели' : 'Поля листа', label: f.label ?? f.tag, name: side === 'target' ? owned(RECEIVER, f.tag) : f.tag });
@@ -192,7 +193,7 @@ export function SlotInput({ value, onChange, context, allow, keep = [], placehol
   })), [options, onChange, onCreateFromRecord, picked]);
 
   const own = structuredName(value);
-  const shownByName = own !== null && (names.has(own) || context.system.fields.some(f => f.tag === own));
+  const shownByName = own !== null && (names.has(own) || hasField(context.system, own));
   const chip = draft === null && !shownByName ? chipOf(value, context) : null;
   const initial = chip ? '' : value && typeof value === 'object' && 'const' in value && dice
     ? asDice(String((value as { const: unknown }).const ?? ''))

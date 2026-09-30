@@ -1,6 +1,7 @@
 import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
-import { ROW, isFormulaCell, onSheet } from '@vtt/engine/model/sheet-columns';
-import { Card, CardHead, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Empty } from '../../../ui/primitives.tsx';
+import { ROW, isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields } from '@vtt/engine/model/sheet-columns';
+import { Card, CardHead, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Empty, Field, Chip } from '../../../ui/primitives.tsx';
+import { LiveValue } from '../live-value.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import { ColumnCard } from './column-card.tsx';
 import type { ColumnPatch } from './column-card.tsx';
@@ -9,15 +10,16 @@ import { FieldRow } from '../../../ui/field-row.tsx';
 import type { GridColumn } from '../../../ui/sheet-grid.tsx';
 import { ValueEditor } from '../../../ui/value-editor.tsx';
 import { newTable } from '../factory.ts';
-import { inUse, usersOf } from '../usage.ts';
+import { inUse, usersOf, useUsage } from '../usage.ts';
 import type { UsageIndex } from '../usage.ts';
-import { freeId, useBook } from '../../../store/world.ts';
+import { freeId, slugOf, useBook } from '../../../store/world.ts';
 import { listUsers } from '@vtt/engine/model/lists';
-import { isRange, keyOf } from '@vtt/engine/model/tables';
+import { isRange, keyOf, choiceTables } from '@vtt/engine/model/tables';
 import { rowUsers, renameRow, renameRowInBook } from '@vtt/engine/model/integrity';
 import { useWorld } from '../../../store/world.ts';
 import { useState, useRef, useEffect } from 'react';
-import type { System, Table, TableColumn, TableRow, TableKey } from '@vtt/schema';
+import type { System, Table, TableRow, TableKey } from '@vtt/schema';
+import type { TableColumn, Holder } from '@vtt/engine/model/types';
 import type { WorldState } from '../../../store/world.ts';
 
 type EditSystem = WorldState['editSystem'];
@@ -35,6 +37,7 @@ const blankRow = (key: TableKey): TableRow =>
       : { value: '', cells: {} });
 
 const COLUMN_KINDS = kindsFor('table');
+const FIELD_KINDS = kindsFor('field');
 
 const parseFree = (text: string): number | string | boolean =>
   /^-?\d+(\.\d+)?$/.test(text) ? Number(text)
@@ -54,7 +57,7 @@ const addTable = (editSystem: EditSystem) => editSystem(draft => {
 });
 
 export function TablesSection({ system, editSystem, usage }: Props) {
-  const entries = Object.entries(system.tables ?? {});
+  const entries = Object.entries(system.tables ?? {}).filter(([, table]) => !isSingle(table));
 
   return (
     <Card>
@@ -183,6 +186,28 @@ export function rowNames(system: System, tableId: string): Map<string, string> {
 const kindLabel = (column: TableColumn): string =>
   `${kindWord(column.kind)}${column.expr !== undefined ? ' · формула' : ''}`;
 
+const HOLDERS = [
+  ['sheet', 'своё у каждого листа'],
+  ['group', 'общее у группы — отряда, банды'],
+  ['desk', 'общее на столе — одно на комнату'],
+] as const;
+
+export function renameColumn(draft: System, tableId: string, key: string, label: string, fresh: string): void {
+  const column = draft.tables?.[tableId]?.columns?.find(c => c.key === key);
+  if (!column) return;
+  column.label = label;
+  column.key = fresh;
+}
+
+export function moveColumn(draft: System, tableId: string, key: string, holder: Holder): void {
+  const from = draft.tables?.[tableId];
+  const column = from?.columns?.find(c => c.key === key);
+  if (!from || !column) return;
+  from.columns = from.columns!.filter(c => c.key !== key);
+  forgetFields(draft);
+  draft.tables = withColumn(draft, column, holder).tables;
+}
+
 export function TableColumnCard({ id, table, column, system, edit, onClose }: {
   id: string;
   table: Table;
@@ -191,34 +216,69 @@ export function TableColumnCard({ id, table, column, system, edit, onClose }: {
   edit: (change: (draft: Table) => void) => void;
   onClose: () => void;
 }) {
+  const single = isSingle(table);
+  const usage = useUsage();
+  const compendium = useBook();
+  const editSystem = useWorld(state => state.editSystem);
+  const pick = useWorld(state => state.pick);
   const set = (change: (c: TableColumn) => void) => edit(draft => {
     const c = draft.columns?.find(x => x.key === column.key);
     if (c) change(c);
   });
-  const others = Object.entries(system.tables ?? {}).filter(([key]) => key !== id)
+  const others = (single ? choiceTables(system) : Object.entries(system.tables ?? {}).filter(([key, t]) => key !== id && !isSingle(t)))
     .map(([key, t]) => [key, t.label || key] as [string, string]);
   const name = column.label || column.key;
+  const users = single ? usersOf(usage, 'field', column.key, system) : [];
+
+  const rename = (label: string) => {
+    if (!single) { set(c => { c.label = label; }); return; }
+    const state = useWorld.getState();
+    const world = JSON.stringify({ s: state.system, c: state.compendium, sh: state.sheets });
+    const virgin = (/^field(_\d+)?$/.test(column.key) || column.key === slugOf(column.label ?? ''))
+      && world.split(`"${column.key}"`).length - 1 <= 1
+      && !new RegExp(`[@#]${column.key}(?![\\p{L}\\p{N}_])`, 'u').test(world);
+    const taken = [...fieldsOf(state.system).map(f => f.tag).filter(tag => tag !== column.key), ...Object.keys(state.system.tables ?? {})];
+    const fresh = virgin && slugOf(label) ? freeId(taken, label) : column.key;
+    editSystem(draft => renameColumn(draft, id, column.key, label, fresh));
+    if (fresh !== column.key) pick({ activeFieldTag: fresh });
+  };
 
   return (
     <ColumnCard
-      column={{ label: column.label ?? '', kind: column.kind ?? 'text', from: column.from, many: column.many, expr: column.expr, min: column.min, max: column.max }}
-      kinds={COLUMN_KINDS}
+      column={{ label: column.label ?? '', kind: column.kind ?? (single ? 'number' : 'text'), from: column.from, many: column.many, expr: column.expr, min: column.min, max: column.max }}
+      kinds={single ? FIELD_KINDS : COLUMN_KINDS}
       tables={others}
-      many
-      formulaHint="Формула для всех строк"
+      many={!single}
+      formulaHint={single ? 'Формула для всех листов' : 'Формула для всех строк'}
       where={`${table.label || id} · ${name}`}
-      names={rowNames(system, id)}
+      {...(single ? {} : { names: rowNames(system, id) })}
       system={system}
-      onChange={patch => set(c => applyPatch(c, patch))}
-      onDelete={() => {
+      onChange={patch => (patch.label !== undefined ? rename(patch.label) : set(c => applyPatch(c, patch)))}
+      onDelete={users.length ? null : () => {
         edit(draft => {
           draft.columns = (draft.columns ?? []).filter(c => c.key !== column.key);
-          for (const row of draft.rows ?? []) delete row.cells?.[column.key];
-          delete draft.sheet?.columns?.[column.key];
+          for (const row of draft.rows ?? []) { delete row.cells?.[column.key]; delete row.view?.[column.key]; }
         });
         onClose();
       }}
       onClose={onClose}
+      preview={single && column.expr !== undefined
+        ? <LiveValue system={system} compendium={compendium} tag={column.key} source={column.expr} /> : null}
+      extra={single ? <>
+        <Field label="Чьё значение">
+          <Select
+            value={holderOf(table) ?? 'sheet'}
+            options={HOLDERS}
+            onChange={next => editSystem(draft => moveColumn(draft, id, column.key, next))}
+          />
+        </Field>
+        {users.length ? (
+          <div className="inline inline--tight">
+            <span className="faint">смотрят:</span>
+            {users.map(user => <Chip key={user}>{user}</Chip>)}
+          </div>
+        ) : null}
+      </> : undefined}
     />
   );
 }
@@ -226,8 +286,10 @@ export function TableColumnCard({ id, table, column, system, edit, onClose }: {
 function applyPatch(c: TableColumn, patch: ColumnPatch): void {
   if (patch.label !== undefined) c.label = patch.label;
   if (patch.kind !== undefined) {
+    if (patch.kind !== c.kind) delete c.default;
     c.kind = patch.kind;
     if (patch.kind !== 'choice') { delete c.from; delete c.many; }
+    if (patch.kind !== 'number') { delete c.min; delete c.max; }
   }
   if (patch.from !== undefined) { if (patch.from) c.from = patch.from; else delete c.from; }
   if (patch.many !== undefined) { if (patch.many) c.many = true; else delete c.many; }

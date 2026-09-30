@@ -4,10 +4,10 @@ import { packRule, resolveRule } from '../src/engine/rule.ts';
 
 const sys = {
   id: 'stub-sys',
-  fields: [
-    { tag: 'x', label: 'Икс', value: { kind: 'stored', type: 'number', default: 7 } },
-    { tag: 'y', label: 'Игрек', value: { kind: 'stored', type: 'number', default: 0 } },
-  ],
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'x', label: 'Икс', kind: 'number', default: 7 },
+    { key: 'y', label: 'Игрек', kind: 'number' },
+  ] } },
 
   effects: {
     poisoned: { label: 'Отравлен', activation: 'passive', modifiers: [] },

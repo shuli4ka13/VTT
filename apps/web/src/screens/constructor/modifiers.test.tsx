@@ -5,8 +5,7 @@ import { ModifiersEditor } from './modifiers.tsx';
 import type { System, Modifier } from '@vtt/schema';
 
 const system = {
-  fields: [{ tag: 'ac', label: 'Класс брони', value: { kind: 'stored', type: 'number', default: 10 } }],
-  tables: { rolls: { label: 'Броски', key: 'word', rows: [{ value: 'атака' }, { value: 'спасбросок' }] } },
+  tables: { лист: { shape: 'single', columns: [{ key: 'ac', label: 'Класс брони', kind: 'number', default: 10 }] }, rolls: { label: 'Броски', key: 'word', rows: [{ value: 'атака' }, { value: 'спасбросок' }] } },
   roll_edits: { фора: { label: 'Фора', ops: [{ op: 'addDie' }] } },
   effects: {},
 } as unknown as System;

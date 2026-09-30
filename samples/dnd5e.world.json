@@ -3,2824 +3,40 @@
   "system": {
     "id": "dnd5e",
     "name": "D&D 5e",
-    "fields": [
-      {
-        "tag": "race",
-        "label": "Раса",
-        "group": "Личное дело",
-        "value": {
-          "kind": "stored",
-          "type": "choice",
-          "default": "",
-          "from": "races"
-        }
-      },
-      {
-        "tag": "class_name",
-        "label": "Класс",
-        "group": "Личное дело",
-        "value": {
-          "kind": "stored",
-          "type": "choice",
-          "default": "",
-          "from": "classes"
-        }
-      },
-      {
-        "tag": "subclass",
-        "label": "Подкласс",
-        "group": "Личное дело",
-        "value": {
-          "kind": "stored",
-          "type": "text",
-          "default": ""
-        }
-      },
-      {
-        "tag": "background",
-        "label": "Предыстория",
-        "group": "Личное дело",
-        "value": {
-          "kind": "stored",
-          "type": "text",
-          "default": ""
-        }
-      },
-      {
-        "tag": "alignment",
-        "label": "Мировоззрение",
-        "group": "Личное дело",
-        "value": {
-          "kind": "stored",
-          "type": "text",
-          "default": ""
-        }
-      },
-      {
-        "tag": "abilities.str.score",
-        "label": "Сила",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 10,
-          "min": 1,
-          "max": 30
-        },
-        "cell": {
-          "table": "abilities",
-          "row": "str",
-          "column": "score"
-        }
-      },
-      {
-        "tag": "abilities.str.mod",
-        "label": "Модификатор: Сила",
-        "group": "Модификаторы",
-        "roll": {
-          "label": "Проверка: Сила",
-          "tags": [
-            "проверка",
-            "сила"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@abilities.str.mod"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "округлить вниз((@abilities.str.score - 10) / 2)"
-        },
-        "cell": {
-          "table": "abilities",
-          "row": "str",
-          "column": "mod"
-        }
-      },
-      {
-        "tag": "abilities.dex.score",
-        "label": "Ловкость",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 10,
-          "min": 1,
-          "max": 30
-        },
-        "cell": {
-          "table": "abilities",
-          "row": "dex",
-          "column": "score"
-        }
-      },
-      {
-        "tag": "abilities.dex.mod",
-        "label": "Модификатор: Ловкость",
-        "group": "Модификаторы",
-        "roll": {
-          "label": "Проверка: Ловкость",
-          "tags": [
-            "проверка",
-            "ловкость"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@abilities.dex.mod"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "округлить вниз((@abilities.dex.score - 10) / 2)"
-        },
-        "cell": {
-          "table": "abilities",
-          "row": "dex",
-          "column": "mod"
-        }
-      },
-      {
-        "tag": "abilities.con.score",
-        "label": "Телосложение",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 10,
-          "min": 1,
-          "max": 30
-        },
-        "cell": {
-          "table": "abilities",
-          "row": "con",
-          "column": "score"
-        }
-      },
-      {
-        "tag": "abilities.con.mod",
-        "label": "Модификатор: Телосложение",
-        "group": "Модификаторы",
-        "roll": {
-          "label": "Проверка: Телосложение",
-          "tags": [
-            "проверка",
-            "телосложение"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@abilities.con.mod"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "округлить вниз((@abilities.con.score - 10) / 2)"
-        },
-        "cell": {
-          "table": "abilities",
-          "row": "con",
-          "column": "mod"
-        }
-      },
-      {
-        "tag": "abilities.int.score",
-        "label": "Интеллект",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 10,
-          "min": 1,
-          "max": 30
-        },
-        "cell": {
-          "table": "abilities",
-          "row": "int",
-          "column": "score"
-        }
-      },
-      {
-        "tag": "abilities.int.mod",
-        "label": "Модификатор: Интеллект",
-        "group": "Модификаторы",
-        "roll": {
-          "label": "Проверка: Интеллект",
-          "tags": [
-            "проверка",
-            "интеллект"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@abilities.int.mod"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "округлить вниз((@abilities.int.score - 10) / 2)"
-        },
-        "cell": {
-          "table": "abilities",
-          "row": "int",
-          "column": "mod"
-        }
-      },
-      {
-        "tag": "abilities.wis.score",
-        "label": "Мудрость",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 10,
-          "min": 1,
-          "max": 30
-        },
-        "cell": {
-          "table": "abilities",
-          "row": "wis",
-          "column": "score"
-        }
-      },
-      {
-        "tag": "abilities.wis.mod",
-        "label": "Модификатор: Мудрость",
-        "group": "Модификаторы",
-        "roll": {
-          "label": "Проверка: Мудрость",
-          "tags": [
-            "проверка",
-            "мудрость"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@abilities.wis.mod"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "округлить вниз((@abilities.wis.score - 10) / 2)"
-        },
-        "cell": {
-          "table": "abilities",
-          "row": "wis",
-          "column": "mod"
-        }
-      },
-      {
-        "tag": "abilities.cha.score",
-        "label": "Харизма",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 10,
-          "min": 1,
-          "max": 30
-        },
-        "cell": {
-          "table": "abilities",
-          "row": "cha",
-          "column": "score"
-        }
-      },
-      {
-        "tag": "abilities.cha.mod",
-        "label": "Модификатор: Харизма",
-        "group": "Модификаторы",
-        "roll": {
-          "label": "Проверка: Харизма",
-          "tags": [
-            "проверка",
-            "харизма"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@abilities.cha.mod"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "округлить вниз((@abilities.cha.score - 10) / 2)"
-        },
-        "cell": {
-          "table": "abilities",
-          "row": "cha",
-          "column": "mod"
-        }
-      },
-      {
-        "tag": "level",
-        "label": "Уровень",
-        "group": "Прогрессия",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 1,
-          "min": 1,
-          "max": 20
-        },
-        "control": "stepper"
-      },
-      {
-        "tag": "prof_bonus",
-        "label": "Бонус мастерства",
-        "group": "Прогрессия",
-        "value": {
-          "kind": "formula",
-          "expr": "таблица(\"levels\", @level, \"prof\")"
-        }
-      },
-      {
-        "tag": "inspiration",
-        "label": "Вдохновение",
-        "group": "Прогрессия",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 1
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "xp",
-        "label": "Опыт",
-        "group": "Прогрессия",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        }
-      },
-      {
-        "tag": "saves.str.extra",
-        "label": "Владение сверх класса: спасбросок Сила",
-        "group": "Спасброски",
-        "control": "ring",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 1
-        },
-        "cell": {
-          "table": "saves",
-          "row": "str",
-          "column": "extra"
-        }
-      },
-      {
-        "tag": "saves.str.prof",
-        "label": "Владение: спасбросок Сила",
-        "group": "Спасброски",
-        "value": {
-          "kind": "formula",
-          "expr": "большее из(@saves.str.extra, если(есть(@class_name.saves, \"сила\"), 1, 0))"
-        },
-        "cell": {
-          "table": "saves",
-          "row": "str",
-          "column": "prof"
-        }
-      },
-      {
-        "tag": "saves.str.save",
-        "label": "Спасбросок: Сила",
-        "group": "Спасброски",
-        "roll": {
-          "label": "Спасбросок: Сила",
-          "tags": [
-            "спасбросок",
-            "сила"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@saves.str.save"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.str.mod + @saves.str.prof * @prof_bonus"
-        },
-        "cell": {
-          "table": "saves",
-          "row": "str",
-          "column": "save"
-        }
-      },
-      {
-        "tag": "saves.dex.extra",
-        "label": "Владение сверх класса: спасбросок Ловкость",
-        "group": "Спасброски",
-        "control": "ring",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 1
-        },
-        "cell": {
-          "table": "saves",
-          "row": "dex",
-          "column": "extra"
-        }
-      },
-      {
-        "tag": "saves.dex.prof",
-        "label": "Владение: спасбросок Ловкость",
-        "group": "Спасброски",
-        "value": {
-          "kind": "formula",
-          "expr": "большее из(@saves.dex.extra, если(есть(@class_name.saves, \"ловкость\"), 1, 0))"
-        },
-        "cell": {
-          "table": "saves",
-          "row": "dex",
-          "column": "prof"
-        }
-      },
-      {
-        "tag": "saves.dex.save",
-        "label": "Спасбросок: Ловкость",
-        "group": "Спасброски",
-        "roll": {
-          "label": "Спасбросок: Ловкость",
-          "tags": [
-            "спасбросок",
-            "ловкость"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@saves.dex.save"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.dex.mod + @saves.dex.prof * @prof_bonus"
-        },
-        "cell": {
-          "table": "saves",
-          "row": "dex",
-          "column": "save"
-        }
-      },
-      {
-        "tag": "saves.con.extra",
-        "label": "Владение сверх класса: спасбросок Телосложение",
-        "group": "Спасброски",
-        "control": "ring",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 1
-        },
-        "cell": {
-          "table": "saves",
-          "row": "con",
-          "column": "extra"
-        }
-      },
-      {
-        "tag": "saves.con.prof",
-        "label": "Владение: спасбросок Телосложение",
-        "group": "Спасброски",
-        "value": {
-          "kind": "formula",
-          "expr": "большее из(@saves.con.extra, если(есть(@class_name.saves, \"телосложение\"), 1, 0))"
-        },
-        "cell": {
-          "table": "saves",
-          "row": "con",
-          "column": "prof"
-        }
-      },
-      {
-        "tag": "saves.con.save",
-        "label": "Спасбросок: Телосложение",
-        "group": "Спасброски",
-        "roll": {
-          "label": "Спасбросок: Телосложение",
-          "tags": [
-            "спасбросок",
-            "телосложение"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@saves.con.save"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.con.mod + @saves.con.prof * @prof_bonus"
-        },
-        "cell": {
-          "table": "saves",
-          "row": "con",
-          "column": "save"
-        }
-      },
-      {
-        "tag": "saves.int.extra",
-        "label": "Владение сверх класса: спасбросок Интеллект",
-        "group": "Спасброски",
-        "control": "ring",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 1
-        },
-        "cell": {
-          "table": "saves",
-          "row": "int",
-          "column": "extra"
-        }
-      },
-      {
-        "tag": "saves.int.prof",
-        "label": "Владение: спасбросок Интеллект",
-        "group": "Спасброски",
-        "value": {
-          "kind": "formula",
-          "expr": "большее из(@saves.int.extra, если(есть(@class_name.saves, \"интеллект\"), 1, 0))"
-        },
-        "cell": {
-          "table": "saves",
-          "row": "int",
-          "column": "prof"
-        }
-      },
-      {
-        "tag": "saves.int.save",
-        "label": "Спасбросок: Интеллект",
-        "group": "Спасброски",
-        "roll": {
-          "label": "Спасбросок: Интеллект",
-          "tags": [
-            "спасбросок",
-            "интеллект"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@saves.int.save"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.int.mod + @saves.int.prof * @prof_bonus"
-        },
-        "cell": {
-          "table": "saves",
-          "row": "int",
-          "column": "save"
-        }
-      },
-      {
-        "tag": "saves.wis.extra",
-        "label": "Владение сверх класса: спасбросок Мудрость",
-        "group": "Спасброски",
-        "control": "ring",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 1
-        },
-        "cell": {
-          "table": "saves",
-          "row": "wis",
-          "column": "extra"
-        }
-      },
-      {
-        "tag": "saves.wis.prof",
-        "label": "Владение: спасбросок Мудрость",
-        "group": "Спасброски",
-        "value": {
-          "kind": "formula",
-          "expr": "большее из(@saves.wis.extra, если(есть(@class_name.saves, \"мудрость\"), 1, 0))"
-        },
-        "cell": {
-          "table": "saves",
-          "row": "wis",
-          "column": "prof"
-        }
-      },
-      {
-        "tag": "saves.wis.save",
-        "label": "Спасбросок: Мудрость",
-        "group": "Спасброски",
-        "roll": {
-          "label": "Спасбросок: Мудрость",
-          "tags": [
-            "спасбросок",
-            "мудрость"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@saves.wis.save"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.wis.mod + @saves.wis.prof * @prof_bonus"
-        },
-        "cell": {
-          "table": "saves",
-          "row": "wis",
-          "column": "save"
-        }
-      },
-      {
-        "tag": "saves.cha.extra",
-        "label": "Владение сверх класса: спасбросок Харизма",
-        "group": "Спасброски",
-        "control": "ring",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 1
-        },
-        "cell": {
-          "table": "saves",
-          "row": "cha",
-          "column": "extra"
-        }
-      },
-      {
-        "tag": "saves.cha.prof",
-        "label": "Владение: спасбросок Харизма",
-        "group": "Спасброски",
-        "value": {
-          "kind": "formula",
-          "expr": "большее из(@saves.cha.extra, если(есть(@class_name.saves, \"харизма\"), 1, 0))"
-        },
-        "cell": {
-          "table": "saves",
-          "row": "cha",
-          "column": "prof"
-        }
-      },
-      {
-        "tag": "saves.cha.save",
-        "label": "Спасбросок: Харизма",
-        "group": "Спасброски",
-        "roll": {
-          "label": "Спасбросок: Харизма",
-          "tags": [
-            "спасбросок",
-            "харизма"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@saves.cha.save"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.cha.mod + @saves.cha.prof * @prof_bonus"
-        },
-        "cell": {
-          "table": "saves",
-          "row": "cha",
-          "column": "save"
-        }
-      },
-      {
-        "tag": "skills.athletics.prof",
-        "label": "Владение: Атлетика",
-        "group": "Навыки от силы",
-        "control": "ring",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 2
-        },
-        "cell": {
-          "table": "skills",
-          "row": "athletics",
-          "column": "prof"
-        }
-      },
-      {
-        "tag": "skills.athletics.total",
-        "label": "Атлетика",
-        "group": "Навыки от силы",
-        "roll": {
-          "label": "Проверка: Атлетика",
-          "tags": [
-            "проверка",
-            "сила",
-            "атлетика"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.athletics.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.str.mod + @skills.athletics.prof * @prof_bonus"
-        },
-        "cell": {
-          "table": "skills",
-          "row": "athletics",
-          "column": "total"
-        }
-      },
-      {
-        "tag": "skills.acrobatics.prof",
-        "label": "Владение: Акробатика",
-        "group": "Навыки от ловкости",
-        "control": "ring",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 2
-        },
-        "cell": {
-          "table": "skills",
-          "row": "acrobatics",
-          "column": "prof"
-        }
-      },
-      {
-        "tag": "skills.acrobatics.total",
-        "label": "Акробатика",
-        "group": "Навыки от ловкости",
-        "roll": {
-          "label": "Проверка: Акробатика",
-          "tags": [
-            "проверка",
-            "ловкость",
-            "акробатика"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.acrobatics.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.dex.mod + @skills.acrobatics.prof * @prof_bonus"
-        },
-        "cell": {
-          "table": "skills",
-          "row": "acrobatics",
-          "column": "total"
-        }
-      },
-      {
-        "tag": "skills.sleight_of_hand.prof",
-        "label": "Владение: Ловкость рук",
-        "group": "Навыки от ловкости",
-        "control": "ring",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 2
-        },
-        "cell": {
-          "table": "skills",
-          "row": "sleight_of_hand",
-          "column": "prof"
-        }
-      },
-      {
-        "tag": "skills.sleight_of_hand.total",
-        "label": "Ловкость рук",
-        "group": "Навыки от ловкости",
-        "roll": {
-          "label": "Проверка: Ловкость рук",
-          "tags": [
-            "проверка",
-            "ловкость",
-            "ловкость_рук"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.sleight_of_hand.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.dex.mod + @skills.sleight_of_hand.prof * @prof_bonus"
-        },
-        "cell": {
-          "table": "skills",
-          "row": "sleight_of_hand",
-          "column": "total"
-        }
-      },
-      {
-        "tag": "skills.stealth.prof",
-        "label": "Владение: Скрытность",
-        "group": "Навыки от ловкости",
-        "control": "ring",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 2
-        },
-        "cell": {
-          "table": "skills",
-          "row": "stealth",
-          "column": "prof"
-        }
-      },
-      {
-        "tag": "skills.stealth.total",
-        "label": "Скрытность",
-        "group": "Навыки от ловкости",
-        "roll": {
-          "label": "Проверка: Скрытность",
-          "tags": [
-            "проверка",
-            "ловкость",
-            "скрытность"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.stealth.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.dex.mod + @skills.stealth.prof * @prof_bonus"
-        },
-        "cell": {
-          "table": "skills",
-          "row": "stealth",
-          "column": "total"
-        }
-      },
-      {
-        "tag": "skills.arcana.prof",
-        "label": "Владение: Магия",
-        "group": "Навыки от интеллекта",
-        "control": "ring",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 2
-        },
-        "cell": {
-          "table": "skills",
-          "row": "arcana",
-          "column": "prof"
-        }
-      },
-      {
-        "tag": "skills.arcana.total",
-        "label": "Магия",
-        "group": "Навыки от интеллекта",
-        "roll": {
-          "label": "Проверка: Магия",
-          "tags": [
-            "проверка",
-            "интеллект",
-            "магия"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.arcana.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.int.mod + @skills.arcana.prof * @prof_bonus"
-        },
-        "cell": {
-          "table": "skills",
-          "row": "arcana",
-          "column": "total"
-        }
-      },
-      {
-        "tag": "skills.history.prof",
-        "label": "Владение: История",
-        "group": "Навыки от интеллекта",
-        "control": "ring",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 2
-        },
-        "cell": {
-          "table": "skills",
-          "row": "history",
-          "column": "prof"
-        }
-      },
-      {
-        "tag": "skills.history.total",
-        "label": "История",
-        "group": "Навыки от интеллекта",
-        "roll": {
-          "label": "Проверка: История",
-          "tags": [
-            "проверка",
-            "интеллект",
-            "история"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.history.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.int.mod + @skills.history.prof * @prof_bonus"
-        },
-        "cell": {
-          "table": "skills",
-          "row": "history",
-          "column": "total"
-        }
-      },
-      {
-        "tag": "skills.investigation.prof",
-        "label": "Владение: Анализ",
-        "group": "Навыки от интеллекта",
-        "control": "ring",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 2
-        },
-        "cell": {
-          "table": "skills",
-          "row": "investigation",
-          "column": "prof"
-        }
-      },
-      {
-        "tag": "skills.investigation.total",
-        "label": "Анализ",
-        "group": "Навыки от интеллекта",
-        "roll": {
-          "label": "Проверка: Анализ",
-          "tags": [
-            "проверка",
-            "интеллект",
-            "анализ"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.investigation.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.int.mod + @skills.investigation.prof * @prof_bonus"
-        },
-        "cell": {
-          "table": "skills",
-          "row": "investigation",
-          "column": "total"
-        }
-      },
-      {
-        "tag": "skills.nature.prof",
-        "label": "Владение: Природа",
-        "group": "Навыки от интеллекта",
-        "control": "ring",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 2
-        },
-        "cell": {
-          "table": "skills",
-          "row": "nature",
-          "column": "prof"
-        }
-      },
-      {
-        "tag": "skills.nature.total",
-        "label": "Природа",
-        "group": "Навыки от интеллекта",
-        "roll": {
-          "label": "Проверка: Природа",
-          "tags": [
-            "проверка",
-            "интеллект",
-            "природа"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.nature.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.int.mod + @skills.nature.prof * @prof_bonus"
-        },
-        "cell": {
-          "table": "skills",
-          "row": "nature",
-          "column": "total"
-        }
-      },
-      {
-        "tag": "skills.religion.prof",
-        "label": "Владение: Религия",
-        "group": "Навыки от интеллекта",
-        "control": "ring",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 2
-        },
-        "cell": {
-          "table": "skills",
-          "row": "religion",
-          "column": "prof"
-        }
-      },
-      {
-        "tag": "skills.religion.total",
-        "label": "Религия",
-        "group": "Навыки от интеллекта",
-        "roll": {
-          "label": "Проверка: Религия",
-          "tags": [
-            "проверка",
-            "интеллект",
-            "религия"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.religion.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.int.mod + @skills.religion.prof * @prof_bonus"
-        },
-        "cell": {
-          "table": "skills",
-          "row": "religion",
-          "column": "total"
-        }
-      },
-      {
-        "tag": "skills.animal_handling.prof",
-        "label": "Владение: Уход за животными",
-        "group": "Навыки от мудрости",
-        "control": "ring",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 2
-        },
-        "cell": {
-          "table": "skills",
-          "row": "animal_handling",
-          "column": "prof"
-        }
-      },
-      {
-        "tag": "skills.animal_handling.total",
-        "label": "Уход за животными",
-        "group": "Навыки от мудрости",
-        "roll": {
-          "label": "Проверка: Уход за животными",
-          "tags": [
-            "проверка",
-            "мудрость",
-            "уход_за_животными"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.animal_handling.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.wis.mod + @skills.animal_handling.prof * @prof_bonus"
-        },
-        "cell": {
-          "table": "skills",
-          "row": "animal_handling",
-          "column": "total"
-        }
-      },
-      {
-        "tag": "skills.insight.prof",
-        "label": "Владение: Проницательность",
-        "group": "Навыки от мудрости",
-        "control": "ring",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 2
-        },
-        "cell": {
-          "table": "skills",
-          "row": "insight",
-          "column": "prof"
-        }
-      },
-      {
-        "tag": "skills.insight.total",
-        "label": "Проницательность",
-        "group": "Навыки от мудрости",
-        "roll": {
-          "label": "Проверка: Проницательность",
-          "tags": [
-            "проверка",
-            "мудрость",
-            "проницательность"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.insight.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.wis.mod + @skills.insight.prof * @prof_bonus"
-        },
-        "cell": {
-          "table": "skills",
-          "row": "insight",
-          "column": "total"
-        }
-      },
-      {
-        "tag": "skills.medicine.prof",
-        "label": "Владение: Медицина",
-        "group": "Навыки от мудрости",
-        "control": "ring",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 2
-        },
-        "cell": {
-          "table": "skills",
-          "row": "medicine",
-          "column": "prof"
-        }
-      },
-      {
-        "tag": "skills.medicine.total",
-        "label": "Медицина",
-        "group": "Навыки от мудрости",
-        "roll": {
-          "label": "Проверка: Медицина",
-          "tags": [
-            "проверка",
-            "мудрость",
-            "медицина"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.medicine.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.wis.mod + @skills.medicine.prof * @prof_bonus"
-        },
-        "cell": {
-          "table": "skills",
-          "row": "medicine",
-          "column": "total"
-        }
-      },
-      {
-        "tag": "skills.perception.prof",
-        "label": "Владение: Внимательность",
-        "group": "Навыки от мудрости",
-        "control": "ring",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 2
-        },
-        "cell": {
-          "table": "skills",
-          "row": "perception",
-          "column": "prof"
-        }
-      },
-      {
-        "tag": "skills.perception.total",
-        "label": "Внимательность",
-        "group": "Навыки от мудрости",
-        "roll": {
-          "label": "Проверка: Внимательность",
-          "tags": [
-            "проверка",
-            "мудрость",
-            "внимательность"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.perception.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.wis.mod + @skills.perception.prof * @prof_bonus"
-        },
-        "cell": {
-          "table": "skills",
-          "row": "perception",
-          "column": "total"
-        }
-      },
-      {
-        "tag": "skills.survival.prof",
-        "label": "Владение: Выживание",
-        "group": "Навыки от мудрости",
-        "control": "ring",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 2
-        },
-        "cell": {
-          "table": "skills",
-          "row": "survival",
-          "column": "prof"
-        }
-      },
-      {
-        "tag": "skills.survival.total",
-        "label": "Выживание",
-        "group": "Навыки от мудрости",
-        "roll": {
-          "label": "Проверка: Выживание",
-          "tags": [
-            "проверка",
-            "мудрость",
-            "выживание"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.survival.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.wis.mod + @skills.survival.prof * @prof_bonus"
-        },
-        "cell": {
-          "table": "skills",
-          "row": "survival",
-          "column": "total"
-        }
-      },
-      {
-        "tag": "skills.deception.prof",
-        "label": "Владение: Обман",
-        "group": "Навыки от харизмы",
-        "control": "ring",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 2
-        },
-        "cell": {
-          "table": "skills",
-          "row": "deception",
-          "column": "prof"
-        }
-      },
-      {
-        "tag": "skills.deception.total",
-        "label": "Обман",
-        "group": "Навыки от харизмы",
-        "roll": {
-          "label": "Проверка: Обман",
-          "tags": [
-            "проверка",
-            "харизма",
-            "обман"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.deception.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.cha.mod + @skills.deception.prof * @prof_bonus"
-        },
-        "cell": {
-          "table": "skills",
-          "row": "deception",
-          "column": "total"
-        }
-      },
-      {
-        "tag": "skills.intimidation.prof",
-        "label": "Владение: Запугивание",
-        "group": "Навыки от харизмы",
-        "control": "ring",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 2
-        },
-        "cell": {
-          "table": "skills",
-          "row": "intimidation",
-          "column": "prof"
-        }
-      },
-      {
-        "tag": "skills.intimidation.total",
-        "label": "Запугивание",
-        "group": "Навыки от харизмы",
-        "roll": {
-          "label": "Проверка: Запугивание",
-          "tags": [
-            "проверка",
-            "харизма",
-            "запугивание"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.intimidation.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.cha.mod + @skills.intimidation.prof * @prof_bonus"
-        },
-        "cell": {
-          "table": "skills",
-          "row": "intimidation",
-          "column": "total"
-        }
-      },
-      {
-        "tag": "skills.performance.prof",
-        "label": "Владение: Выступление",
-        "group": "Навыки от харизмы",
-        "control": "ring",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 2
-        },
-        "cell": {
-          "table": "skills",
-          "row": "performance",
-          "column": "prof"
-        }
-      },
-      {
-        "tag": "skills.performance.total",
-        "label": "Выступление",
-        "group": "Навыки от харизмы",
-        "roll": {
-          "label": "Проверка: Выступление",
-          "tags": [
-            "проверка",
-            "харизма",
-            "выступление"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.performance.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.cha.mod + @skills.performance.prof * @prof_bonus"
-        },
-        "cell": {
-          "table": "skills",
-          "row": "performance",
-          "column": "total"
-        }
-      },
-      {
-        "tag": "skills.persuasion.prof",
-        "label": "Владение: Убеждение",
-        "group": "Навыки от харизмы",
-        "control": "ring",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 2
-        },
-        "cell": {
-          "table": "skills",
-          "row": "persuasion",
-          "column": "prof"
-        }
-      },
-      {
-        "tag": "skills.persuasion.total",
-        "label": "Убеждение",
-        "group": "Навыки от харизмы",
-        "roll": {
-          "label": "Проверка: Убеждение",
-          "tags": [
-            "проверка",
-            "харизма",
-            "убеждение"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.persuasion.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.cha.mod + @skills.persuasion.prof * @prof_bonus"
-        },
-        "cell": {
-          "table": "skills",
-          "row": "persuasion",
-          "column": "total"
-        }
-      },
-      {
-        "tag": "initiative",
-        "label": "Инициатива",
-        "group": "Чувства и движение",
-        "roll": {
-          "label": "Инициатива",
-          "tags": [
-            "проверка",
-            "ловкость",
-            "инициатива"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@initiative"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.dex.mod"
-        }
-      },
-      {
-        "tag": "passive_perception",
-        "label": "Пассивная внимательность",
-        "group": "Чувства и движение",
-        "value": {
-          "kind": "formula",
-          "expr": "10 + @skills.perception.total"
-        }
-      },
-      {
-        "tag": "speed",
-        "label": "Скорость, футов",
-        "group": "Чувства и движение",
-        "value": {
-          "kind": "formula",
-          "expr": "или(@race.speed, 30)"
-        }
-      },
-      {
-        "tag": "darkvision",
-        "label": "Тёмное зрение, футов",
-        "group": "Чувства и движение",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        }
-      },
-      {
-        "tag": "languages",
-        "label": "Языки",
-        "group": "Чувства и движение",
-        "value": {
-          "kind": "stored",
-          "type": "text",
-          "default": "Общий"
-        }
-      },
-      {
-        "tag": "ac_base",
-        "label": "База доспеха",
-        "group": "Защита",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 10,
-          "min": 0
-        }
-      },
-      {
-        "tag": "armor_heavy",
-        "label": "Доспех тяжёлый",
-        "group": "Защита",
-        "value": {
-          "kind": "stored",
-          "type": "boolean",
-          "default": false
-        },
-        "control": "toggle"
-      },
-      {
-        "tag": "ac_dex",
-        "label": "Ловкость в классе брони",
-        "group": "Защита",
-        "value": {
-          "kind": "formula",
-          "expr": "@abilities.dex.mod"
-        }
-      },
-      {
-        "tag": "ac",
-        "label": "Класс брони",
-        "group": "Защита",
-        "value": {
-          "kind": "formula",
-          "expr": "@ac_base + если(@armor_heavy, 0, @ac_dex)"
-        }
-      },
-      {
-        "tag": "hp_max",
-        "label": "Максимум хитов",
-        "group": "Здоровье",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 8,
-          "min": 1
-        }
-      },
-      {
-        "tag": "hp_current",
-        "label": "Хиты",
-        "group": "Здоровье",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 8,
-          "min": 0,
-          "max": "@hp_max"
-        },
-        "control": "bar"
-      },
-      {
-        "tag": "hp_temp",
-        "label": "Временные хиты",
-        "group": "Здоровье",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        },
-        "control": "stepper"
-      },
-      {
-        "tag": "hit_die",
-        "label": "Кость хитов",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "или(@class_name.hit_die, @race.size.hit_die, \"1к8\")"
-        }
-      },
-      {
-        "tag": "hit_dice_left",
-        "label": "Костей хитов осталось",
-        "group": "Здоровье",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 1,
-          "min": 0,
-          "max": "@level"
-        },
-        "control": "stepper"
-      },
-      {
-        "tag": "death_ok",
-        "label": "Спасброски от смерти: успехи",
-        "group": "Здоровье",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 3
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "death_fail",
-        "label": "Спасброски от смерти: провалы",
-        "group": "Здоровье",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 3
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "exhaustion",
-        "label": "Истощение",
-        "group": "Здоровье",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 6
-        },
-        "control": "stepper"
-      },
-      {
-        "tag": "down",
-        "label": "Без сил",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "@hp_current <= 0"
-        }
-      },
-      {
-        "tag": "up",
-        "label": "На ногах",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "@hp_current > 0"
-        }
-      },
-      {
-        "tag": "is_dead",
-        "label": "Три провала",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "@death_fail >= 3"
-        }
-      },
-      {
-        "tag": "is_stable",
-        "label": "Три успеха",
-        "group": "Здоровье",
-        "value": {
-          "kind": "formula",
-          "expr": "@death_ok >= 3"
-        }
-      },
-      {
-        "tag": "attacks_per_action",
-        "label": "Атак за действие",
-        "group": "Атака",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 1,
-          "min": 1,
-          "max": 4
-        },
-        "control": "stepper"
-      },
-      {
-        "tag": "turn_action",
-        "label": "Действие",
-        "group": "В бою",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 1,
-          "min": 0,
-          "max": 2
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "turn_bonus",
-        "label": "Бонусное действие",
-        "group": "В бою",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 1,
-          "min": 0,
-          "max": 1
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "turn_reaction",
-        "label": "Реакция",
-        "group": "В бою",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 1,
-          "min": 0,
-          "max": 1
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "turn_once",
-        "label": "Раз за ход",
-        "group": "В бою",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 1,
-          "min": 0,
-          "max": 1
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "turn_attacks",
-        "label": "Атак осталось",
-        "group": "В бою",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 4
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "battle",
-        "label": "Идёт бой",
-        "group": "В бою",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 1
-        },
-        "control": "toggle",
-        "lives": "desk"
-      },
-      {
-        "tag": "crit_from",
-        "label": "Крит на костях от",
-        "group": "Атака",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 20,
-          "min": 18,
-          "max": 20
-        }
-      },
-      {
-        "tag": "sneak_dice",
-        "label": "Костей скрытой атаки",
-        "group": "Атака",
-        "value": {
-          "kind": "formula",
-          "expr": "округлить вверх(@level / 2)"
-        }
-      },
-      {
-        "tag": "spell_mod",
-        "label": "Заклинательный модификатор",
-        "group": "Магия",
-        "value": {
-          "kind": "formula",
-          "expr": "или(@class_name.spell_ability.mod, @abilities.cha.mod)"
-        }
-      },
-      {
-        "tag": "spell_dc",
-        "label": "Сложность заклинаний",
-        "group": "Магия",
-        "value": {
-          "kind": "formula",
-          "expr": "8 + @prof_bonus + @spell_mod"
-        }
-      },
-      {
-        "tag": "spell_attack",
-        "label": "Атака заклинанием",
-        "group": "Магия",
-        "value": {
-          "kind": "formula",
-          "expr": "@prof_bonus + @spell_mod"
-        }
-      },
-      {
-        "tag": "caster_level",
-        "label": "Уровень заклинателя",
-        "group": "Магия",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 20
-        },
-        "control": "stepper"
-      },
-      {
-        "tag": "cantrip_dice",
-        "label": "Костей заговора",
-        "group": "Магия",
-        "value": {
-          "kind": "formula",
-          "expr": "таблица(\"levels\", @level, \"cantrips\")"
-        }
-      },
-      {
-        "tag": "slots.1.max",
-        "label": "Всего ячеек 1-го круга",
-        "group": "Ячейки заклинаний",
-        "value": {
-          "kind": "formula",
-          "expr": "таблица(\"spell_slots\", @caster_level, \"круг_1\")"
-        },
-        "cell": {
-          "table": "slots",
-          "row": "1",
-          "column": "max"
-        }
-      },
-      {
-        "tag": "slots.1.left",
-        "label": "Ячейки 1-го круга",
-        "group": "Ячейки заклинаний",
-        "control": "pips",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": "@slots.1.max"
-        },
-        "cell": {
-          "table": "slots",
-          "row": "1",
-          "column": "left"
-        }
-      },
-      {
-        "tag": "slots.2.max",
-        "label": "Всего ячеек 2-го круга",
-        "group": "Ячейки заклинаний",
-        "value": {
-          "kind": "formula",
-          "expr": "таблица(\"spell_slots\", @caster_level, \"круг_2\")"
-        },
-        "cell": {
-          "table": "slots",
-          "row": "2",
-          "column": "max"
-        }
-      },
-      {
-        "tag": "slots.2.left",
-        "label": "Ячейки 2-го круга",
-        "group": "Ячейки заклинаний",
-        "control": "pips",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": "@slots.2.max"
-        },
-        "cell": {
-          "table": "slots",
-          "row": "2",
-          "column": "left"
-        }
-      },
-      {
-        "tag": "slots.3.max",
-        "label": "Всего ячеек 3-го круга",
-        "group": "Ячейки заклинаний",
-        "value": {
-          "kind": "formula",
-          "expr": "таблица(\"spell_slots\", @caster_level, \"круг_3\")"
-        },
-        "cell": {
-          "table": "slots",
-          "row": "3",
-          "column": "max"
-        }
-      },
-      {
-        "tag": "slots.3.left",
-        "label": "Ячейки 3-го круга",
-        "group": "Ячейки заклинаний",
-        "control": "pips",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": "@slots.3.max"
-        },
-        "cell": {
-          "table": "slots",
-          "row": "3",
-          "column": "left"
-        }
-      },
-      {
-        "tag": "slots.4.max",
-        "label": "Всего ячеек 4-го круга",
-        "group": "Ячейки заклинаний",
-        "value": {
-          "kind": "formula",
-          "expr": "таблица(\"spell_slots\", @caster_level, \"круг_4\")"
-        },
-        "cell": {
-          "table": "slots",
-          "row": "4",
-          "column": "max"
-        }
-      },
-      {
-        "tag": "slots.4.left",
-        "label": "Ячейки 4-го круга",
-        "group": "Ячейки заклинаний",
-        "control": "pips",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": "@slots.4.max"
-        },
-        "cell": {
-          "table": "slots",
-          "row": "4",
-          "column": "left"
-        }
-      },
-      {
-        "tag": "slots.5.max",
-        "label": "Всего ячеек 5-го круга",
-        "group": "Ячейки заклинаний",
-        "value": {
-          "kind": "formula",
-          "expr": "таблица(\"spell_slots\", @caster_level, \"круг_5\")"
-        },
-        "cell": {
-          "table": "slots",
-          "row": "5",
-          "column": "max"
-        }
-      },
-      {
-        "tag": "slots.5.left",
-        "label": "Ячейки 5-го круга",
-        "group": "Ячейки заклинаний",
-        "control": "pips",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": "@slots.5.max"
-        },
-        "cell": {
-          "table": "slots",
-          "row": "5",
-          "column": "left"
-        }
-      },
-      {
-        "tag": "slots.6.max",
-        "label": "Всего ячеек 6-го круга",
-        "group": "Ячейки заклинаний",
-        "value": {
-          "kind": "formula",
-          "expr": "таблица(\"spell_slots\", @caster_level, \"круг_6\")"
-        },
-        "cell": {
-          "table": "slots",
-          "row": "6",
-          "column": "max"
-        }
-      },
-      {
-        "tag": "slots.6.left",
-        "label": "Ячейки 6-го круга",
-        "group": "Ячейки заклинаний",
-        "control": "pips",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": "@slots.6.max"
-        },
-        "cell": {
-          "table": "slots",
-          "row": "6",
-          "column": "left"
-        }
-      },
-      {
-        "tag": "slots.7.max",
-        "label": "Всего ячеек 7-го круга",
-        "group": "Ячейки заклинаний",
-        "value": {
-          "kind": "formula",
-          "expr": "таблица(\"spell_slots\", @caster_level, \"круг_7\")"
-        },
-        "cell": {
-          "table": "slots",
-          "row": "7",
-          "column": "max"
-        }
-      },
-      {
-        "tag": "slots.7.left",
-        "label": "Ячейки 7-го круга",
-        "group": "Ячейки заклинаний",
-        "control": "pips",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": "@slots.7.max"
-        },
-        "cell": {
-          "table": "slots",
-          "row": "7",
-          "column": "left"
-        }
-      },
-      {
-        "tag": "slots.8.max",
-        "label": "Всего ячеек 8-го круга",
-        "group": "Ячейки заклинаний",
-        "value": {
-          "kind": "formula",
-          "expr": "таблица(\"spell_slots\", @caster_level, \"круг_8\")"
-        },
-        "cell": {
-          "table": "slots",
-          "row": "8",
-          "column": "max"
-        }
-      },
-      {
-        "tag": "slots.8.left",
-        "label": "Ячейки 8-го круга",
-        "group": "Ячейки заклинаний",
-        "control": "pips",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": "@slots.8.max"
-        },
-        "cell": {
-          "table": "slots",
-          "row": "8",
-          "column": "left"
-        }
-      },
-      {
-        "tag": "slots.9.max",
-        "label": "Всего ячеек 9-го круга",
-        "group": "Ячейки заклинаний",
-        "value": {
-          "kind": "formula",
-          "expr": "таблица(\"spell_slots\", @caster_level, \"круг_9\")"
-        },
-        "cell": {
-          "table": "slots",
-          "row": "9",
-          "column": "max"
-        }
-      },
-      {
-        "tag": "slots.9.left",
-        "label": "Ячейки 9-го круга",
-        "group": "Ячейки заклинаний",
-        "control": "pips",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": "@slots.9.max"
-        },
-        "cell": {
-          "table": "slots",
-          "row": "9",
-          "column": "left"
-        }
-      },
-      {
-        "tag": "resources.rages.max",
-        "label": "Ярость: всего",
-        "group": "Ресурсы класса",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        },
-        "cell": {
-          "table": "resources",
-          "row": "rages",
-          "column": "max"
-        }
-      },
-      {
-        "tag": "resources.rages.left",
-        "label": "Ярость: осталось",
-        "group": "Ресурсы класса",
-        "control": "stepper",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": "@resources.rages.max"
-        },
-        "cell": {
-          "table": "resources",
-          "row": "rages",
-          "column": "left"
-        }
-      },
-      {
-        "tag": "resources.ki.max",
-        "label": "Очки ци: всего",
-        "group": "Ресурсы класса",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        },
-        "cell": {
-          "table": "resources",
-          "row": "ki",
-          "column": "max"
-        }
-      },
-      {
-        "tag": "resources.ki.left",
-        "label": "Очки ци: осталось",
-        "group": "Ресурсы класса",
-        "control": "stepper",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": "@resources.ki.max"
-        },
-        "cell": {
-          "table": "resources",
-          "row": "ki",
-          "column": "left"
-        }
-      },
-      {
-        "tag": "resources.bardic.max",
-        "label": "Бардовское вдохновение: всего",
-        "group": "Ресурсы класса",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        },
-        "cell": {
-          "table": "resources",
-          "row": "bardic",
-          "column": "max"
-        }
-      },
-      {
-        "tag": "resources.bardic.left",
-        "label": "Бардовское вдохновение: осталось",
-        "group": "Ресурсы класса",
-        "control": "stepper",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": "@resources.bardic.max"
-        },
-        "cell": {
-          "table": "resources",
-          "row": "bardic",
-          "column": "left"
-        }
-      },
-      {
-        "tag": "resources.channel.max",
-        "label": "Божественный канал: всего",
-        "group": "Ресурсы класса",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        },
-        "cell": {
-          "table": "resources",
-          "row": "channel",
-          "column": "max"
-        }
-      },
-      {
-        "tag": "resources.channel.left",
-        "label": "Божественный канал: осталось",
-        "group": "Ресурсы класса",
-        "control": "stepper",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": "@resources.channel.max"
-        },
-        "cell": {
-          "table": "resources",
-          "row": "channel",
-          "column": "left"
-        }
-      },
-      {
-        "tag": "resources.second_wind.max",
-        "label": "Второе дыхание: всего",
-        "group": "Ресурсы класса",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        },
-        "cell": {
-          "table": "resources",
-          "row": "second_wind",
-          "column": "max"
-        }
-      },
-      {
-        "tag": "resources.second_wind.left",
-        "label": "Второе дыхание: осталось",
-        "group": "Ресурсы класса",
-        "control": "stepper",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": "@resources.second_wind.max"
-        },
-        "cell": {
-          "table": "resources",
-          "row": "second_wind",
-          "column": "left"
-        }
-      },
-      {
-        "tag": "resources.action_surge.max",
-        "label": "Всплеск действий: всего",
-        "group": "Ресурсы класса",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        },
-        "cell": {
-          "table": "resources",
-          "row": "action_surge",
-          "column": "max"
-        }
-      },
-      {
-        "tag": "resources.action_surge.left",
-        "label": "Всплеск действий: осталось",
-        "group": "Ресурсы класса",
-        "control": "stepper",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": "@resources.action_surge.max"
-        },
-        "cell": {
-          "table": "resources",
-          "row": "action_surge",
-          "column": "left"
-        }
-      },
-      {
-        "tag": "resources.lay_on_hands.max",
-        "label": "Наложение рук: запас: всего",
-        "group": "Ресурсы класса",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        },
-        "cell": {
-          "table": "resources",
-          "row": "lay_on_hands",
-          "column": "max"
-        }
-      },
-      {
-        "tag": "resources.lay_on_hands.left",
-        "label": "Наложение рук: запас: осталось",
-        "group": "Ресурсы класса",
-        "control": "stepper",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": "@resources.lay_on_hands.max"
-        },
-        "cell": {
-          "table": "resources",
-          "row": "lay_on_hands",
-          "column": "left"
-        }
-      },
-      {
-        "tag": "resources.sorcery.max",
-        "label": "Очки чародейства: всего",
-        "group": "Ресурсы класса",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        },
-        "cell": {
-          "table": "resources",
-          "row": "sorcery",
-          "column": "max"
-        }
-      },
-      {
-        "tag": "resources.sorcery.left",
-        "label": "Очки чародейства: осталось",
-        "group": "Ресурсы класса",
-        "control": "stepper",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": "@resources.sorcery.max"
-        },
-        "cell": {
-          "table": "resources",
-          "row": "sorcery",
-          "column": "left"
-        }
-      },
-      {
-        "tag": "resources.superiority.max",
-        "label": "Кости превосходства: всего",
-        "group": "Ресурсы класса",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        },
-        "cell": {
-          "table": "resources",
-          "row": "superiority",
-          "column": "max"
-        }
-      },
-      {
-        "tag": "resources.superiority.left",
-        "label": "Кости превосходства: осталось",
-        "group": "Ресурсы класса",
-        "control": "stepper",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": "@resources.superiority.max"
-        },
-        "cell": {
-          "table": "resources",
-          "row": "superiority",
-          "column": "left"
-        }
-      },
-      {
-        "tag": "resources.luck.max",
-        "label": "Очки удачи: всего",
-        "group": "Ресурсы класса",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        },
-        "cell": {
-          "table": "resources",
-          "row": "luck",
-          "column": "max"
-        }
-      },
-      {
-        "tag": "resources.luck.left",
-        "label": "Очки удачи: осталось",
-        "group": "Ресурсы класса",
-        "control": "stepper",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": "@resources.luck.max"
-        },
-        "cell": {
-          "table": "resources",
-          "row": "luck",
-          "column": "left"
-        }
-      },
-      {
-        "tag": "resources.relentless.max",
-        "label": "Непоколебимая стойкость: всего",
-        "group": "Ресурсы класса",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        },
-        "cell": {
-          "table": "resources",
-          "row": "relentless",
-          "column": "max"
-        }
-      },
-      {
-        "tag": "resources.relentless.left",
-        "label": "Непоколебимая стойкость: осталось",
-        "group": "Ресурсы класса",
-        "control": "stepper",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": "@resources.relentless.max"
-        },
-        "cell": {
-          "table": "resources",
-          "row": "relentless",
-          "column": "left"
-        }
-      },
-      {
-        "tag": "rage_damage",
-        "label": "Урон ярости",
-        "group": "Ресурсы класса",
-        "value": {
-          "kind": "formula",
-          "expr": "таблица(\"levels\", @level, \"rage\")"
-        }
-      },
-      {
-        "tag": "superiority_die",
-        "label": "Кость превосходства",
-        "group": "Ресурсы класса",
-        "value": {
-          "kind": "stored",
-          "type": "text",
-          "default": "1к8"
-        },
-        "control": "die"
-      },
-      {
-        "tag": "gp",
-        "label": "Золотые",
-        "group": "Богатство",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        }
-      },
-      {
-        "tag": "sp",
-        "label": "Серебряные",
-        "group": "Богатство",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        }
-      },
-      {
-        "tag": "cp",
-        "label": "Медные",
-        "group": "Богатство",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        }
-      },
-      {
-        "tag": "taken_0",
-        "label": "Рубящий",
-        "group": "Стойкость к урону",
-        "value": {
-          "kind": "stored",
-          "type": "choice",
-          "default": "как есть",
-          "from": "taken"
-        },
-        "control": "choice"
-      },
-      {
-        "tag": "taken_1",
-        "label": "Колющий",
-        "group": "Стойкость к урону",
-        "value": {
-          "kind": "stored",
-          "type": "choice",
-          "default": "как есть",
-          "from": "taken"
-        },
-        "control": "choice"
-      },
-      {
-        "tag": "taken_2",
-        "label": "Дробящий",
-        "group": "Стойкость к урону",
-        "value": {
-          "kind": "stored",
-          "type": "choice",
-          "default": "как есть",
-          "from": "taken"
-        },
-        "control": "choice"
-      },
-      {
-        "tag": "taken_3",
-        "label": "Огонь",
-        "group": "Стойкость к урону",
-        "value": {
-          "kind": "stored",
-          "type": "choice",
-          "default": "как есть",
-          "from": "taken"
-        },
-        "control": "choice"
-      },
-      {
-        "tag": "taken_4",
-        "label": "Холод",
-        "group": "Стойкость к урону",
-        "value": {
-          "kind": "stored",
-          "type": "choice",
-          "default": "как есть",
-          "from": "taken"
-        },
-        "control": "choice"
-      },
-      {
-        "tag": "taken_5",
-        "label": "Молния",
-        "group": "Стойкость к урону",
-        "value": {
-          "kind": "stored",
-          "type": "choice",
-          "default": "как есть",
-          "from": "taken"
-        },
-        "control": "choice"
-      },
-      {
-        "tag": "taken_6",
-        "label": "Гром",
-        "group": "Стойкость к урону",
-        "value": {
-          "kind": "stored",
-          "type": "choice",
-          "default": "как есть",
-          "from": "taken"
-        },
-        "control": "choice"
-      },
-      {
-        "tag": "taken_7",
-        "label": "Кислота",
-        "group": "Стойкость к урону",
-        "value": {
-          "kind": "stored",
-          "type": "choice",
-          "default": "как есть",
-          "from": "taken"
-        },
-        "control": "choice"
-      },
-      {
-        "tag": "taken_8",
-        "label": "Яд",
-        "group": "Стойкость к урону",
-        "value": {
-          "kind": "stored",
-          "type": "choice",
-          "default": "как есть",
-          "from": "taken"
-        },
-        "control": "choice"
-      },
-      {
-        "tag": "taken_9",
-        "label": "Некротический",
-        "group": "Стойкость к урону",
-        "value": {
-          "kind": "stored",
-          "type": "choice",
-          "default": "как есть",
-          "from": "taken"
-        },
-        "control": "choice"
-      },
-      {
-        "tag": "taken_10",
-        "label": "Излучение",
-        "group": "Стойкость к урону",
-        "value": {
-          "kind": "stored",
-          "type": "choice",
-          "default": "как есть",
-          "from": "taken"
-        },
-        "control": "choice"
-      },
-      {
-        "tag": "taken_11",
-        "label": "Психический",
-        "group": "Стойкость к урону",
-        "value": {
-          "kind": "stored",
-          "type": "choice",
-          "default": "как есть",
-          "from": "taken"
-        },
-        "control": "choice"
-      },
-      {
-        "tag": "taken_12",
-        "label": "Силовой",
-        "group": "Стойкость к урону",
-        "value": {
-          "kind": "stored",
-          "type": "choice",
-          "default": "как есть",
-          "from": "taken"
-        },
-        "control": "choice"
-      }
-    ],
     "groups": {
       "Личное дело": {},
-      "Механика": {},
+      "Характеристики": {},
+      "Модификаторы": {},
+      "Прогрессия": {},
+      "Спасброски": {},
+      "Навыки от силы": {
+        "parent": "Навыки"
+      },
+      "Навыки от ловкости": {
+        "parent": "Навыки"
+      },
+      "Навыки от интеллекта": {
+        "parent": "Навыки"
+      },
+      "Навыки от мудрости": {
+        "parent": "Навыки"
+      },
+      "Навыки от харизмы": {
+        "parent": "Навыки"
+      },
+      "Чувства и движение": {},
+      "Защита": {},
+      "Здоровье": {},
       "Атака": {},
+      "В бою": {},
+      "Магия": {},
+      "Ячейки заклинаний": {
+        "parent": "Магия"
+      },
+      "Ресурсы класса": {},
+      "Богатство": {},
+      "Стойкость к урону": {},
+      "Механика": {},
       "Заклинания": {
         "parent": "Механика"
       },
@@ -2864,43 +80,7 @@
       "Бестиарий": {
         "parent": "Книга"
       },
-      "Характеристики": {
-        "default": {
-          "kind": "stored",
-          "type": "number",
-          "default": 10
-        }
-      },
-      "Модификаторы": {},
-      "Прогрессия": {},
-      "Спасброски": {},
-      "Навыки": {},
-      "Навыки от силы": {
-        "parent": "Навыки"
-      },
-      "Навыки от ловкости": {
-        "parent": "Навыки"
-      },
-      "Навыки от интеллекта": {
-        "parent": "Навыки"
-      },
-      "Навыки от мудрости": {
-        "parent": "Навыки"
-      },
-      "Навыки от харизмы": {
-        "parent": "Навыки"
-      },
-      "Чувства и движение": {},
-      "В бою": {},
-      "Защита": {},
-      "Здоровье": {},
-      "Магия": {},
-      "Ячейки заклинаний": {
-        "parent": "Магия"
-      },
-      "Ресурсы класса": {},
-      "Богатство": {},
-      "Стойкость к урону": {}
+      "Навыки": {}
     },
     "constants": {
       "lead_die": {
@@ -2915,6 +95,517 @@
       }
     },
     "tables": {
+      "лист": {
+        "label": "Лист",
+        "shape": "single",
+        "columns": [
+          {
+            "key": "race",
+            "label": "Раса",
+            "kind": "choice",
+            "from": "races",
+            "block": "Личное дело"
+          },
+          {
+            "key": "class_name",
+            "label": "Класс",
+            "kind": "choice",
+            "from": "classes",
+            "block": "Личное дело"
+          },
+          {
+            "key": "subclass",
+            "label": "Подкласс",
+            "kind": "text",
+            "block": "Личное дело"
+          },
+          {
+            "key": "background",
+            "label": "Предыстория",
+            "kind": "text",
+            "block": "Личное дело"
+          },
+          {
+            "key": "alignment",
+            "label": "Мировоззрение",
+            "kind": "text",
+            "block": "Личное дело"
+          },
+          {
+            "key": "level",
+            "label": "Уровень",
+            "kind": "number",
+            "default": 1,
+            "min": 1,
+            "max": 20,
+            "control": "stepper",
+            "block": "Прогрессия"
+          },
+          {
+            "key": "prof_bonus",
+            "label": "Бонус мастерства",
+            "expr": "таблица(\"levels\", @level, \"prof\")",
+            "block": "Прогрессия"
+          },
+          {
+            "key": "inspiration",
+            "label": "Вдохновение",
+            "kind": "number",
+            "min": 0,
+            "max": 1,
+            "control": "pips",
+            "block": "Прогрессия"
+          },
+          {
+            "key": "xp",
+            "label": "Опыт",
+            "kind": "number",
+            "min": 0,
+            "block": "Прогрессия"
+          },
+          {
+            "key": "initiative",
+            "label": "Инициатива",
+            "expr": "@abilities.dex.mod",
+            "roll": {
+              "label": "Инициатива",
+              "tags": [
+                "проверка",
+                "ловкость",
+                "инициатива"
+              ],
+              "die": {
+                "constant": "lead_die"
+              },
+              "bonus": {
+                "expr": "@initiative"
+              }
+            },
+            "block": "Чувства и движение"
+          },
+          {
+            "key": "passive_perception",
+            "label": "Пассивная внимательность",
+            "expr": "10 + @skills.perception.total",
+            "block": "Чувства и движение"
+          },
+          {
+            "key": "speed",
+            "label": "Скорость, футов",
+            "expr": "или(@race.speed, 30)",
+            "block": "Чувства и движение"
+          },
+          {
+            "key": "darkvision",
+            "label": "Тёмное зрение, футов",
+            "kind": "number",
+            "min": 0,
+            "block": "Чувства и движение"
+          },
+          {
+            "key": "languages",
+            "label": "Языки",
+            "kind": "text",
+            "default": "Общий",
+            "block": "Чувства и движение"
+          },
+          {
+            "key": "ac_base",
+            "label": "База доспеха",
+            "kind": "number",
+            "default": 10,
+            "min": 0,
+            "block": "Защита"
+          },
+          {
+            "key": "armor_heavy",
+            "label": "Доспех тяжёлый",
+            "kind": "boolean",
+            "control": "toggle",
+            "block": "Защита"
+          },
+          {
+            "key": "ac_dex",
+            "label": "Ловкость в классе брони",
+            "expr": "@abilities.dex.mod",
+            "block": "Защита"
+          },
+          {
+            "key": "ac",
+            "label": "Класс брони",
+            "expr": "@ac_base + если(@armor_heavy, 0, @ac_dex)",
+            "block": "Защита"
+          },
+          {
+            "key": "hp_max",
+            "label": "Максимум хитов",
+            "kind": "number",
+            "default": 8,
+            "min": 1,
+            "block": "Здоровье"
+          },
+          {
+            "key": "hp_current",
+            "label": "Хиты",
+            "kind": "number",
+            "default": 8,
+            "min": 0,
+            "max": "@hp_max",
+            "control": "bar",
+            "block": "Здоровье"
+          },
+          {
+            "key": "hp_temp",
+            "label": "Временные хиты",
+            "kind": "number",
+            "min": 0,
+            "control": "stepper",
+            "block": "Здоровье"
+          },
+          {
+            "key": "hit_die",
+            "label": "Кость хитов",
+            "expr": "или(@class_name.hit_die, @race.size.hit_die, \"1к8\")",
+            "block": "Здоровье"
+          },
+          {
+            "key": "hit_dice_left",
+            "label": "Костей хитов осталось",
+            "kind": "number",
+            "default": 1,
+            "min": 0,
+            "max": "@level",
+            "control": "stepper",
+            "block": "Здоровье"
+          },
+          {
+            "key": "death_ok",
+            "label": "Спасброски от смерти: успехи",
+            "kind": "number",
+            "min": 0,
+            "max": 3,
+            "control": "pips",
+            "block": "Здоровье"
+          },
+          {
+            "key": "death_fail",
+            "label": "Спасброски от смерти: провалы",
+            "kind": "number",
+            "min": 0,
+            "max": 3,
+            "control": "pips",
+            "block": "Здоровье"
+          },
+          {
+            "key": "exhaustion",
+            "label": "Истощение",
+            "kind": "number",
+            "min": 0,
+            "max": 6,
+            "control": "stepper",
+            "block": "Здоровье"
+          },
+          {
+            "key": "down",
+            "label": "Без сил",
+            "expr": "@hp_current <= 0",
+            "block": "Здоровье"
+          },
+          {
+            "key": "up",
+            "label": "На ногах",
+            "expr": "@hp_current > 0",
+            "block": "Здоровье"
+          },
+          {
+            "key": "is_dead",
+            "label": "Три провала",
+            "expr": "@death_fail >= 3",
+            "block": "Здоровье"
+          },
+          {
+            "key": "is_stable",
+            "label": "Три успеха",
+            "expr": "@death_ok >= 3",
+            "block": "Здоровье"
+          },
+          {
+            "key": "attacks_per_action",
+            "label": "Атак за действие",
+            "kind": "number",
+            "default": 1,
+            "min": 1,
+            "max": 4,
+            "control": "stepper",
+            "block": "Атака"
+          },
+          {
+            "key": "turn_action",
+            "label": "Действие",
+            "kind": "number",
+            "default": 1,
+            "min": 0,
+            "max": 2,
+            "control": "pips",
+            "block": "В бою"
+          },
+          {
+            "key": "turn_bonus",
+            "label": "Бонусное действие",
+            "kind": "number",
+            "default": 1,
+            "min": 0,
+            "max": 1,
+            "control": "pips",
+            "block": "В бою"
+          },
+          {
+            "key": "turn_reaction",
+            "label": "Реакция",
+            "kind": "number",
+            "default": 1,
+            "min": 0,
+            "max": 1,
+            "control": "pips",
+            "block": "В бою"
+          },
+          {
+            "key": "turn_once",
+            "label": "Раз за ход",
+            "kind": "number",
+            "default": 1,
+            "min": 0,
+            "max": 1,
+            "control": "pips",
+            "block": "В бою"
+          },
+          {
+            "key": "turn_attacks",
+            "label": "Атак осталось",
+            "kind": "number",
+            "min": 0,
+            "max": 4,
+            "control": "pips",
+            "block": "В бою"
+          },
+          {
+            "key": "crit_from",
+            "label": "Крит на костях от",
+            "kind": "number",
+            "default": 20,
+            "min": 18,
+            "max": 20,
+            "block": "Атака"
+          },
+          {
+            "key": "sneak_dice",
+            "label": "Костей скрытой атаки",
+            "expr": "округлить вверх(@level / 2)",
+            "block": "Атака"
+          },
+          {
+            "key": "spell_mod",
+            "label": "Заклинательный модификатор",
+            "expr": "или(@class_name.spell_ability.mod, @abilities.cha.mod)",
+            "block": "Магия"
+          },
+          {
+            "key": "spell_dc",
+            "label": "Сложность заклинаний",
+            "expr": "8 + @prof_bonus + @spell_mod",
+            "block": "Магия"
+          },
+          {
+            "key": "spell_attack",
+            "label": "Атака заклинанием",
+            "expr": "@prof_bonus + @spell_mod",
+            "block": "Магия"
+          },
+          {
+            "key": "caster_level",
+            "label": "Уровень заклинателя",
+            "kind": "number",
+            "min": 0,
+            "max": 20,
+            "control": "stepper",
+            "block": "Магия"
+          },
+          {
+            "key": "cantrip_dice",
+            "label": "Костей заговора",
+            "expr": "таблица(\"levels\", @level, \"cantrips\")",
+            "block": "Магия"
+          },
+          {
+            "key": "rage_damage",
+            "label": "Урон ярости",
+            "expr": "таблица(\"levels\", @level, \"rage\")",
+            "block": "Ресурсы класса"
+          },
+          {
+            "key": "superiority_die",
+            "label": "Кость превосходства",
+            "kind": "text",
+            "default": "1к8",
+            "control": "die",
+            "block": "Ресурсы класса"
+          },
+          {
+            "key": "gp",
+            "label": "Золотые",
+            "kind": "number",
+            "min": 0,
+            "block": "Богатство"
+          },
+          {
+            "key": "sp",
+            "label": "Серебряные",
+            "kind": "number",
+            "min": 0,
+            "block": "Богатство"
+          },
+          {
+            "key": "cp",
+            "label": "Медные",
+            "kind": "number",
+            "min": 0,
+            "block": "Богатство"
+          },
+          {
+            "key": "taken_0",
+            "label": "Рубящий",
+            "kind": "choice",
+            "from": "taken",
+            "default": "как есть",
+            "control": "choice",
+            "block": "Стойкость к урону"
+          },
+          {
+            "key": "taken_1",
+            "label": "Колющий",
+            "kind": "choice",
+            "from": "taken",
+            "default": "как есть",
+            "control": "choice",
+            "block": "Стойкость к урону"
+          },
+          {
+            "key": "taken_2",
+            "label": "Дробящий",
+            "kind": "choice",
+            "from": "taken",
+            "default": "как есть",
+            "control": "choice",
+            "block": "Стойкость к урону"
+          },
+          {
+            "key": "taken_3",
+            "label": "Огонь",
+            "kind": "choice",
+            "from": "taken",
+            "default": "как есть",
+            "control": "choice",
+            "block": "Стойкость к урону"
+          },
+          {
+            "key": "taken_4",
+            "label": "Холод",
+            "kind": "choice",
+            "from": "taken",
+            "default": "как есть",
+            "control": "choice",
+            "block": "Стойкость к урону"
+          },
+          {
+            "key": "taken_5",
+            "label": "Молния",
+            "kind": "choice",
+            "from": "taken",
+            "default": "как есть",
+            "control": "choice",
+            "block": "Стойкость к урону"
+          },
+          {
+            "key": "taken_6",
+            "label": "Гром",
+            "kind": "choice",
+            "from": "taken",
+            "default": "как есть",
+            "control": "choice",
+            "block": "Стойкость к урону"
+          },
+          {
+            "key": "taken_7",
+            "label": "Кислота",
+            "kind": "choice",
+            "from": "taken",
+            "default": "как есть",
+            "control": "choice",
+            "block": "Стойкость к урону"
+          },
+          {
+            "key": "taken_8",
+            "label": "Яд",
+            "kind": "choice",
+            "from": "taken",
+            "default": "как есть",
+            "control": "choice",
+            "block": "Стойкость к урону"
+          },
+          {
+            "key": "taken_9",
+            "label": "Некротический",
+            "kind": "choice",
+            "from": "taken",
+            "default": "как есть",
+            "control": "choice",
+            "block": "Стойкость к урону"
+          },
+          {
+            "key": "taken_10",
+            "label": "Излучение",
+            "kind": "choice",
+            "from": "taken",
+            "default": "как есть",
+            "control": "choice",
+            "block": "Стойкость к урону"
+          },
+          {
+            "key": "taken_11",
+            "label": "Психический",
+            "kind": "choice",
+            "from": "taken",
+            "default": "как есть",
+            "control": "choice",
+            "block": "Стойкость к урону"
+          },
+          {
+            "key": "taken_12",
+            "label": "Силовой",
+            "kind": "choice",
+            "from": "taken",
+            "default": "как есть",
+            "control": "choice",
+            "block": "Стойкость к урону"
+          }
+        ]
+      },
+      "стол": {
+        "label": "Стол",
+        "shape": "single",
+        "owner": "desk",
+        "columns": [
+          {
+            "key": "battle",
+            "label": "Идёт бой",
+            "kind": "number",
+            "min": 0,
+            "max": 1,
+            "control": "toggle",
+            "block": "В бою"
+          }
+        ]
+      },
       "slots": {
         "label": "Ячейки по кругам",
         "key": "word",
@@ -2923,14 +614,20 @@
             "key": "max",
             "label": "Всего",
             "kind": "number",
-            "expr": "таблица(\"spell_slots\", @caster_level, @строка)"
+            "expr": "таблица(\"spell_slots\", @caster_level, @строка)",
+            "title": "Всего ячеек {key}-го круга",
+            "block": "Ячейки заклинаний"
           },
           {
             "key": "left",
             "label": "Осталось",
             "kind": "number",
             "min": 0,
-            "max": "@строка.max"
+            "max": "@строка.max",
+            "title": "Ячейки {key}-го круга",
+            "block": "Ячейки заклинаний",
+            "control": "pips",
+            "default": 0
           }
         ],
         "rows": [
@@ -2980,20 +677,7 @@
             "label": "9-й круг"
           }
         ],
-        "sheet": {
-          "columns": {
-            "max": {
-              "label": "Всего ячеек {key}-го круга",
-              "group": "Ячейки заклинаний"
-            },
-            "left": {
-              "label": "Ячейки {key}-го круга",
-              "group": "Ячейки заклинаний",
-              "control": "pips",
-              "start": 0
-            }
-          }
-        }
+        "owner": "sheet"
       },
       "resources": {
         "label": "Ресурсы класса",
@@ -3003,14 +687,21 @@
             "key": "max",
             "label": "Всего",
             "kind": "number",
-            "min": 0
+            "min": 0,
+            "title": "{label}: всего",
+            "block": "Ресурсы класса",
+            "default": 0
           },
           {
             "key": "left",
             "label": "Осталось",
             "kind": "number",
             "min": 0,
-            "max": "@строка.max"
+            "max": "@строка.max",
+            "title": "{label}: осталось",
+            "block": "Ресурсы класса",
+            "control": "stepper",
+            "default": 0
           }
         ],
         "rows": [
@@ -3059,21 +750,7 @@
             "label": "Непоколебимая стойкость"
           }
         ],
-        "sheet": {
-          "columns": {
-            "max": {
-              "label": "{label}: всего",
-              "group": "Ресурсы класса",
-              "start": 0
-            },
-            "left": {
-              "label": "{label}: осталось",
-              "group": "Ресурсы класса",
-              "control": "stepper",
-              "start": 0
-            }
-          }
-        }
+        "owner": "sheet"
       },
       "levels": {
         "label": "Уровень персонажа",
@@ -3859,13 +1536,31 @@
             "label": "Значение",
             "kind": "number",
             "min": 1,
-            "max": 30
+            "max": 30,
+            "title": "{label}",
+            "block": "Характеристики",
+            "default": 10
           },
           {
             "key": "mod",
             "label": "Модификатор",
             "kind": "number",
-            "expr": "округлить вниз((@строка.score - 10) / 2)"
+            "expr": "округлить вниз((@строка.score - 10) / 2)",
+            "title": "Модификатор: {label}",
+            "block": "Модификаторы",
+            "roll": {
+              "label": "Проверка: {label}",
+              "tags": [
+                "проверка",
+                "{value}"
+              ],
+              "die": {
+                "constant": "lead_die"
+              },
+              "bonus": {
+                "expr": "@строка.mod"
+              }
+            }
           }
         ],
         "rows": [
@@ -3900,32 +1595,7 @@
             "label": "Харизма"
           }
         ],
-        "sheet": {
-          "columns": {
-            "score": {
-              "label": "{label}",
-              "group": "Характеристики",
-              "start": 10
-            },
-            "mod": {
-              "label": "Модификатор: {label}",
-              "group": "Модификаторы",
-              "roll": {
-                "label": "Проверка: {label}",
-                "tags": [
-                  "проверка",
-                  "{value}"
-                ],
-                "die": {
-                  "constant": "lead_die"
-                },
-                "bonus": {
-                  "expr": "@строка.mod"
-                }
-              }
-            }
-          }
-        }
+        "owner": "sheet"
       },
       "saves": {
         "label": "Спасброски",
@@ -3942,19 +1612,40 @@
             "label": "Владение сверх класса",
             "kind": "number",
             "min": 0,
-            "max": 1
+            "max": 1,
+            "title": "Владение сверх класса: спасбросок {label}",
+            "block": "Спасброски",
+            "control": "ring",
+            "default": 0
           },
           {
             "key": "prof",
             "label": "Владение",
             "kind": "number",
-            "expr": "большее из(@строка.extra, если(есть(@class_name.saves, @строка), 1, 0))"
+            "expr": "большее из(@строка.extra, если(есть(@class_name.saves, @строка), 1, 0))",
+            "title": "Владение: спасбросок {label}",
+            "block": "Спасброски"
           },
           {
             "key": "save",
             "label": "Спасбросок",
             "kind": "number",
-            "expr": "@строка.ability.mod + @строка.prof * @prof_bonus"
+            "expr": "@строка.ability.mod + @строка.prof * @prof_bonus",
+            "title": "Спасбросок: {label}",
+            "block": "Спасброски",
+            "roll": {
+              "label": "Спасбросок: {label}",
+              "tags": [
+                "спасбросок",
+                "{value}"
+              ],
+              "die": {
+                "constant": "lead_die"
+              },
+              "bonus": {
+                "expr": "@строка.save"
+              }
+            }
           }
         ],
         "rows": [
@@ -4007,37 +1698,7 @@
             }
           }
         ],
-        "sheet": {
-          "columns": {
-            "extra": {
-              "label": "Владение сверх класса: спасбросок {label}",
-              "group": "Спасброски",
-              "control": "ring",
-              "start": 0
-            },
-            "prof": {
-              "label": "Владение: спасбросок {label}",
-              "group": "Спасброски"
-            },
-            "save": {
-              "label": "Спасбросок: {label}",
-              "group": "Спасброски",
-              "roll": {
-                "label": "Спасбросок: {label}",
-                "tags": [
-                  "спасбросок",
-                  "{value}"
-                ],
-                "die": {
-                  "constant": "lead_die"
-                },
-                "bonus": {
-                  "expr": "@строка.save"
-                }
-              }
-            }
-          }
-        }
+        "owner": "sheet"
       },
       "skills": {
         "label": "Навыки",
@@ -4054,13 +1715,31 @@
             "label": "Владение",
             "kind": "number",
             "min": 0,
-            "max": 2
+            "max": 2,
+            "title": "Владение: {label}",
+            "control": "ring",
+            "default": 0
           },
           {
             "key": "total",
             "label": "Навык",
             "kind": "number",
-            "expr": "@строка.ability.mod + @строка.prof * @prof_bonus"
+            "expr": "@строка.ability.mod + @строка.prof * @prof_bonus",
+            "title": "{label}",
+            "roll": {
+              "label": "Проверка: {label}",
+              "tags": [
+                "проверка",
+                "{ability}",
+                "{value}"
+              ],
+              "die": {
+                "constant": "lead_die"
+              },
+              "bonus": {
+                "expr": "@строка.total"
+              }
+            }
           }
         ],
         "rows": [
@@ -4068,191 +1747,166 @@
             "value": "атлетика",
             "key": "athletics",
             "label": "Атлетика",
-            "group": "Навыки от силы",
             "cells": {
               "ability": "сила"
-            }
+            },
+            "block": "Навыки от силы"
           },
           {
             "value": "акробатика",
             "key": "acrobatics",
             "label": "Акробатика",
-            "group": "Навыки от ловкости",
             "cells": {
               "ability": "ловкость"
-            }
+            },
+            "block": "Навыки от ловкости"
           },
           {
             "value": "ловкость_рук",
             "key": "sleight_of_hand",
             "label": "Ловкость рук",
-            "group": "Навыки от ловкости",
             "cells": {
               "ability": "ловкость"
-            }
+            },
+            "block": "Навыки от ловкости"
           },
           {
             "value": "скрытность",
             "key": "stealth",
             "label": "Скрытность",
-            "group": "Навыки от ловкости",
             "cells": {
               "ability": "ловкость"
-            }
+            },
+            "block": "Навыки от ловкости"
           },
           {
             "value": "магия",
             "key": "arcana",
             "label": "Магия",
-            "group": "Навыки от интеллекта",
             "cells": {
               "ability": "интеллект"
-            }
+            },
+            "block": "Навыки от интеллекта"
           },
           {
             "value": "история",
             "key": "history",
             "label": "История",
-            "group": "Навыки от интеллекта",
             "cells": {
               "ability": "интеллект"
-            }
+            },
+            "block": "Навыки от интеллекта"
           },
           {
             "value": "анализ",
             "key": "investigation",
             "label": "Анализ",
-            "group": "Навыки от интеллекта",
             "cells": {
               "ability": "интеллект"
-            }
+            },
+            "block": "Навыки от интеллекта"
           },
           {
             "value": "природа",
             "key": "nature",
             "label": "Природа",
-            "group": "Навыки от интеллекта",
             "cells": {
               "ability": "интеллект"
-            }
+            },
+            "block": "Навыки от интеллекта"
           },
           {
             "value": "религия",
             "key": "religion",
             "label": "Религия",
-            "group": "Навыки от интеллекта",
             "cells": {
               "ability": "интеллект"
-            }
+            },
+            "block": "Навыки от интеллекта"
           },
           {
             "value": "уход_за_животными",
             "key": "animal_handling",
             "label": "Уход за животными",
-            "group": "Навыки от мудрости",
             "cells": {
               "ability": "мудрость"
-            }
+            },
+            "block": "Навыки от мудрости"
           },
           {
             "value": "проницательность",
             "key": "insight",
             "label": "Проницательность",
-            "group": "Навыки от мудрости",
             "cells": {
               "ability": "мудрость"
-            }
+            },
+            "block": "Навыки от мудрости"
           },
           {
             "value": "медицина",
             "key": "medicine",
             "label": "Медицина",
-            "group": "Навыки от мудрости",
             "cells": {
               "ability": "мудрость"
-            }
+            },
+            "block": "Навыки от мудрости"
           },
           {
             "value": "внимательность",
             "key": "perception",
             "label": "Внимательность",
-            "group": "Навыки от мудрости",
             "cells": {
               "ability": "мудрость"
-            }
+            },
+            "block": "Навыки от мудрости"
           },
           {
             "value": "выживание",
             "key": "survival",
             "label": "Выживание",
-            "group": "Навыки от мудрости",
             "cells": {
               "ability": "мудрость"
-            }
+            },
+            "block": "Навыки от мудрости"
           },
           {
             "value": "обман",
             "key": "deception",
             "label": "Обман",
-            "group": "Навыки от харизмы",
             "cells": {
               "ability": "харизма"
-            }
+            },
+            "block": "Навыки от харизмы"
           },
           {
             "value": "запугивание",
             "key": "intimidation",
             "label": "Запугивание",
-            "group": "Навыки от харизмы",
             "cells": {
               "ability": "харизма"
-            }
+            },
+            "block": "Навыки от харизмы"
           },
           {
             "value": "выступление",
             "key": "performance",
             "label": "Выступление",
-            "group": "Навыки от харизмы",
             "cells": {
               "ability": "харизма"
-            }
+            },
+            "block": "Навыки от харизмы"
           },
           {
             "value": "убеждение",
             "key": "persuasion",
             "label": "Убеждение",
-            "group": "Навыки от харизмы",
             "cells": {
               "ability": "харизма"
-            }
+            },
+            "block": "Навыки от харизмы"
           }
         ],
-        "sheet": {
-          "columns": {
-            "prof": {
-              "label": "Владение: {label}",
-              "control": "ring",
-              "start": 0
-            },
-            "total": {
-              "label": "{label}",
-              "roll": {
-                "label": "Проверка: {label}",
-                "tags": [
-                  "проверка",
-                  "{ability}",
-                  "{value}"
-                ],
-                "die": {
-                  "constant": "lead_die"
-                },
-                "bonus": {
-                  "expr": "@строка.total"
-                }
-              }
-            }
-          }
-        }
+        "owner": "sheet"
       },
       "classes": {
         "label": "Классы",

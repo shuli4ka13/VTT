@@ -11,10 +11,11 @@ import type { RoomState, Sheet, System } from '@vtt/schema';
 import { availableActions } from '@vtt/engine/events/envelope';
 import { heardMoments } from '@vtt/engine/events/moments';
 import { isDesk } from '@vtt/engine/engine/owners';
-import { deskSystemOf } from '@vtt/engine/engine/calc';
+import { fieldsFor } from '@vtt/engine/engine/calc';
 import { useReader } from '../../engine/use-calc.ts';
 import { FieldCell } from '../../sheet/field-cell.tsx';
 import './table.css';
+import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 
 export function TableScreen() {
   const room = useRoom(s => s.room);
@@ -36,7 +37,7 @@ function RoomTable({ room }: { room: RoomState }) {
   const targets = room.sheets.filter(s => to.includes(s.id));
   const people = room.sheets.filter(s => !isDesk(s));
   const desk = room.sheets.find(isDesk) ?? null;
-  const deskFields = room.system.fields.filter(f => f.lives === 'desk');
+  const deskFields = fieldsOf(room.system).filter(f => f.lives === 'desk');
 
   return (
     <Columns
@@ -88,7 +89,7 @@ function RoomTable({ room }: { room: RoomState }) {
                       onChange={e => setPinned(e.target.value)}
                     >
                       <option value="">— ничего —</option>
-                      {room.system.fields
+                      {fieldsOf(room.system)
                         .filter(f => f.lives !== 'desk' && f.value.kind === 'stored' && f.value.type === 'number')
                         .map(f => <option key={f.tag} value={f.tag}>{f.label}</option>)}
                     </select>
@@ -139,13 +140,13 @@ function RoomTable({ room }: { room: RoomState }) {
 function DeskPanel({ room, desk }: { room: RoomState; desk: Sheet }) {
   const userId = useSession(s => s.userId);
   const gm = room.members.some(m => m.userId === userId && m.role === 'gm');
-  const system = deskSystemOf(room.system as System);
-  const reader = useReader(system, desk, room.compendium, null);
+  const system = room.system as System;
+  const reader = useReader(system, desk, room.compendium, null, 'desk');
   return (
     <Card>
       <CardHead title="Стол" actions={<span className="faint">{gm ? 'общий для всех — правите вы' : 'общий для всех — правит ведущий'}</span>} />
       <div className="row">
-        {system.fields.map(field => (
+        {fieldsFor(system, 'desk').map(field => (
           <FieldCell
             key={field.tag} field={field} system={system} sheet={desk} reader={reader}
             onChange={gm ? (tag, value) => tableSocket.setValue(room.id, desk.id, tag, value) : undefined}

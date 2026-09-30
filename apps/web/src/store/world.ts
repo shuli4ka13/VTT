@@ -2,15 +2,14 @@ import { useMemo } from 'react';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { world as W } from '@vtt/schema';
-import type { System, Compendium, Sheet, Effect, Field } from '@vtt/schema';
+import type { System, Compendium, Sheet, Effect, Column } from '@vtt/schema';
+import type { Field } from '@vtt/engine/model/types';
 import { lazyStorage } from './lazy-storage.ts';
 import { blockOf } from '@vtt/engine/model/blocks';
 import { withLibrary } from '@vtt/engine/model/owned';
-import { withTableFields } from '@vtt/engine/model/sheet-columns';
+import { fieldsOf, forgetFields } from '@vtt/engine/model/sheet-columns';
 
-const built = (system: System): System => {
-  try { return withTableFields(system); } catch { return system; }
-};
+const fresh = (system: System): System => { forgetFields(system); return system; };
 
 export type WorkMode = 'system' | 'compendium';
 
@@ -47,7 +46,7 @@ export interface WorldState {
 
   editSystem: (edit: (draft: System) => void) => void;
   editEffect: (id: string, edit: (draft: Effect) => void) => void;
-  editField: (tag: string, edit: (draft: Field) => void) => void;
+  editColumn: (table: string, key: string, edit: (draft: Column) => void) => void;
   editRules: (edit: (draft: System) => void) => void;
   editCompendium: (edit: (draft: Compendium) => void) => void;
   editSheets: (edit: (draft: Sheet[]) => void) => void;
@@ -59,7 +58,6 @@ export interface WorldState {
 export const emptySystem = (): System => ({
   id: 'new-system',
   name: 'Новая система',
-  fields: [],
   effects: {},
   grants: [],
   records: {},
@@ -95,7 +93,7 @@ export const useWorld = create<WorldState>()(persist(set => ({
   editSystem: edit => set(state => {
     const draft = structuredClone(state.system);
     edit(draft);
-    return { system: built(draft) };
+    return { system: fresh(draft) };
   }),
 
   editEffect: (id, edit) => set(state => {
@@ -106,25 +104,25 @@ export const useWorld = create<WorldState>()(persist(set => ({
     return { system: { ...state.system, effects: { ...state.system.effects, [id]: draft } } };
   }),
 
-  editField: (tag, edit) => set(state => {
-    const at = state.system.fields.findIndex(f => f.tag === tag);
-    const current = state.system.fields[at];
-    if (!current) return {};
-    const draft = structuredClone(current);
+  editColumn: (table, key, edit) => set(state => {
+    const home = state.system.tables?.[table];
+    const at = (home?.columns ?? []).findIndex(c => c.key === key);
+    if (!home || at < 0) return {};
+    const draft = structuredClone(home.columns![at]!);
     edit(draft);
-    const fields = [...state.system.fields];
-    fields[at] = draft;
-    return { system: built({ ...state.system, fields }) };
+    const columns = [...home.columns!];
+    columns[at] = draft;
+    return { system: { ...state.system, tables: { ...state.system.tables, [table]: { ...home, columns } } } };
   }),
 
   editRules: edit => set(state => {
-    const { effects, fields, ...rest } = state.system;
-    const draft = { ...structuredClone(rest), effects, fields } as System;
+    const { effects, ...rest } = state.system;
+    const draft = { ...structuredClone(rest), effects } as System;
     edit(draft);
-    if (draft.effects !== effects || draft.fields !== fields) {
-      throw new Error('editRules правит словари; эффекты и поля правят editEffect и editField');
+    if (draft.effects !== effects) {
+      throw new Error('editRules правит словари и таблицы; эффекты правит editEffect');
     }
-    return { system: built(draft) };
+    return { system: fresh(draft) };
   }),
 
   editCompendium: edit => set(state => {
@@ -187,7 +185,7 @@ export const takeRestoreProblem = (): string | null => {
 
 export const fieldsByGroup = (system: System): [string, Field[]][] => {
   const groups = new Map<string, Field[]>();
-  for (const field of system.fields) {
+  for (const field of fieldsOf(system)) {
     const key = field.group ?? 'Без блока';
     const list = groups.get(key);
     if (list) list.push(field);

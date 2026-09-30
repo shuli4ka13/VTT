@@ -3,3309 +3,44 @@
   "system": {
     "id": "cp-slice",
     "name": "Киберпанк RED",
-    "fields": [
-      {
-        "tag": "handle",
-        "label": "Псевдоним",
-        "group": "Личное дело",
-        "value": {
-          "kind": "stored",
-          "type": "text",
-          "default": "Без имени"
-        }
-      },
-      {
-        "tag": "role",
-        "label": "Роль",
-        "group": "Личное дело",
-        "value": {
-          "kind": "stored",
-          "type": "text",
-          "default": "Соло"
-        }
-      },
-      {
-        "tag": "int",
-        "label": "Интеллект",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 6,
-          "min": 1,
-          "max": 10
-        }
-      },
-      {
-        "tag": "ref",
-        "label": "Рефлексы",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 7,
-          "min": 1,
-          "max": 10
-        }
-      },
-      {
-        "tag": "dex",
-        "label": "Ловкость",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 6,
-          "min": 1,
-          "max": 10
-        }
-      },
-      {
-        "tag": "tech",
-        "label": "Техника",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 5,
-          "min": 1,
-          "max": 10
-        }
-      },
-      {
-        "tag": "cool",
-        "label": "Хладнокровие",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 7,
-          "min": 1,
-          "max": 10
-        }
-      },
-      {
-        "tag": "will",
-        "label": "Воля",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 6,
-          "min": 1,
-          "max": 10
-        }
-      },
-      {
-        "tag": "luck",
-        "label": "Удача",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 6,
-          "min": 1,
-          "max": 10
-        }
-      },
-      {
-        "tag": "move",
-        "label": "Движение",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 6,
-          "min": 1,
-          "max": 10
-        }
-      },
-      {
-        "tag": "body",
-        "label": "Телосложение",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 7,
-          "min": 1,
-          "max": 10
-        }
-      },
-      {
-        "tag": "humanity",
-        "label": "Гуманность",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 60,
-          "min": 0,
-          "max": 80
-        }
-      },
-      {
-        "tag": "emp",
-        "label": "Эмпатия",
-        "group": "Характеристики",
-        "value": {
-          "kind": "formula",
-          "expr": "округлить вниз(@humanity / 10)"
-        }
-      },
-      {
-        "tag": "hp_max",
-        "label": "Максимум хитов",
-        "group": "Состояние",
-        "value": {
-          "kind": "formula",
-          "expr": "10 + 5 * округлить вверх((@body + @will) / 2)"
-        }
-      },
-      {
-        "tag": "hp",
-        "label": "Хиты",
-        "group": "Состояние",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 45,
-          "min": 0,
-          "max": "@hp_max"
-        },
-        "control": "bar"
-      },
-      {
-        "tag": "wound_at",
-        "label": "Порог серьёзной раны",
-        "group": "Состояние",
-        "value": {
-          "kind": "formula",
-          "expr": "округлить вверх(@hp_max / 2)"
-        }
-      },
-      {
-        "tag": "luck_left",
-        "label": "Удача в запасе",
-        "group": "Состояние",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 6,
-          "min": 0,
-          "max": "@luck"
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "injury",
-        "label": "Травма",
-        "group": "Состояние",
-        "value": {
-          "kind": "stored",
-          "type": "text",
-          "default": ""
-        }
-      },
-      {
-        "tag": "seriously",
-        "label": "Тяжело ранен",
-        "group": "Состояние",
-        "value": {
-          "kind": "formula",
-          "expr": "@hp <= @wound_at"
-        }
-      },
-      {
-        "tag": "mortal",
-        "label": "При смерти",
-        "group": "Состояние",
-        "value": {
-          "kind": "formula",
-          "expr": "@hp <= 0"
-        }
-      },
-      {
-        "tag": "dead",
-        "label": "Мёртв",
-        "group": "Состояние",
-        "value": {
-          "kind": "stored",
-          "type": "boolean",
-          "default": false
-        },
-        "control": "toggle"
-      },
-      {
-        "tag": "sp_head",
-        "label": "Броня головы",
-        "group": "Броня",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 11,
-          "min": 0
-        },
-        "control": "stepper"
-      },
-      {
-        "tag": "sp_body",
-        "label": "Броня тела",
-        "group": "Броня",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 11,
-          "min": 0
-        },
-        "control": "stepper"
-      },
-      {
-        "label": "Концентрация",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.concentration.rank",
-        "group": "Навыки — внимание",
-        "cell": {
-          "table": "skills",
-          "row": "concentration",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Концентрация — всего",
-        "roll": {
-          "label": "Проверка: Концентрация",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.concentration.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@will + @skills.concentration.rank"
-        },
-        "tag": "skills.concentration.total",
-        "group": "Навыки — внимание",
-        "cell": {
-          "table": "skills",
-          "row": "concentration",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Спрятать / найти",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.conceal_reveal.rank",
-        "group": "Навыки — внимание",
-        "cell": {
-          "table": "skills",
-          "row": "conceal_reveal",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Спрятать / найти — всего",
-        "roll": {
-          "label": "Проверка: Спрятать / найти",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.conceal_reveal.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@int + @skills.conceal_reveal.rank"
-        },
-        "tag": "skills.conceal_reveal.total",
-        "group": "Навыки — внимание",
-        "cell": {
-          "table": "skills",
-          "row": "conceal_reveal",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Чтение по губам",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.lip_reading.rank",
-        "group": "Навыки — внимание",
-        "cell": {
-          "table": "skills",
-          "row": "lip_reading",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Чтение по губам — всего",
-        "roll": {
-          "label": "Проверка: Чтение по губам",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.lip_reading.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@int + @skills.lip_reading.rank"
-        },
-        "tag": "skills.lip_reading.total",
-        "group": "Навыки — внимание",
-        "cell": {
-          "table": "skills",
-          "row": "lip_reading",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Внимательность",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 3,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.perception.rank",
-        "group": "Навыки — внимание",
-        "cell": {
-          "table": "skills",
-          "row": "perception",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Внимательность — всего",
-        "roll": {
-          "label": "Проверка: Внимательность",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.perception.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@int + @skills.perception.rank"
-        },
-        "tag": "skills.perception.total",
-        "group": "Навыки — внимание",
-        "cell": {
-          "table": "skills",
-          "row": "perception",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Выслеживание",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.tracking.rank",
-        "group": "Навыки — внимание",
-        "cell": {
-          "table": "skills",
-          "row": "tracking",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Выслеживание — всего",
-        "roll": {
-          "label": "Проверка: Выслеживание",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.tracking.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@int + @skills.tracking.rank"
-        },
-        "tag": "skills.tracking.total",
-        "group": "Навыки — внимание",
-        "cell": {
-          "table": "skills",
-          "row": "tracking",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Атлетика",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.athletics.rank",
-        "group": "Навыки — тело",
-        "cell": {
-          "table": "skills",
-          "row": "athletics",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Атлетика — всего",
-        "roll": {
-          "label": "Проверка: Атлетика",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.athletics.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@dex + @skills.athletics.rank"
-        },
-        "tag": "skills.athletics.total",
-        "group": "Навыки — тело",
-        "cell": {
-          "table": "skills",
-          "row": "athletics",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Гибкость",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.contortionist.rank",
-        "group": "Навыки — тело",
-        "cell": {
-          "table": "skills",
-          "row": "contortionist",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Гибкость — всего",
-        "roll": {
-          "label": "Проверка: Гибкость",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.contortionist.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@dex + @skills.contortionist.rank"
-        },
-        "tag": "skills.contortionist.total",
-        "group": "Навыки — тело",
-        "cell": {
-          "table": "skills",
-          "row": "contortionist",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Танец",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.dance.rank",
-        "group": "Навыки — тело",
-        "cell": {
-          "table": "skills",
-          "row": "dance",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Танец — всего",
-        "roll": {
-          "label": "Проверка: Танец",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.dance.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@dex + @skills.dance.rank"
-        },
-        "tag": "skills.dance.total",
-        "group": "Навыки — тело",
-        "cell": {
-          "table": "skills",
-          "row": "dance",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Выносливость",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.endurance.rank",
-        "group": "Навыки — тело",
-        "cell": {
-          "table": "skills",
-          "row": "endurance",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Выносливость — всего",
-        "roll": {
-          "label": "Проверка: Выносливость",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.endurance.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@will + @skills.endurance.rank"
-        },
-        "tag": "skills.endurance.total",
-        "group": "Навыки — тело",
-        "cell": {
-          "table": "skills",
-          "row": "endurance",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Стойкость к пыткам и наркотикам",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.resist_torture.rank",
-        "group": "Навыки — тело",
-        "cell": {
-          "table": "skills",
-          "row": "resist_torture",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Стойкость к пыткам и наркотикам — всего",
-        "roll": {
-          "label": "Проверка: Стойкость к пыткам и наркотикам",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.resist_torture.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@will + @skills.resist_torture.rank"
-        },
-        "tag": "skills.resist_torture.total",
-        "group": "Навыки — тело",
-        "cell": {
-          "table": "skills",
-          "row": "resist_torture",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Скрытность",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 2,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.stealth.rank",
-        "group": "Навыки — тело",
-        "cell": {
-          "table": "skills",
-          "row": "stealth",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Скрытность — всего",
-        "roll": {
-          "label": "Проверка: Скрытность",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.stealth.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@dex + @skills.stealth.rank"
-        },
-        "tag": "skills.stealth.total",
-        "group": "Навыки — тело",
-        "cell": {
-          "table": "skills",
-          "row": "stealth",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Вождение",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.drive_land.rank",
-        "group": "Навыки — управление",
-        "cell": {
-          "table": "skills",
-          "row": "drive_land",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Вождение — всего",
-        "roll": {
-          "label": "Проверка: Вождение",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.drive_land.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@ref + @skills.drive_land.rank"
-        },
-        "tag": "skills.drive_land.total",
-        "group": "Навыки — управление",
-        "cell": {
-          "table": "skills",
-          "row": "drive_land",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Пилотирование: воздух",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.pilot_air.rank",
-        "group": "Навыки — управление",
-        "cell": {
-          "table": "skills",
-          "row": "pilot_air",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Пилотирование: воздух — всего",
-        "roll": {
-          "label": "Проверка: Пилотирование: воздух",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.pilot_air.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@ref + @skills.pilot_air.rank"
-        },
-        "tag": "skills.pilot_air.total",
-        "group": "Навыки — управление",
-        "cell": {
-          "table": "skills",
-          "row": "pilot_air",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Пилотирование: море",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.pilot_sea.rank",
-        "group": "Навыки — управление",
-        "cell": {
-          "table": "skills",
-          "row": "pilot_sea",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Пилотирование: море — всего",
-        "roll": {
-          "label": "Проверка: Пилотирование: море",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.pilot_sea.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@ref + @skills.pilot_sea.rank"
-        },
-        "tag": "skills.pilot_sea.total",
-        "group": "Навыки — управление",
-        "cell": {
-          "table": "skills",
-          "row": "pilot_sea",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Верховая езда",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.riding.rank",
-        "group": "Навыки — управление",
-        "cell": {
-          "table": "skills",
-          "row": "riding",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Верховая езда — всего",
-        "roll": {
-          "label": "Проверка: Верховая езда",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.riding.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@ref + @skills.riding.rank"
-        },
-        "tag": "skills.riding.total",
-        "group": "Навыки — управление",
-        "cell": {
-          "table": "skills",
-          "row": "riding",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Бухгалтерия",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.accounting.rank",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "accounting",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Бухгалтерия — всего",
-        "roll": {
-          "label": "Проверка: Бухгалтерия",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.accounting.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@int + @skills.accounting.rank"
-        },
-        "tag": "skills.accounting.total",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "accounting",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Обращение с животными",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.animal_handling.rank",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "animal_handling",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Обращение с животными — всего",
-        "roll": {
-          "label": "Проверка: Обращение с животными",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.animal_handling.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@int + @skills.animal_handling.rank"
-        },
-        "tag": "skills.animal_handling.total",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "animal_handling",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Бюрократия",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.bureaucracy.rank",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "bureaucracy",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Бюрократия — всего",
-        "roll": {
-          "label": "Проверка: Бюрократия",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.bureaucracy.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@int + @skills.bureaucracy.rank"
-        },
-        "tag": "skills.bureaucracy.total",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "bureaucracy",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Бизнес",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.business.rank",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "business",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Бизнес — всего",
-        "roll": {
-          "label": "Проверка: Бизнес",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.business.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@int + @skills.business.rank"
-        },
-        "tag": "skills.business.total",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "business",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Сочинительство",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.composition.rank",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "composition",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Сочинительство — всего",
-        "roll": {
-          "label": "Проверка: Сочинительство",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.composition.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@int + @skills.composition.rank"
-        },
-        "tag": "skills.composition.total",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "composition",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Криминология",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.criminology.rank",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "criminology",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Криминология — всего",
-        "roll": {
-          "label": "Проверка: Криминология",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.criminology.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@int + @skills.criminology.rank"
-        },
-        "tag": "skills.criminology.total",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "criminology",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Криптография",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.cryptography.rank",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "cryptography",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Криптография — всего",
-        "roll": {
-          "label": "Проверка: Криптография",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.cryptography.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@int + @skills.cryptography.rank"
-        },
-        "tag": "skills.cryptography.total",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "cryptography",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Дедукция",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.deduction.rank",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "deduction",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Дедукция — всего",
-        "roll": {
-          "label": "Проверка: Дедукция",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.deduction.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@int + @skills.deduction.rank"
-        },
-        "tag": "skills.deduction.total",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "deduction",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Образование",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.education.rank",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "education",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Образование — всего",
-        "roll": {
-          "label": "Проверка: Образование",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.education.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@int + @skills.education.rank"
-        },
-        "tag": "skills.education.total",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "education",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Азартные игры",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.gamble.rank",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "gamble",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Азартные игры — всего",
-        "roll": {
-          "label": "Проверка: Азартные игры",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.gamble.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@int + @skills.gamble.rank"
-        },
-        "tag": "skills.gamble.total",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "gamble",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Язык",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.language.rank",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "language",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Язык — всего",
-        "roll": {
-          "label": "Проверка: Язык",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.language.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@int + @skills.language.rank"
-        },
-        "tag": "skills.language.total",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "language",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Поиск информации",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.library_search.rank",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "library_search",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Поиск информации — всего",
-        "roll": {
-          "label": "Проверка: Поиск информации",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.library_search.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@int + @skills.library_search.rank"
-        },
-        "tag": "skills.library_search.total",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "library_search",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Знаток района",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.local_expert.rank",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "local_expert",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Знаток района — всего",
-        "roll": {
-          "label": "Проверка: Знаток района",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.local_expert.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@int + @skills.local_expert.rank"
-        },
-        "tag": "skills.local_expert.total",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "local_expert",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Наука",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.science.rank",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "science",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Наука — всего",
-        "roll": {
-          "label": "Проверка: Наука",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.science.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@int + @skills.science.rank"
-        },
-        "tag": "skills.science.total",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "science",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Тактика",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.tactics.rank",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "tactics",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Тактика — всего",
-        "roll": {
-          "label": "Проверка: Тактика",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.tactics.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@int + @skills.tactics.rank"
-        },
-        "tag": "skills.tactics.total",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "tactics",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Выживание в глуши",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.wilderness_survival.rank",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "wilderness_survival",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Выживание в глуши — всего",
-        "roll": {
-          "label": "Проверка: Выживание в глуши",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.wilderness_survival.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@int + @skills.wilderness_survival.rank"
-        },
-        "tag": "skills.wilderness_survival.total",
-        "group": "Навыки — образование",
-        "cell": {
-          "table": "skills",
-          "row": "wilderness_survival",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Рукопашный бой",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 3,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.brawling.rank",
-        "group": "Навыки — бой",
-        "cell": {
-          "table": "skills",
-          "row": "brawling",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Рукопашный бой — всего",
-        "roll": {
-          "label": "Проверка: Рукопашный бой",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.brawling.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@dex + @skills.brawling.rank"
-        },
-        "tag": "skills.brawling.total",
-        "group": "Навыки — бой",
-        "cell": {
-          "table": "skills",
-          "row": "brawling",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Уклонение",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 4,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.evasion.rank",
-        "group": "Навыки — бой",
-        "cell": {
-          "table": "skills",
-          "row": "evasion",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Уклонение — всего",
-        "roll": {
-          "label": "Проверка: Уклонение",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.evasion.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@dex + @skills.evasion.rank"
-        },
-        "tag": "skills.evasion.total",
-        "group": "Навыки — бой",
-        "cell": {
-          "table": "skills",
-          "row": "evasion",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Боевые искусства",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.martial_arts.rank",
-        "group": "Навыки — бой",
-        "cell": {
-          "table": "skills",
-          "row": "martial_arts",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Боевые искусства — всего",
-        "roll": {
-          "label": "Проверка: Боевые искусства",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.martial_arts.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@dex + @skills.martial_arts.rank"
-        },
-        "tag": "skills.martial_arts.total",
-        "group": "Навыки — бой",
-        "cell": {
-          "table": "skills",
-          "row": "martial_arts",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Холодное оружие",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.melee_weapon.rank",
-        "group": "Навыки — бой",
-        "cell": {
-          "table": "skills",
-          "row": "melee_weapon",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Холодное оружие — всего",
-        "roll": {
-          "label": "Проверка: Холодное оружие",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.melee_weapon.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@dex + @skills.melee_weapon.rank"
-        },
-        "tag": "skills.melee_weapon.total",
-        "group": "Навыки — бой",
-        "cell": {
-          "table": "skills",
-          "row": "melee_weapon",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Актёрство",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.acting.rank",
-        "group": "Навыки — выступление",
-        "cell": {
-          "table": "skills",
-          "row": "acting",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Актёрство — всего",
-        "roll": {
-          "label": "Проверка: Актёрство",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.acting.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@cool + @skills.acting.rank"
-        },
-        "tag": "skills.acting.total",
-        "group": "Навыки — выступление",
-        "cell": {
-          "table": "skills",
-          "row": "acting",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Игра на инструменте",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.play_instrument.rank",
-        "group": "Навыки — выступление",
-        "cell": {
-          "table": "skills",
-          "row": "play_instrument",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Игра на инструменте — всего",
-        "roll": {
-          "label": "Проверка: Игра на инструменте",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.play_instrument.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@tech + @skills.play_instrument.rank"
-        },
-        "tag": "skills.play_instrument.total",
-        "group": "Навыки — выступление",
-        "cell": {
-          "table": "skills",
-          "row": "play_instrument",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Стрельба из лука",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.archery.rank",
-        "group": "Навыки — стрельба",
-        "cell": {
-          "table": "skills",
-          "row": "archery",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Стрельба из лука — всего",
-        "roll": {
-          "label": "Проверка: Стрельба из лука",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.archery.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@ref + @skills.archery.rank"
-        },
-        "tag": "skills.archery.total",
-        "group": "Навыки — стрельба",
-        "cell": {
-          "table": "skills",
-          "row": "archery",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Автоматический огонь",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.autofire.rank",
-        "group": "Навыки — стрельба",
-        "cell": {
-          "table": "skills",
-          "row": "autofire",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Автоматический огонь — всего",
-        "roll": {
-          "label": "Проверка: Автоматический огонь",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.autofire.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@ref + @skills.autofire.rank"
-        },
-        "tag": "skills.autofire.total",
-        "group": "Навыки — стрельба",
-        "cell": {
-          "table": "skills",
-          "row": "autofire",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Пистолеты",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 4,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.handgun.rank",
-        "group": "Навыки — стрельба",
-        "cell": {
-          "table": "skills",
-          "row": "handgun",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Пистолеты — всего",
-        "roll": {
-          "label": "Проверка: Пистолеты",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.handgun.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@ref + @skills.handgun.rank"
-        },
-        "tag": "skills.handgun.total",
-        "group": "Навыки — стрельба",
-        "cell": {
-          "table": "skills",
-          "row": "handgun",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Тяжёлое оружие",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.heavy_weapons.rank",
-        "group": "Навыки — стрельба",
-        "cell": {
-          "table": "skills",
-          "row": "heavy_weapons",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Тяжёлое оружие — всего",
-        "roll": {
-          "label": "Проверка: Тяжёлое оружие",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.heavy_weapons.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@ref + @skills.heavy_weapons.rank"
-        },
-        "tag": "skills.heavy_weapons.total",
-        "group": "Навыки — стрельба",
-        "cell": {
-          "table": "skills",
-          "row": "heavy_weapons",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Длинноствольное",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.shoulder_arms.rank",
-        "group": "Навыки — стрельба",
-        "cell": {
-          "table": "skills",
-          "row": "shoulder_arms",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Длинноствольное — всего",
-        "roll": {
-          "label": "Проверка: Длинноствольное",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.shoulder_arms.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@ref + @skills.shoulder_arms.rank"
-        },
-        "tag": "skills.shoulder_arms.total",
-        "group": "Навыки — стрельба",
-        "cell": {
-          "table": "skills",
-          "row": "shoulder_arms",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Подкуп",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.bribery.rank",
-        "group": "Навыки — общение",
-        "cell": {
-          "table": "skills",
-          "row": "bribery",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Подкуп — всего",
-        "roll": {
-          "label": "Проверка: Подкуп",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.bribery.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@cool + @skills.bribery.rank"
-        },
-        "tag": "skills.bribery.total",
-        "group": "Навыки — общение",
-        "cell": {
-          "table": "skills",
-          "row": "bribery",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Разговор",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.conversation.rank",
-        "group": "Навыки — общение",
-        "cell": {
-          "table": "skills",
-          "row": "conversation",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Разговор — всего",
-        "roll": {
-          "label": "Проверка: Разговор",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.conversation.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@emp + @skills.conversation.rank"
-        },
-        "tag": "skills.conversation.total",
-        "group": "Навыки — общение",
-        "cell": {
-          "table": "skills",
-          "row": "conversation",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Понимание людей",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.human_perception.rank",
-        "group": "Навыки — общение",
-        "cell": {
-          "table": "skills",
-          "row": "human_perception",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Понимание людей — всего",
-        "roll": {
-          "label": "Проверка: Понимание людей",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.human_perception.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@emp + @skills.human_perception.rank"
-        },
-        "tag": "skills.human_perception.total",
-        "group": "Навыки — общение",
-        "cell": {
-          "table": "skills",
-          "row": "human_perception",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Допрос",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.interrogation.rank",
-        "group": "Навыки — общение",
-        "cell": {
-          "table": "skills",
-          "row": "interrogation",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Допрос — всего",
-        "roll": {
-          "label": "Проверка: Допрос",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.interrogation.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@cool + @skills.interrogation.rank"
-        },
-        "tag": "skills.interrogation.total",
-        "group": "Навыки — общение",
-        "cell": {
-          "table": "skills",
-          "row": "interrogation",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Убеждение",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 3,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.persuasion.rank",
-        "group": "Навыки — общение",
-        "cell": {
-          "table": "skills",
-          "row": "persuasion",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Убеждение — всего",
-        "roll": {
-          "label": "Проверка: Убеждение",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.persuasion.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@cool + @skills.persuasion.rank"
-        },
-        "tag": "skills.persuasion.total",
-        "group": "Навыки — общение",
-        "cell": {
-          "table": "skills",
-          "row": "persuasion",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Уход за собой",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.personal_grooming.rank",
-        "group": "Навыки — общение",
-        "cell": {
-          "table": "skills",
-          "row": "personal_grooming",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Уход за собой — всего",
-        "roll": {
-          "label": "Проверка: Уход за собой",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.personal_grooming.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@cool + @skills.personal_grooming.rank"
-        },
-        "tag": "skills.personal_grooming.total",
-        "group": "Навыки — общение",
-        "cell": {
-          "table": "skills",
-          "row": "personal_grooming",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Знание улиц",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.streetwise.rank",
-        "group": "Навыки — общение",
-        "cell": {
-          "table": "skills",
-          "row": "streetwise",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Знание улиц — всего",
-        "roll": {
-          "label": "Проверка: Знание улиц",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.streetwise.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@cool + @skills.streetwise.rank"
-        },
-        "tag": "skills.streetwise.total",
-        "group": "Навыки — общение",
-        "cell": {
-          "table": "skills",
-          "row": "streetwise",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Торговля",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.trading.rank",
-        "group": "Навыки — общение",
-        "cell": {
-          "table": "skills",
-          "row": "trading",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Торговля — всего",
-        "roll": {
-          "label": "Проверка: Торговля",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.trading.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@cool + @skills.trading.rank"
-        },
-        "tag": "skills.trading.total",
-        "group": "Навыки — общение",
-        "cell": {
-          "table": "skills",
-          "row": "trading",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Стиль и гардероб",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.wardrobe.rank",
-        "group": "Навыки — общение",
-        "cell": {
-          "table": "skills",
-          "row": "wardrobe",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Стиль и гардероб — всего",
-        "roll": {
-          "label": "Проверка: Стиль и гардероб",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.wardrobe.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@cool + @skills.wardrobe.rank"
-        },
-        "tag": "skills.wardrobe.total",
-        "group": "Навыки — общение",
-        "cell": {
-          "table": "skills",
-          "row": "wardrobe",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Авиатехника",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.air_vehicle_tech.rank",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "air_vehicle_tech",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Авиатехника — всего",
-        "roll": {
-          "label": "Проверка: Авиатехника",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.air_vehicle_tech.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@tech + @skills.air_vehicle_tech.rank"
-        },
-        "tag": "skills.air_vehicle_tech.total",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "air_vehicle_tech",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Общая техника",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.basic_tech.rank",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "basic_tech",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Общая техника — всего",
-        "roll": {
-          "label": "Проверка: Общая техника",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.basic_tech.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@tech + @skills.basic_tech.rank"
-        },
-        "tag": "skills.basic_tech.total",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "basic_tech",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Кибертехника",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.cybertech.rank",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "cybertech",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Кибертехника — всего",
-        "roll": {
-          "label": "Проверка: Кибертехника",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.cybertech.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@tech + @skills.cybertech.rank"
-        },
-        "tag": "skills.cybertech.total",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "cybertech",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Подрывное дело",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.demolitions.rank",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "demolitions",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Подрывное дело — всего",
-        "roll": {
-          "label": "Проверка: Подрывное дело",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.demolitions.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@tech + @skills.demolitions.rank"
-        },
-        "tag": "skills.demolitions.total",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "demolitions",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Электроника и охранные системы",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.electronics.rank",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "electronics",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Электроника и охранные системы — всего",
-        "roll": {
-          "label": "Проверка: Электроника и охранные системы",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.electronics.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@tech + @skills.electronics.rank"
-        },
-        "tag": "skills.electronics.total",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "electronics",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Первая помощь",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.first_aid.rank",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "first_aid",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Первая помощь — всего",
-        "roll": {
-          "label": "Проверка: Первая помощь",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.first_aid.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@tech + @skills.first_aid.rank"
-        },
-        "tag": "skills.first_aid.total",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "first_aid",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Подделка",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.forgery.rank",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "forgery",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Подделка — всего",
-        "roll": {
-          "label": "Проверка: Подделка",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.forgery.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@tech + @skills.forgery.rank"
-        },
-        "tag": "skills.forgery.total",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "forgery",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Автотехника",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.land_vehicle_tech.rank",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "land_vehicle_tech",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Автотехника — всего",
-        "roll": {
-          "label": "Проверка: Автотехника",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.land_vehicle_tech.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@tech + @skills.land_vehicle_tech.rank"
-        },
-        "tag": "skills.land_vehicle_tech.total",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "land_vehicle_tech",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Рисунок и скульптура",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.paint_draw.rank",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "paint_draw",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Рисунок и скульптура — всего",
-        "roll": {
-          "label": "Проверка: Рисунок и скульптура",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.paint_draw.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@tech + @skills.paint_draw.rank"
-        },
-        "tag": "skills.paint_draw.total",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "paint_draw",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Парамедик",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.paramedic.rank",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "paramedic",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Парамедик — всего",
-        "roll": {
-          "label": "Проверка: Парамедик",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.paramedic.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@tech + @skills.paramedic.rank"
-        },
-        "tag": "skills.paramedic.total",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "paramedic",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Фото и видео",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.photography.rank",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "photography",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Фото и видео — всего",
-        "roll": {
-          "label": "Проверка: Фото и видео",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.photography.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@tech + @skills.photography.rank"
-        },
-        "tag": "skills.photography.total",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "photography",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Взлом замков",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.pick_lock.rank",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "pick_lock",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Взлом замков — всего",
-        "roll": {
-          "label": "Проверка: Взлом замков",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.pick_lock.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@tech + @skills.pick_lock.rank"
-        },
-        "tag": "skills.pick_lock.total",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "pick_lock",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Карманная кража",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.pick_pocket.rank",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "pick_pocket",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Карманная кража — всего",
-        "roll": {
-          "label": "Проверка: Карманная кража",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.pick_pocket.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@tech + @skills.pick_pocket.rank"
-        },
-        "tag": "skills.pick_pocket.total",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "pick_pocket",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Морская техника",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.sea_vehicle_tech.rank",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "sea_vehicle_tech",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Морская техника — всего",
-        "roll": {
-          "label": "Проверка: Морская техника",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.sea_vehicle_tech.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@tech + @skills.sea_vehicle_tech.rank"
-        },
-        "tag": "skills.sea_vehicle_tech.total",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "sea_vehicle_tech",
-          "column": "total"
-        }
-      },
-      {
-        "label": "Оружейное дело",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        },
-        "control": "stepper",
-        "tag": "skills.weaponstech.rank",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "weaponstech",
-          "column": "rank"
-        }
-      },
-      {
-        "label": "Оружейное дело — всего",
-        "roll": {
-          "label": "Проверка: Оружейное дело",
-          "tags": [
-            "проверка"
-          ],
-          "die": {
-            "constant": "lead_die"
-          },
-          "bonus": {
-            "expr": "@skills.weaponstech.total"
-          }
-        },
-        "value": {
-          "kind": "formula",
-          "expr": "@tech + @skills.weaponstech.rank"
-        },
-        "tag": "skills.weaponstech.total",
-        "group": "Навыки — техника",
-        "cell": {
-          "table": "skills",
-          "row": "weaponstech",
-          "column": "total"
-        }
-      },
-      {
-        "tag": "turn_action",
-        "label": "Действие",
-        "group": "В бою",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 1,
-          "min": 0,
-          "max": 1
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "turn_move",
-        "label": "Движение",
-        "group": "В бою",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 1,
-          "min": 0,
-          "max": 1
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "battle",
-        "label": "Идёт бой",
-        "lives": "desk",
-        "group": "В бою",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 1
-        },
-        "control": "toggle"
-      }
-    ],
     "groups": {
       "Личное дело": {},
       "Характеристики": {},
       "Состояние": {},
       "Броня": {},
-      "Навыки": {},
       "Навыки — внимание": {
-        "parent": "Навыки",
-        "default": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
+        "parent": "Навыки"
       },
       "Навыки — тело": {
-        "parent": "Навыки",
-        "default": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
+        "parent": "Навыки"
       },
       "Навыки — управление": {
-        "parent": "Навыки",
-        "default": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
+        "parent": "Навыки"
       },
       "Навыки — образование": {
-        "parent": "Навыки",
-        "default": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
+        "parent": "Навыки"
       },
       "Навыки — бой": {
-        "parent": "Навыки",
-        "default": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
+        "parent": "Навыки"
       },
       "Навыки — выступление": {
-        "parent": "Навыки",
-        "default": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
+        "parent": "Навыки"
       },
       "Навыки — стрельба": {
-        "parent": "Навыки",
-        "default": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
+        "parent": "Навыки"
       },
       "Навыки — общение": {
-        "parent": "Навыки",
-        "default": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
+        "parent": "Навыки"
       },
       "Навыки — техника": {
-        "parent": "Навыки",
-        "default": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 10
-        }
+        "parent": "Навыки"
       },
+      "В бою": {},
+      "Навыки": {},
       "Атака": {},
       "Состояния": {},
       "Снаряжение": {},
       "Приёмы": {},
-      "В бою": {},
       "Общие правила": {},
       "Вызываемые": {}
     },
@@ -3368,6 +103,233 @@
       }
     },
     "tables": {
+      "лист": {
+        "label": "Лист",
+        "shape": "single",
+        "columns": [
+          {
+            "key": "handle",
+            "label": "Псевдоним",
+            "kind": "text",
+            "default": "Без имени",
+            "block": "Личное дело"
+          },
+          {
+            "key": "role",
+            "label": "Роль",
+            "kind": "text",
+            "default": "Соло",
+            "block": "Личное дело"
+          },
+          {
+            "key": "int",
+            "label": "Интеллект",
+            "kind": "number",
+            "default": 6,
+            "min": 1,
+            "max": 10,
+            "block": "Характеристики"
+          },
+          {
+            "key": "ref",
+            "label": "Рефлексы",
+            "kind": "number",
+            "default": 7,
+            "min": 1,
+            "max": 10,
+            "block": "Характеристики"
+          },
+          {
+            "key": "dex",
+            "label": "Ловкость",
+            "kind": "number",
+            "default": 6,
+            "min": 1,
+            "max": 10,
+            "block": "Характеристики"
+          },
+          {
+            "key": "tech",
+            "label": "Техника",
+            "kind": "number",
+            "default": 5,
+            "min": 1,
+            "max": 10,
+            "block": "Характеристики"
+          },
+          {
+            "key": "cool",
+            "label": "Хладнокровие",
+            "kind": "number",
+            "default": 7,
+            "min": 1,
+            "max": 10,
+            "block": "Характеристики"
+          },
+          {
+            "key": "will",
+            "label": "Воля",
+            "kind": "number",
+            "default": 6,
+            "min": 1,
+            "max": 10,
+            "block": "Характеристики"
+          },
+          {
+            "key": "luck",
+            "label": "Удача",
+            "kind": "number",
+            "default": 6,
+            "min": 1,
+            "max": 10,
+            "block": "Характеристики"
+          },
+          {
+            "key": "move",
+            "label": "Движение",
+            "kind": "number",
+            "default": 6,
+            "min": 1,
+            "max": 10,
+            "block": "Характеристики"
+          },
+          {
+            "key": "body",
+            "label": "Телосложение",
+            "kind": "number",
+            "default": 7,
+            "min": 1,
+            "max": 10,
+            "block": "Характеристики"
+          },
+          {
+            "key": "humanity",
+            "label": "Гуманность",
+            "kind": "number",
+            "default": 60,
+            "min": 0,
+            "max": 80,
+            "block": "Характеристики"
+          },
+          {
+            "key": "emp",
+            "label": "Эмпатия",
+            "expr": "округлить вниз(@humanity / 10)",
+            "block": "Характеристики"
+          },
+          {
+            "key": "hp_max",
+            "label": "Максимум хитов",
+            "expr": "10 + 5 * округлить вверх((@body + @will) / 2)",
+            "block": "Состояние"
+          },
+          {
+            "key": "hp",
+            "label": "Хиты",
+            "kind": "number",
+            "default": 45,
+            "min": 0,
+            "max": "@hp_max",
+            "control": "bar",
+            "block": "Состояние"
+          },
+          {
+            "key": "wound_at",
+            "label": "Порог серьёзной раны",
+            "expr": "округлить вверх(@hp_max / 2)",
+            "block": "Состояние"
+          },
+          {
+            "key": "luck_left",
+            "label": "Удача в запасе",
+            "kind": "number",
+            "default": 6,
+            "min": 0,
+            "max": "@luck",
+            "control": "pips",
+            "block": "Состояние"
+          },
+          {
+            "key": "injury",
+            "label": "Травма",
+            "kind": "text",
+            "block": "Состояние"
+          },
+          {
+            "key": "seriously",
+            "label": "Тяжело ранен",
+            "expr": "@hp <= @wound_at",
+            "block": "Состояние"
+          },
+          {
+            "key": "mortal",
+            "label": "При смерти",
+            "expr": "@hp <= 0",
+            "block": "Состояние"
+          },
+          {
+            "key": "dead",
+            "label": "Мёртв",
+            "kind": "boolean",
+            "control": "toggle",
+            "block": "Состояние"
+          },
+          {
+            "key": "sp_head",
+            "label": "Броня головы",
+            "kind": "number",
+            "default": 11,
+            "min": 0,
+            "control": "stepper",
+            "block": "Броня"
+          },
+          {
+            "key": "sp_body",
+            "label": "Броня тела",
+            "kind": "number",
+            "default": 11,
+            "min": 0,
+            "control": "stepper",
+            "block": "Броня"
+          },
+          {
+            "key": "turn_action",
+            "label": "Действие",
+            "kind": "number",
+            "default": 1,
+            "min": 0,
+            "max": 1,
+            "control": "pips",
+            "block": "В бою"
+          },
+          {
+            "key": "turn_move",
+            "label": "Движение",
+            "kind": "number",
+            "default": 1,
+            "min": 0,
+            "max": 1,
+            "control": "pips",
+            "block": "В бою"
+          }
+        ]
+      },
+      "стол": {
+        "label": "Стол",
+        "shape": "single",
+        "owner": "desk",
+        "columns": [
+          {
+            "key": "battle",
+            "label": "Идёт бой",
+            "kind": "number",
+            "min": 0,
+            "max": 1,
+            "control": "toggle",
+            "block": "В бою"
+          }
+        ]
+      },
       "dv_range": {
         "label": "Сложность по дистанции",
         "key": "range",
@@ -3563,13 +525,29 @@
             "label": "Ранг",
             "kind": "number",
             "min": 0,
-            "max": 10
+            "max": 10,
+            "title": "{label}",
+            "control": "stepper",
+            "default": "{start}"
           },
           {
             "key": "total",
             "label": "Всего",
             "kind": "number",
-            "expr": "@строка.stat + @строка.rank"
+            "expr": "@строка.stat + @строка.rank",
+            "title": "{label} — всего",
+            "roll": {
+              "label": "Проверка: {label}",
+              "tags": [
+                "проверка"
+              ],
+              "die": {
+                "constant": "lead_die"
+              },
+              "bonus": {
+                "expr": "@строка.total"
+              }
+            }
           }
         ],
         "rows": [
@@ -3577,687 +555,664 @@
             "value": "концентрация",
             "key": "concentration",
             "label": "Концентрация",
-            "group": "Навыки — внимание",
             "cells": {
               "stat": "will",
               "start": 0
-            }
+            },
+            "block": "Навыки — внимание"
           },
           {
             "value": "спрятать / найти",
             "key": "conceal_reveal",
             "label": "Спрятать / найти",
-            "group": "Навыки — внимание",
             "cells": {
               "stat": "int",
               "start": 0
-            }
+            },
+            "block": "Навыки — внимание"
           },
           {
             "value": "чтение по губам",
             "key": "lip_reading",
             "label": "Чтение по губам",
-            "group": "Навыки — внимание",
             "cells": {
               "stat": "int",
               "start": 0
-            }
+            },
+            "block": "Навыки — внимание"
           },
           {
             "value": "внимательность",
             "key": "perception",
             "label": "Внимательность",
-            "group": "Навыки — внимание",
             "cells": {
               "stat": "int",
               "start": 3
-            }
+            },
+            "block": "Навыки — внимание"
           },
           {
             "value": "выслеживание",
             "key": "tracking",
             "label": "Выслеживание",
-            "group": "Навыки — внимание",
             "cells": {
               "stat": "int",
               "start": 0
-            }
+            },
+            "block": "Навыки — внимание"
           },
           {
             "value": "атлетика",
             "key": "athletics",
             "label": "Атлетика",
-            "group": "Навыки — тело",
             "cells": {
               "stat": "dex",
               "start": 0
-            }
+            },
+            "block": "Навыки — тело"
           },
           {
             "value": "гибкость",
             "key": "contortionist",
             "label": "Гибкость",
-            "group": "Навыки — тело",
             "cells": {
               "stat": "dex",
               "start": 0
-            }
+            },
+            "block": "Навыки — тело"
           },
           {
             "value": "танец",
             "key": "dance",
             "label": "Танец",
-            "group": "Навыки — тело",
             "cells": {
               "stat": "dex",
               "start": 0
-            }
+            },
+            "block": "Навыки — тело"
           },
           {
             "value": "выносливость",
             "key": "endurance",
             "label": "Выносливость",
-            "group": "Навыки — тело",
             "cells": {
               "stat": "will",
               "start": 0
-            }
+            },
+            "block": "Навыки — тело"
           },
           {
             "value": "стойкость к пыткам и наркотикам",
             "key": "resist_torture",
             "label": "Стойкость к пыткам и наркотикам",
-            "group": "Навыки — тело",
             "cells": {
               "stat": "will",
               "start": 0
-            }
+            },
+            "block": "Навыки — тело"
           },
           {
             "value": "скрытность",
             "key": "stealth",
             "label": "Скрытность",
-            "group": "Навыки — тело",
             "cells": {
               "stat": "dex",
               "start": 2
-            }
+            },
+            "block": "Навыки — тело"
           },
           {
             "value": "вождение",
             "key": "drive_land",
             "label": "Вождение",
-            "group": "Навыки — управление",
             "cells": {
               "stat": "ref",
               "start": 0
-            }
+            },
+            "block": "Навыки — управление"
           },
           {
             "value": "пилотирование: воздух",
             "key": "pilot_air",
             "label": "Пилотирование: воздух",
-            "group": "Навыки — управление",
             "cells": {
               "stat": "ref",
               "start": 0
-            }
+            },
+            "block": "Навыки — управление"
           },
           {
             "value": "пилотирование: море",
             "key": "pilot_sea",
             "label": "Пилотирование: море",
-            "group": "Навыки — управление",
             "cells": {
               "stat": "ref",
               "start": 0
-            }
+            },
+            "block": "Навыки — управление"
           },
           {
             "value": "верховая езда",
             "key": "riding",
             "label": "Верховая езда",
-            "group": "Навыки — управление",
             "cells": {
               "stat": "ref",
               "start": 0
-            }
+            },
+            "block": "Навыки — управление"
           },
           {
             "value": "бухгалтерия",
             "key": "accounting",
             "label": "Бухгалтерия",
-            "group": "Навыки — образование",
             "cells": {
               "stat": "int",
               "start": 0
-            }
+            },
+            "block": "Навыки — образование"
           },
           {
             "value": "обращение с животными",
             "key": "animal_handling",
             "label": "Обращение с животными",
-            "group": "Навыки — образование",
             "cells": {
               "stat": "int",
               "start": 0
-            }
+            },
+            "block": "Навыки — образование"
           },
           {
             "value": "бюрократия",
             "key": "bureaucracy",
             "label": "Бюрократия",
-            "group": "Навыки — образование",
             "cells": {
               "stat": "int",
               "start": 0
-            }
+            },
+            "block": "Навыки — образование"
           },
           {
             "value": "бизнес",
             "key": "business",
             "label": "Бизнес",
-            "group": "Навыки — образование",
             "cells": {
               "stat": "int",
               "start": 0
-            }
+            },
+            "block": "Навыки — образование"
           },
           {
             "value": "сочинительство",
             "key": "composition",
             "label": "Сочинительство",
-            "group": "Навыки — образование",
             "cells": {
               "stat": "int",
               "start": 0
-            }
+            },
+            "block": "Навыки — образование"
           },
           {
             "value": "криминология",
             "key": "criminology",
             "label": "Криминология",
-            "group": "Навыки — образование",
             "cells": {
               "stat": "int",
               "start": 0
-            }
+            },
+            "block": "Навыки — образование"
           },
           {
             "value": "криптография",
             "key": "cryptography",
             "label": "Криптография",
-            "group": "Навыки — образование",
             "cells": {
               "stat": "int",
               "start": 0
-            }
+            },
+            "block": "Навыки — образование"
           },
           {
             "value": "дедукция",
             "key": "deduction",
             "label": "Дедукция",
-            "group": "Навыки — образование",
             "cells": {
               "stat": "int",
               "start": 0
-            }
+            },
+            "block": "Навыки — образование"
           },
           {
             "value": "образование",
             "key": "education",
             "label": "Образование",
-            "group": "Навыки — образование",
             "cells": {
               "stat": "int",
               "start": 0
-            }
+            },
+            "block": "Навыки — образование"
           },
           {
             "value": "азартные игры",
             "key": "gamble",
             "label": "Азартные игры",
-            "group": "Навыки — образование",
             "cells": {
               "stat": "int",
               "start": 0
-            }
+            },
+            "block": "Навыки — образование"
           },
           {
             "value": "язык",
             "key": "language",
             "label": "Язык",
-            "group": "Навыки — образование",
             "cells": {
               "stat": "int",
               "start": 0
-            }
+            },
+            "block": "Навыки — образование"
           },
           {
             "value": "поиск информации",
             "key": "library_search",
             "label": "Поиск информации",
-            "group": "Навыки — образование",
             "cells": {
               "stat": "int",
               "start": 0
-            }
+            },
+            "block": "Навыки — образование"
           },
           {
             "value": "знаток района",
             "key": "local_expert",
             "label": "Знаток района",
-            "group": "Навыки — образование",
             "cells": {
               "stat": "int",
               "start": 0
-            }
+            },
+            "block": "Навыки — образование"
           },
           {
             "value": "наука",
             "key": "science",
             "label": "Наука",
-            "group": "Навыки — образование",
             "cells": {
               "stat": "int",
               "start": 0
-            }
+            },
+            "block": "Навыки — образование"
           },
           {
             "value": "тактика",
             "key": "tactics",
             "label": "Тактика",
-            "group": "Навыки — образование",
             "cells": {
               "stat": "int",
               "start": 0
-            }
+            },
+            "block": "Навыки — образование"
           },
           {
             "value": "выживание в глуши",
             "key": "wilderness_survival",
             "label": "Выживание в глуши",
-            "group": "Навыки — образование",
             "cells": {
               "stat": "int",
               "start": 0
-            }
+            },
+            "block": "Навыки — образование"
           },
           {
             "value": "рукопашный бой",
             "key": "brawling",
             "label": "Рукопашный бой",
-            "group": "Навыки — бой",
             "cells": {
               "stat": "dex",
               "start": 3
-            }
+            },
+            "block": "Навыки — бой"
           },
           {
             "value": "уклонение",
             "key": "evasion",
             "label": "Уклонение",
-            "group": "Навыки — бой",
             "cells": {
               "stat": "dex",
               "start": 4
-            }
+            },
+            "block": "Навыки — бой"
           },
           {
             "value": "боевые искусства",
             "key": "martial_arts",
             "label": "Боевые искусства",
-            "group": "Навыки — бой",
             "cells": {
               "stat": "dex",
               "start": 0
-            }
+            },
+            "block": "Навыки — бой"
           },
           {
             "value": "холодное оружие",
             "key": "melee_weapon",
             "label": "Холодное оружие",
-            "group": "Навыки — бой",
             "cells": {
               "stat": "dex",
               "start": 0
-            }
+            },
+            "block": "Навыки — бой"
           },
           {
             "value": "актёрство",
             "key": "acting",
             "label": "Актёрство",
-            "group": "Навыки — выступление",
             "cells": {
               "stat": "cool",
               "start": 0
-            }
+            },
+            "block": "Навыки — выступление"
           },
           {
             "value": "игра на инструменте",
             "key": "play_instrument",
             "label": "Игра на инструменте",
-            "group": "Навыки — выступление",
             "cells": {
               "stat": "tech",
               "start": 0
-            }
+            },
+            "block": "Навыки — выступление"
           },
           {
             "value": "стрельба из лука",
             "key": "archery",
             "label": "Стрельба из лука",
-            "group": "Навыки — стрельба",
             "cells": {
               "stat": "ref",
               "start": 0
-            }
+            },
+            "block": "Навыки — стрельба"
           },
           {
             "value": "автоматический огонь",
             "key": "autofire",
             "label": "Автоматический огонь",
-            "group": "Навыки — стрельба",
             "cells": {
               "stat": "ref",
               "start": 0
-            }
+            },
+            "block": "Навыки — стрельба"
           },
           {
             "value": "пистолеты",
             "key": "handgun",
             "label": "Пистолеты",
-            "group": "Навыки — стрельба",
             "cells": {
               "stat": "ref",
               "start": 4
-            }
+            },
+            "block": "Навыки — стрельба"
           },
           {
             "value": "тяжёлое оружие",
             "key": "heavy_weapons",
             "label": "Тяжёлое оружие",
-            "group": "Навыки — стрельба",
             "cells": {
               "stat": "ref",
               "start": 0
-            }
+            },
+            "block": "Навыки — стрельба"
           },
           {
             "value": "длинноствольное",
             "key": "shoulder_arms",
             "label": "Длинноствольное",
-            "group": "Навыки — стрельба",
             "cells": {
               "stat": "ref",
               "start": 0
-            }
+            },
+            "block": "Навыки — стрельба"
           },
           {
             "value": "подкуп",
             "key": "bribery",
             "label": "Подкуп",
-            "group": "Навыки — общение",
             "cells": {
               "stat": "cool",
               "start": 0
-            }
+            },
+            "block": "Навыки — общение"
           },
           {
             "value": "разговор",
             "key": "conversation",
             "label": "Разговор",
-            "group": "Навыки — общение",
             "cells": {
               "stat": "emp",
               "start": 0
-            }
+            },
+            "block": "Навыки — общение"
           },
           {
             "value": "понимание людей",
             "key": "human_perception",
             "label": "Понимание людей",
-            "group": "Навыки — общение",
             "cells": {
               "stat": "emp",
               "start": 0
-            }
+            },
+            "block": "Навыки — общение"
           },
           {
             "value": "допрос",
             "key": "interrogation",
             "label": "Допрос",
-            "group": "Навыки — общение",
             "cells": {
               "stat": "cool",
               "start": 0
-            }
+            },
+            "block": "Навыки — общение"
           },
           {
             "value": "убеждение",
             "key": "persuasion",
             "label": "Убеждение",
-            "group": "Навыки — общение",
             "cells": {
               "stat": "cool",
               "start": 3
-            }
+            },
+            "block": "Навыки — общение"
           },
           {
             "value": "уход за собой",
             "key": "personal_grooming",
             "label": "Уход за собой",
-            "group": "Навыки — общение",
             "cells": {
               "stat": "cool",
               "start": 0
-            }
+            },
+            "block": "Навыки — общение"
           },
           {
             "value": "знание улиц",
             "key": "streetwise",
             "label": "Знание улиц",
-            "group": "Навыки — общение",
             "cells": {
               "stat": "cool",
               "start": 0
-            }
+            },
+            "block": "Навыки — общение"
           },
           {
             "value": "торговля",
             "key": "trading",
             "label": "Торговля",
-            "group": "Навыки — общение",
             "cells": {
               "stat": "cool",
               "start": 0
-            }
+            },
+            "block": "Навыки — общение"
           },
           {
             "value": "стиль и гардероб",
             "key": "wardrobe",
             "label": "Стиль и гардероб",
-            "group": "Навыки — общение",
             "cells": {
               "stat": "cool",
               "start": 0
-            }
+            },
+            "block": "Навыки — общение"
           },
           {
             "value": "авиатехника",
             "key": "air_vehicle_tech",
             "label": "Авиатехника",
-            "group": "Навыки — техника",
             "cells": {
               "stat": "tech",
               "start": 0
-            }
+            },
+            "block": "Навыки — техника"
           },
           {
             "value": "общая техника",
             "key": "basic_tech",
             "label": "Общая техника",
-            "group": "Навыки — техника",
             "cells": {
               "stat": "tech",
               "start": 0
-            }
+            },
+            "block": "Навыки — техника"
           },
           {
             "value": "кибертехника",
             "key": "cybertech",
             "label": "Кибертехника",
-            "group": "Навыки — техника",
             "cells": {
               "stat": "tech",
               "start": 0
-            }
+            },
+            "block": "Навыки — техника"
           },
           {
             "value": "подрывное дело",
             "key": "demolitions",
             "label": "Подрывное дело",
-            "group": "Навыки — техника",
             "cells": {
               "stat": "tech",
               "start": 0
-            }
+            },
+            "block": "Навыки — техника"
           },
           {
             "value": "электроника и охранные системы",
             "key": "electronics",
             "label": "Электроника и охранные системы",
-            "group": "Навыки — техника",
             "cells": {
               "stat": "tech",
               "start": 0
-            }
+            },
+            "block": "Навыки — техника"
           },
           {
             "value": "первая помощь",
             "key": "first_aid",
             "label": "Первая помощь",
-            "group": "Навыки — техника",
             "cells": {
               "stat": "tech",
               "start": 0
-            }
+            },
+            "block": "Навыки — техника"
           },
           {
             "value": "подделка",
             "key": "forgery",
             "label": "Подделка",
-            "group": "Навыки — техника",
             "cells": {
               "stat": "tech",
               "start": 0
-            }
+            },
+            "block": "Навыки — техника"
           },
           {
             "value": "автотехника",
             "key": "land_vehicle_tech",
             "label": "Автотехника",
-            "group": "Навыки — техника",
             "cells": {
               "stat": "tech",
               "start": 0
-            }
+            },
+            "block": "Навыки — техника"
           },
           {
             "value": "рисунок и скульптура",
             "key": "paint_draw",
             "label": "Рисунок и скульптура",
-            "group": "Навыки — техника",
             "cells": {
               "stat": "tech",
               "start": 0
-            }
+            },
+            "block": "Навыки — техника"
           },
           {
             "value": "парамедик",
             "key": "paramedic",
             "label": "Парамедик",
-            "group": "Навыки — техника",
             "cells": {
               "stat": "tech",
               "start": 0
-            }
+            },
+            "block": "Навыки — техника"
           },
           {
             "value": "фото и видео",
             "key": "photography",
             "label": "Фото и видео",
-            "group": "Навыки — техника",
             "cells": {
               "stat": "tech",
               "start": 0
-            }
+            },
+            "block": "Навыки — техника"
           },
           {
             "value": "взлом замков",
             "key": "pick_lock",
             "label": "Взлом замков",
-            "group": "Навыки — техника",
             "cells": {
               "stat": "tech",
               "start": 0
-            }
+            },
+            "block": "Навыки — техника"
           },
           {
             "value": "карманная кража",
             "key": "pick_pocket",
             "label": "Карманная кража",
-            "group": "Навыки — техника",
             "cells": {
               "stat": "tech",
               "start": 0
-            }
+            },
+            "block": "Навыки — техника"
           },
           {
             "value": "морская техника",
             "key": "sea_vehicle_tech",
             "label": "Морская техника",
-            "group": "Навыки — техника",
             "cells": {
               "stat": "tech",
               "start": 0
-            }
+            },
+            "block": "Навыки — техника"
           },
           {
             "value": "оружейное дело",
             "key": "weaponstech",
             "label": "Оружейное дело",
-            "group": "Навыки — техника",
             "cells": {
               "stat": "tech",
               "start": 0
-            }
+            },
+            "block": "Навыки — техника"
           }
         ],
-        "sheet": {
-          "columns": {
-            "rank": {
-              "label": "{label}",
-              "control": "stepper",
-              "start": "{start}"
-            },
-            "total": {
-              "label": "{label} — всего",
-              "roll": {
-                "label": "Проверка: {label}",
-                "tags": [
-                  "проверка"
-                ],
-                "die": {
-                  "constant": "lead_die"
-                },
-                "bonus": {
-                  "expr": "@строка.total"
-                }
-              }
-            }
-          }
-        }
+        "owner": "sheet"
       }
     },
     "initiative": {

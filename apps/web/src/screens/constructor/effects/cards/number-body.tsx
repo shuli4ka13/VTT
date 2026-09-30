@@ -10,6 +10,7 @@ import { namesOf } from '../../slots.tsx';
 import { inputBadges } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
+import { hasField } from '@vtt/engine/model/sheet-columns';
 
 type Loose = Record<string, unknown>;
 
@@ -38,7 +39,7 @@ export function NumberBody({ step, context, edit, onAddParam }: {
 
   const unknown = [...new Set([...shown.matchAll(/@([\p{L}\p{N}_.]+)/gu)].map(m => m[1]!))]
     .filter(name => !ownerOf(name) && !name.includes('.'))
-    .filter(name => !names.has(name) && !context.system.fields.some(f => f.tag === name));
+    .filter(name => !names.has(name) && !hasField(context.system, name));
 
   const commit = (typed: string) => {
     edit(0, target => {

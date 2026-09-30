@@ -6,13 +6,13 @@ import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const system = {
   id: 'r', name: 'r',
-  fields: [
-    { tag: 'уровень', label: 'Уровень', value: { kind: 'stored', type: 'number', default: 5 } },
-    { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 40, min: 0 } },
-    { tag: 'ячейки_1', label: 'Ячейки 1-го круга', value: { kind: 'stored', type: 'number', default: 1, min: 0 } },
-    { tag: 'ячейки_2', label: 'Ячейки 2-го круга', value: { kind: 'stored', type: 'number', default: 0, min: 0 } },
-    { tag: 'ячейки_1_всего', label: 'Всего ячеек 1-го круга', value: { kind: 'stored', type: 'number', default: 4 } },
-  ],
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'уровень', label: 'Уровень', kind: 'number', default: 5 },
+    { key: 'хиты', label: 'Хиты', kind: 'number', default: 40, min: 0 },
+    { key: 'ячейки_1', label: 'Ячейки 1-го круга', kind: 'number', default: 1, min: 0 },
+    { key: 'ячейки_2', label: 'Ячейки 2-го круга', kind: 'number', min: 0 },
+    { key: 'ячейки_1_всего', label: 'Всего ячеек 1-го круга', kind: 'number', default: 4 },
+  ] } },
   effects: {
     ячейка: {
       label: 'Ячейка заклинания',
@@ -118,13 +118,12 @@ group('отдых — момент, как начало хода', () => {
 group('бросок несёт несколько меток, одна приходит входом', () => {
   const sys = {
     id: 'm', name: 'm',
-    fields: [
-      { tag: 'лов', label: 'Ловкость', value: { kind: 'stored', type: 'number', default: 2 } },
-      { tag: 'спас_лов', label: 'Спасбросок Ловкости', value: { kind: 'formula', expr: '@лов' } },
-      { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
-    ],
     constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
-    tables: {
+    tables: { лист: { shape: 'single', columns: [
+      { key: 'лов', label: 'Ловкость', kind: 'number', default: 2 },
+      { key: 'спас_лов', label: 'Спасбросок Ловкости', expr: '@лов' },
+      { key: 'хиты', label: 'Хиты', kind: 'number', default: 20 },
+    ] },
       rolls: { label: 'Броски', key: 'word', rows: [{ value: 'спас' }] },
       черты: {
         label: 'Характеристики', key: 'word',
@@ -177,7 +176,7 @@ group('бросок несёт несколько меток, одна прих�
 group('общий держатель: взялся за новое — старое спало', () => {
   const sys = {
     id: 'c', name: 'c',
-    fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } }],
+    tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } },
     effects: {
       концентрация: { label: 'Концентрация', activation: 'passive', on: [{ on: 'moment:scene-end', steps: [] }] },
       благословлён: { label: 'Благословлён', activation: 'passive', modifiers: [] },
@@ -207,7 +206,7 @@ group('общий держатель: взялся за новое — стар�
 group('запись выдаёт эффект владельцу', () => {
   const sys = {
     id: 'g', name: 'g',
-    fields: [{ tag: 'кд', label: 'Класс брони', value: { kind: 'stored', type: 'number', default: 10 } }],
+    tables: { лист: { shape: 'single', columns: [{ key: 'кд', label: 'Класс брони', kind: 'number', default: 10 }] } },
     effects: { стойка: { label: 'Оборонительная стойка', activation: 'passive', modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: { expr: '1' }, stacking: 'sum' }] } },
     records: { черта: { kind: 'action', label: 'Черта', props: [], bindings: [] } },
   } as unknown as System;
@@ -226,14 +225,13 @@ group('запись выдаёт эффект владельцу', () => {
 group('наложенное помнит число, штрафная кость, порог из поля, платная реакция', () => {
   const sys = {
     id: 'k', name: 'k',
-    fields: [
-      { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 30 } },
-      { tag: 'кд', label: 'Класс брони', value: { kind: 'stored', type: 'number', default: 10 } },
-      { tag: 'крит_от', label: 'Крит от', value: { kind: 'stored', type: 'number', default: 19 } },
-      { tag: 'заряды', label: 'Заряды', value: { kind: 'stored', type: 'number', default: 1, min: 0 } },
-    ],
     constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
-    tables: { rolls: { label: 'Броски', key: 'word', rows: [{ value: 'атака' }] } },
+    tables: { лист: { shape: 'single', columns: [
+      { key: 'хиты', label: 'Хиты', kind: 'number', default: 30 },
+      { key: 'кд', label: 'Класс брони', kind: 'number', default: 10 },
+      { key: 'крит_от', label: 'Крит от', kind: 'number', default: 19 },
+      { key: 'заряды', label: 'Заряды', kind: 'number', default: 1, min: 0 },
+    ] }, rolls: { label: 'Броски', key: 'word', rows: [{ value: 'атака' }] } },
     roll_edits: { порча: { label: 'Порча', ops: [{ op: 'bonusDie', sides: 4, minus: true }] } },
     effects: {
       горит: {

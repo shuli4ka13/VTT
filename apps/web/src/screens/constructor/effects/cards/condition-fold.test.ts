@@ -2,8 +2,7 @@ import { describe, it, expect } from 'vitest';
 import type { System } from '@vtt/schema';
 import { whenWords } from './condition-fold.tsx';
 
-const system = {
-  fields: [], constants: {}, effects: {},
+const system = { constants: {}, effects: {},
   tables: { damage_types: { label: 'Типы урона', key: 'word', columns: [{ key: 'armor', label: 'Броня', kind: 'choice', from: 'armor_pass' }], rows: [] } },
 } as unknown as System;
 

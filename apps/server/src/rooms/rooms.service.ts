@@ -24,7 +24,8 @@ import { fireMoments, describeMoment, momentsOfTurn } from '@vtt/engine/events/m
 import { releaseHolder } from '@vtt/engine/events/bonds';
 import { settle as settleSheets } from '@vtt/engine/events/settle';
 import { runSelfTrack, selfRefusal } from '@vtt/engine/events/self';
-import { deskOf, sharedOf } from '@vtt/engine/events/desk';
+import { deskOf, sharedOf, hasDesk } from '@vtt/engine/events/desk';
+import { fieldOf } from '@vtt/engine/model/sheet-columns';
 import { DESK_ID, isDesk } from '@vtt/engine/engine/owners';
 import { rollCheck, fieldCheck } from '@vtt/engine/engine/check';
 import {
@@ -85,8 +86,7 @@ export class RoomsService {
       compendium: JSON.stringify(world.compendium),
       createdAt: this.now(),
     });
-    const deskFields = world.system.fields.filter(field => field.lives === 'desk');
-    const withDesk = deskFields.length && !deskOf(world.sheets)
+    const withDesk = hasDesk(world.system) && !deskOf(world.sheets)
       ? [...world.sheets, { id: DESK_ID, systemId: world.system.id, name: 'Стол', values: {}, has: [], effects: [] } as Sheet]
       : world.sheets;
     for (const sheet of withDesk) {
@@ -595,7 +595,7 @@ export class RoomsService {
     await this.assertMaySheet(roomId, userId, sheetId);
 
     const { system } = this.worldOf(room);
-    const field = system.fields.find(f => f.tag === tag);
+    const field = fieldOf(system, tag);
     if (!field) throw new BadRequestException(`система не объявляет поля «${tag}»`);
     if (field.value.kind !== 'stored') {
       throw new BadRequestException(

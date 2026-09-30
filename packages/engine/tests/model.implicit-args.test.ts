@@ -6,7 +6,7 @@ import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const system = {
   id: 's', name: 's',
-  fields: [{ tag: 'hp', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 10 } }],
+  tables: { лист: { shape: 'single', columns: [{ key: 'hp', label: 'Хиты', kind: 'number', default: 10 }] } },
   effects: {
     hit: {
       label: 'Удар', activation: 'manual',

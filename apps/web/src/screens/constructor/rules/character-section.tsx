@@ -3,125 +3,25 @@ import type { ReactNode } from 'react';
 import { blockTree } from '../block-tree.tsx';
 import type { BlockNode } from '../block-tree.tsx';
 import { TableColumnCard } from './tables-section.tsx';
-import { useWorld, useBook, freeId, slugOf } from '../../../store/world.ts';
+import { useWorld, freeId } from '../../../store/world.ts';
 import { freeGroupName, renameGroup } from '../groups.ts';
 import { sheetKinds } from '@vtt/engine/model/owned';
-import { LiveValue } from '../live-value.tsx';
-import { Card, CardHead, Button, Field, Select, Chip, Empty, LabelInput, DangerButton } from '../../../ui/primitives.tsx';
-import { ColumnCard } from './column-card.tsx';
-import type { ColumnPatch } from './column-card.tsx';
-import { newField } from '../factory.ts';
-import { usersOf } from '../usage.ts';
+import { Card, CardHead, Button, Empty, LabelInput, DangerButton } from '../../../ui/primitives.tsx';
+import { newColumn } from '../factory.ts';
 import type { UsageIndex } from '../usage.ts';
-import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
-import { choiceTables } from '@vtt/engine/model/tables';
-import type { Field as FieldModel, System, ValueKind } from '@vtt/schema';
+import { kindWord } from '@vtt/engine/words/kinds';
+import type { System, Column } from '@vtt/schema';
+import type { Field as FieldModel, Holder } from '@vtt/engine/model/types';
 import type { WorldState } from '../../../store/world.ts';
-
-const FIELD_KINDS = kindsFor('field');
-
-const ZERO = { number: 0, text: '', boolean: false, choice: '' } as const;
-
-type Stored = 'number' | 'text' | 'boolean' | 'choice';
+import { fieldsOf, withColumn } from '@vtt/engine/model/sheet-columns';
 
 export const isCharacterColumn = (field: FieldModel): boolean => !field.cell;
 
 const kindOf = (field: FieldModel): string =>
   (field.value.kind === 'formula' ? 'формула' : kindWord(field.value.type));
 
-function applyField(system: System, field: FieldModel, patch: ColumnPatch): void {
-  if (patch.label !== undefined) field.label = patch.label;
-  if (patch.expr !== undefined) {
-    field.value = patch.expr !== null
-      ? { kind: 'formula', expr: patch.expr }
-      : { kind: 'stored', type: 'number', default: 0 };
-    return;
-  }
-  if (field.value.kind !== 'stored') {
-    if (patch.kind === undefined) return;
-    field.value = { kind: 'stored', type: 'number', default: 0 };
-  }
-  const value = field.value;
-  if (patch.kind !== undefined) {
-    const type = (['number', 'text', 'boolean', 'choice'].includes(patch.kind) ? patch.kind : 'text') as Stored;
-    const from = type === 'choice' ? choiceTables(system)[0]?.[0] : undefined;
-    if (type === 'choice' && !from) return;
-    field.value = { kind: 'stored', type, default: ZERO[type], ...(from ? { from } : {}) };
-    return;
-  }
-  if (patch.from !== undefined && patch.from) field.value = { kind: 'stored', type: 'choice', from: patch.from, default: '' };
-  if (patch.min !== undefined) { if (patch.min !== null) value.min = patch.min; else delete value.min; }
-  if (patch.max !== undefined) { if (patch.max !== null) value.max = patch.max; else delete value.max; }
-}
-
-function FieldColumnCard({ field, system, usage, onClose }: {
-  field: FieldModel;
-  system: System;
-  usage: UsageIndex;
-  onClose: () => void;
-}) {
-  const editSystem = useWorld(s => s.editSystem);
-  const pick = useWorld(s => s.pick);
-  const compendium = useBook();
-  const users = usersOf(usage, 'field', field.tag, system);
-  const rename = (label: string) => {
-    const state = useWorld.getState();
-    const world = JSON.stringify({ s: state.system, c: state.compendium, sh: state.sheets });
-    const virgin = (/^field(_\d+)?$/.test(field.tag) || field.tag === slugOf(field.label))
-      && world.split(`"${field.tag}"`).length - 1 <= 1
-      && !new RegExp(`[@#]${field.tag}(?![\\p{L}\\p{N}_])`, 'u').test(world);
-    const fresh = virgin && slugOf(label) ? freeId(state.system.fields.filter(f => f.tag !== field.tag).map(f => f.tag), label) : field.tag;
-    editSystem(draft => {
-      const target = draft.fields.find(f => f.tag === field.tag);
-      if (target) { target.label = label; target.tag = fresh; }
-    });
-    if (fresh !== field.tag) pick({ activeFieldTag: fresh });
-  };
-  const edit = (change: (draft: FieldModel) => void) => editSystem(draft => {
-    const target = draft.fields.find(f => f.tag === field.tag);
-    if (target) change(target);
-  });
-  const value = field.value;
-
-  return (
-    <ColumnCard
-      column={{
-        label: field.label,
-        kind: (value.kind === 'stored' ? value.type : 'number') as ValueKind,
-        ...(value.kind === 'stored' && value.from ? { from: value.from } : {}),
-        ...(value.kind === 'formula' ? { expr: value.expr } : {}),
-        ...(value.kind === 'stored' && value.min !== undefined ? { min: value.min } : {}),
-        ...(value.kind === 'stored' && value.max !== undefined ? { max: value.max } : {}),
-      }}
-      kinds={FIELD_KINDS}
-      tables={choiceTables(system).map(([key, t]) => [key, t.label || key])}
-      formulaHint="Формула для всех персонажей"
-      where={`Персонаж · ${field.label}`}
-      system={system}
-      onChange={patch => (patch.label !== undefined ? rename(patch.label) : edit(draft => applyField(system, draft, patch)))}
-      onDelete={users.length ? null : () => {
-        editSystem(draft => { draft.fields = draft.fields.filter(f => f.tag !== field.tag); });
-        onClose();
-      }}
-      onClose={onClose}
-      preview={value.kind === 'formula' ? <LiveValue system={system} compendium={compendium} tag={field.tag} source={value.expr} /> : null}
-      extra={<>
-        <Field label="Чьё значение">
-          <Select
-            value={field.lives ?? 'sheet'}
-            options={[['sheet', 'своё у каждого листа'], ['group', 'общее у группы — отряда, банды'], ['desk', 'общее на столе — одно на комнату']] as const}
-            onChange={next => edit(draft => { if (next === 'sheet') delete draft.lives; else draft.lives = next; })}
-          />
-        </Field>
-        {users.length ? (
-          <div className="inline inline--tight">
-            <span className="faint">смотрят:</span>
-            {users.map(user => <Chip key={user}>{user}</Chip>)}
-          </div>
-        ) : null}
-      </>}
-    />
-  );
+export function addColumn(draft: System, column: Column, holder: Holder = 'sheet'): void {
+  draft.tables = withColumn(draft, column, holder).tables;
 }
 
 interface TablePart { table: string; columns: string[]; rows: string[] }
@@ -161,10 +61,10 @@ function BlockName({ value, onCommit }: { value: string; onCommit: (next: string
 
 type Picked = { table: string; column: string } | null;
 
-export function CharacterSection({ system, editSystem, usage }: {
+export function CharacterSection({ system, editSystem }: {
   system: System;
   editSystem: WorldState['editSystem'];
-  usage: UsageIndex;
+  usage?: UsageIndex;
   onTable?: (id: string) => void;
 }) {
   const picked = useWorld(s => s.activeFieldTag);
@@ -173,8 +73,8 @@ export function CharacterSection({ system, editSystem, usage }: {
   const [cell, setCell] = useState<Picked>(null);
   const kinds = sheetKinds(system);
   const kind = of ? system.records?.[of] : undefined;
-  const active = system.fields.filter(isCharacterColumn).find(f => f.tag === picked) ?? null;
-  const tree = blockTree<FieldModel>(system, system.fields, field => field.group);
+  const active = fieldsOf(system).filter(isCharacterColumn).find(f => f.tag === picked) ?? null;
+  const tree = blockTree<FieldModel>(system, fieldsOf(system), field => field.group);
   const names: string[] = [];
   const collect = (nodes: BlockNode<FieldModel>[]) => { for (const node of nodes) { names.push(node.name); collect(node.children); } };
   collect(tree);
@@ -188,17 +88,17 @@ export function CharacterSection({ system, editSystem, usage }: {
     if (names.every(name => next.includes(name))) delete target.blocks; else target.blocks = next;
   });
   const add = (group: string) => {
-    const made = newField(system, group);
-    editSystem(draft => { draft.fields.push(made.value); });
+    const made = newColumn(system, group);
+    editSystem(draft => addColumn(draft, made.value));
     setCell(null);
     pick({ activeFieldTag: made.key });
   };
   const addBlock = (parent?: string) => {
     const name = freeGroupName(system, 'Новый блок');
-    const made = newField(system, name);
+    const made = newColumn(system, name);
     editSystem(draft => {
-      draft.fields.push(made.value);
-      if (parent) (draft.groups ??= {})[name] = { parent };
+      (draft.groups ??= {})[name] = parent ? { parent } : {};
+      addColumn(draft, made.value);
     });
     setCell(null);
     pick({ activeFieldTag: made.key });
@@ -213,8 +113,9 @@ export function CharacterSection({ system, editSystem, usage }: {
     pick({ activeFieldTag: null });
     setCell(cell && next && cell.table === next.table && cell.column === next.column ? null : next);
   };
-  const cellTable = cell ? system.tables?.[cell.table] : undefined;
-  const cellColumn = cell ? cellTable?.columns?.find(c => c.key === cell.column) : undefined;
+  const open: Picked = cell ?? (active ? { table: active.home, column: active.tag } : null);
+  const openTable = open ? system.tables?.[open.table] : undefined;
+  const openColumn = open ? openTable?.columns?.find(c => c.key === open.column) : undefined;
 
   const branch = (nodes: BlockNode<FieldModel>[], depth: number): ReactNode => nodes.map(node => {
     const { plain, tables } = partsOf(node.items, system);
@@ -285,11 +186,10 @@ export function CharacterSection({ system, editSystem, usage }: {
           <DangerButton size="sm" onConfirm={() => { editSystem(draft => { delete draft.records?.[of]; }); setOf(''); }}>Удалить тип</DangerButton>
         </div>
       ) : null}
-      {active ? <FieldColumnCard field={active} system={system} usage={usage} onClose={() => pick({ activeFieldTag: null })} /> : null}
-      {cell && cellTable && cellColumn ? (
-        <TableColumnCard id={cell.table} table={cellTable} column={cellColumn} system={system}
-          edit={change => editSystem(draft => { const target = draft.tables?.[cell.table]; if (target) change(target); })}
-          onClose={() => setCell(null)} />
+      {open && openTable && openColumn ? (
+        <TableColumnCard id={open.table} table={openTable} column={openColumn} system={system}
+          edit={change => editSystem(draft => { const target = draft.tables?.[open.table]; if (target) change(target); })}
+          onClose={() => { setCell(null); pick({ activeFieldTag: null }); }} />
       ) : null}
       {tree.length === 0 ? <Empty title="Лист пока пуст" /> : null}
       {branch(tree, 0)}

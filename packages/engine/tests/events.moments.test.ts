@@ -5,10 +5,10 @@ import type { System, Sheet, Effect, Compendium } from '../src/model/types.ts';
 
 const system = {
   id: 'x', name: 'x',
-  fields: [
-    { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
-    { tag: 'яд', label: 'Отравлен', value: { kind: 'stored', type: 'boolean', default: false } },
-  ],
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'хиты', label: 'Хиты', kind: 'number', default: 20 },
+    { key: 'яд', label: 'Отравлен', kind: 'boolean' },
+  ] } },
   effects: {
     отравление: {
       label: 'Отравление', activation: 'passive',
@@ -122,10 +122,10 @@ group('образец D&D: спасброски от смерти', () => {
 group('поле стало верным', () => {
   const watched = {
     id: 'п', name: 'п',
-    fields: [
-      { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
-      { tag: 'без_сил', label: 'Без сил', value: { kind: 'formula', expr: '#хиты <= 0' } },
-    ],
+    tables: { лист: { shape: 'single', columns: [
+      { key: 'хиты', label: 'Хиты', kind: 'number', default: 20 },
+      { key: 'без_сил', label: 'Без сил', expr: '#хиты <= 0' },
+    ] } },
     effects: {
       без_сознания: { label: 'Без сознания', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [] },
       падение: {

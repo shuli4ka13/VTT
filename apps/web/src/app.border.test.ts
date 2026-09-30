@@ -66,7 +66,7 @@ describe('граница режимов', () => {
       const code = read(screen);
       expect(code.includes('editSystem'), `${screen}: систему правит только автор`).toBe(false);
       expect(code.includes('editCompendium'), `${screen}: компендиум правит только автор`).toBe(false);
-      expect(/system\.fields\s*(=|\.push|\.splice)/.test(code), `${screen}: состав полей неприкосновенен`)
+      expect(/editColumn|editRules|withColumn/.test(code), `${screen}: состав полей неприкосновенен`)
         .toBe(false);
     }
   });

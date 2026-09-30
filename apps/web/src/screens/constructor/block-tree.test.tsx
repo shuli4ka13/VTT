@@ -6,7 +6,7 @@ import { useOpened } from '../../store/opened.ts';
 import type { System } from '@vtt/schema';
 
 const system = {
-  fields: [], effects: {},
+  tables: {}, effects: {},
   groups: { Механика: {}, 'Умения класса': { parent: 'Механика' }, Атака: {} },
 } as unknown as System;
 

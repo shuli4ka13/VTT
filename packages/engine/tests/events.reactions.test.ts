@@ -2,6 +2,7 @@ import { group, test, eq, ok, deepEq, throws } from './harness.ts';
 import { send, receive, offers, react, senderResults } from '../src/events/envelope.ts';
 import { exchange, deliver } from '../src/events/exchange.ts';
 import { system, arven, mirra, compendium } from './fixtures.ts';
+import { withColumn } from '../src/model/sheet-columns.ts';
 
 const queue = (...values: number[]) => {
   const rest = [...values];
@@ -80,8 +81,7 @@ group('реакция цели: пауза перед разрешением', (
 
 group('реакция отправителя: увидел бросок — решил перебросить', () => {
   const luckWorld: any = {
-    ...system,
-    fields: [...system.fields, { tag: 'inspiration', label: 'Вдохновение', value: { kind: 'stored', type: 'number', default: 1, min: 0 } }],
+    ...withColumn(system, { key: 'inspiration', label: 'Вдохновение', kind: 'number', default: 1, min: 0 }),
     effects: {
       ...system.effects,
       inspire: {

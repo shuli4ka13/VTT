@@ -8,7 +8,7 @@ import { useLookup } from '../store/lookup.ts';
 import type { System } from '@vtt/schema';
 
 const system = {
-  fields: [{ tag: 'сила', label: 'Сила', value: { kind: 'stored', type: 'number', default: 0 } }],
+  tables: { лист: { shape: 'single', columns: [{ key: 'сила', label: 'Сила', kind: 'number' }] } },
   effects: {}, constants: {},
 } as unknown as System;
 

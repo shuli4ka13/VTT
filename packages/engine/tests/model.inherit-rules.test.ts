@@ -4,7 +4,7 @@ import type { System } from '../src/model/types.ts';
 
 group('наследование: списки складываются, своя кнопка на том же месте правит кнопку основы', () => {
   const system = flattenSystem({
-    id: 's', name: 's', fields: [],
+    id: 's', name: 's', tables: {},
     effects: {
       base: { label: 'Основа', activation: 'passive', grants: ['a'], on: [{ on: 'x', steps: [] }] },
       own: { label: 'Своё', activation: 'passive', extends: 'base', grants: ['b'], on: [{ on: 'y', steps: [] }] },

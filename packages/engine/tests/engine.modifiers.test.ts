@@ -5,6 +5,7 @@ import { targets, assertTarget } from '../src/engine/targets.ts';
 import { calledOf } from '../src/engine/effects.ts';
 import { UnknownTagError } from '../src/engine/errors.ts';
 import { system, arven, mirra, compendium } from './fixtures.ts';
+import { fieldsOf } from '../src/model/sheet-columns.ts';
 
 const withGear = (sheet, book = compendium) => newPass(system, sheet, { compendium: book });
 
@@ -340,14 +341,14 @@ group('модификаторы', () => {
   group('словарь мишеней выводится из системы', () => {
     test('в него попадают все поля, два броска и входящее хранимых полей', () => {
       const all = targets(system);
-      const incoming = system.fields.filter(f => f.value.kind === 'stored').length;
+      const incoming = fieldsOf(system).filter(f => f.value.kind === 'stored').length;
       const events = calledOf(system).length;
-      const cells = Object.values(system.tables ?? {}).reduce((n, table) => {
+      const cells = Object.values(system.tables ?? {}).filter(table => table.shape !== 'single').reduce((n, table) => {
         const columns = (table.columns ?? []).filter(c => c.kind === 'expr' || c.kind === 'number').length;
         const rows = table.key === 'range' ? 0 : (table.rows ?? []).filter(r => r.value !== undefined).length;
         return n + columns * (1 + rows);
       }, 0);
-      eq(all.length, 2 + system.fields.length + incoming + events + cells,
+      eq(all.length, 2 + fieldsOf(system).length + incoming + events + cells,
         'мой бросок и бросок по мне, поля, входящее хранимых, входящие вызовы и ячейки таблиц');
       ok(all.some(t => t.tag === 'roll:any' && t.kind === 'roll'), 'свой бросок');
       ok(all.some(t => t.tag === 'incoming:roll:any' && t.kind === 'roll'), 'бросок по мне правит состояние цели');

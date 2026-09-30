@@ -4,7 +4,7 @@ import { startCombat, idleClock } from '../src/engine/clock.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const system = {
-  id: 'с', name: 'с', fields: [],
+  id: 'с', name: 'с', tables: {},
   effects: {
     помочь: { label: 'Помочь', activation: 'manual', steps: [{ type: 'status', mode: 'apply', effect: { const: 'помощь' } }] },
     помощь: { label: 'Помощь', activation: 'passive', duration: { kind: 'turns', max: 1, ends: 'turn-start', whose: 'source' } },

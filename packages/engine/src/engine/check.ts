@@ -5,6 +5,7 @@ import type { LeadRoll } from './lead-die.ts';
 import { packRef, resolveNumber, resolveOptionalNumber } from './refs.ts';
 import { EngineError } from './errors.ts';
 import type { System, Sheet, Compendium, Die, SlotRef } from '../model/types.ts';
+import { fieldOf } from '../model/sheet-columns.ts';
 
 export interface Check {
   die: { constant: string };
@@ -35,7 +36,7 @@ export function rollCheck(
 }
 
 export function fieldCheck(system: System, tag: string): Check & { label: string } {
-  const field = system.fields.find(f => f.tag === tag);
+  const field = fieldOf(system, tag);
   if (!field) throw new EngineError(`система не объявляет поля «${tag}»`);
   if (!field.roll) throw new EngineError(`по полю «${field.label}» не бросают — включите броски в конструкторе`);
   const constant = (field.roll as { die?: { constant?: string } }).die?.constant;

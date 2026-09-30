@@ -24,23 +24,6 @@ const typed = {
   many: z.boolean().optional(),
 };
 
-export const fieldValue = z.discriminatedUnion('kind', [
-  z.object({
-    kind: z.literal('stored'),
-    type: z.enum(['number', 'text', 'boolean', 'choice']),
-    from: z.string().min(1).optional(),
-    default: z.union([z.number(), z.string(), z.boolean()]),
-    min: bound.optional(),
-    max: bound.optional(),
-  }),
-  z.object({ kind: z.literal('formula'), expr: z.string() }),
-]);
-
-export const groupSpec = z.object({
-  parent: z.string().optional(),
-  default: fieldValue.optional(),
-}).passthrough();
-
 export const tag = z.string().min(1).refine(v => !v.includes(':'), {
   message: 'двоеточие в теге запрещено — им размечены выведенные мишени',
 });
@@ -57,20 +40,6 @@ export const rollSpec = z.object({
   count: formula.optional(),
   bonus: formula.optional(),
   tags: z.array(z.string().min(1)).optional(),
-}).passthrough();
-
-export const field = z.object({
-  tag,
-  label: z.string(),
-  group: z.string().optional(),
-  roll: z.lazy(() => rollSpec.partial({ die: true }).extend({ label: z.string().optional() })).optional(),
-  value: fieldValue,
-
-  control: control.optional(),
-
-  lives: z.enum(['desk', 'group']).optional(),
-
-  cell: z.object({ table: z.string().min(1), row: z.string().min(1), column: z.string().min(1) }).optional(),
 }).passthrough();
 
 export const diceTerm = z.object({
@@ -107,51 +76,64 @@ export const dieConstant = z.object({
 
 export const tableValue = z.union([z.number(), z.string(), z.boolean()]);
 
-export const tableViewColumn = z.object({
+export const cellView = z.object({
   label: z.string().optional(),
-  group: z.string().optional(),
+  block: z.string().optional(),
   roll: z.lazy(() => rollSpec.partial()).optional(),
   control: control.optional(),
-  start: z.union([z.number(), z.string(), z.boolean()]).optional(),
+  default: tableValue.optional(),
 });
 
-export const tableView = z.object({
-  group: z.string().optional(),
-  columns: z.record(z.string(), tableViewColumn).optional(),
-  cells: z.record(z.string(), tableViewColumn).optional(),
-});
-
-export const tableColumn = z.object({
-  key: z.string().min(1),
-  label: z.string().optional(),
+export const columnValue = z.object({
   ...typed,
   expr: z.string().optional(),
+  default: tableValue.optional(),
   min: bound.optional(),
   max: bound.optional(),
 });
+
+export const column = columnValue.extend({
+  key: tag,
+  label: z.string().optional(),
+  roll: z.lazy(() => rollSpec.partial({ die: true }).extend({ label: z.string().optional() })).optional(),
+  control: control.optional(),
+  block: z.string().optional(),
+  title: z.string().optional(),
+}).passthrough();
+
+export const groupSpec = z.object({
+  parent: z.string().optional(),
+}).strict();
 
 export const tableRow = z.object({
   value: tableValue.optional(),
   label: z.string().optional(),
   key: z.string().min(1).optional(),
-  group: z.string().optional(),
+  block: z.string().optional(),
 
   from: z.number().optional(),
   to: z.number().optional(),
 
   cells: z.record(z.string(), z.unknown()).optional(),
+  view: z.record(z.string(), cellView).optional(),
 });
 
 export const tableKey = z.enum(['word', 'number', 'range']);
 
+export const tableShape = z.enum(['rows', 'single']);
+export const tableOwner = z.enum(['sheet', 'group', 'desk']);
+
 export const table = z.object({
   label: z.string().optional(),
 
+  shape: tableShape.optional(),
+  owner: tableOwner.optional(),
+  block: z.string().optional(),
+
   key: tableKey.optional(),
-  columns: z.array(tableColumn).optional(),
+  columns: z.array(column).optional(),
   rows: z.array(tableRow).optional(),
   otherwise: tableValue.optional(),
-  sheet: tableView.optional(),
 }).passthrough();
 
 export const rollEditOp = z.object({ op: z.string().min(1) }).passthrough();
@@ -204,11 +186,7 @@ export const ask = z.object({
   hint: z.string().optional(),
 });
 
-export const param = z.object({
-  key: z.string().min(1),
-  label: z.string().optional(),
-  ...typed,
-
+export const param = column.extend({
   ask: ask.optional(),
 
   role: z.enum(['amount']).optional(),
@@ -287,12 +265,7 @@ export const recordKind = z.object({
 
   blocks: z.array(z.string().min(1)).optional(),
   grants: z.array(z.string().min(1)).optional(),
-  props: z.array(z.object({
-    key: z.string().min(1),
-    label: z.string().optional(),
-    ...typed,
-    onSheet: z.boolean().optional(),
-  }).passthrough()).optional(),
+  props: z.array(column.extend({ onSheet: z.boolean().optional() }).passthrough()).optional(),
   bindings: z.array(binding).optional(),
 
   modifiers: z.array(modifier).optional(),
@@ -301,7 +274,7 @@ export const recordKind = z.object({
 export const system = z.object({
   id: z.string().optional(),
   name: z.string().optional(),
-  fields: z.array(field),
+  fields: z.never({ message: 'полей больше нет — это колонки таблицы листа (system.tables, shape: single)' }).optional(),
   groups: z.record(z.string(), groupSpec).optional(),
   effects: z.record(z.string(), effect),
 
@@ -380,17 +353,17 @@ export type SystemConstant = z.infer<typeof systemConstant>;
 export type RollEditOp = z.infer<typeof rollEditOp>;
 export type RollEdit = z.infer<typeof rollEdit>;
 export type Table = z.infer<typeof table>;
-export type TableColumn = z.infer<typeof tableColumn>;
 export type TableRow = z.infer<typeof tableRow>;
-export type TableView = z.infer<typeof tableView>;
-export type TableViewColumn = z.infer<typeof tableViewColumn>;
 export type TableKey = z.infer<typeof tableKey>;
 export type Activation = z.infer<typeof activation>;
 export type DurationKind = z.infer<typeof durationKind>;
 export type Reapply = z.infer<typeof reapply>;
 export type StoredValue = z.infer<typeof storedValue>;
-export type Field = z.infer<typeof field>;
-export type FieldValue = z.infer<typeof fieldValue>;
+export type Column = z.infer<typeof column>;
+export type ColumnValue = z.infer<typeof columnValue>;
+export type CellView = z.infer<typeof cellView>;
+export type TableShape = z.infer<typeof tableShape>;
+export type TableOwner = z.infer<typeof tableOwner>;
 export type GroupSpec = z.infer<typeof groupSpec>;
 export type Modifier = z.infer<typeof modifier>;
 export type Param = z.infer<typeof param>;

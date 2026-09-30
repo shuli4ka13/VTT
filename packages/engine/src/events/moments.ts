@@ -10,6 +10,7 @@ import { effectLabelOf } from './envelope.ts';
 import { sharedOf, isShared } from './desk.ts';
 import type { Report, WorldContext } from './envelope.ts';
 import type { Sheet, System, Effect, Handler, Step, WornEffect } from '../model/types.ts';
+import { fieldOf as columnField } from '../model/sheet-columns.ts';
 
 
 export const MOMENTS = {
@@ -193,7 +194,7 @@ export function fireCrossings(before: Sheet[], after: Sheet[], world: WorldConte
         throw new EngineError(`поля будят эффекты без остановки: больше ${MAX_FIRES} срабатываний за раз`);
       }
       const live = updated.find(s => s.id === sheetId)!;
-      const label = world.system.fields.find(f => f.tag === tag)?.label ?? tag;
+      const label = columnField(world.system, tag)?.label ?? tag;
       const done = fire({
         sheetId, id, effect, handler, steps: handler.steps,
         owner: `поле «${label}» стало верным у «${effect.label ?? id}»`,
@@ -225,7 +226,7 @@ export const describeMoment = (
   const what = entry.report.label || effectLabelOf(world.system, entry.report.effect);
   const changes = (entry.report.changes as { tag: string; from: unknown; to: unknown }[])
     .map(change => {
-      const field = world.system.fields.find(f => f.tag === change.tag);
+      const field = columnField(world.system, change.tag);
       return `${field?.label ?? change.tag}: ${change.from} → ${change.to}`;
     });
   return changes.length ? `${who}: «${what}» — ${changes.join(', ')}` : `${who}: «${what}»`;

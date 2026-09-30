@@ -12,15 +12,10 @@ const queue = (...values: number[]) => {
 
 const sys: any = {
   id: 'срез-5e',
-  fields: [
+  tables: { лист: { shape: 'single', columns: [
 
-    {
-      tag: 'скрытность', label: 'Скрытность',
-      value: { kind: 'stored', type: 'number', default: 3 },
-      roll: { label: 'Проверка: Скрытность', tags: ['скрытность'] },
-    },
-  ],
-  tables: { skills: { label: 'Навыки', key: 'word', rows: [{ value: 'скрытность' }] } },
+    { key: 'скрытность', label: 'Скрытность', kind: 'number', default: 3, roll: { label: 'Проверка: Скрытность', tags: ['скрытность'] } },
+  ] }, skills: { label: 'Навыки', key: 'word', rows: [{ value: 'скрытность' }] } },
   constants: { lead: { label: 'Ведущая кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
   roll_edits: {
     помеха: { label: 'Помеха', ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }] },

@@ -5,11 +5,11 @@ import type { System, Compendium, Sheet } from '../src/model/types.ts';
 describe('имя с хозяином', () => {
   const system = {
     id: 'стороны', name: 'стороны',
-    fields: [
-      { tag: 'сила', label: 'Сила', value: { kind: 'stored', type: 'number', default: 0 } },
-      { tag: 'броня', label: 'Броня', value: { kind: 'stored', type: 'number', default: 10 } },
-      { tag: 'хп', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
-    ],
+    tables: { лист: { shape: 'single', columns: [
+      { key: 'сила', label: 'Сила', kind: 'number' },
+      { key: 'броня', label: 'Броня', kind: 'number', default: 10 },
+      { key: 'хп', label: 'Хиты', kind: 'number', default: 20 },
+    ] } },
     effects: {
       удар: {
         label: 'Удар', activation: 'manual',

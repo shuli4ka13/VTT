@@ -89,7 +89,7 @@ describe('Словари: кости, правки броска, таблицы'
       ...state,
       system: {
         ...emptySystem(),
-        fields: [{ tag: 'пул', label: 'Пул', value: { kind: 'stored', type: 'number', default: 6 } }],
+        tables: { лист: { shape: 'single', columns: [{ key: 'пул', label: 'Пул', kind: 'number', default: 6 }] } },
         constants: { d: { label: 'Пул', kind: 'die', dice: [{ count: 1, sides: 6 }] } },
       },
       activeEffectId: null,
@@ -377,9 +377,8 @@ describe('Словари: кости, правки броска, таблицы'
       ...state,
       system: {
         ...emptySystem(),
-        tables: { proficiency: { label: 'Бонус мастерства', key: 'range',
+        tables: { лист: { shape: 'single', columns: [{ key: 'pb', label: 'Бонус мастерства', expr: 'таблица("proficiency", #level)' }] }, proficiency: { label: 'Бонус мастерства', key: 'range',
           columns: [{ key: 'value', label: 'значение', kind: 'number' }], rows: [{ from: 1, to: 4, cells: { value: 2 } }] } },
-        fields: [{ tag: 'pb', label: 'Бонус мастерства', value: { kind: 'formula', expr: 'таблица("proficiency", #level)' } }],
       },
       activeEffectId: null,
     }));
@@ -394,8 +393,7 @@ describe('Словари: кости, правки броска, таблицы'
       ...state,
       system: {
         ...emptySystem(),
-        fields: [{ tag: 'сила', label: 'Сила', value: { kind: 'stored', type: 'number', default: 0 } }],
-        tables: { wield: {
+        tables: { лист: { shape: 'single', columns: [{ key: 'сила', label: 'Сила', kind: 'number' }] }, wield: {
           label: 'Способ атаки', key: 'word',
           columns: [{ key: 'attack', label: 'Бонус атаки', kind: 'number' }],
           rows: [{ value: 'ближний бой', cells: { attack: { expr: '@сила + 2' } } }],
@@ -436,10 +434,10 @@ describe('Быстрые настройки: крит и броня пишутс
       ...state,
       system: {
         ...emptySystem(),
-        fields: [
-          { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
-          { tag: 'броня', label: 'Броня', value: { kind: 'stored', type: 'number', default: 5 } },
-        ],
+        tables: { лист: { shape: 'single', columns: [
+          { key: 'хиты', label: 'Хиты', kind: 'number', default: 20 },
+          { key: 'броня', label: 'Броня', kind: 'number', default: 5 },
+        ] } },
         effects: { урон: { label: 'Урон', params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }], steps: [] } },
       },
       activeEffectId: null,

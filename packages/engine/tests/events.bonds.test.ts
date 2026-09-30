@@ -5,7 +5,7 @@ import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const system = {
   id: 'x', name: 'x',
-  fields: [{ tag: 'бонус', label: 'Бонус', value: { kind: 'stored', type: 'number', default: 0 } }],
+  tables: { лист: { shape: 'single', columns: [{ key: 'бонус', label: 'Бонус', kind: 'number' }] } },
   effects: {
     благословение: {
       label: 'Благословение', activation: 'manual', bond: true,

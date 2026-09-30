@@ -5,6 +5,7 @@ import { calledOf, isPipeline } from '../src/engine/effects.ts';
 import { availableActions } from '../src/events/envelope.ts';
 import { withLibrary } from '../src/model/owned.ts';
 import type { System, Sheet } from '../src/model/types.ts';
+import { fieldOf } from '../src/model/sheet-columns.ts';
 
 const unreachable = (system: System): string[] => {
   const reach = new Set<string>([...system.grants ?? [], ...calledOf(system).map(([key]) => key)]);
@@ -17,7 +18,7 @@ const unreachable = (system: System): string[] => {
   return Object.entries(system.effects).filter(([id, e]) => isPipeline(e) && !reach.has(id)).map(([id]) => id);
 };
 
-const empty = (): System => ({ id: 'новая', name: 'Новая', fields: [], effects: {} } as unknown as System);
+const empty = (): System => ({ id: 'новая', name: 'Новая', tables: {}, effects: {} } as unknown as System);
 
 group('куски систем: взять кусок со всем, от чего он зависит', () => {
   for (const piece of PIECES) {
@@ -47,10 +48,10 @@ group('кусок добавляется, а не заменяет', () => {
   });
 
   test('своё одноимённое остаётся своим — кусок его не перезаписывает', () => {
-    const mine = { ...empty(), fields: [{ tag: 'level', label: 'Мой уровень', value: { kind: 'stored', type: 'number', default: 3 } }] } as unknown as System;
+    const mine = { ...empty(), tables: { лист: { shape: 'single', columns: [{ key: 'level', label: 'Мой уровень', kind: 'number', default: 3 }] } } } as unknown as System;
     const out = bringPiece(mine, abilities);
     ok(out.kept.some(p => p.kind === 'field' && p.key === 'level'));
-    deepEq(out.system.fields.find(f => f.tag === 'level')!.label, 'Мой уровень');
+    deepEq(fieldOf(out.system, 'level')!.label, 'Мой уровень');
   });
 
   test('правила куска включаются для всех листов системы', () => {

@@ -1,14 +1,14 @@
 import { group, test, ok, eq } from './harness.ts';
 import { describeEntry } from '../src/events/describe.ts';
 import type { System, Sheet } from '../src/model/types.ts';
+import { withColumn } from '../src/model/sheet-columns.ts';
 
 const system = {
   id: 'т', name: 'т',
-  fields: [
-    { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 10 } },
-    { tag: 'броня', label: 'Класс брони', value: { kind: 'stored', type: 'number', default: 15 } },
-  ],
-  tables: {
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'хиты', label: 'Хиты', kind: 'number', default: 10 },
+    { key: 'броня', label: 'Класс брони', kind: 'number', default: 15 },
+  ] },
     rolls: {
       label: 'Броски', key: 'word',
       columns: [{ key: 'успех', label: 'Успех', kind: 'text' }, { key: 'провал', label: 'Провал', kind: 'text' }],
@@ -88,8 +88,7 @@ group('журнал говорит словами стола, а не движк
 
 group('журнал называет чужие и общие поля словами', () => {
   test('поле отправителя, получателя и стола — подпись с хозяином, выход шага — его подпись', () => {
-    const owned = { ...system,
-      fields: [...system.fields, { tag: 'эскалация', label: 'Кость эскалации', lives: 'desk', value: { kind: 'stored', type: 'number', default: 0 } }],
+    const owned = { ...withColumn(system, { key: 'эскалация', label: 'Кость эскалации', kind: 'number' }, 'desk'),
       effects: { шаблон: { label: 'Удар', steps: [
         { id: 'п', type: 'threshold', roll: { tags: ['атака'], bonus: { expr: '@отправитель.хиты + @стол.эскалация' } }, versus: { expr: '@получатель.броня' } },
         { id: 'в', type: 'amount', fixed: { expr: 'если(@п.natural >= 20, 2, 1)' } },

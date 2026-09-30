@@ -4,10 +4,10 @@ import { newPass } from '../src/engine/calc.ts';
 
 const sys: any = {
   id: 'слово-силы',
-  fields: [
-    { tag: 'хп', label: 'Текущие ХП', value: { kind: 'stored', type: 'number', default: 1, min: 0 } },
-    { tag: 'хп_макс', label: 'Максимум ХП', value: { kind: 'stored', type: 'number', default: 1 } },
-  ],
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'хп', label: 'Текущие ХП', kind: 'number', default: 1, min: 0 },
+    { key: 'хп_макс', label: 'Максимум ХП', kind: 'number', default: 1 },
+  ] } },
   effects: {},
 };
 

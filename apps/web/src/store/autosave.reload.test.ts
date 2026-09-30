@@ -9,7 +9,7 @@ vi.mock('../api/client.ts', async () => {
 
 describe('автосохранение после перезагрузки страницы', () => {
   it('черновик, не успевший уйти на сервер, уходит до публикации', async () => {
-    const system = { id: 'new-system', name: 'Черновик', fields: [], effects: {}, grants: [] };
+    const system = { id: 'new-system', name: 'Черновик', tables: {}, effects: {}, grants: [] };
     localStorage.setItem('vtt.world', JSON.stringify({
       state: { system, compendium: { records: [] }, sheets: [], origin: { mode: 'system', systemId: 'sys-9' } },
       version: 0,

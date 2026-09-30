@@ -24,7 +24,7 @@ describe('индекс использования вместо поиска по
 
   it('совпадение подстроки больше не считается использованием', () => {
     const system = {
-      fields: [{ tag: 'a', label: 'А', value: { kind: 'formula', expr: '1' } }],
+      tables: { лист: { shape: 'single', columns: [{ key: 'a', label: 'А', expr: '1' }] } },
       effects: { x: { label: 'кость d20 в названии', activation: 'manual', steps: [] } },
       constants: { d20: { kind: 'die', dice: [{ sides: 20 }] } },
     } as unknown as System;

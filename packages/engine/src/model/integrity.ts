@@ -5,6 +5,7 @@ import type { Node } from '../formula/index.ts';
 import { tagTablesOf, choiceTableOf } from './lists.ts';
 import type { System, Compendium } from './types.ts';
 import type { Where } from './references.ts';
+import { fieldsOf, forgetFields } from './sheet-columns.ts';
 
 type Loose = Record<string, unknown>;
 
@@ -189,7 +190,7 @@ export function rowUsers(system: System, table: string, key: unknown, compendium
       }
     }
   }
-  for (const field of system.fields ?? []) {
+  for (const field of fieldsOf(system)) {
     if (choiceTableOf(field) !== table) continue;
     const value = field.value as Loose;
     if (value.kind === 'stored' && same(value.default, key)) {
@@ -283,11 +284,17 @@ export function renameRow(system: System, table: string, from: unknown, to: unkn
   for (const { cond, rename } of stepConditions(system).reverse()) {
     if (pointsAt(system, cond, table) && same(cond.is, from)) rename(to);
   }
-  for (const field of system.fields ?? []) {
-    if (choiceTableOf(field) !== table) continue;
-    const value = field.value as Loose;
-    if (value.kind === 'stored' && same(value.default, from)) value.default = to;
+  for (const other of Object.values(system.tables ?? {})) {
+    const choices = (other.columns ?? []).filter(column => column.kind === 'choice' && column.from === table);
+    for (const column of choices) {
+      if (same(column.default, from)) column.default = to as typeof column.default;
+      for (const row of other.rows ?? []) {
+        const view = row.view?.[column.key];
+        if (view && same(view.default, from)) view.default = to as typeof view.default;
+      }
+    }
   }
+  forgetFields(system);
 }
 
 export function renameRowInBook(system: System, book: Compendium, table: string, from: unknown, to: unknown): void {

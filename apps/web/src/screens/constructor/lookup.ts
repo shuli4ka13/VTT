@@ -14,6 +14,7 @@ import type { EarlierStep } from './slots.tsx';
 import { usersOf } from './usage.ts';
 import type { UsageIndex } from './usage.ts';
 import type { WorldState } from '../../store/world.ts';
+import { fieldOf } from '@vtt/engine/model/sheet-columns';
 
 type Pick = Parameters<WorldState['pick']>[0];
 
@@ -136,7 +137,7 @@ export function explainName(
     };
   }
 
-  const field = system.fields.find(f => f.tag === rest);
+  const field = fieldOf(system, rest);
   if (field) {
     const value = field.value as Loose;
     const how = value.kind === 'formula' ? `формула ${formulaAsLabels(system, String(value.expr))}`
@@ -156,7 +157,7 @@ export function explainName(
 
   const path = fieldPaths(system).get(rest);
   if (path) {
-    const base = system.fields.find(f => f.tag === head);
+    const base = fieldOf(system, head);
     const table = choiceTableOf(base);
     return {
       kind: 'колонка по полю',

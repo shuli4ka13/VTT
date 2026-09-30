@@ -6,6 +6,7 @@ import { send, receive } from '../src/events/envelope.ts';
 import { system, arven, mirra, sheets, compendium } from './fixtures.ts';
 import { PLAYABLE_SYSTEMS as SAMPLE_SYSTEMS, PLAYABLE_WORLDS as SAMPLE_WORLDS } from '../src/model/systems.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
+import { withColumn, editColumn } from '../src/model/sheet-columns.ts';
 
 const all = (sys, sheet, book = compendium) =>
   calcAll(sys, sheet, newPass(sys, sheet, { compendium: book }));
@@ -27,7 +28,9 @@ group('критерии приёмки', () => {
   test('2. переименование label любого поля не ломает ни одной формулы', () => {
     const renamed = {
       ...system,
-      fields: system.fields.map(f => ({ ...f, label: `Переименовано ${f.tag}` })),
+      tables: Object.fromEntries(Object.entries(system.tables).map(([id, table]) => [id, {
+        ...table, columns: (table.columns ?? []).map(c => ({ ...c, label: `Переименовано ${c.key}` })),
+      }])),
     };
     for (const sheet of sheets) {
       deepEq(all(renamed, sheet), all(system, sheet), `лист ${sheet.id}`);
@@ -36,13 +39,7 @@ group('критерии приёмки', () => {
 
   test('3. новый стат и новый предмет с бонусом добавляются только правкой данных', () => {
 
-    const extended = {
-      ...system,
-      fields: [
-        ...system.fields,
-        { tag: 'initiative', label: 'Инициатива', group: 'Атака', value: { kind: 'formula', expr: '#dex_mod + #prof_bonus' } },
-      ],
-    };
+    const extended = withColumn(system, { key: 'initiative', label: 'Инициатива', expr: '#dex_mod + #prof_bonus', block: 'Атака' });
     const book = {
       records: [...compendium.records, {
         id: 'cloak-of-speed',
@@ -85,12 +82,7 @@ group('критерии приёмки', () => {
   });
 
   test('7. циклическая формула даёт внятную ошибку, а не зависание', () => {
-    const looped = {
-      ...system,
-      fields: system.fields.map(f => f.tag === 'ac'
-        ? { ...f, value: { kind: 'formula', expr: '#ac + 1' } }
-        : f),
-    };
+    const looped = editColumn(system, 'ac', column => ({ ...column, expr: '#ac + 1' }));
     const err = throws(() => calc(looped, arven, 'ac'), CycleError);
     ok(err.message.includes('ac → ac'), `путь в сообщении: ${err.message}`);
   });

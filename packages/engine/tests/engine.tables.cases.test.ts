@@ -4,7 +4,7 @@ import { send, receive } from '../src/events/envelope.ts';
 import type { System } from '../src/model/types.ts';
 
 const system = {
-  id: 'т', name: 'т', fields: [], effects: {},
+  id: 'т', name: 'т', effects: {},
   tables: {
     по_уровню: {
       label: 'По уровню', key: 'range', columns: [{ key: 'value', label: 'значение', kind: 'number' }],
@@ -64,10 +64,10 @@ group('формула видит результат шага выше', () => {
   test('крит пишется формулой, порог берётся с листа', () => {
     const система = {
       id: 'к', name: 'к',
-      fields: [
-        { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 100, min: 0 } },
-        { tag: 'порог', label: 'Крит от', value: { kind: 'stored', type: 'number', default: 20 } },
-      ],
+      tables: { лист: { shape: 'single', columns: [
+        { key: 'хиты', label: 'Хиты', kind: 'number', default: 100, min: 0 },
+        { key: 'порог', label: 'Крит от', kind: 'number', default: 20 },
+      ] } },
       constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
       effects: {
         удар: {
@@ -104,7 +104,7 @@ group('формула видит результат шага выше', () => {
 
 group('ключ строки — одно из трёх', () => {
   const система = {
-    id: 'к', name: 'к', fields: [], effects: {},
+    id: 'к', name: 'к', effects: {},
     tables: {
       типы: { label: 'Типы урона', key: 'word', rows: [{ value: 'огонь', label: 'огонь' }, { value: 'холод', label: 'холод' }] },
       ступени: {

@@ -1,14 +1,16 @@
 import { group, test, eq, ok } from './harness.ts';
 import { exchange } from '../src/events/exchange.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
+import { withColumn } from '../src/model/sheet-columns.ts';
 
 const system = {
   id: 'стол', name: 'стол',
-  fields: [
-    { tag: 'хп', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
-    { tag: 'эскалация', label: 'Кость эскалации', lives: 'desk', value: { kind: 'stored', type: 'number', default: 0 } },
-    { tag: 'страх', label: 'Страх', lives: 'desk', value: { kind: 'stored', type: 'number', default: 0 } },
-  ],
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'хп', label: 'Хиты', kind: 'number', default: 20 },
+  ] }, стол: { shape: 'single', owner: 'desk', columns: [
+    { key: 'эскалация', label: 'Кость эскалации', kind: 'number' },
+    { key: 'страх', label: 'Страх', kind: 'number' },
+  ] } },
   effects: {
     удар: {
       label: 'Удар', activation: 'manual',
@@ -49,7 +51,8 @@ group('стол — третий участник с полями', () => {
   });
 
   test('у системы без полей стола чтение со стола — внятная ошибка', () => {
-    const plain = { ...system, fields: system.fields.filter(f => f.lives !== 'desk') } as System;
+    const { стол: _desk, ...tables } = system.tables!;
+    const plain = { ...system, tables } as System;
     let why = '';
     try {
       exchange({ system: plain, compendium: book, die: () => 1, sheets: [pc('бьёт'), pc('держит')], actionId: 'удар:0', fromId: 'бьёт', toId: 'держит' });
@@ -75,9 +78,7 @@ group('проверки конструктора про стол', () => {
 
 group('стол в формулах листа', () => {
   const withSheetFormula = (expr: string, desk = false) => {
-    const next = JSON.parse(JSON.stringify(system)) as System;
-    next.fields.push({ tag: 'атака', label: 'Атака', ...(desk ? { lives: 'desk' } : {}), value: { kind: 'formula', expr } } as never);
-    return next;
+    return withColumn(system, { key: 'атака', label: 'Атака', expr }, desk ? 'desk' : 'sheet');
   };
 
   test('поле листа читает стол через @стол', async () => {

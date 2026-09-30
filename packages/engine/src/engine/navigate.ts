@@ -5,13 +5,14 @@ import { rowKeyOf } from '../model/sheet-columns.ts';
 import { choiceTableOf } from '../model/lists.ts';
 import type { System, Param } from '../model/types.ts';
 import type { Pass } from './calc.ts';
+import { fieldOf, hasField } from '../model/sheet-columns.ts';
 
 type Loose = Record<string, unknown>;
 
 export function referencedTable(system: System, head: string, paramDefs?: Param[]): string | undefined {
   const param = (paramDefs ?? []).find(p => p.key === head) as Loose | undefined;
   if (param) return param.kind === 'choice' ? (param.from as string | undefined) : undefined;
-  const field = system.fields.find(f => f.tag === head);
+  const field = fieldOf(system, head);
   if (field) return choiceTableOf(field);
   for (const kind of Object.values(system.records ?? {})) {
     const prop = (kind.props ?? []).find(p => p.key === head) as Loose | undefined;
@@ -57,7 +58,7 @@ export function walk(
 export function resolveAddress(system: System, pass: Pass, name: string): { value: unknown } | null {
   const [tableId, rowKey, column, ...rest] = name.split('.');
   const table = tableId ? system.tables?.[tableId] : undefined;
-  if (!table || rowKey === undefined || isRange(table) || system.fields.some(f => f.tag === tableId)) return null;
+  if (!table || rowKey === undefined || isRange(table) || hasField(system, tableId)) return null;
   const row = (table.rows ?? []).find(r => rowKeyOf(r) === rowKey) ?? (table.rows ?? []).find(r => String(r.value) === rowKey);
   if (!row) throw new EngineError(`«${name}»: в таблице «${table.label || tableId}» нет строки «${rowKey}»`);
   if (!column) return { value: row.value };

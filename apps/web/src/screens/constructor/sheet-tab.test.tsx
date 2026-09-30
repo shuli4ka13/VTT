@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { RulesTab } from './rules/rules-tab.tsx';
 import { useWorld } from '../../store/world.ts';
+import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 
 describe('колонка персонажа: человеческие теги', () => {
   beforeEach(() => {
@@ -10,7 +11,7 @@ describe('колонка персонажа: человеческие теги',
       ...state,
       system: {
         ...state.system,
-        fields: [{ tag: 'field', label: 'Новое поле', group: 'Блок', value: { kind: 'stored', type: 'number', default: 0 } }],
+        tables: { лист: { shape: 'single', columns: [{ key: 'field', label: 'Новое поле', kind: 'number', block: 'Блок' }] } },
         effects: {},
       },
       compendium: { ...state.compendium, records: [] },
@@ -24,7 +25,7 @@ describe('колонка персонажа: человеческие теги',
     const name = screen.getByPlaceholderText('как зовётся колонка');
     fireEvent.change(name, { target: { value: 'Урон' } });
     fireEvent.blur(name);
-    const field = useWorld.getState().system.fields[0]!;
+    const field = fieldsOf(useWorld.getState().system)[0]!;
     expect(field.label).toBe('Урон');
     expect(field.tag).toBe('урон');
   });
@@ -34,10 +35,10 @@ describe('колонка персонажа: человеческие теги',
       ...state,
       system: {
         ...state.system,
-        fields: [
-          { tag: 'урон', label: 'Урон', group: 'Блок', value: { kind: 'stored', type: 'number', default: 0 } },
-          { tag: 'field_2', label: 'Итог', group: 'Блок', value: { kind: 'formula', expr: '#урон + 1' } },
-        ],
+        tables: { лист: { shape: 'single', columns: [
+          { key: 'урон', label: 'Урон', kind: 'number', block: 'Блок' },
+          { key: 'field_2', label: 'Итог', expr: '#урон + 1', block: 'Блок' },
+        ] } },
       },
       activeFieldTag: 'урон',
     }));
@@ -45,7 +46,7 @@ describe('колонка персонажа: человеческие теги',
     const name = screen.getByPlaceholderText('как зовётся колонка');
     fireEvent.change(name, { target: { value: 'Повреждения' } });
     fireEvent.blur(name);
-    const field = useWorld.getState().system.fields[0]!;
+    const field = fieldsOf(useWorld.getState().system)[0]!;
     expect(field.label).toBe('Повреждения');
     expect(field.tag).toBe('урон');
   });

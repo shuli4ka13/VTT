@@ -4,9 +4,10 @@ import type { System } from '@vtt/schema';
 import { matchTagQuery } from './tag-suggest.tsx';
 import { fieldPaths } from './paths.ts';
 import { ownerOf, OWNERS, SENDER, RECEIVER, DESK } from '@vtt/engine/engine/owners';
+import { fieldsOf, fieldOf, hasField } from '@vtt/engine/model/sheet-columns';
 
 const plainLabel = (system: System, tag: string, extra?: Map<string, string>): string =>
-  system.fields.find(f => f.tag === tag)?.label ?? extra?.get(tag) ?? fieldPaths(system).get(tag)
+  fieldOf(system, tag)?.label ?? extra?.get(tag) ?? fieldPaths(system).get(tag)
   ?? system.effects?.[tag]?.label ?? tag;
 
 const statesOf = (system: System): { tag: string; label: string }[] =>
@@ -20,7 +21,7 @@ const labelOfTag = (system: System, tag: string, extra?: Map<string, string>): s
 };
 
 const knownSheetName = (system: System, tag: string, paths: Map<string, string>): boolean =>
-  system.fields.some(field => field.tag === tag) || paths.has(tag) || Boolean(system.effects?.[tag]);
+  hasField(system, tag) || paths.has(tag) || Boolean(system.effects?.[tag]);
 
 export type Part = { text: string } | { tag: string };
 
@@ -135,9 +136,9 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
     : null);
 
   const fields = useMemo(() => {
-    const desk = system.fields.filter(f => f.lives === 'desk').map(f => ({ tag: `${DESK}.${f.tag}`, label: f.label ?? f.tag, group: 'стол' }));
+    const desk = fieldsOf(system).filter(f => f.lives === 'desk').map(f => ({ tag: `${DESK}.${f.tag}`, label: f.label ?? f.tag, group: 'стол' }));
     const sheet = [
-      ...system.fields.filter(f => f.lives !== 'desk').map(f => ({ tag: f.tag, label: f.label ?? f.tag, via: false })),
+      ...fieldsOf(system).filter(f => f.lives !== 'desk').map(f => ({ tag: f.tag, label: f.label ?? f.tag, via: false })),
       ...[...paths].map(([tag, label]) => ({ tag, label, via: true })),
     ];
     const offered = new Set((extraOptions ?? []).map(o => o.name).filter(Boolean));

@@ -4,6 +4,7 @@ import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { listUsers } from '../src/model/lists.ts';
 import { danglingRows } from '../src/model/integrity.ts';
 import type { System, Compendium } from '../src/model/types.ts';
+import { fieldsOf } from '../src/model/sheet-columns.ts';
 
 type Loose = Record<string, unknown>;
 
@@ -29,7 +30,7 @@ const troublesOf = (system: System): string[] => {
   for (const [rk, kind] of Object.entries(system.records ?? {})) {
     for (const p of (kind.props ?? [])) look(`тип «${kind.label ?? rk}» · ${p.label ?? p.key}`, p as Loose);
   }
-  for (const field of system.fields ?? []) {
+  for (const field of fieldsOf(system)) {
     const from = choiceTableOf(field);
     if (from && !lists[from]) out.push(`поле «${field.label}»: словаря «${from}» нет`);
   }
@@ -85,8 +86,7 @@ group('словарь — одно место правды', () => {
   }
 
   test('негативный контроль: проверки видят подделку', () => {
-    const кривая = {
-      fields: [], effects: { бой: { label: 'Бой', params: [{ key: 'тип', label: 'Тип', kind: 'choice' }] } },
+    const кривая = { effects: { бой: { label: 'Бой', params: [{ key: 'тип', label: 'Тип', kind: 'choice' }] } },
       records: { меч: { label: 'Меч', props: [{ key: 'тип', label: 'Тип', kind: 'choice', from: 'нетути' }] } },
       tables: {},
     } as unknown as System;

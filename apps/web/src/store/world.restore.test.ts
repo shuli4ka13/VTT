@@ -25,13 +25,14 @@ describe('восстановление черновика из браузера'
     expect(second.takeRestoreProblem()).toBeNull();
   });
 
-  it('нечитаемый черновик не пропадает молча: причина названа, копия отложена', async () => {
-    const broken = { state: { system: { fields: 'не список' }, compendium: {}, sheets: [] }, version: 0 };
+  it('черновик прежней формы (с полями вместо таблиц) не пропадает молча: причина названа, копия отложена', async () => {
+    const old = { fields: [{ tag: 'hp', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 1 } }], effects: {} };
+    const broken = { state: { system: old, compendium: {}, sheets: [] }, version: 0 };
     localStorage.setItem('vtt.world', JSON.stringify(broken));
     const world = await load();
     expect(world.useWorld.getState().system.name).toBe('Новая система');
-    expect(world.takeRestoreProblem()).toBeTruthy();
-    expect(world.brokenDraft()).toContain('не список');
+    expect(world.takeRestoreProblem()).toContain('полей больше нет');
+    expect(world.brokenDraft()).toContain('"tag":"hp"');
     world.forgetBrokenDraft();
     expect(world.brokenDraft()).toBeNull();
   });

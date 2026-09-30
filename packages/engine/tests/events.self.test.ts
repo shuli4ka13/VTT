@@ -6,10 +6,10 @@ import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const system = {
   id: 'x', name: 'x',
-  fields: [
-    { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
-    { tag: 'ячейки', label: 'Ячейки', value: { kind: 'stored', type: 'number', default: 3, min: 0 } },
-  ],
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'хиты', label: 'Хиты', kind: 'number', default: 20 },
+    { key: 'ячейки', label: 'Ячейки', kind: 'number', default: 3, min: 0 },
+  ] } },
   effects: {
     снаряд: {
       label: 'Снаряд', activation: 'manual',

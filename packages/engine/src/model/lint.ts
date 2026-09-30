@@ -4,7 +4,6 @@ import { calledOf, chainsOfEffect } from '../engine/effects.ts';
 import { basedOn, paramsOf } from './inherit.ts';
 import { danglingRows } from './integrity.ts';
 import { recordsOf, sheetKinds, argsWithProps, propKeysOf } from './owned.ts';
-import { withTableFields, same } from './sheet-columns.ts';
 import { blockNames } from './blocks.ts';
 import { MOMENTS } from '../events/moments.ts';
 import { TABS, STEP } from '../words/glossary.ts';
@@ -14,6 +13,7 @@ import {
   type Where, type Reference, type RefKind, type Declared,
   LISTEN,
 } from './references.ts';
+import { fieldsOf, fieldOf, fieldProblems } from './sheet-columns.ts';
 
 export type Level = 'error' | 'warn';
 
@@ -70,12 +70,12 @@ const stepsAt = (system: System, where: Where): Step[] | undefined => {
 
 function ownerText(ref: Reference, system: System): string | null {
   if (ref.kind === 'field' && ref.scope === 'plain') {
-    const field = system.fields.find(f => f.tag === ref.key);
+    const field = fieldOf(system, ref.key);
     return field?.lives === 'desk' ? `поле «${field.label}» лежит на столе — пишите @стол.${field.tag}` : null;
   }
   if (ref.kind !== 'field' || !ref.scope?.startsWith('owner:')) return null;
   const owner = ref.scope.slice('owner:'.length);
-  const field = system.fields.find(f => f.tag === ref.key);
+  const field = fieldOf(system, ref.key);
   if (!field) return null;
   if (owner === RECEIVER && ref.from.part === 'self') {
     return `в шагах отправителя получателя нет — они идут один раз до всех целей; пишите @отправитель.${field.tag}`;
@@ -257,23 +257,28 @@ function emittedBy(steps: Step[] | undefined): string[] {
 }
 
 function tableFieldProblems(system: System): Problem[] {
-  let built: System;
-  try { built = withTableFields(system); } catch (err) {
-    return [{ where: { tab: 'rules', section: 'tables' }, level: 'error', text: (err as Error).message }];
+  return fieldProblems(system).map(problem => ({
+    where: { tab: 'rules' as const, section: 'tables', key: problem.table }, level: 'error' as const, text: problem.message,
+  }));
+}
+
+function fieldNameProblems(system: System): Problem[] {
+  const out: Problem[] = [];
+  const seen = new Set<string>();
+  for (const field of fieldsOf(system)) {
+    const where = { tab: 'sheet' as const, field: field.tag };
+    if (seen.has(field.tag)) out.push({ where, level: 'error', text: `имя «${field.tag}» занято дважды — у колонок листа оно одно на всю систему` });
+    seen.add(field.tag);
+    if (!field.cell && system.tables?.[field.tag]) {
+      out.push({ where, level: 'error', text: `имя «${field.tag}» носит и колонка листа, и таблица «${system.tables[field.tag]!.label || field.tag}»` });
+    }
   }
-  if (built === system) return [];
-  const tables = new Set([...system.fields, ...built.fields].map(f => f.cell?.table).filter((t): t is string => Boolean(t)));
-  return [...tables]
-    .filter(id => !same(system.fields.filter(f => f.cell?.table === id), built.fields.filter(f => f.cell?.table === id)))
-    .map(id => ({
-      where: { tab: 'rules', section: 'tables', key: id }, level: 'error' as const,
-      text: `поля таблицы «${system.tables?.[id]?.label ?? id}» разошлись с её колонками — их правили в обход таблицы`,
-    }));
+  return out;
 }
 
 function fieldRollProblems(system: System): Problem[] {
   const out: Problem[] = [];
-  for (const field of system.fields) {
+  for (const field of fieldsOf(system)) {
     if (!field.roll) continue;
     const where = { tab: 'sheet' as const, field: field.tag };
     const die = field.roll.die?.constant;
@@ -345,7 +350,7 @@ function orphanProblems(system: System, compendium?: Compendium): Problem[] {
 
 function paramProblems(system: System): Problem[] {
   const out: Problem[] = [];
-  const fields = new Set(system.fields.map(f => f.tag));
+  const fields = new Set(fieldsOf(system).map(f => f.tag));
   for (const [id, effect] of Object.entries(system.effects)) {
     for (const param of effect.params ?? []) {
       if (!fields.has(param.key)) continue;
@@ -434,6 +439,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...orphanProblems(system, compendium));
   out.push(...sheetKindProblems(system));
   out.push(...fieldRollProblems(system));
+  out.push(...fieldNameProblems(system));
   out.push(...tableFieldProblems(system));
   out.push(...danglingRows(system, compendium).map(d => ({ where: d.where, level: 'error' as const, text: d.text })));
   return out;
@@ -456,7 +462,7 @@ export function describeWhere(where: Where, system: System, compendium?: Compend
   const parts: string[] = [];
   if (where.tab === 'sheet') {
     parts.push(TABS.sheet);
-    if (where.field) parts.push(`поле ${quoted(system.fields.find(f => f.tag === where.field)?.label, where.field)}`);
+    if (where.field) parts.push(`поле ${quoted(fieldOf(system, where.field)?.label, where.field)}`);
   } else if (where.tab === 'effects') {
     parts.push(TABS.effects);
     if (where.effect) parts.push(`эффект ${quoted(system.effects[where.effect]?.label, where.effect)}`);

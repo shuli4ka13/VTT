@@ -7,7 +7,7 @@ const hp = (sign: 'add' | 'subtract', n: number) => ({ type: 'apply', target: { 
 
 const system = {
   id: 'x', name: 'x',
-  fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } }],
+  tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } },
   effects: {
     горит: {
       label: 'Горит', activation: 'passive', duration: { kind: 'permanent' },

@@ -4,6 +4,7 @@ import { stepModule } from '@vtt/engine/engine/steps/index';
 import { calledOf } from '@vtt/engine/engine/effects';
 import { amountParamOf } from '@vtt/engine/model/lists';
 import { STEP } from '../../words.ts';
+import { hasField } from '@vtt/engine/model/sheet-columns';
 
 export interface EarlierStep { id: string; type: string; at?: number; title?: string }
 
@@ -109,7 +110,7 @@ export function namesOf(ctx: SlotContext): Map<string, string> {
 }
 
 export function refForName(ctx: SlotContext, name: string): SlotRef | null {
-  if (ctx.system.fields.some(field => field.tag === name)) return null;
+  if (hasField(ctx.system, name)) return null;
   if ((ctx.effect.params ?? []).some(param => param.key === name)) return { param: name };
   if (ctx.system.constants?.[name]) return { constant: name };
   return null;

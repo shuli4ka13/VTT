@@ -8,11 +8,11 @@ const add = (tag: string, n: number) => ({ type: 'apply', target: { tag }, direc
 
 const system = {
   id: 'x', name: 'x',
-  fields: [
-    { tag: 'ярость', label: 'Ярость', value: { kind: 'stored', type: 'number', default: 0 } },
-    { tag: 'усталость', label: 'Истощение', value: { kind: 'stored', type: 'number', default: 0 } },
-    { tag: 'замечено', label: 'Замечено', value: { kind: 'stored', type: 'number', default: 0 } },
-  ],
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'ярость', label: 'Ярость', kind: 'number' },
+    { key: 'усталость', label: 'Истощение', kind: 'number' },
+    { key: 'замечено', label: 'Замечено', kind: 'number' },
+  ] } },
   effects: {
     ярость: {
       label: 'Ярость', activation: 'passive', duration: { kind: 'permanent' }, reapply: 'refresh',
@@ -109,7 +109,7 @@ group('подписка на чужое: «на мне появилось» и �
 group('выдача у типа предмета', () => {
   test('надел вещь — висит то, что выдаёт её тип, снял — ушло', () => {
     const system = {
-      id: 's', name: 's', fields: [{ tag: 'ac', label: 'КБ', value: { kind: 'stored', type: 'number', default: 10 } }],
+      id: 's', name: 's', tables: { лист: { shape: 'single', columns: [{ key: 'ac', label: 'КБ', kind: 'number', default: 10 }] } },
       effects: { shield_rule: { label: 'Щит', activation: 'passive', modifiers: [{ kind: 'value', target: 'ac', op: 'add', value: { expr: '2' } }] } },
       records: { shield: { kind: 'item', label: 'Щит', grants: ['shield_rule'] } },
     } as unknown as System;

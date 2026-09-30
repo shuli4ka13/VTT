@@ -390,7 +390,7 @@ describe('сквозной прогон стенда', () => {
       .send({
         title: 'Для проверки заполненности',
         system: {
-          name: 'Для проверки заполненности', fields: [],
+          name: 'Для проверки заполненности', tables: {},
           effects: { strike: { label: 'Удар', activation: 'manual', params: [{ key: 'damage_dice', label: 'Кость урона', kind: 'dice' }], steps: [] } },
           records: {
             weapon: { kind: 'item', label: 'Оружие',
@@ -435,7 +435,7 @@ describe('публикация компендиума проверяется л�
     const sys = await as(http().post('/systems')).send({
       title: 'Для линта книги',
       system: {
-        name: 'Для линта книги', fields: [], effects: {},
+        name: 'Для линта книги', effects: {},
         tables: { rolls: { label: 'Броски', key: 'word', rows: [{ value: 'атака' }] } },
         records: { gear: { kind: 'item', label: 'Снаряжение', props: [], bindings: [] } },
       },
@@ -498,7 +498,7 @@ describe('концентрация снимается с листа', () => {
 
     const system = {
       id: 'связи', name: 'Со связями',
-      fields: [{ tag: 'бонус', label: 'Бонус', value: { kind: 'stored', type: 'number', default: 0 } }],
+      tables: { лист: { shape: 'single', columns: [{ key: 'бонус', label: 'Бонус', kind: 'number' }] } },
       effects: {
         держу: {
           label: 'Держу', activation: 'manual', bond: true,

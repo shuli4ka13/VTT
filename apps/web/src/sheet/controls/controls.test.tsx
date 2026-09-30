@@ -7,22 +7,15 @@ import type { System, Sheet } from '@vtt/schema';
 import type { Reader } from '../../engine/use-calc.ts';
 
 const system = {
-  fields: [
-    { tag: 'хиты', label: 'Хиты', group: 'Состояние', control: 'bar',
-      value: { kind: 'stored', type: 'number', default: 10, min: 0, max: '#максимум' } },
-    { tag: 'максимум', label: 'Максимум', group: 'Состояние', value: { kind: 'formula', expr: '20' } },
-    { tag: 'провалы', label: 'Провалы', group: 'Состояние', control: 'pips',
-      value: { kind: 'stored', type: 'number', default: 0, min: 0, max: 3 } },
-    { tag: 'броня', label: 'Броня', group: 'Состояние', control: 'stepper',
-      value: { kind: 'stored', type: 'number', default: 2, min: 0, max: 5 } },
-    { tag: 'тяжёлый', label: 'Тяжёлый доспех', group: 'Состояние', control: 'toggle',
-      value: { kind: 'stored', type: 'boolean', default: false } },
-    { tag: 'огонь', label: 'Огонь доходит', group: 'Состояние', control: 'choice',
-      value: { kind: 'stored', type: 'choice', from: 'доля', default: 1 } },
-    { tag: 'атлетика', label: 'Атлетика', group: 'Состояние', control: 'ring',
-      value: { kind: 'stored', type: 'choice', from: 'владение', default: 0 } },
-  ],
-  tables: {
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'хиты', label: 'Хиты', kind: 'number', default: 10, min: 0, max: '#максимум', control: 'bar', block: 'Состояние' },
+    { key: 'максимум', label: 'Максимум', expr: '20', block: 'Состояние' },
+    { key: 'провалы', label: 'Провалы', kind: 'number', min: 0, max: 3, control: 'pips', block: 'Состояние' },
+    { key: 'броня', label: 'Броня', kind: 'number', default: 2, min: 0, max: 5, control: 'stepper', block: 'Состояние' },
+    { key: 'тяжёлый', label: 'Тяжёлый доспех', kind: 'boolean', control: 'toggle', block: 'Состояние' },
+    { key: 'огонь', label: 'Огонь доходит', kind: 'choice', from: 'доля', default: 1, control: 'choice', block: 'Состояние' },
+    { key: 'атлетика', label: 'Атлетика', kind: 'choice', from: 'владение', default: 0, control: 'ring', block: 'Состояние' },
+  ] },
     доля: { key: 'number', rows: [{ value: 0, label: 'иммунитет' }, { value: 0.5, label: 'половина' }, { value: 1, label: 'полностью' }, { value: 2, label: 'вдвое' }] },
     владение: { key: 'number', rows: [{ value: 0, label: 'нет' }, { value: 1, label: 'владение' }] },
   },

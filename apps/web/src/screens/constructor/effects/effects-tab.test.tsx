@@ -5,6 +5,7 @@ import { renderOpen } from '../../../testing/render-open.tsx';
 import { EffectsTab } from './effects-tab.tsx';
 import { useWorld, emptySystem } from '../../../store/world.ts';
 import { CREATE_KINDS } from './words.ts';
+import { fieldsOf, hasField } from '@vtt/engine/model/sheet-columns';
 
 describe('EffectsTab: палитра трёх понятий', () => {
   beforeEach(() => {
@@ -156,7 +157,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
     renderOpen(<EffectsTab />);
     const fix = screen.getByText(/взять блок/);
     fireEvent.click(fix);
-    expect(useWorld.getState().system.fields.some(f => f.tag === 'hp_current')).toBe(true);
+    expect(hasField(useWorld.getState().system, 'hp_current')).toBe(true);
   });
 });
 
@@ -228,7 +229,7 @@ describe('три вида создания, два вида запуска', () 
     expect(made).toEqual(['+ кнопкой', '+ срабатывает сам', '+ висит и правит']);
     const chrome = document.body.cloneNode(true) as HTMLElement;
     chrome.querySelectorAll('.column--right').forEach(node => node.remove());
-    const data = useWorld.getState().system.fields.map(field => field.label);
+    const data = fieldsOf(useWorld.getState().system).map(field => field.label);
     const all = data.reduce((text, label) => text.split(label).join(''), chrome.textContent ?? '');
     expect(all.replace(/Реакции/g, '').match(/.{30}(реакци|триггерн).{30}/i)?.[0] ?? null).toBeNull();
   });
@@ -260,7 +261,7 @@ describe('вызываемый эффект — обычный эффект', ()
       ...state,
       system: {
         ...emptySystem(),
-        fields: [{ tag: 'hp', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 10 } }],
+        tables: { лист: { shape: 'single', columns: [{ key: 'hp', label: 'Хиты', kind: 'number', default: 10 }] } },
       },
       activeEffectId: null,
     }));
@@ -300,7 +301,7 @@ describe('эффект слушает время', () => {
       ...state,
       system: {
         ...emptySystem(),
-        fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 10 } }],
+        tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 10 }] } },
       },
       activeEffectId: null,
     }));
@@ -329,7 +330,7 @@ describe('крит — обычная формула, а не особый сл�
       ...state,
       system: {
         ...emptySystem(),
-        fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 10 } }],
+        tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 10 }] } },
         constants: { к20: { label: 'Кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
         effects: {
           удар: {
@@ -400,7 +401,7 @@ describe('шаг отправителя — один раз, до остальн
       ...state,
       system: {
         ...emptySystem(),
-        fields: [{ tag: 'ячейки', label: 'Ячейки', value: { kind: 'stored', type: 'number', default: 3 } }],
+        tables: { лист: { shape: 'single', columns: [{ key: 'ячейки', label: 'Ячейки', kind: 'number', default: 3 }] } },
         effects: { снаряд: { label: 'Снаряд', activation: 'manual', params: [], steps: [] } },
       },
       activeEffectId: 'снаряд',

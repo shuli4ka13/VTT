@@ -4,6 +4,7 @@ import { ownerOf, OWNER_WORDS } from '../engine/owners.ts';
 import { outcomeWords, rollName } from '../engine/roll-tags.ts';
 import type { Envelope } from './envelope.ts';
 import type { System, Sheet } from '../model/types.ts';
+import { fieldOf, hasField } from '../model/sheet-columns.ts';
 
 const tagsOfStep = (step: Record<string, any> | undefined, trace?: Record<string, any>): string[] =>
   (trace?.tags ?? step?.tags ?? (step?.roll?.tags ?? []).filter((t: unknown) => typeof t === 'string')) as string[];
@@ -25,7 +26,7 @@ export function previewLines(envelope: Envelope, system: System, dry: { report: 
   for (const trace of dry?.report.trace ?? []) {
     if (trace.type !== 'threshold' || trace.skipped) continue;
     const versus = trace.versus?.tag
-      ? system.fields.find(f => f.tag === trace.versus.tag)?.label ?? trace.versus.tag : 'порог';
+      ? fieldOf(system, trace.versus.tag)?.label ?? trace.versus.tag : 'порог';
     const own = !packed.has(String(trace.step ?? '')) && Array.isArray(trace.rolls)
       ? `бросок цели [${trace.rolls.join(', ')}] + ${trace.bonus ?? 0} = ${trace.total} ` : '';
     const step = steps.find(s => String(s.id ?? '') === String(trace.step ?? ''));
@@ -49,18 +50,18 @@ export function describeEntry(
 
   const changes = (entry.report.changes ?? []) as { tag: string; from: unknown; to: unknown }[];
   const shown = changes.map(c => {
-    const field = system.fields.find(f => f.tag === c.tag);
+    const field = fieldOf(system, c.tag);
     return `${field?.label ?? c.tag}: ${c.from} → ${c.to}`;
   });
   const labelOf = (tag: string) =>
-    system.fields.find(f => f.tag === tag)?.label ?? tag;
+    fieldOf(system, tag)?.label ?? tag;
   const effect = system.effects[String(entry.report.effect)] as any;
   const stepOf = (trace: Record<string, unknown>) => (effect?.steps ?? [])
     .find((step: any, index: number) => String(step.id ?? index) === String(trace.step));
   const nameLabel = (name: string): string => {
     const owned = ownerOf(name);
     if (owned) return `${nameLabel(owned.rest)} ${OWNER_WORDS[owned.owner]}`;
-    if (name.includes('.') && !system.fields.some(f => f.tag === name)) return outputLabel(name);
+    if (name.includes('.') && !hasField(system, name)) return outputLabel(name);
     const params: { key: string; label?: string }[] = effect?.params ?? [];
     const param = params.find(p => p.key === name);
     return param ? String(param.label ?? name) : labelOf(name);

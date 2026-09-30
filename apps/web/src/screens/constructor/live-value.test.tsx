@@ -7,10 +7,10 @@ import type { System } from '@vtt/schema';
 
 const system = (): System => ({
   ...emptySystem(),
-  fields: [
-    { tag: 'сила', label: 'Сила', group: 'Характеристики', value: { kind: 'stored', type: 'number', default: 14 } },
-    { tag: 'мод', label: 'Модификатор Силы', group: 'Характеристики', value: { kind: 'formula', expr: '(#сила - 10) / 2' } },
-  ],
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'сила', label: 'Сила', kind: 'number', default: 14, block: 'Характеристики' },
+    { key: 'мод', label: 'Модификатор Силы', expr: '(#сила - 10) / 2', block: 'Характеристики' },
+  ] } },
 } as System);
 
 describe('живое значение под формулой колонки персонажа', () => {
@@ -32,9 +32,7 @@ describe('живое значение под формулой колонки п�
     expect(document.body.textContent).toContain('= 2');
 
     act(() => {
-      useWorld.getState().editField('мод', draft => {
-        if (draft.value.kind === 'formula') draft.value.expr = '#сила + 1';
-      });
+      useWorld.getState().editColumn('лист', 'мод', draft => { draft.expr = '#сила + 1'; });
     });
     expect(document.body.textContent).toContain('= 15');
   });
@@ -42,9 +40,7 @@ describe('живое значение под формулой колонки п�
   it('сломанная формула не роняет экран, а показывает прочерк', () => {
     render(<RulesTab />);
     act(() => {
-      useWorld.getState().editField('мод', draft => {
-        if (draft.value.kind === 'formula') draft.value.expr = '#нет_такого + 1';
-      });
+      useWorld.getState().editColumn('лист', 'мод', draft => { draft.expr = '#нет_такого + 1'; });
     });
     expect(document.body.textContent).toContain('= —');
   });

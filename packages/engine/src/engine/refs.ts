@@ -10,6 +10,7 @@ import { ownerOf, RECEIVER, SENDER, DESK } from './owners.ts';
 import { rollNotation, multiplyNotation } from './dice.ts';
 import type { Param, Die, System } from '../model/types.ts';
 import type { Pass } from './calc.ts';
+import { hasField } from '../model/sheet-columns.ts';
 
 export interface RefContext {
   pass: Pass;
@@ -252,7 +253,7 @@ export function resolveOptionalNumber(ref: unknown, ctx: RefContext, what: strin
   return value;
 }
 
-const isField = (system: System, name: string): boolean => system.fields.some(field => field.tag === name);
+const isField = (system: System, name: string): boolean => hasField(system, name);
 
 function waitingName(name: string, ctx: RefContext): boolean {
   if (ownerOf(name)) return false;
@@ -350,7 +351,7 @@ export function lonelyField(ref: unknown, system?: System): string | null {
   if (!exact) return null;
   const owned = ownerOf(exact[1]!);
   const name = owned ? owned.rest : exact[1]!;
-  return !name.includes('.') || system?.fields.some(f => f.tag === name) ? name : null;
+  return !name.includes('.') || (system && hasField(system, name)) ? name : null;
 }
 
 function senderValue(name: string, ctx: RefContext): unknown {

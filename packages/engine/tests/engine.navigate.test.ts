@@ -2,18 +2,18 @@ import { group, test, eq, ok, throws } from './harness.ts';
 import { calc } from '../src/engine/calc.ts';
 import { send, receive } from '../src/events/envelope.ts';
 import type { System, Sheet } from '../src/model/types.ts';
+import { withColumn } from '../src/model/sheet-columns.ts';
 
 const система = {
   id: 'н', name: 'н',
-  fields: [
-    { tag: 'сила', label: 'Сила', value: { kind: 'stored', type: 'number', default: 3 } },
-    { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 50 } },
-    { tag: 'класс', label: 'Класс', value: { kind: 'stored', type: 'choice', from: 'классы', default: 'воин' } },
-    { tag: 'кость_хитов', label: 'Кость хитов', value: { kind: 'formula', expr: '@класс.кость' } },
-    { tag: 'природа_класса', label: 'Природа', value: { kind: 'formula', expr: '@класс.урон.природа' } },
-  ],
   constants: {},
-  tables: {
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'сила', label: 'Сила', kind: 'number', default: 3 },
+    { key: 'хиты', label: 'Хиты', kind: 'number', default: 50 },
+    { key: 'класс', label: 'Класс', kind: 'choice', from: 'классы', default: 'воин' },
+    { key: 'кость_хитов', label: 'Кость хитов', expr: '@класс.кость' },
+    { key: 'природа_класса', label: 'Природа', expr: '@класс.урон.природа' },
+  ] },
     природы: { label: 'Природа урона', key: 'word', rows: [{ value: 'физ', label: 'физический' }, { value: 'стих', label: 'стихийный' }] },
     урон: {
       label: 'Типы урона', key: 'word',
@@ -72,14 +72,14 @@ group('ссылка на таблицу читается через точку',
   });
 
   test('опечатка в колонке называется словами и перечисляет, что есть', () => {
-    const кривая = { ...система, fields: [...система.fields, { tag: 'х', label: 'х', value: { kind: 'formula', expr: '@класс.кост' } }] } as System;
+    const кривая = withColumn(система, { key: 'х', label: 'х', expr: '@класс.кост' });
     const беда = throws(() => calc(кривая, лист(), 'х'));
     ok(String(беда.message).includes('кост'), String(беда.message));
     ok(String(беда.message).includes('Кость хитов'), String(беда.message));
   });
 
   test('идти дальше обычной колонки некуда — так и сказано', () => {
-    const кривая = { ...система, fields: [...система.fields, { tag: 'х', label: 'х', value: { kind: 'formula', expr: '@класс.кость.ещё' } }] } as System;
+    const кривая = withColumn(система, { key: 'х', label: 'х', expr: '@класс.кость.ещё' });
     const беда = throws(() => calc(кривая, лист(), 'х'));
     ok(String(беда.message).includes('не из таблицы'), String(беда.message));
   });

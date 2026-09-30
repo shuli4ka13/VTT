@@ -15,6 +15,7 @@ import { critOf, armorOf } from '@vtt/engine/model/toggles';
 import type { System } from '@vtt/schema';
 import { calledOf } from '@vtt/engine/engine/effects';
 import { blockNames } from '@vtt/engine/model/blocks';
+import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 
 type SectionKey = 'character' | 'dice' | 'edits' | 'tables' | 'blocks' | 'initiative' | 'toggles';
 
@@ -26,7 +27,7 @@ interface Section {
 }
 
 const SECTIONS: Section[] = [
-  { key: 'character', label: 'Листы', count: system => system.fields.filter(isCharacterColumn).length },
+  { key: 'character', label: 'Листы', count: system => fieldsOf(system).filter(isCharacterColumn).length },
   { key: 'dice', label: 'Кости', count: system => dieEntries(system).length },
   { key: 'edits', label: 'Правки броска', count: system => Object.keys(system.roll_edits ?? {}).length },
   { key: 'tables', label: 'Таблицы', count: system => Object.keys(system.tables ?? {}).length },

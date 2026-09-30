@@ -7,7 +7,7 @@ import type { System, Effect } from '@vtt/schema';
 
 const ctx: SlotContext = {
   system: {
-    fields: [{ tag: 'armor', label: 'Класс брони', value: { kind: 'stored', type: 'number', default: 10 } }],
+    tables: { лист: { shape: 'single', columns: [{ key: 'armor', label: 'Класс брони', kind: 'number', default: 10 }] } },
     constants: { lead: { label: 'Ведущая кость', kind: 'die', dice: [{ sides: 20 }] } },
     effects: {},
   } as unknown as System,
@@ -163,7 +163,7 @@ describe('SlotInput: дописывание после фишки', () => {
     const onChange = (next: unknown) => { value = next; };
     const ctxWithField: SlotContext = {
       ...ctx,
-      system: { ...ctx.system, fields: [{ tag: 'сила', label: 'Сила', value: { kind: 'stored', type: 'number', default: 10 } }] } as never,
+      system: { ...ctx.system, tables: { лист: { shape: 'single', columns: [{ key: 'сила', label: 'Сила', kind: 'number', default: 10 }] } } } as never,
     };
     const { rerender } = render(
       <SlotInput value={value} onChange={onChange} context={ctxWithField} />,

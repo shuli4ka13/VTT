@@ -6,7 +6,7 @@ import { groupSteps } from '../../cards.ts';
 import type { System, Effect, Step } from '@vtt/schema';
 
 const system = {
-  fields: [{ tag: 'armor', label: 'Класс брони', value: { kind: 'stored', type: 'number', default: 10 } }],
+  tables: { лист: { shape: 'single', columns: [{ key: 'armor', label: 'Класс брони', kind: 'number', default: 10 }] } },
   constants: { lead: { label: 'Ведущая кость', kind: 'die', dice: [{ sides: 20 }] } },
   rolls: [], effects: {},
 } as unknown as System;

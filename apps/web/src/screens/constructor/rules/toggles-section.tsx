@@ -7,12 +7,13 @@ import { Card, CardHead, Field, Segmented, Select, Verdict, Button, DangerButton
 import type { System } from '@vtt/schema';
 import type { WorldState } from '../../../store/world.ts';
 import { calledOf } from '@vtt/engine/engine/effects';
+import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 
 type EditSystem = WorldState['editSystem'];
 interface Props { system: System; editSystem: EditSystem }
 
 const numberFields = (system: System) =>
-  system.fields.filter(f => f.value.kind === 'stored' && f.value.type === 'number');
+  fieldsOf(system).filter(f => f.value.kind === 'stored' && f.value.type === 'number');
 
 export function TogglesSection({ system, editSystem }: Props) {
   const crit = critOf(system);

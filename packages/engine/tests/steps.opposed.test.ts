@@ -5,17 +5,16 @@ import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const system = {
   id: 'пулы', name: 'пулы',
-  fields: [
-    { tag: 'ловкость', label: 'Ловкость', value: { kind: 'stored', type: 'number', default: 3 } },
-    { tag: 'стрельба', label: 'Стрельба', value: { kind: 'stored', type: 'number', default: 3 } },
-    { tag: 'реакция', label: 'Реакция', value: { kind: 'stored', type: 'number', default: 2 } },
-    { tag: 'хп', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 10 } },
-  ],
   constants: {
     пул_атаки: { label: 'Пул атаки', kind: 'die', dice: [{ count: { expr: '@отправитель.ловкость + @отправитель.стрельба' }, sides: 6 }], read: { kind: 'count', atLeast: 5 } },
     пул_защиты: { label: 'Пул защиты', kind: 'die', dice: [{ count: { expr: '@получатель.реакция' }, sides: 6 }], read: { kind: 'count', atLeast: 5 } },
   },
-  tables: { rolls: { label: 'Броски', key: 'word', rows: [{ value: 'защита' }] } },
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'ловкость', label: 'Ловкость', kind: 'number', default: 3 },
+    { key: 'стрельба', label: 'Стрельба', kind: 'number', default: 3 },
+    { key: 'реакция', label: 'Реакция', kind: 'number', default: 2 },
+    { key: 'хп', label: 'Хиты', kind: 'number', default: 10 },
+  ] }, rolls: { label: 'Броски', key: 'word', rows: [{ value: 'защита' }] } },
   effects: {
     вырваться: {
       label: 'Вырваться', activation: 'manual',

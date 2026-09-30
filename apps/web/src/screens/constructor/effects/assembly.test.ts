@@ -8,11 +8,11 @@ import type { System, Sheet, Step } from '@vtt/schema';
 
 const base = (): System => ({
   ...emptySystem(),
-  fields: [
-    { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
-    { tag: 'временные', label: 'Временные хиты', value: { kind: 'stored', type: 'number', default: 5, min: 0 } },
-    { tag: 'броня', label: 'Броня', value: { kind: 'stored', type: 'number', default: 10 } },
-  ],
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'хиты', label: 'Хиты', kind: 'number', default: 20 },
+    { key: 'временные', label: 'Временные хиты', kind: 'number', default: 5, min: 0 },
+    { key: 'броня', label: 'Броня', kind: 'number', default: 10 },
+  ] } },
   constants: { к20: { label: 'Кость проверки', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
 } as System);
 

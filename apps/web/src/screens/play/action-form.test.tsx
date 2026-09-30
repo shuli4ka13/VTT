@@ -6,8 +6,7 @@ import type { System, Compendium } from '@vtt/schema';
 
 const system = {
   id: 'x', name: 'x',
-  tables: { места: { label: 'Места', key: 'word', rows: [{ value: 'тело', label: 'тело' }, { value: 'голова', label: 'голова' }] } },
-  fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } }],
+  tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] }, места: { label: 'Места', key: 'word', rows: [{ value: 'тело', label: 'тело' }, { value: 'голова', label: 'голова' }] } },
   effects: {
     выстрел: {
       label: 'Выстрел', activation: 'manual',

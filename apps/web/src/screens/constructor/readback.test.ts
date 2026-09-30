@@ -1,13 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { checkReadback, changeReadback, numberReadback, joinReadback, editReadback, dieReadback } from './readback.ts';
 import type { System, Effect, Step } from '@vtt/schema';
+import { withColumn } from '@vtt/engine/model/sheet-columns';
 
 const system = {
-  fields: [
-    { tag: 'armor', label: 'Класс брони', value: { kind: 'stored', type: 'number', default: 10 } },
-    { tag: 'wounds', label: 'Текущие хиты', value: { kind: 'stored', type: 'number', default: 10 } },
-    { tag: 'power_mod', label: 'Мод Силы', value: { kind: 'formula', expr: '1' } },
-  ],
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'armor', label: 'Класс брони', kind: 'number', default: 10 },
+    { key: 'wounds', label: 'Текущие хиты', kind: 'number', default: 10 },
+    { key: 'power_mod', label: 'Мод Силы', expr: '1' },
+  ] } },
   constants: { lead: { label: 'Ведущая кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
   effects: { poison: { label: 'Отравлен', activation: 'passive', modifiers: [] } },
 } as unknown as System;
@@ -131,10 +132,7 @@ describe('dieReadback — кость словами', () => {
   });
 
   it('пул из листа назван лейблом поля, а не тегом', () => {
-    const sys = {
-      ...system,
-      fields: [...system.fields, { tag: 'pool', label: 'Пул костей', value: { kind: 'stored', type: 'number', default: 4 } }],
-    } as unknown as System;
+    const sys = withColumn(system, { key: 'pool', label: 'Пул костей', kind: 'number', default: 4 });
     const die = { kind: 'die', dice: [{ count: { expr: '@pool' }, sides: 6 }], read: 'best' };
     expect(joinReadback(dieReadback(die, sys)))
       .toBe('Кинуть к6 по числу «Пул костей» и взять лучшую.');

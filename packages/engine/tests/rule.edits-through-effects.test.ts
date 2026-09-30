@@ -19,7 +19,6 @@ const passive = (label: string, edit: string) => ({
 
 const world = (edits: Record<string, unknown>, effects: string[]) => ({
   id: 'чужой-мир',
-  fields: [],
   tables: { rolls: { label: 'Броски', key: 'word', rows: [{ value: 'проверка' }] } },
   constants: { кость: { label: 'Кость черты', kind: 'die', dice: [{ count: 1, sides: 6 }] } },
   roll_edits: edits,
@@ -164,7 +163,6 @@ group('любой бросок ловит правку, ничего для эт
 group('переворот к100 доезжает через эффект — проверка под навык', () => {
   const sys = (lucky: boolean) => ({
     id: 'варгейм',
-    fields: [],
     tables: { rolls: { label: 'Броски', key: 'word', rows: [{ value: 'проверка' }] } },
     constants: { сотня: { label: 'к100', kind: 'die', dice: [{ count: 1, sides: 100 }] } },
     roll_edits: { удача: { label: 'Удача', ops: [{ op: 'flip', prefer: 'low' }] } },

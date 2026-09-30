@@ -3,259 +3,12 @@
   "system": {
     "id": "blades",
     "name": "Blades in the Dark",
-    "fields": [
-      {
-        "tag": "hunt",
-        "label": "Охота",
-        "group": "Действия",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 4
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "study",
-        "label": "Изучение",
-        "group": "Действия",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 4
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "survey",
-        "label": "Разведка",
-        "group": "Действия",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 4
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "tinker",
-        "label": "Механика",
-        "group": "Действия",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 4
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "finesse",
-        "label": "Ловкость рук",
-        "group": "Действия",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 4
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "prowl",
-        "label": "Скрытность",
-        "group": "Действия",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 4
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "skirmish",
-        "label": "Драка",
-        "group": "Действия",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 4
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "wreck",
-        "label": "Разрушение",
-        "group": "Действия",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 4
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "attune",
-        "label": "Мистика",
-        "group": "Действия",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 4
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "command",
-        "label": "Приказ",
-        "group": "Действия",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 4
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "consort",
-        "label": "Связи",
-        "group": "Действия",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 4
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "sway",
-        "label": "Убеждение",
-        "group": "Действия",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 4
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "stress",
-        "label": "Стресс",
-        "group": "Состояние",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 9
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "alarm",
-        "label": "Часы тревоги",
-        "lives": "desk",
-        "group": "Стол",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 8
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "heat",
-        "label": "Жар банды",
-        "lives": "group",
-        "group": "Банда",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 9
-        },
-        "control": "stepper"
-      },
-      {
-        "tag": "rep",
-        "label": "Репутация",
-        "group": "Банда",
-        "lives": "group",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        }
-      },
-      {
-        "tag": "coin",
-        "label": "Монеты банды",
-        "group": "Банда",
-        "lives": "group",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 2,
-          "min": 0
-        }
-      },
-      {
-        "tag": "wanted",
-        "label": "Уровень розыска",
-        "group": "Банда",
-        "lives": "group",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        }
-      },
-      {
-        "tag": "tier",
-        "label": "Ярус",
-        "group": "Банда",
-        "lives": "group",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        }
-      }
-    ],
     "groups": {
       "Действия": {},
       "Состояние": {},
       "Стол": {},
-      "Ремесло": {},
       "Банда": {},
+      "Ремесло": {},
       "Приёмы": {}
     },
     "constants": {
@@ -288,6 +41,190 @@
       }
     },
     "tables": {
+      "лист": {
+        "label": "Лист",
+        "shape": "single",
+        "columns": [
+          {
+            "key": "hunt",
+            "label": "Охота",
+            "kind": "number",
+            "min": 0,
+            "max": 4,
+            "control": "pips",
+            "block": "Действия"
+          },
+          {
+            "key": "study",
+            "label": "Изучение",
+            "kind": "number",
+            "min": 0,
+            "max": 4,
+            "control": "pips",
+            "block": "Действия"
+          },
+          {
+            "key": "survey",
+            "label": "Разведка",
+            "kind": "number",
+            "min": 0,
+            "max": 4,
+            "control": "pips",
+            "block": "Действия"
+          },
+          {
+            "key": "tinker",
+            "label": "Механика",
+            "kind": "number",
+            "min": 0,
+            "max": 4,
+            "control": "pips",
+            "block": "Действия"
+          },
+          {
+            "key": "finesse",
+            "label": "Ловкость рук",
+            "kind": "number",
+            "min": 0,
+            "max": 4,
+            "control": "pips",
+            "block": "Действия"
+          },
+          {
+            "key": "prowl",
+            "label": "Скрытность",
+            "kind": "number",
+            "min": 0,
+            "max": 4,
+            "control": "pips",
+            "block": "Действия"
+          },
+          {
+            "key": "skirmish",
+            "label": "Драка",
+            "kind": "number",
+            "min": 0,
+            "max": 4,
+            "control": "pips",
+            "block": "Действия"
+          },
+          {
+            "key": "wreck",
+            "label": "Разрушение",
+            "kind": "number",
+            "min": 0,
+            "max": 4,
+            "control": "pips",
+            "block": "Действия"
+          },
+          {
+            "key": "attune",
+            "label": "Мистика",
+            "kind": "number",
+            "min": 0,
+            "max": 4,
+            "control": "pips",
+            "block": "Действия"
+          },
+          {
+            "key": "command",
+            "label": "Приказ",
+            "kind": "number",
+            "min": 0,
+            "max": 4,
+            "control": "pips",
+            "block": "Действия"
+          },
+          {
+            "key": "consort",
+            "label": "Связи",
+            "kind": "number",
+            "min": 0,
+            "max": 4,
+            "control": "pips",
+            "block": "Действия"
+          },
+          {
+            "key": "sway",
+            "label": "Убеждение",
+            "kind": "number",
+            "min": 0,
+            "max": 4,
+            "control": "pips",
+            "block": "Действия"
+          },
+          {
+            "key": "stress",
+            "label": "Стресс",
+            "kind": "number",
+            "min": 0,
+            "max": 9,
+            "control": "pips",
+            "block": "Состояние"
+          }
+        ]
+      },
+      "стол": {
+        "label": "Стол",
+        "shape": "single",
+        "owner": "desk",
+        "columns": [
+          {
+            "key": "alarm",
+            "label": "Часы тревоги",
+            "kind": "number",
+            "min": 0,
+            "max": 8,
+            "control": "pips",
+            "block": "Стол"
+          }
+        ]
+      },
+      "группа": {
+        "label": "Группа",
+        "shape": "single",
+        "owner": "group",
+        "columns": [
+          {
+            "key": "heat",
+            "label": "Жар банды",
+            "kind": "number",
+            "min": 0,
+            "max": 9,
+            "control": "stepper",
+            "block": "Банда"
+          },
+          {
+            "key": "rep",
+            "label": "Репутация",
+            "kind": "number",
+            "min": 0,
+            "block": "Банда"
+          },
+          {
+            "key": "coin",
+            "label": "Монеты банды",
+            "kind": "number",
+            "default": 2,
+            "min": 0,
+            "block": "Банда"
+          },
+          {
+            "key": "wanted",
+            "label": "Уровень розыска",
+            "kind": "number",
+            "min": 0,
+            "block": "Банда"
+          },
+          {
+            "key": "tier",
+            "label": "Ярус",
+            "kind": "number",
+            "min": 0,
+            "block": "Банда"
+          }
+        ]
+      },
       "outcome": {
         "label": "Исход действия",
         "key": "range",

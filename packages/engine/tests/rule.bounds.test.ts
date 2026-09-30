@@ -4,15 +4,13 @@ import { newPass } from '../src/engine/calc.ts';
 
 const sys: any = {
   id: 'границы',
-  fields: [
-    { tag: 'хп', label: 'Хиты',
-      value: { kind: 'stored', type: 'number', default: 10, min: 0, max: '#макс' } },
-    { tag: 'макс', label: 'Максимум', value: { kind: 'stored', type: 'number', default: 20 } },
-    { tag: 'жар', label: 'Температура', value: { kind: 'stored', type: 'number', default: 0 } },
-    { tag: 'имя', label: 'Имя', value: { kind: 'stored', type: 'text', default: 'Мирра' } },
-    { tag: 'кривое', label: 'Кривая граница',
-      value: { kind: 'stored', type: 'number', default: 0, max: '#имя' } },
-  ],
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'хп', label: 'Хиты', kind: 'number', default: 10, min: 0, max: '#макс' },
+    { key: 'макс', label: 'Максимум', kind: 'number', default: 20 },
+    { key: 'жар', label: 'Температура', kind: 'number' },
+    { key: 'имя', label: 'Имя', kind: 'text', default: 'Мирра' },
+    { key: 'кривое', label: 'Кривая граница', kind: 'number', max: '#имя' },
+  ] } },
   effects: {},
 };
 

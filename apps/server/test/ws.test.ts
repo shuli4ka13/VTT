@@ -9,6 +9,7 @@ import { openDatabase } from '../src/db/db.ts';
 import type { Database } from '../src/db/db.ts';
 
 import { sliceWorld } from './slice.ts';
+import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 
 const { system: dnd, compendium, sheets } = sliceWorld();
 
@@ -201,7 +202,7 @@ describe('бросок с листа', () => {
     say(socket, 'room:join', { roomId: room.id, token: gm.token });
     const state = await joined;
     const [hero] = state.state.sheets;
-    const rollable = state.state.system.fields.find((field: { roll?: unknown }) => field.roll);
+    const rollable = fieldsOf(state.state.system).find(field => field.roll)!;
     expect(rollable, 'в образце есть поле с броском').toBeTruthy();
 
     const rolled = waitFor(socket, 'room:delta');
@@ -212,8 +213,7 @@ describe('бросок с листа', () => {
     expect(said).toMatch(/\[\d+/);
 
     const refused = waitFor(socket, 'error');
-    const plain = state.state.system.fields.find((field: { roll?: unknown; value: { kind: string } }) =>
-      !field.roll && field.value.kind === 'stored');
+    const plain = fieldsOf(state.state.system).find(field => !field.roll && field.value.kind === 'stored')!;
     say(socket, 'sheet:roll', { roomId: room.id, sheetId: hero.id, tag: plain.tag });
     expect((await refused).message).toContain('не бросают');
 

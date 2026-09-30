@@ -1,5 +1,6 @@
 import type { System, FieldOption, Field, Effect } from './types.ts';
 import { rowsOf, tableOf } from './tables.ts';
+import { fieldsOf } from './sheet-columns.ts';
 
 export function listOf(system: System, key: string | undefined): FieldOption[] | undefined {
   if (!key) return undefined;
@@ -33,7 +34,7 @@ export function tagsOf(system: System, effect: Effect): string[] {
 export function listUsers(system: System, key: string): string[] {
   const out: string[] = [];
   const from = (thing: unknown): string | undefined => (thing as { from?: string }).from;
-  for (const field of system.fields ?? []) {
+  for (const field of fieldsOf(system)) {
     if (choiceTableOf(field) === key) out.push(`поле «${field.label}»`);
   }
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
@@ -48,6 +49,7 @@ export function listUsers(system: System, key: string): string[] {
     }
   }
   for (const [id, table] of Object.entries(system.tables ?? {})) {
+    if (table.shape === 'single') continue;
     for (const column of (table.columns ?? [])) {
       if (column.from === key) out.push(`колонка «${column.label ?? column.key}» таблицы «${table.label ?? id}»`);
     }

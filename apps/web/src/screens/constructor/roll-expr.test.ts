@@ -3,7 +3,7 @@ import { parseRollExpr, formatRollExpr, parseAmountExpr, formatAmountExpr } from
 import type { System } from '@vtt/schema';
 
 const system = {
-  fields: [],
+  tables: {},
   constants: { lead: { label: 'Ведущая кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
   effects: {},
 } as unknown as System;

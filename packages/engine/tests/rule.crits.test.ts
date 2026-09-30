@@ -12,7 +12,6 @@ const queue = (...values: number[]) => {
 
 const sys: any = {
   id: 'криты',
-  fields: [],
   tables: { rolls: { label: 'Броски', key: 'word', rows: [{ value: 'проверка' }] } },
   constants: {
     пул: { label: 'Пул', kind: 'die', dice: [{ count: 3, sides: 6 }], read: 'best' },

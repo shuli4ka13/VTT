@@ -4,10 +4,11 @@ import type { LaunchKind } from '@vtt/engine/model/effect-kinds';
 import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
 import { emptySystem } from '../../store/world.ts';
 import {
-  newEffect, newField, newRecordKind, newBinding, newProp, newDie, newRollEdit, newTable,
+  newEffect, newColumn, newRecordKind, newBinding, newProp, newDie, newRollEdit, newTable,
   newCalled, BRICKS,
 } from './factory.ts';
 import type { System } from '@vtt/schema';
+import { withColumn } from '@vtt/engine/model/sheet-columns';
 
 const BASES: [string, () => System][] = [
   ['пустая система', emptySystem],
@@ -46,7 +47,7 @@ for (const [name, base] of BASES) {
 
     it('новое поле проходит схему', () => {
       const system = base();
-      system.fields.push(newField(system, 'Новый блок').value);
+      system.tables = withColumn(system, newColumn(system, 'Новый блок').value).tables;
       expect(issuesOf(system)).toEqual([]);
     });
 

@@ -6,6 +6,7 @@ import { useReader } from '../../../engine/use-calc.ts';
 import { useDryRun, mannequinsOf, DICE_MODES } from '../../../engine/dry-run.ts';
 import type { DiceMode } from '../../../engine/dry-run.ts';
 import { DonorPalette } from '../donors.tsx';
+import { fieldOf } from '@vtt/engine/model/sheet-columns';
 
 const DICE_OPTIONS = (Object.keys(DICE_MODES) as DiceMode[]).map(key => [key, DICE_MODES[key].label] as const);
 
@@ -68,6 +69,6 @@ export function PreviewPanel({ effectId }: { effectId: string | null }) {
   );
 
   function labelOf(tag: string): string {
-    return system.fields.find(field => field.tag === tag)?.label ?? tag;
+    return fieldOf(system, tag)?.label ?? tag;
   }
 }

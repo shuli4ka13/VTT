@@ -3,368 +3,20 @@
   "system": {
     "id": "13age",
     "name": "13th Age",
-    "fields": [
-      {
-        "label": "Сила",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 10,
-          "min": 3,
-          "max": 24
-        },
-        "tag": "abilities.str.score",
-        "group": "Характеристики",
-        "cell": {
-          "table": "abilities",
-          "row": "str",
-          "column": "score"
-        }
-      },
-      {
-        "label": "Модификатор: Сила",
-        "value": {
-          "kind": "formula",
-          "expr": "округлить вниз((@abilities.str.score - 10) / 2)"
-        },
-        "tag": "abilities.str.mod",
-        "group": "Модификаторы",
-        "cell": {
-          "table": "abilities",
-          "row": "str",
-          "column": "mod"
-        }
-      },
-      {
-        "label": "Телосложение",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 10,
-          "min": 3,
-          "max": 24
-        },
-        "tag": "abilities.con.score",
-        "group": "Характеристики",
-        "cell": {
-          "table": "abilities",
-          "row": "con",
-          "column": "score"
-        }
-      },
-      {
-        "label": "Модификатор: Телосложение",
-        "value": {
-          "kind": "formula",
-          "expr": "округлить вниз((@abilities.con.score - 10) / 2)"
-        },
-        "tag": "abilities.con.mod",
-        "group": "Модификаторы",
-        "cell": {
-          "table": "abilities",
-          "row": "con",
-          "column": "mod"
-        }
-      },
-      {
-        "label": "Ловкость",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 10,
-          "min": 3,
-          "max": 24
-        },
-        "tag": "abilities.dex.score",
-        "group": "Характеристики",
-        "cell": {
-          "table": "abilities",
-          "row": "dex",
-          "column": "score"
-        }
-      },
-      {
-        "label": "Модификатор: Ловкость",
-        "value": {
-          "kind": "formula",
-          "expr": "округлить вниз((@abilities.dex.score - 10) / 2)"
-        },
-        "tag": "abilities.dex.mod",
-        "group": "Модификаторы",
-        "cell": {
-          "table": "abilities",
-          "row": "dex",
-          "column": "mod"
-        }
-      },
-      {
-        "label": "Интеллект",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 10,
-          "min": 3,
-          "max": 24
-        },
-        "tag": "abilities.int.score",
-        "group": "Характеристики",
-        "cell": {
-          "table": "abilities",
-          "row": "int",
-          "column": "score"
-        }
-      },
-      {
-        "label": "Модификатор: Интеллект",
-        "value": {
-          "kind": "formula",
-          "expr": "округлить вниз((@abilities.int.score - 10) / 2)"
-        },
-        "tag": "abilities.int.mod",
-        "group": "Модификаторы",
-        "cell": {
-          "table": "abilities",
-          "row": "int",
-          "column": "mod"
-        }
-      },
-      {
-        "label": "Мудрость",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 10,
-          "min": 3,
-          "max": 24
-        },
-        "tag": "abilities.wis.score",
-        "group": "Характеристики",
-        "cell": {
-          "table": "abilities",
-          "row": "wis",
-          "column": "score"
-        }
-      },
-      {
-        "label": "Модификатор: Мудрость",
-        "value": {
-          "kind": "formula",
-          "expr": "округлить вниз((@abilities.wis.score - 10) / 2)"
-        },
-        "tag": "abilities.wis.mod",
-        "group": "Модификаторы",
-        "cell": {
-          "table": "abilities",
-          "row": "wis",
-          "column": "mod"
-        }
-      },
-      {
-        "label": "Харизма",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 10,
-          "min": 3,
-          "max": 24
-        },
-        "tag": "abilities.cha.score",
-        "group": "Характеристики",
-        "cell": {
-          "table": "abilities",
-          "row": "cha",
-          "column": "score"
-        }
-      },
-      {
-        "label": "Модификатор: Харизма",
-        "value": {
-          "kind": "formula",
-          "expr": "округлить вниз((@abilities.cha.score - 10) / 2)"
-        },
-        "tag": "abilities.cha.mod",
-        "group": "Модификаторы",
-        "cell": {
-          "table": "abilities",
-          "row": "cha",
-          "column": "mod"
-        }
-      },
-      {
-        "tag": "level",
-        "label": "Уровень",
-        "group": "Характеристики",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 1,
-          "min": 1,
-          "max": 10
-        },
-        "control": "stepper"
-      },
-      {
-        "tag": "ac",
-        "label": "Защита от оружия (КЗ)",
-        "group": "Защита",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 12,
-          "min": 0
-        }
-      },
-      {
-        "tag": "pd",
-        "label": "Физическая защита (ФЗ)",
-        "group": "Защита",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 11,
-          "min": 0
-        }
-      },
-      {
-        "tag": "md",
-        "label": "Ментальная защита (МЗ)",
-        "group": "Защита",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 11,
-          "min": 0
-        }
-      },
-      {
-        "tag": "hp_max",
-        "label": "Максимум хитов",
-        "group": "Здоровье",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 20,
-          "min": 1
-        }
-      },
-      {
-        "tag": "hp",
-        "label": "Хиты",
-        "group": "Здоровье",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 20,
-          "min": 0,
-          "max": "@hp_max"
-        },
-        "control": "bar",
-        "lives": "group"
-      },
-      {
-        "tag": "escalation",
-        "label": "Кость эскалации",
-        "lives": "desk",
-        "group": "Стол",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 6
-        },
-        "control": "stepper"
-      },
-      {
-        "tag": "turn_standard",
-        "label": "Стандартное",
-        "group": "В бою",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 1,
-          "min": 0,
-          "max": 1
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "turn_move",
-        "label": "Движение",
-        "group": "В бою",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 1,
-          "min": 0,
-          "max": 1
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "turn_quick",
-        "label": "Быстрое",
-        "group": "В бою",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 1,
-          "min": 0,
-          "max": 1
-        },
-        "control": "pips"
-      },
-      {
-        "tag": "battle",
-        "label": "Идёт бой",
-        "lives": "desk",
-        "group": "В бою",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0,
-          "max": 1
-        },
-        "control": "toggle"
-      },
-      {
-        "tag": "mook_hp",
-        "label": "Хиты одного в толпе",
-        "group": "Толпа",
-        "lives": "group",
-        "value": {
-          "kind": "stored",
-          "type": "number",
-          "default": 0,
-          "min": 0
-        }
-      },
-      {
-        "tag": "mooks_left",
-        "label": "Сколько в толпе стоит",
-        "group": "Толпа",
-        "lives": "group",
-        "value": {
-          "kind": "formula",
-          "expr": "если(@mook_hp > 0, округлить вверх(большее из(0, @hp) / @mook_hp), 1)"
-        }
-      }
-    ],
     "groups": {
       "Характеристики": {},
       "Модификаторы": {},
       "Защита": {},
       "Здоровье": {},
       "Стол": {},
+      "В бою": {},
+      "Толпа": {},
       "Атака": {},
       "Бой": {},
       "Вызываемые": {},
       "Снаряжение": {},
       "Приёмы": {},
-      "В бою": {},
-      "Общие правила": {},
-      "Толпа": {}
+      "Общие правила": {}
     },
     "constants": {
       "lead_die": {
@@ -380,6 +32,139 @@
     },
     "roll_edits": {},
     "tables": {
+      "лист": {
+        "label": "Лист",
+        "shape": "single",
+        "columns": [
+          {
+            "key": "level",
+            "label": "Уровень",
+            "kind": "number",
+            "default": 1,
+            "min": 1,
+            "max": 10,
+            "control": "stepper",
+            "block": "Характеристики"
+          },
+          {
+            "key": "ac",
+            "label": "Защита от оружия (КЗ)",
+            "kind": "number",
+            "default": 12,
+            "min": 0,
+            "block": "Защита"
+          },
+          {
+            "key": "pd",
+            "label": "Физическая защита (ФЗ)",
+            "kind": "number",
+            "default": 11,
+            "min": 0,
+            "block": "Защита"
+          },
+          {
+            "key": "md",
+            "label": "Ментальная защита (МЗ)",
+            "kind": "number",
+            "default": 11,
+            "min": 0,
+            "block": "Защита"
+          },
+          {
+            "key": "hp_max",
+            "label": "Максимум хитов",
+            "kind": "number",
+            "default": 20,
+            "min": 1,
+            "block": "Здоровье"
+          },
+          {
+            "key": "turn_standard",
+            "label": "Стандартное",
+            "kind": "number",
+            "default": 1,
+            "min": 0,
+            "max": 1,
+            "control": "pips",
+            "block": "В бою"
+          },
+          {
+            "key": "turn_move",
+            "label": "Движение",
+            "kind": "number",
+            "default": 1,
+            "min": 0,
+            "max": 1,
+            "control": "pips",
+            "block": "В бою"
+          },
+          {
+            "key": "turn_quick",
+            "label": "Быстрое",
+            "kind": "number",
+            "default": 1,
+            "min": 0,
+            "max": 1,
+            "control": "pips",
+            "block": "В бою"
+          }
+        ]
+      },
+      "стол": {
+        "label": "Стол",
+        "shape": "single",
+        "owner": "desk",
+        "columns": [
+          {
+            "key": "escalation",
+            "label": "Кость эскалации",
+            "kind": "number",
+            "min": 0,
+            "max": 6,
+            "control": "stepper",
+            "block": "Стол"
+          },
+          {
+            "key": "battle",
+            "label": "Идёт бой",
+            "kind": "number",
+            "min": 0,
+            "max": 1,
+            "control": "toggle",
+            "block": "В бою"
+          }
+        ]
+      },
+      "группа": {
+        "label": "Группа",
+        "shape": "single",
+        "owner": "group",
+        "columns": [
+          {
+            "key": "hp",
+            "label": "Хиты",
+            "kind": "number",
+            "default": 20,
+            "min": 0,
+            "max": "@hp_max",
+            "control": "bar",
+            "block": "Здоровье"
+          },
+          {
+            "key": "mook_hp",
+            "label": "Хиты одного в толпе",
+            "kind": "number",
+            "min": 0,
+            "block": "Толпа"
+          },
+          {
+            "key": "mooks_left",
+            "label": "Сколько в толпе стоит",
+            "expr": "если(@mook_hp > 0, округлить вверх(большее из(0, @hp) / @mook_hp), 1)",
+            "block": "Толпа"
+          }
+        ]
+      },
       "wield": {
         "label": "Способ атаки",
         "key": "word",
@@ -438,13 +223,18 @@
             "label": "Значение",
             "kind": "number",
             "min": 3,
-            "max": 24
+            "max": 24,
+            "title": "{label}",
+            "block": "Характеристики",
+            "default": 10
           },
           {
             "key": "mod",
             "label": "Модификатор",
             "kind": "number",
-            "expr": "округлить вниз((@строка.score - 10) / 2)"
+            "expr": "округлить вниз((@строка.score - 10) / 2)",
+            "title": "Модификатор: {label}",
+            "block": "Модификаторы"
           }
         ],
         "rows": [
@@ -479,19 +269,7 @@
             "label": "Харизма"
           }
         ],
-        "sheet": {
-          "columns": {
-            "score": {
-              "label": "{label}",
-              "group": "Характеристики",
-              "start": 10
-            },
-            "mod": {
-              "label": "Модификатор: {label}",
-              "group": "Модификаторы"
-            }
-          }
-        }
+        "owner": "sheet"
       }
     },
     "initiative": {

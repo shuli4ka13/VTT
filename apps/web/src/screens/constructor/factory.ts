@@ -1,11 +1,10 @@
 import { freeId } from '../../store/world.ts';
 import { dice } from '../../words.ts';
-import { effectiveDefault } from './groups.ts';
+import { NO_BLOCK } from '@vtt/engine/model/blocks';
 import type { LaunchKind } from '@vtt/engine/model/effect-kinds';
 import { COST_BLOCK } from '@vtt/engine/words/glossary';
-import type {
-  System, Effect, Handler, Field, RecordKind, Binding, Step, SystemConstant, RollEdit, Table,
-} from '@vtt/schema';
+import type { System, Effect, Handler, RecordKind, Binding, Step, SystemConstant, RollEdit, Table, Column } from '@vtt/schema';
+import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 
 export interface Made<T> { key: string; value: T }
 
@@ -23,18 +22,9 @@ export const newEffect = (system: System, kind: LaunchKind): Made<Effect> => ({
     },
 });
 
-export const newField = (system: System, group: string): Made<Field> => {
-  const tag = freeId(system.fields.map(f => f.tag), 'field');
-  const preset = effectiveDefault(system, group);
-  return {
-    key: tag,
-    value: {
-      tag,
-      label: 'Новое поле',
-      group,
-      value: preset ? structuredClone(preset) : { kind: 'stored', type: 'number', default: 0 },
-    },
-  };
+export const newColumn = (system: System, block: string): Made<Column> => {
+  const key = freeId([...fieldsOf(system).map(f => f.tag), ...Object.keys(system.tables ?? {})], 'field');
+  return { key, value: { key, label: 'Новое поле', kind: 'number', ...(block && block !== NO_BLOCK ? { block } : {}) } };
 };
 
 export const newRecordKind = (system: System): Made<RecordKind> => ({
@@ -83,7 +73,7 @@ export const payStep = (id: string, taken: readonly string[] = []): Step =>
   ({ id: freeId([...taken], 'стоимость'), type: 'emit', event: id, strict: true } as unknown as Step);
 
 export const newCalled = (system: System): Made<Effect> => {
-  const field = system.fields.find(f => f.value.kind === 'stored' && f.value.type === 'number');
+  const field = fieldsOf(system).find(f => f.value.kind === 'stored' && f.value.type === 'number');
   return {
     key: freeId(Object.keys(system.effects ?? {}), 'вызываемый'),
     value: {

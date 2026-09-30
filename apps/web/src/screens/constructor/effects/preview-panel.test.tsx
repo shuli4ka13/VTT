@@ -7,7 +7,7 @@ import type { System } from '@vtt/schema';
 
 const system = (): System => ({
   ...emptySystem(),
-  fields: [{ tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } }],
+  tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } },
   constants: { к6: { label: 'Кость урона', kind: 'die', dice: [{ count: 1, sides: 6 }] } },
   effects: {
     удар: {

@@ -4,7 +4,7 @@ import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const system = {
   id: 'общий-кусок', name: 'общий кусок',
-  fields: [{ tag: 'хп', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 40, min: 0 } }],
+  tables: { лист: { shape: 'single', columns: [{ key: 'хп', label: 'Хиты', kind: 'number', default: 40, min: 0 }] } },
   effects: {
     урон_костями: {
       label: 'Урон костями',

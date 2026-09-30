@@ -33,7 +33,6 @@ const world = (extraEffects: Record<string, unknown> = {}, receive: unknown[] | 
   { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '@event.amount' }, targetModifiers: false },
 ]) => ({
   id: 'вызовы',
-  fields: [{ tag: 'хп', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20, min: 0 } }],
   effects: {
     удар: strike('удар', 'Удар', 8, ['рубящий']),
     огонь: strike('огонь', 'Огненный шар', 8, ['огонь', 'магический']),
@@ -50,7 +49,7 @@ const world = (extraEffects: Record<string, unknown> = {}, receive: unknown[] | 
     тревога: { label: 'Тревога' },
     ...extraEffects,
   },
-  tables: {
+  tables: { лист: { shape: 'single', columns: [{ key: 'хп', label: 'Хиты', kind: 'number', default: 20, min: 0 }] },
     типы: { label: 'Типы', key: 'word', rows: ['рубящий', 'колющий', 'огонь'].map(value => ({ value, label: value })) },
     источники: { label: 'Источники', key: 'word', rows: [{ value: 'магический', label: 'магический' }] },
   },

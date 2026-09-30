@@ -15,7 +15,6 @@ group('степени успеха', () => {
 
   const sys: any = {
     id: 'pbta',
-    fields: [],
     tables: { rolls: { label: 'Броски', key: 'word', rows: [{ value: 'ход' }] } },
     constants: { пара: { label: 'Две шестёрки', kind: 'die', dice: [{ count: 2, sides: 6 }] } },
     tables: {

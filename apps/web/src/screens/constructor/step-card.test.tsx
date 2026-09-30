@@ -25,7 +25,7 @@ describe('problemOf: тег внутри формулы слота', () => {
   });
 
   it('поле, объявленное в системе, формулу не ломает', () => {
-    const system: System = { ...systemWithDie(), fields: [{ tag: 'attack_bonus', label: 'Бонус атаки', group: 'Атака', value: { kind: 'stored', type: 'number', default: 0 } }] };
+    const system: System = { ...systemWithDie(), tables: { лист: { shape: 'single', columns: [{ key: 'attack_bonus', label: 'Бонус атаки', kind: 'number', block: 'Атака' }] } } };
     const step = {
       type: 'threshold',
       roll: { die: { constant: 'd20' }, bonus: { expr: '#attack_bonus' } },
@@ -48,7 +48,7 @@ describe('problemOf: тег внутри формулы слота', () => {
 
 describe('формула зовёт шаг выше', () => {
   const system = {
-    fields: [{ tag: 'hp', label: 'Текущие ХП', value: { kind: 'stored', type: 'number', default: 20 } }],
+    tables: { лист: { shape: 'single', columns: [{ key: 'hp', label: 'Текущие ХП', kind: 'number', default: 20 }] } },
     effects: {},
   } as unknown as System;
   const effect = { params: [] } as unknown as Effect;

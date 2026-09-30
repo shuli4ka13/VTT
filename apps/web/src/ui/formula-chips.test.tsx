@@ -3,12 +3,13 @@ import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { FormulaChips, partsOf, joinParts } from './formula-chips.tsx';
 import type { System } from '@vtt/schema';
+import { withColumn } from '@vtt/engine/model/sheet-columns';
 
 const system = {
-  fields: [
-    { tag: 'бонус_атаки', label: 'Бонус атаки', value: { kind: 'formula', expr: '1' } },
-    { tag: 'сила', label: 'Сила', value: { kind: 'stored', type: 'number', default: 10 } },
-  ],
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'бонус_атаки', label: 'Бонус атаки', expr: '1' },
+    { key: 'сила', label: 'Сила', kind: 'number', default: 10 },
+  ] } },
   constants: {}, effects: {},
 } as unknown as System;
 
@@ -51,14 +52,9 @@ describe('FormulaChips', () => {
 
   it('имена «здесь же» стоят выше полей листа, а совпавшие с начала — выше вложенных', () => {
     const рядом = new Map([['damage_dice', 'Кость урона']]);
-    const большая = {
-      ...system,
-      fields: [
-        ...system.fields,
-        { tag: 'ловкость', label: 'Ловкость', value: { kind: 'stored', type: 'number', default: 10 } },
-        { tag: 'hit_die', label: 'Кость хитов', value: { kind: 'stored', type: 'number', default: 8 } },
-      ],
-    } as unknown as System;
+    const большая = withColumn(
+      withColumn(system, { key: 'ловкость', label: 'Ловкость', kind: 'number', default: 10 }),
+      { key: 'hit_die', label: 'Кость хитов', kind: 'number', default: 8 });
 
     render(<FormulaChips value="@кость" system={большая} extraNames={рядом} onChange={() => {}} />);
     const input = screen.getByDisplayValue('@кость') as HTMLInputElement;
@@ -118,11 +114,10 @@ describe('FormulaChips', () => {
 
 describe('ссылка на таблицу видна в формуле через точку', () => {
   const сКлассом = {
-    fields: [
-      { tag: 'класс', label: 'Класс', value: { kind: 'stored', type: 'choice', from: 'классы', default: 'воин' } },
-      { tag: 'сила', label: 'Сила', value: { kind: 'stored', type: 'number', default: 10 } },
-    ],
-    tables: {
+    tables: { лист: { shape: 'single', columns: [
+      { key: 'класс', label: 'Класс', kind: 'choice', from: 'классы', default: 'воин' },
+      { key: 'сила', label: 'Сила', kind: 'number', default: 10 },
+    ] },
       классы: { label: 'Классы', key: 'word', columns: [{ key: 'кость', label: 'Кость хитов', kind: 'number' }], rows: [] },
     },
     constants: {}, effects: {},
@@ -147,8 +142,7 @@ describe('ссылка на таблицу видна в формуле чере
 
 describe('ссылка через две таблицы', () => {
   const мир = {
-    fields: [{ tag: 'раса', label: 'Раса', value: { kind: 'stored', type: 'choice', from: 'расы', default: 'огр' } }],
-    tables: {
+    tables: { лист: { shape: 'single', columns: [{ key: 'раса', label: 'Раса', kind: 'choice', from: 'расы', default: 'огр' }] },
       расы: { label: 'Расы', key: 'word', columns: [{ key: 'размер', label: 'Размер', kind: 'choice', from: 'размеры' }], rows: [] },
       размеры: { label: 'Размеры', key: 'word', columns: [{ key: 'кость', label: 'Кость хитов', kind: 'dice' }], rows: [] },
     },

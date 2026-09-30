@@ -10,7 +10,7 @@ import type { RoomState } from '@vtt/schema';
 const room = (clock: object | null): RoomState => ({
   id: 'к', title: 'Стол', members: [{ userId: 'u', name: 'Ведущий', role: 'gm' }],
   system: {
-    id: 'x', name: 'x', fields: [], effects: {},
+    id: 'x', name: 'x', tables: {}, effects: {},
   },
   compendium: { records: [] },
   sheets: [
@@ -147,7 +147,9 @@ describe('панель «Стол»', () => {
     members: [{ userId: 'u', name: 'Я', role }],
     system: {
       id: 'x', name: 'x', effects: {},
-      fields: [{ tag: 'страх', label: 'Страх', lives: 'desk', value: { kind: 'stored', type: 'number', default: 0 } }],
+      tables: { стол: { shape: 'single', owner: 'desk', columns: [
+    { key: 'страх', label: 'Страх', kind: 'number' },
+  ] } },
     },
     sheets: [
       { id: 'а', systemId: 'x', name: 'Арвен', values: {}, has: [], effects: [] },

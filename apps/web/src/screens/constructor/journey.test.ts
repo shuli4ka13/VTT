@@ -2,8 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { world as W } from '@vtt/schema';
 import { exchange } from '@vtt/engine/events/exchange';
 import { emptySystem } from '../../store/world.ts';
-import { newField, newDie, newEffect, newRecordKind, newBinding, BRICKS } from './factory.ts';
+import { newColumn, newDie, newEffect, newRecordKind, newBinding, BRICKS } from './factory.ts';
 import type { System, Compendium, Sheet, Step } from '@vtt/schema';
+import { withColumn } from '@vtt/engine/model/sheet-columns';
 
 const brick = (key: string, system: System, taken: string[] = []): Step =>
   BRICKS.find(b => b.key === key)!.make(system, taken)[0]!;
@@ -11,10 +12,9 @@ const brick = (key: string, system: System, taken: string[] = []): Step =>
 function assemble(): { system: System; compendium: Compendium; sheets: Sheet[]; hits: string; action: string } {
   const system = emptySystem();
 
-  const hits = newField(system, 'Здоровье');
-  hits.value.label = 'Хиты';
-  hits.value.value = { kind: 'stored', type: 'number', default: 10, min: 0 };
-  system.fields.push(hits.value);
+  const hits = newColumn(system, 'Здоровье');
+  Object.assign(hits.value, { label: 'Хиты', kind: 'number', default: 10, min: 0 });
+  system.tables = withColumn(system, hits.value).tables;
 
   const die = newDie(system);
   die.value.label = 'Кость проверки';

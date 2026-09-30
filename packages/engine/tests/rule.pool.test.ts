@@ -20,9 +20,9 @@ const sys = {
       read: { kind: 'count', atLeast: 5 },
     },
   },
-  fields: [
-    { tag: 'pool', label: 'Пул костей', value: { kind: 'stored', type: 'number', default: 4 } },
-  ],
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'pool', label: 'Пул костей', kind: 'number', default: 4 },
+  ] } },
 };
 
 const rule = {

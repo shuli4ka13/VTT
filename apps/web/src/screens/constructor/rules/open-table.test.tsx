@@ -10,8 +10,7 @@ describe('«открыть таблицу →» из поля листа', () =>
 
   it('правила открываются на таблицах, нужная раскрыта', () => {
     Element.prototype.scrollIntoView = () => {};
-    const system = {
-      fields: [], constants: {}, effects: {},
+    const system = { constants: {}, effects: {},
       tables: {
         расы: { label: 'Расы', key: 'word', rows: [{ value: 'эльф', label: 'эльф' }] },
         классы: { label: 'Классы', key: 'word', rows: [{ value: 'воин', label: 'воин' }] },

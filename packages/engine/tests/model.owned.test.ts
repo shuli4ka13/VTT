@@ -4,13 +4,14 @@ import { availableActions, send, receive } from '../src/events/envelope.ts';
 import { wornEffects } from '../src/engine/effects.ts';
 import { shownOn } from '../src/model/owned.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
+import { fieldsOf } from '../src/model/sheet-columns.ts';
 
 const system = {
   id: 'в', name: 'в',
-  fields: [
-    { tag: 'кд', label: 'Класс брони', value: { kind: 'stored', type: 'number', default: 10 } },
-    { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
-  ],
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'кд', label: 'Класс брони', kind: 'number', default: 10 },
+    { key: 'хиты', label: 'Хиты', kind: 'number', default: 20 },
+  ] } },
   effects: {
     удар: {
       label: 'Удар', activation: 'manual',
@@ -67,10 +68,10 @@ group('тип листа — как запись, которую лист нос
   const withKinds = {
     ...system,
     groups: { Защита: {}, Магия: {}, Щиты: { parent: 'Защита' } },
-    fields: [
-      { tag: 'кд', label: 'Класс брони', group: 'Щиты', value: { kind: 'stored', type: 'number', default: 10 } },
-      { tag: 'ячейки', label: 'Ячейки', group: 'Магия', value: { kind: 'stored', type: 'number', default: 2 } },
-    ],
+    tables: { лист: { shape: 'single', columns: [
+      { key: 'кд', label: 'Класс брони', kind: 'number', default: 10, block: 'Щиты' },
+      { key: 'ячейки', label: 'Ячейки', kind: 'number', default: 2, block: 'Магия' },
+    ] } },
     records: {
       ...system.records,
       противник: {
@@ -88,9 +89,9 @@ group('тип листа — как запись, которую лист нос
   });
 
   test('тип показывает только свои блоки, вложенные — вместе с родителем', () => {
-    const shown = withKinds.fields.filter(shownOn(withKinds, orc)).map(f => f.tag);
+    const shown = fieldsOf(withKinds).filter(shownOn(withKinds, orc)).map(f => f.tag);
     deepEq(shown, ['кд']);
-    deepEq(withKinds.fields.filter(shownOn(withKinds, hero([]))).map(f => f.tag), ['кд', 'ячейки']);
+    deepEq(fieldsOf(withKinds).filter(shownOn(withKinds, hero([]))).map(f => f.tag), ['кд', 'ячейки']);
   });
 });
 

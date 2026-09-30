@@ -5,8 +5,7 @@ import type { System, Compendium, Sheet } from '../src/model/types.ts';
 
 const system = {
   id: 'x', name: 'x',
-  fields: [{ tag: 'hp', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } }],
-  tables: { места: { label: 'Места', key: 'word', rows: [{ value: 'тело', label: 'тело' }, { value: 'голова', label: 'голова' }] } },
+  tables: { лист: { shape: 'single', columns: [{ key: 'hp', label: 'Хиты', kind: 'number', default: 20 }] }, места: { label: 'Места', key: 'word', rows: [{ value: 'тело', label: 'тело' }, { value: 'голова', label: 'голова' }] } },
   constants: { к6: { label: 'Кость', kind: 'die', dice: [{ count: 1, sides: 6 }] } },
   effects: {
     выстрел: {

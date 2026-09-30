@@ -4,7 +4,7 @@ import { world as W } from '@vtt/schema';
 import type { System, Step } from '@vtt/schema';
 
 const steps = (list: object[]) => list as unknown as Step[];
-const system = { fields: [], constants: { lead: { label: 'Ведущая кость', kind: 'die', dice: [{ sides: 20 }] } }, effects: {} } as unknown as System;
+const system = { tables: {}, constants: { lead: { label: 'Ведущая кость', kind: 'die', dice: [{ sides: 20 }] } }, effects: {} } as unknown as System;
 
 describe('groupSteps', () => {
   it('пара amount+apply склеивается в одно изменение', () => {

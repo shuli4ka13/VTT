@@ -3,6 +3,7 @@ import { calledOf } from './effects.ts';
 import { cellTagOf, columnTagOf } from './cells.ts';
 import { isRange } from '../model/tables.ts';
 import type { System } from '../model/types.ts';
+import { fieldsOf } from '../model/sheet-columns.ts';
 
 export type TargetKind = 'value' | 'roll' | 'incoming' | 'event' | 'cell';
 
@@ -26,9 +27,9 @@ export function targets(system: System): Target[] {
     { tag: ANY_ROLL, label: 'Мой бросок', group: 'Броски', kind: 'roll' },
     { tag: incomingTagOf(ANY_ROLL), label: 'Бросок по мне', group: 'Броски', kind: 'roll', from: ANY_ROLL },
 
-    ...system.fields.map((f): Target => ({ tag: f.tag, label: f.label, group: f.group, kind: 'value' })),
+    ...fieldsOf(system).map((f): Target => ({ tag: f.tag, label: f.label, group: f.group, kind: 'value' })),
 
-    ...system.fields.filter(f => f.value.kind === 'stored').map((f): Target => ({
+    ...fieldsOf(system).filter(f => f.value.kind === 'stored').map((f): Target => ({
       tag: incomingTagOf(f.tag),
       label: `Входящее: ${f.label}`,
       group: f.group,
@@ -51,6 +52,7 @@ export function targets(system: System): Target[] {
 function cellTargets(system: System): Target[] {
   const out: Target[] = [];
   for (const [id, table] of Object.entries(system.tables ?? {})) {
+    if (table.shape === 'single') continue;
     const name = table.label || id;
     for (const column of (table.columns ?? [])) {
       if (column.kind !== 'expr' && column.kind !== 'number') continue;

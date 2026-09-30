@@ -1,6 +1,7 @@
 import { group, test, eq, throws } from './harness.ts';
 import { packRule, resolveRule } from '../src/engine/rule.ts';
 import { newPass } from '../src/engine/calc.ts';
+import { withColumn } from '../src/model/sheet-columns.ts';
 
 const queue = (...values: number[]) => {
   const rest = [...values];
@@ -12,11 +13,11 @@ const queue = (...values: number[]) => {
 
 const sys: any = {
   id: 'выражения',
-  fields: [
-    { tag: 'хп', label: 'Текущие ХП', value: { kind: 'stored', type: 'number', default: 20 } },
-    { tag: 'максхп', label: 'Максимум ХП', value: { kind: 'stored', type: 'number', default: 30 } },
-    { tag: 'сила', label: 'Мод Силы', value: { kind: 'stored', type: 'number', default: 3 } },
-  ],
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'хп', label: 'Текущие ХП', kind: 'number', default: 20 },
+    { key: 'максхп', label: 'Максимум ХП', kind: 'number', default: 30 },
+    { key: 'сила', label: 'Мод Силы', kind: 'number', default: 3 },
+  ] } },
   effects: {},
 };
 
@@ -62,10 +63,7 @@ group('новое значение поля — выражение', () => {
   });
 
   test('поле важнее шага: одноимённое поле не подменяется результатом', () => {
-    const collide: any = {
-      ...sys,
-      fields: [...sys.fields, { tag: 'урон', label: 'Урон в листе', value: { kind: 'stored', type: 'number', default: 100 } }],
-    };
+    const collide: any = withColumn(sys as never, { key: 'урон', label: 'Урон в листе', kind: 'number', default: 100 });
     const rule: any = {
       steps: [
         { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d8' } },

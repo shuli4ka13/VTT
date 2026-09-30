@@ -1,5 +1,6 @@
 import type { System, Compendium, ValueKind } from '@vtt/schema';
 import { listOf } from '@vtt/engine/model/lists';
+import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 import { recordsOf } from '@vtt/engine/model/owned';
 import { Input, NumInput, Select } from './primitives.tsx';
 import { MultiChoice } from './multi-choice.tsx';
@@ -63,7 +64,7 @@ export function ValueEditor({ type, value, system, compendium, onlyWorn, except,
     return (
       <Select
         value={String(value ?? '')}
-        options={[['', '— какое поле —'], ...system.fields.map(f => [f.tag, f.label] as const)] as never}
+        options={[['', '— какое поле —'], ...fieldsOf(system).map(f => [f.tag, f.label] as const)] as never}
         onChange={next => onChange(next)}
       />
     );

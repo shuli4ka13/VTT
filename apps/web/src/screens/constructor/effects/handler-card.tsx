@@ -9,6 +9,7 @@ import { MOMENTS } from './words.ts';
 import type { Moment } from './words.ts';
 import type { System, Handler } from '@vtt/schema';
 import { calledOf } from '@vtt/engine/engine/effects';
+import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 
 function conditionsOf(system: System, listened: string | undefined): (readonly [string, string])[] {
   const source = listened ? system.effects[listened] : undefined;
@@ -78,7 +79,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
   const isMoment = [MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX].some(prefix => listened?.startsWith(prefix));
   const hanging = Object.entries(system.effects).filter(([key, e]) => key !== id && (e.activation ?? 'manual') === 'passive');
   const conditions = isMoment ? [] : anyAction ? conditionsOfAny(system) : conditionsOf(system, listened);
-  const watchable = system.fields.filter(f => f.value.kind !== 'stored' || f.value.type === 'boolean');
+  const watchable = fieldsOf(system).filter(f => f.value.kind !== 'stored' || f.value.type === 'boolean');
   const aims = moment === 'after-in' || moment === 'after-out' || moment === 'ask-after';
   const written = handler.if?.expr ?? null;
   const picked = written !== null ? conditions.find(([ref]) => written.trim() === `@${ref}`)?.[0] ?? null : null;

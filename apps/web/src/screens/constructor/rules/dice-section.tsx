@@ -9,6 +9,7 @@ import { inUse as isUsed } from '../usage.ts';
 import type { UsageIndex } from '../usage.ts';
 import type { System, SystemConstant, DiceTerm } from '@vtt/schema';
 import type { WorldState } from '../../../store/world.ts';
+import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 
 type EditSystem = WorldState['editSystem'];
 interface Props { system: System; editSystem: EditSystem; usage: UsageIndex }
@@ -132,7 +133,7 @@ function DiceComposer({ dice, system, onEdit }: {
   onEdit: (change: (list: DiceTerm[]) => void) => void;
 }) {
   const many = dice.length > 1;
-  const numeric = system.fields.filter(f =>
+  const numeric = fieldsOf(system).filter(f =>
     f.value.kind === 'formula' || (f.value.kind === 'stored' && f.value.type === 'number'));
 
   return (

@@ -9,7 +9,7 @@ const tape = (...values: number[]) => () => values.shift() ?? 1;
 
 const system = {
   id: 'с', name: 'с',
-  fields: [{ tag: 'грань', label: 'Грань', value: { kind: 'stored', type: 'number', default: 3 } }],
+  tables: { лист: { shape: 'single', columns: [{ key: 'грань', label: 'Грань', kind: 'number', default: 3 }] } },
   effects: {},
   roll_edits: { выжать: { label: 'Выжать', ops: [{ op: 'addDie', count: { expr: '@грань' } }, { op: 'explode', apart: true }] } },
 } as unknown as System;

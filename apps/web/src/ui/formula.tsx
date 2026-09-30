@@ -5,6 +5,7 @@ import { Verdict } from './primitives.tsx';
 import { FormulaField } from './formula-field.tsx';
 import { fieldPaths } from './paths.ts';
 import { ownerOf, OWNER_WORDS } from '@vtt/engine/engine/owners';
+import { fieldOf } from '@vtt/engine/model/sheet-columns';
 
 export { columnPaths, fieldPaths } from './paths.ts';
 
@@ -30,7 +31,7 @@ export function parseFormula(source: string): Parsed {
 export function labelOfTag(system: System, tag: string): string {
   const owned = ownerOf(tag);
   if (owned) return `${labelOfTag(system, owned.rest)} ${OWNER_WORDS[owned.owner]}`;
-  const field = system.fields.find(f => f.tag === tag);
+  const field = fieldOf(system, tag);
   if (field) return field.label ?? tag;
   return fieldPaths(system).get(tag) ?? system.effects?.[tag]?.label ?? tag;
 }
@@ -49,7 +50,7 @@ export function formulaAsLabels(
     });
   return lookups.replace(/[@#]([\p{L}\p{N}_.]+)/gu, (_, name: string) => {
     if (ownerOf(name)) return labelOfTag(system, name);
-    const field = system.fields.find(f => f.tag === name);
+    const field = fieldOf(system, name);
     if (field) return field.label ?? name;
     return names?.get(name) ?? fieldPaths(system).get(name) ?? system.effects?.[name]?.label ?? name;
   });

@@ -12,10 +12,10 @@ const queue = (...values: number[]) => {
 
 const sys: any = {
   id: 'стороны',
-  fields: [
-    { tag: 'хп', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 20 } },
-    { tag: 'сила', label: 'Мод Силы', value: { kind: 'stored', type: 'number', default: 0 } },
-  ],
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'хп', label: 'Хиты', kind: 'number', default: 20 },
+    { key: 'сила', label: 'Мод Силы', kind: 'number' },
+  ] } },
   effects: {},
 };
 

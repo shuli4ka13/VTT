@@ -4,6 +4,7 @@ import type { System, Effect, Step, SystemConstant } from '@vtt/schema';
 import { labelOfTag, formulaAsLabels } from '../../ui/formula.tsx';
 import { ownerOf } from '@vtt/engine/engine/owners';
 import { dice as diceText, asDice, DIE_LETTER } from '../../words.ts';
+import { fieldOf, hasField } from '@vtt/engine/model/sheet-columns';
 
 export type Segment = { text: string } | { hole: string };
 
@@ -15,7 +16,7 @@ export function countWord(system: System, count: unknown): string {
   const expr = String((count as { expr?: unknown }).expr ?? '').trim();
   if (!expr) return '…';
   const tag = /^@([\p{L}\p{N}_]+)$/u.exec(expr)?.[1];
-  if (tag) return system.fields.find(f => f.tag === tag)?.label || tag;
+  if (tag) return fieldOf(system, tag)?.label || tag;
   return formulaAsLabels(system, expr);
 }
 
@@ -60,7 +61,7 @@ export function refSegment(ref: unknown, system: System, effect: Effect, emptyAs
       if (declared) return hole(`вход «${declared.label ?? alone}»`);
       if (head === 'event') return seg(EVENT_WORDS[alone] ?? 'присланное');
       if (alone === 'worn.carry') return seg('запомненного числа');
-      if (system.fields.some(f => f.tag === field)) return seg(`«${labelOfTag(system, field)}»`);
+      if (hasField(system, field)) return seg(`«${labelOfTag(system, field)}»`);
       if (!ownerOf(alone)) {
         const named = names?.get(alone) ?? names?.get(head);
         return seg(named ? `«${named}»` : `результат «${head}»`);
@@ -163,7 +164,7 @@ function exprSegments(expr: string, amount: Step | null, system: System, effect:
       const name = m[1]!;
       const field = ownerOf(name)?.rest ?? name;
       const label = names?.get(name)
-        ?? (system.fields.some(f => f.tag === field) ? labelOfTag(system, name) : null);
+        ?? (hasField(system, field) ? labelOfTag(system, name) : null);
       out.push(label ? seg(`«${label}»`) : hole(`${name} — такого нет`));
     }
     rest = rest.slice(m.index + m[0].length);

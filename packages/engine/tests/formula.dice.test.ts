@@ -5,11 +5,11 @@ import type { System } from '../src/model/types.ts';
 
 const система = {
   id: 'ф', name: 'ф',
-  fields: [
-    { tag: 'хиты', label: 'Хиты', value: { kind: 'stored', type: 'number', default: 100, min: 0 } },
-    { tag: 'порог', label: 'Крит от', value: { kind: 'stored', type: 'number', default: 20 } },
-    { tag: 'сила', label: 'Сила', value: { kind: 'stored', type: 'number', default: 3 } },
-  ],
+  tables: { лист: { shape: 'single', columns: [
+    { key: 'хиты', label: 'Хиты', kind: 'number', default: 100, min: 0 },
+    { key: 'порог', label: 'Крит от', kind: 'number', default: 20 },
+    { key: 'сила', label: 'Сила', kind: 'number', default: 3 },
+  ] } },
   constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
   effects: {
     удар: {
