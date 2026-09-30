@@ -21,13 +21,13 @@ describe('листы: блоки и типы', () => {
   it('«+ тип листа» заводит тип, снятая отметка убирает блок с этого типа', () => {
     render(<RulesTab />);
     fireEvent.click(screen.getByText('+ тип листа'));
-    const [key, kind] = Object.entries(useWorld.getState().system.records ?? {})[0]!;
-    expect(kind.kind).toBe('sheet');
+    const [key, kind] = Object.entries(useWorld.getState().system.sheets ?? {})[0]!;
+    expect(kind.label).toBe('Новый тип листа');
     const boxes = screen.getAllByRole('checkbox') as HTMLInputElement[];
     fireEvent.click(boxes[1]!);
-    expect(useWorld.getState().system.records?.[key]?.blocks).toEqual(['Здоровье']);
+    expect(useWorld.getState().system.sheets?.[key]?.blocks).toEqual(['Здоровье']);
     fireEvent.click(boxes[1]!);
-    expect(useWorld.getState().system.records?.[key]?.blocks).toBeUndefined();
+    expect(useWorld.getState().system.sheets?.[key]?.blocks).toBeUndefined();
   });
 
   it('«+ блок» заводит блок с колонкой, название блока правится на месте', () => {

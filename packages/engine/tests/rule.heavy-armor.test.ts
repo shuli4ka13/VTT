@@ -34,7 +34,7 @@ const sys: any = {
 
 const compendium: any = {
   records: [{
-    id: 'кольчуга', rk: 'доспех', label: 'Кольчуга',
+    id: 'кольчуга', table: 'доспех', label: 'Кольчуга',
     modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['скрытность'], edit: 'помеха' }],
   }],
 };

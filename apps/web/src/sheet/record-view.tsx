@@ -1,4 +1,4 @@
-import { findRecord } from '@vtt/engine/model/owned';
+import { findRecord, recordKindOf } from '@vtt/engine/model/owned';
 import { Card, Chip } from '../ui/primitives.tsx';
 import { asDice } from '../words.ts';
 import { listOf } from '@vtt/engine/model/lists';
@@ -18,25 +18,25 @@ const recordLabel = (compendium: Compendium | undefined, id: string): string => 
 };
 
 export function recordDetails(record: CompendiumRecord, system: System, compendium?: Compendium): RecordLine[] {
-  const kind = system.records?.[String(record.rk)];
-  return (kind?.props ?? [])
+  const kind = recordKindOf(system, record.table);
+  return (kind?.columns ?? [])
     .filter(prop => prop.onSheet !== false)
-    .filter(prop => record.props?.[prop.key] !== undefined && record.props[prop.key] !== '')
+    .filter(prop => record.cells?.[prop.key] !== undefined && record.cells[prop.key] !== '')
     .map(prop => {
-      const raw = String(record.props?.[prop.key]);
+      const raw = String(record.cells?.[prop.key]);
       const kindOf = String(prop.kind ?? 'number');
       const value = kindOf === 'dice' ? asDice(raw)
         : kindOf === 'effect' ? (system.effects[raw]?.label ?? raw)
           : kindOf === 'record' ? recordLabel(compendium, raw)
             : kindOf === 'choice'
-              ? labelsOf(system, prop.from, record.props?.[prop.key])
+              ? labelsOf(system, prop.from, record.cells?.[prop.key])
               : raw;
       return { label: prop.label ?? prop.key, value };
     });
 }
 
 export function recordButtons(record: CompendiumRecord, system: System): string[] {
-  const kind = system.records?.[String(record.rk)];
+  const kind = recordKindOf(system, record.table);
   const bindings = record.bindings?.length ? record.bindings : (kind?.bindings ?? []);
   return bindings.map(b => b.label ?? system.effects[b.effect]?.label ?? 'Применение');
 }
@@ -48,14 +48,14 @@ export function RecordView({ record, system, compendium }: {
 }) {
   const details = recordDetails(record, system, compendium);
   const buttons = recordButtons(record, system);
-  const kind = system.records?.[String(record.rk)];
+  const kind = recordKindOf(system, record.table);
 
   return (
     <Card tone="flat">
       <div className="record-view">
         <div className="record-view__head">
           <span className="record-view__name">{record.label ?? record.id}</span>
-          {kind ? <Chip>{kind.label ?? String(record.rk)}</Chip> : null}
+          {kind ? <Chip>{kind.label ?? String(record.table)}</Chip> : null}
         </div>
         {record.description ? <p className="record-view__text">{record.description}</p> : null}
         {details.length ? (

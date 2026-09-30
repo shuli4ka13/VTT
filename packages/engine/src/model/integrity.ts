@@ -1,5 +1,5 @@
 import { rowsOf } from './tables.ts';
-import { recordsOf } from './owned.ts';
+import { recordsOf, recordKinds, kindsOf } from './owned.ts';
 import { compile } from '../formula/index.ts';
 import type { Node } from '../formula/index.ts';
 import { tagTablesOf, choiceTableOf } from './lists.ts';
@@ -37,7 +37,7 @@ function modifierLists(system: System): { where: Where; modifiers: Loose[] }[] {
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
     out.push({ where: { tab: 'effects', effect: id }, modifiers: (effect.modifiers ?? []) as unknown as Loose[] });
   }
-  for (const [rk, kind] of Object.entries(system.records ?? {})) {
+  for (const [rk, kind] of kindsOf(system)) {
     out.push({ where: { tab: 'records', kind: rk }, modifiers: (kind.modifiers ?? []) as unknown as Loose[] });
   }
   return out;
@@ -57,7 +57,7 @@ function choiceArgs(system: System, table: string): { where: Where; args: Loose;
       if (s.type === 'emit') collect({ tab: 'effects', effect: id, step: at }, s.event, s.args);
     }
   }
-  for (const [rk, kind] of Object.entries(system.records ?? {})) {
+  for (const [rk, kind] of recordKinds(system)) {
     for (const binding of kind.bindings ?? []) collect({ tab: 'records', kind: rk }, binding.effect, binding.args);
   }
   return out;
@@ -179,12 +179,12 @@ export function rowUsers(system: System, table: string, key: unknown, compendium
   for (const { where, args, key: arg } of choiceArgs(system, table)) {
     if (holds(constOf(args[arg]), key)) out.push({ where, text: 'значение входа при вызове' });
   }
-  for (const [rk, kind] of Object.entries(system.records ?? {})) {
-    const props = (kind.props ?? []).filter(p => (p as Loose).kind === 'choice' && (p as Loose).from === table);
+  for (const [rk, kind] of recordKinds(system)) {
+    const props = (kind.columns ?? []).filter(p => (p as Loose).kind === 'choice' && (p as Loose).from === table);
     for (const record of recordsOf(compendium)) {
-      if (record.rk !== rk) continue;
+      if (record.table !== rk) continue;
       for (const prop of props) {
-        if (holds((record.props ?? {})[prop.key], key)) {
+        if (holds((record.cells ?? {})[prop.key], key)) {
           out.push({ where: { tab: 'book', record: record.id }, text: `запись «${record.label || record.id}»` });
         }
       }
@@ -234,13 +234,13 @@ export function danglingRows(system: System, compendium?: Compendium): Dangling[
     const text = badCondition(system, cond, 'условие шага');
     if (text) out.push({ where, text });
   }
-  for (const [rk, kind] of Object.entries(system.records ?? {})) {
-    for (const prop of (kind.props ?? [])) {
+  for (const [rk, kind] of recordKinds(system)) {
+    for (const prop of (kind.columns ?? [])) {
       const p = prop as Loose;
       if (p.kind !== 'choice' || typeof p.from !== 'string') continue;
       for (const record of recordsOf(compendium)) {
-        if (record.rk !== rk) continue;
-        const lost = missing(system, p.from, (record.props ?? {})[prop.key]);
+        if (record.table !== rk) continue;
+        const lost = missing(system, p.from, (record.cells ?? {})[prop.key]);
         if (!lost.length) continue;
         out.push({
           where: { tab: 'book', record: record.id },
@@ -298,13 +298,13 @@ export function renameRow(system: System, table: string, from: unknown, to: unkn
 }
 
 export function renameRowInBook(system: System, book: Compendium, table: string, from: unknown, to: unknown): void {
-  for (const [rk, kind] of Object.entries(system.records ?? {})) {
-    const props = (kind.props ?? []).filter(p => (p as Loose).kind === 'choice' && (p as Loose).from === table);
+  for (const [rk, kind] of recordKinds(system)) {
+    const props = (kind.columns ?? []).filter(p => (p as Loose).kind === 'choice' && (p as Loose).from === table);
     if (!props.length) continue;
     for (const record of recordsOf(book)) {
-      if (record.rk !== rk || !record.props) continue;
+      if (record.table !== rk || !record.cells) continue;
       for (const prop of props) {
-        if (holds(record.props[prop.key], from)) record.props[prop.key] = swap(record.props[prop.key], from, to);
+        if (holds(record.cells[prop.key], from)) record.cells[prop.key] = swap(record.cells[prop.key], from, to);
       }
     }
   }

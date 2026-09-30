@@ -11,6 +11,7 @@ import type { EditFn } from '../words.ts';
 import { badFormula } from '../../roll-expr.ts';
 import { parseCheck, formatCheck } from '../../check-expr.ts';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
+import { rowTables } from '@vtt/engine/model/tables';
 
 const firstDie = (system: System): string | undefined => Object.keys(system.constants ?? {})[0];
 
@@ -24,7 +25,7 @@ export function CheckBody({ step, context, edit, system }: {
   system: System;
 }) {
   const mode = step.type === 'compare' ? 'plain' : 'roll';
-  const tables = Object.entries(system.tables ?? {});
+  const tables = rowTables(system);
 
   const setMode = (next: string) => edit(0, draft => {
     const d = loose(draft);

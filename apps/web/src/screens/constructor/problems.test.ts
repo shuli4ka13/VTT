@@ -4,10 +4,10 @@ import type { System } from '@vtt/schema';
 
 const system = {
   name: 'x',
-  tables: { лист: { shape: 'single', columns: [{ key: 'hp', label: 'Хиты', kind: 'number', default: 1 }] } },
+  tables: { лист: { shape: 'single', columns: [{ key: 'hp', label: 'Хиты', kind: 'number', default: 1 }] } , weapon: { shape: 'book', use: 'item', label: 'Оружие' } },
   effects: { hit: { label: 'Удар', activation: 'manual', steps: [] } },
 
-  records: { weapon: { kind: 'item', label: 'Оружие' } },
+  
 } as unknown as System;
 
 describe('пути схемы переводятся в слова экрана', () => {
@@ -21,7 +21,7 @@ describe('пути схемы переводятся в слова экрана'
   });
 
   it('незнакомое — как есть, но с переводом сообщения', () => {
-    expect(pathWords('records.weapon.bindings.1.args: Required', system)).toBe('тип записи «Оружие» · кнопка 2 · что отправляем: не заполнено');
+    expect(pathWords('tables.weapon.bindings.1.args: Required', system)).toBe('тип записи «Оружие» · кнопка 2 · что отправляем: не заполнено');
     expect(pathWords('без двоеточия', system)).toBe('без двоеточия');
   });
 });

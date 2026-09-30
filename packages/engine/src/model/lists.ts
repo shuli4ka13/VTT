@@ -1,6 +1,7 @@
 import type { System, FieldOption, Field, Effect } from './types.ts';
 import { rowsOf, tableOf } from './tables.ts';
 import { fieldsOf } from './sheet-columns.ts';
+import { recordKinds } from './owned.ts';
 
 export function listOf(system: System, key: string | undefined): FieldOption[] | undefined {
   if (!key) return undefined;
@@ -43,13 +44,13 @@ export function listUsers(system: System, key: string): string[] {
       if (from(param) === key) out.push(`«${param.label ?? param.key}» у эффекта «${effect.label ?? id}»`);
     }
   }
-  for (const [rk, kind] of Object.entries(system.records ?? {})) {
-    for (const prop of (kind.props ?? [])) {
+  for (const [rk, kind] of recordKinds(system)) {
+    for (const prop of (kind.columns ?? [])) {
       if (from(prop) === key) out.push(`свойство «${prop.label ?? prop.key}» у типа «${kind.label ?? rk}»`);
     }
   }
   for (const [id, table] of Object.entries(system.tables ?? {})) {
-    if (table.shape === 'single') continue;
+    if (table.shape === 'single' || table.shape === 'book') continue;
     for (const column of (table.columns ?? [])) {
       if (column.from === key) out.push(`колонка «${column.label ?? column.key}» таблицы «${table.label ?? id}»`);
     }

@@ -52,7 +52,7 @@ export function targets(system: System): Target[] {
 function cellTargets(system: System): Target[] {
   const out: Target[] = [];
   for (const [id, table] of Object.entries(system.tables ?? {})) {
-    if (table.shape === 'single') continue;
+    if (table.shape === 'single' || table.shape === 'book') continue;
     const name = table.label || id;
     for (const column of (table.columns ?? [])) {
       if (column.kind !== 'expr' && column.kind !== 'number') continue;

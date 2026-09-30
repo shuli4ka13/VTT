@@ -12,13 +12,13 @@ const system = {
   ] }, группа: { shape: 'single', owner: 'group', columns: [
     { key: 'урон', label: 'Урон отряда', kind: 'number' },
     { key: 'выбыло', label: 'Выбыло', expr: 'округлить вниз(@урон / 3)' },
-  ] } },
+  ] } , приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [] } },
   effects: {
     удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'apply', target: { tag: 'урон' }, direction: 'add', value: { expr: '4' } }] },
   },
-  records: { приём: { kind: 'action', label: 'Приём', props: [], bindings: [] } },
+  
 } as unknown as System;
-const book = { records: [{ id: 'удар', rk: 'приём', label: 'Удар', bindings: [{ label: 'Удар', effect: 'удар', args: {} }] }] } as unknown as Compendium;
+const book = { records: [{ id: 'удар', table: 'приём', label: 'Удар', bindings: [{ label: 'Удар', effect: 'удар', args: {} }] }] } as unknown as Compendium;
 
 const sheet = (id: string, extra: Partial<Sheet> = {}) =>
   ({ id, systemId: 'г', name: id, values: {}, has: [{ of: 'удар' }], effects: [], ...extra }) as unknown as Sheet;

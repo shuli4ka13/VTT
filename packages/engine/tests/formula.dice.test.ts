@@ -9,7 +9,10 @@ const система = {
     { key: 'хиты', label: 'Хиты', kind: 'number', default: 100, min: 0 },
     { key: 'порог', label: 'Крит от', kind: 'number', default: 20 },
     { key: 'сила', label: 'Сила', kind: 'number', default: 3 },
-  ] } },
+  ] } , оружие: {
+      shape: 'book', use: 'item', label: 'Оружие', columns: [{ key: 'кость', label: 'Кость урона', kind: 'dice' }],
+      bindings: [{ label: 'Удар', effect: 'удар', args: { кость: { prop: 'кость' } } }],
+    } },
   constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
   effects: {
     удар: {
@@ -25,16 +28,11 @@ const система = {
       ],
     },
   },
-  records: {
-    оружие: {
-      kind: 'item', label: 'Оружие', props: [{ key: 'кость', label: 'Кость урона', kind: 'dice' }],
-      bindings: [{ label: 'Удар', effect: 'удар', args: { кость: { prop: 'кость' } } }],
-    },
-  },
+  
 } as unknown as System;
 
 const книга = {
-  records: [{ id: 'меч', rk: 'оружие', label: 'Меч', props: { кость: '1к8' } }],
+  records: [{ id: 'меч', table: 'оружие', label: 'Меч', cells: { кость: '1к8' } }],
 } as never;
 
 const лист = (порог: number) => ({

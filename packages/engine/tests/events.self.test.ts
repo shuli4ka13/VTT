@@ -9,7 +9,7 @@ const system = {
   tables: { лист: { shape: 'single', columns: [
     { key: 'хиты', label: 'Хиты', kind: 'number', default: 20 },
     { key: 'ячейки', label: 'Ячейки', kind: 'number', default: 3, min: 0 },
-  ] } },
+  ] } , заклинание: { shape: 'book', use: 'action', label: 'Заклинание', columns: [], bindings: [{ label: 'Снаряд', effect: 'снаряд', args: {} }] }, приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
   effects: {
     снаряд: {
       label: 'Снаряд', activation: 'manual',
@@ -21,14 +21,11 @@ const system = {
       steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '2' } }],
     },
   },
-  records: {
-    заклинание: { kind: 'action', label: 'Заклинание', props: [], bindings: [{ label: 'Снаряд', effect: 'снаряд', args: {} }] },
-    приём: { kind: 'action', label: 'Приём', props: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] },
-  },
+  
 } as unknown as System;
 
 const compendium = {
-  records: [{ id: 'снаряд', rk: 'заклинание', label: 'Снаряд', props: {} }, { id: 'меч', rk: 'приём', label: 'Меч', props: {} }],
+  records: [{ id: 'снаряд', table: 'заклинание', label: 'Снаряд', cells: {} }, { id: 'меч', table: 'приём', label: 'Меч', cells: {} }],
 } as unknown as Compendium;
 
 const sheet = (id: string): Sheet => ({
@@ -78,7 +75,7 @@ group('в шагах отправителя получателя нет', () => 
   const withSelf = (self: unknown[], params: unknown[] = [], args: Record<string, unknown> = {}) => ({
     ...system,
     effects: { ...system.effects, снаряд: { ...(system.effects as any).снаряд, self, params } },
-    records: { ...system.records, заклинание: { ...(system.records as any).заклинание, bindings: [{ label: 'Снаряд', effect: 'снаряд', args }] } },
+    tables: { ...system.tables, заклинание: { ...(system.tables as any).заклинание, bindings: [{ label: 'Снаряд', effect: 'снаряд', args }] } },
   }) as unknown as System;
 
   test('поле получателя прямо в шаге отправителя — ошибка словами, а не свой лист молча', () => {

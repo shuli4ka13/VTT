@@ -6,7 +6,7 @@ import { compile } from '../formula/index.ts';
 import type { Node } from '../formula/index.ts';
 import { registry } from '../engine/steps/index.ts';
 import { calledOf } from '../engine/effects.ts';
-import { recordsOf } from './owned.ts';
+import { recordsOf, recordKinds, kindsOf } from './owned.ts';
 
 export { EVENT_PREFIX, MOMENT_PREFIX, FIELD_PREFIX } from '../events/bus.ts';
 import { EVENT_PREFIX, MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX } from '../events/bus.ts';
@@ -67,8 +67,8 @@ export function declaredOf(system: System): Declared {
     rollEdit: new Set(Object.keys(system.roll_edits ?? {})),
     event: new Set(Object.keys(system.effects ?? {})),
     roll: new Set(tagWords(system).keys()),
-    prop: new Set(Object.values(system.records ?? {}).flatMap(k => (k.props ?? []).map(p => p.key))),
-    recordKind: new Set(Object.keys(system.records ?? {})),
+    prop: new Set(recordKinds(system).flatMap(([, k]) => (k.columns ?? []).map(p => p.key))),
+    recordKind: new Set(kindsOf(system).map(([id]) => id)),
   };
 }
 
@@ -318,9 +318,9 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
 
   for (const [id, effect] of Object.entries(system.effects ?? {})) effectRefs(system, id, effect, out);
 
-  for (const [kind, spec] of Object.entries(system.records ?? {})) {
-    const own = new Set((spec.props ?? []).map(p => p.key));
-    for (const prop of spec.props ?? []) typedRefs(prop, { tab: 'records', kind, part: 'props', key: prop.key }, out);
+  for (const [kind, spec] of kindsOf(system)) {
+    const own = new Set((spec.columns ?? []).map(p => p.key));
+    for (const prop of spec.columns ?? []) typedRefs(prop, { tab: 'records', kind, part: 'props', key: prop.key }, out);
     (spec.bindings ?? []).forEach((binding, index) => {
       const from: Where = { tab: 'records', kind, part: 'bindings', binding: index };
       if (binding.effect) out.push({ kind: 'effect', key: binding.effect, from });
@@ -360,7 +360,7 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
   for (const list of [[...records.values()]]) {
     for (const record of list) {
       const from: Where = { tab: 'book', record: record.id };
-      if (record.rk) out.push({ kind: 'recordKind', key: String(record.rk), from });
+      if (record.table) out.push({ kind: 'recordKind', key: String(record.table), from });
       for (const id of record.grants ?? []) out.push({ kind: 'effect', key: id, from });
       for (const binding of record.bindings ?? []) if (binding.effect) out.push({ kind: 'effect', key: binding.effect, from });
       modifierRefs(record.modifiers, from, out);

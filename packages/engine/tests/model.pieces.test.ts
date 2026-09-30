@@ -6,10 +6,11 @@ import { availableActions } from '../src/events/envelope.ts';
 import { withLibrary } from '../src/model/owned.ts';
 import type { System, Sheet } from '../src/model/types.ts';
 import { fieldOf } from '../src/model/sheet-columns.ts';
+import { recordKinds } from '../src/model/owned.ts';
 
 const unreachable = (system: System): string[] => {
   const reach = new Set<string>([...system.grants ?? [], ...calledOf(system).map(([key]) => key)]);
-  for (const kind of Object.values(system.records ?? {})) {
+  for (const [, kind] of recordKinds(system)) {
     for (const b of kind.bindings ?? []) reach.add(b.effect);
     for (const id of kind.grants ?? []) reach.add(id);
   }

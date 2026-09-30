@@ -1284,6 +1284,107 @@
             }
           }
         ]
+      },
+      "weapon": {
+        "label": "Оружие",
+        "icon": "🔫",
+        "hint": "Базовый урон, вид, пять значений атаки по дистанциям и навык.",
+        "shape": "book",
+        "use": "item",
+        "block": "Снаряжение",
+        "columns": [
+          {
+            "key": "dv",
+            "label": "Базовый урон",
+            "kind": "number"
+          },
+          {
+            "key": "damage_kind",
+            "label": "Вид урона",
+            "kind": "choice",
+            "from": "damage_kinds"
+          },
+          {
+            "key": "electric",
+            "label": "Электрический (1 — да)",
+            "kind": "number"
+          },
+          {
+            "key": "ar1",
+            "label": "АТК: вплотную",
+            "kind": "number"
+          },
+          {
+            "key": "ar2",
+            "label": "АТК: близкая",
+            "kind": "number"
+          },
+          {
+            "key": "ar3",
+            "label": "АТК: средняя",
+            "kind": "number"
+          },
+          {
+            "key": "ar4",
+            "label": "АТК: дальняя",
+            "kind": "number"
+          },
+          {
+            "key": "ar5",
+            "label": "АТК: экстремальная",
+            "kind": "number"
+          },
+          {
+            "key": "skill",
+            "label": "Навык",
+            "kind": "choice",
+            "from": "skills"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Атаковать",
+            "effect": "ranged_attack",
+            "args": {
+              "attack_pool": {
+                "expr": "таблица(\"skills\", @skill, \"pool\")"
+              },
+              "physical_hit": {
+                "expr": "таблица(\"damage_kinds\", @damage_kind, \"physical\")"
+              }
+            }
+          }
+        ]
+      },
+      "armor": {
+        "label": "Броня",
+        "icon": "🧥",
+        "hint": "Прибавка к значению защиты. Броня не складывается, шлемы и щиты — сверху.",
+        "shape": "book",
+        "use": "item",
+        "block": "Снаряжение",
+        "columns": [
+          {
+            "key": "rating",
+            "label": "К значению защиты",
+            "kind": "number"
+          },
+          {
+            "key": "accessory",
+            "label": "Шлем или щит (1 — да)",
+            "kind": "number"
+          }
+        ]
+      },
+      "action": {
+        "label": "Действие",
+        "icon": "✦",
+        "hint": "Преимущество, лечение, простые действия.",
+        "shape": "book",
+        "use": "action",
+        "block": "Приёмы",
+        "columns": [],
+        "bindings": []
       }
     },
     "roll_edits": {
@@ -2514,181 +2615,6 @@
         ]
       }
     },
-    "records": {
-      "runner": {
-        "kind": "sheet",
-        "label": "Раннер",
-        "icon": "🕶",
-        "group": "Листы",
-        "hint": "Лист игрока: все блоки."
-      },
-      "grunt": {
-        "kind": "sheet",
-        "label": "Пешка",
-        "icon": "👥",
-        "group": "Листы",
-        "hint": "Пешка из отряда (стр. 203): одна шкала на оба вида урона, 8 + ⌈больше из Воли и Тела / 2⌉, штраф за каждые 2 ячейки.",
-        "blocks": [
-          "Характеристики",
-          "Навыки",
-          "Наборы кубиков",
-          "Защита",
-          "Счётчики",
-          "Инициатива"
-        ],
-        "modifiers": [
-          {
-            "kind": "value",
-            "target": "physical_max",
-            "op": "set",
-            "value": {
-              "expr": "8 + округлить вверх(большее из(@willpower, @body) / 2)"
-            },
-            "stacking": "override"
-          },
-          {
-            "kind": "value",
-            "target": "physical_total",
-            "op": "set",
-            "value": {
-              "expr": "@physical + @stun"
-            },
-            "stacking": "override"
-          },
-          {
-            "kind": "value",
-            "target": "knocked_out",
-            "op": "set",
-            "value": {
-              "expr": "нет"
-            },
-            "stacking": "override"
-          },
-          {
-            "kind": "value",
-            "target": "wound_mod",
-            "op": "set",
-            "value": {
-              "expr": "0 - округлить вниз(меньшее из(@physical + @stun, @physical_max) / 2)"
-            },
-            "stacking": "override"
-          }
-        ]
-      },
-      "opponent": {
-        "kind": "sheet",
-        "label": "Противник",
-        "icon": "👤",
-        "group": "Листы",
-        "hint": "Лист противника: характеристики, навыки, защита, счётчики.",
-        "blocks": [
-          "Характеристики",
-          "Навыки",
-          "Наборы кубиков",
-          "Защита",
-          "Счётчики",
-          "Инициатива"
-        ]
-      },
-      "weapon": {
-        "kind": "item",
-        "label": "Оружие",
-        "icon": "🔫",
-        "group": "Снаряжение",
-        "hint": "Базовый урон, вид, пять значений атаки по дистанциям и навык.",
-        "props": [
-          {
-            "key": "dv",
-            "label": "Базовый урон",
-            "kind": "number"
-          },
-          {
-            "key": "damage_kind",
-            "label": "Вид урона",
-            "kind": "choice",
-            "from": "damage_kinds"
-          },
-          {
-            "key": "electric",
-            "label": "Электрический (1 — да)",
-            "kind": "number"
-          },
-          {
-            "key": "ar1",
-            "label": "АТК: вплотную",
-            "kind": "number"
-          },
-          {
-            "key": "ar2",
-            "label": "АТК: близкая",
-            "kind": "number"
-          },
-          {
-            "key": "ar3",
-            "label": "АТК: средняя",
-            "kind": "number"
-          },
-          {
-            "key": "ar4",
-            "label": "АТК: дальняя",
-            "kind": "number"
-          },
-          {
-            "key": "ar5",
-            "label": "АТК: экстремальная",
-            "kind": "number"
-          },
-          {
-            "key": "skill",
-            "label": "Навык",
-            "kind": "choice",
-            "from": "skills"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Атаковать",
-            "effect": "ranged_attack",
-            "args": {
-              "attack_pool": {
-                "expr": "таблица(\"skills\", @skill, \"pool\")"
-              },
-              "physical_hit": {
-                "expr": "таблица(\"damage_kinds\", @damage_kind, \"physical\")"
-              }
-            }
-          }
-        ]
-      },
-      "armor": {
-        "kind": "item",
-        "label": "Броня",
-        "icon": "🧥",
-        "group": "Снаряжение",
-        "hint": "Прибавка к значению защиты. Броня не складывается, шлемы и щиты — сверху.",
-        "props": [
-          {
-            "key": "rating",
-            "label": "К значению защиты",
-            "kind": "number"
-          },
-          {
-            "key": "accessory",
-            "label": "Шлем или щит (1 — да)",
-            "kind": "number"
-          }
-        ]
-      },
-      "action": {
-        "kind": "action",
-        "label": "Действие",
-        "icon": "✦",
-        "group": "Приёмы",
-        "hint": "Преимущество, лечение, простые действия.",
-        "props": [],
-        "bindings": []
-      }
-    },
     "grants": [
       "knock_out",
       "bleed_out",
@@ -2745,16 +2671,90 @@
         "has": [],
         "effects": []
       }
-    ]
+    ],
+    "sheets": {
+      "runner": {
+        "label": "Раннер",
+        "icon": "🕶",
+        "hint": "Лист игрока: все блоки.",
+        "block": "Листы"
+      },
+      "grunt": {
+        "label": "Пешка",
+        "icon": "👥",
+        "hint": "Пешка из отряда (стр. 203): одна шкала на оба вида урона, 8 + ⌈больше из Воли и Тела / 2⌉, штраф за каждые 2 ячейки.",
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "physical_max",
+            "op": "set",
+            "value": {
+              "expr": "8 + округлить вверх(большее из(@willpower, @body) / 2)"
+            },
+            "stacking": "override"
+          },
+          {
+            "kind": "value",
+            "target": "physical_total",
+            "op": "set",
+            "value": {
+              "expr": "@physical + @stun"
+            },
+            "stacking": "override"
+          },
+          {
+            "kind": "value",
+            "target": "knocked_out",
+            "op": "set",
+            "value": {
+              "expr": "нет"
+            },
+            "stacking": "override"
+          },
+          {
+            "kind": "value",
+            "target": "wound_mod",
+            "op": "set",
+            "value": {
+              "expr": "0 - округлить вниз(меньшее из(@physical + @stun, @physical_max) / 2)"
+            },
+            "stacking": "override"
+          }
+        ],
+        "block": "Листы",
+        "blocks": [
+          "Характеристики",
+          "Навыки",
+          "Наборы кубиков",
+          "Защита",
+          "Счётчики",
+          "Инициатива"
+        ]
+      },
+      "opponent": {
+        "label": "Противник",
+        "icon": "👤",
+        "hint": "Лист противника: характеристики, навыки, защита, счётчики.",
+        "block": "Листы",
+        "blocks": [
+          "Характеристики",
+          "Навыки",
+          "Наборы кубиков",
+          "Защита",
+          "Счётчики",
+          "Инициатива"
+        ]
+      }
+    }
   },
   "compendium": {
     "records": [
       {
         "id": "combat_knife",
-        "rk": "weapon",
         "label": "Боевой нож",
         "description": "Клинки (стр. 249). Урон 3ф, АТК 8/—/—/—/—. Можно метнуть: близкая 2, до 20 м.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 3,
           "damage_kind": "физический",
           "electric": 0,
@@ -2768,10 +2768,10 @@
       },
       {
         "id": "combat_axe",
-        "rk": "weapon",
         "label": "Боевой топор",
         "description": "Клинки (стр. 249). Урон 5ф, АТК 9/—/—/—/—.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 5,
           "damage_kind": "физический",
           "electric": 0,
@@ -2785,10 +2785,10 @@
       },
       {
         "id": "katana",
-        "rk": "weapon",
         "label": "Катана",
         "description": "Клинки (стр. 249). Урон 4ф, АТК 10/—/—/—/—.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 4,
           "damage_kind": "физический",
           "electric": 0,
@@ -2802,10 +2802,10 @@
       },
       {
         "id": "spear",
-        "rk": "weapon",
         "label": "Копьё",
         "description": "Клинки (стр. 249). Урон 4ф, АТК 8/—/—/—/—.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 4,
           "damage_kind": "физический",
           "electric": 0,
@@ -2819,10 +2819,10 @@
       },
       {
         "id": "sword",
-        "rk": "weapon",
         "label": "Меч",
         "description": "Клинки (стр. 249). Урон 3ф, АТК 9/—/—/—/—.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 3,
           "damage_kind": "физический",
           "electric": 0,
@@ -2836,10 +2836,10 @@
       },
       {
         "id": "knife",
-        "rk": "weapon",
         "label": "Нож",
         "description": "Клинки (стр. 249). Урон 2ф, АТК 6/—/—/—/—.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 2,
           "damage_kind": "физический",
           "electric": 0,
@@ -2853,10 +2853,10 @@
       },
       {
         "id": "club",
-        "rk": "weapon",
         "label": "Дубинка",
         "description": "Дробящее (стр. 249). Урон 3о, АТК 6/—/—/—/—.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 3,
           "damage_kind": "оглушающий",
           "electric": 0,
@@ -2870,10 +2870,10 @@
       },
       {
         "id": "stun_baton",
-        "rk": "weapon",
         "label": "Оглушающая дубинка",
         "description": "Дробящее (стр. 249). Урон 5о(э), АТК 6/—/—/—/—.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 5,
           "damage_kind": "оглушающий",
           "electric": 1,
@@ -2887,10 +2887,10 @@
       },
       {
         "id": "staff",
-        "rk": "weapon",
         "label": "Посох",
         "description": "Дробящее (стр. 249). Урон 4о, АТК 8/—/—/—/—.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 4,
           "damage_kind": "оглушающий",
           "electric": 0,
@@ -2904,10 +2904,10 @@
       },
       {
         "id": "sap",
-        "rk": "weapon",
         "label": "Слеппер",
         "description": "Дробящее (стр. 249). Урон 2о, АТК 6/—/—/—/—.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 2,
           "damage_kind": "оглушающий",
           "electric": 0,
@@ -2921,10 +2921,10 @@
       },
       {
         "id": "telescoping_staff",
-        "rk": "weapon",
         "label": "Телескопический посох",
         "description": "Дробящее (стр. 249). Урон 4о, АТК 8/—/—/—/—.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 4,
           "damage_kind": "оглушающий",
           "electric": 0,
@@ -2938,10 +2938,10 @@
       },
       {
         "id": "knucks",
-        "rk": "weapon",
         "label": "Кастет",
         "description": "Безоружное (стр. 250). Урон 3ф, АТК 6/—/—/—/—.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 3,
           "damage_kind": "физический",
           "electric": 0,
@@ -2955,10 +2955,10 @@
       },
       {
         "id": "bike_chain",
-        "rk": "weapon",
         "label": "Мотоциклетная цепь",
         "description": "Безоружное (стр. 250). Урон 2о, АТК 5/—/—/—/—.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 2,
           "damage_kind": "оглушающий",
           "electric": 0,
@@ -2972,10 +2972,10 @@
       },
       {
         "id": "shock_gloves",
-        "rk": "weapon",
         "label": "Электрошоковые перчатки",
         "description": "Безоружное (стр. 250). Урон 4о(э), АТК 5/—/—/—/—.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 4,
           "damage_kind": "оглушающий",
           "electric": 1,
@@ -2989,10 +2989,10 @@
       },
       {
         "id": "throwing_knives",
-        "rk": "weapon",
         "label": "Метательные ножи",
         "description": "Метательное (стр. 250). Урон 2ф, АТК 10/9/3/—/—.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 2,
           "damage_kind": "физический",
           "electric": 0,
@@ -3006,10 +3006,10 @@
       },
       {
         "id": "shuriken",
-        "rk": "weapon",
         "label": "Метательные звёздочки",
         "description": "Метательное (стр. 250). Урон 2ф, АТК 9/11/5/—/—.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 2,
           "damage_kind": "физический",
           "electric": 0,
@@ -3023,10 +3023,10 @@
       },
       {
         "id": "super_shock",
-        "rk": "weapon",
         "label": "«Дефайанс Супер Шок»",
         "description": "Шокер (стр. 250). Урон 6о(э), АТК 10/6/—/—/—. ОВ, 4(м), до 20 м.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 6,
           "damage_kind": "оглушающий",
           "electric": 1,
@@ -3040,10 +3040,10 @@
       },
       {
         "id": "pulsar",
-        "rk": "weapon",
         "label": "«Ямаха Пульсар I»",
         "description": "Шокер (стр. 250). Урон 4о(э), АТК 9/9/—/—/—. ОВ, 4(м), до 50 м.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 4,
           "damage_kind": "оглушающий",
           "electric": 1,
@@ -3057,10 +3057,10 @@
       },
       {
         "id": "streetline",
-        "rk": "weapon",
         "label": "«Стритлайн Спешл»",
         "description": "Карманный пистолет (стр. 252). Урон 2ф, АТК 8/8/—/—/—. ОВ, 6(о).",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 2,
           "damage_kind": "физический",
           "electric": 0,
@@ -3074,10 +3074,10 @@
       },
       {
         "id": "palm_pistol",
-        "rk": "weapon",
         "label": "«Вальтер Палм Пистол»",
         "description": "Карманный пистолет (стр. 252). Урон 2ф, АТК 12/7/—/—/—. ОВ/ДО, 6(л).",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 2,
           "damage_kind": "физический",
           "electric": 0,
@@ -3091,10 +3091,10 @@
       },
       {
         "id": "light_fire_70",
-        "rk": "weapon",
         "label": "«Арес Лайт Фаер 70»",
         "description": "Лёгкий пистолет (стр. 252). Урон 2ф, АТК 10/7/6/—/—. КО, 16(о).",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 2,
           "damage_kind": "физический",
           "electric": 0,
@@ -3108,10 +3108,10 @@
       },
       {
         "id": "beretta_101t",
-        "rk": "weapon",
         "label": "«Беретта 101Т»",
         "description": "Лёгкий пистолет (стр. 252). Урон 2ф, АТК 9/8/6/—/—. КО, 21(о).",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 2,
           "damage_kind": "физический",
           "electric": 0,
@@ -3125,10 +3125,10 @@
       },
       {
         "id": "colt_l36",
-        "rk": "weapon",
         "label": "«Кольт Америка L36»",
         "description": "Лёгкий пистолет (стр. 252). Урон 2ф, АТК 8/8/6/—/—. КО, 11(о).",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 2,
           "damage_kind": "физический",
           "electric": 0,
@@ -3142,10 +3142,10 @@
       },
       {
         "id": "security_600",
-        "rk": "weapon",
         "label": "«Фичетти Секьюрити 600»",
         "description": "Лёгкий пистолет (стр. 252). Урон 2ф, АТК 10/9/6/—/—. КО, 30(о).",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 2,
           "damage_kind": "физический",
           "electric": 0,
@@ -3159,10 +3159,10 @@
       },
       {
         "id": "black_scorpion",
-        "rk": "weapon",
         "label": "«Ческа Блэк Скорпион»",
         "description": "Автоматический пистолет (стр. 253). Урон 2ф, АТК 10/9/8/—/—. КО/ДО, 35(о).",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 2,
           "damage_kind": "физический",
           "electric": 0,
@@ -3176,10 +3176,10 @@
       },
       {
         "id": "predator_vi",
-        "rk": "weapon",
         "label": "«Арес Предатор VI»",
         "description": "Тяжёлый пистолет (стр. 254). Урон 3ф, АТК 10/10/8/—/—. КО/ДО, 15(о).",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 3,
           "damage_kind": "физический",
           "electric": 0,
@@ -3193,10 +3193,10 @@
       },
       {
         "id": "ultra_power",
-        "rk": "weapon",
         "label": "«Браунинг Ультра Пауэр»",
         "description": "Тяжёлый пистолет (стр. 254). Урон 3ф, АТК 10/9/6/—/—. КО, 10(о).",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 3,
           "damage_kind": "физический",
           "electric": 0,
@@ -3210,10 +3210,10 @@
       },
       {
         "id": "manhunter",
-        "rk": "weapon",
         "label": "«Кольт Мэнхантер»",
         "description": "Тяжёлый пистолет (стр. 254). Урон 3ф, АТК 11/9/7/—/—. КО, 14(о).",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 3,
           "damage_kind": "физический",
           "electric": 0,
@@ -3227,10 +3227,10 @@
       },
       {
         "id": "super_warhawk",
-        "rk": "weapon",
         "label": "«Ругер Супер Вархок»",
         "description": "Тяжёлый пистолет (стр. 254). Урон 4ф, АТК 8/11/8/—/—. КО, 6(б).",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 4,
           "damage_kind": "физический",
           "electric": 0,
@@ -3244,10 +3244,10 @@
       },
       {
         "id": "ingram_xi",
-        "rk": "weapon",
         "label": "«Инграм Смартган XI»",
         "description": "Пистолет-пулемёт (стр. 254). Урон 3ф, АТК 11/9/6/—/—. КО/ДО, 32(о).",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 3,
           "damage_kind": "физический",
           "electric": 0,
@@ -3261,10 +3261,10 @@
       },
       {
         "id": "hk_227",
-        "rk": "weapon",
         "label": "«ХК-227»",
         "description": "Пистолет-пулемёт (стр. 254). Урон 3ф, АТК 10/11/8/—/—. КО/ДО, 28(о).",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 3,
           "damage_kind": "физический",
           "electric": 0,
@@ -3278,10 +3278,10 @@
       },
       {
         "id": "uzi_v",
-        "rk": "weapon",
         "label": "«Узи V»",
         "description": "Пистолет-пулемёт (стр. 254). Урон 3ф, АТК 8/8/7/—/—. КО/ДО/НО, 24(о).",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 3,
           "damage_kind": "физический",
           "electric": 0,
@@ -3295,10 +3295,10 @@
       },
       {
         "id": "t250",
-        "rk": "weapon",
         "label": "«Дефайанс Т-250»",
         "description": "Дробовик (стр. 255). Урон 4ф, АТК 7/10/6/—/—. ОВ/КО, 5(м).",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 4,
           "damage_kind": "физический",
           "electric": 0,
@@ -3312,10 +3312,10 @@
       },
       {
         "id": "roomsweeper",
-        "rk": "weapon",
         "label": "«Ремингтон Румсвипер»",
         "description": "Дробовик (стр. 255). Урон 5ф, АТК 9/8/4/—/—. КО, 8(м).",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 5,
           "damage_kind": "физический",
           "electric": 0,
@@ -3329,10 +3329,10 @@
       },
       {
         "id": "ak_97",
-        "rk": "weapon",
         "label": "АК-97",
         "description": "Винтовка (стр. 256). Урон 5ф, АТК 4/11/9/7/1. КО/ДО/НО, 38(о).",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 5,
           "damage_kind": "физический",
           "electric": 0,
@@ -3346,10 +3346,10 @@
       },
       {
         "id": "ares_alpha",
-        "rk": "weapon",
         "label": "«Арес Альфа»",
         "description": "Винтовка (стр. 256). Урон 4ф, АТК 4/10/9/7/2. КО/ДО/НО, 42(о).",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 4,
           "damage_kind": "физический",
           "electric": 0,
@@ -3363,10 +3363,10 @@
       },
       {
         "id": "colt_m23",
-        "rk": "weapon",
         "label": "«Кольт М23»",
         "description": "Винтовка (стр. 256). Урон 4ф, АТК 5/8/8/8/1. КО/ДО/НО, 40(о).",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 4,
           "damage_kind": "физический",
           "electric": 0,
@@ -3380,10 +3380,10 @@
       },
       {
         "id": "desert_strike",
-        "rk": "weapon",
         "label": "«Арес Дезерт Страйк»",
         "description": "Снайперская винтовка (стр. 256). Урон 5ф, АТК 3/10/10/10/10. КО, 14(о).",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 5,
           "damage_kind": "физический",
           "electric": 0,
@@ -3397,10 +3397,10 @@
       },
       {
         "id": "ruger_101",
-        "rk": "weapon",
         "label": "«Ругер 101»",
         "description": "Снайперская винтовка (стр. 256). Урон 5ф, АТК 2/6/10/12/11. КО, 8(м).",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 5,
           "damage_kind": "физический",
           "electric": 0,
@@ -3414,10 +3414,10 @@
       },
       {
         "id": "ingram_valiant",
-        "rk": "weapon",
         "label": "«Инграм Вэлиант»",
         "description": "Лёгкий пулемёт (стр. 257). Урон 4ф, АТК 2/11/12/7/3. КО/ДО/НО, 50(о).",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "dv": 4,
           "damage_kind": "физический",
           "electric": 0,
@@ -3431,13 +3431,8 @@
       },
       {
         "id": "synth_leather",
-        "rk": "armor",
         "label": "Синтекожаная куртка",
         "description": "Значение защиты +1.",
-        "props": {
-          "rating": 1,
-          "accessory": 0
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -3448,17 +3443,17 @@
             },
             "stacking": "max"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "rating": 1,
+          "accessory": 0
+        }
       },
       {
         "id": "armor_clothing",
-        "rk": "armor",
         "label": "Армированная одежда",
         "description": "Значение защиты +2.",
-        "props": {
-          "rating": 2,
-          "accessory": 0
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -3469,17 +3464,17 @@
             },
             "stacking": "max"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "rating": 2,
+          "accessory": 0
+        }
       },
       {
         "id": "actioneer",
-        "rk": "armor",
         "label": "Боевой деловой костюм",
         "description": "Значение защиты +2.",
-        "props": {
-          "rating": 2,
-          "accessory": 0
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -3490,17 +3485,17 @@
             },
             "stacking": "max"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "rating": 2,
+          "accessory": 0
+        }
       },
       {
         "id": "chameleon_suit",
-        "rk": "armor",
         "label": "Костюм-хамелеон",
         "description": "Значение защиты +2. Очко Преимущества на Скрытность.",
-        "props": {
-          "rating": 2,
-          "accessory": 0
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -3511,17 +3506,17 @@
             },
             "stacking": "max"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "rating": 2,
+          "accessory": 0
+        }
       },
       {
         "id": "armor_vest",
-        "rk": "armor",
         "label": "Бронежилет",
         "description": "Значение защиты +3.",
-        "props": {
-          "rating": 3,
-          "accessory": 0
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -3532,17 +3527,17 @@
             },
             "stacking": "max"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "rating": 3,
+          "accessory": 0
+        }
       },
       {
         "id": "lined_coat",
-        "rk": "armor",
         "label": "Пальто с подкладом",
         "description": "Значение защиты +3.",
-        "props": {
-          "rating": 3,
-          "accessory": 0
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -3553,17 +3548,17 @@
             },
             "stacking": "max"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "rating": 3,
+          "accessory": 0
+        }
       },
       {
         "id": "urban_explorer",
-        "rk": "armor",
         "label": "Комбинезон городского исследователя",
         "description": "Значение защиты +3.",
-        "props": {
-          "rating": 3,
-          "accessory": 0
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -3574,17 +3569,17 @@
             },
             "stacking": "max"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "rating": 3,
+          "accessory": 0
+        }
       },
       {
         "id": "armor_jacket",
-        "rk": "armor",
         "label": "Армированная куртка",
         "description": "Значение защиты +4.",
-        "props": {
-          "rating": 4,
-          "accessory": 0
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -3595,17 +3590,17 @@
             },
             "stacking": "max"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "rating": 4,
+          "accessory": 0
+        }
       },
       {
         "id": "full_body_armor",
-        "rk": "armor",
         "label": "Доспех полной защиты",
         "description": "Значение защиты +5.",
-        "props": {
-          "rating": 5,
-          "accessory": 0
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -3616,17 +3611,17 @@
             },
             "stacking": "max"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "rating": 5,
+          "accessory": 0
+        }
       },
       {
         "id": "gang_jacket",
-        "rk": "armor",
         "label": "Бандитская куртка",
         "description": "Значение защиты +1. Встречается в блоках противников (стр. 205), в таблице брони её нет.",
-        "props": {
-          "rating": 1,
-          "accessory": 0
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -3637,17 +3632,17 @@
             },
             "stacking": "max"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "rating": 1,
+          "accessory": 0
+        }
       },
       {
         "id": "helmet",
-        "rk": "armor",
         "label": "Шлем",
         "description": "Значение защиты +1.",
-        "props": {
-          "rating": 1,
-          "accessory": 1
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -3658,17 +3653,17 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "rating": 1,
+          "accessory": 1
+        }
       },
       {
         "id": "full_body_helmet",
-        "rk": "armor",
         "label": "Шлем доспеха полной защиты",
         "description": "Значение защиты +2.",
-        "props": {
-          "rating": 2,
-          "accessory": 1
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -3679,17 +3674,17 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "rating": 2,
+          "accessory": 1
+        }
       },
       {
         "id": "ballistic_shield",
-        "rk": "armor",
         "label": "Баллистический щит",
         "description": "Значение защиты +2.",
-        "props": {
-          "rating": 2,
-          "accessory": 1
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -3700,77 +3695,81 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "rating": 2,
+          "accessory": 1
+        }
       },
       {
         "id": "act_scene",
-        "rk": "action",
         "label": "Начало сцены",
         "bindings": [
           {
             "label": "Начало сцены",
             "effect": "scene_start"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "act_second_wind",
-        "rk": "action",
         "label": "Второе дыхание (3 Преимущества)",
         "bindings": [
           {
             "label": "Второе дыхание (3 Преимущества)",
             "effect": "second_wind"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "act_shrug",
-        "rk": "action",
         "label": "Ранен не так сильно (4 Преимущества)",
         "bindings": [
           {
             "label": "Ранен не так сильно (4 Преимущества)",
             "effect": "shrug_off"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "act_stand",
-        "rk": "action",
         "label": "Встать",
         "bindings": [
           {
             "label": "Встать",
             "effect": "stand_up"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "act_rest_hour",
-        "rk": "action",
         "label": "Час отдыха",
         "bindings": [
           {
             "label": "Час отдыха",
             "effect": "rest_hour"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "act_rest_day",
-        "rk": "action",
         "label": "День отдыха",
         "bindings": [
           {
             "label": "День отдыха",
             "effect": "rest_day"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "act_first_aid",
-        "rk": "action",
         "label": "Первая помощь",
         "bindings": [
           {
@@ -3782,7 +3781,8 @@
               }
             }
           }
-        ]
+        ],
+        "table": "action"
       }
     ]
   },

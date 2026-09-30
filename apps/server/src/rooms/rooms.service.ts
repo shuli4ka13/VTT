@@ -629,7 +629,7 @@ export class RoomsService {
     const room = await this.requireRoom(roomId);
     await this.assertMaySheet(roomId, userId, sheetId);
     const { system, compendium } = this.worldOf(room);
-    if (of !== null && system.records?.[of]?.kind !== 'sheet') {
+    if (of !== null && !system.sheets?.[of]) {
       throw new BadRequestException(`система не объявляет типа листа «${of}»`);
     }
     const rows = await this.db.select().from(roomSheets)

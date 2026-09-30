@@ -99,6 +99,7 @@ export const column = columnValue.extend({
   control: control.optional(),
   block: z.string().optional(),
   title: z.string().optional(),
+  onSheet: z.boolean().optional(),
 }).passthrough();
 
 export const groupSpec = z.object({
@@ -119,22 +120,6 @@ export const tableRow = z.object({
 });
 
 export const tableKey = z.enum(['word', 'number', 'range']);
-
-export const tableShape = z.enum(['rows', 'single']);
-export const tableOwner = z.enum(['sheet', 'group', 'desk']);
-
-export const table = z.object({
-  label: z.string().optional(),
-
-  shape: tableShape.optional(),
-  owner: tableOwner.optional(),
-  block: z.string().optional(),
-
-  key: tableKey.optional(),
-  columns: z.array(column).optional(),
-  rows: z.array(tableRow).optional(),
-  otherwise: tableValue.optional(),
-}).passthrough();
 
 export const rollEditOp = z.object({ op: z.string().min(1) }).passthrough();
 
@@ -254,22 +239,41 @@ export const binding = z.object({
   args: z.record(z.string(), bindingArg).optional(),
 }).passthrough();
 
-export const recordKind = z.object({
-  extends: z.string().min(1).optional(),
+export const tableShape = z.enum(['rows', 'single', 'book']);
+export const tableOwner = z.enum(['sheet', 'group', 'desk']);
+export const tableUse = z.enum(['item', 'action']);
 
-  kind: z.enum(['item', 'action', 'sheet']),
+export const table = z.object({
   label: z.string().optional(),
+
+  shape: tableShape.optional(),
+  owner: tableOwner.optional(),
+  block: z.string().optional(),
+
+  key: tableKey.optional(),
+  columns: z.array(column).optional(),
+  rows: z.array(tableRow).optional(),
+  otherwise: tableValue.optional(),
+
+  extends: z.string().min(1).optional(),
+  use: tableUse.optional(),
   icon: z.string().optional(),
-  group: z.string().optional(),
   hint: z.string().optional(),
-
-  blocks: z.array(z.string().min(1)).optional(),
   grants: z.array(z.string().min(1)).optional(),
-  props: z.array(column.extend({ onSheet: z.boolean().optional() }).passthrough()).optional(),
   bindings: z.array(binding).optional(),
-
   modifiers: z.array(modifier).optional(),
 }).passthrough();
+
+export const sheetKind = z.object({
+  extends: z.string().min(1).optional(),
+  label: z.string().optional(),
+  icon: z.string().optional(),
+  block: z.string().optional(),
+  hint: z.string().optional(),
+  blocks: z.array(z.string().min(1)).optional(),
+  grants: z.array(z.string().min(1)).optional(),
+  modifiers: z.array(modifier).optional(),
+}).strict();
 
 export const system = z.object({
   id: z.string().optional(),
@@ -279,7 +283,8 @@ export const system = z.object({
   effects: z.record(z.string(), effect),
 
   grants: z.array(z.string()).optional(),
-  records: z.record(z.string(), recordKind).optional(),
+  records: z.never({ message: 'типов записей больше нет — это таблицы со строками из книги (shape: book), типы листов — system.sheets' }).optional(),
+  sheets: z.record(z.string(), sheetKind).optional(),
   constants: z.record(z.string(), systemConstant).optional(),
   tables: z.record(z.string(), table).optional(),
   roll_edits: z.record(z.string(), rollEdit).optional(),
@@ -319,16 +324,16 @@ export const sheet = z.object({
 export const compendiumRecord = z.object({
   id: z.string().min(1),
 
-  rk: z.string().optional(),
+  table: z.string().optional(),
   label: z.string().optional(),
   description: z.string().optional(),
-  props: z.record(z.string(), z.unknown()).optional(),
+  cells: z.record(z.string(), z.unknown()).optional(),
   modifiers: z.array(modifier).optional(),
 
   bindings: z.array(binding).optional(),
 
   grants: z.array(z.string().min(1)).optional(),
-}).passthrough();
+}).strict();
 
 export const compendium = z.object({
   records: z.array(compendiumRecord).optional(),
@@ -377,7 +382,8 @@ export type Handler = z.infer<typeof handler>;
 export type Effect = z.infer<typeof effect>;
 export type Binding = z.infer<typeof binding>;
 export type BindingArg = z.infer<typeof bindingArg>;
-export type RecordKind = z.infer<typeof recordKind>;
+export type SheetKind = z.infer<typeof sheetKind>;
+export type TableUse = z.infer<typeof tableUse>;
 export type System = z.infer<typeof system>;
 export type WornEffect = z.infer<typeof wornEffect>;
 export type Owned = z.infer<typeof owned>;

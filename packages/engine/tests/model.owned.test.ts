@@ -11,7 +11,10 @@ const system = {
   tables: { лист: { shape: 'single', columns: [
     { key: 'кд', label: 'Класс брони', kind: 'number', default: 10 },
     { key: 'хиты', label: 'Хиты', kind: 'number', default: 20 },
-  ] } },
+  ] } , оружие: {
+      shape: 'book', use: 'item', label: 'Оружие', columns: [{ key: 'урон', label: 'Урон', kind: 'number' }],
+      bindings: [{ label: 'Ударить', effect: 'удар', args: { урон: { prop: 'урон' } } }],
+    }, щит: { shape: 'book', use: 'item', label: 'Щит', columns: [] } },
   effects: {
     удар: {
       label: 'Удар', activation: 'manual',
@@ -20,19 +23,13 @@ const system = {
     },
     зоркость: { label: 'Зоркость', activation: 'passive', modifiers: [] },
   },
-  records: {
-    оружие: {
-      kind: 'item', label: 'Оружие', props: [{ key: 'урон', label: 'Урон', kind: 'number' }],
-      bindings: [{ label: 'Ударить', effect: 'удар', args: { урон: { prop: 'урон' } } }],
-    },
-    щит: { kind: 'item', label: 'Щит', props: [] },
-  },
+  
 } as unknown as System;
 
 const book = {
   records: [
-    { id: 'меч', rk: 'оружие', label: 'Меч', props: { урон: 5 } },
-    { id: 'щит', rk: 'щит', label: 'Щит', props: {}, grants: ['зоркость'], modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: { expr: '2' } }] },
+    { id: 'меч', table: 'оружие', label: 'Меч', cells: { урон: 5 } },
+    { id: 'щит', table: 'щит', label: 'Щит', cells: {}, grants: ['зоркость'], modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: { expr: '2' } }] },
   ],
 } as unknown as Compendium;
 
@@ -72,10 +69,9 @@ group('тип листа — как запись, которую лист нос
       { key: 'кд', label: 'Класс брони', kind: 'number', default: 10, block: 'Щиты' },
       { key: 'ячейки', label: 'Ячейки', kind: 'number', default: 2, block: 'Магия' },
     ] } },
-    records: {
-      ...system.records,
+    sheets: {
       противник: {
-        kind: 'sheet', label: 'Противник', blocks: ['Защита'], grants: ['зоркость'],
+        label: 'Противник', blocks: ['Защита'], grants: ['зоркость'],
         modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: { expr: '1' } }],
       },
     },

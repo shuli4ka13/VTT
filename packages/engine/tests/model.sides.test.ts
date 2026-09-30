@@ -9,7 +9,7 @@ describe('имя с хозяином', () => {
       { key: 'сила', label: 'Сила', kind: 'number' },
       { key: 'броня', label: 'Броня', kind: 'number', default: 10 },
       { key: 'хп', label: 'Хиты', kind: 'number', default: 20 },
-    ] } },
+    ] } , приём: { shape: 'book', use: 'action', label: 'Приём' } },
     effects: {
       удар: {
         label: 'Удар', activation: 'manual',
@@ -35,10 +35,10 @@ describe('имя с хозяином', () => {
         steps: [{ type: 'emit', event: 'наивный', args: { сколько: { const: 1 } } }],
       },
     },
-    records: { приём: { kind: 'action', label: 'Приём' } },
+    
   } as unknown as System;
   const book = {
-    records: [...(['удар', 'просто', 'зовёт_наивного'].map(id => ({ id, rk: 'приём', label: id, bindings: [{ label: id, effect: id, args: {} }] })))],
+    records: [...(['удар', 'просто', 'зовёт_наивного'].map(id => ({ id, table: 'приём', label: id, bindings: [{ label: id, effect: id, args: {} }] })))],
   } as unknown as Compendium;
   const sheet = (id: string, сила: number, броня: number): Sheet =>
     ({ id, systemId: 'стороны', name: id, values: { сила, броня, хп: 20 }, has: [{ of: 'удар' }, { of: 'просто' }, { of: 'зовёт_наивного' }], effects: [] } as unknown as Sheet);

@@ -11,6 +11,7 @@ import { rollNotation, multiplyNotation } from './dice.ts';
 import type { Param, Die, System } from '../model/types.ts';
 import type { Pass } from './calc.ts';
 import { hasField } from '../model/sheet-columns.ts';
+import { recordKinds } from '../model/owned.ts';
 
 export interface RefContext {
   pass: Pass;
@@ -388,8 +389,8 @@ function recordNamesInline(expr: string, ctx: RefContext): string {
   const props = ctx.props;
   const text = (name: string): string => {
     const value = props[name];
-    const formula = typeof value === 'string' && Object.values(ctx.pass.system.records ?? {})
-      .some(kind => (kind.props ?? []).some(prop => prop.key === name && prop.kind === 'expr'));
+    const formula = typeof value === 'string' && recordKinds(ctx.pass.system)
+      .some(([, kind]) => (kind.columns ?? []).some(prop => prop.key === name && prop.kind === 'expr'));
     return formula ? String(value) : JSON.stringify(value ?? null);
   };
   const lone = /^\s*[@#]([\p{L}\p{N}_]+)\s*$/u.exec(expr);
@@ -403,12 +404,12 @@ function recordNamesInline(expr: string, ctx: RefContext): string {
 }
 
 const declaredProp = (system: System, name: string): boolean =>
-  Object.values(system.records ?? {}).some(kind => (kind.props ?? []).some(prop => prop.key === name));
+  recordKinds(system).some(([, kind]) => (kind.columns ?? []).some(prop => prop.key === name));
 
 function recordValue(name: string, ctx: RefContext): unknown {
   const value = ctx.props![name];
-  const formula = Object.values(ctx.pass.system.records ?? {})
-    .some(kind => (kind.props ?? []).some(prop => prop.key === name && prop.kind === 'expr'));
+  const formula = recordKinds(ctx.pass.system)
+      .some(([, kind]) => (kind.columns ?? []).some(prop => prop.key === name && prop.kind === 'expr'));
   return formula && typeof value === 'string' ? evaluate(value, ctx) : value;
 }
 

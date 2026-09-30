@@ -167,8 +167,8 @@ group('две системы одними слотами', () => {
 
       const book = {
         ...compendium,
-        records: [...compendium.records, { id: 'axe-item', rk: 'weapon', label: 'Топор',
-            props: { damage_dice: '1d12', damage_type: 'рубящий' }, modifiers: [],
+        records: [...compendium.records, { id: 'axe-item', table: 'weapon', label: 'Топор',
+            cells: { damage_dice: '1d12', damage_type: 'рубящий' }, modifiers: [],
 
             bindings: [{ label: 'Удар', effect: 'strike',
               args: { damage_dice: { prop: 'damage_dice' }, damage_type: { prop: 'damage_type' } } }] }],
@@ -247,7 +247,7 @@ group('две системы одними слотами', () => {
     test('запись зовёт эффект, которого система не объявляет', () => {
       const book = {
         ...compendium,
-        records: [...compendium.records, { id: 'a', rk: 'action', label: 'А', bindings: [{ label: 'А', effect: 'котик', args: {} }] }],
+        records: [...compendium.records, { id: 'a', table: 'action', label: 'А', bindings: [{ label: 'А', effect: 'котик', args: {} }] }],
       };
       throws(() => send('a:0', { system, sheet: arven, compendium: book, die: queue() }), 'котик');
     });

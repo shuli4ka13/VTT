@@ -3,7 +3,7 @@ import { registry } from '../engine/steps/index.ts';
 import { calledOf, chainsOfEffect } from '../engine/effects.ts';
 import { basedOn, paramsOf } from './inherit.ts';
 import { danglingRows } from './integrity.ts';
-import { recordsOf, sheetKinds, argsWithProps, propKeysOf } from './owned.ts';
+import { recordsOf, sheetKinds, argsWithProps, propKeysOf, recordKinds, kindsOf, kindOf, isBook } from './owned.ts';
 import { blockNames } from './blocks.ts';
 import { MOMENTS } from '../events/moments.ts';
 import { TABS, STEP } from '../words/glossary.ts';
@@ -269,7 +269,7 @@ function fieldNameProblems(system: System): Problem[] {
     const where = { tab: 'sheet' as const, field: field.tag };
     if (seen.has(field.tag)) out.push({ where, level: 'error', text: `имя «${field.tag}» занято дважды — у колонок листа оно одно на всю систему` });
     seen.add(field.tag);
-    if (!field.cell && system.tables?.[field.tag]) {
+    if (!field.cell && system.tables?.[field.tag] && !isBook(system.tables[field.tag])) {
       out.push({ where, level: 'error', text: `имя «${field.tag}» носит и колонка листа, и таблица «${system.tables[field.tag]!.label || field.tag}»` });
     }
   }
@@ -325,7 +325,7 @@ function orphanProblems(system: System, compendium?: Compendium): Problem[] {
     });
   }
   const bound = new Set<string>();
-  for (const kind of Object.values(system.records ?? {})) {
+  for (const [, kind] of kindsOf(system)) {
     for (const b of kind.bindings ?? []) bound.add(b.effect);
     for (const id of kind.grants ?? []) bound.add(id);
   }
@@ -379,9 +379,9 @@ function paramProblems(system: System): Problem[] {
       });
     }
   }
-  const kindBases = new Set(Object.values(system.records ?? {})
-    .map(kind => basedOn(kind)).filter((key): key is string => Boolean(key)));
-  for (const [kind, spec] of Object.entries(system.records ?? {})) {
+  const kindBases = new Set(recordKinds(system)
+    .map(([, kind]) => basedOn(kind)).filter((key): key is string => Boolean(key)));
+  for (const [kind, spec] of recordKinds(system)) {
     if (kindBases.has(kind)) continue;
     const props = propKeysOf(spec);
     (spec.bindings ?? []).forEach((binding, index) => {
@@ -480,10 +480,10 @@ export function describeWhere(where: Where, system: System, compendium?: Compend
     if (where.step !== undefined) parts.push(`${STEP.one} ${where.step + 1}`);
   } else if (where.tab === 'records') {
     parts.push(TABS.records);
-    if (where.kind) parts.push(quoted(system.records?.[where.kind]?.label, where.kind));
+    if (where.kind) parts.push(quoted(kindOf(system, where.kind)?.label, where.kind));
     if (where.binding !== undefined) parts.push(`кнопка ${where.binding + 1}`);
     else if (where.part === 'modifiers') parts.push('модификаторы');
-    else if (where.part === 'props') parts.push(`свойство ${quoted(system.records?.[where.kind ?? '']?.props?.find(p => p.key === where.key)?.label, where.key ?? '')}`);
+    else if (where.part === 'props') parts.push(`свойство ${quoted(kindOf(system, where.kind)?.columns?.find(p => p.key === where.key)?.label, where.key ?? '')}`);
   } else if (where.tab === 'book') {
     parts.push('Компендиум');
     if (where.record) {

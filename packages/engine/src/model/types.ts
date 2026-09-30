@@ -2,7 +2,7 @@ export type {
   SlotRef, Formula, ValueKind, RefSide, Tag, Column, ColumnValue, CellView, TableShape, TableOwner, FieldOption, DiceTerm, DieConstant,
   SystemConstant, Table, TableRow, TableKey, RollEditOp, RollEdit, Modifier, Param,
   Step, Guard, Ask, Handler, Effect,
-  Activation, DurationKind, Reapply, Binding, RecordKind, System,
+  Activation, DurationKind, Reapply, Binding, SheetKind, TableUse, System,
   StoredValue, WornEffect, Owned, Sheet, CompendiumRecord, Compendium, World,
 } from '@vtt/schema';
 

@@ -6,6 +6,7 @@ import { choiceTableOf } from '../model/lists.ts';
 import type { System, Param } from '../model/types.ts';
 import type { Pass } from './calc.ts';
 import { fieldOf, hasField } from '../model/sheet-columns.ts';
+import { recordKinds } from '../model/owned.ts';
 
 type Loose = Record<string, unknown>;
 
@@ -14,8 +15,8 @@ export function referencedTable(system: System, head: string, paramDefs?: Param[
   if (param) return param.kind === 'choice' ? (param.from as string | undefined) : undefined;
   const field = fieldOf(system, head);
   if (field) return choiceTableOf(field);
-  for (const kind of Object.values(system.records ?? {})) {
-    const prop = (kind.props ?? []).find(p => p.key === head) as Loose | undefined;
+  for (const [, kind] of recordKinds(system)) {
+    const prop = (kind.columns ?? []).find(p => p.key === head) as Loose | undefined;
     if (prop?.kind === 'choice' && typeof prop.from === 'string') return prop.from;
   }
   return undefined;

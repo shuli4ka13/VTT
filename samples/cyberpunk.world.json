@@ -1213,6 +1213,60 @@
           }
         ],
         "owner": "sheet"
+      },
+      "weapon": {
+        "label": "Оружие",
+        "icon": "🔫",
+        "hint": "Ствол или клинок: кость урона своя у каждого.",
+        "shape": "book",
+        "use": "item",
+        "block": "Снаряжение",
+        "columns": [
+          {
+            "key": "damage_dice",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "choice",
+            "from": "damage_types"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Выстрелить",
+            "effect": "shoot"
+          }
+        ]
+      },
+      "armor": {
+        "label": "Броня",
+        "icon": "🛡",
+        "hint": "Прочность брони: её съедает каждое попадание.",
+        "modifiers": [],
+        "shape": "book",
+        "use": "item",
+        "block": "Снаряжение",
+        "columns": [
+          {
+            "key": "sp",
+            "label": "Прочность",
+            "kind": "number"
+          }
+        ],
+        "bindings": []
+      },
+      "action": {
+        "label": "Приём",
+        "icon": "🎯",
+        "hint": "То, что персонаж умеет и без снаряжения.",
+        "shape": "book",
+        "use": "action",
+        "block": "Приёмы",
+        "columns": [],
+        "bindings": []
       }
     },
     "initiative": {
@@ -1838,59 +1892,6 @@
         ]
       }
     },
-    "records": {
-      "weapon": {
-        "kind": "item",
-        "label": "Оружие",
-        "icon": "🔫",
-        "group": "Снаряжение",
-        "hint": "Ствол или клинок: кость урона своя у каждого.",
-        "props": [
-          {
-            "key": "damage_dice",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "damage_type",
-            "label": "Тип урона",
-            "kind": "choice",
-            "from": "damage_types"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Выстрелить",
-            "effect": "shoot"
-          }
-        ]
-      },
-      "armor": {
-        "kind": "item",
-        "label": "Броня",
-        "icon": "🛡",
-        "group": "Снаряжение",
-        "hint": "Прочность брони: её съедает каждое попадание.",
-        "props": [
-          {
-            "key": "sp",
-            "label": "Прочность",
-            "kind": "number"
-          }
-        ],
-        "bindings": [],
-        "modifiers": []
-      },
-      "action": {
-        "kind": "action",
-        "label": "Приём",
-        "icon": "🎯",
-        "group": "Приёмы",
-        "hint": "То, что персонаж умеет и без снаряжения.",
-        "props": [],
-        "bindings": []
-      }
-    },
     "grants": [
       "battle_start",
       "battle_end",
@@ -1903,39 +1904,39 @@
     "records": [
       {
         "id": "heavy-pistol",
-        "rk": "weapon",
         "label": "Тяжёлый пистолет",
         "description": "Обычный ствол улиц: 3к6.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "3d6",
           "damage_type": "пуля"
         }
       },
       {
         "id": "mono-knife",
-        "rk": "weapon",
         "label": "Моноклинок",
         "description": "Режет броню на раз: 2к6.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "2d6",
           "damage_type": "холодное"
         }
       },
       {
         "id": "kevlar",
-        "rk": "armor",
         "label": "Кевларовая куртка",
         "description": "Прочность 11.",
-        "props": {
+        "table": "armor",
+        "cells": {
           "sp": 11
         }
       },
       {
         "id": "injury",
-        "rk": "action",
         "label": "Бросить травму",
         "description": "Две шестёрки на уроне — бросок по таблице травм.",
-        "props": {}
+        "table": "action",
+        "cells": {}
       }
     ]
   },

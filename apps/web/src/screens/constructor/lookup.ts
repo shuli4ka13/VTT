@@ -2,7 +2,7 @@ import { ownerOf, OWNER_WORDS } from '@vtt/engine/engine/owners';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
 import { splitPath } from '@vtt/engine/engine/navigate';
 import { choiceTableOf } from '@vtt/engine/model/lists';
-import { recordsOf, argsWithProps, propKeysOf } from '@vtt/engine/model/owned';
+import { recordsOf, argsWithProps, propKeysOf, recordKinds } from '@vtt/engine/model/owned';
 import { kindWord } from '@vtt/engine/words/kinds';
 import type { RefKind } from '@vtt/engine/model/references';
 import type { System, Compendium, Effect } from '@vtt/schema';
@@ -58,7 +58,7 @@ const argText = (arg: unknown, props: ReadonlySet<string> = new Set()): string =
 
 function callersOf(system: System, effectId: string, key: string): string[] {
   const out: string[] = [];
-  for (const [kindKey, kind] of Object.entries(system.records ?? {})) {
+  for (const [kindKey, kind] of recordKinds(system)) {
     for (const binding of kind.bindings ?? []) {
       if (binding.effect !== effectId) continue;
       const props = propKeysOf(kind);
@@ -210,10 +210,10 @@ export function explainName(
     };
   }
 
-  for (const [kindKey, kind] of Object.entries(system.records ?? {})) {
-    const prop = (kind.props ?? []).find(p => p.key === head);
+  for (const [kindKey, kind] of recordKinds(system)) {
+    const prop = (kind.columns ?? []).find(p => p.key === head);
     if (!prop) continue;
-    const records = recordsOf(compendium).filter(r => r.rk === kindKey);
+    const records = recordsOf(compendium).filter(r => r.table === kindKey);
     return {
       kind: 'свойство записи',
       title: `${prop.label ?? prop.key} · ${kind.label ?? kindKey}`,

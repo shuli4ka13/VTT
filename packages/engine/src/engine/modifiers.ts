@@ -71,7 +71,7 @@ function sourcesOf(system: System, sheet: Sheet, compendium: Compendium): Modifi
     const kind = kindOfRecord(system, item);
     if (kind?.modifiers?.length) {
       sources.push({
-        type: 'kind', id: String(item.rk), label: kind.label || String(item.rk),
+        type: 'kind', id: String(item.table), label: kind.label || String(item.table),
         modifiers: kind.modifiers,
       });
     }

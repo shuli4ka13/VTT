@@ -1346,6 +1346,126 @@
             }
           }
         ]
+      },
+      "weapon": {
+        "label": "Оружие",
+        "icon": "⚔",
+        "hint": "Черта, дистанция, кость урона и прибавка.",
+        "shape": "book",
+        "use": "item",
+        "block": "Снаряжение",
+        "columns": [
+          {
+            "key": "trait",
+            "label": "Черта",
+            "kind": "choice",
+            "from": "traits"
+          },
+          {
+            "key": "range",
+            "label": "Дистанция",
+            "kind": "choice",
+            "from": "ranges"
+          },
+          {
+            "key": "damage_die",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "die_size",
+            "label": "Граней на кости",
+            "kind": "number"
+          },
+          {
+            "key": "damage_bonus",
+            "label": "Прибавка к урону",
+            "kind": "number"
+          },
+          {
+            "key": "attack_bonus",
+            "label": "Прибавка к атаке",
+            "kind": "number"
+          },
+          {
+            "key": "extra_die",
+            "label": "Ещё кость урона, худшая отбрасывается (1 — да)",
+            "kind": "number"
+          },
+          {
+            "key": "damage_kind",
+            "label": "Вид урона",
+            "kind": "choice",
+            "from": "damage_kinds"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Атака",
+            "effect": "hero_attack"
+          }
+        ]
+      },
+      "armor": {
+        "label": "Доспех",
+        "icon": "🛡",
+        "hint": "Основа порогов и броня.",
+        "shape": "book",
+        "use": "item",
+        "block": "Снаряжение",
+        "columns": [
+          {
+            "key": "major",
+            "label": "Основа порога серьёзного",
+            "kind": "number"
+          },
+          {
+            "key": "severe",
+            "label": "Основа порога тяжёлого",
+            "kind": "number"
+          },
+          {
+            "key": "score",
+            "label": "Броня",
+            "kind": "number"
+          }
+        ]
+      },
+      "adversary_move": {
+        "label": "Приём противника",
+        "icon": "👹",
+        "hint": "Урон вписан в приём, особенности — в описании.",
+        "shape": "book",
+        "use": "action",
+        "block": "Приёмы",
+        "columns": [
+          {
+            "key": "damage_dice",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "damage_bonus",
+            "label": "Прибавка",
+            "kind": "number"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Атака",
+            "effect": "adversary_attack"
+          }
+        ]
+      },
+      "action": {
+        "label": "Действие",
+        "icon": "🎲",
+        "hint": "Бросок, отдых, смертельные ходы, способности.",
+        "shape": "book",
+        "use": "action",
+        "block": "Приёмы",
+        "columns": [],
+        "bindings": []
       }
     },
     "roll_edits": {
@@ -2762,187 +2882,6 @@
         ]
       }
     },
-    "records": {
-      "hero": {
-        "kind": "sheet",
-        "label": "Герой",
-        "icon": "🗡",
-        "group": "Листы",
-        "hint": "Лист игрока.",
-        "grants": [
-          "duality",
-          "last_hp",
-          "stress_limit",
-          "stress_relief"
-        ]
-      },
-      "adversary": {
-        "kind": "sheet",
-        "label": "Противник",
-        "icon": "👹",
-        "group": "Листы",
-        "hint": "Сложность, пороги, хиты и Стресс, модификатор атаки — числами из блока противника, без класса и уровня.",
-        "blocks": [
-          "Пороги урона",
-          "Здоровье",
-          "Противник"
-        ],
-        "modifiers": [
-          {
-            "kind": "value",
-            "target": "hp_max",
-            "op": "set",
-            "value": {
-              "expr": "@adversary_hp"
-            },
-            "stacking": "override"
-          },
-          {
-            "kind": "value",
-            "target": "stress_max",
-            "op": "set",
-            "value": {
-              "expr": "@adversary_stress"
-            },
-            "stacking": "override"
-          },
-          {
-            "kind": "value",
-            "target": "major",
-            "op": "set",
-            "value": {
-              "expr": "@major_base"
-            },
-            "stacking": "override"
-          },
-          {
-            "kind": "value",
-            "target": "severe",
-            "op": "set",
-            "value": {
-              "expr": "@severe_base"
-            },
-            "stacking": "override"
-          }
-        ]
-      },
-      "weapon": {
-        "kind": "item",
-        "label": "Оружие",
-        "icon": "⚔",
-        "group": "Снаряжение",
-        "hint": "Черта, дистанция, кость урона и прибавка.",
-        "props": [
-          {
-            "key": "trait",
-            "label": "Черта",
-            "kind": "choice",
-            "from": "traits"
-          },
-          {
-            "key": "range",
-            "label": "Дистанция",
-            "kind": "choice",
-            "from": "ranges"
-          },
-          {
-            "key": "damage_die",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "die_size",
-            "label": "Граней на кости",
-            "kind": "number"
-          },
-          {
-            "key": "damage_bonus",
-            "label": "Прибавка к урону",
-            "kind": "number"
-          },
-          {
-            "key": "attack_bonus",
-            "label": "Прибавка к атаке",
-            "kind": "number"
-          },
-          {
-            "key": "extra_die",
-            "label": "Ещё кость урона, худшая отбрасывается (1 — да)",
-            "kind": "number"
-          },
-          {
-            "key": "damage_kind",
-            "label": "Вид урона",
-            "kind": "choice",
-            "from": "damage_kinds"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Атака",
-            "effect": "hero_attack"
-          }
-        ]
-      },
-      "armor": {
-        "kind": "item",
-        "label": "Доспех",
-        "icon": "🛡",
-        "group": "Снаряжение",
-        "hint": "Основа порогов и броня.",
-        "props": [
-          {
-            "key": "major",
-            "label": "Основа порога серьёзного",
-            "kind": "number"
-          },
-          {
-            "key": "severe",
-            "label": "Основа порога тяжёлого",
-            "kind": "number"
-          },
-          {
-            "key": "score",
-            "label": "Броня",
-            "kind": "number"
-          }
-        ]
-      },
-      "adversary_move": {
-        "kind": "action",
-        "label": "Приём противника",
-        "icon": "👹",
-        "group": "Приёмы",
-        "hint": "Урон вписан в приём, особенности — в описании.",
-        "props": [
-          {
-            "key": "damage_dice",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "damage_bonus",
-            "label": "Прибавка",
-            "kind": "number"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Атака",
-            "effect": "adversary_attack"
-          }
-        ]
-      },
-      "action": {
-        "kind": "action",
-        "label": "Действие",
-        "icon": "🎲",
-        "group": "Приёмы",
-        "hint": "Бросок, отдых, смертельные ходы, способности.",
-        "props": [],
-        "bindings": []
-      }
-    },
     "mannequins": [
       {
         "id": "манекен-а",
@@ -2980,16 +2919,79 @@
         "has": [],
         "effects": []
       }
-    ]
+    ],
+    "sheets": {
+      "hero": {
+        "label": "Герой",
+        "icon": "🗡",
+        "hint": "Лист игрока.",
+        "grants": [
+          "duality",
+          "last_hp",
+          "stress_limit",
+          "stress_relief"
+        ],
+        "block": "Листы"
+      },
+      "adversary": {
+        "label": "Противник",
+        "icon": "👹",
+        "hint": "Сложность, пороги, хиты и Стресс, модификатор атаки — числами из блока противника, без класса и уровня.",
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "hp_max",
+            "op": "set",
+            "value": {
+              "expr": "@adversary_hp"
+            },
+            "stacking": "override"
+          },
+          {
+            "kind": "value",
+            "target": "stress_max",
+            "op": "set",
+            "value": {
+              "expr": "@adversary_stress"
+            },
+            "stacking": "override"
+          },
+          {
+            "kind": "value",
+            "target": "major",
+            "op": "set",
+            "value": {
+              "expr": "@major_base"
+            },
+            "stacking": "override"
+          },
+          {
+            "kind": "value",
+            "target": "severe",
+            "op": "set",
+            "value": {
+              "expr": "@severe_base"
+            },
+            "stacking": "override"
+          }
+        ],
+        "block": "Листы",
+        "blocks": [
+          "Пороги урона",
+          "Здоровье",
+          "Противник"
+        ]
+      }
+    }
   },
   "compendium": {
     "records": [
       {
         "id": "broadsword",
-        "rk": "weapon",
         "label": "Палаш",
         "description": "Broadsword. Проворство, вплотную, к8 физ., одноручное. Надёжный: +1 к броскам атаки.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "проворство",
           "range": "вплотную",
           "damage_die": "1d8",
@@ -3002,10 +3004,10 @@
       },
       {
         "id": "longsword",
-        "rk": "weapon",
         "label": "Длинный меч",
         "description": "Longsword. Проворство, вплотную, к8 + 3 физ., двуручное.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "проворство",
           "range": "вплотную",
           "damage_die": "1d8",
@@ -3018,10 +3020,10 @@
       },
       {
         "id": "battleaxe",
-        "rk": "weapon",
         "label": "Боевой топор",
         "description": "Battleaxe. Сила, вплотную, к10 + 3 физ., двуручное.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "сила",
           "range": "вплотную",
           "damage_die": "1d10",
@@ -3034,19 +3036,8 @@
       },
       {
         "id": "greatsword",
-        "rk": "weapon",
         "label": "Двуручный меч",
         "description": "Greatsword. Сила, вплотную, к10 + 3 физ., двуручное. Массивный: −1 к уклонению; при попадании ещё кость урона, худшая отбрасывается.",
-        "props": {
-          "trait": "сила",
-          "range": "вплотную",
-          "damage_die": "1d10",
-          "die_size": 10,
-          "damage_bonus": 3,
-          "attack_bonus": 0,
-          "extra_die": 1,
-          "damage_kind": "физический"
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -3057,14 +3048,25 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "table": "weapon",
+        "cells": {
+          "trait": "сила",
+          "range": "вплотную",
+          "damage_die": "1d10",
+          "die_size": 10,
+          "damage_bonus": 3,
+          "attack_bonus": 0,
+          "extra_die": 1,
+          "damage_kind": "физический"
+        }
       },
       {
         "id": "mace",
-        "rk": "weapon",
         "label": "Булава",
         "description": "Mace. Сила, вплотную, к8 + 1 физ., одноручное.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "сила",
           "range": "вплотную",
           "damage_die": "1d8",
@@ -3077,19 +3079,8 @@
       },
       {
         "id": "warhammer",
-        "rk": "weapon",
         "label": "Боевой молот",
         "description": "Warhammer. Сила, вплотную, к12 + 3 физ., двуручное. Тяжёлый: −1 к уклонению.",
-        "props": {
-          "trait": "сила",
-          "range": "вплотную",
-          "damage_die": "1d12",
-          "die_size": 12,
-          "damage_bonus": 3,
-          "attack_bonus": 0,
-          "extra_die": 0,
-          "damage_kind": "физический"
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -3100,14 +3091,25 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "table": "weapon",
+        "cells": {
+          "trait": "сила",
+          "range": "вплотную",
+          "damage_die": "1d12",
+          "die_size": 12,
+          "damage_bonus": 3,
+          "attack_bonus": 0,
+          "extra_die": 0,
+          "damage_kind": "физический"
+        }
       },
       {
         "id": "dagger",
-        "rk": "weapon",
         "label": "Кинжал",
         "description": "Dagger. Искусность, вплотную, к8 + 1 физ., одноручное.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "искусность",
           "range": "вплотную",
           "damage_die": "1d8",
@@ -3120,10 +3122,10 @@
       },
       {
         "id": "quarterstaff",
-        "rk": "weapon",
         "label": "Боевой посох",
         "description": "Quarterstaff. Чутьё, вплотную, к10 + 3 физ., двуручное.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "чутьё",
           "range": "вплотную",
           "damage_die": "1d10",
@@ -3136,10 +3138,10 @@
       },
       {
         "id": "cutlass",
-        "rk": "weapon",
         "label": "Абордажная сабля",
         "description": "Cutlass. Присутствие, вплотную, к8 + 1 физ., одноручное.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "присутствие",
           "range": "вплотную",
           "damage_die": "1d8",
@@ -3152,10 +3154,10 @@
       },
       {
         "id": "rapier",
-        "rk": "weapon",
         "label": "Рапира",
         "description": "Rapier. Присутствие, вплотную, к8 физ., одноручное. Быстрая: отметить Стресс, чтобы атаковать ещё одну цель в дистанции.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "присутствие",
           "range": "вплотную",
           "damage_die": "1d8",
@@ -3168,10 +3170,21 @@
       },
       {
         "id": "halberd",
-        "rk": "weapon",
         "label": "Алебарда",
         "description": "Halberd. Сила, очень близко, к10 + 2 физ., двуручное. Громоздкая: −1 к Искусности.",
-        "props": {
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "finesse",
+            "op": "add",
+            "value": {
+              "expr": "-1"
+            },
+            "stacking": "sum"
+          }
+        ],
+        "table": "weapon",
+        "cells": {
           "trait": "сила",
           "range": "очень близко",
           "damage_die": "1d10",
@@ -3180,7 +3193,12 @@
           "attack_bonus": 0,
           "extra_die": 0,
           "damage_kind": "физический"
-        },
+        }
+      },
+      {
+        "id": "spear",
+        "label": "Копьё",
+        "description": "Spear. Искусность, очень близко, к10 + 2 физ., двуручное. Громоздкое: −1 к Искусности.",
         "modifiers": [
           {
             "kind": "value",
@@ -3191,14 +3209,9 @@
             },
             "stacking": "sum"
           }
-        ]
-      },
-      {
-        "id": "spear",
-        "rk": "weapon",
-        "label": "Копьё",
-        "description": "Spear. Искусность, очень близко, к10 + 2 физ., двуручное. Громоздкое: −1 к Искусности.",
-        "props": {
+        ],
+        "table": "weapon",
+        "cells": {
           "trait": "искусность",
           "range": "очень близко",
           "damage_die": "1d10",
@@ -3207,25 +3220,14 @@
           "attack_bonus": 0,
           "extra_die": 0,
           "damage_kind": "физический"
-        },
-        "modifiers": [
-          {
-            "kind": "value",
-            "target": "finesse",
-            "op": "add",
-            "value": {
-              "expr": "-1"
-            },
-            "stacking": "sum"
-          }
-        ]
+        }
       },
       {
         "id": "shortbow",
-        "rk": "weapon",
         "label": "Короткий лук",
         "description": "Shortbow. Проворство, далеко, к6 + 3 физ., двуручное.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "проворство",
           "range": "далеко",
           "damage_die": "1d6",
@@ -3238,10 +3240,10 @@
       },
       {
         "id": "crossbow",
-        "rk": "weapon",
         "label": "Арбалет",
         "description": "Crossbow. Искусность, далеко, к6 + 1 физ., одноручное.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "искусность",
           "range": "далеко",
           "damage_die": "1d6",
@@ -3254,19 +3256,8 @@
       },
       {
         "id": "longbow",
-        "rk": "weapon",
         "label": "Длинный лук",
         "description": "Longbow. Проворство, очень далеко, к8 + 3 физ., двуручное. Громоздкий: −1 к Искусности.",
-        "props": {
-          "trait": "проворство",
-          "range": "очень далеко",
-          "damage_die": "1d8",
-          "die_size": 8,
-          "damage_bonus": 3,
-          "attack_bonus": 0,
-          "extra_die": 0,
-          "damage_kind": "физический"
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -3277,14 +3268,25 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "table": "weapon",
+        "cells": {
+          "trait": "проворство",
+          "range": "очень далеко",
+          "damage_die": "1d8",
+          "die_size": 8,
+          "damage_bonus": 3,
+          "attack_bonus": 0,
+          "extra_die": 0,
+          "damage_kind": "физический"
+        }
       },
       {
         "id": "arcane_gauntlets",
-        "rk": "weapon",
         "label": "Чародейские перчатки",
         "description": "Arcane Gauntlets. Сила, вплотную, к10 + 3 маг., двуручное.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "сила",
           "range": "вплотную",
           "damage_die": "1d10",
@@ -3297,10 +3299,10 @@
       },
       {
         "id": "hallowed_axe",
-        "rk": "weapon",
         "label": "Освящённый топор",
         "description": "Hallowed Axe. Сила, вплотную, к8 + 1 маг., одноручное.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "сила",
           "range": "вплотную",
           "damage_die": "1d8",
@@ -3313,10 +3315,10 @@
       },
       {
         "id": "glowing_rings",
-        "rk": "weapon",
         "label": "Сияющие кольца",
         "description": "Glowing Rings. Проворство, очень близко, к10 + 1 маг., двуручное.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "проворство",
           "range": "очень близко",
           "damage_die": "1d10",
@@ -3329,10 +3331,10 @@
       },
       {
         "id": "hand_runes",
-        "rk": "weapon",
         "label": "Руны на ладонях",
         "description": "Hand Runes. Чутьё, очень близко, к10 маг., одноручное.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "чутьё",
           "range": "очень близко",
           "damage_die": "1d10",
@@ -3345,10 +3347,10 @@
       },
       {
         "id": "returning_blade",
-        "rk": "weapon",
         "label": "Возвращающийся клинок",
         "description": "Returning Blade. Искусность, близко, к8 маг., одноручное. Возвращается в руку после броска.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "искусность",
           "range": "близко",
           "damage_die": "1d8",
@@ -3361,10 +3363,10 @@
       },
       {
         "id": "shortstaff",
-        "rk": "weapon",
         "label": "Короткий посох",
         "description": "Shortstaff. Чутьё, близко, к8 + 1 маг., одноручное.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "чутьё",
           "range": "близко",
           "damage_die": "1d8",
@@ -3377,10 +3379,10 @@
       },
       {
         "id": "dualstaff",
-        "rk": "weapon",
         "label": "Двойной посох",
         "description": "Dualstaff. Чутьё, далеко, к6 + 3 маг., двуручное.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "чутьё",
           "range": "далеко",
           "damage_die": "1d6",
@@ -3393,10 +3395,10 @@
       },
       {
         "id": "scepter",
-        "rk": "weapon",
         "label": "Скипетр",
         "description": "Scepter. Присутствие, далеко, к6 маг., двуручное. Разносторонний: можно и как Присутствие, вплотную, к8.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "присутствие",
           "range": "далеко",
           "damage_die": "1d6",
@@ -3409,10 +3411,10 @@
       },
       {
         "id": "wand",
-        "rk": "weapon",
         "label": "Жезл",
         "description": "Wand. Знание, далеко, к6 + 1 маг., одноручное.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "знание",
           "range": "далеко",
           "damage_die": "1d6",
@@ -3425,10 +3427,10 @@
       },
       {
         "id": "greatstaff",
-        "rk": "weapon",
         "label": "Великий посох",
         "description": "Greatstaff. Знание, очень далеко, к6 маг., двуручное. Мощный: при попадании ещё кость урона, худшая отбрасывается.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "знание",
           "range": "очень далеко",
           "damage_die": "1d6",
@@ -3441,10 +3443,10 @@
       },
       {
         "id": "shortsword",
-        "rk": "weapon",
         "label": "Короткий меч",
         "description": "Shortsword (вторичное). Проворство, вплотную, к8 физ., одноручное. Парное: +2 к урону основного оружия вплотную.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "проворство",
           "range": "вплотную",
           "damage_die": "1d8",
@@ -3457,19 +3459,8 @@
       },
       {
         "id": "round_shield",
-        "rk": "weapon",
         "label": "Круглый щит",
         "description": "Round Shield (вторичное). Сила, вплотную, к4 физ., одноручное. Защитный: +1 к броне.",
-        "props": {
-          "trait": "сила",
-          "range": "вплотную",
-          "damage_die": "1d4",
-          "die_size": 4,
-          "damage_bonus": 0,
-          "attack_bonus": 0,
-          "extra_die": 0,
-          "damage_kind": "физический"
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -3480,23 +3471,23 @@
             },
             "stacking": "sum"
           }
-        ]
-      },
-      {
-        "id": "tower_shield",
-        "rk": "weapon",
-        "label": "Ростовой щит",
-        "description": "Tower Shield (вторичное). Сила, вплотную, к6 физ., одноручное. Заслон: +2 к броне, −1 к уклонению.",
-        "props": {
+        ],
+        "table": "weapon",
+        "cells": {
           "trait": "сила",
           "range": "вплотную",
-          "damage_die": "1d6",
-          "die_size": 6,
+          "damage_die": "1d4",
+          "die_size": 4,
           "damage_bonus": 0,
           "attack_bonus": 0,
           "extra_die": 0,
           "damage_kind": "физический"
-        },
+        }
+      },
+      {
+        "id": "tower_shield",
+        "label": "Ростовой щит",
+        "description": "Tower Shield (вторичное). Сила, вплотную, к6 физ., одноручное. Заслон: +2 к броне, −1 к уклонению.",
         "modifiers": [
           {
             "kind": "value",
@@ -3516,14 +3507,25 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "table": "weapon",
+        "cells": {
+          "trait": "сила",
+          "range": "вплотную",
+          "damage_die": "1d6",
+          "die_size": 6,
+          "damage_bonus": 0,
+          "attack_bonus": 0,
+          "extra_die": 0,
+          "damage_kind": "физический"
+        }
       },
       {
         "id": "small_dagger",
-        "rk": "weapon",
         "label": "Малый кинжал",
         "description": "Small Dagger (вторичное). Искусность, вплотную, к8 физ., одноручное. Парное: +2 к урону основного оружия вплотную.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "искусность",
           "range": "вплотную",
           "damage_die": "1d8",
@@ -3536,10 +3538,10 @@
       },
       {
         "id": "whip",
-        "rk": "weapon",
         "label": "Кнут",
         "description": "Whip (вторичное). Присутствие, очень близко, к6 физ., одноручное. Хлёсткий: отметить Стресс — всех вплотную отбросить на близкую дистанцию.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "присутствие",
           "range": "очень близко",
           "damage_die": "1d6",
@@ -3552,10 +3554,10 @@
       },
       {
         "id": "grappler",
-        "rk": "weapon",
         "label": "Крюк",
         "description": "Grappler (вторичное). Искусность, близко, к6 физ., одноручное. Цепкий: при попадании подтянуть цель вплотную.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "искусность",
           "range": "близко",
           "damage_die": "1d6",
@@ -3568,10 +3570,10 @@
       },
       {
         "id": "hand_crossbow",
-        "rk": "weapon",
         "label": "Ручной арбалет",
         "description": "Hand Crossbow (вторичное). Искусность, далеко, к6 + 1 физ., одноручное.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "trait": "искусность",
           "range": "далеко",
           "damage_die": "1d6",
@@ -3584,14 +3586,8 @@
       },
       {
         "id": "gambeson",
-        "rk": "armor",
         "label": "Стёганка",
         "description": "Gambeson Armor. Пороги 5/11 + уровень, броня 3. Гибкая: +1 к уклонению.",
-        "props": {
-          "major": 5,
-          "severe": 11,
-          "score": 3
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -3629,18 +3625,18 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "major": 5,
+          "severe": 11,
+          "score": 3
+        }
       },
       {
         "id": "leather",
-        "rk": "armor",
         "label": "Кожаный доспех",
         "description": "Leather Armor. Пороги 6/13 + уровень, броня 3.",
-        "props": {
-          "major": 6,
-          "severe": 13,
-          "score": 3
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -3669,18 +3665,18 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "major": 6,
+          "severe": 13,
+          "score": 3
+        }
       },
       {
         "id": "chainmail",
-        "rk": "armor",
         "label": "Кольчуга",
         "description": "Chainmail Armor. Пороги 7/15 + уровень, броня 4. Тяжёлая: −1 к уклонению.",
-        "props": {
-          "major": 7,
-          "severe": 15,
-          "score": 4
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -3718,18 +3714,18 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "major": 7,
+          "severe": 15,
+          "score": 4
+        }
       },
       {
         "id": "full_plate",
-        "rk": "armor",
         "label": "Латы",
         "description": "Full Plate Armor. Пороги 8/17 + уровень, броня 4. Очень тяжёлые: −2 к уклонению, −1 к Проворству.",
-        "props": {
-          "major": 8,
-          "severe": 17,
-          "score": 4
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -3776,446 +3772,452 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "major": 8,
+          "severe": 17,
+          "score": 4
+        }
       },
       {
         "id": "acid_burrower_claws",
-        "rk": "adversary_move",
         "label": "Когти (Кислотный землерой)",
         "description": "Очень близко. Relentless (3); Earth Eruption; Spit Acid; Acid Bath.",
-        "props": {
+        "table": "adversary_move",
+        "cells": {
           "damage_dice": "1d12",
           "damage_bonus": 2
         }
       },
       {
         "id": "bear_claws",
-        "rk": "adversary_move",
         "label": "Когти (Медведь)",
         "description": "Вплотную. Overwhelming Force; Bite (3к4 + 10 и опутан); Momentum.",
-        "props": {
+        "table": "adversary_move",
+        "cells": {
           "damage_dice": "1d8",
           "damage_bonus": 3
         }
       },
       {
         "id": "cave_ogre_club",
-        "rk": "adversary_move",
         "label": "Дубина (Пещерный огр)",
         "description": "Очень близко. Ramp Up; Bone Breaker; Hail of Boulders; Rampaging Fury.",
-        "props": {
+        "table": "adversary_move",
+        "cells": {
           "damage_dice": "1d10",
           "damage_bonus": 2
         }
       },
       {
         "id": "construct_slam",
-        "rk": "adversary_move",
         "label": "Удар кулаком (Конструкт)",
         "description": "Вплотную. Relentless (2); Weak Structure; Trample; Overload; Death Quake.",
-        "props": {
+        "table": "adversary_move",
+        "cells": {
           "damage_dice": "1d20",
           "damage_bonus": 0
         }
       },
       {
         "id": "courtier_daggers",
-        "rk": "adversary_move",
         "label": "Кинжалы (Придворный)",
         "description": "Вплотную. Mockery; Scapegoat.",
-        "props": {
+        "table": "adversary_move",
+        "cells": {
           "damage_dice": "1d4",
           "damage_bonus": 2
         }
       },
       {
         "id": "mosquito_proboscis",
-        "rk": "adversary_move",
         "label": "Хоботок (Гигантские комары)",
         "description": "Вплотную. Орда (5 за клетку): урон 1к4 + 1, когда в орде половина хитов; Flying; Bloodsucker.",
-        "props": {
+        "table": "adversary_move",
+        "cells": {
           "damage_dice": "1d8",
           "damage_bonus": 3
         }
       },
       {
         "id": "deeproot_vines",
-        "rk": "adversary_move",
         "label": "Лозы (Защитник Глубоких корней)",
         "description": "Близко. Ground Slam; Grab and Drag.",
-        "props": {
+        "table": "adversary_move",
+        "cells": {
           "damage_dice": "1d8",
           "damage_bonus": 3
         }
       },
       {
         "id": "rat_claws",
-        "rk": "adversary_move",
         "label": "Когти (Гигантская крыса)",
         "description": "Вплотную, урон 1. Миньон (3); Group Attack.",
-        "props": {
+        "table": "adversary_move",
+        "cells": {
           "damage_dice": "1d1",
           "damage_bonus": 0
         }
       },
       {
         "id": "wolf_claws",
-        "rk": "adversary_move",
         "label": "Когти (Лютый волк)",
         "description": "Вплотную. Pack Tactics (1к6 + 5 и Страх); Hobbling Strike.",
-        "props": {
+        "table": "adversary_move",
+        "cells": {
           "damage_dice": "1d6",
           "damage_bonus": 2
         }
       },
       {
         "id": "scorpion_pincers",
-        "rk": "adversary_move",
         "label": "Клешни (Гигантский скорпион)",
         "description": "Вплотную. Double Strike; Venomous Stinger; Momentum.",
-        "props": {
+        "table": "adversary_move",
+        "cells": {
           "damage_dice": "1d12",
           "damage_bonus": 2
         }
       },
       {
         "id": "glass_fangs",
-        "rk": "adversary_move",
         "label": "Стеклянные клыки (Стеклянный змей)",
         "description": "Очень близко. Armor-Shredding Shards; Spinning Serpent; Spitter.",
-        "props": {
+        "table": "adversary_move",
+        "cells": {
           "damage_dice": "1d8",
           "damage_bonus": 2
         }
       },
       {
         "id": "harrier_javelin",
-        "rk": "adversary_move",
         "label": "Дротик (Застрельщик)",
         "description": "Близко. Maintain Distance; Fall Back.",
-        "props": {
+        "table": "adversary_move",
+        "cells": {
           "damage_dice": "1d6",
           "damage_bonus": 2
         }
       },
       {
         "id": "guard_longsword",
-        "rk": "adversary_move",
         "label": "Длинный меч (Стражник с клинком)",
         "description": "Вплотную. Shield Wall; Detain.",
-        "props": {
+        "table": "adversary_move",
+        "cells": {
           "damage_dice": "1d6",
           "damage_bonus": 1
         }
       },
       {
         "id": "head_guard_mace",
-        "rk": "adversary_move",
         "label": "Булава (Начальник стражи)",
         "description": "Вплотную. Rally Guards; On My Signal; Momentum.",
-        "props": {
+        "table": "adversary_move",
+        "cells": {
           "damage_dice": "1d10",
           "damage_bonus": 4
         }
       },
       {
         "id": "archer_longbow",
-        "rk": "adversary_move",
         "label": "Длинный лук (Стражник-лучник)",
         "description": "Далеко. Hobbling Shot.",
-        "props": {
+        "table": "adversary_move",
+        "cells": {
           "damage_dice": "1d8",
           "damage_bonus": 3
         }
       },
       {
         "id": "bandit_daggers",
-        "rk": "adversary_move",
         "label": "Кинжалы (Разбойник Зазубренного ножа)",
         "description": "Вплотную. Climber; From Above (1к10 + 1).",
-        "props": {
+        "table": "adversary_move",
+        "cells": {
           "damage_dice": "1d8",
           "damage_bonus": 1
         }
       },
       {
         "id": "hexer_staff",
-        "rk": "adversary_move",
         "label": "Посох (Ворожей Зазубренного ножа)",
         "description": "Далеко, маг. Curse; Chaotic Flux.",
-        "props": {
+        "table": "adversary_move",
+        "cells": {
           "damage_dice": "1d6",
           "damage_bonus": 2
         }
       },
       {
         "id": "lieutenant_javelin",
-        "rk": "adversary_move",
         "label": "Дротик (Лейтенант Зазубренного ножа)",
         "description": "Близко. Tactician; More Where That Came From; Coup de Grace; Momentum.",
-        "props": {
+        "table": "adversary_move",
+        "cells": {
           "damage_dice": "1d8",
           "damage_bonus": 3
         }
       },
       {
         "id": "kneebreaker_club",
-        "rk": "adversary_move",
         "label": "Дубина (Костолом Зазубренного ножа)",
         "description": "Вплотную. I’ve Got ’Em; Hold Them Down.",
-        "props": {
+        "table": "adversary_move",
+        "cells": {
           "damage_dice": "1d4",
           "damage_bonus": 6
         }
       },
       {
         "id": "shadow_daggers",
-        "rk": "adversary_move",
         "label": "Кинжалы (Тень Зазубренного ножа)",
         "description": "Вплотную. Backstab (1к6 + 6); Cloaked.",
-        "props": {
+        "table": "adversary_move",
+        "cells": {
           "damage_dice": "1d4",
           "damage_bonus": 4
         }
       },
       {
         "id": "lackey_daggers",
-        "rk": "adversary_move",
         "label": "Кинжалы (Шестёрка Зазубренного ножа)",
         "description": "Вплотную, урон 2. Миньон (3); Group Attack.",
-        "props": {
+        "table": "adversary_move",
+        "cells": {
           "damage_dice": "1d1",
           "damage_bonus": 1
         }
       },
       {
         "id": "sniper_shortbow",
-        "rk": "adversary_move",
         "label": "Короткий лук (Снайпер Зазубренного ножа)",
         "description": "Далеко. Unseen Strike (1к10 + 4 из укрытия).",
-        "props": {
+        "table": "adversary_move",
+        "cells": {
           "damage_dice": "1d10",
           "damage_bonus": 2
         }
       },
       {
         "id": "merchant_club",
-        "rk": "adversary_move",
         "label": "Дубина (Торговец)",
         "description": "Вплотную. Preferential Treatment; The Runaround.",
-        "props": {
+        "table": "adversary_move",
+        "cells": {
           "damage_dice": "1d4",
           "damage_bonus": 1
         }
       },
       {
         "id": "act",
-        "rk": "action",
         "label": "Бросок действия",
         "bindings": [
           {
             "label": "Бросок действия",
             "effect": "action_roll"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "armor_slot",
-        "rk": "action",
         "label": "Отметить бронеслот",
         "bindings": [
           {
             "label": "Отметить бронеслот",
             "effect": "mark_armor"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "short_tend",
-        "rk": "action",
         "label": "Перевязать раны",
         "bindings": [
           {
             "label": "Перевязать раны",
             "effect": "tend_wounds"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "short_stress",
-        "rk": "action",
         "label": "Снять Стресс",
         "bindings": [
           {
             "label": "Снять Стресс",
             "effect": "clear_stress"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "short_armor",
-        "rk": "action",
         "label": "Починить доспех",
         "bindings": [
           {
             "label": "Починить доспех",
             "effect": "repair_armor"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "prepare",
-        "rk": "action",
         "label": "Подготовиться",
         "bindings": [
           {
             "label": "Подготовиться",
             "effect": "prepare"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "long_tend",
-        "rk": "action",
         "label": "Залечить все раны",
         "bindings": [
           {
             "label": "Залечить все раны",
             "effect": "tend_all"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "long_stress",
-        "rk": "action",
         "label": "Снять весь Стресс",
         "bindings": [
           {
             "label": "Снять весь Стресс",
             "effect": "clear_all_stress"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "long_armor",
-        "rk": "action",
         "label": "Починить весь доспех",
         "bindings": [
           {
             "label": "Починить весь доспех",
             "effect": "repair_all"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "death_blaze",
-        "rk": "action",
         "label": "Сгореть во славе",
         "bindings": [
           {
             "label": "Сгореть во славе",
             "effect": "blaze_of_glory"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "death_avoid",
-        "rk": "action",
         "label": "Избежать смерти",
         "bindings": [
           {
             "label": "Избежать смерти",
             "effect": "avoid_death"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "death_risk",
-        "rk": "action",
         "label": "Рискнуть всем",
         "bindings": [
           {
             "label": "Рискнуть всем",
             "effect": "risk_it_all"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "hope_frontline",
-        "rk": "action",
         "label": "Frontline Tank",
         "bindings": [
           {
             "label": "Frontline Tank",
             "effect": "frontline_tank"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "hope_life",
-        "rk": "action",
         "label": "Life Support",
         "bindings": [
           {
             "label": "Life Support",
             "effect": "life_support"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "hope_mercy",
-        "rk": "action",
         "label": "No Mercy",
         "bindings": [
           {
             "label": "No Mercy",
             "effect": "no_mercy"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "hope_dodge",
-        "rk": "action",
         "label": "Rogue’s Dodge",
         "bindings": [
           {
             "label": "Rogue’s Dodge",
             "effect": "rogues_dodge"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "hope_scene",
-        "rk": "action",
         "label": "Make a Scene",
         "bindings": [
           {
             "label": "Make a Scene",
             "effect": "make_a_scene"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "gm_short",
-        "rk": "action",
         "label": "Страх: короткий отдых",
         "bindings": [
           {
             "label": "Страх: короткий отдых",
             "effect": "gm_short_rest"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "gm_long",
-        "rk": "action",
         "label": "Страх: долгий отдых",
         "bindings": [
           {
             "label": "Страх: долгий отдых",
             "effect": "gm_long_rest"
           }
-        ]
+        ],
+        "table": "action"
       }
     ]
   },

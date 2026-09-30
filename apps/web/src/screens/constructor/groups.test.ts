@@ -21,7 +21,7 @@ const make = (over: Partial<System> = {}): System => ({
     'Навыки': {},
     'Навыки от ловкости': { parent: 'Навыки' },
   },
-  records: { hero: { kind: 'sheet', blocks: ['Навыки'] } },
+  sheets: { hero: { blocks: ['Навыки'] } },
   effects: {},
   ...over,
 } as System);
@@ -59,7 +59,7 @@ describe('renameGroup', () => {
     expect(fieldOf(system, 'saves.воля.bonus')!.group).toBe('Умения');
     const saves = system.tables!.saves!;
     expect([saves.block, saves.columns![0]!.block, saves.rows![0]!.block, saves.rows![0]!.view!.bonus!.block]).toEqual(['Умения', 'Умения', 'Умения', 'Умения']);
-    expect(system.records!.hero!.blocks).toEqual(['Умения']);
+    expect(system.sheets!.hero!.blocks).toEqual(['Умения']);
     expect(system.groups!['Умения']).toBeTruthy();
     expect(system.groups!['Навыки']).toBeUndefined();
     expect(system.groups!['Навыки от ловкости']!.parent).toBe('Умения');

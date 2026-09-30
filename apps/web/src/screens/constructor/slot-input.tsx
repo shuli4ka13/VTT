@@ -10,6 +10,7 @@ import { asDice } from '../../words.ts';
 import { SENDER, RECEIVER, owned } from '@vtt/engine/engine/owners';
 import { writeTableCall } from '@vtt/engine/model/amounts';
 import { fieldsOf, hasField } from '@vtt/engine/model/sheet-columns';
+import { rowTables } from '@vtt/engine/model/tables';
 
 export type Keep = 'const' | 'param' | 'prop' | 'tag' | 'constant';
 
@@ -51,7 +52,7 @@ export function chipOf(ref: unknown, ctx: SlotContext): { label: string; record:
   }
   if ('prop' in r) {
     const key = String(r.prop);
-    const own = ctx.recordKind?.props?.find(p => p.key === key);
+    const own = ctx.recordKind?.columns?.find(p => p.key === key);
     return { label: own?.label ?? declaredProps(ctx.system).get(key) ?? key, record: true };
   }
   if ('constant' in r) {
@@ -76,7 +77,7 @@ export interface SlotOption {
 }
 
 const tableOption = (ctx: SlotContext, table: string, column: string): Pick<SlotOption, 'name' | 'ref'> | null => {
-  const props = ctx.recordKind?.props ?? [];
+  const props = ctx.recordKind?.columns ?? [];
   const chosen = props.find(p => (p as { kind?: string }).kind === 'choice' && (p as { from?: string }).from === table);
   if (chosen) return { name: `${chosen.key}.${column}` };
   const by = props[0];
@@ -88,7 +89,7 @@ export function optionsFor(ctx: SlotContext, allow: SlotKind[] | undefined, keep
   const ok = (kind: SlotKind) => !allow || allow.includes(kind);
   const out: SlotOption[] = [];
   if (ok('prop')) {
-    for (const p of ctx.recordKind?.props ?? []) {
+    for (const p of ctx.recordKind?.columns ?? []) {
       out.push({ group: 'Свойства записи', label: p.label ?? p.key, name: p.key, ...(keep.includes('prop') ? { ref: { prop: p.key } } : {}) });
     }
   }
@@ -98,7 +99,7 @@ export function optionsFor(ctx: SlotContext, allow: SlotKind[] | undefined, keep
     }
   }
   if (ok('table')) {
-    for (const [key, table] of Object.entries(ctx.system.tables ?? {})) {
+    for (const [key, table] of rowTables(ctx.system)) {
       const name = table.label || key;
       for (const column of table.columns ?? []) {
         const found = tableOption(ctx, key, column.key);

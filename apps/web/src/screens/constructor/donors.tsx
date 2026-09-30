@@ -10,6 +10,7 @@ import { PIECES, bringPiece, donorOf } from '@vtt/engine/model/pieces';
 import { groupChain, subtreeNames } from './groups.ts';
 import { launchOf, LAUNCHES } from '@vtt/engine/model/effect-kinds';
 import { fieldsOf, fieldOf } from '@vtt/engine/model/sheet-columns';
+import { kindOf } from '@vtt/engine/model/owned';
 
 const DONORS = SAMPLE_SYSTEMS as System[];
 
@@ -64,7 +65,7 @@ function partLabel(system: System, part: Part): string {
     case 'table': return system.tables?.[part.key]?.label ?? part.key;
     case 'constant': return system.constants?.[part.key]?.label ?? part.key;
     case 'rollEdit': return system.roll_edits?.[part.key]?.label ?? part.key;
-    case 'recordKind': return system.records?.[part.key]?.label ?? part.key;
+    case 'recordKind': return kindOf(system, part.key)?.label ?? part.key;
     case 'record': return system.library?.find(r => r.id === part.key)?.label ?? part.key;
     case 'group': return part.key;
   }

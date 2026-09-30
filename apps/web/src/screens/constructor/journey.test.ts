@@ -37,10 +37,10 @@ function assemble(): { system: System; compendium: Compendium; sheets: Sheet[]; 
   kind.value.kind = 'action';
   kind.value.label = 'Приём';
   kind.value.bindings = [newBinding(system)];
-  (system.records ??= {})[kind.key] = kind.value;
+  (system.tables ??= {})[kind.key] = kind.value;
 
   const compendium: Compendium = {
-    records: [{ id: 'удар', rk: kind.key, label: 'Удар' }],
+    records: [{ id: 'удар', table: kind.key, label: 'Удар' }],
   } as Compendium;
 
   const sheet = (id: string, name: string): Sheet => W.sheet.parse({

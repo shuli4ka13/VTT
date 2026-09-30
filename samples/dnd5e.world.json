@@ -2250,6 +2250,709 @@
             }
           }
         ]
+      },
+      "weapon": {
+        "label": "Оружие",
+        "icon": "⚔",
+        "hint": "Меч, рапира, лук — всё сразу. Кость и тип урона свои, а способ атаки выбирается свойством.",
+        "shape": "book",
+        "use": "item",
+        "block": "Снаряжение",
+        "columns": [
+          {
+            "key": "damage_dice",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "choice",
+            "from": "damage_types"
+          },
+          {
+            "key": "damage_source",
+            "label": "Источник урона",
+            "kind": "choice",
+            "from": "damage_source"
+          },
+          {
+            "key": "wield",
+            "label": "Способ атаки",
+            "kind": "choice",
+            "from": "wield"
+          },
+          {
+            "key": "properties",
+            "label": "Свойства",
+            "kind": "choice",
+            "from": "weapon_properties",
+            "many": true
+          },
+          {
+            "key": "range",
+            "label": "Дистанция",
+            "kind": "text",
+            "optional": true
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Удар",
+            "effect": "strike",
+            "args": {
+              "attack_with": {
+                "expr": "таблица(\"wield\", @wield, \"attack\")"
+              },
+              "damage_with": {
+                "expr": "таблица(\"wield\", @wield, \"damage\")"
+              }
+            }
+          }
+        ]
+      },
+      "armor": {
+        "label": "Доспех",
+        "icon": "🛡",
+        "hint": "Задаёт базу класса брони. У тяжёлого Ловкость не прибавляется.",
+        "shape": "book",
+        "use": "item",
+        "block": "Снаряжение",
+        "columns": [
+          {
+            "key": "ac",
+            "label": "База класса брони",
+            "kind": "number"
+          },
+          {
+            "key": "heavy",
+            "label": "Тяжёлый",
+            "kind": "text",
+            "onSheet": false
+          }
+        ]
+      },
+      "shield": {
+        "label": "Щит",
+        "icon": "🔰",
+        "hint": "Прибавка к классу брони, пока надет.",
+        "shape": "book",
+        "use": "item",
+        "block": "Снаряжение",
+        "columns": [
+          {
+            "key": "bonus",
+            "label": "Прибавка к классу брони",
+            "kind": "number"
+          }
+        ]
+      },
+      "wondrous": {
+        "label": "Чудесная вещь",
+        "icon": "💍",
+        "hint": "Кольцо, плащ, амулет: даёт эффект или правит поля, пока надета.",
+        "shape": "book",
+        "use": "item",
+        "block": "Снаряжение",
+        "columns": [
+          {
+            "key": "attunement",
+            "label": "Требует настройки",
+            "kind": "text"
+          }
+        ]
+      },
+      "potion": {
+        "label": "Зелье",
+        "icon": "🧪",
+        "hint": "Выпил — восполнил хиты. Стол списывает хиты, склянку убирает игрок.",
+        "shape": "book",
+        "use": "item",
+        "block": "Расходники",
+        "columns": [
+          {
+            "key": "heal_die",
+            "label": "Кости лечения",
+            "kind": "dice"
+          },
+          {
+            "key": "heal_bonus",
+            "label": "Прибавка",
+            "kind": "number"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Выпить",
+            "effect": "potion_heal"
+          }
+        ]
+      },
+      "gear": {
+        "label": "Снаряжение",
+        "icon": "⬡",
+        "hint": "Верёвка, факел, набор инструментов. Ничего не считает — лежит на листе.",
+        "shape": "book",
+        "use": "item",
+        "block": "Снаряжение",
+        "columns": [
+          {
+            "key": "weight",
+            "label": "Вес, фунтов",
+            "kind": "number"
+          },
+          {
+            "key": "cost",
+            "label": "Цена, зм",
+            "kind": "number"
+          }
+        ]
+      },
+      "cantrip_attack": {
+        "label": "Заговор с броском атаки",
+        "icon": "✨",
+        "hint": "Огненный снаряд, укус холода: бросок атаки заклинанием, кости растут с уровнем.",
+        "shape": "book",
+        "use": "action",
+        "block": "Заклинания",
+        "columns": [
+          {
+            "key": "damage_die",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "choice",
+            "from": "damage_types"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Сотворить",
+            "effect": "cantrip_attack"
+          }
+        ]
+      },
+      "cantrip_save": {
+        "label": "Заговор со спасброском",
+        "icon": "✨",
+        "hint": "Брызги яда, священное пламя: цель спасается, провал — урон.",
+        "shape": "book",
+        "use": "action",
+        "block": "Заклинания",
+        "columns": [
+          {
+            "key": "damage_die",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "choice",
+            "from": "damage_types"
+          },
+          {
+            "key": "save_by",
+            "label": "Чем спасаются",
+            "kind": "choice",
+            "from": "saves"
+          },
+          {
+            "key": "status",
+            "label": "Состояние",
+            "kind": "effect"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Сотворить",
+            "effect": "cantrip_save"
+          }
+        ]
+      },
+      "cantrip_note": {
+        "label": "Заговор без броска",
+        "icon": "✨",
+        "hint": "Свет, волшебная рука, фокусы: стол пишет строку, остальное решает ведущий.",
+        "shape": "book",
+        "use": "action",
+        "block": "Заклинания",
+        "columns": [],
+        "bindings": [
+          {
+            "label": "Сотворить",
+            "effect": "cantrip_note"
+          }
+        ]
+      },
+      "spell_attack": {
+        "label": "Заклинание с броском атаки",
+        "icon": "🔮",
+        "hint": "Огненный луч, палящий луч: бросок атаки заклинанием, ячейка выше круга добавляет кости.",
+        "shape": "book",
+        "use": "action",
+        "block": "Заклинания",
+        "columns": [
+          {
+            "key": "spell_level",
+            "label": "Круг",
+            "kind": "number"
+          },
+          {
+            "key": "damage_die",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "dice_count",
+            "label": "Сколько костей",
+            "kind": "number"
+          },
+          {
+            "key": "dice_up",
+            "label": "Костей за круг выше",
+            "kind": "number"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "choice",
+            "from": "damage_types"
+          },
+          {
+            "key": "status",
+            "label": "Состояние",
+            "kind": "effect"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Сотворить",
+            "effect": "spell_attack"
+          }
+        ]
+      },
+      "spell_save_half": {
+        "label": "Заклинание: спасбросок, половина при успехе",
+        "icon": "💥",
+        "hint": "Огненный шар, молния: кости бросаются один раз на всех, спасбросок у каждого свой.",
+        "shape": "book",
+        "use": "action",
+        "block": "Заклинания",
+        "columns": [
+          {
+            "key": "spell_level",
+            "label": "Круг",
+            "kind": "number"
+          },
+          {
+            "key": "save_by",
+            "label": "Чем спасаются",
+            "kind": "choice",
+            "from": "saves"
+          },
+          {
+            "key": "damage_die",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "dice_count",
+            "label": "Сколько костей",
+            "kind": "number"
+          },
+          {
+            "key": "dice_up",
+            "label": "Костей за круг выше",
+            "kind": "number"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "choice",
+            "from": "damage_types"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Сотворить",
+            "effect": "spell_save_half"
+          }
+        ]
+      },
+      "spell_save_none": {
+        "label": "Заклинание: спасбросок, при успехе ничего",
+        "icon": "☄",
+        "hint": "Град, ядовитое облако: провал — урон и состояние, успех — ничего.",
+        "shape": "book",
+        "use": "action",
+        "block": "Заклинания",
+        "columns": [
+          {
+            "key": "spell_level",
+            "label": "Круг",
+            "kind": "number"
+          },
+          {
+            "key": "save_by",
+            "label": "Чем спасаются",
+            "kind": "choice",
+            "from": "saves"
+          },
+          {
+            "key": "damage_die",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "dice_count",
+            "label": "Сколько костей",
+            "kind": "number"
+          },
+          {
+            "key": "dice_up",
+            "label": "Костей за круг выше",
+            "kind": "number"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "choice",
+            "from": "damage_types"
+          },
+          {
+            "key": "status",
+            "label": "Состояние",
+            "kind": "effect"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Сотворить",
+            "effect": "spell_save_none"
+          }
+        ]
+      },
+      "spell_auto": {
+        "label": "Заклинание без броска",
+        "icon": "🎯",
+        "hint": "Волшебная стрела: попадает всегда, к каждой кости своя прибавка.",
+        "shape": "book",
+        "use": "action",
+        "block": "Заклинания",
+        "columns": [
+          {
+            "key": "spell_level",
+            "label": "Круг",
+            "kind": "number"
+          },
+          {
+            "key": "damage_die",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "dice_count",
+            "label": "Сколько костей",
+            "kind": "number"
+          },
+          {
+            "key": "dice_up",
+            "label": "Костей за круг выше",
+            "kind": "number"
+          },
+          {
+            "key": "per_die",
+            "label": "Прибавка к каждой кости",
+            "kind": "number"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "choice",
+            "from": "damage_types"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Сотворить",
+            "effect": "spell_auto"
+          }
+        ]
+      },
+      "spell_condition": {
+        "label": "Заклинание: состояние",
+        "icon": "🌀",
+        "hint": "Удержание личности, страх: провал спасброска вешает состояние. Держится концентрацией, если выбрано.",
+        "shape": "book",
+        "use": "action",
+        "block": "Заклинания",
+        "columns": [
+          {
+            "key": "spell_level",
+            "label": "Круг",
+            "kind": "number"
+          },
+          {
+            "key": "save_by",
+            "label": "Чем спасаются",
+            "kind": "choice",
+            "from": "saves"
+          },
+          {
+            "key": "status",
+            "label": "Состояние",
+            "kind": "effect"
+          },
+          {
+            "key": "holds",
+            "label": "Держится концентрацией",
+            "kind": "text",
+            "onSheet": false
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Сотворить",
+            "effect": "spell_condition_held"
+          }
+        ]
+      },
+      "spell_buff": {
+        "label": "Заклинание: усиление",
+        "icon": "🕊",
+        "hint": "Благословение, ускорение, доспех мага: вешает эффект на цели.",
+        "shape": "book",
+        "use": "action",
+        "block": "Заклинания",
+        "columns": [
+          {
+            "key": "spell_level",
+            "label": "Круг",
+            "kind": "number"
+          },
+          {
+            "key": "status",
+            "label": "Состояние",
+            "kind": "effect"
+          },
+          {
+            "key": "holds",
+            "label": "Держится концентрацией",
+            "kind": "text",
+            "onSheet": false
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Сотворить",
+            "effect": "spell_buff_held"
+          }
+        ]
+      },
+      "spell_buff_free": {
+        "label": "Заклинание: усиление без концентрации",
+        "icon": "🕊",
+        "hint": "Доспех мага, ложная жизнь: висит само, концентрация не нужна.",
+        "shape": "book",
+        "use": "action",
+        "block": "Заклинания",
+        "columns": [
+          {
+            "key": "spell_level",
+            "label": "Круг",
+            "kind": "number"
+          },
+          {
+            "key": "status",
+            "label": "Состояние",
+            "kind": "effect"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Сотворить",
+            "effect": "spell_buff"
+          }
+        ]
+      },
+      "spell_heal": {
+        "label": "Заклинание: лечение",
+        "icon": "✚",
+        "hint": "Лечение ран, слово лечения: кости плюс заклинательный модификатор.",
+        "shape": "book",
+        "use": "action",
+        "block": "Заклинания",
+        "columns": [
+          {
+            "key": "spell_level",
+            "label": "Круг",
+            "kind": "number"
+          },
+          {
+            "key": "heal_die",
+            "label": "Кость лечения",
+            "kind": "dice"
+          },
+          {
+            "key": "dice_count",
+            "label": "Сколько костей",
+            "kind": "number"
+          },
+          {
+            "key": "dice_up",
+            "label": "Костей за круг выше",
+            "kind": "number"
+          },
+          {
+            "key": "cure",
+            "label": "Что снимает",
+            "kind": "effect"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Сотворить",
+            "effect": "spell_heal"
+          }
+        ]
+      },
+      "spell_cleanse": {
+        "label": "Заклинание: снять состояние",
+        "icon": "🩹",
+        "hint": "Малое восстановление, снятие проклятия.",
+        "shape": "book",
+        "use": "action",
+        "block": "Заклинания",
+        "columns": [
+          {
+            "key": "spell_level",
+            "label": "Круг",
+            "kind": "number"
+          },
+          {
+            "key": "cure",
+            "label": "Что снимает",
+            "kind": "effect"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Сотворить",
+            "effect": "spell_cleanse"
+          }
+        ]
+      },
+      "spell_note": {
+        "label": "Заклинание без расчёта",
+        "icon": "📜",
+        "hint": "Туманный шаг, полёт, обнаружение магии: тратит ячейку и пишет строку в журнал.",
+        "shape": "book",
+        "use": "action",
+        "block": "Заклинания",
+        "columns": [
+          {
+            "key": "spell_level",
+            "label": "Круг",
+            "kind": "number"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Сотворить",
+            "effect": "spell_note"
+          }
+        ]
+      },
+      "feature": {
+        "label": "Умение класса",
+        "icon": "🏅",
+        "hint": "Второе дыхание, ярость, наложение рук: кнопка на листе, ресурс тратится сам.",
+        "shape": "book",
+        "use": "action",
+        "block": "Умения и черты",
+        "columns": [
+          {
+            "key": "source",
+            "label": "Откуда",
+            "kind": "text"
+          }
+        ]
+      },
+      "trait": {
+        "label": "Черта или особенность",
+        "icon": "✦",
+        "hint": "Дополнительная атака, тёмное зрение, боевой стиль: висит и правит цифры, кнопки не даёт.",
+        "shape": "book",
+        "use": "action",
+        "block": "Умения и черты",
+        "columns": [
+          {
+            "key": "source",
+            "label": "Откуда",
+            "kind": "text"
+          }
+        ]
+      },
+      "action_basic": {
+        "label": "Действие в бою",
+        "icon": "◆",
+        "hint": "Действие, которое есть не у всех: его дают класс, черта или предмет.",
+        "shape": "book",
+        "use": "action",
+        "block": "Действия в бою",
+        "columns": []
+      },
+      "monster_attack": {
+        "label": "Атака существа",
+        "icon": "🐺",
+        "hint": "Для НПС: бонус атаки и прибавка к урону вписаны числами — та же «Атака», что и у оружия.",
+        "shape": "book",
+        "use": "action",
+        "block": "Бестиарий",
+        "columns": [
+          {
+            "key": "to_hit",
+            "label": "Бонус атаки",
+            "kind": "number"
+          },
+          {
+            "key": "damage_dice",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "damage_bonus",
+            "label": "Прибавка к урону",
+            "kind": "number"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "choice",
+            "from": "damage_types"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Атаковать",
+            "effect": "strike",
+            "args": {
+              "attack_with": {
+                "expr": "@to_hit"
+              },
+              "damage_with": {
+                "expr": "@damage_bonus"
+              },
+              "damage_source": {
+                "expr": "\"немагический\""
+              }
+            }
+          }
+        ]
       }
     },
     "roll_edits": {
@@ -7832,732 +8535,6 @@
         ]
       }
     },
-    "records": {
-      "персонаж": {
-        "kind": "sheet",
-        "label": "Персонаж",
-        "icon": "🧙",
-        "group": "Бестиарий",
-        "hint": "Лист героя: все блоки. На нуле хитов падает без сознания и делает спасброски от смерти.",
-        "grants": [
-          "fall",
-          "wake",
-          "death_now",
-          "stabilize",
-          "dodge",
-          "dash",
-          "disengage",
-          "hide",
-          "help"
-        ]
-      },
-      "противник": {
-        "kind": "sheet",
-        "label": "Противник",
-        "icon": "👹",
-        "group": "Бестиарий",
-        "hint": "Лист противника: без личного дела, магии, ресурсов класса и богатства. Спасбросков от смерти нет — что с ним на нуле хитов, решает ведущий.",
-        "blocks": [
-          "Характеристики",
-          "Модификаторы",
-          "Прогрессия",
-          "Спасброски",
-          "Навыки",
-          "Чувства и движение",
-          "Защита",
-          "Здоровье",
-          "В бою",
-          "Стойкость к урону"
-        ],
-        "grants": [
-          "dodge",
-          "dash",
-          "disengage",
-          "hide",
-          "help"
-        ]
-      },
-      "weapon": {
-        "kind": "item",
-        "label": "Оружие",
-        "icon": "⚔",
-        "group": "Снаряжение",
-        "hint": "Меч, рапира, лук — всё сразу. Кость и тип урона свои, а способ атаки выбирается свойством.",
-        "props": [
-          {
-            "key": "damage_dice",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "damage_type",
-            "label": "Тип урона",
-            "kind": "choice",
-            "from": "damage_types"
-          },
-          {
-            "key": "damage_source",
-            "label": "Источник урона",
-            "kind": "choice",
-            "from": "damage_source"
-          },
-          {
-            "key": "wield",
-            "label": "Способ атаки",
-            "kind": "choice",
-            "from": "wield"
-          },
-          {
-            "key": "properties",
-            "label": "Свойства",
-            "kind": "choice",
-            "from": "weapon_properties",
-            "many": true
-          },
-          {
-            "key": "range",
-            "label": "Дистанция",
-            "kind": "text",
-            "optional": true
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Удар",
-            "effect": "strike",
-            "args": {
-              "attack_with": {
-                "expr": "таблица(\"wield\", @wield, \"attack\")"
-              },
-              "damage_with": {
-                "expr": "таблица(\"wield\", @wield, \"damage\")"
-              }
-            }
-          }
-        ]
-      },
-      "armor": {
-        "kind": "item",
-        "label": "Доспех",
-        "icon": "🛡",
-        "group": "Снаряжение",
-        "hint": "Задаёт базу класса брони. У тяжёлого Ловкость не прибавляется.",
-        "props": [
-          {
-            "key": "ac",
-            "label": "База класса брони",
-            "kind": "number"
-          },
-          {
-            "key": "heavy",
-            "label": "Тяжёлый",
-            "kind": "text",
-            "onSheet": false
-          }
-        ]
-      },
-      "shield": {
-        "kind": "item",
-        "label": "Щит",
-        "icon": "🔰",
-        "group": "Снаряжение",
-        "hint": "Прибавка к классу брони, пока надет.",
-        "props": [
-          {
-            "key": "bonus",
-            "label": "Прибавка к классу брони",
-            "kind": "number"
-          }
-        ]
-      },
-      "wondrous": {
-        "kind": "item",
-        "label": "Чудесная вещь",
-        "icon": "💍",
-        "group": "Снаряжение",
-        "hint": "Кольцо, плащ, амулет: даёт эффект или правит поля, пока надета.",
-        "props": [
-          {
-            "key": "attunement",
-            "label": "Требует настройки",
-            "kind": "text"
-          }
-        ]
-      },
-      "potion": {
-        "kind": "item",
-        "label": "Зелье",
-        "icon": "🧪",
-        "group": "Расходники",
-        "hint": "Выпил — восполнил хиты. Стол списывает хиты, склянку убирает игрок.",
-        "props": [
-          {
-            "key": "heal_die",
-            "label": "Кости лечения",
-            "kind": "dice"
-          },
-          {
-            "key": "heal_bonus",
-            "label": "Прибавка",
-            "kind": "number"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Выпить",
-            "effect": "potion_heal"
-          }
-        ]
-      },
-      "gear": {
-        "kind": "item",
-        "label": "Снаряжение",
-        "icon": "⬡",
-        "group": "Снаряжение",
-        "hint": "Верёвка, факел, набор инструментов. Ничего не считает — лежит на листе.",
-        "props": [
-          {
-            "key": "weight",
-            "label": "Вес, фунтов",
-            "kind": "number"
-          },
-          {
-            "key": "cost",
-            "label": "Цена, зм",
-            "kind": "number"
-          }
-        ]
-      },
-      "cantrip_attack": {
-        "kind": "action",
-        "label": "Заговор с броском атаки",
-        "icon": "✨",
-        "group": "Заклинания",
-        "hint": "Огненный снаряд, укус холода: бросок атаки заклинанием, кости растут с уровнем.",
-        "props": [
-          {
-            "key": "damage_die",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "damage_type",
-            "label": "Тип урона",
-            "kind": "choice",
-            "from": "damage_types"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Сотворить",
-            "effect": "cantrip_attack"
-          }
-        ]
-      },
-      "cantrip_save": {
-        "kind": "action",
-        "label": "Заговор со спасброском",
-        "icon": "✨",
-        "group": "Заклинания",
-        "hint": "Брызги яда, священное пламя: цель спасается, провал — урон.",
-        "props": [
-          {
-            "key": "damage_die",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "damage_type",
-            "label": "Тип урона",
-            "kind": "choice",
-            "from": "damage_types"
-          },
-          {
-            "key": "save_by",
-            "label": "Чем спасаются",
-            "kind": "choice",
-            "from": "saves"
-          },
-          {
-            "key": "status",
-            "label": "Состояние",
-            "kind": "effect"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Сотворить",
-            "effect": "cantrip_save"
-          }
-        ]
-      },
-      "cantrip_note": {
-        "kind": "action",
-        "label": "Заговор без броска",
-        "icon": "✨",
-        "group": "Заклинания",
-        "hint": "Свет, волшебная рука, фокусы: стол пишет строку, остальное решает ведущий.",
-        "props": [],
-        "bindings": [
-          {
-            "label": "Сотворить",
-            "effect": "cantrip_note"
-          }
-        ]
-      },
-      "spell_attack": {
-        "kind": "action",
-        "label": "Заклинание с броском атаки",
-        "icon": "🔮",
-        "group": "Заклинания",
-        "hint": "Огненный луч, палящий луч: бросок атаки заклинанием, ячейка выше круга добавляет кости.",
-        "props": [
-          {
-            "key": "spell_level",
-            "label": "Круг",
-            "kind": "number"
-          },
-          {
-            "key": "damage_die",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "dice_count",
-            "label": "Сколько костей",
-            "kind": "number"
-          },
-          {
-            "key": "dice_up",
-            "label": "Костей за круг выше",
-            "kind": "number"
-          },
-          {
-            "key": "damage_type",
-            "label": "Тип урона",
-            "kind": "choice",
-            "from": "damage_types"
-          },
-          {
-            "key": "status",
-            "label": "Состояние",
-            "kind": "effect"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Сотворить",
-            "effect": "spell_attack"
-          }
-        ]
-      },
-      "spell_save_half": {
-        "kind": "action",
-        "label": "Заклинание: спасбросок, половина при успехе",
-        "icon": "💥",
-        "group": "Заклинания",
-        "hint": "Огненный шар, молния: кости бросаются один раз на всех, спасбросок у каждого свой.",
-        "props": [
-          {
-            "key": "spell_level",
-            "label": "Круг",
-            "kind": "number"
-          },
-          {
-            "key": "save_by",
-            "label": "Чем спасаются",
-            "kind": "choice",
-            "from": "saves"
-          },
-          {
-            "key": "damage_die",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "dice_count",
-            "label": "Сколько костей",
-            "kind": "number"
-          },
-          {
-            "key": "dice_up",
-            "label": "Костей за круг выше",
-            "kind": "number"
-          },
-          {
-            "key": "damage_type",
-            "label": "Тип урона",
-            "kind": "choice",
-            "from": "damage_types"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Сотворить",
-            "effect": "spell_save_half"
-          }
-        ]
-      },
-      "spell_save_none": {
-        "kind": "action",
-        "label": "Заклинание: спасбросок, при успехе ничего",
-        "icon": "☄",
-        "group": "Заклинания",
-        "hint": "Град, ядовитое облако: провал — урон и состояние, успех — ничего.",
-        "props": [
-          {
-            "key": "spell_level",
-            "label": "Круг",
-            "kind": "number"
-          },
-          {
-            "key": "save_by",
-            "label": "Чем спасаются",
-            "kind": "choice",
-            "from": "saves"
-          },
-          {
-            "key": "damage_die",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "dice_count",
-            "label": "Сколько костей",
-            "kind": "number"
-          },
-          {
-            "key": "dice_up",
-            "label": "Костей за круг выше",
-            "kind": "number"
-          },
-          {
-            "key": "damage_type",
-            "label": "Тип урона",
-            "kind": "choice",
-            "from": "damage_types"
-          },
-          {
-            "key": "status",
-            "label": "Состояние",
-            "kind": "effect"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Сотворить",
-            "effect": "spell_save_none"
-          }
-        ]
-      },
-      "spell_auto": {
-        "kind": "action",
-        "label": "Заклинание без броска",
-        "icon": "🎯",
-        "group": "Заклинания",
-        "hint": "Волшебная стрела: попадает всегда, к каждой кости своя прибавка.",
-        "props": [
-          {
-            "key": "spell_level",
-            "label": "Круг",
-            "kind": "number"
-          },
-          {
-            "key": "damage_die",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "dice_count",
-            "label": "Сколько костей",
-            "kind": "number"
-          },
-          {
-            "key": "dice_up",
-            "label": "Костей за круг выше",
-            "kind": "number"
-          },
-          {
-            "key": "per_die",
-            "label": "Прибавка к каждой кости",
-            "kind": "number"
-          },
-          {
-            "key": "damage_type",
-            "label": "Тип урона",
-            "kind": "choice",
-            "from": "damage_types"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Сотворить",
-            "effect": "spell_auto"
-          }
-        ]
-      },
-      "spell_condition": {
-        "kind": "action",
-        "label": "Заклинание: состояние",
-        "icon": "🌀",
-        "group": "Заклинания",
-        "hint": "Удержание личности, страх: провал спасброска вешает состояние. Держится концентрацией, если выбрано.",
-        "props": [
-          {
-            "key": "spell_level",
-            "label": "Круг",
-            "kind": "number"
-          },
-          {
-            "key": "save_by",
-            "label": "Чем спасаются",
-            "kind": "choice",
-            "from": "saves"
-          },
-          {
-            "key": "status",
-            "label": "Состояние",
-            "kind": "effect"
-          },
-          {
-            "key": "holds",
-            "label": "Держится концентрацией",
-            "kind": "text",
-            "onSheet": false
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Сотворить",
-            "effect": "spell_condition_held"
-          }
-        ]
-      },
-      "spell_buff": {
-        "kind": "action",
-        "label": "Заклинание: усиление",
-        "icon": "🕊",
-        "group": "Заклинания",
-        "hint": "Благословение, ускорение, доспех мага: вешает эффект на цели.",
-        "props": [
-          {
-            "key": "spell_level",
-            "label": "Круг",
-            "kind": "number"
-          },
-          {
-            "key": "status",
-            "label": "Состояние",
-            "kind": "effect"
-          },
-          {
-            "key": "holds",
-            "label": "Держится концентрацией",
-            "kind": "text",
-            "onSheet": false
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Сотворить",
-            "effect": "spell_buff_held"
-          }
-        ]
-      },
-      "spell_buff_free": {
-        "kind": "action",
-        "label": "Заклинание: усиление без концентрации",
-        "icon": "🕊",
-        "group": "Заклинания",
-        "hint": "Доспех мага, ложная жизнь: висит само, концентрация не нужна.",
-        "props": [
-          {
-            "key": "spell_level",
-            "label": "Круг",
-            "kind": "number"
-          },
-          {
-            "key": "status",
-            "label": "Состояние",
-            "kind": "effect"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Сотворить",
-            "effect": "spell_buff"
-          }
-        ]
-      },
-      "spell_heal": {
-        "kind": "action",
-        "label": "Заклинание: лечение",
-        "icon": "✚",
-        "group": "Заклинания",
-        "hint": "Лечение ран, слово лечения: кости плюс заклинательный модификатор.",
-        "props": [
-          {
-            "key": "spell_level",
-            "label": "Круг",
-            "kind": "number"
-          },
-          {
-            "key": "heal_die",
-            "label": "Кость лечения",
-            "kind": "dice"
-          },
-          {
-            "key": "dice_count",
-            "label": "Сколько костей",
-            "kind": "number"
-          },
-          {
-            "key": "dice_up",
-            "label": "Костей за круг выше",
-            "kind": "number"
-          },
-          {
-            "key": "cure",
-            "label": "Что снимает",
-            "kind": "effect"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Сотворить",
-            "effect": "spell_heal"
-          }
-        ]
-      },
-      "spell_cleanse": {
-        "kind": "action",
-        "label": "Заклинание: снять состояние",
-        "icon": "🩹",
-        "group": "Заклинания",
-        "hint": "Малое восстановление, снятие проклятия.",
-        "props": [
-          {
-            "key": "spell_level",
-            "label": "Круг",
-            "kind": "number"
-          },
-          {
-            "key": "cure",
-            "label": "Что снимает",
-            "kind": "effect"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Сотворить",
-            "effect": "spell_cleanse"
-          }
-        ]
-      },
-      "spell_note": {
-        "kind": "action",
-        "label": "Заклинание без расчёта",
-        "icon": "📜",
-        "group": "Заклинания",
-        "hint": "Туманный шаг, полёт, обнаружение магии: тратит ячейку и пишет строку в журнал.",
-        "props": [
-          {
-            "key": "spell_level",
-            "label": "Круг",
-            "kind": "number"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Сотворить",
-            "effect": "spell_note"
-          }
-        ]
-      },
-      "feature": {
-        "kind": "action",
-        "label": "Умение класса",
-        "icon": "🏅",
-        "group": "Умения и черты",
-        "hint": "Второе дыхание, ярость, наложение рук: кнопка на листе, ресурс тратится сам.",
-        "props": [
-          {
-            "key": "source",
-            "label": "Откуда",
-            "kind": "text"
-          }
-        ]
-      },
-      "trait": {
-        "kind": "action",
-        "label": "Черта или особенность",
-        "icon": "✦",
-        "group": "Умения и черты",
-        "hint": "Дополнительная атака, тёмное зрение, боевой стиль: висит и правит цифры, кнопки не даёт.",
-        "props": [
-          {
-            "key": "source",
-            "label": "Откуда",
-            "kind": "text"
-          }
-        ]
-      },
-      "action_basic": {
-        "kind": "action",
-        "label": "Действие в бою",
-        "icon": "◆",
-        "group": "Действия в бою",
-        "hint": "Действие, которое есть не у всех: его дают класс, черта или предмет.",
-        "props": []
-      },
-      "monster_attack": {
-        "kind": "action",
-        "label": "Атака существа",
-        "icon": "🐺",
-        "group": "Бестиарий",
-        "hint": "Для НПС: бонус атаки и прибавка к урону вписаны числами — та же «Атака», что и у оружия.",
-        "props": [
-          {
-            "key": "to_hit",
-            "label": "Бонус атаки",
-            "kind": "number"
-          },
-          {
-            "key": "damage_dice",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "damage_bonus",
-            "label": "Прибавка к урону",
-            "kind": "number"
-          },
-          {
-            "key": "damage_type",
-            "label": "Тип урона",
-            "kind": "choice",
-            "from": "damage_types"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Атаковать",
-            "effect": "strike",
-            "args": {
-              "attack_with": {
-                "expr": "@to_hit"
-              },
-              "damage_with": {
-                "expr": "@damage_bonus"
-              },
-              "damage_source": {
-                "expr": "\"немагический\""
-              }
-            }
-          }
-        ]
-      }
-    },
     "grants": [
       "battle_start",
       "battle_end",
@@ -8633,16 +8610,60 @@
         "has": [],
         "effects": []
       }
-    ]
+    ],
+    "sheets": {
+      "персонаж": {
+        "label": "Персонаж",
+        "icon": "🧙",
+        "hint": "Лист героя: все блоки. На нуле хитов падает без сознания и делает спасброски от смерти.",
+        "grants": [
+          "fall",
+          "wake",
+          "death_now",
+          "stabilize",
+          "dodge",
+          "dash",
+          "disengage",
+          "hide",
+          "help"
+        ],
+        "block": "Бестиарий"
+      },
+      "противник": {
+        "label": "Противник",
+        "icon": "👹",
+        "hint": "Лист противника: без личного дела, магии, ресурсов класса и богатства. Спасбросков от смерти нет — что с ним на нуле хитов, решает ведущий.",
+        "grants": [
+          "dodge",
+          "dash",
+          "disengage",
+          "hide",
+          "help"
+        ],
+        "block": "Бестиарий",
+        "blocks": [
+          "Характеристики",
+          "Модификаторы",
+          "Прогрессия",
+          "Спасброски",
+          "Навыки",
+          "Чувства и движение",
+          "Защита",
+          "Здоровье",
+          "В бою",
+          "Стойкость к урону"
+        ]
+      }
+    }
   },
   "compendium": {
     "records": [
       {
         "id": "club",
-        "rk": "weapon",
         "label": "Дубинка",
         "description": "Простое оружие, лёгкое.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d4",
           "damage_type": "дробящий",
           "damage_source": "немагический",
@@ -8654,10 +8675,10 @@
       },
       {
         "id": "greatclub",
-        "rk": "weapon",
         "label": "Палица",
         "description": "Простое оружие, двуручное.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d8",
           "damage_type": "дробящий",
           "damage_source": "немагический",
@@ -8669,10 +8690,10 @@
       },
       {
         "id": "handaxe",
-        "rk": "weapon",
         "label": "Ручной топор",
         "description": "Простое оружие, лёгкое, метательное.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d6",
           "damage_type": "рубящий",
           "damage_source": "немагический",
@@ -8685,10 +8706,10 @@
       },
       {
         "id": "spear",
-        "rk": "weapon",
         "label": "Копьё",
         "description": "Простое оружие, универсальное: двумя руками 1к8.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d6",
           "damage_type": "колющий",
           "damage_source": "немагический",
@@ -8700,10 +8721,10 @@
       },
       {
         "id": "mace",
-        "rk": "weapon",
         "label": "Булава",
         "description": "Простое оружие.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d6",
           "damage_type": "дробящий",
           "damage_source": "немагический",
@@ -8713,10 +8734,10 @@
       },
       {
         "id": "quarterstaff",
-        "rk": "weapon",
         "label": "Боевой посох",
         "description": "Простое оружие, универсальное: двумя руками 1к8.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d6",
           "damage_type": "дробящий",
           "damage_source": "немагический",
@@ -8728,10 +8749,10 @@
       },
       {
         "id": "longsword",
-        "rk": "weapon",
         "label": "Длинный меч",
         "description": "Воинское оружие, универсальное: двумя руками 1к10.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d8",
           "damage_type": "рубящий",
           "damage_source": "немагический",
@@ -8743,10 +8764,10 @@
       },
       {
         "id": "battleaxe",
-        "rk": "weapon",
         "label": "Боевой топор",
         "description": "Воинское оружие, универсальное.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d8",
           "damage_type": "рубящий",
           "damage_source": "немагический",
@@ -8758,10 +8779,10 @@
       },
       {
         "id": "warhammer",
-        "rk": "weapon",
         "label": "Боевой молот",
         "description": "Воинское оружие, универсальное.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d8",
           "damage_type": "дробящий",
           "damage_source": "немагический",
@@ -8773,10 +8794,10 @@
       },
       {
         "id": "greatsword",
-        "rk": "weapon",
         "label": "Двуручный меч",
         "description": "Воинское оружие, двуручное, тяжёлое.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "2d6",
           "damage_type": "рубящий",
           "damage_source": "немагический",
@@ -8789,10 +8810,10 @@
       },
       {
         "id": "greataxe",
-        "rk": "weapon",
         "label": "Секира",
         "description": "Воинское оружие, двуручное, тяжёлое.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d12",
           "damage_type": "рубящий",
           "damage_source": "немагический",
@@ -8805,10 +8826,10 @@
       },
       {
         "id": "maul",
-        "rk": "weapon",
         "label": "Молот",
         "description": "Воинское оружие, двуручное, тяжёлое.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "2d6",
           "damage_type": "дробящий",
           "damage_source": "немагический",
@@ -8821,10 +8842,10 @@
       },
       {
         "id": "halberd",
-        "rk": "weapon",
         "label": "Алебарда",
         "description": "Воинское оружие, досягаемость, тяжёлое.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d10",
           "damage_type": "рубящий",
           "damage_source": "немагический",
@@ -8837,10 +8858,10 @@
       },
       {
         "id": "glaive",
-        "rk": "weapon",
         "label": "Глефа",
         "description": "Воинское оружие, досягаемость, тяжёлое.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d10",
           "damage_type": "рубящий",
           "damage_source": "немагический",
@@ -8853,10 +8874,10 @@
       },
       {
         "id": "dagger",
-        "rk": "weapon",
         "label": "Кинжал",
         "description": "Простое оружие, фехтовальное, лёгкое, метательное.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d4",
           "damage_type": "колющий",
           "damage_source": "немагический",
@@ -8870,10 +8891,10 @@
       },
       {
         "id": "shortsword",
-        "rk": "weapon",
         "label": "Короткий меч",
         "description": "Воинское оружие, фехтовальное, лёгкое.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d6",
           "damage_type": "колющий",
           "damage_source": "немагический",
@@ -8886,10 +8907,10 @@
       },
       {
         "id": "rapier",
-        "rk": "weapon",
         "label": "Рапира",
         "description": "Воинское оружие, фехтовальное.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d8",
           "damage_type": "колющий",
           "damage_source": "немагический",
@@ -8901,10 +8922,10 @@
       },
       {
         "id": "scimitar",
-        "rk": "weapon",
         "label": "Скимитар",
         "description": "Воинское оружие, фехтовальное, лёгкое.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d6",
           "damage_type": "рубящий",
           "damage_source": "немагический",
@@ -8917,10 +8938,10 @@
       },
       {
         "id": "whip",
-        "rk": "weapon",
         "label": "Кнут",
         "description": "Воинское оружие, фехтовальное, досягаемость.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d4",
           "damage_type": "рубящий",
           "damage_source": "немагический",
@@ -8933,10 +8954,10 @@
       },
       {
         "id": "shortbow",
-        "rk": "weapon",
         "label": "Короткий лук",
         "description": "Простое оружие, двуручное.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d6",
           "damage_type": "колющий",
           "damage_source": "немагический",
@@ -8950,10 +8971,10 @@
       },
       {
         "id": "longbow",
-        "rk": "weapon",
         "label": "Длинный лук",
         "description": "Воинское оружие, двуручное, тяжёлое.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d8",
           "damage_type": "колющий",
           "damage_source": "немагический",
@@ -8968,10 +8989,10 @@
       },
       {
         "id": "light_crossbow",
-        "rk": "weapon",
         "label": "Лёгкий арбалет",
         "description": "Простое оружие, перезарядка.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d8",
           "damage_type": "колющий",
           "damage_source": "немагический",
@@ -8985,10 +9006,10 @@
       },
       {
         "id": "heavy_crossbow",
-        "rk": "weapon",
         "label": "Тяжёлый арбалет",
         "description": "Воинское оружие, тяжёлое, перезарядка.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d10",
           "damage_type": "колющий",
           "damage_source": "немагический",
@@ -9003,10 +9024,10 @@
       },
       {
         "id": "hand_crossbow",
-        "rk": "weapon",
         "label": "Ручной арбалет",
         "description": "Воинское оружие, лёгкое, перезарядка.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d6",
           "damage_type": "колющий",
           "damage_source": "немагический",
@@ -9021,10 +9042,10 @@
       },
       {
         "id": "sling",
-        "rk": "weapon",
         "label": "Праща",
         "description": "Простое оружие.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d4",
           "damage_type": "дробящий",
           "damage_source": "немагический",
@@ -9037,10 +9058,10 @@
       },
       {
         "id": "dart",
-        "rk": "weapon",
         "label": "Дротик",
         "description": "Простое оружие, фехтовальное, метательное.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d4",
           "damage_type": "колющий",
           "damage_source": "немагический",
@@ -9054,32 +9075,24 @@
       },
       {
         "id": "flame_tongue",
-        "rk": "weapon",
         "label": "Огненный язык",
         "description": "Длинный меч: пока горит, каждый удар добавляет 2к6 огнём.",
-        "props": {
+        "grants": [
+          "flame_blade"
+        ],
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d8",
           "damage_type": "рубящий",
           "damage_source": "магический",
           "wield": "ближний бой — Сила",
           "properties": []
-        },
-        "grants": [
-          "flame_blade"
-        ]
+        }
       },
       {
         "id": "magic_sword_1",
-        "rk": "weapon",
         "label": "Длинный меч +1",
         "description": "Оружие с бонусом к атаке и урону.",
-        "props": {
-          "damage_dice": "1d8",
-          "damage_type": "рубящий",
-          "damage_source": "магический",
-          "wield": "ближний бой — Сила",
-          "properties": []
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -9099,17 +9112,20 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "table": "weapon",
+        "cells": {
+          "damage_dice": "1d8",
+          "damage_type": "рубящий",
+          "damage_source": "магический",
+          "wield": "ближний бой — Сила",
+          "properties": []
+        }
       },
       {
         "id": "padded",
-        "rk": "armor",
         "label": "Стёганый доспех",
         "description": "Лёгкий доспех. Помеха на Скрытность.",
-        "props": {
-          "ac": 11,
-          "heavy": "нет"
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -9120,17 +9136,17 @@
             },
             "stacking": "override"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "ac": 11,
+          "heavy": "нет"
+        }
       },
       {
         "id": "leather",
-        "rk": "armor",
         "label": "Кожаный доспех",
         "description": "Лёгкий доспех.",
-        "props": {
-          "ac": 11,
-          "heavy": "нет"
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -9141,17 +9157,17 @@
             },
             "stacking": "override"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "ac": 11,
+          "heavy": "нет"
+        }
       },
       {
         "id": "studded_leather",
-        "rk": "armor",
         "label": "Проклёпанная кожа",
         "description": "Лёгкий доспех.",
-        "props": {
-          "ac": 12,
-          "heavy": "нет"
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -9162,17 +9178,17 @@
             },
             "stacking": "override"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "ac": 12,
+          "heavy": "нет"
+        }
       },
       {
         "id": "hide",
-        "rk": "armor",
         "label": "Шкурный доспех",
         "description": "Средний доспех.",
-        "props": {
-          "ac": 12,
-          "heavy": "нет"
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -9183,17 +9199,17 @@
             },
             "stacking": "override"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "ac": 12,
+          "heavy": "нет"
+        }
       },
       {
         "id": "chain_shirt",
-        "rk": "armor",
         "label": "Кольчужная рубаха",
         "description": "Средний доспех.",
-        "props": {
-          "ac": 13,
-          "heavy": "нет"
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -9204,17 +9220,17 @@
             },
             "stacking": "override"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "ac": 13,
+          "heavy": "нет"
+        }
       },
       {
         "id": "scale_mail",
-        "rk": "armor",
         "label": "Чешуйчатый доспех",
         "description": "Средний доспех. Помеха на Скрытность.",
-        "props": {
-          "ac": 14,
-          "heavy": "нет"
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -9225,17 +9241,17 @@
             },
             "stacking": "override"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "ac": 14,
+          "heavy": "нет"
+        }
       },
       {
         "id": "breastplate",
-        "rk": "armor",
         "label": "Кираса",
         "description": "Средний доспех.",
-        "props": {
-          "ac": 14,
-          "heavy": "нет"
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -9246,17 +9262,17 @@
             },
             "stacking": "override"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "ac": 14,
+          "heavy": "нет"
+        }
       },
       {
         "id": "half_plate",
-        "rk": "armor",
         "label": "Полулаты",
         "description": "Средний доспех. Помеха на Скрытность.",
-        "props": {
-          "ac": 15,
-          "heavy": "нет"
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -9267,17 +9283,17 @@
             },
             "stacking": "override"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "ac": 15,
+          "heavy": "нет"
+        }
       },
       {
         "id": "ring_mail",
-        "rk": "armor",
         "label": "Колечный доспех",
         "description": "Тяжёлый доспех. Ловкость не прибавляется.",
-        "props": {
-          "ac": 14,
-          "heavy": "да"
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -9297,17 +9313,17 @@
             },
             "stacking": "override"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "ac": 14,
+          "heavy": "да"
+        }
       },
       {
         "id": "chain_mail",
-        "rk": "armor",
         "label": "Кольчуга",
         "description": "Тяжёлый доспех. Нужна Сила 13, помеха на Скрытность.",
-        "props": {
-          "ac": 16,
-          "heavy": "да"
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -9327,17 +9343,17 @@
             },
             "stacking": "override"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "ac": 16,
+          "heavy": "да"
+        }
       },
       {
         "id": "splint",
-        "rk": "armor",
         "label": "Наборный доспех",
         "description": "Тяжёлый доспех. Нужна Сила 15, помеха на Скрытность.",
-        "props": {
-          "ac": 17,
-          "heavy": "да"
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -9357,17 +9373,17 @@
             },
             "stacking": "override"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "ac": 17,
+          "heavy": "да"
+        }
       },
       {
         "id": "plate",
-        "rk": "armor",
         "label": "Латы",
         "description": "Тяжёлый доспех. Нужна Сила 15, помеха на Скрытность.",
-        "props": {
-          "ac": 18,
-          "heavy": "да"
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -9387,16 +9403,17 @@
             },
             "stacking": "override"
           }
-        ]
+        ],
+        "table": "armor",
+        "cells": {
+          "ac": 18,
+          "heavy": "да"
+        }
       },
       {
         "id": "shield_item",
-        "rk": "shield",
         "label": "Щит",
         "description": "Надет в одной руке: +2 к классу брони.",
-        "props": {
-          "bonus": 2
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -9407,28 +9424,28 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "table": "shield",
+        "cells": {
+          "bonus": 2
+        }
       },
       {
         "id": "ring_protection",
-        "rk": "wondrous",
         "label": "Кольцо защиты",
         "description": "+1 к классу брони и всем спасброскам.",
-        "props": {
-          "attunement": "да"
-        },
         "grants": [
           "ring_protection"
-        ]
+        ],
+        "table": "wondrous",
+        "cells": {
+          "attunement": "да"
+        }
       },
       {
         "id": "cloak_protection",
-        "rk": "wondrous",
         "label": "Плащ защиты",
         "description": "+1 к классу брони и всем спасброскам.",
-        "props": {
-          "attunement": "да"
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -9439,16 +9456,16 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "table": "wondrous",
+        "cells": {
+          "attunement": "да"
+        }
       },
       {
         "id": "amulet_health",
-        "rk": "wondrous",
         "label": "Амулет здоровья",
         "description": "Телосложение становится 19.",
-        "props": {
-          "attunement": "да"
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -9459,16 +9476,16 @@
             },
             "stacking": "override"
           }
-        ]
+        ],
+        "table": "wondrous",
+        "cells": {
+          "attunement": "да"
+        }
       },
       {
         "id": "belt_giant",
-        "rk": "wondrous",
         "label": "Пояс силы холмового великана",
         "description": "Сила становится 21.",
-        "props": {
-          "attunement": "да"
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -9479,16 +9496,16 @@
             },
             "stacking": "override"
           }
-        ]
+        ],
+        "table": "wondrous",
+        "cells": {
+          "attunement": "да"
+        }
       },
       {
         "id": "boots_speed",
-        "rk": "wondrous",
         "label": "Сапоги скорости",
         "description": "Скорость вдвое больше.",
-        "props": {
-          "attunement": "да"
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -9499,28 +9516,28 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "table": "wondrous",
+        "cells": {
+          "attunement": "да"
+        }
       },
       {
         "id": "ring_fire",
-        "rk": "wondrous",
         "label": "Кольцо сопротивления огню",
         "description": "Сопротивление урону огнём.",
-        "props": {
-          "attunement": "да"
-        },
         "grants": [
           "fire_resistance"
-        ]
+        ],
+        "table": "wondrous",
+        "cells": {
+          "attunement": "да"
+        }
       },
       {
         "id": "goggles_night",
-        "rk": "wondrous",
         "label": "Очки ночи",
         "description": "Тёмное зрение на 60 футов.",
-        "props": {
-          "attunement": "нет"
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -9531,16 +9548,16 @@
             },
             "stacking": "max"
           }
-        ]
+        ],
+        "table": "wondrous",
+        "cells": {
+          "attunement": "нет"
+        }
       },
       {
         "id": "bracers_defense",
-        "rk": "wondrous",
         "label": "Наручи защиты",
         "description": "+2 к классу брони без доспеха и щита.",
-        "props": {
-          "attunement": "да"
-        },
         "modifiers": [
           {
             "kind": "value",
@@ -9551,174 +9568,178 @@
             },
             "stacking": "sum"
           }
-        ]
+        ],
+        "table": "wondrous",
+        "cells": {
+          "attunement": "да"
+        }
       },
       {
         "id": "potion_healing",
-        "rk": "potion",
         "label": "Зелье лечения",
         "description": "Восполняет 2к4 + 2 хитов.",
-        "props": {
+        "table": "potion",
+        "cells": {
           "heal_die": "2d4",
           "heal_bonus": 2
         }
       },
       {
         "id": "potion_greater",
-        "rk": "potion",
         "label": "Большое зелье лечения",
         "description": "Восполняет 4к4 + 4 хитов.",
-        "props": {
+        "table": "potion",
+        "cells": {
           "heal_die": "4d4",
           "heal_bonus": 4
         }
       },
       {
         "id": "potion_superior",
-        "rk": "potion",
         "label": "Отличное зелье лечения",
         "description": "Восполняет 8к4 + 8 хитов.",
-        "props": {
+        "table": "potion",
+        "cells": {
           "heal_die": "8d4",
           "heal_bonus": 8
         }
       },
       {
         "id": "potion_supreme",
-        "rk": "potion",
         "label": "Превосходное зелье лечения",
         "description": "Восполняет 10к4 + 20 хитов.",
-        "props": {
+        "table": "potion",
+        "cells": {
           "heal_die": "10d4",
           "heal_bonus": 20
         }
       },
       {
         "id": "rope",
-        "rk": "gear",
         "label": "Верёвка, 50 футов",
         "description": "Пеньковая верёвка.",
-        "props": {
+        "table": "gear",
+        "cells": {
           "weight": 10,
           "cost": 1
         }
       },
       {
         "id": "torch",
-        "rk": "gear",
         "label": "Факел",
         "description": "Горит час, светит на 20 футов.",
-        "props": {
+        "table": "gear",
+        "cells": {
           "weight": 1,
           "cost": 0
         }
       },
       {
         "id": "rations",
-        "rk": "gear",
         "label": "Походный паёк, день",
         "description": "Еда на день.",
-        "props": {
+        "table": "gear",
+        "cells": {
           "weight": 2,
           "cost": 1
         }
       },
       {
         "id": "thieves_tools",
-        "rk": "gear",
         "label": "Воровские инструменты",
         "description": "Нужны для взлома замков и обезвреживания ловушек.",
-        "props": {
+        "table": "gear",
+        "cells": {
           "weight": 1,
           "cost": 25
         }
       },
       {
         "id": "healers_kit",
-        "rk": "gear",
         "label": "Набор целителя",
         "description": "Десять применений: стабилизирует умирающего без проверки.",
-        "props": {
+        "table": "gear",
+        "cells": {
           "weight": 3,
           "cost": 5
         }
       },
       {
         "id": "holy_symbol",
-        "rk": "gear",
         "label": "Священный символ",
         "description": "Фокусировка для жреца и паладина.",
-        "props": {
+        "table": "gear",
+        "cells": {
           "weight": 1,
           "cost": 5
         }
       },
       {
         "id": "arcane_focus",
-        "rk": "gear",
         "label": "Магическая фокусировка",
         "description": "Посох, жезл или хрустальный шар.",
-        "props": {
+        "table": "gear",
+        "cells": {
           "weight": 3,
           "cost": 10
         }
       },
       {
         "id": "backpack",
-        "rk": "gear",
         "label": "Рюкзак",
         "description": "Вмещает 30 фунтов.",
-        "props": {
+        "table": "gear",
+        "cells": {
           "weight": 5,
           "cost": 2
         }
       },
       {
         "id": "fire_bolt",
-        "rk": "cantrip_attack",
         "label": "Огненный снаряд",
         "description": "Заговор. Бросок атаки заклинанием, 1к10 огнём; кости растут с уровнем.",
-        "props": {
+        "table": "cantrip_attack",
+        "cells": {
           "damage_die": "1d10",
           "damage_type": "огонь"
         }
       },
       {
         "id": "ray_frost",
-        "rk": "cantrip_attack",
         "label": "Луч холода",
         "description": "Заговор. Бросок атаки, 1к8 холодом; цель замедляется на 10 футов.",
-        "props": {
+        "table": "cantrip_attack",
+        "cells": {
           "damage_die": "1d8",
           "damage_type": "холод"
         }
       },
       {
         "id": "eldritch_blast",
-        "rk": "cantrip_attack",
         "label": "Магlatin",
         "description": "Заговор колдуна. Бросок атаки, 1к10 силовым уроном.",
-        "props": {
+        "table": "cantrip_attack",
+        "cells": {
           "damage_die": "1d10",
           "damage_type": "силовой"
         }
       },
       {
         "id": "shocking_grasp",
-        "rk": "cantrip_attack",
         "label": "Электрический захват",
         "description": "Заговор. Бросок атаки с преимуществом по цели в металле, 1к8 молнией.",
-        "props": {
+        "table": "cantrip_attack",
+        "cells": {
           "damage_die": "1d8",
           "damage_type": "молния"
         }
       },
       {
         "id": "sacred_flame",
-        "rk": "cantrip_save",
         "label": "Священное пламя",
         "description": "Заговор. Цель спасается Ловкостью, провал — 1к8 излучением.",
-        "props": {
+        "table": "cantrip_save",
+        "cells": {
           "damage_die": "1d8",
           "damage_type": "излучение",
           "save_by": "ловкость",
@@ -9727,10 +9748,10 @@
       },
       {
         "id": "poison_spray",
-        "rk": "cantrip_save",
         "label": "Ядовитые брызги",
         "description": "Заговор. Цель спасается Телосложением, провал — 1к12 ядом.",
-        "props": {
+        "table": "cantrip_save",
+        "cells": {
           "damage_die": "1d12",
           "damage_type": "яд",
           "save_by": "телосложение",
@@ -9739,10 +9760,10 @@
       },
       {
         "id": "toll_dead",
-        "rk": "cantrip_save",
         "label": "Похоронный звон",
         "description": "Заговор. Цель спасается Мудростью, провал — 1к8 некротическим; раненой цели 1к12.",
-        "props": {
+        "table": "cantrip_save",
+        "cells": {
           "damage_die": "1d8",
           "damage_type": "некротический",
           "save_by": "мудрость",
@@ -9751,41 +9772,41 @@
       },
       {
         "id": "light",
-        "rk": "cantrip_note",
         "label": "Свет",
         "description": "Заговор. Предмет светит на 20 футов.",
-        "props": {}
+        "table": "cantrip_note",
+        "cells": {}
       },
       {
         "id": "mage_hand",
-        "rk": "cantrip_note",
         "label": "Волшебная рука",
         "description": "Заговор. Призрачная рука носит до 10 фунтов.",
-        "props": {}
+        "table": "cantrip_note",
+        "cells": {}
       },
       {
         "id": "prestidigitation",
-        "rk": "cantrip_note",
         "label": "Фокусы",
         "description": "Заговор. Мелкие чудеса на минуту.",
-        "props": {}
+        "table": "cantrip_note",
+        "cells": {}
       },
       {
         "id": "guidance_cantrip",
-        "rk": "spell_buff_free",
         "label": "Указание",
         "description": "Заговор. Цель прибавляет 1к4 к одной проверке характеристики.",
-        "props": {
+        "table": "spell_buff_free",
+        "cells": {
           "spell_level": 0,
           "status": "guided"
         }
       },
       {
         "id": "magic_missile",
-        "rk": "spell_auto",
         "label": "Волшебная стрела",
         "description": "Три стрелы по 1к4+1 силовым уроном, попадают всегда. Круг выше — ещё стрела.",
-        "props": {
+        "table": "spell_auto",
+        "cells": {
           "spell_level": 1,
           "damage_die": "1d4",
           "dice_count": 3,
@@ -9796,10 +9817,10 @@
       },
       {
         "id": "burning_hands",
-        "rk": "spell_save_half",
         "label": "Огненные ладони",
         "description": "Конус огня: спасбросок Ловкости, 3к6, при успехе половина. Круг выше — ещё 1к6.",
-        "props": {
+        "table": "spell_save_half",
+        "cells": {
           "spell_level": 1,
           "save_by": "ловкость",
           "damage_die": "1d6",
@@ -9810,10 +9831,10 @@
       },
       {
         "id": "thunderwave",
-        "rk": "spell_save_half",
         "label": "Волна грома",
         "description": "Волна вокруг себя: спасбросок Телосложения, 2к8 громом, при успехе половина.",
-        "props": {
+        "table": "spell_save_half",
+        "cells": {
           "spell_level": 1,
           "save_by": "телосложение",
           "damage_die": "1d8",
@@ -9824,10 +9845,10 @@
       },
       {
         "id": "guiding_bolt",
-        "rk": "spell_attack",
         "label": "Направляющий снаряд",
         "description": "Бросок атаки заклинанием, 4к6 излучением; следующая атака по цели с преимуществом.",
-        "props": {
+        "table": "spell_attack",
+        "cells": {
           "spell_level": 1,
           "damage_die": "1d6",
           "dice_count": 4,
@@ -9838,10 +9859,10 @@
       },
       {
         "id": "inflict_wounds",
-        "rk": "spell_attack",
         "label": "Нанесение ран",
         "description": "Касание: бросок атаки заклинанием, 3к10 некротическим уроном.",
-        "props": {
+        "table": "spell_attack",
+        "cells": {
           "spell_level": 1,
           "damage_die": "1d10",
           "dice_count": 3,
@@ -9852,10 +9873,10 @@
       },
       {
         "id": "chromatic_orb",
-        "rk": "spell_attack",
         "label": "Хроматическая сфера",
         "description": "Бросок атаки заклинанием, 3к8 выбранной стихией.",
-        "props": {
+        "table": "spell_attack",
+        "cells": {
           "spell_level": 1,
           "damage_die": "1d8",
           "dice_count": 3,
@@ -9866,10 +9887,10 @@
       },
       {
         "id": "scorching_ray",
-        "rk": "spell_attack",
         "label": "Палящий луч",
         "description": "Три луча, каждый 2к6 огнём. Здесь считается одним броском: 6к6.",
-        "props": {
+        "table": "spell_attack",
+        "cells": {
           "spell_level": 2,
           "damage_die": "1d6",
           "dice_count": 6,
@@ -9880,10 +9901,10 @@
       },
       {
         "id": "fireball",
-        "rk": "spell_save_half",
         "label": "Огненный шар",
         "description": "Шар в 20 футов: спасбросок Ловкости, 8к6 огнём, при успехе половина. Круг выше — ещё 1к6.",
-        "props": {
+        "table": "spell_save_half",
+        "cells": {
           "spell_level": 3,
           "save_by": "ловкость",
           "damage_die": "1d6",
@@ -9894,10 +9915,10 @@
       },
       {
         "id": "lightning_bolt",
-        "rk": "spell_save_half",
         "label": "Молния",
         "description": "Линия в 100 футов: спасбросок Ловкости, 8к6 молнией, при успехе половина.",
-        "props": {
+        "table": "spell_save_half",
+        "cells": {
           "spell_level": 3,
           "save_by": "ловкость",
           "damage_die": "1d6",
@@ -9908,10 +9929,10 @@
       },
       {
         "id": "cone_cold",
-        "rk": "spell_save_half",
         "label": "Конус холода",
         "description": "Конус в 60 футов: спасбросок Телосложения, 8к8 холодом, при успехе половина.",
-        "props": {
+        "table": "spell_save_half",
+        "cells": {
           "spell_level": 5,
           "save_by": "телосложение",
           "damage_die": "1d8",
@@ -9922,10 +9943,10 @@
       },
       {
         "id": "disintegrate",
-        "rk": "spell_save_none",
         "label": "Распад",
         "description": "Спасбросок Ловкости: провал — 10к6+40 силовым уроном, успех — ничего.",
-        "props": {
+        "table": "spell_save_none",
+        "cells": {
           "spell_level": 6,
           "save_by": "ловкость",
           "damage_die": "1d6",
@@ -9937,10 +9958,10 @@
       },
       {
         "id": "hold_person",
-        "rk": "spell_condition",
         "label": "Удержание личности",
         "description": "Спасбросок Мудрости: провал — паралич. В конце своего хода цель пробует снова.",
-        "props": {
+        "table": "spell_condition",
+        "cells": {
           "spell_level": 2,
           "save_by": "мудрость",
           "status": "paralyzed",
@@ -9949,10 +9970,10 @@
       },
       {
         "id": "fear_spell",
-        "rk": "spell_condition",
         "label": "Страх",
         "description": "Спасбросок Мудрости: провал — испуг и бегство. В конце хода цель пробует снова.",
-        "props": {
+        "table": "spell_condition",
+        "cells": {
           "spell_level": 3,
           "save_by": "мудрость",
           "status": "frightened",
@@ -9961,10 +9982,10 @@
       },
       {
         "id": "slow_spell",
-        "rk": "spell_condition",
         "label": "Замедление",
         "description": "Спасбросок Мудрости: провал — замедление. В конце хода цель пробует снова.",
-        "props": {
+        "table": "spell_condition",
+        "cells": {
           "spell_level": 3,
           "save_by": "мудрость",
           "status": "slowed",
@@ -9973,10 +9994,10 @@
       },
       {
         "id": "blindness",
-        "rk": "spell_condition",
         "label": "Слепота",
         "description": "Спасбросок Телосложения: провал — слепота на минуту.",
-        "props": {
+        "table": "spell_condition",
+        "cells": {
           "spell_level": 2,
           "save_by": "телосложение",
           "status": "blinded",
@@ -9985,10 +10006,10 @@
       },
       {
         "id": "entangle",
-        "rk": "spell_condition",
         "label": "Опутывание",
         "description": "Спасбросок Силы: провал — цель опутана.",
-        "props": {
+        "table": "spell_condition",
+        "cells": {
           "spell_level": 1,
           "save_by": "сила",
           "status": "restrained",
@@ -9997,10 +10018,10 @@
       },
       {
         "id": "bless_spell",
-        "rk": "spell_buff",
         "label": "Благословение",
         "description": "До трёх целей прибавляют 1к4 к атакам и спасброскам, пока держишь концентрацию.",
-        "props": {
+        "table": "spell_buff",
+        "cells": {
           "spell_level": 1,
           "status": "blessed",
           "holds": "да"
@@ -10008,10 +10029,10 @@
       },
       {
         "id": "bane_spell",
-        "rk": "spell_buff",
         "label": "Порча",
         "description": "До трёх целей вычитают 1к4 из атак и спасбросков, пока держишь концентрацию.",
-        "props": {
+        "table": "spell_buff",
+        "cells": {
           "spell_level": 1,
           "status": "baned",
           "holds": "да"
@@ -10019,10 +10040,10 @@
       },
       {
         "id": "haste",
-        "rk": "spell_buff",
         "label": "Ускорение",
         "description": "+2 к классу брони, двойная скорость, преимущество на Ловкость. Концентрация.",
-        "props": {
+        "table": "spell_buff",
+        "cells": {
           "spell_level": 3,
           "status": "hasted",
           "holds": "да"
@@ -10030,10 +10051,10 @@
       },
       {
         "id": "blur",
-        "rk": "spell_buff",
         "label": "Размытый образ",
         "description": "Атаки по тебе идут с помехой, пока держишь концентрацию.",
-        "props": {
+        "table": "spell_buff",
+        "cells": {
           "spell_level": 2,
           "status": "blurred",
           "holds": "да"
@@ -10041,10 +10062,10 @@
       },
       {
         "id": "stoneskin_spell",
-        "rk": "spell_buff",
         "label": "Каменная кожа",
         "description": "Сопротивление немагическому рубящему, колющему и дробящему урону. Концентрация.",
-        "props": {
+        "table": "spell_buff",
+        "cells": {
           "spell_level": 4,
           "status": "stoneskin",
           "holds": "да"
@@ -10052,50 +10073,50 @@
       },
       {
         "id": "protection_poison",
-        "rk": "spell_buff_free",
         "label": "Защита от яда",
         "description": "Сопротивление урону ядом на час. Концентрация не нужна.",
-        "props": {
+        "table": "spell_buff_free",
+        "cells": {
           "spell_level": 2,
           "status": "poison_resistance"
         }
       },
       {
         "id": "mage_armor",
-        "rk": "spell_buff_free",
         "label": "Доспех мага",
         "description": "База класса брони 13, пока не носишь доспехов. Восемь часов.",
-        "props": {
+        "table": "spell_buff_free",
+        "cells": {
           "spell_level": 1,
           "status": "mage_armored"
         }
       },
       {
         "id": "aid",
-        "rk": "spell_buff_free",
         "label": "Подмога",
         "description": "Максимум хитов трёх целей выше на 5 на восемь часов.",
-        "props": {
+        "table": "spell_buff_free",
+        "cells": {
           "spell_level": 2,
           "status": "aided"
         }
       },
       {
         "id": "resistance_spell",
-        "rk": "spell_buff_free",
         "label": "Сопротивление",
         "description": "Цель прибавляет 1к4 к одному спасброску.",
-        "props": {
+        "table": "spell_buff_free",
+        "cells": {
           "spell_level": 0,
           "status": "resisted"
         }
       },
       {
         "id": "cure_wounds",
-        "rk": "spell_heal",
         "label": "Лечение ран",
         "description": "Касание: 1к8 + заклинательный модификатор хитов. Круг выше — ещё 1к8.",
-        "props": {
+        "table": "spell_heal",
+        "cells": {
           "spell_level": 1,
           "heal_die": "1d8",
           "dice_count": 1,
@@ -10105,10 +10126,10 @@
       },
       {
         "id": "healing_word",
-        "rk": "spell_heal",
         "label": "Слово лечения",
         "description": "Бонусным действием: 1к4 + модификатор хитов на расстоянии.",
-        "props": {
+        "table": "spell_heal",
+        "cells": {
           "spell_level": 1,
           "heal_die": "1d4",
           "dice_count": 1,
@@ -10118,10 +10139,10 @@
       },
       {
         "id": "mass_cure",
-        "rk": "spell_heal",
         "label": "Массовое лечение ран",
         "description": "До шести целей: 3к8 + модификатор хитов каждой.",
-        "props": {
+        "table": "spell_heal",
+        "cells": {
           "spell_level": 5,
           "heal_die": "1d8",
           "dice_count": 3,
@@ -10131,529 +10152,529 @@
       },
       {
         "id": "lesser_restoration",
-        "rk": "spell_cleanse",
         "label": "Малое восстановление",
         "description": "Снимает с цели одно состояние: отравление, слепоту, паралич.",
-        "props": {
+        "table": "spell_cleanse",
+        "cells": {
           "spell_level": 2,
           "cure": "poisoned"
         }
       },
       {
         "id": "greater_restoration",
-        "rk": "spell_cleanse",
         "label": "Высшее восстановление",
         "description": "Снимает паралич или окаменение.",
-        "props": {
+        "table": "spell_cleanse",
+        "cells": {
           "spell_level": 5,
           "cure": "paralyzed"
         }
       },
       {
         "id": "misty_step",
-        "rk": "spell_note",
         "label": "Туманный шаг",
         "description": "Бонусным действием переносишься на 30 футов.",
-        "props": {
+        "table": "spell_note",
+        "cells": {
           "spell_level": 2
         }
       },
       {
         "id": "fly",
-        "rk": "spell_note",
         "label": "Полёт",
         "description": "Цель получает скорость полёта 60 футов на десять минут. Концентрация.",
-        "props": {
+        "table": "spell_note",
+        "cells": {
           "spell_level": 3
         }
       },
       {
         "id": "detect_magic",
-        "rk": "spell_note",
         "label": "Обнаружение магии",
         "description": "Видишь магию в 30 футах. Концентрация.",
-        "props": {
+        "table": "spell_note",
+        "cells": {
           "spell_level": 1
         }
       },
       {
         "id": "counterspell",
-        "rk": "spell_note",
         "label": "Контрзаклинание",
         "description": "Реакцией прерываешь чужое заклинание. Ведущий решает исход.",
-        "props": {
+        "table": "spell_note",
+        "cells": {
           "spell_level": 3
         }
       },
       {
         "id": "feature_second_wind",
-        "rk": "feature",
         "label": "Второе дыхание",
         "description": "Бонусным действием восполняешь 1к10 + уровень хитов. Раз до короткого отдыха.",
-        "props": {
-          "source": "Воин, 1 уровень"
-        },
         "bindings": [
           {
             "label": "Второе дыхание",
             "effect": "second_wind"
           }
-        ]
+        ],
+        "table": "feature",
+        "cells": {
+          "source": "Воин, 1 уровень"
+        }
       },
       {
         "id": "feature_action_surge",
-        "rk": "feature",
         "label": "Всплеск действий",
         "description": "Ещё одно действие в этом ходу. Раз до короткого отдыха.",
-        "props": {
-          "source": "Воин, 2 уровень"
-        },
         "bindings": [
           {
             "label": "Всплеск действий",
             "effect": "action_surge"
           }
-        ]
+        ],
+        "table": "feature",
+        "cells": {
+          "source": "Воин, 2 уровень"
+        }
       },
       {
         "id": "feature_rage",
-        "rk": "feature",
         "label": "Ярость",
         "description": "Бонусным действием впадаешь в ярость: урон выше, сопротивление физическому.",
-        "props": {
-          "source": "Варвар, 1 уровень"
-        },
         "bindings": [
           {
             "label": "Ярость",
             "effect": "rage"
           }
-        ]
+        ],
+        "table": "feature",
+        "cells": {
+          "source": "Варвар, 1 уровень"
+        }
       },
       {
         "id": "feature_reckless",
-        "rk": "feature",
         "label": "Безрассудная атака",
         "description": "Бьёшь с преимуществом, но и по тебе бьют с преимуществом.",
-        "props": {
-          "source": "Варвар, 2 уровень"
-        },
         "bindings": [
           {
             "label": "Безрассудная атака",
             "effect": "reckless_attack"
           }
-        ]
+        ],
+        "table": "feature",
+        "cells": {
+          "source": "Варвар, 2 уровень"
+        }
       },
       {
         "id": "feature_sneak",
-        "rk": "feature",
         "label": "Скрытая атака",
         "description": "Раз за ход: дополнительные кости урона, половина уровня округляя вверх.",
-        "props": {
-          "source": "Плут, 1 уровень"
-        },
         "bindings": [
           {
             "label": "Скрытая атака",
             "effect": "sneak_attack"
           }
-        ]
+        ],
+        "table": "feature",
+        "cells": {
+          "source": "Плут, 1 уровень"
+        }
       },
       {
         "id": "feature_lay_hands",
-        "rk": "feature",
         "label": "Наложение рук",
         "description": "Лечишь из запаса, сколько назовёшь. Запас — пять на уровень.",
-        "props": {
-          "source": "Паладин, 1 уровень"
-        },
         "bindings": [
           {
             "label": "Наложение рук",
             "effect": "lay_on_hands"
           }
-        ]
+        ],
+        "table": "feature",
+        "cells": {
+          "source": "Паладин, 1 уровень"
+        }
       },
       {
         "id": "feature_smite",
-        "rk": "feature",
         "label": "Божественная кара",
         "description": "После попадания тратишь ячейку: 2к8 излучением и ещё 1к8 за круг выше.",
-        "props": {
-          "source": "Паладин, 2 уровень"
-        },
         "bindings": [
           {
             "label": "Божественная кара",
             "effect": "divine_smite"
           }
-        ]
+        ],
+        "table": "feature",
+        "cells": {
+          "source": "Паладин, 2 уровень"
+        }
       },
       {
         "id": "feature_bardic",
-        "rk": "feature",
         "label": "Бардовское вдохновение",
         "description": "Даёшь союзнику кость, которую он прибавит к своему броску.",
-        "props": {
-          "source": "Бард, 1 уровень"
-        },
         "bindings": [
           {
             "label": "Бардовское вдохновение",
             "effect": "bardic_inspiration"
           }
-        ]
+        ],
+        "table": "feature",
+        "cells": {
+          "source": "Бард, 1 уровень"
+        }
       },
       {
         "id": "feature_turn_undead",
-        "rk": "feature",
         "label": "Изгнание нежити",
         "description": "Божественный канал: нежить спасается Мудростью или бежит.",
-        "props": {
-          "source": "Жрец, 2 уровень"
-        },
         "bindings": [
           {
             "label": "Изгнание нежити",
             "effect": "turn_undead"
           }
-        ]
+        ],
+        "table": "feature",
+        "cells": {
+          "source": "Жрец, 2 уровень"
+        }
       },
       {
         "id": "feature_hit_die",
-        "rk": "feature",
         "label": "Потратить кость хитов",
         "description": "На коротком отдыхе: кость хитов плюс Телосложение.",
-        "props": {
-          "source": "Правила отдыха"
-        },
         "bindings": [
           {
             "label": "Потратить кость хитов",
             "effect": "spend_hit_die"
           }
-        ]
+        ],
+        "table": "feature",
+        "cells": {
+          "source": "Правила отдыха"
+        }
       },
       {
         "id": "trait_extra_attack",
-        "rk": "trait",
         "label": "Дополнительная атака",
         "description": "Действием «Атака» бьёшь дважды.",
-        "props": {
-          "source": "Воин, Варвар, Паладин, 5 уровень"
-        },
         "grants": [
           "extra_attack"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Воин, Варвар, Паладин, 5 уровень"
+        }
       },
       {
         "id": "trait_improved_crit",
-        "rk": "trait",
         "label": "Улучшенный критический удар",
         "description": "Крит на 19 и 20.",
-        "props": {
-          "source": "Чемпион, 3 уровень"
-        },
         "grants": [
           "improved_critical"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Чемпион, 3 уровень"
+        }
       },
       {
         "id": "trait_style_defense",
-        "rk": "trait",
         "label": "Боевой стиль: оборона",
         "description": "+1 к классу брони в доспехе.",
-        "props": {
-          "source": "Боевой стиль"
-        },
         "grants": [
           "style_defense"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Боевой стиль"
+        }
       },
       {
         "id": "trait_style_dueling",
-        "rk": "trait",
         "label": "Боевой стиль: дуэлянт",
         "description": "+2 к урону одноручным оружием.",
-        "props": {
-          "source": "Боевой стиль"
-        },
         "grants": [
           "style_dueling"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Боевой стиль"
+        }
       },
       {
         "id": "trait_style_archery",
-        "rk": "trait",
         "label": "Боевой стиль: стрельба",
         "description": "+2 к атаке дальнобойным оружием.",
-        "props": {
-          "source": "Боевой стиль"
-        },
         "grants": [
           "style_archery"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Боевой стиль"
+        }
       },
       {
         "id": "trait_unarmored_barb",
-        "rk": "trait",
         "label": "Защита без доспехов: варвар",
         "description": "Без доспеха класс брони 10 + Ловкость + Телосложение.",
-        "props": {
-          "source": "Варвар, 1 уровень"
-        },
         "grants": [
           "unarmored_barbarian"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Варвар, 1 уровень"
+        }
       },
       {
         "id": "trait_unarmored_monk",
-        "rk": "trait",
         "label": "Защита без доспехов: монах",
         "description": "Без доспеха и щита класс брони 10 + Ловкость + Мудрость.",
-        "props": {
-          "source": "Монах, 1 уровень"
-        },
         "grants": [
           "unarmored_monk"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Монах, 1 уровень"
+        }
       },
       {
         "id": "trait_danger_sense",
-        "rk": "trait",
         "label": "Чувство опасности",
         "description": "Преимущество на спасброски Ловкости.",
-        "props": {
-          "source": "Варвар, 2 уровень"
-        },
         "grants": [
           "danger_sense"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Варвар, 2 уровень"
+        }
       },
       {
         "id": "trait_feral",
-        "rk": "trait",
         "label": "Дикий инстинкт",
         "description": "Преимущество на инициативу.",
-        "props": {
-          "source": "Варвар, 7 уровень"
-        },
         "grants": [
           "feral_instinct"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Варвар, 7 уровень"
+        }
       },
       {
         "id": "trait_relentless",
-        "rk": "trait",
         "label": "Непоколебимая стойкость",
         "description": "Раз до долгого отдыха: упал до нуля — остался с одним хитом.",
-        "props": {
-          "source": "Варвар, 11 уровень"
-        },
         "grants": [
           "relentless"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Варвар, 11 уровень"
+        }
       },
       {
         "id": "trait_reliable",
-        "rk": "trait",
         "label": "Надёжный талант",
         "description": "На проверках навыков кость считается не меньше десяти.",
-        "props": {
-          "source": "Плут, 11 уровень"
-        },
         "grants": [
           "reliable_talent"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Плут, 11 уровень"
+        }
       },
       {
         "id": "trait_uncanny",
-        "rk": "trait",
         "label": "Невероятное уклонение",
         "description": "Реакцией уполовиниваешь урон одной атаки.",
-        "props": {
-          "source": "Плут, 5 уровень"
-        },
         "grants": [
           "uncanny_dodge"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Плут, 5 уровень"
+        }
       },
       {
         "id": "trait_lucky_halfling",
-        "rk": "trait",
         "label": "Везучий",
         "description": "Единица на к20 перебрасывается.",
-        "props": {
-          "source": "Полурослик"
-        },
         "grants": [
           "halfling_lucky"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Полурослик"
+        }
       },
       {
         "id": "trait_darkvision",
-        "rk": "trait",
         "label": "Тёмное зрение",
         "description": "Видишь в темноте на 60 футов.",
-        "props": {
-          "source": "Дварф, эльф, полуэльф, тифлинг"
-        },
         "grants": [
           "darkvision_60"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Дварф, эльф, полуэльф, тифлинг"
+        }
       },
       {
         "id": "trait_dwarf_resilience",
-        "rk": "trait",
         "label": "Дварфская стойкость",
         "description": "Сопротивление урону ядом.",
-        "props": {
-          "source": "Дварф"
-        },
         "grants": [
           "dwarven_resilience"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Дварф"
+        }
       },
       {
         "id": "trait_infernal",
-        "rk": "trait",
         "label": "Дьявольское наследие",
         "description": "Сопротивление урону огнём.",
-        "props": {
-          "source": "Тифлинг"
-        },
         "grants": [
           "infernal_legacy"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Тифлинг"
+        }
       },
       {
         "id": "feat_alert",
-        "rk": "trait",
         "label": "Черта: бдительный",
         "description": "+5 к инициативе.",
-        "props": {
-          "source": "Черта"
-        },
         "grants": [
           "feat_alert"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Черта"
+        }
       },
       {
         "id": "feat_tough",
-        "rk": "trait",
         "label": "Черта: крепкий",
         "description": "Максимум хитов выше на два за уровень.",
-        "props": {
-          "source": "Черта"
-        },
         "grants": [
           "feat_tough"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Черта"
+        }
       },
       {
         "id": "feat_mobile",
-        "rk": "trait",
         "label": "Черта: подвижный",
         "description": "Скорость выше на 10 футов.",
-        "props": {
-          "source": "Черта"
-        },
         "grants": [
           "feat_mobile"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Черта"
+        }
       },
       {
         "id": "feat_observant",
-        "rk": "trait",
         "label": "Черта: наблюдательный",
         "description": "+5 к пассивной внимательности.",
-        "props": {
-          "source": "Черта"
-        },
         "grants": [
           "feat_observant"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Черта"
+        }
       },
       {
         "id": "feat_war_caster",
-        "rk": "trait",
         "label": "Черта: боевой заклинатель",
         "description": "Преимущество на спасброски Телосложения ради концентрации.",
-        "props": {
-          "source": "Черта"
-        },
         "grants": [
           "feat_war_caster"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Черта"
+        }
       },
       {
         "id": "feat_lucky",
-        "rk": "trait",
         "label": "Черта: везунчик",
         "description": "Три очка удачи до долгого отдыха: перебрасываешь свой бросок.",
-        "props": {
-          "source": "Черта"
-        },
         "grants": [
           "lucky_point"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Черта"
+        }
       },
       {
         "id": "trait_shield_spell",
-        "rk": "trait",
         "label": "Заклинание «Щит»",
         "description": "Реакцией тратишь ячейку 1-го круга: +5 к классу брони.",
-        "props": {
-          "source": "Волшебник, чародей"
-        },
         "grants": [
           "shield"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Волшебник, чародей"
+        }
       },
       {
         "id": "trait_rebuke",
-        "rk": "trait",
         "label": "Адское возмездие",
         "description": "Реакцией тратишь ячейку: обидчик получает 2к10 огнём.",
-        "props": {
-          "source": "Тифлинг, колдун"
-        },
         "grants": [
           "hellish_rebuke"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Тифлинг, колдун"
+        }
       },
       {
         "id": "trait_inspiration",
-        "rk": "trait",
         "label": "Вдохновение",
         "description": "Увидел свой бросок — тратишь вдохновение и бросаешь с преимуществом.",
-        "props": {
-          "source": "Правила вдохновения"
-        },
         "grants": [
           "inspire"
-        ]
+        ],
+        "table": "trait",
+        "cells": {
+          "source": "Правила вдохновения"
+        }
       },
       {
         "id": "act_smite_note",
-        "rk": "action_basic",
         "label": "Заклинание: состояние без концентрации",
         "description": "Для заклинаний, которые вешают состояние и не требуют концентрации.",
-        "props": {},
         "bindings": [
           {
             "label": "Заклинание: состояние без концентрации",
             "effect": "spell_condition"
           }
-        ]
+        ],
+        "table": "action_basic",
+        "cells": {}
       },
       {
         "id": "goblin_scimitar",
-        "rk": "monster_attack",
         "label": "Гоблин: скимитар",
         "description": "Гоблин бьёт кривым клинком.",
-        "props": {
+        "table": "monster_attack",
+        "cells": {
           "to_hit": 4,
           "damage_dice": "1d6",
           "damage_bonus": 2,
@@ -10662,10 +10683,10 @@
       },
       {
         "id": "orc_greataxe",
-        "rk": "monster_attack",
         "label": "Орк: секира",
         "description": "Орк рубит секирой.",
-        "props": {
+        "table": "monster_attack",
+        "cells": {
           "to_hit": 5,
           "damage_dice": "1d12",
           "damage_bonus": 3,
@@ -10674,10 +10695,10 @@
       },
       {
         "id": "wolf_bite",
-        "rk": "monster_attack",
         "label": "Волк: укус",
         "description": "Волк кусает; при попадании цель может упасть.",
-        "props": {
+        "table": "monster_attack",
+        "cells": {
           "to_hit": 4,
           "damage_dice": "2d4",
           "damage_bonus": 2,
@@ -10686,10 +10707,10 @@
       },
       {
         "id": "skeleton_shortsword",
-        "rk": "monster_attack",
         "label": "Скелет: короткий меч",
         "description": "Скелет колет ржавым мечом.",
-        "props": {
+        "table": "monster_attack",
+        "cells": {
           "to_hit": 4,
           "damage_dice": "1d6",
           "damage_bonus": 2,
@@ -10698,10 +10719,10 @@
       },
       {
         "id": "zombie_slam",
-        "rk": "monster_attack",
         "label": "Зомби: удар",
         "description": "Зомби бьёт кулаком.",
-        "props": {
+        "table": "monster_attack",
+        "cells": {
           "to_hit": 3,
           "damage_dice": "1d6",
           "damage_bonus": 1,
@@ -10710,10 +10731,10 @@
       },
       {
         "id": "bandit_crossbow",
-        "rk": "monster_attack",
         "label": "Разбойник: лёгкий арбалет",
         "description": "Разбойник стреляет из арбалета.",
-        "props": {
+        "table": "monster_attack",
+        "cells": {
           "to_hit": 3,
           "damage_dice": "1d8",
           "damage_bonus": 1,
@@ -10722,10 +10743,10 @@
       },
       {
         "id": "ogre_club",
-        "rk": "monster_attack",
         "label": "Огр: дубина",
         "description": "Огр обрушивает дубину.",
-        "props": {
+        "table": "monster_attack",
+        "cells": {
           "to_hit": 6,
           "damage_dice": "2d8",
           "damage_bonus": 4,
@@ -10734,10 +10755,10 @@
       },
       {
         "id": "dragon_bite",
-        "rk": "monster_attack",
         "label": "Молодой красный дракон: укус",
         "description": "Дракон кусает.",
-        "props": {
+        "table": "monster_attack",
+        "cells": {
           "to_hit": 10,
           "damage_dice": "2d10",
           "damage_bonus": 6,

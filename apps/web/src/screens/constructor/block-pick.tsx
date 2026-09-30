@@ -4,6 +4,7 @@ import { blockNames, NO_BLOCK } from '@vtt/engine/model/blocks';
 import { groupChain } from './groups.ts';
 import type { System } from '@vtt/schema';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { kindsOf } from '@vtt/engine/model/owned';
 
 const depthOf = (system: System, name: string): number => groupChain(system, name).length - 1;
 
@@ -12,7 +13,7 @@ export type BlockOf = 'fields' | 'effects' | 'records';
 function usedBy(system: System, of: BlockOf): Set<string> {
   const groups = of === 'fields' ? fieldsOf(system).map(f => f.group)
     : of === 'effects' ? Object.values(system.effects).map(e => e.group)
-      : Object.values(system.records ?? {}).map(k => k.group);
+      : kindsOf(system).map(([, k]) => k.block);
   return new Set(groups.filter((g): g is string => Boolean(g)).flatMap(g => groupChain(system, g)));
 }
 

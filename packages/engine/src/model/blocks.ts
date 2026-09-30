@@ -1,5 +1,6 @@
 import type { System, Field } from './types.ts';
 import { fieldsOf } from './sheet-columns.ts';
+import { kindsOf, kindOf } from './owned.ts';
 
 type Loose = Record<string, unknown>;
 
@@ -11,19 +12,19 @@ export function blockNames(system: System): string[] {
   for (const effect of Object.values(system.effects ?? {})) {
     if (effect.group) out.add(effect.group);
   }
-  for (const kind of Object.values(system.records ?? {})) if (kind.group) out.add(kind.group);
+  for (const [, kind] of kindsOf(system)) if (kind.block) out.add(kind.block);
   return [...out];
 }
 
-export function blockOf(system: System, thing: { group?: string; extends?: string } | undefined): string | undefined {
+export function blockOf(system: System, thing: { group?: string; block?: string; extends?: string } | undefined): string | undefined {
   let at = thing;
   const seen = new Set<unknown>();
   while (at && !seen.has(at)) {
-    if (at.group) return at.group;
+    if (at.group ?? at.block) return at.group ?? at.block;
     seen.add(at);
     const base = (at as Loose).extends;
     at = base
-      ? (system.effects?.[String(base)] ?? system.records?.[String(base)]) as typeof at
+      ? (system.effects?.[String(base)] ?? kindOf(system, String(base))) as typeof at
       : undefined;
   }
   return undefined;
@@ -35,7 +36,7 @@ export function blockUse(system: System, name: string): BlockUse {
   let fields = 0; let effects = 0; let records = 0;
   for (const field of fieldsOf(system)) if (field.group === name) fields += 1;
   for (const effect of Object.values(system.effects ?? {})) if (blockOf(system, effect) === name) effects += 1;
-  for (const kind of Object.values(system.records ?? {})) if (blockOf(system, kind) === name) records += 1;
+  for (const [, kind] of kindsOf(system)) if (blockOf(system, kind) === name) records += 1;
   return { fields, effects, records };
 }
 

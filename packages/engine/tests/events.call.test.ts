@@ -19,8 +19,8 @@ group('один путь вызова', () => {
       label: 'Эхо', activation: 'manual',
       steps: [{ type: 'emit', event: 'damage', args: { amount: { expr: '3' } } }],
     } as unknown as Effect;
-    looped.records = { ...(looped.records ?? {}), shout: { kind: 'action', label: 'Крик', bindings: [{ label: 'Эхо', effect: 'echo', args: {} }] } } as never;
-    const book = { ...compendium, records: [...(compendium.records ?? []), { id: 'shout', rk: 'shout', label: 'Крик', props: {} }] };
+    looped.tables = { ...(looped.tables ?? {}), shout: { shape: 'book', use: 'action', label: 'Крик', bindings: [{ label: 'Эхо', effect: 'echo', args: {} }] } } as never;
+    const book = { ...compendium, records: [...(compendium.records ?? []), { id: 'shout', table: 'shout', label: 'Крик', cells: {} }] };
     const sheet = { ...arven, has: [...arven.has, { of: 'shout' }] };
     let caught: unknown;
     try {

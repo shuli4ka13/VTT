@@ -12,7 +12,7 @@ const system = {
     { key: 'ячейки_1', label: 'Ячейки 1-го круга', kind: 'number', default: 1, min: 0 },
     { key: 'ячейки_2', label: 'Ячейки 2-го круга', kind: 'number', min: 0 },
     { key: 'ячейки_1_всего', label: 'Всего ячеек 1-го круга', kind: 'number', default: 4 },
-  ] } },
+  ] } , чары: { shape: 'book', use: 'action', label: 'Чары', columns: [], bindings: [{ label: 'Сотворить', effect: 'стрела', args: {} }] }, приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Ударить', effect: 'скрытая', args: {} }] } },
   effects: {
     ячейка: {
       label: 'Ячейка заклинания',
@@ -46,12 +46,9 @@ const system = {
     },
   },
   grants: ['сон'],
-  records: {
-    чары: { kind: 'action', label: 'Чары', props: [], bindings: [{ label: 'Сотворить', effect: 'стрела', args: {} }] },
-    приём: { kind: 'action', label: 'Приём', props: [], bindings: [{ label: 'Ударить', effect: 'скрытая', args: {} }] },
-  },
+  
 } as unknown as System;
-const book = { records: [{ id: 'стрела', rk: 'чары', label: 'Волшебная стрела', props: {} }, { id: 'скрытая', rk: 'приём', label: 'Скрытая атака', props: {} }] } as unknown as Compendium;
+const book = { records: [{ id: 'стрела', table: 'чары', label: 'Волшебная стрела', cells: {} }, { id: 'скрытая', table: 'приём', label: 'Скрытая атака', cells: {} }] } as unknown as Compendium;
 const sheet = (id: string, values: Record<string, number> = {}): Sheet => ({
   id, systemId: 'r', name: id, values, has: [{ of: 'стрела' }, { of: 'скрытая' }], effects: []
 } as unknown as Sheet);
@@ -130,7 +127,7 @@ group('бросок несёт несколько меток, одна прих�
         columns: [{ key: 'спас', label: 'Спасбросок', kind: 'number' }],
         rows: [{ value: 'лов', cells: { спас: { expr: '@спас_лов' } } }],
       },
-    },
+     чары: { shape: 'book', use: 'action', label: 'Чары', columns: [], bindings: [{ label: 'Шар', effect: 'шар', args: { чем: 'лов' } }] } },
     roll_edits: { помеха: { label: 'Помеха', ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }] } },
     effects: {
       опутан: { label: 'Опутан', activation: 'passive', modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['спас', 'лов'], edit: 'помеха' }] },
@@ -144,9 +141,9 @@ group('бросок несёт несколько меток, одна прих�
         }],
       },
     },
-    records: { чары: { kind: 'action', label: 'Чары', props: [], bindings: [{ label: 'Шар', effect: 'шар', args: { чем: 'лов' } }] } },
+    
   } as unknown as System;
-  const spells = { records: [{ id: 'шар', rk: 'чары', label: 'Шар', props: {} }] } as unknown as Compendium;
+  const spells = { records: [{ id: 'шар', table: 'чары', label: 'Шар', cells: {} }] } as unknown as Compendium;
   const who = (id: string, worn: string[] = []): Sheet => ({
     id, systemId: 'm', name: id, values: {}, has: [{ of: 'шар' }], effects: worn.map(effectId => ({ effectId })),
   } as unknown as Sheet);
@@ -176,7 +173,7 @@ group('бросок несёт несколько меток, одна прих�
 group('общий держатель: взялся за новое — старое спало', () => {
   const sys = {
     id: 'c', name: 'c',
-    tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } },
+    tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } , а: { shape: 'book', use: 'action', label: 'А', columns: [], bindings: [{ label: 'Благословение', effect: 'благословение', args: {} }] }, б: { shape: 'book', use: 'action', label: 'Б', columns: [], bindings: [{ label: 'Ускорение', effect: 'ускорение', args: {} }] } },
     effects: {
       концентрация: { label: 'Концентрация', activation: 'passive', on: [{ on: 'moment:scene-end', steps: [] }] },
       благословлён: { label: 'Благословлён', activation: 'passive', modifiers: [] },
@@ -184,12 +181,9 @@ group('общий держатель: взялся за новое — стар�
       благословение: { label: 'Благословение', activation: 'manual', bond: 'концентрация', steps: [{ type: 'status', mode: 'apply', effect: { const: 'благословлён' } }] },
       ускорение: { label: 'Ускорение', activation: 'manual', bond: 'концентрация', steps: [{ type: 'status', mode: 'apply', effect: { const: 'ускорен' } }] },
     },
-    records: {
-      а: { kind: 'action', label: 'А', props: [], bindings: [{ label: 'Благословение', effect: 'благословение', args: {} }] },
-      б: { kind: 'action', label: 'Б', props: [], bindings: [{ label: 'Ускорение', effect: 'ускорение', args: {} }] },
-    },
+    
   } as unknown as System;
-  const spells = { records: [{ id: 'а', rk: 'а', label: 'Благословение', props: {} }, { id: 'б', rk: 'б', label: 'Ускорение', props: {} }] } as unknown as Compendium;
+  const spells = { records: [{ id: 'а', table: 'а', label: 'Благословение', cells: {} }, { id: 'б', table: 'б', label: 'Ускорение', cells: {} }] } as unknown as Compendium;
   const who = (id: string): Sheet => ({ id, systemId: 'c', name: id, values: {}, has: [{ of: 'а' }, { of: 'б' }], effects: [] } as unknown as Sheet);
   const worn = (sheets: Sheet[], id: string) => sheets.find(s => s.id === id)!.effects.map(e => e.effectId);
 
@@ -206,11 +200,11 @@ group('общий держатель: взялся за новое — стар�
 group('запись выдаёт эффект владельцу', () => {
   const sys = {
     id: 'g', name: 'g',
-    tables: { лист: { shape: 'single', columns: [{ key: 'кд', label: 'Класс брони', kind: 'number', default: 10 }] } },
+    tables: { лист: { shape: 'single', columns: [{ key: 'кд', label: 'Класс брони', kind: 'number', default: 10 }] } , черта: { shape: 'book', use: 'action', label: 'Черта', columns: [], bindings: [] } },
     effects: { стойка: { label: 'Оборонительная стойка', activation: 'passive', modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: { expr: '1' }, stacking: 'sum' }] } },
-    records: { черта: { kind: 'action', label: 'Черта', props: [], bindings: [] } },
+    
   } as unknown as System;
-  const feats = { records: [{ id: 'оборона', rk: 'черта', label: 'Боевой стиль: оборона', props: {}, grants: ['стойка'] }] } as unknown as Compendium;
+  const feats = { records: [{ id: 'оборона', table: 'черта', label: 'Боевой стиль: оборона', cells: {}, grants: ['стойка'] }] } as unknown as Compendium;
 
   test('выучил черту — эффект действует, хотя на листе его нет; разучил — перестал', async () => {
     const { calc, newPass } = await import('../src/engine/calc.ts');
@@ -231,7 +225,7 @@ group('наложенное помнит число, штрафная кость
       { key: 'кд', label: 'Класс брони', kind: 'number', default: 10 },
       { key: 'крит_от', label: 'Крит от', kind: 'number', default: 19 },
       { key: 'заряды', label: 'Заряды', kind: 'number', default: 1, min: 0 },
-    ] }, rolls: { label: 'Броски', key: 'word', rows: [{ value: 'атака' }] } },
+    ] }, rolls: { label: 'Броски', key: 'word', rows: [{ value: 'атака' }] } , а: { shape: 'book', use: 'action', label: 'А', columns: [], bindings: [{ label: 'Поджечь', effect: 'поджечь', args: {} }] }, б: { shape: 'book', use: 'action', label: 'Б', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
     roll_edits: { порча: { label: 'Порча', ops: [{ op: 'bonusDie', sides: 4, minus: true }] } },
     effects: {
       горит: {
@@ -256,12 +250,9 @@ group('наложенное помнит число, штрафная кость
         ], steps: [] }],
       },
     },
-    records: {
-      а: { kind: 'action', label: 'А', props: [], bindings: [{ label: 'Поджечь', effect: 'поджечь', args: {} }] },
-      б: { kind: 'action', label: 'Б', props: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] },
-    },
+    
   } as unknown as System;
-  const acts = { records: [{ id: 'а', rk: 'а', label: 'Поджечь', props: {} }, { id: 'б', rk: 'б', label: 'Удар', props: {} }] } as unknown as Compendium;
+  const acts = { records: [{ id: 'а', table: 'а', label: 'Поджечь', cells: {} }, { id: 'б', table: 'б', label: 'Удар', cells: {} }] } as unknown as Compendium;
   const who = (id: string, worn: string[] = [], values: Record<string, number> = {}): Sheet => ({
     id, systemId: 'k', name: id, values, has: [{ of: 'а' }, { of: 'б' }], effects: worn.map(effectId => ({ effectId })),
   } as unknown as Sheet);

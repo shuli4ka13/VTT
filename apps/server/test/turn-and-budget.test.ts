@@ -170,7 +170,7 @@ describe('значение, которое называет человек за 
 
     const system = {
       id: 'ask', name: 'Со спросом',
-      tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } },
+      tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } , ствол: { shape: 'book', use: 'action', label: 'Ствол', columns: [], bindings: [{ label: 'Выстрел', effect: 'выстрел', args: {} }] } },
       effects: {
         выстрел: {
           label: 'Выстрел', activation: 'manual',
@@ -178,9 +178,9 @@ describe('значение, которое называет человек за 
           steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@дистанция' } }],
         },
       },
-      records: { ствол: { kind: 'action', label: 'Ствол', props: [], bindings: [{ label: 'Выстрел', effect: 'выстрел', args: {} }] } },
+      
     };
-    const book = { records: [{ id: 'ствол', rk: 'ствол', label: 'Ствол', props: {} }] };
+    const book = { records: [{ id: 'ствол', table: 'ствол', label: 'Ствол', cells: {} }] };
     const sheet = (id: string) => ({
       id, systemId: 'ask', name: id, values: { хиты: 20 }, has: [{ of: 'ствол' }], effects: []
     });
@@ -288,7 +288,7 @@ describe('ячейка тратится один раз на действие', 
       tables: { лист: { shape: 'single', columns: [
         { key: 'хиты', label: 'Хиты', kind: 'number', default: 20 },
         { key: 'ячейки', label: 'Ячейки', kind: 'number', default: 3, min: 0 },
-      ] } },
+      ] } , свиток: { shape: 'book', use: 'action', label: 'Свиток', columns: [], bindings: [{ label: 'Огненный шар', effect: 'шар', args: {} }] } },
       effects: {
         шар: {
           label: 'Огненный шар', activation: 'manual',
@@ -296,9 +296,9 @@ describe('ячейка тратится один раз на действие', 
           steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '5' } }],
         },
       },
-      records: { свиток: { kind: 'action', label: 'Свиток', props: [], bindings: [{ label: 'Огненный шар', effect: 'шар', args: {} }] } },
+      
     };
-    const book = { records: [{ id: 'свиток', rk: 'свиток', label: 'Свиток', props: {} }] };
+    const book = { records: [{ id: 'свиток', table: 'свиток', label: 'Свиток', cells: {} }] };
     const sheet = (id: string) => ({
       id, systemId: 'ячейки', name: id, values: { хиты: 20, ячейки: 3 },
       has: [{ of: 'свиток' }], effects: [],
@@ -338,16 +338,16 @@ describe('появилось и ушло с листа', () => {
       tables: { лист: { shape: 'single', columns: [
         { key: 'надето', label: 'Надето', kind: 'number' },
         { key: 'снято', label: 'Снято', kind: 'number' },
-      ] } },
+      ] } , оружие: { shape: 'book', use: 'item', label: 'Оружие', columns: [], bindings: [] } },
       effects: {
         заточка: { label: 'Заточка', activation: 'passive', attach: [add('надето')] },
         бафф: { label: 'Бафф', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [] },
         сторож: { label: 'Сторож', activation: 'passive', on: [{ on: 'lost:бафф', steps: [add('снято')] }] },
       },
       grants: ['сторож'],
-      records: { оружие: { kind: 'item', label: 'Оружие', props: [], bindings: [] } },
+      
     };
-    const book = { records: [{ id: 'меч', rk: 'оружие', label: 'Меч', props: {}, grants: ['заточка'] }] };
+    const book = { records: [{ id: 'меч', table: 'оружие', label: 'Меч', cells: {}, grants: ['заточка'] }] };
     const sheet = { id: 'воин', systemId: 'вещи', name: 'Воин', values: {}, has: [], effects: [] };
 
     const systemId = (await as(http().post('/systems')).send({ title: 'С вещами', system })).body.id;
@@ -378,7 +378,7 @@ describe('вопросы к человеку переживают пересбо
 
     const system = {
       id: 'вопросы', name: 'С вопросами',
-      tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } },
+      tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } , приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
       constants: { к20: { label: 'Кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
       roll_edits: { плюс: { label: 'Плюс', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }] } },
       effects: {
@@ -395,9 +395,9 @@ describe('вопросы к человеку переживают пересбо
           on: [{ on: '*', role: 'sender', phase: 'before', confirm: true, claims: ['плюс'], steps: [] }],
         },
       },
-      records: { приём: { kind: 'action', label: 'Приём', props: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
+      
     };
-    const book = { records: [{ id: 'приём', rk: 'приём', label: 'Удар', props: {} }] };
+    const book = { records: [{ id: 'приём', table: 'приём', label: 'Удар', cells: {} }] };
     const sheet = (id: string, worn: string[]) => ({
       id, systemId: 'вопросы', name: id, values: { хиты: 20 },
       has: [{ of: 'приём' }], effects: worn.map(effectId => ({ effectId })),
@@ -435,7 +435,7 @@ describe('цель правит свой бросок, увидев его', () 
 
     const system = {
       id: 'спасение', name: 'Со спасброском',
-      tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } },
+      tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } , приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Залп', effect: 'залп', args: {} }] } },
       constants: { к20: { label: 'Кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
       roll_edits: { удача: { label: 'Удача', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }] } },
       effects: {
@@ -451,9 +451,9 @@ describe('цель правит свой бросок, увидев его', () 
           on: [{ on: '*', phase: 'before', confirm: true, claims: ['удача'], steps: [] }],
         },
       },
-      records: { приём: { kind: 'action', label: 'Приём', props: [], bindings: [{ label: 'Залп', effect: 'залп', args: {} }] } },
+      
     };
-    const book = { records: [{ id: 'приём', rk: 'приём', label: 'Залп', props: {} }] };
+    const book = { records: [{ id: 'приём', table: 'приём', label: 'Залп', cells: {} }] };
     const sheet = (id: string, worn: string[]) => ({
       id, systemId: 'спасение', name: id, values: { хиты: 20 },
       has: [{ of: 'приём' }], effects: worn.map(effectId => ({ effectId })),
@@ -562,11 +562,11 @@ describe('два сообщения стола сразу', () => {
 
     const system = {
       id: 'гонка', name: 'Гонка',
-      tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } },
+      tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } , приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
       effects: { удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '5' } }] } },
-      records: { приём: { kind: 'action', label: 'Приём', props: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
+      
     };
-    const book = { records: [{ id: 'приём', rk: 'приём', label: 'Удар', props: {} }] };
+    const book = { records: [{ id: 'приём', table: 'приём', label: 'Удар', cells: {} }] };
     const sheet = (id: string) => ({ id, systemId: 'гонка', name: id, values: { хиты: 20 }, has: [{ of: 'приём' }], effects: [] });
 
     const systemId = (await as(http().post('/systems')).send({ title: 'Гонка', system })).body.id;
@@ -595,7 +595,7 @@ describe('реакция после разрешения', () => {
 
     const system = {
       id: 'возмездие', name: 'С возмездием',
-      tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } },
+      tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } , приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
       constants: { к20: { label: 'Кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
       effects: {
         удар: {
@@ -610,9 +610,9 @@ describe('реакция после разрешения', () => {
           on: [{ on: 'удар', to: 'other', confirm: true, steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '2' } }] }],
         },
       },
-      records: { приём: { kind: 'action', label: 'Приём', props: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
+      
     };
-    const book = { records: [{ id: 'приём', rk: 'приём', label: 'Удар', props: {} }] };
+    const book = { records: [{ id: 'приём', table: 'приём', label: 'Удар', cells: {} }] };
     const sheet = (id: string, worn: string[]) => ({
       id, systemId: 'возмездие', name: id, values: { хиты: 20 },
       has: [{ of: 'приём' }], effects: worn.map(effectId => ({ effectId })),
@@ -659,7 +659,7 @@ describe('отдых и плата ячейкой', () => {
       tables: { лист: { shape: 'single', columns: [
         { key: 'хиты', label: 'Хиты', kind: 'number', default: 20 },
         { key: 'ячейки', label: 'Ячейки', kind: 'number', default: 1, min: 0 },
-      ] } },
+      ] } , чары: { shape: 'book', use: 'action', label: 'Чары', columns: [], bindings: [{ label: 'Стрела', effect: 'стрела', args: {} }] } },
       effects: {
         ячейка: {
           label: 'Ячейка',
@@ -679,9 +679,9 @@ describe('отдых и плата ячейкой', () => {
         },
       },
       grants: ['сон'],
-      records: { чары: { kind: 'action', label: 'Чары', props: [], bindings: [{ label: 'Стрела', effect: 'стрела', args: {} }] } },
+      
     };
-    const book = { records: [{ id: 'стрела', rk: 'чары', label: 'Стрела', props: {} }] };
+    const book = { records: [{ id: 'стрела', table: 'чары', label: 'Стрела', cells: {} }] };
     const sheet = (id: string) => ({ id, systemId: 'отдых', name: id, values: {}, has: [{ of: 'стрела' }], effects: [] });
 
     const systemId = (await as(http().post('/systems')).send({ title: 'С отдыхом', system })).body.id;
@@ -718,7 +718,7 @@ describe('лист заводят с типом из системы', () => {
       id: 'типы', name: 'С типами',
       tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 5 }] } },
       effects: {},
-      records: { питомец: { kind: 'sheet', label: 'Питомец', hint: 'Зверь героя.' } },
+      sheets: { питомец: { label: 'Питомец', hint: 'Зверь героя.' } },
     };
     const systemId = (await as(http().post('/systems')).send({ title: 'С типами', system })).body.id;
     await as(http().post(`/systems/${systemId}/publish`)).send({}).expect(201);
@@ -744,11 +744,11 @@ describe('группа листов за столом', () => {
       id: 'отряды', name: 'С отрядами',
       tables: { группа: { shape: 'single', owner: 'group', columns: [
     { key: 'урон', label: 'Урон отряда', kind: 'number' },
-  ] } },
+  ] } , приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [] } },
       effects: { удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'apply', target: { tag: 'урон' }, direction: 'add', value: { expr: '3' } }] } },
-      records: { приём: { kind: 'action', label: 'Приём', props: [], bindings: [] } },
+      
     };
-    const book = { records: [{ id: 'удар', rk: 'приём', label: 'Удар', bindings: [{ label: 'Удар', effect: 'удар', args: {} }] }] };
+    const book = { records: [{ id: 'удар', table: 'приём', label: 'Удар', bindings: [{ label: 'Удар', effect: 'удар', args: {} }] }] };
     const sheet = (id: string) => ({ id, systemId: 'отряды', name: id, values: {}, has: [{ of: 'удар' }], effects: [] });
 
     const systemId = (await as(http().post('/systems')).send({ title: 'С отрядами', system })).body.id;

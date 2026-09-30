@@ -945,6 +945,172 @@
             "value": "проверка"
           }
         ]
+      },
+      "weapon": {
+        "label": "Оружие",
+        "icon": "⚔",
+        "hint": "Кость урона — и атака появляется у владельца сама.",
+        "shape": "book",
+        "use": "item",
+        "block": "Снаряжение",
+        "columns": [
+          {
+            "key": "damage_dice",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "text"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Атака",
+            "effect": "strike"
+          }
+        ]
+      },
+      "gear": {
+        "label": "Снаряжение",
+        "icon": "⬡",
+        "hint": "Носимая вещь с бонусами к полям листа. Действий не даёт.",
+        "shape": "book",
+        "use": "item",
+        "block": "Снаряжение",
+        "columns": []
+      },
+      "action": {
+        "label": "Действие",
+        "icon": "✊",
+        "hint": "Приём без предмета: сам выбирает эффект.",
+        "shape": "book",
+        "use": "action",
+        "block": "Приёмы",
+        "columns": []
+      },
+      "attack-spell": {
+        "label": "Атакующее заклинание",
+        "icon": "🔥",
+        "hint": "Цель спасается; при провале — урон и, если задано, состояние.",
+        "shape": "book",
+        "use": "action",
+        "block": "Заклинания",
+        "columns": [
+          {
+            "key": "damage_dice",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "save_by",
+            "label": "Чем спасаются",
+            "kind": "expr"
+          },
+          {
+            "key": "status",
+            "label": "Состояние при провале",
+            "kind": "effect"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "text"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Сотворить",
+            "effect": "save",
+            "args": {
+              "save": {
+                "expr": "@save_by"
+              }
+            }
+          }
+        ]
+      },
+      "healing-spell": {
+        "label": "Лечащее заклинание",
+        "icon": "💚",
+        "hint": "Восполняет хиты и, если задано, снимает состояние.",
+        "shape": "book",
+        "use": "action",
+        "block": "Заклинания",
+        "columns": [
+          {
+            "key": "heal_dice",
+            "label": "Кость лечения",
+            "kind": "dice"
+          },
+          {
+            "key": "cure",
+            "label": "Что снимает",
+            "kind": "effect"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Сотворить",
+            "effect": "heal"
+          }
+        ]
+      },
+      "lore": {
+        "label": "Заметка",
+        "icon": "📜",
+        "hint": "Чистые данные: род без привязок ничего не автоматизирует.",
+        "shape": "book",
+        "use": "action",
+        "block": "Заклинания",
+        "columns": []
+      },
+      "support-spell": {
+        "label": "Поддерживающее заклинание",
+        "icon": "✨",
+        "hint": "Вешает состояние на цель и держится концентрацией: снял — спало со всех.",
+        "shape": "book",
+        "use": "action",
+        "block": "Заклинания",
+        "columns": [],
+        "bindings": [
+          {
+            "label": "Сотворить",
+            "effect": "bless"
+          }
+        ]
+      },
+      "area-spell": {
+        "label": "Заклинание по области",
+        "icon": "💥",
+        "hint": "Бьёт по нескольким целям сразу: кости урона кидаются один раз, спасбросок — у каждого.",
+        "shape": "book",
+        "use": "action",
+        "block": "Заклинания",
+        "columns": [
+          {
+            "key": "save_by",
+            "label": "Чем спасаются",
+            "kind": "expr"
+          },
+          {
+            "key": "damage_dice",
+            "label": "Кость урона",
+            "kind": "dice"
+          },
+          {
+            "key": "damage_type",
+            "label": "Тип урона",
+            "kind": "text"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Сотворить",
+            "effect": "fireball"
+          }
+        ]
       }
     },
     "constants": {
@@ -2293,175 +2459,6 @@
       "fall",
       "wake"
     ],
-    "records": {
-      "weapon": {
-        "kind": "item",
-        "label": "Оружие",
-        "icon": "⚔",
-        "group": "Снаряжение",
-        "hint": "Кость урона — и атака появляется у владельца сама.",
-        "props": [
-          {
-            "key": "damage_dice",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "damage_type",
-            "label": "Тип урона",
-            "kind": "text"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Атака",
-            "effect": "strike"
-          }
-        ]
-      },
-      "gear": {
-        "kind": "item",
-        "label": "Снаряжение",
-        "icon": "⬡",
-        "group": "Снаряжение",
-        "hint": "Носимая вещь с бонусами к полям листа. Действий не даёт."
-      },
-      "action": {
-        "kind": "action",
-        "label": "Действие",
-        "icon": "✊",
-        "group": "Приёмы",
-        "hint": "Приём без предмета: сам выбирает эффект."
-      },
-      "attack-spell": {
-        "kind": "action",
-        "label": "Атакующее заклинание",
-        "icon": "🔥",
-        "group": "Заклинания",
-        "hint": "Цель спасается; при провале — урон и, если задано, состояние.",
-        "props": [
-          {
-            "key": "damage_dice",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "save_by",
-            "label": "Чем спасаются",
-            "kind": "expr"
-          },
-          {
-            "key": "status",
-            "label": "Состояние при провале",
-            "kind": "effect"
-          },
-          {
-            "key": "damage_type",
-            "label": "Тип урона",
-            "kind": "text"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Сотворить",
-            "effect": "save",
-            "args": {
-              "save": {
-                "expr": "@save_by"
-              }
-            }
-          }
-        ]
-      },
-      "healing-spell": {
-        "kind": "action",
-        "label": "Лечащее заклинание",
-        "icon": "💚",
-        "group": "Заклинания",
-        "hint": "Восполняет хиты и, если задано, снимает состояние.",
-        "props": [
-          {
-            "key": "heal_dice",
-            "label": "Кость лечения",
-            "kind": "dice"
-          },
-          {
-            "key": "cure",
-            "label": "Что снимает",
-            "kind": "effect"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Сотворить",
-            "effect": "heal"
-          }
-        ]
-      },
-      "lore": {
-        "kind": "action",
-        "label": "Заметка",
-        "icon": "📜",
-        "group": "Заклинания",
-        "hint": "Чистые данные: род без привязок ничего не автоматизирует."
-      },
-      "support-spell": {
-        "kind": "action",
-        "label": "Поддерживающее заклинание",
-        "icon": "✨",
-        "group": "Заклинания",
-        "hint": "Вешает состояние на цель и держится концентрацией: снял — спало со всех.",
-        "props": [],
-        "bindings": [
-          {
-            "label": "Сотворить",
-            "effect": "bless"
-          }
-        ]
-      },
-      "area-spell": {
-        "kind": "action",
-        "label": "Заклинание по области",
-        "icon": "💥",
-        "group": "Заклинания",
-        "hint": "Бьёт по нескольким целям сразу: кости урона кидаются один раз, спасбросок — у каждого.",
-        "props": [
-          {
-            "key": "save_by",
-            "label": "Чем спасаются",
-            "kind": "expr"
-          },
-          {
-            "key": "damage_dice",
-            "label": "Кость урона",
-            "kind": "dice"
-          },
-          {
-            "key": "damage_type",
-            "label": "Тип урона",
-            "kind": "text"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Сотворить",
-            "effect": "fireball"
-          }
-        ]
-      },
-      "персонаж": {
-        "kind": "sheet",
-        "label": "Персонаж",
-        "icon": "🧙",
-        "hint": "Лист героя."
-      },
-      "противник": {
-        "kind": "sheet",
-        "label": "Противник",
-        "icon": "👹",
-        "hint": "Лист противника."
-      }
-    },
     "groups": {
       "Личное дело": {},
       "Характеристики": {},
@@ -2534,13 +2531,24 @@
       "tags": [
         "проверка"
       ]
+    },
+    "sheets": {
+      "персонаж": {
+        "label": "Персонаж",
+        "icon": "🧙",
+        "hint": "Лист героя."
+      },
+      "противник": {
+        "label": "Противник",
+        "icon": "👹",
+        "hint": "Лист противника."
+      }
     }
   },
   "compendium": {
     "records": [
       {
         "id": "chain-mail",
-        "rk": "gear",
         "label": "Кольчуга",
         "description": "Тяжёлый доспех. Ловкость к классу брони не прибавляется.",
         "modifiers": [
@@ -2562,25 +2570,26 @@
             },
             "stacking": "override"
           }
-        ]
+        ],
+        "table": "gear"
       },
       {
         "id": "longsword-item",
-        "rk": "weapon",
         "label": "Длинный меч",
         "description": "Клинок в четыре ладони.",
-        "props": {
+        "modifiers": [],
+        "table": "weapon",
+        "cells": {
           "damage_dice": "1d8",
           "damage_type": "рубящий"
-        },
-        "modifiers": []
+        }
       },
       {
         "id": "poison-spray",
-        "rk": "attack-spell",
         "label": "Ядовитые брызги",
         "description": "Заговор. Цель делает спасбросок Ловкости; при провале — урон и отравление.",
-        "props": {
+        "table": "attack-spell",
+        "cells": {
           "damage_dice": "2d6",
           "save_by": "@получатель.dex_save",
           "status": "poisoned",
@@ -2589,23 +2598,22 @@
       },
       {
         "id": "healing-word",
-        "rk": "healing-spell",
         "label": "Слово лечения",
         "description": "Заговор. Восполняет хиты (не выше максимума) и снимает отравление.",
-        "props": {
+        "table": "healing-spell",
+        "cells": {
           "heal_dice": "1d4",
           "cure": "poisoned"
         }
       },
       {
         "id": "old-map",
-        "rk": "lore",
         "label": "Ветхая карта",
-        "description": "Нейтральная запись: род без привязок, автоматизации нет."
+        "description": "Нейтральная запись: род без привязок, автоматизации нет.",
+        "table": "lore"
       },
       {
         "id": "fire-bolt",
-        "rk": "action",
         "label": "Огненный снаряд",
         "description": "Сгусток огня: попадание по КД, 1d10 огнём.",
         "bindings": [
@@ -2613,21 +2621,22 @@
             "label": "Огненный снаряд",
             "effect": "fire_bolt"
           }
-        ]
+        ],
+        "table": "action"
       },
       {
         "id": "bless-spell",
-        "rk": "support-spell",
         "label": "Благословение",
         "description": "Пока держишь концентрацию, цели получают +1к4 к любому броску.",
-        "props": {}
+        "table": "support-spell",
+        "cells": {}
       },
       {
         "id": "fireball-spell",
-        "rk": "area-spell",
         "label": "Огненный шар",
         "description": "Взрыв по области: спасбросок Ловкости, при успехе — половина урона.",
-        "props": {
+        "table": "area-spell",
+        "cells": {
           "save_by": "@получатель.dex_save",
           "damage_dice": "6d6",
           "damage_type": "огонь"

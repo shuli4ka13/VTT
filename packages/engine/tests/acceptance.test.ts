@@ -7,6 +7,7 @@ import { system, arven, mirra, sheets, compendium } from './fixtures.ts';
 import { PLAYABLE_SYSTEMS as SAMPLE_SYSTEMS, PLAYABLE_WORLDS as SAMPLE_WORLDS } from '../src/model/systems.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 import { withColumn, editColumn } from '../src/model/sheet-columns.ts';
+import { recordKinds } from '../src/model/owned.ts';
 
 const all = (sys, sheet, book = compendium) =>
   calcAll(sys, sheet, newPass(sys, sheet, { compendium: book }));
@@ -126,7 +127,7 @@ if (inNode) {
         for (const id of sys.grants || []) {
           ok(sys.effects[id], `${sys.name}: правило комнаты «${id}» ссылается в пустоту`);
         }
-        for (const decl of Object.values(sys.records || {})) {
+        for (const [, decl] of recordKinds(sys)) {
           for (const binding of decl.bindings || []) {
             ok(sys.effects[binding.effect],
               `${sys.name}: привязка рода зовёт эффект «${binding.effect}», которого нет`);

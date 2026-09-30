@@ -4,20 +4,20 @@ import { startCombat, idleClock } from '../src/engine/clock.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const system = {
-  id: 'с', name: 'с', tables: {},
+  id: 'с', name: 'с', tables: { приём: { shape: 'book', use: 'action', label: 'Приём' } },
   effects: {
     помочь: { label: 'Помочь', activation: 'manual', steps: [{ type: 'status', mode: 'apply', effect: { const: 'помощь' } }] },
     помощь: { label: 'Помощь', activation: 'passive', duration: { kind: 'turns', max: 1, ends: 'turn-start', whose: 'source' } },
     отвлечь: { label: 'Отвлечь', activation: 'manual', steps: [{ type: 'status', mode: 'apply', effect: { const: 'отвлечён' } }] },
     отвлечён: { label: 'Отвлечён', activation: 'passive', duration: { kind: 'turns', max: 1 } },
   },
-  records: { приём: { kind: 'action', label: 'Приём' } },
+  
 } as unknown as System;
 
 const book = {
   records: [
-    { id: 'помочь', rk: 'приём', label: 'Помочь', bindings: [{ label: 'Помочь', effect: 'помочь', args: {} }] },
-    { id: 'отвлечь', rk: 'приём', label: 'Отвлечь', bindings: [{ label: 'Отвлечь', effect: 'отвлечь', args: {} }] },
+    { id: 'помочь', table: 'приём', label: 'Помочь', bindings: [{ label: 'Помочь', effect: 'помочь', args: {} }] },
+    { id: 'отвлечь', table: 'приём', label: 'Отвлечь', bindings: [{ label: 'Отвлечь', effect: 'отвлечь', args: {} }] },
   ],
 } as unknown as Compendium;
 

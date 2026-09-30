@@ -270,6 +270,77 @@
           }
         ],
         "owner": "sheet"
+      },
+      "weapon": {
+        "label": "Оружие",
+        "icon": "⚔",
+        "hint": "Кость оружия и способ атаки свои у каждого.",
+        "shape": "book",
+        "use": "item",
+        "block": "Снаряжение",
+        "columns": [
+          {
+            "key": "weapon_die",
+            "label": "Кость оружия",
+            "kind": "dice"
+          },
+          {
+            "key": "wield",
+            "label": "Способ атаки",
+            "kind": "choice",
+            "from": "wield"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Удар",
+            "effect": "hero_attack",
+            "args": {
+              "attack_with": {
+                "expr": "таблица(\"wield\", @wield, \"attack\")"
+              },
+              "damage_with": {
+                "expr": "таблица(\"wield\", @wield, \"damage\")"
+              }
+            }
+          }
+        ]
+      },
+      "monster_move": {
+        "label": "Приём монстра",
+        "icon": "👹",
+        "hint": "Бонус атаки и урон вписаны числами.",
+        "shape": "book",
+        "use": "action",
+        "block": "Приёмы",
+        "columns": [
+          {
+            "key": "to_hit",
+            "label": "Бонус атаки",
+            "kind": "number"
+          },
+          {
+            "key": "hit_damage",
+            "label": "Урон при попадании",
+            "kind": "number"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Атаковать",
+            "effect": "monster_attack"
+          }
+        ]
+      },
+      "battle": {
+        "label": "Ход боя",
+        "icon": "⏱",
+        "hint": "Ведущий двигает кость эскалации.",
+        "shape": "book",
+        "use": "action",
+        "block": "Приёмы",
+        "columns": [],
+        "bindings": []
       }
     },
     "initiative": {
@@ -663,169 +734,99 @@
         ]
       }
     },
-    "records": {
-      "weapon": {
-        "kind": "item",
-        "label": "Оружие",
-        "icon": "⚔",
-        "group": "Снаряжение",
-        "hint": "Кость оружия и способ атаки свои у каждого.",
-        "props": [
-          {
-            "key": "weapon_die",
-            "label": "Кость оружия",
-            "kind": "dice"
-          },
-          {
-            "key": "wield",
-            "label": "Способ атаки",
-            "kind": "choice",
-            "from": "wield"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Удар",
-            "effect": "hero_attack",
-            "args": {
-              "attack_with": {
-                "expr": "таблица(\"wield\", @wield, \"attack\")"
-              },
-              "damage_with": {
-                "expr": "таблица(\"wield\", @wield, \"damage\")"
-              }
-            }
-          }
-        ]
-      },
-      "monster_move": {
-        "kind": "action",
-        "label": "Приём монстра",
-        "icon": "👹",
-        "group": "Приёмы",
-        "hint": "Бонус атаки и урон вписаны числами.",
-        "props": [
-          {
-            "key": "to_hit",
-            "label": "Бонус атаки",
-            "kind": "number"
-          },
-          {
-            "key": "hit_damage",
-            "label": "Урон при попадании",
-            "kind": "number"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Атаковать",
-            "effect": "monster_attack"
-          }
-        ]
-      },
-      "battle": {
-        "kind": "action",
-        "label": "Ход боя",
-        "icon": "⏱",
-        "group": "Приёмы",
-        "hint": "Ведущий двигает кость эскалации.",
-        "props": [],
-        "bindings": []
-      },
+    "grants": [
+      "battle_start",
+      "battle_end",
+      "turn_refresh"
+    ],
+    "sheets": {
       "персонаж": {
-        "kind": "sheet",
         "label": "Персонаж",
         "icon": "🧙",
         "hint": "Лист героя."
       },
       "противник": {
-        "kind": "sheet",
         "label": "Противник",
         "icon": "👹",
         "hint": "Лист противника."
       }
-    },
-    "grants": [
-      "battle_start",
-      "battle_end",
-      "turn_refresh"
-    ]
+    }
   },
   "compendium": {
     "records": [
       {
         "id": "longsword",
-        "rk": "weapon",
         "label": "Длинный меч",
         "description": "к8 за уровень, ближний бой.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "weapon_die": "1d8",
           "wield": "ближний бой — Сила"
         }
       },
       {
         "id": "dagger",
-        "rk": "weapon",
         "label": "Кинжал",
         "description": "к4 за уровень, ближний бой.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "weapon_die": "1d4",
           "wield": "ближний бой — Сила"
         }
       },
       {
         "id": "longbow",
-        "rk": "weapon",
         "label": "Длинный лук",
         "description": "к8 за уровень, дальний бой.",
-        "props": {
+        "table": "weapon",
+        "cells": {
           "weapon_die": "1d8",
           "wield": "дальний бой — Ловкость"
         }
       },
       {
         "id": "goblin_spear",
-        "rk": "monster_move",
         "label": "Копьё гоблина",
         "description": "+6 против КЗ, 5 урона.",
-        "props": {
+        "table": "monster_move",
+        "cells": {
           "to_hit": 6,
           "hit_damage": 5
         }
       },
       {
         "id": "orc_axe",
-        "rk": "monster_move",
         "label": "Топор орка",
         "description": "+7 против КЗ, 8 урона.",
-        "props": {
+        "table": "monster_move",
+        "cells": {
           "to_hit": 7,
           "hit_damage": 8
         }
       },
       {
         "id": "new_round",
-        "rk": "battle",
         "label": "Новый раунд",
-        "props": {},
         "bindings": [
           {
             "label": "Новый раунд",
             "effect": "new_round"
           }
-        ]
+        ],
+        "table": "battle",
+        "cells": {}
       },
       {
         "id": "end_battle",
-        "rk": "battle",
         "label": "Конец боя",
-        "props": {},
         "bindings": [
           {
             "label": "Конец боя",
             "effect": "end_battle"
           }
-        ]
+        ],
+        "table": "battle",
+        "cells": {}
       }
     ]
   },

@@ -54,8 +54,8 @@ for (const [name, base] of BASES) {
     it('новый тип записи со свойством проходит схему', () => {
       const system = base();
       const made = newRecordKind(system);
-      made.value.props = [newProp(made.value)];
-      (system.records ??= {})[made.key] = made.value;
+      made.value.columns = [newProp(made.value)];
+      (system.tables ??= {})[made.key] = made.value;
       expect(issuesOf(system)).toEqual([]);
     });
 
@@ -65,7 +65,7 @@ for (const [name, base] of BASES) {
       system.effects[effect.key] = effect.value;
       const made = newRecordKind(system);
       made.value.bindings = [newBinding(system)];
-      (system.records ??= {})[made.key] = made.value;
+      (system.tables ??= {})[made.key] = made.value;
       expect(issuesOf(system)).toEqual([]);
     });
 

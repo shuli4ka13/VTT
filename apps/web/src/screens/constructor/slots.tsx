@@ -1,10 +1,12 @@
-import type { System, Effect, RecordKind, SlotRef } from '@vtt/schema';
+import type { System, Effect, SlotRef } from '@vtt/schema';
+import type { RecordKind } from '@vtt/engine/model/owned';
 import { columnPaths } from '../../ui/formula.tsx';
 import { stepModule } from '@vtt/engine/engine/steps/index';
 import { calledOf } from '@vtt/engine/engine/effects';
 import { amountParamOf } from '@vtt/engine/model/lists';
 import { STEP } from '../../words.ts';
 import { hasField } from '@vtt/engine/model/sheet-columns';
+import { recordKinds } from '@vtt/engine/model/owned';
 
 export interface EarlierStep { id: string; type: string; at?: number; title?: string }
 
@@ -59,8 +61,8 @@ export interface SlotContext {
 
 export function declaredProps(system: System): Map<string, string> {
   const out = new Map<string, string>();
-  for (const kind of Object.values(system.records ?? {})) {
-    for (const prop of kind.props ?? []) {
+  for (const [, kind] of recordKinds(system)) {
+    for (const prop of kind.columns ?? []) {
       out.set(prop.key, `${prop.label ?? prop.key} · ${kind.label ?? 'род'}`);
     }
   }
@@ -119,7 +121,7 @@ export function refForName(ctx: SlotContext, name: string): SlotRef | null {
 function propsFor(ctx: SlotContext): Map<string, string> {
   if (!ctx.recordKind) return new Map();
   const out = new Map<string, string>();
-  for (const prop of ctx.recordKind.props ?? []) {
+  for (const prop of ctx.recordKind.columns ?? []) {
     out.set(prop.key, prop.label ?? prop.key);
   }
   return out;

@@ -3,7 +3,7 @@ import { flattenSystem, hasBases } from '../src/model/inherit.ts';
 import type { System } from '../src/model/types.ts';
 
 const sys = (effects: Record<string, unknown>, records: Record<string, unknown> = {}): System => ({
-  id: 'о', name: 'о', tables: {}, effects, records,
+  id: 'о', name: 'о', tables: records, effects,
 } as unknown as System);
 
 group('основа: эффект берёт у основы и дописывает своё', () => {
@@ -78,19 +78,19 @@ group('основа: тип записи', () => {
   test('свойства копятся, привязка по счёту доправляет аргументы и может смениться именем', () => {
     const flat = flattenSystem(sys({ удар: { label: 'Удар' } }, {
       оружие: {
-        kind: 'item', label: 'Оружие',
-        props: [{ key: 'кость', label: 'Кость урона' }, { key: 'тип', label: 'Тип урона' }],
+        shape: 'book', use: 'item', label: 'Оружие',
+        columns: [{ key: 'кость', label: 'Кость урона' }, { key: 'тип', label: 'Тип урона' }],
         bindings: [{ label: 'Удар', effect: 'удар', args: { чем: '#сила', кость: { prop: 'кость' } } }],
       },
       фехтовальное: {
-        kind: 'item', extends: 'оружие', label: 'Оружие фехтовальное',
+        shape: 'book', use: 'item', extends: 'оружие', label: 'Оружие фехтовальное',
         bindings: [{ label: 'Выстрел', effect: 'удар', args: { чем: '#ловкость' } }],
       },
     }));
 
-    const ф = flat.records!.фехтовальное!;
+    const ф = flat.tables!.фехтовальное!;
     eq(ф.label, 'Оружие фехтовальное');
-    eq(ф.props?.length, 2, 'оба свойства достались от основы');
+    eq(ф.columns?.length, 2, 'оба свойства достались от основы');
     eq(ф.bindings?.length, 1, 'привязка не задвоилась');
     eq(ф.bindings?.[0]?.label, 'Выстрел', 'кнопку можно переназвать');
     deepEq(ф.bindings?.[0]?.args, { чем: '#ловкость', кость: { prop: 'кость' } });

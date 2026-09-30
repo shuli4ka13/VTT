@@ -77,7 +77,8 @@ export function renameGroup(draft: System, from: string, to: string): void {
       for (const view of Object.values(row.view ?? {})) if (view.block === from) view.block = clean;
     }
   }
-  for (const kind of Object.values(draft.records ?? {})) {
+  for (const kind of Object.values(draft.sheets ?? {})) {
+    if (kind.block === from) kind.block = clean;
     if (kind.blocks) kind.blocks = kind.blocks.map(block => (block === from ? clean : block));
   }
 }

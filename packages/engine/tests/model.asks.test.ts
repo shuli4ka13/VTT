@@ -5,7 +5,7 @@ import type { System, Compendium, Sheet } from '../src/model/types.ts';
 
 const system = {
   id: 'x', name: 'x',
-  tables: { лист: { shape: 'single', columns: [{ key: 'hp', label: 'Хиты', kind: 'number', default: 20 }] }, места: { label: 'Места', key: 'word', rows: [{ value: 'тело', label: 'тело' }, { value: 'голова', label: 'голова' }] } },
+  tables: { лист: { shape: 'single', columns: [{ key: 'hp', label: 'Хиты', kind: 'number', default: 20 }] }, места: { label: 'Места', key: 'word', rows: [{ value: 'тело', label: 'тело' }, { value: 'голова', label: 'голова' }] } , ствол: { shape: 'book', use: 'action', label: 'Ствол', columns: [], bindings: [{ label: 'Выстрел', effect: 'выстрел', args: { кость: '1d6' } }] } },
   constants: { к6: { label: 'Кость', kind: 'die', dice: [{ count: 1, sides: 6 }] } },
   effects: {
     выстрел: {
@@ -22,12 +22,10 @@ const system = {
       ],
     },
   },
-  records: {
-    ствол: { kind: 'action', label: 'Ствол', props: [], bindings: [{ label: 'Выстрел', effect: 'выстрел', args: { кость: '1d6' } }] },
-  },
+  
 } as unknown as System;
 
-const compendium = { records: [{ id: 'ствол', rk: 'ствол', label: 'Ствол', props: {} }] } as unknown as Compendium;
+const compendium = { records: [{ id: 'ствол', table: 'ствол', label: 'Ствол', cells: {} }] } as unknown as Compendium;
 const sheet = (id: string): Sheet => ({ id, systemId: 'x', name: id, values: { hp: 20 }, has: [{ of: 'ствол' }], effects: [] } as unknown as Sheet);
 
 group('значение, которое называет человек за столом', () => {

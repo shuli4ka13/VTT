@@ -86,13 +86,13 @@ export function trial({ system, compendium, effectId, from, to, args, dice = 'av
   }
   const probe: System = {
     ...system,
-    records: {
-      ...(system.records ?? {}),
-      [TRIAL_KIND]: { kind: 'action', label: 'Проба', props: [], bindings: [{ label: effect.label ?? effectId, effect: effectId, args: filled }] },
+    tables: {
+      ...(system.tables ?? {}),
+      [TRIAL_KIND]: { shape: 'book', use: 'action', label: 'Проба', columns: [], bindings: [{ label: effect.label ?? effectId, effect: effectId, args: filled }] },
     },
   } as System;
   const book: Compendium = {
-    records: [...(compendium?.records ?? []), { id: TRIAL_RECORD, rk: TRIAL_KIND, label: effect.label ?? effectId, props: {} }],
+    records: [...(compendium?.records ?? []), { id: TRIAL_RECORD, table: TRIAL_KIND, label: effect.label ?? effectId, cells: {} }],
   };
   const sender: Sheet = { ...from, has: [...(from.has ?? []), { of: TRIAL_RECORD }] };
   const people = from.id === to.id ? [sender] : [sender, to];

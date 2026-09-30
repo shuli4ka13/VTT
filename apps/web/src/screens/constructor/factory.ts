@@ -3,12 +3,13 @@ import { dice } from '../../words.ts';
 import { NO_BLOCK } from '@vtt/engine/model/blocks';
 import type { LaunchKind } from '@vtt/engine/model/effect-kinds';
 import { COST_BLOCK } from '@vtt/engine/words/glossary';
-import type { System, Effect, Handler, RecordKind, Binding, Step, SystemConstant, RollEdit, Table, Column } from '@vtt/schema';
+import type { System, Effect, Handler, Binding, Step, SystemConstant, RollEdit, Table, Column } from '@vtt/schema';
+import type { RecordKind } from '@vtt/engine/model/owned';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { rowTables } from '@vtt/engine/model/tables';
 
 export interface Made<T> { key: string; value: T }
 
-type Prop = NonNullable<RecordKind['props']>[number];
 
 export const newHandler = (): Handler => ({ on: '', steps: [] });
 
@@ -28,16 +29,16 @@ export const newColumn = (system: System, block: string): Made<Column> => {
 };
 
 export const newRecordKind = (system: System): Made<RecordKind> => ({
-  key: freeId(Object.keys(system.records ?? {}), 'kind'),
-  value: { kind: 'item', label: 'Новый тип', group: 'Снаряжение', props: [], bindings: [] },
+  key: freeId([...Object.keys(system.tables ?? {}), ...Object.keys(system.sheets ?? {})], 'kind'),
+  value: { shape: 'book', use: 'item', label: 'Новый тип', block: 'Снаряжение', columns: [], bindings: [] },
 });
 
 export const newBinding = (system: System): Binding => ({
   label: 'Применение', effect: Object.keys(system.effects)[0] ?? '', args: {},
 });
 
-export const newProp = (kind: RecordKind): Prop => ({
-  key: freeId((kind.props ?? []).map(p => p.key), 'prop'),
+export const newProp = (kind: RecordKind): Column => ({
+  key: freeId((kind.columns ?? []).map(p => p.key), 'prop'),
   label: 'Новое свойство',
   kind: 'number',
 });
@@ -119,7 +120,7 @@ export const BRICKS: StepTemplate[] = [
     hint: 'Прочитать строку таблицы по броску или числу: травма, исход, сложность по дистанции.',
     make: (system, taken) => [{
       id: freeId(taken, 'таблица'), type: 'table',
-      table: { const: Object.keys(system.tables ?? {})[0] ?? '' },
+      table: { const: rowTables(system)[0]?.[0] ?? '' },
       dice: { const: dice(1, 6) },
     } as unknown as Step],
   },

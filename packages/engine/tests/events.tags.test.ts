@@ -52,12 +52,12 @@ const world = (extraEffects: Record<string, unknown> = {}, receive: unknown[] | 
   tables: { лист: { shape: 'single', columns: [{ key: 'хп', label: 'Хиты', kind: 'number', default: 20, min: 0 }] },
     типы: { label: 'Типы', key: 'word', rows: ['рубящий', 'колющий', 'огонь'].map(value => ({ value, label: value })) },
     источники: { label: 'Источники', key: 'word', rows: [{ value: 'магический', label: 'магический' }] },
-  },
-  records: { приём: { kind: 'action', label: 'Приём' } },
+   приём: { shape: 'book', use: 'action', label: 'Приём' } },
+  
 });
 
 const book = {
-  records: [{ id: 'удар', rk: 'приём', label: 'Удар', bindings: [{ label: 'Удар', effect: 'удар', args: {} }] }, { id: 'огонь', rk: 'приём', label: 'Огненный шар', bindings: [{ label: 'Огненный шар', effect: 'огонь', args: {} }] }, { id: 'тревога', rk: 'приём', label: 'Тревога', bindings: [{ label: 'Тревога', effect: 'сигнал', args: {} }] }],
+  records: [{ id: 'удар', table: 'приём', label: 'Удар', bindings: [{ label: 'Удар', effect: 'удар', args: {} }] }, { id: 'огонь', table: 'приём', label: 'Огненный шар', bindings: [{ label: 'Огненный шар', effect: 'огонь', args: {} }] }, { id: 'тревога', table: 'приём', label: 'Тревога', bindings: [{ label: 'Тревога', effect: 'сигнал', args: {} }] }],
 };
 
 const hero = (effects: string[] = []) => ({
@@ -90,7 +90,7 @@ group('вызываемый эффект как провод: отправите
 
   test('необъявленный вызов — ошибка перечисляет известные эффекты', () => {
     const sys: any = world({ чужое: { label: 'Чужое', activation: 'manual', steps: [{ type: 'emit', event: 'котик' }] } });
-    const withAction = { ...book, records: [...book.records, { id: 'чужое', rk: 'приём', label: 'Чужое', bindings: [{ label: 'Чужое', effect: 'чужое', args: {} }] }] };
+    const withAction = { ...book, records: [...book.records, { id: 'чужое', table: 'приём', label: 'Чужое', bindings: [{ label: 'Чужое', effect: 'чужое', args: {} }] }] };
     throws(() => send('чужое:0', { system: sys, sheet: { ...hero(), records: ['чужое'] }, compendium: withAction, die: queue() }), 'котик');
   });
 

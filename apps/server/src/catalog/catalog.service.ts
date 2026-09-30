@@ -12,6 +12,7 @@ import type { Compendium, System } from '@vtt/schema';
 import { DB, CLOCK, IDS } from '../common/tokens.ts';
 import type { Db } from '../db/db.ts';
 import { publishedCompendiums, publishedSystems, users } from '../db/schema.ts';
+import { recordKindOf } from '@vtt/engine/model/owned';
 
 @Injectable()
 export class CatalogService {
@@ -132,7 +133,7 @@ export class CatalogService {
     if (!parsed.success) throw new BadRequestException('компендиум не проходит схему');
     const system = await this.system(systemId);
     const unknown = (parsed.data.records ?? [])
-      .find(record => !system.system.records?.[String(record.rk)]);
+      .find(record => !recordKindOf(system.system, record.table));
     if (unknown) throw new BadRequestException(
       `запись «${unknown.label ?? unknown.id}» не соответствует выбранной системе`);
     const id = this.newId();
@@ -180,12 +181,12 @@ export class CatalogService {
 
   private assertRecordsFilled(system: System, compendium: Compendium): void {
     for (const record of compendium.records ?? []) {
-      const kind = system.records?.[String(record.rk)];
+      const kind = recordKindOf(system, record.table);
       const bindings = bindingsOf(record, system);
       for (const key of propsNeeded(system, kind, bindings)) {
-        const value = record.props?.[key];
+        const value = record.cells?.[key];
         if (value === undefined || value === '') {
-          const label = kind?.props?.find(p => p.key === key)?.label ?? key;
+          const label = kind?.columns?.find(p => p.key === key)?.label ?? key;
           throw new BadRequestException(
             `запись «${record.label ?? record.id}»: не заполнено «${label}»`);
         }

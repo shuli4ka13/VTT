@@ -270,6 +270,37 @@
             "value": "нулевой"
           }
         ]
+      },
+      "move": {
+        "label": "Действие",
+        "icon": "🎲",
+        "hint": "Какое действие бросается — формула рейтинга по листу.",
+        "shape": "book",
+        "use": "action",
+        "block": "Приёмы",
+        "columns": [
+          {
+            "key": "rating",
+            "label": "Рейтинг действия",
+            "kind": "expr"
+          }
+        ],
+        "bindings": [
+          {
+            "label": "Бросить",
+            "effect": "risky_action"
+          }
+        ]
+      },
+      "crew": {
+        "label": "Дела банды",
+        "icon": "🏴",
+        "hint": "Общие ходы банды.",
+        "shape": "book",
+        "use": "action",
+        "block": "Банда",
+        "columns": [],
+        "bindings": []
       }
     },
     "effects": {
@@ -409,37 +440,6 @@
         ]
       }
     },
-    "records": {
-      "move": {
-        "kind": "action",
-        "label": "Действие",
-        "icon": "🎲",
-        "group": "Приёмы",
-        "hint": "Какое действие бросается — формула рейтинга по листу.",
-        "props": [
-          {
-            "key": "rating",
-            "label": "Рейтинг действия",
-            "kind": "expr"
-          }
-        ],
-        "bindings": [
-          {
-            "label": "Бросить",
-            "effect": "risky_action"
-          }
-        ]
-      },
-      "crew": {
-        "kind": "action",
-        "label": "Дела банды",
-        "icon": "🏴",
-        "group": "Банда",
-        "hint": "Общие ходы банды.",
-        "props": [],
-        "bindings": []
-      }
-    },
     "grants": [
       "zero_rating_rule"
     ]
@@ -448,72 +448,72 @@
     "records": [
       {
         "id": "act_skirmish",
-        "rk": "move",
         "label": "Драка",
         "description": "Пул к6 по рейтингу «Драка».",
-        "props": {
+        "table": "move",
+        "cells": {
           "rating": "@отправитель.skirmish"
         }
       },
       {
         "id": "act_prowl",
-        "rk": "move",
         "label": "Скрытность",
         "description": "Пул к6 по рейтингу «Скрытность».",
-        "props": {
+        "table": "move",
+        "cells": {
           "rating": "@отправитель.prowl"
         }
       },
       {
         "id": "act_finesse",
-        "rk": "move",
         "label": "Ловкость рук",
         "description": "Пул к6 по рейтингу «Ловкость рук».",
-        "props": {
+        "table": "move",
+        "cells": {
           "rating": "@отправитель.finesse"
         }
       },
       {
         "id": "act_sway",
-        "rk": "move",
         "label": "Убеждение",
         "description": "Пул к6 по рейтингу «Убеждение».",
-        "props": {
+        "table": "move",
+        "cells": {
           "rating": "@отправитель.sway"
         }
       },
       {
         "id": "act_study",
-        "rk": "move",
         "label": "Изучение",
         "description": "Пул к6 по рейтингу «Изучение».",
-        "props": {
+        "table": "move",
+        "cells": {
           "rating": "@отправитель.study"
         }
       },
       {
         "id": "resist",
-        "rk": "crew",
         "label": "Сопротивление",
-        "props": {},
         "bindings": [
           {
             "label": "Сопротивление",
             "effect": "resist"
           }
-        ]
+        ],
+        "table": "crew",
+        "cells": {}
       },
       {
         "id": "lay_low",
-        "rk": "crew",
         "label": "Залечь на дно",
-        "props": {},
         "bindings": [
           {
             "label": "Залечь на дно",
             "effect": "lay_low"
           }
-        ]
+        ],
+        "table": "crew",
+        "cells": {}
       }
     ]
   },

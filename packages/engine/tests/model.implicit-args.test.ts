@@ -6,7 +6,11 @@ import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const system = {
   id: 's', name: 's',
-  tables: { лист: { shape: 'single', columns: [{ key: 'hp', label: 'Хиты', kind: 'number', default: 10 }] } },
+  tables: { лист: { shape: 'single', columns: [{ key: 'hp', label: 'Хиты', kind: 'number', default: 10 }] } , weapon: {
+      shape: 'book', use: 'item', label: 'Оружие',
+      columns: [{ key: 'урон', kind: 'number' }, { key: 'заметка', kind: 'text' }],
+      bindings: [{ label: 'Удар', effect: 'hit' }],
+    } },
   effects: {
     hit: {
       label: 'Удар', activation: 'manual',
@@ -14,15 +18,9 @@ const system = {
       steps: [{ type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '@урон' } }],
     },
   },
-  records: {
-    weapon: {
-      kind: 'item', label: 'Оружие',
-      props: [{ key: 'урон', kind: 'number' }, { key: 'заметка', kind: 'text' }],
-      bindings: [{ label: 'Удар', effect: 'hit' }],
-    },
-  },
+  
 } as unknown as System;
-const compendium = { records: [{ id: 'club', rk: 'weapon', label: 'Дубина', props: { урон: 3 } }] } as Compendium;
+const compendium = { records: [{ id: 'club', table: 'weapon', label: 'Дубина', cells: { урон: 3 } }] } as Compendium;
 const sheet = (id: string, has: string[] = []) => ({ id, systemId: 's', name: id, values: {}, has: has.map(of => ({ of })), effects: [] }) as Sheet;
 
 group('вход с именем свойства записи берёт его сам', () => {
@@ -34,7 +32,7 @@ group('вход с именем свойства записи берёт его 
   });
 
   test('обязательное свойство запись должна заполнить, необязательное — нет', () => {
-    const need = propsNeeded(system, system.records!.weapon, system.records!.weapon!.bindings!);
+    const need = propsNeeded(system, system.tables!.weapon, system.tables!.weapon!.bindings!);
     ok(need.has('урон'));
     ok(!need.has('заметка'));
   });

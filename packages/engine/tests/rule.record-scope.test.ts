@@ -8,7 +8,7 @@ const dnd = PLAYABLE_WORLDS.find(w => (w.system as System).id === 'dnd5e')!;
 
 const withStrikeArgs = (args: Record<string, unknown>, strikeSteps?: unknown[]): System => {
   const system = JSON.parse(JSON.stringify(dnd.system)) as System;
-  const weapon = system.records!.weapon!;
+  const weapon = system.tables!.weapon!;
   weapon.bindings![0]!.args = { ...weapon.bindings![0]!.args, ...args } as never;
   if (strikeSteps) system.effects.strike!.steps = strikeSteps as never;
   return system;

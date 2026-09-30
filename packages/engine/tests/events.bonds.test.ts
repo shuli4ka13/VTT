@@ -5,7 +5,7 @@ import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const system = {
   id: 'x', name: 'x',
-  tables: { лист: { shape: 'single', columns: [{ key: 'бонус', label: 'Бонус', kind: 'number' }] } },
+  tables: { лист: { shape: 'single', columns: [{ key: 'бонус', label: 'Бонус', kind: 'number' }] } , молитва: { shape: 'book', use: 'action', label: 'Молитва', columns: [], bindings: [{ label: 'Благословение', effect: 'благословение', args: {} }] } },
   effects: {
     благословение: {
       label: 'Благословение', activation: 'manual', bond: true,
@@ -16,12 +16,10 @@ const system = {
       modifiers: [{ kind: 'value', target: 'бонус', op: 'add', value: { expr: '2' }, stacking: 'sum' }],
     },
   },
-  records: {
-    молитва: { kind: 'action', label: 'Молитва', props: [], bindings: [{ label: 'Благословение', effect: 'благословение', args: {} }] },
-  },
+  
 } as unknown as System;
 
-const compendium = { records: [{ id: 'молитва', rk: 'молитва', label: 'Молитва', props: {} }] } as unknown as Compendium;
+const compendium = { records: [{ id: 'молитва', table: 'молитва', label: 'Молитва', cells: {} }] } as unknown as Compendium;
 
 const sheet = (id: string, effects: object[] = []): Sheet => ({
   id, systemId: 'x', name: id, values: {}, has: [{ of: 'молитва' }], effects,

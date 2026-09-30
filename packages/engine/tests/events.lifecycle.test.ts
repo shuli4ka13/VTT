@@ -12,7 +12,7 @@ const system = {
     { key: 'ярость', label: 'Ярость', kind: 'number' },
     { key: 'усталость', label: 'Истощение', kind: 'number' },
     { key: 'замечено', label: 'Замечено', kind: 'number' },
-  ] } },
+  ] } , умение: { shape: 'book', use: 'action', label: 'Умение', columns: [], bindings: [] }, вещь: { shape: 'book', use: 'item', label: 'Вещь', columns: [] } },
   effects: {
     ярость: {
       label: 'Ярость', activation: 'passive', duration: { kind: 'permanent' }, reapply: 'refresh',
@@ -29,17 +29,14 @@ const system = {
     пинг: { label: 'Пинг', activation: 'passive', attach: [{ type: 'status', mode: 'remove', effect: { const: 'пинг' } }, { type: 'status', mode: 'apply', effect: { const: 'понг' } }] },
     понг: { label: 'Понг', activation: 'passive', attach: [{ type: 'status', mode: 'remove', effect: { const: 'понг' } }, { type: 'status', mode: 'apply', effect: { const: 'пинг' } }] },
   },
-  records: {
-    умение: { kind: 'action', label: 'Умение', props: [], bindings: [] },
-    вещь: { kind: 'item', label: 'Вещь', props: [] },
-  },
+  
 } as unknown as System;
 
 const book = {
   records: [
-    { id: 'в', rk: 'умение', label: 'Впасть', bindings: [{ label: 'Впасть', effect: 'впасть', args: {} }] },
-    { id: 'у', rk: 'умение', label: 'Успокоиться', bindings: [{ label: 'Успокоиться', effect: 'успокоиться', args: {} }] },
-    { id: 'топор', rk: 'вещь', label: 'Топор берсерка', props: {}, grants: ['ярость'] },
+    { id: 'в', table: 'умение', label: 'Впасть', bindings: [{ label: 'Впасть', effect: 'впасть', args: {} }] },
+    { id: 'у', table: 'умение', label: 'Успокоиться', bindings: [{ label: 'Успокоиться', effect: 'успокоиться', args: {} }] },
+    { id: 'топор', table: 'вещь', label: 'Топор берсерка', cells: {}, grants: ['ярость'] },
   ],
 } as unknown as Compendium;
 
@@ -109,11 +106,11 @@ group('подписка на чужое: «на мне появилось» и �
 group('выдача у типа предмета', () => {
   test('надел вещь — висит то, что выдаёт её тип, снял — ушло', () => {
     const system = {
-      id: 's', name: 's', tables: { лист: { shape: 'single', columns: [{ key: 'ac', label: 'КБ', kind: 'number', default: 10 }] } },
+      id: 's', name: 's', tables: { лист: { shape: 'single', columns: [{ key: 'ac', label: 'КБ', kind: 'number', default: 10 }] } , shield: { shape: 'book', use: 'item', label: 'Щит', grants: ['shield_rule'] } },
       effects: { shield_rule: { label: 'Щит', activation: 'passive', modifiers: [{ kind: 'value', target: 'ac', op: 'add', value: { expr: '2' } }] } },
-      records: { shield: { kind: 'item', label: 'Щит', grants: ['shield_rule'] } },
+      
     } as unknown as System;
-    const compendium = { records: [{ id: 'buckler', rk: 'shield', label: 'Баклер' }] } as Compendium;
+    const compendium = { records: [{ id: 'buckler', table: 'shield', label: 'Баклер' }] } as Compendium;
     const worn = { id: 'h', systemId: 's', name: 'h', values: {}, has: [{ of: 'buckler' }], effects: [] } as Sheet;
     ok(grantedTo(system, worn, compendium).includes('shield_rule'));
     ok(!grantedTo(system, { ...worn, has: [{ of: 'buckler', off: true }] }, compendium).includes('shield_rule'));

@@ -51,7 +51,7 @@ group('линт: висячие ссылки называются словами
 
   test('привязка типа записи к несуществующему эффекту', () => {
     const system = bare();
-    system.records = { weapon: { kind: 'item', label: 'Оружие', bindings: [{ label: 'Удар', effect: 'нету', args: {} }] } } as never;
+    system.tables = { weapon: { shape: 'book', use: 'item', label: 'Оружие', bindings: [{ label: 'Удар', effect: 'нету', args: {} }] } } as never;
     const [problem] = errorsOf(lintSystem(system));
     ok(problem?.text.includes('эффекта «нету»'), problem?.text);
     eq(problem?.where.tab, 'records');
@@ -163,7 +163,7 @@ group('линт: слушатели, круги, входы', () => {
 
   test('привязка не закрывает вход эффекта', () => {
     const system = withEffect('strike', { params: [{ key: 'dice', label: 'Кость урона' }], steps: [] });
-    system.records = { weapon: { kind: 'item', label: 'Оружие', props: [], bindings: [{ label: 'Удар', effect: 'strike', args: {} }] } } as never;
+    system.tables = { weapon: { shape: 'book', use: 'item', label: 'Оружие', columns: [], bindings: [{ label: 'Удар', effect: 'strike', args: {} }] } } as never;
     const [problem] = errorsOf(lintSystem(system));
     ok(problem?.text.includes('не заполняет вход «Кость урона»'), problem?.text);
     eq(problem?.where.binding, 0);
@@ -171,15 +171,15 @@ group('линт: слушатели, круги, входы', () => {
 
   test('вход, которую спрашивают за столом, привязка закрывать не обязана', () => {
     const system = withEffect('strike', { params: [{ key: 'дистанция', label: 'Дистанция', ask: { by: 'actor' } }], steps: [] });
-    system.records = { weapon: { kind: 'item', label: 'Оружие', props: [], bindings: [{ label: 'Удар', effect: 'strike', args: {} }] } } as never;
+    system.tables = { weapon: { shape: 'book', use: 'item', label: 'Оружие', columns: [], bindings: [{ label: 'Удар', effect: 'strike', args: {} }] } } as never;
     eq(errorTexts(system).join(''), '');
   });
 
   test('привязка берёт свойство, которого у этого типа нет', () => {
     const system = withEffect('strike', { params: [{ key: 'dice' }], steps: [] });
-    system.records = {
-      weapon: { kind: 'item', label: 'Оружие', props: [{ key: 'dmg' }], bindings: [{ label: 'Удар', effect: 'strike', args: { dice: { prop: 'other' } } }] },
-      armor: { kind: 'item', label: 'Броня', props: [{ key: 'other' }] },
+    system.tables = {
+      weapon: { shape: 'book', use: 'item', label: 'Оружие', columns: [{ key: 'dmg' }], bindings: [{ label: 'Удар', effect: 'strike', args: { dice: { prop: 'other' } } }] },
+      armor: { shape: 'book', use: 'item', label: 'Броня', columns: [{ key: 'other' }] },
     } as never;
     ok(errorTexts(system).some(t => t.includes('«other» не объявлено у этого типа')), errorTexts(system).join('|'));
   });

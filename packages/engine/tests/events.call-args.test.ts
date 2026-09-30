@@ -4,7 +4,10 @@ import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const system = {
   id: 'общий-кусок', name: 'общий кусок',
-  tables: { лист: { shape: 'single', columns: [{ key: 'хп', label: 'Хиты', kind: 'number', default: 40, min: 0 }] } },
+  tables: { лист: { shape: 'single', columns: [{ key: 'хп', label: 'Хиты', kind: 'number', default: 40, min: 0 }] } , оружие: {
+      shape: 'book', use: 'item', label: 'Оружие', columns: [{ key: 'кость', label: 'Кость урона', kind: 'dice' }],
+      bindings: [{ label: 'Удар', effect: 'меч', args: { кость: { prop: 'кость' } } }],
+    }, чары: { shape: 'book', use: 'action', label: 'Чары', columns: [], bindings: [{ label: 'Сотворить', effect: 'шар', args: {} }] } },
   effects: {
     урон_костями: {
       label: 'Урон костями',
@@ -28,17 +31,11 @@ const system = {
       steps: [{ type: 'emit', event: 'урон_костями', args: { кость: { const: '1d6' }, сколько: { const: 8 } } }],
     },
   },
-  records: {
-    оружие: {
-      kind: 'item', label: 'Оружие', props: [{ key: 'кость', label: 'Кость урона', kind: 'dice' }],
-      bindings: [{ label: 'Удар', effect: 'меч', args: { кость: { prop: 'кость' } } }],
-    },
-    чары: { kind: 'action', label: 'Чары', props: [], bindings: [{ label: 'Сотворить', effect: 'шар', args: {} }] },
-  },
+  
 } as unknown as System;
 
 const compendium = {
-  records: [{ id: 'секира', rk: 'оружие', label: 'Секира', props: { кость: '1d12' } }, { id: 'шар', rk: 'чары', label: 'Огненный шар', props: {} }],
+  records: [{ id: 'секира', table: 'оружие', label: 'Секира', cells: { кость: '1d12' } }, { id: 'шар', table: 'чары', label: 'Огненный шар', cells: {} }],
 } as unknown as Compendium;
 
 const sheet = (id: string): Sheet => ({

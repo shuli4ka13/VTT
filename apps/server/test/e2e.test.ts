@@ -390,13 +390,11 @@ describe('сквозной прогон стенда', () => {
       .send({
         title: 'Для проверки заполненности',
         system: {
-          name: 'Для проверки заполненности', tables: {},
+          name: 'Для проверки заполненности', tables: { weapon: { shape: 'book', use: 'item', label: 'Оружие',
+              columns: [{ key: 'dmg', label: 'Кость урона', kind: 'dice' }],
+              bindings: [{ label: 'Удар', effect: 'strike', args: { damage_dice: { expr: '@dmg' } } }] } },
           effects: { strike: { label: 'Удар', activation: 'manual', params: [{ key: 'damage_dice', label: 'Кость урона', kind: 'dice' }], steps: [] } },
-          records: {
-            weapon: { kind: 'item', label: 'Оружие',
-              props: [{ key: 'dmg', label: 'Кость урона', kind: 'dice' }],
-              bindings: [{ label: 'Удар', effect: 'strike', args: { damage_dice: { expr: '@dmg' } } }] },
-          },
+          
         },
       })
       .expect(201);
@@ -407,7 +405,7 @@ describe('сквозной прогон стенда', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({
         title: 'Пустая оружейная', systemId: sys.body.id,
-        compendium: { records: [{ id: 'sword', rk: 'weapon', label: 'Меч', props: {} }] },
+        compendium: { records: [{ id: 'sword', table: 'weapon', label: 'Меч', cells: {} }] },
       })
       .expect(201);
 
@@ -419,7 +417,7 @@ describe('сквозной прогон стенда', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({
         title: 'Пустая оружейная', systemId: sys.body.id,
-        compendium: { records: [{ id: 'sword', rk: 'weapon', label: 'Меч', props: { dmg: '1d6' } }] },
+        compendium: { records: [{ id: 'sword', table: 'weapon', label: 'Меч', cells: { dmg: '1d6' } }] },
       })
       .expect(200);
 
@@ -436,15 +434,15 @@ describe('публикация компендиума проверяется л�
       title: 'Для линта книги',
       system: {
         name: 'Для линта книги', effects: {},
-        tables: { rolls: { label: 'Броски', key: 'word', rows: [{ value: 'атака' }] } },
-        records: { gear: { kind: 'item', label: 'Снаряжение', props: [], bindings: [] } },
+        tables: { rolls: { label: 'Броски', key: 'word', rows: [{ value: 'атака' }] } , gear: { shape: 'book', use: 'item', label: 'Снаряжение', columns: [], bindings: [] } },
+        
       },
     }).expect(201);
     await as(http().post(`/systems/${sys.body.id}/publish`)).send({}).expect(201);
     const book = await as(http().post('/compendiums')).send({
       title: 'Книга с дыркой', systemId: sys.body.id,
       compendium: {
-        records: [{ id: 'ring', rk: 'gear', label: 'Кольцо', props: {}, modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'нет_такой' }] }],
+        records: [{ id: 'ring', table: 'gear', label: 'Кольцо', cells: {}, modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'нет_такой' }] }],
       },
     }).expect(201);
     const rejected = await as(http().post(`/compendiums/${book.body.id}/publish`)).send({}).expect(400);
@@ -498,7 +496,7 @@ describe('концентрация снимается с листа', () => {
 
     const system = {
       id: 'связи', name: 'Со связями',
-      tables: { лист: { shape: 'single', columns: [{ key: 'бонус', label: 'Бонус', kind: 'number' }] } },
+      tables: { лист: { shape: 'single', columns: [{ key: 'бонус', label: 'Бонус', kind: 'number' }] } , жест: { shape: 'book', use: 'action', label: 'Жест', columns: [], bindings: [{ label: 'Держу', effect: 'держу', args: {} }] } },
       effects: {
         держу: {
           label: 'Держу', activation: 'manual', bond: true,
@@ -506,9 +504,9 @@ describe('концентрация снимается с листа', () => {
         },
         связан: { label: 'Связан', activation: 'passive', duration: { kind: 'permanent' }, modifiers: [] },
       },
-      records: { жест: { kind: 'action', label: 'Жест', props: [], bindings: [{ label: 'Держу', effect: 'держу', args: {} }] } },
+      
     };
-    const book = { records: [{ id: 'жест', rk: 'жест', label: 'Жест', props: {} }] };
+    const book = { records: [{ id: 'жест', table: 'жест', label: 'Жест', cells: {} }] };
     const sheet = (id: string) => ({
       id, systemId: 'связи', name: id, values: {}, has: [{ of: 'жест' }], effects: [],
     });

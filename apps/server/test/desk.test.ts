@@ -15,7 +15,7 @@ const system = {
     { key: 'хп', label: 'Хиты', kind: 'number', default: 20 },
   ] }, стол: { shape: 'single', owner: 'desk', columns: [
     { key: 'страх', label: 'Страх', kind: 'number' },
-  ] } },
+  ] } , приём: { shape: 'book', use: 'action', label: 'Приём', bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
   effects: {
     удар: {
       label: 'Удар', activation: 'manual',
@@ -25,9 +25,9 @@ const system = {
       ],
     },
   },
-  records: { приём: { kind: 'action', label: 'Приём', bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
+  
 };
-const compendium = { records: [{ id: 'удар', rk: 'приём', label: 'Удар', props: {} }] };
+const compendium = { records: [{ id: 'удар', table: 'приём', label: 'Удар', cells: {} }] };
 const pc = (id: string) => ({ id, systemId: 'стол', name: id, values: {}, has: [{ of: 'удар' }], effects: [] });
 
 let app: INestApplication;
@@ -96,7 +96,7 @@ describe('система без компендиума доходит до иг�
   it('кнопка, выданная всем, жмётся за столом, а встроенные записи едут в мир', async () => {
     const token = (await http().post('/auth/login').send({ name: 'Автор' })).body.token as string;
     const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
-    const own = { ...system, grants: ['удар'], library: [{ id: 'меч', rk: 'приём', label: 'Меч', props: {} }] };
+    const own = { ...system, grants: ['удар'], library: [{ id: 'меч', table: 'приём', label: 'Меч', cells: {} }] };
     const systemId = (await as(http().post('/systems')).send({ title: 'сама', system: own })).body.id;
     const pub = await as(http().post(`/systems/${systemId}/publish`)).send({});
     if (pub.status !== 201) throw new Error(JSON.stringify(pub.body));

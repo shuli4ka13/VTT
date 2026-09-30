@@ -14,7 +14,7 @@ const system = {
     { key: 'стрельба', label: 'Стрельба', kind: 'number', default: 3 },
     { key: 'реакция', label: 'Реакция', kind: 'number', default: 2 },
     { key: 'хп', label: 'Хиты', kind: 'number', default: 10 },
-  ] }, rolls: { label: 'Броски', key: 'word', rows: [{ value: 'защита' }] } },
+  ] }, rolls: { label: 'Броски', key: 'word', rows: [{ value: 'защита' }] } , приём: { shape: 'book', use: 'action', label: 'Приём' } },
   effects: {
     вырваться: {
       label: 'Вырваться', activation: 'manual',
@@ -36,10 +36,10 @@ const system = {
       ],
     },
   },
-  records: { приём: { kind: 'action', label: 'Приём' } },
+  
 } as unknown as System;
 
-const book = { records: [{ id: 'выстрел', rk: 'приём', label: 'Выстрел', bindings: [{ label: 'Выстрел', effect: 'выстрел', args: {} }] }, { id: 'вырваться', rk: 'приём', label: 'Вырваться', bindings: [{ label: 'Вырваться', effect: 'вырваться', args: {} }] }] } as unknown as Compendium;
+const book = { records: [{ id: 'выстрел', table: 'приём', label: 'Выстрел', bindings: [{ label: 'Выстрел', effect: 'выстрел', args: {} }] }, { id: 'вырваться', table: 'приём', label: 'Вырваться', bindings: [{ label: 'Вырваться', effect: 'вырваться', args: {} }] }] } as unknown as Compendium;
 const sheet = (id: string, effects: unknown[] = []): Sheet =>
   ({ id, systemId: 'пулы', name: id, values: {}, has: [{ of: 'выстрел' }, { of: 'вырваться' }], effects } as unknown as Sheet);
 

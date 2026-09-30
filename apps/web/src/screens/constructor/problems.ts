@@ -8,6 +8,7 @@ import type { WorldState } from '../../store/world.ts';
 import { STEP } from '../../words.ts';
 import { flattenSystem } from '@vtt/engine/model/inherit';
 import { isSingle } from '@vtt/engine/model/sheet-columns';
+import { isBook } from '@vtt/engine/model/owned';
 
 export type { Problem };
 
@@ -63,16 +64,16 @@ export function pathWords(issue: string, system: System): string {
     const index = next !== undefined && /^\d+$/.test(next) ? Number(next) : null;
     const named = next !== undefined && index === null ? next : null;
     if (key === 'effects' && named) { words.push(`эффект ${labelOf(system.effects, named)}`); i++; continue; }
-    if (key === 'records' && named) { words.push(`тип записи ${labelOf(system.records, named)}`); i++; continue; }
+    if (key === 'sheets' && named) { words.push(`тип листа ${labelOf(system.sheets, named)}`); i++; continue; }
     if (key === 'constants' && named) { words.push(`кость ${labelOf(system.constants, named)}`); i++; continue; }
     if (key === 'roll_edits' && named) { words.push(`правка броска ${labelOf(system.roll_edits, named)}`); i++; continue; }
     if (key === 'tables' && named) {
       const table = system.tables?.[named];
       const at = path[i + 2] === 'columns' && /^\d+$/.test(path[i + 3] ?? '') ? Number(path[i + 3]) : null;
       const column = at === null ? undefined : table?.columns?.[at];
-      if (!isSingle(table)) words.push(`таблица ${labelOf(system.tables, named)}`);
+      if (!isSingle(table)) words.push(`${isBook(table) ? 'тип записи' : 'таблица'} ${labelOf(system.tables, named)}`);
       i++;
-      if (at !== null) { words.push(`${isSingle(table) ? 'поле' : 'колонка'} «${column?.label || column?.key || at + 1}»`); i += 2; }
+      if (at !== null) { words.push(`${isSingle(table) ? 'поле' : isBook(table) ? 'свойство' : 'колонка'} «${column?.label || column?.key || at + 1}»`); i += 2; }
       continue;
     }
     if ((key === 'steps' || key === 'receive') && index !== null) { words.push(`${STEP.one} ${index + 1}`); i++; continue; }

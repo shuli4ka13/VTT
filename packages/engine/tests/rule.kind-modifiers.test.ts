@@ -7,26 +7,22 @@ const sys: any = {
   tables: { лист: { shape: 'single', columns: [
     { key: 'скрытность', label: 'Скрытность', kind: 'number', default: 3, roll: { label: 'Проверка: Скрытность', tags: ['скрытность'] } },
     { key: 'кд', label: 'Класс брони', kind: 'number', default: 10 },
-  ] } },
-  roll_edits: { помеха: { label: 'Помеха', ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }] } },
-  records: {
-    тяжёлый: {
-      kind: 'item', label: 'Тяжёлый доспех',
-      props: [], bindings: [],
+  ] } , тяжёлый: {
+      shape: 'book', use: 'item', label: 'Тяжёлый доспех',
+      columns: [], bindings: [],
 
       modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['скрытность'], edit: 'помеха' }],
-    },
-    лёгкий: { kind: 'item', label: 'Лёгкий доспех', props: [], bindings: [] },
-    кольцо: {
-      kind: 'item', label: 'Кольцо', props: [], bindings: [],
+    }, лёгкий: { shape: 'book', use: 'item', label: 'Лёгкий доспех', columns: [], bindings: [] }, кольцо: {
+      shape: 'book', use: 'item', label: 'Кольцо', columns: [], bindings: [],
       modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: { expr: '1' }, stacking: 'sum' }],
-    },
-  },
+    } },
+  roll_edits: { помеха: { label: 'Помеха', ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }] } },
+  
   effects: {},
 };
 
 const compendium: any = {
-  records: [{ id: 'кольчуга', rk: 'тяжёлый', label: 'Кольчуга' }, { id: 'латы', rk: 'тяжёлый', label: 'Латы' }, { id: 'кожа', rk: 'лёгкий', label: 'Кожаный доспех' }, { id: 'кольцо1', rk: 'кольцо', label: 'Кольцо защиты' }, { id: 'кольцо2', rk: 'кольцо', label: 'Кольцо стража' }],
+  records: [{ id: 'кольчуга', table: 'тяжёлый', label: 'Кольчуга' }, { id: 'латы', table: 'тяжёлый', label: 'Латы' }, { id: 'кожа', table: 'лёгкий', label: 'Кожаный доспех' }, { id: 'кольцо1', table: 'кольцо', label: 'Кольцо защиты' }, { id: 'кольцо2', table: 'кольцо', label: 'Кольцо стража' }],
 };
 
 const hero = (equipped: string[]) => ({ id: 'вор', values: { скрытность: 3, кд: 10 }, has: [...equipped.map(of => ({ of }))], effects: [] });

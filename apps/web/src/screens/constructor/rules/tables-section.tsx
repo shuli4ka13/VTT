@@ -14,10 +14,11 @@ import { inUse, usersOf, useUsage } from '../usage.ts';
 import type { UsageIndex } from '../usage.ts';
 import { freeId, slugOf, useBook } from '../../../store/world.ts';
 import { listUsers } from '@vtt/engine/model/lists';
-import { isRange, keyOf, choiceTables } from '@vtt/engine/model/tables';
+import { isRange, keyOf, choiceTables, rowTables } from '@vtt/engine/model/tables';
 import { rowUsers, renameRow, renameRowInBook } from '@vtt/engine/model/integrity';
 import { useWorld } from '../../../store/world.ts';
 import { useState, useRef, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import type { System, Table, TableRow, TableKey } from '@vtt/schema';
 import type { TableColumn, Holder } from '@vtt/engine/model/types';
 import type { WorldState } from '../../../store/world.ts';
@@ -38,6 +39,7 @@ const blankRow = (key: TableKey): TableRow =>
 
 const COLUMN_KINDS = kindsFor('table');
 const FIELD_KINDS = kindsFor('field');
+const PROP_KINDS = kindsFor('prop');
 
 const parseFree = (text: string): number | string | boolean =>
   /^-?\d+(\.\d+)?$/.test(text) ? Number(text)
@@ -57,7 +59,7 @@ const addTable = (editSystem: EditSystem) => editSystem(draft => {
 });
 
 export function TablesSection({ system, editSystem, usage }: Props) {
-  const entries = Object.entries(system.tables ?? {}).filter(([, table]) => !isSingle(table));
+  const entries = rowTables(system);
 
   return (
     <Card>
@@ -208,7 +210,8 @@ export function moveColumn(draft: System, tableId: string, key: string, holder: 
   draft.tables = withColumn(draft, column, holder).tables;
 }
 
-export function TableColumnCard({ id, table, column, system, edit, onClose }: {
+export function TableColumnCard({ id, table, column, system, edit, onClose, extra }: {
+  extra?: ReactNode;
   id: string;
   table: Table;
   column: TableColumn;
@@ -217,6 +220,7 @@ export function TableColumnCard({ id, table, column, system, edit, onClose }: {
   onClose: () => void;
 }) {
   const single = isSingle(table);
+  const book = table.shape === 'book';
   const usage = useUsage();
   const compendium = useBook();
   const editSystem = useWorld(state => state.editSystem);
@@ -225,7 +229,7 @@ export function TableColumnCard({ id, table, column, system, edit, onClose }: {
     const c = draft.columns?.find(x => x.key === column.key);
     if (c) change(c);
   });
-  const others = (single ? choiceTables(system) : Object.entries(system.tables ?? {}).filter(([key, t]) => key !== id && !isSingle(t)))
+  const others = (single || book ? choiceTables(system) : rowTables(system).filter(([key]) => key !== id))
     .map(([key, t]) => [key, t.label || key] as [string, string]);
   const name = column.label || column.key;
   const users = single ? usersOf(usage, 'field', column.key, system) : [];
@@ -246,10 +250,10 @@ export function TableColumnCard({ id, table, column, system, edit, onClose }: {
   return (
     <ColumnCard
       column={{ label: column.label ?? '', kind: column.kind ?? (single ? 'number' : 'text'), from: column.from, many: column.many, expr: column.expr, min: column.min, max: column.max }}
-      kinds={single ? FIELD_KINDS : COLUMN_KINDS}
+      kinds={single ? FIELD_KINDS : book ? PROP_KINDS : COLUMN_KINDS}
       tables={others}
       many={!single}
-      formulaHint={single ? 'Формула для всех листов' : 'Формула для всех строк'}
+      formulaHint={single ? 'Формула для всех листов' : book ? 'Формула для всех записей' : 'Формула для всех строк'}
       where={`${table.label || id} · ${name}`}
       {...(single ? {} : { names: rowNames(system, id) })}
       system={system}
@@ -278,7 +282,7 @@ export function TableColumnCard({ id, table, column, system, edit, onClose }: {
             {users.map(user => <Chip key={user}>{user}</Chip>)}
           </div>
         ) : null}
-      </> : undefined}
+      </> : extra}
     />
   );
 }

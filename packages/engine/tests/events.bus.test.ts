@@ -43,8 +43,8 @@ group('шина: одно состояние — несколько подпис
   });
 
   test('действие будит только подписку с его ролью, фазой и вопросом', () => {
-    const asked = listening(system, sheet(), { kind: 'action', role: 'target', phase: 'before', confirm: true, effect: 'удар', emitted: [] });
+    const asked = listening(system, sheet(), { shape: 'book', use: 'action', role: 'target', phase: 'before', confirm: true, effect: 'удар', emitted: [] });
     deepEq(asked.map(s => s.key), ['горит#2']);
-    eq(listening(system, sheet(), { kind: 'action', role: 'target', phase: 'after', confirm: false, effect: 'удар', emitted: [] }).length, 0);
+    eq(listening(system, sheet(), { shape: 'book', use: 'action', role: 'target', phase: 'after', confirm: false, effect: 'удар', emitted: [] }).length, 0);
   });
 });

@@ -28,7 +28,7 @@ const система = {
       columns: [{ key: 'кость', label: 'Кость хитов', kind: 'number' }, { key: 'урон', label: 'Любимый урон', kind: 'choice', from: 'урон' }],
       rows: [{ value: 'воин', cells: { кость: 10, урон: 'рубящий' } }, { value: 'маг', cells: { кость: 6, урон: 'огонь' } }],
     },
-  },
+   меч: { shape: 'book', use: 'action', label: 'Приём', bindings: [{ label: 'Удар', effect: 'удар', args: { тип: { const: 'рубящий' } } }] }, факел: { shape: 'book', use: 'action', label: 'Приём', bindings: [{ label: 'Удар', effect: 'удар', args: { тип: { const: 'огонь' } } }] } },
   effects: {
     удар: {
       label: 'Удар', activation: 'manual',
@@ -39,10 +39,7 @@ const система = {
       ],
     },
   },
-  records: {
-    меч: { kind: 'action', label: 'Приём', bindings: [{ label: 'Удар', effect: 'удар', args: { тип: { const: 'рубящий' } } }] },
-    факел: { kind: 'action', label: 'Приём', bindings: [{ label: 'Удар', effect: 'удар', args: { тип: { const: 'огонь' } } }] },
-  },
+  
 } as unknown as System;
 
 const лист = (класс = 'воин') => ({
@@ -61,7 +58,7 @@ group('ссылка на таблицу читается через точку',
   });
 
   test('вход эффекта — тоже ссылка: прибавка берётся у своего типа урона, формула считается листом', () => {
-    const книга = { records: [{ id: 'меч', rk: 'меч', label: 'Меч', props: {} }, { id: 'факел', rk: 'факел', label: 'Факел', props: {} }] } as never;
+    const книга = { records: [{ id: 'меч', table: 'меч', label: 'Меч', cells: {} }, { id: 'факел', table: 'факел', label: 'Факел', cells: {} }] } as never;
     const мир = { system: система, compendium: книга, die: () => 1 };
     const бей = (action: string) => {
       const итог = receive(send(action, { ...мир, sheet: лист() }), { ...мир, sheet: лист() });

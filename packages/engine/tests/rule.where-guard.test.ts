@@ -17,8 +17,8 @@ const withProbe = (tags: string[]) => {
       ...Object.fromEntries(tags.map(tag => [tag.startsWith('по ') ? 'aim' : 'damage_type', { const: tag }])),
     } }],
   } as never;
-  system.records = { ...system.records, проба: { kind: 'action', label: 'Проба' } } as never;
-  const book = { records: [{ id: 'проба', rk: 'проба', label: 'Проба', bindings: [{ label: 'Проба', effect: 'проба', args: {} }] }] };
+  system.tables = { ...system.tables, проба: { shape: 'book', use: 'action', label: 'Проба' } } as never;
+  const book = { records: [{ id: 'проба', table: 'проба', label: 'Проба', bindings: [{ label: 'Проба', effect: 'проба', args: {} }] }] };
   return { system, book };
 };
 

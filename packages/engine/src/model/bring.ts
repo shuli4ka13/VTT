@@ -3,6 +3,7 @@ import type { Reference, Where } from './references.ts';
 import { basedOn } from './inherit.ts';
 import { isFormulaCell, fieldsOf, fieldOf, hasField } from './sheet-columns.ts';
 import type { System, Table } from './types.ts';
+import { isBook, kindOf } from './owned.ts';
 
 export type PartKind = 'field' | 'group' | 'effect' | 'table' | 'constant' | 'rollEdit' | 'recordKind' | 'record';
 
@@ -39,8 +40,7 @@ function tableDeps(system: System, key: string): Part[] {
   const out: Part[] = [];
   for (const column of table.columns ?? []) {
     const from = column.from ? String(column.from) : '';
-    if (from && system.tables?.[from]) out.push({ kind: 'table', key: from });
-    if (from && system.records?.[from]) out.push({ kind: 'recordKind', key: from });
+    if (from && system.tables?.[from]) out.push({ kind: isBook(system.tables[from]) ? 'recordKind' : 'table', key: from });
     for (const row of table.rows ?? []) {
       const cell = (row.cells ?? {})[column.key];
       if (isFormulaCell(cell)) {
@@ -120,7 +120,8 @@ export function dependencies(donor: System): (part: Part) => Part[] {
       if (base) out.push({ kind: 'effect', key: base });
     }
     if (part.kind === 'recordKind') {
-      const base = (donor.records?.[part.key] as Loose | undefined)?.extends;
+      const base = (kindOf(donor, part.key) as Loose | undefined)?.extends;
+      out.push(...tableDeps(donor, part.key));
       if (typeof base === 'string') out.push({ kind: 'recordKind', key: base });
     }
     if (part.kind === 'group') {
@@ -139,7 +140,7 @@ const exists = (system: System, part: Part): boolean => {
     case 'table': return Boolean(system.tables?.[part.key]);
     case 'constant': return Boolean(system.constants?.[part.key]);
     case 'rollEdit': return Boolean(system.roll_edits?.[part.key]);
-    case 'recordKind': return Boolean(system.records?.[part.key]);
+    case 'recordKind': return Boolean(kindOf(system, part.key));
     case 'record': return (system.library ?? []).some(record => record.id === part.key);
   }
 };
@@ -182,7 +183,10 @@ function copyPart(target: System, donor: System, part: Part): void {
     case 'table': target.tables = { ...target.tables, [part.key]: clone(donor.tables![part.key]!) }; return;
     case 'constant': (target.constants ??= {})[part.key] = clone(donor.constants![part.key]!); return;
     case 'rollEdit': (target.roll_edits ??= {})[part.key] = clone(donor.roll_edits![part.key]!); return;
-    case 'recordKind': (target.records ??= {})[part.key] = clone(donor.records![part.key]!); return;
+    case 'recordKind':
+      if (donor.sheets?.[part.key]) (target.sheets ??= {})[part.key] = clone(donor.sheets[part.key]!);
+      else target.tables = { ...target.tables, [part.key]: clone(donor.tables![part.key]!) };
+      return;
     case 'record': (target.library ??= []).push(clone(donor.library!.find(record => record.id === part.key)!)); return;
   }
 }

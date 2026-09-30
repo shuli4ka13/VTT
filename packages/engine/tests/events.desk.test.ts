@@ -10,7 +10,7 @@ const system = {
   ] }, стол: { shape: 'single', owner: 'desk', columns: [
     { key: 'эскалация', label: 'Кость эскалации', kind: 'number' },
     { key: 'страх', label: 'Страх', kind: 'number' },
-  ] } },
+  ] } , приём: { shape: 'book', use: 'action', label: 'Приём' } },
   effects: {
     удар: {
       label: 'Удар', activation: 'manual',
@@ -20,10 +20,10 @@ const system = {
       ],
     },
   },
-  records: { приём: { kind: 'action', label: 'Приём' } },
+  
 } as unknown as System;
 
-const book = { records: [{ id: 'удар', rk: 'приём', label: 'Удар', bindings: [{ label: 'Удар', effect: 'удар', args: {} }] }] } as unknown as Compendium;
+const book = { records: [{ id: 'удар', table: 'приём', label: 'Удар', bindings: [{ label: 'Удар', effect: 'удар', args: {} }] }] } as unknown as Compendium;
 const pc = (id: string): Sheet => ({ id, systemId: 'стол', name: id, values: {}, has: [{ of: 'удар' }], effects: [] } as unknown as Sheet);
 const desk = (values: Record<string, number>): Sheet => ({ id: 'стол', systemId: 'стол', name: 'Стол', values, has: [], effects: [] } as unknown as Sheet);
 

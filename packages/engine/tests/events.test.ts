@@ -86,7 +86,7 @@ group('конверт вызова', () => {
 
       const sword = compendium.records.find(i => i.id === 'longsword-item');
       ok(!sword.activities, 'у меча нет своей активности');
-      ok(system.records[sword.rk].bindings.length, 'зато у его рода есть привязка');
+      ok(system.tables[sword.table].bindings.length, 'зато у его рода есть привязка');
     });
   });
 
@@ -217,7 +217,7 @@ const PARAMETRIC = {
 const paramSys = { ...system, effects: { ...system.effects, parametric: PARAMETRIC } };
 const paramBook = (id, args) => ({
   ...compendium,
-  records: [...compendium.records, { id, rk: 'weapon', label: 'Своё', props: { damage_dice: '1d6' },
+  records: [...compendium.records, { id, table: 'weapon', label: 'Своё', cells: { damage_dice: '1d6' },
       bindings: [{ label: 'Удар', effect: 'parametric', args }] }],
 });
 

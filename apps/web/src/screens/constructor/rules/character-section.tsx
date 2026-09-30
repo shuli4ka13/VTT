@@ -72,7 +72,7 @@ export function CharacterSection({ system, editSystem }: {
   const [of, setOf] = useState('');
   const [cell, setCell] = useState<Picked>(null);
   const kinds = sheetKinds(system);
-  const kind = of ? system.records?.[of] : undefined;
+  const kind = of ? system.sheets?.[of] : undefined;
   const active = fieldsOf(system).filter(isCharacterColumn).find(f => f.tag === picked) ?? null;
   const tree = blockTree<FieldModel>(system, fieldsOf(system), field => field.group);
   const names: string[] = [];
@@ -81,7 +81,7 @@ export function CharacterSection({ system, editSystem }: {
 
   const shown = (block: string) => !kind?.blocks || kind.blocks.includes(block);
   const toggle = (block: string) => editSystem(draft => {
-    const target = draft.records?.[of];
+    const target = draft.sheets?.[of];
     if (!target) return;
     const now = target.blocks ?? names;
     const next = now.includes(block) ? now.filter(b => b !== block) : [...now, block];
@@ -104,8 +104,8 @@ export function CharacterSection({ system, editSystem }: {
     pick({ activeFieldTag: made.key });
   };
   const addType = () => {
-    const key = freeId(Object.keys(system.records ?? {}), 'лист');
-    editSystem(draft => { (draft.records ??= {})[key] = { kind: 'sheet', label: 'Новый тип листа' }; });
+    const key = freeId([...Object.keys(system.sheets ?? {}), ...Object.keys(system.tables ?? {})], 'лист');
+    editSystem(draft => { (draft.sheets ??= {})[key] = { label: 'Новый тип листа' }; });
     setOf(key);
   };
   const pickField = (tag: string) => { setCell(null); pick({ activeFieldTag: tag === picked ? null : tag }); };
@@ -182,8 +182,8 @@ export function CharacterSection({ system, editSystem }: {
       {kind ? (
         <div className="inline inline--tight">
           <LabelInput value={kind.label ?? ''} placeholder="как зовётся тип листа"
-            onCommit={label => editSystem(draft => { const target = draft.records?.[of]; if (target) target.label = label; })} />
-          <DangerButton size="sm" onConfirm={() => { editSystem(draft => { delete draft.records?.[of]; }); setOf(''); }}>Удалить тип</DangerButton>
+            onCommit={label => editSystem(draft => { const target = draft.sheets?.[of]; if (target) target.label = label; })} />
+          <DangerButton size="sm" onConfirm={() => { editSystem(draft => { delete draft.sheets?.[of]; }); setOf(''); }}>Удалить тип</DangerButton>
         </div>
       ) : null}
       {open && openTable && openColumn ? (

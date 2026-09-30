@@ -1,5 +1,8 @@
 import { EngineError } from '../engine/errors.ts';
-import type { System, Effect, RecordKind, Param, Step, Binding, Modifier } from './types.ts';
+import type { System, Effect, Table, SheetKind, Param, Step, Binding, Modifier } from './types.ts';
+import { recordKinds, kindsOf } from './owned.ts';
+
+type AnyKind = Table & SheetKind;
 
 const MAX_CHAIN = 8;
 
@@ -60,16 +63,18 @@ function mergeEffect(base: Effect, own: Effect): Effect {
   return merged as Effect;
 }
 
-function mergeKind(base: RecordKind, own: RecordKind): RecordKind {
+function mergeKind<K extends Table | SheetKind>(base: K, own: K): K {
+  const b = base as AnyKind;
+  const o = own as AnyKind;
   const merged: Loose = { ...base, ...own };
-  merged.props = byKey((base.props ?? []) as { key: string }[], (own.props ?? []) as { key: string }[]);
-  merged.bindings = byOrder((base.bindings ?? []) as Binding[], (own.bindings ?? []) as Binding[]);
-  merged.modifiers = [...(base.modifiers ?? []), ...(own.modifiers ?? [])] as Modifier[];
-  merged.grants = union(base.grants, own.grants);
-  merged.blocks = union(base.blocks, own.blocks);
+  merged.columns = byKey(b.columns ?? [], o.columns ?? []);
+  merged.bindings = byOrder(b.bindings ?? [], o.bindings ?? []);
+  merged.modifiers = [...(b.modifiers ?? []), ...(o.modifiers ?? [])] as Modifier[];
+  merged.grants = union(b.grants, o.grants);
+  merged.blocks = union(b.blocks, o.blocks);
 
-  dropEmpty(merged, ['props', 'bindings', 'modifiers', 'grants', 'blocks']);
-  return merged as RecordKind;
+  dropEmpty(merged, ['columns', 'bindings', 'modifiers', 'grants', 'blocks']);
+  return merged as K;
 }
 
 export const basedOn = (thing: unknown): string | undefined => {
@@ -91,7 +96,7 @@ export function paramsOf(system: System, effect: Effect): Param[] {
 
 export function hasBases(system: System): boolean {
   for (const effect of Object.values(system.effects ?? {})) if (basedOn(effect)) return true;
-  for (const kind of Object.values(system.records ?? {})) if (basedOn(kind)) return true;
+  for (const [, kind] of kindsOf(system)) if (basedOn(kind)) return true;
   return false;
 }
 
@@ -113,24 +118,24 @@ export function flattenSystem(system: System): System {
     );
   }
 
-  const records: Record<string, RecordKind> = {};
-  for (const id of Object.keys(system.records ?? {})) {
-    const line = lineOf(id, key => {
-      const at = basedOn(system.records?.[key]);
-      if (at && !system.records?.[at]) {
-        throw new EngineError(`тип записи «${key}»: основы «${at}» в системе нет`);
-      }
-      return at;
-    }, 'тип записи');
-    records[id] = line.reduce<RecordKind>(
-      (done, key) => (done ? mergeKind(done, system.records![key]!) : system.records![key]!),
-      undefined as unknown as RecordKind,
-    );
-  }
+  const flat = <K extends Table | SheetKind>(all: Record<string, K>, mine: (key: string) => boolean): Record<string, K> => {
+    const out: Record<string, K> = { ...all };
+    for (const id of Object.keys(all).filter(mine)) {
+      const line = lineOf(id, key => {
+        const at = basedOn(all[key]);
+        if (at && !(all[at] && mine(at))) throw new EngineError(`тип записи «${key}»: основы «${at}» в системе нет`);
+        return at;
+      }, 'тип записи');
+      out[id] = line.reduce<K>((done, key) => (done ? mergeKind(done, all[key]!) : all[key]!), undefined as unknown as K);
+    }
+    return out;
+  };
+  const books = new Set(recordKinds(system).map(([id]) => id));
 
   return {
     ...system,
     effects,
-    ...(system.records ? { records } : {}),
+    ...(system.tables && [...books].some(id => basedOn(system.tables![id])) ? { tables: flat(system.tables, id => books.has(id)) } : {}),
+    ...(system.sheets ? { sheets: flat(system.sheets, () => true) } : {}),
   };
 }

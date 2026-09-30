@@ -21,5 +21,10 @@ export const cellOf = (row: TableRow | undefined, column: string): unknown =>
 export const isWordTable = (table: Table): boolean => !isRange(table);
 
 export function choiceTables(system: System): [string, Table][] {
-  return Object.entries(system.tables ?? {}).filter(([, table]) => isWordTable(table) && table.shape !== 'single');
+  return Object.entries(system.tables ?? {}).filter(([, table]) => isWordTable(table) && hasRows(table));
 }
+
+export const hasRows = (table: Table | undefined): boolean => Boolean(table) && table!.shape !== 'single' && table!.shape !== 'book';
+
+export const rowTables = (system: System): [string, Table][] =>
+  Object.entries(system.tables ?? {}).filter(([, table]) => hasRows(table));

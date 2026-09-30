@@ -16,6 +16,7 @@ import type { System } from '@vtt/schema';
 import { calledOf } from '@vtt/engine/engine/effects';
 import { blockNames } from '@vtt/engine/model/blocks';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { rowTables } from '@vtt/engine/model/tables';
 
 type SectionKey = 'character' | 'dice' | 'edits' | 'tables' | 'blocks' | 'initiative' | 'toggles';
 
@@ -30,7 +31,7 @@ const SECTIONS: Section[] = [
   { key: 'character', label: 'Листы', count: system => fieldsOf(system).filter(isCharacterColumn).length },
   { key: 'dice', label: 'Кости', count: system => dieEntries(system).length },
   { key: 'edits', label: 'Правки броска', count: system => Object.keys(system.roll_edits ?? {}).length },
-  { key: 'tables', label: 'Таблицы', count: system => Object.keys(system.tables ?? {}).length },
+  { key: 'tables', label: 'Таблицы', count: system => rowTables(system).length },
   { key: 'blocks', label: 'Блоки', count: system => blockNames(system).length },
   { key: 'initiative', label: 'Инициатива', lint: 'initiative', count: system => (system.initiative ? 1 : 0) },
   {

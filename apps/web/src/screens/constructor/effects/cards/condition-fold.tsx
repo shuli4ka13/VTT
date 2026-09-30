@@ -12,6 +12,7 @@ import type { EarlierStep } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
 import { readGuard, writeGuard } from '../../guard-expr.ts';
 import type { When, RowIs } from '../../guard-expr.ts';
+import { rowTables } from '@vtt/engine/model/tables';
 
 const EVENT_TAGS = 'event.tags';
 
@@ -62,7 +63,7 @@ const KIND_OF = (ref: string | undefined, earlier: EarlierStep[]): string =>
   (ref === EVENT_TAGS ? 'tags' : outputRefs(earlier).find(o => o.ref === ref)?.kind ?? 'boolean');
 
 const tablesOfTags = (system: System, tags: string[]) =>
-  Object.entries(system.tables ?? {})
+  rowTables(system)
     .filter(([, t]) => (t.columns ?? []).length && (t.rows ?? []).some(r => tags.includes(String(r.value))))
     .map(([id, t]) => [id, t.label || id] as const);
 

@@ -5,6 +5,7 @@ import { outcomeWords, rollName } from '../engine/roll-tags.ts';
 import type { Envelope } from './envelope.ts';
 import type { System, Sheet } from '../model/types.ts';
 import { fieldOf, hasField } from '../model/sheet-columns.ts';
+import { recordKinds } from '../model/owned.ts';
 
 const tagsOfStep = (step: Record<string, any> | undefined, trace?: Record<string, any>): string[] =>
   (trace?.tags ?? step?.tags ?? (step?.roll?.tags ?? []).filter((t: unknown) => typeof t === 'string')) as string[];
@@ -79,8 +80,8 @@ export function describeEntry(
     if ('param' in ref) return effect?.params?.find((p: any) => p.key === ref.param)?.label ?? String(ref.param);
     if ('tag' in ref) return labelOf(String(ref.tag));
     if ('prop' in ref) {
-      for (const kind of Object.values(system.records ?? {}) as any[]) {
-        const prop = kind.props?.find((p: any) => p.key === ref.prop);
+      for (const [, kind] of recordKinds(system)) {
+        const prop = kind.columns?.find(p => p.key === ref.prop);
         if (prop) return prop.label ?? String(ref.prop);
       }
       return String(ref.prop);

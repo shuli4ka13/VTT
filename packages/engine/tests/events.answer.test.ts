@@ -4,7 +4,7 @@ import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const system = {
   id: 'ответ', name: 'ответ',
-  tables: { лист: { shape: 'single', columns: [{ key: 'хп', label: 'Хиты', kind: 'number', default: 20 }] } },
+  tables: { лист: { shape: 'single', columns: [{ key: 'хп', label: 'Хиты', kind: 'number', default: 20 }] } , приём: { shape: 'book', use: 'action', label: 'Приём' } },
   effects: {
     урон: {
       label: 'Урон', params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }],
@@ -26,10 +26,10 @@ const system = {
       ],
     },
   },
-  records: { приём: { kind: 'action', label: 'Приём' } },
+  
 } as unknown as System;
 
-const book = { records: [{ id: 'касание', rk: 'приём', label: 'Касание', bindings: [{ label: 'Касание', effect: 'касание', args: {} }] }] } as unknown as Compendium;
+const book = { records: [{ id: 'касание', table: 'приём', label: 'Касание', bindings: [{ label: 'Касание', effect: 'касание', args: {} }] }] } as unknown as Compendium;
 const sheet = (id: string, хп: number, effects: string[] = []): Sheet =>
   ({ id, systemId: 'ответ', name: id, values: { хп }, has: [{ of: 'касание' }], effects: effects.map(effectId => ({ effectId })) } as unknown as Sheet);
 

@@ -60,7 +60,6 @@ export const emptySystem = (): System => ({
   name: 'Новая система',
   effects: {},
   grants: [],
-  records: {},
   constants: {},
   tables: {},
   rolls: [],

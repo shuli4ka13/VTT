@@ -19,9 +19,9 @@ group('предмет даёт действие', () => {
     const sword = findItem('longsword-item');
     ok(!sword.activities, 'у записи нет ни активностей, ни шагов');
     ok(!('rule' in sword), 'и промежуточной записи-вызова тоже нет');
-    ok(system.records[sword.rk].bindings.some(b => b.effect === 'strike'),
+    ok(system.tables[sword.table].bindings.some(b => b.effect === 'strike'),
       'привязку объявил род «Оружие» в системе');
-    ok(sword.props.damage_dice, 'запись заполнила ровно одну циферку — кость урона');
+    ok(sword.cells.damage_dice, 'запись заполнила ровно одну циферку — кость урона');
   });
 
   test('надетый меч появляется в списке действий владельца', () => {
@@ -50,7 +50,7 @@ group('предмет даёт действие', () => {
     const spell = list.find(a => a.id === 'poison-spray:0');
     ok(spell, 'выученное заклинание в списке');
     eq(spell.effect, 'save', 'род «Атакующее заклинание» привязан к спасброску');
-    eq(spell.record.props.damage_dice, '2d6', 'а кость урона ввёл человек');
+    eq(spell.record.cells.damage_dice, '2d6', 'а кость урона ввёл человек');
   });
 
   test('своя активность перебивает привязку рода — так живут штучные вещи', () => {
@@ -68,7 +68,7 @@ group('предмет даёт действие', () => {
   });
 
   test('свойства оружия объявляет система: нет объявления — внятная ошибка', () => {
-    const { records, ...noSchema } = system;
+    const noSchema = { ...system, tables: Object.fromEntries(Object.entries(system.tables).filter(([, t]) => t.shape !== 'book')) };
     throws(() => send('longsword-item:0', { system: noSchema, sheet: arven, compendium, die: queue(10) }),
       'longsword-item');
   });

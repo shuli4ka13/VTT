@@ -5,6 +5,7 @@ import { listUsers } from '../src/model/lists.ts';
 import { danglingRows } from '../src/model/integrity.ts';
 import type { System, Compendium } from '../src/model/types.ts';
 import { fieldsOf } from '../src/model/sheet-columns.ts';
+import { recordKinds, recordKindOf } from '../src/model/owned.ts';
 
 type Loose = Record<string, unknown>;
 
@@ -27,8 +28,8 @@ const troublesOf = (system: System): string[] => {
       if (!lists[tagsFrom]) out.push(`эффект «${effect.label ?? id}»: словаря меток «${tagsFrom}» нет`);
     }
   }
-  for (const [rk, kind] of Object.entries(system.records ?? {})) {
-    for (const p of (kind.props ?? [])) look(`тип «${kind.label ?? rk}» · ${p.label ?? p.key}`, p as Loose);
+  for (const [rk, kind] of recordKinds(system)) {
+    for (const p of (kind.columns ?? [])) look(`тип «${kind.label ?? rk}» · ${p.label ?? p.key}`, p as Loose);
   }
   for (const field of fieldsOf(system)) {
     const from = choiceTableOf(field);
@@ -40,7 +41,7 @@ const troublesOf = (system: System): string[] => {
 const unfilledOf = (system: System, book: Compendium): string[] => {
   const out: string[] = [];
   for (const record of (book.records ?? [])) {
-    const kind = system.records?.[String(record.rk)];
+    const kind = recordKindOf(system, record.table);
     if (!kind) continue;
     const must = new Set<string>();
     for (const binding of (kind.bindings ?? [])) {
@@ -52,9 +53,9 @@ const unfilledOf = (system: System, book: Compendium): string[] => {
         if (typeof ref?.by?.prop === 'string') must.add(ref.by.prop as string);
       }
     }
-    for (const prop of (kind.props ?? [])) {
+    for (const prop of (kind.columns ?? [])) {
       if (!must.has(prop.key)) continue;
-      const value = (record.props ?? {})[prop.key];
+      const value = (record.cells ?? {})[prop.key];
       if (value === undefined || value === '') out.push(`«${record.label}» · ${prop.label ?? prop.key}`);
     }
   }
@@ -87,8 +88,7 @@ group('словарь — одно место правды', () => {
 
   test('негативный контроль: проверки видят подделку', () => {
     const кривая = { effects: { бой: { label: 'Бой', params: [{ key: 'тип', label: 'Тип', kind: 'choice' }] } },
-      records: { меч: { label: 'Меч', props: [{ key: 'тип', label: 'Тип', kind: 'choice', from: 'нетути' }] } },
-      tables: {},
+      tables: { меч: { shape: 'book', use: 'item', label: 'Меч', columns: [{ key: 'тип', label: 'Тип', kind: 'choice', from: 'нетути' }] } },
     } as unknown as System;
     eq(troublesOf(кривая).length, 2, troublesOf(кривая).join(' | '));
   });

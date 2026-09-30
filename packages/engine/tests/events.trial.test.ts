@@ -42,7 +42,7 @@ group('пробный прогон эффекта на манекенах', () =
     const out = trial({ system, compendium: world.compendium as Compendium, effectId: 'strike', from: arven!, to: mirra!, dice: 'max', args: { damage_dice: '1d8' } });
     const after = out.sheets.find(s => s.id === mirra!.id)!;
     ok(Number(after.values.hp_current) < Number(mirra!.values.hp_current), out.lines.join('\n'));
-    ok(!('__проба' in (system.records ?? {})), 'исходная система не тронута');
+    ok(!('__проба' in (system.tables ?? {})), 'исходная система не тронута');
   });
 
   test('висящий на листе — отказ словами', () => {

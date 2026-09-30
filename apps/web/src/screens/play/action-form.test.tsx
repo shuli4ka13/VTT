@@ -6,7 +6,7 @@ import type { System, Compendium } from '@vtt/schema';
 
 const system = {
   id: 'x', name: 'x',
-  tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] }, места: { label: 'Места', key: 'word', rows: [{ value: 'тело', label: 'тело' }, { value: 'голова', label: 'голова' }] } },
+  tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] }, места: { label: 'Места', key: 'word', rows: [{ value: 'тело', label: 'тело' }, { value: 'голова', label: 'голова' }] } , ствол: { shape: 'book', use: 'action', label: 'Ствол', columns: [], bindings: [{ label: 'Выстрел', effect: 'выстрел', args: {} }] }, меч: { shape: 'book', use: 'action', label: 'Меч', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
   effects: {
     выстрел: {
       label: 'Выстрел', activation: 'manual',
@@ -18,14 +18,11 @@ const system = {
     },
     удар: { label: 'Удар', activation: 'manual', params: [], steps: [] },
   },
-  records: {
-    ствол: { kind: 'action', label: 'Ствол', props: [], bindings: [{ label: 'Выстрел', effect: 'выстрел', args: {} }] },
-    меч: { kind: 'action', label: 'Меч', props: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] },
-  },
+  
 } as unknown as System;
 
 const compendium = {
-  records: [{ id: 'ствол', rk: 'ствол', label: 'Ствол', props: {} }, { id: 'меч', rk: 'меч', label: 'Меч', props: {} }],
+  records: [{ id: 'ствол', table: 'ствол', label: 'Ствол', cells: {} }, { id: 'меч', table: 'меч', label: 'Меч', cells: {} }],
 } as unknown as Compendium;
 
 describe('форма действия спрашивает то, что объявлено', () => {

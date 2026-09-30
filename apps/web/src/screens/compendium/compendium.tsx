@@ -1,6 +1,6 @@
 import { bindingsOf } from '@vtt/engine/events/envelope';
 import { GrantsEditor } from '../constructor/grants-editor.tsx';
-import { recordsOf, isItem, propsNeeded } from '@vtt/engine/model/owned';
+import { recordsOf, isItem, propsNeeded, recordKindOf, recordKinds } from '@vtt/engine/model/owned';
 import { TABS } from '../../words.ts';
 import { useWorld, freeId, randomTag } from '../../store/world.ts';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
@@ -11,7 +11,8 @@ import {
 import { ModifiersEditor } from '../constructor/modifiers.tsx';
 import { RecordView } from '../../sheet/record-view.tsx';
 import { ValueEditor } from '../../ui/value-editor.tsx';
-import type { CompendiumRecord, RecordKind, System, Compendium } from '@vtt/schema';
+import type { CompendiumRecord, System, Compendium } from '@vtt/schema';
+import type { RecordKind } from '@vtt/engine/model/owned';
 
 export function CompendiumScreen() {
   const system = useWorld(s => s.system);
@@ -21,7 +22,7 @@ export function CompendiumScreen() {
   const pick = useWorld(s => s.pick);
   const editCompendium = useWorld(s => s.editCompendium);
 
-  const kinds = Object.entries(system.records ?? {}).filter(([, kind]) => kind.kind !== 'sheet');
+  const kinds = recordKinds(system);
   const all = recordsOf(compendium).map(r => ({ record: r, basis: isItem(system, r) ? 'item' as const : 'action' as const }));
   const active = all.find(entry => entry.record.id === activeId) ?? null;
 
@@ -29,12 +30,12 @@ export function CompendiumScreen() {
     const taken = all.map(e => e.record.id);
     const id = freeId(taken, `${kind.label ?? rk}_${randomTag()}`);
     editCompendium(draft => {
-      (draft.records ??= []).push({ id, rk, label: `Новая запись (${kind.label ?? rk})`, props: {} });
+      (draft.records ??= []).push({ id, table: rk, label: `Новая запись (${kind.label ?? rk})`, cells: {} });
     });
     pick({ activeRecordId: id });
   };
 
-  const tree = blockTree(system, all, entry => system.records?.[String(entry.record.rk)]?.group);
+  const tree = blockTree(system, all, entry => recordKindOf(system, entry.record.table)?.block);
 
   return (
     <Columns
@@ -52,7 +53,7 @@ export function CompendiumScreen() {
                   <ListItem
                     key={record.id}
                     name={record.label ?? record.id}
-                    meta={system.records?.[String(record.rk)]?.label ?? 'тип неизвестен'}
+                    meta={recordKindOf(system, record.table)?.label ?? 'тип неизвестен'}
                     active={record.id === activeId}
                     onClick={() => pick({ activeRecordId: record.id })}
                   />
@@ -85,7 +86,7 @@ export function CompendiumScreen() {
               {kinds.map(([rk, kind]) => (
                 <button key={rk} type="button" className="card card--pick" onClick={() => add(rk, kind)}>
                   <span className="card__title" style={{ fontSize: 'var(--fs-4)' }}>{kind.label ?? rk}</span>
-                  <span className="card__sub">{kind.hint ?? `спросят: ${kind.props?.length ?? 0}`}</span>
+                  <span className="card__sub">{kind.hint ?? `спросят: ${kind.columns?.length ?? 0}`}</span>
                 </button>
               ))}
             </div>
@@ -99,7 +100,7 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
   const editCompendium = useWorld(s => s.editCompendium);
   const pick = useWorld(s => s.pick);
 
-  const kind = system.records?.[String(record.rk)];
+  const kind = recordKindOf(system, record.table);
 
   const edit = (change: (draft: CompendiumRecord) => void) => {
     editCompendium(draft => {
@@ -138,7 +139,7 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
 
       {!kind ? (
         <Verdict tone="bad">
-          Рода «{String(record.rk)}» в системе нет — запись не знает, что о ней спрашивать.
+          Рода «{String(record.table)}» в системе нет — запись не знает, что о ней спрашивать.
         </Verdict>
       ) : null}
 
@@ -149,26 +150,26 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
         </span>
       ) : null}
 
-      {kind?.props?.length ? (
+      {kind?.columns?.length ? (
         <Card>
           <CardHead title="Циферки" />
           <div className="row">
-            {kind.props.map(prop => (
+            {kind.columns.map(prop => (
               <Field
                 key={prop.key}
                 label={prop.label ?? prop.key}
                 needed={mustFill.has(prop.key)
-                  && (record.props?.[prop.key] === undefined || record.props[prop.key] === ''
-                    || (Array.isArray(record.props[prop.key]) && !(record.props[prop.key] as unknown[]).length))}
+                  && (record.cells?.[prop.key] === undefined || record.cells[prop.key] === ''
+                    || (Array.isArray(record.cells[prop.key]) && !(record.cells[prop.key] as unknown[]).length))}
               >
                 <ValueEditor
                   type={prop}
-                  value={record.props?.[prop.key]}
+                  value={record.cells?.[prop.key]}
                   system={system}
                   compendium={compendium}
                   onlyWorn
                   except={record.id}
-                  onChange={next => edit(draft => { (draft.props ??= {})[prop.key] = next; })}
+                  onChange={next => edit(draft => { (draft.cells ??= {})[prop.key] = next; })}
                 />
               </Field>
             ))}
@@ -194,7 +195,7 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
         </Card>
       ) : null}
 
-      {kind?.kind === 'item' ? (
+      {kind?.use === 'item' ? (
         <ModifiersEditor
           system={system}
           title="Что правит эта вещь"

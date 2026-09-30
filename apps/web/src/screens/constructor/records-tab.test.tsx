@@ -23,10 +23,10 @@ describe('RecordsTab: тип видит входы эффекта', () => {
         effects: {
           hit: { label: 'Удар', activation: 'manual', params: [{ key: 'кость', label: 'Кость урона', kind: 'dice' }], steps: [] },
         },
-        records: {
+        tables: {
           weapon: {
-            kind: 'item', label: 'Оружие', group: 'Снаряжение',
-            props: [],
+            shape: 'book', use: 'item', label: 'Оружие', block: 'Снаряжение',
+            columns: [],
             bindings: [{ label: 'Удар', effect: 'hit', args: {} }],
           },
         },
@@ -42,9 +42,9 @@ describe('RecordsTab: тип видит входы эффекта', () => {
     набрать('Кость урона', '');
     fireEvent.mouseDown([...document.querySelectorAll('.slot__option')].find(o => o.textContent?.includes('новое свойство'))!);
 
-    const kind = useWorld.getState().system.records!.weapon!;
-    expect(kind.props!.some(p => p.label === 'Кость урона' && p.kind === 'dice')).toBe(true);
-    expect(kind.props![0]!.key).toBe('кость');
+    const kind = useWorld.getState().system.tables!.weapon!;
+    expect(kind.columns!.some(p => p.label === 'Кость урона' && p.kind === 'dice')).toBe(true);
+    expect(kind.columns![0]!.key).toBe('кость');
     expect((kind.bindings![0] as any).args?.['кость']).toBeUndefined();
     expect(строкаВхода('Кость урона').textContent).toContain('берётся из свойства');
   });
@@ -64,15 +64,15 @@ describe('RecordsTab: тип видит входы эффекта', () => {
         effects: {
           hit: { label: 'Удар', activation: 'manual', params: [{ key: 'кость', label: 'Кость урона', kind: 'dice' }], steps: [] },
         },
-        records: {
+        tables: {
           weapon: {
-            kind: 'item', label: 'Оружие', group: 'Снаряжение',
-            props: [{ key: 'кость', label: 'Кость урона' }],
+            shape: 'book', use: 'item', label: 'Оружие', block: 'Снаряжение',
+            columns: [{ key: 'кость', label: 'Кость урона' }],
             bindings: [{ label: 'Удар', effect: 'hit', args: {} }],
           },
           armor: {
-            kind: 'item', label: 'Доспех', group: 'Снаряжение',
-            props: [{ key: 'защита', label: 'Класс защиты' }],
+            shape: 'book', use: 'item', label: 'Доспех', block: 'Снаряжение',
+            columns: [{ key: 'защита', label: 'Класс защиты' }],
             bindings: [],
           },
         },
@@ -88,7 +88,7 @@ describe('RecordsTab: тип видит входы эффекта', () => {
       system,
       effect: system.effects.hit!,
       earlier: [],
-      recordKind: system.records!.weapon!,
+      recordKind: system.tables!.weapon!,
     }, undefined, ['prop']).map(option => option.label);
 
     expect(предложат.some(label => label.includes('Кость урона')), предложат.join(' | ')).toBe(true);
@@ -102,9 +102,9 @@ describe('модификаторы типа', () => {
       ...state,
       system: {
         ...state.system,
-        tables: { лист: { shape: 'single', columns: [{ key: 'скрытность', label: 'Скрытность', kind: 'number', roll: { label: 'Проверка: Скрытность' } }] } },
+        tables: { лист: { shape: 'single', columns: [{ key: 'скрытность', label: 'Скрытность', kind: 'number', roll: { label: 'Проверка: Скрытность' } }] } , тяжёлый: { shape: 'book', use: 'item', label: 'Тяжёлый доспех', columns: [], bindings: [] } },
         roll_edits: { помеха: { label: 'Помеха', ops: [{ op: 'addDie' }] } },
-        records: { тяжёлый: { kind: 'item', label: 'Тяжёлый доспех', props: [], bindings: [] } },
+        
       },
       activeRecordKind: 'тяжёлый',
     }));
@@ -119,7 +119,7 @@ describe('модификаторы типа', () => {
     render(<RecordsTab />);
     fireEvent.click(screen.getByText('+ правит бросок'));
 
-    const kind = useWorld.getState().system.records!['тяжёлый']!;
+    const kind = useWorld.getState().system.tables!['тяжёлый']!;
     expect(kind.modifiers).toHaveLength(1);
     expect(kind.modifiers![0]).toMatchObject({ kind: 'roll', edit: 'помеха' });
     expect(useWorld.getState().compendium.records).toEqual([]);
@@ -135,10 +135,10 @@ describe('RecordsTab: свойство знает свою судьбу', () => 
         effects: {
           hit: { label: 'Удар', activation: 'manual', params: [{ key: 'кость', label: 'Кость урона', kind: 'dice' }], steps: [] },
         },
-        records: {
+        tables: {
           weapon: {
-            kind: 'item', label: 'Оружие', group: 'Снаряжение',
-            props: [
+            shape: 'book', use: 'item', label: 'Оружие', block: 'Снаряжение',
+            columns: [
               { key: 'damage_dice', label: 'Кость урона', kind: 'dice' },
               { key: 'вес', label: 'Вес', kind: 'number' },
             ],
@@ -152,7 +152,9 @@ describe('RecordsTab: свойство знает свою судьбу', () => 
 
   it('протянутое свойство называет кнопку, справочное — говорит «никуда»', () => {
     render(<RecordsTab />);
+    fireEvent.click(screen.getByRole('button', { name: 'Кость урона' }));
     expect(screen.getByText('уходит в кнопку «Удар»')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Вес' }));
     expect(screen.getByText(/никуда не уходит/)).toBeTruthy();
   });
 
@@ -170,8 +172,8 @@ describe('RecordsTab: свойство на лист или служебное',
       system: {
         ...state.system,
         effects: {},
-        records: {
-          weapon: { kind: 'item', label: 'Оружие', props: [{ key: 'вес', label: 'Вес', kind: 'number' }], bindings: [] },
+        tables: {
+          weapon: { shape: 'book', use: 'item', label: 'Оружие', columns: [{ key: 'вес', label: 'Вес', kind: 'number' }], bindings: [] },
         },
       },
       activeRecordKind: 'weapon',
@@ -180,15 +182,18 @@ describe('RecordsTab: свойство на лист или служебное',
 
   it('по умолчанию свойство на листе; «служебное» пишет onSheet: false, обратно — убирает ключ', () => {
     render(<RecordsTab />);
+    fireEvent.click(screen.getByRole('button', { name: 'Вес' }));
+    fireEvent.click(screen.getByText('ещё'));
     const where = screen.getByDisplayValue('на лист — игрок видит') as HTMLSelectElement;
     fireEvent.change(where, { target: { value: 'service' } });
-    expect(useWorld.getState().system.records!.weapon!.props![0]!.onSheet).toBe(false);
+    expect(useWorld.getState().system.tables!.weapon!.columns![0]!.onSheet).toBe(false);
     fireEvent.change(where, { target: { value: 'sheet' } });
-    expect('onSheet' in useWorld.getState().system.records!.weapon!.props![0]!).toBe(false);
+    expect('onSheet' in useWorld.getState().system.tables!.weapon!.columns![0]!).toBe(false);
   });
 
   it('среди видов свойства есть «запись»', () => {
     render(<RecordsTab />);
+    fireEvent.click(screen.getByRole('button', { name: 'Вес' }));
     const kind = screen.getByDisplayValue('число') as HTMLSelectElement;
     expect([...kind.options].map(o => o.textContent)).toContain('запись');
   });
@@ -209,7 +214,11 @@ describe('слот привязки подсказывает то, чем его
         label: 'Бонус атаки по тому, чем бьют', key: 'word',
         columns: [{ key: 'value', label: 'формула', kind: 'expr' }], rows: [],
       },
-    },
+     weapon: {
+        shape: 'book', use: 'item', label: 'Оружие',
+        columns: [{ key: 'wield', label: 'Чем бьют', kind: 'text' }],
+        bindings: [{ label: 'Удар', effect: 'hit', args: {} }],
+      } },
     effects: {
       hit: {
         label: 'Удар', activation: 'manual', steps: [],
@@ -219,13 +228,7 @@ describe('слот привязки подсказывает то, чем его
         ],
       },
     },
-    records: {
-      weapon: {
-        kind: 'item', label: 'Оружие',
-        props: [{ key: 'wield', label: 'Чем бьют', kind: 'text' }],
-        bindings: [{ label: 'Удар', effect: 'hit', args: {} }],
-      },
-    },
+    
   });
 
   beforeEach(() => {
@@ -257,8 +260,8 @@ describe('слот привязки подсказывает то, чем его
       .find(o => o.textContent?.includes('новое свойство'))!;
     fireEvent.mouseDown(кнопка);
 
-    const kind = useWorld.getState().system.records!.weapon!;
-    const свойство = kind.props!.find(p => p.label === 'Тип урона')!;
+    const kind = useWorld.getState().system.tables!.weapon!;
+    const свойство = kind.columns!.find(p => p.label === 'Тип урона')!;
     expect(свойство.kind).toBe('choice');
     expect(свойство.from).toBe('damage_types');
     expect(свойство.key).toBe('damage_type');

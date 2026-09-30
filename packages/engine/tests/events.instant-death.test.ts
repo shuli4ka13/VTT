@@ -30,7 +30,7 @@ const sys: any = {
 };
 
 const compendium: any = {
-  records: [{ id: 'strike', rk: 'приём', label: 'Удар', bindings: [{ label: 'Удар', effect: 'удар', args: { величина: 0 } }] }],
+  records: [{ id: 'strike', table: 'приём', label: 'Удар', bindings: [{ label: 'Удар', effect: 'удар', args: { величина: 0 } }] }],
 };
 
 const hit = (величина: number, хп: number, хп_макс: number) => {

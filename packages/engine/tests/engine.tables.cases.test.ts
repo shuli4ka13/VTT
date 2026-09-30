@@ -67,7 +67,7 @@ group('формула видит результат шага выше', () => {
       tables: { лист: { shape: 'single', columns: [
         { key: 'хиты', label: 'Хиты', kind: 'number', default: 100, min: 0 },
         { key: 'порог', label: 'Крит от', kind: 'number', default: 20 },
-      ] } },
+      ] } , приём: { shape: 'book', use: 'action', label: 'Приём', bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
       constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
       effects: {
         удар: {
@@ -80,9 +80,9 @@ group('формула видит результат шага выше', () => {
           ],
         },
       },
-      records: { приём: { kind: 'action', label: 'Приём', bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
+      
     } as unknown as System;
-    const книга = { records: [{ id: 'приём', rk: 'приём', label: 'Удар', props: {} }] } as never;
+    const книга = { records: [{ id: 'приём', table: 'приём', label: 'Удар', cells: {} }] } as never;
     const лист = (порог: number) => ({
       id: 'я', systemId: 'к', name: 'я',
       values: { порог }, has: [{ of: 'приём' }], effects: []

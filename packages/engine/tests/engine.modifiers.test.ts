@@ -343,7 +343,7 @@ group('модификаторы', () => {
       const all = targets(system);
       const incoming = fieldsOf(system).filter(f => f.value.kind === 'stored').length;
       const events = calledOf(system).length;
-      const cells = Object.values(system.tables ?? {}).filter(table => table.shape !== 'single').reduce((n, table) => {
+      const cells = Object.values(system.tables ?? {}).filter(table => table.shape !== 'single' && table.shape !== 'book').reduce((n, table) => {
         const columns = (table.columns ?? []).filter(c => c.kind === 'expr' || c.kind === 'number').length;
         const rows = table.key === 'range' ? 0 : (table.rows ?? []).filter(r => r.value !== undefined).length;
         return n + columns * (1 + rows);

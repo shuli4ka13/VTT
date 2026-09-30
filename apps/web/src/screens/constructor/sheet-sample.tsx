@@ -26,7 +26,7 @@ export function SheetSample({ system, picked, onPick }: { system: System; picked
   const editSystem = useWorld(s => s.editSystem);
   const kinds = sheetKinds(system);
   const [of, setOf] = useState('');
-  const kind = of ? system.records?.[of] : undefined;
+  const kind = of ? system.sheets?.[of] : undefined;
   const sample = useMemo<Sheet>(() => ({
     id: 'образец', systemId: system.id ?? '', name: kind?.label ?? 'Образец листа',
     ...(of ? { of } : {}), values: {}, has: [], effects: [],

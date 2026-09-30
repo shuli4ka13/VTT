@@ -193,7 +193,7 @@ group('ход в бою: наложенный эффект получает ср
       timed: { label: 'На два раунда', activation: 'passive', duration: { kind: 'rounds', max: 2 }, modifiers: [] },
     },
   };
-  const book: any = { ...compendium, records: [...(compendium.records ?? []), { id: 'bless', rk: 'action', label: 'Благословить', bindings: [{ label: 'Благословить', effect: 'bless_action', args: {} }] }] };
+  const book: any = { ...compendium, records: [...(compendium.records ?? []), { id: 'bless', table: 'action', label: 'Благословить', bindings: [{ label: 'Благословить', effect: 'bless_action', args: {} }] }] };
   const cleric = { ...arven, records: ['bless'] };
 
   test('в третьем раунде «Благословлён» на два раунда получает until = 5', () => {
