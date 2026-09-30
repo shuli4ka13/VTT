@@ -46,19 +46,6 @@ describe('Словари: кости, правки броска, таблицы'
     expect(edits.disadvantage?.label).toBe('Помеха');
   });
 
-  it('инициатива объявляется костью системы и снимается выбором «нет»', () => {
-    renderOpen(<RulesTab />);
-    открыть('Кости');
-    fireEvent.click(screen.getByText('+ кость'));
-    const dieKey = Object.keys(useWorld.getState().system.constants ?? {})[0]!;
-    открыть('Инициатива');
-    const select = [...document.querySelectorAll('select')].find(el => [...el.options].some(o => o.textContent?.includes('инициативы нет')))!;
-    fireEvent.change(select, { target: { value: dieKey } });
-    expect(useWorld.getState().system.initiative).toEqual({ die: { constant: dieKey } });
-    fireEvent.change(select, { target: { value: '' } });
-    expect(useWorld.getState().system.initiative).toBeUndefined();
-  });
-
   it('кость заводится и попадает в словарь системы', () => {
     renderOpen(<RulesTab />);
     открыть('Кости');

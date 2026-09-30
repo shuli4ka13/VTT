@@ -37,7 +37,6 @@ const AUTHOR_ONLY = [
   'constructor/rules/roll-edits-section.tsx',
   'constructor/rules/rolls-section.tsx',
   'constructor/rules/tables-section.tsx',
-  'constructor/rules/initiative-section.tsx',
 ];
 
 const PLAY_SCREENS = ['screens/play/sheet.tsx', 'screens/play/table.tsx', 'screens/play/lobby.tsx'];

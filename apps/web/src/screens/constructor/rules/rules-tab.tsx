@@ -7,18 +7,15 @@ import { useProblems } from '../problems.ts';
 import { DiceSection, dieEntries } from './dice-section.tsx';
 import { RollEditsSection, AdvantagePalette } from './roll-edits-section.tsx';
 import { TablesSection } from './tables-section.tsx';
-import { InitiativeSection } from './initiative-section.tsx';
 import { TogglesSection } from './toggles-section.tsx';
-import { BlocksSection } from './blocks-section.tsx';
 import { CharacterSection, isCharacterColumn } from './character-section.tsx';
 import { critOf, armorOf } from '@vtt/engine/model/toggles';
 import type { System } from '@vtt/schema';
 import { calledOf } from '@vtt/engine/engine/effects';
-import { blockNames } from '@vtt/engine/model/blocks';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 import { rowTables } from '@vtt/engine/model/tables';
 
-type SectionKey = 'character' | 'dice' | 'edits' | 'tables' | 'blocks' | 'initiative' | 'toggles';
+type SectionKey = 'character' | 'dice' | 'edits' | 'tables' | 'toggles';
 
 interface Section {
   key: SectionKey;
@@ -32,8 +29,6 @@ const SECTIONS: Section[] = [
   { key: 'dice', label: 'Кости', count: system => dieEntries(system).length },
   { key: 'edits', label: 'Правки броска', count: system => Object.keys(system.roll_edits ?? {}).length },
   { key: 'tables', label: 'Таблицы', count: system => rowTables(system).length },
-  { key: 'blocks', label: 'Блоки', count: system => blockNames(system).length },
-  { key: 'initiative', label: 'Инициатива', lint: 'initiative', count: system => (system.initiative ? 1 : 0) },
   {
     key: 'toggles', label: 'Быстрые настройки',
     count: system => [
@@ -90,8 +85,6 @@ export function RulesTab() {
             {section === 'dice' ? <DiceSection system={system} editSystem={editSystem} usage={usage} /> : null}
             {section === 'edits' ? <RollEditsSection system={system} editSystem={editSystem} usage={usage} /> : null}
             {section === 'tables' ? <TablesSection system={system} editSystem={editSystem} usage={usage} /> : null}
-            {section === 'blocks' ? <BlocksSection system={system} /> : null}
-            {section === 'initiative' ? <InitiativeSection system={system} editSystem={editSystem} /> : null}
             {section === 'toggles' ? <TogglesSection system={system} editSystem={editSystem} /> : null}
           </>
         ),
