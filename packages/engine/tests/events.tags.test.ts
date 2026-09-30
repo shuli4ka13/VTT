@@ -140,11 +140,11 @@ group('реакции слушают слово, а не имя эффекта',
   const spiky = world({
     шипы: {
       label: 'Шипы', activation: 'passive', duration: { kind: 'permanent' },
-      on: [{ on: 'event:урон', to: 'other', if: null, steps: [{ type: 'emit', event: 'урон', args: damageArgs({ expr: '@event.amount' }, ['колющий']) }] }],
+      on: [{ on: 'affected', of: 'event:урон', to: 'other', if: null, steps: [{ type: 'emit', event: 'урон', args: damageArgs({ expr: '@event.amount' }, ['колющий']) }] }],
     },
     сторож: {
       label: 'Сторож', activation: 'passive', duration: { kind: 'permanent' },
-      on: [{ on: 'event:тревога', to: 'other', steps: [{ type: 'apply', target: { tag: 'хп' }, direction: 'add', value: { expr: '1' } }] }],
+      on: [{ on: 'affected', of: 'event:тревога', to: 'other', steps: [{ type: 'apply', target: { tag: 'хп' }, direction: 'add', value: { expr: '1' } }] }],
     },
   });
 
@@ -173,7 +173,7 @@ group('реакции слушают слово, а не имя эффекта',
       ...spiky.effects,
       сосредоточен: {
         label: 'Сосредоточен', activation: 'passive', duration: { kind: 'permanent' },
-        on: [{ on: 'event:урон', steps: [{ type: 'status', mode: 'remove', effect: { const: 'сосредоточен' } }] }],
+        on: [{ on: 'affected', of: 'event:урон', steps: [{ type: 'status', mode: 'remove', effect: { const: 'сосредоточен' } }] }],
       },
     });
     const r = exchange({

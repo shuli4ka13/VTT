@@ -109,7 +109,7 @@ describe('пробный расчёт и итог бросают одни кос
       ...dnd,
       effects: {
         ...dnd.effects,
-        watch: { label: 'Настороже', activation: 'passive', duration: { kind: 'permanent' }, params: [], on: [{ on: '*', phase: 'before', confirm: true, steps: [] }] },
+        watch: { label: 'Настороже', activation: 'passive', duration: { kind: 'permanent' }, params: [], on: [{ on: 'targeted', confirm: true, steps: [] }] },
       },
     };
     const token = (await http().post('/auth/login').send({ name: 'Страж' })).body.token as string;
@@ -157,7 +157,7 @@ describe('публикация проверяет систему линтом', 
 
     await as(http().put(`/systems/${id}`)).send({
       title: 'Сломанная',
-      system: { ...system, effects: { thorns: { ...system.effects.thorns, on: [{ on: '*', to: 'other', steps: [] }] } } },
+      system: { ...system, effects: { thorns: { ...system.effects.thorns, on: [{ on: 'affected', to: 'other', steps: [] }] } } },
     }).expect(200);
     await as(http().post(`/systems/${id}/publish`)).send({}).expect(201);
   });
@@ -392,7 +392,7 @@ describe('вопросы к человеку переживают пересбо
         },
         вдохновение: {
           label: 'Вдохновение', activation: 'passive',
-          on: [{ on: '*', role: 'sender', phase: 'before', confirm: true, claims: ['плюс'], steps: [] }],
+          on: [{ on: 'acting', confirm: true, claims: ['плюс'], steps: [] }],
         },
       },
       
@@ -448,7 +448,7 @@ describe('цель правит свой бросок, увидев его', () 
         },
         везение: {
           label: 'Везение', activation: 'passive',
-          on: [{ on: '*', phase: 'before', confirm: true, claims: ['удача'], steps: [] }],
+          on: [{ on: 'targeted', confirm: true, claims: ['удача'], steps: [] }],
         },
       },
       
@@ -607,7 +607,7 @@ describe('реакция после разрешения', () => {
         },
         возмездие: {
           label: 'Возмездие', activation: 'passive',
-          on: [{ on: 'удар', to: 'other', confirm: true, steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '2' } }] }],
+          on: [{ on: 'affected', of: 'удар', to: 'other', confirm: true, steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '2' } }] }],
         },
       },
       

@@ -234,24 +234,26 @@ describe('три вида создания, два вида запуска', () 
     expect(all.replace(/Реакции/g, '').match(/.{30}(реакци|триггерн).{30}/i)?.[0] ?? null).toBeNull();
   });
 
-  it('у «когда» роль и фаза собраны в один список: после молча или до с вопросом', () => {
+  it('«когда» — один список моментов словами правил: момент сам задаёт сторону, до/после и вопрос', () => {
     renderOpen(<EffectsTab />);
     fireEvent.click(screen.getByText('+ срабатывает сам'));
     const moment = [...document.querySelectorAll('select')]
       .find(el => [...el.options].some(o => o.value === 'ask-target'))!;
-    expect([...moment.options].map(o => o.value))
-      .toEqual(['after-in', 'after-out', 'before-in', 'ask-target', 'ask-sender', 'ask-after']);
+    expect([...moment.options].map(o => o.value).slice(0, 7))
+      .toEqual(['', 'after-in', 'after-out', 'before-in', 'ask-target', 'ask-sender', 'ask-after']);
 
     fireEvent.change(moment, { target: { value: 'ask-sender' } });
     const effect = Object.values(useWorld.getState().system.effects).at(-1)!;
     expect(effect.activation).toBe('passive');
-    expect(effect.on?.[0]).toMatchObject({ role: 'sender', phase: 'before', confirm: true });
+    expect(effect.on?.[0]).toMatchObject({ on: 'acting', confirm: true });
 
     fireEvent.change(moment, { target: { value: 'after-out' } });
     const again = Object.values(useWorld.getState().system.effects).at(-1)!.on![0]!;
-    expect(again.role).toBe('sender');
+    expect(again.on).toBe('acted');
     expect(again.confirm).toBeUndefined();
-    expect(again.phase).toBeUndefined();
+
+    fireEvent.change(moment, { target: { value: 'moment:turn-start' } });
+    expect(Object.values(useWorld.getState().system.effects).at(-1)!.on![0]!.on).toBe('moment:turn-start');
   });
 });
 

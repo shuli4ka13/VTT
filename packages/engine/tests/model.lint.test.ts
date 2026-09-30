@@ -40,12 +40,12 @@ group('линт: висячие ссылки называются словами
   });
 
   test('слушатель эффекта, которого нет', () => {
-    const system = withEffect('t', { activation: 'passive', on: [{ on: 'event:нету', to: 'other', steps: [] }] });
+    const system = withEffect('t', { activation: 'passive', on: [{ on: 'affected', of: 'event:нету', to: 'other', steps: [] }] });
     ok(errorTexts(system).some(t => t.includes('общего эффекта «нету»')), errorTexts(system).join('|'));
   });
 
   test('подписка на эффект, которого пока нет, — не ошибка: сработает, когда он появится', () => {
-    const system = withEffect('t', { activation: 'passive', on: [{ on: 'нет_эффекта', to: 'other', steps: [] }] });
+    const system = withEffect('t', { activation: 'passive', on: [{ on: 'affected', of: 'нет_эффекта', to: 'other', steps: [] }] });
     ok(!errorTexts(system).some(t => t.includes('нет_эффекта')), errorTexts(system).join('|'));
   });
 
@@ -95,9 +95,9 @@ group('линт: висячие ссылки называются словами
 
   test('условие срабатывания смотрит на шаг слушаемого эффекта', () => {
     const system = withEffect('strike', { steps: [{ id: 'hit', type: 'threshold', roll: { die: { constant: 'd20' } }, versus: { expr: '10' } }] as Step[] });
-    system.effects.thorns = { label: 'Шипы', activation: 'passive', on: [{ on: 'strike', to: 'other', if: { expr: '@hit.success' }, steps: [] }] } as never;
+    system.effects.thorns = { label: 'Шипы', activation: 'passive', on: [{ on: 'affected', of: 'strike', to: 'other', if: { expr: '@hit.success' }, steps: [] }] } as never;
     eq(errorTexts(system).join(''), '');
-    system.effects.thorns = { label: 'Шипы', activation: 'passive', on: [{ on: 'strike', to: 'other', if: { expr: '@miss.success' }, steps: [] }] } as never;
+    system.effects.thorns = { label: 'Шипы', activation: 'passive', on: [{ on: 'affected', of: 'strike', to: 'other', if: { expr: '@miss.success' }, steps: [] }] } as never;
     ok(errorTexts(system).some(t => t.includes('нет шага «miss»')), errorTexts(system).join('|'));
   });
 
@@ -133,14 +133,22 @@ group('линт: слушатели, круги, входы', () => {
     ok(problem?.text.includes('не сказано, когда срабатывает'), problem?.text);
     eq(problem?.where.part, 'on');
     eq(problem?.where.handler, 0);
-    const noTrigger = withEffect('r', { activation: 'passive' , on: [{ on: '', phase: 'before', confirm: true, steps: [] }] });
-    ok(errorTexts(noTrigger).some(t => t.includes('не сказано, когда срабатывает')));
+  });
+
+  test('«когда» знает только свои моменты и их сочетания', () => {
+    const texts = (handler: Record<string, unknown>) => errorTexts(withEffect('r', { activation: 'passive', on: [{ steps: [], ...handler } as never] }));
+    ok(texts({ on: 'strike' }).some(t => t.includes('такого «когда» нет')));
+    ok(texts({ on: 'moment:turn-start', of: 'strike' }).some(t => t.includes('только у моментов действия')));
+    ok(texts({ on: 'acting' }).some(t => t.includes('только с вопросом')));
+    ok(texts({ on: 'acted', confirm: true }).some(t => t.includes('спросить здесь нельзя')));
+    ok(texts({ on: 'targeted', to: 'other' }).some(t => t.includes('ответить другому нельзя')));
+    eq(texts({ on: 'targeted', confirm: true }).length, 0, 'любое действие — законно');
   });
 
   test('вызовы по кругу: эффект зовёт тот, на который сам и срабатывает', () => {
     const system = withEffect('loop', {
       activation: 'passive',
-      on: [{ on: 'event:damage', to: 'other', steps: [{ type: 'emit', event: 'damage' }] as Step[] }],
+      on: [{ on: 'affected', of: 'event:damage', to: 'other', steps: [{ type: 'emit', event: 'damage' }] as Step[] }],
     });
     system.effects.damage = { label: 'Урон', params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }], steps: [] } as never;
     const found = errorTexts(system).find(t => t.includes('по кругу'));
@@ -227,11 +235,13 @@ group('ссылки и слушатели', () => {
   });
 
   test('listenerOf разбирает три вида слушателя и пустоту', () => {
-    eq(listenerOf('*').kind, 'any');
-    eq(listenerOf('event:damage').key, 'damage');
-    eq(listenerOf('strike').kind, 'effect');
-    eq(listenerOf('').kind, 'empty');
-    eq(listenerOf(undefined).kind, 'empty');
+    eq(listenerOf({ on: 'affected' }).kind, 'any');
+    eq(listenerOf({ on: 'affected', of: 'event:damage' }).key, 'damage');
+    eq(listenerOf({ on: 'acted', of: 'strike' }).kind, 'effect');
+    eq(listenerOf({ on: 'moment:turn-start' }).kind, 'moment');
+    eq(listenerOf({ on: 'strike' }).kind, 'unknown');
+    eq(listenerOf({ on: '' }).kind, 'empty');
+    eq(listenerOf({}).kind, 'empty');
   });
 });
 

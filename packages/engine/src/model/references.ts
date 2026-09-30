@@ -9,7 +9,7 @@ import { calledOf } from '../engine/effects.ts';
 import { recordsOf, recordKinds, kindsOf } from './owned.ts';
 
 export { EVENT_PREFIX, MOMENT_PREFIX, FIELD_PREFIX } from '../events/bus.ts';
-import { EVENT_PREFIX, MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX } from '../events/bus.ts';
+import { EVENT_PREFIX, MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX, isActionMoment } from '../events/bus.ts';
 import { fieldsOf, hasField } from './sheet-columns.ts';
 
 export const EVENT_RESULTS = ['event', 'event_amount', 'event_incoming'] as const;
@@ -237,16 +237,19 @@ function modifierRefs(list: Modifier[] | undefined, from: Where, out: Reference[
 }
 
 export function listenerOf(
-  on: string | undefined,
-): { kind: 'any' | 'event' | 'effect' | 'moment' | 'field' | 'gained' | 'lost' | 'empty'; key?: string } {
+  { on, of }: { on?: string; of?: string },
+): { kind: 'any' | 'event' | 'effect' | 'moment' | 'field' | 'gained' | 'lost' | 'empty' | 'unknown'; key?: string } {
   if (!on) return { kind: 'empty' };
-  if (on === '*') return { kind: 'any' };
-  if (on.startsWith(EVENT_PREFIX)) return { kind: 'event', key: on.slice(EVENT_PREFIX.length) };
+  if (isActionMoment(on)) {
+    if (!of) return { kind: 'any' };
+    if (of.startsWith(EVENT_PREFIX)) return { kind: 'event', key: of.slice(EVENT_PREFIX.length) };
+    return { kind: 'effect', key: of };
+  }
   if (on.startsWith(MOMENT_PREFIX)) return { kind: 'moment', key: on.slice(MOMENT_PREFIX.length) };
   if (on.startsWith(FIELD_PREFIX)) return { kind: 'field', key: on.slice(FIELD_PREFIX.length) };
   if (on.startsWith(GAINED_PREFIX)) return { kind: 'gained', key: on.slice(GAINED_PREFIX.length) };
   if (on.startsWith(LOST_PREFIX)) return { kind: 'lost', key: on.slice(LOST_PREFIX.length) };
-  return { kind: 'effect', key: on };
+  return { kind: 'unknown', key: on };
 }
 
 function typedRefs(spec: { kind?: string; from?: string }, from: Where, out: Reference[]): void {
@@ -263,7 +266,7 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
   out.push(...chainRefs(effect.self ?? [], step => ({ tab: 'effects', effect: id, step, part: 'self' }), params, false));
   (effect.on ?? []).forEach((handler, index) => {
     const head: Where = { tab: 'effects', effect: id, part: 'on', handler: index };
-    const heard = listenerOf(handler.on);
+    const heard = listenerOf(handler);
     out.push(...chainRefs(handler.steps ?? [], step => ({ tab: 'effects', effect: id, handler: index, step }), params, heard.kind === 'event'));
     out.push(...chainRefs(handler.self ?? [], step => ({ tab: 'effects', effect: id, handler: index, step, part: 'self' }), params, false));
     if (heard.kind === 'event') out.push({ kind: 'event', key: heard.key!, from: head });

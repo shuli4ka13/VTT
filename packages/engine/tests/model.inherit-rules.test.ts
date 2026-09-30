@@ -6,8 +6,8 @@ group('наследование: списки складываются, своя
   const system = flattenSystem({
     id: 's', name: 's', sheets: { gear: { label: 'Снаряжение', grants: ['a'], blocks: ['Бой'] }, ring: { label: 'Кольцо', extends: 'gear', grants: ['b'] } },
     effects: {
-      base: { label: 'Основа', activation: 'passive', grants: ['a'], on: [{ on: 'x', steps: [] }] },
-      own: { label: 'Своё', activation: 'passive', extends: 'base', grants: ['b'], on: [{ on: 'y', steps: [] }] },
+      base: { label: 'Основа', activation: 'passive', grants: ['a'], on: [{ on: 'affected', of: 'x', steps: [] }] },
+      own: { label: 'Своё', activation: 'passive', extends: 'base', grants: ['b'], on: [{ on: 'affected', of: 'y', steps: [] }] },
       a: { label: 'A', activation: 'passive' }, b: { label: 'B', activation: 'passive' },
     },
     
@@ -15,7 +15,7 @@ group('наследование: списки складываются, своя
 
   test('эффект на основе получает и выдачу, и подписки основы', () => {
     deepEq(system.effects.own!.grants, ['a', 'b']);
-    deepEq((system.effects.own!.on ?? []).map(h => h.on), ['x', 'y']);
+    deepEq((system.effects.own!.on ?? []).map(h => h.of), ['x', 'y']);
   });
 
   test('тип на основе получает выдачу и блоки основы', () => {

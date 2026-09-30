@@ -194,15 +194,14 @@ export const step = z.object({
 
 export const handler = z.object({
   on: z.string(),
-  role: z.enum(['target', 'sender']).optional(),
-  phase: z.enum(['before', 'after']).optional(),
+  of: z.string().min(1).optional(),
   confirm: z.boolean().optional(),
   to: z.enum(['self', 'other']).optional(),
   if: guard.nullable().optional(),
   claims: z.array(z.string().min(1)).optional(),
   self: z.array(step).optional(),
   steps: z.array(step).optional(),
-}).passthrough();
+}).strict();
 
 export const effect = z.object({
   extends: z.string().min(1).optional(),

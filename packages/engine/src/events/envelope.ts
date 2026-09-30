@@ -10,7 +10,7 @@ export { propsOf } from '../model/owned.ts';
 import { requireEffect, findEffect, isPipeline, grantedTo } from '../engine/effects.ts';
 import { byOrder } from '../model/inherit.ts';
 import { listening, subscriberByKey, hears, runsAtOther, withSteps } from './bus.ts';
-import type { Role, Phase } from './bus.ts';
+import type { ActionMoment } from './bus.ts';
 import { EngineError } from '../engine/errors.ts';
 import { incomingRollModifiers } from '../engine/modifiers.ts';
 import { holderOf } from './bonds.ts';
@@ -251,7 +251,7 @@ function fireBefore(
   let current = sheet;
   let shared = [...(ctx.shared ?? [])];
 
-  const occasion = { kind: 'action' as const, role: 'target' as const, phase: 'before' as const, confirm: false, effect: envelope.effect, emitted: [] };
+  const occasion = { kind: 'action' as const, moment: 'targeted' as const, confirm: false, effect: envelope.effect, emitted: [] };
   for (const { id, effect, handler } of listening(ctx.system, sheet, occasion, { compendium: ctx.compendium })) {
     const owner = `триггер «${effect.label || id}»`;
     const refs = { pass: newPass(ctx.system, current, { compendium: ctx.compendium }), results: {}, owner };
@@ -346,7 +346,7 @@ function fireTriggers(
   let sheet = out.sheet;
   let shared = [...(ctx.shared ?? [])];
 
-  const occasion = { kind: 'action' as const, role: 'target' as const, phase: 'after' as const, confirm: false, effect: envelope.effect, emitted: out.emitted };
+  const occasion = { kind: 'action' as const, moment: 'affected' as const, confirm: false, effect: envelope.effect, emitted: out.emitted };
   for (const { id, effect, handler, heard } of listening(ctx.system, sheet, occasion, { compendium: ctx.compendium })) {
     const results = withEvent(out.results, heard);
     const owner = `триггер «${effect.label || id}»`;
@@ -384,7 +384,7 @@ export function fireOutgoing(
   let sheet = sender;
   let shared = [...(ctx.shared ?? [])];
 
-  const occasion = { kind: 'action' as const, role: 'sender' as const, phase: 'after' as const, confirm: false, effect: envelope.effect, emitted: outcome.emitted };
+  const occasion = { kind: 'action' as const, moment: 'acted' as const, confirm: false, effect: envelope.effect, emitted: outcome.emitted };
   for (const { id, effect, handler, heard } of listening(ctx.system, sheet, occasion, { compendium: ctx.compendium })) {
     const results = withEvent(outcome.results, heard);
     const owner = `триггер «${effect.label || id}»`;
@@ -411,10 +411,10 @@ export function fireOutgoing(
 
 export interface Offer { id: string; label: string; cost?: string; claims: string[] }
 
-const WINDOWS: Record<ReactionWindow, { role: Role; phase: Phase }> = {
-  sender: { role: 'sender', phase: 'before' },
-  target: { role: 'target', phase: 'before' },
-  after: { role: 'target', phase: 'after' },
+const WINDOWS: Record<ReactionWindow, { moment: ActionMoment }> = {
+  sender: { moment: 'acting' },
+  target: { moment: 'targeted' },
+  after: { moment: 'affected' },
 };
 
 export function offers(
@@ -480,7 +480,7 @@ export function react(
       sheet = paid.sheet;
       if (paid.report.changes.length) reports.push(paid.report);
     }
-    const seed = withEvent(results, hears(handler.on, envelope.effect, emitted) ?? undefined);
+    const seed = withEvent(results, hears(handler.of, envelope.effect, emitted) ?? undefined);
     const body = withSteps(effect, handler.steps);
     if (runsAtOther(handler)) {
       replies.push(replyFrom(found.id, body, sheet, envelope.from, seed, owner, ctx));

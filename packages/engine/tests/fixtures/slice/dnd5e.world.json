@@ -1602,8 +1602,7 @@
         "params": [],
         "on": [
           {
-            "on": "*",
-            "phase": "before",
+            "on": "targeted",
             "self": [
               {
                 "type": "compare",
@@ -1685,9 +1684,7 @@
         "params": [],
         "on": [
           {
-            "on": "*",
-            "role": "sender",
-            "phase": "before",
+            "on": "acting",
             "if": {
               "expr": "#inspiration > 0"
             },
@@ -1799,7 +1796,8 @@
         "params": [],
         "on": [
           {
-            "on": "strike",
+            "on": "affected",
+            "of": "strike",
             "to": "other",
             "if": {
               "expr": "@hit.success"
@@ -2197,7 +2195,8 @@
         "params": [],
         "on": [
           {
-            "on": "event:damage",
+            "on": "affected",
+            "of": "event:damage",
             "to": "other",
             "self": [
               {

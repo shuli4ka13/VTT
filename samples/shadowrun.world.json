@@ -1756,7 +1756,8 @@
         "description": "Значение атаки больше значения защиты цели на 4 и больше — очко Преимущества атакующему (не больше 7).",
         "on": [
           {
-            "on": "ranged_attack",
+            "on": "affected",
+            "of": "ranged_attack",
             "to": "other",
             "if": {
               "expr": "@атк - @defense_rating >= 4"
@@ -1805,9 +1806,7 @@
         "description": "Увидел свой бросок — за 4 очка Преимущества перебросить все кубики с 1–4. После сбоя нельзя.",
         "on": [
           {
-            "on": "*",
-            "role": "sender",
-            "phase": "before",
+            "on": "acting",
             "claims": [
               "reroll_failures"
             ],
@@ -1845,9 +1844,7 @@
         "description": "Увидел свой бросок — за 4 очка Преимущества добавить к набору характеристику Преимущество; шестёрки подрываются: каждая даёт ещё кубик.",
         "on": [
           {
-            "on": "*",
-            "role": "sender",
-            "phase": "before",
+            "on": "acting",
             "claims": [
               "push_edge"
             ],
@@ -2101,8 +2098,8 @@
         "description": "Единицы больше чем на половине кубиков атаки — сбой.",
         "on": [
           {
-            "on": "ranged_attack",
-            "role": "sender",
+            "on": "acted",
+            "of": "ranged_attack",
             "if": {
               "expr": "все(@атака.atMin * 2 > @атака.rolled, @атака.natural >= 1)"
             },
@@ -2121,8 +2118,8 @@
         "description": "Сбой без единого успеха.",
         "on": [
           {
-            "on": "ranged_attack",
-            "role": "sender",
+            "on": "acted",
+            "of": "ranged_attack",
             "if": {
               "expr": "все(@атака.atMin * 2 > @атака.rolled, @атака.natural == 0)"
             },

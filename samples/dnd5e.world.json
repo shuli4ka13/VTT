@@ -3068,8 +3068,8 @@
         },
         "on": [
           {
-            "on": "strike",
-            "role": "sender",
+            "on": "acted",
+            "of": "strike",
             "to": "other",
             "steps": [
               {
@@ -4872,8 +4872,7 @@
         "params": [],
         "on": [
           {
-            "on": "*",
-            "phase": "before",
+            "on": "targeted",
             "if": {
               "expr": "@hit.success"
             },
@@ -4918,7 +4917,8 @@
         "params": [],
         "on": [
           {
-            "on": "event:damage",
+            "on": "affected",
+            "of": "event:damage",
             "to": "other",
             "self": [
               {
@@ -5007,8 +5007,7 @@
         "params": [],
         "on": [
           {
-            "on": "*",
-            "phase": "before",
+            "on": "targeted",
             "if": {
               "expr": "@hit.success"
             },
@@ -5043,9 +5042,7 @@
         "params": [],
         "on": [
           {
-            "on": "*",
-            "role": "sender",
-            "phase": "before",
+            "on": "acting",
             "claims": [
               "advantage"
             ],
@@ -5083,9 +5080,7 @@
         "params": [],
         "on": [
           {
-            "on": "*",
-            "role": "sender",
-            "phase": "before",
+            "on": "acting",
             "claims": [
               "advantage"
             ],
@@ -5124,9 +5119,7 @@
         "params": [],
         "on": [
           {
-            "on": "*",
-            "role": "sender",
-            "phase": "before",
+            "on": "acting",
             "claims": [
               "bardic"
             ],
@@ -5936,7 +5929,8 @@
         ],
         "on": [
           {
-            "on": "event:damage",
+            "on": "affected",
+            "of": "event:damage",
             "steps": [
               {
                 "type": "status",
@@ -6823,7 +6817,8 @@
         "params": [],
         "on": [
           {
-            "on": "event:damage",
+            "on": "affected",
+            "of": "event:damage",
             "steps": [
               {
                 "id": "save",

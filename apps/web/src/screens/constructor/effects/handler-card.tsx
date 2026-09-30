@@ -39,27 +39,21 @@ const BY_FORMULA = ':формула';
 
 const SEED_NAMES = new Map([['worn.carry', 'запомненное число']]);
 
-export const momentOf = (handler: Handler): Moment => {
-  const before = handler.phase === 'before';
-  const sender = handler.role === 'sender';
-  if (handler.confirm) return sender ? 'ask-sender' : before ? 'ask-target' : 'ask-after';
-  if (sender) return 'after-out';
-  return before ? 'before-in' : 'after-in';
+const SHAPE: Record<Moment, Pick<Handler, 'on' | 'confirm'>> = {
+  'after-in': { on: 'affected' },
+  'after-out': { on: 'acted' },
+  'before-in': { on: 'targeted' },
+  'ask-target': { on: 'targeted', confirm: true },
+  'ask-sender': { on: 'acting', confirm: true },
+  'ask-after': { on: 'affected', confirm: true },
 };
 
-const SHAPE: Record<Moment, Pick<Handler, 'role' | 'phase' | 'confirm'>> = {
-  'after-in': {},
-  'after-out': { role: 'sender' },
-  'before-in': { phase: 'before' },
-  'ask-target': { phase: 'before', confirm: true },
-  'ask-sender': { role: 'sender', phase: 'before', confirm: true },
-  'ask-after': { confirm: true },
-};
+export const momentOf = (handler: Handler): Moment | null =>
+  (Object.keys(SHAPE) as Moment[]).find(key => SHAPE[key].on === handler.on && (SHAPE[key].confirm ?? false) === (handler.confirm ?? false)) ?? null;
 
 const applyMoment = (draft: Handler, moment: Moment): void => {
-  delete draft.role; delete draft.phase; delete draft.confirm;
+  delete draft.confirm;
   Object.assign(draft, SHAPE[moment]);
-  if (!draft.on && SHAPE[moment].confirm) draft.on = '*';
   if (moment === 'before-in' || moment === 'ask-target' || moment === 'ask-sender') delete draft.to;
   if (moment !== 'ask-sender') delete draft.claims;
 };
@@ -73,10 +67,9 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
   onRemove: () => void;
 }) {
   const moment = momentOf(handler);
-  const asks = handler.confirm === true;
-  const listened = handler.on;
-  const anyAction = !listened || listened === '*';
-  const isMoment = [MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX].some(prefix => listened?.startsWith(prefix));
+  const listened = handler.of;
+  const anyAction = !listened;
+  const isMoment = moment === null;
   const hanging = Object.entries(system.effects).filter(([key, e]) => key !== id && (e.activation ?? 'manual') === 'passive');
   const conditions = isMoment ? [] : anyAction ? conditionsOfAny(system) : conditionsOf(system, listened);
   const watchable = fieldsOf(system).filter(f => f.value.kind !== 'stored' || f.value.type === 'boolean');
@@ -94,35 +87,42 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
       />
 
       <div className="row">
-        <Field label="Что случилось" needed={!asks && !listened}>
+        <Field label="Когда" needed={!handler.on}>
           <Select
-            value={listened ?? (asks ? '*' : '')}
+            value={moment ?? handler.on ?? ''}
             options={[
-              ...(asks ? [['*', 'любое действие'] as const] : [['', '— что случилось —'] as const]),
-              ...calledOf(system)
-                .map(([key, e]) => [`event:${key}`, `пришёл «${e.label || key}»`] as const),
-              ...Object.entries(system.effects)
-                .filter(([key, e]) => key !== id && (e.activation ?? 'manual') === 'manual')
-                .map(([key, e]) => [key, `действие «${e.label ?? key}»`] as const),
-              ...(asks ? [] : (Object.keys(TIMES) as MomentKey[])
-                .map(key => [`${MOMENT_PREFIX}${key}`, `время: ${TIMES[key]}`] as const)),
-              ...(asks ? [] : watchable
-                .map(f => [`${FIELD_PREFIX}${f.tag}`, `поле «${f.label}» стало верным`] as const)),
-              ...(asks ? [] : hanging
-                .map(([key, e]) => [`${GAINED_PREFIX}${key}`, `на мне появилось «${e.label ?? key}»`] as const)),
-              ...(asks ? [] : hanging
-                .map(([key, e]) => [`${LOST_PREFIX}${key}`, `с меня ушло «${e.label ?? key}»`] as const)),
+              ...(handler.on ? [] : [['', '— когда —'] as const]),
+              ...MOMENTS,
+              ...(Object.keys(TIMES) as MomentKey[])
+                .map(key => [`${MOMENT_PREFIX}${key}`, `время: ${TIMES[key]}`] as const),
+              ...watchable
+                .map(f => [`${FIELD_PREFIX}${f.tag}`, `поле «${f.label}» стало верным`] as const),
+              ...hanging
+                .map(([key, e]) => [`${GAINED_PREFIX}${key}`, `на мне появилось «${e.label ?? key}»`] as const),
+              ...hanging
+                .map(([key, e]) => [`${LOST_PREFIX}${key}`, `с меня ушло «${e.label ?? key}»`] as const),
             ] as never}
-            onChange={next => edit(draft => { draft.on = next || (asks ? '*' : ''); })}
+            onChange={next => edit(draft => {
+              if (next in SHAPE) { applyMoment(draft, next as Moment); return; }
+              draft.on = next;
+              delete draft.of; delete draft.confirm; delete draft.to; delete draft.claims;
+            })}
           />
         </Field>
 
         {isMoment ? null : (
-          <Field label="С кем и когда">
+          <Field label="Какое действие">
             <Select
-              value={moment}
-              options={MOMENTS as never}
-              onChange={next => edit(draft => { applyMoment(draft, next as Moment); })}
+              value={listened ?? ''}
+              options={[
+                ['', 'любое'] as const,
+                ...calledOf(system)
+                  .map(([key, e]) => [`event:${key}`, `пришёл «${e.label || key}»`] as const),
+                ...Object.entries(system.effects)
+                  .filter(([key, e]) => key !== id && (e.activation ?? 'manual') === 'manual')
+                  .map(([key, e]) => [key, `действие «${e.label ?? key}»`] as const),
+              ] as never}
+              onChange={next => edit(draft => { if (next) draft.of = next; else delete draft.of; })}
             />
           </Field>
         )}

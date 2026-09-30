@@ -18,7 +18,7 @@ const sys: any = {
     },
     мгновенная_смерть: {
       label: 'Мгновенная смерть', activation: 'passive',
-      on: [{ on: 'удар', steps: [
+      on: [{ on: 'affected', of: 'удар', steps: [
 
         { type: 'compare', value: { expr: '@рана.overkill' }, versus: { expr: '@получатель.хп_макс' }, breakIf: 'less' },
         { type: 'status', mode: 'apply', effect: { const: 'мёртв' } },

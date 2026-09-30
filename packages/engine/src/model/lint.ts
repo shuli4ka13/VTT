@@ -1,3 +1,4 @@
+import { isActionMoment } from '../events/bus.ts';
 import type { System, Compendium, Effect, Step } from './types.ts';
 import { registry } from '../engine/steps/index.ts';
 import { calledOf, chainsOfEffect } from '../engine/effects.ts';
@@ -42,7 +43,7 @@ const sameWhere = (a: Where, b: Where): boolean => JSON.stringify(a) === JSON.st
 
 interface Chain { steps: Step[]; where: (step: number) => Where; eventChain: boolean; part?: 'self' }
 
-const hearsEvent = (effect: Effect): boolean => (effect.on ?? []).some(h => listenerOf(h.on).kind === 'event');
+const hearsEvent = (effect: Effect): boolean => (effect.on ?? []).some(h => listenerOf(h).kind === 'event');
 
 function chainsOf(id: string, effect: Effect, called: boolean): Chain[] {
   const out: Chain[] = [
@@ -50,7 +51,7 @@ function chainsOf(id: string, effect: Effect, called: boolean): Chain[] {
     { steps: effect.self ?? [], where: step => ({ tab: 'effects', effect: id, step, part: 'self' }), eventChain: false, part: 'self' },
   ];
   (effect.on ?? []).forEach((handler, index) => {
-    const event = listenerOf(handler.on).kind === 'event';
+    const event = listenerOf(handler).kind === 'event';
     out.push({ steps: handler.steps ?? [], where: step => ({ tab: 'effects', effect: id, handler: index, step }), eventChain: event });
     out.push({ steps: handler.self ?? [], where: step => ({ tab: 'effects', effect: id, handler: index, step, part: 'self' }), eventChain: false, part: 'self' });
   });
@@ -189,7 +190,7 @@ function cycleProblems(system: System): Problem[] {
     for (const handler of effect.on ?? []) {
       for (const called of emitsOf(handler.steps)) link(effectNode(id), effectNode(called));
       if (handler.confirm) continue;
-      const heard = listenerOf(handler.on);
+      const heard = listenerOf(handler);
       if (heard.kind === 'event') link(effectNode(heard.key!), effectNode(id));
       if (heard.kind === 'effect') link(effectNode(heard.key!), effectNode(id));
     }
@@ -227,9 +228,24 @@ function listenerProblems(system: System): Problem[] {
   for (const [id, effect] of Object.entries(system.effects)) {
     (effect.on ?? []).forEach((handler, index) => {
       const where: Where = { tab: 'effects', effect: id, part: 'on', handler: index };
-      const heard = listenerOf(handler.on);
+      const heard = listenerOf(handler);
       if (heard.kind === 'empty') {
         out.push({ where, level: 'error', text: 'не сказано, когда срабатывает — выберите, что случилось' });
+      }
+      if (heard.kind === 'unknown') {
+        out.push({ where, level: 'error', text: `такого «когда» нет: «${heard.key}»` });
+      }
+      if (handler.of && !isActionMoment(handler.on)) {
+        out.push({ where, level: 'error', text: 'какое действие слушать, выбирают только у моментов действия' });
+      }
+      if (handler.on === 'acting' && !handler.confirm) {
+        out.push({ where, level: 'error', text: '«я действую — до» бывает только с вопросом игроку' });
+      }
+      if (handler.on === 'acted' && handler.confirm) {
+        out.push({ where, level: 'error', text: '«я подействовал на цель» срабатывает молча — спросить здесь нельзя' });
+      }
+      if ((handler.on === 'acting' || handler.on === 'targeted') && handler.to === 'other') {
+        out.push({ where, level: 'error', text: 'до того, как решится, ответить другому нельзя — только себе' });
       }
       if (heard.kind === 'moment' && !MOMENT_KEYS.has(heard.key!)) {
         out.push({ where, level: 'error', text: `такого момента нет: «${heard.key}» — стол знает ${[...MOMENT_KEYS].join(', ')}` });
@@ -328,7 +344,7 @@ function orphanProblems(system: System, compendium?: Compendium): Problem[] {
     for (const event of chainsOfEffect(effect).flatMap(emittedBy)) emitted.add(event);
     for (const handler of effect.on ?? []) {
       for (const event of emittedBy(handler.steps)) emitted.add(event);
-      const heard = listenerOf(handler.on);
+      const heard = listenerOf(handler);
       if (heard.kind === 'event') heardEvents.add(heard.key!);
     }
   }

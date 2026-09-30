@@ -8,8 +8,17 @@ export const FIELD_PREFIX = 'field:';
 export const GAINED_PREFIX = 'gained:';
 export const LOST_PREFIX = 'lost:';
 
-export type Role = 'target' | 'sender';
-export type Phase = 'before' | 'after';
+export const ACTION_MOMENTS = {
+  acting: { label: 'я действую — до того, как уйдёт цели', side: 'sender', before: true },
+  acted: { label: 'я подействовал на цель', side: 'sender', before: false },
+  targeted: { label: 'на меня действуют — до того, как решится', side: 'target', before: true },
+  affected: { label: 'на меня подействовали', side: 'target', before: false },
+} as const;
+
+export type ActionMoment = keyof typeof ACTION_MOMENTS;
+
+export const isActionMoment = (on: string | undefined): on is ActionMoment =>
+  Boolean(on && Object.prototype.hasOwnProperty.call(ACTION_MOMENTS, on));
 
 export interface Subscriber {
   id: string;
@@ -24,22 +33,19 @@ export type Occasion =
   | { kind: 'field'; tag: string }
   | { kind: 'gained'; effect: string }
   | { kind: 'lost'; effect: string }
-  | { kind: 'action'; role: Role; phase: Phase; confirm: boolean; effect: string; emitted: EmittedEvent[] };
+  | { kind: 'action'; moment: ActionMoment; confirm: boolean; effect: string; emitted: EmittedEvent[] };
 
 export const handlerKey = (id: string, index: number): string => (index ? `${id}#${index}` : id);
 
-export const roleOf = (handler: Handler): Role => handler.role ?? 'target';
-export const phaseOf = (handler: Handler): Phase => handler.phase ?? 'after';
 export const asks = (handler: Handler): boolean => handler.confirm === true;
 export const runsAtOther = (handler: Handler): boolean => handler.to === 'other';
 
 export const handlersOf = (effect: Effect | null | undefined): Handler[] => effect?.on ?? [];
 
-export function hears(on: string, effectId: string, emitted: EmittedEvent[]): EmittedEvent | undefined | null {
-  if (on === '*') return undefined;
-  if (on.startsWith(EVENT_PREFIX)) return emitted.filter(e => `${EVENT_PREFIX}${e.event}` === on).at(-1) ?? null;
-  if ([MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX].some(prefix => on.startsWith(prefix))) return null;
-  return on === effectId ? undefined : null;
+export function hears(of: string | undefined, effectId: string, emitted: EmittedEvent[]): EmittedEvent | undefined | null {
+  if (!of) return undefined;
+  if (of.startsWith(EVENT_PREFIX)) return emitted.filter(e => `${EVENT_PREFIX}${e.event}` === of).at(-1) ?? null;
+  return of === effectId ? undefined : null;
 }
 
 export function subscribers(
@@ -71,8 +77,8 @@ export function listening(
       if (handler.on === `${prefix}${occasion.effect}`) out.push(sub);
       continue;
     }
-    if (roleOf(handler) !== occasion.role || phaseOf(handler) !== occasion.phase || asks(handler) !== occasion.confirm) continue;
-    const heard = hears(handler.on, occasion.effect, occasion.emitted);
+    if (handler.on !== occasion.moment || asks(handler) !== occasion.confirm) continue;
+    const heard = hears(handler.of, occasion.effect, occasion.emitted);
     if (heard === null) continue;
     out.push(heard ? { ...sub, heard } : sub);
   }

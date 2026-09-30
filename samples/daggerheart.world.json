@@ -1843,8 +1843,8 @@
         "description": "После броска двойственности: больше выпало на Надежде — Надежда герою; на Страхе — Страх ведущему; дубль — крит: Надежда и минус один Стресс.",
         "on": [
           {
-            "on": "action_roll",
-            "role": "sender",
+            "on": "acted",
+            "of": "action_roll",
             "if": {
               "expr": "@бросок.parts.надежда > @бросок.parts.страх"
             },
@@ -1863,8 +1863,8 @@
             ]
           },
           {
-            "on": "action_roll",
-            "role": "sender",
+            "on": "acted",
+            "of": "action_roll",
             "if": {
               "expr": "@бросок.parts.страх > @бросок.parts.надежда"
             },
@@ -1883,8 +1883,8 @@
             ]
           },
           {
-            "on": "action_roll",
-            "role": "sender",
+            "on": "acted",
+            "of": "action_roll",
             "if": {
               "expr": "@бросок.parts.надежда == @бросок.parts.страх"
             },
@@ -1917,8 +1917,8 @@
             ]
           },
           {
-            "on": "hero_attack",
-            "role": "sender",
+            "on": "acted",
+            "of": "hero_attack",
             "if": {
               "expr": "@бросок.parts.надежда > @бросок.parts.страх"
             },
@@ -1937,8 +1937,8 @@
             ]
           },
           {
-            "on": "hero_attack",
-            "role": "sender",
+            "on": "acted",
+            "of": "hero_attack",
             "if": {
               "expr": "@бросок.parts.страх > @бросок.parts.надежда"
             },
@@ -1957,8 +1957,8 @@
             ]
           },
           {
-            "on": "hero_attack",
-            "role": "sender",
+            "on": "acted",
+            "of": "hero_attack",
             "if": {
               "expr": "@бросок.parts.надежда == @бросок.parts.страх"
             },
@@ -2741,7 +2741,8 @@
         ],
         "on": [
           {
-            "on": "event:damage",
+            "on": "affected",
+            "of": "event:damage",
             "steps": [
               {
                 "type": "status",

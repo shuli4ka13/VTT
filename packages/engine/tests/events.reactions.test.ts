@@ -18,7 +18,7 @@ const shieldWorld: any = {
     ...system.effects,
     shield: {
       label: 'Щит', activation: 'passive', cost: 'reaction',
-      on: [{ on: '*', phase: 'before', confirm: true, if: { expr: '@hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: { const: 'shield_up' } }] }],
+      on: [{ on: 'targeted', confirm: true, if: { expr: '@hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: { const: 'shield_up' } }] }],
     },
     shield_up: {
       label: 'Под щитом', activation: 'passive', duration: { kind: 'turns', max: 1 },
@@ -86,7 +86,7 @@ group('реакция отправителя: увидел бросок — ре
       ...system.effects,
       inspire: {
         label: 'Вдохновение: перебросить', activation: 'passive',
-        on: [{ on: '*', role: 'sender', phase: 'before', confirm: true, if: { expr: '#inspiration > 0' }, claims: ['advantage'], steps: [{ type: 'apply', target: { tag: 'inspiration' }, direction: 'subtract', value: { expr: '1' } }] }],
+        on: [{ on: 'acting', confirm: true, if: { expr: '#inspiration > 0' }, claims: ['advantage'], steps: [{ type: 'apply', target: { tag: 'inspiration' }, direction: 'subtract', value: { expr: '1' } }] }],
       },
     },
   };
@@ -118,12 +118,12 @@ group('подписка на исходящее: вампиризм и метк�
       ...system.effects,
       vampiric: {
         label: 'Вампиризм', activation: 'passive', duration: { kind: 'permanent' },
-        on: [{ on: 'event:damage', role: 'sender', steps: [{ type: 'apply', target: { tag: 'hp_current' }, direction: 'add',
+        on: [{ on: 'acted', of: 'event:damage', steps: [{ type: 'apply', target: { tag: 'hp_current' }, direction: 'add',
           value: { expr: 'округлить вниз(#event_amount / 2)' }, targetModifiers: false }] }],
       },
       brand: {
         label: 'Метка охотника', activation: 'passive', duration: { kind: 'permanent' },
-        on: [{ on: 'fire_bolt', role: 'sender', to: 'other', if: { expr: '@hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: { const: 'poisoned' } }] }],
+        on: [{ on: 'acted', of: 'fire_bolt', to: 'other', if: { expr: '@hit.success' }, steps: [{ type: 'status', mode: 'apply', effect: { const: 'poisoned' } }] }],
       },
     },
   };
@@ -203,7 +203,7 @@ group('реакция после разрешения: «на меня поде�
       ...system.effects,
       rebuke: {
         label: 'Возмездие', activation: 'passive', cost: 'reaction',
-        on: [{ on: 'strike', to: 'other', confirm: true, if: { expr: '@hit.success' }, steps: [{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { expr: '3' } }] }],
+        on: [{ on: 'affected', of: 'strike', to: 'other', confirm: true, if: { expr: '@hit.success' }, steps: [{ type: 'apply', target: { tag: 'hp_current' }, direction: 'subtract', value: { expr: '3' } }] }],
       },
     },
   };
@@ -240,7 +240,7 @@ group('триггер до разрешения: срабатывает молч
       ...system.effects,
       brace: {
         label: 'Стойка', activation: 'passive',
-        on: [{ on: 'strike', phase: 'before', steps: [{ type: 'status', mode: 'apply', effect: { const: 'wall' } }] }],
+        on: [{ on: 'targeted', of: 'strike', steps: [{ type: 'status', mode: 'apply', effect: { const: 'wall' } }] }],
       },
       wall: {
         label: 'Стена', activation: 'passive', duration: { kind: 'turns', max: 1 },

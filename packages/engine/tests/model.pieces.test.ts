@@ -103,7 +103,7 @@ group('подписка на эффект — слабая ссылка', () => 
   test('атака, пришедшая другим куском, подхватывается подпиской сама', () => {
     const system = take('dh-duality', 'dh-weapons');
     ok(system.effects.hero_attack);
-    ok((system.effects.duality!.on ?? []).some(h => h.on === 'hero_attack'));
+    ok((system.effects.duality!.on ?? []).some(h => h.of === 'hero_attack'));
     deepEq(errorsOf(lintSystem(system)).map(e => e.text), []);
   });
 });
