@@ -6,6 +6,7 @@ export interface RolledSummary {
   atMin: number;
   edited: boolean;
   dice: { rolls: number[]; kept: number | null };
+  parts: Record<string, number>;
 }
 
 export function rolledSummary(step: Record<string, unknown>): RolledSummary | null {
@@ -13,6 +14,7 @@ export function rolledSummary(step: Record<string, unknown>): RolledSummary | nu
     total: number; rolls: number[]; kept: number | null;
     tally?: { dice: number; atMax: number; atMin: number };
     edits?: unknown[];
+    parts?: Record<string, number>;
   } | undefined;
   if (!rolled) return null;
 
@@ -28,6 +30,7 @@ export function rolledSummary(step: Record<string, unknown>): RolledSummary | nu
     atMin: rolled.tally?.atMin ?? 0,
     edited: (rolled.edits?.length ?? 0) > 0,
     dice: { rolls: rolled.rolls, kept: rolled.kept },
+    parts: rolled.parts || {},
   };
 }
 

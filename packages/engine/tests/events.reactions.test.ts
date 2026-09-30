@@ -184,6 +184,15 @@ group('окно «я бросил» видит факты собственног
     eq(seen.hit.total, 24);
     eq(seen.hit.rolled, 1);
     eq(seen.hit.edited, false);
+    deepEq(seen.hit.parts, {});
+  });
+
+  test('senderResults несёт части броска: Надежду и Страх видно у отправителя, а не только у цели', () => {
+    const seen = senderResults({
+      kind: 'effect', effect: 'x', from: 'a', action: 'x:0', label: 'x',
+      steps: [{ type: 'threshold', id: 'бросок', rolled: { total: 13, rolls: [9, 4], kept: null, parts: { надежда: 9, страх: 4 } }, bonus: { const: 0 } }],
+    } as any);
+    deepEq(seen.бросок.parts, { надежда: 9, страх: 4 });
   });
 });
 
