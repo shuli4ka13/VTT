@@ -168,6 +168,32 @@ group('реакции слушают слово, а не имя эффекта',
     eq(r.sheets.find(s => s.id === 'герой')!.values.хп, 12, 'шипы вернули те же 8');
   });
 
+  test('урон ответкой будит подписку нападавшего — как концентрацию от «Адского возмездия»', () => {
+    const sys = world({
+      ...spiky.effects,
+      сосредоточен: {
+        label: 'Сосредоточен', activation: 'passive', duration: { kind: 'permanent' },
+        on: [{ on: 'event:урон', steps: [{ type: 'status', mode: 'remove', effect: { const: 'сосредоточен' } }] }],
+      },
+    });
+    const r = exchange({
+      system: sys as any, compendium: book, die: queue(), sheets: [hero(['сосредоточен']), foe(['шипы'])],
+      actionId: 'удар:0', fromId: 'герой', toId: 'враг',
+    });
+    const me = r.sheets.find(s => s.id === 'герой')!;
+    eq(me.values.хп, 12);
+    deepEq(me.effects, [], 'шипы ранили — сосредоточенность сорвалась');
+  });
+
+  test('на ответку не отвечают: шипы против шипов не ходят по кругу', () => {
+    const r = exchange({
+      system: spiky as any, compendium: book, die: queue(), sheets: [hero(['шипы']), foe(['шипы'])],
+      actionId: 'удар:0', fromId: 'герой', toId: 'враг',
+    });
+    eq(r.sheets.find(s => s.id === 'враг')!.values.хп, 12);
+    eq(r.sheets.find(s => s.id === 'герой')!.values.хп, 12, 'только одна ответка');
+  });
+
   test('сигнал без приёма будит реакцию на самом себе', () => {
     const sys = { ...spiky, effects: { ...spiky.effects, сторож: { ...spiky.effects.сторож, on: [{ ...spiky.effects.сторож.on[0], to: 'self' }] } } };
     const out = hit(sys, 'тревога', foe(['сторож']));

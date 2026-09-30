@@ -201,9 +201,7 @@ export function receive(
   { system, sheet, compendium, die, claims, clock, shared }: WorldContext & { sheet: Sheet } & { claims?: string[] },
 ): ReceiveResult {
   const holder = findEffect(system, envelope.effect);
-  const early: { sheet: Sheet; reactions: Report[]; spent: string[]; shared?: Sheet[] } = envelope.reply
-    ? { sheet, reactions: [], spent: [] }
-    : fireBefore(envelope, sheet, { system, compendium, die, clock, shared });
+  const early = fireBefore(envelope, sheet, { system, compendium, die, clock, shared });
   const sharedBefore = withShared(shared ?? [], early.shared);
   const out = runCall(envelope.steps || [], {
     sheet: early.sheet, owner: `конверт «${envelope.label}»`, source: envelope.from,
@@ -212,12 +210,10 @@ export function receive(
   }, { system, compendium, die, clock, shared: sharedBefore });
 
   const sharedAfter = withShared(sharedBefore, out.shared);
-  const fired: { sheet: Sheet; replies: Envelope[]; spent: string[]; reactions: Report[]; shared?: Sheet[] } = envelope.reply
-    ? { sheet: out.sheet, replies: [], spent: [], reactions: [] }
-    : fireTriggers(envelope, out, { system, compendium, die, clock, shared: sharedAfter });
+  const fired = fireTriggers(envelope, out, { system, compendium, die, clock, shared: sharedAfter });
   const sharedChanged = changedShared(withShared(sharedAfter, fired.shared), shared);
   const reactions = [...early.reactions, ...fired.reactions];
-  const answered: Envelope[] = (out.answers ?? []).map(call => ({
+  const answered: Envelope[] = envelope.reply ? [] : (out.answers ?? []).map(call => ({
     kind: 'effect', effect: call.event, from: sheet.id, to: envelope.from, reply: true, action: call.event,
     label: system.effects[call.event]?.label || call.event,
     steps: answerSteps(call),
@@ -225,7 +221,7 @@ export function receive(
 
   return {
     sheet: fired.sheet,
-    replies: [...answered, ...fired.replies],
+    replies: envelope.reply ? [] : [...answered, ...fired.replies],
     results: out.results,
     ...(sharedChanged.length ? { shared: sharedChanged } : {}),
     report: {
@@ -358,6 +354,7 @@ function fireTriggers(
 
     const body = withSteps(effect, handler.steps);
     if (runsAtOther(handler)) {
+      if (envelope.reply) continue;
       replies.push(replyFrom(id, body, sheet, envelope.from, results, owner, ctx));
     } else {
       const done = runOnSelf(id, body, sheet, results, owner, { ...ctx, shared });
