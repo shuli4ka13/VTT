@@ -133,6 +133,40 @@ function rowRefs(system: System, tableId: string, row: TableRow, value: unknown)
   return value;
 }
 
+function recordPath(system: System, tableId: string, cells: Record<string, unknown>, path: string[]): string {
+  const table = system.tables?.[tableId];
+  const where = `тип «${table?.label || tableId}»`;
+  const [head, ...rest] = path;
+  if (!head) throw new EngineError(`${where}: «@${ROW}» без колонки — напишите, какую клетку записи взять`);
+  const found = (table?.columns ?? []).find(c => c.key === head);
+  if (!found) throw new EngineError(`${where}: колонки «${head}» нет`);
+  let spec: TableColumn = found;
+  const cell = cells[head];
+  if (Array.isArray(cell)) throw new EngineError(`${where}: «${spec.label || head}» — список, одним числом его не взять`);
+  let expr = literal(cell ?? '');
+  for (const step of rest) {
+    if (spec.kind !== 'choice' || !spec.from) throw new EngineError(`${where}: «${spec.label || spec.key}» — не ссылка, дальше «${step}» идти некуда`);
+    expr = `таблица(${JSON.stringify(spec.from)}, ${expr}, ${JSON.stringify(step)})`;
+    const next: TableColumn | undefined = (system.tables?.[spec.from]?.columns ?? []).find(c => c.key === step);
+    if (!next) throw new EngineError(`${where}: у таблицы «${spec.from}» нет колонки «${step}»`);
+    spec = next;
+  }
+  return `(${expr})`;
+}
+
+export function withRecord<T>(system: System, tableId: string, cells: Record<string, unknown>, value: T): T {
+  if (typeof value === 'string') {
+    return (value.includes(`@${ROW}`)
+      ? value.replace(ROW_REF, (_, tail: string) => recordPath(system, tableId, cells, tail ? tail.slice(1).split('.') : []))
+      : value) as T;
+  }
+  if (Array.isArray(value)) return value.map(item => withRecord(system, tableId, cells, item)) as T;
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value as Loose).map(([k, v]) => [k, withRecord(system, tableId, cells, v)])) as T;
+  }
+  return value;
+}
+
 export const defaultLabel = (column: TableColumn, first: boolean): string =>
   (first ? '{label}' : `${column.label || column.key}: {label}`);
 
@@ -148,6 +182,11 @@ const valueOf = (column: TableColumn, start: unknown): FieldValue => {
   };
 };
 
+const boundsOf = (column: TableColumn): { min?: number | string; max?: number | string } => ({
+  ...(column.min !== undefined ? { min: column.min } : {}),
+  ...(column.max !== undefined ? { max: column.max } : {}),
+});
+
 const livesOf = (table: Table): { lives?: 'group' | 'desk' } => {
   const holder = holderOf(table);
   return holder === 'group' || holder === 'desk' ? { lives: holder } : {};
@@ -162,7 +201,7 @@ function singleFields(tableId: string, table: Table): Field[] {
       ...(group ? { group } : {}),
       ...(column.roll ? { roll: column.roll } : {}),
       ...(column.control ? { control: column.control } : {}),
-      value: column.expr !== undefined ? { kind: 'formula', expr: column.expr } : valueOf(column, column.default),
+      value: column.expr !== undefined ? { kind: 'formula', expr: column.expr, ...boundsOf(column) } : valueOf(column, column.default),
       ...livesOf(table),
       home: tableId,
     };
@@ -178,7 +217,7 @@ function rowFields(system: System, tableId: string, table: Table): Field[] {
       if (source.kind === 'value') continue;
       const view = viewOf(table, column.key, row);
       const value: FieldValue = source.kind === 'formula'
-        ? { kind: 'formula', expr: withRow(system, tableId, row, source.expr) }
+        ? rowRefs(system, tableId, row, { kind: 'formula', expr: withRow(system, tableId, row, source.expr), ...boundsOf(column) }) as FieldValue
         : rowRefs(system, tableId, row, deep(system, table, row, valueOf(column, view.default))) as FieldValue;
       const group = row.block ?? (view.block !== undefined ? fill(system, table, row, view.block) : table.block);
       const roll = view.roll ? rowRefs(system, tableId, row, deep(system, table, row, view.roll)) as Field['roll'] : undefined;

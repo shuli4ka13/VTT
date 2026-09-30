@@ -32,6 +32,7 @@ import { rollCheck, fieldCheck } from '@vtt/engine/engine/check';
 import {
   idleClock, startCombat, stopCombat, nextTurn, rollInitiative, expiryOf, inCombat,
 } from '@vtt/engine/engine/clock';
+import { newBreaches } from '@vtt/engine/engine/limits';
 
 export type Role = 'gm' | 'player';
 
@@ -648,6 +649,7 @@ export class RoomsService {
 
     const before = (await this.db.select().from(roomSheets).where(eq(roomSheets.roomId, roomId)))
       .map(entry => (entry.sheetId === sheetId ? sheet : JSON.parse(entry.data) as Sheet));
+    this.assertWithinLimits(system, this.worldOf(room).compendium, sheet, next, before);
     const lines: string[] = [];
     let settled = before.map(entry => (entry.id === sheetId ? next : entry));
     try {
@@ -835,11 +837,12 @@ export class RoomsService {
         : was ? list.map(other => (other.of === id ? entry : other)) : [...list, entry];
     }
 
-    await this.db.update(roomSheets).set({ data: JSON.stringify(next) })
-      .where(and(eq(roomSheets.roomId, roomId), eq(roomSheets.sheetId, sheetId)));
-
     const before = (await this.db.select().from(roomSheets).where(eq(roomSheets.roomId, roomId)))
       .map(entry => (entry.sheetId === sheetId ? sheet : JSON.parse(entry.data) as Sheet));
+    this.assertWithinLimits(system, compendium, sheet, next, before);
+
+    await this.db.update(roomSheets).set({ data: JSON.stringify(next) })
+      .where(and(eq(roomSheets.roomId, roomId), eq(roomSheets.sheetId, sheetId)));
     const all = before.map(entry => (entry.id === sheetId ? next : entry));
     const lines: string[] = [];
     const world = { system, compendium, die: this.roll, clock: await this.clockOf(roomId) };
@@ -852,6 +855,12 @@ export class RoomsService {
     const touched = await this.persistSheets(roomId, before, settled, [next]);
     const log = lines.length ? await this.appendLog(roomId, lines) : [];
     return { roomId, sheets: touched, log };
+  }
+
+  private assertWithinLimits(system: System, compendium: Compendium, sheet: Sheet, next: Sheet, all: Sheet[]): void {
+    const options = { compendium, shared: sharedOf(system, all) };
+    const broken = newBreaches(system, sheet, next, options);
+    if (broken.length) throw new BadRequestException(`так нельзя: ${broken.map(one => one.text).join('; ')}`);
   }
 
   private settle(

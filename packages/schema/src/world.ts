@@ -16,7 +16,7 @@ export const slotRef = z.union([
 
 const bound = z.union([z.number(), z.string()]);
 
-export const valueKind = z.enum(['number', 'text', 'boolean', 'expr', 'dice', 'choice', 'effect', 'record', 'tag']);
+export const valueKind = z.enum(['number', 'text', 'boolean', 'expr', 'dice', 'choice', 'effect', 'record', 'tag', 'table']);
 
 const typed = {
   kind: valueKind.optional(),

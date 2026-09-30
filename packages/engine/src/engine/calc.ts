@@ -22,6 +22,7 @@ export interface Pass {
   desk?: Pass;
   group?: Pass;
   only?: Scope;
+  compendium?: Compendium;
 }
 
 export interface PassOptions {
@@ -59,6 +60,7 @@ export function newPass(system: System, sheet: Sheet, options: PassOptions = {})
 
     resolve: () => undefined,
     ...(options.only ? { only: options.only } : {}),
+    ...(options.compendium ? { compendium: options.compendium } : {}),
   };
 
   const deskSheet = options.shared?.find(s => s.id === DESK_ID);

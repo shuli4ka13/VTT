@@ -12,6 +12,8 @@ import type { Param, Die, System } from '../model/types.ts';
 import type { Pass } from './calc.ts';
 import { hasField } from '../model/sheet-columns.ts';
 import { recordKinds } from '../model/owned.ts';
+import { heldBy, propsOf, withLibrary, isBook } from '../model/owned.ts';
+import { isSingle } from '../model/sheet-columns.ts';
 
 export interface RefContext {
   pass: Pass;
@@ -274,6 +276,22 @@ function waitsForStep(expr: string, ctx: RefContext): boolean {
   return compile(expr).deps.some(name => waitingName(name, ctx));
 }
 
+function rowsOfTable(system: System, pass: Pass, name: string, column: string, owner: string): Value[] {
+  const table = system.tables?.[name];
+  if (!table) throw new EngineError(`«строки»: таблицы «${name}» нет`);
+  if (!(table.columns ?? []).some(c => c.key === column)) {
+    throw new EngineError(`«строки»: у таблицы «${table.label || name}» нет колонки «${column}»`);
+  }
+  if (isBook(table)) {
+    if (!pass.compendium) throw new EngineError(`«строки»: записей «${table.label || name}» здесь не видно — книги нет`);
+    return heldBy(pass.sheet, withLibrary(system, pass.compendium))
+      .filter(held => held.record.table === name)
+      .map(held => (propsOf(held.record, system, held.entry)?.[column] ?? '') as Value);
+  }
+  if (isSingle(table)) return [pass.resolve(column) as Value];
+  return (table.rows ?? []).map(row => readCell(system, pass, name, row.value, column, owner) as Value);
+}
+
 export function toolsOf(system: System, pass: Pass, owner: string, die?: Die): Tools {
   return {
     ...(die ? {
@@ -290,6 +308,7 @@ export function toolsOf(system: System, pass: Pass, owner: string, die?: Die): T
       if (!Array.isArray(key)) return read(key) as Value;
       return key.filter(one => rowOf(system, name, one)).map(read) as unknown as Value;
     },
+    rows: (name, column) => rowsOfTable(system, pass, name, column, owner),
   };
 }
 

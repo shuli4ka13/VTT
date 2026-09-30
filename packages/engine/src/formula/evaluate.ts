@@ -7,6 +7,7 @@ export type Value = number | boolean | string;
 export interface Tools {
   roll?: (notation: string, times: number, keep?: number) => number;
   table?: (name: string, key: Value | Value[], column: string | null) => Value;
+  rows?: (table: string, column: string) => Value[];
 }
 
 interface Fn {
@@ -20,8 +21,35 @@ const FUNCTIONS: Record<string, Fn> = {
   'округлить вверх': { arity: 1, apply: args => Math.ceil(args[0]!) },
   округлить: { arity: 1, apply: args => Math.round(args[0]!) },
   модуль: { arity: 1, apply: args => Math.abs(args[0]!) },
-  'меньшее из': { arity: '1+', apply: args => Math.min(...args) },
-  'большее из': { arity: '1+', apply: args => Math.max(...args) },
+  'меньшее из': { arity: '1+', apply: () => 0, raw: args => Math.min(...numbers(args, 'меньшее из')) },
+  'большее из': { arity: '1+', apply: () => 0, raw: args => Math.max(...numbers(args, 'большее из')) },
+  сумма: { arity: '1+', apply: () => 0, raw: args => numbers(args, 'сумма', true).reduce((sum, value) => sum + value, 0) },
+  среднее: {
+    arity: '1+',
+    apply: () => 0,
+    raw: args => {
+      const list = numbers(args, 'среднее', true);
+      if (!list.length) throw new FormulaRuntimeError('«среднее»: список пуст');
+      return list.reduce((sum, value) => sum + value, 0) / list.length;
+    },
+  },
+  сколько: {
+    arity: '1+',
+    apply: () => 0,
+    raw: args => {
+      if (args.length > 2) throw new FormulaRuntimeError('«сколько» ждёт список и, если нужно, какое значение считать');
+      const list = listOf(args[0]).filter(value => value !== null && value !== undefined && value !== '');
+      return args.length === 2 ? list.filter(value => String(value) === String(args[1])).length : list.length;
+    },
+  },
+  строки: {
+    arity: 2,
+    apply: () => 0,
+    raw: (args, tools) => {
+      if (!tools.rows) throw new FormulaRuntimeError('«строки» здесь нельзя: таблиц системы тут не видно');
+      return tools.rows(String(args[0]), String(args[1])) as unknown as Value;
+    },
+  },
   есть: {
     arity: 2,
     apply: () => 0,
@@ -39,6 +67,11 @@ const FUNCTIONS: Record<string, Fn> = {
       if (found === undefined) throw new FormulaRuntimeError('«или»: ни одно значение не задано');
       return found;
     },
+  },
+  пусто: {
+    arity: 1,
+    apply: () => 0,
+    raw: args => args[0] === null || args[0] === undefined || args[0] === '' || (Array.isArray(args[0]) && !(args[0] as unknown[]).length),
   },
   все: {
     arity: '1+',
@@ -172,6 +205,14 @@ export function evaluate(ast: Node, resolve: Resolve, tools: Tools = {}): Value 
     const args = node.args.map((arg, n) => number(visit(arg), `аргумент ${n + 1} функции «${node.name}»`));
     return fn.apply(args);
   }
+}
+
+const listOf = (value: unknown): Value[] => (Array.isArray(value) ? value as Value[] : [value as Value]);
+
+function numbers(args: Value[], name: string, empty = false): number[] {
+  const list = args.flatMap(listOf).filter(value => value !== null && value !== undefined && value !== '');
+  if (!list.length && !empty) throw new FormulaRuntimeError(`«${name}»: не из чего выбирать — список пуст`);
+  return list.map((value, n) => number(value, `значение ${n + 1} в «${name}»`));
 }
 
 function number(value: unknown, what: string): number {

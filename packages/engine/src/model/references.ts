@@ -207,7 +207,18 @@ export function chainRefs(steps: Step[], whereOf: (index: number) => Where, para
   return out;
 }
 
-function modifierRefs(list: Modifier[] | undefined, from: Where, out: Reference[]): void {
+const ROW_PATH = /@строка((?:\.[\p{L}\p{N}_]+)*)/gu;
+
+function rowFree(text: string, from: Where, own: Set<string> | undefined, out: Reference[]): string {
+  if (!own) return text;
+  return text.replace(ROW_PATH, (_, tail: string) => {
+    const head = tail.slice(1).split('.')[0] ?? '';
+    if (!own.has(head)) out.push({ kind: 'prop', key: head || 'строка', from, scope: 'foreign' });
+    return '0';
+  });
+}
+
+function modifierRefs(list: Modifier[] | undefined, from: Where, out: Reference[], own?: Set<string>): void {
   for (const mod of list ?? []) {
     const target = String(mod.target ?? '');
     if (mod.kind === 'value') {
@@ -218,8 +229,8 @@ function modifierRefs(list: Modifier[] | undefined, from: Where, out: Reference[
       if (mod.edit) out.push({ kind: 'rollEdit', key: String(mod.edit), from });
     }
     const noScope = { params: new Set<string>(), earlier: new Set<string>(), eventChain: false };
-    if (mod.condition?.expr.trim()) exprRefs(mod.condition.expr, from, noScope, out);
-    if (mod.value?.expr.trim()) exprRefs(mod.value.expr, from, noScope, out);
+    if (mod.condition?.expr.trim()) exprRefs(rowFree(mod.condition.expr, from, own, out), from, noScope, out);
+    if (mod.value?.expr.trim()) exprRefs(rowFree(mod.value.expr, from, own, out), from, noScope, out);
     const where = (mod as { where?: { table?: unknown } }).where;
     if (where && typeof where.table === 'string' && where.table) out.push({ kind: 'table', key: where.table, from, scope: 'condition' });
   }
@@ -316,6 +327,17 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
     }
   }
 
+  for (const [id, table] of Object.entries(system.tables ?? {})) {
+    const from: Where = { tab: 'rules', section: 'tables', key: id };
+    for (const column of table.columns ?? []) {
+      if (column.kind !== 'table') continue;
+      for (const row of table.rows ?? []) {
+        const cell = (row.cells ?? {})[column.key];
+        if (typeof cell === 'string' && cell) out.push({ kind: 'table', key: cell, from });
+      }
+    }
+  }
+
   for (const [id, effect] of Object.entries(system.effects ?? {})) effectRefs(system, id, effect, out);
 
   for (const [kind, spec] of kindsOf(system)) {
@@ -333,7 +355,7 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
         }
       }
     });
-    modifierRefs(spec.modifiers, { tab: 'records', kind, part: 'modifiers' }, out);
+    modifierRefs(spec.modifiers, { tab: 'records', kind, part: 'modifiers' }, out, spec.shape === 'book' ? own : undefined);
     for (const id of spec.grants ?? []) out.push({ kind: 'effect', key: id, from: { tab: 'records', kind, part: 'grants' } });
   }
 
@@ -363,7 +385,7 @@ export function referencesOf(system: System, compendium?: Compendium): Reference
       if (record.table) out.push({ kind: 'recordKind', key: String(record.table), from });
       for (const id of record.grants ?? []) out.push({ kind: 'effect', key: id, from });
       for (const binding of record.bindings ?? []) if (binding.effect) out.push({ kind: 'effect', key: binding.effect, from });
-      modifierRefs(record.modifiers, from, out);
+      modifierRefs(record.modifiers, from, out, record.table ? new Set((system.tables?.[record.table]?.columns ?? []).map(c => c.key)) : undefined);
     }
   }
 

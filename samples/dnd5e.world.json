@@ -382,6 +382,13 @@
             "block": "Магия"
           },
           {
+            "key": "attuned",
+            "label": "Настроено предметов",
+            "expr": "сколько(строки(\"wondrous\", \"attunement\"), да)",
+            "max": 3,
+            "block": "Магия"
+          },
+          {
             "key": "cantrip_dice",
             "label": "Костей заговора",
             "expr": "таблица(\"levels\", @level, \"cantrips\")",
@@ -390,7 +397,7 @@
           {
             "key": "rage_damage",
             "label": "Урон ярости",
-            "expr": "таблица(\"levels\", @level, \"rage\")",
+            "expr": "если(пусто(@class_name.progression), 0, таблица(@class_name.progression, @level, \"rage_damage\"))",
             "block": "Ресурсы класса"
           },
           {
@@ -722,11 +729,6 @@
             "key": "cantrips",
             "label": "Костей заговора",
             "kind": "number"
-          },
-          {
-            "key": "rage",
-            "label": "Урон ярости",
-            "kind": "number"
           }
         ],
         "rows": [
@@ -734,160 +736,174 @@
             "value": 1,
             "cells": {
               "prof": 2,
-              "cantrips": 1,
-              "rage": 2
+              "cantrips": 1
             }
           },
           {
             "value": 2,
             "cells": {
               "prof": 2,
-              "cantrips": 1,
-              "rage": 2
+              "cantrips": 1
             }
           },
           {
             "value": 3,
             "cells": {
               "prof": 2,
-              "cantrips": 1,
-              "rage": 2
+              "cantrips": 1
             }
           },
           {
             "value": 4,
             "cells": {
               "prof": 2,
-              "cantrips": 1,
-              "rage": 2
+              "cantrips": 1
             }
           },
           {
             "value": 5,
             "cells": {
               "prof": 3,
-              "cantrips": 2,
-              "rage": 2
+              "cantrips": 2
             }
           },
           {
             "value": 6,
             "cells": {
               "prof": 3,
-              "cantrips": 2,
-              "rage": 2
+              "cantrips": 2
             }
           },
           {
             "value": 7,
             "cells": {
               "prof": 3,
-              "cantrips": 2,
-              "rage": 2
+              "cantrips": 2
             }
           },
           {
             "value": 8,
             "cells": {
               "prof": 3,
-              "cantrips": 2,
-              "rage": 2
+              "cantrips": 2
             }
           },
           {
             "value": 9,
             "cells": {
               "prof": 4,
-              "cantrips": 2,
-              "rage": 3
+              "cantrips": 2
             }
           },
           {
             "value": 10,
             "cells": {
               "prof": 4,
-              "cantrips": 2,
-              "rage": 3
+              "cantrips": 2
             }
           },
           {
             "value": 11,
             "cells": {
               "prof": 4,
-              "cantrips": 3,
-              "rage": 3
+              "cantrips": 3
             }
           },
           {
             "value": 12,
             "cells": {
               "prof": 4,
-              "cantrips": 3,
-              "rage": 3
+              "cantrips": 3
             }
           },
           {
             "value": 13,
             "cells": {
               "prof": 5,
-              "cantrips": 3,
-              "rage": 3
+              "cantrips": 3
             }
           },
           {
             "value": 14,
             "cells": {
               "prof": 5,
-              "cantrips": 3,
-              "rage": 3
+              "cantrips": 3
             }
           },
           {
             "value": 15,
             "cells": {
               "prof": 5,
-              "cantrips": 3,
-              "rage": 3
+              "cantrips": 3
             }
           },
           {
             "value": 16,
             "cells": {
               "prof": 5,
-              "cantrips": 3,
-              "rage": 4
+              "cantrips": 3
             }
           },
           {
             "value": 17,
             "cells": {
               "prof": 6,
-              "cantrips": 4,
-              "rage": 4
+              "cantrips": 4
             }
           },
           {
             "value": 18,
             "cells": {
               "prof": 6,
-              "cantrips": 4,
-              "rage": 4
+              "cantrips": 4
             }
           },
           {
             "value": 19,
             "cells": {
               "prof": 6,
-              "cantrips": 4,
-              "rage": 4
+              "cantrips": 4
             }
           },
           {
             "value": 20,
             "cells": {
               "prof": 6,
-              "cantrips": 4,
-              "rage": 4
+              "cantrips": 4
+            }
+          }
+        ]
+      },
+      "barbarian_levels": {
+        "label": "Прогрессия варвара",
+        "key": "range",
+        "columns": [
+          {
+            "key": "rage_damage",
+            "label": "Урон ярости",
+            "kind": "number"
+          }
+        ],
+        "rows": [
+          {
+            "from": 1,
+            "to": 8,
+            "cells": {
+              "rage_damage": 2
+            }
+          },
+          {
+            "from": 9,
+            "to": 15,
+            "cells": {
+              "rage_damage": 3
+            }
+          },
+          {
+            "from": 16,
+            "to": 20,
+            "cells": {
+              "rage_damage": 4
             }
           }
         ]
@@ -1810,6 +1826,11 @@
             "label": "Заклинательная характеристика",
             "kind": "choice",
             "from": "abilities"
+          },
+          {
+            "key": "progression",
+            "label": "Прогрессия",
+            "kind": "table"
           }
         ],
         "rows": [
@@ -1820,7 +1841,8 @@
               "saves": [
                 "сила",
                 "телосложение"
-              ]
+              ],
+              "progression": "barbarian_levels"
             }
           },
           {
@@ -2239,7 +2261,7 @@
           {
             "key": "attunement",
             "label": "Требует настройки",
-            "kind": "text"
+            "kind": "boolean"
           }
         ]
       },
@@ -9320,7 +9342,7 @@
         ],
         "table": "wondrous",
         "cells": {
-          "attunement": "да"
+          "attunement": true
         }
       },
       {
@@ -9340,7 +9362,7 @@
         ],
         "table": "wondrous",
         "cells": {
-          "attunement": "да"
+          "attunement": true
         }
       },
       {
@@ -9360,7 +9382,7 @@
         ],
         "table": "wondrous",
         "cells": {
-          "attunement": "да"
+          "attunement": true
         }
       },
       {
@@ -9380,7 +9402,7 @@
         ],
         "table": "wondrous",
         "cells": {
-          "attunement": "да"
+          "attunement": true
         }
       },
       {
@@ -9400,7 +9422,7 @@
         ],
         "table": "wondrous",
         "cells": {
-          "attunement": "да"
+          "attunement": true
         }
       },
       {
@@ -9412,7 +9434,7 @@
         ],
         "table": "wondrous",
         "cells": {
-          "attunement": "да"
+          "attunement": true
         }
       },
       {
@@ -9432,7 +9454,7 @@
         ],
         "table": "wondrous",
         "cells": {
-          "attunement": "нет"
+          "attunement": false
         }
       },
       {
@@ -9452,7 +9474,7 @@
         ],
         "table": "wondrous",
         "cells": {
-          "attunement": "да"
+          "attunement": true
         }
       },
       {

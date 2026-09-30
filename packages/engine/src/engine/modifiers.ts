@@ -3,10 +3,12 @@ import { assertTarget, incomingTagOf, ANY_ROLL } from './targets.ts';
 import { wornEffects, activationOf } from './effects.ts';
 import { EngineError } from './errors.ts';
 import { anyRowSays } from './tables.ts';
-import { findRecord, kindOfRecord, sheetKindOf } from '../model/owned.ts';
+import { findRecord, kindOfRecord, sheetKindOf, propsOf } from '../model/owned.ts';
 import { tagsHold } from './roll-tags.ts';
 import type { System, Sheet, Compendium, Modifier, RollEdit } from '../model/types.ts';
 import type { Pass } from './calc.ts';
+import { withRecord } from '../model/sheet-columns.ts';
+import { toolsOf } from './refs.ts';
 
 export interface ModifierSource {
   type: 'item' | 'kind' | 'effect' | 'claim';
@@ -69,13 +71,15 @@ function sourcesOf(system: System, sheet: Sheet, compendium: Compendium): Modifi
     if (!item) throw new EngineError(`у листа «${sheet.id}» есть «${entry.of}», которого нет в компендиуме`);
 
     const kind = kindOfRecord(system, item);
+    const cells = propsOf(item, system, entry) ?? {};
+    const mine = <T,>(list: T): T => (item.table ? withRecord(system, item.table, cells, list) : list);
     if (kind?.modifiers?.length) {
       sources.push({
         type: 'kind', id: String(item.table), label: kind.label || String(item.table),
-        modifiers: kind.modifiers,
+        modifiers: mine(kind.modifiers),
       });
     }
-    if (item.modifiers?.length) sources.push({ type: 'item', id: item.id, label: item.label, modifiers: item.modifiers });
+    if (item.modifiers?.length) sources.push({ type: 'item', id: item.id, label: item.label, modifiers: mine(item.modifiers) });
   }
 
   for (const { id, effect } of wornEffects(system, sheet, { compendium })) {
@@ -168,7 +172,7 @@ function withValues(edit: RollEdit & { label: string }, pass: Pass): RollEdit & 
   if (!(edit.ops ?? []).some(op => Object.values(op).some(isFormula))) return edit;
   const ops = edit.ops.map(op => Object.fromEntries(Object.entries(op).map(([key, value]) => {
     if (!isFormula(value)) return [key, value];
-    const number = Number(compile(value.expr).evaluate(pass.resolve));
+    const number = Number(compile(value.expr).evaluate(pass.resolve, toolsOf(pass.system, pass, 'правка броска')));
     if (!Number.isFinite(number)) throw new EngineError(`правка броска «${edit.label}»: «${key}» — формула «${value.expr}» дала не число`);
     return [key, number];
   })) as typeof op);
@@ -215,7 +219,7 @@ function tagsMatch(mod: SourcedModifier, tags: string[], system: System): boolea
 
 function conditionHolds(mod: SourcedModifier, pass: Pass): boolean {
   if (!mod.condition) return true;
-  const result = compile(mod.condition.expr).evaluate(pass.resolve);
+  const result = compile(mod.condition.expr).evaluate(pass.resolve, toolsOf(pass.system, pass, 'условие модификатора'));
   if (typeof result !== 'boolean') {
     throw new EngineError(
       `условие «${mod.condition.expr}» источника «${mod.source.label}» должно давать да или нет`);
@@ -225,7 +229,7 @@ function conditionHolds(mod: SourcedModifier, pass: Pass): boolean {
 
 function valueOf(mod: SourcedModifier, pass: Pass): unknown {
   const raw = (mod as { value?: { expr: string } }).value;
-  return raw ? compile(raw.expr).evaluate(pass.resolve) : undefined;
+  return raw ? compile(raw.expr).evaluate(pass.resolve, toolsOf(pass.system, pass, 'модификатор')) : undefined;
 }
 
 function totalOf(mods: SourcedModifier[], pass: Pass, tag: string, seed = 0): number {

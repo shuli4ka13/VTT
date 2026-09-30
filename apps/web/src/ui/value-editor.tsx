@@ -1,5 +1,6 @@
 import type { System, Compendium, ValueKind } from '@vtt/schema';
 import { listOf } from '@vtt/engine/model/lists';
+import { rowTables } from '@vtt/engine/model/tables';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 import { recordsOf } from '@vtt/engine/model/owned';
 import { Input, NumInput, Select } from './primitives.tsx';
@@ -56,6 +57,15 @@ export function ValueEditor({ type, value, system, compendium, onlyWorn, except,
           ...recordsOf(compendium)
             .filter(other => other.id !== except)
             .map(other => [other.id, other.label ?? other.id] as const)] as never}
+        onChange={next => onChange(next)}
+      />
+    );
+  }
+  if (kind === 'table') {
+    return (
+      <Select
+        value={String(value ?? '')}
+        options={[['', '— какая таблица —'], ...rowTables(system).map(([key, table]) => [key, table.label || key] as const)] as never}
         onChange={next => onChange(next)}
       />
     );
