@@ -113,6 +113,7 @@ function Shown({ label, text, title, bad, roll }: {
 
 function boundOf(bound: unknown, reader: Reader): number | undefined {
   if (typeof bound !== 'string') return undefined;
+  if (/^-?\d+(\.\d+)?$/.test(bound.trim())) return Number(bound);
   const tag = /^[@#]([\p{L}\p{N}_.-]+)$/u.exec(bound.trim())?.[1];
   if (!tag) return undefined;
   const value = reader.valueOf(tag);

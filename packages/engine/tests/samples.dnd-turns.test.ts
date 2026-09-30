@@ -28,33 +28,33 @@ group('действия хода — поля листа, а не отдельн
   test('вне боя действия не тратятся: бей сколько хочешь', () => {
     let sheets = table(0);
     for (let i = 0; i < 3; i++) sheets = hit(sheets);
-    eq(value(sheets, 'turn_action'), 1);
-    eq(value(sheets, 'turn_attacks'), 0);
+    eq(value(sheets, 'turn.действие.left'), 1);
+    eq(value(sheets, 'turn.атаки.left'), 0);
   });
 
   test('в бою первый удар тратит действие и даёт запас атак; кончились атаки и действие — отказ словами', () => {
     const perAction = Number(read((dnd.sheets as Sheet[]).find(s => s.id === 'arven')!, 'attacks_per_action'));
     ok(perAction >= 2, 'у Арвен дополнительная атака');
     let sheets = hit(table(1));
-    eq(value(sheets, 'turn_action'), 0, 'действие потрачено первым ударом');
-    eq(value(sheets, 'turn_attacks'), perAction - 1, 'в запасе остальные атаки этого действия');
+    eq(value(sheets, 'turn.действие.left'), 0, 'действие потрачено первым ударом');
+    eq(value(sheets, 'turn.атаки.left'), perAction - 1, 'в запасе остальные атаки этого действия');
     for (let i = 1; i < perAction; i++) sheets = hit(sheets);
-    eq(value(sheets, 'turn_attacks'), 0);
+    eq(value(sheets, 'turn.атаки.left'), 0);
     throws(() => hit(sheets), 'действие на этом ходу уже потрачено');
   });
 
   test('начало хода снова даёт действие, бонусное, реакцию', () => {
     const spent = hit(table(1));
     const out = fireMoments([{ moment: 'turn-start', sheetId: 'arven' }], spent, { system, compendium, die: () => 1 });
-    eq(value(out.sheets, 'turn_action'), 1);
-    eq(value(out.sheets, 'turn_reaction'), 1);
-    eq(value(out.sheets, 'turn_attacks'), 0);
+    eq(value(out.sheets, 'turn.действие.left'), 1);
+    eq(value(out.sheets, 'turn.реакция.left'), 1);
+    eq(value(out.sheets, 'turn.атаки.left'), 0);
   });
 
   test('«Ускорение» даёт ещё одно действие в начале хода', () => {
     const spent = hit(table(1)).map(s => (s.id === 'arven' ? { ...s, effects: [...(s.effects ?? []), { effectId: 'hasted' }] } : s));
     const out = fireMoments([{ moment: 'turn-start', sheetId: 'arven' }], spent, { system, compendium, die: () => 1 });
-    eq(value(out.sheets, 'turn_action'), 2);
+    eq(value(out.sheets, 'turn.действие.left'), 2);
   });
 
   test('начало боя отмечает бой на столе, конец — снимает', () => {

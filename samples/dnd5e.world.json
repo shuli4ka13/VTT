@@ -340,55 +340,6 @@
             "block": "Атака"
           },
           {
-            "key": "turn_action",
-            "label": "Действие",
-            "kind": "number",
-            "default": 1,
-            "min": 0,
-            "max": 2,
-            "control": "pips",
-            "block": "В бою"
-          },
-          {
-            "key": "turn_bonus",
-            "label": "Бонусное действие",
-            "kind": "number",
-            "default": 1,
-            "min": 0,
-            "max": 1,
-            "control": "pips",
-            "block": "В бою"
-          },
-          {
-            "key": "turn_reaction",
-            "label": "Реакция",
-            "kind": "number",
-            "default": 1,
-            "min": 0,
-            "max": 1,
-            "control": "pips",
-            "block": "В бою"
-          },
-          {
-            "key": "turn_once",
-            "label": "Раз за ход",
-            "kind": "number",
-            "default": 1,
-            "min": 0,
-            "max": 1,
-            "control": "pips",
-            "block": "В бою"
-          },
-          {
-            "key": "turn_attacks",
-            "label": "Атак осталось",
-            "kind": "number",
-            "min": 0,
-            "max": 4,
-            "control": "pips",
-            "block": "В бою"
-          },
-          {
             "key": "crit_from",
             "label": "Крит на костях от",
             "kind": "number",
@@ -470,123 +421,6 @@
             "kind": "number",
             "min": 0,
             "block": "Богатство"
-          },
-          {
-            "key": "taken_0",
-            "label": "Рубящий",
-            "kind": "choice",
-            "from": "taken",
-            "default": "как есть",
-            "control": "choice",
-            "block": "Стойкость к урону"
-          },
-          {
-            "key": "taken_1",
-            "label": "Колющий",
-            "kind": "choice",
-            "from": "taken",
-            "default": "как есть",
-            "control": "choice",
-            "block": "Стойкость к урону"
-          },
-          {
-            "key": "taken_2",
-            "label": "Дробящий",
-            "kind": "choice",
-            "from": "taken",
-            "default": "как есть",
-            "control": "choice",
-            "block": "Стойкость к урону"
-          },
-          {
-            "key": "taken_3",
-            "label": "Огонь",
-            "kind": "choice",
-            "from": "taken",
-            "default": "как есть",
-            "control": "choice",
-            "block": "Стойкость к урону"
-          },
-          {
-            "key": "taken_4",
-            "label": "Холод",
-            "kind": "choice",
-            "from": "taken",
-            "default": "как есть",
-            "control": "choice",
-            "block": "Стойкость к урону"
-          },
-          {
-            "key": "taken_5",
-            "label": "Молния",
-            "kind": "choice",
-            "from": "taken",
-            "default": "как есть",
-            "control": "choice",
-            "block": "Стойкость к урону"
-          },
-          {
-            "key": "taken_6",
-            "label": "Гром",
-            "kind": "choice",
-            "from": "taken",
-            "default": "как есть",
-            "control": "choice",
-            "block": "Стойкость к урону"
-          },
-          {
-            "key": "taken_7",
-            "label": "Кислота",
-            "kind": "choice",
-            "from": "taken",
-            "default": "как есть",
-            "control": "choice",
-            "block": "Стойкость к урону"
-          },
-          {
-            "key": "taken_8",
-            "label": "Яд",
-            "kind": "choice",
-            "from": "taken",
-            "default": "как есть",
-            "control": "choice",
-            "block": "Стойкость к урону"
-          },
-          {
-            "key": "taken_9",
-            "label": "Некротический",
-            "kind": "choice",
-            "from": "taken",
-            "default": "как есть",
-            "control": "choice",
-            "block": "Стойкость к урону"
-          },
-          {
-            "key": "taken_10",
-            "label": "Излучение",
-            "kind": "choice",
-            "from": "taken",
-            "default": "как есть",
-            "control": "choice",
-            "block": "Стойкость к урону"
-          },
-          {
-            "key": "taken_11",
-            "label": "Психический",
-            "kind": "choice",
-            "from": "taken",
-            "default": "как есть",
-            "control": "choice",
-            "block": "Стойкость к урону"
-          },
-          {
-            "key": "taken_12",
-            "label": "Силовой",
-            "kind": "choice",
-            "from": "taken",
-            "default": "как есть",
-            "control": "choice",
-            "block": "Стойкость к урону"
           }
         ]
       },
@@ -603,6 +437,85 @@
             "max": 1,
             "control": "toggle",
             "block": "В бою"
+          }
+        ]
+      },
+      "turn": {
+        "label": "За ход",
+        "key": "word",
+        "owner": "sheet",
+        "block": "В бою",
+        "columns": [
+          {
+            "key": "max",
+            "label": "Всего",
+            "kind": "number"
+          },
+          {
+            "key": "left",
+            "label": "Осталось",
+            "kind": "number",
+            "min": 0,
+            "max": "@строка.max",
+            "control": "pips",
+            "title": "{label}"
+          }
+        ],
+        "rows": [
+          {
+            "value": "действие",
+            "label": "Действие",
+            "cells": {
+              "max": 2
+            },
+            "view": {
+              "left": {
+                "default": 1
+              }
+            }
+          },
+          {
+            "value": "бонусное",
+            "label": "Бонусное действие",
+            "cells": {
+              "max": 1
+            },
+            "view": {
+              "left": {
+                "default": 1
+              }
+            }
+          },
+          {
+            "value": "реакция",
+            "label": "Реакция",
+            "cells": {
+              "max": 1
+            },
+            "view": {
+              "left": {
+                "default": 1
+              }
+            }
+          },
+          {
+            "value": "раз_за_ход",
+            "label": "Раз за ход",
+            "cells": {
+              "max": 1
+            },
+            "view": {
+              "left": {
+                "default": 1
+              }
+            }
+          },
+          {
+            "value": "атаки",
+            "label": "Атак осталось",
+            "cells": {
+              "max": 4
+            }
           }
         ]
       },
@@ -675,6 +588,13 @@
         "key": "word",
         "columns": [
           {
+            "key": "class",
+            "label": "Чей ресурс",
+            "kind": "choice",
+            "from": "classes",
+            "many": true
+          },
+          {
             "key": "max",
             "label": "Всего",
             "kind": "number",
@@ -698,39 +618,85 @@
         "rows": [
           {
             "value": "rages",
-            "label": "Ярость"
+            "label": "Ярость",
+            "cells": {
+              "class": [
+                "варвар"
+              ]
+            }
           },
           {
             "value": "ki",
-            "label": "Очки ци"
+            "label": "Очки ци",
+            "cells": {
+              "class": [
+                "монах"
+              ]
+            }
           },
           {
             "value": "bardic",
-            "label": "Бардовское вдохновение"
+            "label": "Бардовское вдохновение",
+            "cells": {
+              "class": [
+                "бард"
+              ]
+            }
           },
           {
             "value": "channel",
-            "label": "Божественный канал"
+            "label": "Божественный канал",
+            "cells": {
+              "class": [
+                "жрец",
+                "паладин"
+              ]
+            }
           },
           {
             "value": "second_wind",
-            "label": "Второе дыхание"
+            "label": "Второе дыхание",
+            "cells": {
+              "class": [
+                "воин"
+              ]
+            }
           },
           {
             "value": "action_surge",
-            "label": "Всплеск действий"
+            "label": "Всплеск действий",
+            "cells": {
+              "class": [
+                "воин"
+              ]
+            }
           },
           {
             "value": "lay_on_hands",
-            "label": "Наложение рук: запас"
+            "label": "Наложение рук: запас",
+            "cells": {
+              "class": [
+                "паладин"
+              ]
+            }
           },
           {
             "value": "sorcery",
-            "label": "Очки чародейства"
+            "label": "Очки чародейства",
+            "cells": {
+              "class": [
+                "чародей"
+              ]
+            }
           },
           {
             "value": "superiority",
-            "label": "Кости превосходства"
+            "label": "Кости превосходства",
+            "cells": {
+              "class": [
+                "воин"
+              ]
+            }
           },
           {
             "value": "luck",
@@ -1342,6 +1308,16 @@
             "label": "Природа",
             "kind": "choice",
             "from": "damage_nature"
+          },
+          {
+            "key": "taken",
+            "label": "Стойкость",
+            "kind": "choice",
+            "from": "taken",
+            "default": "как есть",
+            "control": "choice",
+            "block": "Стойкость к урону",
+            "title": "{label}"
           }
         ],
         "rows": [
@@ -1423,7 +1399,8 @@
               "nature": "прочий"
             }
           }
-        ]
+        ],
+        "owner": "sheet"
       },
       "wield": {
         "label": "Способ атаки",
@@ -1552,6 +1529,46 @@
                 "expr": "@строка.mod"
               }
             }
+          },
+          {
+            "key": "save_extra",
+            "label": "Владение сверх класса",
+            "kind": "number",
+            "min": 0,
+            "max": 1,
+            "title": "Владение сверх класса: спасбросок {label}",
+            "block": "Спасброски",
+            "control": "ring",
+            "default": 0
+          },
+          {
+            "key": "save_prof",
+            "label": "Владение",
+            "kind": "number",
+            "expr": "большее из(@строка.save_extra, если(есть(@class_name.saves, @строка), 1, 0))",
+            "title": "Владение: спасбросок {label}",
+            "block": "Спасброски"
+          },
+          {
+            "key": "save",
+            "label": "Спасбросок",
+            "kind": "number",
+            "expr": "@строка.mod + @строка.save_prof * @prof_bonus",
+            "title": "Спасбросок: {label}",
+            "block": "Спасброски",
+            "roll": {
+              "label": "Спасбросок: {label}",
+              "tags": [
+                "спасбросок",
+                "{value}"
+              ],
+              "die": {
+                "constant": "lead_die"
+              },
+              "bonus": {
+                "expr": "@строка.save"
+              }
+            }
           }
         ],
         "rows": [
@@ -1578,103 +1595,6 @@
           {
             "value": "харизма",
             "label": "Харизма"
-          }
-        ],
-        "owner": "sheet"
-      },
-      "saves": {
-        "label": "Спасброски",
-        "key": "word",
-        "columns": [
-          {
-            "key": "ability",
-            "label": "Характеристика",
-            "kind": "choice",
-            "from": "abilities"
-          },
-          {
-            "key": "extra",
-            "label": "Владение сверх класса",
-            "kind": "number",
-            "min": 0,
-            "max": 1,
-            "title": "Владение сверх класса: спасбросок {label}",
-            "block": "Спасброски",
-            "control": "ring",
-            "default": 0
-          },
-          {
-            "key": "prof",
-            "label": "Владение",
-            "kind": "number",
-            "expr": "большее из(@строка.extra, если(есть(@class_name.saves, @строка), 1, 0))",
-            "title": "Владение: спасбросок {label}",
-            "block": "Спасброски"
-          },
-          {
-            "key": "save",
-            "label": "Спасбросок",
-            "kind": "number",
-            "expr": "@строка.ability.mod + @строка.prof * @prof_bonus",
-            "title": "Спасбросок: {label}",
-            "block": "Спасброски",
-            "roll": {
-              "label": "Спасбросок: {label}",
-              "tags": [
-                "спасбросок",
-                "{value}"
-              ],
-              "die": {
-                "constant": "lead_die"
-              },
-              "bonus": {
-                "expr": "@строка.save"
-              }
-            }
-          }
-        ],
-        "rows": [
-          {
-            "value": "сила",
-            "label": "Сила",
-            "cells": {
-              "ability": "сила"
-            }
-          },
-          {
-            "value": "ловкость",
-            "label": "Ловкость",
-            "cells": {
-              "ability": "ловкость"
-            }
-          },
-          {
-            "value": "телосложение",
-            "label": "Телосложение",
-            "cells": {
-              "ability": "телосложение"
-            }
-          },
-          {
-            "value": "интеллект",
-            "label": "Интеллект",
-            "cells": {
-              "ability": "интеллект"
-            }
-          },
-          {
-            "value": "мудрость",
-            "label": "Мудрость",
-            "cells": {
-              "ability": "мудрость"
-            }
-          },
-          {
-            "value": "харизма",
-            "label": "Харизма",
-            "cells": {
-              "ability": "харизма"
-            }
           }
         ],
         "owner": "sheet"
@@ -2419,7 +2339,7 @@
             "key": "save_by",
             "label": "Чем спасаются",
             "kind": "choice",
-            "from": "saves"
+            "from": "abilities"
           },
           {
             "key": "status",
@@ -2513,7 +2433,7 @@
             "key": "save_by",
             "label": "Чем спасаются",
             "kind": "choice",
-            "from": "saves"
+            "from": "abilities"
           },
           {
             "key": "damage_die",
@@ -2561,7 +2481,7 @@
             "key": "save_by",
             "label": "Чем спасаются",
             "kind": "choice",
-            "from": "saves"
+            "from": "abilities"
           },
           {
             "key": "damage_die",
@@ -2661,7 +2581,7 @@
             "key": "save_by",
             "label": "Чем спасаются",
             "kind": "choice",
-            "from": "saves"
+            "from": "abilities"
           },
           {
             "key": "status",
@@ -3270,7 +3190,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_0.mult"
+              "expr": "@damage_types.рубящий.taken.mult"
             },
             "stacking": "sum",
             "tags": [
@@ -3282,7 +3202,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_1.mult"
+              "expr": "@damage_types.колющий.taken.mult"
             },
             "stacking": "sum",
             "tags": [
@@ -3294,7 +3214,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_2.mult"
+              "expr": "@damage_types.дробящий.taken.mult"
             },
             "stacking": "sum",
             "tags": [
@@ -3306,7 +3226,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_3.mult"
+              "expr": "@damage_types.огонь.taken.mult"
             },
             "stacking": "sum",
             "tags": [
@@ -3318,7 +3238,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_4.mult"
+              "expr": "@damage_types.холод.taken.mult"
             },
             "stacking": "sum",
             "tags": [
@@ -3330,7 +3250,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_5.mult"
+              "expr": "@damage_types.молния.taken.mult"
             },
             "stacking": "sum",
             "tags": [
@@ -3342,7 +3262,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_6.mult"
+              "expr": "@damage_types.гром.taken.mult"
             },
             "stacking": "sum",
             "tags": [
@@ -3354,7 +3274,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_7.mult"
+              "expr": "@damage_types.кислота.taken.mult"
             },
             "stacking": "sum",
             "tags": [
@@ -3366,7 +3286,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_8.mult"
+              "expr": "@damage_types.яд.taken.mult"
             },
             "stacking": "sum",
             "tags": [
@@ -3378,7 +3298,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_9.mult"
+              "expr": "@damage_types.некротический.taken.mult"
             },
             "stacking": "sum",
             "tags": [
@@ -3390,7 +3310,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_10.mult"
+              "expr": "@damage_types.излучение.taken.mult"
             },
             "stacking": "sum",
             "tags": [
@@ -3402,7 +3322,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_11.mult"
+              "expr": "@damage_types.психический.taken.mult"
             },
             "stacking": "sum",
             "tags": [
@@ -3414,7 +3334,7 @@
             "target": "event:damage",
             "op": "mul",
             "value": {
-              "expr": "@taken_12.mult"
+              "expr": "@damage_types.силовой.taken.mult"
             },
             "stacking": "sum",
             "tags": [
@@ -3553,7 +3473,7 @@
             "key": "save_by",
             "label": "Чем спасаются",
             "kind": "choice",
-            "from": "saves"
+            "from": "abilities"
           },
           {
             "key": "damage_die",
@@ -3757,7 +3677,7 @@
             "key": "save_by",
             "label": "Чем спасаются",
             "kind": "choice",
-            "from": "saves"
+            "from": "abilities"
           },
           {
             "key": "damage_die",
@@ -3857,7 +3777,7 @@
             "key": "save_by",
             "label": "Чем спасаются",
             "kind": "choice",
-            "from": "saves"
+            "from": "abilities"
           },
           {
             "key": "damage_die",
@@ -4030,7 +3950,7 @@
             "key": "save_by",
             "label": "Чем спасаются",
             "kind": "choice",
-            "from": "saves"
+            "from": "abilities"
           },
           {
             "key": "status",
@@ -4093,7 +4013,7 @@
             "key": "save_by",
             "label": "Чем спасаются",
             "kind": "choice",
-            "from": "saves"
+            "from": "abilities"
           },
           {
             "key": "status",
@@ -4447,7 +4367,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "turn_action"
+              "tag": "turn.действие.left"
             },
             "direction": "add",
             "value": {
@@ -4625,7 +4545,7 @@
                 "constant": "lead_die"
               },
               "bonus": {
-                "expr": "@получатель.saves.мудрость.save"
+                "expr": "@получатель.abilities.мудрость.save"
               },
               "tags": [
                 "спасбросок",
@@ -5005,7 +4925,7 @@
                     "constant": "lead_die"
                   },
                   "bonus": {
-                    "expr": "@получатель.saves.ловкость.save"
+                    "expr": "@получатель.abilities.ловкость.save"
                   },
                   "tags": [
                     "спасбросок",
@@ -5234,7 +5154,7 @@
                     "constant": "lead_die"
                   },
                   "bonus": {
-                    "expr": "@отправитель.saves.телосложение.save"
+                    "expr": "@отправитель.abilities.телосложение.save"
                   },
                   "tags": [
                     "спасбросок",
@@ -5322,7 +5242,7 @@
                     "constant": "lead_die"
                   },
                   "bonus": {
-                    "expr": "@отправитель.saves.мудрость.save"
+                    "expr": "@отправитель.abilities.мудрость.save"
                   },
                   "tags": [
                     "спасбросок",
@@ -5479,7 +5399,7 @@
                     "constant": "lead_die"
                   },
                   "bonus": {
-                    "expr": "@отправитель.saves.мудрость.save"
+                    "expr": "@отправитель.abilities.мудрость.save"
                   },
                   "tags": [
                     "спасбросок",
@@ -5678,7 +5598,7 @@
                     "constant": "lead_die"
                   },
                   "bonus": {
-                    "expr": "@отправитель.saves.сила.save"
+                    "expr": "@отправитель.abilities.сила.save"
                   },
                   "tags": [
                     "спасбросок",
@@ -6198,7 +6118,7 @@
                     "constant": "lead_die"
                   },
                   "bonus": {
-                    "expr": "@отправитель.saves.мудрость.save"
+                    "expr": "@отправитель.abilities.мудрость.save"
                   },
                   "tags": [
                     "спасбросок",
@@ -6891,7 +6811,7 @@
                     "constant": "lead_die"
                   },
                   "bonus": {
-                    "expr": "@отправитель.saves.телосложение.save"
+                    "expr": "@отправитель.abilities.телосложение.save"
                   },
                   "tags": [
                     "спасбросок",
@@ -7628,7 +7548,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_action"
+                  "tag": "turn.действие.left"
                 },
                 "direction": "set",
                 "value": {
@@ -7639,7 +7559,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_bonus"
+                  "tag": "turn.бонусное.left"
                 },
                 "direction": "set",
                 "value": {
@@ -7650,7 +7570,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_reaction"
+                  "tag": "turn.реакция.left"
                 },
                 "direction": "set",
                 "value": {
@@ -7661,7 +7581,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_once"
+                  "tag": "turn.раз_за_ход.left"
                 },
                 "direction": "set",
                 "value": {
@@ -7672,7 +7592,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_attacks"
+                  "tag": "turn.атаки.left"
                 },
                 "direction": "set",
                 "value": {
@@ -7728,7 +7648,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_action"
+                  "tag": "turn.действие.left"
                 },
                 "direction": "set",
                 "value": {
@@ -7739,7 +7659,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_bonus"
+                  "tag": "turn.бонусное.left"
                 },
                 "direction": "set",
                 "value": {
@@ -7750,7 +7670,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_reaction"
+                  "tag": "turn.реакция.left"
                 },
                 "direction": "set",
                 "value": {
@@ -7761,7 +7681,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_once"
+                  "tag": "turn.раз_за_ход.left"
                 },
                 "direction": "set",
                 "value": {
@@ -7772,7 +7692,7 @@
               {
                 "type": "apply",
                 "target": {
-                  "tag": "turn_attacks"
+                  "tag": "turn.атаки.left"
                 },
                 "direction": "set",
                 "value": {
@@ -7892,7 +7812,7 @@
           {
             "type": "compare",
             "value": {
-              "expr": "@получатель.turn_action"
+              "expr": "@получатель.turn.действие.left"
             },
             "versus": {
               "expr": "1"
@@ -7906,7 +7826,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "turn_action"
+              "tag": "turn.действие.left"
             },
             "direction": "subtract",
             "value": {
@@ -7929,7 +7849,7 @@
           {
             "type": "compare",
             "value": {
-              "expr": "@получатель.turn_bonus"
+              "expr": "@получатель.turn.бонусное.left"
             },
             "versus": {
               "expr": "1"
@@ -7943,7 +7863,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "turn_bonus"
+              "tag": "turn.бонусное.left"
             },
             "direction": "subtract",
             "value": {
@@ -7966,7 +7886,7 @@
           {
             "type": "compare",
             "value": {
-              "expr": "@получатель.turn_reaction"
+              "expr": "@получатель.turn.реакция.left"
             },
             "versus": {
               "expr": "1"
@@ -7980,7 +7900,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "turn_reaction"
+              "tag": "turn.реакция.left"
             },
             "direction": "subtract",
             "value": {
@@ -8003,7 +7923,7 @@
           {
             "type": "compare",
             "value": {
-              "expr": "@получатель.turn_once"
+              "expr": "@получатель.turn.раз_за_ход.left"
             },
             "versus": {
               "expr": "1"
@@ -8017,7 +7937,7 @@
           {
             "type": "apply",
             "target": {
-              "tag": "turn_once"
+              "tag": "turn.раз_за_ход.left"
             },
             "direction": "subtract",
             "value": {
@@ -8040,7 +7960,7 @@
           {
             "type": "compare",
             "value": {
-              "expr": "@получатель.turn_action"
+              "expr": "@получатель.turn.действие.left"
             },
             "versus": {
               "expr": "1"
@@ -8048,13 +7968,13 @@
             "breakIf": "less",
             "note": "действие на этом ходу уже потрачено",
             "when": {
-              "expr": "все(@стол.battle >= 1, @получатель.turn_attacks < 1)"
+              "expr": "все(@стол.battle >= 1, @получатель.turn.атаки.left < 1)"
             }
           },
           {
             "type": "apply",
             "target": {
-              "tag": "turn_action"
+              "tag": "turn.действие.left"
             },
             "direction": "subtract",
             "value": {
@@ -8062,13 +7982,13 @@
             },
             "targetModifiers": false,
             "when": {
-              "expr": "все(@стол.battle >= 1, @получатель.turn_attacks < 1)"
+              "expr": "все(@стол.battle >= 1, @получатель.turn.атаки.left < 1)"
             }
           },
           {
             "type": "apply",
             "target": {
-              "tag": "turn_attacks"
+              "tag": "turn.атаки.left"
             },
             "direction": "set",
             "value": {
@@ -8076,13 +7996,13 @@
             },
             "targetModifiers": false,
             "when": {
-              "expr": "все(@стол.battle >= 1, @получатель.turn_attacks < 1)"
+              "expr": "все(@стол.battle >= 1, @получатель.turn.атаки.left < 1)"
             }
           },
           {
             "type": "apply",
             "target": {
-              "tag": "turn_attacks"
+              "tag": "turn.атаки.left"
             },
             "direction": "subtract",
             "value": {
@@ -8528,7 +8448,7 @@
           "ac_base": 14,
           "skills.атлетика.prof": 1,
           "skills.внимательность.prof": 1,
-          "saves.телосложение.extra": 1,
+          "abilities.телосложение.save_extra": 1,
           "resources.second_wind.max": 1,
           "resources.second_wind.left": 1,
           "resources.rages.max": 3,
