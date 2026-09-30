@@ -2,11 +2,12 @@ import { Injectable, Inject, NotFoundException, ForbiddenException, BadRequestEx
 import { and, eq, asc, desc } from 'drizzle-orm';
 import { DB, CLOCK, IDS, DIE } from '../common/tokens.ts';
 import type { Db } from '../db/db.ts';
-import { rooms, roomSheets, roomClocks, roomPending, members, logEntries, users } from '../db/schema.ts';
+import { AsyncLocalStorage } from 'node:async_hooks';
+import { rooms, roomSheets, roomClocks, roomPending, roomJournal, members, logEntries, users } from '../db/schema.ts';
 import { WorldsService } from '../worlds/worlds.service.ts';
 import { world as W } from '@vtt/schema';
 import type {
-  RoomState, RoomSummary, RoomDelta, ActIntent, TurnIntent, AnswerIntent, ClockState, PendingState,
+  RoomState, RoomSummary, RoomDelta, JournalEntry, ActIntent, TurnIntent, AnswerIntent, ClockState, PendingState,
   Sheet, System, Compendium, StoredValue,
 } from '@vtt/schema';
 import { deliver, sharedHolderOf } from '@vtt/engine/events/exchange';
@@ -146,46 +147,81 @@ export class RoomsService {
   }
 
   turn(userId: string, intent: TurnIntent): Promise<RoomDelta> {
-    return this.inTurn(intent.roomId, () => this.runTurn(userId, intent));
+    return this.recorded(intent.roomId, userId, 'turn', intent, () => this.runTurn(userId, intent));
   }
 
   act(userId: string, intent: ActIntent): Promise<RoomDelta> {
-    return this.inTurn(intent.roomId, () => this.runAct(userId, intent));
+    return this.recorded(intent.roomId, userId, 'act', intent, () => this.runAct(userId, intent));
   }
 
   answer(userId: string, intent: AnswerIntent): Promise<RoomDelta> {
-    return this.inTurn(intent.roomId, () => this.runAnswer(userId, intent));
+    return this.recorded(intent.roomId, userId, 'answer', intent, () => this.runAnswer(userId, intent));
   }
 
   setValue(userId: string, roomId: string, sheetId: string, tag: string, value: StoredValue): Promise<RoomDelta> {
-    return this.inTurn(roomId, () => this.runSetValue(userId, roomId, sheetId, tag, value));
+    return this.recorded(roomId, userId, 'set', { sheetId, tag, value }, () => this.runSetValue(userId, roomId, sheetId, tag, value));
   }
 
   rollField(userId: string, roomId: string, sheetId: string, tag: string): Promise<RoomDelta> {
-    return this.inTurn(roomId, () => this.runRollField(userId, roomId, sheetId, tag));
+    return this.recorded(roomId, userId, 'roll', { sheetId, tag }, () => this.runRollField(userId, roomId, sheetId, tag));
   }
 
   createSheet(userId: string, roomId: string, name: string, of?: string): Promise<RoomDelta> {
-    return this.inTurn(roomId, () => this.runCreateSheet(userId, roomId, name, of));
+    return this.recorded(roomId, userId, 'sheet', { name, of }, () => this.runCreateSheet(userId, roomId, name, of));
   }
 
   setBelonging(
     userId: string, roomId: string, sheetId: string,
     list: 'has' | 'effects', id: string, on: boolean, off?: boolean,
   ): Promise<RoomDelta> {
-    return this.inTurn(roomId, () => this.runSetBelonging(userId, roomId, sheetId, list, id, on, off));
+    return this.recorded(roomId, userId, 'belonging', { sheetId, list, id, on, off },
+      () => this.runSetBelonging(userId, roomId, sheetId, list, id, on, off));
   }
 
   setSheetKind(userId: string, roomId: string, sheetId: string, of: string | null): Promise<RoomDelta> {
-    return this.inTurn(roomId, () => this.runSetSheetKind(userId, roomId, sheetId, of));
+    return this.recorded(roomId, userId, 'kind', { sheetId, of }, () => this.runSetSheetKind(userId, roomId, sheetId, of));
   }
 
   setSheetGroup(userId: string, roomId: string, sheetId: string, group: string | null): Promise<RoomDelta> {
-    return this.inTurn(roomId, () => this.runSetSheetGroup(userId, roomId, sheetId, group));
+    return this.recorded(roomId, userId, 'group', { sheetId, group }, () => this.runSetSheetGroup(userId, roomId, sheetId, group));
   }
 
   claimSheet(userId: string, roomId: string, sheetId: string | null): Promise<RoomDelta> {
-    return this.inTurn(roomId, () => this.runClaimSheet(userId, roomId, sheetId));
+    return this.recorded(roomId, userId, 'claim', { sheetId }, () => this.runClaimSheet(userId, roomId, sheetId));
+  }
+
+  async journal(userId: string, roomId: string): Promise<JournalEntry[]> {
+    await this.requireRoom(roomId);
+    if (!(await this.memberOf(roomId, userId))) throw new ForbiddenException('журнал стола видят его участники');
+    const rows = await this.db.select().from(roomJournal).where(eq(roomJournal.roomId, roomId)).orderBy(asc(roomJournal.seq));
+    return rows.map(row => ({
+      seq: row.seq, at: row.at, userId: row.userId, op: row.op,
+      input: JSON.parse(row.input), dice: JSON.parse(row.dice), result: JSON.parse(row.result),
+    }));
+  }
+
+  private readonly rolling = new AsyncLocalStorage<number[]>();
+
+  private readonly roll = (sides: number): number => {
+    const value = this.die(sides);
+    this.rolling.getStore()?.push(value);
+    return value;
+  };
+
+  private recorded(roomId: string, userId: string, op: string, input: unknown, work: () => Promise<RoomDelta>): Promise<RoomDelta> {
+    return this.inTurn(roomId, () => {
+      const dice: number[] = [];
+      return this.rolling.run(dice, async () => {
+        const result = await work();
+        const last = await this.db.select({ seq: roomJournal.seq }).from(roomJournal)
+          .where(eq(roomJournal.roomId, roomId)).orderBy(desc(roomJournal.seq)).limit(1);
+        await this.db.insert(roomJournal).values({
+          roomId, seq: (last[0]?.seq ?? -1) + 1, at: this.now(), userId, op,
+          input: JSON.stringify(input ?? null), dice: JSON.stringify(dice), result: JSON.stringify(result),
+        });
+        return result;
+      });
+    });
   }
 
   private async runTurn(userId: string, intent: TurnIntent): Promise<RoomDelta> {
@@ -217,7 +253,7 @@ export class RoomsService {
           const unknown = order.find(id => !sheets.some(s => s.id === id));
           if (unknown) throw new BadRequestException(`в комнате нет листа «${unknown}»`);
         } else {
-          const rolled = rollInitiative(system, sheets, compendium, this.die);
+          const rolled = rollInitiative(system, sheets, compendium, this.roll);
           order = rolled.order;
           if (rolled.rolls.length) {
             lines.push(`Инициатива: ${rolled.rolls
@@ -247,7 +283,7 @@ export class RoomsService {
     }
 
     try {
-      const world = { system, compendium, die: this.die, clock: next };
+      const world = { system, compendium, die: this.roll, clock: next };
       const fired = fireMoments(momentsOfTurn(intent.op, clock, next, after), after, world);
       after = fired.sheets;
       for (const e of fired.expired ?? []) lines.push(`«${effectLabelOf(system, e.effectId)}» спало с ${nameOf(e.sheetId)}`);
@@ -300,11 +336,11 @@ export class RoomsService {
       if (trouble) throw new BadRequestException(trouble);
       const inputs = normalizeInputs(asked, intent.inputs);
       envelope = send(intent.actionId, {
-        system, compendium, die: this.die, clock, sheet: from, against: to, claims: intent.edits ?? [], shared: sharedOf(system, sheets),
+        system, compendium, die: this.roll, clock, sheet: from, against: to, claims: intent.edits ?? [], shared: sharedOf(system, sheets),
         ...(Object.keys(inputs).length ? { inputs } : {}),
       });
       own = runSelfTrack(intent.actionId, from, {
-        system, compendium, die: this.die, clock, shared: sharedOf(system, sheets),
+        system, compendium, die: this.roll, clock, shared: sharedOf(system, sheets),
         ...(Object.keys(inputs).length ? { inputs } : {}),
       });
       const refused = selfRefusal(own, { system }, envelope.label);
@@ -349,7 +385,7 @@ export class RoomsService {
     const { system, compendium } = world;
     let { sheets } = world;
     const { intent } = state;
-    const ctx = { system, compendium, die: this.die, clock: state.clock };
+    const ctx = { system, compendium, die: this.roll, clock: state.clock };
     const sheetOf = (id: string) => {
       const found = sheets.find(s => s.id === id);
       if (!found) throw new NotFoundException(`в комнате нет листа «${id}»`);
@@ -376,7 +412,7 @@ export class RoomsService {
       if (stage === 'target') {
         for (let at = state.at ?? 0; at < targets.length; at++) {
           const target = sheetOf(targets[at]!);
-          const taped = tapeDie(this.die);
+          const taped = tapeDie(this.roll);
           const dry = receive(state.envelope, {
             ...ctx, die: taped.die, sheet: target, claims: claimsFor(target.id), shared: sharedOf(system, sheets),
           });
@@ -401,7 +437,7 @@ export class RoomsService {
       try {
         for (const toId of targets) {
           const out = deliver({
-            ...ctx, die: replayDie(tapes[toId] ?? [], this.die), sheets, envelope: state.envelope,
+            ...ctx, die: replayDie(tapes[toId] ?? [], this.roll), sheets, envelope: state.envelope,
             fromId: intent.fromId, toId,
             claims: { target: claimsFor(toId) },
           });
@@ -491,7 +527,7 @@ export class RoomsService {
     const changed: Sheet[] = [];
     try {
       const reacted = react(intent.chosen, envelope, record.stage as ReactionWindow,
-        { system, compendium, die: this.die, clock, sheet: asked }, record.results, record.emitted ?? []);
+        { system, compendium, die: this.roll, clock, sheet: asked }, record.results, record.emitted ?? []);
       sheets = sheets.map(s => (s.id === asked.id ? reacted.sheet : s));
       if (reacted.sheet !== asked) changed.push(reacted.sheet);
       for (const report of reacted.reports) {
@@ -500,7 +536,7 @@ export class RoomsService {
       for (const reply of reacted.replies) {
         const target = sheets.find(s => s.id === reply.to);
         if (!target) continue;
-        const back = receive(reply, { system, compendium, die: this.die, clock, sheet: target, shared: sharedOf(system, sheets) });
+        const back = receive(reply, { system, compendium, die: this.roll, clock, sheet: target, shared: sharedOf(system, sheets) });
         sheets = sheets.map(s => (s.id === back.sheet.id ? back.sheet : back.shared?.find(u => u.id === s.id) ?? s));
         if (back.sheet !== target) changed.push(back.sheet);
         changed.push(...back.shared ?? []);
@@ -524,7 +560,7 @@ export class RoomsService {
         const asked = asksOf(record.intent.actionId, { system, compendium });
         const inputs = normalizeInputs(asked, record.intent.inputs);
         envelope = send(record.intent.actionId, {
-          system, compendium, die: this.die, clock, sheet: from, against: to, claims, shared: sharedOf(system, sheets),
+          system, compendium, die: this.roll, clock, sheet: from, against: to, claims, shared: sharedOf(system, sheets),
           ...(Object.keys(inputs).length ? { inputs } : {}),
           kept: envelope.steps,
         });
@@ -615,7 +651,7 @@ export class RoomsService {
     const lines: string[] = [];
     let settled = before.map(entry => (entry.id === sheetId ? next : entry));
     try {
-      const world = { system, compendium: this.worldOf(room).compendium, die: this.die, clock: await this.clockOf(roomId) };
+      const world = { system, compendium: this.worldOf(room).compendium, die: this.roll, clock: await this.clockOf(roomId) };
       settled = this.settle(world, before, settled, lines);
     } catch (err) {
       throw new BadRequestException((err as Error).message);
@@ -646,7 +682,7 @@ export class RoomsService {
     const lines: string[] = [];
     let settled = before.map(entry => (entry.id === sheetId ? next : entry));
     try {
-      const world = { system, compendium, die: this.die, clock: await this.clockOf(roomId) };
+      const world = { system, compendium, die: this.roll, clock: await this.clockOf(roomId) };
       settled = this.settle(world, before, settled, lines);
     } catch (err) {
       throw new BadRequestException((err as Error).message);
@@ -679,7 +715,7 @@ export class RoomsService {
     const lines: string[] = [group === null ? `«${sheet.name}» вышел из группы` : `«${sheet.name}» теперь в группе «${before.find(entry => entry.id === group)!.name}»`];
     let settled = before.map(entry => (entry.id === sheetId ? next : entry));
     try {
-      const world = { system, compendium, die: this.die, clock: await this.clockOf(roomId) };
+      const world = { system, compendium, die: this.roll, clock: await this.clockOf(roomId) };
       settled = this.settle(world, before, settled, lines);
     } catch (err) {
       throw new BadRequestException((err as Error).message);
@@ -709,7 +745,7 @@ export class RoomsService {
 
     let line: string;
     try {
-      const { rolled, bonus, total, edits } = rollCheck(system, sheet, check, { compendium, die: this.die, owner: check.label });
+      const { rolled, bonus, total, edits } = rollCheck(system, sheet, check, { compendium, die: this.roll, owner: check.label });
       const named = edits.length ? ` (${edits.join(', ')})` : '';
       const shown = rolled.kept != null && rolled.rolls.length > 1
         ? `[${rolled.rolls.join(', ')}] → ${rolled.kept}` : `[${rolled.rolls.join(', ')}]`;
@@ -806,7 +842,7 @@ export class RoomsService {
       .map(entry => (entry.sheetId === sheetId ? sheet : JSON.parse(entry.data) as Sheet));
     const all = before.map(entry => (entry.id === sheetId ? next : entry));
     const lines: string[] = [];
-    const world = { system, compendium, die: this.die, clock: await this.clockOf(roomId) };
+    const world = { system, compendium, die: this.roll, clock: await this.clockOf(roomId) };
     let settled: Sheet[];
     try {
       settled = this.settle(world, before, all, lines);

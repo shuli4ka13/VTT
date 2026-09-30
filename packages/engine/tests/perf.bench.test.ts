@@ -1,7 +1,7 @@
 import { group, test, ok } from './harness.ts';
 import { exchange } from '../src/events/exchange.ts';
 import { calcAll, newPass } from '../src/engine/calc.ts';
-import { randomDie } from '../src/engine/dice.ts';
+const randomDie = (sides: number) => 1 + Math.floor(Math.random() * sides);
 import { system, compendium, sheets, arven, mirra } from './fixtures.ts';
 
 const ms = (work: () => void): number => {

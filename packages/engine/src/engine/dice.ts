@@ -8,8 +8,6 @@ export interface NotationRoll {
   tally: { dice: number; atMax: number; atMin: number };
 }
 
-export const randomDie: Die = sides => 1 + Math.floor(Math.random() * sides);
-
 const NOTATION = /^(\d+)?\s*[dдк]\s*(\d+)$/iu;
 
 export function multiplyNotation(notation: unknown, times: number): string {

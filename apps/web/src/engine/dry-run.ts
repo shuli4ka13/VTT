@@ -29,7 +29,7 @@ export function dryRun(
 ): DryRun {
   const [from, to] = mannequinsOf(system);
   try {
-    const out = trial({ system: system as never, compendium: compendium as never, effectId, from: from as never, to: to as never, dice });
+    const out = trial({ system: system as never, compendium: compendium as never, effectId, from: from as never, to: to as never, dice, random: Math.random });
     const changes = out.reports.flatMap(entry =>
       ((entry.report.changes ?? []) as { tag: string; from: unknown; to: unknown }[]).map(change => ({
         sheet: out.sheets.find(s => s.id === entry.toId)?.name ?? entry.toId,

@@ -38,6 +38,10 @@ CREATE TABLE IF NOT EXISTS log_entries (
   id TEXT PRIMARY KEY, room_id TEXT NOT NULL, at TEXT NOT NULL,
   text TEXT NOT NULL, seq INTEGER NOT NULL);
 CREATE INDEX IF NOT EXISTS log_by_room ON log_entries (room_id, seq);
+CREATE TABLE IF NOT EXISTS room_journal (
+  room_id TEXT NOT NULL, seq INTEGER NOT NULL, at TEXT NOT NULL, user_id TEXT NOT NULL,
+  op TEXT NOT NULL, input TEXT NOT NULL, dice TEXT NOT NULL, result TEXT NOT NULL,
+  PRIMARY KEY (room_id, seq));
 `;
 
 export interface Database {

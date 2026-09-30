@@ -146,6 +146,16 @@ export const actIntent = z.object({
   inputs: z.record(z.string().min(1), z.union([z.number(), z.string()])).optional(),
 });
 
+export const journalEntry = z.object({
+  seq: z.number().int().nonnegative(),
+  at: z.string(),
+  userId: z.string(),
+  op: z.string().min(1),
+  input: z.unknown(),
+  dice: z.array(z.number().int()),
+  result: z.lazy(() => roomDelta),
+});
+
 export const roomDelta = z.object({
   roomId: z.string(),
   sheets: z.array(sheet),
@@ -226,5 +236,6 @@ export type PendingState = z.infer<typeof pendingState>;
 export type AnswerIntent = z.infer<typeof answerIntent>;
 export type TurnIntent = z.infer<typeof turnIntent>;
 export type RoomDelta = z.infer<typeof roomDelta>;
+export type JournalEntry = z.infer<typeof journalEntry>;
 export type ServerMessage = z.infer<typeof serverMessage>;
 export type ClientMessage = z.infer<typeof clientMessage>;

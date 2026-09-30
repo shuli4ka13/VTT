@@ -17,10 +17,11 @@ export const DICE_MODES: Record<DiceMode, { label: string; hint: string }> = {
   random: { label: 'случайно', hint: 'как за столом' },
 };
 
-export function dieOf(mode: DiceMode, random: () => number = Math.random): Die {
+export function dieOf(mode: DiceMode, random?: () => number): Die {
   if (mode === 'min') return () => 1;
   if (mode === 'max') return sides => sides;
   if (mode === 'avg') return sides => Math.ceil((sides + 1) / 2);
+  if (!random) throw new EngineError('проба «случайно»: источник случайности не передан — движок сам костей не выдумывает');
   return sides => 1 + Math.floor(random() * sides);
 }
 

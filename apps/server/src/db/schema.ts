@@ -69,6 +69,17 @@ export const roomPending = sqliteTable('room_pending', {
   data: text('data').notNull(),
 });
 
+export const roomJournal = sqliteTable('room_journal', {
+  roomId: text('room_id').notNull(),
+  seq: integer('seq').notNull(),
+  at: text('at').notNull(),
+  userId: text('user_id').notNull(),
+  op: text('op').notNull(),
+  input: text('input').notNull(),
+  dice: text('dice').notNull(),
+  result: text('result').notNull(),
+});
+
 export const members = sqliteTable('members', {
   roomId: text('room_id').notNull(),
   userId: text('user_id').notNull(),

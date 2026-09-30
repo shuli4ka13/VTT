@@ -54,6 +54,12 @@ export class RoomsController {
     return this.roomsService.state(id);
   }
 
+  @Get('rooms/:id/journal')
+  async journal(@Param('id') id: string, @Headers('authorization') header?: string) {
+    const { userId } = await this.auth.whoIs(bearer(header));
+    return this.roomsService.journal(userId, id);
+  }
+
   @Post('rooms/:id/act')
   @UsePipes(new ZodValidationPipe(api.actIntent))
   async act(@Body() intent: ActIntent, @Headers('authorization') header?: string) {
