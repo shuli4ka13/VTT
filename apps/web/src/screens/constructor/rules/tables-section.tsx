@@ -335,7 +335,7 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
   });
 
   const placed = onSheet(table);
-  const lead = byRange ? ['от', 'до'] : [key === 'number' ? 'число' : 'слово', 'как показать', ...(placed ? ['имя в формулах'] : [])];
+  const lead = byRange ? ['от', 'до'] : [key === 'number' ? 'число' : 'слово', ...(placed ? ['имя в формулах'] : [])];
   const gridColumns: GridColumn[] = [
     ...lead.map(name => ({ key: `:${name}`, label: name, width: byRange ? 90 : defaultWidth() })),
     ...columns.map(c => ({
@@ -457,11 +457,6 @@ function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRe
       ) : (
         <>
           <KeyInput value={row.value} numeric={rowKey === 'number'} taken={taken} onRename={onRename} />
-          <Input
-            value={row.label ?? ''}
-            placeholder="как в списке"
-            onChange={next => set(r => { if (next.trim()) r.label = next; else delete r.label; })}
-          />
           {placed ? (
             <Input mono value={row.key ?? ''} placeholder={String(row.value ?? '')}
               onChange={next => set(r => { if (next.trim()) r.key = next.trim(); else delete r.key; })} />
