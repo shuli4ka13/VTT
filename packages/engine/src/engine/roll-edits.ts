@@ -3,7 +3,7 @@ import { readingOf } from './readings.ts';
 import type { ReadSpec, RolledDie } from './readings.ts';
 import type { DieConstant, DiceTerm, RollEdit, RollEditOp, Die } from '../model/types.ts';
 
-export interface KeepSpec { n: number; from: 'best' | 'worst'; part?: string }
+export interface KeepSpec { n: number; from: 'best' | 'worst'; part?: string; unnamed?: boolean }
 
 export interface RollClaim {
   dice: DiceTerm[];
@@ -38,6 +38,8 @@ const LADDER = [4, 6, 8, 10, 12, 20];
 const partOf = (op: RollEditOp) => (op.part ? String(op.part) : undefined);
 
 const inPart = (name: string | undefined, part?: string) => (part ? name === part : true);
+
+const mainOf = (entry: RolledDie, part?: string) => inPart(entry.name, part) && (Boolean(part) || !entry.bonus);
 
 const PRIMITIVES: Record<string, ClaimPrimitive | ResultPrimitive> = {
 
@@ -91,7 +93,7 @@ const PRIMITIVES: Record<string, ClaimPrimitive | ResultPrimitive> = {
       const least = num(op.least, 10);
       const part = partOf(op);
       return dice.map(entry => {
-        if (!inPart(entry.name, part)) return entry;
+        if (!mainOf(entry, part)) return entry;
         return entry.value >= least ? entry : { ...entry, value: least };
       });
     },
@@ -158,14 +160,14 @@ const PRIMITIVES: Record<string, ClaimPrimitive | ResultPrimitive> = {
         let guard = 0;
         for (let at = 0; at < out.length && guard < limit * Math.max(1, dice.length); at += 1) {
           const entry = out[at]!;
-          if (!inPart(entry.name, part) || entry.value !== entry.sides) continue;
+          if (!mainOf(entry, part) || entry.value !== entry.sides) continue;
           out.push({ ...entry, value: die(entry.sides) });
           guard += 1;
         }
         return out;
       }
       return dice.map(entry => {
-        if (!inPart(entry.name, part)) return entry;
+        if (!mainOf(entry, part)) return entry;
         const trigger = down ? 1 : entry.sides;
         if (entry.value !== trigger) return entry;
         let value = entry.value;
@@ -187,7 +189,7 @@ const PRIMITIVES: Record<string, ClaimPrimitive | ResultPrimitive> = {
       const low = String(op.prefer ?? 'low') !== 'high';
       const part = partOf(op);
       return dice.map(entry => {
-        if (!inPart(entry.name, part)) return entry;
+        if (!mainOf(entry, part)) return entry;
         const flipped = flipDigits(entry.value, entry.sides);
         if (flipped === null) return entry;
         const value = low ? Math.min(entry.value, flipped) : Math.max(entry.value, flipped);
@@ -204,9 +206,9 @@ const rerollPrimitive: ResultPrimitive = {
     const limit = num(op.n, 1);
     const part = partOf(op);
     return dice.map(entry => {
-      if (!inPart(entry.name, part)) return entry;
+      if (!mainOf(entry, part)) return entry;
       if (entry.value > limit) return entry;
-      return { ...entry, value: die(entry.sides) };
+      return { ...entry, value: die(entry.sides), rerolled: true };
     });
   },
 };
@@ -290,7 +292,7 @@ export function keptDice(dice: RolledDie[], keeps: KeepSpec[]): RolledDie[] {
   let out = dice.filter(d => !d.dropped);
   for (const keep of keeps) {
 
-    const mine = (keep.part ? out.filter(d => d.name === keep.part) : out).filter(d => !d.bonus);
+    const mine = (keep.part ? out.filter(d => d.name === keep.part) : keep.unnamed ? out.filter(d => !d.name) : out).filter(d => !d.bonus);
     const chosen = new Set([...mine]
       .sort((a, b) => (keep.from === 'best' ? b.value - a.value : a.value - b.value))
       .slice(0, Math.max(1, keep.n)));

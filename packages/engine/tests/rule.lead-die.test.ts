@@ -276,8 +276,8 @@ group('переброс с обязательным новым результа�
     eq(rollLead(d20, queue(2, 9), [{ label: 'Щедрая удача', ops: [{ op: 'reroll', n: 2 }] }]).total, 9);
   });
 
-  test('счёт единиц снят с натурального броска', () => {
-    deepEq(rollLead(d20, queue(1, 14), [lucky]).tally, { dice: 1, atMax: 0, atMin: 1 });
+  test('счёт единиц — по итоговой кости: переброшенная единица больше не единица', () => {
+    deepEq(rollLead(d20, queue(1, 14), [lucky]).tally, { dice: 1, atMax: 0, atMin: 0 });
   });
 
   test('переброс адресуется части броска', () => {

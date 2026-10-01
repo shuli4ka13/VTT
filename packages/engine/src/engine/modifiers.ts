@@ -3,7 +3,8 @@ import { assertTarget } from './targets.ts';
 import { ROLL_CALL } from '../words/calls.ts';
 import { amountParamOf } from '../model/lists.ts';
 import { wornEffects, activationOf } from './effects.ts';
-import { EngineError, isRuleError } from './errors.ts';
+import { EngineError } from './errors.ts';
+import { FormulaRuntimeError } from '../formula/errors.ts';
 import { anyRowSays } from './tables.ts';
 import { findRecord, kindOfRecord, sheetKindOf, propsOf } from '../model/owned.ts';
 import { tagsHold } from './roll-tags.ts';
@@ -32,7 +33,10 @@ export const editKey = (call: string, param: string, as?: string): string =>
   `${as ? `${as}:` : ''}${call}.${param}`;
 
 const assertCall = (system: System, mod: EditModifier, owner?: string): void => {
-  if (mod.call === ROLL_CALL) return;
+  if (mod.call === ROLL_CALL) {
+    if (mod.param === 'edits' || mod.param === 'bonus') return;
+    throw new EngineError(`${owner ? `«${owner}»: ` : ''}у броска нет параметра «${mod.param}» — есть «edits» и «bonus»`);
+  }
   const who = owner ? `«${owner}»: ` : '';
   const effect = system.effects?.[mod.call];
   if (!effect) throw new EngineError(`${who}правка вызова «${mod.call}» — такого эффекта в системе нет`);
@@ -172,7 +176,7 @@ function callHolds(mod: SourcedModifier, pass: Pass, args: Record<string, unknow
       name => (name.startsWith(prefix) ? (args[name.slice(prefix.length)] ?? null) as never : pass.resolve(name)),
       toolsOf(pass.system, pass, 'условие правки'));
   } catch (err) {
-    if (isRuleError(err)) return false;
+    if (err instanceof FormulaRuntimeError) return false;
     throw err;
   }
   if (typeof result !== 'boolean') {
@@ -213,8 +217,8 @@ export function resolveRoll(
     return !canceledBy || !named.includes(canceledBy);
   });
 
-  const adds = mods.filter(m => m.op === 'add');
-  const bonus = adds.length ? totalOf(adds, pass, tags.join(', ') || ROLL_CALL) : 0;
+  const numbers = mods.filter(m => m.op);
+  const bonus = numbers.length ? Number(stackNumber(numbers, 0, tags.join(', ') || ROLL_CALL, pass)) : 0;
 
   return {
     tags,
@@ -297,7 +301,8 @@ function conditionHolds(mod: SourcedModifier, pass: Pass): boolean {
 
 function valueOf(mod: SourcedModifier, pass: Pass): unknown {
   const raw = (mod as { value?: { expr: string } }).value;
-  return raw ? compile(raw.expr).evaluate(pass.resolve, toolsOf(pass.system, pass, 'модификатор')) : undefined;
+  if (!raw?.expr?.trim()) throw new EngineError(`правка «${mod.source.label}»: не задано, на сколько`);
+  return compile(raw.expr).evaluate(pass.resolve, toolsOf(pass.system, pass, 'модификатор'));
 }
 
 function totalOf(mods: SourcedModifier[], pass: Pass, tag: string, seed = 0): number {

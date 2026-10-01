@@ -313,15 +313,16 @@ export function toolsOf(system: System, pass: Pass, owner: string, die?: Die): T
   return {
     ...(die ? {
       roll: (notation: string, times: number, keep?: number) => {
-        const written = times > 1 ? multiplyNotation(notation, times) : notation;
+        if (Math.floor(times) < 1) return 0;
+        const written = times > 1 ? multiplyNotation(notation, Math.floor(times)) : notation;
         const rolled = rollNotation(written, die);
         if (keep === undefined) return rolled.total;
         const sorted = [...rolled.rolls].sort((a, b) => (keep > 0 ? b - a : a - b));
         return sorted.slice(0, Math.abs(keep)).reduce((sum, value) => sum + value, 0);
       },
     } : {}),
-    peak: (notation: string, times: number) =>
-      rollNotation(times > 1 ? multiplyNotation(notation, times) : notation, sides => sides).total,
+    peak: (notation: string, times: number) => (Math.floor(times) < 1 ? 0
+      : rollNotation(times > 1 ? multiplyNotation(notation, Math.floor(times)) : notation, sides => sides).total),
     table: (name, key, column) => {
       const read = (one: unknown) => readCell(system, pass, name, one, column ?? VALUE_COLUMN, owner);
       if (!Array.isArray(key)) return read(key) as Value;

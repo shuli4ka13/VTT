@@ -10,6 +10,8 @@ export interface RolledDie {
   from?: number;
 
   dropped?: boolean;
+
+  rerolled?: boolean;
 }
 
 export interface ReadSpec { kind: string; [key: string]: unknown }
@@ -38,10 +40,11 @@ const keeping = (best: boolean): Reading => ({
   label: best ? 'лучшая' : 'худшая',
   read(dice, spec) {
     const keep = Math.max(1, Number(spec.keep ?? 1));
-    const taken = [...dice]
+    const taken = dice.filter(d => !d.bonus)
       .sort((a, b) => (best ? b.value - a.value : a.value - b.value))
       .slice(0, keep);
-    const total = taken.reduce((acc, d) => acc + d.value, 0);
+    const extra = dice.filter(d => d.bonus).reduce((acc, d) => acc + d.value, 0);
+    const total = taken.reduce((acc, d) => acc + d.value, 0) + extra;
     return { total, kept: taken.length === 1 ? taken[0]!.value : null };
   },
 });

@@ -106,12 +106,14 @@ export function rollLead(def: DieConstant, die: Die, edits: RollEdit[] = []): Le
   }
 
   const grown = applyResultEdits(entries, edits, die);
+  const rerolled = entries.map(entry => grown.find(other => other.from === entry.from && other.rerolled) ?? entry)
+    .map(({ rerolled: _rerolled, ...entry }) => entry);
   return settle({
     edits: edits.map(e => e.label || '').filter(Boolean),
     versusShift: claim.versusShift,
     degreeShift: claim.degreeShift,
     read: claim.read.kind,
-    entries, grown, keeps: claim.keeps, reading: claim.read, plus: 0, applied: edits,
+    entries: rerolled, grown, keeps: claim.keeps, reading: claim.read, plus: 0, applied: edits,
     exploded: edits.some(edit => (edit.ops ?? []).some(one => one.op === 'explode')),
   });
 }
@@ -129,7 +131,7 @@ function settle(base: Settled): LeadRoll {
     ...base,
     rolls: base.grown.map(e => e.value),
     raw: base.entries.map(e => e.value),
-    kept, natural: total, total: total + base.plus, parts,
+    kept, natural: applyReading(taken.filter(entry => !entry.bonus), base.reading).total, total: total + base.plus, parts,
     tally: tallyOf(base.entries),
   };
 }
@@ -163,8 +165,8 @@ export function seeRoll(rolled: LeadRoll, op: SeenOp, die: Die): LeadRoll {
   const grown = !op.explode ? [...before, ...grownFresh]
     : base.exploded ? [...before, ...applyResultEdits(grownFresh, [EXPLODE], die)]
       : applyResultEdits([...before, ...grownFresh], [EXPLODE], die);
-  const held = [...taken].filter(entry => !entry.bonus).length;
-  const keeps = op.keep ? [{ n: Math.max(1, held), from: op.keep } as KeepSpec] : base.keeps;
+  const held = [...taken].filter(entry => !entry.bonus && !entry.name).length;
+  const keeps = op.keep ? [...base.keeps.filter(keep => keep.part), { n: Math.max(1, held), from: op.keep, unnamed: true } as KeepSpec] : base.keeps;
   return settle({ ...base, entries: [...base.entries, ...fresh], grown, keeps, exploded: base.exploded || Boolean(op.explode) });
 }
 

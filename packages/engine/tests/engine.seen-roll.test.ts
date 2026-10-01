@@ -89,3 +89,27 @@ group('увидев кости: докинуть и оставить — сре�
     eq(seen.total, 11);
   });
 });
+
+group('бросок: по ревью', () => {
+  const bless = { label: 'Благословение', ops: [{ op: 'bonusDie', sides: 4 }] } as never;
+  const bane = { label: 'Порча', ops: [{ op: 'bonusDie', sides: 4, minus: true }] } as never;
+  const reliable = { label: 'Надёжный талант', ops: [{ op: 'floorDie', least: 10 }] } as never;
+
+  test('кость сверх не входит в натуральную: 1 + к4 остаётся натуральной единицей', () => {
+    const r = rollLead(d20, queue(1, 3), [bless]);
+    eq(r.natural, 1);
+    eq(r.total, 4);
+  });
+
+  test('«не меньше 10» не трогает кость сверх', () => {
+    const r = rollLead(d20, queue(4, 3), [reliable, bless]);
+    deepEq(r.rolls, [10, 3]);
+    eq(r.total, 13);
+  });
+
+  test('переброс единиц не трогает штрафную кость', () => {
+    const lucky = { label: 'Везучий', ops: [{ op: 'reroll', n: 1 }] } as never;
+    const r = rollLead(d20, queue(15, 3), [lucky, bane]);
+    eq(r.total, 12);
+  });
+});
