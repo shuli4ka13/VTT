@@ -113,7 +113,7 @@ export function concludeAction({
 }: WorldArgs & { envelope: Envelope; fromId: string; toIds: string[]; seen: Record<string, Seen> }): ExchangeResult {
   const sender = sheets.find(s => s.id === fromId);
   if (!sender || envelope.reply) return { sheets, reports: [] };
-  const targets = toIds.filter(id => seen[id]).map(id => ({ id, ...seen[id]! }));
+  const targets = [...new Set(toIds)].filter(id => seen[id]).map(id => ({ id, ...seen[id]! }));
   const out = conclude(envelope, targets, sender, { system, compendium, die, clock, shared: sharedOf(system, sheets) });
   const changed = new Map([[out.sheet.id, out.sheet], ...(out.shared ?? []).map(s => [s.id, s] as const)]);
   return {
@@ -137,7 +137,8 @@ export function deliverMany({
   const reports: ExchangeEntry[] = [];
   const seen: Record<string, Seen> = {};
 
-  for (const toId of toIds) {
+  const unique = [...new Set(toIds)];
+  for (const toId of unique) {
     const out = deliver({
       system, compendium, die, clock, sheets: updated, envelope, fromId, toId, claims,
     });
@@ -146,7 +147,7 @@ export function deliverMany({
     Object.assign(seen, out.seen ?? {});
   }
 
-  const done = concludeAction({ system, compendium, die, clock, sheets: updated, envelope, fromId, toIds, seen });
+  const done = concludeAction({ system, compendium, die, clock, sheets: updated, envelope, fromId, toIds: unique, seen });
   return { sheets: done.sheets, reports: [...reports, ...done.reports], seen };
 }
 

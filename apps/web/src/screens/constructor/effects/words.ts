@@ -2,6 +2,7 @@ import { LAUNCHES } from '@vtt/engine/model/effect-kinds';
 import type { LaunchKind } from '@vtt/engine/model/effect-kinds';
 import { COST_BLOCK } from '@vtt/engine/words/glossary';
 import { ACTION_MOMENTS } from '@vtt/engine/events/bus';
+import type { ActionMoment } from '@vtt/engine/events/bus';
 import type { Step, System } from '@vtt/schema';
 
 export const LAUNCH_KINDS = (['manual', 'passive'] as const)
@@ -12,17 +13,15 @@ export const CREATE_KINDS = (['manual', 'auto', 'passive'] as const)
 
 export const launchHint = (kind: LaunchKind): string => LAUNCHES[kind].hint;
 
-export type Moment = 'after-in' | 'after-out' | 'done' | 'before-in' | 'ask-target' | 'ask-sender' | 'ask-after';
+export type Moment = ActionMoment | `${typeof ASK}${ActionMoment}`;
 
-export const MOMENTS: readonly (readonly [Moment, string])[] = [
-  ['after-in', `${ACTION_MOMENTS.affected.label} — молча`],
-  ['after-out', `${ACTION_MOMENTS.acted.label} — молча`],
-  ['done', `${ACTION_MOMENTS.done.label} — молча, один раз на все цели`],
-  ['before-in', `${ACTION_MOMENTS.targeted.label} — молча`],
-  ['ask-target', `${ACTION_MOMENTS.targeted.label} — спросить меня`],
-  ['ask-sender', `${ACTION_MOMENTS.acting.label} — спросить меня`],
-  ['ask-after', `${ACTION_MOMENTS.affected.label} — спросить меня`],
-];
+export const ASK = 'ask:';
+
+export const MOMENTS: readonly (readonly [Moment, string])[] = (Object.entries(ACTION_MOMENTS) as [ActionMoment, typeof ACTION_MOMENTS[ActionMoment]][])
+  .flatMap(([key, moment]) => [
+    ...(moment.asks === 'only' ? [] : [[key, `${moment.label} — молча${'note' in moment ? `, ${moment.note}` : ''}`] as const]),
+    ...(moment.asks === 'never' ? [] : [[`${ASK}${key}` as Moment, `${moment.label} — спросить меня`] as const]),
+  ]);
 
 export type EditFn = (slotIndexInGroup: number, change: (draft: Step) => void) => void;
 export type WithNumber = (change: (amount: Step, apply: Step, id: string) => void) => void;

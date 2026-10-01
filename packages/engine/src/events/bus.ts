@@ -1,6 +1,7 @@
 import { wornEffects, findEffect } from '../engine/effects.ts';
 import type { System, Sheet, Compendium, Effect, Handler } from '../model/types.ts';
 import type { EmittedEvent } from '../engine/rule.ts';
+import type { ActionMoment } from './action-moments.ts';
 
 export const EVENT_PREFIX = 'event:';
 export const MOMENT_PREFIX = 'moment:';
@@ -8,18 +9,8 @@ export const FIELD_PREFIX = 'field:';
 export const GAINED_PREFIX = 'gained:';
 export const LOST_PREFIX = 'lost:';
 
-export const ACTION_MOMENTS = {
-  acting: { label: 'я действую — до того, как уйдёт цели', side: 'sender', before: true },
-  acted: { label: 'я подействовал на цель', side: 'sender', before: false },
-  targeted: { label: 'на меня действуют — до того, как решится', side: 'target', before: true },
-  affected: { label: 'на меня подействовали', side: 'target', before: false },
-  done: { label: 'я совершил действие', side: 'sender', before: false },
-} as const;
-
-export type ActionMoment = keyof typeof ACTION_MOMENTS;
-
-export const isActionMoment = (on: string | undefined): on is ActionMoment =>
-  Boolean(on && Object.prototype.hasOwnProperty.call(ACTION_MOMENTS, on));
+export { ACTION_MOMENTS, isActionMoment } from './action-moments.ts';
+export type { ActionMoment } from './action-moments.ts';
 
 export interface Subscriber {
   id: string;

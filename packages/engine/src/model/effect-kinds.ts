@@ -1,3 +1,4 @@
+import { ACTION_MOMENTS, isActionMoment } from '../events/action-moments.ts';
 export type LaunchKind = 'manual' | 'passive' | 'auto';
 
 export interface Launch {
@@ -22,7 +23,7 @@ export function launchOf(effect: Launchable): Launch {
   if ((effect?.activation ?? 'manual') !== 'passive') return { kind: 'manual', moment: 'after', confirm: false };
   const first = effect?.on?.[0];
   if (!first || effect?.modifiers?.length) return { kind: 'passive', moment: 'after', confirm: false };
-  return { kind: 'auto', moment: first.on === 'acting' || first.on === 'targeted' ? 'before' : 'after', confirm: first.confirm === true };
+  return { kind: 'auto', moment: isActionMoment(first.on) && ACTION_MOMENTS[first.on].before ? 'before' : 'after', confirm: first.confirm === true };
 }
 
 export function activationFor(launch: Launch): 'manual' | 'passive' {

@@ -11,7 +11,7 @@ import { requireEffect, findEffect, isPipeline, grantedTo } from '../engine/effe
 import { byOrder } from '../model/inherit.ts';
 import { listening, subscriberByKey, hears, runsAtOther, withSteps } from './bus.ts';
 import type { ActionMoment } from './bus.ts';
-import { EngineError } from '../engine/errors.ts';
+import { EngineError, isRuleError } from '../engine/errors.ts';
 import { TARGETS_SEED } from '../model/references.ts';
 import { incomingRollModifiers } from '../engine/modifiers.ts';
 import { holderOf } from './bonds.ts';
@@ -260,7 +260,7 @@ function fireBefore(
     try {
       fits = holdsNow(handler.if, refs);
     } catch (err) {
-      if (!(err instanceof EngineError)) throw err;
+      if (!isRuleError(err)) throw err;
       fits = false;
     }
     if (!fits) continue;
@@ -331,7 +331,7 @@ function holdsQuietly(condition: Parameters<typeof holdsNow>[0], ctx: Parameters
   try {
     return holdsNow(condition, ctx);
   } catch (err) {
-    if (!(err instanceof EngineError)) throw err;
+    if (!isRuleError(err)) throw err;
     return false;
   }
 }
@@ -471,7 +471,7 @@ export function offers(
     try {
       fits = holdsNow(handler.if, ctx);
     } catch (err) {
-      if (!(err instanceof EngineError)) throw err;
+      if (!isRuleError(err)) throw err;
       fits = false;
     }
     if (!fits) continue;

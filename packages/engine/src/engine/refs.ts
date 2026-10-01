@@ -47,8 +47,10 @@ const FORMS = ['expr', 'const', 'param', 'prop', 'tag', 'constant'];
 
 type AnyRef = Record<string, unknown>;
 
+const isRow = (one: unknown): boolean => Boolean(one) && typeof one === 'object' && !Array.isArray(one);
+
 const stepInto = (at: unknown, key: string): unknown => {
-  if (Array.isArray(at)) return at.map(one => stepInto(one, key));
+  if (Array.isArray(at) && at.every(isRow) && !/^\d+$/.test(key)) return at.map(one => stepInto(one, key));
   return at && typeof at === 'object' ? (at as AnyRef)[key] : undefined;
 };
 

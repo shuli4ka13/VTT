@@ -601,9 +601,13 @@ describe('реакция после разрешения', () => {
 
     const system = {
       id: 'возмездие', name: 'С возмездием',
-      tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] } , приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
+      tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }, { key: 'видел', label: 'Видел', kind: 'number', default: 0 }] } , приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
       constants: { к20: { label: 'Кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
       effects: {
+        итог: {
+          label: 'Итог', activation: 'passive',
+          on: [{ on: 'done', of: 'удар', steps: [{ type: 'apply', target: { tag: 'видел' }, direction: 'set', value: { expr: '@хиты' } }] }],
+        },
         удар: {
           label: 'Удар', activation: 'manual',
           steps: [
@@ -630,7 +634,7 @@ describe('реакция после разрешения', () => {
     await as(http().post(`/compendiums/${bookId}/publish`)).send({}).expect(201);
     const worldId = (await as(http().post('/worlds')).send({
       title: 'Мир возмездия', systemId, compendiumIds: [bookId],
-      sheets: [sheet('боец', []), sheet('цель', ['возмездие'])],
+      sheets: [sheet('боец', ['итог']), sheet('цель', ['возмездие'])],
     })).body.id;
     const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол возмездия' })).body.id as string;
 
@@ -642,6 +646,7 @@ describe('реакция после разрешения', () => {
     expect(hit.body.pending?.question).toContain('подействовали');
     const between = (await as(http().get(`/rooms/${roomId}`))).body.sheets;
     expect(between.find((s: { id: string }) => s.id === 'цель').values.хиты, 'удар уже прошёл до вопроса').toBe(15);
+    expect(between.find((s: { id: string }) => s.id === 'боец').values.видел ?? 0, '«совершил действие» ждёт ответа на вопрос').toBe(0);
 
     const answered = await as(http().post(`/rooms/${roomId}/answer`)).send({
       roomId, pendingId: hit.body.pending.id, chosen: ['возмездие'],
@@ -652,6 +657,7 @@ describe('реакция после разрешения', () => {
     const after = (await as(http().get(`/rooms/${roomId}`))).body.sheets;
     expect(after.find((s: { id: string }) => s.id === 'боец').values.хиты, 'ответка дошла до нападавшего').toBe(18);
     expect(after.find((s: { id: string }) => s.id === 'цель').values.хиты, 'удар второй раз не прошёл').toBe(15);
+    expect(after.find((s: { id: string }) => s.id === 'боец').values.видел, '«совершил действие» — в самом конце, после ответки').toBe(18);
   });
 });
 

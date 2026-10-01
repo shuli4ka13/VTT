@@ -238,16 +238,16 @@ describe('три вида создания, два вида запуска', () 
     renderOpen(<EffectsTab />);
     fireEvent.click(screen.getByText('+ срабатывает сам'));
     const moment = [...document.querySelectorAll('select')]
-      .find(el => [...el.options].some(o => o.value === 'ask-target'))!;
+      .find(el => [...el.options].some(o => o.value === 'ask:targeted'))!;
     expect([...moment.options].map(o => o.value).slice(0, 8))
-      .toEqual(['', 'after-in', 'after-out', 'done', 'before-in', 'ask-target', 'ask-sender', 'ask-after']);
+      .toEqual(['', 'ask:acting', 'acted', 'done', 'targeted', 'ask:targeted', 'affected', 'ask:affected']);
 
-    fireEvent.change(moment, { target: { value: 'ask-sender' } });
+    fireEvent.change(moment, { target: { value: 'ask:acting' } });
     const effect = Object.values(useWorld.getState().system.effects).at(-1)!;
     expect(effect.activation).toBe('passive');
     expect(effect.on?.[0]).toMatchObject({ on: 'acting', confirm: true });
 
-    fireEvent.change(moment, { target: { value: 'after-out' } });
+    fireEvent.change(moment, { target: { value: 'acted' } });
     const again = Object.values(useWorld.getState().system.effects).at(-1)!.on![0]!;
     expect(again.on).toBe('acted');
     expect(again.confirm).toBeUndefined();

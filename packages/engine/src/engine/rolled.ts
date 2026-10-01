@@ -9,6 +9,11 @@ export interface RolledSummary {
   parts: Record<string, number>;
 }
 
+export const SUMMARY_KEYS: readonly (keyof RolledSummary)[] = ['total', 'natural', 'rolled', 'atMax', 'atMin', 'edited', 'dice', 'parts'];
+
+export const rolledBySender = (step: { type?: string; side?: string }): boolean =>
+  step.type === 'threshold' && (step.side ?? 'sender') === 'sender';
+
 export function rolledSummary(step: Record<string, unknown>): RolledSummary | null {
   const rolled = step.rolled as {
     total: number; rolls: number[]; kept: number | null;

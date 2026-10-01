@@ -226,6 +226,16 @@ group('«я совершил действие» — один раз на все 
     eq(me.effects[0]!.usesLeft, 1);
   });
 
+  test('кривое условие подписки — подписка молчит, ход не падает', () => {
+    const broken = world({ итог: { ...tally.effects.итог, on: [{ ...tally.effects.итог.on[0], if: { expr: '@цели.n > 0' } }] } });
+    const r = exchange({
+      system: broken as any, compendium: book, die: queue(), sheets: [hero(['итог']), foe()],
+      actionId: 'удар:0', fromId: 'герой', toId: 'враг',
+    });
+    eq(r.sheets.find(s => s.id === 'враг')!.values.хп, 12);
+    eq(r.sheets.find(s => s.id === 'герой')!.values.хп, 20);
+  });
+
   test('ход по одной цели тоже доходит до «совершил действие»', () => {
     const r = exchange({
       system: tally as any, compendium: book, die: queue(), sheets: [hero(['итог']), foe()],

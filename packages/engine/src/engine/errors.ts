@@ -1,3 +1,5 @@
+import { FormulaError } from '../formula/errors.ts';
+
 export class EngineError extends Error {
   constructor(message: string) {
     super(message);
@@ -28,3 +30,5 @@ export class CycleError extends EngineError {
 }
 
 export class TableError extends EngineError {}
+
+export const isRuleError = (err: unknown): boolean => err instanceof EngineError || err instanceof FormulaError;

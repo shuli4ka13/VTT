@@ -1,3 +1,5 @@
+import { isActionMoment } from '../../packages/engine/src/events/bus.ts';
+
 type Loose = Record<string, any>;
 
 const LISTENS = ['moment:', 'field:', 'gained:', 'lost:'];
@@ -9,10 +11,15 @@ const MOMENT: Record<string, string> = {
   'target:after': 'affected',
 };
 
+const isOld = (handler: Loose): boolean => {
+  if ('role' in handler || 'phase' in handler) return true;
+  const on = String(handler.on ?? '');
+  return Boolean(on) && !isActionMoment(on) && !LISTENS.some(prefix => on.startsWith(prefix));
+};
+
 export function handlerOf(handler: Loose): Loose {
-  if (!('role' in handler) && !('phase' in handler) && ['acting', 'acted', 'targeted', 'affected'].includes(handler.on)) return handler;
+  if (!isOld(handler)) return handler;
   const { role, phase, on, ...rest } = handler;
-  if (LISTENS.some(prefix => String(on).startsWith(prefix))) return { on, ...rest };
   const moment = MOMENT[`${role ?? 'target'}:${phase ?? 'after'}`];
   return { on: moment, ...(on && on !== '*' ? { of: on } : {}), ...rest };
 }

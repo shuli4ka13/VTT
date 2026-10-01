@@ -9,6 +9,7 @@ import { calledOf } from '../engine/effects.ts';
 import { recordsOf, recordKinds, kindsOf } from './owned.ts';
 
 export { EVENT_PREFIX, MOMENT_PREFIX, FIELD_PREFIX } from '../events/bus.ts';
+import { rolledBySender, SUMMARY_KEYS } from '../engine/rolled.ts';
 import { EVENT_PREFIX, MOMENT_PREFIX, FIELD_PREFIX, GAINED_PREFIX, LOST_PREFIX, isActionMoment } from '../events/bus.ts';
 import { fieldsOf, hasField } from './sheet-columns.ts';
 
@@ -240,6 +241,8 @@ function modifierRefs(list: Modifier[] | undefined, from: Where, out: Reference[
 
 export const TARGETS_SEED = 'цели';
 
+export const DONE_OUTCOME = 'done-outcome';
+
 export function listenerOf(
   { on, of }: { on?: string; of?: string },
 ): { kind: 'any' | 'event' | 'effect' | 'moment' | 'field' | 'gained' | 'lost' | 'empty' | 'unknown'; key?: string } {
@@ -280,7 +283,7 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
     if (heard.kind === 'field') out.push({ kind: 'field', key: heard.key!, from: head });
     if (handler.if) {
       const found: Reference[] = [];
-      exprRefs(handler.if.expr, head, { params, earlier: new Set(), eventChain: heard.kind === 'event' }, found);
+      exprRefs(handler.if.expr, head, { params, earlier: new Set(seeds), eventChain: heard.kind === 'event' }, found);
       const listened = heard.kind === 'effect' ? system.effects[heard.key!] : undefined;
       const listenedSteps = new Set((listened?.steps ?? []).map(s => s.id).filter(Boolean));
       const absent = heard.kind === 'effect' && !listened;
@@ -292,8 +295,14 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
         }
         if (ref.kind !== 'step') { out.push(ref); continue; }
         if (seeds.includes(ref.key)) continue;
-        if (listened && !(listened.steps ?? []).some(s => s.id === ref.key)) {
+        const step = (listened?.steps ?? []).find(s => s.id === ref.key);
+        if (listened && !step) {
           out.push({ ...ref, scope: `listened:${heard.key}` });
+          continue;
+        }
+        const tail = ref.path?.split('.')[1];
+        if (step && handler.on === 'done' && !(rolledBySender(step) && tail && (SUMMARY_KEYS as readonly string[]).includes(tail))) {
+          out.push({ ...ref, scope: DONE_OUTCOME });
         }
       }
     }

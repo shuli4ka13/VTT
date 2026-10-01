@@ -12,7 +12,7 @@ import { DESK, RECEIVER, SENDER } from '../engine/owners.ts';
 import {
   referencesOf, declaredOf, chainRefs, listenerOf, withAddresses,
   type Where, type Reference, type RefKind, type Declared,
-  LISTEN,
+  LISTEN, DONE_OUTCOME, TARGETS_SEED,
 } from './references.ts';
 import { fieldsOf, fieldOf, fieldProblems, onSheet, isSingle, rowKeyOf } from './sheet-columns.ts';
 
@@ -92,6 +92,9 @@ function danglingText(ref: Reference, declared: Declared): string | null {
     return ref.scope === 'missing' ? `вход «${ref.key}» эффектом не объявлен` : null;
   }
   if (ref.kind === 'step') {
+    if (ref.scope === DONE_OUTCOME) {
+      return `«${ACTION_MOMENTS.done.label}» срабатывает один раз на все цели — итог «${ref.path ?? ref.key}» у каждой цели свой: берите его из таблицы целей, например сколько(@${TARGETS_SEED}.${ref.path ?? ref.key}, да)`;
+    }
     if (ref.scope?.startsWith('listened:')) {
       return `в эффекте «${ref.scope.slice('listened:'.length)}» нет ${STEP.gen} «${ref.key}» — условию срабатывания не на что смотреть`;
     }
@@ -238,17 +241,17 @@ function listenerProblems(system: System): Problem[] {
       if (handler.of && !isActionMoment(handler.on)) {
         out.push({ where, level: 'error', text: 'какое действие слушать, выбирают только у моментов действия' });
       }
-      if (handler.on === 'acting' && !handler.confirm) {
-        out.push({ where, level: 'error', text: '«я действую — до» бывает только с вопросом игроку' });
-      }
-      if ((handler.on === 'acted' || handler.on === 'done') && handler.confirm) {
-        out.push({ where, level: 'error', text: `«${ACTION_MOMENTS[handler.on].label}» срабатывает молча — спросить здесь нельзя` });
-      }
-      if (handler.on === 'done' && handler.to === 'other') {
-        out.push({ where, level: 'error', text: '«я совершил действие» — один раз на все цели: ответить «другому» некому, только себе' });
-      }
-      if ((handler.on === 'acting' || handler.on === 'targeted') && handler.to === 'other') {
-        out.push({ where, level: 'error', text: 'до того, как решится, ответить другому нельзя — только себе' });
+      if (isActionMoment(handler.on)) {
+        const moment = ACTION_MOMENTS[handler.on];
+        if (moment.asks === 'only' && !handler.confirm) {
+          out.push({ where, level: 'error', text: `«${moment.label}» бывает только с вопросом игроку` });
+        }
+        if (moment.asks === 'never' && handler.confirm) {
+          out.push({ where, level: 'error', text: `«${moment.label}» срабатывает молча — спросить здесь нельзя` });
+        }
+        if (!moment.replies && handler.to === 'other') {
+          out.push({ where, level: 'error', text: `«${moment.label}» — ответить другому нельзя, только себе` });
+        }
       }
       if (heard.kind === 'moment' && !MOMENT_KEYS.has(heard.key!)) {
         out.push({ where, level: 'error', text: `такого момента нет: «${heard.key}» — стол знает ${[...MOMENT_KEYS].join(', ')}` });

@@ -446,11 +446,6 @@ export class RoomsService {
           reports.push(...out.reports);
           Object.assign(afterSeen, out.seen ?? {});
         }
-        const done = concludeAction({
-          ...ctx, sheets, envelope: state.envelope, fromId: intent.fromId, toIds: targets, seen: afterSeen,
-        });
-        sheets = done.sheets;
-        reports.push(...done.reports);
       } catch (err) {
         throw new BadRequestException((err as Error).message);
       }
@@ -484,8 +479,22 @@ export class RoomsService {
       return { ...parked, sheets: touched, log: [...log, ...parked.log] };
     }
 
+    const tail: string[] = [];
+    let concluded: Sheet[];
+    try {
+      const done = concludeAction({
+        ...ctx, sheets, envelope: state.envelope, fromId: intent.fromId, toIds: targets, seen: afterSeen,
+      });
+      tail.push(...done.reports.map(entry => describeEntry(entry, system, done.sheets)));
+      concluded = done.reports.length ? this.settle(ctx, sheets, done.sheets, tail) : sheets;
+    } catch (err) {
+      throw new BadRequestException((err as Error).message);
+    }
+    const finalTouched = await this.persistSheets(state.roomId, sheets, concluded, touched);
+    const finalLog = tail.length ? [...log, ...await this.appendLog(state.roomId, tail)] : log;
+
     await this.db.delete(roomPending).where(eq(roomPending.roomId, state.roomId));
-    return { roomId: state.roomId, sheets: touched, log, clock: state.clock, pending: null };
+    return { roomId: state.roomId, sheets: finalTouched, log: finalLog, clock: state.clock, pending: null };
   }
 
   private async park(

@@ -143,12 +143,25 @@ group('линт: слушатели, круги, входы', () => {
     ok(texts({ on: 'acted', confirm: true }).some(t => t.includes('спросить здесь нельзя')));
     ok(texts({ on: 'targeted', to: 'other' }).some(t => t.includes('ответить другому нельзя')));
     eq(texts({ on: 'targeted', confirm: true }).length, 0, 'любое действие — законно');
-    ok(texts({ on: 'done', to: 'other' }).some(t => t.includes('ответить «другому» некому')));
+    ok(texts({ on: 'done', to: 'other' }).some(t => t.includes('ответить другому нельзя')));
     ok(texts({ on: 'done', confirm: true }).some(t => t.includes('спросить здесь нельзя')));
     eq(texts({
       on: 'done', if: { expr: 'сколько(@цели.hit.success, да) >= 1' },
       steps: [{ type: 'apply', target: { tag: 'hp' }, direction: 'add', value: { expr: 'сумма(@цели.dmg)' } }],
     }).length, 0, '«я совершил действие» знает таблицу целей');
+    eq(texts({ on: 'done', if: { expr: 'сколько(@цели) >= 2' }, steps: [] }).length, 0, 'и голое @цели — тоже');
+  });
+
+  test('«я совершил действие» не читает итог одной цели — только свои броски и таблицу целей', () => {
+    const system = withEffect('удар', {
+      steps: [{ id: 'hit', type: 'threshold', roll: { die: { constant: 'd20' } }, versus: { expr: '10' } }] as Step[],
+    });
+    system.effects.r = { label: 'r', activation: 'passive', on: [{ on: 'done', of: 'удар', if: { expr: '@hit.success' }, steps: [] }] } as Effect;
+    ok(errorTexts(system).some(t => t.includes('итог «hit.success» у каждой цели свой')));
+    system.effects.r = { label: 'r', activation: 'passive', on: [{ on: 'done', of: 'удар', if: { expr: '@hit.natural >= 20' }, steps: [] }] } as Effect;
+    eq(errorTexts(system).length, 0, 'свой бросок — можно');
+    system.effects.r = { label: 'r', activation: 'passive', on: [{ on: 'acted', of: 'удар', if: { expr: '@hit.success' }, steps: [] }] } as Effect;
+    eq(errorTexts(system).length, 0, '«на цель» видит итог цели');
   });
 
   test('вызовы по кругу: эффект зовёт тот, на который сам и срабатывает', () => {
