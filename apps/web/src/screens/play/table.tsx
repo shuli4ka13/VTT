@@ -333,6 +333,7 @@ function Actions({ room, sender, targets, onError, onClear }: {
                 key={action.id}
                 system={room.system as System}
                 compendium={room.compendium}
+                actor={sender}
                 actionId={action.id}
                 label={action.label}
                 disabled={Boolean(room.pending)}

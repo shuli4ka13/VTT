@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { Button, Field, Input, Select, Verdict } from '../../ui/primitives.tsx';
 import { asksOf, askKindOf, checkInputs, choicesOf, normalizeInputs } from '@vtt/engine/model/asks';
 import type { AskedParam } from '@vtt/engine/model/asks';
-import type { System, Compendium } from '@vtt/schema';
+import { newPass } from '@vtt/engine/engine/calc';
+import type { System, Compendium, Sheet } from '@vtt/schema';
 
 export interface ActionRequest {
   actionId: string;
@@ -11,9 +12,10 @@ export interface ActionRequest {
   targetEdits?: string[];
 }
 
-export function ActionForm({ system, compendium, actionId, label, disabled, onAct }: {
+export function ActionForm({ system, compendium, actor, actionId, label, disabled, onAct }: {
   system: System;
   compendium: Compendium;
+  actor?: Sheet;
   actionId: string;
   label: string;
   disabled?: boolean;
@@ -33,7 +35,7 @@ export function ActionForm({ system, compendium, actionId, label, disabled, onAc
       const value = answers[param.key];
       if (value !== undefined && value !== '') given[param.key] = value;
     }
-    const problem = checkInputs(asked, given, system);
+    const problem = checkInputs(asked, given, system, actor ? newPass(system, actor, { compendium }) : undefined);
     if (problem) { setTrouble(problem); return; }
     setTrouble(null);
     onAct({ actionId, ...(asked.length ? { inputs: normalizeInputs(asked, given) } : {}) });

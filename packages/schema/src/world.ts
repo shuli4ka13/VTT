@@ -165,8 +165,6 @@ export const reapply = z.enum(['ignore', 'refresh', 'stack']);
 
 export const ask = z.object({
   by: z.enum(['actor', 'gm']).optional(),
-  min: z.number().optional(),
-  max: z.number().optional(),
   hint: z.string().optional(),
 });
 

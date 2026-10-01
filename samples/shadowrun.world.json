@@ -1482,10 +1482,10 @@
             "kind": "number",
             "optional": true,
             "ask": {
-              "by": "actor",
-              "min": 0,
-              "max": 1
-            }
+              "by": "actor"
+            },
+            "min": 0,
+            "max": 1
           },
           {
             "key": "приём",

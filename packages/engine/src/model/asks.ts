@@ -1,5 +1,7 @@
 import { actionOf } from '../events/actions.ts';
 import { listOf } from './lists.ts';
+import { compile } from '../formula/index.ts';
+import type { Pass } from '../engine/calc.ts';
 import type { System, Compendium, Ask, Param } from './types.ts';
 
 export interface AskedParam extends Param {
@@ -28,8 +30,16 @@ export function choicesOf(system: System, param: Param): string[] {
   return (listOf(system, param.from) ?? []).map(option => String(option.value));
 }
 
+const boundOf = (bound: unknown, actor: Pass | undefined): number | null => {
+  if (bound === undefined || bound === null || bound === '') return null;
+  if (typeof bound === 'number') return bound;
+  if (!actor) return null;
+  const value = compile(String(bound)).evaluate(actor.resolve);
+  return typeof value === 'number' ? value : null;
+};
+
 export function checkInputs(
-  asked: AskedParam[], inputs: Record<string, number | string> | undefined, system: System,
+  asked: AskedParam[], inputs: Record<string, number | string> | undefined, system: System, actor?: Pass,
 ): string | null {
   const given = inputs ?? {};
   for (const key of Object.keys(given)) {
@@ -43,8 +53,10 @@ export function checkInputs(
     if (kind === 'number') {
       const number = Number(value);
       if (!Number.isFinite(number)) return `${name}: нужно число, а пришло «${value}»`;
-      if (param.ask.min !== undefined && number < param.ask.min) return `${name}: не меньше ${param.ask.min}`;
-      if (param.ask.max !== undefined && number > param.ask.max) return `${name}: не больше ${param.ask.max}`;
+      const low = boundOf(param.min, actor);
+      const high = boundOf(param.max, actor);
+      if (low !== null && number < low) return `${name}: не меньше ${low}`;
+      if (high !== null && number > high) return `${name}: не больше ${high}`;
     }
     if (kind === 'choice') {
       const options = choicesOf(system, param);

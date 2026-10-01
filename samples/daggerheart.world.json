@@ -1538,20 +1538,20 @@
             "label": "Опыт: 0 или +2 за Надежду",
             "kind": "number",
             "ask": {
-              "by": "actor",
-              "min": 0,
-              "max": 2
-            }
+              "by": "actor"
+            },
+            "min": 0,
+            "max": 2
           },
           {
             "key": "сложность",
             "label": "Сложность",
             "kind": "number",
             "ask": {
-              "by": "gm",
-              "min": 1,
-              "max": 30
-            }
+              "by": "gm"
+            },
+            "min": 1,
+            "max": 30
           }
         ],
         "self": [
@@ -2407,10 +2407,10 @@
             "label": "С партией: 1 — да, 0 — нет",
             "kind": "number",
             "ask": {
-              "by": "actor",
-              "min": 0,
-              "max": 1
-            }
+              "by": "actor"
+            },
+            "min": 0,
+            "max": 1
           }
         ]
       },
@@ -2521,10 +2521,10 @@
             "label": "Героев в партии",
             "kind": "number",
             "ask": {
-              "by": "gm",
-              "min": 1,
-              "max": 8
-            }
+              "by": "gm"
+            },
+            "min": 1,
+            "max": 8
           }
         ]
       },

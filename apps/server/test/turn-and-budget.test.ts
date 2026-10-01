@@ -175,7 +175,7 @@ describe('значение, которое называет человек за 
       effects: {
         выстрел: {
           label: 'Выстрел', activation: 'manual',
-          params: [{ key: 'дистанция', label: 'Дистанция', kind: 'number', ask: { by: 'actor', kind: 'number', min: 1, max: 50 } }],
+          params: [{ key: 'дистанция', label: 'Дистанция', kind: 'number', min: 1, max: 50, ask: { by: 'actor' } }],
           steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@дистанция' } }],
         },
       },
@@ -391,7 +391,7 @@ describe('вопросы к человеку переживают пересбо
       effects: {
         удар: {
           label: 'Удар', activation: 'manual',
-          params: [{ key: 'сила', label: 'Сила', kind: 'number', ask: { by: 'actor', kind: 'number', min: 1, max: 10 } }],
+          params: [{ key: 'сила', label: 'Сила', kind: 'number', min: 1, max: 10, ask: { by: 'actor' } }],
           steps: [
             { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' } }, versus: { expr: '0' }, continueOn: 'success' },
             { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@сила' } },

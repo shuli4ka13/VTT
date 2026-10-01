@@ -1,6 +1,7 @@
 import { group, test, eq, ok } from './harness.ts';
 import { asksOf, checkInputs, normalizeInputs } from '../src/model/asks.ts';
 import { exchange } from './play.ts';
+import { newPass } from '../src/engine/calc.ts';
 import type { System, Compendium, Sheet } from '../src/model/types.ts';
 
 const system = {
@@ -11,7 +12,7 @@ const system = {
     выстрел: {
       label: 'Выстрел', activation: 'manual',
       params: [
-        { key: 'дистанция', label: 'Дистанция', kind: 'number', ask: { by: 'actor', min: 1, max: 100 } },
+        { key: 'дистанция', label: 'Дистанция', kind: 'number', min: 1, max: 100, ask: { by: 'actor' } },
         { key: 'прицел', label: 'Куда целишься', kind: 'choice', from: 'места', ask: { by: 'gm' } },
         { key: 'кость', label: 'Кость урона', kind: 'dice' },
       ],
@@ -62,5 +63,23 @@ group('значение, которое называет человек за с�
     });
     eq(played(3).sheets.find(s => s.id === 'б')!.values.hp, 13, 'кость 4 плюс дистанция 3');
     eq(played(10).sheets.find(s => s.id === 'б')!.values.hp, 6, 'та же кость, дистанция 10');
+  });
+});
+
+group('граница вопроса — формула по листу действующего', () => {
+  const capped = {
+    ...system,
+    effects: { ...system.effects, выстрел: { ...system.effects.выстрел, params: [{ key: 'дистанция', label: 'Дистанция', kind: 'number', min: 0, max: '@hp', ask: { by: 'actor' } }] } },
+  } as unknown as System;
+  const asked = asksOf('ствол:0', { system: capped, compendium });
+  const pass = (hp: number) => newPass(capped, { ...sheet('я'), values: { hp } }, { compendium });
+
+  test('потолок читается с листа', () => {
+    eq(checkInputs(asked, { дистанция: 5 }, capped, pass(5)), null);
+    eq(checkInputs(asked, { дистанция: 6 }, capped, pass(5)), 'Дистанция: не больше 5');
+  });
+
+  test('без листа формулу не проверить — решает сервер', () => {
+    eq(checkInputs(asked, { дистанция: 60 }, capped), null);
   });
 });

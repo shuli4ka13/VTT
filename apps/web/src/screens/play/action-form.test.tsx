@@ -11,7 +11,7 @@ const system = {
     выстрел: {
       label: 'Выстрел', activation: 'manual',
       params: [
-        { key: 'дистанция', label: 'Дистанция', kind: 'number', ask: { by: 'actor', min: 1, max: 50 } },
+        { key: 'дистанция', label: 'Дистанция', kind: 'number', min: 1, max: 50, ask: { by: 'actor' } },
         { key: 'куда', label: 'Куда целишься', kind: 'choice', from: 'места', ask: { by: 'gm' } },
       ],
       steps: [],

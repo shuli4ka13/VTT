@@ -22,6 +22,7 @@ import type { ActOutcome } from '@vtt/engine/lang/act';
 import { emptyJournal } from '@vtt/engine/lang/journal';
 import type { Journal, Question } from '@vtt/engine/lang/journal';
 import { deskOf, sharedOf, hasDesk } from '@vtt/engine/events/desk';
+import { newPass } from '@vtt/engine/engine/calc';
 import { fieldOf } from '@vtt/engine/model/sheet-columns';
 import { DESK_ID, isDesk } from '@vtt/engine/engine/owners';
 import { rollCheck, fieldCheck } from '@vtt/engine/engine/check';
@@ -309,7 +310,8 @@ export class RoomsService {
     let inputs: Record<string, number | string>;
     try {
       const asked = asksOf(intent.actionId, { system, compendium });
-      const trouble = checkInputs(asked, intent.inputs, system);
+      const actor = sheets.find(s => s.id === intent.fromId)!;
+      const trouble = checkInputs(asked, intent.inputs, system, newPass(system, actor, { compendium, shared: sharedOf(system, sheets) }));
       if (trouble) throw new BadRequestException(trouble);
       inputs = normalizeInputs(asked, intent.inputs);
     } catch (err) {

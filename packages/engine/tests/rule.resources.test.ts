@@ -26,7 +26,7 @@ const system = {
     },
     стрела: {
       label: 'Волшебная стрела', activation: 'manual',
-      params: [{ key: 'круг', label: 'Каким кругом', kind: 'number', ask: { by: 'actor', min: 1, max: 2 } }],
+      params: [{ key: 'круг', label: 'Каким кругом', kind: 'number', min: 1, max: 2, ask: { by: 'actor' } }],
       self: [{ type: 'emit', event: 'ячейка', args: { круг: { param: 'круг' } }, strict: true }],
       steps: [
         { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d4' }, count: { expr: '2 + #круг' }, bonus: { expr: '2 + #круг' } },
