@@ -144,7 +144,7 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
             <div className="row">
               <Field label="Чей бросок" needed={!modifier.target}>
                 <Select
-                  value={modifier.target}
+                  value={String(modifier.target ?? '')}
                   options={[['', '— выберите бросок —'],
                     ...rollTargets.map(t => [t.tag, t.label] as const)] as never}
                   onChange={target => onEdit(draft => { (draft[index] as Modifier).target = target; })}

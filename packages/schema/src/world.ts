@@ -157,7 +157,27 @@ export const rollModifier = z.object({
   condition: formula.optional(),
 }).passthrough();
 
-export const modifier = z.discriminatedUnion('kind', [valueModifier, rollModifier]);
+export const editModifier = z.object({
+  kind: z.literal('edit'),
+  call: z.string().min(1),
+  param: z.string(),
+  as: z.enum(['against']).optional(),
+  edit: z.string().optional(),
+  op: z.string().optional(),
+  value: formula.optional(),
+  stacking: z.string().optional(),
+  condition: formula.optional(),
+  tags: z.array(z.string().min(1)).optional(),
+  anyTags: z.array(z.string().min(1)).optional(),
+  notTags: z.array(z.string().min(1)).optional(),
+  where: z.object({
+    table: z.string().min(1),
+    column: z.string().min(1),
+    is: tableValue,
+  }).optional(),
+}).passthrough();
+
+export const modifier = z.discriminatedUnion('kind', [valueModifier, rollModifier, editModifier]);
 
 export const activation = z.enum(['manual', 'passive']);
 export const durationKind = z.enum(['permanent', 'uses', 'rounds', 'turns', 'combat', 'scene']);

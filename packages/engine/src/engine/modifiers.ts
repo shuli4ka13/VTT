@@ -1,5 +1,7 @@
 import { compile } from '../formula/index.ts';
-import { assertTarget, incomingTagOf, ANY_ROLL } from './targets.ts';
+import { assertTarget, incomingTagOf, ANY_ROLL, eventTagOf } from './targets.ts';
+import { ROLL_CALL } from '../words/calls.ts';
+import { amountParamOf } from '../model/lists.ts';
 import { wornEffects, activationOf } from './effects.ts';
 import { EngineError } from './errors.ts';
 import { anyRowSays } from './tables.ts';
@@ -21,8 +23,38 @@ export type SourcedModifier = Modifier & { source: ModifierSource };
 
 export interface CollectedModifiers {
   value: Map<string, SourcedModifier[]>;
-  roll: Map<string, SourcedModifier[]>;
+  edits: Map<string, SourcedModifier[]>;
 }
+
+type EditModifier = Extract<Modifier, { kind: 'edit' }>;
+
+export const editKey = (call: string, param: string, as?: string): string =>
+  `${as ? `${as}:` : ''}${call}.${param}`;
+
+export function asEdits(system: System, mod: Modifier): EditModifier[] | null {
+  if (mod.kind === 'edit') return [mod];
+  const { target, kind: _kind, ...rest } = mod as Modifier & Record<string, unknown>;
+  if (mod.kind === 'value' && String(target).startsWith(eventTagOf(''))) {
+    const call = String(target).slice(eventTagOf('').length);
+    const { tags, ...others } = rest as { tags?: string[] };
+    return [{
+      ...others, kind: 'edit', call, param: amountParamOf(system.effects?.[call])?.key ?? '',
+      ...(tags?.length ? { anyTags: tags } : {}),
+    } as EditModifier];
+  }
+  if (mod.kind !== 'roll') return null;
+  const as = target === incomingTagOf(ANY_ROLL) ? { as: 'against' as const } : {};
+  const { edit, op, value, stacking, ...shared } = rest as Record<string, unknown>;
+  const out: EditModifier[] = [];
+  if (edit) out.push({ ...shared, kind: 'edit', call: ROLL_CALL, param: 'edits', edit, ...as } as EditModifier);
+  if (op) out.push({ ...shared, kind: 'edit', call: ROLL_CALL, param: 'bonus', op, value, ...(stacking ? { stacking } : {}), ...as } as EditModifier);
+  return out;
+}
+
+const assertCall = (system: System, mod: EditModifier, owner?: string): void => {
+  if (mod.call === ROLL_CALL || system.effects?.[mod.call]) return;
+  throw new EngineError(`${owner ? `«${owner}»: ` : ''}правка вызова «${mod.call}» — такого эффекта в системе нет`);
+};
 
 export interface RollResolution {
   tags: string[];
@@ -41,17 +73,27 @@ const STACKING: Record<string, (values: unknown[]) => unknown> = {
 export function collectModifiers(
   system: System, sheet: Sheet, compendium: Compendium,
 ): CollectedModifiers {
-  const buckets: CollectedModifiers = { value: new Map(), roll: new Map() };
+  const buckets: CollectedModifiers = { value: new Map(), edits: new Map() };
   if (!compendium) return buckets;
+  const put = (bucket: Map<string, SourcedModifier[]>, key: string, mod: SourcedModifier) => {
+    let list = bucket.get(key);
+    if (!list) { list = []; bucket.set(key, list); }
+    list.push(mod);
+  };
 
   for (const source of sourcesOf(system, sheet, compendium)) {
     for (const mod of source.modifiers) {
-
-      assertTarget(system, mod.target, source.label);
-      const bucket = mod.kind === 'roll' ? buckets.roll : buckets.value;
-      let list = bucket.get(mod.target);
-      if (!list) { list = []; bucket.set(mod.target, list); }
-      list.push({ ...mod, source });
+      const edits = asEdits(system, mod);
+      if (edits) {
+        for (const one of edits) {
+          assertCall(system, one, source.label);
+          put(buckets.edits, editKey(one.call, one.param, one.as), { ...one, source });
+        }
+        continue;
+      }
+      const target = (mod as { target: string }).target;
+      assertTarget(system, target, source.label);
+      put(buckets.value, target, { ...mod, source });
     }
   }
   return buckets;
@@ -102,6 +144,10 @@ export function applyValueModifiers(
   const active = mods.filter(m => conditionHolds(m, pass) && tagsMatch(m, context.tags ?? [], pass.system));
   if (active.length === 0) return base;
 
+  return stackNumber(active, base, tag, pass);
+}
+
+function stackNumber(active: SourcedModifier[], base: unknown, tag: string, pass: Pass): unknown {
   let value = base;
 
   const sets = active.filter(m => m.op === 'set');
@@ -130,13 +176,21 @@ export function applyValueModifiers(
 
 export const VALUE_OPS = ['set', 'add', 'mul', 'floor', 'cap'];
 
+const editsOf = (pass: Pass, call: string, param: string, as?: string): SourcedModifier[] =>
+  (pass?.modifiers ? pass.modifiers.edits.get(editKey(call, param, as)) || [] : []);
+
+export function editNumber(pass: Pass, call: string, param: string, base: number, tags: readonly string[]): number {
+  const active = editsOf(pass, call, param).filter(m => conditionHolds(m, pass) && editMatches(m, tags, pass.system));
+  return active.length ? Number(stackNumber(active, base, `${call}.${param}`, pass)) : base;
+}
+
 export function resolveRoll(
   system: System, _sheet: Sheet, rollTags: readonly (string | null | undefined)[], pass: Pass,
   extra: SourcedModifier[] = [],
 ): RollResolution {
   const tags = [...new Set(rollTags.filter((t): t is string => Boolean(t)))];
   const mods = [
-    ...rollBucket(pass, ANY_ROLL).filter(m => conditionHolds(m, pass) && rollTagsHold(m, tags)),
+    ...rollEditsOf(pass, tags),
     ...extra,
   ];
 
@@ -179,15 +233,12 @@ function withValues(edit: RollEdit & { label: string }, pass: Pass): RollEdit & 
   return { ...edit, ops };
 }
 
-const rollBucket = (pass: Pass, target: string): SourcedModifier[] =>
-  (pass?.modifiers ? pass.modifiers.roll.get(target) || [] : []);
-
-const rollTagsHold = (mod: SourcedModifier, tags: readonly string[]): boolean =>
-  tagsHold((mod as { tags?: string[] }).tags, tags);
+const rollEditsOf = (pass: Pass, tags: readonly string[], as?: string): SourcedModifier[] =>
+  [...editsOf(pass, ROLL_CALL, 'edits', as), ...editsOf(pass, ROLL_CALL, 'bonus', as)]
+    .filter(m => conditionHolds(m, pass) && editMatches(m, tags, pass.system));
 
 export function incomingRollModifiers(rollTags: readonly string[], pass: Pass): SourcedModifier[] {
-  return rollBucket(pass, incomingTagOf(ANY_ROLL))
-    .filter(m => conditionHolds(m, pass) && rollTagsHold(m, rollTags));
+  return rollEditsOf(pass, rollTags, 'against');
 }
 
 export function claimedModifiers(system: System, keys: string[]): SourcedModifier[] {
@@ -200,10 +251,22 @@ export function claimedModifiers(system: System, keys: string[]): SourcedModifie
           Object.keys(dictionary).join(', ') || '(пусто)'}`);
     }
     return {
-      kind: 'roll' as const, target: ANY_ROLL, edit: key,
+      kind: 'edit' as const, call: ROLL_CALL, param: 'edits', edit: key,
       source: { type: 'claim' as const, id: key, label: edit.label || key, modifiers: [] },
     };
   });
+}
+
+function editMatches(mod: SourcedModifier, tags: readonly string[], system: System): boolean {
+  const all = (mod as { tags?: string[] }).tags;
+  const any = (mod as { anyTags?: string[] }).anyTags;
+  const avoid = (mod as { notTags?: string[] }).notTags;
+  const where = (mod as { where?: { table: string; column: string; is: unknown } }).where;
+  if (all?.length && !tagsHold(all, tags)) return false;
+  if (any?.length && !any.some(t => tags.includes(t))) return false;
+  if (avoid?.length && avoid.some(t => tags.includes(t))) return false;
+  if (where && !anyRowSays(system, [...tags], where)) return false;
+  return true;
 }
 
 function tagsMatch(mod: SourcedModifier, tags: string[], system: System): boolean {
