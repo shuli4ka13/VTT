@@ -306,7 +306,7 @@ describe('сквозной прогон стенда', () => {
     expect(state.body.clock.active).toBeNull();
   });
 
-  it('реакция отправителя: стол ставит ход на паузу, ответ тратит очко и собирает бросок заново', async () => {
+  it('увидев кости: стол ставит ход на паузу, ответ тратит очко и докидывает кость к выпавшему', async () => {
     const rooms = app.get(await import('../src/rooms/rooms.service.ts').then(m => m.RoomsService));
     const me = await http().get('/auth/me').set('Authorization', `Bearer ${token}`).expect(200);
     const state = await http().get(`/rooms/${roomId}`)
@@ -334,8 +334,8 @@ describe('сквозной прогон стенда', () => {
       .expect(201);
     expect(answered.body.pending).toBeNull();
     const journal = answered.body.log.map((l: { text: string }) => l.text).join(' · ');
-    expect(journal).toContain('собран заново');
-    expect(journal).toContain('Преимущество');
+    expect(journal).toContain('Вдохновение');
+    expect(journal).toContain('докинуто');
 
     const after = await http().get(`/rooms/${roomId}`)
       .set('Authorization', `Bearer ${token}`).expect(200);

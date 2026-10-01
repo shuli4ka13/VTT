@@ -23,7 +23,7 @@ import type { Offer, Report, ReactionWindow } from './types.ts';
 import type { ActionMoment, Subscriber } from '../events/bus.ts';
 import type { Param, Sheet, Step, StoredValue, WornEffect } from '../model/types.ts';
 import type { LeadRoll } from '../engine/lead-die.ts';
-import { tagsHold } from '../engine/roll-tags.ts';
+import { tagsHold, rollName } from '../engine/roll-tags.ts';
 
 export type Packed = (index: number) => StepData | undefined;
 
@@ -406,7 +406,7 @@ export class Runner {
         if (!offers.length) continue;
         const question: Question = {
           key: `${scope}?seen:${sheetId}`, sheetId, window: 'seen', label: '', offers, results: seed(),
-          preview: [`кости: [${cell.value.rolls.join(', ')}] → ${cell.value.total}`],
+          preview: [`${tags.length ? `Бросок (${rollName([...tags])})` : 'Бросок'}: [${cell.value.rolls.join(', ')}] → ${cell.value.total}`],
         };
         const chosen = this.drying ? [] : this.ext.ask(question);
         const stray = chosen.find(id => !offers.some(offer => offer.id === id));

@@ -33,7 +33,7 @@ export interface LeadRoll {
 }
 
 export type SeenOp =
-  | { kind: 'add'; count: number; sides?: number; keep?: 'best' | 'worst'; edit?: RollEdit }
+  | { kind: 'add'; count: number; sides?: number; keep?: 'best' | 'worst'; explode?: boolean }
   | { kind: 'reroll'; upTo: number }
   | { kind: 'plus'; value: number };
 
@@ -146,9 +146,11 @@ export function seeRoll(rolled: LeadRoll, op: SeenOp, die: Die): LeadRoll {
   }
   const sides = op.sides ?? base.entries.find(entry => !entry.bonus)?.sides ?? 6;
   const fresh: RolledDie[] = Array.from({ length: Math.max(0, op.count) }, () => ({ value: die(sides), sides }));
-  const grownFresh = applyResultEdits(fresh, [...base.applied, ...(op.edit ? [op.edit] : [])], die);
+  const grownFresh = applyResultEdits(fresh, base.applied, die);
+  const all = [...base.grown, ...grownFresh];
+  const grown = op.explode ? applyResultEdits(all, [{ label: '', ops: [{ op: 'explode', apart: true }] }], die) : all;
   const keeps = op.keep ? [...base.keeps, { n: 1, from: op.keep } as KeepSpec] : base.keeps;
-  return settle({ ...base, entries: [...base.entries, ...fresh], grown: [...base.grown, ...grownFresh], keeps });
+  return settle({ ...base, entries: [...base.entries, ...fresh], grown, keeps });
 }
 
 function tallyOf(entries: RolledDie[]) {

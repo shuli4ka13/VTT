@@ -64,7 +64,7 @@ group('увидев кости', () => {
     eq(first.kind, 'paused');
     if (first.kind !== 'paused') return;
     eq(first.question.window, 'seen');
-    ok(first.question.preview[0]!.includes('[4]'), first.question.preview.join(' | '));
+    ok(first.question.preview[0]!.includes('[4]') && first.question.preview[0]!.includes('Бросок'), first.question.preview.join(' | '));
     const journal = { ...first.journal, answers: { ...first.journal.answers, [first.question.key]: [first.question.offers[0]!.id] } };
     const second = play(system, sheets, [17], journal);
     eq(second.kind, 'done');

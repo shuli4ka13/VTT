@@ -5102,11 +5102,7 @@
         "params": [],
         "on": [
           {
-            "on": "acting",
-            "claims": [
-              "advantage"
-            ],
-            "steps": [],
+            "on": "seen",
             "confirm": true,
             "cost": [
               {
@@ -5125,6 +5121,15 @@
                   }
                 }
               }
+            ],
+            "steps": [
+              {
+                "type": "roll-add",
+                "count": {
+                  "expr": "1"
+                },
+                "keep": "best"
+              }
             ]
           }
         ]
@@ -5140,11 +5145,7 @@
         "params": [],
         "on": [
           {
-            "on": "acting",
-            "claims": [
-              "advantage"
-            ],
-            "steps": [],
+            "on": "seen",
             "confirm": true,
             "cost": [
               {
@@ -5163,6 +5164,15 @@
                   }
                 }
               }
+            ],
+            "steps": [
+              {
+                "type": "roll-add",
+                "count": {
+                  "expr": "1"
+                },
+                "keep": "best"
+              }
             ]
           }
         ]
@@ -5179,12 +5189,16 @@
         "params": [],
         "on": [
           {
-            "on": "acting",
-            "claims": [
-              "bardic"
-            ],
-            "steps": [],
-            "confirm": true
+            "on": "seen",
+            "confirm": true,
+            "steps": [
+              {
+                "type": "roll-plus",
+                "value": {
+                  "expr": "кинуть('1к6')"
+                }
+              }
+            ]
           }
         ]
       },

@@ -14,7 +14,7 @@ const cellOf = (ctx: StepContext, label: string): SeenCell => {
 
 export const packed = (keys: readonly string[]) => (step: StepData, ctx: StepContext): Record<string, unknown> =>
   Object.fromEntries(keys.filter(key => step[key] !== undefined && step[key] !== null && step[key] !== '')
-    .map(key => [key, key === 'keep' ? step[key] : packRef(step[key], ctx)]));
+    .map(key => [key, key === 'keep' || key === 'explode' ? step[key] : packRef(step[key], ctx)]));
 
 export function operate(ctx: StepContext, label: string, op: SeenOp) {
   const cell = cellOf(ctx, label);

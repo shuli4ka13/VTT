@@ -1687,13 +1687,11 @@
         "params": [],
         "on": [
           {
-            "on": "acting",
+            "on": "seen",
             "if": {
               "expr": "#inspiration > 0"
             },
-            "claims": [
-              "advantage"
-            ],
+            "confirm": true,
             "steps": [
               {
                 "type": "apply",
@@ -1705,9 +1703,15 @@
                   "expr": "1"
                 },
                 "targetModifiers": false
+              },
+              {
+                "type": "roll-add",
+                "count": {
+                  "expr": "1"
+                },
+                "keep": "best"
               }
-            ],
-            "confirm": true
+            ]
           }
         ],
         "group": "Реакции"

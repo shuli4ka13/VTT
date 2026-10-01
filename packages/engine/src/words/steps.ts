@@ -142,6 +142,10 @@ export const STEP_WORDS = {
         key: 'keep', label: 'Оставить', kind: 'choice', options: ['', 'best', 'worst'], fallback: '',
         choice: [['', 'все'], ['best', 'лучшую'], ['worst', 'худшую']],
       },
+      {
+        key: 'explode', label: 'Максимум', kind: 'flag', fallback: 'false',
+        choice: [['false', 'как обычно'], ['true', 'взрывается — во всём наборе']],
+      },
     ],
     outputs: [],
     reasons: {},

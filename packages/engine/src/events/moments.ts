@@ -104,7 +104,7 @@ export function fire(firing: Firing, sheets: Sheet[], world: WorldContext): { sh
   if (handler && !holds(handler, live, seed, owner, world)) return null;
 
   const state = new State([...sheets], world.system, world.compendium, world.clock ?? null);
-  const run = new Runner(state, new External(emptyJournal(), world.die));
+  const run = new Runner(state, new External(emptyJournal(), world.die, true));
   const sink = newSink();
   const ran = run.exec({
     scope: `${firing.sheetId}:${id}`, me: firing.sheetId, here: firing.sheetId, target: firing.sheetId, effectId: id, owner,

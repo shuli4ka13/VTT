@@ -11,7 +11,7 @@ export const icon = '+🎲';
 export const traceLine = (t: { before: number; after: number; rolls: number[] }): string =>
   `докинуто: [${t.rolls.join(', ')}] — итог ${t.before} → ${t.after}`;
 
-export const pack = packed(['count', 'sides', 'keep']);
+export const pack = packed(['count', 'sides', 'keep', 'explode']);
 
 export function resolve(step: StepData, ctx: StepContext) {
   const keep = step.keep === 'best' || step.keep === 'worst' ? step.keep : undefined;
@@ -19,5 +19,6 @@ export function resolve(step: StepData, ctx: StepContext) {
   return operate(ctx, label, {
     kind: 'add', count: numberOf(step.count, ctx, 'сколько костей докинуть'),
     ...(sides !== null ? { sides } : {}), ...(keep ? { keep } : {}),
+    ...(step.explode === true || step.explode === 'true' ? { explode: true } : {}),
   });
 }
