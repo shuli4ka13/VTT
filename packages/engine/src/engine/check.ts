@@ -23,14 +23,18 @@ export interface Checked {
 
 export function rollCheck(
   system: System, sheet: Sheet, check: Check,
-  { compendium, die, owner }: { compendium?: Compendium | null; die: Die; owner: string },
+  { compendium, die, owner, seen }: {
+    compendium?: Compendium | null; die: Die; owner: string;
+    seen?: (rolled: LeadRoll, tags: readonly string[], rollerId: string) => LeadRoll;
+  },
 ): Checked {
   const pass = newPass(system, sheet, { compendium: compendium ?? undefined });
   const ctx = { pass, owner };
   const mods = resolveRoll(system, sheet, check.tags ?? [], pass);
   const constant = dieConstant(system, check.die.constant);
   const def = unfoldDice(withCount(constant, check.count, owner), (ref, what) => resolveNumber(packRef(ref, ctx), ctx, what));
-  const rolled = rollLead(def, die, mods.edits);
+  const thrown = rollLead(def, die, mods.edits);
+  const rolled = seen ? seen(thrown, check.tags ?? [], sheet.id) : thrown;
   const bonus = (check.bonus ? resolveOptionalNumber(packRef(check.bonus, ctx), ctx, `${owner} · прибавка`) ?? 0 : 0) + mods.bonus;
   return { rolled, bonus, total: rolled.total + bonus, edits: mods.edits.map(edit => edit.label ?? '') };
 }

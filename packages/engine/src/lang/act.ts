@@ -149,10 +149,11 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
       const gate = steps.findIndex(step => HOISTED(step as StepData) && stepModule(step.type).mayBreak === true);
       const cache: Record<number, StepData> = {};
       const seenSink = newSink();
-      const start = { sheet: state.get(actor), shared: sharedOf(system, state.sheets) };
+      const now = () => ({ sheet: state.get(actor), shared: sharedOf(system, state.sheets) });
+      let start: ReturnType<typeof now> | null = null;
       const packOne = (index: number): StepData => {
         const step = steps[index] as StepData;
-        const { sheet, shared } = start;
+        const { sheet, shared } = start ?? now();
         const done = Object.keys(cache).map(Number).filter(at => at < index).sort((a, b) => a - b).map(at => cache[at]!);
         const inner: StepContext = {
           system, sheet, die: ext.dieAt(`send/${step.id ?? index}`),
@@ -173,6 +174,7 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
         });
       };
       eager();
+      start = now();
       log.push(...seenSink.after);
       seenSink.after = [];
       packed = (index: number): StepData | undefined => {

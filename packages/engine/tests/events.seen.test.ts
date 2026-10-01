@@ -90,3 +90,35 @@ group('увидев кости в проверке системы', () => {
     ok(errorsOf(lintSystem(system, book)).some(p => p.text.includes('только в подписке')));
   });
 });
+
+group('увидев кости: поздние броски видят, что сделала реакция', () => {
+  test('реакция потратила удачу — величина после проверки читает уже потраченное', () => {
+    const system = world({
+      удар: {
+        label: 'Удар', activation: 'manual',
+        steps: [
+          { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' }, tags: ['атака'] }, versus: { expr: '10' } },
+          { id: 'урон', type: 'amount', source: 'item', fixed: { expr: '5 + @удача * 10' } },
+          { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '@урон' } },
+        ],
+      },
+      жертва: { label: 'Жертва', activation: 'passive', on: [{ on: 'seen', steps: [{ type: 'apply', target: { tag: 'удача' }, direction: 'subtract', value: { expr: '1' } }, { type: 'roll-plus', value: { expr: '0' } }] }] },
+    });
+    const out = play(system, [{ ...sheet('а', ['жертва']), values: { удача: 1 } } as Sheet, sheet('б')], [15]);
+    eq(hp(out, 'б'), 15, 'удача уже 0: урон 5, а не 15');
+  });
+});
+
+group('увидев кости на броске по полю листа', () => {
+  test('без вопроса — срабатывает, с вопросом — молчит (вопросов вне действия нет)', async () => {
+    const { checkSeen } = await import('../src/lang/check.ts');
+    const system = world({
+      везунчик: { label: 'Везунчик', activation: 'passive', on: [{ on: 'seen', steps: [{ type: 'roll-reroll', upTo: { expr: '1' } }] }] },
+      вдохновение: { label: 'Вдохновение', activation: 'passive', on: [{ on: 'seen', confirm: true, steps: [{ type: 'roll-plus', value: { expr: '10' } }] }] },
+    });
+    const sheets = [sheet('а', ['везунчик', 'вдохновение'])];
+    const out = checkSeen({ system, compendium: book, die: queue(1, 12) }, sheets, 'а', { die: { constant: 'к20' }, tags: ['атака'] }, 'проверка');
+    eq(out.total, 12);
+    ok(out.lines.some(line => line.includes('Везунчик')), out.lines.join(' | '));
+  });
+});

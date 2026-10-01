@@ -8,6 +8,8 @@ export interface RolledDie {
   bonus?: boolean;
 
   from?: number;
+
+  dropped?: boolean;
 }
 
 export interface ReadSpec { kind: string; [key: string]: unknown }

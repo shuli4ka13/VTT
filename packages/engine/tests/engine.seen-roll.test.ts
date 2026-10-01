@@ -69,3 +69,23 @@ group('увидев кости: по ревью', () => {
     eq(seen.rolls.length, 4, 'добавлена одна кость, старая шестёрка второй довесок не получила');
   });
 });
+
+group('увидев кости: докинуть и оставить — среди взятого и докинутого', () => {
+  const dis = { label: 'Помеха', ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }] } as never;
+
+  test('при помехе удача докидывает и оставляет лучшую из взятой и новой', () => {
+    const die = queue(3, 15, 18);
+    const first = rollLead(d20, die, [dis]);
+    eq(first.total, 3);
+    const seen = seeRoll(first, { kind: 'add', count: 1, keep: 'best' }, die);
+    eq(seen.total, 18, 'лучшая из 3 и 18; выбывшая 15 не возвращается');
+    deepEq(seen.rolls, [3, 15, 18]);
+  });
+
+  test('на 2к6 докинуть и оставить лучшие — две лучшие из трёх', () => {
+    const die = queue(2, 5, 6);
+    const two = { label: '2к6', kind: 'die', dice: [{ count: 2, sides: 6 }] } as DieConstant;
+    const seen = seeRoll(rollLead(two, die), { kind: 'add', count: 1, keep: 'best' }, die);
+    eq(seen.total, 11);
+  });
+});

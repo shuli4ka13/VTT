@@ -158,10 +158,13 @@ export function seeRoll(rolled: LeadRoll, op: SeenOp, die: Die): LeadRoll {
   const sides = op.sides ?? base.entries.find(entry => !entry.bonus)?.sides ?? 6;
   const fresh: RolledDie[] = Array.from({ length: Math.max(0, op.count) }, (_, k) => ({ value: die(sides), sides, from: base.entries.length + k }));
   const grownFresh = applyResultEdits(fresh, base.applied, die);
-  const grown = !op.explode ? [...base.grown, ...grownFresh]
-    : base.exploded ? [...base.grown, ...applyResultEdits(grownFresh, [EXPLODE], die)]
-      : applyResultEdits([...base.grown, ...grownFresh], [EXPLODE], die);
-  const keeps = op.keep ? [...base.keeps, { n: 1, from: op.keep } as KeepSpec] : base.keeps;
+  const taken = new Set(keptDice(base.grown, base.keeps));
+  const before = op.keep ? base.grown.map(entry => (taken.has(entry) ? entry : { ...entry, dropped: true })) : base.grown;
+  const grown = !op.explode ? [...before, ...grownFresh]
+    : base.exploded ? [...before, ...applyResultEdits(grownFresh, [EXPLODE], die)]
+      : applyResultEdits([...before, ...grownFresh], [EXPLODE], die);
+  const held = [...taken].filter(entry => !entry.bonus).length;
+  const keeps = op.keep ? [{ n: Math.max(1, held), from: op.keep } as KeepSpec] : base.keeps;
   return settle({ ...base, entries: [...base.entries, ...fresh], grown, keeps, exploded: base.exploded || Boolean(op.explode) });
 }
 

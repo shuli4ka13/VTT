@@ -18,6 +18,7 @@ import { asksOf, checkInputs, normalizeInputs } from '@vtt/engine/model/asks';
 import { fireMoments, describeMoment, momentsOfTurn } from '@vtt/engine/events/moments';
 import { settle as settleSheets } from '@vtt/engine/events/settle';
 import { act } from '@vtt/engine/lang/act';
+import { checkSeen, initiativeSeen } from '@vtt/engine/lang/check';
 import type { ActOutcome } from '@vtt/engine/lang/act';
 import { emptyJournal } from '@vtt/engine/lang/journal';
 import type { Journal, Question } from '@vtt/engine/lang/journal';
@@ -25,9 +26,9 @@ import { deskOf, sharedOf, hasDesk } from '@vtt/engine/events/desk';
 import { newPass } from '@vtt/engine/engine/calc';
 import { fieldOf } from '@vtt/engine/model/sheet-columns';
 import { DESK_ID, isDesk } from '@vtt/engine/engine/owners';
-import { rollCheck, fieldCheck } from '@vtt/engine/engine/check';
+import { fieldCheck } from '@vtt/engine/engine/check';
 import {
-  idleClock, startCombat, stopCombat, nextTurn, rollInitiative, expiryOf, inCombat,
+  idleClock, startCombat, stopCombat, nextTurn, expiryOf, inCombat,
 } from '@vtt/engine/engine/clock';
 import { newBreaches } from '@vtt/engine/engine/limits';
 
@@ -243,7 +244,9 @@ export class RoomsService {
           const unknown = order.find(id => !sheets.some(s => s.id === id));
           if (unknown) throw new BadRequestException(`в комнате нет листа «${unknown}»`);
         } else {
-          const rolled = rollInitiative(system, sheets, compendium, this.roll);
+          const rolled = initiativeSeen({ system, compendium, die: this.roll }, after);
+          after = rolled.sheets;
+          lines.push(...rolled.lines);
           order = rolled.order;
           if (rolled.rolls.length) {
             lines.push(`Инициатива: ${rolled.rolls
@@ -584,10 +587,13 @@ export class RoomsService {
     const row = rows[0];
     if (!row) throw new NotFoundException(`в комнате нет листа «${sheetId}»`);
     const sheet = JSON.parse(row.data) as Sheet;
+    const before = await this.sheetsOf(roomId);
 
     let line: string;
+    let reacted: { sheets: Sheet[]; lines: string[] };
     try {
-      const { rolled, bonus, total, edits } = rollCheck(system, sheet, check, { compendium, die: this.roll, owner: check.label });
+      const { rolled, bonus, total, edits, sheets: changed, lines: extra } = checkSeen({ system, compendium, die: this.roll }, before, sheet.id, check, check.label);
+      reacted = { sheets: changed, lines: extra };
       const named = edits.length ? ` (${edits.join(', ')})` : '';
       const shown = rolled.kept != null && rolled.rolls.length > 1
         ? `[${rolled.rolls.join(', ')}] → ${rolled.kept}` : `[${rolled.rolls.join(', ')}]`;
@@ -598,8 +604,9 @@ export class RoomsService {
       throw new BadRequestException((err as Error).message);
     }
 
-    const log = await this.appendLog(roomId, [line]);
-    return { roomId, sheets: [], log };
+    const touched = await this.persistSheets(roomId, before, reacted.sheets, []);
+    const log = await this.appendLog(roomId, [line, ...reacted.lines]);
+    return { roomId, sheets: touched, log };
   }
 
   private async runCreateSheet(

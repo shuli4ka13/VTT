@@ -287,7 +287,7 @@ export function applyResultEdits(dice: RolledDie[], edits: RollEdit[], die: Die)
 }
 
 export function keptDice(dice: RolledDie[], keeps: KeepSpec[]): RolledDie[] {
-  let out = dice;
+  let out = dice.filter(d => !d.dropped);
   for (const keep of keeps) {
 
     const mine = (keep.part ? out.filter(d => d.name === keep.part) : out).filter(d => !d.bonus);

@@ -1,3 +1,4 @@
+import type { LeadRoll } from './lead-die.ts';
 import { durationOf, findEffect } from './effects.ts';
 import { rollCheck } from './check.ts';
 import { EngineError } from './errors.ts';
@@ -44,13 +45,14 @@ export interface InitiativeRoll { sheetId: string; rolls: number[]; total: numbe
 
 export function rollInitiative(
   system: System, sheets: Sheet[], compendium: Compendium, die: Die,
+  seen?: (rolled: LeadRoll, tags: readonly string[], rollerId: string) => LeadRoll,
 ): { order: string[]; rolls: InitiativeRoll[] } {
   const spec = system.initiative;
   const fighters = sheets.filter(sheet => !isDesk(sheet) && !sheets.some(other => other.group === sheet.id));
   if (!spec) return { order: fighters.map(s => s.id), rolls: [] };
 
   const rolls = fighters.map((sheet): InitiativeRoll => {
-    const checked = rollCheck(system, sheet, spec, { compendium, die, owner: 'инициатива' });
+    const checked = rollCheck(system, sheet, spec, { compendium, die, owner: 'инициатива', ...(seen ? { seen } : {}) });
     return { sheetId: sheet.id, rolls: checked.rolled.rolls, total: checked.total, edits: checked.rolled.edits };
   });
 
