@@ -11,7 +11,7 @@ export const scenarios: Scenario[] = [
     rule: `PHB/SRD 5.1, «Бросок атаки»: к20 + бонус атаки (Сила +4, мастерство +3 на 5 уровне = +7) против КБ; равно или больше — попадание. Урон оружия: 1к8 + модификатор Силы (+4). Промах урона не наносит. Орк КБ 13. ${PAD}`,
     world: 'dnd5e',
     sheets: { arven: arvenPlain, orc: fat(40) },
-    dice: [12, 5, 2, 7],
+    dice: [12, 5, 2],
     steps: [
       { act: 'longsword:0', from: 'arven', to: 'orc' },
       { act: 'longsword:0', from: 'arven', to: 'orc' },
@@ -45,7 +45,7 @@ export const scenarios: Scenario[] = [
       arven: { values: { inspiration: 0, ac_base: 30 }, has: ARVEN_HAS.filter(item => item.of !== 'chain_mail') },
       orc: { values: { ac_base: 0, hp_max: 40, hp_current: 40 } },
     },
-    dice: [20, 4, 7, 1, 5],
+    dice: [20, 4, 7, 1],
     steps: [
       { act: 'orc_greataxe:0', from: 'orc', to: 'arven' },
       { act: 'longsword:0', from: 'arven', to: 'orc' },
@@ -69,7 +69,7 @@ export const scenarios: Scenario[] = [
     rule: `PHB/SRD, заклинание «Щит»: реакция при попадании по тебе, ячейка 1 круга; +5 к КБ, в том числе против вызвавшей атаки, до начала твоего следующего хода. Мирра КБ 14. Орк (+5) выбрасывает 9 → 14, попадает; Мирра отвечает «Щит» — КБ 19, промах. Гоблин (+4) в свой ход: 12 → 16 против 19 — промах (щит ещё держится). В начале хода Мирры щит спадает. Ячейка 4 → 3. ${PAD}`,
     world: 'dnd5e',
     sheets: { mirra: fat(33), orc: fat(40), goblin: fat(40) },
-    dice: [9, 5, 12, 5],
+    dice: [9, 5, 12],
     steps: [
       { turn: 'start', order: ['orc', 'goblin', 'mirra'] },
       { act: 'orc_greataxe:0', from: 'orc', to: 'mirra', answers: [['shield']] },
@@ -126,7 +126,7 @@ export const scenarios: Scenario[] = [
       sil: { values: {}, has: [{ of: 'rapier' }], effects: ['reckless', 'helped'] },
       orc: { ...fat(40), effects: ['dodging'] },
     },
-    dice: [16, 4, 7, 10, 5],
+    dice: [16, 4, 10, 5],
     steps: [
       { act: 'longsword:0', from: 'arven', to: 'orc' },
       { act: 'rapier:0', from: 'sil', to: 'orc' },

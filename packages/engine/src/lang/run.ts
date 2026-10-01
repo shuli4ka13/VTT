@@ -23,6 +23,8 @@ import type { Offer, Report, ReactionWindow } from './types.ts';
 import type { ActionMoment, Subscriber } from '../events/bus.ts';
 import type { Param, Sheet, Step, StoredValue, WornEffect } from '../model/types.ts';
 
+export type Packed = (index: number) => StepData | undefined;
+
 export interface Frame {
   scope: string;
   me: string;
@@ -37,7 +39,7 @@ export interface Frame {
   claims?: string[];
   kept?: Record<string, StepData>;
   against?: (tags: readonly string[]) => SourcedModifier[];
-  packed?: Record<number, StepData>;
+  packed?: Packed;
   bond?: { from: string; by: string };
   source: string;
   hop: number;
@@ -82,7 +84,7 @@ export interface Call {
   props?: Record<string, unknown> | null;
   inputs?: Record<string, number | string>;
   claims?: string[];
-  packed?: Record<number, StepData>;
+  packed?: Packed;
   asks: boolean;
 }
 
@@ -230,15 +232,21 @@ export class Runner {
         sender: rolledSoFar(done as unknown as Record<string, unknown>[]),
         stepIds,
       };
-      const ready = frame.packed?.[index];
-      const packed: StepData = ready ?? (() => {
-        const when = packGuardRef((step as StepData).when, ctx);
-        return { type: step.type, id: step.id ?? null, ...(when !== undefined ? { when } : {}), ...mod.pack(step as StepData, ctx) } as StepData;
-      })();
-      done.push(packed);
       const mark = within ? { within } : {};
+      const skip = () => sink.trace.push({ step: name, type: step.type, skipped: true, ...mark });
+      const ready = frame.packed?.(index);
+      if (!ready) {
+        const when = packGuardRef((step as StepData).when, ctx);
+        if (!guardHolds(when, ctx)) {
+          done.push({ type: step.type, id: step.id ?? null, ...(when !== undefined ? { when } : {}) } as StepData);
+          skip();
+          continue;
+        }
+      }
+      const packed: StepData = ready ?? { type: step.type, id: step.id ?? null, ...mod.pack(step as StepData, ctx) } as StepData;
+      done.push(packed);
       if (!guardHolds(packed.when, ctx)) {
-        sink.trace.push({ step: name, type: step.type, skipped: true, ...mark });
+        skip();
         continue;
       }
       const at = sink.trace.length;

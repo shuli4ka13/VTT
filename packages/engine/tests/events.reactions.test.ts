@@ -95,7 +95,7 @@ group('реакция отправителя: увидел бросок — ре
   });
 
   test('применил — очко потрачено, а бросок собирается заново с заявленной правкой', () => {
-    const r = play(luckWorld, [inspired, mirra], [4, 5, 18], q => (q.window === 'sender' ? ['inspire'] : []));
+    const r = play(luckWorld, [inspired, mirra], [4, 18, 5], q => (q.window === 'sender' ? ['inspire'] : []));
     eq(r.sheets.find(s => s.id === 'arven')!.values.inspiration, 0);
     const strike = r.reports.find(x => x.report.effect === 'strike')!.report;
     deepEq((strike.trace[0] as any).rolls, [4, 18]);

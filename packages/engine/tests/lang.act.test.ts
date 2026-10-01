@@ -112,3 +112,29 @@ group('новое ядро: «для каждой цели»', () => {
     eq(hp(out, 'в'), 18);
   });
 });
+
+group('новое ядро: урон бросается, только когда до него дошло', () => {
+  const steps = [
+    { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' } }, versus: { expr: '@получатель.хп - 10' } },
+    { id: 'урон', type: 'amount', source: 'item', fixed: { expr: "кинуть('1d6')" } },
+    { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '@урон' } },
+  ];
+  const system = { ...world({ удар: { label: 'Удар', activation: 'manual', steps } }), constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } } } as unknown as System;
+  const go = (sheets: Sheet[], toIds: string[], dice: number[]) =>
+    act({ system, compendium: book, clock: null, sheets, die: queue(...dice), journal: emptyJournal() }, { actionId: 'приём:0', fromId: 'а', toIds });
+
+  test('промах — кость урона не брошена', () => {
+    const out = go([sheet('а'), sheet('б')], ['б'], [5]);
+    eq(hp(out, 'б'), 20);
+    ok(out.kind === 'done' && out.fresh.length === 1, 'брошена одна кость — проверка');
+  });
+
+  test('первая цель увернулась, вторая задета — урон брошен однажды, на всех один', () => {
+    const near = { ...sheet('в'), values: { хп: 12 } } as Sheet;
+    const third = { ...sheet('г'), values: { хп: 12 } } as Sheet;
+    const out = go([sheet('а'), sheet('б'), near, third], ['б', 'в', 'г'], [5, 4]);
+    eq(hp(out, 'б'), 20, '5 против 10 — промах');
+    eq(hp(out, 'в'), 8, '5 против 2 — попадание, урон 4');
+    eq(hp(out, 'г'), 8, 'та же кость урона');
+  });
+});

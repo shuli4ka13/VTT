@@ -17,7 +17,7 @@ import { EngineError } from '../engine/errors.ts';
 import { State } from './state.ts';
 import { External, Pause } from './journal.ts';
 import { Runner, newSink, reportOf } from './run.ts';
-import type { Entry } from './run.ts';
+import type { Entry, Packed } from './run.ts';
 import type { Journal, Question } from './journal.ts';
 import type { WorldContext } from './types.ts';
 import type { StepData, StepContext } from '../engine/steps/index.ts';
@@ -124,8 +124,8 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
     const firstTarget = targets[0] ? state.find(targets[0]) : null;
     const against = firstTarget ? newPass(system, firstTarget, { compendium }) : null;
 
-    let packed: Record<number, StepData> | undefined;
-    let rolled: StepData[] = [];
+    let packed: Packed | undefined;
+    let rolledNow: () => StepData[] = () => [];
     let seed: Record<string, unknown> = {};
 
     if (split >= 0) {
@@ -162,49 +162,60 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
         log.push({ fromId: actor, toId: actor, report: reportOf('effect', action.effect, actor, action.label, first.sink, null, false) });
       }
       log.push(...first.sink.after);
-      rolled = first.ran.packed;
+      const hoisted = first.ran.packed;
+      rolledNow = () => hoisted;
       seed = first.ran.results;
     } else {
       const stepIds = new Set(steps.map(step => step.id).filter((id): id is string => typeof id === 'string' && id !== ''));
-      const pack = (round: number, kept?: Record<number, StepData>): Record<number, StepData> => {
+      const gate = steps.findIndex(step => HOISTED(step as StepData) && stepModule(step.type).mayBreak === true);
+      const cache: Record<number, StepData> = {};
+      let round = 0;
+      let kept: Record<string, StepData> | undefined;
+      const packOne = (index: number): StepData => {
+        const step = steps[index] as StepData;
         const sheet = state.get(actor);
-        const base: StepContext = {
-          system, sheet, die: ext.dieAt(`send:${round}`),
+        const done = Object.keys(cache).map(Number).filter(at => at < index).sort((a, b) => a - b).map(at => cache[at]!);
+        const inner: StepContext = {
+          system, sheet, die: ext.dieAt(index > gate && gate >= 0 ? `send:${round}/${step.id ?? index}` : `send:${round}`),
           pass: newPass(system, sheet, { compendium, shared: sharedOf(system, state.sheets) }),
           params: args, paramDefs, props, owner: `эффект «${effect.label || action.effect}»`,
           ...(inputs ? { inputs } : {}),
           ...(against ? { against: (tags: readonly string[]) => incomingRollModifiers(tags, against) } : {}),
           ...(claims.length ? { claims } : {}),
-          ...(kept ? { kept: Object.fromEntries(Object.entries(kept).map(([index, step]) => [String(step.id ?? index), step])) } : {}),
+          ...(kept ? { kept } : {}),
+          sender: rolledSoFar(done as unknown as Record<string, unknown>[]), stepIds,
         };
-        const out: Record<number, StepData> = {};
-        const done: StepData[] = [];
-        steps.forEach((step, index) => {
-          if (!HOISTED(step as StepData)) return;
-          const inner = { ...base, sender: rolledSoFar(done as unknown as Record<string, unknown>[]), stepIds };
-          const when = packGuardRef((step as StepData).when, inner);
-          const one = { type: step.type, id: step.id ?? null, ...(when !== undefined ? { when } : {}), ...stepModule(step.type).pack(step as StepData, inner) } as StepData;
-          out[index] = one;
-          done.push(one);
-        });
-        return out;
+        const when = packGuardRef(step.when, inner);
+        return { type: step.type, id: step.id ?? null, ...(when !== undefined ? { when } : {}), ...stepModule(step.type).pack(step, inner) } as StepData;
       };
-      packed = pack(0);
-      const seenBySender = rolledSoFar(Object.values(packed) as unknown as Record<string, unknown>[]);
+      const eager = (): void => {
+        steps.forEach((step, index) => {
+          if (HOISTED(step as StepData) && (gate < 0 || index <= gate)) cache[index] = packOne(index);
+        });
+      };
+      eager();
+      const seenBySender = rolledSoFar(Object.values(cache) as unknown as Record<string, unknown>[]);
       const senderOffers = run.offers('sender', actor, action.effect, 0, seenBySender, [], 'sender');
       if (senderOffers.length) {
         const asked = run.ask({
           key: 'sender', sheetId: actor, window: 'sender', label: '', offers: senderOffers,
-          results: seenBySender, preview: previewLines(Object.values(packed), system, null),
+          results: seenBySender, preview: previewLines(Object.values(cache), system, null),
         }, action.effect, 0, [], targets[0] ?? null);
         log.push(...asked.entries);
         if (asked.claims.length) {
           claims = [...new Set([...claims, ...asked.claims])];
-          packed = pack(1, packed);
+          round = 1;
+          kept = Object.fromEntries(Object.entries(cache).map(([index, step]) => [String(step.id ?? index), step]));
+          eager();
           log.push({ text: `${nameOf(actor)}: бросок собран заново — выпавшее остаётся, новые кости добавлены` });
         }
       }
-      rolled = Object.values(packed);
+      packed = (index: number): StepData | undefined => {
+        if (!HOISTED(steps[index] as StepData)) return undefined;
+        cache[index] ??= packOne(index);
+        return cache[index];
+      };
+      rolledNow = () => Object.keys(cache).map(Number).sort((a, b) => a - b).map(at => cache[at]!);
     }
 
     const holder = holderOf(action.effect, effect);
@@ -222,7 +233,7 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
       if (dry && before.length) {
         const asked = run.ask({
           key: `target:${toId}`, sheetId: toId, window: 'target', label: '', offers: before,
-          results: dry.results, preview: previewLines(rolled, system, dry),
+          results: dry.results, preview: previewLines(rolledNow(), system, dry),
         }, action.effect, 0, dry.emitted, actor);
         log.push(...asked.entries);
         if (asked.claims.length) {
@@ -260,7 +271,7 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
     const done = newSink();
     const table = targets.filter(id => seen[id]).map(id => ({ ...seen[id]!.results, лист: id }));
     run.fire('done', 'any', actor, action.effect, targets.flatMap(id => seen[id]?.emitted ?? []),
-      { ...rolledSoFar(rolled as unknown as Record<string, unknown>[]), цели: table }, null, 'done', 0, done);
+      { ...rolledSoFar(rolledNow() as unknown as Record<string, unknown>[]), цели: table }, null, 'done', 0, done);
     for (const report of done.reactions) log.push({ fromId: actor, toId: actor, report });
     log.push(...done.after);
     if (run.cut) log.push({ text: CUT_WORDS });

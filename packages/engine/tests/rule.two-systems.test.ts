@@ -210,7 +210,7 @@ group('две системы одними слотами', () => {
   group('ведущая кость', () => {
     test('смена размера кости в данных системы меняет все броски, формулы не правились', () => {
       const asked = [];
-      const spy = sides => { asked.push(sides); return 3; };
+      const spy = sides => { asked.push(sides); return sides; };
 
       const d12world = {
         ...system,
