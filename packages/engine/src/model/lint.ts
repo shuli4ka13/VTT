@@ -4,6 +4,7 @@ import { registry } from '../engine/steps/index.ts';
 import { STEP_WORDS } from '../words/steps.ts';
 import { ROLL_CALL, CALL_WORDS } from '../words/calls.ts';
 import { modifierLists } from './integrity.ts';
+import { CALL_ARG } from './references.ts';
 import { calledOf, chainsOfEffect } from '../engine/effects.ts';
 import { basedOn, paramsOf } from './inherit.ts';
 import { danglingRows } from './integrity.ts';
@@ -387,6 +388,11 @@ function editProblems(system: System, compendium?: Compendium): Problem[] {
       if (mod.kind !== 'edit') continue;
       const call = String(mod.call);
       const at = { ...where, part: 'modifiers' };
+      const known = call === ROLL_CALL ? ['метки'] : (system.effects?.[call]?.params ?? []).map(p => p.key);
+      const when = (mod.when as { expr?: string } | undefined)?.expr ?? '';
+      for (const name of [...when.matchAll(CALL_ARG)].map(m => m[0].slice('@вызов.'.length))) {
+        if (!known.includes(name)) out.push({ where: at, level: 'error', text: `в условии правки «@вызов.${name}» — у вызова нет такого входа; есть: ${known.join(', ') || '(ничего)'}` });
+      }
       if (call === ROLL_CALL) {
         if (!(String(mod.param) in CALL_WORDS.roll.params)) out.push({ where: at, level: 'error', text: `у броска нет параметра «${String(mod.param)}»` });
         else if (mod.param === 'edits' && !mod.edit) out.push({ where: at, level: 'error', text: 'правка броска не выбрана' });

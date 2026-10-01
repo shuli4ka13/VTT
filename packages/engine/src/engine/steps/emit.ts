@@ -69,7 +69,7 @@ export function resolve(step: StepData, ctx: StepContext) {
     ? number(args[main.key], `«${main.label ?? main.key}» вызова «${spec.label ?? id}»`)
     : 0;
   const tags = chosenTags(spec, args);
-  const amount = Math.floor(editNumber(ctx.pass, id, main?.key ?? '', incoming, tags));
+  const amount = Math.floor(editNumber(ctx.pass, id, main?.key ?? '', incoming, tags, args));
   const payload = { event: id, amount, incoming, tags };
   if (main) args[main.key] = amount;
 

@@ -173,7 +173,7 @@ function EditBody({ system, modifier, calls, edits, recipes, onChange, onPickEdi
   const effect = isRoll ? undefined : system.effects[call];
   const amount = amountParamOf(effect);
   const pickCall = (next: string) => onChange(d => {
-    for (const key of ['edit', 'op', 'value', 'stacking', 'as', 'tags', 'anyTags', 'notTags', 'where']) delete d[key];
+    for (const key of ['edit', 'op', 'value', 'stacking', 'as', 'tags', 'anyTags', 'notTags', 'where', 'when']) delete d[key];
     d.call = next;
     if (next === ROLL_CALL) { d.param = 'edits'; d.edit = edits[0]?.[0] ?? ''; return; }
     d.param = amountParamOf(system.effects[next])?.key ?? '';
@@ -267,6 +267,19 @@ function EditBody({ system, modifier, calls, edits, recipes, onChange, onPickEdi
           <EventCondition system={system} effect={effect} modifier={modifier} onChange={onChange} />
         </>
       )}
+      <Field
+        label="Только если по вызову"
+        hint={isRoll ? 'Формула над броском: @вызов.метки — его метки. Пусто — всегда.' : `Формула над тем, что пришло в вызов: ${(effect?.params ?? []).map(p => `@вызов.${p.key}`).join(', ') || 'входов нет'}. Пусто — всегда.`}
+      >
+        <FormulaInput
+          where="правка вызова · только если по вызову"
+          system={system}
+          extraNames={new Map(isRoll ? [['вызов.метки', 'метки броска']] : (effect?.params ?? []).map(p => [`вызов.${p.key}`, `вызов → ${p.label || p.key}`]))}
+          value={(m.when as { expr?: string } | undefined)?.expr ?? ''}
+          onChange={expr => onChange(d => { if (expr.trim()) d.when = { expr }; else delete d.when; })}
+          placeholder={isRoll ? 'например: есть(@вызов.метки, "атака")' : 'например: @вызов.сколько >= 10'}
+        />
+      </Field>
     </div>
   );
 }

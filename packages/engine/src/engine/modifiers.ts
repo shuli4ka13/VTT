@@ -160,8 +160,26 @@ export const VALUE_OPS = ['set', 'add', 'mul', 'floor', 'cap'];
 const editsOf = (pass: Pass, call: string, param: string, as?: string): SourcedModifier[] =>
   (pass?.modifiers ? pass.modifiers.edits.get(editKey(call, param, as)) || [] : []);
 
-export function editNumber(pass: Pass, call: string, param: string, base: number, tags: readonly string[]): number {
-  const active = editsOf(pass, call, param).filter(m => conditionHolds(m, pass) && editMatches(m, tags, pass.system));
+export const CALL_NAME = 'вызов';
+
+function callHolds(mod: SourcedModifier, pass: Pass, args: Record<string, unknown>): boolean {
+  const when = (mod as { when?: { expr?: string } }).when;
+  if (!when?.expr?.trim()) return true;
+  const prefix = `${CALL_NAME}.`;
+  const result = compile(when.expr).evaluate(
+    name => (name.startsWith(prefix) ? (args[name.slice(prefix.length)] ?? null) as never : pass.resolve(name)),
+    toolsOf(pass.system, pass, 'условие правки'));
+  if (typeof result !== 'boolean') {
+    throw new EngineError(`условие правки «${when.expr}» источника «${mod.source.label}» должно давать да или нет`);
+  }
+  return result;
+}
+
+export function editNumber(
+  pass: Pass, call: string, param: string, base: number, tags: readonly string[], args: Record<string, unknown> = {},
+): number {
+  const active = editsOf(pass, call, param)
+    .filter(m => conditionHolds(m, pass) && editMatches(m, tags, pass.system) && callHolds(m, pass, args));
   return active.length ? Number(stackNumber(active, base, `${call}.${param}`, pass)) : base;
 }
 
@@ -216,7 +234,7 @@ function withValues(edit: RollEdit & { label: string }, pass: Pass): RollEdit & 
 
 const rollEditsOf = (pass: Pass, tags: readonly string[], as?: string): SourcedModifier[] =>
   [...editsOf(pass, ROLL_CALL, 'edits', as), ...editsOf(pass, ROLL_CALL, 'bonus', as)]
-    .filter(m => conditionHolds(m, pass) && editMatches(m, tags, pass.system));
+    .filter(m => conditionHolds(m, pass) && editMatches(m, tags, pass.system) && callHolds(m, pass, { метки: [...tags] }));
 
 export function incomingRollModifiers(rollTags: readonly string[], pass: Pass): SourcedModifier[] {
   return rollEditsOf(pass, rollTags, 'against');

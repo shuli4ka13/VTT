@@ -56,8 +56,9 @@ export function formulaAsLabels(
   });
 }
 
-export function FormulaInput({ system, value, onChange, placeholder, where = 'формула' }: {
+export function FormulaInput({ system, value, onChange, placeholder, where = 'формула', extraNames }: {
   system: System;
+  extraNames?: Map<string, string>;
   value: string;
   onChange: (next: string) => void;
   placeholder?: string;
@@ -71,6 +72,7 @@ export function FormulaInput({ system, value, onChange, placeholder, where = 'ф
         value={value}
         system={system}
         where={where}
+        {...(extraNames ? { extraNames } : {})}
         placeholder={placeholder ?? 'наберите @ и выберите поле'}
         onChange={onChange}
       />

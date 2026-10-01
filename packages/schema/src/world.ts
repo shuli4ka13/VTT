@@ -165,6 +165,7 @@ export const editModifier = z.object({
     column: z.string().min(1),
     is: tableValue,
   }).optional(),
+  when: formula.optional(),
 }).passthrough();
 
 export const modifier = z.discriminatedUnion('kind', [valueModifier, editModifier]);

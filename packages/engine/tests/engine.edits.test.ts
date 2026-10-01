@@ -116,3 +116,26 @@ group('правка вызова в проверке системы', () => {
     ]), '');
   });
 });
+
+group('правка вызова: условие над аргументами', () => {
+  const mod = (when: string) => [{ kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, when: { expr: when } }];
+
+  test('формула видит вход вызова: срезается только крупный огненный урон', () => {
+    const p = pass(mod('все(@вызов.тип == "огонь", @вызов.сколько >= 10)'));
+    eq(editNumber(p, 'урон', 'сколько', 12, [], { тип: 'огонь', сколько: 12 }), 6);
+    eq(editNumber(p, 'урон', 'сколько', 8, [], { тип: 'огонь', сколько: 8 }), 8);
+    eq(editNumber(p, 'урон', 'сколько', 12, [], { тип: 'холод', сколько: 12 }), 12);
+  });
+
+  test('у броска есть @вызов.метки', () => {
+    const p = pass([{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '2' }, when: { expr: 'есть(@вызов.метки, "атака")' } }]);
+    eq(resolveRoll(p.system, p.sheet, ['атака'], p).bonus, 2);
+    eq(resolveRoll(p.system, p.sheet, ['спасбросок'], p).bonus, 0);
+  });
+
+  test('чужое имя в условии — находка линта', async () => {
+    const { lintSystem, errorsOf } = await import('../src/model/lint.ts');
+    const text = errorsOf(lintSystem(world(mod('@вызов.нету > 1')), { records: [] })).map(p => p.text).join('; ');
+    eq(text.includes('у вызова нет такого входа'), true, text);
+  });
+});

@@ -221,6 +221,8 @@ function rowFree(text: string, from: Where, own: Set<string> | undefined, out: R
   });
 }
 
+export const CALL_ARG = /@вызов\.[\p{L}\p{N}_]+/gu;
+
 function modifierRefs(list: Modifier[] | undefined, from: Where, out: Reference[], own?: Set<string>): void {
   for (const mod of list ?? []) {
     const target = String((mod as { target?: string }).target ?? '');
@@ -237,6 +239,8 @@ function modifierRefs(list: Modifier[] | undefined, from: Where, out: Reference[
     const noScope = { params: new Set<string>(), earlier: new Set<string>(), eventChain: false };
     if (mod.condition?.expr.trim()) exprRefs(rowFree(mod.condition.expr, from, own, out), from, noScope, out);
     if (mod.value?.expr.trim()) exprRefs(rowFree(mod.value.expr, from, own, out), from, noScope, out);
+    const when = (mod as { when?: { expr?: string } }).when?.expr;
+    if (when?.trim()) exprRefs(rowFree(when.replace(CALL_ARG, '0'), from, own, out), from, noScope, out);
     const where = (mod as { where?: { table?: unknown } }).where;
     if (where && typeof where.table === 'string' && where.table) out.push({ kind: 'table', key: where.table, from, scope: 'condition' });
   }
