@@ -777,6 +777,10 @@ describe('реакция после разрешения', () => {
     expect(between.find((s: { id: string }) => s.id === 'цель').values.хиты, 'удар уже прошёл до вопроса').toBe(15);
     expect(between.find((s: { id: string }) => s.id === 'боец').values.видел ?? 0, '«совершил действие» ждёт ответа на вопрос').toBe(0);
 
+    const me = (await as(http().get('/auth/me'))).body.userId as string;
+    await expect(app.get(RoomsService).setValue(me, roomId, 'боец', 'хиты', 1), 'пока висит вопрос, лист не правится — иначе повтор действия затрёт правку')
+      .rejects.toThrow(/стол ждёт ответа/);
+
     const answered = await as(http().post(`/rooms/${roomId}/answer`)).send({
       roomId, pendingId: hit.body.pending.id, chosen: ['возмездие'],
     }).expect(201);

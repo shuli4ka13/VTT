@@ -440,6 +440,7 @@ export class RoomsService {
     userId: string, roomId: string, sheetId: string, tag: string, value: StoredValue,
   ): Promise<RoomDelta> {
     const room = await this.requireRoom(roomId);
+    await this.assertNotWaiting(roomId, await this.sheetsOf(roomId));
     await this.assertMaySheet(roomId, userId, sheetId);
 
     const { system } = this.worldOf(room);
@@ -476,6 +477,7 @@ export class RoomsService {
 
   private async runSetSheetKind(userId: string, roomId: string, sheetId: string, of: string | null): Promise<RoomDelta> {
     const room = await this.requireRoom(roomId);
+    await this.assertNotWaiting(roomId, await this.sheetsOf(roomId));
     await this.assertMaySheet(roomId, userId, sheetId);
     const { system, compendium } = this.worldOf(room);
     if (of !== null && !system.sheets?.[of]) {
@@ -507,6 +509,7 @@ export class RoomsService {
 
   private async runSetSheetGroup(userId: string, roomId: string, sheetId: string, group: string | null): Promise<RoomDelta> {
     const room = await this.requireRoom(roomId);
+    await this.assertNotWaiting(roomId, await this.sheetsOf(roomId));
     await this.assertMaySheet(roomId, userId, sheetId);
     const { system, compendium } = this.worldOf(room);
     const before = (await this.db.select().from(roomSheets).where(eq(roomSheets.roomId, roomId)))
@@ -540,6 +543,7 @@ export class RoomsService {
 
   private async runRollField(userId: string, roomId: string, sheetId: string, tag: string): Promise<RoomDelta> {
     const room = await this.requireRoom(roomId);
+    await this.assertNotWaiting(roomId, await this.sheetsOf(roomId));
     await this.assertMaySheet(roomId, userId, sheetId);
 
     const { system, compendium } = this.worldOf(room);
@@ -605,6 +609,7 @@ export class RoomsService {
     list: 'has' | 'effects', id: string, on: boolean, off?: boolean,
   ): Promise<RoomDelta> {
     const room = await this.requireRoom(roomId);
+    await this.assertNotWaiting(roomId, await this.sheetsOf(roomId));
     await this.assertMaySheet(roomId, userId, sheetId);
 
     const { system, compendium } = this.worldOf(room);
