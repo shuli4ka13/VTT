@@ -37,8 +37,14 @@ export function ActionForm({ system, compendium, actor, actionId, label, disable
       const value = answers[param.key];
       if (value !== undefined && value !== '') given[param.key] = value;
     }
-    const problem = checkInputs(asked, given, system, actor ? newPass(system, actor, { compendium }) : undefined);
+    let problem: string | null;
+    try {
+      problem = checkInputs(asked, given, system, actor ? newPass(system, actor, { compendium }) : undefined);
+    } catch (err) {
+      problem = (err as Error).message;
+    }
     if (problem) { setTrouble(problem); return; }
+    setTip(null);
     setTrouble(null);
     onAct({ actionId, ...(asked.length ? { inputs: normalizeInputs(asked, given) } : {}) });
     setAnswers({});
@@ -52,7 +58,13 @@ export function ActionForm({ system, compendium, actor, actionId, label, disable
       const value = answers[param.key];
       if (value !== undefined && value !== '') given[param.key] = value;
     }
-    if (checkInputs(asked, given, system)) { setTip(null); return; }
+    let problem: string | null;
+    try {
+      problem = checkInputs(asked, given, system, actor ? newPass(system, actor, { compendium }) : undefined);
+    } catch (err) {
+      problem = (err as Error).message;
+    }
+    if (problem) { setTip(null); return; }
     const text = expect({ actionId, ...(asked.length ? { inputs: normalizeInputs(asked, given) } : {}) });
     setTip(text ? `Ожидание — кости по среднему, на вопросы «нет»:\n${text}` : null);
   };

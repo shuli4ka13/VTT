@@ -38,7 +38,7 @@ export const useRoom = create<RoomStore>(set => ({
   leave: () => {
     localStorage.removeItem(LAST_ROOM);
     tableSocket.close();
-    set({ room: null, log: [], mySheetId: null });
+    set({ room: null, log: [], mySheetId: null, secret: false });
   },
 
   pickSheet: sheetId => set({ mySheetId: sheetId }),
@@ -81,7 +81,7 @@ export function listenToRoom(): void {
             ...(message.delta.clock ? { clock: message.delta.clock } : {}),
             ...(message.delta.pending !== undefined ? { pending: message.delta.pending } : {}),
           },
-          log: [...current.log, ...message.delta.log],
+          log: [...current.log, ...message.delta.log.filter((entry: { id: string }) => !current.log.some(seen => seen.id === entry.id))],
         };
       });
     }

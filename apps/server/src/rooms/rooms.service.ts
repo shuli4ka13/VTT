@@ -233,11 +233,7 @@ export class RoomsService {
     const sheets = rows.map(r => JSON.parse(r.data) as Sheet);
     const nameOf = (id: string) => sheets.find(s => s.id === id)?.name ?? id;
 
-    const waiting = await this.pendingOf(intent.roomId);
-    if (waiting) {
-      throw new BadRequestException(
-        `стол ждёт ответа: ${nameOf(waiting.sheetId)} решает, применить ли реакцию — ход и сцену двигать рано`);
-    }
+    await this.assertNotWaiting(intent.roomId, sheets);
     const clock = await this.clockOf(intent.roomId);
 
     let next: ClockState = clock;
@@ -614,8 +610,16 @@ export class RoomsService {
       throw new BadRequestException((err as Error).message);
     }
 
-    const touched = await this.persistSheets(roomId, before, reacted.sheets, []);
-    const log = await this.appendLog(roomId, [line, ...reacted.lines], hidden);
+    const lines = [line, ...reacted.lines];
+    let settled: Sheet[];
+    try {
+      const world = { system, compendium, die: this.roll, clock: await this.clockOf(roomId) };
+      settled = this.settle(world, before, before.map(s => reacted.sheets.find(r => r.id === s.id) ?? s), lines);
+    } catch (err) {
+      throw new BadRequestException((err as Error).message);
+    }
+    const touched = await this.persistSheets(roomId, before, settled, []);
+    const log = await this.appendLog(roomId, lines, hidden);
     return { roomId, sheets: touched, log };
   }
 
@@ -699,8 +703,6 @@ export class RoomsService {
       .map(entry => (entry.sheetId === sheetId ? sheet : JSON.parse(entry.data) as Sheet));
     this.assertWithinLimits(system, compendium, sheet, next, before);
 
-    await this.db.update(roomSheets).set({ data: JSON.stringify(next) })
-      .where(and(eq(roomSheets.roomId, roomId), eq(roomSheets.sheetId, sheetId)));
     const all = before.map(entry => (entry.id === sheetId ? next : entry));
     const lines: string[] = [];
     const world = { system, compendium, die: this.roll, clock: await this.clockOf(roomId) };
@@ -735,6 +737,10 @@ export class RoomsService {
   }
 
   private readonly queues = new Map<string, Promise<unknown>>();
+
+  enter<T>(roomId: string, work: (state: RoomState) => T | Promise<T>): Promise<T> {
+    return this.inTurn(roomId, async () => work(await this.state(roomId)));
+  }
 
   private inTurn<T>(roomId: string, work: () => Promise<T>): Promise<T> {
     const previous = this.queues.get(roomId) ?? Promise.resolve();

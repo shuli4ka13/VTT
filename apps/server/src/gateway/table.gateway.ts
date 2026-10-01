@@ -41,7 +41,6 @@ export class TableGateway {
       if (guest.socket === socket) this.guests.delete(guest);
     }
     const gm = await this.roomsService.isGm(roomId, userId);
-    this.guests.add({ socket, roomId, userId, gm });
     socket.once('close', () => {
       for (const guest of this.guests) {
         if (guest.socket === socket) this.guests.delete(guest);
@@ -49,7 +48,10 @@ export class TableGateway {
       this.announceMembers(roomId);
     });
 
-    this.send(socket, { type: 'room:state', state: seenBy(await this.roomsService.state(roomId), gm) });
+    await this.roomsService.enter(roomId, state => {
+      this.guests.add({ socket, roomId, userId, gm });
+      this.send(socket, { type: 'room:state', state: seenBy(state, gm) });
+    });
     this.announceMembers(roomId);
   }
 
