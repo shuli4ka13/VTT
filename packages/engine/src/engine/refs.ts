@@ -41,6 +41,8 @@ export interface RefContext {
   alone?: boolean;
 
   recordScope?: boolean;
+
+  direct?: { me: Pass; target: Pass | null };
 }
 
 const FORMS = ['expr', 'const', 'param', 'prop', 'tag', 'constant'];
@@ -72,6 +74,7 @@ export function packRef(ref: unknown, ctx: RefContext): unknown {
 }
 
 function packExpr(source: string, ctx: RefContext): unknown {
+  if (ctx.direct) return waitsForStep(source, ctx) ? { expr: source, later: true } : { const: evaluate(source, ctx) };
   const expr = withReceiverInputs(source, ctx);
   const deps = compile(expr).deps;
   if (deps.some(name => ownerOf(name)?.owner === RECEIVER)) {
@@ -210,6 +213,13 @@ export function resolveRef(ref: unknown, ctx: RefContext): unknown {
 
   if ('const' in r) return r.const;
 
+  if (ctx.direct && !r.later && !r.of) {
+    if ('expr' in r) return evaluate(r.expr, ctx);
+    if ('param' in r) return (packParam(String(r.param), Boolean(r.optional), ctx) as AnyRef).const;
+    if ('prop' in r) return (packProp(String(r.prop), Boolean(r.optional), ctx) as AnyRef).const;
+    if ('constant' in r) return dieText(ctx.pass.system, String(r.constant));
+  }
+
   if ('expr' in r) {
     if (r.later) return evaluate(r.expr, ctx, r.sent as Record<string, unknown> | undefined, true);
     if ((r.of || 'sender') !== 'target') {
@@ -328,6 +338,11 @@ function evaluate(
   const resolve = (name: string): unknown => {
     if (sent && name in sent) return sent[name];
     const owned = ownerOf(name);
+    if (ctx.direct && owned && owned.owner !== DESK) {
+      const pass = owned.owner === SENDER ? ctx.direct.me : ctx.direct.target;
+      if (!pass) throw new EngineError(`${who(ctx)}: «${owned.rest}» получателя здесь не прочитать — у этого вызова нет цели`);
+      return evaluate(`@${owned.rest}`, { ...ctx, pass });
+    }
     if (owned && (atReceiver || ctx.atReceiver) && owned.owner === SENDER) {
       throw new EngineError(`${who(ctx)}: «${owned.rest}» отправителя не пришло в сообщении — отправитель должен был посчитать его у себя`);
     }

@@ -29,6 +29,10 @@
     "./words/*": {
       "types": "./dist/words/*.d.ts",
       "default": "./dist/words/*.js"
+    },
+    "./lang/*": {
+      "types": "./dist/lang/*.d.ts",
+      "default": "./dist/lang/*.js"
     }
   },
   "scripts": {

@@ -7,7 +7,7 @@ const shot = (range: string, extra: Record<string, number | string> = {}) => ({
 const batonInRound1 = [
   { turn: 'start', order: ['razor', 'lone_star'] },
   { turn: 'next' },
-  { act: 'stun_baton:0', from: 'lone_star', to: 'razor', inputs: shot('вплотную'), answers: [[]] },
+  { act: 'stun_baton:0', from: 'lone_star', to: 'razor', inputs: shot('вплотную') },
 ] as Scenario['steps'];
 
 const batonDice = [
@@ -22,7 +22,7 @@ export const scenarios: Scenario[] = [
     rule: 'SR6, основная книга, гл. «Бой»: набор к6, успех — 5 или 6. Атакующий бросает Навык+Атрибут, защитник — Реакция+Интуиция; атака попадает, если успехов у неё больше, чем у защиты, чистые успехи прибавляются к базовому урону. Цель бросает Тело на сопротивление, каждый успех снимает 1 урон. Бритва: Стрельба 6 + Проворство 5 = 11 костей, «Предатор» урон 3, АТК вплотную 10. Саурон: Реакция 2 + Интуиция 2 = 4 кости защиты, Тело 3. Атака [5,6,5,6,6,…] = 5 успехов, защита 1, сопротивление 1: урон 3 + (5−1) − 1 = 6. Урон 6 больше Тела 3 — цель сбита с ног. Штраф за раны −1 за каждые полные 3 ячейки: −2. АТК 10 против ЗНАЧ. ЗАЩ. 5 (Тело 3 + одежда 2): разница ≥ 4 — атакующий получает очко Преимущества (стр. 44–46).',
     world: 'shadowrun',
     dice: [5, 6, 5, 6, 6, 1, 2, 3, 4, 1, 2, 5, 2, 3, 4, 5, 1, 3],
-    steps: [{ act: 'predator_vi:0', from: 'razor', to: 'sauron', inputs: shot('вплотную'), answers: [[]] }],
+    steps: [{ act: 'predator_vi:0', from: 'razor', to: 'sauron', inputs: shot('вплотную') }],
     expect: {
       values: {
         sauron: { physical: 6, wound_mod: -2, defense_pool: 2 },
@@ -37,7 +37,7 @@ export const scenarios: Scenario[] = [
     rule: 'SR6 стр. 44–46: если атакующий набрал меньше успехов, чем защитник, атака промахивается, урона нет и сопротивление не бросают. Преимущество за разрыв значений (АТК больше ЗНАЧ. ЗАЩ. на 4+) даётся при сравнении значений, ещё до бросков, а не по результату попадания. Бритва вплотную: АТК 10 против ЗНАЧ. ЗАЩ. Саурона 5 — разрыв 5, +1 Преимущество (3 → 4). Атака [5,2,…] = 1 успех, защита [5,6,2,3] = 2 успеха — промах.',
     world: 'shadowrun',
     dice: [5, 2, 1, 2, 3, 4, 2, 3, 4, 1, 2, 5, 6, 2, 3],
-    steps: [{ act: 'predator_vi:0', from: 'razor', to: 'sauron', inputs: shot('вплотную'), answers: [[]] }],
+    steps: [{ act: 'predator_vi:0', from: 'razor', to: 'sauron', inputs: shot('вплотную') }],
     expect: { values: { sauron: { physical: 0, stun: 0 }, razor: { edge_left: 4 } } },
   },
   {
@@ -45,7 +45,7 @@ export const scenarios: Scenario[] = [
     rule: 'SR6 стр. 44: сбой — единицы выпали больше чем на половине костей набора; если при этом есть успехи — это просто сбой (атака удалась, но с осложнением), без успехов — критический сбой. Бритва на средней дистанции (АТК 8 против ЗНАЧ. ЗАЩ. 5, разрыв 3 — Преимущества нет): из 11 костей 6 единиц (6 > 5,5) и один успех [5]; защита 0 успехов, сопротивление 0: попадание с чистым 1 успехом, урон 3 + 1 = 4.',
     world: 'shadowrun',
     dice: [1, 1, 1, 1, 1, 1, 5, 2, 3, 4, 2, 2, 3, 4, 2, 2, 3, 4],
-    steps: [{ act: 'predator_vi:0', from: 'razor', to: 'sauron', inputs: shot('средняя'), answers: [[]] }],
+    steps: [{ act: 'predator_vi:0', from: 'razor', to: 'sauron', inputs: shot('средняя') }],
     expect: {
       values: { sauron: { physical: 4 } },
       log: ['применяет «Сбой»'],
@@ -72,7 +72,7 @@ export const scenarios: Scenario[] = [
     rule: 'SR6: выстрел по нескольким целям — один бросок атакующего, сравниваемый с защитой каждой цели отдельно; сбой определяется по броску атакующего, значит случается один раз, а не по разу на цель. Бритва вплотную по Головорезу и Патрульному: 11 костей, 6 единиц и 2 успеха [5,6] — сбой при попадании. Головорез (защита 4 кости, 0 успехов) — попадание, сопротивление Телом 2 даёт 1 успех: урон 3 + 2 − 1 = 4. Патрульный (защита Реакция 3 + Интуиция 3 = 6 костей, 3 успеха) — промах, урона нет. Весь расход костей: 11 + (4 + 2) + 6 = 23.',
     world: 'shadowrun',
     dice: [1, 1, 1, 1, 1, 1, 5, 6, 2, 3, 4, 2, 3, 4, 1, 5, 2, 5, 5, 6, 2, 3, 4],
-    steps: [{ act: 'predator_vi:0', from: 'razor', to: ['humanis', 'lone_star'], inputs: shot('вплотную'), answers: [[]] }],
+    steps: [{ act: 'predator_vi:0', from: 'razor', to: ['humanis', 'lone_star'], inputs: shot('вплотную') }],
     expect: {
       values: { humanis: { physical: 4 }, lone_star: { physical: 0 } },
       log: ['применяет «Сбой»'],
@@ -103,7 +103,7 @@ export const scenarios: Scenario[] = [
     sheets: { razor: { values: { edge_left: 3, stun: 3 } }, silk: { values: { edge_left: 2, stun: 3 } } },
     dice: [],
     steps: [
-      { act: 'act_second_wind:0', from: 'razor', to: 'razor', answers: [[]] },
+      { act: 'act_second_wind:0', from: 'razor', to: 'razor' },
       { act: 'act_second_wind:0', from: 'silk', to: 'silk', refused: 'нужно 3' },
     ],
     expect: { values: { razor: { edge_left: 0, stun: 2 }, silk: { edge_left: 2, stun: 3 } } },
@@ -114,7 +114,7 @@ export const scenarios: Scenario[] = [
     world: 'shadowrun',
     sheets: { sauron: { values: { physical: 4 } } },
     dice: [5, 6, 5, 6, 5, 6, 2, 3, 4, 2, 3, 2, 3, 4, 2, 2, 3],
-    steps: [{ act: 'predator_vi:0', from: 'razor', to: 'sauron', inputs: shot('вплотную'), answers: [[]] }],
+    steps: [{ act: 'predator_vi:0', from: 'razor', to: 'sauron', inputs: shot('вплотную') }],
     expect: {
       values: {
         sauron: { physical: 13, physical_max: 11, critical: 2, bleeding_out: true, is_dead: false, wound_mod: -3, 'skills.стрельба.pool': 2, defense_pool: 1 },

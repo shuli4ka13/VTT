@@ -58,7 +58,7 @@ export const scenarios: Scenario[] = [
     rule: `PHB/SRD, «Огненный шар»: 8к6 огнём, спасбросок Ловкости; успех — половина. Кости урона бросаются один раз на всех. Сложность Мирры 8 + 3 + 4 = 15, успех при равенстве. Кости 4+5+6+3+2+6+1+6 = 33. Гоблин (Лов +2): 12 → 14 — провал, 33. Орк (Лов +1): 14 → 15 — успех, 33 / 2 = 16 (с округлением вниз). Огр (Лов −1): 3 → 2 — провал, 33. Ячейка одна: 3 круга 1 → 0. Второе сотворение без ячейки — отказ. ${PAD}`,
     world: 'dnd5e',
     sheets: { mirra: { values: { 'slots.круг_3.left': 1 } }, goblin: fat(40), orc: fat(40), ogre: fat(100) },
-    dice: [4, 5, 6, 3, 2, 6, 1, 6, 12, 14, 3, 1, 1, 1, 1, 1, 1, 1, 1],
+    dice: [4, 5, 6, 3, 2, 6, 1, 6, 12, 14, 3],
     steps: [
       { act: 'fireball:0', from: 'mirra', to: ['goblin', 'orc', 'ogre'], inputs: { slot: 3 } },
       { act: 'fireball:0', from: 'mirra', to: ['goblin'], inputs: { slot: 3 }, refused: 'нет ячейки' },
@@ -102,7 +102,7 @@ export const scenarios: Scenario[] = [
     dice: [5, 14, 8, 4],
     steps: [
       { act: 'hold_person:0', from: 'mirra', to: 'ogre', inputs: { slot: 2 } },
-      { act: 'orc_greataxe:0', from: 'orc', to: 'mirra', answers: [[], []] },
+      { act: 'orc_greataxe:0', from: 'orc', to: 'mirra' },
     ],
     expect: { values: { mirra: { hp_current: 22, 'slots.круг_2.left': 2 } }, effects: { ogre: { not: ['paralyzed'] }, mirra: { not: ['concentration'] } } },
   },
@@ -160,7 +160,7 @@ export const scenarios: Scenario[] = [
     rule: `PHB, «Дополнительная атака» (воин 5): действием «Атака» — две атаки. «Всплеск действий»: одно дополнительное действие в этот ход, раз до отдыха. В бою Арвен (атак 2): две атаки по 15 + 7 = 22 против КБ 11, каждая 1к8 (4) + 4 = 8. Третья — отказ, действия нет. После Всплеска ещё две атаки; пятая — отказ. Огр 100 − 4 × 8 = 68. ${PAD}`,
     world: 'dnd5e',
     sheets: { arven: arvenPlain, ogre: fat(100) },
-    dice: [15, 4, 15, 4, 15, 4, 15, 4, 15, 4, 15, 4],
+    dice: [15, 4, 15, 4, 15, 4, 15, 4],
     steps: [
       { turn: 'start', order: ['arven', 'ogre'] },
       { act: 'longsword:0', from: 'arven', to: 'ogre' },

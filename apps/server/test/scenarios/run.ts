@@ -115,7 +115,7 @@ export async function playScenario(scenario: Scenario): Promise<Played> {
       } catch (err) {
         const message = (err as Error).message;
         if (refused !== undefined && message.includes(refused)) { log.push(`отказ: ${message}`); return; }
-        throw new Error(`сценарий: ход отклонён — ${message}`);
+        throw new Error(`сценарий: ход отклонён — ${message}`, { cause: err });
       }
       if (refused !== undefined) throw new Error(`сценарий: ждали отказа «${refused}», а ход прошёл`);
       log.push(...delta.log.map(entry => entry.text));

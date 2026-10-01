@@ -10,21 +10,17 @@ import type {
   RoomState, RoomSummary, RoomDelta, JournalEntry, ActIntent, TurnIntent, AnswerIntent, ClockState, PendingState,
   Sheet, System, Compendium, StoredValue,
 } from '@vtt/schema';
-import { deliver, concludeAction, sharedHolderOf, CUT_WORDS, MAX_REPLIES } from '@vtt/engine/events/exchange';
-import type { Seen } from '@vtt/engine/events/exchange';
-import type { EmittedEvent } from '@vtt/engine/engine/rule';
-import { previewLines, describeEntry } from '@vtt/engine/events/describe';
 import { flattenSystem } from '@vtt/engine/model/inherit';
 import { findRecord, sheetKindOf } from '@vtt/engine/model/owned';
-import { effectLabelOf, send, receive, offers, react, senderResults } from '@vtt/engine/events/envelope';
-import { tapeDie, replayDie } from '@vtt/engine/engine/dice';
-import type { Envelope, Offer, ReactionWindow, Report } from '@vtt/engine/events/envelope';
+import { effectLabelOf } from '@vtt/engine/events/envelope';
 import { findEffect, usesMax } from '@vtt/engine/engine/effects';
 import { asksOf, checkInputs, normalizeInputs } from '@vtt/engine/model/asks';
 import { fireMoments, describeMoment, momentsOfTurn } from '@vtt/engine/events/moments';
-import { releaseHolder } from '@vtt/engine/events/bonds';
 import { settle as settleSheets } from '@vtt/engine/events/settle';
-import { runSelfTrack, selfRefusal } from '@vtt/engine/events/self';
+import { act } from '@vtt/engine/lang/act';
+import type { ActOutcome } from '@vtt/engine/lang/act';
+import { emptyJournal } from '@vtt/engine/lang/journal';
+import type { Journal, Question } from '@vtt/engine/lang/journal';
 import { deskOf, sharedOf, hasDesk } from '@vtt/engine/events/desk';
 import { fieldOf } from '@vtt/engine/model/sheet-columns';
 import { DESK_ID, isDesk } from '@vtt/engine/engine/owners';
@@ -40,34 +36,11 @@ interface PendingRecord {
   id?: string;
   roomId: string;
   intent: ActIntent;
-  envelope: Envelope;
   clock: ClockState;
-  stage: ReactionWindow | 'deliver' | 'reply';
-  claims: string[];
-  results: Record<string, unknown>;
-  sheetId?: string;
-  offered?: Offer[];
-  preview?: string[];
-  tape?: number[];
-
-  at?: number;
-  tapes?: Record<string, number[]>;
-  targetClaims?: Record<string, string[]>;
-
-  emitted?: EmittedEvent[];
-  afterAt?: number;
-  afterSeen?: Record<string, Seen>;
-
-  deliverAt?: number;
-  replies?: Envelope[];
-  budget?: number;
-  cut?: boolean;
-  returnTo?: 'deliver' | 'after';
-  replyWindow?: 'target' | 'after';
-  replyEnvelope?: Envelope;
-  replyTape?: number[];
-  replyClaims?: string[];
-  replyAsked?: boolean;
+  snapshot: Sheet[];
+  journal: Journal;
+  question: Question;
+  logged: number;
 }
 
 const targetsOf = (intent: ActIntent): string[] =>
@@ -322,260 +295,63 @@ export class RoomsService {
     if (!await this.memberOf(intent.roomId, userId)) {
       throw new ForbiddenException('вы не в этой комнате');
     }
-
     const { system, compendium } = this.worldOf(room);
-    const rows = await this.db.select().from(roomSheets)
-      .where(eq(roomSheets.roomId, intent.roomId));
-    const sheets = rows.map(r => JSON.parse(r.data) as Sheet);
+    const sheets = await this.sheetsOf(intent.roomId);
     await this.assertMaySheet(intent.roomId, userId, intent.fromId);
+    await this.assertNotWaiting(intent.roomId, sheets);
+    if (!sheets.some(s => s.id === intent.fromId)) throw new NotFoundException(`в комнате нет листа «${intent.fromId}»`);
+    for (const id of targetsOf(intent)) if (!sheets.some(s => s.id === id)) throw new NotFoundException(`в комнате нет листа «${id}»`);
 
-    const waiting = await this.pendingOf(intent.roomId);
-    if (waiting) {
-      const who = sheets.find(s => s.id === waiting.sheetId)?.name ?? waiting.sheetId;
-      throw new BadRequestException(`стол ждёт ответа: ${who} решает, применить ли реакцию`);
-    }
-
-    const clock = await this.clockOf(intent.roomId);
-    let envelope: Envelope;
-    let own: { sheet: Sheet; report: Report | null; shared?: Sheet[] } | null = null;
+    let inputs: Record<string, number | string>;
     try {
-      const from = sheets.find(s => s.id === intent.fromId);
-      const to = sheets.find(s => s.id === intent.toId);
-      if (!from) throw new NotFoundException(`в комнате нет листа «${intent.fromId}»`);
-      if (!to) throw new NotFoundException(`в комнате нет листа «${intent.toId}»`);
       const asked = asksOf(intent.actionId, { system, compendium });
       const trouble = checkInputs(asked, intent.inputs, system);
       if (trouble) throw new BadRequestException(trouble);
-      const inputs = normalizeInputs(asked, intent.inputs);
-      envelope = send(intent.actionId, {
-        system, compendium, die: this.roll, clock, sheet: from, against: to, claims: intent.edits ?? [], shared: sharedOf(system, sheets),
-        ...(Object.keys(inputs).length ? { inputs } : {}),
-      });
-      own = runSelfTrack(intent.actionId, from, {
-        system, compendium, die: this.roll, clock, shared: sharedOf(system, sheets),
-        ...(Object.keys(inputs).length ? { inputs } : {}),
-      });
-      const refused = selfRefusal(own, { system }, envelope.label);
-      if (refused) throw new BadRequestException(refused);
+      inputs = normalizeInputs(asked, intent.inputs);
     } catch (err) {
-      if (err instanceof NotFoundException) throw err;
+      if (err instanceof BadRequestException) throw err;
       throw new BadRequestException((err as Error).message);
     }
-    const afterOwn = own?.report
-      ? sheets.map(s => (s.id === own!.sheet.id ? own!.sheet : own!.shared?.find(u => u.id === s.id) ?? s))
-      : sheets;
-    const shared = sharedHolderOf(system, envelope.effect);
-    const released = shared ? releaseHolder(system, afterOwn, intent.fromId, shared) : { sheets: afterOwn, broken: [] };
-    const started = released.sheets;
-    const releasedLines = released.broken.map(broken => {
-      const who = started.find(s => s.id === broken.sheetId)?.name ?? broken.sheetId;
-      return `«${effectLabelOf(system, broken.effectId)}» спало с ${who}: наложивший взялся за новое`;
-    });
-    const ownTold = own?.report
-      && (own.report.changes.length || own.report.effects.length || own.report.removed.length);
-    const ownLines = ownTold
-      ? [describeEntry({ fromId: intent.fromId, toId: intent.fromId, report: own!.report }, system, started)]
-      : [];
-
-    return this.proceed({
-      roomId: intent.roomId, intent, envelope, clock, stage: 'sender',
-      claims: intent.edits ?? [], results: {},
-    }, {
-      system, compendium, sheets: started, log: [...ownLines, ...releasedLines],
-      touched: started.filter((sheet, at) => sheet !== sheets[at]),
-      origin: sheets,
-    });
+    const clock = await this.clockOf(intent.roomId);
+    const fixed: ActIntent = { ...intent, ...(Object.keys(inputs).length ? { inputs } : {}) };
+    return this.play({ roomId: intent.roomId, intent: fixed, clock, snapshot: sheets, journal: emptyJournal(), logged: 0 }, sheets, system, compendium);
   }
 
-  private async proceed(
-    state: PendingRecord,
-    world: {
-      system: System; compendium: Compendium; sheets: Sheet[]; log: string[]; touched: Sheet[];
-      origin?: Sheet[];
-    },
+  private async play(
+    record: Omit<PendingRecord, 'question'>, current: Sheet[], system: System, compendium: Compendium,
   ): Promise<RoomDelta> {
-    const { system, compendium } = world;
-    let { sheets } = world;
-    const { intent } = state;
-    const ctx = { system, compendium, die: this.roll, clock: state.clock };
-    const sheetOf = (id: string) => {
-      const found = sheets.find(s => s.id === id);
-      if (!found) throw new NotFoundException(`в комнате нет листа «${id}»`);
-      return found;
-    };
-
-    let stage: PendingRecord['stage'] = state.stage;
-    const targets = targetsOf(intent);
-    const takenByTarget = state.targetClaims ?? {};
-    const claimsFor = (id: string): string[] =>
-      [...new Set([...(intent.targetEdits ?? []), ...(takenByTarget[id] ?? [])])];
-    const tapes: Record<string, number[]> = { ...(state.tapes ?? {}) };
+    const { intent } = record;
+    let outcome: ActOutcome;
     try {
-      if (stage === 'sender') {
-        const sender = sheetOf(intent.fromId);
-        const seen = senderResults(state.envelope);
-        const offered = offers(state.envelope, 'sender', { ...ctx, sheet: sender }, seen);
-        if (offered.length) {
-          return this.park({ ...state, stage: 'sender', sheetId: sender.id, offered, results: seen },
-            sender, previewLines(state.envelope, system, null), world);
-        }
-        stage = 'target';
-      }
-      if (stage === 'target') {
-        for (let at = state.at ?? 0; at < targets.length; at++) {
-          const target = sheetOf(targets[at]!);
-          const taped = tapeDie(this.roll);
-          const dry = receive(state.envelope, {
-            ...ctx, die: taped.die, sheet: target, claims: claimsFor(target.id), shared: sharedOf(system, sheets),
-          });
-          const results = dry.results;
-          tapes[target.id] = taped.tape;
-          const offered = offers(state.envelope, 'target', { ...ctx, sheet: target }, results, dry.report.emitted);
-          if (offered.length) {
-            return this.park({ ...state, stage: 'target', sheetId: target.id, offered, results, emitted: dry.report.emitted, tapes, at },
-              target, previewLines(state.envelope, system, dry), world);
-          }
-        }
-      }
-    } catch (err) {
-      if (err instanceof NotFoundException) throw err;
-      throw new BadRequestException((err as Error).message);
-    }
-
-    const lines: string[] = [];
-    const afterSeen: Record<string, Seen> = { ...(state.afterSeen ?? {}) };
-    const origin = world.origin ?? world.sheets;
-    const queue: Envelope[] = [...(state.replies ?? [])];
-    let budget = state.budget ?? MAX_REPLIES;
-    let cut = state.cut ?? false;
-    let deliverAt = state.deliverAt ?? 0;
-    let afterAt = state.afterAt ?? 0;
-    let resumed = state.stage === 'reply' ? state.replyAsked === true : false;
-    let phase: 'deliver' | 'after' = stage === 'reply' ? state.returnTo ?? 'deliver' : stage === 'after' ? 'after' : 'deliver';
-
-    const pause = (patch: Partial<PendingRecord> & { stage: PendingRecord['stage']; sheetId: string; offered: Offer[] }, asked: Sheet, preview: string[]) => {
-      sheets = this.settle(ctx, origin, sheets, lines);
-      const before = new Map(world.sheets.map(sheet => [sheet.id, JSON.stringify(sheet)]));
-      const changed = sheets.filter(sheet => before.get(sheet.id) !== JSON.stringify(sheet) || world.touched.some(t => t.id === sheet.id));
-      return this.park({
-        ...state, replyAsked: false, replyClaims: [], replyTape: [], ...patch,
-        replies: [...queue], budget, cut, afterSeen, tapes, deliverAt, afterAt, returnTo: phase,
-      }, asked, preview, { system, sheets, log: [...world.log, ...lines], touched: changed });
-    };
-
-    const drain = async (): Promise<RoomDelta | null> => {
-      while (queue.length) {
-        const reply = queue[0]!;
-        const target = sheets.find(sheet => sheet.id === String(reply.to));
-        if (!target) { queue.shift(); continue; }
-        if (budget <= 0) { cut = true; queue.length = 0; break; }
-        let tape = resumed ? state.replyTape ?? [] : [];
-        const claimsHere = resumed ? state.replyClaims ?? [] : [];
-        if (!resumed) {
-          const taped = tapeDie(this.roll);
-          const dry = receive(reply, { ...ctx, die: taped.die, sheet: target, shared: sharedOf(system, sheets) });
-          tape = taped.tape;
-          const offered = offers(reply, 'target', { ...ctx, sheet: target }, dry.results, dry.report.emitted);
-          if (offered.length) {
-            return pause({
-              stage: 'reply', replyWindow: 'target', replyEnvelope: reply, replyTape: tape,
-              sheetId: target.id, offered, results: dry.results, emitted: dry.report.emitted,
-            }, target, previewLines(reply, system, dry));
-          }
-        }
-        resumed = false;
-        const back = receive(reply, {
-          ...ctx, die: replayDie(tape, this.roll), sheet: target, shared: sharedOf(system, sheets),
-          ...(claimsHere.length ? { claims: claimsHere } : {}),
-        });
-        queue.shift();
-        budget--;
-        const changed = new Map([[back.sheet.id, back.sheet], ...(back.shared ?? []).map(sheet => [sheet.id, sheet] as const)]);
-        sheets = sheets.map(sheet => changed.get(sheet.id) ?? sheet);
-        lines.push(describeEntry({ fromId: reply.from, toId: target.id, report: back.report }, system, sheets));
-        queue.push(...back.replies);
-        if (back.cut) cut = true;
-        const hit = sheets.find(sheet => sheet.id === target.id)!;
-        const offered = offers(reply, 'after', { ...ctx, sheet: hit }, back.results, back.report.emitted);
-        if (offered.length) {
-          return pause({
-            stage: 'reply', replyWindow: 'after', replyEnvelope: reply,
-            sheetId: hit.id, offered, results: back.results, emitted: back.report.emitted,
-          }, hit, []);
-        }
-      }
-      return null;
-    };
-
-    try {
-      if (stage === 'reply') {
-        const paused = await drain();
-        if (paused) return paused;
-      }
-      if (phase === 'deliver') {
-        for (; deliverAt < targets.length; deliverAt++) {
-          const toId = targets[deliverAt]!;
-          const out = deliver({
-            ...ctx, die: replayDie(tapes[toId] ?? [], this.roll), sheets, envelope: state.envelope,
-            fromId: intent.fromId, toId, claims: { target: claimsFor(toId) }, drain: false,
-          });
-          sheets = out.sheets;
-          lines.push(...out.reports.map(entry => describeEntry(entry, system, sheets)));
-          Object.assign(afterSeen, out.seen ?? {});
-          if (out.cut) cut = true;
-          queue.push(...(out.replies ?? []));
-          if (queue.length) {
-            deliverAt++;
-            const paused = await drain();
-            if (paused) return paused;
-            deliverAt--;
-          }
-        }
-        phase = 'after';
-      }
-      for (; afterAt < targets.length; afterAt++) {
-        const target = sheets.find(sheet => sheet.id === targets[afterAt]);
-        const seen = afterSeen[targets[afterAt]!];
-        if (!target || !seen) continue;
-        const offered = offers(state.envelope, 'after', { ...ctx, sheet: target }, seen.results, seen.emitted);
-        if (offered.length) {
-          return await pause({ stage: 'after', sheetId: target.id, offered, results: seen.results, emitted: seen.emitted }, target, []);
-        }
-      }
-      const done = concludeAction({
-        ...ctx, sheets, envelope: state.envelope, fromId: intent.fromId, toIds: targets, seen: afterSeen,
+      outcome = act({
+        system, compendium, clock: record.clock, sheets: record.snapshot, die: this.roll, journal: record.journal,
+      }, {
+        actionId: intent.actionId, fromId: intent.fromId, toIds: targetsOf(intent),
+        ...(intent.inputs ? { inputs: intent.inputs } : {}),
+        ...(intent.edits?.length ? { edits: intent.edits } : {}),
+        ...(intent.targetEdits?.length ? { targetEdits: intent.targetEdits } : {}),
       });
-      sheets = done.sheets;
-      lines.push(...done.reports.map(entry => describeEntry(entry, system, sheets)));
-      if (cut) lines.push(CUT_WORDS);
-      sheets = this.settle(ctx, origin, sheets, lines);
     } catch (err) {
       if (err instanceof NotFoundException) throw err;
       throw new BadRequestException((err as Error).message);
     }
-
-    const touched = await this.persistSheets(state.roomId, world.sheets, sheets, world.touched);
-    const log = await this.appendLog(state.roomId, [...world.log, ...lines]);
-    await this.db.delete(roomPending).where(eq(roomPending.roomId, state.roomId));
-    return { roomId: state.roomId, sheets: touched, log, clock: state.clock, pending: null };
-  }
-
-  private async park(
-    state: PendingRecord & { sheetId: string; offered: Offer[] },
-    asked: Sheet, preview: string[],
-    world: { system: System; sheets: Sheet[]; log: string[]; touched: Sheet[] },
-  ): Promise<RoomDelta> {
+    const touched = await this.persistSheets(record.roomId, current, outcome.sheets, []);
+    const fresh = outcome.log.slice(record.logged);
+    await this.db.delete(roomPending).where(eq(roomPending.roomId, record.roomId));
+    if (outcome.kind === 'done') {
+      const log = await this.appendLog(record.roomId, fresh);
+      return { roomId: record.roomId, sheets: touched, log, clock: record.clock, pending: null };
+    }
     const id = this.newId();
-    const record: PendingRecord = { ...state, id, preview };
-    await this.db.delete(roomPending).where(eq(roomPending.roomId, state.roomId));
-    await this.db.insert(roomPending).values({ id, roomId: state.roomId, data: JSON.stringify(record) });
-    const pending = this.pendingView(record, asked);
-    const touched = await this.persistSheets(state.roomId, world.sheets, world.sheets, world.touched);
-    const log = await this.appendLog(state.roomId, [
-      ...world.log,
-      `${asked.name}: стол ждёт решения — ${pending.options.map(o => o.label).join(', ')}`,
+    const pending: PendingRecord = { ...record, id, journal: outcome.journal, question: outcome.question, logged: outcome.log.length };
+    await this.db.insert(roomPending).values({ id, roomId: record.roomId, data: JSON.stringify(pending) });
+    const asked = outcome.sheets.find(s => s.id === outcome.question.sheetId)!;
+    const view = this.pendingView(pending, asked);
+    const log = await this.appendLog(record.roomId, [
+      ...fresh,
+      `${asked.name}: стол ждёт решения — ${view.options.map(o => o.label).join(', ')}`,
     ]);
-    return { roomId: state.roomId, sheets: touched, log, clock: state.clock, pending };
+    return { roomId: record.roomId, sheets: touched, log, clock: record.clock, pending: view };
   }
 
   private async runAnswer(userId: string, intent: AnswerIntent): Promise<RoomDelta> {
@@ -587,82 +363,31 @@ export class RoomsService {
     if (!record || record.id !== intent.pendingId) {
       throw new BadRequestException('стол никого не ждёт — этот вопрос уже закрыт');
     }
-    const { system, compendium } = this.worldOf(room);
-    const rows = await this.db.select().from(roomSheets)
-      .where(eq(roomSheets.roomId, intent.roomId));
-    let sheets = rows.map(r => JSON.parse(r.data) as Sheet);
-    const origin = sheets;
-    const asked = sheets.find(s => s.id === record.sheetId);
-    if (!asked) throw new NotFoundException(`в комнате нет листа «${record.sheetId}»`);
-    await this.assertMaySheet(intent.roomId, userId, asked.id);
-
-    const clock = record.clock;
-    const lines: string[] = [];
-    let envelope = record.envelope;
-    const window = (record.stage === 'reply' ? record.replyWindow : record.stage) as ReactionWindow;
-    const asking = record.stage === 'reply' ? record.replyEnvelope! : envelope;
-    const queue = [...(record.replies ?? [])];
-    let replyClaims: string[] = [];
-    let claims = record.claims;
-    let targetClaims = record.targetClaims ?? {};
-    const tapes = { ...(record.tapes ?? {}) };
-    const changed: Sheet[] = [];
-    try {
-      const reacted = react(intent.chosen, asking, window,
-        { system, compendium, die: this.roll, clock, sheet: asked }, record.results, record.emitted ?? []);
-      sheets = sheets.map(s => (s.id === asked.id ? reacted.sheet : s));
-      if (reacted.sheet !== asked) changed.push(reacted.sheet);
-      for (const report of reacted.reports) {
-        lines.push(describeEntry({ fromId: asked.id, toId: asked.id, report }, system, sheets));
-      }
-      queue.push(...reacted.replies);
-      if (!intent.chosen.length) lines.push(`${asked.name} пропускает реакцию`);
-      if (record.stage === 'reply' && reacted.claims.length) {
-        replyClaims = reacted.claims;
-        lines.push(`${asked.name}: ответка пересчитана с заявленной правкой`);
-      }
-
-      if (record.stage === 'target' && reacted.claims.length) {
-        targetClaims = {
-          ...targetClaims,
-          [asked.id]: [...new Set([...(targetClaims[asked.id] ?? []), ...reacted.claims])],
-        };
-        delete tapes[asked.id];
-        lines.push(`${asked.name}: бросок пересчитан с заявленной правкой`);
-      }
-
-      if (record.stage === 'sender' && reacted.claims.length) {
-        claims = [...new Set([...claims, ...reacted.claims])];
-        const from = sheets.find(s => s.id === record.intent.fromId)!;
-        const to = sheets.find(s => s.id === targetsOf(record.intent)[0])!;
-        const asked = asksOf(record.intent.actionId, { system, compendium });
-        const inputs = normalizeInputs(asked, record.intent.inputs);
-        envelope = send(record.intent.actionId, {
-          system, compendium, die: this.roll, clock, sheet: from, against: to, claims, shared: sharedOf(system, sheets),
-          ...(Object.keys(inputs).length ? { inputs } : {}),
-          kept: envelope.steps,
-        });
-        lines.push(`${from.name}: бросок собран заново — выпавшее остаётся, новые кости добавлены`);
-      }
-    } catch (err) {
-      throw new BadRequestException((err as Error).message);
+    await this.assertMaySheet(intent.roomId, userId, record.question.sheetId);
+    const offered = new Set(record.question.offers.map(o => o.id));
+    const stray = intent.chosen.find(id => !offered.has(id));
+    if (stray) {
+      throw new BadRequestException(`реакция «${stray}» сейчас не предлагается; можно: ${[...offered].join(', ') || '(ничего)'}`);
     }
-    const more = record.stage === 'target' && (record.at ?? 0) + 1 < targetsOf(record.intent).length;
-    const replying = record.stage === 'reply' || (record.stage === 'after' && queue.length > 0);
-    const next: PendingRecord['stage'] = replying ? 'reply'
-      : record.stage === 'sender' || more ? 'target' : record.stage === 'after' ? 'after' : 'deliver';
-    return this.proceed({
-      ...record, envelope, clock, claims, targetClaims, tapes, stage: next, replies: queue,
-      ...(record.stage === 'target' ? { at: (record.at ?? 0) + 1 } : {}),
-      ...(record.stage === 'after' ? { afterAt: (record.afterAt ?? 0) + 1, returnTo: 'after' as const } : {}),
-      ...(record.stage === 'reply' ? {
-        replyAsked: record.replyWindow === 'target',
-        replyClaims,
-        replyTape: replyClaims.length ? [] : record.replyTape ?? [],
-      } : { replyAsked: false }),
-      results: {},
-    }, { system, compendium, sheets, log: lines, touched: changed, origin });
+    const { system, compendium } = this.worldOf(room);
+    const current = await this.sheetsOf(intent.roomId);
+    const journal: Journal = { ...record.journal, answers: { ...record.journal.answers, [record.question.key]: intent.chosen } };
+    const { question: _question, id: _id, ...rest } = record;
+    return this.play({ ...rest, journal }, current, system, compendium);
   }
+
+  private async sheetsOf(roomId: string): Promise<Sheet[]> {
+    const rows = await this.db.select().from(roomSheets).where(eq(roomSheets.roomId, roomId));
+    return rows.map(r => JSON.parse(r.data) as Sheet);
+  }
+
+  private async assertNotWaiting(roomId: string, sheets: Sheet[]): Promise<void> {
+    const waiting = await this.pendingRecord(roomId);
+    if (!waiting) return;
+    const who = sheets.find(s => s.id === waiting.question.sheetId)?.name ?? waiting.question.sheetId;
+    throw new BadRequestException(`стол ждёт ответа: ${who} решает, применить ли реакцию`);
+  }
+
 
   private async persistSheets(roomId: string, before: Sheet[], after: Sheet[], already: Sheet[]): Promise<Sheet[]> {
     const touched: Sheet[] = [...already];
@@ -686,29 +411,30 @@ export class RoomsService {
 
   private async pendingOf(roomId: string): Promise<PendingState | null> {
     const record = await this.pendingRecord(roomId);
-    if (!record?.sheetId) return null;
+    if (!record) return null;
     const rows = await this.db.select().from(roomSheets)
-      .where(and(eq(roomSheets.roomId, roomId), eq(roomSheets.sheetId, record.sheetId)));
+      .where(and(eq(roomSheets.roomId, roomId), eq(roomSheets.sheetId, record.question.sheetId)));
     const asked = rows[0] ? JSON.parse(rows[0].data) as Sheet : null;
     return asked ? this.pendingView(record, asked) : null;
   }
 
   private pendingView(record: PendingRecord, asked: Sheet): PendingState {
-    const stage = (record.stage === 'reply' ? record.replyWindow : record.stage) as ReactionWindow;
-    const by = record.stage === 'reply' && record.replyEnvelope ? ` ответкой «${record.replyEnvelope.label}»` : '';
+    const { question } = record;
+    const by = question.label ? ` ответкой «${question.label}»` : '';
     return {
       id: String(record.id),
       sheetId: asked.id,
-      stage,
-      question: stage === 'sender'
+      stage: question.window,
+      question: question.window === 'sender'
         ? `${asked.name}: бросок сделан — ответить реакцией?`
-        : stage === 'after'
+        : question.window === 'after'
           ? `${asked.name}: на вас подействовали${by} — ответить реакцией?`
           : `${asked.name}: на вас действуют${by} — ответить реакцией?`,
-      options: (record.offered ?? []).map(o => ({ id: o.id, label: o.label })),
-      preview: record.preview ?? [],
+      options: question.offers.map(o => ({ id: o.id, label: o.label })),
+      preview: question.preview,
     };
   }
+
 
   private async runSetValue(
     userId: string, roomId: string, sheetId: string, tag: string, value: StoredValue,
