@@ -288,6 +288,7 @@ describe('ячейка тратится один раз на действие', 
       tables: { лист: { shape: 'single', columns: [
         { key: 'хиты', label: 'Хиты', kind: 'number', default: 20 },
         { key: 'ячейки', label: 'Ячейки', kind: 'number', default: 3, min: 0 },
+        { key: 'целей', label: 'Целей', kind: 'number', default: 0 },
       ] } , свиток: { shape: 'book', use: 'action', label: 'Свиток', columns: [], bindings: [{ label: 'Огненный шар', effect: 'шар', args: {} }] } },
       effects: {
         шар: {
@@ -295,13 +296,17 @@ describe('ячейка тратится один раз на действие', 
           self: [{ type: 'apply', target: { tag: 'ячейки' }, direction: 'subtract', value: { expr: '1' } }],
           steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '5' } }],
         },
+        счёт: {
+          label: 'Счёт целей', activation: 'passive', duration: { kind: 'permanent' },
+          on: [{ on: 'done', of: 'шар', steps: [{ type: 'apply', target: { tag: 'целей' }, direction: 'add', value: { expr: 'сколько(@цели.лист)' } }] }],
+        },
       },
       
     };
     const book = { records: [{ id: 'свиток', table: 'свиток', label: 'Свиток', cells: {} }] };
     const sheet = (id: string) => ({
       id, systemId: 'ячейки', name: id, values: { хиты: 20, ячейки: 3 },
-      has: [{ of: 'свиток' }], effects: [],
+      has: [{ of: 'свиток' }], effects: id === 'маг' ? [{ effectId: 'счёт' }] : [],
     });
 
     const systemId = (await as(http().post('/systems')).send({ title: 'С ячейками', system })).body.id;
@@ -321,6 +326,7 @@ describe('ячейка тратится один раз на действие', 
     const after = (await as(http().get(`/rooms/${roomId}`))).body.sheets;
     const of = (id: string) => after.find((s: { id: string }) => s.id === id).values;
     expect(of('маг').ячейки, 'одна ячейка на всё действие').toBe(2);
+    expect(of('маг').целей, '«я совершил действие» — один раз, видит все три цели').toBe(3);
     expect([of('а').хиты, of('б').хиты, of('в').хиты]).toEqual([15, 15, 15]);
     expect(done.body.log.map((e: { text: string }) => e.text).join(' ')).toContain('Ячейки');
   });

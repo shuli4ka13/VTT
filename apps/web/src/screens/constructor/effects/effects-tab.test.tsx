@@ -239,8 +239,8 @@ describe('три вида создания, два вида запуска', () 
     fireEvent.click(screen.getByText('+ срабатывает сам'));
     const moment = [...document.querySelectorAll('select')]
       .find(el => [...el.options].some(o => o.value === 'ask-target'))!;
-    expect([...moment.options].map(o => o.value).slice(0, 7))
-      .toEqual(['', 'after-in', 'after-out', 'before-in', 'ask-target', 'ask-sender', 'ask-after']);
+    expect([...moment.options].map(o => o.value).slice(0, 8))
+      .toEqual(['', 'after-in', 'after-out', 'done', 'before-in', 'ask-target', 'ask-sender', 'ask-after']);
 
     fireEvent.change(moment, { target: { value: 'ask-sender' } });
     const effect = Object.values(useWorld.getState().system.effects).at(-1)!;
@@ -251,6 +251,9 @@ describe('три вида создания, два вида запуска', () 
     const again = Object.values(useWorld.getState().system.effects).at(-1)!.on![0]!;
     expect(again.on).toBe('acted');
     expect(again.confirm).toBeUndefined();
+
+    fireEvent.change(moment, { target: { value: 'done' } });
+    expect(Object.values(useWorld.getState().system.effects).at(-1)!.on![0]!.on).toBe('done');
 
     fireEvent.change(moment, { target: { value: 'moment:turn-start' } });
     expect(Object.values(useWorld.getState().system.effects).at(-1)!.on![0]!.on).toBe('moment:turn-start');

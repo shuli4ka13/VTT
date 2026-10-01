@@ -2098,7 +2098,7 @@
         "description": "Единицы больше чем на половине кубиков атаки — сбой.",
         "on": [
           {
-            "on": "acted",
+            "on": "done",
             "of": "ranged_attack",
             "if": {
               "expr": "все(@атака.atMin * 2 > @атака.rolled, @атака.natural >= 1)"
@@ -2118,7 +2118,7 @@
         "description": "Сбой без единого успеха.",
         "on": [
           {
-            "on": "acted",
+            "on": "done",
             "of": "ranged_attack",
             "if": {
               "expr": "все(@атака.atMin * 2 > @атака.rolled, @атака.natural == 0)"

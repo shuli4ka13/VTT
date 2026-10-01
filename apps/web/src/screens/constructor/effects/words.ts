@@ -12,11 +12,12 @@ export const CREATE_KINDS = (['manual', 'auto', 'passive'] as const)
 
 export const launchHint = (kind: LaunchKind): string => LAUNCHES[kind].hint;
 
-export type Moment = 'after-in' | 'after-out' | 'before-in' | 'ask-target' | 'ask-sender' | 'ask-after';
+export type Moment = 'after-in' | 'after-out' | 'done' | 'before-in' | 'ask-target' | 'ask-sender' | 'ask-after';
 
 export const MOMENTS: readonly (readonly [Moment, string])[] = [
   ['after-in', `${ACTION_MOMENTS.affected.label} — молча`],
   ['after-out', `${ACTION_MOMENTS.acted.label} — молча`],
+  ['done', `${ACTION_MOMENTS.done.label} — молча, один раз на все цели`],
   ['before-in', `${ACTION_MOMENTS.targeted.label} — молча`],
   ['ask-target', `${ACTION_MOMENTS.targeted.label} — спросить меня`],
   ['ask-sender', `${ACTION_MOMENTS.acting.label} — спросить меня`],

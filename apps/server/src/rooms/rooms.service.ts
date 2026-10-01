@@ -10,7 +10,7 @@ import type {
   RoomState, RoomSummary, RoomDelta, JournalEntry, ActIntent, TurnIntent, AnswerIntent, ClockState, PendingState,
   Sheet, System, Compendium, StoredValue,
 } from '@vtt/schema';
-import { deliver, sharedHolderOf } from '@vtt/engine/events/exchange';
+import { deliver, concludeAction, sharedHolderOf } from '@vtt/engine/events/exchange';
 import type { Seen } from '@vtt/engine/events/exchange';
 import type { EmittedEvent } from '@vtt/engine/engine/rule';
 import { previewLines, describeEntry } from '@vtt/engine/events/describe';
@@ -446,6 +446,11 @@ export class RoomsService {
           reports.push(...out.reports);
           Object.assign(afterSeen, out.seen ?? {});
         }
+        const done = concludeAction({
+          ...ctx, sheets, envelope: state.envelope, fromId: intent.fromId, toIds: targets, seen: afterSeen,
+        });
+        sheets = done.sheets;
+        reports.push(...done.reports);
       } catch (err) {
         throw new BadRequestException((err as Error).message);
       }

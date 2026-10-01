@@ -10,6 +10,7 @@ import type { Moment } from './words.ts';
 import type { System, Handler } from '@vtt/schema';
 import { calledOf } from '@vtt/engine/engine/effects';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { TARGETS_SEED } from '@vtt/engine/model/references';
 
 function conditionsOf(system: System, listened: string | undefined): (readonly [string, string])[] {
   const source = listened ? system.effects[listened] : undefined;
@@ -39,9 +40,12 @@ const BY_FORMULA = ':формула';
 
 const SEED_NAMES = new Map([['worn.carry', 'запомненное число']]);
 
+const DONE_NAMES = new Map([...SEED_NAMES, [TARGETS_SEED, 'цели действия: строка на цель']]);
+
 const SHAPE: Record<Moment, Pick<Handler, 'on' | 'confirm'>> = {
   'after-in': { on: 'affected' },
   'after-out': { on: 'acted' },
+  done: { on: 'done' },
   'before-in': { on: 'targeted' },
   'ask-target': { on: 'targeted', confirm: true },
   'ask-sender': { on: 'acting', confirm: true },
@@ -54,7 +58,7 @@ export const momentOf = (handler: Handler): Moment | null =>
 const applyMoment = (draft: Handler, moment: Moment): void => {
   delete draft.confirm;
   Object.assign(draft, SHAPE[moment]);
-  if (moment === 'before-in' || moment === 'ask-target' || moment === 'ask-sender') delete draft.to;
+  if (moment === 'before-in' || moment === 'ask-target' || moment === 'ask-sender' || moment === 'done') delete draft.to;
   if (moment !== 'ask-sender') delete draft.claims;
 };
 
@@ -148,9 +152,9 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
               value={formula}
               system={system}
               where={`когда №${index + 1} · только если`}
-              extraNames={SEED_NAMES}
+              extraNames={moment === 'done' ? DONE_NAMES : SEED_NAMES}
               owners
-              placeholder="например: @получатель.хиты <= 0"
+              placeholder={moment === 'done' ? 'например: сколько(@цели.hit.success, да) >= 1' : 'например: @получатель.хиты <= 0'}
               onCommit={next => edit(draft => { draft.if = { expr: next }; })}
             />
           ) : null}
