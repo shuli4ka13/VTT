@@ -1,4 +1,4 @@
-import { isActionMoment } from '../events/bus.ts';
+import { isActionMoment, ACTION_MOMENTS } from '../events/bus.ts';
 import type { System, Compendium, Effect, Step } from './types.ts';
 import { registry } from '../engine/steps/index.ts';
 import { calledOf, chainsOfEffect } from '../engine/effects.ts';
@@ -241,8 +241,11 @@ function listenerProblems(system: System): Problem[] {
       if (handler.on === 'acting' && !handler.confirm) {
         out.push({ where, level: 'error', text: '«я действую — до» бывает только с вопросом игроку' });
       }
-      if (handler.on === 'acted' && handler.confirm) {
-        out.push({ where, level: 'error', text: '«я подействовал на цель» срабатывает молча — спросить здесь нельзя' });
+      if ((handler.on === 'acted' || handler.on === 'done') && handler.confirm) {
+        out.push({ where, level: 'error', text: `«${ACTION_MOMENTS[handler.on].label}» срабатывает молча — спросить здесь нельзя` });
+      }
+      if (handler.on === 'done' && handler.to === 'other') {
+        out.push({ where, level: 'error', text: '«я совершил действие» — один раз на все цели: ответить «другому» некому, только себе' });
       }
       if ((handler.on === 'acting' || handler.on === 'targeted') && handler.to === 'other') {
         out.push({ where, level: 'error', text: 'до того, как решится, ответить другому нельзя — только себе' });

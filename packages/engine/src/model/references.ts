@@ -187,9 +187,11 @@ function guardRefs(guard: Guard | undefined, from: Where, scope: ChainScope, out
   if (guard) exprRefs(guard.expr, from, scope, out);
 }
 
-export function chainRefs(steps: Step[], whereOf: (index: number) => Where, params: Set<string>, eventChain: boolean): Reference[] {
+export function chainRefs(
+  steps: Step[], whereOf: (index: number) => Where, params: Set<string>, eventChain: boolean, seeds: string[] = [],
+): Reference[] {
   const out: Reference[] = [];
-  const earlier = new Set<string>();
+  const earlier = new Set<string>(seeds);
   const ids = steps.map(step => step.id).filter((id): id is string => Boolean(id));
   steps.forEach((step, index) => {
     const from = whereOf(index);
@@ -236,6 +238,8 @@ function modifierRefs(list: Modifier[] | undefined, from: Where, out: Reference[
   }
 }
 
+export const TARGETS_SEED = 'цели';
+
 export function listenerOf(
   { on, of }: { on?: string; of?: string },
 ): { kind: 'any' | 'event' | 'effect' | 'moment' | 'field' | 'gained' | 'lost' | 'empty' | 'unknown'; key?: string } {
@@ -267,7 +271,8 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
   (effect.on ?? []).forEach((handler, index) => {
     const head: Where = { tab: 'effects', effect: id, part: 'on', handler: index };
     const heard = listenerOf(handler);
-    out.push(...chainRefs(handler.steps ?? [], step => ({ tab: 'effects', effect: id, handler: index, step }), params, heard.kind === 'event'));
+    const seeds = handler.on === 'done' ? [TARGETS_SEED] : [];
+    out.push(...chainRefs(handler.steps ?? [], step => ({ tab: 'effects', effect: id, handler: index, step }), params, heard.kind === 'event', seeds));
     out.push(...chainRefs(handler.self ?? [], step => ({ tab: 'effects', effect: id, handler: index, step, part: 'self' }), params, false));
     if (heard.kind === 'event') out.push({ kind: 'event', key: heard.key!, from: head });
     if (heard.kind === 'effect') out.push({ kind: 'effect', key: heard.key!, from: head, scope: LISTEN });
@@ -286,6 +291,7 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
           continue;
         }
         if (ref.kind !== 'step') { out.push(ref); continue; }
+        if (seeds.includes(ref.key)) continue;
         if (listened && !(listened.steps ?? []).some(s => s.id === ref.key)) {
           out.push({ ...ref, scope: `listened:${heard.key}` });
         }

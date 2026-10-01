@@ -1,5 +1,5 @@
 import { sharedOf } from './desk.ts';
-import { send, receive, fireOutgoing } from './envelope.ts';
+import { send, receive, fireOutgoing, conclude } from './envelope.ts';
 import { runSelfTrack, selfRefusal } from './self.ts';
 import { holderOf, releaseHolder } from './bonds.ts';
 import { settle } from './settle.ts';
@@ -108,6 +108,20 @@ export function deliver({
   return { sheets: updated, reports, seen };
 }
 
+export function concludeAction({
+  system, compendium, die, clock, sheets, envelope, fromId, toIds, seen,
+}: WorldArgs & { envelope: Envelope; fromId: string; toIds: string[]; seen: Record<string, Seen> }): ExchangeResult {
+  const sender = sheets.find(s => s.id === fromId);
+  if (!sender || envelope.reply) return { sheets, reports: [] };
+  const targets = toIds.filter(id => seen[id]).map(id => ({ id, ...seen[id]! }));
+  const out = conclude(envelope, targets, sender, { system, compendium, die, clock, shared: sharedOf(system, sheets) });
+  const changed = new Map([[out.sheet.id, out.sheet], ...(out.shared ?? []).map(s => [s.id, s] as const)]);
+  return {
+    sheets: sheets.map(s => changed.get(s.id) ?? s),
+    reports: out.reactions.map(report => ({ fromId, toId: fromId, report })),
+  };
+}
+
 export interface ManyArgs extends WorldArgs {
   envelope: Envelope;
   fromId: string;
@@ -132,7 +146,8 @@ export function deliverMany({
     Object.assign(seen, out.seen ?? {});
   }
 
-  return { sheets: updated, reports, seen };
+  const done = concludeAction({ system, compendium, die, clock, sheets: updated, envelope, fromId, toIds, seen });
+  return { sheets: done.sheets, reports: [...reports, ...done.reports], seen };
 }
 
 export function exchange({
@@ -156,10 +171,12 @@ export function exchange({
   const shared = sharedHolderOf(system, envelope.effect);
   const started = shared ? releaseHolder(system, afterOwn, fromId, shared).sheets : afterOwn;
 
-  const out = deliver({
+  const delivered = deliver({
     system, compendium, die, clock, sheets: started, envelope, fromId, toId,
     claims: { target: claims?.target },
   });
+  const done = concludeAction({ system, compendium, die, clock, sheets: delivered.sheets, envelope, fromId, toIds: [toId], seen: delivered.seen ?? {} });
+  const out = { ...delivered, sheets: done.sheets, reports: [...delivered.reports, ...done.reports] };
   const settled = settle(sheets, out.sheets, { system, compendium, die, clock });
   const hooks = settled.aftermath.flatMap(entry => (entry.kind === 'fired'
     ? [{ fromId: entry.sheetId, toId: entry.sheetId, report: entry.report }] : []));

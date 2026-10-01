@@ -13,6 +13,7 @@ export const ACTION_MOMENTS = {
   acted: { label: 'я подействовал на цель', side: 'sender', before: false },
   targeted: { label: 'на меня действуют — до того, как решится', side: 'target', before: true },
   affected: { label: 'на меня подействовали', side: 'target', before: false },
+  done: { label: 'я совершил действие', side: 'sender', before: false },
 } as const;
 
 export type ActionMoment = keyof typeof ACTION_MOMENTS;

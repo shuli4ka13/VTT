@@ -47,6 +47,11 @@ const FORMS = ['expr', 'const', 'param', 'prop', 'tag', 'constant'];
 
 type AnyRef = Record<string, unknown>;
 
+const stepInto = (at: unknown, key: string): unknown => {
+  if (Array.isArray(at)) return at.map(one => stepInto(one, key));
+  return at && typeof at === 'object' ? (at as AnyRef)[key] : undefined;
+};
+
 const knownOf = (ctx: RefContext): Record<string, unknown> => ({ ...(ctx.sender ?? {}), ...(ctx.results ?? {}) });
 
 export function packRef(ref: unknown, ctx: RefContext): unknown {
@@ -269,7 +274,7 @@ function waitingName(name: string, ctx: RefContext): boolean {
   if (referencedTable(system, head, ctx.paramDefs)) return false;
   const held = known[head];
   if (held === undefined || held === null || typeof held !== 'object') return true;
-  return split.path.reduce<unknown>((at, key) => (at && typeof at === 'object' ? (at as AnyRef)[key] : undefined), held) === undefined;
+  return split.path.reduce<unknown>(stepInto, held) === undefined;
 }
 
 function waitsForStep(expr: string, ctx: RefContext): boolean {
@@ -335,7 +340,7 @@ function evaluate(
       const held = known[name.slice(0, dot)];
       if (held && typeof held === 'object') {
         const value = name.slice(dot + 1).split('.')
-          .reduce<unknown>((at, key) => (at && typeof at === 'object' ? (at as AnyRef)[key] : undefined), held);
+          .reduce<unknown>(stepInto, held);
         if (value !== undefined) return value;
       }
     }

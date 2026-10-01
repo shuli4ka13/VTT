@@ -12,6 +12,7 @@ import { byOrder } from '../model/inherit.ts';
 import { listening, subscriberByKey, hears, runsAtOther, withSteps } from './bus.ts';
 import type { ActionMoment } from './bus.ts';
 import { EngineError } from '../engine/errors.ts';
+import { TARGETS_SEED } from '../model/references.ts';
 import { incomingRollModifiers } from '../engine/modifiers.ts';
 import { holderOf } from './bonds.ts';
 import { withShared, changedShared, isDesk } from './desk.ts';
@@ -407,6 +408,44 @@ export function fireOutgoing(
   }
 
   return { sheet, replies, spent, reactions, ...(changedShared(shared, ctx.shared).length ? { shared: changedShared(shared, ctx.shared) } : {}) };
+}
+
+export interface TargetOutcome { id: string; results: Record<string, unknown>; emitted: EmittedEvent[] }
+
+export function conclude(
+  envelope: Envelope,
+  targets: TargetOutcome[],
+  sender: Sheet,
+  ctx: WorldContext,
+): { sheet: Sheet; spent: string[]; reactions: Report[]; shared?: Sheet[] } {
+  const spent: string[] = [];
+  const reactions: Report[] = [];
+  let sheet = sender;
+  let shared = [...(ctx.shared ?? [])];
+
+  const emitted = targets.flatMap(target => target.emitted);
+  const seed = {
+    ...senderResults(envelope),
+    [TARGETS_SEED]: targets.map(target => ({ ...target.results, лист: target.id })),
+  };
+  const occasion = { kind: 'action' as const, moment: 'done' as const, confirm: false, effect: envelope.effect, emitted };
+  for (const { id, effect, handler, heard } of listening(ctx.system, sheet, occasion, { compendium: ctx.compendium })) {
+    const results = withEvent(seed, heard);
+    const owner = `триггер «${effect.label || id}»`;
+    if (!holdsQuietly(handler.if, { pass: newPass(ctx.system, sheet, { compendium: ctx.compendium }), results, owner })) continue;
+
+    const done = runOnSelf(id, withSteps(effect, handler.steps), sheet, results, owner, { ...ctx, shared });
+    sheet = done.sheet;
+    shared = withShared(shared, done.shared);
+    reactions.push(done.report);
+
+    if (burnsUse(effect)) {
+      sheet = spendUse(sheet, id);
+      spent.push(id);
+    }
+  }
+
+  return { sheet, spent, reactions, ...(changedShared(shared, ctx.shared).length ? { shared: changedShared(shared, ctx.shared) } : {}) };
 }
 
 export interface Offer { id: string; label: string; cost?: string; claims: string[] }

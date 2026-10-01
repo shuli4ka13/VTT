@@ -1,6 +1,8 @@
 import { group, test, eq, ok } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
-import { exchange } from '../src/events/exchange.ts';
+import { exchange, deliverMany } from '../src/events/exchange.ts';
+import { send } from '../src/events/envelope.ts';
+import { sharedOf } from '../src/events/desk.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
@@ -61,6 +63,27 @@ group('Daggerheart: кости двойственности', () => {
   test('опыт стоит Надежды и даёт +2', () => {
     const out = act(tape(3, 10), sheetOf('bran'), 2);
     eq(valueOf(out, 'bran', 'hope'), 1);
+  });
+});
+
+group('Daggerheart: одна атака по двум целям — один бросок двойственности', () => {
+  const withDuality = (moment: string): System => ({
+    ...system,
+    effects: { ...system.effects, duality: { ...system.effects.duality!, on: system.effects.duality!.on!.map(h => ({ ...h, on: moment })) } },
+  } as System);
+  const twice = (sys: System) => {
+    const bran = sheetOf('bran');
+    const sheets = [bran, sheetOf('bandit'), { ...sheetOf('bandit'), id: 'bandit2' } as Sheet, sheetOf('стол')];
+    const envelope = send('longsword:0', { system: sys, compendium, die: tape(9, 4, 8), sheet: bran, shared: sharedOf(sys, sheets) });
+    return deliverMany({ system: sys, compendium, die: tape(8), sheets, envelope, fromId: 'bran', toIds: ['bandit', 'bandit2'] });
+  };
+
+  test('«я подействовал на цель» — Надежда за каждую цель: бросок один, а Надежды две', () => {
+    eq(twice(withDuality('acted')).sheets.find(s => s.id === 'bran')!.values.hope, 4);
+  });
+
+  test('«я совершил действие» — Надежда один раз на всё действие', () => {
+    eq(twice(withDuality('done')).sheets.find(s => s.id === 'bran')!.values.hope, 3);
   });
 });
 

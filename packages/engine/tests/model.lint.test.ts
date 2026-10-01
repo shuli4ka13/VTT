@@ -143,6 +143,12 @@ group('линт: слушатели, круги, входы', () => {
     ok(texts({ on: 'acted', confirm: true }).some(t => t.includes('спросить здесь нельзя')));
     ok(texts({ on: 'targeted', to: 'other' }).some(t => t.includes('ответить другому нельзя')));
     eq(texts({ on: 'targeted', confirm: true }).length, 0, 'любое действие — законно');
+    ok(texts({ on: 'done', to: 'other' }).some(t => t.includes('ответить «другому» некому')));
+    ok(texts({ on: 'done', confirm: true }).some(t => t.includes('спросить здесь нельзя')));
+    eq(texts({
+      on: 'done', if: { expr: 'сколько(@цели.hit.success, да) >= 1' },
+      steps: [{ type: 'apply', target: { tag: 'hp' }, direction: 'add', value: { expr: 'сумма(@цели.dmg)' } }],
+    }).length, 0, '«я совершил действие» знает таблицу целей');
   });
 
   test('вызовы по кругу: эффект зовёт тот, на который сам и срабатывает', () => {

@@ -1,6 +1,6 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.ts';
 import { send, receive } from '../src/events/envelope.ts';
-import { exchange } from '../src/events/exchange.ts';
+import { exchange, deliverMany } from '../src/events/exchange.ts';
 import { targets } from '../src/engine/targets.ts';
 
 const queue = (...values: number[]) => {
@@ -198,5 +198,39 @@ group('реакции слушают слово, а не имя эффекта',
     const sys = { ...spiky, effects: { ...spiky.effects, сторож: { ...spiky.effects.сторож, on: [{ ...spiky.effects.сторож.on[0], to: 'self' }] } } };
     const out = hit(sys, 'тревога', foe(['сторож']));
     eq(out.sheet.values.хп, 21);
+  });
+});
+
+group('«я совершил действие» — один раз на все цели, видит таблицу целей', () => {
+  const tally = world({
+    итог: {
+      label: 'Итог', activation: 'passive', duration: { kind: 'uses', max: 2 },
+      on: [{ on: 'done', of: 'удар', steps: [
+        { type: 'apply', target: { tag: 'хп' }, direction: 'set', value: { expr: 'сумма(@цели.n) + сколько(@цели.лист)' } },
+      ] }],
+    },
+  });
+  const twoFoes = () => {
+    const sheets = [{ ...hero(), effects: [{ effectId: 'итог', usesLeft: 2 }] }, foe(), { ...foe(), id: 'враг2' }];
+    const envelope = send('удар:0', { system: tally as any, sheet: sheets[0] as any, compendium: book, die: queue() });
+    return deliverMany({ system: tally as any, compendium: book, die: queue(), sheets: sheets as any, envelope, fromId: 'герой', toIds: ['враг', 'враг2'] });
+  };
+
+  test('по двум целям: итог по колонке целей — урон 8 + 8 и две строки', () => {
+    const me = twoFoes().sheets.find(s => s.id === 'герой')!;
+    eq(me.values.хп, 18);
+  });
+
+  test('заряд сгорает один раз за действие, а не за каждую цель', () => {
+    const me = twoFoes().sheets.find(s => s.id === 'герой')!;
+    eq(me.effects[0]!.usesLeft, 1);
+  });
+
+  test('ход по одной цели тоже доходит до «совершил действие»', () => {
+    const r = exchange({
+      system: tally as any, compendium: book, die: queue(), sheets: [hero(['итог']), foe()],
+      actionId: 'удар:0', fromId: 'герой', toId: 'враг',
+    });
+    eq(r.sheets.find(s => s.id === 'герой')!.values.хп, 9);
   });
 });
