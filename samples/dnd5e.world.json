@@ -3115,7 +3115,11 @@
             "key": "damage_type",
             "label": "Тип урона",
             "kind": "choice",
-            "from": "damage_types"
+            "from": "damage_types",
+            "ask": {
+              "by": "actor",
+              "hint": "Тип урона оружия, которым попал."
+            }
           }
         ],
         "steps": [
@@ -10200,12 +10204,7 @@
         "bindings": [
           {
             "label": "Скрытая атака",
-            "effect": "sneak_attack",
-            "args": {
-              "damage_type": {
-                "expr": "\"колющий\""
-              }
-            }
+            "effect": "sneak_attack"
           }
         ],
         "table": "feature",
