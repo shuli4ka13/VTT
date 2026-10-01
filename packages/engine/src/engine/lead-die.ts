@@ -1,7 +1,8 @@
 import { EngineError } from './errors.ts';
 import { applyReading } from './readings.ts';
 import { claimOf, applyClaimEdits, applyResultEdits, keptDice } from './roll-edits.ts';
-import type { RolledDie } from './readings.ts';
+import type { RolledDie, ReadSpec } from './readings.ts';
+import type { KeepSpec } from './roll-edits.ts';
 import type { System, DieConstant, Die, RollEdit } from '../model/types.ts';
 
 export interface LeadRoll {
@@ -23,7 +24,18 @@ export interface LeadRoll {
   tally: { dice: number; atMax: number; atMin: number };
 
   entries: RolledDie[];
+
+  grown: RolledDie[];
+  keeps: KeepSpec[];
+  reading: ReadSpec;
+  plus: number;
+  applied: RollEdit[];
 }
+
+export type SeenOp =
+  | { kind: 'add'; count: number; sides?: number; keep?: 'best' | 'worst'; edit?: RollEdit }
+  | { kind: 'reroll'; upTo: number }
+  | { kind: 'plus'; value: number };
 
 export function dieConstant(system: System, name: string): DieConstant {
   const constants = system.constants;
@@ -95,28 +107,48 @@ export function rollLead(def: DieConstant, die: Die, edits: RollEdit[] = [], kee
     }
   }
 
-  const tally = tallyOf(entries);
-
   const grown = applyResultEdits(entries, edits, die);
-  const taken = keptDice(grown, claim.keeps);
-  const { total, kept } = applyReading(taken, claim.read);
-
-  const parts: Record<string, number> = {};
-  for (const entry of taken) {
-    if (entry.name) parts[entry.name] = (parts[entry.name] ?? 0) + entry.value;
-  }
-
-  return {
-    rolls: grown.map(e => e.value),
-    raw: entries.map(e => e.value),
-    kept, total, parts,
+  return settle({
     edits: edits.map(e => e.label || '').filter(Boolean),
     versusShift: claim.versusShift,
     degreeShift: claim.degreeShift,
     read: claim.read.kind,
-    tally,
-    entries,
+    entries, grown, keeps: claim.keeps, reading: claim.read, plus: 0, applied: edits,
+  });
+}
+
+type Settled = Omit<LeadRoll, 'rolls' | 'raw' | 'kept' | 'total' | 'parts' | 'tally'>;
+
+function settle(base: Settled): LeadRoll {
+  const taken = keptDice(base.grown, base.keeps);
+  const { total, kept } = applyReading(taken, base.reading);
+  const parts: Record<string, number> = {};
+  for (const entry of taken) {
+    if (entry.name) parts[entry.name] = (parts[entry.name] ?? 0) + entry.value;
+  }
+  return {
+    ...base,
+    rolls: base.grown.map(e => e.value),
+    raw: base.entries.map(e => e.value),
+    kept, total: total + base.plus, parts,
+    tally: tallyOf(base.entries),
   };
+}
+
+export function seeRoll(rolled: LeadRoll, op: SeenOp, die: Die): LeadRoll {
+  const { rolls: _rolls, raw: _raw, kept: _kept, total: _total, parts: _parts, tally: _tally, ...base } = rolled;
+  if (op.kind === 'plus') return settle({ ...base, plus: base.plus + op.value });
+  if (op.kind === 'reroll') {
+    const again = (entry: RolledDie): RolledDie =>
+      (!entry.bonus && entry.value > 0 && entry.value <= op.upTo ? { ...entry, value: die(entry.sides) } : entry);
+    const grown = base.grown.map(again);
+    return settle({ ...base, grown, entries: base.entries.length === grown.length ? grown : base.entries });
+  }
+  const sides = op.sides ?? base.entries.find(entry => !entry.bonus)?.sides ?? 6;
+  const fresh: RolledDie[] = Array.from({ length: Math.max(0, op.count) }, () => ({ value: die(sides), sides }));
+  const grownFresh = applyResultEdits(fresh, [...base.applied, ...(op.edit ? [op.edit] : [])], die);
+  const keeps = op.keep ? [...base.keeps, { n: 1, from: op.keep } as KeepSpec] : base.keeps;
+  return settle({ ...base, entries: [...base.entries, ...fresh], grown: [...base.grown, ...grownFresh], keeps });
 }
 
 function tallyOf(entries: RolledDie[]) {
