@@ -33,6 +33,8 @@ export interface DeliverArgs extends WorldArgs {
   fromId: string;
   toId: string;
 
+  drain?: boolean;
+
   claims?: { target?: string[] };
 }
 
@@ -47,6 +49,8 @@ export interface ExchangeResult {
   seen?: Record<string, Seen>;
 
   cut?: boolean;
+
+  replies?: Envelope[];
 }
 
 export const MAX_REPLIES = 32;
@@ -85,9 +89,10 @@ export const sharedHolderOf = (system: System, effectId: string): string | null 
 const finder = (sheets: Sheet[]) => (id: string): Sheet | null => sheets.find(s => s.id === id) || null;
 
 export function deliver({
-  system, compendium, die, clock, sheets, envelope, fromId, toId, claims,
+  system, compendium, die, clock, sheets, envelope, fromId, toId, claims, drain = true,
 }: DeliverArgs): ExchangeResult {
   const ctx = { system, compendium, die, clock };
+  const held: Envelope[] = [];
   let updated = [...sheets];
   const put = (sheet: Sheet): void => { updated = updated.map(s => (s.id === sheet.id ? sheet : s)); };
   const live = (id: string): Sheet | null => updated.find(s => s.id === id) || null;
@@ -103,10 +108,16 @@ export function deliver({
   const seen: Record<string, Seen> = { [toId]: { results: main.results, emitted: main.report.emitted } };
 
   let cut = main.cut === true;
-  const first = deliverReplies({ ...ctx, sheets: updated, replies: main.replies });
-  updated = first.sheets;
-  reports.push(...first.reports);
-  if (first.cut) cut = true;
+  let budget = MAX_REPLIES;
+  const answer = (replies: Envelope[]): void => {
+    if (!drain) { held.push(...replies); return; }
+    const out = deliverReplies({ ...ctx, sheets: updated, replies, budget });
+    updated = out.sheets;
+    budget = out.budget;
+    reports.push(...out.reports);
+    if (out.cut) cut = true;
+  };
+  answer(main.replies);
 
   const holder = holderOf(envelope.effect, system.effects[envelope.effect]);
   if (holder && !envelope.reply) {
@@ -122,13 +133,10 @@ export function deliver({
     put(out.sheet);
     for (const s of out.shared ?? []) put(s);
     for (const report of out.reactions) reports.push({ fromId, toId: fromId, report });
-    const next = deliverReplies({ ...ctx, sheets: updated, replies: out.replies, budget: first.budget });
-    updated = next.sheets;
-    reports.push(...next.reports);
-    if (next.cut) cut = true;
+    answer(out.replies);
   }
 
-  return { sheets: updated, reports, seen, ...(cut ? { cut } : {}) };
+  return { sheets: updated, reports, seen, ...(cut ? { cut } : {}), ...(drain ? {} : { replies: held }) };
 }
 
 export function concludeAction({

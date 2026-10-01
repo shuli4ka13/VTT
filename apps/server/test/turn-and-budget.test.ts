@@ -627,6 +627,102 @@ describe('цепочка ответок', () => {
   });
 });
 
+describe('вопросы на ответках', () => {
+  it('«Возмездие» на «Возмездие»: стол спрашивает на каждой ответке и продолжает с того же места', async () => {
+    const token = (await http().post('/auth/login').send({ name: 'Ведущий ответок' })).body.token as string;
+    const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
+    const system = {
+      id: 'ответки', name: 'С ответками',
+      tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] }, приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
+      effects: {
+        урон: {
+          label: 'Урон', params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }],
+          steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@event.amount' }, targetModifiers: false }],
+        },
+        удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'emit', event: 'урон', args: { сколько: { expr: '5' } } }] },
+        возмездие: {
+          label: 'Возмездие', activation: 'passive',
+          on: [{ on: 'affected', of: 'event:урон', to: 'other', confirm: true, steps: [{ type: 'emit', event: 'урон', args: { сколько: { expr: '2' } } }] }],
+        },
+      },
+    };
+    const book = { records: [{ id: 'приём', table: 'приём', label: 'Удар', cells: {} }] };
+    const sheet = (id: string) => ({ id, systemId: 'ответки', name: id, values: { хиты: 20 }, has: [{ of: 'приём' }], effects: [{ effectId: 'возмездие' }] });
+    const systemId = (await as(http().post('/systems')).send({ title: 'С ответками', system })).body.id;
+    const bookId = (await as(http().post('/compendiums')).send({ title: 'Книга ответок', systemId, compendium: book })).body.id;
+    await as(http().post(`/systems/${systemId}/publish`)).send({}).expect(201);
+    await as(http().post(`/compendiums/${bookId}/publish`)).send({}).expect(201);
+    const worldId = (await as(http().post('/worlds')).send({ title: 'Мир ответок', systemId, compendiumIds: [bookId], sheets: [sheet('а'), sheet('б')] })).body.id;
+    const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол ответок' })).body.id as string;
+    const hp = async () => Object.fromEntries((await as(http().get(`/rooms/${roomId}`))).body.sheets.map((s: { id: string; values: { хиты: number } }) => [s.id, s.values.хиты]));
+    const answer = (pending: { id: string }, chosen: string[]) => as(http().post(`/rooms/${roomId}/answer`)).send({ roomId, pendingId: pending.id, chosen }).expect(201);
+
+    const hit = await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: 'приём:0', fromId: 'а', toId: 'б' }).expect(201);
+    expect(hit.body.pending?.sheetId).toBe('б');
+    expect(await hp()).toEqual({ а: 20, б: 15 });
+
+    const first = await answer(hit.body.pending, ['возмездие']);
+    expect(first.body.pending?.sheetId, 'ответка дошла — теперь спрашивают нападавшего').toBe('а');
+    expect(first.body.pending?.stage).toBe('after');
+    expect(first.body.pending?.question).toContain('ответкой «Возмездие»');
+    expect(await hp()).toEqual({ а: 18, б: 15 });
+
+    const second = await answer(first.body.pending, ['возмездие']);
+    expect(second.body.pending?.sheetId).toBe('б');
+    expect(await hp()).toEqual({ а: 18, б: 13 });
+
+    const last = await answer(second.body.pending, []);
+    expect(last.body.pending).toBeNull();
+    expect(await hp()).toEqual({ а: 18, б: 13 });
+  });
+
+  it('на ответку можно ответить и «до»: стол спрашивает раньше, чем ответка подействует', async () => {
+    const token = (await http().post('/auth/login').send({ name: 'Ведущий заслона' })).body.token as string;
+    const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
+    const system = {
+      id: 'заслон', name: 'С заслоном',
+      tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] }, приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
+      effects: {
+        удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '5' } }] },
+        шипы: {
+          label: 'Шипы', activation: 'passive',
+          on: [{ on: 'affected', of: 'удар', to: 'other', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '2' } }] }],
+        },
+        заслон: {
+          label: 'Заслон', activation: 'passive',
+          on: [{ on: 'targeted', of: 'шипы', confirm: true, steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'add', value: { expr: '3' } }] }],
+        },
+      },
+    };
+    const book = { records: [{ id: 'приём', table: 'приём', label: 'Удар', cells: {} }] };
+    const sheet = (id: string, worn: string[]) => ({ id, systemId: 'заслон', name: id, values: { хиты: 20 }, has: [{ of: 'приём' }], effects: worn.map(effectId => ({ effectId })) });
+    const systemId = (await as(http().post('/systems')).send({ title: 'С заслоном', system })).body.id;
+    const bookId = (await as(http().post('/compendiums')).send({ title: 'Книга заслона', systemId, compendium: book })).body.id;
+    await as(http().post(`/systems/${systemId}/publish`)).send({}).expect(201);
+    await as(http().post(`/compendiums/${bookId}/publish`)).send({}).expect(201);
+    const worldId = (await as(http().post('/worlds')).send({ title: 'Мир заслона', systemId, compendiumIds: [bookId], sheets: [sheet('а', ['заслон']), sheet('б', ['шипы']), sheet('в', [])] })).body.id;
+    const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол заслона' })).body.id as string;
+    const hp = async () => Object.fromEntries((await as(http().get(`/rooms/${roomId}`))).body.sheets.map((s: { id: string; values: { хиты: number } }) => [s.id, s.values.хиты]));
+
+    const hit = await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: 'приём:0', fromId: 'а', toId: 'б' }).expect(201);
+    expect(hit.body.pending?.sheetId).toBe('а');
+    expect(hit.body.pending?.stage).toBe('target');
+    expect(hit.body.pending?.question).toContain('ответкой «Шипы»');
+    expect(await hp(), 'удар прошёл, шипы ещё нет').toEqual({ а: 20, б: 15, в: 20 });
+
+    const done = await as(http().post(`/rooms/${roomId}/answer`)).send({ roomId, pendingId: hit.body.pending.id, chosen: ['заслон'] }).expect(201);
+    expect(done.body.pending).toBeNull();
+    expect(await hp(), 'заслон +3, потом шипы −2').toEqual({ а: 21, б: 15, в: 20 });
+
+    const two = await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: 'приём:0', fromId: 'а', toId: 'б', toIds: ['б', 'в'] }).expect(201);
+    expect(two.body.pending?.sheetId, 'вопрос на ответке посреди списка целей').toBe('а');
+    expect(await hp(), 'первая цель получила, вторая ещё нет').toEqual({ а: 21, б: 10, в: 20 });
+    const rest = await as(http().post(`/rooms/${roomId}/answer`)).send({ roomId, pendingId: two.body.pending.id, chosen: [] }).expect(201);
+    expect(rest.body.pending).toBeNull();
+    expect(await hp(), 'вторая цель — один раз, первая — без повтора').toEqual({ а: 19, б: 10, в: 15 });
+  });
+});
+
 describe('реакция после разрешения', () => {
   it('удар уже прошёл, стол спрашивает цель, ответ бьёт нападавшего', async () => {
     const token = (await http().post('/auth/login').send({ name: 'Ведущий возмездия' })).body.token as string;

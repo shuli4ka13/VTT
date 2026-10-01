@@ -59,7 +59,7 @@ export const MAX_HOPS = 4;
 
 export const hopOf = (envelope: Envelope): number => (envelope.reply ? envelope.hop ?? 1 : 0);
 
-const mayAnswer = (envelope: Envelope): boolean => hopOf(envelope) < MAX_HOPS;
+export const mayAnswer = (envelope: Envelope): boolean => hopOf(envelope) < MAX_HOPS;
 
 export interface Report {
   kind: string;
@@ -488,6 +488,7 @@ export function offers(
       fits = false;
     }
     if (!fits) continue;
+    if (runsAtOther(handler) && !mayAnswer(envelope)) continue;
     out.push({
       id: key, label: effect.label || key,
       claims: [...(handler.claims ?? [])],
@@ -535,7 +536,7 @@ export function react(
     const seed = withEvent(results, hears(handler.of, envelope.effect, emitted) ?? undefined);
     const body = withSteps(effect, handler.steps);
     if (runsAtOther(handler)) {
-      replies.push(replyFrom(found.id, body, sheet, envelope.from, seed, owner, ctx));
+      replies.push(replyFrom(found.id, body, sheet, envelope.from, seed, owner, ctx, hopOf(envelope) + 1));
     } else {
       const done = runOnSelf(found.id, body, sheet, seed, owner, ctx);
       sheet = done.sheet;
