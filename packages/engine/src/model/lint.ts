@@ -2,6 +2,8 @@ import { isActionMoment, ACTION_MOMENTS } from '../events/bus.ts';
 import type { System, Compendium, Effect, Step } from './types.ts';
 import { registry } from '../engine/steps/index.ts';
 import { STEP_WORDS } from '../words/steps.ts';
+import { ROLL_CALL, CALL_WORDS } from '../words/calls.ts';
+import { modifierLists } from './integrity.ts';
 import { calledOf, chainsOfEffect } from '../engine/effects.ts';
 import { basedOn, paramsOf } from './inherit.ts';
 import { danglingRows } from './integrity.ts';
@@ -330,6 +332,30 @@ function fieldRollProblems(system: System): Problem[] {
   return out;
 }
 
+function editProblems(system: System): Problem[] {
+  const out: Problem[] = [];
+  if (system.effects?.[ROLL_CALL]) {
+    out.push({ where: { tab: 'effects', effect: ROLL_CALL }, level: 'error', text: `id «${ROLL_CALL}» занят встроенным вызовом «${CALL_WORDS.roll.label}» — переименуйте эффект` });
+  }
+  for (const { where, modifiers } of modifierLists(system)) {
+    for (const mod of modifiers) {
+      if (mod.kind !== 'edit') continue;
+      const call = String(mod.call);
+      if (call === ROLL_CALL) {
+        if (!(String(mod.param) in CALL_WORDS.roll.params)) out.push({ where: { ...where, part: 'modifiers' }, level: 'error', text: `у броска нет параметра «${String(mod.param)}»` });
+        continue;
+      }
+      const effect = system.effects?.[call];
+      if (!effect) continue;
+      if (mod.as) out.push({ where: { ...where, part: 'modifiers' }, level: 'error', text: `«${CALL_WORDS.against}» бывает только у броска, а правка вызывает «${effect.label || call}»` });
+      const param = (effect.params ?? []).find(p => p.key === mod.param);
+      if (!param) out.push({ where: { ...where, part: 'modifiers' }, level: 'error', text: `у «${effect.label || call}» нет входа «${String(mod.param)}» — править нечего` });
+      else if (param.role !== 'amount') out.push({ where: { ...where, part: 'modifiers' }, level: 'error', text: `правка «${effect.label || call}» правит пока только величину, а «${param.label || param.key}» — не она` });
+    }
+  }
+  return out;
+}
+
 function sheetKindProblems(system: System): Problem[] {
   const out: Problem[] = [];
   const known = new Set(blockNames(system));
@@ -481,6 +507,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...paramProblems(system));
   out.push(...orphanProblems(system, compendium));
   out.push(...sheetKindProblems(system));
+  out.push(...editProblems(system));
   out.push(...fieldRollProblems(system));
   out.push(...fieldNameProblems(system));
   out.push(...rowNameProblems(system));

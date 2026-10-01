@@ -65,3 +65,28 @@ group('правка вызова: новая форма даёт то же, чт
     throws(() => pass([{ kind: 'edit', call: 'нет_такого', param: 'x', op: 'add', value: { expr: '1' } }]).resolve('хп'));
   });
 });
+
+group('правка вызова в проверке системы', () => {
+  const lint = async (modifiers: unknown[]) => {
+    const { lintSystem, errorsOf } = await import('../src/model/lint.ts');
+    return errorsOf(lintSystem(world(modifiers), { records: [] })).map(p => p.text).join('; ');
+  };
+
+  test('правка входа, которого нет, и «по мне» у эффекта — ошибки словами', async () => {
+    const text = await lint([
+      { kind: 'edit', call: 'урон', param: 'нет', op: 'add', value: { expr: '1' } },
+      { kind: 'edit', call: 'урон', param: 'сколько', op: 'add', value: { expr: '1' }, as: 'against' },
+      { kind: 'edit', call: 'урон', param: 'тип', op: 'add', value: { expr: '1' } },
+    ]);
+    eq(text.includes('нет входа «нет»'), true, text);
+    eq(text.includes('бывает только у броска'), true, text);
+    eq(text.includes('правит пока только величину'), true, text);
+  });
+
+  test('верная правка урона и броска — чисто', async () => {
+    eq(await lint([
+      { kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, anyTags: ['огонь'] },
+      { kind: 'edit', call: 'roll', param: 'edits', edit: 'advantage', as: 'against' },
+    ]), '');
+  });
+});

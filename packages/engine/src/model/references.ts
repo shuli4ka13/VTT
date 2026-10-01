@@ -1,5 +1,6 @@
 import { tagWords } from '../engine/roll-tags.ts';
 import { ANY_ROLL, incomingTagOf } from '../engine/targets.ts';
+import { ROLL_CALL } from '../words/calls.ts';
 import { ownerOf } from '../engine/owners.ts';
 import type { System, Compendium, Effect, Step, Modifier, Guard } from './types.ts';
 import { compile } from '../formula/index.ts';
@@ -223,8 +224,15 @@ function rowFree(text: string, from: Where, own: Set<string> | undefined, out: R
 
 function modifierRefs(list: Modifier[] | undefined, from: Where, out: Reference[], own?: Set<string>): void {
   for (const mod of list ?? []) {
-    const target = String(mod.target ?? '');
-    if (mod.kind === 'value') {
+    const target = String((mod as { target?: string }).target ?? '');
+    if (mod.kind === 'edit') {
+      if (mod.call === ROLL_CALL) {
+        for (const tag of [...mod.tags ?? [], ...mod.anyTags ?? [], ...mod.notTags ?? []]) out.push({ kind: 'roll', key: tag, from });
+        if (mod.edit) out.push({ kind: 'rollEdit', key: String(mod.edit), from });
+      } else {
+        out.push({ kind: 'effect', key: mod.call, from });
+      }
+    } else if (mod.kind === 'value') {
       if (target && !target.includes(':') && target !== '*') out.push({ kind: 'field', key: target, from });
     } else {
       if (target && target !== ANY_ROLL && target !== incomingTagOf(ANY_ROLL)) out.push({ kind: 'roll', key: target, from });

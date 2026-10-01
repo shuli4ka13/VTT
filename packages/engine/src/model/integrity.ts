@@ -27,12 +27,14 @@ const missing = (system: System, table: string, value: unknown): unknown[] =>
 const swap = (value: unknown, from: unknown, to: unknown): unknown =>
   (Array.isArray(value) ? value.map(item => (same(item, from) ? to : item)) : (same(value, from) ? to : value));
 
-const tagTablesOfTarget = (system: System, target: unknown): string[] => {
+const tagTablesOfTarget = (system: System, mod: Loose): string[] => {
+  if (mod.kind === 'edit' && typeof mod.call === 'string') return tagTablesOf(system.effects[mod.call]);
+  const target = mod.target;
   if (typeof target !== 'string' || !target.startsWith('event:')) return [];
   return tagTablesOf(system.effects[target.slice('event:'.length)]);
 };
 
-function modifierLists(system: System): { where: Where; modifiers: Loose[] }[] {
+export function modifierLists(system: System): { where: Where; modifiers: Loose[] }[] {
   const out: { where: Where; modifiers: Loose[] }[] = [];
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
     out.push({ where: { tab: 'effects', effect: id }, modifiers: (effect.modifiers ?? []) as unknown as Loose[] });
@@ -166,10 +168,10 @@ export function rowUsers(system: System, table: string, key: unknown, compendium
   for (const { where, modifiers } of modifierLists(system)) {
     for (const m of modifiers) {
       const w = m.where as { table?: string; is?: unknown } | undefined;
-      const tagTables = tagTablesOfTarget(system, m.target);
+      const tagTables = tagTablesOfTarget(system, m);
       const byWhere = w?.table && system.tables?.[w.table]?.columns?.some(c => c.from === table) && same(w.is, key);
       const byTags = tagTables.includes(table)
-        && [...((m.tags ?? []) as unknown[]), ...((m.notTags ?? []) as unknown[])].some(t => same(t, key));
+        && [...((m.tags ?? []) as unknown[]), ...((m.anyTags ?? []) as unknown[]), ...((m.notTags ?? []) as unknown[])].some(t => same(t, key));
       if (byWhere || byTags) out.push({ where, text: 'правка значения' });
     }
   }
@@ -271,8 +273,9 @@ export function renameRow(system: System, table: string, from: unknown, to: unkn
     for (const m of modifiers) {
       const w = m.where as { table?: string; is?: unknown } | undefined;
       if (w?.table && system.tables?.[w.table]?.columns?.some(c => c.from === table) && same(w.is, from)) w.is = to;
-      if (tagTablesOfTarget(system, m.target).includes(table)) {
+      if (tagTablesOfTarget(system, m).includes(table)) {
         if (m.tags) m.tags = retag(m.tags);
+        if (m.anyTags) m.anyTags = retag(m.anyTags);
         if (m.notTags) m.notTags = retag(m.notTags);
       }
     }
