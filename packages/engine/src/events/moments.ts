@@ -7,9 +7,9 @@ import { lapse, burnsUse, spendUse } from './durations.ts';
 import type { Expired } from './durations.ts';
 import type { Clock } from '../engine/clock.ts';
 import { listening, subscribers, MOMENT_PREFIX, FIELD_PREFIX } from './bus.ts';
-import { EngineError } from '../engine/errors.ts';
+import { EngineError, isRuleError } from '../engine/errors.ts';
 import { effectLabelOf } from './actions.ts';
-import { isShared, isDesk } from './desk.ts';
+import { isShared, isDesk, sharedOf } from './desk.ts';
 import type { Report, WorldContext } from '../lang/types.ts';
 import type { Sheet, System, Effect, Handler, Step, WornEffect } from '../model/types.ts';
 import { fieldOf as columnField } from '../model/sheet-columns.ts';
@@ -101,7 +101,7 @@ export function fire(firing: Firing, sheets: Sheet[], world: WorldContext): { sh
   const live = sheets.find(s => s.id === firing.sheetId);
   if (!live) return null;
   const { id, effect, owner, seed, handler } = firing;
-  if (handler && !holds(handler, live, seed, owner, world)) return null;
+  if (handler && !holds(handler, live, seed, owner, world, sheets)) return null;
 
   const state = new State([...sheets], world.system, world.compendium, world.clock ?? null);
   const run = new Runner(state, new External(emptyJournal(), world.die, true));
@@ -115,7 +115,14 @@ export function fire(firing: Firing, sheets: Sheet[], world: WorldContext): { sh
   const known = new Set(sheets.map(s => s.id));
   return {
     sheets: state.sheets.filter(s => known.has(s.id)),
-    fired: { sheetId: firing.sheetId, report: { ...reportOf('moment', id, firing.sheetId, firing.label, sink, ran.stopped, false) } },
+    fired: {
+      sheetId: firing.sheetId,
+      report: (() => {
+        const report = reportOf('moment', id, firing.sheetId, firing.label, sink, ran.stopped, false);
+        const later = sink.after.flatMap(entry => ('report' in entry ? [entry.report] : []));
+        return later.length ? { ...report, reactions: [...(report.reactions ?? []), ...later] } : report;
+      })(),
+    },
   };
 }
 
@@ -123,9 +130,9 @@ export function fireMoments(events: MomentEvent[], sheets: Sheet[], world: World
   let updated = sheets;
   const reports: Fired[] = [];
   const expired: Expired[] = [];
-  let fired = 0;
 
   for (const event of events) {
+    let fired = 0;
     const lapsed = lapse(event, updated, world.system, world.clock);
     updated = lapsed.sheets;
     expired.push(...lapsed.expired);
@@ -164,9 +171,16 @@ export const fieldOf = (on: string | undefined): string | null =>
 const truthy = (value: unknown): boolean =>
   value === true || (typeof value === 'number' && value !== 0) || (typeof value === 'string' && value !== '');
 
-const valuesOf = (sheet: Sheet, world: WorldContext): (tag: string) => unknown => {
+const valuesOf = (sheet: Sheet, world: WorldContext, sheets: readonly Sheet[]): (tag: string) => unknown => {
   let pass: ReturnType<typeof newPass> | null = null;
-  return tag => calc(world.system, sheet, tag, pass ??= newPass(world.system, sheet, { compendium: world.compendium }));
+  return tag => {
+    try {
+      return calc(world.system, sheet, tag, pass ??= newPass(world.system, sheet, { compendium: world.compendium, shared: sharedOf(world.system, sheets) }));
+    } catch (err) {
+      if (isRuleError(err)) return undefined;
+      throw err;
+    }
+  };
 };
 
 export function fireCrossings(before: Sheet[], after: Sheet[], world: WorldContext): MomentRun {
@@ -180,8 +194,8 @@ export function fireCrossings(before: Sheet[], after: Sheet[], world: WorldConte
     for (const sheet of updated) {
       const was = previous.find(s => s.id === sheet.id);
       if (!was || was === sheet) continue;
-      const now = valuesOf(sheet, world);
-      const then = valuesOf(was, world);
+      const now = valuesOf(sheet, world, updated);
+      const then = valuesOf(was, world, previous);
       for (const { id, effect, handler } of subscribers(world.system, sheet, { compendium: world.compendium })) {
         const tag = fieldOf(handler.on);
         if (!tag) continue;
@@ -215,12 +229,17 @@ export function fireCrossings(before: Sheet[], after: Sheet[], world: WorldConte
 }
 
 function holds(
-  handler: Handler, sheet: Sheet, seed: Record<string, unknown>, owner: string, world: WorldContext,
+  handler: Handler, sheet: Sheet, seed: Record<string, unknown>, owner: string, world: WorldContext, sheets: readonly Sheet[],
 ): boolean {
   const condition = handler.if;
   if (!condition) return true;
-  const pass = newPass(world.system, sheet, { compendium: world.compendium });
-  return holdsNow(condition, { pass, owner, results: seed });
+  const pass = newPass(world.system, sheet, { compendium: world.compendium, shared: sharedOf(world.system, sheets) });
+  try {
+    return holdsNow(condition, { pass, owner, results: seed });
+  } catch (err) {
+    if (isRuleError(err)) return false;
+    throw err;
+  }
 }
 
 export const describeMoment = (

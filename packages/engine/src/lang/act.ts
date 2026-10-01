@@ -166,6 +166,9 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
           seen: (rolled, tags, rollerId) => run.seen(rollerId, targets[0] ?? null, rolled, tags, `send/${step.id ?? index}`, action.effect, 0, seenSink),
         };
         const when = packGuardRef(step.when, inner);
+        if (when && typeof when === 'object' && 'const' in when && (when as { const: unknown }).const === false) {
+          return { type: step.type, id: step.id ?? null, when } as unknown as StepData;
+        }
         return { type: step.type, id: step.id ?? null, ...(when !== undefined ? { when } : {}), ...stepModule(step.type).pack(step, inner) } as StepData;
       };
       const eager = (): void => {

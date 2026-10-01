@@ -171,3 +171,47 @@ group('ожидание для кнопки', () => {
     eq(sheets[1]!.values.хп, undefined, 'настоящие листы не тронуты');
   });
 });
+
+group('ядро: по ревью', () => {
+  test('вызов, будящий подписку на себя же, обрывается ошибкой словами, а не переполнением стека', () => {
+    const system = world({
+      удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'emit', event: 'эхо' }] },
+      эхо: { label: 'Эхо', activation: 'manual', params: [], steps: [] },
+      отзвук: { label: 'Отзвук', activation: 'passive', on: [{ on: 'targeted', of: 'event:эхо', steps: [{ type: 'emit', event: 'эхо' }] }] },
+    });
+    let message = '';
+    try { play(system, [sheet('а'), sheet('б', ['отзвук'])], []); } catch (err) { message = (err as Error).message; }
+    ok(message.includes('похоже, идут по кругу'), message);
+  });
+
+  test('ложное «когда» у броска действующего — кость не брошена, реакции на неё не будят', () => {
+    const system = world({
+      удар: {
+        label: 'Удар', activation: 'manual',
+        steps: [
+          { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' }, tags: ['атака'] }, versus: { expr: '10' }, when: { expr: 'нет' } },
+          { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '1' } },
+        ],
+      },
+      плата: { label: 'Плата', activation: 'passive', on: [{ on: 'seen', steps: [{ type: 'apply', target: { tag: 'удача' }, direction: 'subtract', value: { expr: '1' } }, { type: 'roll-plus', value: { expr: '0' } }] }] },
+    });
+    const out = play(system, [{ ...sheet('а', ['плата']), values: { удача: 1 } } as Sheet, sheet('б')], []);
+    eq(out.kind, 'done');
+    eq(out.sheets.find(s => s.id === 'а')!.values.удача, 1, 'реакция на несостоявшийся бросок не сработала');
+  });
+
+  test('две выбранные реакции на один ресурс: вторая пропускается с причиной, действие не падает', () => {
+    const shield = (label: string) => ({
+      label, activation: 'passive',
+      on: [{ on: 'targeted', confirm: true, cost: [{ type: 'compare', value: { expr: '@удача' }, versus: { expr: '1' }, breakIf: 'less', note: 'нет удачи' }, { type: 'apply', target: { tag: 'удача' }, direction: 'subtract', value: { expr: '1' } }], steps: [] }],
+    });
+    const system = world({ р1: shield('Р1'), р2: shield('Р2') });
+    const sheets = [sheet('а'), { ...sheet('б', ['р1', 'р2']), values: { удача: 1 } } as Sheet];
+    const first = play(system, sheets, [15]);
+    if (first.kind !== 'paused') { ok(false, 'ждали вопрос'); return; }
+    const journal = { ...first.journal, answers: { ...first.journal.answers, [first.question.key]: ['р1', 'р2'] } };
+    const second = play(system, sheets, [], journal);
+    eq(second.kind, 'done');
+    if (second.kind === 'done') ok(second.log.some(line => line.includes('не состоялось')), second.log.join(' | '));
+  });
+});

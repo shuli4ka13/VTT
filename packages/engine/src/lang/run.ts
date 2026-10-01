@@ -123,6 +123,7 @@ export class Runner {
   cut = false;
   private drying = 0;
   private seeing = 0;
+  private depth = 0;
 
   get isDrying(): boolean { return this.drying > 0; }
 
@@ -194,13 +195,15 @@ export class Runner {
     };
 
     const me = state.pass(frame.me);
+    const rolls = { n: 0 };
     return {
       system,
       sheet: state.get(here),
       die: this.ext.dieAt(scope),
       ...(frame.roll ? { seenRoll: frame.roll } : {}),
       seen: (rolled: LeadRoll, tags: readonly string[], rollerId: string) =>
-        this.seen(rollerId, frame.opponent !== undefined ? frame.opponent : rollerId === frame.me ? frame.target : frame.me, rolled, tags, scope, frame.effectId, frame.hop, sink),
+        this.seen(rollerId, frame.opponent !== undefined ? frame.opponent : rollerId === frame.me ? frame.target : frame.me, rolled, tags,
+          rolls.n++ ? `${scope}#${rolls.n - 1}` : scope, frame.effectId, frame.hop, sink),
       pass: state.pass(here),
       direct: {
         me,
@@ -276,18 +279,23 @@ export class Runner {
     const heard = [payload];
     const scope = `${at}>${event}`;
     const chain = [...(frame.chain ?? []), event];
-    if (chain.length > MAX_CALL_DEPTH) {
+    if (chain.length > MAX_CALL_DEPTH || this.depth >= MAX_CALL_DEPTH * 2) {
       throw new EngineError(`${who(frame)}: вызовы вложены глубже ${MAX_CALL_DEPTH} — похоже, идут по кругу: ${chain.join(' → ')}`);
     }
-    this.fire('targeted', 'event', frame.here, event, heard, parent, frame.me, `${scope}<`, frame.hop, sink);
-    const inner: Frame = {
-      ...frame, scope, target: frame.here, effectId: event, args: args ?? {}, paramDefs: paramDefs ?? [], props: null,
-      names: 'here', packed: undefined, claims: undefined, against: undefined, alone: false, inputs: undefined, chain, actor: false,
-    };
-    const ran = this.exec(inner, steps, sink, { event: payload }, event);
-    this.fire('affected', 'event', frame.here, event, heard, parent, frame.me, `${scope}>`, frame.hop, sink);
-    if (frame.actor) this.fire('acted', 'event', frame.me, event, heard, parent, frame.here, `${scope}^`, frame.hop, sink);
-    return { results: ran.results, stopped: ran.stopped };
+    this.depth++;
+    try {
+      this.fire('targeted', 'event', frame.here, event, heard, parent, frame.me, `${scope}<`, frame.hop, sink);
+      const inner: Frame = {
+        ...frame, scope, target: frame.here, effectId: event, args: args ?? {}, paramDefs: paramDefs ?? [], props: null,
+        names: 'here', packed: undefined, claims: undefined, against: undefined, alone: false, inputs: undefined, chain, actor: false,
+      };
+      const ran = this.exec(inner, steps, sink, { event: payload }, event);
+      this.fire('affected', 'event', frame.here, event, heard, parent, frame.me, `${scope}>`, frame.hop, sink);
+      if (frame.actor) this.fire('acted', 'event', frame.me, event, heard, parent, frame.here, `${scope}^`, frame.hop, sink);
+      return { results: ran.results, stopped: ran.stopped };
+    } finally {
+      this.depth--;
+    }
   }
 
   answer(frame: Frame, call: { event: string; args: Record<string, unknown> }, sink: Sink, at: string): void {
@@ -525,6 +533,11 @@ export class Runner {
       const found = subscriberByKey(this.system, id);
       if (!found) throw new EngineError(`реакция «${id}»: такой подписки в системе нет`);
       const label = found.effect.label || id;
+      const why = this.refusal(id, sheetId, results, `${question.key}!${id}?`);
+      if (why) {
+        entries.push({ text: `«${label}» не состоялось: ${why}` });
+        continue;
+      }
       if (found.handler.cost?.length) {
         const paid = newSink();
         const ran = this.exec(this.selfFrame(found, sheetId, `${question.key}$${id}`, hop, `плата за «${label}»`), found.handler.cost, paid, results);
