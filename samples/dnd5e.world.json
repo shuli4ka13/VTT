@@ -3024,6 +3024,12 @@
             },
             "versus": {
               "expr": "@получатель.ac"
+            },
+            "succeedOn": {
+              "expr": "20"
+            },
+            "failOn": {
+              "expr": "1"
             }
           },
           {
@@ -3451,6 +3457,12 @@
             },
             "versus": {
               "expr": "@получатель.ac"
+            },
+            "succeedOn": {
+              "expr": "20"
+            },
+            "failOn": {
+              "expr": "1"
             }
           },
           {
@@ -3646,6 +3658,12 @@
             },
             "versus": {
               "expr": "@получатель.ac"
+            },
+            "succeedOn": {
+              "expr": "20"
+            },
+            "failOn": {
+              "expr": "1"
             }
           },
           {

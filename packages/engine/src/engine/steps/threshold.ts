@@ -5,7 +5,7 @@ import { packRef, resolveRef, resolveNumber, resolveOptionalNumber, lonelyField 
 import { EngineError } from '../errors.ts';
 import type { StepData, StepContext } from './index.ts';
 import type { RolledDie } from '../readings.ts';
-import { STEP_WORDS, type StepWords } from '../../words/steps.ts';
+import { STEP_WORDS, forcedWords, type StepWords } from '../../words/steps.ts';
 
 export const type = 'threshold';
 const words: StepWords = STEP_WORDS.threshold;
@@ -143,7 +143,8 @@ export function traceLine(t: any, h: any) {
     ? ' · ' + Object.entries(t.parts).map(([k, v]) => `${k}: ${v}`).join(', ')
     : '';
 
-  const taken = t.success ? `взят (запас ${t.margin})` : `не взят (недобор ${-t.margin})`;
+  const taken = t.forced != null ? `${t.success ? 'взят' : 'не взят'} (${forcedWords(t.forced, t.success)})`
+    : t.success ? `взят (запас ${t.margin})` : `не взят (недобор ${-t.margin})`;
   const verdict = t.degree !== undefined && t.degree !== null
     ? `${taken}, степень ${t.degree}`
     : taken;
@@ -169,6 +170,8 @@ export function pack(step: StepData, ctx: StepContext) {
     ...(lonelyField(step.versus, ctx.system) ? { against: lonelyField(step.versus, ctx.system) } : {}),
 
     ...(step.degrees && step.degrees.table ? { degrees: step.degrees } : {}),
+    ...(step.succeedOn !== undefined && step.succeedOn !== null ? { succeedOn: packRef(step.succeedOn, ctx) } : {}),
+    ...(step.failOn !== undefined && step.failOn !== null ? { failOn: packRef(step.failOn, ctx) } : {}),
   };
 
   if (base.side === 'target') {
@@ -211,7 +214,13 @@ export function resolve(step: StepData, ctx: StepContext) {
   const against = versusOf(step.versus, ctx);
   const versus = against.value + eased;
   const outcome = OUTCOMES[String(step.successWhen)] || OUTCOMES.atLeast!;
-  const { success, margin } = outcome(total, versus);
+  const judged = outcome(total, versus);
+  const margin = judged.margin;
+  const succeedOn = resolveOptionalNumber(step.succeedOn, ctx, 'кость верного успеха');
+  const failOn = resolveOptionalNumber(step.failOn, ctx, 'кость верного провала');
+  const forced = failOn !== null && rolled.total <= failOn ? false
+    : succeedOn !== null && rolled.total >= succeedOn ? true : null;
+  const success = forced ?? judged.success;
 
   const scale = step.degrees && step.degrees.table ? step.degrees : null;
   const degree = scale
@@ -247,6 +256,7 @@ export function resolve(step: StepData, ctx: StepContext) {
       ...(rolled.edits?.length ? { edits: rolled.edits } : {}),
       versus: step.against ? { tag: step.against, value: versus } : { value: versus },
       margin, success,
+      ...(forced !== null ? { forced: rolled.total } : {}),
       ...(against.against ? { against: against.against } : {}),
       ...(scale ? { degree } : {}),
       ...(Object.keys(rolled.parts || {}).length ? { parts: rolled.parts } : {}),

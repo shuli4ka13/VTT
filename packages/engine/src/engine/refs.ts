@@ -320,6 +320,8 @@ export function toolsOf(system: System, pass: Pass, owner: string, die?: Die): T
         return sorted.slice(0, Math.abs(keep)).reduce((sum, value) => sum + value, 0);
       },
     } : {}),
+    peak: (notation: string, times: number) =>
+      rollNotation(times > 1 ? multiplyNotation(notation, times) : notation, sides => sides).total,
     table: (name, key, column) => {
       const read = (one: unknown) => readCell(system, pass, name, one, column ?? VALUE_COLUMN, owner);
       if (!Array.isArray(key)) return read(key) as Value;

@@ -5,6 +5,7 @@ import { outcomeWords, rollName } from '../engine/roll-tags.ts';
 import type { System, Sheet } from '../model/types.ts';
 import { fieldOf, hasField } from '../model/sheet-columns.ts';
 import { recordKinds } from '../model/owned.ts';
+import { forcedWords } from '../words/steps.ts';
 
 const tagsOfStep = (step: Record<string, any> | undefined, trace?: Record<string, any>): string[] =>
   (trace?.tags ?? step?.tags ?? (step?.roll?.tags ?? []).filter((t: unknown) => typeof t === 'string')) as string[];
@@ -31,7 +32,7 @@ export function previewLines(hoisted: Record<string, any>[], system: System, dry
       ? `бросок цели [${trace.rolls.join(', ')}] + ${trace.bonus ?? 0} = ${trace.total} ` : '';
     const step = steps.find(s => String(s.id ?? '') === String(trace.step ?? ''));
     const words = outcomeWords(system, tagsOfStep(step, trace));
-    lines.push(`${own}против ${versus} ${trace.versus?.value}: ${trace.success ? words.success : words.fail}`);
+    lines.push(`${own}против ${versus} ${trace.versus?.value}: ${trace.success ? words.success : words.fail}${trace.forced != null ? ` (${forcedWords(trace.forced, Boolean(trace.success))})` : ''}`);
   }
   return lines;
 }
@@ -111,7 +112,8 @@ export function describeEntry(
         : (refLabel(step?.versus) ?? 'порог');
       const degree = trace.degree !== undefined && trace.degree !== null ? `, степень ${trace.degree}` : '';
       const words = outcomeWords(system, tagsOfStep(step, trace));
-      const verdict = (trace.success ? words.success : words.fail) + degree;
+      const forced = trace.forced != null ? ` (${forcedWords(trace.forced, Boolean(trace.success))})` : '';
+      const verdict = (trace.success ? words.success : words.fail) + forced + degree;
       return `${check}: ${rolls}${edits}${bonus} = ${trace.total} против ${versus}: ${trace.versus?.value} — ${verdict}`;
     }
     if (trace.type === 'amount') {

@@ -35,6 +35,8 @@ export const STEP_WORDS = {
         choice: [['atLeast', 'не меньше порога'], ['notOver', 'не больше порога'],
           ['over', 'строго больше'], ['under', 'строго меньше'], ['equals', 'ровно порог']],
       },
+      { key: 'succeedOn', label: 'Всегда успех, если на кости не меньше', kind: 'ref', allow: ['expr', 'const', 'param', 'prop', 'empty'] },
+      { key: 'failOn', label: 'Всегда провал, если на кости не больше', kind: 'ref', allow: ['expr', 'const', 'param', 'prop', 'empty'] },
       {
         key: 'continueOn', label: 'Дальше при', kind: 'choice', options: ['success', 'fail', 'always'], fallback: 'success',
         choice: [['success', 'успехе'], ['fail', 'провале'], ['always', 'всегда — ветвят следующие шаги']],
@@ -186,3 +188,5 @@ export const stepLabel = (type: string): string => (STEP_WORDS as Record<string,
 
 export const reasonWordOf = (type: string, reason: string): string | null =>
   (STEP_WORDS as Record<string, StepWords>)[type]?.reasons[reason] ?? null;
+
+export const forcedWords = (die: number, success: boolean): string => `на кости ${die} — всегда ${success ? 'успех' : 'провал'}`;

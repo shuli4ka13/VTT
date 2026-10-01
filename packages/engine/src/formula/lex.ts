@@ -19,7 +19,7 @@ const PUNCT: Record<string, TokenType> = {
   '(': 'lparen', ')': 'rparen', ',': 'comma',
 };
 
-export const PHRASES = ['округлить вниз', 'округлить вверх', 'большее из', 'меньшее из'];
+export const PHRASES = ['округлить вниз', 'округлить вверх', 'большее из', 'меньшее из', 'максимум костей'];
 
 function phraseAt(src: string, at: number): string | null {
   for (const phrase of PHRASES) {

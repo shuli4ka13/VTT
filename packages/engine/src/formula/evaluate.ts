@@ -6,6 +6,7 @@ export type Value = number | boolean | string;
 
 export interface Tools {
   roll?: (notation: string, times: number, keep?: number) => number;
+  peak?: (notation: string, times: number) => number;
   table?: (name: string, key: Value | Value[], column: string | null) => Value;
   rows?: (table: string, column: string) => Value[];
 }
@@ -116,6 +117,17 @@ const FUNCTIONS: Record<string, Fn> = {
         throw new FormulaRuntimeError('третий аргумент «кинуть» — сколько костей оставить: число лучших, со знаком минус — худших');
       }
       return tools.roll(notation, times, keep);
+    },
+  },
+  'максимум костей': {
+    arity: '1+',
+    apply: args => args[0]!,
+    raw: (args, tools) => {
+      if (args.length > 2) throw new FormulaRuntimeError('«максимум костей» ждёт кости и, если нужно, сколько раз');
+      if (!tools.peak) throw new FormulaRuntimeError('«максимум костей» здесь нельзя: кости здесь не разобрать');
+      const times = args.length > 1 ? Number(args[1]) : 1;
+      if (!Number.isFinite(times)) throw new FormulaRuntimeError('второй аргумент «максимум костей» — сколько раз, должен быть числом');
+      return tools.peak(String(args[0]), times);
     },
   },
 };
