@@ -332,21 +332,31 @@ function fieldRollProblems(system: System): Problem[] {
   return out;
 }
 
-function editProblems(system: System): Problem[] {
+function editProblems(system: System, compendium?: Compendium): Problem[] {
   const out: Problem[] = [];
   if (system.effects?.[ROLL_CALL]) {
     out.push({ where: { tab: 'effects', effect: ROLL_CALL }, level: 'error', text: `id «${ROLL_CALL}» занят встроенным вызовом «${CALL_WORDS.roll.label}» — переименуйте эффект` });
   }
-  for (const { where, modifiers } of modifierLists(system)) {
+  const lists = [
+    ...modifierLists(system),
+    ...recordsOf(compendium).map(record => ({ where: { tab: 'book' as const, record: record.id }, modifiers: (record.modifiers ?? []) as unknown as Record<string, unknown>[] })),
+  ];
+  for (const { where, modifiers } of lists) {
     for (const mod of modifiers) {
       if (mod.kind !== 'edit') continue;
       const call = String(mod.call);
+      const at = { ...where, part: 'modifiers' };
       if (call === ROLL_CALL) {
-        if (!(String(mod.param) in CALL_WORDS.roll.params)) out.push({ where: { ...where, part: 'modifiers' }, level: 'error', text: `у броска нет параметра «${String(mod.param)}»` });
+        if (!(String(mod.param) in CALL_WORDS.roll.params)) out.push({ where: at, level: 'error', text: `у броска нет параметра «${String(mod.param)}»` });
+        else if (mod.param === 'edits' && !mod.edit) out.push({ where: at, level: 'error', text: 'правка броска не выбрана' });
+        else if (mod.param === 'bonus' && !(mod.value as { expr?: string } | undefined)?.expr?.trim()) out.push({ where: at, level: 'error', text: 'у прибавки к броску не задано, на сколько' });
         continue;
       }
       const effect = system.effects?.[call];
-      if (!effect) continue;
+      if (!effect) {
+        out.push({ where: at, level: 'error', text: `правка вызывает «${call}», а такого эффекта нет` });
+        continue;
+      }
       if (mod.as) out.push({ where: { ...where, part: 'modifiers' }, level: 'error', text: `«${CALL_WORDS.against}» бывает только у броска, а правка вызывает «${effect.label || call}»` });
       const param = (effect.params ?? []).find(p => p.key === mod.param);
       if (!param) out.push({ where: { ...where, part: 'modifiers' }, level: 'error', text: `у «${effect.label || call}» нет входа «${String(mod.param)}» — править нечего` });
@@ -507,7 +517,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...paramProblems(system));
   out.push(...orphanProblems(system, compendium));
   out.push(...sheetKindProblems(system));
-  out.push(...editProblems(system));
+  out.push(...editProblems(system, compendium));
   out.push(...fieldRollProblems(system));
   out.push(...fieldNameProblems(system));
   out.push(...rowNameProblems(system));

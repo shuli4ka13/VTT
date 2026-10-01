@@ -1,6 +1,7 @@
 import { compile } from '../formula/index.ts';
 import { assertTarget } from './targets.ts';
 import { ROLL_CALL } from '../words/calls.ts';
+import { amountParamOf } from '../model/lists.ts';
 import { wornEffects, activationOf } from './effects.ts';
 import { EngineError } from './errors.ts';
 import { anyRowSays } from './tables.ts';
@@ -31,8 +32,13 @@ export const editKey = (call: string, param: string, as?: string): string =>
   `${as ? `${as}:` : ''}${call}.${param}`;
 
 const assertCall = (system: System, mod: EditModifier, owner?: string): void => {
-  if (mod.call === ROLL_CALL || system.effects?.[mod.call]) return;
-  throw new EngineError(`${owner ? `«${owner}»: ` : ''}правка вызова «${mod.call}» — такого эффекта в системе нет`);
+  if (mod.call === ROLL_CALL) return;
+  const who = owner ? `«${owner}»: ` : '';
+  const effect = system.effects?.[mod.call];
+  if (!effect) throw new EngineError(`${who}правка вызова «${mod.call}» — такого эффекта в системе нет`);
+  if (amountParamOf(effect)?.key !== mod.param) {
+    throw new EngineError(`${who}правка «${effect.label || mod.call}» правит вход «${mod.param}», а величина эффекта — ${amountParamOf(effect)?.key ? `«${amountParamOf(effect)!.key}»` : 'не задана'}`);
+  }
 };
 
 export interface RollResolution {

@@ -75,6 +75,10 @@ group('правка вызова работает', () => {
     eq(editNumber(pass(mod({ notTags: ['огонь'] })), 'урон', 'сколько', 0, ['огонь']), 0);
   });
 
+  test('правка не той величины (вход переименовали) — ошибка, а не тихо пропавшая правка', () => {
+    throws(() => pass([{ kind: 'edit', call: 'урон', param: 'старое_имя', op: 'add', value: { expr: '1' } }]).resolve('хп'), 'величина эффекта');
+  });
+
   test('правка несуществующего вызова — ошибка, а не тихо пропавшее сопротивление', () => {
     throws(() => pass([{ kind: 'edit', call: 'нет_такого', param: 'x', op: 'add', value: { expr: '1' } }]).resolve('хп'));
   });
@@ -95,6 +99,14 @@ group('правка вызова в проверке системы', () => {
     eq(text.includes('нет входа «нет»'), true, text);
     eq(text.includes('бывает только у броска'), true, text);
     eq(text.includes('правит пока только величину'), true, text);
+  });
+
+  test('правка в записи книги и правка без выбора — тоже находки', async () => {
+    const { lintSystem, errorsOf } = await import('../src/model/lint.ts');
+    const book = { records: [{ id: 'кольцо', table: 'x', label: 'Кольцо', cells: {}, modifiers: [{ kind: 'edit', call: 'урон', param: 'тип', op: 'add', value: { expr: '1' } }, { kind: 'edit', call: 'roll', param: 'edits' }] }] };
+    const text = errorsOf(lintSystem(world([]), book as never)).map(p => p.text).join('; ');
+    eq(text.includes('правит пока только величину'), true, text);
+    eq(text.includes('правка броска не выбрана'), true, text);
   });
 
   test('верная правка урона и броска — чисто', async () => {

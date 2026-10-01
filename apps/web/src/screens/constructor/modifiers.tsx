@@ -40,7 +40,7 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
 }) {
   const all = targets(system) as { tag: string; label: string; kind: string; group?: string }[];
   const valueTargets = all.filter(t => t.kind === 'value' || t.kind === 'incoming' || t.kind === 'cell');
-  const calls = calledOf(system);
+  const calls = calledOf(system).filter(([, effect]) => amountParamOf(effect));
   const edits = Object.entries(system.roll_edits ?? {});
   const recipes = editSystem ? recipesToInstall(system) : [];
   const pickEdit = (index: number, value: string) => {
