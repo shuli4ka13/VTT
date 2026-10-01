@@ -41,6 +41,10 @@ export class External {
     };
   }
 
+  peek(key: string): string[] | null {
+    return this.journal.answers[key] ?? null;
+  }
+
   ask(question: Question): string[] {
     this.used.add(question.key);
     const known = this.journal.answers[question.key];

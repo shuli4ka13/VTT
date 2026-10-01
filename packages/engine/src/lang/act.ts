@@ -199,7 +199,8 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
     const targetClaims = intent.targetEdits ?? [];
     const callTo = (toId: string) => ({
       effectId: action.effect, label: action.label, steps: body, from: actor, to: toId, hop: 0, seed,
-      scope: `t:${toId}`, args, paramDefs, props, ...(inputs ? { inputs } : {}), ...(packed ? { packed } : {}), asks: false,
+      scope: `t:${toId}`, args, paramDefs, props, ...(inputs ? { inputs } : {}), ...(packed ? { packed } : {}),
+      ...(claims.length ? { mine: claims } : {}), asks: false,
     });
 
     for (const toId of targets) {

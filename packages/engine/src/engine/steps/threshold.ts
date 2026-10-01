@@ -99,7 +99,10 @@ function packVersus(versus: unknown, rollerSide: string, ctx: StepContext): unkn
   const opposed = opposedOf(versus);
   if (!opposed) return packRef(versus, ctx);
   if (rollerSide === 'target') {
-    const { rolled, modBonus, tags } = rollHere(opposed, ctx);
+    const sender = ctx.direct?.me;
+    const own: StepContext = sender && sender.sheet && sender.sheet.id !== ctx.sheet.id
+      ? { ...ctx, sheet: sender.sheet, pass: sender, claims: undefined } : ctx;
+    const { rolled, modBonus, tags } = rollHere(opposed, own);
     return { rolled, bonus: packRef(opposed.bonus, ctx), modBonus, tags };
   }
   return { roll: { die: opposed.die, ...countPacked(opposed.count, ctx), bonus: packRef(opposed.bonus, ctx), tags: packTags(opposed.tags, ctx) } };

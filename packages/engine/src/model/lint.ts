@@ -245,6 +245,9 @@ function listenerProblems(system: System): Problem[] {
       if (handler.watch && (handler.as || String(handler.of ?? '').startsWith('event:'))) {
         out.push({ where, level: 'error', text: '«наблюдаю» слушает чужое действие целиком: «бросок по мне» и «пришёл вызов» с ним не сочетаются' });
       }
+      if (handler.watch && handler.confirm && handler.on === 'affected') {
+        out.push({ where, level: 'error', text: `наблюдатель «${ACTION_MOMENTS.affected.label}» срабатывает молча — спросить здесь нельзя` });
+      }
       if (handler.watch && handler.on !== 'seen' && handler.on !== 'affected') {
         out.push({ where, level: 'error', text: `«наблюдаю» бывает только у «${ACTION_MOMENTS.seen.label}» и «${ACTION_MOMENTS.affected.label}»` });
       }

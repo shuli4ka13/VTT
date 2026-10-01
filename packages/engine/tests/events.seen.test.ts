@@ -215,3 +215,55 @@ group('ядро: по ревью', () => {
     if (second.kind === 'done') ok(second.log.some(line => line.includes('не состоялось')), second.log.join(' | '));
   });
 });
+
+group('ядро: по ревью Fable', () => {
+  const split = (extra: Record<string, unknown>) => world({
+    удар: {
+      label: 'Удар', activation: 'manual',
+      steps: [
+        { type: 'each' },
+        { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' }, tags: ['атака'] }, versus: { expr: '15' } },
+        { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '5' } },
+      ],
+    },
+    ...extra,
+  });
+  const plus5 = { label: '+5', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '5' }, tags: ['атака'] }] };
+
+  test('после «Для каждой цели» атаку бросает нападающий: его +5 работает, +5 цели — нет', () => {
+    eq(hp(play(split({ плюс: plus5 }), [sheet('а', ['плюс']), sheet('б')], [11]), 'б'), 15, '11 + 5 = 16 против 15 — попадание');
+    eq(hp(play(split({ плюс: plus5 }), [sheet('а'), sheet('б', ['плюс'])], [11]), 'б'), 20, '+5 цели к атаке нападающего не идёт');
+  });
+
+  test('после «Для каждой цели» «бросок по мне» у цели срезает атаку, у нападающего — нет', () => {
+    const cut = { label: 'Насмешка', activation: 'passive', on: [{ on: 'seen', as: 'against', steps: [{ type: 'roll-plus', value: { expr: '-5' } }] }] };
+    eq(hp(play(split({ насмешка: cut }), [sheet('а'), sheet('б', ['насмешка'])], [16]), 'б'), 20, '16 − 5 = 11 — промах');
+    eq(hp(play(split({ насмешка: cut }), [sheet('а', ['насмешка']), sheet('б')], [16]), 'б'), 15, 'своё «по мне» нападающему атаку не режет');
+  });
+
+  test('две копии в стопке — у каждой своя кость', () => {
+    const system = world({ порча: { label: 'Порча', activation: 'passive', reapply: 'stack', on: [{ on: 'seen', steps: [{ type: 'roll-plus', value: { expr: "0 - кинуть('1d4')" } }] }] } });
+    const out = play(system, [sheet('а', ['порча', 'порча']), sheet('б')], [14, 1, 4]);
+    eq(hp(out, 'б'), 20, '14 − 1 − 4 = 9 — промах; с одной костью на обе было бы 12');
+  });
+
+  test('одноразовый эффект с двумя подписками срабатывает один раз', () => {
+    const system = world({
+      разок: { label: 'Разок', activation: 'passive', duration: { kind: 'uses', max: 1 }, on: [
+        { on: 'seen', steps: [{ type: 'roll-plus', value: { expr: '1' } }] },
+        { on: 'seen', steps: [{ type: 'roll-plus', value: { expr: '10' } }] },
+      ] },
+    });
+    const out = play(system, [{ ...sheet('а'), effects: [{ effectId: 'разок', usesLeft: 1 }] } as unknown as Sheet, sheet('б')], [5]);
+    eq(hp(out, 'б'), 20, '5 + 1 = 6 — промах; второй +10 сгоревший эффект не даёт');
+  });
+
+  test('повтор id в ответе выполняет реакцию один раз', () => {
+    const system = world({ вд: { label: 'Вд', activation: 'passive', on: [{ on: 'seen', confirm: true, steps: [{ type: 'roll-plus', value: { expr: '3' } }] }] } });
+    const sheets = [sheet('а', ['вд']), sheet('б')];
+    const first = play(system, sheets, [5]);
+    if (first.kind !== 'paused') { ok(false, 'ждали вопрос'); return; }
+    const journal = { ...first.journal, answers: { ...first.journal.answers, [first.question.key]: ['вд', 'вд'] } };
+    eq(hp(play(system, sheets, [], journal), 'б'), 20, '5 + 3 = 8 — промах; дважды было бы 11 и попадание');
+  });
+});

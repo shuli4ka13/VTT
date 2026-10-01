@@ -8,7 +8,7 @@ import { holdsNow } from '../engine/refs.ts';
 import { whoseOf, burnsUse, spendUse } from '../events/durations.ts';
 import { guardHolds, packGuardRef, MAX_CALL_DEPTH } from '../engine/rule.ts';
 import { EngineError, isRuleError } from '../engine/errors.ts';
-import { listening, subscriberByKey, hears, runsAtOther } from '../events/bus.ts';
+import { listening, subscriberByKey, subscribers, hears, runsAtOther } from '../events/bus.ts';
 import { MAX_HOPS } from './limits.ts';
 import { holderOf as bondHolderOf } from '../events/bonds.ts';
 import { refusalWords } from '../events/refusal.ts';
@@ -50,6 +50,7 @@ export interface Frame {
   chain?: string[];
   roll?: { value: LeadRoll };
   opponent?: string | null;
+  mine?: string[];
 }
 
 export interface Sink {
@@ -87,6 +88,7 @@ export interface Call {
   props?: Record<string, unknown> | null;
   inputs?: Record<string, number | string>;
   claims?: string[];
+  mine?: string[];
   packed?: Packed;
   asks: boolean;
 }
@@ -251,7 +253,11 @@ export class Runner {
         skip();
         continue;
       }
-      const packed: StepData = frame.packed?.(index) ?? { type: step.type, id: step.id ?? null, ...mod.pack(step as StepData, ctx) } as StepData;
+      const sender = frame.names === 'me' && frame.me !== frame.here && (mod.once?.(step as StepData) ?? false);
+      const packCtx: StepContext = sender
+        ? { ...ctx, sheet: this.state.get(frame.me), pass: this.state.pass(frame.me), ...(frame.mine?.length ? { claims: frame.mine } : { claims: undefined }) }
+        : ctx;
+      const packed: StepData = frame.packed?.(index) ?? { type: step.type, id: step.id ?? null, ...mod.pack(step as StepData, packCtx) } as StepData;
       done.push(packed);
       if (!guardHolds(packed.when, ctx)) {
         skip();
@@ -323,6 +329,8 @@ export class Runner {
       const event = sub.handler.of?.startsWith('event:') ?? false;
       if ((mode === 'event' && !event) || (mode === 'action' && event)) continue;
       const results = withEvent(seed, sub.heard);
+      const live = this.state.find(sheetId);
+      if (!live || !subscribers(this.system, live, { compendium: this.state.compendium }).some(other => other.key === sub.key)) continue;
       if (!this.holds(sub, sheetId, results)) continue;
       this.handle(sub, sheetId, results, other, `${scope}~${sub.key}${nth ? `@${nth}` : ''}`, hop, sink);
     }
@@ -336,10 +344,13 @@ export class Runner {
     for (const id of this.state.sheets.map(s => s.id)) {
       const sheet = this.state.find(id);
       if (!sheet || id === actorId || id === targetId) continue;
+      const counted = new Map<string, number>();
       for (const sub of listening(this.system, sheet, occasion, { compendium: this.state.compendium })) {
+        const nth = counted.get(sub.key) ?? 0;
+        counted.set(sub.key, nth + 1);
         const results = { ...withEvent(seed, sub.heard), [CALL_NAME]: { я: actorId, цель: targetId } };
         if (!this.holds(sub, sheet.id, results)) continue;
-        this.handle(sub, sheet.id, results, actorId, `${scope}~${sheet.id}~${sub.key}`, hop, sink);
+        this.handle(sub, sheet.id, results, actorId, `${scope}~${sheet.id}~${sub.key}${nth ? `@${nth}` : ''}`, hop, sink);
       }
     }
   }
@@ -429,33 +440,44 @@ export class Runner {
       for (const [sheetId, as, watch] of sides) {
         const sheet = sheetId ? this.state.find(sheetId) : null;
         if (!sheet || !sheetId) continue;
-        const heard = (confirm: boolean) => listening(this.system, sheet,
-          { kind: 'action', moment: 'seen', confirm, effect: effectId, emitted: [], watch }, { compendium: this.state.compendium })
-          .filter(sub => (watch || sub.handler.as === as) && tagsHold(sub.handler.tags, tags) && this.holds(sub, sheetId, seed()));
+        const heard = (confirm: boolean) => {
+          const live = this.state.find(sheetId);
+          return live ? listening(this.system, live,
+            { kind: 'action', moment: 'seen', confirm, effect: effectId, emitted: [], watch }, { compendium: this.state.compendium })
+            .filter(sub => (watch || sub.handler.as === as) && tagsHold(sub.handler.tags, tags) && this.holds(sub, sheetId, seed())) : [];
+        };
+        const counted = new Map<string, number>();
         for (const sub of heard(false)) {
-          const key = `${scope}!seen~${sheetId}~${sub.key}`;
+          const nth = counted.get(sub.key) ?? 0;
+          counted.set(sub.key, nth + 1);
+          const key = `${scope}!seen~${sheetId}~${sub.key}${nth ? `@${nth}` : ''}`;
+          if (!heard(false).some(other => other.key === sub.key)) continue;
           if (this.refusal(sub.key, sheetId, seed(), `${key}?`)) continue;
-          this.useSeen(sub, sheetId, cell, key, hop, sink, seed());
+          this.useSeen(sub, sheetId, cell, key, `${key}?`, hop, sink, seed());
         }
-        const offers = heard(true)
-          .map(sub => ({ id: sub.key, label: sub.effect.label || sub.key }))
-          .filter(offer => !this.refusal(offer.id, sheetId, seed(), `${scope}?seen:${sheetId}?${offer.id}`));
+        const base = `${scope}?seen:${sheetId}`;
+        const offers = [...new Map(heard(true).map(sub => [sub.key, { id: sub.key, label: sub.effect.label || sub.key }])).values()]
+          .filter(offer => !this.refusal(offer.id, sheetId, seed(), `${base}?${offer.id}`));
         if (!offers.length) continue;
         const question: Question = {
           key: `${scope}?seen:${sheetId}`, sheetId, window: 'seen', label: '', offers, results: seed(),
           preview: [`${tags.length ? `Бросок (${rollName([...tags])})` : 'Бросок'}: [${cell.value.rolls.join(', ')}] → ${cell.value.total}`],
         };
-        const chosen = this.drying ? [] : this.ext.ask(question);
+        const chosen = [...new Set(this.drying ? (this.ext.peek(question.key) ?? []) : this.ext.ask(question))];
         const stray = chosen.find(id => !offers.some(offer => offer.id === id));
         if (stray) throw new EngineError(`реакция «${stray}» сейчас не предлагается; можно: ${offers.map(o => o.id).join(', ')}`);
         for (const id of chosen) {
           const found = subscriberByKey(this.system, id)!;
-          const why = this.refusal(id, sheetId, seed(), `${question.key}!${id}?`);
+          if (!heard(true).some(sub => sub.key === id)) {
+            sink.after.push({ text: `«${found.effect.label || id}» не состоялось: эффекта уже нет` });
+            continue;
+          }
+          const why = this.refusal(id, sheetId, seed(), `${base}?${id}`);
           if (why) {
             sink.after.push({ text: `«${found.effect.label || id}» не состоялось: ${why}` });
             continue;
           }
-          this.useSeen(found, sheetId, cell, `${question.key}!${id}`, hop, sink, seed());
+          this.useSeen(found, sheetId, cell, `${question.key}!${id}`, `${base}?${id}`, hop, sink, seed());
         }
         if (!chosen.length && !this.ext.declineAll && !this.drying) sink.after.push({ text: `${sheet.name} пропускает реакцию` });
       }
@@ -466,12 +488,12 @@ export class Runner {
   }
 
   private useSeen(
-    sub: Subscriber, sheetId: string, cell: { value: LeadRoll }, scope: string, hop: number, sink: Sink, seed: Record<string, unknown>,
+    sub: Subscriber, sheetId: string, cell: { value: LeadRoll }, scope: string, costScope: string, hop: number, sink: Sink, seed: Record<string, unknown>,
   ): void {
     const label = sub.effect.label || sub.id;
     if (sub.handler.cost?.length) {
       const paid = newSink();
-      const ran = this.exec(this.selfFrame(sub, sheetId, `${scope}$`, hop, `плата за «${label}»`), sub.handler.cost, paid, seed);
+      const ran = this.exec(this.selfFrame(sub, sheetId, `${costScope}$`, hop, `плата за «${label}»`), sub.handler.cost, paid, seed);
       const report = reportOf('effect', sub.id, sheetId, label, paid, ran.stopped, false);
       const why = refusalWords(report, this.system);
       if (why) throw new EngineError(`«${label}» не состоялось: ${why}`);
@@ -522,7 +544,7 @@ export class Runner {
   ask(
     question: Question, effectId: string, hop: number, emitted: EmittedEvent[], other: string | null,
   ): { entries: Entry[] } {
-    const chosen = this.drying ? [] : this.ext.ask(question);
+    const chosen = [...new Set(this.drying ? (this.ext.peek(question.key) ?? []) : this.ext.ask(question))];
     const { sheetId, results } = question;
     const stray = chosen.find(id => !question.offers.some(offer => offer.id === id));
     if (stray) {
@@ -533,14 +555,19 @@ export class Runner {
       const found = subscriberByKey(this.system, id);
       if (!found) throw new EngineError(`реакция «${id}»: такой подписки в системе нет`);
       const label = found.effect.label || id;
-      const why = this.refusal(id, sheetId, results, `${question.key}!${id}?`);
+      const live = this.state.find(sheetId);
+      if (!live || !subscribers(this.system, live, { compendium: this.state.compendium }).some(sub => sub.key === id)) {
+        entries.push({ text: `«${label}» не состоялось: эффекта уже нет` });
+        continue;
+      }
+      const why = this.refusal(id, sheetId, results, `${question.key}?${id}`);
       if (why) {
         entries.push({ text: `«${label}» не состоялось: ${why}` });
         continue;
       }
       if (found.handler.cost?.length) {
         const paid = newSink();
-        const ran = this.exec(this.selfFrame(found, sheetId, `${question.key}$${id}`, hop, `плата за «${label}»`), found.handler.cost, paid, results);
+        const ran = this.exec(this.selfFrame(found, sheetId, `${question.key}?${id}$`, hop, `плата за «${label}»`), found.handler.cost, paid, results);
         const report = reportOf('effect', found.id, sheetId, label, paid, ran.stopped, false);
         const why = refusalWords(report, this.system);
         if (why) throw new EngineError(`«${label}» не состоялось: ${why}`);
@@ -571,6 +598,7 @@ export class Runner {
       args: call.args ?? {}, paramDefs: call.paramDefs ?? [], props: call.props ?? null,
       ...(call.inputs ? { inputs: call.inputs } : {}),
       ...(claims.length ? { claims } : {}),
+      ...(call.mine?.length ? { mine: call.mine } : {}),
       ...(call.packed ? { packed: call.packed } : {}),
       ...(holder ? { bond: { from: call.from, by: holder } } : {}),
       against: (tags: readonly string[]) => incomingRollModifiers(tags, this.state.pass(call.to)),
