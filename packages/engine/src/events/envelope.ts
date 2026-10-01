@@ -52,7 +52,14 @@ export interface Envelope {
   steps: StepData[];
 
   reply?: boolean;
+  hop?: number;
 }
+
+export const MAX_HOPS = 4;
+
+export const hopOf = (envelope: Envelope): number => (envelope.reply ? envelope.hop ?? 1 : 0);
+
+const mayAnswer = (envelope: Envelope): boolean => hopOf(envelope) < MAX_HOPS;
 
 export interface Report {
   kind: string;
@@ -80,6 +87,8 @@ export interface ReceiveResult {
   results: Record<string, unknown>;
 
   shared?: Sheet[];
+
+  cut?: boolean;
 }
 
 export function bindingsOf(record: CompendiumRecord, system: System): Binding[] {
@@ -214,16 +223,18 @@ export function receive(
   const fired = fireTriggers(envelope, out, { system, compendium, die, clock, shared: sharedAfter });
   const sharedChanged = changedShared(withShared(sharedAfter, fired.shared), shared);
   const reactions = [...early.reactions, ...fired.reactions];
-  const answered: Envelope[] = envelope.reply ? [] : (out.answers ?? []).map(call => ({
-    kind: 'effect', effect: call.event, from: sheet.id, to: envelope.from, reply: true, action: call.event,
+  const answering = mayAnswer(envelope);
+  const answered: Envelope[] = !answering ? [] : (out.answers ?? []).map(call => ({
+    kind: 'effect', effect: call.event, from: sheet.id, to: envelope.from, reply: true, hop: hopOf(envelope) + 1, action: call.event,
     label: system.effects[call.event]?.label || call.event,
     steps: answerSteps(call),
   }));
 
   return {
     sheet: fired.sheet,
-    replies: envelope.reply ? [] : [...answered, ...fired.replies],
+    replies: [...answered, ...fired.replies],
     results: out.results,
+    ...(fired.cut || (!answering && out.answers?.length) ? { cut: true } : {}),
     ...(sharedChanged.length ? { shared: sharedChanged } : {}),
     report: {
       kind: envelope.kind,
@@ -311,7 +322,7 @@ function runOnSelf(
 
 function replyFrom(
   id: string, effect: Effect, sheet: Sheet, to: string, results: Record<string, unknown>, owner: string,
-  { system, compendium, die }: WorldContext,
+  { system, compendium, die }: WorldContext, hop = 1,
 ): Envelope {
   return {
     kind: 'effect',
@@ -319,6 +330,7 @@ function replyFrom(
     from: sheet.id,
     to,
     reply: true,
+    hop,
     action: id,
     label: effect.label || id,
     steps: packCall({
@@ -340,12 +352,13 @@ function fireTriggers(
   envelope: Envelope,
   out: { sheet: Sheet; results: Record<string, unknown>; emitted: EmittedEvent[] },
   ctx: WorldContext,
-): { sheet: Sheet; replies: Envelope[]; spent: string[]; reactions: Report[]; shared?: Sheet[] } {
+): { sheet: Sheet; replies: Envelope[]; spent: string[]; reactions: Report[]; shared?: Sheet[]; cut?: boolean } {
   const replies: Envelope[] = [];
   const spent: string[] = [];
   const reactions: Report[] = [];
   let sheet = out.sheet;
   let shared = [...(ctx.shared ?? [])];
+  let cut = false;
 
   const occasion = { kind: 'action' as const, moment: 'affected' as const, confirm: false, effect: envelope.effect, emitted: out.emitted };
   for (const { id, effect, handler, heard } of listening(ctx.system, sheet, occasion, { compendium: ctx.compendium })) {
@@ -355,8 +368,8 @@ function fireTriggers(
 
     const body = withSteps(effect, handler.steps);
     if (runsAtOther(handler)) {
-      if (envelope.reply) continue;
-      replies.push(replyFrom(id, body, sheet, envelope.from, results, owner, ctx));
+      if (!mayAnswer(envelope)) { cut = true; continue; }
+      replies.push(replyFrom(id, body, sheet, envelope.from, results, owner, ctx, hopOf(envelope) + 1));
     } else {
       const done = runOnSelf(id, body, sheet, results, owner, { ...ctx, shared });
       sheet = done.sheet;
@@ -370,7 +383,7 @@ function fireTriggers(
     }
   }
 
-  return { sheet, replies, spent, reactions, ...(changedShared(shared, ctx.shared).length ? { shared: changedShared(shared, ctx.shared) } : {}) };
+  return { sheet, replies, spent, reactions, ...(cut ? { cut } : {}), ...(changedShared(shared, ctx.shared).length ? { shared: changedShared(shared, ctx.shared) } : {}) };
 }
 
 export function fireOutgoing(

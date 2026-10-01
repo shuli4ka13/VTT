@@ -32,6 +32,7 @@ beforeAll(async () => {
   allowBigWorlds(app);
   app.useWebSocketAdapter(new WsAdapter(app));
   await app.init();
+  await app.listen(0, '127.0.0.1');
 });
 
 afterAll(async () => { await app.close(); db.close(); });
@@ -591,6 +592,38 @@ describe('два сообщения стола сразу', () => {
     const after = (await as(http().get(`/rooms/${roomId}`))).body.sheets;
     expect(after.find((s: { id: string }) => s.id === 'б').values.хиты, 'оба удара дошли').toBe(10);
     expect(after.find((s: { id: string }) => s.id === 'а').values.хиты).toBe(11);
+  });
+});
+
+describe('цепочка ответок', () => {
+  it('шипы против шипов идут до предела, и журнал говорит, что цепочка оборвана', async () => {
+    const token = (await http().post('/auth/login').send({ name: 'Ведущий шипов' })).body.token as string;
+    const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
+    const system = {
+      id: 'шипы', name: 'С шипами',
+      tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] }, приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
+      effects: {
+        удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '1' } }] },
+        шипы: {
+          label: 'Шипы', activation: 'passive',
+          on: [{ on: 'affected', to: 'other', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '1' } }] }],
+        },
+      },
+    };
+    const book = { records: [{ id: 'приём', table: 'приём', label: 'Удар', cells: {} }] };
+    const sheet = (id: string) => ({ id, systemId: 'шипы', name: id, values: { хиты: 20 }, has: [{ of: 'приём' }], effects: [{ effectId: 'шипы' }] });
+    const systemId = (await as(http().post('/systems')).send({ title: 'С шипами', system })).body.id;
+    const bookId = (await as(http().post('/compendiums')).send({ title: 'Книга шипов', systemId, compendium: book })).body.id;
+    await as(http().post(`/systems/${systemId}/publish`)).send({}).expect(201);
+    await as(http().post(`/compendiums/${bookId}/publish`)).send({}).expect(201);
+    const worldId = (await as(http().post('/worlds')).send({ title: 'Мир шипов', systemId, compendiumIds: [bookId], sheets: [sheet('а'), sheet('б')] })).body.id;
+    const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол шипов' })).body.id as string;
+
+    const done = await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: 'приём:0', fromId: 'а', toId: 'б' }).expect(201);
+    expect(done.body.log.map((e: { text: string }) => e.text).join('\n')).toContain('цепочка ответов оборвана');
+    const after = (await as(http().get(`/rooms/${roomId}`))).body.sheets;
+    expect(after.find((s: { id: string }) => s.id === 'б').values.хиты, 'удар и две ответки').toBe(17);
+    expect(after.find((s: { id: string }) => s.id === 'а').values.хиты, 'две ответки').toBe(18);
   });
 });
 

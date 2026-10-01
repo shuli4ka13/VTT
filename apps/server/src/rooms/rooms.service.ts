@@ -10,7 +10,7 @@ import type {
   RoomState, RoomSummary, RoomDelta, JournalEntry, ActIntent, TurnIntent, AnswerIntent, ClockState, PendingState,
   Sheet, System, Compendium, StoredValue,
 } from '@vtt/schema';
-import { deliver, concludeAction, sharedHolderOf } from '@vtt/engine/events/exchange';
+import { deliver, deliverReplies, concludeAction, sharedHolderOf, CUT_WORDS } from '@vtt/engine/events/exchange';
 import type { Seen } from '@vtt/engine/events/exchange';
 import type { EmittedEvent } from '@vtt/engine/engine/rule';
 import { previewLines, describeEntry } from '@vtt/engine/events/describe';
@@ -435,6 +435,7 @@ export class RoomsService {
     const afterSeen: Record<string, Seen> = { ...(state.afterSeen ?? {}) };
     if (stage !== 'after') {
       const reports: { fromId: string; toId: string; report: any }[] = [];
+      let cut = false;
       try {
         for (const toId of targets) {
           const out = deliver({
@@ -445,11 +446,13 @@ export class RoomsService {
           sheets = out.sheets;
           reports.push(...out.reports);
           Object.assign(afterSeen, out.seen ?? {});
+          if (out.cut) cut = true;
         }
       } catch (err) {
         throw new BadRequestException((err as Error).message);
       }
       lines.push(...reports.map(entry => describeEntry(entry, system, sheets)));
+      if (cut) lines.push(CUT_WORDS);
     }
 
     try {
@@ -548,15 +551,12 @@ export class RoomsService {
       for (const report of reacted.reports) {
         lines.push(describeEntry({ fromId: asked.id, toId: asked.id, report }, system, sheets));
       }
-      for (const reply of reacted.replies) {
-        const target = sheets.find(s => s.id === reply.to);
-        if (!target) continue;
-        const back = receive(reply, { system, compendium, die: this.roll, clock, sheet: target, shared: sharedOf(system, sheets) });
-        sheets = sheets.map(s => (s.id === back.sheet.id ? back.sheet : back.shared?.find(u => u.id === s.id) ?? s));
-        if (back.sheet !== target) changed.push(back.sheet);
-        changed.push(...back.shared ?? []);
-        lines.push(describeEntry({ fromId: asked.id, toId: target.id, report: back.report }, system, sheets));
-      }
+      const beforeReplies = sheets;
+      const answered = deliverReplies({ system, compendium, die: this.roll, clock, sheets, replies: reacted.replies });
+      sheets = answered.sheets;
+      changed.push(...sheets.filter((sheet, at) => sheet !== beforeReplies[at]));
+      lines.push(...answered.reports.map(entry => describeEntry(entry, system, sheets)));
+      if (answered.cut) lines.push(CUT_WORDS);
       if (!intent.chosen.length) lines.push(`${asked.name} пропускает реакцию`);
 
       if (record.stage === 'target' && reacted.claims.length) {

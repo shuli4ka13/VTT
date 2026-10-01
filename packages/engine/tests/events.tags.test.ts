@@ -185,13 +185,39 @@ group('реакции слушают слово, а не имя эффекта',
     deepEq(me.effects, [], 'шипы ранили — сосредоточенность сорвалась');
   });
 
-  test('на ответку не отвечают: шипы против шипов не ходят по кругу', () => {
+  test('шипы против шипов: ответки идут до предела глубины, и видно, что цепочка оборвана', () => {
     const r = exchange({
       system: spiky as any, compendium: book, die: queue(), sheets: [hero(['шипы']), foe(['шипы'])],
       actionId: 'удар:0', fromId: 'герой', toId: 'враг',
     });
-    eq(r.sheets.find(s => s.id === 'враг')!.values.хп, 12);
-    eq(r.sheets.find(s => s.id === 'герой')!.values.хп, 12, 'только одна ответка');
+    eq(r.reports.filter(entry => entry.report.reply).length, 4, 'четыре ответки — предел глубины');
+    eq(r.sheets.find(s => s.id === 'враг')!.values.хп, 0, 'удар, вторая и четвёртая ответки: 20 − 24, не ниже нуля');
+    eq(r.sheets.find(s => s.id === 'герой')!.values.хп, 4, 'первая и третья: 20 − 16');
+    eq(r.cut, true);
+  });
+
+  test('ответ из тела ответки доходит: вампирские шипы ранят и лечат хозяина', () => {
+    const vampiric = world({
+      ...spiky.effects,
+      шипы: {
+        label: 'Вампирские шипы', activation: 'passive', duration: { kind: 'permanent' },
+        on: [{ on: 'affected', of: 'event:урон', to: 'other', steps: [
+          { type: 'emit', event: 'урон', args: damageArgs({ expr: '4' }, ['колющий']) },
+          { type: 'emit', event: 'лечение', to: 'sender', args: { сколько: { expr: '4' } } },
+        ] }],
+      },
+      лечение: {
+        label: 'Лечение', params: [{ key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }],
+        steps: [{ type: 'apply', target: { tag: 'хп' }, direction: 'add', value: { expr: '@event.amount' }, targetModifiers: false }],
+      },
+    });
+    const r = exchange({
+      system: vampiric as any, compendium: book, die: queue(), sheets: [hero(), foe(['шипы'])],
+      actionId: 'удар:0', fromId: 'герой', toId: 'враг',
+    });
+    eq(r.sheets.find(s => s.id === 'герой')!.values.хп, 16, 'шипы укололи на 4');
+    eq(r.sheets.find(s => s.id === 'враг')!.values.хп, 16, 'удар 8, лечение от своих шипов 4');
+    ok(!r.cut);
   });
 
   test('сигнал без приёма будит реакцию на самом себе', () => {

@@ -45,6 +45,36 @@ export interface ExchangeResult {
   reports: ExchangeEntry[];
 
   seen?: Record<string, Seen>;
+
+  cut?: boolean;
+}
+
+export const MAX_REPLIES = 32;
+
+export const CUT_WORDS = 'цепочка ответов оборвана: дальше отвечать нельзя — предел';
+
+export function deliverReplies({
+  system, compendium, die, clock, sheets, replies, budget = MAX_REPLIES,
+}: WorldArgs & { replies: Envelope[]; budget?: number }): ExchangeResult & { budget: number } {
+  let updated = sheets;
+  const reports: ExchangeEntry[] = [];
+  const queue = [...replies];
+  let left = budget;
+  let cut = false;
+  while (queue.length) {
+    if (left <= 0) { cut = true; break; }
+    const reply = queue.shift()!;
+    const target = updated.find(s => s.id === String(reply.to));
+    if (!target) continue;
+    left--;
+    const back = receive(reply, { system, compendium, die, clock, sheet: target, shared: sharedOf(system, updated) });
+    const changed = new Map([[back.sheet.id, back.sheet], ...(back.shared ?? []).map(s => [s.id, s] as const)]);
+    updated = updated.map(s => changed.get(s.id) ?? s);
+    reports.push({ fromId: reply.from, toId: String(reply.to), report: back.report });
+    queue.push(...back.replies);
+    if (back.cut) cut = true;
+  }
+  return { sheets: updated, reports, budget: left, ...(cut ? { cut } : {}) };
 }
 
 export const sharedHolderOf = (system: System, effectId: string): string | null => {
@@ -72,14 +102,11 @@ export function deliver({
   const reports: ExchangeEntry[] = [{ fromId, toId, report: main.report }];
   const seen: Record<string, Seen> = { [toId]: { results: main.results, emitted: main.report.emitted } };
 
-  for (const reply of main.replies) {
-    const target = live(String(reply.to));
-    if (!target) continue;
-    const back = receive(reply, { ...ctx, sheet: target, shared: common() });
-    put(back.sheet);
-    for (const s of back.shared ?? []) put(s);
-    reports.push({ fromId: reply.from, toId: String(reply.to), report: back.report });
-  }
+  let cut = main.cut === true;
+  const first = deliverReplies({ ...ctx, sheets: updated, replies: main.replies });
+  updated = first.sheets;
+  reports.push(...first.reports);
+  if (first.cut) cut = true;
 
   const holder = holderOf(envelope.effect, system.effects[envelope.effect]);
   if (holder && !envelope.reply) {
@@ -95,17 +122,13 @@ export function deliver({
     put(out.sheet);
     for (const s of out.shared ?? []) put(s);
     for (const report of out.reactions) reports.push({ fromId, toId: fromId, report });
-    for (const reply of out.replies) {
-      const target = live(String(reply.to));
-      if (!target) continue;
-      const back = receive(reply, { ...ctx, sheet: target, shared: common() });
-      put(back.sheet);
-      for (const s of back.shared ?? []) put(s);
-      reports.push({ fromId: reply.from, toId: String(reply.to), report: back.report });
-    }
+    const next = deliverReplies({ ...ctx, sheets: updated, replies: out.replies, budget: first.budget });
+    updated = next.sheets;
+    reports.push(...next.reports);
+    if (next.cut) cut = true;
   }
 
-  return { sheets: updated, reports, seen };
+  return { sheets: updated, reports, seen, ...(cut ? { cut } : {}) };
 }
 
 export function concludeAction({
@@ -138,6 +161,7 @@ export function deliverMany({
   const seen: Record<string, Seen> = {};
 
   const unique = [...new Set(toIds)];
+  let cut = false;
   for (const toId of unique) {
     const out = deliver({
       system, compendium, die, clock, sheets: updated, envelope, fromId, toId, claims,
@@ -145,10 +169,11 @@ export function deliverMany({
     updated = out.sheets;
     reports.push(...out.reports);
     Object.assign(seen, out.seen ?? {});
+    if (out.cut) cut = true;
   }
 
   const done = concludeAction({ system, compendium, die, clock, sheets: updated, envelope, fromId, toIds: unique, seen });
-  return { sheets: done.sheets, reports: [...reports, ...done.reports], seen };
+  return { sheets: done.sheets, reports: [...reports, ...done.reports], seen, ...(cut ? { cut } : {}) };
 }
 
 export function exchange({
