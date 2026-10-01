@@ -133,40 +133,46 @@ export function applyValueModifiers(
 }
 
 function stackNumber(active: SourcedModifier[], base: unknown, tag: string, pass: Pass): unknown {
-  let value = base;
+  return stackWith(active, base, tag, mod => valueOf(mod, pass));
+}
+
+export function stackWith<M extends SourcedModifier>(
+  active: M[], base: unknown, tag: string, value: (mod: M) => unknown,
+): unknown {
+  let result = base;
 
   const sets = active.filter(m => m.op === 'set');
   if (sets.length) {
     const rule = String(sets[sets.length - 1]!.stacking || 'override');
-    value = reduce(rule, sets.map(m => valueOf(m, pass)), tag);
+    result = reduce(rule, sets.map(value), tag);
   }
 
   const adds = active.filter(m => m.op === 'add');
-  if (adds.length) value = (value as number) + totalOf(adds, pass, tag);
+  if (adds.length) result = (result as number) + totalOf(adds, value, tag);
 
   const muls = active.filter(m => m.op === 'mul');
-  if (muls.length) value = (value as number) * totalOf(muls, pass, tag, 1);
+  if (muls.length) result = (result as number) * totalOf(muls, value, tag, 1);
 
-  const floors = active.filter(m => m.op === 'floor').map(m => Number(valueOf(m, pass)));
-  if (floors.length) value = Math.max(value as number, ...floors);
+  const floors = active.filter(m => m.op === 'floor').map(m => Number(value(m)));
+  if (floors.length) result = Math.max(result as number, ...floors);
 
-  const caps = active.filter(m => m.op === 'cap').map(m => Number(valueOf(m, pass)));
-  if (caps.length) value = Math.min(value as number, ...caps);
+  const caps = active.filter(m => m.op === 'cap').map(m => Number(value(m)));
+  if (caps.length) result = Math.min(result as number, ...caps);
 
   const unknown = active.find(m => !VALUE_OPS.includes(String(m.op)));
   if (unknown) throw new EngineError(`неизвестная операция модификатора «${unknown.op}» на мишени «${tag}»`);
 
-  return value;
+  return result;
 }
 
 export const VALUE_OPS = ['set', 'add', 'mul', 'floor', 'cap'];
 
-const editsOf = (pass: Pass, call: string, param: string, as?: string): SourcedModifier[] =>
+export const editsOf = (pass: Pass, call: string, param: string, as?: string): SourcedModifier[] =>
   (pass?.modifiers ? pass.modifiers.edits.get(editKey(call, param, as)) || [] : []);
 
 export const CALL_NAME = 'вызов';
 
-function callHolds(mod: SourcedModifier, pass: Pass, args: Record<string, unknown>): boolean {
+export function callHolds(mod: SourcedModifier, pass: Pass, args: Record<string, unknown>): boolean {
   const when = (mod as { when?: { expr?: string } }).when;
   if (!when?.expr?.trim()) return true;
   const prefix = `${CALL_NAME}.`;
@@ -231,7 +237,7 @@ export function resolveRoll(
 const isFormula = (value: unknown): value is { expr: string } =>
   Boolean(value && typeof value === 'object' && 'expr' in (value as object));
 
-function withValues(edit: RollEdit & { label: string }, pass: Pass): RollEdit & { label: string } {
+export function withValues(edit: RollEdit & { label: string }, pass: Pass): RollEdit & { label: string } {
   if (!(edit.ops ?? []).some(op => Object.values(op).some(isFormula))) return edit;
   const ops = edit.ops.map(op => Object.fromEntries(Object.entries(op).map(([key, value]) => {
     if (!isFormula(value)) return [key, value];
@@ -266,7 +272,7 @@ export function claimedModifiers(system: System, keys: string[]): SourcedModifie
   });
 }
 
-function editMatches(mod: SourcedModifier, tags: readonly string[], system: System): boolean {
+export function editMatches(mod: SourcedModifier, tags: readonly string[], system: System): boolean {
   const all = (mod as { tags?: string[] }).tags;
   const any = (mod as { anyTags?: string[] }).anyTags;
   const avoid = (mod as { notTags?: string[] }).notTags;
@@ -305,13 +311,13 @@ function valueOf(mod: SourcedModifier, pass: Pass): unknown {
   return compile(raw.expr).evaluate(pass.resolve, toolsOf(pass.system, pass, 'модификатор'));
 }
 
-function totalOf(mods: SourcedModifier[], pass: Pass, tag: string, seed = 0): number {
+function totalOf<M extends SourcedModifier>(mods: M[], value: (mod: M) => unknown, tag: string, seed = 0): number {
   const byRule = new Map<string, unknown[]>();
   for (const mod of mods) {
     const rule = String(mod.stacking || 'sum');
     let list = byRule.get(rule);
     if (!list) { list = []; byRule.set(rule, list); }
-    list.push(valueOf(mod, pass));
+    list.push(value(mod));
   }
   const multiplying = seed !== 0;
   let total = seed;
