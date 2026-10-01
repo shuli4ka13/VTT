@@ -197,8 +197,8 @@ export class Runner {
       read, write, attach, detach,
       emit: (event: EmittedEvent) => { sink.emitted.push(event); },
       run: (list, seed, within, params, paramDefs) => this.eventCall(
-        frame, String(within), (seed as { event: EmittedEvent }).event, list, params, paramDefs, sink, results),
-      answer: call => this.answer(frame, call, sink),
+        frame, String(within), (seed as { event: EmittedEvent }).event, list, params, paramDefs, sink, results, scope),
+      answer: call => this.answer(frame, call, sink, scope),
       expiry: effect => expiryOf(effect, state.clock),
       ...(frame.bond ? { bond: frame.bond } : {}),
       source: frame.source,
@@ -246,9 +246,10 @@ export class Runner {
   eventCall(
     frame: Frame, event: string, payload: EmittedEvent, steps: Step[],
     args: Record<string, unknown> | undefined, paramDefs: Param[] | undefined, sink: Sink, parent: Record<string, unknown>,
+    at: string,
   ): NestedRun {
     const heard = [payload];
-    const scope = `${frame.scope}>${event}`;
+    const scope = `${at}>${event}`;
     this.fire('targeted', 'event', frame.here, event, heard, parent, frame.me, `${scope}<`, frame.hop, sink);
     const inner: Frame = {
       ...frame, scope, target: frame.here, effectId: event, args: args ?? {}, paramDefs: paramDefs ?? [], props: null,
@@ -260,13 +261,13 @@ export class Runner {
     return { results: ran.results, stopped: ran.stopped };
   }
 
-  answer(frame: Frame, call: { event: string; args: Record<string, unknown> }, sink: Sink): void {
+  answer(frame: Frame, call: { event: string; args: Record<string, unknown> }, sink: Sink, at: string): void {
     if (frame.me === frame.here) return;
     if (frame.hop >= MAX_HOPS) { this.cut = true; return; }
     const effect = requireEffect(this.system, call.event, who(frame));
     const delivered = this.deliver({
       effectId: call.event, label: effect.label || call.event, steps: answerSteps(call),
-      from: frame.here, to: frame.me, hop: frame.hop + 1, scope: `${frame.scope}=${call.event}`, asks: true,
+      from: frame.here, to: frame.me, hop: frame.hop + 1, scope: `${at}=${call.event}`, asks: true,
     });
     if (delivered) sink.after.push(...delivered.entries);
   }
@@ -278,12 +279,15 @@ export class Runner {
     const sheet = this.state.find(sheetId);
     if (!sheet) return;
     const occasion = { kind: 'action' as const, moment, confirm: false, effect: effectId, emitted };
+    const seen = new Map<string, number>();
     for (const sub of listening(this.system, sheet, occasion, { compendium: this.state.compendium })) {
+      const nth = seen.get(sub.key) ?? 0;
+      seen.set(sub.key, nth + 1);
       const event = sub.handler.of?.startsWith('event:') ?? false;
       if ((mode === 'event' && !event) || (mode === 'action' && event)) continue;
       const results = withEvent(seed, sub.heard);
       if (!this.holds(sub, sheetId, results)) continue;
-      this.handle(sub, sheetId, results, other, `${scope}~${sub.key}`, hop, sink);
+      this.handle(sub, sheetId, results, other, `${scope}~${sub.key}${nth ? `@${nth}` : ''}`, hop, sink);
     }
   }
 
@@ -311,14 +315,14 @@ export class Runner {
     const { id, effect, handler } = sub;
     const name = label || effect.label || id;
     if (runsAtOther(handler)) {
-      if (other && hop >= MAX_HOPS) this.cut = true;
-      else if (other) {
-        const delivered = this.deliver({
-          effectId: id, label: name, steps: handler.steps ?? [], from: sheetId, to: other, hop: hop + 1,
-          scope, seed, args: (effect.args || {}) as Record<string, unknown>, paramDefs: effect.params ?? [], asks: true,
-        });
-        if (delivered) sink.after.push(...delivered.entries);
-      }
+      if (!other || other === sheetId) return;
+      if (hop >= MAX_HOPS) { this.cut = true; return; }
+      const delivered = this.deliver({
+        effectId: id, label: name, steps: handler.steps ?? [], from: sheetId, to: other, hop: hop + 1,
+        scope, seed, args: (effect.args || {}) as Record<string, unknown>, paramDefs: effect.params ?? [], asks: true,
+      });
+      if (!delivered) return;
+      sink.after.push(...delivered.entries);
     } else {
       const own = newSink();
       const ran = this.exec(this.selfFrame(sub, sheetId, scope, hop, `триггер «${name}»`), handler.steps ?? [], own, seed);
@@ -361,9 +365,12 @@ export class Runner {
     const sheet = this.state.find(sheetId);
     if (!sheet) return [];
     const envelope = { kind: 'effect', effect: effectId, from: '', action: effectId, label: '', steps: [], reply: hop > 0, hop } as Envelope;
-    return offersOf(envelope, window, {
+    const ctx = {
       system: this.system, compendium: this.state.compendium, sheet, shared: this.state.shared(), die: this.ext.dieAt(`${scope}?`),
-    }, results, emitted).filter(offer => !this.refusal(offer.id, sheetId, results, `${scope}?${offer.id}`));
+    };
+    const offered = offersOf(envelope, window, ctx, results, emitted);
+    if (hop >= MAX_HOPS && offersOf({ ...envelope, reply: false, hop: 0 }, window, ctx, results, emitted).length > offered.length) this.cut = true;
+    return offered.filter(offer => !this.refusal(offer.id, sheetId, results, `${scope}?${offer.id}`));
   }
 
   ask(
@@ -405,7 +412,7 @@ export class Runner {
     const effect = this.system.effects[call.effectId];
     const holder = effect?.bond && call.hop === 0 ? bondHolderOf(call.effectId, effect) : null;
     const frame: Frame = {
-      scope: claims.length ? `${call.scope}:c` : call.scope,
+      scope: claims.length ? `${call.scope}:c=${[...claims].sort().join(',')}` : call.scope,
       me: call.from, here: call.to, target: call.to, effectId: call.effectId,
       owner: `конверт «${call.label}»`,
       args: call.args ?? {}, paramDefs: call.paramDefs ?? [], props: call.props ?? null,
