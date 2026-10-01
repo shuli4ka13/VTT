@@ -65,8 +65,8 @@ export class TableSocket {
     this.send('sheet:claim', { roomId, sheetId });
   }
 
-  rollField(roomId: string, sheetId: string, tag: string): void {
-    this.send('sheet:roll', { roomId, sheetId, tag });
+  rollField(roomId: string, sheetId: string, tag: string, hidden = false): void {
+    this.send('sheet:roll', { roomId, sheetId, tag, ...(hidden ? { hidden } : {}) });
   }
 
   createSheet(roomId: string, name: string, of?: string): void {

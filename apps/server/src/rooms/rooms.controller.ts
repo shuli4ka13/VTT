@@ -1,3 +1,4 @@
+import { seenBy } from './visibility.ts';
 import { Controller, Get, Post, Body, Param, Headers, UsePipes, Inject } from '@nestjs/common';
 import { RoomsService } from './rooms.service.ts';
 import { WorldsService } from '../worlds/worlds.service.ts';
@@ -45,13 +46,13 @@ export class RoomsController {
   async join(@Param('id') id: string, @Headers('authorization') header?: string) {
     const { userId } = await this.auth.whoIs(bearer(header));
     await this.roomsService.join(userId, id);
-    return this.roomsService.state(id);
+    return seenBy(await this.roomsService.state(id), await this.roomsService.isGm(id, userId));
   }
 
   @Get('rooms/:id')
   async state(@Param('id') id: string, @Headers('authorization') header?: string) {
-    await this.auth.whoIs(bearer(header));
-    return this.roomsService.state(id);
+    const { userId } = await this.auth.whoIs(bearer(header));
+    return seenBy(await this.roomsService.state(id), await this.roomsService.isGm(id, userId));
   }
 
   @Get('rooms/:id/journal')
@@ -64,7 +65,7 @@ export class RoomsController {
   @UsePipes(new ZodValidationPipe(api.actIntent))
   async act(@Body() intent: ActIntent, @Headers('authorization') header?: string) {
     const { userId } = await this.auth.whoIs(bearer(header));
-    return this.roomsService.act(userId, intent);
+    return seenBy(await this.roomsService.act(userId, intent), await this.roomsService.isGm(intent.roomId, userId));
   }
 
   @Post('rooms/:id/turn')
@@ -78,7 +79,7 @@ export class RoomsController {
   @UsePipes(new ZodValidationPipe(api.answerIntent))
   async answer(@Body() intent: AnswerIntent, @Headers('authorization') header?: string) {
     const { userId } = await this.auth.whoIs(bearer(header));
-    return this.roomsService.answer(userId, intent);
+    return seenBy(await this.roomsService.answer(userId, intent), await this.roomsService.isGm(intent.roomId, userId));
   }
 
   @Post('rooms/:id/cancel')

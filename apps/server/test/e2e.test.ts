@@ -535,3 +535,36 @@ describe('концентрация снимается с листа', () => {
     expect(cleared.find((s: { id: string }) => s.id === 'воин').effects).toHaveLength(0);
   });
 });
+
+describe('скрытый бросок ведущего', () => {
+  it('игрок видит «втайне», ведущий — подробности; игроку втайне нельзя; кости журнала ходов спрятаны', async () => {
+    const gm = (await http().post('/auth/login').send({ name: 'Ведущий тайн' })).body;
+    const player = (await http().post('/auth/login').send({ name: 'Игрок тайн' })).body;
+    const as = (token: string) => (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
+
+    const systemId = (await as(gm.token)(http().post('/systems')).send({ title: 'Тайны', system: dnd })).body.id;
+    const bookId = (await as(gm.token)(http().post('/compendiums')).send({ title: 'Книга тайн', systemId, compendium })).body.id;
+    await as(gm.token)(http().post(`/systems/${systemId}/publish`)).send({});
+    await as(gm.token)(http().post(`/compendiums/${bookId}/publish`)).send({});
+    const worldId = (await as(gm.token)(http().post('/worlds')).send({
+      title: 'Мир тайн', systemId, compendiumIds: [bookId],
+      sheets: sheets.filter((s: { systemId: string }) => s.systemId === dnd.id),
+    })).body.id;
+    const roomId = (await as(gm.token)(http().post('/rooms')).send({ worldId, title: 'Стол тайн' })).body.id as string;
+    await as(player.token)(http().post(`/rooms/${roomId}/join`)).send({});
+    const [arven, mirra] = (await as(gm.token)(http().get(`/rooms/${roomId}`))).body.sheets;
+    const swing = { roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id, hidden: true };
+
+    await as(player.token)(http().post(`/rooms/${roomId}/act`)).send(swing).expect(403);
+    await as(gm.token)(http().post(`/rooms/${roomId}/act`)).send(swing).expect(201);
+
+    const seenByPlayer = (await as(player.token)(http().get(`/rooms/${roomId}`))).body.log.map((e: { text: string }) => e.text).join(' · ');
+    const seenByGm = (await as(gm.token)(http().get(`/rooms/${roomId}`))).body.log.map((e: { text: string }) => e.text).join(' · ');
+    expect(seenByPlayer).toContain('Ведущий бросает втайне');
+    expect(seenByPlayer).not.toContain('Длинный меч');
+    expect(seenByGm).toContain('Длинный меч');
+
+    const journal = (await as(player.token)(http().get(`/rooms/${roomId}/journal`))).body as { op: string; dice: number[] }[];
+    expect(journal.filter(entry => entry.op === 'act').every(entry => entry.dice.length === 0)).toBe(true);
+  });
+});

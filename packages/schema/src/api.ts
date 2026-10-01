@@ -95,6 +95,7 @@ export const pendingState = z.object({
   question: z.string(),
   options: z.array(z.object({ id: z.string(), label: z.string() })),
   preview: z.array(z.string()),
+  hidden: z.boolean().optional(),
 });
 
 export const answerIntent = z.object({
@@ -114,6 +115,13 @@ export const clockState = z.object({
   active: z.string().nullable(),
 });
 
+export const logEntry = z.object({
+  id: z.string(),
+  at: z.string(),
+  text: z.string(),
+  hidden: z.boolean().optional(),
+});
+
 export const roomState = z.object({
   id: z.string(),
   title: z.string(),
@@ -121,11 +129,7 @@ export const roomState = z.object({
   compendium,
   sheets: z.array(sheet),
   members: z.array(member),
-  log: z.array(z.object({
-    id: z.string(),
-    at: z.string(),
-    text: z.string(),
-  })),
+  log: z.array(logEntry),
 
   clock: clockState.optional(),
   pending: pendingState.nullable().optional(),
@@ -149,6 +153,8 @@ export const actIntent = z.object({
   targetEdits: z.array(z.string().min(1)).optional(),
 
   inputs: z.record(z.string().min(1), z.union([z.number(), z.string()])).optional(),
+
+  hidden: z.boolean().optional(),
 });
 
 export const journalEntry = z.object({
@@ -164,11 +170,7 @@ export const journalEntry = z.object({
 export const roomDelta = z.object({
   roomId: z.string(),
   sheets: z.array(sheet),
-  log: z.array(z.object({
-    id: z.string(),
-    at: z.string(),
-    text: z.string(),
-  })),
+  log: z.array(logEntry),
 
   clock: clockState.optional(),
   pending: pendingState.nullable().optional(),
@@ -191,7 +193,7 @@ export const clientMessage = z.discriminatedUnion('type', [
 
   z.object({ type: z.literal('sheet:create'), roomId: z.string(), name: z.string().min(1).max(64), of: z.string().min(1).optional() }),
 
-  z.object({ type: z.literal('sheet:roll'), roomId: z.string(), sheetId: z.string(), tag: z.string().min(1) }),
+  z.object({ type: z.literal('sheet:roll'), roomId: z.string(), sheetId: z.string(), tag: z.string().min(1), hidden: z.boolean().optional() }),
 
   z.object({ type: z.literal('sheet:claim'), roomId: z.string(), sheetId: z.string().nullable() }),
 

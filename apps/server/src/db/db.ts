@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS members (
   sheet_id TEXT, PRIMARY KEY (room_id, user_id));
 CREATE TABLE IF NOT EXISTS log_entries (
   id TEXT PRIMARY KEY, room_id TEXT NOT NULL, at TEXT NOT NULL,
-  text TEXT NOT NULL, seq INTEGER NOT NULL);
+  text TEXT NOT NULL, seq INTEGER NOT NULL, hidden INTEGER NOT NULL DEFAULT 0);
 CREATE INDEX IF NOT EXISTS log_by_room ON log_entries (room_id, seq);
 CREATE TABLE IF NOT EXISTS room_journal (
   room_id TEXT NOT NULL, seq INTEGER NOT NULL, at TEXT NOT NULL, user_id TEXT NOT NULL,
@@ -63,6 +63,12 @@ function addSnapshotColumn(raw: DatabaseSync, table: string): void {
   raw.exec(`UPDATE ${table} SET published_data = data WHERE status = 'published'`);
 }
 
+function addHiddenColumn(raw: DatabaseSync): void {
+  const columns = raw.prepare('PRAGMA table_info(log_entries)').all() as { name: string }[];
+  if (columns.some(column => column.name === 'hidden')) return;
+  raw.exec('ALTER TABLE log_entries ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0');
+}
+
 export function openDatabase(file = ':memory:'): Database {
   const raw = new DatabaseSync(file);
   raw.exec('PRAGMA foreign_keys = ON');
@@ -71,6 +77,7 @@ export function openDatabase(file = ':memory:'): Database {
   addStatusColumn(raw, 'published_compendiums');
   addSnapshotColumn(raw, 'published_systems');
   addSnapshotColumn(raw, 'published_compendiums');
+  addHiddenColumn(raw);
 
   const db = drizzle<typeof schema>(async (sql, params, method) => {
     const statement = raw.prepare(sql);

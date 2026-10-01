@@ -1,3 +1,4 @@
+import { seenBy } from '../rooms/visibility.ts';
 import { WebSocketGateway, WebSocketServer, SubscribeMessage, MessageBody, ConnectedSocket } from '@nestjs/websockets';
 import { Injectable, Inject } from '@nestjs/common';
 import type { WebSocket, Server } from 'ws';
@@ -6,7 +7,7 @@ import { AuthService } from '../auth/auth.service.ts';
 import { api } from '@vtt/schema';
 import type { ServerMessage } from '@vtt/schema';
 
-interface Guest { socket: WebSocket; roomId: string; userId: string }
+interface Guest { socket: WebSocket; roomId: string; userId: string; gm: boolean }
 
 @Injectable()
 @WebSocketGateway({ path: '/ws' })
@@ -39,7 +40,8 @@ export class TableGateway {
     for (const guest of this.guests) {
       if (guest.socket === socket) this.guests.delete(guest);
     }
-    this.guests.add({ socket, roomId, userId });
+    const gm = await this.roomsService.isGm(roomId, userId);
+    this.guests.add({ socket, roomId, userId, gm });
     socket.once('close', () => {
       for (const guest of this.guests) {
         if (guest.socket === socket) this.guests.delete(guest);
@@ -47,7 +49,7 @@ export class TableGateway {
       this.announceMembers(roomId);
     });
 
-    this.send(socket, { type: 'room:state', state: await this.roomsService.state(roomId) });
+    this.send(socket, { type: 'room:state', state: seenBy(await this.roomsService.state(roomId), gm) });
     this.announceMembers(roomId);
   }
 
@@ -180,9 +182,9 @@ export class TableGateway {
     if (!parsed.success || parsed.data.type !== 'sheet:roll') {
       return this.fail(socket, 'бросок с листа не проходит схему');
     }
-    const { roomId, sheetId, tag } = parsed.data;
+    const { roomId, sheetId, tag, hidden } = parsed.data;
     try {
-      const delta = await this.roomsService.rollField(guest.userId, roomId, sheetId, tag);
+      const delta = await this.roomsService.rollField(guest.userId, roomId, sheetId, tag, Boolean(hidden));
       this.broadcast(roomId, { type: 'room:delta', delta });
     } catch (err) {
       this.fail(socket, (err as Error).message);
@@ -248,7 +250,9 @@ export class TableGateway {
 
   broadcast(roomId: string, message: ServerMessage): void {
     for (const guest of this.guests) {
-      if (guest.roomId === roomId) this.send(guest.socket, message);
+      if (guest.roomId !== roomId) continue;
+      this.send(guest.socket, message.type === 'room:delta' ? { ...message, delta: seenBy(message.delta, guest.gm) }
+        : message.type === 'room:state' ? { ...message, state: seenBy(message.state, guest.gm) } : message);
     }
   }
 

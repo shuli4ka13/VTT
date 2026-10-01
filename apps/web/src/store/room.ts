@@ -5,10 +5,13 @@ import type { RoomState, Sheet } from '@vtt/schema';
 
 export interface RoomStore {
   room: RoomState | null;
-  log: { id: string; at: string; text: string }[];
+  log: { id: string; at: string; text: string; hidden?: boolean }[];
   error: string | null;
 
   mySheetId: string | null;
+
+  secret: boolean;
+  setSecret: (secret: boolean) => void;
 
   join: (roomId: string) => void;
   leave: () => void;
@@ -23,6 +26,8 @@ export const useRoom = create<RoomStore>(set => ({
   log: [],
   error: null,
   mySheetId: null,
+  secret: false,
+  setSecret: secret => set({ secret }),
 
   join: roomId => {
     localStorage.setItem(LAST_ROOM, roomId);

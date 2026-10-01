@@ -1,3 +1,4 @@
+import { seenBy } from './visibility.ts';
 import { Injectable, Inject, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { and, eq, ne, asc, desc } from 'drizzle-orm';
 import { DB, CLOCK, IDS, DIE } from '../common/tokens.ts';
@@ -153,8 +154,8 @@ export class RoomsService {
     return this.recorded(roomId, userId, 'set', { sheetId, tag, value }, () => this.runSetValue(userId, roomId, sheetId, tag, value));
   }
 
-  rollField(userId: string, roomId: string, sheetId: string, tag: string): Promise<RoomDelta> {
-    return this.recorded(roomId, userId, 'roll', { sheetId, tag }, () => this.runRollField(userId, roomId, sheetId, tag));
+  rollField(userId: string, roomId: string, sheetId: string, tag: string, hidden = false): Promise<RoomDelta> {
+    return this.recorded(roomId, userId, 'roll', { sheetId, tag, ...(hidden ? { hidden } : {}) }, () => this.runRollField(userId, roomId, sheetId, tag, hidden));
   }
 
   createSheet(userId: string, roomId: string, name: string, of?: string): Promise<RoomDelta> {
@@ -185,10 +186,15 @@ export class RoomsService {
     await this.requireRoom(roomId);
     if (!(await this.memberOf(roomId, userId))) throw new ForbiddenException('журнал стола видят его участники');
     const rows = await this.db.select().from(roomJournal).where(eq(roomJournal.roomId, roomId)).orderBy(asc(roomJournal.seq));
-    return rows.map(row => ({
-      seq: row.seq, at: row.at, userId: row.userId, op: row.op,
-      input: JSON.parse(row.input), dice: JSON.parse(row.dice), result: JSON.parse(row.result),
-    }));
+    const gm = await this.isGm(roomId, userId);
+    return rows.map(row => {
+      const input = JSON.parse(row.input) as { hidden?: boolean };
+      const secret = Boolean(input?.hidden) && !gm;
+      return {
+        seq: row.seq, at: row.at, userId: row.userId, op: row.op,
+        input, dice: secret ? [] : JSON.parse(row.dice), result: seenBy(JSON.parse(row.result), !secret),
+      };
+    });
   }
 
   private readonly rolling = new AsyncLocalStorage<number[]>();
@@ -303,6 +309,7 @@ export class RoomsService {
     if (!await this.memberOf(intent.roomId, userId)) {
       throw new ForbiddenException('вы не в этой комнате');
     }
+    if (intent.hidden) await this.assertMayHide(intent.roomId, userId);
     const { system, compendium } = this.worldOf(room);
     const sheets = await this.sheetsOf(intent.roomId);
     await this.assertMaySheet(intent.roomId, userId, intent.fromId);
@@ -348,7 +355,7 @@ export class RoomsService {
     if (outcome.kind === 'done') {
       const touched = await this.persistSheets(record.roomId, current, outcome.sheets, []);
       await this.db.delete(roomPending).where(eq(roomPending.roomId, record.roomId));
-      const log = await this.appendLog(record.roomId, fresh);
+      const log = await this.appendLog(record.roomId, fresh, Boolean(record.intent.hidden));
       return { roomId: record.roomId, sheets: touched, log, clock: record.clock, pending: null };
     }
     const id = this.newId();
@@ -358,10 +365,10 @@ export class RoomsService {
     const touched = await this.persistSheets(record.roomId, current, outcome.sheets, []);
     const asked = outcome.sheets.find(s => s.id === outcome.question.sheetId)!;
     const view = this.pendingView(pending, asked);
-    const log = await this.appendLog(record.roomId, [
-      ...fresh,
-      `${asked.name}: стол ждёт решения — ${view.options.map(o => o.label).join(', ')}`,
-    ]);
+    const log = [
+      ...await this.appendLog(record.roomId, fresh, Boolean(record.intent.hidden)),
+      ...await this.appendLog(record.roomId, [`${asked.name}: стол ждёт решения — ${view.options.map(o => o.label).join(', ')}`]),
+    ];
     return { roomId: record.roomId, sheets: touched, log, clock: record.clock, pending: view };
   }
 
@@ -459,6 +466,7 @@ export class RoomsService {
           : `${asked.name}: на вас действуют${by} — ответить реакцией?`,
       options: question.offers.map(o => ({ id: o.id, label: o.label })),
       preview: question.preview,
+      ...(record.intent.hidden ? { hidden: true } : {}),
     };
   }
 
@@ -569,8 +577,9 @@ export class RoomsService {
     return { roomId, sheets: touched, log };
   }
 
-  private async runRollField(userId: string, roomId: string, sheetId: string, tag: string): Promise<RoomDelta> {
+  private async runRollField(userId: string, roomId: string, sheetId: string, tag: string, hidden = false): Promise<RoomDelta> {
     const room = await this.requireRoom(roomId);
+    if (hidden) await this.assertMayHide(roomId, userId);
     await this.assertNotWaiting(roomId, await this.sheetsOf(roomId));
     await this.assertMaySheet(roomId, userId, sheetId);
 
@@ -605,7 +614,7 @@ export class RoomsService {
     }
 
     const touched = await this.persistSheets(roomId, before, reacted.sheets, []);
-    const log = await this.appendLog(roomId, [line, ...reacted.lines]);
+    const log = await this.appendLog(roomId, [line, ...reacted.lines], hidden);
     return { roomId, sheets: touched, log };
   }
 
@@ -800,20 +809,29 @@ export class RoomsService {
   private async log(roomId: string) {
     const rows = await this.db.select().from(logEntries)
       .where(eq(logEntries.roomId, roomId)).orderBy(asc(logEntries.seq));
-    return rows.map(r => ({ id: r.id, at: r.at, text: r.text }));
+    return rows.map(r => ({ id: r.id, at: r.at, text: r.text, ...(r.hidden ? { hidden: true } : {}) }));
   }
 
-  private async appendLog(roomId: string, lines: string[]) {
+  private async appendLog(roomId: string, lines: string[], hidden = false) {
     const existing = await this.db.select().from(logEntries).where(eq(logEntries.roomId, roomId));
     let seq = existing.length;
-    const added: { id: string; at: string; text: string }[] = [];
+    const added: { id: string; at: string; text: string; hidden?: boolean }[] = [];
 
     for (const text of lines) {
-      const entry = { id: this.newId(), roomId, at: this.now(), text, seq: seq++ };
+      const entry = { id: this.newId(), roomId, at: this.now(), text, seq: seq++, hidden: hidden ? 1 : 0 };
       await this.db.insert(logEntries).values(entry);
-      added.push({ id: entry.id, at: entry.at, text: entry.text });
+      added.push({ id: entry.id, at: entry.at, text: entry.text, ...(hidden ? { hidden: true } : {}) });
     }
     return added;
+  }
+
+  async isGm(roomId: string, userId: string): Promise<boolean> {
+    const rows = await this.db.select().from(members).where(and(eq(members.roomId, roomId), eq(members.userId, userId)));
+    return rows[0]?.role === 'gm';
+  }
+
+  private async assertMayHide(roomId: string, userId: string): Promise<void> {
+    if (!await this.isGm(roomId, userId)) throw new ForbiddenException('втайне бросает только ведущий');
   }
 
 }

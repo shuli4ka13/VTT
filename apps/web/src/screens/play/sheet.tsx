@@ -128,7 +128,7 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
         only={only}
         badge={isDesk ? 'стол' : kind?.label ?? 'лист'}
         onChange={(tag, value) => tableSocket.setValue(room.id, sheet.id, tag, value)}
-        onRoll={tag => tableSocket.rollField(room.id, sheet.id, tag)}
+        onRoll={tag => tableSocket.rollField(room.id, sheet.id, tag, useRoom.getState().secret)}
       />
     </>
   );

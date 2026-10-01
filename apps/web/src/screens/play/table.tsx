@@ -63,7 +63,7 @@ function RoomTable({ room }: { room: RoomState }) {
                     {log.slice(-80).map(entry => (
                       <div key={entry.id} className="log-line">
                         <span className="log-line__at">{timeOf(entry.at)}</span>
-                        <span>{entry.text}</span>
+                        <span>{entry.hidden ? <span title="видно только ведущему" aria-label="втайне">🔒 </span> : null}{entry.text}</span>
                       </div>
                     ))}
                   </div>
@@ -285,6 +285,10 @@ function Actions({ room, sender, targets, onError, onClear }: {
 }) {
   const [mine, setMine] = useState<string[]>([]);
   const [theirs, setTheirs] = useState<string[]>([]);
+  const myId = useSession(s => s.userId);
+  const leading = room.members.some(m => m.userId === myId && m.role === 'gm');
+  const secret = useRoom(s => s.secret) && leading;
+  const setSecret = useRoom(s => s.setSecret);
   const edits = Object.entries(room.system.roll_edits ?? {});
   const flip = (list: string[], key: string) =>
     (list.includes(key) ? list.filter(k => k !== key) : [...list, key]);
@@ -323,6 +327,12 @@ function Actions({ room, sender, targets, onError, onClear }: {
           </div>
         </Fold>
       ) : null}
+      {leading ? (
+        <div className="inline inline--tight">
+          <Chip active={secret} onClick={() => setSecret(!secret)}>🔒 втайне</Chip>
+          <span className="faint">{secret ? 'броски и действия видите только вы, игрокам — «Ведущий бросает втайне»' : 'броски видят все'}</span>
+        </div>
+      ) : null}
       {available.length === 0
         ? <span className="faint">
             У этого листа нет применимых действий — наденьте предмет или выучите приём на листе персонажа.
@@ -359,6 +369,7 @@ function Actions({ room, sender, targets, onError, onClear }: {
                     ...(request.inputs ? { inputs: request.inputs } : {}),
                     ...(mine.length ? { edits: mine } : {}),
                     ...(theirs.length ? { targetEdits: theirs } : {}),
+                    ...(secret ? { hidden: true } : {}),
                   });
                   setMine([]);
                   setTheirs([]);
