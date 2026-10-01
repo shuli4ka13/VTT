@@ -17,6 +17,7 @@ import { EngineError } from '../engine/errors.ts';
 import { State } from './state.ts';
 import { External, Pause } from './journal.ts';
 import { Runner, newSink, reportOf } from './run.ts';
+import type { Entry } from './run.ts';
 import type { Journal, Question } from './journal.ts';
 import type { Envelope, WorldContext } from '../events/envelope.ts';
 import type { StepData, StepContext } from '../engine/steps/index.ts';
@@ -40,11 +41,15 @@ export interface ActWorld {
   sheets: Sheet[];
   die: Die;
   journal: Journal;
+  declineAll?: boolean;
 }
 
 export type ActOutcome =
-  | { kind: 'done'; sheets: Sheet[]; log: string[]; journal: Journal; fresh: number[] }
-  | { kind: 'paused'; sheets: Sheet[]; log: string[]; journal: Journal; fresh: number[]; question: Question };
+  | { kind: 'done'; sheets: Sheet[]; log: string[]; entries: Entry[]; journal: Journal; fresh: number[] }
+  | { kind: 'paused'; sheets: Sheet[]; log: string[]; entries: Entry[]; journal: Journal; fresh: number[]; question: Question };
+
+export const render = (entries: Entry[], system: System, sheets: Sheet[]): string[] =>
+  entries.map(entry => ('text' in entry ? entry.text : describeEntry(entry, system, sheets)));
 
 export function settleLines(world: WorldContext, before: Sheet[], after: Sheet[], lines: string[]): Sheet[] {
   const done = settle(before, after, world);
@@ -61,10 +66,10 @@ const HOISTED = (step: StepData): boolean =>
 
 export function act(world: ActWorld, intent: ActIntent): ActOutcome {
   const { system, compendium, clock } = world;
-  const ext = new External(world.journal, world.die);
+  const ext = new External(world.journal, world.die, world.declineAll);
   const state = new State([...world.sheets], system, compendium, clock);
   const run = new Runner(state, ext);
-  const log: string[] = [];
+  const log: Entry[] = [];
   const nameOf = (id: string): string => state.find(id)?.name ?? id;
   const targets = [...new Set(intent.toIds)];
 
@@ -93,7 +98,7 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
       const why = refusalWords(report, system);
       if (why) throw new EngineError(`«${action.label}» не состоялось: ${why}`);
       if (sink.changes.length || sink.effects.length || sink.removed.length) {
-        log.push(describeEntry({ fromId: actor, toId: actor, report }, system, state.sheets));
+        log.push({ fromId: actor, toId: actor, report });
       }
       log.push(...sink.after);
     }
@@ -103,7 +108,7 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
       const released = releaseHolder(system, state.sheets, actor, shared);
       state.sheets = released.sheets;
       for (const broken of released.broken) {
-        log.push(`«${effectLabelOf(system, broken.effectId)}» спало с ${nameOf(broken.sheetId)}: наложивший взялся за новое`);
+        log.push({ text: `«${effectLabelOf(system, broken.effectId)}» спало с ${nameOf(broken.sheetId)}: наложивший взялся за новое` });
       }
     }
 
@@ -147,11 +152,11 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
         key: 'sender', sheetId: actor, window: 'sender', label: '', offers: senderOffers,
         results: seenBySender, preview: previewLines(asEnvelope(packed), system, null),
       }, action.effect, 0, [], targets[0] ?? null);
-      log.push(...asked.lines);
+      log.push(...asked.entries);
       if (asked.claims.length) {
         claims = [...new Set([...claims, ...asked.claims])];
         packed = pack(1, packed);
-        log.push(`${nameOf(actor)}: бросок собран заново — выпавшее остаётся, новые кости добавлены`);
+        log.push({ text: `${nameOf(actor)}: бросок собран заново — выпавшее остаётся, новые кости добавлены` });
       }
     }
 
@@ -172,15 +177,15 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
           key: `target:${toId}`, sheetId: toId, window: 'target', label: '', offers: before,
           results: dry.results, preview: previewLines(asEnvelope(packed), system, dry),
         }, action.effect, 0, dry.emitted, actor);
-        log.push(...asked.lines);
+        log.push(...asked.entries);
         if (asked.claims.length) {
           taken[toId] = [...new Set([...(taken[toId] ?? []), ...asked.claims])];
-          log.push(`${nameOf(toId)}: бросок пересчитан с заявленной правкой`);
+          log.push({ text: `${nameOf(toId)}: бросок пересчитан с заявленной правкой` });
         }
       }
       const delivered = run.deliver({ ...callTo(toId), claims: claimsFor(toId) });
       if (!delivered) continue;
-      log.push(...delivered.lines);
+      log.push(...delivered.entries);
       if (holder) {
         const caster = state.get(actor);
         if (!(caster.effects ?? []).some(entry => entry.effectId === holder)) {
@@ -189,7 +194,7 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
       }
       const out = newSink();
       run.fire('acted', 'action', actor, action.effect, delivered.emitted, delivered.results, toId, `t:${toId}^`, 0, out);
-      for (const report of out.reactions) log.push(describeEntry({ fromId: actor, toId: actor, report }, system, state.sheets));
+      for (const report of out.reactions) log.push({ fromId: actor, toId: actor, report });
       log.push(...out.after);
       seen[toId] = { results: delivered.results, emitted: delivered.emitted };
     }
@@ -201,7 +206,7 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
       if (after.length) {
         log.push(...run.ask({
           key: `after:${toId}`, sheetId: toId, window: 'after', label: '', offers: after, results: here.results, preview: [],
-        }, action.effect, 0, here.emitted, actor).lines);
+        }, action.effect, 0, here.emitted, actor).entries);
       }
     }
 
@@ -209,14 +214,15 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
     const table = targets.filter(id => seen[id]).map(id => ({ ...seen[id]!.results, лист: id }));
     run.fire('done', 'any', actor, action.effect, targets.flatMap(id => seen[id]?.emitted ?? []),
       { ...rolledSoFar(Object.values(packed) as unknown as Record<string, unknown>[]), цели: table }, null, 'done', 0, done);
-    for (const report of done.reactions) log.push(describeEntry({ fromId: actor, toId: actor, report }, system, state.sheets));
+    for (const report of done.reactions) log.push({ fromId: actor, toId: actor, report });
     log.push(...done.after);
-    if (run.cut) log.push(CUT_WORDS);
+    if (run.cut) log.push({ text: CUT_WORDS });
 
-    const final = settleLines({ system, compendium, clock, die: ext.dieAt('settle') }, world.sheets, state.sheets, log);
-    return { kind: 'done', sheets: final, log, journal: ext.settled(), fresh: ext.fresh };
+    const lines = render(log, system, state.sheets);
+    const final = settleLines({ system, compendium, clock, die: ext.dieAt('settle') }, world.sheets, state.sheets, lines);
+    return { kind: 'done', sheets: final, log: lines, entries: log, journal: ext.settled(), fresh: ext.fresh };
   } catch (err) {
     if (!(err instanceof Pause)) throw err;
-    return { kind: 'paused', sheets: state.sheets, log, journal: { ...world.journal }, fresh: ext.fresh, question: err.question };
+    return { kind: 'paused', sheets: state.sheets, log: render(log, system, state.sheets), entries: log, journal: { ...world.journal }, fresh: ext.fresh, question: err.question };
   }
 }

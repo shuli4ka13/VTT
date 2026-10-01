@@ -5,6 +5,9 @@ import type { Clock } from '../engine/clock.ts';
 import type { System, Sheet, Compendium } from '../model/types.ts';
 
 export class State {
+  private sharedFor: { sheets: Sheet[]; shared: Sheet[] } | null = null;
+  private readonly passes = new WeakMap<Sheet, { shared: Sheet[]; pass: Pass }>();
+
   constructor(
     public sheets: Sheet[],
     readonly system: System,
@@ -13,7 +16,8 @@ export class State {
   ) {}
 
   shared(): Sheet[] {
-    return sharedOf(this.system, this.sheets);
+    if (this.sharedFor?.sheets !== this.sheets) this.sharedFor = { sheets: this.sheets, shared: sharedOf(this.system, this.sheets) };
+    return this.sharedFor.shared;
   }
 
   find(id: string): Sheet | null {
@@ -33,7 +37,13 @@ export class State {
   }
 
   pass(id: string): Pass {
-    return newPass(this.system, this.get(id), { compendium: this.compendium, shared: this.shared() });
+    const sheet = this.get(id);
+    const shared = this.shared();
+    const known = this.passes.get(sheet);
+    if (known && known.shared === shared) return known.pass;
+    const pass = newPass(this.system, sheet, { compendium: this.compendium, shared });
+    this.passes.set(sheet, { shared, pass });
+    return pass;
   }
 
   desk(): Sheet | null {

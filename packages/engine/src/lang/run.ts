@@ -12,7 +12,6 @@ import { listening, subscriberByKey, hears, runsAtOther } from '../events/bus.ts
 import { offers as offersOf, MAX_HOPS } from '../events/envelope.ts';
 import { holderOf as bondHolderOf } from '../events/bonds.ts';
 import { refusalWords } from '../events/refusal.ts';
-import { describeEntry } from '../events/describe.ts';
 import { MAX_REPLIES } from '../events/exchange.ts';
 import type { State } from './state.ts';
 import type { External, Question } from './journal.ts';
@@ -49,8 +48,10 @@ export interface Sink {
   removed: string[];
   emitted: EmittedEvent[];
   reactions: Report[];
-  after: string[];
+  after: Entry[];
 }
+
+export type Entry = { fromId: string; toId: string; report: Report } | { text: string };
 
 export const newSink = (): Sink => ({ trace: [], changes: [], effects: [], removed: [], emitted: [], reactions: [], after: [] });
 
@@ -81,7 +82,7 @@ export interface Delivery {
   results: Record<string, unknown>;
   emitted: EmittedEvent[];
   report: Report;
-  lines: string[];
+  entries: Entry[];
 }
 
 type Mode = 'action' | 'event' | 'any';
@@ -267,7 +268,7 @@ export class Runner {
       effectId: call.event, label: effect.label || call.event, steps: answerSteps(call),
       from: frame.here, to: frame.me, hop: frame.hop + 1, scope: `${frame.scope}=${call.event}`, asks: true,
     });
-    if (delivered) sink.after.push(...delivered.lines);
+    if (delivered) sink.after.push(...delivered.entries);
   }
 
   fire(
@@ -316,7 +317,7 @@ export class Runner {
           effectId: id, label: name, steps: handler.steps ?? [], from: sheetId, to: other, hop: hop + 1,
           scope, seed, args: (effect.args || {}) as Record<string, unknown>, paramDefs: effect.params ?? [], asks: true,
         });
-        if (delivered) sink.after.push(...delivered.lines);
+        if (delivered) sink.after.push(...delivered.entries);
       }
     } else {
       const own = newSink();
@@ -367,10 +368,10 @@ export class Runner {
 
   ask(
     question: Question, effectId: string, hop: number, emitted: EmittedEvent[], other: string | null,
-  ): { claims: string[]; lines: string[] } {
+  ): { claims: string[]; entries: Entry[] } {
     const chosen = this.drying ? [] : this.ext.ask(question);
     const { sheetId, results } = question;
-    const lines: string[] = [];
+    const entries: Entry[] = [];
     const claims: string[] = [];
     for (const id of chosen) {
       const found = subscriberByKey(this.system, id);
@@ -382,7 +383,7 @@ export class Runner {
         const report = reportOf('effect', found.id, sheetId, label, paid, ran.stopped, false);
         const why = refusalWords(report, this.system);
         if (why) throw new EngineError(`«${label}» не состоялось: ${why}`);
-        if (paid.changes.length) lines.push(describeEntry({ fromId: sheetId, toId: sheetId, report }, this.system, this.state.sheets));
+        if (paid.changes.length) entries.push({ fromId: sheetId, toId: sheetId, report });
       }
       const seed = withEvent(results, hears(found.handler.of, effectId, emitted));
       const sink = newSink();
@@ -390,14 +391,14 @@ export class Runner {
         this.handle(found, sheetId, seed, other, `${question.key}!${id}`, hop, sink, label);
       } else {
         const ran = this.exec(this.selfFrame(found, sheetId, `${question.key}!${id}`, hop, `реакция «${label}»`), found.handler.steps ?? [], sink, seed);
-        lines.push(describeEntry({ fromId: sheetId, toId: sheetId, report: reportOf('effect', found.id, sheetId, label, sink, ran.stopped, false) }, this.system, this.state.sheets));
+        entries.push({ fromId: sheetId, toId: sheetId, report: reportOf('effect', found.id, sheetId, label, sink, ran.stopped, false) });
         if (burnsUse(found.effect)) this.state.put(spendUse(this.state.get(sheetId), found.id));
       }
-      lines.push(...sink.after);
+      entries.push(...sink.after);
       claims.push(...(found.handler.claims ?? []));
     }
-    if (!chosen.length) lines.push(`${this.state.get(sheetId).name} пропускает реакцию`);
-    return { claims: [...new Set(claims)], lines };
+    if (!chosen.length && !this.ext.declineAll) entries.push({ text: `${this.state.get(sheetId).name} пропускает реакцию` });
+    return { claims: [...new Set(claims)], entries };
   }
 
   body(call: Call, sink: Sink, claims: string[]): Ran {
@@ -423,7 +424,7 @@ export class Runner {
       this.budget--;
     }
     if (!this.state.find(call.to)) return null;
-    const lines: string[] = [];
+    const entries: Entry[] = [];
     let claims = call.claims ?? [];
     if (call.asks) {
       const dry = this.dry(() => { const sink = newSink(); const ran = this.body(call, sink, claims); return { ran, sink }; });
@@ -433,7 +434,7 @@ export class Runner {
           key: `${call.scope}:target`, sheetId: call.to, window: 'target', label: call.label,
           offers: before, results: dry.ran.results, preview: [],
         }, call.effectId, call.hop, dry.sink.emitted, call.from);
-        lines.push(...asked.lines);
+        entries.push(...asked.entries);
         claims = [...new Set([...claims, ...asked.claims])];
       }
     }
@@ -442,16 +443,16 @@ export class Runner {
     const ran = this.body(call, sink, claims);
     this.fire('affected', 'action', call.to, call.effectId, sink.emitted, ran.results, call.from, `${call.scope}>`, call.hop, sink);
     const report = reportOf('effect', call.effectId, call.from, call.label, sink, ran.stopped, call.hop > 0);
-    lines.push(describeEntry({ fromId: call.from, toId: call.to, report }, this.system, this.state.sheets), ...sink.after);
+    entries.push({ fromId: call.from, toId: call.to, report }, ...sink.after);
     if (call.asks) {
       const after = this.offers('after', call.to, call.effectId, call.hop, ran.results, sink.emitted, `${call.scope}:after`);
       if (after.length) {
-        lines.push(...this.ask({
+        entries.push(...this.ask({
           key: `${call.scope}:after`, sheetId: call.to, window: 'after', label: call.label,
           offers: after, results: ran.results, preview: [],
-        }, call.effectId, call.hop, sink.emitted, call.from).lines);
+        }, call.effectId, call.hop, sink.emitted, call.from).entries);
       }
     }
-    return { results: ran.results, emitted: sink.emitted, report, lines };
+    return { results: ran.results, emitted: sink.emitted, report, entries };
   }
 }

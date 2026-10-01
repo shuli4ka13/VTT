@@ -25,7 +25,7 @@ export class External {
   readonly fresh: number[] = [];
   readonly used = new Set<string>();
 
-  constructor(private readonly journal: Journal, private readonly roll: Die) {}
+  constructor(private readonly journal: Journal, private readonly roll: Die, readonly declineAll = false) {}
 
   dieAt(scope: string): Die {
     let n = 0;
@@ -45,6 +45,10 @@ export class External {
     this.used.add(question.key);
     const known = this.journal.answers[question.key];
     if (known !== undefined) return known;
+    if (this.declineAll) {
+      this.journal.answers[question.key] = [];
+      return [];
+    }
     throw new Pause(question);
   }
 

@@ -1,7 +1,7 @@
 import { deskOf, hasDesk, blankDesk } from './desk.ts';
-import { exchange } from './exchange.ts';
-import type { ExchangeResult } from './exchange.ts';
-import { describeEntry } from './describe.ts';
+import { act } from '../lang/act.ts';
+import { emptyJournal } from '../lang/journal.ts';
+import type { Report } from './envelope.ts';
 import { isPipeline } from '../engine/effects.ts';
 import { EngineError } from '../engine/errors.ts';
 import { registry } from '../engine/steps/index.ts';
@@ -66,7 +66,9 @@ export interface TrialArgs {
   random?: () => number;
 }
 
-export interface TrialResult extends ExchangeResult {
+export interface TrialResult {
+  sheets: Sheet[];
+  reports: { fromId: string; toId: string; report: Report }[];
   lines: string[];
 }
 
@@ -98,10 +100,9 @@ export function trial({ system, compendium, effectId, from, to, args, dice = 'av
   const sender: Sheet = { ...from, has: [...(from.has ?? []), { of: TRIAL_RECORD }] };
   const people = from.id === to.id ? [sender] : [sender, to];
   const sheets = hasDesk(system) && !deskOf(people) ? [...people, blankDesk(system)] : people;
-  const result = exchange({
-    system: probe, compendium: book, die: dieOf(dice, random), sheets,
-    actionId: `${TRIAL_RECORD}:0`, fromId: sender.id, toId: to.id,
-  });
-  const lines = result.reports.map(entry => describeEntry(entry, probe, result.sheets));
-  return { ...result, lines };
+  const result = act({
+    system: probe, compendium: book, clock: null, sheets, die: dieOf(dice, random), journal: emptyJournal(), declineAll: true,
+  }, { actionId: `${TRIAL_RECORD}:0`, fromId: sender.id, toIds: [to.id] });
+  const reports = result.entries.filter((entry): entry is TrialResult['reports'][number] => !('text' in entry));
+  return { sheets: result.sheets, reports, lines: result.log };
 }
