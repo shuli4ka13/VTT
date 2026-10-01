@@ -6,6 +6,7 @@ import * as apply from './apply.ts';
 import * as status from './status.ts';
 import * as emit from './emit.ts';
 import * as table from './table.ts';
+import * as each from './each.ts';
 import type { Step, System, Sheet, Die, StoredValue, Effect, WornEffect, Param } from '../../model/types.ts';
 import type { RefContext } from '../refs.ts';
 import type { SourcedModifier } from '../modifiers.ts';
@@ -77,6 +78,8 @@ export interface StepModule {
   reasonWord?: (reason: string) => string | null;
 
   once?: (step: StepData) => boolean;
+
+  splits?: boolean;
   [k: string]: unknown;
 }
 
@@ -98,7 +101,7 @@ export function registerStepType(mod: StepModule): StepModule {
   return mod;
 }
 
-for (const mod of [threshold, amount, compare, apply, status, emit, table]) {
+for (const mod of [threshold, amount, compare, apply, status, emit, table, each]) {
   registerStepType(mod as unknown as StepModule);
 }
 

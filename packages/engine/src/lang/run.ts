@@ -17,6 +17,8 @@ import type { State } from './state.ts';
 import type { External, Question } from './journal.ts';
 import type { StepContext, StepData } from '../engine/steps/index.ts';
 import type { Change, EmittedEvent, NestedRun, StopReason } from '../engine/rule.ts';
+import type { SourcedModifier } from '../engine/modifiers.ts';
+import { incomingRollModifiers } from '../engine/modifiers.ts';
 import type { Offer, Report, ReactionWindow } from './types.ts';
 import type { ActionMoment, Subscriber } from '../events/bus.ts';
 import type { Param, Sheet, Step, StoredValue, WornEffect } from '../model/types.ts';
@@ -33,6 +35,8 @@ export interface Frame {
   props: Record<string, unknown> | null;
   inputs?: Record<string, number | string>;
   claims?: string[];
+  kept?: Record<string, StepData>;
+  against?: (tags: readonly string[]) => SourcedModifier[];
   packed?: Record<number, StepData>;
   bond?: { from: string; by: string };
   source: string;
@@ -61,6 +65,7 @@ export const newSink = (): Sink => ({ trace: [], changes: [], effects: [], remov
 export interface Ran {
   results: Record<string, unknown>;
   stopped: StopReason | null;
+  packed: StepData[];
 }
 
 export interface Call {
@@ -198,6 +203,8 @@ export class Runner {
       owner: frame.owner,
       results,
       ...(frame.claims?.length ? { claims: frame.claims } : {}),
+      ...(frame.kept ? { kept: frame.kept } : {}),
+      ...(frame.against ? { against: frame.against } : {}),
       ...(frame.alone ? { alone: true } : {}),
       read, write, attach, detach,
       emit: (event: EmittedEvent) => { sink.emitted.push(event); },
@@ -240,12 +247,12 @@ export class Runner {
       if (step.id != null) results[step.id] = out.value;
       if (out.break) {
         return {
-          results,
+          results, packed: done,
           stopped: { step: name, type: step.type, reason: out.break.reason, ...(out.break.note ? { note: out.break.note } : {}) },
         };
       }
     }
-    return { results, stopped: null };
+    return { results, stopped: null, packed: done };
   }
 
   eventCall(
@@ -262,7 +269,7 @@ export class Runner {
     this.fire('targeted', 'event', frame.here, event, heard, parent, frame.me, `${scope}<`, frame.hop, sink);
     const inner: Frame = {
       ...frame, scope, target: frame.here, effectId: event, args: args ?? {}, paramDefs: paramDefs ?? [], props: null,
-      names: 'here', packed: undefined, claims: undefined, alone: false, inputs: undefined, chain, actor: false,
+      names: 'here', packed: undefined, claims: undefined, kept: undefined, against: undefined, alone: false, inputs: undefined, chain, actor: false,
     };
     const ran = this.exec(inner, steps, sink, { event: payload }, event);
     this.fire('affected', 'event', frame.here, event, heard, parent, frame.me, `${scope}>`, frame.hop, sink);
@@ -446,6 +453,7 @@ export class Runner {
       ...(claims.length ? { claims } : {}),
       ...(call.packed ? { packed: call.packed } : {}),
       ...(holder ? { bond: { from: call.from, by: holder } } : {}),
+      against: (tags: readonly string[]) => incomingRollModifiers(tags, this.state.pass(call.to)),
       source: call.from, hop: call.hop, names: 'me', actor: call.hop === 0,
     };
     return this.exec(frame, call.steps, sink, call.seed ?? {});

@@ -85,3 +85,30 @@ group('новое ядро: пауза и повтор', () => {
     ok(second.kind === 'done' && second.fresh.length === 1, 'свежая только кость ответа');
   });
 });
+
+group('новое ядро: «для каждой цели»', () => {
+  const twoTargets = (steps: unknown[]) => {
+    const system = world({ удар: { label: 'Удар', activation: 'manual', steps } });
+    return act({ system, compendium: book, clock: null, sheets: [sheet('а'), sheet('б'), sheet('в')], die: queue(2, 5, 9), journal: emptyJournal() },
+      { actionId: 'приём:0', fromId: 'а', toIds: ['б', 'в'] });
+  };
+
+  test('шаг до разделителя — один раз у действующего, после — у каждой цели свой бросок', () => {
+    const out = twoTargets([
+      { id: 'общая', type: 'amount', source: 'item', fixed: { expr: "кинуть('1d6')" } },
+      { type: 'each' },
+      { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: "@общая + кинуть('1d10')" } },
+    ]);
+    eq(hp(out, 'б'), 20 - 2 - 5, 'общая кость 2, своя 5');
+    eq(hp(out, 'в'), 20 - 2 - 9, 'общая кость та же 2, своя 9');
+  });
+
+  test('без разделителя бросок действующего — один на всех, как раньше', () => {
+    const out = twoTargets([
+      { id: 'урон', type: 'amount', source: 'item', fixed: { expr: "кинуть('1d6')" } },
+      { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '@урон' } },
+    ]);
+    eq(hp(out, 'б'), 18);
+    eq(hp(out, 'в'), 18);
+  });
+});
