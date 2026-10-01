@@ -118,11 +118,13 @@ export function describeEntry(
     }
     if (trace.type === 'amount') {
       const terms: string[] = [];
-      if (trace.rolls?.length) {
+      const own = trace.rolls?.length && trace.notation;
+      if (own) {
         const value = trace.rolls.reduce((sum: number, die: number) => sum + die, 0);
         terms.push(`${refLabel(step?.dice) ?? 'Бросок'}: ${value}`);
       }
-      if (step?.fixed !== undefined) terms.push(`${refLabel(step.fixed) ?? 'Значение'}: ${trace.flat}`);
+      const thrown = trace.rolls?.length && !own ? ` [${trace.rolls.join(', ')}]` : '';
+      if (step?.fixed !== undefined) terms.push(`${refLabel(step.fixed) ?? 'Значение'}${thrown}: ${trace.flat}`);
       if (step?.bonus !== undefined) terms.push(`${refLabel(step.bonus) ?? 'Бонус'}: ${trace.bonus}`);
       if (step?.margin !== undefined) terms.push(`${refLabel(step.margin) ?? 'Запас'}: ${trace.margin}`);
       const sum = terms.join(' + ') || '0';

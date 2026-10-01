@@ -28,7 +28,7 @@ export const MOMENTS = {
 
 export type MomentKey = keyof typeof MOMENTS;
 
-const TABLE_MOMENTS: ReadonlySet<MomentKey> = new Set<MomentKey>(['combat-start', 'round-start', 'combat-end', 'scene-end']);
+const TABLE_MOMENTS: ReadonlySet<MomentKey> = new Set<MomentKey>(['combat-start', 'round-start', 'combat-end', 'scene-end', 'short-rest', 'long-rest']);
 
 export const heardMoments = (system: System): Set<MomentKey> =>
   new Set(Object.values(system.effects ?? {}).flatMap(effect => (effect.on ?? []).map(handler => momentOf(handler.on)))

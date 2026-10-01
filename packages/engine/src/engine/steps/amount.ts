@@ -31,11 +31,10 @@ export function lint(step: StepData) {
 
 export function traceLine(t: any) {
   const parts: string[] = [];
-  if (t.rolls.length) {
-    const notation = String(t.notation ?? '').replace(/d/gi, 'к');
-    parts.push(`${notation ? `${notation} ` : ''}[${t.rolls.join(', ')}]`);
-  }
-  if (t.flat || t.source === 'item') parts.push(String(t.flat));
+  const own = t.rolls.length > 0 && t.notation;
+  if (own) parts.push(`${String(t.notation).replace(/d/gi, 'к')} [${t.rolls.join(', ')}]`);
+  const thrown = t.rolls.length && !own ? ` [${t.rolls.join(', ')}]` : '';
+  if (t.flat || t.source === 'item') parts.push(`${t.flat}${thrown}`);
   if (t.bonus) parts.push(String(t.bonus));
   if (t.margin) parts.push(`запас ${t.margin}`);
   if (!parts.length) parts.push('0');

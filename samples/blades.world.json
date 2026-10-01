@@ -37,17 +37,6 @@
           }
         ],
         "read": "best"
-      },
-      "heat_die": {
-        "label": "кость жара к6",
-        "kind": "die",
-        "dice": [
-          {
-            "count": 1,
-            "sides": 6
-          }
-        ],
-        "read": "best"
       }
     },
     "roll_edits": {
@@ -488,15 +477,21 @@
         "label": "Залечь на дно",
         "group": "Банда",
         "activation": "manual",
-        "description": "Бросок к6: жар банды снижается — 1–3 на 1, 4–5 на 2, 6 на 3 (не ниже 0). Тревога на столе сбрасывается.",
+        "description": "Бросок действия, которым прикрываете следы (при рейтинге 0 — две кости, худшая): жар банды снижается — 1–3 на 1, 4–5 на 2, 6 на 3, крит (две шестёрки) на 5; не ниже 0.",
         "steps": [
           {
             "id": "бросок",
             "type": "threshold",
             "roll": {
               "die": {
-                "constant": "heat_die"
-              }
+                "constant": "pool"
+              },
+              "tags": [
+                "действие",
+                {
+                  "expr": "если(@rating == 0, \"нулевой\", \"\")"
+                }
+              ]
             },
             "versus": {
               "expr": "4"
@@ -511,23 +506,25 @@
           {
             "type": "apply",
             "target": {
-              "tag": "alarm"
-            },
-            "direction": "set",
-            "targetModifiers": false,
-            "value": {
-              "expr": "0"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
               "tag": "heat"
             },
             "direction": "set",
             "targetModifiers": false,
             "value": {
-              "expr": "большее из(0, @heat - если(@бросок.natural >= 6, 3, если(@бросок.natural >= 4, 2, 1)))"
+              "expr": "большее из(0, @heat - если(все(@rating > 0, сколько(@бросок.dice.rolls, 6) >= 2), 5, если(@бросок.natural >= 6, 3, если(@бросок.natural >= 4, 2, 1))))"
+            }
+          }
+        ],
+        "params": [
+          {
+            "key": "rating",
+            "label": "Рейтинг действия",
+            "kind": "number",
+            "min": 0,
+            "max": 4,
+            "ask": {
+              "by": "actor",
+              "hint": "Каким действием прикрываете следы — его рейтинг."
             }
           }
         ]

@@ -54,11 +54,20 @@ export const scenarios: Scenario[] = [
   },
   {
     name: 'залечь на дно по SRD снижает жар, а не повышает',
-    rule: 'SRD, Downtime «Lay Low»: бросок, число успехов — снижение жара (4/5 — минус 2). Образец вместо этого прибавляет жар (+1) и без броска. Ожидание: бросок [5], жар 1 → 0 (не ниже 0).',
+    rule: 'SRD, Downtime «Reduce Heat»: бросок действия, которым прикрывают следы; 1–3 — минус 1 жар, 4–5 — минус 2, 6 — минус 3, крит — минус 5. Векс, рейтинг 1: бросок [5], жар 1 → 0 (не ниже 0).',
     world: 'blades',
     dice: [5],
-    steps: [{ act: 'lay_low:0', from: 'vex', to: 'crew' }],
+    steps: [{ act: 'lay_low:0', from: 'vex', to: 'crew', inputs: { rating: 1 } }],
     expect: { values: { crew: { heat: 0 } } },
+  },
+  {
+    name: 'залечь на дно: крит (две шестёрки при ненулевом рейтинге) снижает жар на 5',
+    rule: 'SRD, Downtime «Reduce Heat»: критический успех — минус 5 жара. Векс, рейтинг 2: [6, 6] — крит; жар банды 6 → 1.',
+    world: 'blades',
+    sheets: { crew: { values: { heat: 6 } } },
+    dice: [6, 6],
+    steps: [{ act: 'lay_low:0', from: 'vex', to: 'crew', inputs: { rating: 2 } }],
+    expect: { values: { crew: { heat: 1 } } },
   },
   {
     name: 'сопротивление: цена в стрессе 6 минус лучшая кость, а не фиксированные 2',

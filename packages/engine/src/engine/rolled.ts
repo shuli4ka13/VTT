@@ -22,14 +22,16 @@ export function rolledSummary(step: Record<string, unknown>): RolledSummary | nu
     parts?: Record<string, number>;
   } | undefined;
   if (!rolled) return null;
+  const formula = step.type === 'amount' && (rolled as { notation?: unknown }).notation == null;
+  const natural = formula ? rolled.rolls.reduce((sum, value) => sum + value, 0) : rolled.total;
 
   const bonusRef = step.bonus as { const?: unknown } | undefined;
   const bonus = (typeof bonusRef?.const === 'number' ? bonusRef.const : 0)
     + (typeof step.modBonus === 'number' ? step.modBonus : 0);
 
   return {
-    total: rolled.total + bonus,
-    natural: rolled.total,
+    total: natural + bonus,
+    natural,
     rolled: rolled.tally?.dice ?? rolled.rolls.length,
     atMax: rolled.tally?.atMax ?? 0,
     atMin: rolled.tally?.atMin ?? 0,

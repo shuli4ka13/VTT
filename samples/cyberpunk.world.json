@@ -268,6 +268,14 @@
             "block": "Состояние"
           },
           {
+            "key": "death_penalty",
+            "label": "Штраф спасброска от смерти",
+            "kind": "number",
+            "default": 0,
+            "min": 0,
+            "block": "Состояние"
+          },
+          {
             "key": "dead",
             "label": "Мёртв",
             "kind": "boolean",
@@ -1475,7 +1483,7 @@
         "duration": {
           "kind": "permanent"
         },
-        "description": "Хиты не выше половины максимума — минус два ко всем проверкам.",
+        "description": "Хиты ниже половины максимума — минус два ко всем проверкам и атакам (спасброски — без штрафа).",
         "modifiers": [
           {
             "kind": "roll",
@@ -1515,7 +1523,7 @@
         "duration": {
           "kind": "permanent"
         },
-        "description": "Десятка на ведущей кости атаки — бросаешь ещё и прибавляешь; единица — бросаешь ещё и вычитаешь.",
+        "description": "Десятка на ведущей кости проверки или атаки — бросаешь ещё и прибавляешь; единица — бросаешь ещё и вычитаешь. Спасброски — без этого.",
         "modifiers": [
           {
             "kind": "roll",
@@ -1532,6 +1540,22 @@
             "tags": [
               "атака"
             ]
+          },
+          {
+            "kind": "roll",
+            "target": "roll:any",
+            "edit": "crit_up",
+            "tags": [
+              "проверка"
+            ]
+          },
+          {
+            "kind": "roll",
+            "target": "roll:any",
+            "edit": "crit_down",
+            "tags": [
+              "проверка"
+            ]
           }
         ],
         "group": "Состояния"
@@ -1543,7 +1567,7 @@
         "duration": {
           "kind": "permanent"
         },
-        "description": "Хиты на нуле: в начале своего хода к10 строго ниже Телосложения, иначе смерть. Без модификаторов.",
+        "description": "Хиты на нуле: в начале своего хода к10 минус штраф строго ниже Телосложения, иначе смерть. Каждый спасбросок увеличивает штраф на 1; на новой грани смерти штраф снова 0.",
         "params": [],
         "group": "Состояния",
         "on": [
@@ -1562,13 +1586,27 @@
                   },
                   "tags": [
                     "спасбросок"
-                  ]
+                  ],
+                  "bonus": {
+                    "expr": "@death_penalty"
+                  }
                 },
                 "versus": {
                   "expr": "@отправитель.body"
                 },
                 "successWhen": "under",
-                "continueOn": "fail"
+                "continueOn": "always"
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "death_penalty"
+                },
+                "direction": "add",
+                "value": {
+                  "expr": "1"
+                },
+                "targetModifiers": false
               },
               {
                 "type": "apply",
@@ -1578,6 +1616,25 @@
                 "direction": "set",
                 "value": {
                   "expr": "да"
+                },
+                "targetModifiers": false,
+                "when": {
+                  "expr": "не(@спас.success)"
+                }
+              }
+            ]
+          },
+          {
+            "on": "field:mortal",
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "death_penalty"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "0"
                 },
                 "targetModifiers": false
               }
