@@ -325,8 +325,9 @@ export class Runner {
     actorId: string, targetId: string, scope: string, hop: number, sink: Sink,
   ): void {
     const occasion = { kind: 'action' as const, moment, confirm: false, effect: effectId, emitted, watch: true };
-    for (const sheet of this.state.sheets) {
-      if (sheet.id === actorId || sheet.id === targetId) continue;
+    for (const id of this.state.sheets.map(s => s.id)) {
+      const sheet = this.state.find(id);
+      if (!sheet || id === actorId || id === targetId) continue;
       for (const sub of listening(this.system, sheet, occasion, { compendium: this.state.compendium })) {
         const results = { ...withEvent(seed, sub.heard), [CALL_NAME]: { я: actorId, цель: targetId } };
         if (!this.holds(sub, sheet.id, results)) continue;
@@ -424,7 +425,7 @@ export class Runner {
           { kind: 'action', moment: 'seen', confirm, effect: effectId, emitted: [], watch }, { compendium: this.state.compendium })
           .filter(sub => (watch || sub.handler.as === as) && tagsHold(sub.handler.tags, tags) && this.holds(sub, sheetId, seed()));
         for (const sub of heard(false)) {
-          const key = `${scope}!seen~${sub.key}`;
+          const key = `${scope}!seen~${sheetId}~${sub.key}`;
           if (this.refusal(sub.key, sheetId, seed(), `${key}?`)) continue;
           this.useSeen(sub, sheetId, cell, key, hop, sink, seed());
         }

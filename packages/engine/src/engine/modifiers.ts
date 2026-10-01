@@ -3,7 +3,7 @@ import { assertTarget } from './targets.ts';
 import { ROLL_CALL } from '../words/calls.ts';
 import { amountParamOf } from '../model/lists.ts';
 import { wornEffects, activationOf } from './effects.ts';
-import { EngineError } from './errors.ts';
+import { EngineError, isRuleError } from './errors.ts';
 import { anyRowSays } from './tables.ts';
 import { findRecord, kindOfRecord, sheetKindOf, propsOf } from '../model/owned.ts';
 import { tagsHold } from './roll-tags.ts';
@@ -166,9 +166,15 @@ function callHolds(mod: SourcedModifier, pass: Pass, args: Record<string, unknow
   const when = (mod as { when?: { expr?: string } }).when;
   if (!when?.expr?.trim()) return true;
   const prefix = `${CALL_NAME}.`;
-  const result = compile(when.expr).evaluate(
-    name => (name.startsWith(prefix) ? (args[name.slice(prefix.length)] ?? null) as never : pass.resolve(name)),
-    toolsOf(pass.system, pass, 'условие правки'));
+  let result: unknown;
+  try {
+    result = compile(when.expr).evaluate(
+      name => (name.startsWith(prefix) ? (args[name.slice(prefix.length)] ?? null) as never : pass.resolve(name)),
+      toolsOf(pass.system, pass, 'условие правки'));
+  } catch (err) {
+    if (isRuleError(err)) return false;
+    throw err;
+  }
   if (typeof result !== 'boolean') {
     throw new EngineError(`условие правки «${when.expr}» источника «${mod.source.label}» должно давать да или нет`);
   }
