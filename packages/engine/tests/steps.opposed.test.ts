@@ -1,5 +1,5 @@
 import { group, test, eq, ok, deepEq } from './harness.ts';
-import { send, receive } from '../src/events/envelope.ts';
+import { exchange } from './play.ts';
 import { lintSystem, errorsOf } from '../src/model/lint.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
@@ -45,23 +45,33 @@ const sheet = (id: string, effects: unknown[] = []): Sheet =>
 
 const queue = (...values: number[]) => () => values.shift() ?? 1;
 
-const shoot = (senderDice: number[], receiverDice: number[], target = sheet('цель')) => {
-  const env = send('выстрел:0', { system, sheet: sheet('стрелок'), compendium: book, die: queue(...senderDice) });
-  return receive(env, { system, sheet: target, compendium: book, die: queue(...receiverDice) });
+type Hit = { success: boolean; margin: number; natural?: number; total: number; against: { natural: number } };
+
+const play = (action: string, from: string, to: string, dice: number[], target = sheet(to)) => {
+  const out = exchange({
+    system, compendium: book, die: queue(...dice), sheets: [sheet(from), target],
+    actionId: `${action}:0`, fromId: from, toId: to,
+  });
+  const report = out.reports.find(entry => entry.toId === to && !entry.report.reply)!.report;
+  const trace = (id: string) => report.trace.find(t => t.step === id) as unknown as Hit;
+  return { sheet: out.sheets.find(s => s.id === to)!, report, trace };
 };
+
+const shoot = (senderDice: number[], receiverDice: number[], target = sheet('цель')) =>
+  play('выстрел', 'стрелок', 'цель', [...senderDice, ...receiverDice], target);
 
 group('встречный бросок: каждая сторона бросает свой пул', () => {
   test('6 костей атаки (3 успеха) против 2 костей защиты (1 успех) — чистых 2, урон 4', () => {
     const out = shoot([6, 5, 5, 1, 2, 3], [6, 1]);
     eq(out.sheet.values.хп, 10 - 4);
-    const hit = out.results.попал as { margin: number; against: { natural: number } };
+    const hit = out.trace('попал');
     eq(hit.margin, 2);
     eq(hit.against.natural, 1);
   });
 
   test('защита бросается костями получателя, а не отправителя', () => {
     const out = shoot([6, 6, 1, 1, 1, 1], [5, 5]);
-    eq((out.results.попал as { success: boolean }).success, false, '2 успеха против 2 — ничья у защиты');
+    eq(out.trace('попал').success, false, '2 успеха против 2 — ничья у защиты');
   });
 
   test('в журнале видно обе стороны', () => {
@@ -74,11 +84,10 @@ group('встречный бросок: каждая сторона бросае
   });
 
   test('зеркально: бросает получатель, встречно — отправитель при сборке', () => {
-    const env = send('вырваться:0', { system, sheet: sheet('держит'), compendium: book, die: queue(5, 1, 1, 1, 1, 1) });
-    const out = receive(env, { system, sheet: sheet('рвётся'), compendium: book, die: queue(6, 6) });
-    const got = out.results.вырвался as { success: boolean; natural: number; against: { natural: number } };
+    const out = play('вырваться', 'держит', 'рвётся', [5, 1, 1, 1, 1, 1, 6, 6]);
+    const got = out.trace('вырвался');
     eq(got.against.natural, 1, 'пул отправителя брошен у отправителя: один успех');
-    eq(got.natural, 2);
+    eq(got.total, 2);
     eq(got.success, true);
   });
 });

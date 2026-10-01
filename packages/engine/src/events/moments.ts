@@ -8,9 +8,9 @@ import type { Expired } from './durations.ts';
 import type { Clock } from '../engine/clock.ts';
 import { listening, subscribers, MOMENT_PREFIX, FIELD_PREFIX } from './bus.ts';
 import { EngineError } from '../engine/errors.ts';
-import { effectLabelOf } from './envelope.ts';
+import { effectLabelOf } from './actions.ts';
 import { isShared } from './desk.ts';
-import type { Report, WorldContext } from './envelope.ts';
+import type { Report, WorldContext } from '../lang/types.ts';
 import type { Sheet, System, Effect, Handler, Step, WornEffect } from '../model/types.ts';
 import { fieldOf as columnField } from '../model/sheet-columns.ts';
 

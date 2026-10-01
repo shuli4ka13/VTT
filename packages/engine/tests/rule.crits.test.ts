@@ -1,6 +1,5 @@
 import { group, test, eq, deepEq } from './harness.ts';
-import { packRule, resolveRule } from '../src/engine/rule.ts';
-import { newPass } from '../src/engine/calc.ts';
+import { exchange } from './play.ts';
 
 const queue = (...values: number[]) => {
   const rest = [...values];
@@ -32,13 +31,38 @@ const rule: any = {
   ],
 };
 
-const run = (...dice: number[]) => {
-  const ctx = () => ({
-    system: sys, sheet, params: {}, item: null,
-    die: queue(...dice), pass: newPass(sys, sheet, { compendium: { records: [] } }),
-  });
-  return resolveRule(packRule(rule, ctx()), ctx());
+const runRule = (sys: any, rule: any, sender: any, target: any, die: () => number, base: any = { records: [] }) => {
+  const full: any = {
+    ...sys, tables: { ...sys.tables, приём: { shape: 'book', use: 'action', label: 'Приём' } },
+    effects: { ...sys.effects, 'правило': { label: 'правило', activation: 'manual', ...rule } },
+  };
+  const book: any = { ...base, records: [...base.records, { id: 'правило', table: 'приём', label: 'правило', bindings: [{ label: 'правило', effect: 'правило', args: {} }] }] };
+  const from = { ...sender, id: 'отправитель-теста', has: [...(sender.has ?? []), { of: 'правило' }], effects: sender.effects ?? [] };
+  const out = exchange({ system: full, compendium: book, die, sheets: [from, target], actionId: 'правило:0', fromId: from.id, toId: target.id });
+  const report = out.reports[0]!.report;
+  return { sheet: out.sheets.find((s: any) => s.id === target.id)!, trace: report.trace as any[], stopped: report.stopped as any };
 };
+
+const PROBE_KEYS = ['rolled', 'atMax', 'atMin'];
+const probed = (sys: any, rule: any, stepId: string, sender: any, die: () => number) => {
+  const columns = PROBE_KEYS.map(key => ({ key: `зонд_${key}`, label: key, kind: 'number', default: -1 }));
+  const withProbe: any = { ...sys, tables: { ...sys.tables, лист: { shape: 'single', columns: [...(sys.tables.лист?.columns ?? []), ...columns] } } };
+  const at = rule.steps.findIndex((step: any) => step.id === stepId) + 1;
+  const writes = PROBE_KEYS.map(key => ({ type: 'apply', target: { tag: `зонд_${key}` }, direction: 'set', targetModifiers: false, value: { expr: `@${stepId}.${key}` } }));
+  const steps = [...rule.steps.slice(0, at), ...writes, ...rule.steps.slice(at)];
+  const target = { id: 'цель-теста', values: {}, effects: [] };
+  const out = runRule(withProbe, { ...rule, steps }, sender, target, die);
+  const roll = out.trace.find(t => t.step === stepId);
+  return {
+    stopped: out.stopped,
+    results: { [stepId]: {
+      rolled: out.sheet.values.зонд_rolled, atMax: out.sheet.values.зонд_atMax, atMin: out.sheet.values.зонд_atMin,
+      dice: { rolls: roll?.rolls },
+    } } as any,
+  };
+};
+
+const run = (...dice: number[]) => probed(sys, rule, 'roll', sheet, queue(...dice));
 
 group('криты и глитчи собираются автором', () => {
   test('счёт по натуральному броску виден в результате шага', () => {
@@ -78,11 +102,7 @@ group('криты и глитчи собираются автором', () => {
       },
     };
     const hot = { ...sheet, effects: [{ effectId: 'всегда' }] };
-    const ctx = () => ({
-      system: explosive, sheet: hot, params: {}, item: null,
-      die: queue(6, 2, 3, 4), pass: newPass(explosive, hot, { compendium: { records: [] } }),
-    });
-    const r = resolveRule(packRule(rule, ctx()), ctx());
+    const r = probed(explosive, rule, 'roll', hot, queue(6, 2, 3, 4));
     eq(r.results.roll.atMax, 1, 'шестёрка была одна, хоть и выросла до десяти');
     deepEq(r.results.roll.dice.rolls, [10, 2, 3], 'в журнале — уже выросшая');
   });

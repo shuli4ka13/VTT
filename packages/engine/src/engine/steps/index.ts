@@ -75,6 +75,8 @@ export interface StepModule {
   traceLine?: (...args: never[]) => unknown;
 
   reasonWord?: (reason: string) => string | null;
+
+  once?: (step: StepData) => boolean;
   [k: string]: unknown;
 }
 

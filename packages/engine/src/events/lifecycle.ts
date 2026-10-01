@@ -1,7 +1,7 @@
 import { findEffect, wornEffects } from '../engine/effects.ts';
 import { EngineError } from '../engine/errors.ts';
 import { listening } from './bus.ts';
-import type { WorldContext } from './envelope.ts';
+import type { WorldContext } from '../lang/types.ts';
 import { fire, wornEntry, wornSeed } from './moments.ts';
 import type { Fired, Firing, MomentRun } from './moments.ts';
 import type { Sheet, WornEffect } from '../model/types.ts';

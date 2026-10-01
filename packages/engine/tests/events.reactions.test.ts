@@ -1,6 +1,6 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.ts';
-import { send, receive, offers, react, senderResults } from '../src/events/envelope.ts';
-import { exchange, deliver } from '../src/events/exchange.ts';
+import { exchange } from './play.ts';
+import type { Question } from '../src/lang/journal.ts';
 import { system, arven, mirra, compendium } from './fixtures.ts';
 import { withColumn } from '../src/model/sheet-columns.ts';
 
@@ -28,54 +28,48 @@ const shieldWorld: any = {
 };
 const shielded = { ...mirra, effects: [{ effectId: 'shield' }] };
 
+const play = (sys: any, sheets: any[], dice: number[], answer?: (q: Question) => string[], from = 'arven', to = 'mirra', actionId = 'longsword-item:0') =>
+  exchange({ system: sys, compendium, die: queue(...dice), sheets, actionId, fromId: from, toId: to, ...(answer ? { answer } : {}) });
+const ids = (q: Question) => q.offers.map(o => o.id);
+
 group('реакция цели: пауза перед разрешением', () => {
-  const attack = (...dice: number[]) =>
-    send('longsword-item:0', { system: shieldWorld, sheet: arven, compendium, die: queue(...dice) });
+  const attack = (target: any, dice: number[], answer?: (q: Question) => string[], sys: any = shieldWorld) =>
+    play(sys, [arven, target], dice, answer);
+  const noAnswer = (): string[] => [];
 
   test('«Щит» предлагается только когда атака попала бы — стол заранее знает исход', () => {
-    const env = attack(9, 5);
-    const dry = receive(env, { system: shieldWorld, sheet: shielded, compendium, die: queue() });
-    const offered = offers(env, 'target', { system: shieldWorld, sheet: shielded, compendium, die: queue() }, dry.report.trace.length ? resultsOf(dry) : {});
-    deepEq(offered.map(o => o.id), ['shield']);
+    const hit = attack(shielded, [9, 5], noAnswer);
+    deepEq(hit.questions.filter(q => q.window === 'target').map(ids), [['shield']]);
+    eq(hit.questions[0]!.results.hit && (hit.questions[0]!.results.hit as any).success, true);
 
-    const miss = attack(2, 5);
-    const dryMiss = receive(miss, { system: shieldWorld, sheet: shielded, compendium, die: queue() });
-    eq(offers(miss, 'target', { system: shieldWorld, sheet: shielded, compendium, die: queue() }, resultsOf(dryMiss)).length, 0);
+    const miss = attack(shielded, [2, 5], noAnswer);
+    eq(miss.questions.length, 0);
   });
 
   test('без реакции на листе предлагать нечего', () => {
-    eq(offers(attack(9, 5), 'target', { system: shieldWorld, sheet: mirra, compendium, die: queue() }).length, 0);
+    eq(attack(mirra, [9, 5], noAnswer).questions.length, 0);
   });
 
   test('игрок применил «Щит» — броня выросла, и та же атака промахнулась', () => {
-    const env = attack(9, 5);
-    const dry = receive(env, { system: shieldWorld, sheet: shielded, compendium, die: queue() });
-    eq(resultsOf(dry).hit.success, true, 'без щита 15 против 14 — попадание');
+    const plain = attack(shielded, [9, 5]);
+    eq((plain.reports[0]!.report.trace[0] as any).success, true, 'без щита 15 против 14 — попадание');
 
-    const reacted = react(['shield'], env, 'target', { system: shieldWorld, sheet: shielded, compendium, die: queue() }, resultsOf(dry));
-    deepEq(reacted.sheet.effects.map(e => e.effectId), ['shield', 'shield_up']);
-    eq(reacted.reports.length, 1);
-
-    const final = deliver({
-      system: shieldWorld, compendium, die: queue(), sheets: [arven, reacted.sheet],
-      envelope: env, fromId: 'arven', toId: 'mirra',
-    });
-    eq((final.reports[0]!.report.trace[0] as any).success, false, 'та же кость, но 15 против 19');
-    eq(final.sheets.find(s => s.id === 'mirra')!.values.hp_current, mirra.values.hp_current);
+    const r = attack(shielded, [9, 5], q => (q.window === 'target' ? ['shield'] : []));
+    deepEq(r.sheets.find(s => s.id === 'mirra')!.effects.map(e => e.effectId), ['shield', 'shield_up']);
+    const strike = r.reports.find(x => x.report.effect === 'strike')!.report;
+    eq((strike.trace[0] as any).success, false, 'та же кость, но 15 против 19');
+    eq(r.sheets.find(s => s.id === 'mirra')!.values.hp_current, mirra.values.hp_current);
   });
 
   test('выбрать то, что не предлагалось, нельзя', () => {
-    const env = attack(9, 5);
-    throws(() => react(['thorns'], env, 'target', { system: shieldWorld, sheet: shielded, compendium, die: queue() }, { hit: { success: true } }), 'не предлагается');
+    throws(() => attack(shielded, [9, 5, 4, 4, 4, 4], () => ['thorns']), 'не предлагается');
   });
 
   test('реакция со счётчиком тратится', () => {
     const once: any = { ...shieldWorld, effects: { ...shieldWorld.effects, shield: { ...shieldWorld.effects.shield, duration: { kind: 'uses', max: 1 } } } };
     const sheet = { ...mirra, effects: [{ effectId: 'shield', usesLeft: 1 }] };
-    const env = send('longsword-item:0', { system: once, sheet: arven, compendium, die: queue(9, 5) });
-    const reacted = react(['shield'], env, 'target', { system: once, sheet, compendium, die: queue() }, { hit: { success: true } });
-    deepEq(reacted.spent, ['shield']);
-    deepEq(reacted.sheet.effects.map(e => e.effectId), ['shield_up']);
+    const r = attack(sheet, [9, 5], q => (q.window === 'target' ? ['shield'] : []), once);
+    deepEq(r.sheets.find(s => s.id === 'mirra')!.effects.map(e => e.effectId), ['shield_up']);
   });
 });
 
@@ -91,23 +85,21 @@ group('реакция отправителя: увидел бросок — ре
     },
   };
   const inspired = { ...arven, values: { ...arven.values, inspiration: 1 }, effects: [{ effectId: 'inspire' }] };
+  const decline = (): string[] => [];
 
   test('предлагается, пока есть очко; после траты — нет', () => {
-    const env = send('longsword-item:0', { system: luckWorld, sheet: inspired, compendium, die: queue(4, 5) });
-    deepEq(offers(env, 'sender', { system: luckWorld, sheet: inspired, compendium, die: queue() }).map(o => o.id), ['inspire']);
+    const r = play(luckWorld, [inspired, mirra], [4, 5], decline);
+    deepEq(r.questions.filter(q => q.window === 'sender').map(ids), [['inspire']]);
     const broke = { ...inspired, values: { ...inspired.values, inspiration: 0 } };
-    eq(offers(env, 'sender', { system: luckWorld, sheet: broke, compendium, die: queue() }).length, 0);
+    eq(play(luckWorld, [broke, mirra], [4, 5], decline).questions.length, 0);
   });
 
-  test('применил — очко потрачено, а конверт собирается заново с заявленной правкой', () => {
-    const env = send('longsword-item:0', { system: luckWorld, sheet: inspired, compendium, die: queue(4, 5) });
-    const reacted = react(['inspire'], env, 'sender', { system: luckWorld, sheet: inspired, compendium, die: queue() });
-    eq(reacted.sheet.values.inspiration, 0);
-    deepEq(reacted.claims, ['advantage']);
-
-    const again = send('longsword-item:0', { system: luckWorld, sheet: reacted.sheet, compendium, die: queue(4, 18, 5), claims: reacted.claims });
-    deepEq(again.steps[0]!.rolled.rolls, [4, 18]);
-    eq(again.steps[0]!.rolled.kept, 18);
+  test('применил — очко потрачено, а бросок собирается заново с заявленной правкой', () => {
+    const r = play(luckWorld, [inspired, mirra], [4, 5, 18], q => (q.window === 'sender' ? ['inspire'] : []));
+    eq(r.sheets.find(s => s.id === 'arven')!.values.inspiration, 0);
+    const strike = r.reports.find(x => x.report.effect === 'strike')!.report;
+    deepEq((strike.trace[0] as any).rolls, [4, 18]);
+    eq((strike.trace[0] as any).kept, 18);
   });
 });
 
@@ -137,7 +129,7 @@ group('подписка на исходящее: вампиризм и метк�
     const dealt = r.reports[0]!.report.emitted[0]!.amount;
     ok(dealt > 0, 'урон дошёл');
     eq(r.sheets.find(s => s.id === 'arven')!.values.hp_current, 10 + Math.floor(dealt / 2));
-    eq(r.reports.length, 2, 'вторая запись журнала — реакция отправителя на самого себя');
+    ok(r.log.some(line => line.includes('Вампиризм')), 'журнал называет срабатывание вампиризма');
   });
 
   test('промах — вампиризм молчит: вызова урона не было', () => {
@@ -159,40 +151,42 @@ group('подписка на исходящее: вампиризм и метк�
   });
 });
 
-function resultsOf(out: ReturnType<typeof receive>): Record<string, unknown> {
-  const results: Record<string, unknown> = {};
-  for (const t of out.report.trace as any[]) {
-    if (t.step === undefined || typeof t.step !== 'string') continue;
-    if (t.type === 'threshold') results[t.step] = { success: t.success, margin: t.margin, total: t.total };
-  }
-  return results;
-}
-
 group('окно «я бросил» видит факты собственного броска', () => {
-  test('senderResults отдаёт итог, число костей и признаки максимума/единицы по упакованному порогу', () => {
-    const envelope = {
-      kind: 'effect', effect: 'x', from: 'a', action: 'x:0', label: 'x',
-      steps: [
-        { type: 'threshold', id: 'hit', rolled: { total: 17, rolls: [17], kept: null, edits: [], tally: { dice: 1, atMax: 0, atMin: 0 } }, bonus: { const: 5 }, modBonus: 2 },
-        { type: 'threshold', id: 'save', roll: {} },
-        { type: 'amount', id: 'n', rolled: null },
-        { type: 'amount', id: 'dmg' },
-      ],
-    };
-    const seen = senderResults(envelope);
-    deepEq(Object.keys(seen), ['hit']);
-    eq(seen.hit.total, 24);
-    eq(seen.hit.rolled, 1);
-    eq(seen.hit.edited, false);
-    deepEq(seen.hit.parts, {});
+  const luck: any = {
+    ...withColumn(system, { key: 'inspiration', label: 'Вдохновение', kind: 'number', default: 1, min: 0 }),
+    effects: {
+      ...system.effects,
+      inspire: {
+        label: 'Вдохновение: перебросить', activation: 'passive',
+        on: [{ on: 'acting', confirm: true, claims: ['advantage'], steps: [] }],
+      },
+    },
+  };
+  const inspired = { ...arven, effects: [{ effectId: 'inspire' }] };
+  const senderQuestion = (sys: any) => {
+    const r = play(sys, [inspired, mirra], [17, 5], () => []);
+    return r.questions.find(q => q.window === 'sender')!;
+  };
+
+  test('вопрос отправителю несёт итог броска, число костей и признак правки', () => {
+    const seen = senderQuestion(luck).results.hit as any;
+    eq(seen.total, 23);
+    eq(seen.rolled, 1);
+    eq(seen.edited, false);
+    deepEq(seen.parts, {});
   });
 
-  test('senderResults несёт части броска: Надежду и Страх видно у отправителя, а не только у цели', () => {
-    const seen = senderResults({
-      kind: 'effect', effect: 'x', from: 'a', action: 'x:0', label: 'x',
-      steps: [{ type: 'threshold', id: 'бросок', rolled: { total: 13, rolls: [9, 4], kept: null, parts: { надежда: 9, страх: 4 } }, bonus: { const: 0 } }],
-    } as any);
-    deepEq(seen.бросок.parts, { надежда: 9, страх: 4 });
+  test('вопрос отправителю несёт части броска: Надежду и Страх видно у отправителя, а не только у цели', () => {
+    const duality: any = {
+      ...luck,
+      constants: { ...(luck.constants ?? {}), lead_die: {
+        label: 'Кости дуальности', kind: 'die',
+        dice: [{ count: 1, sides: 12, name: 'надежда', label: 'Надежда' }, { count: 1, sides: 12, name: 'страх', label: 'Страх' }],
+      } },
+    };
+    const r = play(duality, [inspired, mirra], [9, 4, 5], () => []);
+    const seen = r.questions.find(q => q.window === 'sender')!.results.hit as any;
+    deepEq(seen.parts, { надежда: 9, страх: 4 });
   });
 });
 
@@ -208,28 +202,26 @@ group('реакция после разрешения: «на меня поде�
     },
   };
   const vengeful = { ...mirra, effects: [{ effectId: 'rebuke' }] };
-  const ctx = (sheet: any) => ({ system: rebukeWorld, sheet, compendium, die: queue() });
+
+  const strike = (sheet: any, dice: number[], answer: (q: Question) => string[]) =>
+    play(rebukeWorld, [arven, sheet], dice, answer);
+  const decline = (): string[] => [];
 
   test('предлагается только в окне «после» и только когда попали', () => {
-    const env = send('longsword-item:0', { system: rebukeWorld, sheet: arven, compendium, die: queue(9, 5) });
-    const main = receive(env, ctx(vengeful));
-    eq(offers(env, 'target', ctx(vengeful), main.results, main.report.emitted).length, 0);
-    deepEq(offers(env, 'after', ctx(vengeful), main.results, main.report.emitted).map(o => o.id), ['rebuke']);
+    const r = strike(vengeful, [9, 5], decline);
+    deepEq(r.questions.map(q => q.window), ['after']);
+    deepEq(ids(r.questions[0]!), ['rebuke']);
 
-    const miss = send('longsword-item:0', { system: rebukeWorld, sheet: arven, compendium, die: queue(2, 5) });
-    const dry = receive(miss, ctx(vengeful));
-    eq(offers(miss, 'after', ctx(vengeful), dry.results, dry.report.emitted).length, 0);
+    eq(strike(vengeful, [2, 5], decline).questions.length, 0);
   });
 
-  test('согласие даёт ответный конверт нападавшему, и тот теряет хиты', () => {
-    const env = send('longsword-item:0', { system: rebukeWorld, sheet: arven, compendium, die: queue(9, 5) });
-    const main = receive(env, ctx(vengeful));
-    const reacted = react(['rebuke'], env, 'after', ctx(vengeful), main.results, main.report.emitted);
-    eq(reacted.reports.length, 0, 'на себе ничего не делает');
-    eq(reacted.replies.length, 1);
-    eq(reacted.replies[0]!.to, 'arven');
-    const back = receive(reacted.replies[0]!, ctx(arven));
-    eq(back.sheet.values.hp_current, (arven.values.hp_current as number) - 3);
+  test('согласие даёт ответ нападавшему, и тот теряет хиты', () => {
+    const r = strike(vengeful, [9, 5], q => (q.window === 'after' ? ['rebuke'] : []));
+    eq(r.sheets.find(s => s.id === 'mirra')!.values.hp_current, (mirra.values.hp_current as number) - 8, 'себе возмездие ничего не делает');
+    eq(r.sheets.find(s => s.id === 'arven')!.values.hp_current, (arven.values.hp_current as number) - 3);
+    const reply = r.reports.find(x => x.report.reply)!;
+    eq(reply.fromId, 'mirra');
+    eq(reply.toId, 'arven');
   });
 });
 
@@ -251,14 +243,12 @@ group('триггер до разрешения: срабатывает молч
   const braced = { ...mirra, effects: [{ effectId: 'brace' }] };
 
   test('атака, которая попала бы, промахивается по поднятой броне', () => {
-    const attack = () => send('longsword-item:0', { system: braceWorld, sheet: arven, compendium, die: queue(9, 5) });
-    const plain = receive(attack(), { system: braceWorld, sheet: mirra, compendium, die: queue() });
-    ok((resultsOf(plain).hit as { success: boolean }).success, 'без стойки попадание');
+    const plain = play(braceWorld, [arven, mirra], [9, 5]);
+    ok((plain.reports[0]!.report.trace[0] as any).success, 'без стойки попадание');
 
-    const guarded = receive(attack(), { system: braceWorld, sheet: braced, compendium, die: queue() });
-    eq(guarded.report.reactions?.length, 1);
-    eq(guarded.report.reactions![0]!.effect, 'brace');
-    ok(!(resultsOf(guarded).hit as { success: boolean }).success, 'со стойкой промах');
-    ok(guarded.sheet.effects.some(e => e.effectId === 'wall'));
+    const guarded = play(braceWorld, [arven, braced], [9, 5]);
+    const hit = guarded.reports.find(x => x.report.effect === 'strike')!.report;
+    ok(!(hit.trace[0] as any).success, 'со стойкой промах');
+    ok(guarded.sheets.find(s => s.id === 'mirra')!.effects.some(e => e.effectId === 'wall'));
   });
 });

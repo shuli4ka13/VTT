@@ -1,7 +1,5 @@
 import { group, test, eq, ok, throws } from './harness.ts';
-import { exchange } from '../src/events/exchange.ts';
-import { send } from '../src/events/envelope.ts';
-import { runSelfTrack } from '../src/events/self.ts';
+import { exchange } from './play.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const system = {
@@ -47,11 +45,12 @@ group('дорожка «со мной»', () => {
   });
 
   test('на трёх целях ячейка всё равно одна: дорожка идёт до целей', () => {
-    const sheets = [sheet('маг'), sheet('а'), sheet('б'), sheet('в')];
-    const envelope = send('снаряд:0', { ...world, sheet: sheets[0]! });
-    const own = runSelfTrack('снаряд:0', sheets[0]!, world);
-    eq(own.sheet.values.ячейки, 2, 'дорожка сработала один раз');
-    ok(envelope.steps.length > 0);
+    const out = exchange({
+      ...world, sheets: [sheet('маг'), sheet('а'), sheet('б'), sheet('в')],
+      actionId: 'снаряд:0', fromId: 'маг', toIds: ['а', 'б', 'в'],
+    });
+    eq(out.sheets.find(s => s.id === 'маг')!.values.ячейки, 2, 'дорожка сработала один раз');
+    for (const id of ['а', 'б', 'в']) eq(out.sheets.find(s => s.id === id)!.values.хиты, 16);
   });
 
   test('без дорожки ничего не меняется и лишнего отчёта нет', () => {
@@ -66,8 +65,8 @@ group('дорожка «со мной»', () => {
 
   test('дорожка не может опустить поле ниже нижней границы', () => {
     const empty = { ...sheet('маг'), values: { хиты: 20, ячейки: 0 } } as Sheet;
-    const out = runSelfTrack('снаряд:0', empty, world);
-    eq(out.sheet.values.ячейки, 0);
+    const out = exchange({ ...world, sheets: [empty, sheet('цель')], actionId: 'снаряд:0', fromId: 'маг', toId: 'цель' });
+    eq(out.sheets.find(s => s.id === 'маг')!.values.ячейки, 0);
   });
 });
 
@@ -80,7 +79,7 @@ group('в шагах отправителя получателя нет', () => 
 
   test('поле получателя прямо в шаге отправителя — ошибка словами, а не свой лист молча', () => {
     const sys = withSelf([{ type: 'apply', target: { tag: 'ячейки' }, direction: 'set', value: { expr: '@получатель.хиты' } }]);
-    throws(() => runSelfTrack('снаряд:0', sheet('маг'), { system: sys, compendium, die: () => 1 }), 'получателя нет');
+    throws(() => exchange({ system: sys, compendium, die: () => 1, sheets: [sheet('маг'), sheet('цель')], actionId: 'снаряд:0', fromId: 'маг', toId: 'цель' }), 'получателя здесь не прочитать');
   });
 
   test('вход-формула с полем получателя, пришедшая из записи в шаг отправителя, — та же ошибка', () => {
@@ -89,6 +88,6 @@ group('в шагах отправителя получателя нет', () => 
       [{ key: 'сколько', label: 'Сколько', kind: 'number' }],
       { сколько: '@получатель.хиты' },
     );
-    throws(() => runSelfTrack('снаряд:0', sheet('маг'), { system: sys, compendium, die: () => 1 }), 'получателя нет');
+    throws(() => exchange({ system: sys, compendium, die: () => 1, sheets: [sheet('маг'), sheet('цель')], actionId: 'снаряд:0', fromId: 'маг', toId: 'цель' }), 'получателя здесь не прочитать');
   });
 });

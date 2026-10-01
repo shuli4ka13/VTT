@@ -8,7 +8,7 @@ import { Card, CardHead, Button, Empty, Verdict, Chip, Fold, DangerButton } from
 import { Lobby } from './lobby.tsx';
 import { useSession } from '../../store/session.ts';
 import type { RoomState, Sheet, System } from '@vtt/schema';
-import { availableActions } from '@vtt/engine/events/envelope';
+import { availableActions } from '@vtt/engine/events/actions';
 import { heardMoments } from '@vtt/engine/events/moments';
 import { isDesk } from '@vtt/engine/engine/owners';
 import { fieldsFor } from '@vtt/engine/engine/calc';

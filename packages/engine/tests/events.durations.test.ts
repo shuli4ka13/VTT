@@ -1,5 +1,5 @@
 import { group, test, eq, deepEq } from './harness.ts';
-import { send, receive } from '../src/events/envelope.ts';
+import { exchange } from './play.ts';
 import { startCombat, idleClock } from '../src/engine/clock.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
@@ -25,8 +25,8 @@ const who = (id: string): Sheet => ({ id, systemId: 'с', name: id, values: {}, 
 
 const apply = (action: string) => {
   const clock = startCombat(idleClock(), ['а', 'б']);
-  const env = send(action, { system, sheet: who('а'), compendium: book, die: () => 1 });
-  return receive(env, { system, sheet: who('б'), compendium: book, die: () => 1, clock }).sheet.effects;
+  const out = exchange({ system, compendium: book, die: () => 1, clock, sheets: [who('а'), who('б')], actionId: action, fromId: 'а', toId: 'б' });
+  return out.sheets.find(x => x.id === 'б')!.effects;
 };
 
 group('срок по ходам наложившего', () => {

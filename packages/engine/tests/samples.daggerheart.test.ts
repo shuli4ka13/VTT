@@ -1,8 +1,6 @@
 import { group, test, eq, ok } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
-import { exchange, deliverMany } from '../src/events/exchange.ts';
-import { send } from '../src/events/envelope.ts';
-import { sharedOf } from '../src/events/desk.ts';
+import { exchange, deliverMany } from './play.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
@@ -74,8 +72,7 @@ group('Daggerheart: одна атака по двум целям — один б
   const twice = (sys: System) => {
     const bran = sheetOf('bran');
     const sheets = [bran, sheetOf('bandit'), { ...sheetOf('bandit'), id: 'bandit2' } as Sheet, sheetOf('стол')];
-    const envelope = send('longsword:0', { system: sys, compendium, die: tape(9, 4, 8), sheet: bran, shared: sharedOf(sys, sheets) });
-    return deliverMany({ system: sys, compendium, die: tape(8), sheets, envelope, fromId: 'bran', toIds: ['bandit', 'bandit2'] });
+    return deliverMany({ system: sys, compendium, die: tape(9, 4, 8, 8), sheets, actionId: 'longsword:0', fromId: 'bran', toIds: ['bandit', 'bandit2'] });
   };
 
   test('«я подействовал на цель» — Надежда за каждую цель: бросок один, а Надежды две', () => {

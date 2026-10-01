@@ -64,6 +64,8 @@ const OUTCOMES: Record<string, (total: number, versus: number) => { success: boo
   equals: (total, versus) => ({ success: total === versus, margin: -Math.abs(total - versus) }),
 };
 
+export const once = (step: StepData): boolean => (step.side || 'sender') !== 'target';
+
 export const mayBreak = true;
 
 export const icon = '⌖';

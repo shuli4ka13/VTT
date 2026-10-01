@@ -1,7 +1,9 @@
 import { group, test, eq, ok } from './harness.ts';
 import { slots } from '../src/engine/steps/threshold.ts';
-import { packRule, resolveRule } from '../src/engine/rule.ts';
-import { newPass } from '../src/engine/calc.ts';
+import { Runner, newSink } from '../src/lang/run.ts';
+import { State } from '../src/lang/state.ts';
+import { External, emptyJournal } from '../src/lang/journal.ts';
+import { exchange } from './play.ts';
 
 const queue = (...values) => { let i = 0; return () => values[i++] ?? 1; };
 
@@ -22,8 +24,14 @@ const run = (successWhen, rolled, versus, extra = {}) => {
       ...extra,
     }],
   };
-  const packed = packRule(rule, { system: sys, sheet, params: {}, item: null, die: queue(rolled), pass: newPass(sys, sheet) });
-  return resolveRule(packed, { system: sys, sheet, die: queue(rolled), pass: newPass(sys, sheet) });
+  const state = new State([sheet as never], sys as never, { records: [] } as never, null);
+  const runner = new Runner(state, new External(emptyJournal(), queue(rolled)));
+  const sink = newSink();
+  const ran = runner.exec({
+    scope: 'rule', me: sheet.id, here: sheet.id, target: sheet.id, effectId: 'e', owner: 'тест',
+    args: {}, paramDefs: [], props: null, source: sheet.id, hop: 0, names: 'here',
+  }, rule.steps as never, sink);
+  return ran as { results: Record<string, any>; stopped: unknown };
 };
 
 group('порог: направление успеха объявляется слотом', () => {
@@ -54,18 +62,34 @@ group('порог: направление успеха объявляется с
     ok(!run('notOver', 10, 40).stopped, 'успех — цепочка живёт');
   });
 
-  test('порог на стороне цели уносит направление в конверт', () => {
-    const rule = {
-      steps: [{
-        id: 'try', type: 'threshold', side: 'target', successWhen: 'notOver',
-        roll: { die: { constant: 'lead_die' }, bonus: { expr: '0' }, check: null },
-        versus: { expr: '40' },
-      }],
+  test('порог на стороне цели бросает цель и следует направлению', () => {
+    const world = {
+      id: 'спасбросок', name: 'спасбросок',
+      constants: { lead_die: { label: 'Сотка', kind: 'die', dice: [{ count: 1, sides: 100 }] } },
+      tables: {
+        лист: { shape: 'single', columns: [{ key: 'хп', label: 'Хиты', kind: 'number', default: 10 }] },
+        приём: { shape: 'book', use: 'action', label: 'Приём' },
+      },
+      effects: {
+        спас: {
+          label: 'Спасбросок', activation: 'manual',
+          steps: [{
+            id: 'try', type: 'threshold', side: 'target', successWhen: 'notOver',
+            roll: { die: { constant: 'lead_die' }, bonus: { expr: '0' }, check: null },
+            versus: { expr: '40' },
+          }],
+        },
+      },
     };
-    const packed = packRule(rule, { system: sys, sheet, params: {}, item: null, die: queue(), pass: newPass(sys, sheet) });
-    const done = resolveRule(packed, { system: sys, sheet, die: queue(15) });
-    ok(done.results.try.success, 'цель бросила 15 против 40 «вниз» — спаслась');
-    eq(done.results.try.margin, 25);
+    const book = { records: [{ id: 'спас', table: 'приём', label: 'Спас', bindings: [{ label: 'Спас', effect: 'спас', args: {} }] }] };
+    const mk = (id: string) => ({ id, systemId: 'спасбросок', name: id, values: {}, has: [{ of: 'спас' }], effects: [] });
+    const out = exchange({
+      system: world as never, compendium: book as never, die: queue(15), sheets: [mk('бросающий') as never, mk('цель') as never],
+      actionId: 'спас:0', fromId: 'бросающий', toId: 'цель',
+    });
+    const trace = out.reports[0]!.report.trace.find(t => t.step === 'try') as { success: boolean; margin: number; natural: number };
+    ok(trace.success, 'цель бросила 15 против 40 «вниз» — спаслась');
+    eq(trace.margin, 25);
   });
 
   test('направление — слот-выбор в реестре: конструктор нарисует его сам', () => {

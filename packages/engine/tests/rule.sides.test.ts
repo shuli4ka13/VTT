@@ -1,6 +1,5 @@
 import { group, test, eq } from './harness.ts';
-import { packRule, resolveRule } from '../src/engine/rule.ts';
-import { newPass } from '../src/engine/calc.ts';
+import { exchange } from './play.ts';
 
 const queue = (...values: number[]) => {
   const rest = [...values];
@@ -22,16 +21,19 @@ const sys: any = {
 const атакующий = { id: 'атакующий', values: { хп: 30, сила: 5 }, effects: [] };
 const цель = { id: 'цель', values: { хп: 20, сила: 1 }, effects: [] };
 
-const hit = (rule: any) => {
-  const packed = packRule(rule, {
-    system: sys, sheet: атакующий, params: {}, item: null,
-    die: queue(4), pass: newPass(sys, атакующий, { compendium: { records: [] } }),
-  } as any);
-  return resolveRule(packed, {
-    system: sys, sheet: цель, params: {}, item: null,
-    die: queue(), pass: newPass(sys, цель, { compendium: { records: [] } }),
-  } as any);
+const runRule = (sys: any, rule: any, sender: any, target: any, die: () => number) => {
+  const full: any = {
+    ...sys, tables: { ...sys.tables, приём: { shape: 'book', use: 'action', label: 'Приём' } },
+    effects: { ...sys.effects, 'правило': { label: 'правило', activation: 'manual', ...rule } },
+  };
+  const book: any = { records: [{ id: 'правило', table: 'приём', label: 'правило', bindings: [{ label: 'правило', effect: 'правило', args: {} }] }] };
+  const from = { ...sender, id: 'отправитель-теста', has: [...(sender.has ?? []), { of: 'правило' }], effects: sender.effects ?? [] };
+  const out = exchange({ system: full, compendium: book, die, sheets: [from, target], actionId: 'правило:0', fromId: from.id, toId: target.id });
+  const report = out.reports[0]!.report;
+  return { sheet: out.sheets.find((s: any) => s.id === target.id)!, trace: report.trace as any[], stopped: report.stopped as any };
 };
+
+const hit = (rule: any) => runRule(sys, rule, атакующий, цель, queue(4));
 
 group('чей лист считает слагаемое', () => {
   test('прибавка ВНУТРИ числа считается отправителем — его Силой', () => {
@@ -76,15 +78,5 @@ group('чей лист считает слагаемое', () => {
     };
 
     eq(hit(rule).sheet.values.хп, 16, '20 − 4 − 5 + 5: оба вхождения имени считает отправитель');
-  });
-
-  test('число уезжает в конверте посчитанным: у получателя оно уже готово', () => {
-    const rule: any = {
-      steps: [
-        { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d8' }, bonus: { expr: '#сила' } },
-        { type: 'apply', target: { tag: 'хп' }, direction: 'set', value: { expr: '@получатель.хп - #урон' } },
-      ],
-    };
-    eq(hit(rule).sheet.values.хп, 11, 'выражение цели берёт ГОТОВОЕ число отправителя');
   });
 });

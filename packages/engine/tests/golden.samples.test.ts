@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { SAMPLE_WORLDS } from '../src/model/systems.ts';
 import { flattenSystem } from '../src/model/inherit.ts';
-import { availableActions } from '../src/events/envelope.ts';
-import { exchange } from '../src/events/exchange.ts';
+import { availableActions } from '../src/events/actions.ts';
+import { exchange } from './play.ts';
 import { idleClock, startCombat } from '../src/engine/clock.ts';
 
 const WORLDS: Record<string, any> = Object.fromEntries(SAMPLE_WORLDS.map(w => [w.system.id, w]));

@@ -4,7 +4,7 @@ import type { BondBreak } from './bonds.ts';
 import { fireLifecycle } from './lifecycle.ts';
 import { fireCrossings } from './moments.ts';
 import type { Fired } from './moments.ts';
-import type { WorldContext } from './envelope.ts';
+import type { WorldContext } from '../lang/types.ts';
 import type { Sheet } from '../model/types.ts';
 
 export type Aftermath = ({ kind: 'fired' } & Fired) | ({ kind: 'broken' } & BondBreak);

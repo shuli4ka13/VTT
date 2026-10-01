@@ -1,6 +1,6 @@
 import { group, test, eq, ok, throws } from './harness.ts';
 import { lookupTable, lookupDegree, isCases } from '../src/engine/tables.ts';
-import { send, receive } from '../src/events/envelope.ts';
+import { exchange } from './play.ts';
 import type { System } from '../src/model/types.ts';
 
 const system = {
@@ -89,10 +89,9 @@ group('формула видит результат шага выше', () => {
     } as never);
 
     const кости = (порог: number, выпало: number): string => {
-      const мир = { system: система, compendium: книга, die: () => выпало };
-      const конверт = send('приём:0', { ...мир, sheet: лист(порог) });
-      const итог = receive(конверт, { ...мир, sheet: лист(порог) });
-      return String(итог.report.trace.find((t: Record<string, unknown>) => t.type === 'amount')?.notation);
+      const цель = { id: 'цель', systemId: 'к', name: 'цель', values: {}, has: [], effects: [] } as never;
+      const итог = exchange({ system: система, compendium: книга, die: () => выпало, sheets: [лист(порог), цель], actionId: 'приём:0', fromId: 'я', toId: 'цель' });
+      return String(итог.reports[0]!.report.trace.find((t: Record<string, unknown>) => t.type === 'amount')?.notation);
     };
 
     eq(кости(20, 10), '1d6', 'обычный бросок — одна кость');

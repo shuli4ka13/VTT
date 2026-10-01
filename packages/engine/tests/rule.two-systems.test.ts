@@ -1,6 +1,6 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.ts';
-import { send, receive, bindingsOf } from '../src/events/envelope.ts';
-import { exchange } from '../src/events/exchange.ts';
+import { bindingsOf } from '../src/events/actions.ts';
+import { exchange } from './play.ts';
 import { serializeSheet } from '../src/model/serialize.ts';
 import { system, arven, mirra, compendium, cyberpunk, cpCompendium, silver, raze } from './fixtures.ts';
 import { AMOUNT_SOURCES } from '../src/model/amount-sources.ts';
@@ -14,13 +14,18 @@ const queue = (...values) => {
   };
 };
 
-const ctx5 = (sheet, die) => ({ system, sheet, compendium, die });
+const play5 = (actionId, from, to, rolls, extra = {}) => exchange({
+  system, compendium, die: queue(...rolls), sheets: [from, to], actionId, fromId: from.id, toId: to.id, ...extra,
+});
+const effectReport = out => out.reports.find(entry => entry.report.kind === 'effect' && entry.toId !== entry.fromId).report;
+const sheetOf = (out, id) => out.sheets.find(s => s.id === id);
 
 group('две системы одними слотами', () => {
   group('A: срез 5e', () => {
     test('полный ход: порог → величина → применить, трасса несёт все числа', () => {
-      const env = send('longsword-item:0', ctx5(arven, queue(10, 5)));
-      const { sheet, report } = receive(env, ctx5(mirra, queue()));
+      const out = play5('longsword-item:0', arven, mirra, [10, 5]);
+      const report = effectReport(out);
+      const sheet = sheetOf(out, mirra.id);
 
       eq(report.stopped, null);
       eq(report.trace.length, 5, 'три шага удара и два шага общего эффекта «Урон»');
@@ -40,8 +45,9 @@ group('две системы одними слотами', () => {
     });
 
     test('промах: обрыв на пороге, в журнале threshold-miss, цель не тронута', () => {
-      const env = send('longsword-item:0', ctx5(arven, queue(2, 5)));
-      const { sheet, report } = receive(env, ctx5(mirra, queue()));
+      const out = play5('longsword-item:0', arven, mirra, [2, 5]);
+      const report = effectReport(out);
+      const sheet = sheetOf(out, mirra.id);
       eq(report.stopped.reason, 'threshold-miss');
       eq(report.trace.length, 1, 'после обрыва шаги не исполнялись');
       eq(sheet.values.hp_current, 21);
@@ -50,30 +56,31 @@ group('две системы одними слотами', () => {
 
     test('сопротивление цели половинит урон — модификаторы цели включены в правиле', () => {
       const stony = { ...mirra, effects: [{ effectId: 'stoneskin' }] };
-      const env = send('longsword-item:0', ctx5(arven, queue(10, 5)));
-      const { sheet, report } = receive(env, ctx5(stony, queue()));
+      const out = play5('longsword-item:0', arven, stony, [10, 5]);
+      const report = effectReport(out);
+      const sheet = sheetOf(out, stony.id);
       eq(report.trace[2].incoming, 8, 'пришло восемь…');
       eq(report.trace[2].amount, 4, '…каменная кожа оставила четыре');
       eq(sheet.values.hp_current, 17);
     });
 
     test('спасбросок — то же правило порога, бросает и считает получатель', () => {
-      const env = send('poison-spray:0', ctx5(mirra, queue(3, 4)));
-      const failed = receive(env, ctx5(arven, queue(5)));
-      eq(failed.report.stopped, null, 'спас провален — цепочка дошла до конца');
-      eq(failed.sheet.values.hp_current, 37, '44 минус 2d6=7');
-      deepEq(failed.sheet.effects, [...arven.effects, { effectId: 'poisoned' }]);
+      const failed = play5('poison-spray:0', mirra, arven, [3, 4, 5]);
+      eq(effectReport(failed).stopped, null, 'спас провален — цепочка дошла до конца');
+      eq(sheetOf(failed, arven.id).values.hp_current, 37, '44 минус 2d6=7');
+      deepEq(sheetOf(failed, arven.id).effects, [...arven.effects, { effectId: 'poisoned' }]);
 
-      const held = receive(env, ctx5(arven, queue(19)));
-      eq(held.report.stopped.reason, 'threshold-held', 'спасся — обрыв, и он различим в журнале');
-      eq(held.sheet.values.hp_current, 44);
-      deepEq(held.sheet.effects, arven.effects);
+      const held = play5('poison-spray:0', mirra, arven, [3, 4, 19]);
+      eq(effectReport(held).stopped.reason, 'threshold-held', 'спасся — обрыв, и он различим в журнале');
+      eq(sheetOf(held, arven.id).values.hp_current, 44);
+      deepEq(sheetOf(held, arven.id).effects, arven.effects);
     });
 
     test('лечение — не урон с минусом: потолок это максимум хитов', () => {
       const wounded = { ...arven, values: { ...arven.values, hp_current: 40 } };
-      const env = send('healing-word', ctx5(mirra, queue(2)));
-      const { sheet, report } = receive(env, ctx5(wounded, queue()));
+      const out = play5('healing-word', mirra, wounded, [2]);
+      const report = effectReport(out);
+      const sheet = sheetOf(out, wounded.id);
       eq(report.trace[1].amount, 5, 'кость 2 плюс Харизма лекаря 3');
 
       eq(sheet.values.hp_current, 44, '40 + 5, но max поля — 44');
@@ -85,8 +92,7 @@ group('две системы одними слотами', () => {
         values: { ...arven.values, hp_current: 30 },
         effects: [{ effectId: 'stoneskin' }],
       };
-      const env = send('healing-word', ctx5(mirra, queue(2)));
-      const { sheet } = receive(env, ctx5(stonyWounded, queue()));
+      const sheet = sheetOf(play5('healing-word', mirra, stonyWounded, [2]), stonyWounded.id);
       eq(sheet.values.hp_current, 35, 'все 5, а не округлить вниз(5/2): модификаторы цели выключены');
     });
   });
@@ -186,13 +192,13 @@ group('две системы одними слотами', () => {
         },
       };
 
-      const swordWas = receive(send('longsword-item:0', ctx5(arven, queue(10, 5))), ctx5(mirra, queue())).report;
-      const axeWas = receive(send('axe-item:0', { system, sheet: arven, compendium: book, die: queue(10, 7) }),
-        { system, sheet: mirra, compendium: book, die: queue() }).report;
-      const swordNow = receive(send('longsword-item:0', { system: margined, sheet: arven, compendium, die: queue(10, 5) }),
-        { system: margined, sheet: mirra, compendium, die: queue() }).report;
-      const axeNow = receive(send('axe-item:0', { system: margined, sheet: arven, compendium: book, die: queue(10, 7) }),
-        { system: margined, sheet: mirra, compendium: book, die: queue() }).report;
+      const strike = (sys, comp, id, rolls) => effectReport(exchange({
+        system: sys, compendium: comp, die: queue(...rolls), sheets: [arven, mirra], actionId: id, fromId: arven.id, toId: mirra.id,
+      }));
+      const swordWas = strike(system, compendium, 'longsword-item:0', [10, 5]);
+      const axeWas = strike(system, book, 'axe-item:0', [10, 7]);
+      const swordNow = strike(margined, compendium, 'longsword-item:0', [10, 5]);
+      const axeNow = strike(margined, book, 'axe-item:0', [10, 7]);
 
       eq(swordWas.trace[1].total, 8, 'было: кость 5 плюс Сила 3');
       eq(axeWas.trace[1].total, 10, 'было: кость 7 плюс та же Сила 3');
@@ -213,7 +219,7 @@ group('две системы одними слотами', () => {
           lead_die: { ...system.constants.lead_die, dice: [{ count: 1, sides: 12 }] },
         },
       };
-      send('longsword-item:0', { system: d12world, sheet: arven, compendium, die: spy });
+      exchange({ system: d12world, compendium, die: spy, sheets: [arven, mirra], actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id });
       eq(asked[0], 12, 'проверка пошла новой костью');
       eq(asked[1], 8, 'а кость урона осталась костью оружия');
     });
@@ -241,7 +247,7 @@ group('две системы одними слотами', () => {
   group('сторожа', () => {
     test('действие без эффекта — внятная ошибка', () => {
       const book = { ...compendium, records: [{ id: 'пустое', label: 'Пустое', bindings: [{ label: 'Пустое', effect: 'нетакого', args: {} }] }] };
-      throws(() => send('пустое', { system, sheet: arven, compendium: book, die: queue() }), 'нетакого');
+      throws(() => exchange({ system, compendium: book, die: queue(), sheets: [arven, mirra], actionId: 'пустое', fromId: arven.id, toId: mirra.id }), 'нетакого');
     });
 
     test('запись зовёт эффект, которого система не объявляет', () => {
@@ -249,7 +255,7 @@ group('две системы одними слотами', () => {
         ...compendium,
         records: [...compendium.records, { id: 'a', table: 'action', label: 'А', bindings: [{ label: 'А', effect: 'котик', args: {} }] }],
       };
-      throws(() => send('a:0', { system, sheet: arven, compendium: book, die: queue() }), 'котик');
+      throws(() => exchange({ system, compendium: book, die: queue(), sheets: [arven, mirra], actionId: 'a:0', fromId: arven.id, toId: mirra.id }), 'котик');
     });
   });
 });

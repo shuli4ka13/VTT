@@ -6,7 +6,7 @@ import { and, desc, eq, or } from 'drizzle-orm';
 import { world as schemas } from '@vtt/schema';
 import { lintSystem, lintCompendium, errorsOf, describeWhere } from '@vtt/engine/model/lint';
 import { propsNeeded } from '@vtt/engine/model/owned';
-import { bindingsOf } from '@vtt/engine/events/envelope';
+import { bindingsOf } from '@vtt/engine/events/actions';
 import { flattenSystem } from '@vtt/engine/model/inherit';
 import type { Compendium, System } from '@vtt/schema';
 import { DB, CLOCK, IDS } from '../common/tokens.ts';

@@ -12,7 +12,7 @@ import type {
 } from '@vtt/schema';
 import { flattenSystem } from '@vtt/engine/model/inherit';
 import { findRecord, sheetKindOf } from '@vtt/engine/model/owned';
-import { effectLabelOf } from '@vtt/engine/events/envelope';
+import { effectLabelOf } from '@vtt/engine/events/actions';
 import { findEffect, usesMax } from '@vtt/engine/engine/effects';
 import { asksOf, checkInputs, normalizeInputs } from '@vtt/engine/model/asks';
 import { fireMoments, describeMoment, momentsOfTurn } from '@vtt/engine/events/moments';

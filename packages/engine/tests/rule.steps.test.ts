@@ -1,6 +1,8 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.ts';
 import { registerStepType, registry } from '../src/engine/steps/index.ts';
-import { packRule, resolveRule } from '../src/engine/rule.ts';
+import { Runner, newSink } from '../src/lang/run.ts';
+import { State } from '../src/lang/state.ts';
+import { External, emptyJournal } from '../src/lang/journal.ts';
 
 const sys = {
   id: 'stub-sys',
@@ -62,10 +64,14 @@ const sticker = {
 for (const mod of [echo, stop, reader, writer, sticker]) registerStepType(mod);
 
 const run = steps => {
-  const rule = { label: 'Правило из заглушек', steps };
-  const packed = packRule(rule, { system: sys, sheet, params: {}, item: null });
-  deepEq(JSON.parse(JSON.stringify(packed)), packed, 'упакованная цепочка — чистые данные');
-  return resolveRule(packed, { system: sys, sheet });
+  const state = new State([sheet], sys, { records: [] }, null);
+  const runner = new Runner(state, new External(emptyJournal(), () => 1));
+  const sink = newSink();
+  const ran = runner.exec({
+    scope: 'rule', me: sheet.id, here: sheet.id, target: sheet.id, effectId: 'e', owner: 'Правило из заглушек',
+    args: {}, paramDefs: [], props: null, source: sheet.id, hop: 0, names: 'here',
+  }, steps, sink);
+  return { results: ran.results, stopped: ran.stopped, trace: sink.trace, changes: sink.changes, effects: sink.effects, sheet: state.get(sheet.id) };
 };
 
 group('ядро правил', () => {
@@ -73,14 +79,6 @@ group('ядро правил', () => {
     test('неизвестный тип шага — внятная ошибка с перечнем известных', () => {
       const err = throws(() => run([{ type: 'котик' }]), 'котик');
       ok(err.message.includes('эхо-заглушка'), 'ошибка перечисляет, что реестр знает');
-    });
-
-    test('подделанный тип в пришедшей цепочке ловится и при исполнении', () => {
-      const packed = packRule({ steps: [{ id: 'a', type: 'эхо-заглушка', note: 1 }] },
-        { system: sys, sheet, params: {}, item: null });
-      const forged = JSON.parse(JSON.stringify(packed));
-      forged[0].type = 'котик';
-      throws(() => resolveRule(forged, { system: sys, sheet }), 'котик');
     });
 
     test('регистрация неполного модуля — ошибка, а не тихая бомба на потом', () => {
@@ -188,7 +186,7 @@ if (inNode) {
 
   group('ядро правил › ядро не знает типов шагов', () => {
 
-    const CORE = ['src/engine/rule.ts', 'src/events/envelope.ts'];
+    const CORE = ['src/engine/rule.ts', 'src/lang/run.ts', 'src/lang/act.ts', 'src/lang/journal.ts', 'src/lang/state.ts'];
 
     test('в исходниках ядра нет ни одного имени зарегистрированного типа', () => {
       const hits = [];

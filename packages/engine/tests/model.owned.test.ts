@@ -1,6 +1,7 @@
 import { group, test, eq, deepEq } from './harness.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
-import { availableActions, send, receive } from '../src/events/envelope.ts';
+import { availableActions } from '../src/events/actions.ts';
+import { exchange } from './play.ts';
 import { wornEffects } from '../src/engine/effects.ts';
 import { shownOn } from '../src/model/owned.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
@@ -53,8 +54,8 @@ group('что есть у листа: запись со своим состоя�
 
   test('значение экземпляра перекрывает свойство записи: этот меч наточен', () => {
     const hit = (sheet: Sheet) => {
-      const env = send('меч:0', { system, sheet, compendium: book, die: () => 1 });
-      return receive(env, { system, sheet: target(), compendium: book, die: () => 1 }).sheet.values.хиты;
+      const out = exchange({ system, compendium: book, die: () => 1, sheets: [sheet, target()], actionId: 'меч:0', fromId: 'герой', toId: 'цель' });
+      return out.sheets.find(x => x.id === 'цель')!.values.хиты;
     };
     eq(hit(hero([{ of: 'меч' }])), 15);
     eq(hit(hero([{ of: 'меч', values: { урон: 8 } }])), 12);

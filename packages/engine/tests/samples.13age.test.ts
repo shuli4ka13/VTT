@@ -56,7 +56,6 @@ group('13th Age: кость эскалации на столе', () => {
 
 group('13th Age: толпа — урон переходит с одного на следующего', () => {
   test('удар по одному гоблину из толпы снимает хиты толпы; стоящих становится меньше', async () => {
-    const { exchange } = await import('../src/events/exchange.ts');
     const { PLAYABLE_WORLDS } = await import('../src/model/systems.ts');
     const { calc, newPass } = await import('../src/engine/calc.ts');
     const world = PLAYABLE_WORLDS.find(w => (w.system as { id: string }).id === '13age')!;

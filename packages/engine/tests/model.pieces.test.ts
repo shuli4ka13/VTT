@@ -2,7 +2,7 @@ import { group, test, deepEq, ok } from './harness.ts';
 import { PIECES, bringPiece, donorOf } from '../src/model/pieces.ts';
 import { lintSystem, errorsOf } from '../src/model/lint.ts';
 import { calledOf, isPipeline } from '../src/engine/effects.ts';
-import { availableActions } from '../src/events/envelope.ts';
+import { availableActions } from '../src/events/actions.ts';
 import { withLibrary } from '../src/model/owned.ts';
 import type { System, Sheet } from '../src/model/types.ts';
 import { fieldOf } from '../src/model/sheet-columns.ts';

@@ -1,7 +1,6 @@
 import { group, test, eq, deepEq } from './harness.ts';
-import { packRule, resolveRule } from '../src/engine/rule.ts';
+import { exchange } from './play.ts';
 import { rollLead } from '../src/engine/lead-die.ts';
-import { newPass } from '../src/engine/calc.ts';
 
 const queue = (...values: number[]) => {
   const rest = [...values];
@@ -54,14 +53,25 @@ group('степени успеха', () => {
     }],
   };
 
-  const run = (world: any, effects: string[], ...dice: number[]) => {
-    const sheet = { id: 'герой', values: {}, effects: effects.map(effectId => ({ effectId })) };
-    const ctx = () => ({
-      system: world, sheet, params: {}, item: null,
-      die: queue(...dice), pass: newPass(world, sheet, { compendium: { records: [] } }),
-    });
-    return resolveRule(packRule(rule, ctx()), ctx());
+  const runRule = (sys: any, rule: any, sender: any, target: any, die: () => number, base: any = { records: [] }) => {
+    const full: any = {
+      ...sys, tables: { ...sys.tables, приём: { shape: 'book', use: 'action', label: 'Приём' } },
+      effects: { ...sys.effects, 'правило': { label: 'правило', activation: 'manual', ...rule } },
+    };
+    const book: any = { ...base, records: [...base.records, { id: 'правило', table: 'приём', label: 'правило', bindings: [{ label: 'правило', effect: 'правило', args: {} }] }] };
+    const from = { ...sender, id: 'отправитель-теста', has: [...(sender.has ?? []), { of: 'правило' }], effects: sender.effects ?? [] };
+    const out = exchange({ system: full, compendium: book, die, sheets: [from, target], actionId: 'правило:0', fromId: from.id, toId: target.id });
+    const report = out.reports[0]!.report;
+    return { sheet: out.sheets.find((s: any) => s.id === target.id)!, trace: report.trace as any[], stopped: report.stopped as any };
   };
+
+  const play = (world: any, effects: string[], die: () => number, ruleOf: any = rule) => {
+    const sheet = { id: 'герой', values: {}, effects: effects.map(effectId => ({ effectId })) };
+    const out = runRule(world, ruleOf, sheet, { id: 'цель-теста', values: {}, effects: [] }, die);
+    const t = out.trace[0]!;
+    return { results: { move: { ...(('degree' in t) ? { degree: t.degree } : {}), success: t.success } } as any };
+  };
+  const run = (world: any, effects: string[], ...dice: number[]) => play(world, effects, queue(...dice));
 
   test('исход читается словом автора, а не «да/нет»', () => {
     eq(run(sys, [], 3, 4).results.move.degree, 'успех с ценой', '7 — середина шкалы');
@@ -88,12 +98,7 @@ group('степени успеха', () => {
 
   test('мир без объявленной шкалы живёт как раньше: степени нет вовсе', () => {
     const plain: any = { steps: [{ ...rule.steps[0], degrees: undefined }] };
-    const sheet = { id: 'герой', values: {}, effects: [] };
-    const ctx = () => ({
-      system: sys, sheet, params: {}, item: null,
-      die: queue(3, 4), pass: newPass(sys, sheet, { compendium: { records: [] } }),
-    });
-    const r = resolveRule(packRule(plain, ctx()), ctx());
+    const r = play(sys, [], queue(3, 4), plain);
     eq('degree' in (r.results.move as object), false, 'ключа нет — старые правила не изменились');
     eq(r.results.move.success, true);
   });

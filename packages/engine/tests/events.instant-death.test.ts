@@ -1,5 +1,5 @@
 import { group, test, eq, deepEq } from './harness.ts';
-import { send, receive } from '../src/events/envelope.ts';
+import { exchange } from './play.ts';
 
 const sys: any = {
   id: 'мгновенная-смерть',
@@ -38,10 +38,8 @@ const hit = (величина: number, хп: number, хп_макс: number) => {
   const жертва = { id: 'жертва', values: { хп, хп_макс }, effects: [] };
   const first = compendium.records[0];
   const book = { ...compendium, records: [{ ...first, bindings: [{ ...first.bindings[0], args: { величина } }] }] };
-  const env = send('strike:0', {
-    system: sys, sheet: бьющий, compendium: book, die: () => 1, toId: 'жертва',
-  } as any);
-  return receive(env, { system: sys, sheet: жертва, compendium: book, die: () => 1 } as any);
+  const out = exchange({ system: sys, compendium: book, die: () => 1, sheets: [бьющий, жертва] as any, actionId: 'strike:0', fromId: 'бьющий', toId: 'жертва' });
+  return { ...out, sheet: out.sheets.find(s => s.id === 'жертва')!, report: out.reports[0]!.report } as any;
 };
 
 const dead = (out: any) => (out.sheet.effects ?? []).some((e: any) => e.effectId === 'мёртв');
@@ -70,7 +68,7 @@ group('мгновенная смерть — реакция на себя', () =
 
   test('реакция — не ответка: обратного конверта не рождается', () => {
     const out = hit(19, 6, 12);
-    deepEq(out.replies, [], 'каскад не тронут: реакция на себя конверта не шлёт');
+    eq(out.reports.length, 1, 'реакция на себя новых отчётов-ответок не рождает');
   });
 
   test('без перебора реакция обрывается на сравнении — и это видно', () => {

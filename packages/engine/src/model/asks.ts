@@ -1,4 +1,4 @@
-import { actionOf } from '../events/envelope.ts';
+import { actionOf } from '../events/actions.ts';
 import { listOf } from './lists.ts';
 import type { System, Compendium, Ask, Param } from './types.ts';
 

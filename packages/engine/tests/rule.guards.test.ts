@@ -1,6 +1,5 @@
 import { group, test, eq, deepEq, throws } from './harness.ts';
-import { packRule, resolveRule } from '../src/engine/rule.ts';
-import { newPass } from '../src/engine/calc.ts';
+import { exchange } from './play.ts';
 
 const queue = (...values: number[]) => {
   const rest = [...values];
@@ -24,18 +23,18 @@ const sys: any = {
   effects: {},
 };
 
-const sender = { id: 'маг', values: { хп: 20, уровень: 6 }, effects: [] };
-const target = { id: 'цель', values: { хп: 20, уровень: 3 }, effects: [] };
+const sender = { id: 'маг', systemId: 'ветвление', name: 'маг', values: { хп: 20, уровень: 6 }, has: [{ of: 'e' }], effects: [] };
+const target = { id: 'цель', systemId: 'ветвление', name: 'цель', values: { хп: 20, уровень: 3 }, has: [], effects: [] };
+const book: any = { records: [{ id: 'e', table: 'приём', label: 'E', bindings: [{ label: 'E', effect: 'e', args: {} }] }] };
 
 const play = (steps: any[], ...dice: number[]) => {
-  const packed = packRule({ params: [], steps } as any, {
-    system: sys, sheet: sender, pass: newPass(sys, sender, { compendium: { records: [] } }),
-    die: queue(...dice), params: {}, props: null, owner: 'тест',
-  });
-  return resolveRule(packed, {
-    system: sys, sheet: target, pass: newPass(sys, target, { compendium: { records: [] } }),
-    die: queue(...dice), owner: 'тест',
-  });
+  const full: any = {
+    ...sys, tables: { ...sys.tables, приём: { shape: 'book', use: 'action', label: 'Приём' } },
+    effects: { e: { label: 'E', activation: 'manual', params: [], steps } },
+  };
+  const out = exchange({ system: full, compendium: book, die: queue(...dice), sheets: [sender, target] as any, actionId: 'e:0', fromId: 'маг', toId: 'цель' });
+  const report = out.reports[0]!.report;
+  return { sheet: out.sheets.find(s => s.id === 'цель')!, stopped: report.stopped, trace: report.trace as any[] };
 };
 
 const save = { id: 'спас', type: 'threshold', side: 'target', continueOn: 'always',
@@ -76,16 +75,11 @@ group('ветвление по исходу: стражи на шагах', () =
     eq(play(graded, 2).sheet.values.хп, 20, 'провал — ни один шаг не сработал');
   });
 
-  test('страж-формула отправителя упаковывается константой: цель её не пересчитывает', () => {
+  test('страж-формула отправителя считается листом отправителя (шестой уровень), а не цели (третий)', () => {
     const steps = [
       { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '5' },
         when: { expr: '#уровень >= 5' } },
     ];
-    const packed = packRule({ params: [], steps } as any, {
-      system: sys, sheet: sender, pass: newPass(sys, sender, { compendium: { records: [] } }),
-      die: queue(), params: {}, props: null, owner: 'тест',
-    });
-    deepEq(packed[0]!.when, { const: true }, 'у мага шестой уровень');
     eq(play(steps).sheet.values.хп, 15);
   });
 

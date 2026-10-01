@@ -1,6 +1,6 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.ts';
-import { send, receive } from '../src/events/envelope.ts';
-import { exchange } from '../src/events/exchange.ts';
+import { exchange } from './play.ts';
+import { withColumn } from '../src/model/sheet-columns.ts';
 import { targets } from '../src/engine/targets.ts';
 import { system, arven, mirra, compendium, sheets } from './fixtures.ts';
 
@@ -25,11 +25,16 @@ const passive = (label: string, target: string, edit: string, condition: string 
 };
 const withEffects = (extra: Record<string, unknown>) => ({ ...system, effects: { ...system.effects, ...extra } });
 
+const strike = (sys: any, from: any, to: any, dice: number[], claims?: { source?: string[]; target?: string[] }) =>
+  exchange({
+    system: sys, compendium, die: queue(...dice), sheets: [from, to],
+    actionId: 'longsword-item:0', fromId: from.id, toId: to.id, ...(claims ? { claims } : {}),
+  });
+const hitTrace = (r: ReturnType<typeof exchange>) => r.reports[0]!.report.trace[0] as any;
+
 group('заявка правки за столом', () => {
-  const attack = (claims: string[], sheet = arven, ...dice: number[]) => {
-    const env = send('longsword-item:0', { system, sheet, compendium, die: queue(...dice), claims });
-    return receive(env, { system, sheet: mirra, compendium, die: queue() }).report.trace[0] as any;
-  };
+  const attack = (claims: string[], sheet = arven, ...dice: number[]) =>
+    hitTrace(strike(system, sheet, mirra, dice, { source: claims }));
 
   test('игрок просит преимущество — костей две, берётся лучшая, журнал называет правку', () => {
     const t = attack(['advantage'], arven, 4, 18, 5);
@@ -45,16 +50,15 @@ group('заявка правки за столом', () => {
   });
 
   test('заявка на правку, которой нет в словаре, — ошибка перечисляет словарь', () => {
-    throws(() => send('longsword-item:0', {
-      system, sheet: arven, compendium, die: queue(1, 1), claims: ['котик'],
-    }), 'котик');
+    throws(() => strike(system, arven, mirra, [1, 1], { source: ['котик'] }), 'котик');
   });
 
   test('заявка за цель: спасбросок бросается с преимуществом, считает получатель', () => {
-    const env = send('poison-spray:0', { system, sheet: mirra, compendium, die: queue(3, 4) });
-    const t = receive(env, {
-      system, sheet: arven, compendium, die: queue(2, 19), claims: ['advantage'],
-    }).report.trace[0] as any;
+    const r = exchange({
+      system, compendium, die: queue(3, 4, 2, 19, 5, 5, 5), sheets: [mirra, arven],
+      actionId: 'poison-spray:0', fromId: 'mirra', toId: 'arven', claims: { target: ['advantage'] },
+    });
+    const t = r.reports[0]!.report.trace[0] as any;
     deepEq(t.rolls, [2, 19]);
     eq(t.kept, 19);
   });
@@ -79,46 +83,33 @@ group('цель видна отправителю: состояния цели �
   });
 
   test('по лежащей цели атакуют с преимуществом — правку даёт лист ЦЕЛИ', () => {
-    const env = send('longsword-item:0', {
-      system: prone, sheet: arven, compendium, die: queue(4, 18, 5), against: lying,
-    });
-    deepEq(env.steps[0]!.rolled.rolls, [4, 18]);
-    eq(env.steps[0]!.rolled.kept, 18);
+    const t = hitTrace(strike(prone, arven, lying, [4, 18, 5]));
+    deepEq(t.rolls, [4, 18]);
+    eq(t.kept, 18);
   });
 
-  test('без цели под рукой правок цели нет — предпросмотр на клиенте честен в своих пределах', () => {
-    const env = send('longsword-item:0', { system: prone, sheet: arven, compendium, die: queue(4, 5) });
-    deepEq(env.steps[0]!.rolled.rolls, [4]);
+  test('по цели без правок бросок обычный', () => {
+    deepEq(hitTrace(strike(prone, arven, mirra, [4, 5])).rolls, [4]);
   });
 
   test('условие правки цели считается по листу ЦЕЛИ', () => {
     const sys = withEffects({ prone: passive('Лежит', 'incoming:атака', 'advantage', '#level >= 5') });
-    const env = send('longsword-item:0', {
-      system: sys, sheet: arven, compendium, die: queue(4, 5), against: { ...mirra, effects: [{ effectId: 'prone' }] },
-    });
-    deepEq(env.steps[0]!.rolled.rolls, [4], 'у Мирры третий уровень — условие ложно');
+    deepEq(hitTrace(strike(sys, arven, { ...mirra, effects: [{ effectId: 'prone' }] }, [4, 5])).rolls, [4], 'у Мирры третий уровень — условие ложно');
   });
 
   test('правка цели гасится помехой нападающего по закону словаря', () => {
-    const env = send('longsword-item:0', {
-      system: prone, sheet: { ...arven, effects: [{ effectId: 'poisoned' }] },
-      compendium, die: queue(11, 5), against: lying,
-    });
-    deepEq(env.steps[0]!.rolled.rolls, [11]);
+    const t = hitTrace(strike(prone, { ...arven, effects: [{ effectId: 'poisoned' }] }, lying, [11, 5]));
+    deepEq(t.rolls, [11]);
   });
 
   test('«против меня» не трогает собственные броски цели', () => {
     const armed = { ...lying, has: [{ of: 'longsword-item' }] };
-    const env = send('longsword-item:0', { system: prone, sheet: armed, compendium, die: queue(9, 5) });
-    deepEq(env.steps[0]!.rolled.rolls, [9]);
+    deepEq(hitTrace(strike(prone, armed, arven, [9, 5])).rolls, [9]);
   });
 
   test('«против любого броска по мне» ловит и атаку', () => {
     const sys = withEffects({ shaken: passive('Дрожит', 'incoming:roll:any', 'advantage') });
-    const env = send('longsword-item:0', {
-      system: sys, sheet: arven, compendium, die: queue(4, 18, 5), against: { ...mirra, effects: [{ effectId: 'shaken' }] },
-    });
-    deepEq(env.steps[0]!.rolled.rolls, [4, 18]);
+    deepEq(hitTrace(strike(sys, arven, { ...mirra, effects: [{ effectId: 'shaken' }] }, [4, 18, 5])).rolls, [4, 18]);
   });
 
   test('ход целиком: сервер держит оба листа и подставляет цель сам', () => {
@@ -131,24 +122,33 @@ group('цель видна отправителю: состояния цели �
 });
 
 group('правка после того, как бросок увиден: выпавшее остаётся', () => {
-  test('преимущество, заявленное после броска, добавляет кость, а не перебрасывает старую', () => {
-    const first = send('longsword-item:0', { system, sheet: arven, compendium, die: queue(7, 3) });
-    const before = first.steps[0]!.rolled;
-    deepEq(before.rolls, [7]);
+  const luckWorld: any = {
+    ...withColumn(system, { key: 'inspiration', label: 'Вдохновение', kind: 'number', default: 1, min: 0 }),
+    effects: {
+      ...system.effects,
+      inspire: {
+        label: 'Вдохновение: перебросить', activation: 'passive',
+        on: [{ on: 'acting', confirm: true, if: { expr: '#inspiration > 0' }, claims: ['advantage'], steps: [{ type: 'apply', target: { tag: 'inspiration' }, direction: 'subtract', value: { expr: '1' } }] }],
+      },
+    },
+  };
+  const inspired = { ...arven, values: { ...arven.values, inspiration: 1 }, effects: [{ effectId: 'inspire' }] };
 
-    const again = send('longsword-item:0', {
-      system, sheet: arven, compendium, die: queue(18), claims: ['advantage'], kept: first.steps,
+  test('преимущество, заявленное после броска, добавляет кость, а не перебрасывает старую', () => {
+    const r = exchange({
+      system: luckWorld, compendium, die: queue(7, 3, 18), sheets: [inspired, mirra],
+      actionId: 'longsword-item:0', fromId: 'arven', toId: 'mirra',
+      answer: q => (q.window === 'sender' ? ['inspire'] : []),
     });
-    const after = again.steps[0]!.rolled;
-    deepEq(after.rolls, [7, 18], 'старая семёрка на месте, новая кость добавлена');
-    eq(after.kept, 18);
-    deepEq(again.steps.find(s => s.type === 'amount')!.rolled.rolls, [3], 'кости урона не перебрасывались');
+    const main = r.reports.find(x => x.report.effect === 'strike')!.report;
+    const t = main.trace[0] as any;
+    deepEq(t.rolls, [7, 18], 'старая семёрка на месте, новая кость добавлена');
+    eq(t.kept, 18);
+    const dmg = main.trace.find((x: any) => x.type === 'amount') as any;
+    deepEq(dmg.rolls, [3], 'кости урона не перебрасывались');
   });
 
   test('без сохранённых костей та же заявка бросает всё заново', () => {
-    const again = send('longsword-item:0', {
-      system, sheet: arven, compendium, die: queue(2, 18, 5), claims: ['advantage'],
-    });
-    deepEq(again.steps[0]!.rolled.rolls, [2, 18]);
+    deepEq(hitTrace(strike(system, arven, mirra, [2, 18, 5], { source: ['advantage'] })).rolls, [2, 18]);
   });
 });

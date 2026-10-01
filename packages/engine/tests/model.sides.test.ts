@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { send, receive } from '../src/events/envelope.ts';
+import { exchange } from './play.ts';
 import type { System, Compendium, Sheet } from '../src/model/types.ts';
 
 describe('имя с хозяином', () => {
@@ -43,8 +43,8 @@ describe('имя с хозяином', () => {
   const sheet = (id: string, сила: number, броня: number): Sheet =>
     ({ id, systemId: 'стороны', name: id, values: { сила, броня, хп: 20 }, has: [{ of: 'удар' }, { of: 'просто' }, { of: 'зовёт_наивного' }], effects: [] } as unknown as Sheet);
   const hit = (action: string) => {
-    const env = send(`${action}:0`, { system, sheet: sheet('бьёт', 7, 1), compendium: book, die: () => 1 });
-    return receive(env, { system, sheet: sheet('держит', 3, 5), compendium: book, die: () => 1 }).sheet.values.хп;
+    const out = exchange({ system, compendium: book, die: () => 1, sheets: [sheet('бьёт', 7, 1), sheet('держит', 3, 5)], actionId: `${action}:0`, fromId: 'бьёт', toId: 'держит' });
+    return out.sheets.find(x => x.id === 'держит')!.values.хп;
   };
 
   it('сила — у отправителя, броня — у получателя: 7·2 − 5 = 9', () => {
@@ -55,7 +55,7 @@ describe('имя с хозяином', () => {
     expect(hit('просто')).toBe(20 - 10);
   });
 
-  it('вызываемый эффект не может тайком прочитать лист отправителя', () => {
-    expect(() => hit('зовёт_наивного')).toThrow(/отправителя не пришло/);
+  it('вызываемый эффект читает лист отправителя напрямую: действие идёт одним проходом, обоих листов', () => {
+    expect(hit('зовёт_наивного')).toBe(20 - 7);
   });
 });

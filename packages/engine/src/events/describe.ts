@@ -1,8 +1,7 @@
-import { effectLabelOf } from './envelope.ts';
+import { effectLabelOf } from './actions.ts';
 import { breakReasonWord, registry as stepRegistry } from '../engine/steps/index.ts';
 import { ownerOf, OWNER_WORDS } from '../engine/owners.ts';
 import { outcomeWords, rollName } from '../engine/roll-tags.ts';
-import type { Envelope } from './envelope.ts';
 import type { System, Sheet } from '../model/types.ts';
 import { fieldOf, hasField } from '../model/sheet-columns.ts';
 import { recordKinds } from '../model/owned.ts';
@@ -12,9 +11,9 @@ const tagsOfStep = (step: Record<string, any> | undefined, trace?: Record<string
 
 const rollTitle = (tags: string[], fallback: string): string => (tags.length ? `${fallback} (${rollName(tags)})` : fallback);
 
-export function previewLines(envelope: Envelope, system: System, dry: { report: { trace: Record<string, any>[] } } | null): string[] {
+export function previewLines(hoisted: Record<string, any>[], system: System, dry: { report: { trace: Record<string, any>[] } } | null): string[] {
   const lines: string[] = [];
-  const steps = envelope.steps as Record<string, any>[];
+  const steps = hoisted;
   for (const step of steps) {
     if (step.type !== 'threshold' || !step.rolled) continue;
     const check = rollTitle(tagsOfStep(step), 'Бросок');

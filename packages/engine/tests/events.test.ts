@@ -1,5 +1,5 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.ts';
-import { send, receive } from '../src/events/envelope.ts';
+import { exchange } from './play.ts';
 import { rollNotation } from '../src/engine/dice.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
 import { serializeSheet } from '../src/model/serialize.ts';
@@ -13,8 +13,6 @@ const queue = (...values) => {
   };
 };
 
-const ctx = (sheet, die) => ({ system, sheet, compendium, die });
-
 group('кубики', () => {
   test('нотация NdM бросает нужное число костей', () => {
     const r = rollNotation('2d6', queue(3, 4));
@@ -27,39 +25,24 @@ group('кубики', () => {
   });
 });
 
-group('конверт вызова', () => {
+const hit = (actionId, from, to, die, sys = system, book = compendium) => {
+  const targets = Array.isArray(to) ? to : [to];
+  const out = exchange({ system: sys, compendium: book, die, sheets: [from, ...targets], actionId, fromId: from.id, toIds: targets.map(t => t.id) });
+  const sheetOf = t => out.sheets.find(s => s.id === t.id);
+  const reportOf = t => out.reports.find(r => r.toId === t.id).report;
+  return { out, sheetOf, reportOf };
+};
+
+group('вызов действия', () => {
   group('отправитель', () => {
-    test('собирает конверт, ничего не зная о получателе', () => {
-      const env = send('longsword-item:0', ctx(arven, queue(15, 5)));
-      eq(env.kind, 'effect');
-      eq(env.effect, 'strike', 'конверт называет эффект, а не пересказывает его');
-      eq(env.from, 'arven');
-      eq(env.steps[0].rolled.total, 15, 'свой бросок сделан своей ведущей костью');
-      deepEq(env.steps[0].versus, { expr: '@получатель.ac', of: 'target' }, 'в конверте лежит формула, а не посчитанный КД цели');
-      eq(env.steps[1].rolled.total, 5, 'своя кость урона брошена');
-    });
-
-    test('конверт — чистые данные и переживает сериализацию', () => {
-      const env = send('longsword-item:0', ctx(arven, queue(15, 5)));
-      deepEq(JSON.parse(JSON.stringify(env)), env);
-    });
-
-    test('в конверте нет ни одного значения получателя', () => {
-      const env = send('longsword-item:0', ctx(arven, queue(15, 5)));
-      const text = JSON.stringify(env);
-      ok(!text.includes('mirra'), 'отправитель вообще не упоминает цель');
+    test('неизвестное действие — внятная ошибка', () => {
+      throws(() => hit('нетакого', arven, mirra, queue()), 'нетакого');
     });
 
     test('сложность спасброска считается отправителем по СВОЕЙ системе', () => {
-      const env = send('poison-spray:0', ctx(mirra, queue(3, 4)));
-      deepEq(env.steps[0].versus, { const: 13 }, '8 + бонус мастерства 2 + Харизма 3');
-      deepEq(env.steps[0].roll.bonus, { expr: '@получатель.dex_save', of: 'target' },
-        'а чем спасаться — уехало выражением: его посчитает цель');
-      eq(env.steps[1].rolled.total, 7, 'кости урона брошены отправителем');
-    });
-
-    test('неизвестное действие — внятная ошибка', () => {
-      throws(() => send('нетакого', ctx(arven, queue())), 'нетакого');
+      const { reportOf } = hit('poison-spray:0', mirra, arven, queue(3, 4, 5));
+      eq(reportOf(arven).trace[0].versus.value, 13, '8 + бонус мастерства 2 + Харизма 3');
+      eq(reportOf(arven).trace[0].bonus, 1, 'а спасбросок Ловкости посчитан целью');
     });
 
     test('числовой бонус эффекта попадает в бросок атаки', () => {
@@ -70,12 +53,11 @@ group('конверт вызова', () => {
         } } };
       const sheet = { ...arven, effects: [{ effectId: 'blessed' }] };
 
-      const plain = receive(send('longsword-item:0', ctx(arven, queue(10, 5))), ctx(mirra, queue()));
-      const boosted = receive(send('longsword-item:0', { system: blessedSys, sheet, compendium, die: queue(10, 5) }),
-        { system: blessedSys, sheet: mirra, compendium, die: queue() });
+      const plain = hit('longsword-item:0', arven, mirra, queue(10, 5));
+      const boosted = hit('longsword-item:0', sheet, mirra, queue(10, 5), blessedSys);
 
-      eq(plain.report.trace[0].total, 16, 'кость 10 плюс свой бонус атаки 6');
-      eq(boosted.report.trace[0].total, 20, 'та же кость, но плюс 4 от эффекта');
+      eq(plain.reportOf(mirra).trace[0].total, 16, 'кость 10 плюс свой бонус атаки 6');
+      eq(boosted.reportOf(mirra).trace[0].total, 20, 'та же кость, но плюс 4 от эффекта');
     });
 
     test('записи лежат в компендиуме, а автоматизация — в системе', () => {
@@ -92,107 +74,103 @@ group('конверт вызова', () => {
 
   group('получатель считает сам', () => {
     test('попадание определяется классом брони получателя, а не отправителя', () => {
-      const env = send('longsword-item:0', ctx(arven, queue(9, 5)));
-      eq(receive(env, ctx(mirra, queue())).report.trace[0].success, true, 'у Мирры класс брони 14');
-      eq(receive(env, ctx(arven, queue())).report.trace[0].success, false, 'у Арвен в кольчуге 16');
+      const other = { ...arven, id: 'arven2' };
+      const { reportOf } = hit('longsword-item:0', arven, [mirra, other], queue(9, 5, 5));
+      eq(reportOf(mirra).trace[0].success, true, 'у Мирры класс брони 14');
+      eq(reportOf(other).trace[0].success, false, 'у Арвен в кольчуге 16');
     });
 
-    test('один и тот же конверт по двум получателям даёт разный исход', () => {
-      const env = send('longsword-item:0', ctx(arven, queue(9, 5)));
-      const a = receive(env, ctx(mirra, queue()));
-      const b = receive(env, ctx(arven, queue()));
-      ok(a.report.trace[0].success !== b.report.trace[0].success);
-      eq(a.report.trace[0].versus.value, 14);
-      eq(b.report.trace[0].versus.value, 16);
+    test('один и тот же бросок по двум получателям даёт разный исход', () => {
+      const other = { ...arven, id: 'arven2' };
+      const { reportOf } = hit('longsword-item:0', arven, [mirra, other], queue(9, 5, 5));
+      const a = reportOf(mirra), b = reportOf(other);
+      ok(a.trace[0].success !== b.trace[0].success);
+      eq(a.trace[0].versus.value, 14);
+      eq(b.trace[0].versus.value, 16);
     });
 
     test('попадание снимает хиты у получателя', () => {
-      const env = send('longsword-item:0', ctx(arven, queue(15, 5)));
-      const { sheet } = receive(env, ctx(mirra, queue()));
-      eq(sheet.values.hp_current, 13, '21 минус 8');
+      const { sheetOf } = hit('longsword-item:0', arven, mirra, queue(15, 5));
+      eq(sheetOf(mirra).values.hp_current, 13, '21 минус 8');
     });
 
     test('промах не меняет ничего', () => {
-      const env = send('longsword-item:0', ctx(mirra, queue(2, 5)));
-      const { sheet, report } = receive(env, ctx(arven, queue()));
-      eq(report.stopped.reason, 'threshold-miss');
-      eq(sheet.values.hp_current, 44);
+      const { sheetOf, reportOf } = hit('longsword-item:0', mirra, arven, queue(2, 5));
+      eq(reportOf(arven).stopped.reason, 'threshold-miss');
+      eq(sheetOf(arven).values.hp_current, 44);
     });
 
     test('лист получателя не мутируется — возвращается новый', () => {
-      const env = send('longsword-item:0', ctx(arven, queue(15, 5)));
       const before = serializeSheet(mirra);
-      const { sheet } = receive(env, ctx(mirra, queue()));
+      const { sheetOf } = hit('longsword-item:0', arven, mirra, queue(15, 5));
       eq(serializeSheet(mirra), before, 'исходный лист остался прежним');
-      ok(sheet !== mirra);
+      ok(sheetOf(mirra) !== mirra);
     });
 
     test('новый лист остаётся законным DTO', () => {
-      const env = send('longsword-item:0', ctx(arven, queue(15, 5)));
-      const { sheet } = receive(env, ctx(mirra, queue()));
-      serializeSheet(sheet);
+      const { sheetOf } = hit('longsword-item:0', arven, mirra, queue(15, 5));
+      serializeSheet(sheetOf(mirra));
     });
   });
 
   group('спасбросок отыгрывается на стороне получателя', () => {
-    const poisonAt = () => send('poison-spray:0', ctx(mirra, queue(3, 4)));
+    const poison = (target, die) => hit('poison-spray:0', mirra, target, die);
 
     test('получатель бросает своим спасброском против присланной сложности', () => {
-      const { report } = receive(poisonAt(), ctx(arven, queue(5)));
-      eq(report.trace[0].bonus, 1, 'спасбросок Ловкости Арвен — посчитан ЕЮ');
-      eq(report.trace[0].total, 6);
-      eq(report.trace[0].success, false);
+      const { reportOf } = poison(arven, queue(3, 4, 5));
+      eq(reportOf(arven).trace[0].bonus, 1, 'спасбросок Ловкости Арвен — посчитан ЕЮ');
+      eq(reportOf(arven).trace[0].total, 6);
+      eq(reportOf(arven).trace[0].success, false);
     });
 
     test('провал снимает хиты и вешает эффект', () => {
-      const { sheet } = receive(poisonAt(), ctx(arven, queue(5)));
-      eq(sheet.values.hp_current, 37, '44 минус 7');
-      deepEq(sheet.effects, [...arven.effects, { effectId: 'poisoned' }]);
+      const { sheetOf } = poison(arven, queue(3, 4, 5));
+      eq(sheetOf(arven).values.hp_current, 37, '44 минус 7');
+      deepEq(sheetOf(arven).effects, [...arven.effects, { effectId: 'poisoned' }]);
     });
 
     test('успех не делает ничего — и в журнале это обрыв порога, не промах', () => {
-      const { sheet, report } = receive(poisonAt(), ctx(arven, queue(19)));
-      eq(report.stopped.reason, 'threshold-held');
-      eq(sheet.values.hp_current, 44);
-      deepEq(sheet.effects, arven.effects);
+      const { sheetOf, reportOf } = poison(arven, queue(3, 4, 19));
+      eq(reportOf(arven).stopped.reason, 'threshold-held');
+      eq(sheetOf(arven).values.hp_current, 44);
+      deepEq(sheetOf(arven).effects, arven.effects);
     });
 
     test('свои модификаторы броска получатель применяет сам', () => {
-
       const shakenSys = { ...system, effects: { ...system.effects,
         shaken: {
           label: 'Потрясён', activation: 'passive', duration: { kind: 'permanent' },
           modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['спасбросок'], edit: 'disadvantage' }],
         } } };
       const sheet = { ...arven, effects: [{ effectId: 'shaken' }] };
-      const { report } = receive(poisonAt(), { system: shakenSys, sheet, compendium, die: queue(19, 5) });
-      deepEq(report.trace[0].rolls, [19, 5]);
-      eq(report.trace[0].kept, 5, 'взята худшая кость');
-      eq(report.trace[0].success, false);
+      const { reportOf } = hit('poison-spray:0', mirra, sheet, queue(3, 4, 19, 5), shakenSys);
+      deepEq(reportOf(sheet).trace[0].rolls, [19, 5]);
+      eq(reportOf(sheet).trace[0].kept, 5, 'взята худшая кость');
+      eq(reportOf(sheet).trace[0].success, false);
     });
 
     test('хиты не уходят ниже нуля', () => {
       const weak = { ...arven, values: { ...arven.values, hp_current: 3 } };
-      const { sheet } = receive(poisonAt(), ctx(weak, queue(5)));
-      eq(sheet.values.hp_current, 0);
+      const { sheetOf } = poison(weak, queue(3, 4, 5));
+      eq(sheetOf(weak).values.hp_current, 0);
     });
 
     test('повторное наложение того же эффекта не дублируется', () => {
       const already = { ...arven, effects: [{ effectId: 'poisoned' }] };
-      const { sheet } = receive(poisonAt(), ctx(already, queue(5)));
-      eq(sheet.effects.length, 1);
+      const { sheetOf } = poison(already, queue(3, 4, 5));
+      eq(sheetOf(already).effects.length, 1);
     });
   });
 
   group('критерий приёмки №5', () => {
     test('вызов с одного листа меняет значение у второго, расчёт — у получателя', () => {
       const before = calc(system, mirra, 'hp_current', newPass(system, mirra, { compendium }));
-      const env = send('longsword-item:0', ctx(arven, queue(15, 5)));
-      const { sheet, report } = receive(env, ctx(mirra, queue()));
+      const { sheetOf, reportOf } = hit('longsword-item:0', arven, mirra, queue(15, 5));
+      const sheet = sheetOf(mirra);
       const after = calc(system, sheet, 'hp_current', newPass(system, sheet, { compendium }));
 
       ok(after < before, 'значение у получателя изменилось');
-      deepEq(report.trace[0].versus, { tag: 'ac', value: 14 }, 'класс брони посчитан ПОЛУЧАТЕЛЕМ');
+      deepEq(reportOf(mirra).trace[0].versus, { tag: 'ac', value: 14 }, 'класс брони посчитан ПОЛУЧАТЕЛЕМ');
     });
   });
 });
@@ -221,38 +199,32 @@ const paramBook = (id, args) => ({
       bindings: [{ label: 'Удар', effect: 'parametric', args }] }],
 });
 
-group('конверт не даёт целиться в бессмыслицу', () => {
-  const die = (...v) => { const q = [...v]; return () => q.shift(); };
-
+group('действие не даёт целиться в бессмыслицу', () => {
   const withStrike = args => paramBook('bogus', args);
 
   test('сравнивать бросок с текстовым полем нельзя — внятная ошибка, а не тихое «мимо»', () => {
     const book = withStrike({ bonus: '#attack_bonus', versus: '@получатель.race', damage_bonus: '0' });
-    const env = send('bogus:0', { system: paramSys, sheet: arven, compendium: book, die: die(15, 5) });
-    throws(() => receive(env, { system: paramSys, sheet: mirra, compendium: book, die: die() }), 'race');
+    throws(() => hit('bogus:0', arven, mirra, queue(15, 5, 5), paramSys, book), 'race');
   });
 });
 
 group('в параметрах эффекта живут выражения, а не только ссылки', () => {
-  const die = (...v) => { const q = [...v]; return () => q.shift(); };
   const withStrike = args => paramBook('custom', args);
 
   test('бонус проверки — выражение, а не один тег', () => {
     const book = withStrike({ bonus: '#attack_bonus + 2', versus: '@получатель.ac', damage_bonus: '#str_mod' });
-    const env = send('custom:0', { system: paramSys, sheet: arven, compendium: book, die: die(10, 4) });
-    const { report } = receive(env, { system: paramSys, sheet: mirra, compendium: book, die: die() });
-    eq(report.trace[0].total, 18, 'кость 10 плюс бонус атаки 6 плюс двойка из выражения');
+    const { reportOf } = hit('custom:0', arven, mirra, queue(10, 4), paramSys, book);
+    eq(reportOf(mirra).trace[0].total, 18, 'кость 10 плюс бонус атаки 6 плюс двойка из выражения');
   });
 
   test('бонус урона задаётся выражением', () => {
     const book = withStrike({ bonus: '#attack_bonus', versus: '@получатель.ac', damage_bonus: '#str_mod * 2' });
-    const env = send('custom:0', { system: paramSys, sheet: arven, compendium: book, die: die(10, 4) });
-    const { report } = receive(env, { system: paramSys, sheet: mirra, compendium: book, die: die() });
-    eq(report.trace[1].total, 10, 'кость 4 плюс удвоенная Сила 6');
+    const { reportOf } = hit('custom:0', arven, mirra, queue(10, 4), paramSys, book);
+    eq(reportOf(mirra).trace[1].total, 10, 'кость 4 плюс удвоенная Сила 6');
   });
 
-  test('битое выражение в параметре — внятная ошибка при отправке', () => {
+  test('битое выражение в параметре — внятная ошибка', () => {
     const book = withStrike({ bonus: '#attack_bonus +', versus: '@получатель.ac', damage_bonus: '0' });
-    throws(() => send('custom:0', { system: paramSys, sheet: arven, compendium: book, die: die(10, 4) }));
+    throws(() => hit('custom:0', arven, mirra, queue(10, 4), paramSys, book));
   });
 });

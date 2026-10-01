@@ -1,6 +1,5 @@
 import { group, test, eq } from './harness.ts';
-import { packRule, resolveRule } from '../src/engine/rule.ts';
-import { newPass } from '../src/engine/calc.ts';
+import { exchange } from './play.ts';
 import { system, arven, mirra, compendium } from './fixtures.ts';
 
 const TOUGH = {
@@ -14,16 +13,19 @@ const TOUGH = {
   },
 } as any;
 
-const run = (steps: any[], target: any, sys: any = TOUGH) => {
-  const packed = packRule({ params: [], steps } as any, {
-    system: sys, sheet: arven, pass: newPass(sys, arven, { compendium }),
-    die: () => 1, params: {}, props: null, owner: 'тест',
-  });
-  return resolveRule(packed, {
-    system: sys, sheet: target, pass: newPass(sys, target, { compendium }),
-    die: () => 1, owner: 'тест',
-  });
+const runRule = (sys: any, rule: any, sender: any, target: any, die: () => number, base: any = { records: [] }) => {
+  const full: any = {
+    ...sys, tables: { ...sys.tables, приём: { shape: 'book', use: 'action', label: 'Приём' } },
+    effects: { ...sys.effects, 'правило': { label: 'правило', activation: 'manual', ...rule } },
+  };
+  const book: any = { ...base, records: [...base.records, { id: 'правило', table: 'приём', label: 'правило', bindings: [{ label: 'правило', effect: 'правило', args: {} }] }] };
+  const from = { ...sender, id: 'отправитель-теста', has: [...(sender.has ?? []), { of: 'правило' }], effects: sender.effects ?? [] };
+  const out = exchange({ system: full, compendium: book, die, sheets: [from, target], actionId: 'правило:0', fromId: from.id, toId: target.id });
+  const report = out.reports[0]!.report;
+  return { sheet: out.sheets.find((s: any) => s.id === target.id)!, trace: report.trace as any[], stopped: report.stopped as any };
 };
+
+const run = (steps: any[], target: any, sys: any = TOUGH) => runRule(sys, { params: [], steps }, arven, target, () => 1, compendium);
 
 const stony = { ...mirra, values: { ...mirra.values, hp_current: 22 }, effects: [{ effectId: 'tough' }] };
 const eight = { id: 'dmg', type: 'amount', source: 'item', fixed: { expr: '8' } };

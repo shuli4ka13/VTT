@@ -1,13 +1,12 @@
 import { group, test, eq } from './harness.ts';
-import { packRule, resolveRule } from '../src/engine/rule.ts';
-import { newPass } from '../src/engine/calc.ts';
+import { exchange } from './play.ts';
 
 const sys: any = {
   id: 'слово-силы',
   tables: { лист: { shape: 'single', columns: [
     { key: 'хп', label: 'Текущие ХП', kind: 'number', default: 1, min: 0 },
     { key: 'хп_макс', label: 'Максимум ХП', kind: 'number', default: 1 },
-  ] } },
+  ] }, приём: { shape: 'book', use: 'action', label: 'Приём' } },
   effects: {},
 };
 
@@ -19,18 +18,15 @@ const spell: any = {
   ],
 };
 
-const маг = { id: 'маг', values: { хп: 15, хп_макс: 20 }, effects: [] };
+const book: any = { records: [{ id: 'слово', table: 'приём', label: 'Слово', bindings: [{ label: 'Слово', effect: 'слово', args: {} }] }] };
+const full: any = { ...sys, effects: { слово: { label: 'Слово', activation: 'manual', ...spell } } };
 
 const cast = (порог: string, хп: number, хп_макс: number) => {
-  const жертва = { id: 'жертва', values: { хп, хп_макс }, effects: [] };
-  const packed = packRule(spell, {
-    system: sys, sheet: маг, params: { порог }, item: null,
-    die: () => 1, pass: newPass(sys, маг, { compendium: { records: [] } }),
-  } as any);
-  return resolveRule(packed, {
-    system: sys, sheet: жертва, params: {}, item: null,
-    die: () => 1, pass: newPass(sys, жертва, { compendium: { records: [] } }),
-  } as any);
+  const маг = { id: 'маг', systemId: 'слово-силы', name: 'маг', values: { хп: 15, хп_макс: 20 }, has: [{ of: 'слово' }], effects: [] };
+  const жертва = { id: 'жертва', systemId: 'слово-силы', name: 'жертва', values: { хп, хп_макс }, has: [], effects: [] };
+  const withArg = { records: [{ ...book.records[0], bindings: [{ label: 'Слово', effect: 'слово', args: { порог } }] }] };
+  const out = exchange({ system: full, compendium: withArg as any, die: () => 1, sheets: [маг, жертва] as any, actionId: 'слово:0', fromId: 'маг', toId: 'жертва' });
+  return { sheet: out.sheets.find(s => s.id === 'жертва')!, stopped: out.reports[0]!.report.stopped as any };
 };
 
 group('формула из записи листом цели', () => {
@@ -50,15 +46,5 @@ group('формула из записи листом цели', () => {
 
   test('та же запись, жертва здоровее половины — жива', () => {
     eq(cast('@получатель.хп_макс / 2', 60, 100).sheet.values.хп, 60);
-  });
-
-  test('конверт не несёт ни одного числа жертвы — сторона цели уезжает текстом', () => {
-    const packed = packRule(spell, {
-      system: sys, sheet: маг, params: { порог: '@получатель.хп_макс / 2' }, item: null,
-      die: () => 1, pass: newPass(sys, маг, { compendium: { records: [] } }),
-    } as any);
-    const text = JSON.stringify(packed);
-    eq(text.includes('"expr":"@получатель.хп_макс / 2"'), true, 'формула в конверте — текстом');
-    eq(text.includes('10'), false, 'посчитанного магом порога в конверте нет');
   });
 });

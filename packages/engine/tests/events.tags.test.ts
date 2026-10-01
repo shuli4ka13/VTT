@@ -1,6 +1,6 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.ts';
-import { send, receive } from '../src/events/envelope.ts';
-import { exchange, deliverMany } from '../src/events/exchange.ts';
+import { exchange, deliverMany } from './play.ts';
+import { CUT_WORDS } from '../src/lang/limits.ts';
 import { targets } from '../src/engine/targets.ts';
 
 const queue = (...values: number[]) => {
@@ -66,8 +66,15 @@ const hero = (effects: string[] = []) => ({
 const foe = (effects: string[] = []) => ({ id: 'враг', values: { хп: 20 }, effects: effects.map(effectId => ({ effectId })) });
 
 const hit = (sys: any, action: string, target: any, ...dice: number[]) => {
-  const env = send(`${action}:0`, { system: sys, sheet: hero(), compendium: book, die: queue(...dice) });
-  return receive(env, { system: sys, sheet: target, compendium: book, die: queue() });
+  const played = exchange({
+    system: sys, compendium: book as any, die: queue(...dice), sheets: [hero() as any, target],
+    actionId: `${action}:0`, fromId: 'герой', toId: 'враг',
+  });
+  return {
+    sheet: played.sheets.find(s => s.id === 'враг')!,
+    report: played.reports.find(entry => !entry.report.reply && entry.toId === 'враг')!.report,
+    replies: played.reports.filter(entry => entry.report.reply),
+  };
 };
 
 group('вызываемый эффект как провод: отправитель не лезет в чужое поле', () => {
@@ -91,7 +98,10 @@ group('вызываемый эффект как провод: отправите
   test('необъявленный вызов — ошибка перечисляет известные эффекты', () => {
     const sys: any = world({ чужое: { label: 'Чужое', activation: 'manual', steps: [{ type: 'emit', event: 'котик' }] } });
     const withAction = { ...book, records: [...book.records, { id: 'чужое', table: 'приём', label: 'Чужое', bindings: [{ label: 'Чужое', effect: 'чужое', args: {} }] }] };
-    throws(() => send('чужое:0', { system: sys, sheet: { ...hero(), records: ['чужое'] }, compendium: withAction, die: queue() }), 'котик');
+    throws(() => exchange({
+      system: sys, compendium: withAction as any, die: queue(), sheets: [{ ...hero(), has: [...hero().has, { of: 'чужое' }] } as any, foe() as any],
+      actionId: 'чужое:0', fromId: 'герой', toId: 'враг',
+    }), 'котик');
   });
 
   test('вызов без шагов — просто сигнал: поля не тронуты, но он отправлен', () => {
@@ -154,14 +164,9 @@ group('реакции слушают слово, а не имя эффекта',
     eq(hit(spiky, 'тревога', foe(['шипы'])).replies.length, 0, 'тревога — не урон');
   });
 
-  test('ответка несёт величину вызова константой: отправитель не знает чужих результатов', () => {
-    const out = hit(spiky, 'удар', foe(['шипы']));
-    deepEq(out.replies[0]!.steps[0]!.args.сколько, { const: 8 });
-  });
-
   test('ход целиком: шипы возвращают полученное', () => {
     const r = exchange({
-      system: spiky as any, compendium: book, die: queue(), sheets: [hero(), foe(['шипы'])],
+      system: spiky as any, compendium: book as any, die: queue(), sheets: [hero() as any, foe(['шипы']) as any],
       actionId: 'удар:0', fromId: 'герой', toId: 'враг',
     });
     eq(r.sheets.find(s => s.id === 'враг')!.values.хп, 12);
@@ -177,7 +182,7 @@ group('реакции слушают слово, а не имя эффекта',
       },
     });
     const r = exchange({
-      system: sys as any, compendium: book, die: queue(), sheets: [hero(['сосредоточен']), foe(['шипы'])],
+      system: sys as any, compendium: book as any, die: queue(), sheets: [hero(['сосредоточен']) as any, foe(['шипы']) as any],
       actionId: 'удар:0', fromId: 'герой', toId: 'враг',
     });
     const me = r.sheets.find(s => s.id === 'герой')!;
@@ -187,13 +192,13 @@ group('реакции слушают слово, а не имя эффекта',
 
   test('шипы против шипов: ответки идут до предела глубины, и видно, что цепочка оборвана', () => {
     const r = exchange({
-      system: spiky as any, compendium: book, die: queue(), sheets: [hero(['шипы']), foe(['шипы'])],
+      system: spiky as any, compendium: book as any, die: queue(), sheets: [hero(['шипы']) as any, foe(['шипы']) as any],
       actionId: 'удар:0', fromId: 'герой', toId: 'враг',
     });
     eq(r.reports.filter(entry => entry.report.reply).length, 4, 'четыре ответки — предел глубины');
     eq(r.sheets.find(s => s.id === 'враг')!.values.хп, 0, 'удар, вторая и четвёртая ответки: 20 − 24, не ниже нуля');
     eq(r.sheets.find(s => s.id === 'герой')!.values.хп, 4, 'первая и третья: 20 − 16');
-    eq(r.cut, true);
+    ok(r.log.includes(CUT_WORDS), 'в журнале сказано, что цепочка оборвана');
   });
 
   test('ответ из тела ответки доходит: вампирские шипы ранят и лечат хозяина', () => {
@@ -212,7 +217,7 @@ group('реакции слушают слово, а не имя эффекта',
       },
     });
     const r = exchange({
-      system: vampiric as any, compendium: book, die: queue(), sheets: [hero(), foe(['шипы'])],
+      system: vampiric as any, compendium: book as any, die: queue(), sheets: [hero() as any, foe(['шипы']) as any],
       actionId: 'удар:0', fromId: 'герой', toId: 'враг',
     });
     eq(r.sheets.find(s => s.id === 'герой')!.values.хп, 16, 'шипы укололи на 4');
@@ -238,8 +243,7 @@ group('«я совершил действие» — один раз на все 
   });
   const twoFoes = () => {
     const sheets = [{ ...hero(), effects: [{ effectId: 'итог', usesLeft: 2 }] }, foe(), { ...foe(), id: 'враг2' }];
-    const envelope = send('удар:0', { system: tally as any, sheet: sheets[0] as any, compendium: book, die: queue() });
-    return deliverMany({ system: tally as any, compendium: book, die: queue(), sheets: sheets as any, envelope, fromId: 'герой', toIds: ['враг', 'враг2'] });
+    return deliverMany({ system: tally as any, compendium: book as any, die: queue(), sheets: sheets as any, actionId: 'удар:0', fromId: 'герой', toIds: ['враг', 'враг2'] });
   };
 
   test('по двум целям: итог по колонке целей — урон 8 + 8 и две строки', () => {
@@ -255,7 +259,7 @@ group('«я совершил действие» — один раз на все 
   test('кривое условие подписки — подписка молчит, ход не падает', () => {
     const broken = world({ итог: { ...tally.effects.итог, on: [{ ...tally.effects.итог.on[0], if: { expr: '@цели.n > 0' } }] } });
     const r = exchange({
-      system: broken as any, compendium: book, die: queue(), sheets: [hero(['итог']), foe()],
+      system: broken as any, compendium: book as any, die: queue(), sheets: [hero(['итог']) as any, foe() as any],
       actionId: 'удар:0', fromId: 'герой', toId: 'враг',
     });
     eq(r.sheets.find(s => s.id === 'враг')!.values.хп, 12);
@@ -264,7 +268,7 @@ group('«я совершил действие» — один раз на все 
 
   test('ход по одной цели тоже доходит до «совершил действие»', () => {
     const r = exchange({
-      system: tally as any, compendium: book, die: queue(), sheets: [hero(['итог']), foe()],
+      system: tally as any, compendium: book as any, die: queue(), sheets: [hero(['итог']) as any, foe() as any],
       actionId: 'удар:0', fromId: 'герой', toId: 'враг',
     });
     eq(r.sheets.find(s => s.id === 'герой')!.values.хп, 9);

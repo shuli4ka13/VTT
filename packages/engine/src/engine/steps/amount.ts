@@ -13,6 +13,8 @@ export const { label, hint, slots, outputs } = words;
 
 export const SOURCES = ['roll', 'margin', 'item'];
 
+export const once = (): boolean => true;
+
 export const mayBreak = false;
 
 export const icon = 'Σ';

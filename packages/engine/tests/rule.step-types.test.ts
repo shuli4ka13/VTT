@@ -1,9 +1,8 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.ts';
-import { packRule, resolveRule } from '../src/engine/rule.ts';
+import { exchange } from './play.ts';
 import * as amountStep from '../src/engine/steps/amount.ts';
 import * as thresholdStep from '../src/engine/steps/threshold.ts';
 import * as applyStep from '../src/engine/steps/apply.ts';
-import { newPass } from '../src/engine/calc.ts';
 import { targets, incomingTagOf } from '../src/engine/targets.ts';
 import { system, arven, mirra, compendium } from './fixtures.ts';
 
@@ -31,23 +30,40 @@ const TOUGH = {
   },
 };
 
-const run = (steps, opts = {}) => {
+const run = (steps, opts: any = {}) => {
   const {
     sys = SYS, sender = arven, die = queue(),
-    targetSys = sys, targetSheet = mirra, targetDie = queue(),
+    targetSheet = mirra,
     params = {}, paramDefs = [], props = null,
-    book = compendium, targetBook = compendium,
+    book = compendium,
   } = opts;
-  const packed = packRule({ params: paramDefs, steps }, {
-    system: sys, sheet: sender, pass: newPass(sys, sender, { compendium: book }),
-    die, params, props, owner: 'тест',
-  });
-  deepEq(JSON.parse(JSON.stringify(packed)), packed, 'упакованная цепочка — чистые данные');
-  return resolveRule(packed, {
-    system: targetSys, sheet: targetSheet,
-    pass: newPass(targetSys, targetSheet, { compendium: targetBook }),
-    die: targetDie, owner: 'тест',
-  });
+  const propKeys = props ? Object.keys(props) : [];
+  const world: any = {
+    ...sys,
+    tables: {
+      ...sys.tables,
+      приём: { shape: 'book', use: 'action', label: 'Приём' },
+      предмет: {
+        shape: 'book', use: 'item', label: 'Предмет',
+        columns: propKeys.map(key => ({ key, label: key, kind: paramDefs.find((d: any) => d.key === key)?.kind ?? 'number' })),
+        bindings: [{ label: 'правило', effect: 'правило', args: params }],
+      },
+    },
+    effects: { ...sys.effects, правило: { label: 'правило', activation: 'manual', params: paramDefs, steps } },
+  };
+  const records = [...book.records, { id: 'вещь', table: 'предмет', label: 'вещь', cells: props ?? {} }];
+  const from = { ...sender, has: [...(sender.has ?? []), { of: 'вещь' }] };
+  const out = exchange({ system: world, compendium: { ...book, records }, die, sheets: [from, targetSheet], actionId: 'вещь:0', fromId: from.id, toId: targetSheet.id });
+  const report: any = out.reports[0].report;
+  const results: Record<string, any> = {};
+  for (const t of report.trace as any[]) {
+    if (t.skipped || t.step === undefined) continue;
+    results[t.step] = t.type === 'amount' ? t.total : t.type === 'threshold' ? { ...t, dice: { rolls: t.rolls, kept: t.kept } } : t;
+  }
+  return {
+    sheet: out.sheets.find(x => x.id === targetSheet.id), trace: report.trace as any[], stopped: report.stopped as any,
+    changes: report.changes, effects: report.effects, removed: report.removed, results,
+  };
 };
 
 const viaInput = (key, kind = 'number') => ({ paramDefs: [{ key, kind }], params: { [key]: { prop: key } } });
@@ -62,12 +78,11 @@ const hit = (over = {}) => ({
 group('шаг «порог»', () => {
   test('отправитель бросает ведущую кость, против — считает получатель', () => {
     const out = run([hit()], { die: queue(10) });
-    deepEq(out.results.hit, {
-      success: true, margin: 2, total: 16,
-      natural: 10,
-      rolled: 1, atMax: 0, atMin: 0, edited: false,
-      dice: { rolls: [10], kept: 10 }, parts: {}, versus: 14,
-    }, 'бросок 10 + бонус 6 против КД Мирры 14');
+    const rolled = out.results.hit;
+    eq(rolled.success, true);
+    eq(rolled.margin, 2);
+    eq(rolled.total, 16, 'бросок 10 + бонус 6 против КД Мирры 14');
+    deepEq(rolled.dice, { rolls: [10], kept: 10 });
     eq(out.stopped, null);
     deepEq(out.trace[0].versus, { tag: 'ac', value: 14 });
   });
@@ -82,7 +97,7 @@ group('шаг «порог»', () => {
     eq(out.trace[0].margin, -6);
   });
 
-  test('модификаторы броска отправителя отыгрываются при упаковке', () => {
+  test('модификаторы броска отправителя отыгрываются на его броске', () => {
     const poisoned = { ...arven, effects: [{ effectId: 'poisoned' }] };
     const out = run([hit()], { sender: poisoned, die: queue(17, 4) });
     deepEq(out.results.hit.dice, { rolls: [17, 4], kept: 4 }, 'взята худшая кость');
@@ -97,12 +112,12 @@ group('шаг «порог»', () => {
       continueOn: 'fail',
     };
 
-    const failed = run([save], { sender: mirra, targetSheet: arven, targetDie: queue(5) });
+    const failed = run([save], { sender: mirra, targetSheet: arven, die: queue(5) });
     eq(failed.stopped, null, 'цель провалилась — цепочка продолжается');
     deepEq(failed.results.save.dice, { rolls: [5], kept: 5 });
     eq(failed.results.save.margin, -7, 'спасбросок 6 против сложности 13');
 
-    const held = run([save], { sender: mirra, targetSheet: arven, targetDie: queue(19) });
+    const held = run([save], { sender: mirra, targetSheet: arven, die: queue(19) });
     eq(held.stopped.reason, 'threshold-held', 'цель спаслась — обрыв, и он различим в журнале');
   });
 
@@ -351,7 +366,7 @@ group('шаг «число» и кость из словаря системы', 
   const withDice = (dice: unknown) => ({ id: 'n', type: 'amount', source: 'roll', dice });
 
   test('ссылка на кость системы разворачивается в бросок', () => {
-    const out = run([withDice({ constant: 'lead_die' })] as never, { die: queue(7), targetDie: queue(7) });
+    const out = run([withDice({ constant: 'lead_die' })] as never, { die: queue(7), die: queue(7) });
     eq(out.results.n, 7);
   });
 

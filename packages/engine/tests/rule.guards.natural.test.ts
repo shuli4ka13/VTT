@@ -1,8 +1,7 @@
 import { group, test, eq, ok, throws } from './harness.ts';
-import { resolveRule, packRule } from '../src/engine/rule.ts';
-import { newPass } from '../src/engine/calc.ts';
+import { exchange } from './play.ts';
 import { launchOf, activationFor } from '../src/model/effect-kinds.ts';
-import type { System, Sheet, Effect } from '../src/model/types.ts';
+import type { System, Sheet } from '../src/model/types.ts';
 
 const system = {
   id: 'x', name: 'x',
@@ -12,13 +11,16 @@ const system = {
     rows: [{ from: 0, to: 9, cells: { value: 'провал' } }, { from: 10, to: 99, cells: { value: 'успех' } }] } },
 } as unknown as System;
 const sheet = { id: 'a', systemId: 'x', name: 'А', values: { hp: 10 }, has: [], effects: [] } as unknown as Sheet;
-const compendium = { records: [] };
 
 const run = (steps: object[], die: number) => {
-  const effect = { label: 'e', activation: 'manual', steps } as unknown as Effect;
-  const ctx = { system, sheet, compendium, die: () => die, pass: newPass(system, sheet, { compendium }), owner: 'тест' };
-  const packed = packRule(effect, ctx as never);
-  return resolveRule(packed, { ...ctx, pass: newPass(system, sheet, { compendium }) } as never);
+  const full = {
+    ...system, tables: { ...system.tables, приём: { shape: 'book', use: 'action', label: 'Приём' } },
+    effects: { e: { label: 'e', activation: 'manual', steps } },
+  } as unknown as System;
+  const book = { records: [{ id: 'e', table: 'приём', label: 'e', bindings: [{ label: 'e', effect: 'e', args: {} }] }] };
+  const from = { ...sheet, id: 'from', has: [{ of: 'e' }] } as unknown as Sheet;
+  const out = exchange({ system: full, compendium: book as never, die: () => die, sheets: [from, sheet], actionId: 'e:0', fromId: 'from', toId: 'a' });
+  return { sheet: out.sheets.find(s => s.id === 'a')! };
 };
 
 group('условие шага по числу и степени', () => {

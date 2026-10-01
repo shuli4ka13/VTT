@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { world as W } from '@vtt/schema';
-import { exchange } from '@vtt/engine/events/exchange';
+import { act } from '@vtt/engine/lang/act';
+import { emptyJournal } from '@vtt/engine/lang/journal';
 import { emptySystem } from '../../store/world.ts';
 import { newColumn, newDie, newEffect, newRecordKind, newBinding, BRICKS } from './factory.ts';
 import type { System, Compendium, Sheet, Step } from '@vtt/schema';
@@ -60,10 +61,9 @@ describe('сквозной путь: собрал в конструкторе �
   it('удар по максимальным костям уменьшает хиты цели', () => {
     const made = assemble();
     const world = { system: made.system, compendium: made.compendium };
-    const out = exchange({
-      ...world, die: (sides: number) => sides, sheets: made.sheets,
-      actionId: made.action, fromId: 'герой', toId: 'враг',
-    } as never);
+    const out = act({
+      ...world, clock: null, die: (sides: number) => sides, sheets: made.sheets, journal: emptyJournal(), declineAll: true,
+    } as never, { actionId: made.action, fromId: 'герой', toIds: ['враг'] });
     const target = out.sheets.find(s => s.id === 'враг')!;
     expect(target.values[made.hits]).toBe(6);
   });
@@ -71,12 +71,11 @@ describe('сквозной путь: собрал в конструкторе �
   it('удар по минимальным костям обрывается на проверке и хиты не трогает', () => {
     const made = assemble();
     const world = { system: made.system, compendium: made.compendium };
-    const out = exchange({
-      ...world, die: () => 1, sheets: made.sheets,
-      actionId: made.action, fromId: 'герой', toId: 'враг',
-    } as never);
+    const out = act({
+      ...world, clock: null, die: () => 1, sheets: made.sheets, journal: emptyJournal(), declineAll: true,
+    } as never, { actionId: made.action, fromId: 'герой', toIds: ['враг'] });
     const target = out.sheets.find(s => s.id === 'враг')!;
     expect(target.values[made.hits] ?? 10).toBe(10);
-    expect(out.reports[0]!.report.stopped).toBeTruthy();
+    expect(out.entries.some(entry => 'report' in entry && entry.report.stopped)).toBeTruthy();
   });
 });

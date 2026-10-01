@@ -1,6 +1,6 @@
 import { group, test, eq, ok, throws } from './harness.ts';
 import { calc } from '../src/engine/calc.ts';
-import { send, receive } from '../src/events/envelope.ts';
+import { exchange } from './play.ts';
 import type { System, Sheet } from '../src/model/types.ts';
 import { withColumn } from '../src/model/sheet-columns.ts';
 
@@ -59,10 +59,10 @@ group('ссылка на таблицу читается через точку',
 
   test('вход эффекта — тоже ссылка: прибавка берётся у своего типа урона, формула считается листом', () => {
     const книга = { records: [{ id: 'меч', table: 'меч', label: 'Меч', cells: {} }, { id: 'факел', table: 'факел', label: 'Факел', cells: {} }] } as never;
-    const мир = { system: система, compendium: книга, die: () => 1 };
     const бей = (action: string) => {
-      const итог = receive(send(action, { ...мир, sheet: лист() }), { ...мир, sheet: лист() });
-      return (итог.report.trace.find((t: Record<string, unknown>) => t.type === 'amount') as Record<string, unknown>).total;
+      const цель = { id: 'цель', systemId: 'н', name: 'цель', values: {}, has: [], effects: [] } as unknown as Sheet;
+      const итог = exchange({ system: система, compendium: книга, die: () => 1, sheets: [лист(), цель], actionId: action, fromId: 'я', toId: 'цель' });
+      return (итог.reports[0]!.report.trace.find((t: Record<string, unknown>) => t.type === 'amount') as Record<string, unknown>).total;
     };
     eq(бей('меч:0'), 5 + 3, 'рубящий: прибавка — Сила');
     eq(бей('факел:0'), 5 + 2, 'огонь: прибавка — 2');

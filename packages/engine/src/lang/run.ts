@@ -9,7 +9,7 @@ import { whoseOf, burnsUse, spendUse } from '../events/durations.ts';
 import { guardHolds, packGuardRef, MAX_CALL_DEPTH } from '../engine/rule.ts';
 import { EngineError, isRuleError } from '../engine/errors.ts';
 import { listening, subscriberByKey, hears, runsAtOther } from '../events/bus.ts';
-import { offers as offersOf, MAX_HOPS } from '../events/envelope.ts';
+import { MAX_HOPS } from './limits.ts';
 import { holderOf as bondHolderOf } from '../events/bonds.ts';
 import { refusalWords } from '../events/refusal.ts';
 import { MAX_REPLIES } from './limits.ts';
@@ -17,9 +17,9 @@ import type { State } from './state.ts';
 import type { External, Question } from './journal.ts';
 import type { StepContext, StepData } from '../engine/steps/index.ts';
 import type { Change, EmittedEvent, NestedRun, StopReason } from '../engine/rule.ts';
-import type { Envelope, Offer, Report, ReactionWindow } from '../events/envelope.ts';
+import type { Offer, Report, ReactionWindow } from './types.ts';
 import type { ActionMoment, Subscriber } from '../events/bus.ts';
-import type { Param, Step, StoredValue, WornEffect } from '../model/types.ts';
+import type { Param, Sheet, Step, StoredValue, WornEffect } from '../model/types.ts';
 
 export interface Frame {
   scope: string;
@@ -51,11 +51,12 @@ export interface Sink {
   emitted: EmittedEvent[];
   reactions: Report[];
   after: Entry[];
+  spent: string[];
 }
 
 export type Entry = { fromId: string; toId: string; report: Report } | { text: string };
 
-export const newSink = (): Sink => ({ trace: [], changes: [], effects: [], removed: [], emitted: [], reactions: [], after: [] });
+export const newSink = (): Sink => ({ trace: [], changes: [], effects: [], removed: [], emitted: [], reactions: [], after: [], spent: [] });
 
 export interface Ran {
   results: Record<string, unknown>;
@@ -89,6 +90,8 @@ export interface Delivery {
 
 type Mode = 'action' | 'event' | 'any';
 
+const WINDOWS: Record<ReactionWindow, ActionMoment> = { sender: 'acting', target: 'targeted', after: 'affected' };
+
 export const withEvent = (results: Record<string, unknown>, heard: EmittedEvent | undefined | null): Record<string, unknown> =>
   (heard ? { ...results, event: heard, event_amount: heard.amount, event_incoming: heard.incoming } : results);
 
@@ -97,7 +100,7 @@ export function reportOf(
 ): Report {
   return {
     kind, effect, from, label, reply,
-    trace: sink.trace, stopped, changes: sink.changes, effects: sink.effects, removed: sink.removed, spent: [],
+    trace: sink.trace, stopped, changes: sink.changes, effects: sink.effects, removed: sink.removed, spent: sink.spent,
     emitted: sink.emitted,
     ...(sink.reactions.length ? { reactions: sink.reactions } : {}),
   };
@@ -335,7 +338,10 @@ export class Runner {
       sink.reactions.push(reportOf('effect', id, sheetId, name, own, ran.stopped, false));
       sink.after.push(...own.after);
     }
-    if (burnsUse(effect)) this.state.put(spendUse(this.state.get(sheetId), id));
+    if (burnsUse(effect)) {
+      this.state.put(spendUse(this.state.get(sheetId), id));
+      sink.spent.push(id);
+    }
   }
 
   dry<T>(work: () => T): T {
@@ -370,13 +376,23 @@ export class Runner {
   ): Offer[] {
     const sheet = this.state.find(sheetId);
     if (!sheet) return [];
-    const envelope = { kind: 'effect', effect: effectId, from: '', action: effectId, label: '', steps: [], reply: hop > 0, hop } as Envelope;
-    const ctx = {
-      system: this.system, compendium: this.state.compendium, sheet, shared: this.state.shared(), die: this.ext.dieAt(`${scope}?`),
-    };
-    const offered = offersOf(envelope, window, ctx, results, emitted);
-    if (hop >= MAX_HOPS && offersOf({ ...envelope, reply: false, hop: 0 }, window, ctx, results, emitted).length > offered.length) this.cut = true;
+    const offered = this.listen(window, sheet, effectId, hop, results, emitted);
+    if (hop >= MAX_HOPS && this.listen(window, sheet, effectId, 0, results, emitted).length > offered.length) this.cut = true;
     return offered.filter(offer => !this.refusal(offer.id, sheetId, results, `${scope}?${offer.id}`));
+  }
+
+  private listen(
+    window: ReactionWindow, sheet: Sheet, effectId: string, hop: number,
+    results: Record<string, unknown>, emitted: EmittedEvent[],
+  ): Offer[] {
+    const out: Offer[] = [];
+    const occasion = { kind: 'action' as const, moment: WINDOWS[window], confirm: true, effect: effectId, emitted };
+    for (const sub of listening(this.system, sheet, occasion, { compendium: this.state.compendium })) {
+      if (!this.holds(sub, sheet.id, withEvent(results, sub.heard))) continue;
+      if (runsAtOther(sub.handler) && hop >= MAX_HOPS) continue;
+      out.push({ id: sub.key, label: sub.effect.label || sub.key, claims: [...(sub.handler.claims ?? [])] });
+    }
+    return out;
   }
 
   ask(
@@ -384,6 +400,10 @@ export class Runner {
   ): { claims: string[]; entries: Entry[] } {
     const chosen = this.drying ? [] : this.ext.ask(question);
     const { sheetId, results } = question;
+    const stray = chosen.find(id => !question.offers.some(offer => offer.id === id));
+    if (stray) {
+      throw new EngineError(`реакция «${stray}» сейчас не предлагается; можно: ${question.offers.map(o => o.id).join(', ') || '(ничего)'}`);
+    }
     const entries: Entry[] = [];
     const claims: string[] = [];
     for (const id of chosen) {

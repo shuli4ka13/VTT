@@ -1,6 +1,5 @@
 import { group, test, eq, throws } from './harness.ts';
-import { packRule, resolveRule } from '../src/engine/rule.ts';
-import { newPass } from '../src/engine/calc.ts';
+import { exchange } from './play.ts';
 import { withColumn } from '../src/model/sheet-columns.ts';
 
 const queue = (...values: number[]) => {
@@ -23,6 +22,18 @@ const sys: any = {
 
 const sheet = { id: 'цель', values: { хп: 20, максхп: 30, сила: 3 }, effects: [] };
 
+const runRule = (sys: any, rule: any, sender: any, target: any, die: () => number) => {
+  const full: any = {
+    ...sys, tables: { ...sys.tables, приём: { shape: 'book', use: 'action', label: 'Приём' } },
+    effects: { ...sys.effects, 'правило': { label: 'правило', activation: 'manual', ...rule } },
+  };
+  const book: any = { records: [{ id: 'правило', table: 'приём', label: 'правило', bindings: [{ label: 'правило', effect: 'правило', args: {} }] }] };
+  const from = { ...sender, id: 'отправитель-теста', has: [...(sender.has ?? []), { of: 'правило' }], effects: sender.effects ?? [] };
+  const out = exchange({ system: full, compendium: book, die, sheets: [from, target], actionId: 'правило:0', fromId: from.id, toId: target.id });
+  const report = out.reports[0]!.report;
+  return { sheet: out.sheets.find((s: any) => s.id === target.id)!, trace: report.trace as any[], stopped: report.stopped as any };
+};
+
 const run = (expr: string, ...dice: number[]) => {
   const rule: any = {
     steps: [
@@ -30,11 +41,7 @@ const run = (expr: string, ...dice: number[]) => {
       { type: 'apply', target: { tag: 'хп' }, direction: 'set', value: { expr } },
     ],
   };
-  const ctx = () => ({
-    system: sys, sheet, params: {}, item: null,
-    die: queue(...dice), pass: newPass(sys, sheet, { compendium: { records: [] } }),
-  });
-  return resolveRule(packRule(rule, ctx()), ctx());
+  return runRule(sys, rule, sheet, sheet, queue(...dice));
 };
 
 group('новое значение поля — выражение', () => {
@@ -71,11 +78,7 @@ group('новое значение поля — выражение', () => {
       ],
     };
     const sh = { ...sheet, values: { ...sheet.values, урон: 100 } };
-    const ctx = () => ({
-      system: collide, sheet: sh, params: {}, item: null,
-      die: queue(5), pass: newPass(collide, sh, { compendium: { records: [] } }),
-    });
-    const r = resolveRule(packRule(rule, ctx()), ctx());
+    const r = runRule(collide, rule, sh, sh, queue(5));
     eq(r.sheet.values.хп, 100, 'считалось поле, а не шаг: переименование шага не меняет смысл формул');
   });
 

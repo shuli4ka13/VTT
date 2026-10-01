@@ -1,5 +1,5 @@
 import { group, test, eq, ok } from './harness.ts';
-import { send, receive } from '../src/events/envelope.ts';
+import { exchange } from './play.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { rowUsers, danglingRows, renameRow } from '../src/model/integrity.ts';
 import type { System } from '../src/model/types.ts';
@@ -25,8 +25,11 @@ const withProbe = (tags: string[]) => {
 const hit = (tags: string[]) => {
   const { system, book } = withProbe(tags);
   const target = { id: 'цель', values: { hp: 40, sp_body: 7, sp_head: 7 }, effects: [] };
-  const env = send('проба:0', { system, sheet: { id: 'стрелок', values: {}, effects: [], has: [{ of: 'проба' }] }, compendium: book, die: () => 1 });
-  return receive(env, { system, sheet: target, compendium: book, die: () => 1 }).sheet.values;
+  const out = exchange({
+    system, compendium: book as never, die: () => 1, actionId: 'проба:0', fromId: 'стрелок', toId: 'цель',
+    sheets: [{ id: 'стрелок', values: {}, effects: [], has: [{ of: 'проба' }] }, target] as never,
+  });
+  return out.sheets.find(x => x.id === 'цель')!.values;
 };
 
 group('условие шага «где у метки колонка = значение»', () => {

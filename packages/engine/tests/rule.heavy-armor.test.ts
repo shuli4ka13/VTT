@@ -1,6 +1,5 @@
 import { group, test, eq, deepEq } from './harness.ts';
-import { packRule, resolveRule } from '../src/engine/rule.ts';
-import { newPass } from '../src/engine/calc.ts';
+import { exchange } from './play.ts';
 
 const queue = (...values: number[]) => {
   const rest = [...values];
@@ -39,16 +38,27 @@ const compendium: any = {
   }],
 };
 
-const hero = (equipped: string[]) => ({ id: 'вор', values: { скрытность: 3 }, has: [...equipped.map(of => ({ of }))], effects: [] });
+const hero: any = (equipped: string[]) => ({ id: 'вор', values: { скрытность: 3 }, has: [...equipped.map(of => ({ of }))], effects: [] });
 
-const sneak = (equipped: string[], ...dice: number[]) => {
-  const sheet = hero(equipped);
-  const ctx = () => ({
-    system: sys, sheet, params: {}, item: null,
-    die: queue(...dice), pass: newPass(sys, sheet, { compendium }),
-  });
-  return resolveRule(packRule(sys.effects.sneak, ctx()), ctx());
+const runRule = (sys: any, rule: any, sender: any, target: any, die: () => number, base: any = { records: [] }) => {
+  const full: any = {
+    ...sys, tables: { ...sys.tables, приём: { shape: 'book', use: 'action', label: 'Приём' } },
+    effects: { ...sys.effects, 'правило': { label: 'правило', activation: 'manual', ...rule } },
+  };
+  const book: any = { ...base, records: [...base.records, { id: 'правило', table: 'приём', label: 'правило', bindings: [{ label: 'правило', effect: 'правило', args: {} }] }] };
+  const from = { ...sender, id: 'отправитель-теста', has: [...(sender.has ?? []), { of: 'правило' }], effects: sender.effects ?? [] };
+  const out = exchange({ system: full, compendium: book, die, sheets: [from, target], actionId: 'правило:0', fromId: from.id, toId: target.id });
+  const report = out.reports[0]!.report;
+  return { sheet: out.sheets.find((s: any) => s.id === target.id)!, trace: report.trace as any[], stopped: report.stopped as any };
 };
+
+const sneakIn = (world: any, equipped: string[], ...dice: number[]) => {
+  const sheet = hero(equipped);
+  const out = runRule(world, world.effects.sneak, sheet, { id: 'цель-теста', values: {}, effects: [] }, queue(...dice), compendium);
+  const t = out.trace[0]!;
+  return { trace: out.trace, results: { бросок: { total: t.total, success: t.success } } as any };
+};
+const sneak = (equipped: string[], ...dice: number[]) => sneakIn(sys, equipped, ...dice);
 
 group('тяжёлый доспех мешает красться', () => {
   test('без доспеха — одна кость', () => {
@@ -85,12 +95,7 @@ group('тяжёлый доспех мешает красться', () => {
         },
       },
     };
-    const sheet = hero(['кольчуга']);
-    const ctx = () => ({
-      system: other, sheet, params: {}, item: null,
-      die: queue(14, 4), pass: newPass(other, sheet, { compendium }),
-    });
-    const r = resolveRule(packRule(other.effects.sneak, ctx()), ctx());
+    const r = sneakIn(other, ['кольчуга'], 14, 4);
     deepEq(r.trace[0].rolls, [14], 'это уже не проверка Скрытности');
   });
 });

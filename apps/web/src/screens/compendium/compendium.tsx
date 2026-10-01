@@ -1,4 +1,4 @@
-import { bindingsOf } from '@vtt/engine/events/envelope';
+import { bindingsOf } from '@vtt/engine/events/actions';
 import { GrantsEditor } from '../constructor/grants-editor.tsx';
 import { recordsOf, isItem, propsNeeded, recordKindOf, recordKinds } from '@vtt/engine/model/owned';
 import { TABS } from '../../words.ts';

@@ -1,16 +1,15 @@
 import { group, test, eq, ok } from './harness.ts';
-import { packRule, resolveRule } from '../src/engine/rule.ts';
-import { newPass } from '../src/engine/calc.ts';
+import { exchange } from './play.ts';
 
-const queue = (...values) => {
+const queue = (...values: number[]) => {
   const rest = [...values];
   return () => {
     if (!rest.length) throw new Error('кубик бросили больше раз, чем ожидал тест');
-    return rest.shift();
+    return rest.shift()!;
   };
 };
 
-const sys = {
+const sys: any = {
   id: 'пул-из-листа',
   constants: {
     pool_die: {
@@ -25,7 +24,7 @@ const sys = {
   ] } },
 };
 
-const rule = {
+const rule: any = {
   steps: [{
     id: 'try', type: 'threshold',
     roll: { die: { constant: 'pool_die' }, bonus: { expr: '0' }, check: null },
@@ -33,12 +32,22 @@ const rule = {
   }],
 };
 
-const run = (sheet, ...dice) => {
-  const ctx = () => ({
-    system: sys, sheet, params: {}, item: null,
-    die: queue(...dice), pass: newPass(sys, sheet),
-  });
-  return resolveRule(packRule(rule, ctx()), ctx());
+const runRule = (sys: any, rule: any, sender: any, target: any, die: () => number, base: any = { records: [] }) => {
+  const full: any = {
+    ...sys, tables: { ...sys.tables, приём: { shape: 'book', use: 'action', label: 'Приём' } },
+    effects: { ...sys.effects, 'правило': { label: 'правило', activation: 'manual', ...rule } },
+  };
+  const book: any = { ...base, records: [...base.records, { id: 'правило', table: 'приём', label: 'правило', bindings: [{ label: 'правило', effect: 'правило', args: {} }] }] };
+  const from = { ...sender, id: 'отправитель-теста', has: [...(sender.has ?? []), { of: 'правило' }], effects: sender.effects ?? [] };
+  const out = exchange({ system: full, compendium: book, die, sheets: [from, target], actionId: 'правило:0', fromId: from.id, toId: target.id });
+  const report = out.reports[0]!.report;
+  return { sheet: out.sheets.find((s: any) => s.id === target.id)!, trace: report.trace as any[], stopped: report.stopped as any };
+};
+
+const run = (sheet: any, ...dice: number[]) => {
+  const out = runRule(sys, rule, sheet, { id: 'цель-теста', values: {}, effects: [] }, queue(...dice));
+  const t = out.trace[0]!;
+  return { results: { try: { total: t.total, success: t.success, margin: t.margin } } as any };
 };
 
 group('бросок пулом из листа', () => {

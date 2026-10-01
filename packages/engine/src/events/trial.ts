@@ -1,7 +1,7 @@
 import { deskOf, hasDesk, blankDesk } from './desk.ts';
 import { act } from '../lang/act.ts';
 import { emptyJournal } from '../lang/journal.ts';
-import type { Report } from './envelope.ts';
+import type { Report } from '../lang/types.ts';
 import { isPipeline } from '../engine/effects.ts';
 import { EngineError } from '../engine/errors.ts';
 import { registry } from '../engine/steps/index.ts';

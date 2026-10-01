@@ -1,5 +1,6 @@
 import { group, test, eq, ok, throws } from './harness.ts';
-import { send, receive, availableActions } from '../src/events/envelope.ts';
+import { availableActions } from '../src/events/actions.ts';
+import { exchange } from './play.ts';
 import { system, arven, mirra, compendium } from './fixtures.ts';
 
 const findItem = (id: string) => compendium.records.find(i => i.id === id) || null;
@@ -13,6 +14,10 @@ const queue = (...values) => {
 };
 
 const world = { system, compendium };
+
+const play = (id: string, sys = system, book = compendium, die = queue(10, 5)) => exchange({
+  system: sys, compendium: book, die, sheets: [arven, mirra], actionId: id, fromId: arven.id, toId: mirra.id,
+});
 
 group('предмет даёт действие', () => {
   test('меч не объявляет своей атаки — её даёт привязка его рода', () => {
@@ -38,11 +43,12 @@ group('предмет даёт действие', () => {
   });
 
   test('меч бьёт костью из своей записи', () => {
-    const env = send('longsword-item:0', { system, sheet: arven, compendium, die: queue(10, 5) });
-    eq(env.steps[1].rolled.notation, '1d8', 'нотация пришла из записи «Длинный меч»');
-    const { sheet, report } = receive(env, { system, sheet: mirra, compendium, die: queue() });
+    const asked: number[] = [];
+    const out = play('longsword-item:0', system, compendium, sides => { asked.push(sides); return asked.length === 1 ? 10 : 5; });
+    eq(asked[1], 8, 'кость 1d8 пришла из записи «Длинный меч»');
+    const report = out.reports.find(r => r.toId === mirra.id)!.report;
     eq(report.trace[0].total, 16, 'бросок 10 плюс бонус атаки 6');
-    eq(sheet.values.hp_current, 13, '21 минус кость 5 минус Сила 3');
+    eq(out.sheets.find(s => s.id === mirra.id)!.values.hp_current, 13, '21 минус кость 5 минус Сила 3');
   });
 
   test('заклинание — тоже запись с циферками: род привязал, запись заполнила', () => {
@@ -69,7 +75,7 @@ group('предмет даёт действие', () => {
 
   test('свойства оружия объявляет система: нет объявления — внятная ошибка', () => {
     const noSchema = { ...system, tables: Object.fromEntries(Object.entries(system.tables).filter(([, t]) => t.shape !== 'book')) };
-    throws(() => send('longsword-item:0', { system: noSchema, sheet: arven, compendium, die: queue(10) }),
+    throws(() => play('longsword-item:0', noSchema, compendium, queue(10)),
       'longsword-item');
   });
 
@@ -80,11 +86,11 @@ group('предмет даёт действие', () => {
         ? { ...i, bindings: [{ label: 'Атака', effect: 'нетакого', args: {} }] }
         : i))],
     };
-    throws(() => send('longsword-item:0', { system, sheet: arven, compendium: book, die: queue(10) }), 'нетакого');
+    throws(() => play('longsword-item:0', system, book, queue(10)), 'нетакого');
   });
 
   test('битый номер привязки — внятная ошибка, а не тихий undefined', () => {
-    throws(() => send('longsword-item:9', { system, sheet: arven, compendium, die: queue(10) }), 'longsword-item');
+    throws(() => play('longsword-item:9', system, compendium, queue(10)), 'longsword-item');
   });
 
   test('пассивный эффект применить нельзя — его вешают, а не бьют им', () => {
@@ -94,6 +100,6 @@ group('предмет даёт действие', () => {
         ? { ...i, bindings: [{ label: 'Атака', effect: 'poisoned', args: {} }] }
         : i))],
     };
-    throws(() => send('longsword-item:0', { system, sheet: arven, compendium: book, die: queue(10) }), 'пассивн');
+    throws(() => play('longsword-item:0', system, book, queue(10)), 'пассивн');
   });
 });

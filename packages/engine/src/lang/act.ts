@@ -1,4 +1,4 @@
-import { actionOf, effectLabelOf } from '../events/envelope.ts';
+import { actionOf, effectLabelOf } from '../events/actions.ts';
 import { stepModule } from '../engine/steps/index.ts';
 import { rolledSoFar } from '../engine/rolled.ts';
 import { packGuardRef } from '../engine/rule.ts';
@@ -19,7 +19,7 @@ import { External, Pause } from './journal.ts';
 import { Runner, newSink, reportOf } from './run.ts';
 import type { Entry } from './run.ts';
 import type { Journal, Question } from './journal.ts';
-import type { Envelope, WorldContext } from '../events/envelope.ts';
+import type { WorldContext } from './types.ts';
 import type { StepData, StepContext } from '../engine/steps/index.ts';
 import type { EmittedEvent } from '../engine/rule.ts';
 import type { Clock } from '../engine/clock.ts';
@@ -65,8 +65,7 @@ export function settleLines(world: WorldContext, before: Sheet[], after: Sheet[]
   return done.sheets;
 }
 
-const HOISTED = (step: StepData): boolean =>
-  (step.type === 'threshold' && (step.side ?? 'sender') !== 'target') || step.type === 'amount';
+const HOISTED = (step: StepData): boolean => stepModule(step.type).once?.(step) ?? false;
 
 export function act(world: ActWorld, intent: ActIntent): ActOutcome {
   const { system, compendium, clock } = world;
@@ -144,9 +143,6 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
       });
       return out;
     };
-    const asEnvelope = (hoisted: Record<number, StepData>): Envelope => ({
-      kind: 'effect', effect: action.effect, from: actor, action: action.id, label: action.label, steps: Object.values(hoisted),
-    });
     let packed = pack(0);
 
     const seenBySender = rolledSoFar(Object.values(packed) as unknown as Record<string, unknown>[]);
@@ -154,7 +150,7 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
     if (senderOffers.length) {
       const asked = run.ask({
         key: 'sender', sheetId: actor, window: 'sender', label: '', offers: senderOffers,
-        results: seenBySender, preview: previewLines(asEnvelope(packed), system, null),
+        results: seenBySender, preview: previewLines(Object.values(packed), system, null),
       }, action.effect, 0, [], targets[0] ?? null);
       log.push(...asked.entries);
       if (asked.claims.length) {
@@ -179,7 +175,7 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
       if (dry && before.length) {
         const asked = run.ask({
           key: `target:${toId}`, sheetId: toId, window: 'target', label: '', offers: before,
-          results: dry.results, preview: previewLines(asEnvelope(packed), system, dry),
+          results: dry.results, preview: previewLines(Object.values(packed), system, dry),
         }, action.effect, 0, dry.emitted, actor);
         log.push(...asked.entries);
         if (asked.claims.length) {

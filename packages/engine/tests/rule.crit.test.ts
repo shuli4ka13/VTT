@@ -1,8 +1,7 @@
 import { group, test, eq, ok } from './harness.ts';
-import { packRule, resolveRule } from '../src/engine/rule.ts';
-import { newPass } from '../src/engine/calc.ts';
+import { exchange } from './play.ts';
 import { multiplyNotation } from '../src/engine/dice.ts';
-import type { System, Sheet, Effect } from '../src/model/types.ts';
+import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const system = {
   id: 'x', name: 'x',
@@ -16,8 +15,25 @@ const system = {
 
 const sheet = (id: string): Sheet => ({
   id, systemId: 'x', name: id, values: { хиты: 30, броня: 10 },
-  has: [], effects: [],
+  has: [{ of: 'е' }], effects: [],
 } as unknown as Sheet);
+
+const book = { records: [{ id: 'е', table: 'действие', label: 'е', bindings: [{ label: 'е', effect: 'е', args: {} }] }] } as unknown as Compendium;
+
+const resolve = (stepList: unknown[], rolls: number[]) => {
+  let at = 0;
+  const die = () => rolls[at++] ?? 1;
+  const sys = {
+    ...system,
+    tables: { ...system.tables, действие: { shape: 'book', use: 'action', label: 'Действие' } },
+    effects: { е: { label: 'e', activation: 'manual', steps: stepList } },
+  } as unknown as System;
+  const out = exchange({ system: sys, compendium: book, die, sheets: [sheet('а'), sheet('б')], actionId: 'е:0', fromId: 'а', toId: 'б' });
+  const report = out.reports.find(r => r.toId === 'б')!.report;
+  const target = out.sheets.find(x => x.id === 'б')!;
+  return { out: { sheet: target, trace: report.trace as Record<string, unknown>[] }, used: at };
+};
+const damageDice = (trace: Record<string, unknown>[]) => (trace.find(line => line.step === 'урон') as { rolls: number[] }).rolls;
 
 const steps = [
   { id: 'удар', type: 'threshold', roll: { die: { constant: 'к20' } }, versus: { expr: '@получатель.броня' } },
@@ -28,22 +44,7 @@ const steps = [
   { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@урон' } },
 ];
 
-const play = (rolls: number[]) => {
-  let at = 0;
-  const die = () => rolls[at++] ?? 1;
-  const effect = { label: 'e', activation: 'manual', steps } as unknown as Effect;
-  const from = sheet('а');
-  const to = sheet('б');
-  const packed = packRule(effect, {
-    system, sheet: from, pass: newPass(system, from, { compendium: { records: [] } }),
-    die, owner: 'тест',
-  } as never);
-  const out = resolveRule(packed, {
-    system, sheet: to, pass: newPass(system, to, { compendium: { records: [] } }),
-    die, owner: 'тест',
-  } as never);
-  return { packed, out, used: at };
-};
+const play = (rolls: number[]) => resolve(steps, rolls);
 
 group('крит: кости удваиваются до броска', () => {
   test('запись костей умножается, а не дописывается', () => {
@@ -54,16 +55,14 @@ group('крит: кости удваиваются до броска', () => {
 
   test('на двадцатке кидается вдвое больше костей, и лишних бросков нет', () => {
     const crit = play([20, 4, 4, 4, 4]);
-    const packedDice = (crit.packed[1] as unknown as { rolled: { rolls: number[] } }).rolled.rolls;
-    eq(packedDice.length, 4, 'четыре кости вместо двух');
+    eq(damageDice(crit.out.trace).length, 4, 'четыре кости вместо двух');
     eq(crit.used, 5, 'один бросок проверки и четыре кости урона — ни одного лишнего');
     eq(crit.out.sheet.values.хиты, 14);
   });
 
   test('без двадцатки — обычные две кости и ни одного лишнего броска', () => {
     const plain = play([19, 4, 4]);
-    const packedDice = (plain.packed[1] as unknown as { rolled: { rolls: number[] } }).rolled.rolls;
-    eq(packedDice.length, 2);
+    eq(damageDice(plain.out.trace).length, 2);
     eq(plain.used, 3);
     eq(plain.out.sheet.values.хиты, 22);
   });
@@ -83,14 +82,7 @@ group('крит: кости удваиваются до броска', () => {
       { id: 'урон', type: 'amount', source: 'roll', dice: { const: '2d6' }, double: { expr: '@удар.natural >= 20' } },
       { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@урон' } },
     ];
-    let at = 0;
-    const die = () => [15, 3, 3][at++] ?? 1;
-    const from = sheet('а');
-    const packed = packRule({ label: 'e', activation: 'manual', steps: withBonus } as unknown as Effect, {
-      system, sheet: from, pass: newPass(system, from, { compendium: { records: [] } }),
-      die, owner: 'тест',
-    } as never);
-    const rolls = (packed[1] as unknown as { rolled: { rolls: number[] } }).rolled.rolls;
+    const rolls = damageDice(resolve(withBonus, [15, 3, 3]).out.trace);
     eq(rolls.length, 2, 'итог 15+9=24, но на костях 15 — не крит');
   });
 });
@@ -102,19 +94,7 @@ group('доля величины: половина при удачном спа�
     { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@урон' } },
   ];
 
-  const run = (rolls: number[], times = 0.5) => {
-    let at = 0;
-    const die = () => rolls[at++] ?? 1;
-    const from = sheet('а');
-    const to = sheet('б');
-    const packed = packRule({ label: 'e', activation: 'manual', steps: chain(times) } as unknown as Effect, {
-      system, sheet: from, pass: newPass(system, from, { compendium: { records: [] } }), die, owner: 'тест',
-    } as never);
-    const out = resolveRule(packed, {
-      system, sheet: to, pass: newPass(system, to, { compendium: { records: [] } }), die, owner: 'тест',
-    } as never);
-    return { out, used: at };
-  };
+  const run = (rolls: number[], times = 0.5) => resolve(chain(times), rolls);
 
   test('спасся — половина, провалил — полный урон, кости кидаются один раз', () => {
     const saved = run([5, 5, 15]);

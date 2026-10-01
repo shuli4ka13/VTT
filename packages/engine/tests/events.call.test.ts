@@ -1,6 +1,6 @@
-import { group, test, ok, throws, eq } from './harness.ts';
-import { exchange } from '../src/events/exchange.ts';
-import { MAX_CALL_DEPTH, packCall, runCall } from '../src/events/call.ts';
+import { group, test, ok, eq } from './harness.ts';
+import { exchange } from './play.ts';
+import { MAX_CALL_DEPTH } from '../src/engine/rule.ts';
 import { EngineError } from '../src/engine/errors.ts';
 import { system, arven, mirra, compendium } from './fixtures.ts';
 import type { System, Effect } from '../src/model/types.ts';
@@ -32,13 +32,11 @@ group('один путь вызова', () => {
     ok(text.includes('damage → damage'), text);
   });
 
-  test('packCall и runCall дают тот же результат, что прямой путь конверта', () => {
-    const effect = system.effects.strike!;
-    const world = { system, compendium, die };
-    const packed = packCall({ effectId: 'strike', effect, sheet: arven, owner: 'тест', args: { damage_dice: '1d8', damage_type: 'рубящий' }, props: null }, world);
-    ok(packed.length > 0);
-    const done = runCall(packed, { sheet: mirra, owner: 'тест' }, world);
-    eq(typeof done.trace.length, 'number');
-    throws(() => runCall([{ type: 'котик' } as never], { sheet: mirra, owner: 'тест' }, world), 'котик');
+  test('вызов эффекта из записи доходит до цели и меняет её лист', () => {
+    const out = exchange({ system, compendium, die: () => 15, sheets: [arven, mirra], actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id });
+    const target = out.sheets.find(s => s.id === mirra.id)!;
+    ok((target.values.hp_current as number) < (mirra.values.hp_current as number), 'хиты цели упали');
+    ok(out.reports.length > 0);
+    eq(typeof out.reports[0]!.report.trace.length, 'number');
   });
 });

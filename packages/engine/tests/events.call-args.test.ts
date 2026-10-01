@@ -1,5 +1,5 @@
 import { group, test, eq, ok, throws } from './harness.ts';
-import { send, receive } from '../src/events/envelope.ts';
+import { exchange } from './play.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 
 const system = {
@@ -44,8 +44,8 @@ const sheet = (id: string): Sheet => ({
 } as unknown as Sheet);
 
 const hit = (actionId: string, die: number, sys: System = system) => {
-  const envelope = send(actionId, { system: sys, sheet: sheet('бьёт'), compendium, die: () => die });
-  return receive(envelope, { system: sys, sheet: sheet('получает'), compendium, die: () => die });
+  const out = exchange({ system: sys, compendium, die: () => die, sheets: [sheet('бьёт'), sheet('получает')], actionId, fromId: 'бьёт', toId: 'получает' });
+  return { sheet: out.sheets.find(s => s.id === 'получает')!, report: out.reports[0]!.report };
 };
 
 group('вызов передаёт вызванному его входы', () => {

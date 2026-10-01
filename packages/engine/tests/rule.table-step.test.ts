@@ -1,7 +1,8 @@
 import { group, test, eq, throws } from './harness.ts';
-import { packRule, resolveRule } from '../src/engine/rule.ts';
-import { newPass } from '../src/engine/calc.ts';
-import type { System, Sheet, Effect } from '../src/model/types.ts';
+import { Runner, newSink } from '../src/lang/run.ts';
+import { State } from '../src/lang/state.ts';
+import { External, emptyJournal } from '../src/lang/journal.ts';
+import type { System, Sheet } from '../src/model/types.ts';
 
 const system = {
   id: 'x', name: 'x',
@@ -28,14 +29,20 @@ const system = {
 const sheet = { id: 'а', systemId: 'x', name: 'А', values: { хиты: 20 }, has: [], effects: [] } as unknown as Sheet;
 const compendium = { records: [] };
 
-const run = (steps: object[], rolls: number[] = []) => {
+const exec = (steps: object[], rolls: number[], params: Record<string, unknown> = {}, paramDefs: object[] = []) => {
   let at = 0;
   const die = () => rolls[at++] ?? 1;
-  const effect = { label: 'e', activation: 'manual', steps } as unknown as Effect;
-  const ctx = { system, sheet, compendium, die, pass: newPass(system, sheet, { compendium }), owner: 'тест' };
-  const packed = packRule(effect, ctx as never);
-  return resolveRule(packed, { ...ctx, pass: newPass(system, sheet, { compendium }) } as never);
+  const state = new State([sheet], system, compendium as never, null);
+  const runner = new Runner(state, new External(emptyJournal(), die));
+  const sink = newSink();
+  const ran = runner.exec({
+    scope: 'rule', me: sheet.id, here: sheet.id, target: sheet.id, effectId: 'e', owner: 'тест',
+    args: params, paramDefs: paramDefs as never, props: null, source: sheet.id, hop: 0, names: 'here',
+  }, steps as never, sink);
+  return { results: ran.results, trace: sink.trace, sheet: state.get(sheet.id) };
 };
+
+const run = (steps: object[], rolls: number[] = []) => exec(steps, rolls);
 
 group('шаг «таблица»', () => {
   test('бросок 2к6 читается строкой таблицы и попадает в поле', () => {
@@ -54,14 +61,10 @@ group('шаг «таблица»', () => {
   });
 
   test('имя таблицы приходит и параметром', () => {
-    const effect = {
-      label: 'e', activation: 'manual',
-      params: [{ key: 'какая', label: 'Какая таблица', kind: 'choice' }],
-      steps: [{ id: 'итог', type: 'table', table: { param: 'какая' }, value: { expr: '3' } }],
-    } as unknown as Effect;
-    const ctx = { system, sheet, compendium, die: () => 1, pass: newPass(system, sheet, { compendium }), owner: 'тест', params: { какая: 'травмы' } };
-    const packed = packRule(effect, ctx as never);
-    const out = resolveRule(packed, { ...ctx, pass: newPass(system, sheet, { compendium }) } as never);
+    const out = exec(
+      [{ id: 'итог', type: 'table', table: { param: 'какая' }, value: { expr: '3' } }],
+      [], { какая: 'травмы' }, [{ key: 'какая', label: 'Какая таблица', kind: 'choice' }],
+    );
     eq(out.results.итог, 'синяк');
   });
 

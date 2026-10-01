@@ -2,7 +2,7 @@ import { act } from '../src/lang/act.ts';
 import { emptyJournal } from '../src/lang/journal.ts';
 import type { Journal, Question } from '../src/lang/journal.ts';
 import type { Entry } from '../src/lang/run.ts';
-import type { Report } from '../src/events/envelope.ts';
+import type { Report } from '../src/lang/types.ts';
 import type { Clock } from '../src/engine/clock.ts';
 import type { System, Sheet, Compendium, Die } from '../src/model/types.ts';
 

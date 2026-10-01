@@ -1,5 +1,5 @@
 import { group, test, eq, deepEq, throws } from './harness.ts';
-import { exchange } from '../src/events/exchange.ts';
+import { exchange } from './play.ts';
 import { fireMoments } from '../src/events/moments.ts';
 import { lintSystem, errorsOf } from '../src/model/lint.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
@@ -281,12 +281,16 @@ group('наложенное помнит число, штрафная кость
     eq((plain.reports[0]!.report.trace[1] as { rolls: number[] }).rolls.length, 1);
   });
 
-  test('реакция платит своей дорожкой: нет заряда — отказ словами, есть — списан', async () => {
-    const { send, react } = await import('../src/events/envelope.ts');
-    const env = send('б:0', { system: sys, compendium: acts, die: () => 10, sheet: who('воин') });
-    const ctx = (sheet: Sheet) => ({ system: sys, compendium: acts, die: () => 1, sheet });
-    const paid = react(['парирование'], env, 'target', ctx(who('цель', ['парирование'])));
-    eq(paid.sheet.values.заряды, 0);
-    throws(() => react(['парирование'], env, 'target', ctx(who('цель', ['парирование'], { заряды: 0 }))), 'не хватает «Заряды»');
+  test('реакция платит своей дорожкой: нет заряда — не предложена, есть — предложена и списан', () => {
+    const parry = (target: Sheet) => exchange({
+      system: sys, compendium: acts, die: () => 10, sheets: [who('воин'), target], actionId: 'б:0', fromId: 'воин', toId: 'цель',
+      answer: question => question.offers.map(offer => offer.id),
+    });
+    const paid = parry(who('цель', ['парирование']));
+    eq(paid.sheets.find(s => s.id === 'цель')!.values.заряды, 0);
+    deepEq(paid.questions.map(q => q.offers.map(o => o.id)), [['парирование']]);
+    const refused = parry(who('цель', ['парирование'], { заряды: 0 }));
+    eq(refused.sheets.find(s => s.id === 'цель')!.values.заряды, 0);
+    eq(refused.questions.length, 0, 'без заряда реакцию даже не предлагают');
   });
 });

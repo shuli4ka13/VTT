@@ -1,5 +1,5 @@
 import { group, test, eq, ok, throws } from './harness.ts';
-import { send, receive } from '../src/events/envelope.ts';
+import { exchange } from './play.ts';
 import { compile } from '../src/formula/index.ts';
 import type { System } from '../src/model/types.ts';
 
@@ -41,10 +41,9 @@ const лист = (порог: number) => ({
 } as never);
 
 const бей = (порог: number, выпало: number) => {
-  const мир = { system: система, compendium: книга, die: () => выпало };
-  const конверт = send('меч:0', { ...мир, sheet: лист(порог) });
-  const итог = receive(конверт, { ...мир, sheet: лист(порог) });
-  return итог.report.trace.find((t: Record<string, unknown>) => t.type === 'amount') as Record<string, unknown>;
+  const цель = { id: 'цель', systemId: 'ф', name: 'цель', values: {}, has: [], effects: [] } as never;
+  const out = exchange({ system: система, compendium: книга, die: () => выпало, sheets: [лист(порог), цель], actionId: 'меч:0', fromId: 'я', toId: 'цель' });
+  return out.reports[0]!.report.trace.find((t: Record<string, unknown>) => t.type === 'amount') as Record<string, unknown>;
 };
 
 group('кость бросается прямо в формуле', () => {

@@ -1,6 +1,5 @@
 import { group, test, eq, ok, deepEq } from './harness.ts';
-import { receive, send } from '../src/events/envelope.ts';
-import { exchange } from '../src/events/exchange.ts';
+import { exchange } from './play.ts';
 import { serializeSheet } from '../src/model/serialize.ts';
 import { system, arven, mirra, compendium } from './fixtures.ts';
 
@@ -26,26 +25,25 @@ const thorny = (uses = 3) => ({
 
 const spiked = (sheet, usesLeft = 3) => ({ ...sheet, effects: [{ effectId: 'thorns', usesLeft }] });
 
-group('триггерные эффекты: ответка получателя', () => {
-  test('попали — триггер отвечает конвертом в обратную сторону', () => {
-    const sys = thorny();
-    const env = send('longsword-item:0', { system: sys, sheet: arven, compendium, die: queue(15, 5) });
-    const out = receive(env, { system: sys, sheet: spiked(mirra), compendium, die: queue(3) });
+const hitBy = (sys, sheet, dice) => exchange({
+  system: sys, compendium, die: queue(...dice),
+  sheets: [arven, sheet], actionId: 'longsword-item:0', fromId: 'arven', toId: 'mirra',
+});
 
-    eq(out.replies.length, 1, 'ровно одна ответка');
-    const reply = out.replies[0];
-    eq(reply.from, 'mirra', 'отвечает тот, на ком висел триггер');
-    eq(reply.to, 'arven', 'а целью становится исходный отправитель');
-    eq(reply.reply, true, 'конверт помечен как ответка');
-    eq(reply.effect, 'thorns');
+group('триггерные эффекты: ответка получателя', () => {
+  test('попали — триггер отвечает записью в обратную сторону', () => {
+    const r = hitBy(thorny(), spiked(mirra), [15, 5, 3]);
+    eq(r.reports.length, 2, 'удар и ровно одна ответка');
+    const reply = r.reports[1];
+    eq(reply.fromId, 'mirra', 'отвечает тот, на ком висел триггер');
+    eq(reply.toId, 'arven', 'а целью становится исходный отправитель');
+    eq(reply.report.reply, true, 'запись помечена как ответка');
+    eq(reply.report.effect, 'thorns');
   });
 
   test('промахнулись — триггер молчит: условие смотрит в трассу вызова', () => {
-    const sys = thorny();
-
-    const env = send('longsword-item:0', { system: sys, sheet: arven, compendium, die: queue(2, 5) });
-    const out = receive(env, { system: sys, sheet: spiked(mirra), compendium, die: queue() });
-    eq(out.replies.length, 0);
+    const r = hitBy(thorny(), spiked(mirra), [2, 5]);
+    eq(r.reports.length, 1);
   });
 
   test('ответку считает ЕЁ получатель, своей системой и своим листом', () => {
@@ -57,14 +55,13 @@ group('триггерные эффекты: ответка получателя'
       fromId: 'arven', toId: 'mirra',
     });
 
-    eq(reports.length, 2, 'ход — цепочка: конверт и ответка');
+    eq(reports.length, 2, 'ход — цепочка: удар и ответка');
     const back = sheets.find(s => s.id === 'arven');
     eq(back.values.hp_current, before - 3, 'урон шипов посчитан у Арвен');
     eq(reports[1].report.reply, true, 'вторая запись журнала помечена как ответка');
   });
 
   test('ответка не будит ответку: каскад ограничен глубиной 1', () => {
-
     const sys = thorny();
     const { reports } = exchange({
       system: sys, compendium, die: queue(15, 5, 3),
@@ -89,43 +86,35 @@ group('триггерные эффекты: ответка получателя'
 
 group('длительность: счётчик срабатываний', () => {
   test('сработал — минус одно; остаток живёт в записи на листе', () => {
-    const sys = thorny();
-    const env = send('longsword-item:0', { system: sys, sheet: arven, compendium, die: queue(15, 5) });
-    const out = receive(env, { system: sys, sheet: spiked(mirra, 3), compendium, die: queue(3) });
+    const r = hitBy(thorny(), spiked(mirra, 3), [15, 5, 3]);
+    deepEq(r.sheets.find(s => s.id === 'mirra').effects, [{ effectId: 'thorns', usesLeft: 2 }]);
+  });
 
-    deepEq(out.sheet.effects, [{ effectId: 'thorns', usesLeft: 2 }]);
-    deepEq(out.report.spent, ['thorns'], 'журнал показывает израсходованное срабатывание');
+  test('журнал показывает израсходованное срабатывание', () => {
+    const r = hitBy(thorny(), spiked(mirra, 3), [15, 5, 3]);
+    ok(r.reports.some(x => x.report.spent.includes('thorns')), 'report.spent называет thorns');
   });
 
   test('на нуле эффект спадает сам', () => {
-    const sys = thorny();
-    const env = send('longsword-item:0', { system: sys, sheet: arven, compendium, die: queue(15, 5) });
-    const out = receive(env, { system: sys, sheet: spiked(mirra, 1), compendium, die: queue(3) });
-
-    deepEq(out.sheet.effects, [], 'последнее срабатывание унесло эффект с листа');
-    eq(out.replies.length, 1, 'но само срабатывание состоялось');
+    const r = hitBy(thorny(), spiked(mirra, 1), [15, 5, 3]);
+    deepEq(r.sheets.find(s => s.id === 'mirra').effects, [], 'последнее срабатывание унесло эффект с листа');
+    eq(r.reports.length, 2, 'но само срабатывание состоялось');
   });
 
   test('промах счётчик не тратит', () => {
-    const sys = thorny();
-    const env = send('longsword-item:0', { system: sys, sheet: arven, compendium, die: queue(2, 5) });
-    const out = receive(env, { system: sys, sheet: spiked(mirra, 3), compendium, die: queue() });
-    deepEq(out.sheet.effects, [{ effectId: 'thorns', usesLeft: 3 }]);
+    const r = hitBy(thorny(), spiked(mirra, 3), [2, 5]);
+    deepEq(r.sheets.find(s => s.id === 'mirra').effects, [{ effectId: 'thorns', usesLeft: 3 }]);
   });
 
   test('остаток — скаляр: лист остаётся законным DTO (критерий №1)', () => {
-    const sys = thorny();
-    const env = send('longsword-item:0', { system: sys, sheet: arven, compendium, die: queue(15, 5) });
-    const out = receive(env, { system: sys, sheet: spiked(mirra, 3), compendium, die: queue(3) });
-    const json = serializeSheet(out.sheet);
+    const r = hitBy(thorny(), spiked(mirra, 3), [15, 5, 3]);
+    const json = serializeSheet(r.sheets.find(s => s.id === 'mirra'));
     deepEq(JSON.parse(json).effects, [{ effectId: 'thorns', usesLeft: 2 }]);
   });
 
   test('счётчик — личное число персонажа: у двоих он тратится независимо', () => {
     const sys = thorny();
-    const hit = sheet => receive(
-      send('longsword-item:0', { system: sys, sheet: arven, compendium, die: queue(15, 5) }),
-      { system: sys, sheet, compendium, die: queue(3) }).sheet;
+    const hit = sheet => hitBy(sys, sheet, [15, 5, 3]).sheets.find(s => s.id === 'mirra');
 
     eq(hit(spiked(mirra, 3)).effects[0].usesLeft, 2);
     eq(hit(spiked(mirra, 1)).effects.length, 0, 'у второго осталось одно — и оно ушло');

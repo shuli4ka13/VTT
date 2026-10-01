@@ -2,7 +2,7 @@ import { group, test, eq, ok, deepEq, deepSame, throws } from './harness.ts';
 import { serializeSheet, deserializeSheet } from '../src/model/serialize.ts';
 import { calc, calcAll, newPass } from '../src/engine/calc.ts';
 import { CycleError } from '../src/engine/errors.ts';
-import { send, receive } from '../src/events/envelope.ts';
+import { exchange } from './play.ts';
 import { system, arven, mirra, sheets, compendium } from './fixtures.ts';
 import { PLAYABLE_SYSTEMS as SAMPLE_SYSTEMS, PLAYABLE_WORLDS as SAMPLE_WORLDS } from '../src/model/systems.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
@@ -68,14 +68,10 @@ group('критерии приёмки', () => {
 
   test('5. вызов с одного листа меняет значение у второго, расчёт — у получателя', () => {
     const die = (...values) => { const q = [...values]; return () => q.shift(); };
-    const ctx = (sheet, d) => ({ system, sheet, compendium, die: d });
-
-    const envelope = send('longsword-item:0', ctx(arven, die(18, 6)));
-    ok(!JSON.stringify(envelope).includes('mirra'), 'отправитель о цели не знает');
-    deepEq(envelope.steps[0].versus, { expr: '@получатель.ac', of: 'target' }, 'класс брони цели отправителем не посчитан — уехал формулой');
-
     const before = calc(system, mirra, 'hp_current', newPass(system, mirra, { compendium }));
-    const { sheet, report } = receive(envelope, ctx(mirra, die()));
+    const out = exchange({ system, compendium, die: die(18, 6), sheets: [arven, mirra], actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id });
+    const sheet = out.sheets.find(x => x.id === mirra.id)!;
+    const report = out.reports[0]!.report as any;
     const after = calc(system, sheet, 'hp_current', newPass(system, sheet, { compendium }));
 
     eq(report.trace[0].versus.value, 14, 'класс брони посчитан получателем по его листу');
@@ -193,14 +189,26 @@ group('образец D&D: урон сперва съедает временны
     const mirra = (world.sheets as Sheet[]).find(s => s.id === 'mirra')!;
     const target = { ...mirra, values: { ...mirra.values, ...values } };
     const sender = (world.sheets as Sheet[]).find(s => s.id === 'arven')!;
-    const out = receive(
-      {
-        kind: 'effect', effect: 'урон', from: sender.id, action: 'проба', label: 'Урон',
-        steps: [{ type: 'emit', event: 'damage', args: { amount: { const: amount }, damage_type: { const: 'рубящий' } } }],
-      } as never,
-      { system: dnd, compendium: world.compendium as Compendium, die: () => 1, sheet: target },
-    );
-    return out.sheet.values;
+    const probe = {
+      ...dnd,
+      tables: { ...dnd.tables, проба: { shape: 'book', use: 'action', label: 'Проба' } },
+      effects: {
+        ...dnd.effects,
+        проба: {
+          label: 'Урон', activation: 'manual',
+          steps: [{ type: 'emit', event: 'damage', args: { amount: { const: amount }, damage_type: { const: 'рубящий' } } }],
+        },
+      },
+    } as unknown as System;
+    const book = {
+      ...world.compendium,
+      records: [...(world.compendium as Compendium).records, { id: 'проба', table: 'проба', label: 'Урон', bindings: [{ label: 'Урон', effect: 'проба', args: {} }] }],
+    } as unknown as Compendium;
+    const out = exchange({
+      system: probe, compendium: book, die: () => 1, sheets: [{ ...sender, has: [...(sender.has ?? []), { of: 'проба' }] }, target],
+      actionId: 'проба:0', fromId: sender.id, toId: target.id,
+    });
+    return out.sheets.find(x => x.id === target.id)!.values;
   };
 
   test('временные хиты уходят первыми, остаток бьёт по текущим', () => {

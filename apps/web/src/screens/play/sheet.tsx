@@ -9,7 +9,7 @@ import { recordDetails } from '../../sheet/record-view.tsx';
 import { useSession } from '../../store/session.ts';
 import { Lobby } from './lobby.tsx';
 import type { Sheet, System, RoomState } from '@vtt/schema';
-import { availableActions } from '@vtt/engine/events/envelope';
+import { availableActions } from '@vtt/engine/events/actions';
 import { recordsOf, isItem, sheetKinds, sheetKindOf, shownOn } from '@vtt/engine/model/owned';
 import { fieldsFor, livesOn } from '@vtt/engine/engine/calc';
 import { isGroup, sharedOf } from '@vtt/engine/events/desk';
