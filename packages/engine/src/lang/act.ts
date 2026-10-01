@@ -129,7 +129,7 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
     if (split >= 0) {
       const sink = newSink();
       const ran = run.exec({
-        scope: 'once', me: actor, here: actor, target: null, effectId: action.effect,
+        scope: 'once', me: actor, here: actor, target: null, opponent: targets[0] ?? null, effectId: action.effect,
         owner: `эффект «${effect.label || action.effect}»`, args, paramDefs, props, ...(inputs ? { inputs } : {}),
         ...(claims.length ? { claims } : {}),
         ...(against ? { against: (tags: readonly string[]) => incomingRollModifiers(tags, against) } : {}),
@@ -179,7 +179,11 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
         if (!HOISTED(steps[index] as StepData)) return undefined;
         if (cache[index]) return cache[index];
         const one = packOne(index);
-        if (!run.isDrying) cache[index] = one;
+        if (!run.isDrying) {
+          cache[index] = one;
+          log.push(...seenSink.after);
+        }
+        seenSink.after = [];
         return one;
       };
       rolledNow = () => Object.keys(cache).map(Number).sort((a, b) => a - b).map(at => cache[at]!);

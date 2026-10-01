@@ -41,9 +41,9 @@ group('ведущая кость', () => {
 
   group('total есть всегда', () => {
     test('одна к20: total равен выпавшему, именованных частей нет', () => {
-      const { grown: _grown, keeps: _keeps, reading: _reading, plus: _plus, applied: _applied, ...seen } = rollLead(d20, queue(14));
+      const { grown: _grown, keeps: _keeps, reading: _reading, plus: _plus, applied: _applied, exploded: _exploded, natural: _natural, ...seen } = rollLead(d20, queue(14));
       deepEq(seen, {
-        edits: [], versusShift: 0, degreeShift: 0, read: 'sum', entries: [{ value: 14, sides: 20 }],
+        edits: [], versusShift: 0, degreeShift: 0, read: 'sum', entries: [{ value: 14, sides: 20, from: 0 }],
         rolls: [14], raw: [14], kept: 14, total: 14, parts: {},
         tally: { dice: 1, atMax: 0, atMin: 0 },
       });

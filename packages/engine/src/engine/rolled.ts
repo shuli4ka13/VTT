@@ -23,14 +23,14 @@ export function rolledSummary(step: Record<string, unknown>): RolledSummary | nu
   } | undefined;
   if (!rolled) return null;
   const formula = step.type === 'amount' && (rolled as { notation?: unknown }).notation == null;
-  const natural = formula ? rolled.rolls.reduce((sum, value) => sum + value, 0) : rolled.total;
+  const natural = formula ? rolled.rolls.reduce((sum, value) => sum + value, 0) : ((rolled as { natural?: number }).natural ?? rolled.total);
 
   const bonusRef = step.bonus as { const?: unknown } | undefined;
   const bonus = (typeof bonusRef?.const === 'number' ? bonusRef.const : 0)
     + (typeof step.modBonus === 'number' ? step.modBonus : 0);
 
   return {
-    total: natural + bonus,
+    total: (formula ? natural : rolled.total) + bonus,
     natural,
     rolled: rolled.tally?.dice ?? rolled.rolls.length,
     atMax: rolled.tally?.atMax ?? 0,

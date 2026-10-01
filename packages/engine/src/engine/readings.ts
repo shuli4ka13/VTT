@@ -6,6 +6,8 @@ export interface RolledDie {
   name?: string;
 
   bonus?: boolean;
+
+  from?: number;
 }
 
 export interface ReadSpec { kind: string; [key: string]: unknown }

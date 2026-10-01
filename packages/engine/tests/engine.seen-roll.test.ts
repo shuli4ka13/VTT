@@ -32,3 +32,40 @@ group('увидев кости: выпавшее остаётся', () => {
     deepEq(seen.raw, [12]);
   });
 });
+
+group('увидев кости: по ревью', () => {
+  const adv = { label: 'Преимущество', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }] } as never;
+  const apart = { label: 'Подрыв', ops: [{ op: 'explode', apart: true }] } as never;
+
+  test('прибавка не делает натуральную кость натуральной двадцаткой', () => {
+    const die = queue(17);
+    const seen = seeRoll(rollLead(d20, die), { kind: 'plus', value: 3 }, die);
+    eq(seen.total, 20);
+    eq(seen.natural, 17);
+  });
+
+  test('перебросить трогает только взятые кости: отброшенная преимуществом остаётся', () => {
+    const die = queue(3, 15, 9);
+    const first = rollLead(d20, die, [adv]);
+    eq(first.total, 15);
+    const seen = seeRoll(first, { kind: 'reroll', upTo: 5 }, die);
+    deepEq(seen.rolls, [3, 15], 'тройка отброшена — не перебрасывается');
+  });
+
+  test('переброс единиц виден в счёте единиц, даже когда были взрывы', () => {
+    const die = queue(6, 1, 2, 4, 5);
+    const first = rollLead({ ...pool, dice: [{ count: 3, sides: 6 }] } as DieConstant, die, [apart]);
+    eq(first.tally.atMin, 1);
+    const seen = seeRoll(first, { kind: 'reroll', upTo: 1 }, die);
+    eq(seen.tally.atMin, 0, 'единицу перебросили — сбоя по ней нет');
+    eq(seen.rolls.length, 4, 'взорванная шестёрка со своим довеском на месте');
+  });
+
+  test('подрыв во всём наборе не взрывает второй раз уже взорванное', () => {
+    const die = queue(6, 3, 2, 5, 4);
+    const first = rollLead({ ...pool, dice: [{ count: 2, sides: 6 }] } as DieConstant, die, [apart]);
+    eq(first.rolls.length, 3, 'шестёрка дала довесок');
+    const seen = seeRoll(first, { kind: 'add', count: 1, explode: true }, die);
+    eq(seen.rolls.length, 4, 'добавлена одна кость, старая шестёрка второй довесок не получила');
+  });
+});

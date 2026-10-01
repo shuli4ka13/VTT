@@ -116,7 +116,7 @@ function versusOf(packed: any, ctx: StepContext): { value: number; against?: Rec
     return {
       value: total,
       against: {
-        natural: here.rolled.total, total, bonus, rolls: here.rolled.rolls, kept: here.rolled.kept,
+        natural: here.rolled.natural ?? here.rolled.total, total, bonus, rolls: here.rolled.rolls, kept: here.rolled.kept,
         ...(here.rolled.read && here.rolled.read !== 'sum' ? { read: here.rolled.read } : {}),
         ...(here.tags.length ? { tags: here.tags } : {}),
       },
@@ -219,8 +219,9 @@ export function resolve(step: StepData, ctx: StepContext) {
   const margin = judged.margin;
   const succeedOn = resolveOptionalNumber(step.succeedOn, ctx, 'кость верного успеха');
   const failOn = resolveOptionalNumber(step.failOn, ctx, 'кость верного провала');
-  const forced = failOn !== null && rolled.total <= failOn ? false
-    : succeedOn !== null && rolled.total >= succeedOn ? true : null;
+  const natural = rolled.natural ?? rolled.total;
+  const forced = failOn !== null && natural <= failOn ? false
+    : succeedOn !== null && natural >= succeedOn ? true : null;
   const success = forced ?? judged.success;
 
   const scale = step.degrees && step.degrees.table ? step.degrees : null;
@@ -233,7 +234,7 @@ export function resolve(step: StepData, ctx: StepContext) {
 
   const value = {
     success, margin, total,
-    natural: rolled.total,
+    natural,
     rolled: rolled.tally?.dice ?? rolled.rolls.length,
     atMax: rolled.tally?.atMax ?? 0,
     atMin: rolled.tally?.atMin ?? 0,
@@ -257,7 +258,7 @@ export function resolve(step: StepData, ctx: StepContext) {
       ...(rolled.edits?.length ? { edits: rolled.edits } : {}),
       versus: step.against ? { tag: step.against, value: versus } : { value: versus },
       margin, success,
-      ...(forced !== null ? { forced: rolled.total } : {}),
+      ...(forced !== null ? { forced: natural } : {}),
       ...(against.against ? { against: against.against } : {}),
       ...(scale ? { degree } : {}),
       ...(Object.keys(rolled.parts || {}).length ? { parts: rolled.parts } : {}),

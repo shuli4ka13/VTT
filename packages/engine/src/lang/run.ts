@@ -49,6 +49,7 @@ export interface Frame {
   actor?: boolean;
   chain?: string[];
   roll?: { value: LeadRoll };
+  opponent?: string | null;
 }
 
 export interface Sink {
@@ -199,7 +200,7 @@ export class Runner {
       die: this.ext.dieAt(scope),
       ...(frame.roll ? { seenRoll: frame.roll } : {}),
       seen: (rolled: LeadRoll, tags: readonly string[], rollerId: string) =>
-        this.seen(rollerId, rollerId === frame.me ? frame.target : frame.me, rolled, tags, scope, frame.effectId, frame.hop, sink),
+        this.seen(rollerId, frame.opponent !== undefined ? frame.opponent : rollerId === frame.me ? frame.target : frame.me, rolled, tags, scope, frame.effectId, frame.hop, sink),
       pass: state.pass(here),
       direct: {
         me,
@@ -388,7 +389,7 @@ export class Runner {
       const now = cell.value;
       return {
         roll: {
-          total: now.total, natural: now.total, rolls: now.rolls, kept: now.kept, parts: now.parts,
+          total: now.total, natural: now.natural, plus: now.plus, rolls: now.rolls, kept: now.kept, parts: now.parts,
           rolled: now.tally.dice, atMax: now.tally.atMax, atMin: now.tally.atMin, edited: now.edits.length > 0, tags: [...tags],
         },
       };
@@ -419,6 +420,11 @@ export class Runner {
         if (stray) throw new EngineError(`реакция «${stray}» сейчас не предлагается; можно: ${offers.map(o => o.id).join(', ')}`);
         for (const id of chosen) {
           const found = subscriberByKey(this.system, id)!;
+          const why = this.refusal(id, sheetId, seed(), `${question.key}!${id}?`);
+          if (why) {
+            sink.after.push({ text: `«${found.effect.label || id}» не состоялось: ${why}` });
+            continue;
+          }
           this.useSeen(found, sheetId, cell, `${question.key}!${id}`, hop, sink, seed());
         }
         if (!chosen.length && !this.ext.declineAll && !this.drying) sink.after.push({ text: `${sheet.name} пропускает реакцию` });

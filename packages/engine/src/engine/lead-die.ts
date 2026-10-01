@@ -30,6 +30,8 @@ export interface LeadRoll {
   reading: ReadSpec;
   plus: number;
   applied: RollEdit[];
+  exploded: boolean;
+  natural: number;
 }
 
 export type SeenOp =
@@ -96,7 +98,7 @@ export function rollLead(def: DieConstant, die: Die, edits: RollEdit[] = []): Le
     for (let i = 0; i < count; i++) {
       const value = term.minus ? -die(term.sides) : die(term.sides);
       entries.push({
-        value, sides: term.sides,
+        value, sides: term.sides, from: entries.length,
         ...(term.name ? { name: String(term.name) } : {}),
         ...(term.bonus ? { bonus: true } : {}),
       });
@@ -110,10 +112,11 @@ export function rollLead(def: DieConstant, die: Die, edits: RollEdit[] = []): Le
     degreeShift: claim.degreeShift,
     read: claim.read.kind,
     entries, grown, keeps: claim.keeps, reading: claim.read, plus: 0, applied: edits,
+    exploded: edits.some(edit => (edit.ops ?? []).some(one => one.op === 'explode')),
   });
 }
 
-type Settled = Omit<LeadRoll, 'rolls' | 'raw' | 'kept' | 'total' | 'parts' | 'tally'>;
+type Settled = Omit<LeadRoll, 'rolls' | 'raw' | 'kept' | 'total' | 'parts' | 'tally' | 'natural'>;
 
 function settle(base: Settled): LeadRoll {
   const taken = keptDice(base.grown, base.keeps);
@@ -126,27 +129,40 @@ function settle(base: Settled): LeadRoll {
     ...base,
     rolls: base.grown.map(e => e.value),
     raw: base.entries.map(e => e.value),
-    kept, total: total + base.plus, parts,
+    kept, natural: total, total: total + base.plus, parts,
     tally: tallyOf(base.entries),
   };
 }
 
+const EXPLODE: RollEdit = { label: '', ops: [{ op: 'explode', apart: true }] };
+
 export function seeRoll(rolled: LeadRoll, op: SeenOp, die: Die): LeadRoll {
-  const { rolls: _rolls, raw: _raw, kept: _kept, total: _total, parts: _parts, tally: _tally, ...base } = rolled;
+  const { rolls: _rolls, raw: _raw, kept: _kept, total: _total, parts: _parts, tally: _tally, natural: _natural, ...base } = rolled;
   if (op.kind === 'plus') return settle({ ...base, plus: base.plus + op.value });
   if (op.kind === 'reroll') {
-    const again = (entry: RolledDie): RolledDie =>
-      (!entry.bonus && entry.value > 0 && entry.value <= op.upTo ? { ...entry, value: die(entry.sides) } : entry);
-    const grown = base.grown.map(again);
-    return settle({ ...base, grown, entries: base.entries.length === grown.length ? grown : base.entries });
+    const taken = new Set(keptDice(base.grown, base.keeps));
+    const entries = [...base.entries];
+    let grown = [...base.grown];
+    const parents = base.grown.filter((entry, at) =>
+      entry.from !== undefined && base.grown.findIndex(other => other.from === entry.from) === at
+      && taken.has(entry) && !entry.bonus && entry.value > 0 && entry.value <= op.upTo);
+    for (const parent of parents) {
+      const from = parent.from!;
+      entries[from] = { ...entries[from]!, value: die(parent.sides) };
+      const again = applyResultEdits([{ ...entries[from]! }], base.applied, die);
+      const at = grown.findIndex(entry => entry.from === from);
+      grown = [...grown.slice(0, at).filter(entry => entry.from !== from), ...again, ...grown.slice(at).filter(entry => entry.from !== from)];
+    }
+    return settle({ ...base, entries, grown });
   }
   const sides = op.sides ?? base.entries.find(entry => !entry.bonus)?.sides ?? 6;
-  const fresh: RolledDie[] = Array.from({ length: Math.max(0, op.count) }, () => ({ value: die(sides), sides }));
+  const fresh: RolledDie[] = Array.from({ length: Math.max(0, op.count) }, (_, k) => ({ value: die(sides), sides, from: base.entries.length + k }));
   const grownFresh = applyResultEdits(fresh, base.applied, die);
-  const all = [...base.grown, ...grownFresh];
-  const grown = op.explode ? applyResultEdits(all, [{ label: '', ops: [{ op: 'explode', apart: true }] }], die) : all;
+  const grown = !op.explode ? [...base.grown, ...grownFresh]
+    : base.exploded ? [...base.grown, ...applyResultEdits(grownFresh, [EXPLODE], die)]
+      : applyResultEdits([...base.grown, ...grownFresh], [EXPLODE], die);
   const keeps = op.keep ? [...base.keeps, { n: 1, from: op.keep } as KeepSpec] : base.keeps;
-  return settle({ ...base, entries: [...base.entries, ...fresh], grown, keeps });
+  return settle({ ...base, entries: [...base.entries, ...fresh], grown, keeps, exploded: base.exploded || Boolean(op.explode) });
 }
 
 function tallyOf(entries: RolledDie[]) {

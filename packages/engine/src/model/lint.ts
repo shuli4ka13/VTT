@@ -336,8 +336,12 @@ function seenProblems(system: System): Problem[] {
     const lanes: [Step[] | undefined, (step: number) => Where, boolean][] = [
       [effect.steps, step => ({ tab: 'effects', effect: id, step }), false],
       [effect.cost, step => ({ tab: 'effects', effect: id, step, part: 'cost' }), false],
-      ...(effect.on ?? []).map((handler, index): [Step[] | undefined, (step: number) => Where, boolean] =>
-        [handler.steps, step => ({ tab: 'effects', effect: id, handler: index, step }), handler.on === 'seen']),
+      [effect.attach, step => ({ tab: 'effects', effect: id, step, part: 'attach' }), false],
+      [effect.detach, step => ({ tab: 'effects', effect: id, step, part: 'detach' }), false],
+      ...(effect.on ?? []).flatMap((handler, index): [Step[] | undefined, (step: number) => Where, boolean][] => [
+        [handler.steps, step => ({ tab: 'effects', effect: id, handler: index, step }), handler.on === 'seen'],
+        [handler.cost, step => ({ tab: 'effects', effect: id, handler: index, step, part: 'cost' }), false],
+      ]),
     ];
     for (const [steps, where, allowed] of lanes) {
       (steps ?? []).forEach((step, index) => {
