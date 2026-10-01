@@ -44,3 +44,23 @@ describe('«когда»: исходы под момент', () => {
     expect(view.container.textContent).not.toContain('Кому');
   });
 });
+
+describe('«увидев кости»', () => {
+  afterEach(cleanup);
+
+  it('спрашивает, чей бросок, и переключение на «по мне» пишется в as', () => {
+    const { view, get } = card({ on: 'seen', steps: [] } as unknown as Handler);
+    const whose = view.getByDisplayValue('мой') as HTMLSelectElement;
+    fireEvent.change(whose, { target: { value: 'against' } });
+    expect((get() as unknown as { as?: string }).as).toBe('against');
+  });
+
+  it('уход с момента стирает «чей бросок» и метки', () => {
+    const { view, get } = card({ on: 'seen', as: 'against', tags: ['атака'], steps: [] } as unknown as Handler);
+    const moment = [...view.container.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'seen'))!;
+    fireEvent.change(moment, { target: { value: 'acted' } });
+    const now = get() as unknown as { as?: string; tags?: string[] };
+    expect(now.as).toBeUndefined();
+    expect(now.tags).toBeUndefined();
+  });
+});

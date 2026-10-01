@@ -10,6 +10,8 @@ import { MOMENTS, ASK } from './words.ts';
 import type { Moment } from './words.ts';
 import type { System, Handler } from '@vtt/schema';
 import { calledOf } from '@vtt/engine/engine/effects';
+import { CALL_WORDS } from '@vtt/engine/words/calls';
+import { RollTagsPick } from '../roll-tags-pick.tsx';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 import { TARGETS_SEED } from '@vtt/engine/model/references';
 
@@ -54,6 +56,7 @@ const applyMoment = (draft: Handler, moment: Moment): void => {
   if (moment.startsWith(ASK)) draft.confirm = true; else delete draft.confirm;
   if (!ACTION_MOMENTS[on].replies) delete draft.to;
   if (on !== 'acting') delete draft.claims;
+  if (on !== 'seen') { delete draft.as; delete draft.tags; }
 };
 
 const outcomesOf = (moment: Moment | null, found: (readonly [string, string])[]): (readonly [string, string])[] =>
@@ -108,7 +111,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
             onChange={next => edit(draft => {
               if (isMomentValue(next)) { applyMoment(draft, next); return; }
               draft.on = next;
-              delete draft.of; delete draft.confirm; delete draft.to; delete draft.claims;
+              delete draft.of; delete draft.confirm; delete draft.to; delete draft.claims; delete draft.as; delete draft.tags;
             })}
           />
         </Field>
@@ -170,6 +173,25 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
           </Field>
         )}
       </div>
+
+      {handler.on === 'seen' ? (
+        <div className="row">
+          <Field label="Чей бросок">
+            <Select
+              value={handler.as ?? ''}
+              options={[['', 'мой'], ['against', CALL_WORDS.against]] as never}
+              onChange={next => edit(draft => { if (next) draft.as = 'against'; else delete draft.as; })}
+            />
+          </Field>
+          <Field label="С метками" hint="Бросок должен нести все метки. Пусто — любой бросок.">
+            <RollTagsPick
+              system={system}
+              value={handler.tags}
+              onChange={tags => edit(draft => { if (tags.length) draft.tags = tags; else delete draft.tags; })}
+            />
+          </Field>
+        </div>
+      ) : null}
 
       {handler.on === 'acting' ? (
         <Field label="Перебросить с правкой" hint="Если выбрано — после согласия бросок собирается заново с этими правками из словаря.">

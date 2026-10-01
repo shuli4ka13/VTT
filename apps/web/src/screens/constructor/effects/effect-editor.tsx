@@ -304,6 +304,7 @@ function Handlers({ id, effect, system, edit }: {
               title={`Что делает — когда №${index + 1}`}
               empty="шагов нет — отзывается, но ничего не делает"
               onMoveLane={moveLane}
+              onRoll={handler.on === 'seen'}
               startAt={groupSteps(carrier.cost ?? []).length}
               lead={<SelfTrack effect={carrier} system={system} edit={editCarrier} onMoveLane={moveLane} />}
               {...(handler.confirm ? { onAddCost: (cost: string) => editCarrier(draft => {

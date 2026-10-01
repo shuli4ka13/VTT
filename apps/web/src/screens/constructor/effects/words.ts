@@ -1,3 +1,4 @@
+import { STEP_WORDS } from '@vtt/engine/words/steps';
 import { LAUNCHES } from '@vtt/engine/model/effect-kinds';
 import type { LaunchKind } from '@vtt/engine/model/effect-kinds';
 import { COST_BLOCK } from '@vtt/engine/words/glossary';
@@ -31,5 +32,6 @@ export const CARD_TITLES: Record<string, string> = { check: 'Проверка', 
 export function titleOf(kind: string, step: Step | undefined, system: System): string {
   const s = step as { type?: string; event?: string } | undefined;
   if (s?.type === 'emit' && s.event && system.effects?.[s.event]?.group === COST_BLOCK) return COST_BLOCK;
+  if (kind === 'seen' && s?.type && s.type in STEP_WORDS) return STEP_WORDS[s.type as keyof typeof STEP_WORDS].label;
   return CARD_TITLES[kind] ?? kind;
 }

@@ -10,6 +10,7 @@ import type { Problem } from '../../step-card.tsx';
 import { CheckBody } from './check-body.tsx';
 import { ChangeBody } from './change-body.tsx';
 import { NumberBody } from './number-body.tsx';
+import { SeenBody } from './seen-body.tsx';
 import { ConditionFold, breakLine } from './condition-fold.tsx';
 import { titleOf } from '../words.ts';
 import { STEP_WORDS } from '@vtt/engine/words/steps';
@@ -130,6 +131,7 @@ export function GroupCard({
         />
         {problem ? <Verdict tone="bad" action={problemAction}>{problem.text}</Verdict> : null}
         {group.kind === 'check' ? <CheckBody step={step} context={context} edit={edit} system={system} /> : null}
+        {group.kind === 'seen' ? <SeenBody step={step} context={context} edit={edit} /> : null}
         {group.kind === 'change' ? <ChangeBody group={group} context={context} edit={edit} withNumber={withNumber} system={system} onAddParam={onAddParam} onOpenEffect={onOpenEffect} lane={lane} /> : null}
         {group.kind === 'number'
           ? <NumberBody step={step} context={context} edit={edit} onAddParam={onAddParam} />

@@ -1,3 +1,4 @@
+import { STEP_WORDS } from '@vtt/engine/words/steps';
 import { freeId } from '../../store/world.ts';
 import { dice } from '../../words.ts';
 import { NO_BLOCK } from '@vtt/engine/model/blocks';
@@ -101,6 +102,11 @@ const blankCheck = (system: System): Step => {
     roll: { die: die ? { constant: die } : undefined },
   } as unknown as Step;
 };
+
+export const SEEN_BRICKS: StepTemplate[] = (['roll-add', 'roll-reroll', 'roll-plus'] as const).map(type => ({
+  key: type, label: `+ ${STEP_WORDS[type].label.toLowerCase()}`, hint: STEP_WORDS[type].hint,
+  make: () => [{ type, ...(type === 'roll-add' ? { count: { expr: '1' } } : type === 'roll-reroll' ? { upTo: { expr: '1' } } : { value: { expr: '1' } }) } as unknown as Step],
+}));
 
 export const BRICKS: StepTemplate[] = [
   {

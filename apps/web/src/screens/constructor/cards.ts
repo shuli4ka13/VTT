@@ -1,7 +1,7 @@
 import { compile } from '@vtt/engine/formula';
 import type { Step } from '@vtt/schema';
 
-export type CardKind = 'check' | 'change' | 'number' | 'split' | 'unknown';
+export type CardKind = 'check' | 'change' | 'number' | 'split' | 'seen' | 'unknown';
 
 export interface CardGroup {
   kind: CardKind;
@@ -16,6 +16,7 @@ export interface CardGroup {
 const KIND_OF: Record<string, CardKind> = {
   threshold: 'check', compare: 'check', apply: 'change', status: 'change', emit: 'change',
   amount: 'number', table: 'number', each: 'split',
+  'roll-add': 'seen', 'roll-reroll': 'seen', 'roll-plus': 'seen',
 };
 
 const depsOf = (source: string): readonly string[] => {
@@ -77,7 +78,7 @@ export function groupSteps(list: Step[]): CardGroup[] {
   return out;
 }
 
-export { BRICKS } from './factory.ts';
+export { BRICKS, SEEN_BRICKS } from './factory.ts';
 export type { StepTemplate } from './factory.ts';
 
 export function moveGroup(steps: Step[], groupIndex: number, delta: -1 | 1): Step[] {

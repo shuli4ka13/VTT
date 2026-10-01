@@ -5,7 +5,7 @@ import { STEP } from '../../../words.ts';
 import { titleOf } from './words.ts';
 import { Button, Select, Verdict } from '../../../ui/primitives.tsx';
 import { problemOf } from '../step-card.tsx';
-import { groupSteps, moveGroup, removeSteps, BRICKS } from '../cards.ts';
+import { groupSteps, moveGroup, removeSteps, BRICKS, SEEN_BRICKS } from '../cards.ts';
 import { costsOf, newCost } from '../factory.ts';
 import { GroupCard } from './cards/group-card.tsx';
 import { useOpened } from '../../../store/opened.ts';
@@ -14,7 +14,7 @@ import type { System, Effect, Step, ValueKind } from '@vtt/schema';
 
 export type Lane = 'receiver' | 'sender';
 
-export function Chain({ effect, system, edit, title = 'Шаги', empty = 'шагов ещё нет — эффект ничего не делает', lane = 'receiver', onMoveLane, bare = false, startAt = 0, lead, onAddCost }: {
+export function Chain({ effect, system, edit, title = 'Шаги', empty = 'шагов ещё нет — эффект ничего не делает', lane = 'receiver', onMoveLane, bare = false, startAt = 0, lead, onAddCost, onRoll = false }: {
   effect: Effect;
   system: System;
   edit: (change: (draft: Effect) => void) => void;
@@ -26,6 +26,7 @@ export function Chain({ effect, system, edit, title = 'Шаги', empty = 'ша�
   startAt?: number;
   lead?: ReactNode;
   onAddCost?: (id: string) => void;
+  onRoll?: boolean;
 }) {
   const pick = useWorld(s => s.pick);
   const onOpenEffect = (id: string) => pick({ activeEffectId: id });
@@ -184,7 +185,7 @@ export function Chain({ effect, system, edit, title = 'Шаги', empty = 'ша�
       })}
 
       {bare ? null : <div className="inline inline--tight">
-        {BRICKS.map(b => (
+        {[...BRICKS, ...(onRoll ? SEEN_BRICKS : [])].map(b => (
           <Button key={b.key} size="sm" title={b.hint}
             onClick={() => edit(draft => {
               const taken = (draft.steps ?? []).map(s => s.id).filter(Boolean) as string[];
