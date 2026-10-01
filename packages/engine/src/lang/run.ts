@@ -6,7 +6,7 @@ import { requireEffect, reapplyOf, usesMax } from '../engine/effects.ts';
 import { expiryOf } from '../engine/clock.ts';
 import { holdsNow } from '../engine/refs.ts';
 import { whoseOf, burnsUse, spendUse } from '../events/durations.ts';
-import { guardHolds, packGuardRef } from '../engine/rule.ts';
+import { guardHolds, packGuardRef, MAX_CALL_DEPTH } from '../engine/rule.ts';
 import { EngineError, isRuleError } from '../engine/errors.ts';
 import { listening, subscriberByKey, hears, runsAtOther } from '../events/bus.ts';
 import { offers as offersOf, MAX_HOPS } from '../events/envelope.ts';
@@ -39,6 +39,8 @@ export interface Frame {
   hop: number;
   names: 'me' | 'here';
   alone?: boolean;
+  actor?: boolean;
+  chain?: string[];
 }
 
 export interface Sink {
@@ -250,14 +252,18 @@ export class Runner {
   ): NestedRun {
     const heard = [payload];
     const scope = `${at}>${event}`;
+    const chain = [...(frame.chain ?? []), event];
+    if (chain.length > MAX_CALL_DEPTH) {
+      throw new EngineError(`${who(frame)}: вызовы вложены глубже ${MAX_CALL_DEPTH} — похоже, идут по кругу: ${chain.join(' → ')}`);
+    }
     this.fire('targeted', 'event', frame.here, event, heard, parent, frame.me, `${scope}<`, frame.hop, sink);
     const inner: Frame = {
       ...frame, scope, target: frame.here, effectId: event, args: args ?? {}, paramDefs: paramDefs ?? [], props: null,
-      names: 'here', packed: undefined, claims: undefined, alone: false,
+      names: 'here', packed: undefined, claims: undefined, alone: false, inputs: undefined, chain, actor: false,
     };
     const ran = this.exec(inner, steps, sink, { event: payload }, event);
     this.fire('affected', 'event', frame.here, event, heard, parent, frame.me, `${scope}>`, frame.hop, sink);
-    if (frame.me !== frame.here) this.fire('acted', 'event', frame.me, event, heard, parent, frame.here, `${scope}^`, frame.hop, sink);
+    if (frame.actor) this.fire('acted', 'event', frame.me, event, heard, parent, frame.here, `${scope}^`, frame.hop, sink);
     return { results: ran.results, stopped: ran.stopped };
   }
 
@@ -315,7 +321,7 @@ export class Runner {
     const { id, effect, handler } = sub;
     const name = label || effect.label || id;
     if (runsAtOther(handler)) {
-      if (!other || other === sheetId) return;
+      if (!other) return;
       if (hop >= MAX_HOPS) { this.cut = true; return; }
       const delivered = this.deliver({
         effectId: id, label: name, steps: handler.steps ?? [], from: sheetId, to: other, hop: hop + 1,
@@ -420,7 +426,7 @@ export class Runner {
       ...(claims.length ? { claims } : {}),
       ...(call.packed ? { packed: call.packed } : {}),
       ...(holder ? { bond: { from: call.from, by: holder } } : {}),
-      source: call.from, hop: call.hop, names: 'me',
+      source: call.from, hop: call.hop, names: 'me', actor: call.hop === 0,
     };
     return this.exec(frame, call.steps, sink, call.seed ?? {});
   }

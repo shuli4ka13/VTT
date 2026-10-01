@@ -78,8 +78,8 @@ export function resolve(step: StepData, ctx: StepContext) {
 
   let received: string | null = null;
   let note: string | null = null;
-  if (ctx.run && spec.steps?.length) {
-    const out = ctx.run(spec.steps, { event: payload }, id, Object.keys(args).length ? args : undefined, spec.params ?? []);
+  if (ctx.run) {
+    const out = ctx.run(spec.steps ?? [], { event: payload }, id, Object.keys(args).length ? args : undefined, spec.params ?? []);
     if (out.stopped) {
       received = String(out.stopped.reason ?? 'оборвано');
       note = out.stopped.note ?? null;
