@@ -1,3 +1,4 @@
+import { expectAction } from '@vtt/engine/events/trial';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { useRoom } from '../../store/room.ts';
@@ -337,6 +338,18 @@ function Actions({ room, sender, targets, onError, onClear }: {
                 actionId={action.id}
                 label={action.label}
                 disabled={Boolean(room.pending)}
+                expect={request => {
+                  if (!sender) return null;
+                  const found = expectAction(
+                    { system: room.system as never, compendium: room.compendium as never, clock: room.clock ?? null },
+                    room.sheets as never,
+                    {
+                      actionId: request.actionId, fromId: sender.id, toIds: (targets.length ? targets : [sender]).map(sheet => sheet.id),
+                      ...(request.inputs ? { inputs: request.inputs } : {}),
+                      ...(mine.length ? { edits: mine } : {}), ...(theirs.length ? { targetEdits: theirs } : {}),
+                    });
+                  return found.trouble ? `не выйдет: ${found.trouble}` : found.lines.join('\n');
+                }}
                 onAct={request => {
                   onError(null);
                   tableSocket.act({

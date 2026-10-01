@@ -12,7 +12,7 @@ export interface ActionRequest {
   targetEdits?: string[];
 }
 
-export function ActionForm({ system, compendium, actor, actionId, label, disabled, onAct }: {
+export function ActionForm({ system, compendium, actor, actionId, label, disabled, onAct, expect }: {
   system: System;
   compendium: Compendium;
   actor?: Sheet;
@@ -20,6 +20,7 @@ export function ActionForm({ system, compendium, actor, actionId, label, disable
   label: string;
   disabled?: boolean;
   onAct: (request: ActionRequest) => void;
+  expect?: (request: ActionRequest) => string | null;
 }) {
   const asked = useMemo<AskedParam[]>(() => {
     try { return asksOf(actionId, { system, compendium }); } catch { return []; }
@@ -28,6 +29,7 @@ export function ActionForm({ system, compendium, actor, actionId, label, disable
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [trouble, setTrouble] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [tip, setTip] = useState<string | null>(null);
 
   const send = () => {
     const given: Record<string, number | string> = {};
@@ -43,8 +45,20 @@ export function ActionForm({ system, compendium, actor, actionId, label, disable
     setOpen(false);
   };
 
+  const guess = () => {
+    if (!expect) return;
+    const given: Record<string, number | string> = {};
+    for (const param of asked) {
+      const value = answers[param.key];
+      if (value !== undefined && value !== '') given[param.key] = value;
+    }
+    if (checkInputs(asked, given, system)) { setTip(null); return; }
+    const text = expect({ actionId, ...(asked.length ? { inputs: normalizeInputs(asked, given) } : {}) });
+    setTip(text ? `Ожидание — кости по среднему, на вопросы «нет»:\n${text}` : null);
+  };
+
   if (!asked.length) {
-    return <Button variant="primary" disabled={disabled} onClick={send}>{label}</Button>;
+    return <Button variant="primary" disabled={disabled} onClick={send} onMouseEnter={guess} title={tip ?? undefined}>{label}</Button>;
   }
 
   if (!open) {
@@ -90,7 +104,7 @@ export function ActionForm({ system, compendium, actor, actionId, label, disable
         </Field>
       ))}
       {trouble ? <Verdict tone="bad">{trouble}</Verdict> : null}
-      <Button variant="primary" disabled={disabled} onClick={send}>{label}</Button>
+      <Button variant="primary" disabled={disabled} onClick={send} onMouseEnter={guess} title={tip ?? undefined}>{label}</Button>
     </div>
   );
 }

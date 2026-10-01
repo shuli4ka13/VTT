@@ -7,6 +7,7 @@ import { EngineError } from '../engine/errors.ts';
 import { registry } from '../engine/steps/index.ts';
 import { listOf } from '../model/lists.ts';
 import type { System, Compendium, Sheet, Die, Effect } from '../model/types.ts';
+import type { Clock } from '../engine/clock.ts';
 
 export type DiceMode = 'min' | 'avg' | 'max' | 'random';
 
@@ -105,4 +106,19 @@ export function trial({ system, compendium, effectId, from, to, args, dice = 'av
   }, { actionId: `${TRIAL_RECORD}:0`, fromId: sender.id, toIds: [to.id] });
   const reports = result.entries.filter((entry): entry is TrialResult['reports'][number] => !('text' in entry));
   return { sheets: result.sheets, reports, lines: result.log };
+}
+
+export interface Expected { lines: string[]; trouble: string | null }
+
+export function expectAction(
+  world: { system: System; compendium: Compendium; clock: Clock | null },
+  sheets: Sheet[],
+  intent: { actionId: string; fromId: string; toIds: string[]; inputs?: Record<string, number | string>; edits?: string[]; targetEdits?: string[] },
+): Expected {
+  try {
+    const out = act({ ...world, sheets, die: dieOf('avg'), journal: emptyJournal(), declineAll: true }, intent);
+    return { lines: out.log, trouble: null };
+  } catch (err) {
+    return { lines: [], trouble: (err as Error).message };
+  }
 }

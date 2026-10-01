@@ -157,3 +157,17 @@ group('наблюдатели: по ревью', () => {
     eq(hp(out, 'б'), 20, '14 − 1 − 4 = 9 — промах; с одинаковыми костями было бы 14 − 1 − 1 = 12 и попадание');
   });
 });
+
+group('ожидание для кнопки', () => {
+  test('кости по среднему, на вопросы «нет», листы не тронуты', async () => {
+    const { expectAction } = await import('../src/events/trial.ts');
+    const system = world({
+      вдохновение: { label: 'Вдохновение', activation: 'passive', on: [{ on: 'seen', confirm: true, steps: [{ type: 'roll-plus', value: { expr: '-20' } }] }] },
+    });
+    const sheets = [sheet('а', ['вдохновение']), sheet('б')];
+    const out = expectAction({ system, compendium: book, clock: null }, sheets, { actionId: 'приём:0', fromId: 'а', toIds: ['б'] });
+    eq(out.trouble, null);
+    ok(out.lines.some(line => line.includes('[11]')), out.lines.join(' | '));
+    eq(sheets[1]!.values.хп, undefined, 'настоящие листы не тронуты');
+  });
+});

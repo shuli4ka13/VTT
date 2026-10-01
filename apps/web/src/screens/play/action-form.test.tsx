@@ -61,3 +61,19 @@ describe('форма действия спрашивает то, что объя
     expect(sent).toEqual([{ actionId: 'ствол:0', inputs: { дистанция: 7, куда: 'голова' } }]);
   });
 });
+
+describe('ожидание на кнопке', () => {
+  afterEach(() => { cleanup(); });
+
+  it('наведение считает ожидание и кладёт его в подсказку', () => {
+    let asked = 0;
+    render(<ActionForm system={system} compendium={compendium} actionId="меч:0" label="Удар" onAct={() => {}}
+      expect={() => { asked++; return 'Удар: 11 против 10 — попадание'; }} />);
+    const button = screen.getByText('Удар').closest('button') as HTMLButtonElement;
+    expect(asked).toBe(0);
+    fireEvent.mouseEnter(button);
+    expect(asked).toBe(1);
+    expect(button.title).toContain('по среднему');
+    expect(button.title).toContain('попадание');
+  });
+});
