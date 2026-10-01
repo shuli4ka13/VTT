@@ -234,16 +234,13 @@ export class Runner {
       };
       const mark = within ? { within } : {};
       const skip = () => sink.trace.push({ step: name, type: step.type, skipped: true, ...mark });
-      const ready = frame.packed?.(index);
-      if (!ready) {
-        const when = packGuardRef((step as StepData).when, ctx);
-        if (!guardHolds(when, ctx)) {
-          done.push({ type: step.type, id: step.id ?? null, ...(when !== undefined ? { when } : {}) } as StepData);
-          skip();
-          continue;
-        }
+      const when = packGuardRef((step as StepData).when, ctx);
+      if (!guardHolds(when, ctx)) {
+        done.push({ type: step.type, id: step.id ?? null, ...(when !== undefined ? { when } : {}) } as StepData);
+        skip();
+        continue;
       }
-      const packed: StepData = ready ?? { type: step.type, id: step.id ?? null, ...mod.pack(step as StepData, ctx) } as StepData;
+      const packed: StepData = frame.packed?.(index) ?? { type: step.type, id: step.id ?? null, ...mod.pack(step as StepData, ctx) } as StepData;
       done.push(packed);
       if (!guardHolds(packed.when, ctx)) {
         skip();

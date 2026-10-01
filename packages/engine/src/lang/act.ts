@@ -171,13 +171,14 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
       const cache: Record<number, StepData> = {};
       let round = 0;
       let kept: Record<string, StepData> | undefined;
+      const start = { sheet: state.get(actor), shared: sharedOf(system, state.sheets) };
       const packOne = (index: number): StepData => {
         const step = steps[index] as StepData;
-        const sheet = state.get(actor);
+        const { sheet, shared } = start;
         const done = Object.keys(cache).map(Number).filter(at => at < index).sort((a, b) => a - b).map(at => cache[at]!);
         const inner: StepContext = {
-          system, sheet, die: ext.dieAt(index > gate && gate >= 0 ? `send:${round}/${step.id ?? index}` : `send:${round}`),
-          pass: newPass(system, sheet, { compendium, shared: sharedOf(system, state.sheets) }),
+          system, sheet, die: ext.dieAt(`send:${round}/${step.id ?? index}`),
+          pass: newPass(system, sheet, { compendium, shared }),
           params: args, paramDefs, props, owner: `эффект «${effect.label || action.effect}»`,
           ...(inputs ? { inputs } : {}),
           ...(against ? { against: (tags: readonly string[]) => incomingRollModifiers(tags, against) } : {}),

@@ -138,3 +138,29 @@ group('новое ядро: урон бросается, только когда
     eq(hp(out, 'г'), 8, 'та же кость урона');
   });
 });
+
+group('новое ядро: броски действующего не делят кости', () => {
+  test('величина и проверка, брошенные заранее, берут разные кости', () => {
+    const steps = [
+      { id: 'урон', type: 'amount', source: 'item', fixed: { expr: "кинуть('1d6')" } },
+      { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' } }, versus: { expr: '10' } },
+      { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '@урон' } },
+    ];
+    const system = { ...world({ удар: { label: 'Удар', activation: 'manual', steps } }), constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } } } as unknown as System;
+    const out = play(system, [sheet('а'), sheet('б')], 'а', 'б', [2, 15]);
+    eq(hp(out, 'б'), 18, 'урон 2, проверка 15 — попала');
+    ok(out.kind === 'done' && out.fresh.length === 2, 'две свежие кости');
+  });
+
+  test('ложное «когда» у броска после проверки — кость не брошена', () => {
+    const steps = [
+      { id: 'бросок', type: 'threshold', roll: { die: { constant: 'к20' } }, versus: { expr: '10' } },
+      { id: 'урон', type: 'amount', source: 'item', fixed: { expr: "кинуть('1d6')" }, when: { expr: '@бросок.natural >= 20' } },
+      { type: 'apply', target: { tag: 'хп' }, direction: 'subtract', value: { expr: '1' } },
+    ];
+    const system = { ...world({ удар: { label: 'Удар', activation: 'manual', steps } }), constants: { к20: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } } } as unknown as System;
+    const out = play(system, [sheet('а'), sheet('б')], 'а', 'б', [15]);
+    eq(hp(out, 'б'), 19);
+    ok(out.kind === 'done' && out.fresh.length === 1, 'брошена только проверка');
+  });
+});
