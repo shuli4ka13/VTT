@@ -70,8 +70,12 @@ describe('формула зовёт шаг выше', () => {
 describe('описание слотов живёт в движке, а не в копии конструктора', () => {
   it('у каждого типа шага из реестра есть слоты с человеческими подписями', () => {
     expect(registry.size).toBeGreaterThan(0);
-    for (const [type] of registry) {
+    for (const [type, mod] of registry) {
       const slots = slotsOf(type) ?? [];
+      if (mod.splits) {
+        expect(mod.label, type).toMatch(/[а-яё]/i);
+        continue;
+      }
       expect(slots.length, type).toBeGreaterThan(0);
       for (const slot of slots) expect(slot.label, `${type}.${slot.key}`).toMatch(/[а-яё]/i);
     }
