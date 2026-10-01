@@ -15,6 +15,7 @@ import { CallEditor } from './call-editor.tsx';
 import { BlockPick, fieldBlocks } from './block-pick.tsx';
 import { GrantsEditor } from './grants-editor.tsx';
 import { argsWithProps, propKeysOf, recordKinds, sheetKinds, kindsOf } from '@vtt/engine/model/owned';
+import { DESK_ID } from '@vtt/engine/engine/owners';
 import type { AnyKind } from '@vtt/engine/model/owned';
 import { blockOf } from '@vtt/engine/model/blocks';
 import { blockTree, BlockBranches } from './block-tree.tsx';
@@ -129,7 +130,7 @@ export function RecordsTab() {
                   <ListItem
                     key={key}
                     name={kind.label ?? key}
-                    meta={system.sheets?.[key] ? 'тип листа' : `свойств: ${kind.columns?.length ?? 0} · действий: ${kind.bindings?.length ?? 0}`}
+                    meta={key === DESK_ID ? 'тип стола' : system.sheets?.[key] ? 'тип листа' : `свойств: ${kind.columns?.length ?? 0} · действий: ${kind.bindings?.length ?? 0}`}
                     active={key === activeKind}
                     onClick={() => pick({ activeRecordKind: key })}
                   />

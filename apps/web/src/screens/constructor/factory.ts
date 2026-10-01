@@ -125,6 +125,11 @@ export const BRICKS: StepTemplate[] = [
     } as unknown as Step],
   },
   {
+    key: 'each', label: '+ для каждой цели',
+    hint: 'Разделитель: шаги выше — один раз у действующего, ниже — у каждой цели своим броском.',
+    make: () => [{ type: 'each' } as unknown as Step],
+  },
+  {
     key: 'number', label: '+ число',
     hint: 'Отдельное число: превышение проверки или одно число на несколько изменений.',
     make: (_system, taken) => [{ id: freeId(taken, 'число'), type: 'amount', source: 'roll' } as unknown as Step],

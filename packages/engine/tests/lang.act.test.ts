@@ -164,3 +164,12 @@ group('новое ядро: броски действующего не деля�
     ok(out.kind === 'done' && out.fresh.length === 1, 'брошена только проверка');
   });
 });
+
+group('новое ядро: разделитель в линте', () => {
+  test('два «Для каждой цели» в одной цепочке — ошибка', async () => {
+    const { lintSystem, errorsOf } = await import('../src/model/lint.ts');
+    const system = world({ удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'each' }, hit('1'), { type: 'each' }] } });
+    const found = errorsOf(lintSystem(system, book)).map(p => p.text);
+    ok(found.some(text => text.includes('может быть только один')), found.join('; '));
+  });
+});

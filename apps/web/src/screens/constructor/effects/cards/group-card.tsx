@@ -12,6 +12,7 @@ import { ChangeBody } from './change-body.tsx';
 import { NumberBody } from './number-body.tsx';
 import { ConditionFold, breakLine } from './condition-fold.tsx';
 import { titleOf } from '../words.ts';
+import { STEP_WORDS } from '@vtt/engine/words/steps';
 
 
 export function Readback({ segments }: { segments: Segment[] }) {
@@ -77,6 +78,15 @@ export function GroupCard({
       <DangerButton size="sm" onConfirm={onDelete}>Удалить</DangerButton>
     </>
   );
+
+  if (group.kind === 'split') {
+    return (
+      <Card>
+        <CardHead title={`${position} · ${STEP_WORDS.each.label}`} actions={actions} />
+        <span className="faint">{STEP_WORDS.each.hint}</span>
+      </Card>
+    );
+  }
 
   if (group.kind === 'unknown') {
     return (

@@ -6,6 +6,8 @@ import { TableColumnCard } from './tables-section.tsx';
 import { useWorld, freeId } from '../../../store/world.ts';
 import { freeGroupName, renameGroup } from '../groups.ts';
 import { sheetKinds } from '@vtt/engine/model/owned';
+import { hasDesk } from '@vtt/engine/events/desk';
+import { DESK_ID } from '@vtt/engine/engine/owners';
 import { Card, CardHead, Button, Empty, LabelInput, DangerButton } from '../../../ui/primitives.tsx';
 import { newColumn } from '../factory.ts';
 import type { UsageIndex } from '../usage.ts';
@@ -178,6 +180,10 @@ export function CharacterSection({ system, editSystem }: {
           <Button key={key} size="sm" variant={of === key ? 'primary' : 'ghost'} onClick={() => setOf(key)}>{k.label ?? key}</Button>
         ))}
         <Button size="sm" variant="ghost" onClick={addType}>+ тип листа</Button>
+        {hasDesk(system) && !system.sheets?.[DESK_ID] ? (
+          <Button size="sm" variant="ghost" title="Что выдано столу: правила, которые срабатывают раз на всю комнату — например, раз за раунд"
+            onClick={() => editSystem(draft => { (draft.sheets ??= {})[DESK_ID] = { label: 'Стол' }; })}>+ тип стола</Button>
+        ) : null}
       </div>
       {kind ? (
         <div className="inline inline--tight">

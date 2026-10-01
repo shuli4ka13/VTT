@@ -1,7 +1,7 @@
 import { compile } from '@vtt/engine/formula';
 import type { Step } from '@vtt/schema';
 
-export type CardKind = 'check' | 'change' | 'number' | 'unknown';
+export type CardKind = 'check' | 'change' | 'number' | 'split' | 'unknown';
 
 export interface CardGroup {
   kind: CardKind;
@@ -15,7 +15,7 @@ export interface CardGroup {
 
 const KIND_OF: Record<string, CardKind> = {
   threshold: 'check', compare: 'check', apply: 'change', status: 'change', emit: 'change',
-  amount: 'number', table: 'number',
+  amount: 'number', table: 'number', each: 'split',
 };
 
 const depsOf = (source: string): readonly string[] => {

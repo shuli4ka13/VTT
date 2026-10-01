@@ -49,7 +49,7 @@ describe('BRICKS', () => {
     for (const brick of BRICKS) {
       const made = brick.make(system, []);
       for (const step of made) {
-        expect(['threshold', 'amount', 'compare', 'apply', 'status', 'table']).toContain(step.type);
+        expect(['threshold', 'amount', 'compare', 'apply', 'status', 'table', 'each']).toContain(step.type);
       }
       expect(JSON.stringify(made)).not.toMatch(/"tag"/);
     }
@@ -58,6 +58,7 @@ describe('BRICKS', () => {
   it('каждый шаг палитры получает имя сам, и оно не сталкивается с занятыми', () => {
     for (const brick of BRICKS) {
       const [made] = brick.make(system, []);
+      if (made!.type === 'each') continue;
       expect(made!.id, brick.key).toBeTruthy();
       const again = brick.make(system, [String(made!.id)])[0]!;
       expect(again.id, brick.key).not.toBe(made!.id);

@@ -1,6 +1,7 @@
 import { isActionMoment, ACTION_MOMENTS } from '../events/bus.ts';
 import type { System, Compendium, Effect, Step } from './types.ts';
 import { registry } from '../engine/steps/index.ts';
+import { STEP_WORDS } from '../words/steps.ts';
 import { calledOf, chainsOfEffect } from '../engine/effects.ts';
 import { basedOn, paramsOf } from './inherit.ts';
 import { danglingRows } from './integrity.ts';
@@ -448,6 +449,10 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
     const params = new Set((effect.params ?? []).map(p => p.key));
     for (const chain of chainsOf(id, effect, called.has(id))) {
       out.push(...stepProblems(chain.steps, chain.where, params, chain.eventChain));
+      const splits = chain.steps.flatMap((step, index) => (registry.get(step.type)?.splits ? [index] : []));
+      for (const index of splits.slice(1)) {
+        out.push({ where: chain.where(index), level: 'error', text: `«${STEP_WORDS.each.label}» в цепочке может быть только один` });
+      }
       chain.steps.forEach((step, index) => {
         if (step.id && declared.field.has(String(step.id))) {
           out.push({
