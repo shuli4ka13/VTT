@@ -30,6 +30,7 @@ describe('ограничение листа проверяет сервер', ()
     allowBigWorlds(app);
     app.useWebSocketAdapter(new WsAdapter(app));
     await app.init();
+    await app.listen(0, '127.0.0.1');
     const http = () => request(app.getHttpServer());
     const login = await http().post('/auth/login').send({ name: 'Ведущий' });
     const as = (r: request.Test) => r.set('Authorization', `Bearer ${login.body.token}`);
