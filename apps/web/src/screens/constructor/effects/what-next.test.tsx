@@ -22,17 +22,17 @@ const system = {
     taken_rule: {
       label: 'Что доходит до меня', activation: 'passive',
       modifiers: [
-        { kind: 'value', target: 'event:damage', op: 'mul', value: { expr: '@taken_0' }, tags: ['рубящий'] },
-        { kind: 'value', target: 'event:damage', op: 'mul', value: { expr: '@taken_1' }, tags: ['огонь'] },
+        { kind: 'edit', call: 'damage', param: 'amount', op: 'mul', value: { expr: '@taken_0' }, anyTags: ['рубящий'] },
+        { kind: 'edit', call: 'damage', param: 'amount', op: 'mul', value: { expr: '@taken_1' }, anyTags: ['огонь'] },
       ],
     },
     stone: {
       label: 'Каменная кожа', activation: 'passive',
-      modifiers: [{ kind: 'value', target: 'event:damage', op: 'mul', value: { expr: '0.5' }, tags: ['рубящий'] }],
+      modifiers: [{ kind: 'edit', call: 'damage', param: 'amount', op: 'mul', value: { expr: '0.5' }, anyTags: ['рубящий'] }],
     },
     other: {
       label: 'Не сюда', activation: 'passive',
-      modifiers: [{ kind: 'value', target: 'event:healing', op: 'mul', value: { expr: '2' }, tags: [] }],
+      modifiers: [{ kind: 'edit', call: 'healing', param: 'amount', op: 'mul', value: { expr: '2' }, anyTags: [] }],
     },
   },
 } as unknown as System;

@@ -3,7 +3,9 @@ import { Card, CardHead, Field, Input, Select, Button, Empty, Fold, DangerButton
 import { FormulaInput, formulaAsLabels } from '../../ui/formula.tsx';
 import { targets } from '@vtt/engine/engine/targets';
 import { installMethod, recipesToInstall } from '@vtt/engine/model/advantage-methods';
-import { tagsOf, tagTablesOf, listOf as rowsFrom } from '@vtt/engine/model/lists';
+import { tagsOf, tagTablesOf, listOf as rowsFrom, amountParamOf } from '@vtt/engine/model/lists';
+import { calledOf } from '@vtt/engine/engine/effects';
+import { ROLL_CALL, CALL_WORDS } from '@vtt/engine/words/calls';
 import { TagPick, type Tag } from './tag-pick.tsx';
 import { RollTagsPick } from './roll-tags-pick.tsx';
 
@@ -37,9 +39,8 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
   editSystem?: (change: (draft: System) => void) => void;
 }) {
   const all = targets(system) as { tag: string; label: string; kind: string; group?: string }[];
-  const valueTargets = all.filter(t => t.kind === 'value' || t.kind === 'incoming' || t.kind === 'event' || t.kind === 'cell');
-  const isEvent = (tag: string) => all.find(t => t.tag === tag)?.kind === 'event';
-  const rollTargets = all.filter(t => t.kind === 'roll');
+  const valueTargets = all.filter(t => t.kind === 'value' || t.kind === 'incoming' || t.kind === 'cell');
+  const calls = calledOf(system);
   const edits = Object.entries(system.roll_edits ?? {});
   const recipes = editSystem ? recipesToInstall(system) : [];
   const pickEdit = (index: number, value: string) => {
@@ -63,20 +64,16 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
         <Button size="sm" onClick={() => onEdit(draft => {
           draft.push({ kind: 'value', target: valueTargets[0]?.tag ?? '', op: 'add', value: { expr: '1' }, stacking: 'sum' });
         })}>
-          + правит значение
+          + правит поле
         </Button>
         <Button
           size="sm"
+          title="Правит вызов: бросок (преимущество, прибавка) или вход эффекта (урон вдвое по огню)"
           onClick={() => onEdit(draft => {
-            draft.push({
-              kind: 'roll', target: rollTargets[0]?.tag ?? '',
-              edit: edits[0]?.[0] ?? '',
-            });
+            draft.push({ kind: 'edit', call: ROLL_CALL, param: 'edits', edit: edits[0]?.[0] ?? '' });
           })}
-          disabled={rollTargets.length === 0 || (edits.length === 0 && !editSystem)}
-          title={edits.length === 0 && !editSystem ? 'Сначала заведите правку в словаре «Правки броска»' : undefined}
         >
-          + правит бросок
+          + правка вызова
         </Button>
       </div>
 
@@ -90,7 +87,7 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
       {modifiers.map((modifier, index) => (
         <Card key={index}>
           <CardHead
-            title={modifier.kind === 'value' ? 'Правит значение' : 'Правит бросок'}
+            title={modifier.kind === 'value' ? 'Правит поле' : 'Правка вызова'}
             actions={
               <DangerButton size="sm" onConfirm={() => onEdit(draft => { draft.splice(index, 1); })}>Удалить</DangerButton>
             }
@@ -132,51 +129,14 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
                   onChange={stacking => onEdit(draft => { (draft[index] as { stacking?: string }).stacking = stacking; })}
                 />
               </Field>
-              {isEvent(modifier.target) ? (
-                <EventCondition
-                  system={system}
-                  modifier={modifier}
-                  onChange={change => onEdit(draft => { change(draft[index] as Loose); })}
-                />
-              ) : null}
             </div>
-          ) : (
-            <div className="row">
-              <Field label="Чей бросок" needed={!modifier.target}>
-                <Select
-                  value={String(modifier.target ?? '')}
-                  options={[['', '— выберите бросок —'],
-                    ...rollTargets.map(t => [t.tag, t.label] as const)] as never}
-                  onChange={target => onEdit(draft => { (draft[index] as Modifier).target = target; })}
-                />
-              </Field>
-              <Field label="С метками" hint="Бросок должен нести все метки. Пусто — любой бросок.">
-                <RollTagsPick
-                  system={system}
-                  value={(modifier as { tags?: string[] }).tags }
-                  onChange={tags => onEdit(draft => {
-                    const d = draft[index] as { tags?: string[] };
-                    if (tags.length) d.tags = tags; else delete d.tags;
-                  })}
-                />
-              </Field>
-              <Field
-                label="Какая правка"
-                needed={!modifier.edit}
-                hint={recipes.length ? 'Готовые механизмы приедут в словарь «Правки броска» со всеми словами.' : undefined}
-              >
-                <Select
-                  value={String(modifier.edit ?? '')}
-                  options={[['', '— выберите правку —'],
-                    ...edits.map(([key, e]) => [key, e.label || key] as const),
-                    ...recipes.map(({ method, recipe }) =>
-                      [`${RECIPE}${method.id}:${recipe.key}`, `+ ${recipe.label} · ${method.label}`] as const),
-                  ] as never}
-                  onChange={edit => pickEdit(index, edit)}
-                />
-              </Field>
-            </div>
-          )}
+          ) : modifier.kind === 'edit' ? (
+            <EditBody
+              system={system} modifier={modifier} calls={calls} edits={edits} recipes={recipes}
+              onChange={change => onEdit(draft => { change(draft[index] as Loose); })}
+              onPickEdit={value => pickEdit(index, value)}
+            />
+          ) : null}
 
           <Fold title="Только если" summary={modifier.condition?.expr ? `если ${formulaAsLabels(system, modifier.condition.expr)}` : 'всегда'}>
           <Field label="Условие" hint="На листе владельца. Пусто — всегда.">
@@ -198,14 +158,126 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
   );
 }
 
-function EventCondition({ system, modifier, onChange }: {
+function EditBody({ system, modifier, calls, edits, recipes, onChange, onPickEdit }: {
   system: System;
+  modifier: Modifier;
+  calls: [string, { label?: string; params?: { key: string; label?: string; role?: string }[] }][];
+  edits: [string, { label?: string }][];
+  recipes: ReturnType<typeof recipesToInstall>;
+  onChange: (change: (draft: Loose) => void) => void;
+  onPickEdit: (value: string) => void;
+}) {
+  const m = modifier as Loose;
+  const call = String(m.call ?? '');
+  const isRoll = call === ROLL_CALL;
+  const effect = isRoll ? undefined : system.effects[call];
+  const amount = amountParamOf(effect);
+  const pickCall = (next: string) => onChange(d => {
+    for (const key of ['edit', 'op', 'value', 'stacking', 'as', 'tags', 'anyTags', 'notTags', 'where']) delete d[key];
+    d.call = next;
+    if (next === ROLL_CALL) { d.param = 'edits'; d.edit = edits[0]?.[0] ?? ''; return; }
+    d.param = amountParamOf(system.effects[next])?.key ?? '';
+    Object.assign(d, { op: 'mul', value: { expr: '0.5' }, stacking: 'sum' });
+  });
+  const pickParam = (next: string) => onChange(d => {
+    for (const key of ['edit', 'op', 'value', 'stacking']) delete d[key];
+    d.param = next;
+    if (next === 'edits') d.edit = edits[0]?.[0] ?? '';
+    else Object.assign(d, { op: 'add', value: { expr: '1' }, stacking: 'sum' });
+  });
+  const number = (
+    <>
+      {isRoll ? null : (
+        <Field label="Как">
+          <Select value={String(m.op ?? 'add')} options={OPS} onChange={op => onChange(d => { d.op = op; })} />
+        </Field>
+      )}
+      <Field label="На сколько">
+        <FormulaInput
+          where="правка вызова · на сколько" system={system}
+          value={(m.value as { expr?: string } | undefined)?.expr ?? ''}
+          onChange={expr => onChange(d => { d.value = { expr }; })}
+        />
+      </Field>
+      <Field label="Если таких несколько">
+        <Select
+          value={String(m.stacking ?? 'sum')}
+          options={m.op === 'mul' ? STACKING.map(([key, label]) => [key, key === 'sum' ? 'перемножаются' : label] as const) : STACKING}
+          onChange={stacking => onChange(d => { d.stacking = stacking; })}
+        />
+      </Field>
+    </>
+  );
+
+  return (
+    <div className="row">
+      <Field label="Чей вызов" needed={!call}>
+        <Select
+          value={call}
+          options={[[ROLL_CALL, CALL_WORDS.roll.label], ...calls.map(([id, e]) => [id, e.label || id] as const)] as never}
+          onChange={pickCall}
+        />
+      </Field>
+      {isRoll ? (
+        <>
+          <Field label="Чей бросок">
+            <Select
+              value={m.as === 'against' ? 'against' : ''}
+              options={[['', 'мой'], ['against', CALL_WORDS.against]] as never}
+              onChange={as => onChange(d => { if (as) d.as = as; else delete d.as; })}
+            />
+          </Field>
+          <Field label="Что правим">
+            <Select
+              value={String(m.param ?? 'edits')}
+              options={Object.entries(CALL_WORDS.roll.params) as never}
+              onChange={pickParam}
+            />
+          </Field>
+          <Field label="С метками" hint="Бросок должен нести все метки. Пусто — любой бросок.">
+            <RollTagsPick
+              system={system}
+              value={(m.tags as string[] | undefined)}
+              onChange={tags => onChange(d => { if (tags.length) d.tags = tags; else delete d.tags; })}
+            />
+          </Field>
+          {m.param === 'edits' ? (
+            <Field
+              label="Какая правка" needed={!m.edit}
+              hint={recipes.length ? 'Готовые механизмы приедут в словарь «Правки броска» со всеми словами.' : undefined}
+            >
+              <Select
+                value={String(m.edit ?? '')}
+                options={[['', '— выберите правку —'],
+                  ...edits.map(([key, e]) => [key, e.label || key] as const),
+                  ...recipes.map(({ method, recipe }) =>
+                    [`${RECIPE}${method.id}:${recipe.key}`, `+ ${recipe.label} · ${method.label}`] as const),
+                ] as never}
+                onChange={onPickEdit}
+              />
+            </Field>
+          ) : number}
+        </>
+      ) : (
+        <>
+          <Field label="Что правим">
+            <span>{amount ? amount.label || amount.key : '— у эффекта нет величины —'}</span>
+          </Field>
+          {number}
+          <EventCondition system={system} effect={effect} modifier={modifier} onChange={onChange} />
+        </>
+      )}
+    </div>
+  );
+}
+
+function EventCondition({ system, effect, modifier, onChange }: {
+  system: System;
+  effect: System['effects'][string] | undefined;
   modifier: Modifier;
   onChange: (change: (draft: Loose) => void) => void;
 }) {
   const m = modifier as Loose;
-  const eventId = String(m.target).slice('event:'.length);
-  const effect = system.effects[eventId];
   const known = effect ? tagsOf(system, effect) : [];
   const tagTables = tagTablesOf(effect);
   const columns = tagTables.flatMap(table => (system.tables?.[table]?.columns ?? [])
@@ -219,8 +291,8 @@ function EventCondition({ system, modifier, onChange }: {
     <>
       <Field label="По меткам" hint="Пусто — по любой метке.">
         <TagPick
-          value={words(m.tags)} known={known} fromRecord={[]}
-          onChange={next => onChange(d => { const list = next.map(String); if (list.length) d.tags = list; else delete d.tags; })}
+          value={words(m.anyTags)} known={known} fromRecord={[]}
+          onChange={next => onChange(d => { const list = next.map(String); if (list.length) d.anyTags = list; else delete d.anyTags; })}
         />
       </Field>
       <Field label="Кроме меток">

@@ -6,7 +6,6 @@ import { stepNames } from '../slots.tsx';
 import { CARD_TITLES, titleOf } from './words.ts';
 import { checkReadback, changeReadback, numberReadback, sendReadback, joinReadback } from '../readback.ts';
 import type { Segment } from '../readback.ts';
-import { eventTagOf } from '@vtt/engine/engine/targets';
 import { formulaAsLabels } from '../../../ui/formula.tsx';
 
 type Loose = Record<string, unknown>;
@@ -45,12 +44,11 @@ function whereText(system: System, raw: unknown): string | undefined {
 }
 
 export function meddlersOf(system: System, eventId: string): Meddler[] {
-  const mark = eventTagOf(eventId);
   const seen = new Map<string, Meddler & { values: Set<string> }>();
   for (const effect of Object.values(system.effects ?? {})) {
     for (const modifier of (effect.modifiers ?? []) as unknown[]) {
       const m = loose(modifier);
-      if (m.target !== mark) continue;
+      if (m.kind !== 'edit' || m.call !== eventId) continue;
       const raw = m.value && typeof m.value === 'object' ? loose(m.value) : null;
       const value = raw ? String(raw.expr ?? raw.const ?? '') : String(m.value ?? '');
       const op = String(m.op ?? 'add');
@@ -61,7 +59,7 @@ export function meddlersOf(system: System, eventId: string): Meddler[] {
         by, how: HOW[op] ?? op, tags: [], each: false, values: new Set<string>(), ...(where ? { where } : {}),
       };
       found.values.add(value);
-      for (const tag of (Array.isArray(m.tags) ? m.tags : [])) {
+      for (const tag of [...(Array.isArray(m.tags) ? m.tags : []), ...(Array.isArray(m.anyTags) ? m.anyTags : [])]) {
         if (!found.tags.includes(String(tag))) found.tags.push(String(tag));
       }
       seen.set(key, found);

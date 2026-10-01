@@ -117,11 +117,11 @@ describe('модификаторы типа', () => {
 
   it('правка броска пишется в тип, а не в запись компендиума', () => {
     render(<RecordsTab />);
-    fireEvent.click(screen.getByText('+ правит бросок'));
+    fireEvent.click(screen.getByText('+ правка вызова'));
 
     const kind = useWorld.getState().system.tables!['тяжёлый']!;
     expect(kind.modifiers).toHaveLength(1);
-    expect(kind.modifiers![0]).toMatchObject({ kind: 'roll', edit: 'помеха' });
+    expect(kind.modifiers![0]).toMatchObject({ kind: 'edit', call: 'roll', param: 'edits', edit: 'помеха' });
     expect(useWorld.getState().compendium.records).toEqual([]);
   });
 });
