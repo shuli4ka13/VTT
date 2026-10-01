@@ -18,7 +18,7 @@ import type { External, Question } from './journal.ts';
 import type { StepContext, StepData } from '../engine/steps/index.ts';
 import type { Change, EmittedEvent, NestedRun, StopReason } from '../engine/rule.ts';
 import type { SourcedModifier } from '../engine/modifiers.ts';
-import { incomingRollModifiers } from '../engine/modifiers.ts';
+import { incomingRollModifiers, CALL_NAME } from '../engine/modifiers.ts';
 import type { Offer, Report, ReactionWindow } from './types.ts';
 import type { ActionMoment, Subscriber } from '../events/bus.ts';
 import type { Param, Sheet, Step, StoredValue, WornEffect } from '../model/types.ts';
@@ -320,6 +320,21 @@ export class Runner {
     }
   }
 
+  watch(
+    moment: ActionMoment, effectId: string, emitted: EmittedEvent[], seed: Record<string, unknown>,
+    actorId: string, targetId: string, scope: string, hop: number, sink: Sink,
+  ): void {
+    const occasion = { kind: 'action' as const, moment, confirm: false, effect: effectId, emitted, watch: true };
+    for (const sheet of this.state.sheets) {
+      if (sheet.id === actorId || sheet.id === targetId) continue;
+      for (const sub of listening(this.system, sheet, occasion, { compendium: this.state.compendium })) {
+        const results = { ...withEvent(seed, sub.heard), [CALL_NAME]: { я: actorId, цель: targetId } };
+        if (!this.holds(sub, sheet.id, results)) continue;
+        this.handle(sub, sheet.id, results, actorId, `${scope}~${sheet.id}~${sub.key}`, hop, sink);
+      }
+    }
+  }
+
   private holds(sub: Subscriber, sheetId: string, results: Record<string, unknown>): boolean {
     try {
       return holdsNow(sub.handler.if, { pass: this.state.pass(sheetId), results, owner: `триггер «${sub.effect.label || sub.id}»` });
@@ -388,6 +403,7 @@ export class Runner {
     const seed = (): Record<string, unknown> => {
       const now = cell.value;
       return {
+        [CALL_NAME]: { я: rollerId, цель: againstId },
         roll: {
           total: now.total, natural: now.natural, plus: now.plus, rolls: now.rolls, kept: now.kept, parts: now.parts,
           rolled: now.tally.dice, atMax: now.tally.atMax, atMin: now.tally.atMin, edited: now.edits.length > 0, tags: [...tags],
@@ -396,12 +412,17 @@ export class Runner {
     };
     this.seeing++;
     try {
-      for (const [sheetId, as] of [[rollerId, undefined], [againstId !== rollerId ? againstId : null, 'against']] as const) {
+      const against = againstId !== rollerId ? againstId : null;
+      const sides: [string | null, 'against' | undefined, boolean][] = [
+        [rollerId, undefined, false], [against, 'against', false],
+        ...this.state.sheets.filter(s => s.id !== rollerId && s.id !== against).map((s): [string, undefined, boolean] => [s.id, undefined, true]),
+      ];
+      for (const [sheetId, as, watch] of sides) {
         const sheet = sheetId ? this.state.find(sheetId) : null;
         if (!sheet || !sheetId) continue;
         const heard = (confirm: boolean) => listening(this.system, sheet,
-          { kind: 'action', moment: 'seen', confirm, effect: effectId, emitted: [] }, { compendium: this.state.compendium })
-          .filter(sub => sub.handler.as === as && tagsHold(sub.handler.tags, tags) && this.holds(sub, sheetId, seed()));
+          { kind: 'action', moment: 'seen', confirm, effect: effectId, emitted: [], watch }, { compendium: this.state.compendium })
+          .filter(sub => (watch || sub.handler.as === as) && tagsHold(sub.handler.tags, tags) && this.holds(sub, sheetId, seed()));
         for (const sub of heard(false)) {
           const key = `${scope}!seen~${sub.key}`;
           if (this.refusal(sub.key, sheetId, seed(), `${key}?`)) continue;
@@ -567,6 +588,7 @@ export class Runner {
     this.fire('targeted', 'action', call.to, call.effectId, [], {}, call.from, `${call.scope}<`, call.hop, sink);
     const ran = this.body(call, sink, claims);
     this.fire('affected', 'action', call.to, call.effectId, sink.emitted, ran.results, call.from, `${call.scope}>`, call.hop, sink);
+    this.watch('affected', call.effectId, sink.emitted, ran.results, call.from, call.to, `${call.scope}>>`, call.hop, sink);
     const report = reportOf('effect', call.effectId, call.from, call.label, sink, ran.stopped, call.hop > 0);
     entries.push({ fromId: call.from, toId: call.to, report }, ...sink.after);
     if (call.asks) {

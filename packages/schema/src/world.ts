@@ -209,6 +209,7 @@ export const handler = z.object({
   if: guard.nullable().optional(),
   as: z.enum(['against']).optional(),
   tags: z.array(z.string().min(1)).optional(),
+  watch: z.boolean().optional(),
   cost: z.array(step).optional(),
   steps: z.array(step).optional(),
 }).strict();

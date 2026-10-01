@@ -122,3 +122,28 @@ group('увидев кости на броске по полю листа', () =
     ok(out.lines.some(line => line.includes('Везунчик')), out.lines.join(' | '));
   });
 });
+
+group('наблюдатели: реакции третьих лиц', () => {
+  test('бард видит бросок врага по союзнику и режет его — вопрос задают барду', () => {
+    const system = world({
+      насмешка: { label: 'Язвительная насмешка', activation: 'passive', on: [{ on: 'seen', watch: true, confirm: true, steps: [{ type: 'roll-plus', value: { expr: '-5' } }] }] },
+    });
+    const sheets = [sheet('а'), sheet('б'), sheet('бард', ['насмешка'])];
+    const first = play(system, sheets, [12]);
+    eq(first.kind, 'paused');
+    if (first.kind !== 'paused') return;
+    eq(first.question.sheetId, 'бард');
+    const journal = { ...first.journal, answers: { ...first.journal.answers, [first.question.key]: [first.question.offers[0]!.id] } };
+    const second = play(system, sheets, [], journal);
+    eq(hp(second, 'б'), 20, '12 − 5 = 7 против 10 — промах');
+  });
+
+  test('«когда кого-то ранили» слышит третий лист, а не сама цель', () => {
+    const system = world({
+      сочувствие: { label: 'Сочувствие', activation: 'passive', on: [{ on: 'affected', watch: true, if: { expr: '@вызов.цель == "б"' }, steps: [{ type: 'apply', target: { tag: 'удача' }, direction: 'add', value: { expr: '1' } }] }] },
+    });
+    const out = play(system, [sheet('а'), sheet('б', ['сочувствие']), sheet('в', ['сочувствие'])], [15]);
+    eq(out.sheets.find(s => s.id === 'в')!.values.удача ?? 1, 2, 'наблюдатель отозвался');
+    eq(out.sheets.find(s => s.id === 'б')!.values.удача ?? 1, 1, 'цель своим «наблюдаю» на себя не слышит');
+  });
+});

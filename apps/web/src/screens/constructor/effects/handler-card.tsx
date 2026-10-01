@@ -41,7 +41,7 @@ function conditionsOfAny(system: System): (readonly [string, string])[] {
 
 const BY_FORMULA = ':формула';
 
-const SEED_NAMES = new Map([['worn.carry', 'запомненное число']]);
+const SEED_NAMES = new Map([['worn.carry', 'запомненное число'], ['вызов.я', 'кто действует'], ['вызов.цель', 'на кого действуют'], ['roll.natural', 'что выпало на костях'], ['roll.total', 'итог броска']]);
 
 const DONE_NAMES = new Map([...SEED_NAMES, [TARGETS_SEED, 'цели действия: строка на цель']]);
 
@@ -56,6 +56,7 @@ const applyMoment = (draft: Handler, moment: Moment): void => {
   if (moment.startsWith(ASK)) draft.confirm = true; else delete draft.confirm;
   if (!ACTION_MOMENTS[on].replies) delete draft.to;
   if (on !== 'seen') { delete draft.as; delete draft.tags; }
+  if (on !== 'seen' && on !== 'affected') delete draft.watch;
 };
 
 const outcomesOf = (moment: Moment | null, found: (readonly [string, string])[]): (readonly [string, string])[] =>
@@ -110,7 +111,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
             onChange={next => edit(draft => {
               if (isMomentValue(next)) { applyMoment(draft, next); return; }
               draft.on = next;
-              delete draft.of; delete draft.confirm; delete draft.to; delete draft.as; delete draft.tags;
+              delete draft.of; delete draft.confirm; delete draft.to; delete draft.as; delete draft.tags; delete draft.watch;
             })}
           />
         </Field>
@@ -173,13 +174,27 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
         )}
       </div>
 
+      {handler.on === 'affected' ? (
+        <Field label="На кого" hint="«На другого» — наблюдатель: слышит чужое действие; кто и на кого — @вызов.я и @вызов.цель.">
+          <Select
+            value={handler.watch ? 'watch' : ''}
+            options={[['', 'на меня'], ['watch', 'на другого — наблюдаю']] as never}
+            onChange={next => edit(draft => { if (next) draft.watch = true; else delete draft.watch; })}
+          />
+        </Field>
+      ) : null}
+
       {handler.on === 'seen' ? (
         <div className="row">
           <Field label="Чей бросок">
             <Select
-              value={handler.as ?? ''}
-              options={[['', 'мой'], ['against', CALL_WORDS.against]] as never}
-              onChange={next => edit(draft => { if (next) draft.as = 'against'; else delete draft.as; })}
+              value={handler.watch ? 'watch' : handler.as ?? ''}
+              options={[['', 'мой'], ['against', CALL_WORDS.against], ['watch', 'чужой — наблюдаю']] as never}
+              onChange={next => edit(draft => {
+                delete draft.as; delete draft.watch;
+                if (next === 'against') draft.as = 'against';
+                if (next === 'watch') draft.watch = true;
+              })}
             />
           </Field>
           <Field label="С метками" hint="Бросок должен нести все метки. Пусто — любой бросок.">

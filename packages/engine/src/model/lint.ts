@@ -242,6 +242,9 @@ function listenerProblems(system: System): Problem[] {
       if (heard.kind === 'unknown') {
         out.push({ where, level: 'error', text: `такого «когда» нет: «${heard.key}»` });
       }
+      if (handler.watch && handler.on !== 'seen' && handler.on !== 'affected') {
+        out.push({ where, level: 'error', text: `«наблюдаю» бывает только у «${ACTION_MOMENTS.seen.label}» и «${ACTION_MOMENTS.affected.label}»` });
+      }
       if (handler.of && !isActionMoment(handler.on)) {
         out.push({ where, level: 'error', text: 'какое действие слушать, выбирают только у моментов действия' });
       }

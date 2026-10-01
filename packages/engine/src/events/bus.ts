@@ -25,7 +25,7 @@ export type Occasion =
   | { kind: 'field'; tag: string }
   | { kind: 'gained'; effect: string }
   | { kind: 'lost'; effect: string }
-  | { kind: 'action'; moment: ActionMoment; confirm: boolean; effect: string; emitted: EmittedEvent[] };
+  | { kind: 'action'; moment: ActionMoment; confirm: boolean; effect: string; emitted: EmittedEvent[]; watch?: boolean };
 
 export const handlerKey = (id: string, index: number): string => (index ? `${id}#${index}` : id);
 
@@ -70,6 +70,7 @@ export function listening(
       continue;
     }
     if (handler.on !== occasion.moment || asks(handler) !== occasion.confirm) continue;
+    if (Boolean(handler.watch) !== Boolean(occasion.watch)) continue;
     const heard = hears(handler.of, occasion.effect, occasion.emitted);
     if (heard === null) continue;
     out.push(heard ? { ...sub, heard } : sub);
