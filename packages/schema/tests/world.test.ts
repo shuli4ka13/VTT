@@ -251,3 +251,10 @@ describe('манекены системы', () => {
     expect(W.system.safeParse(broken).success).toBe(false);
   });
 });
+
+describe('цена эффекта', () => {
+  it('старое поле self не проходит молча — цена бы потерялась', () => {
+    expect(W.effect.safeParse({ label: 'Удар', cost: [] }).success).toBe(true);
+    expect(W.effect.safeParse({ label: 'Удар', self: [] }).success).toBe(false);
+  });
+});

@@ -235,7 +235,7 @@ export const effect = z.object({
   attach: z.array(step).optional(),
   detach: z.array(step).optional(),
   grants: z.array(z.string().min(1)).optional(),
-}).passthrough();
+}).passthrough().refine(effect => !('self' in effect), 'поле self переименовано в cost (цена) — переведите мир проходом samples/convert');
 
 export const bindingArg = formula;
 
