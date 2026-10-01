@@ -309,7 +309,7 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
         }
       }
     }
-    for (const claim of handler.claims ?? []) out.push({ kind: 'rollEdit', key: claim, from: head });
+    for (const tag of handler.tags ?? []) out.push({ kind: 'roll', key: tag, from: head });
   });
   for (const turn of ['attach', 'detach'] as const) {
     out.push(...chainRefs(effect[turn] ?? [], step => ({ tab: 'effects', effect: id, step, part: turn }), params, false));

@@ -73,14 +73,14 @@ group('реакция цели: пауза перед разрешением', (
   });
 });
 
-group('реакция отправителя: увидел бросок — решил перебросить', () => {
+group('увидев кости: решил докинуть', () => {
   const luckWorld: any = {
     ...withColumn(system, { key: 'inspiration', label: 'Вдохновение', kind: 'number', default: 1, min: 0 }),
     effects: {
       ...system.effects,
       inspire: {
         label: 'Вдохновение: перебросить', activation: 'passive',
-        on: [{ on: 'acting', confirm: true, if: { expr: '#inspiration > 0' }, claims: ['advantage'], steps: [{ type: 'apply', target: { tag: 'inspiration' }, direction: 'subtract', value: { expr: '1' } }] }],
+        on: [{ on: 'seen', confirm: true, if: { expr: '#inspiration > 0' }, steps: [{ type: 'apply', target: { tag: 'inspiration' }, direction: 'subtract', value: { expr: '1' } }, { type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
       },
     },
   };
@@ -89,13 +89,13 @@ group('реакция отправителя: увидел бросок — ре
 
   test('предлагается, пока есть очко; после траты — нет', () => {
     const r = play(luckWorld, [inspired, mirra], [4, 5], decline);
-    deepEq(r.questions.filter(q => q.window === 'sender').map(ids), [['inspire']]);
+    deepEq(r.questions.filter(q => q.window === 'seen').map(ids), [['inspire']]);
     const broke = { ...inspired, values: { ...inspired.values, inspiration: 0 } };
     eq(play(luckWorld, [broke, mirra], [4, 5], decline).questions.length, 0);
   });
 
-  test('применил — очко потрачено, а бросок собирается заново с заявленной правкой', () => {
-    const r = play(luckWorld, [inspired, mirra], [4, 18, 5], q => (q.window === 'sender' ? ['inspire'] : []));
+  test('применил — очко потрачено, кость докинута к выпавшему', () => {
+    const r = play(luckWorld, [inspired, mirra], [4, 18, 5], q => (q.window === 'seen' ? ['inspire'] : []));
     eq(r.sheets.find(s => s.id === 'arven')!.values.inspiration, 0);
     const strike = r.reports.find(x => x.report.effect === 'strike')!.report;
     deepEq((strike.trace[0] as any).rolls, [4, 18]);
@@ -151,32 +151,32 @@ group('подписка на исходящее: вампиризм и метк�
   });
 });
 
-group('окно «я бросил» видит факты собственного броска', () => {
+group('вопрос «увидев кости» видит факты собственного броска', () => {
   const luck: any = {
     ...withColumn(system, { key: 'inspiration', label: 'Вдохновение', kind: 'number', default: 1, min: 0 }),
     effects: {
       ...system.effects,
       inspire: {
         label: 'Вдохновение: перебросить', activation: 'passive',
-        on: [{ on: 'acting', confirm: true, claims: ['advantage'], steps: [] }],
+        on: [{ on: 'seen', confirm: true, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
       },
     },
   };
   const inspired = { ...arven, effects: [{ effectId: 'inspire' }] };
   const senderQuestion = (sys: any) => {
     const r = play(sys, [inspired, mirra], [17, 5], () => []);
-    return r.questions.find(q => q.window === 'sender')!;
+    return r.questions.find(q => q.window === 'seen')!;
   };
 
-  test('вопрос отправителю несёт итог броска, число костей и признак правки', () => {
-    const seen = senderQuestion(luck).results.hit as any;
-    eq(seen.total, 23);
+  test('вопрос несёт выпавшее, число костей и признак правки', () => {
+    const seen = senderQuestion(luck).results.roll as any;
+    eq(seen.natural, 17);
     eq(seen.rolled, 1);
     eq(seen.edited, false);
     deepEq(seen.parts, {});
   });
 
-  test('вопрос отправителю несёт части броска: Надежду и Страх видно у отправителя, а не только у цели', () => {
+  test('вопрос несёт части броска: Надежду и Страх видно у бросающего, а не только у цели', () => {
     const duality: any = {
       ...luck,
       constants: { ...(luck.constants ?? {}), lead_die: {
@@ -185,7 +185,7 @@ group('окно «я бросил» видит факты собственног
       } },
     };
     const r = play(duality, [inspired, mirra], [9, 4, 5], () => []);
-    const seen = r.questions.find(q => q.window === 'sender')!.results.hit as any;
+    const seen = r.questions.find(q => q.window === 'seen')!.results.roll as any;
     deepEq(seen.parts, { надежда: 9, страх: 4 });
   });
 });

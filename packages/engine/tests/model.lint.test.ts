@@ -139,7 +139,6 @@ group('линт: слушатели, круги, входы', () => {
     const texts = (handler: Record<string, unknown>) => errorTexts(withEffect('r', { activation: 'passive', on: [{ steps: [], ...handler } as never] }));
     ok(texts({ on: 'strike' }).some(t => t.includes('такого «когда» нет')));
     ok(texts({ on: 'moment:turn-start', of: 'strike' }).some(t => t.includes('только у моментов действия')));
-    ok(texts({ on: 'acting' }).some(t => t.includes('только с вопросом')));
     ok(texts({ on: 'acted', confirm: true }).some(t => t.includes('спросить здесь нельзя')));
     ok(texts({ on: 'targeted', to: 'other' }).some(t => t.includes('ответить другому нельзя')));
     eq(texts({ on: 'targeted', confirm: true }).length, 0, 'любое действие — законно');

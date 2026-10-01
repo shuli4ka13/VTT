@@ -17,16 +17,14 @@ export function multiplyNotation(notation: unknown, times: number): string {
   return `${count}d${Number(match[2])}`;
 }
 
-export function rollNotation(notation: unknown, die: Die, keep?: NotationRoll | null): NotationRoll {
+export function rollNotation(notation: unknown, die: Die): NotationRoll {
   const match = NOTATION.exec(String(notation).trim());
   if (!match) throw new Error(`не понимаю запись кубиков «${notation}»; ожидается вид «2к6»`);
 
   const count = Number(match[1] ?? 1);
   const sides = Number(match[2]);
-  const held = keep && NOTATION.exec(String(keep.notation ?? '').trim());
-  const reuse = held && Number(held[2]) === sides ? keep.rolls : [];
   const rolls: number[] = [];
-  for (let i = 0; i < count; i++) rolls.push(i < reuse.length ? reuse[i]! : die(sides));
+  for (let i = 0; i < count; i++) rolls.push(die(sides));
 
   return {
     notation,

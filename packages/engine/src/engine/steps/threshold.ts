@@ -4,7 +4,6 @@ import { dieConstant, rollLead, unfoldDice, withCount } from '../lead-die.ts';
 import { packRef, resolveRef, resolveNumber, resolveOptionalNumber, lonelyField } from '../refs.ts';
 import { EngineError } from '../errors.ts';
 import type { StepData, StepContext } from './index.ts';
-import type { RolledDie } from '../readings.ts';
 import { STEP_WORDS, forcedWords, type StepWords } from '../../words/steps.ts';
 
 export const type = 'threshold';
@@ -186,9 +185,8 @@ export function pack(step: StepData, ctx: StepContext) {
     ...claimedModifiers(ctx.system, ctx.claims ?? []),
   ];
   const mods = resolveRoll(ctx.system, ctx.sheet, tags, ctx.pass, extra);
-  const held = ctx.kept?.[String(step.id ?? '')]?.rolled?.entries as RolledDie[] | undefined;
-  const thrown = rollLead(unfold(roll.die, ctx, roll.count), ctx.die, mods.edits, held ?? []);
-  const rolled = ctx.seen && !held ? ctx.seen(thrown, tags, ctx.sheet.id) : thrown;
+  const thrown = rollLead(unfold(roll.die, ctx, roll.count), ctx.die, mods.edits);
+  const rolled = ctx.seen ? ctx.seen(thrown, tags, ctx.sheet.id) : thrown;
   return { ...base, tags, rolled, bonus: packRef(roll.bonus, ctx), modBonus: mods.bonus };
 }
 

@@ -115,12 +115,10 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
       }
     }
 
-    let claims = intent.edits ?? [];
+    const claims = intent.edits ?? [];
     const steps = effect.steps ?? [];
     const split = steps.findIndex(step => stepModule(step.type).splits === true);
     const body = split >= 0 ? steps.slice(split + 1) : steps;
-    const keptBy = (list: StepData[]): Record<string, StepData> =>
-      Object.fromEntries(list.map((step, index) => [String(step.id ?? index), step]));
     const firstTarget = targets[0] ? state.find(targets[0]) : null;
     const against = firstTarget ? newPass(system, firstTarget, { compendium }) : null;
 
@@ -129,34 +127,15 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
     let seed: Record<string, unknown> = {};
 
     if (split >= 0) {
-      const saved = state.save();
-      const once = (round: number, kept?: StepData[]) => {
-        const sink = newSink();
-        const ran = run.exec({
-          scope: `once:${round}`, me: actor, here: actor, target: null, effectId: action.effect,
-          owner: `эффект «${effect.label || action.effect}»`, args, paramDefs, props, ...(inputs ? { inputs } : {}),
-          ...(claims.length ? { claims } : {}), ...(kept ? { kept: keptBy(kept) } : {}),
-          ...(against ? { against: (tags: readonly string[]) => incomingRollModifiers(tags, against) } : {}),
-          source: actor, hop: 0, names: 'me',
-        }, steps.slice(0, split), sink);
-        return { ran, sink };
-      };
-      let first = once(0);
-      const seenBySender = rolledSoFar(first.ran.packed as unknown as Record<string, unknown>[]);
-      const senderOffers = run.offers('sender', actor, action.effect, 0, seenBySender, [], 'sender');
-      if (senderOffers.length) {
-        const asked = run.ask({
-          key: 'sender', sheetId: actor, window: 'sender', label: '', offers: senderOffers,
-          results: seenBySender, preview: previewLines(first.ran.packed, system, null),
-        }, action.effect, 0, [], targets[0] ?? null);
-        log.push(...asked.entries);
-        if (asked.claims.length) {
-          claims = [...new Set([...claims, ...asked.claims])];
-          state.restore(saved);
-          first = once(1, first.ran.packed);
-          log.push({ text: `${nameOf(actor)}: бросок собран заново — выпавшее остаётся, новые кости добавлены` });
-        }
-      }
+      const sink = newSink();
+      const ran = run.exec({
+        scope: 'once', me: actor, here: actor, target: null, effectId: action.effect,
+        owner: `эффект «${effect.label || action.effect}»`, args, paramDefs, props, ...(inputs ? { inputs } : {}),
+        ...(claims.length ? { claims } : {}),
+        ...(against ? { against: (tags: readonly string[]) => incomingRollModifiers(tags, against) } : {}),
+        source: actor, hop: 0, names: 'me',
+      }, steps.slice(0, split), sink);
+      const first = { ran, sink };
       if (first.ran.stopped) throw new EngineError(`«${action.label}» не состоялось: ${refusalWords(reportOf('effect', action.effect, actor, action.label, first.sink, first.ran.stopped, false), system) ?? 'цепочка оборвана'}`);
       if (first.sink.changes.length || first.sink.effects.length || first.sink.removed.length) {
         log.push({ fromId: actor, toId: actor, report: reportOf('effect', action.effect, actor, action.label, first.sink, null, false) });
@@ -170,23 +149,20 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
       const gate = steps.findIndex(step => HOISTED(step as StepData) && stepModule(step.type).mayBreak === true);
       const cache: Record<number, StepData> = {};
       const seenSink = newSink();
-      let round = 0;
-      let kept: Record<string, StepData> | undefined;
       const start = { sheet: state.get(actor), shared: sharedOf(system, state.sheets) };
       const packOne = (index: number): StepData => {
         const step = steps[index] as StepData;
         const { sheet, shared } = start;
         const done = Object.keys(cache).map(Number).filter(at => at < index).sort((a, b) => a - b).map(at => cache[at]!);
         const inner: StepContext = {
-          system, sheet, die: ext.dieAt(`send:${round}/${step.id ?? index}`),
+          system, sheet, die: ext.dieAt(`send/${step.id ?? index}`),
           pass: newPass(system, sheet, { compendium, shared }),
           params: args, paramDefs, props, owner: `эффект «${effect.label || action.effect}»`,
           ...(inputs ? { inputs } : {}),
           ...(against ? { against: (tags: readonly string[]) => incomingRollModifiers(tags, against) } : {}),
           ...(claims.length ? { claims } : {}),
-          ...(kept ? { kept } : {}),
           sender: rolledSoFar(done as unknown as Record<string, unknown>[]), stepIds,
-          seen: (rolled, tags, rollerId) => run.seen(rollerId, targets[0] ?? null, rolled, tags, `send:${round}/${step.id ?? index}`, action.effect, 0, seenSink),
+          seen: (rolled, tags, rollerId) => run.seen(rollerId, targets[0] ?? null, rolled, tags, `send/${step.id ?? index}`, action.effect, 0, seenSink),
         };
         const when = packGuardRef(step.when, inner);
         return { type: step.type, id: step.id ?? null, ...(when !== undefined ? { when } : {}), ...stepModule(step.type).pack(step, inner) } as StepData;
@@ -199,22 +175,6 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
       eager();
       log.push(...seenSink.after);
       seenSink.after = [];
-      const seenBySender = rolledSoFar(Object.values(cache) as unknown as Record<string, unknown>[]);
-      const senderOffers = run.offers('sender', actor, action.effect, 0, seenBySender, [], 'sender');
-      if (senderOffers.length) {
-        const asked = run.ask({
-          key: 'sender', sheetId: actor, window: 'sender', label: '', offers: senderOffers,
-          results: seenBySender, preview: previewLines(Object.values(cache), system, null),
-        }, action.effect, 0, [], targets[0] ?? null);
-        log.push(...asked.entries);
-        if (asked.claims.length) {
-          claims = [...new Set([...claims, ...asked.claims])];
-          round = 1;
-          kept = Object.fromEntries(Object.entries(cache).map(([index, step]) => [String(step.id ?? index), step]));
-          eager();
-          log.push({ text: `${nameOf(actor)}: бросок собран заново — выпавшее остаётся, новые кости добавлены` });
-        }
-      }
       packed = (index: number): StepData | undefined => {
         if (!HOISTED(steps[index] as StepData)) return undefined;
         if (cache[index]) return cache[index];
@@ -227,15 +187,14 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
 
     const holder = holderOf(action.effect, effect);
     const seen: Record<string, { results: Record<string, unknown>; emitted: EmittedEvent[] }> = {};
-    const taken: Record<string, string[]> = {};
-    const claimsFor = (id: string): string[] => [...new Set([...(intent.targetEdits ?? []), ...(taken[id] ?? [])])];
+    const targetClaims = intent.targetEdits ?? [];
     const callTo = (toId: string) => ({
       effectId: action.effect, label: action.label, steps: body, from: actor, to: toId, hop: 0, seed,
       scope: `t:${toId}`, args, paramDefs, props, ...(inputs ? { inputs } : {}), ...(packed ? { packed } : {}), asks: false,
     });
 
     for (const toId of targets) {
-      const dry = run.dry(() => run.deliver({ ...callTo(toId), claims: claimsFor(toId) }));
+      const dry = run.dry(() => run.deliver({ ...callTo(toId), claims: targetClaims }));
       const before = dry ? run.offers('target', toId, action.effect, 0, dry.results, dry.emitted, `target:${toId}`) : [];
       if (dry && before.length) {
         const asked = run.ask({
@@ -243,12 +202,8 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
           results: dry.results, preview: previewLines(rolledNow(), system, dry),
         }, action.effect, 0, dry.emitted, actor);
         log.push(...asked.entries);
-        if (asked.claims.length) {
-          taken[toId] = [...new Set([...(taken[toId] ?? []), ...asked.claims])];
-          log.push({ text: `${nameOf(toId)}: бросок пересчитан с заявленной правкой` });
-        }
       }
-      const delivered = run.deliver({ ...callTo(toId), claims: claimsFor(toId) });
+      const delivered = run.deliver({ ...callTo(toId), claims: targetClaims });
       if (!delivered) continue;
       log.push(...delivered.entries);
       if (holder) {

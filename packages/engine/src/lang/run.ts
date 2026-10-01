@@ -39,7 +39,6 @@ export interface Frame {
   props: Record<string, unknown> | null;
   inputs?: Record<string, number | string>;
   claims?: string[];
-  kept?: Record<string, StepData>;
   against?: (tags: readonly string[]) => SourcedModifier[];
   packed?: Packed;
   bond?: { from: string; by: string };
@@ -100,7 +99,7 @@ export interface Delivery {
 
 type Mode = 'action' | 'event' | 'any';
 
-const WINDOWS: Record<ReactionWindow, ActionMoment> = { sender: 'acting', target: 'targeted', after: 'affected' };
+const WINDOWS: Record<ReactionWindow, ActionMoment> = { target: 'targeted', after: 'affected' };
 
 export const withEvent = (results: Record<string, unknown>, heard: EmittedEvent | undefined | null): Record<string, unknown> =>
   (heard ? { ...results, event: heard, event_amount: heard.amount, event_incoming: heard.incoming } : results);
@@ -214,7 +213,6 @@ export class Runner {
       owner: frame.owner,
       results,
       ...(frame.claims?.length ? { claims: frame.claims } : {}),
-      ...(frame.kept ? { kept: frame.kept } : {}),
       ...(frame.against ? { against: frame.against } : {}),
       ...(frame.alone ? { alone: true } : {}),
       read, write, attach, detach,
@@ -283,7 +281,7 @@ export class Runner {
     this.fire('targeted', 'event', frame.here, event, heard, parent, frame.me, `${scope}<`, frame.hop, sink);
     const inner: Frame = {
       ...frame, scope, target: frame.here, effectId: event, args: args ?? {}, paramDefs: paramDefs ?? [], props: null,
-      names: 'here', packed: undefined, claims: undefined, kept: undefined, against: undefined, alone: false, inputs: undefined, chain, actor: false,
+      names: 'here', packed: undefined, claims: undefined, against: undefined, alone: false, inputs: undefined, chain, actor: false,
     };
     const ran = this.exec(inner, steps, sink, { event: payload }, event);
     this.fire('affected', 'event', frame.here, event, heard, parent, frame.me, `${scope}>`, frame.hop, sink);
@@ -386,7 +384,15 @@ export class Runner {
   ): LeadRoll {
     if (this.seeing) return rolled;
     const cell = { value: rolled };
-    const seed = (): Record<string, unknown> => ({ roll: { natural: cell.value.total, rolls: cell.value.rolls, tags: [...tags] } });
+    const seed = (): Record<string, unknown> => {
+      const now = cell.value;
+      return {
+        roll: {
+          total: now.total, natural: now.total, rolls: now.rolls, kept: now.kept, parts: now.parts,
+          rolled: now.tally.dice, atMax: now.tally.atMax, atMin: now.tally.atMin, edited: now.edits.length > 0, tags: [...tags],
+        },
+      };
+    };
     this.seeing++;
     try {
       for (const [sheetId, as] of [[rollerId, undefined], [againstId !== rollerId ? againstId : null, 'against']] as const) {
@@ -401,7 +407,7 @@ export class Runner {
           this.useSeen(sub, sheetId, cell, key, hop, sink, seed());
         }
         const offers = heard(true)
-          .map(sub => ({ id: sub.key, label: sub.effect.label || sub.key, claims: [] as string[] }))
+          .map(sub => ({ id: sub.key, label: sub.effect.label || sub.key }))
           .filter(offer => !this.refusal(offer.id, sheetId, seed(), `${scope}?seen:${sheetId}?${offer.id}`));
         if (!offers.length) continue;
         const question: Question = {
@@ -472,14 +478,14 @@ export class Runner {
     for (const sub of listening(this.system, sheet, occasion, { compendium: this.state.compendium })) {
       if (!this.holds(sub, sheet.id, withEvent(results, sub.heard))) continue;
       if (runsAtOther(sub.handler) && hop >= MAX_HOPS) continue;
-      out.push({ id: sub.key, label: sub.effect.label || sub.key, claims: [...(sub.handler.claims ?? [])] });
+      out.push({ id: sub.key, label: sub.effect.label || sub.key });
     }
     return out;
   }
 
   ask(
     question: Question, effectId: string, hop: number, emitted: EmittedEvent[], other: string | null,
-  ): { claims: string[]; entries: Entry[] } {
+  ): { entries: Entry[] } {
     const chosen = this.drying ? [] : this.ext.ask(question);
     const { sheetId, results } = question;
     const stray = chosen.find(id => !question.offers.some(offer => offer.id === id));
@@ -487,7 +493,6 @@ export class Runner {
       throw new EngineError(`реакция «${stray}» сейчас не предлагается; можно: ${question.offers.map(o => o.id).join(', ') || '(ничего)'}`);
     }
     const entries: Entry[] = [];
-    const claims: string[] = [];
     for (const id of chosen) {
       const found = subscriberByKey(this.system, id);
       if (!found) throw new EngineError(`реакция «${id}»: такой подписки в системе нет`);
@@ -510,10 +515,9 @@ export class Runner {
         if (burnsUse(found.effect)) this.state.put(spendUse(this.state.get(sheetId), found.id));
       }
       entries.push(...sink.after);
-      claims.push(...(found.handler.claims ?? []));
     }
     if (!chosen.length && !this.ext.declineAll) entries.push({ text: `${this.state.get(sheetId).name} пропускает реакцию` });
-    return { claims: [...new Set(claims)], entries };
+    return { entries };
   }
 
   body(call: Call, sink: Sink, claims: string[]): Ran {
@@ -541,7 +545,7 @@ export class Runner {
     }
     if (!this.state.find(call.to)) return null;
     const entries: Entry[] = [];
-    let claims = call.claims ?? [];
+    const claims = call.claims ?? [];
     if (call.asks) {
       const dry = this.dry(() => { const sink = newSink(); const ran = this.body(call, sink, claims); return { ran, sink }; });
       const before = this.offers('target', call.to, call.effectId, call.hop, dry.ran.results, dry.sink.emitted, `${call.scope}:target`);
@@ -551,7 +555,6 @@ export class Runner {
           offers: before, results: dry.ran.results, preview: [],
         }, call.effectId, call.hop, dry.sink.emitted, call.from);
         entries.push(...asked.entries);
-        claims = [...new Set([...claims, ...asked.claims])];
       }
     }
     const sink = newSink();

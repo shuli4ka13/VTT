@@ -246,9 +246,6 @@ function listenerProblems(system: System): Problem[] {
       }
       if (isActionMoment(handler.on)) {
         const moment = ACTION_MOMENTS[handler.on];
-        if (moment.asks === 'only' && !handler.confirm) {
-          out.push({ where, level: 'error', text: `«${moment.label}» бывает только с вопросом игроку` });
-        }
         if (moment.asks === 'never' && handler.confirm) {
           out.push({ where, level: 'error', text: `«${moment.label}» срабатывает молча — спросить здесь нельзя` });
         }

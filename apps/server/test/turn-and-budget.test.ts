@@ -378,8 +378,8 @@ describe('появилось и ушло с листа', () => {
   });
 });
 
-describe('вопросы к человеку переживают пересборку броска', () => {
-  it('реакция отправителя собирает конверт заново, и названное игроком число не теряется', async () => {
+describe('вопросы к человеку не теряют названного', () => {
+  it('увидев кости, игрок докидывает — и названное им число не теряется', async () => {
     const token = (await http().post('/auth/login').send({ name: 'Ведущий вопросов' })).body.token as string;
     const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
 
@@ -399,7 +399,7 @@ describe('вопросы к человеку переживают пересбо
         },
         вдохновение: {
           label: 'Вдохновение', activation: 'passive',
-          on: [{ on: 'acting', confirm: true, claims: ['плюс'], steps: [] }],
+          on: [{ on: 'seen', confirm: true, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
         },
       },
       
@@ -428,7 +428,7 @@ describe('вопросы к человеку переживают пересбо
     const answered = await as(http().post(`/rooms/${roomId}/answer`)).send({
       roomId, pendingId: paused.body.pending.id, chosen: ['вдохновение'],
     }).expect(201);
-    expect(answered.body.log.map((e: { text: string }) => e.text).join(' ')).toContain('собран заново');
+    expect(answered.body.log.map((e: { text: string }) => e.text).join(' ')).toContain('докинуто');
 
     const after = (await as(http().get(`/rooms/${roomId}`))).body.sheets;
     expect(after.find((s: { id: string }) => s.id === 'цель').values.хиты, 'названная сила дошла до цели').toBe(13);
@@ -455,7 +455,7 @@ describe('цель правит свой бросок, увидев его', () 
         },
         везение: {
           label: 'Везение', activation: 'passive',
-          on: [{ on: 'targeted', confirm: true, claims: ['удача'], steps: [] }],
+          on: [{ on: 'seen', confirm: true, steps: [{ type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
         },
       },
       
@@ -485,7 +485,7 @@ describe('цель правит свой бросок, увидев его', () 
       roomId, pendingId: paused.body.pending.id, chosen: ['везение'],
     }).expect(201);
     const сказано = answered.body.log.map((e: { text: string }) => e.text).join(' ');
-    expect(сказано, сказано).toContain('пересчитан с заявленной правкой');
+    expect(сказано, сказано).toContain('докинуто');
     expect(сказано, 'бросок сделан двумя костями').toMatch(/\[\d+, \d+\]/);
   });
 });

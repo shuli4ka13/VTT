@@ -155,7 +155,7 @@ describe('контракты клиент ↔ сервер', () => {
 
   it('пауза стола и ответ игрока описаны схемой', () => {
     expect(api.pendingState.safeParse({
-      id: 'p1', sheetId: 'arven', stage: 'sender', question: '?', options: [{ id: 'shield', label: 'Щит' }], preview: [],
+      id: 'p1', sheetId: 'arven', stage: 'seen', question: '?', options: [{ id: 'shield', label: 'Щит' }], preview: [],
     }).success).toBe(true);
     expect(api.answerIntent.safeParse({ roomId: 'r', pendingId: 'p1', chosen: [] }).success).toBe(true);
     expect(api.answerIntent.safeParse({ roomId: 'r', pendingId: '', chosen: [] }).success).toBe(false);

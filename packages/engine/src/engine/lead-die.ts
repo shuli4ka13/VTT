@@ -83,10 +83,9 @@ export function unfoldDice(def: DieConstant, resolveCount?: CountResolver): DieC
   return { ...def, dice };
 }
 
-export function rollLead(def: DieConstant, die: Die, edits: RollEdit[] = [], keep: RolledDie[] = []): LeadRoll {
+export function rollLead(def: DieConstant, die: Die, edits: RollEdit[] = []): LeadRoll {
   const claim = applyClaimEdits(claimOf(def), edits);
 
-  const pool = [...keep];
   const entries: RolledDie[] = [];
   for (const term of claim.dice) {
     const count = term.count ?? 1;
@@ -95,10 +94,7 @@ export function rollLead(def: DieConstant, die: Die, edits: RollEdit[] = [], kee
         `счёт костей «${def.label || '?'}» — неразрешённая ссылка; сперва unfoldDice`);
     }
     for (let i = 0; i < count; i++) {
-      const same = pool.findIndex(e => e.sides === term.sides
-        && (e.name ?? '') === String(term.name ?? '') && Boolean(e.bonus) === Boolean(term.bonus)
-        && (e.value < 0) === Boolean(term.minus));
-      const value = same >= 0 ? pool.splice(same, 1)[0]!.value : (term.minus ? -die(term.sides) : die(term.sides));
+      const value = term.minus ? -die(term.sides) : die(term.sides);
       entries.push({
         value, sides: term.sides,
         ...(term.name ? { name: String(term.name) } : {}),

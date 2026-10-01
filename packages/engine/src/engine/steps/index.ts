@@ -53,7 +53,6 @@ export interface StepContext extends RefContext {
 
   answer?: (call: { event: string; args: Record<string, unknown> }) => void;
 
-  kept?: Record<string, StepData>;
 
   seenRoll?: { value: LeadRoll };
 

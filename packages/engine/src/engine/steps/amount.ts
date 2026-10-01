@@ -1,5 +1,4 @@
 import { rollNotation, multiplyNotation } from '../dice.ts';
-import type { NotationRoll } from '../dice.ts';
 import { dieText } from '../lead-die.ts';
 import { packRef, resolveRef, resolveOptionalNumber } from '../refs.ts';
 import { EngineError } from '../errors.ts';
@@ -79,10 +78,9 @@ export function pack(step: StepData, ctx: StepContext) {
       `${who(ctx)}: источнику «превышение» нужен слот margin — превышение какого шага брать?`);
   }
 
-  const held = ctx.kept?.[String(step.id ?? '')]?.rolled as NotationRoll | undefined;
   return {
     source,
-    rolled: notation ? rollNotation(notation, ctx.die, held) : fromFormula(thrown),
+    rolled: notation ? rollNotation(notation, ctx.die) : fromFormula(thrown),
     ...(doubled ? { doubled: true } : {}),
     ...(times !== null ? { times } : {}),
     ...(step.scale ? {

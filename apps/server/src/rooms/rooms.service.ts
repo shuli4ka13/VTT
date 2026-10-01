@@ -451,8 +451,6 @@ export class RoomsService {
       stage: question.window,
       question: question.window === 'seen'
         ? `${asked.name}: кости выпали — воспользоваться?`
-        : question.window === 'sender'
-        ? `${asked.name}: бросок сделан — ответить реакцией?`
         : question.window === 'after'
           ? `${asked.name}: на вас подействовали${by} — ответить реакцией?`
           : `${asked.name}: на вас действуют${by} — ответить реакцией?`,

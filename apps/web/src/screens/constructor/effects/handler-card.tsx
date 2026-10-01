@@ -1,4 +1,4 @@
-import { Card, CardHead, Field, Select, Chip, Fold, DangerButton } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Field, Select, Fold, DangerButton } from '../../../ui/primitives.tsx';
 import { FormulaField } from '../../../ui/formula-field.tsx';
 import { registry } from '@vtt/engine/engine/steps/index';
 import { MOMENTS as TIMES } from '@vtt/engine/events/moments';
@@ -55,7 +55,6 @@ const applyMoment = (draft: Handler, moment: Moment): void => {
   draft.on = on;
   if (moment.startsWith(ASK)) draft.confirm = true; else delete draft.confirm;
   if (!ACTION_MOMENTS[on].replies) delete draft.to;
-  if (on !== 'acting') delete draft.claims;
   if (on !== 'seen') { delete draft.as; delete draft.tags; }
 };
 
@@ -111,7 +110,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
             onChange={next => edit(draft => {
               if (isMomentValue(next)) { applyMoment(draft, next); return; }
               draft.on = next;
-              delete draft.of; delete draft.confirm; delete draft.to; delete draft.claims; delete draft.as; delete draft.tags;
+              delete draft.of; delete draft.confirm; delete draft.to; delete draft.as; delete draft.tags;
             })}
           />
         </Field>
@@ -193,26 +192,6 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
         </div>
       ) : null}
 
-      {handler.on === 'acting' ? (
-        <Field label="Перебросить с правкой" hint="Если выбрано — после согласия бросок собирается заново с этими правками из словаря.">
-          <div className="inline inline--tight">
-            {Object.entries(system.roll_edits ?? {}).map(([key, e]) => {
-              const picked = (handler.claims ?? []).includes(key);
-              return (
-                <Chip key={key} active={picked} onClick={() => edit(draft => {
-                  const list = new Set(draft.claims ?? []);
-                  if (picked) list.delete(key); else list.add(key);
-                  if (list.size) draft.claims = [...list]; else delete draft.claims;
-                })}>
-                  {e.label || key}
-                </Chip>
-              );
-            })}
-            {Object.keys(system.roll_edits ?? {}).length === 0
-              ? <span className="faint">Правок броска в словаре нет.</span> : null}
-          </div>
-        </Field>
-      ) : null}
     </Card>
   );
 }

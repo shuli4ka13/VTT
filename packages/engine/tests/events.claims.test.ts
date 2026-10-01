@@ -122,7 +122,7 @@ group('правка после того, как бросок увиден: вы�
       ...system.effects,
       inspire: {
         label: 'Вдохновение: перебросить', activation: 'passive',
-        on: [{ on: 'acting', confirm: true, if: { expr: '#inspiration > 0' }, claims: ['advantage'], steps: [{ type: 'apply', target: { tag: 'inspiration' }, direction: 'subtract', value: { expr: '1' } }] }],
+        on: [{ on: 'seen', confirm: true, if: { expr: '#inspiration > 0' }, steps: [{ type: 'apply', target: { tag: 'inspiration' }, direction: 'subtract', value: { expr: '1' } }, { type: 'roll-add', count: { expr: '1' }, keep: 'best' }] }],
       },
     },
   };
@@ -132,7 +132,7 @@ group('правка после того, как бросок увиден: вы�
     const r = exchange({
       system: luckWorld, compendium, die: queue(7, 18, 3), sheets: [inspired, mirra],
       actionId: 'longsword-item:0', fromId: 'arven', toId: 'mirra',
-      answer: q => (q.window === 'sender' ? ['inspire'] : []),
+      answer: q => (q.window === 'seen' ? ['inspire'] : []),
     });
     const main = r.reports.find(x => x.report.effect === 'strike')!.report;
     const t = main.trace[0] as any;
@@ -142,7 +142,7 @@ group('правка после того, как бросок увиден: вы�
     deepEq(dmg.rolls, [3], 'кости урона не перебрасывались');
   });
 
-  test('без сохранённых костей та же заявка бросает всё заново', () => {
+  test('заявка стола до броска бросает обе кости сразу', () => {
     deepEq(hitTrace(strike(system, arven, mirra, [2, 18, 5], { source: ['advantage'] })).rolls, [2, 18]);
   });
 });

@@ -20,7 +20,7 @@ export const ASK = 'ask:';
 
 export const MOMENTS: readonly (readonly [Moment, string])[] = (Object.entries(ACTION_MOMENTS) as [ActionMoment, typeof ACTION_MOMENTS[ActionMoment]][])
   .flatMap(([key, moment]) => [
-    ...(moment.asks === 'only' ? [] : [[key, `${moment.label} — молча${'note' in moment ? `, ${moment.note}` : ''}`] as const]),
+    [key, `${moment.label} — молча${'note' in moment ? `, ${moment.note}` : ''}`] as const,
     ...(moment.asks === 'never' ? [] : [[`${ASK}${key}` as Moment, `${moment.label} — спросить меня`] as const]),
   ]);
 

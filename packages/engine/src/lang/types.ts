@@ -30,8 +30,8 @@ export interface Report {
   reactions?: Report[];
 }
 
-export type ReactionWindow = 'sender' | 'target' | 'after';
+export type ReactionWindow = 'target' | 'after';
 
 export type QuestionWindow = ReactionWindow | 'seen';
 
-export interface Offer { id: string; label: string; cost?: string; claims: string[] }
+export interface Offer { id: string; label: string; cost?: string }

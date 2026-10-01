@@ -241,13 +241,13 @@ describe('три вида создания, два вида запуска', () 
     fireEvent.click(screen.getByText('+ срабатывает сам'));
     const moment = [...document.querySelectorAll('select')]
       .find(el => [...el.options].some(o => o.value === 'ask:targeted'))!;
-    expect([...moment.options].map(o => o.value).slice(0, 8))
-      .toEqual(['', 'ask:acting', 'acted', 'done', 'targeted', 'ask:targeted', 'affected', 'ask:affected']);
+    expect([...moment.options].map(o => o.value).slice(0, 9))
+      .toEqual(['', 'acted', 'done', 'targeted', 'ask:targeted', 'affected', 'ask:affected', 'seen', 'ask:seen']);
 
-    fireEvent.change(moment, { target: { value: 'ask:acting' } });
+    fireEvent.change(moment, { target: { value: 'ask:seen' } });
     const effect = Object.values(useWorld.getState().system.effects).at(-1)!;
     expect(effect.activation).toBe('passive');
-    expect(effect.on?.[0]).toMatchObject({ on: 'acting', confirm: true });
+    expect(effect.on?.[0]).toMatchObject({ on: 'seen', confirm: true });
 
     fireEvent.change(moment, { target: { value: 'acted' } });
     const again = Object.values(useWorld.getState().system.effects).at(-1)!.on![0]!;
