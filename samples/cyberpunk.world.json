@@ -1436,12 +1436,13 @@
         "description": "Имплант: преимущество на броски атаки.",
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
-            "edit": "advantage",
             "tags": [
               "атака"
-            ]
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "advantage"
           }
         ],
         "group": "Состояния"
@@ -1486,32 +1487,34 @@
         "description": "Хиты ниже половины максимума — минус два ко всем проверкам и атакам (спасброски — без штрафа).",
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
-            "op": "add",
-            "value": {
-              "expr": "-2"
-            },
             "condition": {
               "expr": "@seriously"
             },
             "tags": [
               "атака"
-            ]
-          },
-          {
-            "kind": "roll",
-            "target": "roll:any",
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "bonus",
             "op": "add",
             "value": {
               "expr": "-2"
-            },
+            }
+          },
+          {
             "condition": {
               "expr": "@seriously"
             },
             "tags": [
               "проверка"
-            ]
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "bonus",
+            "op": "add",
+            "value": {
+              "expr": "-2"
+            }
           }
         ],
         "group": "Состояния"
@@ -1526,36 +1529,40 @@
         "description": "Десятка на ведущей кости проверки или атаки — бросаешь ещё и прибавляешь; единица — бросаешь ещё и вычитаешь. Спасброски — без этого.",
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
-            "edit": "crit_up",
             "tags": [
               "атака"
-            ]
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "crit_up"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
-            "edit": "crit_down",
             "tags": [
               "атака"
-            ]
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "crit_down"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
-            "edit": "crit_up",
             "tags": [
               "проверка"
-            ]
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "crit_up"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
-            "edit": "crit_down",
             "tags": [
               "проверка"
-            ]
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "crit_down"
           }
         ],
         "group": "Состояния"

@@ -3218,158 +3218,171 @@
         },
         "modifiers": [
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "@damage_types.рубящий.taken.mult"
             },
             "stacking": "sum",
-            "tags": [
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount",
+            "anyTags": [
               "рубящий"
             ]
           },
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "@damage_types.колющий.taken.mult"
             },
             "stacking": "sum",
-            "tags": [
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount",
+            "anyTags": [
               "колющий"
             ]
           },
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "@damage_types.дробящий.taken.mult"
             },
             "stacking": "sum",
-            "tags": [
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount",
+            "anyTags": [
               "дробящий"
             ]
           },
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "@damage_types.огонь.taken.mult"
             },
             "stacking": "sum",
-            "tags": [
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount",
+            "anyTags": [
               "огонь"
             ]
           },
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "@damage_types.холод.taken.mult"
             },
             "stacking": "sum",
-            "tags": [
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount",
+            "anyTags": [
               "холод"
             ]
           },
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "@damage_types.молния.taken.mult"
             },
             "stacking": "sum",
-            "tags": [
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount",
+            "anyTags": [
               "молния"
             ]
           },
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "@damage_types.гром.taken.mult"
             },
             "stacking": "sum",
-            "tags": [
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount",
+            "anyTags": [
               "гром"
             ]
           },
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "@damage_types.кислота.taken.mult"
             },
             "stacking": "sum",
-            "tags": [
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount",
+            "anyTags": [
               "кислота"
             ]
           },
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "@damage_types.яд.taken.mult"
             },
             "stacking": "sum",
-            "tags": [
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount",
+            "anyTags": [
               "яд"
             ]
           },
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "@damage_types.некротический.taken.mult"
             },
             "stacking": "sum",
-            "tags": [
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount",
+            "anyTags": [
               "некротический"
             ]
           },
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "@damage_types.излучение.taken.mult"
             },
             "stacking": "sum",
-            "tags": [
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount",
+            "anyTags": [
               "излучение"
             ]
           },
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "@damage_types.психический.taken.mult"
             },
             "stacking": "sum",
-            "tags": [
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount",
+            "anyTags": [
               "психический"
             ]
           },
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "@damage_types.силовой.taken.mult"
             },
             "stacking": "sum",
-            "tags": [
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount",
+            "anyTags": [
               "силовой"
             ]
           }
@@ -4774,11 +4787,12 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "атака"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "advantage"
           }
         ],
@@ -4820,19 +4834,21 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "атака"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "advantage"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "проверка"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "advantage"
           }
         ],
@@ -5160,20 +5176,23 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "атака"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "disadvantage"
           },
           {
-            "kind": "roll",
-            "target": "incoming:roll:any",
             "tags": [
               "атака"
             ],
-            "edit": "advantage"
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "advantage",
+            "as": "against"
           }
         ],
         "on": [
@@ -5248,19 +5267,21 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "атака"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "disadvantage"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "проверка"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "disadvantage"
           }
         ],
@@ -5355,20 +5376,23 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "атака"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "advantage"
           },
           {
-            "kind": "roll",
-            "target": "incoming:roll:any",
             "tags": [
               "атака"
             ],
-            "edit": "disadvantage"
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "disadvantage",
+            "as": "against"
           }
         ],
         "reapply": "refresh"
@@ -5383,29 +5407,33 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "incoming:roll:any",
             "tags": [
               "атака"
             ],
-            "edit": "advantage"
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "advantage",
+            "as": "against"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "спасбросок",
               "сила"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "auto_fail"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "спасбросок",
               "ловкость"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "auto_fail"
           },
           {
@@ -5471,29 +5499,33 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "incoming:roll:any",
             "tags": [
               "атака"
             ],
-            "edit": "advantage"
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "advantage",
+            "as": "against"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "спасбросок",
               "сила"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "auto_fail"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "спасбросок",
               "ловкость"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "auto_fail"
           },
           {
@@ -5506,13 +5538,14 @@
             "stacking": "override"
           },
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "0.5"
             },
-            "stacking": "max"
+            "stacking": "max",
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount"
           }
         ],
         "grants": [
@@ -5530,19 +5563,21 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "атака"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "disadvantage"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "проверка"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "disadvantage"
           }
         ],
@@ -5558,19 +5593,22 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "incoming:roll:any",
             "tags": [
               "атака"
             ],
-            "edit": "advantage"
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "advantage",
+            "as": "against"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "атака"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "disadvantage"
           }
         ],
@@ -5595,28 +5633,32 @@
             "stacking": "override"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "атака"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "disadvantage"
           },
           {
-            "kind": "roll",
-            "target": "incoming:roll:any",
             "tags": [
               "атака"
             ],
-            "edit": "advantage"
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "advantage",
+            "as": "against"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "спасбросок",
               "ловкость"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "disadvantage"
           }
         ],
@@ -5670,29 +5712,33 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "incoming:roll:any",
             "tags": [
               "атака"
             ],
-            "edit": "advantage"
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "advantage",
+            "as": "against"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "спасбросок",
               "сила"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "auto_fail"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "спасбросок",
               "ловкость"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "auto_fail"
           }
         ],
@@ -5711,29 +5757,33 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "incoming:roll:any",
             "tags": [
               "атака"
             ],
-            "edit": "advantage"
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "advantage",
+            "as": "against"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "спасбросок",
               "сила"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "auto_fail"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "спасбросок",
               "ловкость"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "auto_fail"
           },
           {
@@ -5814,20 +5864,23 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "incoming:roll:any",
             "tags": [
               "атака"
             ],
-            "edit": "disadvantage"
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "disadvantage",
+            "as": "against"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "спасбросок",
               "ловкость"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "advantage"
           }
         ],
@@ -5845,20 +5898,23 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "атака"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "advantage"
           },
           {
-            "kind": "roll",
-            "target": "incoming:roll:any",
             "tags": [
               "атака"
             ],
-            "edit": "advantage"
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "advantage",
+            "as": "against"
           }
         ],
         "reapply": "refresh"
@@ -5883,8 +5939,6 @@
             "stacking": "sum"
           },
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "0.5"
@@ -5894,14 +5948,18 @@
               "table": "damage_types",
               "column": "nature",
               "is": "физический"
-            }
+            },
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "сила"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "advantage"
           }
         ],
@@ -5940,13 +5998,14 @@
         },
         "modifiers": [
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "0.5"
             },
-            "stacking": "sum"
+            "stacking": "sum",
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount"
           }
         ],
         "on": [
@@ -5976,19 +6035,21 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "атака"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "bless"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "спасбросок"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "bless"
           }
         ],
@@ -6004,19 +6065,21 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "атака"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "bane"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "спасбросок"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "bane"
           }
         ],
@@ -6032,11 +6095,12 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "проверка"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "guidance"
           }
         ],
@@ -6052,11 +6116,12 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "спасбросок"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "guidance"
           }
         ],
@@ -6090,12 +6155,13 @@
             "stacking": "sum"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "спасбросок",
               "ловкость"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "advantage"
           }
         ],
@@ -6129,12 +6195,13 @@
             "stacking": "sum"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "спасбросок",
               "ловкость"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "bonus",
             "op": "add",
             "value": {
               "expr": "-2"
@@ -6191,12 +6258,14 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "incoming:roll:any",
             "tags": [
               "атака"
             ],
-            "edit": "advantage"
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "advantage",
+            "as": "against"
           }
         ],
         "reapply": "refresh"
@@ -6211,12 +6280,14 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "incoming:roll:any",
             "tags": [
               "атака"
             ],
-            "edit": "disadvantage"
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "disadvantage",
+            "as": "against"
           }
         ],
         "reapply": "refresh"
@@ -6273,14 +6344,15 @@
         },
         "modifiers": [
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "0.5"
             },
             "stacking": "max",
-            "tags": [
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount",
+            "anyTags": [
               "огонь"
             ]
           }
@@ -6297,14 +6369,15 @@
         },
         "modifiers": [
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "0.5"
             },
             "stacking": "max",
-            "tags": [
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount",
+            "anyTags": [
               "яд"
             ]
           }
@@ -6321,8 +6394,6 @@
         },
         "modifiers": [
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "0.5"
@@ -6335,7 +6406,10 @@
             },
             "notTags": [
               "магический"
-            ]
+            ],
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount"
           }
         ],
         "reapply": "refresh"
@@ -6350,14 +6424,15 @@
         },
         "modifiers": [
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "2"
             },
             "stacking": "sum",
-            "tags": [
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount",
+            "anyTags": [
               "огонь"
             ]
           }
@@ -6374,14 +6449,15 @@
         },
         "modifiers": [
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "0"
             },
             "stacking": "sum",
-            "tags": [
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount",
+            "anyTags": [
               "яд"
             ]
           }
@@ -6554,12 +6630,13 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "спасбросок",
               "ловкость"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "advantage"
           }
         ],
@@ -6575,11 +6652,12 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "инициатива"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "advantage"
           }
         ],
@@ -6595,11 +6673,12 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "проверка"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "reliable"
           }
         ],
@@ -6615,8 +6694,9 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "lucky"
           }
         ],
@@ -6653,14 +6733,15 @@
         },
         "modifiers": [
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "0.5"
             },
             "stacking": "max",
-            "tags": [
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount",
+            "anyTags": [
               "яд"
             ]
           }
@@ -6677,14 +6758,15 @@
         },
         "modifiers": [
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "0.5"
             },
             "stacking": "max",
-            "tags": [
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount",
+            "anyTags": [
               "огонь"
             ]
           }
@@ -6785,12 +6867,13 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "спасбросок",
               "телосложение"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "advantage"
           }
         ],
@@ -6815,11 +6898,12 @@
             "stacking": "sum"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "спасбросок"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "bonus",
             "op": "add",
             "value": {
               "expr": "1"
@@ -7771,15 +7855,16 @@
         ],
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "проверка"
             ],
-            "edit": "disadvantage",
             "condition": {
               "expr": "@exhaustion >= 1"
-            }
+            },
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "disadvantage"
           },
           {
             "kind": "value",
@@ -7794,26 +7879,28 @@
             }
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "атака"
             ],
-            "edit": "disadvantage",
             "condition": {
               "expr": "@exhaustion >= 3"
-            }
+            },
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "disadvantage"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "спасбросок"
             ],
-            "edit": "disadvantage",
             "condition": {
               "expr": "@exhaustion >= 3"
-            }
+            },
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "disadvantage"
           },
           {
             "kind": "value",

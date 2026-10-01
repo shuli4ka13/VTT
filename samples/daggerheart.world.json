@@ -2005,20 +2005,24 @@
         "description": "Все броски против уязвимого — с преимуществом.",
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "incoming:roll:any",
             "tags": [
               "герой"
             ],
-            "edit": "advantage"
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "advantage",
+            "as": "against"
           },
           {
-            "kind": "roll",
-            "target": "incoming:roll:any",
             "tags": [
               "противник"
             ],
-            "edit": "gm_advantage"
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "gm_advantage",
+            "as": "against"
           }
         ]
       },
@@ -2032,20 +2036,24 @@
         "description": "Все броски против скрытого — с помехой. Спадает, когда вас увидели или вы атаковали.",
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "incoming:roll:any",
             "tags": [
               "герой"
             ],
-            "edit": "disadvantage"
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "disadvantage",
+            "as": "against"
           },
           {
-            "kind": "roll",
-            "target": "incoming:roll:any",
             "tags": [
               "противник"
             ],
-            "edit": "gm_disadvantage"
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "gm_disadvantage",
+            "as": "against"
           }
         ]
       },
@@ -2652,11 +2660,12 @@
         "description": "+1 к броскам атаки до следующего отдыха.",
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "атака"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "bonus",
             "op": "add",
             "value": {
               "expr": "1"

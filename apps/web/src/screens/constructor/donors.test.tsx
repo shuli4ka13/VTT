@@ -16,7 +16,7 @@ describe('доноры-образцы', () => {
 
     const system = useWorld.getState().system;
     const mods = Object.values(system.effects).flatMap(e => e.modifiers ?? []);
-    const named = mods.filter(m => m.kind === 'roll' && m.edit).map(m => m.edit);
+    const named = mods.filter(m => m.kind === 'edit' && m.edit).map(m => m.edit);
 
     expect(named.length, 'эффект приехал со ссылкой на правку').toBeGreaterThan(0);
     for (const key of named) {

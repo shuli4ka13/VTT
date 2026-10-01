@@ -1510,12 +1510,13 @@
         "description": "Помеха на броски атаки.",
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
-            "edit": "disadvantage",
             "tags": [
               "атака"
-            ]
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "disadvantage"
           }
         ],
         "steps": [],
@@ -1532,8 +1533,6 @@
         "description": "Немагический урон вдвое меньше.",
         "modifiers": [
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "0.5"
@@ -1541,7 +1540,10 @@
             "stacking": "max",
             "notTags": [
               "магический"
-            ]
+            ],
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount"
           }
         ],
         "steps": [],
@@ -1557,14 +1559,15 @@
         "description": "Входящий урон с тегом «огонь» половинится.",
         "modifiers": [
           {
-            "kind": "value",
-            "target": "event:damage",
             "op": "mul",
             "value": {
               "expr": "0.5"
             },
             "stacking": "max",
-            "tags": [
+            "kind": "edit",
+            "call": "damage",
+            "param": "amount",
+            "anyTags": [
               "огонь"
             ]
           }
@@ -1582,10 +1585,10 @@
         "description": "+1к4 к любому броску, пока благословивший держит концентрацию. Кость сверх: преимущество её не отбрасывает.",
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
-            "edit": "bless",
-            "stacking": "sum"
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "bless"
           }
         ],
         "steps": [],
@@ -1719,20 +1722,23 @@
         "description": "Атаки по лежащему — с преимуществом, его собственные атаки — с помехой.",
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "incoming:roll:any",
-            "edit": "advantage",
             "tags": [
               "атака"
-            ]
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "advantage",
+            "as": "against"
           },
           {
-            "kind": "roll",
-            "target": "roll:any",
-            "edit": "disadvantage",
             "tags": [
               "атака"
-            ]
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "disadvantage"
           }
         ],
         "steps": [],
@@ -1747,15 +1753,16 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
             "condition": {
               "expr": "#armor_heavy"
             },
-            "edit": "disadvantage",
             "tags": [
               "проверка"
-            ]
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "disadvantage"
           }
         ],
         "steps": [],
@@ -1770,15 +1777,16 @@
         },
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
             "condition": {
               "expr": "#prof_bonus >= 4"
             },
-            "edit": "advantage",
             "tags": [
               "проверка"
-            ]
+            ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
+            "edit": "advantage"
           }
         ],
         "steps": [],

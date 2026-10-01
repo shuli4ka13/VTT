@@ -539,11 +539,12 @@
         "description": "Действие с рейтингом 0: бросаются две кости и берётся худшая.",
         "modifiers": [
           {
-            "kind": "roll",
-            "target": "roll:any",
             "tags": [
               "нулевой"
             ],
+            "kind": "edit",
+            "call": "roll",
+            "param": "edits",
             "edit": "zero_rating"
           }
         ]
