@@ -1,13 +1,15 @@
 import { newPass, calc } from '../engine/calc.ts';
-import { packCall, runCall } from './call.ts';
+import { State } from '../lang/state.ts';
+import { External, emptyJournal } from '../lang/journal.ts';
+import { Runner, newSink, reportOf } from '../lang/run.ts';
 import { holdsNow } from '../engine/refs.ts';
 import { lapse, burnsUse, spendUse } from './durations.ts';
 import type { Expired } from './durations.ts';
 import type { Clock } from '../engine/clock.ts';
-import { listening, subscribers, withSteps, MOMENT_PREFIX, FIELD_PREFIX } from './bus.ts';
+import { listening, subscribers, MOMENT_PREFIX, FIELD_PREFIX } from './bus.ts';
 import { EngineError } from '../engine/errors.ts';
 import { effectLabelOf } from './envelope.ts';
-import { sharedOf, isShared } from './desk.ts';
+import { isShared } from './desk.ts';
 import type { Report, WorldContext } from './envelope.ts';
 import type { Sheet, System, Effect, Handler, Step, WornEffect } from '../model/types.ts';
 import { fieldOf as columnField } from '../model/sheet-columns.ts';
@@ -96,22 +98,19 @@ export function fire(firing: Firing, sheets: Sheet[], world: WorldContext): { sh
   const { id, effect, owner, seed, handler } = firing;
   if (handler && !holds(handler, live, seed, owner, world)) return null;
 
-  const here = { ...world, shared: sharedOf(world.system, sheets) };
-  const call = { effectId: id, effect: withSteps(effect, firing.steps), sheet: live, owner, args: {}, props: null, seed };
-  const done = runCall(packCall(call, here), { sheet: live, owner, seed }, here);
-  let next = done.sheet;
-  if (handler && burnsUse(effect)) next = spendUse(next, id);
+  const state = new State([...sheets], world.system, world.compendium, world.clock ?? null);
+  const run = new Runner(state, new External(emptyJournal(), world.die));
+  const sink = newSink();
+  const ran = run.exec({
+    scope: `${firing.sheetId}:${id}`, me: firing.sheetId, here: firing.sheetId, target: firing.sheetId, effectId: id, owner,
+    args: (effect.args || {}) as Record<string, unknown>, paramDefs: effect.params ?? [], props: null,
+    source: firing.sheetId, hop: 0, names: 'here',
+  }, firing.steps ?? [], sink, seed);
+  if (handler && burnsUse(effect)) state.put(spendUse(state.get(firing.sheetId), id));
+  const known = new Set(sheets.map(s => s.id));
   return {
-    sheets: sheets.map(s => (s.id === next.id ? next : done.shared?.find(u => u.id === s.id) ?? s)),
-    fired: {
-      sheetId: firing.sheetId,
-      report: {
-        kind: 'moment', effect: id, from: firing.sheetId, label: firing.label,
-        reply: false, trace: done.trace, stopped: done.stopped,
-        changes: done.changes, effects: done.effects, removed: done.removed, spent: [],
-        emitted: done.emitted,
-      },
-    },
+    sheets: state.sheets.filter(s => known.has(s.id)),
+    fired: { sheetId: firing.sheetId, report: { ...reportOf('moment', id, firing.sheetId, firing.label, sink, ran.stopped, false) } },
   };
 }
 

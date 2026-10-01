@@ -49,3 +49,8 @@ export function sweepBonds(system: System, sheets: Sheet[]): { sheets: Sheet[]; 
 
   return { sheets: next, broken };
 }
+
+export const sharedHolderOf = (system: System, effectId: string): string | null => {
+  const bond = system.effects[effectId]?.bond;
+  return typeof bond === 'string' ? bond : null;
+};

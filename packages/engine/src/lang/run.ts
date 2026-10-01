@@ -12,7 +12,7 @@ import { listening, subscriberByKey, hears, runsAtOther } from '../events/bus.ts
 import { offers as offersOf, MAX_HOPS } from '../events/envelope.ts';
 import { holderOf as bondHolderOf } from '../events/bonds.ts';
 import { refusalWords } from '../events/refusal.ts';
-import { MAX_REPLIES } from '../events/exchange.ts';
+import { MAX_REPLIES } from './limits.ts';
 import type { State } from './state.ts';
 import type { External, Question } from './journal.ts';
 import type { StepContext, StepData } from '../engine/steps/index.ts';

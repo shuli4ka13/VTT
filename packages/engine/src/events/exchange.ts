@@ -53,9 +53,8 @@ export interface ExchangeResult {
   replies?: Envelope[];
 }
 
-export const MAX_REPLIES = 32;
-
-export const CUT_WORDS = 'цепочка ответов оборвана: дальше отвечать нельзя — предел';
+export { MAX_REPLIES, CUT_WORDS } from '../lang/limits.ts';
+import { MAX_REPLIES } from '../lang/limits.ts';
 
 export function deliverReplies({
   system, compendium, die, clock, sheets, replies, budget = MAX_REPLIES,
@@ -81,10 +80,8 @@ export function deliverReplies({
   return { sheets: updated, reports, budget: left, ...(cut ? { cut } : {}) };
 }
 
-export const sharedHolderOf = (system: System, effectId: string): string | null => {
-  const bond = system.effects[effectId]?.bond;
-  return typeof bond === 'string' ? bond : null;
-};
+export { sharedHolderOf } from './bonds.ts';
+import { sharedHolderOf } from './bonds.ts';
 
 const finder = (sheets: Sheet[]) => (id: string): Sheet | null => sheets.find(s => s.id === id) || null;
 
