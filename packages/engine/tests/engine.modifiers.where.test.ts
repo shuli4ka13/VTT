@@ -1,6 +1,6 @@
 import { group, test, eq } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
-import { exchange } from '../src/events/exchange.ts';
+import { exchange } from './play.ts';
 import type { System, Compendium, Sheet } from '../src/model/types.ts';
 
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T;

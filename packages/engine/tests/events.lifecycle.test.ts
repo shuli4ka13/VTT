@@ -1,6 +1,6 @@
 import { group, test, eq, deepEq, throws, ok } from './harness.ts';
 import { grantedTo } from '../src/engine/effects.ts';
-import { exchange } from '../src/events/exchange.ts';
+import { exchange } from './play.ts';
 import { fireLifecycle, lifecycleChanges } from '../src/events/lifecycle.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 

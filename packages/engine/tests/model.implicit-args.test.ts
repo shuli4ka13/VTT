@@ -1,6 +1,6 @@
 import { group, test, eq, ok } from './harness.ts';
 import { availableActions } from '../src/events/envelope.ts';
-import { exchange } from '../src/events/exchange.ts';
+import { exchange } from './play.ts';
 import { propsNeeded } from '../src/model/owned.ts';
 import type { System, Sheet, Compendium } from '../src/model/types.ts';
 

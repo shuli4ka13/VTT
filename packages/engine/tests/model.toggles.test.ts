@@ -2,7 +2,7 @@ import { group, test, eq, ok, deepEq } from './harness.ts';
 import { critOf, setCrit, armorOf, setArmor, armorTail, CRIT_RULE, CRIT_EDIT } from '../src/model/toggles.ts';
 import { lintSystem, errorsOf } from '../src/model/lint.ts';
 import { PLAYABLE_WORLDS as SAMPLE_WORLDS } from '../src/model/systems.ts';
-import { exchange } from '../src/events/exchange.ts';
+import { exchange } from './play.ts';
 import type { System, Compendium, Sheet } from '../src/model/types.ts';
 
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;

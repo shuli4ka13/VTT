@@ -1,7 +1,7 @@
 import { group, test, eq, deepEq } from './harness.ts';
 import { SAMPLE_WORLDS } from '../src/model/systems.ts';
 import { flattenSystem } from '../src/model/inherit.ts';
-import { exchange } from '../src/events/exchange.ts';
+import { exchange } from './play.ts';
 import { lintSystem, errorsOf } from '../src/model/lint.ts';
 import type { Sheet } from '../src/model/types.ts';
 

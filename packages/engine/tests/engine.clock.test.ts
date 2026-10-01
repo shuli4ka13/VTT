@@ -5,7 +5,7 @@ import {
 import { fireMoments, momentsOfTurn } from '../src/events/moments.ts';
 import type { TurnOp } from '../src/events/moments.ts';
 import type { Clock } from '../src/engine/clock.ts';
-import { exchange } from '../src/events/exchange.ts';
+import { exchange } from './play.ts';
 import { system, arven, mirra, compendium } from './fixtures.ts';
 
 const queue = (...values: number[]) => {

@@ -1,6 +1,6 @@
 import { group, test, eq, ok } from './harness.ts';
 import { asksOf, checkInputs, normalizeInputs } from '../src/model/asks.ts';
-import { exchange } from '../src/events/exchange.ts';
+import { exchange } from './play.ts';
 import type { System, Compendium, Sheet } from '../src/model/types.ts';
 
 const system = {

@@ -51,10 +51,14 @@ export type ActOutcome =
 export const render = (entries: Entry[], system: System, sheets: Sheet[]): string[] =>
   entries.map(entry => ('text' in entry ? entry.text : describeEntry(entry, system, sheets)));
 
-export function settleLines(world: WorldContext, before: Sheet[], after: Sheet[], lines: string[]): Sheet[] {
+export function settleLines(world: WorldContext, before: Sheet[], after: Sheet[], lines: string[], entries?: Entry[]): Sheet[] {
   const done = settle(before, after, world);
   for (const entry of done.aftermath) {
-    if (entry.kind === 'fired') { lines.push(describeMoment(world, entry, done.sheets)); continue; }
+    if (entry.kind === 'fired') {
+      lines.push(describeMoment(world, entry, done.sheets));
+      entries?.push({ fromId: entry.sheetId, toId: entry.sheetId, report: entry.report });
+      continue;
+    }
     const who = done.sheets.find(s => s.id === entry.sheetId)?.name ?? entry.sheetId;
     lines.push(`«${effectLabelOf(world.system, entry.effectId)}» спало с ${who}: держать стало нечем`);
   }
@@ -219,7 +223,7 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
     if (run.cut) log.push({ text: CUT_WORDS });
 
     const lines = render(log, system, state.sheets);
-    const final = settleLines({ system, compendium, clock, die: ext.dieAt('settle') }, world.sheets, state.sheets, lines);
+    const final = settleLines({ system, compendium, clock, die: ext.dieAt('settle') }, world.sheets, state.sheets, lines, log);
     return { kind: 'done', sheets: final, log: lines, entries: log, journal: ext.settled(), fresh: ext.fresh };
   } catch (err) {
     if (!(err instanceof Pause)) throw err;

@@ -1,5 +1,5 @@
 import { group, test, eq, deepEq } from './harness.ts';
-import { exchange } from '../src/events/exchange.ts';
+import { exchange } from './play.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
 import { rollInitiative } from '../src/engine/clock.ts';
 import { sharedOf } from '../src/events/desk.ts';

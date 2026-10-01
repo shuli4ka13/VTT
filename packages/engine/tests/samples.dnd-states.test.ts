@@ -1,7 +1,7 @@
 import { group, test, eq, ok } from './harness.ts';
 import { PLAYABLE_WORLDS } from '../src/model/systems.ts';
 import { fireMoments } from '../src/events/moments.ts';
-import { exchange } from '../src/events/exchange.ts';
+import { exchange } from './play.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
 import type { System, Sheet } from '../src/model/types.ts';
 
