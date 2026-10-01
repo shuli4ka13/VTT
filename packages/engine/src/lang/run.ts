@@ -463,9 +463,7 @@ export class Runner {
           key: `${scope}?seen:${sheetId}`, sheetId, window: 'seen', label: '', offers, results: seed(),
           preview: [`${tags.length ? `Бросок (${rollName([...tags])})` : 'Бросок'}: [${cell.value.rolls.join(', ')}] → ${cell.value.total}`],
         };
-        const chosen = [...new Set(this.drying ? (this.ext.peek(question.key) ?? []) : this.ext.ask(question))];
-        const stray = chosen.find(id => !offers.some(offer => offer.id === id));
-        if (stray) throw new EngineError(`реакция «${stray}» сейчас не предлагается; можно: ${offers.map(o => o.id).join(', ')}`);
+        const { chosen, skipped } = this.choose(question);
         for (const id of chosen) {
           const found = subscriberByKey(this.system, id)!;
           if (!heard(true).some(sub => sub.key === id)) {
@@ -479,7 +477,7 @@ export class Runner {
           }
           this.useSeen(found, sheetId, cell, `${question.key}!${id}`, `${base}?${id}`, hop, sink, seed());
         }
-        if (!chosen.length && !this.ext.declineAll && !this.drying) sink.after.push({ text: `${sheet.name} пропускает реакцию` });
+        if (skipped) sink.after.push({ text: `${sheet.name} пропускает реакцию` });
       }
     } finally {
       this.seeing--;
@@ -541,15 +539,20 @@ export class Runner {
     return out;
   }
 
+  private choose(question: Question): { chosen: string[]; skipped: boolean } {
+    const known = this.drying ? this.ext.peek(question.key) : null;
+    const { chosen, byPerson } = this.drying ? { chosen: known ?? [], byPerson: false } : this.ext.ask(question);
+    const unique = [...new Set(chosen)];
+    const stray = unique.find(id => !question.offers.some(offer => offer.id === id));
+    if (stray) throw new EngineError(`реакция «${stray}» сейчас не предлагается; можно: ${question.offers.map(o => o.id).join(', ') || '(ничего)'}`);
+    return { chosen: unique, skipped: byPerson && !unique.length };
+  }
+
   ask(
     question: Question, effectId: string, hop: number, emitted: EmittedEvent[], other: string | null,
   ): { entries: Entry[] } {
-    const chosen = [...new Set(this.drying ? (this.ext.peek(question.key) ?? []) : this.ext.ask(question))];
+    const { chosen, skipped } = this.choose(question);
     const { sheetId, results } = question;
-    const stray = chosen.find(id => !question.offers.some(offer => offer.id === id));
-    if (stray) {
-      throw new EngineError(`реакция «${stray}» сейчас не предлагается; можно: ${question.offers.map(o => o.id).join(', ') || '(ничего)'}`);
-    }
     const entries: Entry[] = [];
     for (const id of chosen) {
       const found = subscriberByKey(this.system, id);
@@ -584,7 +587,7 @@ export class Runner {
       }
       entries.push(...sink.after);
     }
-    if (!chosen.length && !this.ext.declineAll) entries.push({ text: `${this.state.get(sheetId).name} пропускает реакцию` });
+    if (skipped) entries.push({ text: `${this.state.get(sheetId).name} пропускает реакцию` });
     return { entries };
   }
 

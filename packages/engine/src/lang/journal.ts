@@ -45,14 +45,11 @@ export class External {
     return this.journal.answers[key] ?? null;
   }
 
-  ask(question: Question): string[] {
+  ask(question: Question): { chosen: string[]; byPerson: boolean } {
     this.used.add(question.key);
     const known = this.journal.answers[question.key];
-    if (known !== undefined) return known;
-    if (this.declineAll) {
-      this.journal.answers[question.key] = [];
-      return [];
-    }
+    if (known !== undefined) return { chosen: known, byPerson: true };
+    if (this.declineAll) return { chosen: [], byPerson: false };
     throw new Pause(question);
   }
 
