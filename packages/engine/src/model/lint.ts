@@ -4,7 +4,7 @@ import { registry } from '../engine/steps/index.ts';
 import { calledOf, chainsOfEffect } from '../engine/effects.ts';
 import { basedOn, paramsOf } from './inherit.ts';
 import { danglingRows } from './integrity.ts';
-import { recordsOf, sheetKinds, argsWithProps, propKeysOf, recordKinds, kindsOf, kindOf, isBook } from './owned.ts';
+import { recordsOf, argsWithProps, propKeysOf, recordKinds, kindsOf, kindOf, isBook } from './owned.ts';
 import { blockNames } from './blocks.ts';
 import { MOMENTS } from '../events/moments.ts';
 import { TABS, STEP } from '../words/glossary.ts';
@@ -332,7 +332,7 @@ function fieldRollProblems(system: System): Problem[] {
 function sheetKindProblems(system: System): Problem[] {
   const out: Problem[] = [];
   const known = new Set(blockNames(system));
-  for (const [key, kind] of sheetKinds(system)) {
+  for (const [key, kind] of Object.entries(system.sheets ?? {})) {
     for (const block of kind.blocks ?? []) {
       if (!known.has(block)) {
         out.push({ where: { tab: 'records', kind: key }, level: 'warn', text: `тип листа «${kind.label || key}» показывает блок «${block}», которого на листе нет` });

@@ -53,22 +53,12 @@ export const scenarios: Scenario[] = [
     expect: { values: { 'стол': { alarm: 8 } } },
   },
   {
-    name: 'залечь на дно: тревога сбрасывается, жар банды растёт (как задумано в образце)',
-    rule: 'Правило образца (эффект lay_low): тревога на столе → 0, жар банды +1. Одно действие по двум целям — банда и стол — меняет оба листа. Выводится из описания эффекта, не из SRD.',
-    world: 'blades',
-    sheets: { 'стол': { values: { alarm: 3 } } },
-    dice: [],
-    steps: [{ act: 'lay_low:0', from: 'vex', to: ['crew', 'стол'] }],
-    expect: { values: { 'стол': { alarm: 0 }, crew: { heat: 2 } } },
-  },
-  {
     name: 'залечь на дно по SRD снижает жар, а не повышает',
     rule: 'SRD, Downtime «Lay Low»: бросок, число успехов — снижение жара (4/5 — минус 2). Образец вместо этого прибавляет жар (+1) и без броска. Ожидание: бросок [5], жар 1 → 0 (не ниже 0).',
     world: 'blades',
     dice: [5],
     steps: [{ act: 'lay_low:0', from: 'vex', to: 'crew' }],
     expect: { values: { crew: { heat: 0 } } },
-    oldEngine: 'данные образца: lay_low без броска и прибавляет жар (+1), по SRD жар снижается броском',
   },
   {
     name: 'сопротивление: цена в стрессе 6 минус лучшая кость, а не фиксированные 2',
@@ -77,7 +67,6 @@ export const scenarios: Scenario[] = [
     dice: [5],
     steps: [{ act: 'resist:0', from: 'mira', to: 'mira' }],
     expect: { values: { mira: { stress: 3 } } },
-    oldEngine: 'данные образца: resist — фиксированные +2 стресса без броска сопротивления',
   },
   {
     name: 'две шестёрки в пуле — критический успех',
@@ -86,14 +75,5 @@ export const scenarios: Scenario[] = [
     dice: [6, 6, 2],
     steps: [{ act: 'act_prowl:0', from: 'mira', to: 'стол' }],
     expect: { log: ['критический успех'] },
-    oldEngine: 'данные образца: таблица outcome не знает крита, 6+6 — просто «успех»',
-  },
-  {
-    name: 'сопротивление: стресс растёт у того, кто сопротивляется (механика образца, +2)',
-    rule: 'Образец: эффект resist — +2 стресса на лист. Мира 2 → 4. Это правило образца, не SRD; проверяет сам перенос стресса на лист.',
-    world: 'blades',
-    dice: [],
-    steps: [{ act: 'resist:0', from: 'mira', to: 'mira' }],
-    expect: { values: { mira: { stress: 4 } } },
   },
 ];

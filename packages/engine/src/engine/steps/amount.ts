@@ -60,7 +60,9 @@ export function pack(step: StepData, ctx: StepContext) {
   const plain = written !== null && times !== null ? countedNotation(written, times) : written;
   const doubled = plain !== null && doublesNow(step, ctx);
   const notation = doubled ? multiplyNotation(plain, 2) : plain;
-  const fixed = step.fixed !== undefined ? packRef(step.fixed, ctx) : null;
+  const thrown: { sides: number; value: number }[] = [];
+  const watched: StepContext = { ...ctx, die: sides => { const value = ctx.die(sides); thrown.push({ sides, value }); return value; } };
+  const fixed = step.fixed !== undefined ? packRef(step.fixed, watched) : null;
   const bonus = step.bonus !== undefined ? packRef(step.bonus, ctx) : null;
   const margin = step.margin !== undefined ? packRef(step.margin, ctx) : null;
 
@@ -81,7 +83,7 @@ export function pack(step: StepData, ctx: StepContext) {
   const held = ctx.kept?.[String(step.id ?? '')]?.rolled as NotationRoll | undefined;
   return {
     source,
-    rolled: notation ? rollNotation(notation, ctx.die, held) : { notation: null, rolls: [], total: 0 },
+    rolled: notation ? rollNotation(notation, ctx.die, held) : fromFormula(thrown),
     ...(doubled ? { doubled: true } : {}),
     ...(times !== null ? { times } : {}),
     ...(step.scale ? {
@@ -91,6 +93,19 @@ export function pack(step: StepData, ctx: StepContext) {
       },
     } : {}),
     fixed, bonus, margin,
+  };
+}
+
+function fromFormula(thrown: { sides: number; value: number }[]) {
+  return {
+    notation: null, rolls: thrown.map(one => one.value), total: 0,
+    ...(thrown.length ? {
+      tally: {
+        dice: thrown.length,
+        atMax: thrown.filter(one => one.value === one.sides).length,
+        atMin: thrown.filter(one => one.value === 1).length,
+      },
+    } : {}),
   };
 }
 

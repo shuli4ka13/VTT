@@ -123,7 +123,7 @@ group('две системы одними слотами', () => {
       const out = shoot([15, 6, 6, 6], { distance: 3, spend_luck: 0 });
       const target = out.sheets.find(s => s.id === 'raze')!;
       eq(target.values.sp_body, 10, 'броня изношена на единицу');
-      eq(target.values.hp, 33, '45 минус (18 − броня 11)');
+      eq(target.values.hp, 28, '45 минус (18 − броня 11) и 5 мимо брони за шестёрки');
     });
 
     test('броня держит: слабый урон не проходит и брони не портит', () => {

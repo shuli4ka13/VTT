@@ -1,4 +1,5 @@
 import { compile } from '../formula/index.ts';
+import { DESK_ID, isDesk } from '../engine/owners.ts';
 import { paramsOf } from './inherit.ts';
 import type { Binding, Compendium, CompendiumRecord, Owned, Sheet, SheetKind, System, Table } from './types.ts';
 
@@ -62,12 +63,13 @@ export function propsOf(record: CompendiumRecord, system: System, entry?: Owned)
 }
 
 export const sheetKindOf = (system: System, sheet: Sheet | null | undefined): SheetKind | undefined =>
-  (sheet?.of ? system.sheets?.[sheet.of] : undefined);
+  (sheet?.of ? system.sheets?.[sheet.of] : sheet && isDesk(sheet) ? system.sheets?.[DESK_ID] : undefined);
 
-export const sheetKinds = (system: System): [string, SheetKind][] => Object.entries(system.sheets ?? {});
+export const sheetKinds = (system: System): [string, SheetKind][] =>
+  Object.entries(system.sheets ?? {}).filter(([key]) => key !== DESK_ID);
 
 export const kindsOf = (system: System): [string, AnyKind][] =>
-  [...recordKinds(system), ...sheetKinds(system)] as [string, AnyKind][];
+  [...recordKinds(system), ...Object.entries(system.sheets ?? {})] as [string, AnyKind][];
 
 export const kindOf = (system: System, id: string | undefined): AnyKind | undefined =>
   (recordKindOf(system, id) ?? (id ? system.sheets?.[id] : undefined)) as AnyKind | undefined;

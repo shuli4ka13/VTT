@@ -236,7 +236,7 @@
           {
             "key": "wound_at",
             "label": "Порог серьёзной раны",
-            "expr": "округлить вверх(@hp_max / 2)",
+            "expr": "округлить вверх(@hp_max / 2) - 1",
             "block": "Состояние"
           },
           {
@@ -459,6 +459,12 @@
             "cells": {
               "armor": "мимо брони"
             }
+          },
+          {
+            "value": "критический",
+            "cells": {
+              "armor": "мимо брони"
+            }
           }
         ],
         "columns": [
@@ -503,6 +509,9 @@
           },
           {
             "value": "проверка"
+          },
+          {
+            "value": "спасбросок"
           }
         ]
       },
@@ -1302,7 +1311,7 @@
               "expr": "@отправитель.skills.пистолеты.total"
             },
             "bonus": {
-              "expr": "@spend_luck"
+              "expr": "@spend_luck - если(@aim == \"по голове\", 8, 0)"
             }
           },
           {
@@ -1368,7 +1377,7 @@
                 "expr": "@boom"
               },
               "damage_type": {
-                "expr": "@damage_type"
+                "expr": "\"критический\""
               },
               "aim": {
                 "expr": "@aim"
@@ -1477,7 +1486,52 @@
             },
             "condition": {
               "expr": "@seriously"
-            }
+            },
+            "tags": [
+              "атака"
+            ]
+          },
+          {
+            "kind": "roll",
+            "target": "roll:any",
+            "op": "add",
+            "value": {
+              "expr": "-2"
+            },
+            "condition": {
+              "expr": "@seriously"
+            },
+            "tags": [
+              "проверка"
+            ]
+          }
+        ],
+        "group": "Состояния"
+      },
+      "crit_rule": {
+        "label": "Критический бросок",
+        "icon": "🎲",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "description": "Десятка на ведущей кости атаки — бросаешь ещё и прибавляешь; единица — бросаешь ещё и вычитаешь.",
+        "modifiers": [
+          {
+            "kind": "roll",
+            "target": "roll:any",
+            "edit": "crit_up",
+            "tags": [
+              "атака"
+            ]
+          },
+          {
+            "kind": "roll",
+            "target": "roll:any",
+            "edit": "crit_down",
+            "tags": [
+              "атака"
+            ]
           }
         ],
         "group": "Состояния"
@@ -1489,7 +1543,7 @@
         "duration": {
           "kind": "permanent"
         },
-        "description": "Хиты на нуле: в начале своего хода к10 не выше Телосложения, иначе смерть.",
+        "description": "Хиты на нуле: в начале своего хода к10 строго ниже Телосложения, иначе смерть. Без модификаторов.",
         "params": [],
         "group": "Состояния",
         "on": [
@@ -1507,13 +1561,13 @@
                     "constant": "lead_die"
                   },
                   "tags": [
-                    "проверка"
+                    "спасбросок"
                   ]
                 },
                 "versus": {
                   "expr": "@отправитель.body"
                 },
-                "successWhen": "notOver",
+                "successWhen": "under",
                 "continueOn": "fail"
               },
               {
@@ -1543,7 +1597,7 @@
             "versus": {
               "expr": "@получатель.sp_body"
             },
-            "breakIf": "less",
+            "breakIf": "atMost",
             "when": {
               "expr": "все(есть(@event.tags, \"по телу\"), есть(таблица(\"damage_types\", @event.tags, \"armor\"), \"через броню\"))"
             }
@@ -1585,7 +1639,7 @@
             "versus": {
               "expr": "@получатель.sp_head"
             },
-            "breakIf": "less",
+            "breakIf": "atMost",
             "when": {
               "expr": "все(есть(@event.tags, \"по голове\"), есть(таблица(\"damage_types\", @event.tags, \"armor\"), \"через броню\"))"
             }
@@ -1831,7 +1885,8 @@
       "battle_end",
       "turn_refresh",
       "serious_wound_rule",
-      "death_save"
+      "death_save",
+      "crit_rule"
     ]
   },
   "compendium": {

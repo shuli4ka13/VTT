@@ -504,7 +504,7 @@ export class RoomsService {
     await this.assertNotWaiting(roomId, await this.sheetsOf(roomId));
     await this.assertMaySheet(roomId, userId, sheetId);
     const { system, compendium } = this.worldOf(room);
-    if (of !== null && !system.sheets?.[of]) {
+    if (of !== null && (!system.sheets?.[of] || isDesk({ id: of }))) {
       throw new BadRequestException(`система не объявляет типа листа «${of}»`);
     }
     const rows = await this.db.select().from(roomSheets)

@@ -1,6 +1,7 @@
 import { heldBy, sheetKindOf, kindOfRecord } from '../model/owned.ts';
 import { DURATIONS, REAPPLY } from '../model/effect-kinds.ts';
 import { EngineError } from './errors.ts';
+import { isDesk } from './owners.ts';
 import type {
   System, Sheet, Compendium, Effect, Modifier, Step,
   Activation, DurationKind, Reapply, WornEffect,
@@ -90,7 +91,7 @@ export function grantedTo(system: System, sheet: Sheet, compendium: Compendium |
       ...kindOfRecord(system, record)?.grants ?? [], ...record.grants ?? [],
     ]) : []),
     ...sheetKindOf(system, sheet)?.grants ?? [],
-    ...system.grants ?? [],
+    ...(isDesk(sheet) ? [] : system.grants ?? []),
   ]);
   const queue = [...(sheet.effects ?? []).map(entry => entry.effectId), ...granted];
   for (let at = 0; at < queue.length; at += 1) {

@@ -9,7 +9,7 @@ import type { Clock } from '../engine/clock.ts';
 import { listening, subscribers, MOMENT_PREFIX, FIELD_PREFIX } from './bus.ts';
 import { EngineError } from '../engine/errors.ts';
 import { effectLabelOf } from './actions.ts';
-import { isShared } from './desk.ts';
+import { isShared, isDesk } from './desk.ts';
 import type { Report, WorldContext } from '../lang/types.ts';
 import type { Sheet, System, Effect, Handler, Step, WornEffect } from '../model/types.ts';
 import { fieldOf as columnField } from '../model/sheet-columns.ts';
@@ -27,6 +27,8 @@ export const MOMENTS = {
 } as const;
 
 export type MomentKey = keyof typeof MOMENTS;
+
+const TABLE_MOMENTS: ReadonlySet<MomentKey> = new Set<MomentKey>(['combat-start', 'round-start', 'combat-end', 'scene-end']);
 
 export const heardMoments = (system: System): Set<MomentKey> =>
   new Set(Object.values(system.effects ?? {}).flatMap(effect => (effect.on ?? []).map(handler => momentOf(handler.on)))
@@ -56,8 +58,11 @@ export interface MomentRun {
 export type TurnOp = 'start' | 'next' | 'stop' | 'scene' | 'short-rest' | 'long-rest';
 
 export function momentsOfTurn(op: TurnOp, before: Clock, after: Clock, sheets: Sheet[]): MomentEvent[] {
-  const everyone = (moment: MomentKey): MomentEvent[] =>
-    sheets.filter(sheet => !isShared(sheet, sheets)).map(sheet => ({ moment, sheetId: sheet.id }));
+  const desk = sheets.find(isDesk);
+  const everyone = (moment: MomentKey): MomentEvent[] => [
+    ...sheets.filter(sheet => !isShared(sheet, sheets)).map(sheet => ({ moment, sheetId: sheet.id })),
+    ...(desk && TABLE_MOMENTS.has(moment) ? [{ moment, sheetId: desk.id }] : []),
+  ];
   if (op === 'start') {
     return [
       ...everyone('combat-start'),
@@ -137,7 +142,7 @@ export function fireMoments(events: MomentEvent[], sheets: Sheet[], world: World
         sheetId: event.sheetId, id, effect, handler, steps: handler.steps,
         owner: `момент «${MOMENTS[event.moment]}» у «${effect.label ?? id}»`,
         label: effect.label ?? id,
-        seed: { moment: { moment: event.moment, sheet: event.sheetId }, worn: wornEntry(live, id) },
+        seed: { moment: { moment: event.moment, sheet: event.sheetId, round: world.clock?.round ?? 0 }, worn: wornEntry(live, id) },
       }, updated, world);
       if (!done) continue;
       updated = done.sheets;

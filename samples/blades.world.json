@@ -24,6 +24,30 @@
           }
         ],
         "read": "best"
+      },
+      "resist_pool": {
+        "label": "пул сопротивления к6",
+        "kind": "die",
+        "dice": [
+          {
+            "count": {
+              "expr": "большее из(1, @resolve)"
+            },
+            "sides": 6
+          }
+        ],
+        "read": "best"
+      },
+      "heat_die": {
+        "label": "кость жара к6",
+        "kind": "die",
+        "dice": [
+          {
+            "count": 1,
+            "sides": 6
+          }
+        ],
+        "read": "best"
       }
     },
     "roll_edits": {
@@ -154,6 +178,13 @@
             "block": "Действия"
           },
           {
+            "key": "resolve",
+            "label": "Воля",
+            "kind": "number",
+            "expr": "если(@attune > 0, 1, 0) + если(@command > 0, 1, 0) + если(@consort > 0, 1, 0) + если(@sway > 0, 1, 0)",
+            "block": "Действия"
+          },
+          {
             "key": "stress",
             "label": "Стресс",
             "kind": "number",
@@ -268,6 +299,9 @@
           },
           {
             "value": "нулевой"
+          },
+          {
+            "value": "сопротивление"
           }
         ]
       },
@@ -301,6 +335,26 @@
         "block": "Банда",
         "columns": [],
         "bindings": []
+      },
+      "crit": {
+        "label": "Критический успех",
+        "key": "range",
+        "columns": [
+          {
+            "key": "value",
+            "label": "исход",
+            "kind": "text"
+          }
+        ],
+        "rows": [
+          {
+            "from": 2,
+            "to": 99,
+            "cells": {
+              "value": "критический успех"
+            }
+          }
+        ]
       }
     },
     "effects": {
@@ -308,7 +362,7 @@
         "label": "Рискованное действие",
         "group": "Ремесло",
         "activation": "manual",
-        "description": "Пул к6 по рейтингу действия, берётся лучшая кость: 1–3 провал, 4–5 успех с последствием, 6 успех. При рейтинге 0 — две кости, берётся худшая. Последствия крутят часы тревоги на столе.",
+        "description": "Пул к6 по рейтингу действия, берётся лучшая кость: 1–3 провал, 4–5 успех с последствием, 6 успех. При рейтинге 0 — две кости, берётся худшая. Последствия крутят часы тревоги на столе. Две и более шестёрки при ненулевом рейтинге — критический успех.",
         "params": [
           {
             "key": "rating",
@@ -339,6 +393,16 @@
             "degrees": {
               "table": "outcome",
               "of": "total"
+            }
+          },
+          {
+            "type": "table",
+            "table": "crit",
+            "value": {
+              "expr": "сколько(@бросок.dice.rolls, 6)"
+            },
+            "when": {
+              "expr": "все(@rating > 0, сколько(@бросок.dice.rolls, 6) >= 2)"
             }
           },
           {
@@ -375,8 +439,38 @@
         "label": "Сопротивление",
         "group": "Ремесло",
         "activation": "manual",
-        "description": "Отказаться от последствия ценой стресса.",
+        "description": "Сопротивление: кости по Воле, стресс = 6 минус лучшая кость; две шестёрки — критический успех, снимает 1 стресс. При нулевой Воле две кости, берётся худшая.",
         "steps": [
+          {
+            "id": "бросок",
+            "type": "threshold",
+            "roll": {
+              "die": {
+                "constant": "resist_pool"
+              },
+              "tags": [
+                "сопротивление",
+                {
+                  "expr": "если(@resolve == 0, \"нулевой\", \"\")"
+                }
+              ]
+            },
+            "versus": {
+              "expr": "4"
+            },
+            "successWhen": "atLeast",
+            "continueOn": "always"
+          },
+          {
+            "type": "table",
+            "table": "crit",
+            "value": {
+              "expr": "сколько(@бросок.dice.rolls, 6)"
+            },
+            "when": {
+              "expr": "все(@resolve > 0, сколько(@бросок.dice.rolls, 6) >= 2)"
+            }
+          },
           {
             "type": "apply",
             "target": {
@@ -385,7 +479,7 @@
             "direction": "add",
             "targetModifiers": false,
             "value": {
-              "expr": "2"
+              "expr": "если(все(@resolve > 0, сколько(@бросок.dice.rolls, 6) >= 2), -1, 6 - @бросок.natural)"
             }
           }
         ]
@@ -394,8 +488,26 @@
         "label": "Залечь на дно",
         "group": "Банда",
         "activation": "manual",
-        "description": "Тревога на столе сбрасывается, жар банды растёт.",
+        "description": "Бросок к6: жар банды снижается — 1–3 на 1, 4–5 на 2, 6 на 3 (не ниже 0). Тревога на столе сбрасывается.",
         "steps": [
+          {
+            "id": "бросок",
+            "type": "threshold",
+            "roll": {
+              "die": {
+                "constant": "heat_die"
+              }
+            },
+            "versus": {
+              "expr": "4"
+            },
+            "successWhen": "atLeast",
+            "continueOn": "always",
+            "degrees": {
+              "table": "outcome",
+              "of": "total"
+            }
+          },
           {
             "type": "apply",
             "target": {
@@ -415,7 +527,7 @@
             "direction": "set",
             "targetModifiers": false,
             "value": {
-              "expr": "меньшее из(9, @heat + 1)"
+              "expr": "большее из(0, @heat - если(@бросок.natural >= 6, 3, если(@бросок.natural >= 4, 2, 1)))"
             }
           }
         ]

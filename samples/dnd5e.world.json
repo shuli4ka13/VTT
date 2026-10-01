@@ -8568,6 +8568,17 @@
           "Здоровье",
           "В бою",
           "Стойкость к урону"
+        ],
+        "modifiers": [
+          {
+            "kind": "value",
+            "target": "armor_heavy",
+            "op": "set",
+            "value": {
+              "expr": "да"
+            },
+            "stacking": "override"
+          }
         ]
       }
     }
@@ -10189,7 +10200,12 @@
         "bindings": [
           {
             "label": "Скрытая атака",
-            "effect": "sneak_attack"
+            "effect": "sneak_attack",
+            "args": {
+              "damage_type": {
+                "expr": "\"колющий\""
+              }
+            }
           }
         ],
         "table": "feature",

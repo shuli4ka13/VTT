@@ -732,6 +732,34 @@
             }
           }
         ]
+      },
+      "escalation_round": {
+        "label": "Эскалация раунда",
+        "group": "Общие правила",
+        "description": "В начале каждого раунда, кроме первого, кость эскалации растёт на единицу (не выше 6); в первом раунде — 0. Висит на столе — срабатывает раз за раунд.",
+        "activation": "passive",
+        "duration": {
+          "kind": "permanent"
+        },
+        "params": [],
+        "on": [
+          {
+            "on": "moment:round-start",
+            "steps": [
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "escalation"
+                },
+                "direction": "set",
+                "value": {
+                  "expr": "если(@moment.round > 1, меньшее из(6, @стол.escalation + 1), 0)"
+                },
+                "targetModifiers": false
+              }
+            ]
+          }
+        ]
       }
     },
     "grants": [
@@ -749,6 +777,14 @@
         "label": "Противник",
         "icon": "👹",
         "hint": "Лист противника."
+      },
+      "стол": {
+        "label": "Стол",
+        "icon": "🎲",
+        "hint": "Общий стол комнаты: кость эскалации и бой.",
+        "grants": [
+          "escalation_round"
+        ]
       }
     }
   },

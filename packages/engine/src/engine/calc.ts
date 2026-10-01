@@ -73,6 +73,7 @@ export function newPass(system: System, sheet: Sheet, options: PassOptions = {})
   pass.resolve = tag => {
     const owned = ownerOf(tag);
     if (owned?.owner === DESK) {
+      if (sheet.id === DESK_ID) return pass.resolve(owned.rest);
       if (!pass.desk) throw new EngineError(`стола нет — «${owned.rest}» читать неоткуда`);
       return pass.desk.resolve(owned.rest);
     }

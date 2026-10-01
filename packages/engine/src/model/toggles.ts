@@ -135,7 +135,7 @@ export function armorTail(choice: ArmorChoice, armor: string, hp: string): Step[
     ];
   }
   return [
-    { id: ARMOR_STEP, type: 'compare', value: { expr: '@event.amount' }, versus: { expr: `@получатель.${armor}` }, breakIf: 'less' } as Step,
+    { id: ARMOR_STEP, type: 'compare', value: { expr: '@event.amount' }, versus: { expr: `@получатель.${armor}` }, breakIf: 'atMost' } as Step,
     { type: 'apply', target: { tag: hp }, direction: 'subtract', value: { expr: `@${ARMOR_STEP}.margin` }, targetModifiers: false } as Step,
     { type: 'apply', target: { tag: armor }, direction: 'subtract', value: { expr: '1' }, targetModifiers: false } as Step,
   ];

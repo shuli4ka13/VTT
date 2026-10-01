@@ -36,13 +36,13 @@ group('Blades: эффекты крутят часы на столе', () => {
     eq(desk(sheets).alarm, 8);
   });
 
-  test('«Залечь на дно» сбрасывает тревогу на столе и греет банду — Жар один на всю банду', () => {
-    let sheets = act(fresh(), 'act_skirmish:0', 'vex', 3, 1).sheets;
-    sheets = act(sheets, 'lay_low:0', 'mira').sheets;
+  test('«Залечь на дно» сбрасывает тревогу на столе и остужает банду — Жар один на всю банду', () => {
+    const hot = fresh().map(sheet => (sheet.id === 'crew' ? { ...sheet, values: { ...sheet.values, heat: 5 } } : sheet));
+    let sheets = act(act(hot, 'act_skirmish:0', 'vex', 3, 1).sheets, 'lay_low:0', 'mira', 2).sheets;
     eq(desk(sheets).alarm, 0);
-    eq(crew(sheets).heat, 2);
-    sheets = act(sheets, 'lay_low:0', 'vex').sheets;
-    eq(crew(sheets).heat, 3, 'Векс греет ту же банду, что и Мира');
+    eq(crew(sheets).heat, 4, 'кость 2 — жар −1');
+    sheets = act(sheets, 'lay_low:0', 'vex', 6).sheets;
+    eq(crew(sheets).heat, 1, 'Векс остужает ту же банду: кость 6 — жар −3');
   });
 
   test('пул берётся по рейтингу бросающего: у Миры в скрытности 3 кости', () => {
