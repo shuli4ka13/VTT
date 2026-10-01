@@ -1,4 +1,5 @@
 import { EngineError } from '../errors.ts';
+import type { LeadRoll } from '../lead-die.ts';
 import * as threshold from './threshold.ts';
 import * as amount from './amount.ts';
 import * as compare from './compare.ts';
@@ -7,6 +8,9 @@ import * as status from './status.ts';
 import * as emit from './emit.ts';
 import * as table from './table.ts';
 import * as each from './each.ts';
+import * as rollAdd from './roll-add.ts';
+import * as rollReroll from './roll-reroll.ts';
+import * as rollPlus from './roll-plus.ts';
 import type { Step, System, Sheet, Die, StoredValue, Effect, WornEffect, Param } from '../../model/types.ts';
 import type { RefContext } from '../refs.ts';
 import type { SourcedModifier } from '../modifiers.ts';
@@ -50,6 +54,10 @@ export interface StepContext extends RefContext {
   answer?: (call: { event: string; args: Record<string, unknown> }) => void;
 
   kept?: Record<string, StepData>;
+
+  seenRoll?: { value: LeadRoll };
+
+  seen?: (rolled: LeadRoll, tags: readonly string[], rollerId: string) => LeadRoll;
   [k: string]: unknown;
 }
 
@@ -80,6 +88,8 @@ export interface StepModule {
   once?: (step: StepData) => boolean;
 
   splits?: boolean;
+
+  seen?: boolean;
   [k: string]: unknown;
 }
 
@@ -101,7 +111,7 @@ export function registerStepType(mod: StepModule): StepModule {
   return mod;
 }
 
-for (const mod of [threshold, amount, compare, apply, status, emit, table, each]) {
+for (const mod of [threshold, amount, compare, apply, status, emit, table, each, rollAdd, rollReroll, rollPlus]) {
   registerStepType(mod as unknown as StepModule);
 }
 

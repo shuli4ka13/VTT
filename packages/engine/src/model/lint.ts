@@ -332,6 +332,25 @@ function fieldRollProblems(system: System): Problem[] {
   return out;
 }
 
+function seenProblems(system: System): Problem[] {
+  const out: Problem[] = [];
+  const seenOnly = (step: Step) => registry.get(step.type)?.seen === true;
+  for (const [id, effect] of Object.entries(system.effects ?? {})) {
+    const lanes: [Step[] | undefined, (step: number) => Where, boolean][] = [
+      [effect.steps, step => ({ tab: 'effects', effect: id, step }), false],
+      [effect.cost, step => ({ tab: 'effects', effect: id, step, part: 'cost' }), false],
+      ...(effect.on ?? []).map((handler, index): [Step[] | undefined, (step: number) => Where, boolean] =>
+        [handler.steps, step => ({ tab: 'effects', effect: id, handler: index, step }), handler.on === 'seen']),
+    ];
+    for (const [steps, where, allowed] of lanes) {
+      (steps ?? []).forEach((step, index) => {
+        if (seenOnly(step) && !allowed) out.push({ where: where(index), level: 'error', text: `«${registry.get(step.type)?.label}» работает только в подписке «${ACTION_MOMENTS.seen.label}»` });
+      });
+    }
+  }
+  return out;
+}
+
 function costProblems(system: System): Problem[] {
   const out: Problem[] = [];
   const pays = (step: Step): boolean => {
@@ -540,6 +559,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...sheetKindProblems(system));
   out.push(...editProblems(system, compendium));
   out.push(...costProblems(system));
+  out.push(...seenProblems(system));
   out.push(...fieldRollProblems(system));
   out.push(...fieldNameProblems(system));
   out.push(...rowNameProblems(system));

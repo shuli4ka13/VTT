@@ -449,7 +449,9 @@ export class RoomsService {
       id: String(record.id),
       sheetId: asked.id,
       stage: question.window,
-      question: question.window === 'sender'
+      question: question.window === 'seen'
+        ? `${asked.name}: кости выпали — воспользоваться?`
+        : question.window === 'sender'
         ? `${asked.name}: бросок сделан — ответить реакцией?`
         : question.window === 'after'
           ? `${asked.name}: на вас подействовали${by} — ответить реакцией?`

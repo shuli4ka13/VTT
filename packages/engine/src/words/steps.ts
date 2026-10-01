@@ -132,6 +132,41 @@ export const STEP_WORDS = {
     reasons: {},
     breakLines: {},
   },
+  'roll-add': {
+    label: 'Докинуть',
+    hint: 'Увидев кости: докинуть ещё к выпавшему и, если нужно, оставить лучшую или худшую. Выпавшее остаётся.',
+    slots: [
+      { key: 'count', label: 'Сколько костей', kind: 'ref', main: true, required: true, allow: ['expr', 'const', 'param', 'prop'] },
+      { key: 'sides', label: 'Сколько граней', kind: 'ref', allow: ['expr', 'const', 'empty'] },
+      {
+        key: 'keep', label: 'Оставить', kind: 'choice', options: ['', 'best', 'worst'], fallback: '',
+        choice: [['', 'все'], ['best', 'лучшую'], ['worst', 'худшую']],
+      },
+    ],
+    outputs: [],
+    reasons: {},
+    breakLines: {},
+  },
+  'roll-reroll': {
+    label: 'Перебросить',
+    hint: 'Увидев кости: перебросить кости, на которых выпало не больше числа. Остальные остаются.',
+    slots: [
+      { key: 'upTo', label: 'Перебросить, где выпало не больше', kind: 'ref', main: true, required: true, allow: ['expr', 'const', 'param', 'prop'] },
+    ],
+    outputs: [],
+    reasons: {},
+    breakLines: {},
+  },
+  'roll-plus': {
+    label: 'Прибавить',
+    hint: 'Увидев кости: прибавить к итогу число или кость. Натуральная кость не меняется.',
+    slots: [
+      { key: 'value', label: 'Сколько', kind: 'ref', main: true, required: true, allow: ['expr', 'const', 'param', 'prop'] },
+    ],
+    outputs: [],
+    reasons: {},
+    breakLines: {},
+  },
   status: {
     label: 'Состояние',
     hint: 'Повесить эффект на цель или снять его.',

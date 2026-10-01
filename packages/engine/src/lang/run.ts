@@ -22,6 +22,8 @@ import { incomingRollModifiers } from '../engine/modifiers.ts';
 import type { Offer, Report, ReactionWindow } from './types.ts';
 import type { ActionMoment, Subscriber } from '../events/bus.ts';
 import type { Param, Sheet, Step, StoredValue, WornEffect } from '../model/types.ts';
+import type { LeadRoll } from '../engine/lead-die.ts';
+import { tagsHold } from '../engine/roll-tags.ts';
 
 export type Packed = (index: number) => StepData | undefined;
 
@@ -47,6 +49,7 @@ export interface Frame {
   alone?: boolean;
   actor?: boolean;
   chain?: string[];
+  roll?: { value: LeadRoll };
 }
 
 export interface Sink {
@@ -119,6 +122,9 @@ export class Runner {
   budget = MAX_REPLIES;
   cut = false;
   private drying = 0;
+  private seeing = 0;
+
+  get isDrying(): boolean { return this.drying > 0; }
 
   constructor(readonly state: State, readonly ext: External) {}
 
@@ -192,6 +198,9 @@ export class Runner {
       system,
       sheet: state.get(here),
       die: this.ext.dieAt(scope),
+      ...(frame.roll ? { seenRoll: frame.roll } : {}),
+      seen: (rolled: LeadRoll, tags: readonly string[], rollerId: string) =>
+        this.seen(rollerId, rollerId === frame.me ? frame.target : frame.me, rolled, tags, scope, frame.effectId, frame.hop, sink),
       pass: state.pass(here),
       direct: {
         me,
@@ -369,6 +378,67 @@ export class Runner {
       this.budget = budget;
       this.cut = cut;
     }
+  }
+
+  seen(
+    rollerId: string, againstId: string | null, rolled: LeadRoll, tags: readonly string[],
+    scope: string, effectId: string, hop: number, sink: Sink,
+  ): LeadRoll {
+    if (this.seeing) return rolled;
+    const cell = { value: rolled };
+    const seed = (): Record<string, unknown> => ({ roll: { natural: cell.value.total, rolls: cell.value.rolls, tags: [...tags] } });
+    this.seeing++;
+    try {
+      for (const [sheetId, as] of [[rollerId, undefined], [againstId !== rollerId ? againstId : null, 'against']] as const) {
+        const sheet = sheetId ? this.state.find(sheetId) : null;
+        if (!sheet || !sheetId) continue;
+        const heard = (confirm: boolean) => listening(this.system, sheet,
+          { kind: 'action', moment: 'seen', confirm, effect: effectId, emitted: [] }, { compendium: this.state.compendium })
+          .filter(sub => sub.handler.as === as && tagsHold(sub.handler.tags, tags) && this.holds(sub, sheetId, seed()));
+        for (const sub of heard(false)) {
+          const key = `${scope}!seen~${sub.key}`;
+          if (this.refusal(sub.key, sheetId, seed(), `${key}?`)) continue;
+          this.useSeen(sub, sheetId, cell, key, hop, sink, seed());
+        }
+        const offers = heard(true)
+          .map(sub => ({ id: sub.key, label: sub.effect.label || sub.key, claims: [] as string[] }))
+          .filter(offer => !this.refusal(offer.id, sheetId, seed(), `${scope}?seen:${sheetId}?${offer.id}`));
+        if (!offers.length) continue;
+        const question: Question = {
+          key: `${scope}?seen:${sheetId}`, sheetId, window: 'seen', label: '', offers, results: seed(),
+          preview: [`кости: [${cell.value.rolls.join(', ')}] → ${cell.value.total}`],
+        };
+        const chosen = this.drying ? [] : this.ext.ask(question);
+        const stray = chosen.find(id => !offers.some(offer => offer.id === id));
+        if (stray) throw new EngineError(`реакция «${stray}» сейчас не предлагается; можно: ${offers.map(o => o.id).join(', ')}`);
+        for (const id of chosen) {
+          const found = subscriberByKey(this.system, id)!;
+          this.useSeen(found, sheetId, cell, `${question.key}!${id}`, hop, sink, seed());
+        }
+        if (!chosen.length && !this.ext.declineAll && !this.drying) sink.after.push({ text: `${sheet.name} пропускает реакцию` });
+      }
+    } finally {
+      this.seeing--;
+    }
+    return cell.value;
+  }
+
+  private useSeen(
+    sub: Subscriber, sheetId: string, cell: { value: LeadRoll }, scope: string, hop: number, sink: Sink, seed: Record<string, unknown>,
+  ): void {
+    const label = sub.effect.label || sub.id;
+    if (sub.handler.cost?.length) {
+      const paid = newSink();
+      const ran = this.exec(this.selfFrame(sub, sheetId, `${scope}$`, hop, `плата за «${label}»`), sub.handler.cost, paid, seed);
+      const report = reportOf('effect', sub.id, sheetId, label, paid, ran.stopped, false);
+      const why = refusalWords(report, this.system);
+      if (why) throw new EngineError(`«${label}» не состоялось: ${why}`);
+      if (paid.changes.length) sink.after.push({ fromId: sheetId, toId: sheetId, report });
+    }
+    const own = newSink();
+    const ran = this.exec({ ...this.selfFrame(sub, sheetId, scope, hop, `«${label}» — увидев кости`), roll: cell }, sub.handler.steps ?? [], own, seed);
+    sink.after.push({ fromId: sheetId, toId: sheetId, report: reportOf('effect', sub.id, sheetId, label, own, ran.stopped, false) });
+    if (burnsUse(sub.effect)) this.state.put(spendUse(this.state.get(sheetId), sub.id));
   }
 
   refusal(offerId: string, sheetId: string, results: Record<string, unknown>, scope: string): string | null {

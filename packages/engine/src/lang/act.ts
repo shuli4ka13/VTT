@@ -169,6 +169,7 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
       const stepIds = new Set(steps.map(step => step.id).filter((id): id is string => typeof id === 'string' && id !== ''));
       const gate = steps.findIndex(step => HOISTED(step as StepData) && stepModule(step.type).mayBreak === true);
       const cache: Record<number, StepData> = {};
+      const seenSink = newSink();
       let round = 0;
       let kept: Record<string, StepData> | undefined;
       const start = { sheet: state.get(actor), shared: sharedOf(system, state.sheets) };
@@ -185,6 +186,7 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
           ...(claims.length ? { claims } : {}),
           ...(kept ? { kept } : {}),
           sender: rolledSoFar(done as unknown as Record<string, unknown>[]), stepIds,
+          seen: (rolled, tags, rollerId) => run.seen(rollerId, targets[0] ?? null, rolled, tags, `send:${round}/${step.id ?? index}`, action.effect, 0, seenSink),
         };
         const when = packGuardRef(step.when, inner);
         return { type: step.type, id: step.id ?? null, ...(when !== undefined ? { when } : {}), ...stepModule(step.type).pack(step, inner) } as StepData;
@@ -195,6 +197,8 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
         });
       };
       eager();
+      log.push(...seenSink.after);
+      seenSink.after = [];
       const seenBySender = rolledSoFar(Object.values(cache) as unknown as Record<string, unknown>[]);
       const senderOffers = run.offers('sender', actor, action.effect, 0, seenBySender, [], 'sender');
       if (senderOffers.length) {
@@ -213,8 +217,10 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
       }
       packed = (index: number): StepData | undefined => {
         if (!HOISTED(steps[index] as StepData)) return undefined;
-        cache[index] ??= packOne(index);
-        return cache[index];
+        if (cache[index]) return cache[index];
+        const one = packOne(index);
+        if (!run.isDrying) cache[index] = one;
+        return one;
       };
       rolledNow = () => Object.keys(cache).map(Number).sort((a, b) => a - b).map(at => cache[at]!);
     }

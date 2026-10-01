@@ -10,7 +10,7 @@ export const emptyJournal = (): Journal => ({ dice: {}, answers: {} });
 export interface Question {
   key: string;
   sheetId: string;
-  window: 'sender' | 'target' | 'after';
+  window: 'sender' | 'target' | 'after' | 'seen';
   label: string;
   offers: { id: string; label: string; cost?: string; claims: string[] }[];
   results: Record<string, unknown>;

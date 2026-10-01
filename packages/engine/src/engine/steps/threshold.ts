@@ -91,7 +91,8 @@ function rollHere(spec: RollSpec, ctx: StepContext, packed = false) {
   const mods = resolveRoll(
     ctx.system, ctx.sheet, tags, ctx.pass,
     claimedModifiers(ctx.system, ctx.claims ?? []) as never);
-  const rolled = rollLead(unfold(spec.die, ctx, spec.count, packed), ctx.die, mods.edits);
+  const thrown = rollLead(unfold(spec.die, ctx, spec.count, packed), ctx.die, mods.edits);
+  const rolled = ctx.seen ? ctx.seen(thrown, tags, ctx.sheet.id) : thrown;
   return { rolled, modBonus: mods.bonus, tags };
 }
 
@@ -186,7 +187,8 @@ export function pack(step: StepData, ctx: StepContext) {
   ];
   const mods = resolveRoll(ctx.system, ctx.sheet, tags, ctx.pass, extra);
   const held = ctx.kept?.[String(step.id ?? '')]?.rolled?.entries as RolledDie[] | undefined;
-  const rolled = rollLead(unfold(roll.die, ctx, roll.count), ctx.die, mods.edits, held ?? []);
+  const thrown = rollLead(unfold(roll.die, ctx, roll.count), ctx.die, mods.edits, held ?? []);
+  const rolled = ctx.seen && !held ? ctx.seen(thrown, tags, ctx.sheet.id) : thrown;
   return { ...base, tags, rolled, bonus: packRef(roll.bonus, ctx), modBonus: mods.bonus };
 }
 
@@ -200,7 +202,8 @@ export function resolve(step: StepData, ctx: StepContext) {
     const mods = resolveRoll(
       ctx.system, ctx.sheet, tags, ctx.pass,
       claimedModifiers(ctx.system, ctx.claims ?? []));
-    rolled = rollLead(unfold(step.roll.die, ctx, step.roll.count, true), ctx.die, mods.edits);
+    const thrown = rollLead(unfold(step.roll.die, ctx, step.roll.count, true), ctx.die, mods.edits);
+    rolled = ctx.seen ? ctx.seen(thrown, tags, ctx.sheet.id) : thrown;
     modBonus = mods.bonus;
   }
 

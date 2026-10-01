@@ -207,6 +207,8 @@ export const handler = z.object({
   to: z.enum(['self', 'other']).optional(),
   if: guard.nullable().optional(),
   claims: z.array(z.string().min(1)).optional(),
+  as: z.enum(['against']).optional(),
+  tags: z.array(z.string().min(1)).optional(),
   cost: z.array(step).optional(),
   steps: z.array(step).optional(),
 }).strict();
