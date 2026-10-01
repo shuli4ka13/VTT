@@ -1189,7 +1189,8 @@
           }
         ],
         "description": "Удар оружием: попадание против класса брони, урон костью оружия и модификатором Силы. На двадцатке кости урона удваиваются. Посчитанное уходит в общий эффект «Урон».",
-        "self": [
+        "group": "Атака",
+        "cost": [
           {
             "type": "compare",
             "value": {
@@ -1218,8 +1219,7 @@
               "expr": "@стол.battle >= 1"
             }
           }
-        ],
-        "group": "Атака"
+        ]
       },
       "save": {
         "label": "Спасбросок",
@@ -1297,7 +1297,8 @@
             }
           }
         ],
-        "self": [
+        "group": "Атака",
+        "cost": [
           {
             "type": "compare",
             "value": {
@@ -1326,8 +1327,7 @@
               "expr": "@стол.battle >= 1"
             }
           }
-        ],
-        "group": "Атака"
+        ]
       },
       "heal": {
         "label": "Лечение",
@@ -1377,7 +1377,9 @@
             }
           }
         ],
-        "self": [
+        "description": "Тратит ячейку 1-го круга: восполняет хиты и, если задано, снимает состояние.",
+        "group": "Лечение",
+        "cost": [
           {
             "type": "compare",
             "value": {
@@ -1416,9 +1418,7 @@
               "expr": "1"
             }
           }
-        ],
-        "description": "Тратит ячейку 1-го круга: восполняет хиты и, если задано, снимает состояние.",
-        "group": "Лечение"
+        ]
       },
       "fire_bolt": {
         "label": "Огненный снаряд",
@@ -1468,7 +1468,8 @@
             }
           }
         ],
-        "self": [
+        "group": "Атака",
+        "cost": [
           {
             "type": "compare",
             "value": {
@@ -1497,8 +1498,7 @@
               "expr": "@стол.battle >= 1"
             }
           }
-        ],
-        "group": "Атака"
+        ]
       },
       "poisoned": {
         "label": "Отравлен",
@@ -1606,7 +1606,20 @@
         "on": [
           {
             "on": "targeted",
-            "self": [
+            "if": {
+              "expr": "@hit.success"
+            },
+            "steps": [
+              {
+                "type": "status",
+                "mode": "apply",
+                "effect": {
+                  "const": "shield_up"
+                }
+              }
+            ],
+            "confirm": true,
+            "cost": [
               {
                 "type": "compare",
                 "value": {
@@ -1635,20 +1648,7 @@
                   "expr": "@стол.battle >= 1"
                 }
               }
-            ],
-            "if": {
-              "expr": "@hit.success"
-            },
-            "steps": [
-              {
-                "type": "status",
-                "mode": "apply",
-                "effect": {
-                  "const": "shield_up"
-                }
-              }
-            ],
-            "confirm": true
+            ]
           }
         ],
         "group": "Реакции"
@@ -1855,7 +1855,8 @@
             }
           }
         ],
-        "self": [
+        "group": "Поддержка",
+        "cost": [
           {
             "type": "compare",
             "value": {
@@ -1894,54 +1895,13 @@
               "expr": "1"
             }
           }
-        ],
-        "group": "Поддержка"
+        ]
       },
       "fireball": {
         "label": "Огненный шар",
         "icon": "💥",
         "description": "Тратит ячейку. Каждая цель делает спасбросок Ловкости: провал — полный урон, успех — половина. Ведущий называет, кто попал в область.",
         "activation": "manual",
-        "self": [
-          {
-            "type": "compare",
-            "value": {
-              "expr": "@turn_action"
-            },
-            "versus": {
-              "expr": "1"
-            },
-            "breakIf": "less",
-            "note": "действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn_action"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "1"
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "slots_1"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "1"
-            }
-          }
-        ],
         "params": [
           {
             "key": "save_by",
@@ -2013,7 +1973,47 @@
             }
           }
         ],
-        "group": "Атака"
+        "group": "Атака",
+        "cost": [
+          {
+            "type": "compare",
+            "value": {
+              "expr": "@turn_action"
+            },
+            "versus": {
+              "expr": "1"
+            },
+            "breakIf": "less",
+            "note": "действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn_action"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "1"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "slots_1"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "1"
+            }
+          }
+        ]
       },
       "dying": {
         "label": "При смерти",
@@ -2206,36 +2206,6 @@
             "on": "affected",
             "of": "event:damage",
             "to": "other",
-            "self": [
-              {
-                "type": "compare",
-                "value": {
-                  "expr": "@turn_reaction"
-                },
-                "versus": {
-                  "expr": "1"
-                },
-                "breakIf": "less",
-                "note": "реакция уже потрачена",
-                "when": {
-                  "expr": "@стол.battle >= 1"
-                }
-              },
-              {
-                "type": "apply",
-                "target": {
-                  "tag": "turn_reaction"
-                },
-                "direction": "subtract",
-                "value": {
-                  "expr": "1"
-                },
-                "targetModifiers": false,
-                "when": {
-                  "expr": "@стол.battle >= 1"
-                }
-              }
-            ],
             "steps": [
               {
                 "id": "save",
@@ -2290,7 +2260,37 @@
                 }
               }
             ],
-            "confirm": true
+            "confirm": true,
+            "cost": [
+              {
+                "type": "compare",
+                "value": {
+                  "expr": "@turn_reaction"
+                },
+                "versus": {
+                  "expr": "1"
+                },
+                "breakIf": "less",
+                "note": "реакция уже потрачена",
+                "when": {
+                  "expr": "@стол.battle >= 1"
+                }
+              },
+              {
+                "type": "apply",
+                "target": {
+                  "tag": "turn_reaction"
+                },
+                "direction": "subtract",
+                "value": {
+                  "expr": "1"
+                },
+                "targetModifiers": false,
+                "when": {
+                  "expr": "@стол.battle >= 1"
+                }
+              }
+            ]
           }
         ],
         "group": "Реакции"

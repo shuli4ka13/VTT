@@ -90,14 +90,14 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
     const props = propsOf(action.record, system, entryOf(state.get(actor), action.record.id));
     const paramDefs = effect.params ?? [];
 
-    if (effect.self?.length) {
+    if (effect.cost?.length) {
       const sink = newSink();
       const owner = `стоимость действия «${action.label}»`;
       const ran = run.exec({
-        scope: 'self', me: actor, here: actor, target: null, effectId: action.effect, owner,
+        scope: 'cost', me: actor, here: actor, target: null, effectId: action.effect, owner,
         args, paramDefs, props, ...(inputs ? { inputs } : {}), source: actor, hop: 0, names: 'me', alone: true,
-      }, effect.self, sink);
-      const report = reportOf('self', action.effect, actor, action.label, sink, ran.stopped, false);
+      }, effect.cost, sink);
+      const report = reportOf('cost', action.effect, actor, action.label, sink, ran.stopped, false);
       const why = refusalWords(report, system);
       if (why) throw new EngineError(`«${action.label}» не состоялось: ${why}`);
       if (sink.changes.length || sink.effects.length || sink.removed.length) {

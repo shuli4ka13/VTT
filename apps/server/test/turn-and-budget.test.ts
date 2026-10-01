@@ -294,7 +294,7 @@ describe('ячейка тратится один раз на действие', 
       effects: {
         шар: {
           label: 'Огненный шар', activation: 'manual',
-          self: [{ type: 'apply', target: { tag: 'ячейки' }, direction: 'subtract', value: { expr: '1' } }],
+          cost: [{ type: 'apply', target: { tag: 'ячейки' }, direction: 'subtract', value: { expr: '1' } }],
           steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '5' } }],
         },
         счёт: {
@@ -851,7 +851,7 @@ describe('отдых и плата ячейкой', () => {
         },
         стрела: {
           label: 'Стрела', activation: 'manual',
-          self: [{ type: 'emit', event: 'ячейка', amount: { expr: '1' }, strict: true }],
+          cost: [{ type: 'emit', event: 'ячейка', amount: { expr: '1' }, strict: true }],
           steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '4' } }],
         },
         сон: {

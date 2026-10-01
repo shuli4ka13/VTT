@@ -373,11 +373,11 @@ export class Runner {
 
   refusal(offerId: string, sheetId: string, results: Record<string, unknown>, scope: string): string | null {
     const found = subscriberByKey(this.system, offerId);
-    if (!found?.handler.self?.length) return null;
+    if (!found?.handler.cost?.length) return null;
     const label = found.effect.label || offerId;
     return this.dry(() => {
       const own = newSink();
-      const ran = this.exec(this.selfFrame(found, sheetId, `${scope}$`, 0, `плата за «${label}»`), found.handler.self ?? [], own, results);
+      const ran = this.exec(this.selfFrame(found, sheetId, `${scope}$`, 0, `плата за «${label}»`), found.handler.cost ?? [], own, results);
       return refusalWords(reportOf('effect', found.id, sheetId, label, own, ran.stopped, false), this.system);
     });
   }
@@ -422,9 +422,9 @@ export class Runner {
       const found = subscriberByKey(this.system, id);
       if (!found) throw new EngineError(`реакция «${id}»: такой подписки в системе нет`);
       const label = found.effect.label || id;
-      if (found.handler.self?.length) {
+      if (found.handler.cost?.length) {
         const paid = newSink();
-        const ran = this.exec(this.selfFrame(found, sheetId, `${question.key}$${id}`, hop, `плата за «${label}»`), found.handler.self, paid, results);
+        const ran = this.exec(this.selfFrame(found, sheetId, `${question.key}$${id}`, hop, `плата за «${label}»`), found.handler.cost, paid, results);
         const report = reportOf('effect', found.id, sheetId, label, paid, ran.stopped, false);
         const why = refusalWords(report, this.system);
         if (why) throw new EngineError(`«${label}» не состоялось: ${why}`);

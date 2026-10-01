@@ -3,5 +3,6 @@ import { kindsOf } from './kinds.ts';
 import { rowKeysOf } from './row-keys.ts';
 import { handlersOf } from './handlers.ts';
 import { editsOf } from './edits.ts';
+import { costsOf } from './cost.ts';
 
-export const convert = (world: Record<string, any>): Record<string, any> => editsOf(handlersOf(rowKeysOf(kindsOf(columnsOf(world)))));
+export const convert = (world: Record<string, any>): Record<string, any> => costsOf(editsOf(handlersOf(rowKeysOf(kindsOf(columnsOf(world))))));

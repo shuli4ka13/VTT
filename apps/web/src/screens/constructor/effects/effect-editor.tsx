@@ -34,7 +34,7 @@ const REAPPLY_OPTIONS = (Object.keys(REAPPLY) as (keyof typeof REAPPLY)[]).map(k
 const fromBase = (base: Effect): string => {
   const parts: string[] = [];
   if (base.params?.length) parts.push(`входов: ${base.params.length}`);
-  if (base.self?.length) parts.push(`стоимость: ${base.self.length}`);
+  if (base.cost?.length) parts.push(`стоимость: ${base.cost.length}`);
   if (base.steps?.length) parts.push(`шагов впереди: ${base.steps.length}`);
   if (base.modifiers?.length) parts.push(`правок: ${base.modifiers.length}`);
   return parts.length
@@ -53,9 +53,9 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
   const pipeline = launch.kind === 'manual';
 
   const moveLane = (indices: number[], to: Lane) => {
-    const fromList = (to === 'sender' ? effect.steps : effect.self) ?? [];
+    const fromList = (to === 'sender' ? effect.steps : effect.cost) ?? [];
     const first = fromList[indices[0] ?? 0];
-    const at = to === 'sender' ? (effect.self?.length ?? 0) : 0;
+    const at = to === 'sender' ? (effect.cost?.length ?? 0) : 0;
     useOpened.getState().setOpen([`step|${effect.label ?? ''}|${to}|${String(first?.id ?? at)}`], true);
     shiftLane(indices, to);
   };
@@ -178,11 +178,11 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
             effect={effect} system={system} edit={edit}
             empty={idleWords(effect)}
             onMoveLane={moveLane}
-            startAt={groupSteps(effect.self ?? []).length}
+            startAt={groupSteps(effect.cost ?? []).length}
             lead={<SelfTrack effect={effect} system={system} edit={edit} onMoveLane={moveLane} />}
             onAddCost={id => edit(draft => {
-              const taken = (draft.self ?? []).map(s => String(s.id ?? ''));
-              (draft.self ??= []).unshift(payStep(id, taken));
+              const taken = (draft.cost ?? []).map(s => String(s.id ?? ''));
+              (draft.cost ??= []).unshift(payStep(id, taken));
             })}
           />
         </>
@@ -246,17 +246,17 @@ function Hooks({ effect, system, edit }: {
   );
 }
 
-type Holder = { steps?: Step[]; self?: Step[] };
+type Holder = { steps?: Step[]; cost?: Step[] };
 
 const shiftBetween = (holder: Holder, indices: number[], to: Lane): void => {
-  const fromList = (to === 'sender' ? holder.steps : holder.self) ?? [];
+  const fromList = (to === 'sender' ? holder.steps : holder.cost) ?? [];
   const moved = indices.map(i => fromList[i]!).filter(Boolean);
   const rest = fromList.filter((_, i) => !indices.includes(i));
   if (to === 'sender') {
     holder.steps = rest;
-    holder.self = [...(holder.self ?? []), ...moved];
+    holder.cost = [...(holder.cost ?? []), ...moved];
   } else {
-    if (rest.length) holder.self = rest; else delete holder.self;
+    if (rest.length) holder.cost = rest; else delete holder.cost;
     holder.steps = [...moved, ...(holder.steps ?? [])];
   }
 };
@@ -276,14 +276,14 @@ function Handlers({ id, effect, system, edit }: {
         <Empty title="Ни на что не отзывается" hint="«Когда» — что случилось (начался ход, пришёл урон, по мне бросают) и что эффект делает в ответ." />
       ) : null}
       {list.map((handler, index) => {
-        const carrier = { ...effect, label: `${effect.label ?? ''} · когда ${index + 1}`, steps: handler.steps ?? [], self: handler.self } as Effect;
+        const carrier = { ...effect, label: `${effect.label ?? ''} · когда ${index + 1}`, steps: handler.steps ?? [], self: handler.cost } as Effect;
         const editCarrier = (change: (draft: Effect) => void) => edit(draft => {
           const own = draft.on?.[index];
           if (!own) return;
-          const view = { ...draft, steps: own.steps ?? [], self: own.self } as Effect;
+          const view = { ...draft, steps: own.steps ?? [], cost: own.cost } as Effect;
           change(view);
           own.steps = view.steps ?? [];
-          if (view.self?.length) own.self = view.self; else delete own.self;
+          if (view.cost?.length) own.cost = view.cost; else delete own.cost;
         });
         const moveLane = (indices: number[], to: Lane) => edit(draft => {
           const own = draft.on?.[index];
@@ -304,11 +304,11 @@ function Handlers({ id, effect, system, edit }: {
               title={`Что делает — когда №${index + 1}`}
               empty="шагов нет — отзывается, но ничего не делает"
               onMoveLane={moveLane}
-              startAt={groupSteps(carrier.self ?? []).length}
+              startAt={groupSteps(carrier.cost ?? []).length}
               lead={<SelfTrack effect={carrier} system={system} edit={editCarrier} onMoveLane={moveLane} />}
               {...(handler.confirm ? { onAddCost: (cost: string) => editCarrier(draft => {
-                const taken = (draft.self ?? []).map(s => String(s.id ?? ''));
-                (draft.self ??= []).unshift(payStep(cost, taken));
+                const taken = (draft.cost ?? []).map(s => String(s.id ?? ''));
+                (draft.cost ??= []).unshift(payStep(cost, taken));
               }) } : {})}
             />
           </div>
@@ -320,7 +320,7 @@ function Handlers({ id, effect, system, edit }: {
 
 const idleWords = (effect: Effect): string => {
   const also: string[] = [];
-  if (effect.self?.length) also.push('стоимость');
+  if (effect.cost?.length) also.push('стоимость');
   if (effect.modifiers?.length) also.push('правки');
   return also.length
     ? `шагов нет — работает только ${also.join(' и ')}`
@@ -417,15 +417,15 @@ function SelfTrack({ effect, system, edit, onMoveLane }: {
   edit: (change: (draft: Effect) => void) => void;
   onMoveLane: (indices: number[], to: Lane) => void;
 }) {
-  const track = effect.self ?? [];
+  const track = effect.cost ?? [];
   if (!track.length) return null;
   const carrier = { ...effect, steps: track } as Effect;
 
   const editTrack = (change: (draft: Effect) => void) => edit(draft => {
-    const own = { ...draft, steps: draft.self ?? [] } as Effect;
+    const own = { ...draft, steps: draft.cost ?? [] } as Effect;
     change(own);
     const steps = own.steps ?? [];
-    if (steps.length) draft.self = steps; else delete draft.self;
+    if (steps.length) draft.cost = steps; else delete draft.cost;
   });
 
   return <Chain effect={carrier} system={system} edit={editTrack} lane="sender" onMoveLane={onMoveLane} bare />;

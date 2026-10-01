@@ -116,7 +116,7 @@ group('линт: висячие ссылки называются словами
 
 group('линт: чей лист в шагах отправителя', () => {
   test('@получатель в шагах отправителя — ошибка с подсказкой, как написать', () => {
-    const system = withEffect('a', { self: [{ type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '@получатель.hp' } }] as Step[] });
+    const system = withEffect('a', { cost: [{ type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '@получатель.hp' } }] as Step[] });
     ok(errorTexts(system).some(text => text.includes('в шагах отправителя получателя нет') && text.includes('@отправитель.hp')), errorTexts(system).join('\n'));
   });
 

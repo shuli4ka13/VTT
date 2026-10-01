@@ -1498,80 +1498,6 @@
             }
           }
         ],
-        "self": [
-          {
-            "type": "compare",
-            "value": {
-              "expr": "@edge_left"
-            },
-            "versus": {
-              "expr": "3"
-            },
-            "breakIf": "less",
-            "note": "нужно 3 очка Преимущества",
-            "when": {
-              "expr": "(если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "edge_left"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "3"
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "(если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) >= 1"
-            }
-          },
-          {
-            "type": "emit",
-            "event": "spend",
-            "strict": true,
-            "args": {
-              "what": {
-                "expr": "@edge_left"
-              },
-              "amount": {
-                "expr": "таблица(\"edge_actions\", или(@приём, \"нет\"), \"cost\")"
-              },
-              "note": {
-                "expr": "\"на приём не хватает Преимущества\""
-              }
-            }
-          },
-          {
-            "type": "compare",
-            "value": {
-              "expr": "@complex_left"
-            },
-            "versus": {
-              "expr": "1"
-            },
-            "breakIf": "less",
-            "note": "сложное действие на этом ходу уже потрачено",
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "complex_left"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "1"
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
-          }
-        ],
         "steps": [
           {
             "id": "атк",
@@ -1743,6 +1669,80 @@
               "expr": "все(таблица(\"edge_actions\", или(@приём, \"нет\"), \"knockout\") >= 1, большее из(0, @dv + таблица(\"fire_modes\", или(@режим, \"одиночный выстрел\"), \"dv\") + таблица(\"edge_actions\", или(@приём, \"нет\"), \"dv\") + @атака.natural + (если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) - @атака.versusNatural - @сопротивление.natural) > @получатель.willpower)"
             }
           }
+        ],
+        "cost": [
+          {
+            "type": "compare",
+            "value": {
+              "expr": "@edge_left"
+            },
+            "versus": {
+              "expr": "3"
+            },
+            "breakIf": "less",
+            "note": "нужно 3 очка Преимущества",
+            "when": {
+              "expr": "(если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "edge_left"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "3"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "(если(или(@успех_за_преимущество, 0) >= 1, 1, 0)) >= 1"
+            }
+          },
+          {
+            "type": "emit",
+            "event": "spend",
+            "strict": true,
+            "args": {
+              "what": {
+                "expr": "@edge_left"
+              },
+              "amount": {
+                "expr": "таблица(\"edge_actions\", или(@приём, \"нет\"), \"cost\")"
+              },
+              "note": {
+                "expr": "\"на приём не хватает Преимущества\""
+              }
+            }
+          },
+          {
+            "type": "compare",
+            "value": {
+              "expr": "@complex_left"
+            },
+            "versus": {
+              "expr": "1"
+            },
+            "breakIf": "less",
+            "note": "сложное действие на этом ходу уже потрачено",
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "complex_left"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "1"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          }
         ]
       },
       "edge_gain": {
@@ -1810,7 +1810,9 @@
             "claims": [
               "reroll_failures"
             ],
-            "self": [
+            "steps": [],
+            "confirm": true,
+            "cost": [
               {
                 "type": "emit",
                 "event": "spend",
@@ -1827,9 +1829,7 @@
                   }
                 }
               }
-            ],
-            "steps": [],
-            "confirm": true
+            ]
           }
         ]
       },
@@ -1848,7 +1848,9 @@
             "claims": [
               "push_edge"
             ],
-            "self": [
+            "steps": [],
+            "confirm": true,
+            "cost": [
               {
                 "type": "emit",
                 "event": "spend",
@@ -1865,9 +1867,7 @@
                   }
                 }
               }
-            ],
-            "steps": [],
-            "confirm": true
+            ]
           }
         ]
       },
@@ -1999,7 +1999,20 @@
         "group": "Преимущество",
         "activation": "manual",
         "description": "За 3 очка Преимущества — освободить 1 ячейку оглушения.",
-        "self": [
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "stun"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "меньшее из(@stun, 1)"
+            },
+            "targetModifiers": false
+          }
+        ],
+        "cost": [
           {
             "type": "emit",
             "event": "spend",
@@ -2016,19 +2029,6 @@
               }
             }
           }
-        ],
-        "steps": [
-          {
-            "type": "apply",
-            "target": {
-              "tag": "stun"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "меньшее из(@stun, 1)"
-            },
-            "targetModifiers": false
-          }
         ]
       },
       "shrug_off": {
@@ -2036,7 +2036,20 @@
         "group": "Преимущество",
         "activation": "manual",
         "description": "За 4 очка Преимущества — освободить 1 ячейку здоровья.",
-        "self": [
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "physical"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "меньшее из(@physical, 1)"
+            },
+            "targetModifiers": false
+          }
+        ],
+        "cost": [
           {
             "type": "emit",
             "event": "spend",
@@ -2052,19 +2065,6 @@
                 "expr": "\"нужно 4 очк. Преимущества\""
               }
             }
-          }
-        ],
-        "steps": [
-          {
-            "type": "apply",
-            "target": {
-              "tag": "physical"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "меньшее из(@physical, 1)"
-            },
-            "targetModifiers": false
           }
         ]
       },
@@ -2362,7 +2362,16 @@
         "group": "Действия",
         "activation": "manual",
         "description": "Простое действие: снять «Распластан».",
-        "self": [
+        "steps": [
+          {
+            "type": "status",
+            "mode": "remove",
+            "effect": {
+              "const": "prone"
+            }
+          }
+        ],
+        "cost": [
           {
             "type": "compare",
             "value": {
@@ -2389,15 +2398,6 @@
             "targetModifiers": false,
             "when": {
               "expr": "@стол.battle >= 1"
-            }
-          }
-        ],
-        "steps": [
-          {
-            "type": "status",
-            "mode": "remove",
-            "effect": {
-              "const": "prone"
             }
           }
         ]

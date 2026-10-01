@@ -423,13 +423,13 @@ describe('шаг отправителя — один раз, до остальн
 
     fireEvent.click(screen.getByText('раз за действие'));
     const moved = useWorld.getState().system.effects.снаряд!;
-    expect(moved.self).toHaveLength(1);
+    expect(moved.cost).toHaveLength(1);
     expect(moved.steps ?? []).toHaveLength(0);
     expect(document.querySelector('.chip--on')?.textContent).toBe('раз за действие');
 
     fireEvent.click(screen.getByText('раз за действие'));
     const back = useWorld.getState().system.effects.снаряд!;
-    expect(back.self).toBeUndefined();
+    expect(back.cost).toBeUndefined();
     expect(back.steps).toHaveLength(1);
   });
 });

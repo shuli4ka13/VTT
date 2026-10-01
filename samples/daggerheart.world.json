@@ -1554,7 +1554,32 @@
             "max": 30
           }
         ],
-        "self": [
+        "steps": [
+          {
+            "id": "бросок",
+            "type": "threshold",
+            "roll": {
+              "die": {
+                "constant": "duality"
+              },
+              "bonus": {
+                "expr": "таблица(\"traits\", @trait, \"value\") + @опыт"
+              },
+              "tags": [
+                "действие",
+                "герой",
+                {
+                  "expr": "@trait"
+                }
+              ]
+            },
+            "versus": {
+              "expr": "@сложность"
+            },
+            "continueOn": "always"
+          }
+        ],
+        "cost": [
           {
             "type": "compare",
             "value": {
@@ -1582,31 +1607,6 @@
             "when": {
               "expr": "@опыт > 0"
             }
-          }
-        ],
-        "steps": [
-          {
-            "id": "бросок",
-            "type": "threshold",
-            "roll": {
-              "die": {
-                "constant": "duality"
-              },
-              "bonus": {
-                "expr": "таблица(\"traits\", @trait, \"value\") + @опыт"
-              },
-              "tags": [
-                "действие",
-                "герой",
-                {
-                  "expr": "@trait"
-                }
-              ]
-            },
-            "versus": {
-              "expr": "@сложность"
-            },
-            "continueOn": "always"
           }
         ]
       },
@@ -2554,7 +2554,7 @@
             "targetModifiers": false
           }
         ],
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "spend",
@@ -2598,7 +2598,7 @@
             }
           }
         ],
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "spend",
@@ -2631,7 +2631,7 @@
             }
           }
         ],
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "spend",
@@ -2713,7 +2713,7 @@
             }
           }
         ],
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "spend",
@@ -2805,7 +2805,7 @@
             }
           }
         ],
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "spend",

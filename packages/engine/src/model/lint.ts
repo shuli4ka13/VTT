@@ -44,19 +44,19 @@ const NAMES: Record<Exclude<RefKind, 'param' | 'step'>, (key: string) => string>
 
 const sameWhere = (a: Where, b: Where): boolean => JSON.stringify(a) === JSON.stringify(b);
 
-interface Chain { steps: Step[]; where: (step: number) => Where; eventChain: boolean; part?: 'self' }
+interface Chain { steps: Step[]; where: (step: number) => Where; eventChain: boolean; part?: 'cost' }
 
 const hearsEvent = (effect: Effect): boolean => (effect.on ?? []).some(h => listenerOf(h).kind === 'event');
 
 function chainsOf(id: string, effect: Effect, called: boolean): Chain[] {
   const out: Chain[] = [
     { steps: effect.steps ?? [], where: step => ({ tab: 'effects', effect: id, step }), eventChain: called },
-    { steps: effect.self ?? [], where: step => ({ tab: 'effects', effect: id, step, part: 'self' }), eventChain: false, part: 'self' },
+    { steps: effect.cost ?? [], where: step => ({ tab: 'effects', effect: id, step, part: 'cost' }), eventChain: false, part: 'cost' },
   ];
   (effect.on ?? []).forEach((handler, index) => {
     const event = listenerOf(handler).kind === 'event';
     out.push({ steps: handler.steps ?? [], where: step => ({ tab: 'effects', effect: id, handler: index, step }), eventChain: event });
-    out.push({ steps: handler.self ?? [], where: step => ({ tab: 'effects', effect: id, handler: index, step, part: 'self' }), eventChain: false, part: 'self' });
+    out.push({ steps: handler.cost ?? [], where: step => ({ tab: 'effects', effect: id, handler: index, step, part: 'cost' }), eventChain: false, part: 'cost' });
   });
   for (const turn of ['attach', 'detach'] as const) {
     out.push({ steps: effect[turn] ?? [], where: step => ({ tab: 'effects', effect: id, step, part: turn }), eventChain: false });
@@ -69,7 +69,7 @@ const stepsAt = (system: System, where: Where): Step[] | undefined => {
   const effect = system.effects[where.effect];
   if (where.part === 'attach' || where.part === 'detach') return effect?.[where.part];
   const holder = where.handler === undefined ? effect : effect?.on?.[where.handler];
-  return where.part === 'self' ? holder?.self : holder?.steps;
+  return where.part === 'cost' ? holder?.cost : holder?.steps;
 };
 
 function ownerText(ref: Reference, system: System): string | null {
@@ -81,7 +81,7 @@ function ownerText(ref: Reference, system: System): string | null {
   const owner = ref.scope.slice('owner:'.length);
   const field = fieldOf(system, ref.key);
   if (!field) return null;
-  if (owner === RECEIVER && ref.from.part === 'self') {
+  if (owner === RECEIVER && ref.from.part === 'cost') {
     return `в шагах отправителя получателя нет — они идут один раз до всех целей; пишите @отправитель.${field.tag}`;
   }
   if (field.lives === 'desk' && owner !== DESK) return `поле «${field.label}» лежит на столе, а не на листе ${owner === SENDER ? 'отправителя' : 'получателя'} — пишите @стол.${field.tag}`;
@@ -332,6 +332,27 @@ function fieldRollProblems(system: System): Problem[] {
   return out;
 }
 
+function costProblems(system: System): Problem[] {
+  const out: Problem[] = [];
+  const pays = (step: Step): boolean => {
+    const s = step as { type?: string; direction?: string };
+    return s.type === 'emit' || s.type === 'compare' || (s.type === 'apply' && s.direction === 'subtract');
+  };
+  for (const [id, effect] of Object.entries(system.effects ?? {})) {
+    const chains: [Step[] | undefined, (step: number) => Where][] = [
+      [effect.cost, step => ({ tab: 'effects', effect: id, step, part: 'cost' })],
+      ...(effect.on ?? []).map((handler, index): [Step[] | undefined, (step: number) => Where] =>
+        [handler.cost, step => ({ tab: 'effects', effect: id, handler: index, step, part: 'cost' })]),
+    ];
+    for (const [steps, where] of chains) {
+      (steps ?? []).forEach((step, index) => {
+        if (!pays(step)) out.push({ where: where(index), level: 'warn', text: `в цене «${effect.label || id}» — не плата, а действие: место ему в ${STEP.manyPrep}` });
+      });
+    }
+  }
+  return out;
+}
+
 function editProblems(system: System, compendium?: Compendium): Problem[] {
   const out: Problem[] = [];
   if (system.effects?.[ROLL_CALL]) {
@@ -518,6 +539,7 @@ export function lintSystem(system: System, compendium?: Compendium): Problem[] {
   out.push(...orphanProblems(system, compendium));
   out.push(...sheetKindProblems(system));
   out.push(...editProblems(system, compendium));
+  out.push(...costProblems(system));
   out.push(...fieldRollProblems(system));
   out.push(...fieldNameProblems(system));
   out.push(...rowNameProblems(system));

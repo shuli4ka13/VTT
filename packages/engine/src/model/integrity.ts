@@ -52,7 +52,7 @@ function choiceArgs(system: System, table: string): { where: Where; args: Loose;
     for (const key of Object.keys(args)) if (takes(effectId, key)) out.push({ where, args: args as Loose, key });
   };
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
-    for (const [at, step] of [...(effect.steps ?? []), ...(effect.self ?? [])].entries()) {
+    for (const [at, step] of [...(effect.steps ?? []), ...(effect.cost ?? [])].entries()) {
       const s = step as unknown as Loose;
       if (s.type === 'emit') collect({ tab: 'effects', effect: id, step: at }, s.event, s.args);
     }
@@ -121,10 +121,10 @@ function stepConditions(system: System): StepCondition[] {
   };
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
     visit(effect.steps, at => ({ tab: 'effects', effect: id, step: at }));
-    visit(effect.self, at => ({ tab: 'effects', effect: id, step: at, part: 'self' }));
+    visit(effect.cost, at => ({ tab: 'effects', effect: id, step: at, part: 'cost' }));
     (effect.on ?? []).forEach((handler, index) => {
       visit(handler.steps, at => ({ tab: 'effects', effect: id, handler: index, step: at }));
-      visit(handler.self, at => ({ tab: 'effects', effect: id, handler: index, step: at, part: 'self' }));
+      visit(handler.cost, at => ({ tab: 'effects', effect: id, handler: index, step: at, part: 'cost' }));
     });
     visit(effect.attach, at => ({ tab: 'effects', effect: id, step: at, part: 'attach' }));
     visit(effect.detach, at => ({ tab: 'effects', effect: id, step: at, part: 'detach' }));

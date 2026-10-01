@@ -36,7 +36,7 @@ type Loose = Record<string, any>;
 
 function stepsOf(effect: Effect | undefined): EarlierStep[] {
   const out: EarlierStep[] = [];
-  const all = [...(effect?.self ?? []), ...(effect?.steps ?? [])] as Loose[];
+  const all = [...(effect?.cost ?? []), ...(effect?.steps ?? [])] as Loose[];
   all.forEach((step, index) => { if (step.id) out.push({ id: String(step.id), type: String(step.type), at: index + 1 }); });
   return out;
 }
@@ -67,7 +67,7 @@ function callersOf(system: System, effectId: string, key: string): string[] {
     }
   }
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
-    for (const step of [...(effect.self ?? []), ...(effect.steps ?? [])] as Loose[]) {
+    for (const step of [...(effect.cost ?? []), ...(effect.steps ?? [])] as Loose[]) {
       if (step.type !== 'emit' || step.event !== effectId) continue;
       const text = argText(step.args?.[key]);
       out.push(`эффект «${effect.label ?? id}» зовёт: ${text || 'не передаёт'}`);

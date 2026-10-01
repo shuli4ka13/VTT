@@ -207,7 +207,7 @@ export const handler = z.object({
   to: z.enum(['self', 'other']).optional(),
   if: guard.nullable().optional(),
   claims: z.array(z.string().min(1)).optional(),
-  self: z.array(step).optional(),
+  cost: z.array(step).optional(),
   steps: z.array(step).optional(),
 }).strict();
 
@@ -229,7 +229,7 @@ export const effect = z.object({
   params: z.array(param).optional(),
   steps: z.array(step).optional(),
 
-  self: z.array(step).optional(),
+  cost: z.array(step).optional(),
   modifiers: z.array(modifier).optional(),
   on: z.array(handler).optional(),
   attach: z.array(step).optional(),

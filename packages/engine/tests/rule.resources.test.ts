@@ -27,7 +27,7 @@ const system = {
     стрела: {
       label: 'Волшебная стрела', activation: 'manual',
       params: [{ key: 'круг', label: 'Каким кругом', kind: 'number', min: 1, max: 2, ask: { by: 'actor' } }],
-      self: [{ type: 'emit', event: 'ячейка', args: { круг: { param: 'круг' } }, strict: true }],
+      cost: [{ type: 'emit', event: 'ячейка', args: { круг: { param: 'круг' } }, strict: true }],
       steps: [
         { id: 'урон', type: 'amount', source: 'roll', dice: { const: '1d4' }, count: { expr: '2 + #круг' }, bonus: { expr: '2 + #круг' } },
         { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@урон' } },
@@ -244,7 +244,7 @@ group('наложенное помнит число, штрафная кость
       },
       парирование: {
         label: 'Парирование', activation: 'passive',
-        on: [{ on: 'targeted', confirm: true, self: [
+        on: [{ on: 'targeted', confirm: true, cost: [
           { type: 'compare', value: { expr: '@заряды' }, versus: { expr: '1' }, breakIf: 'less' },
           { type: 'apply', target: { tag: 'заряды' }, direction: 'subtract', value: { expr: '1' } },
         ], steps: [] }],

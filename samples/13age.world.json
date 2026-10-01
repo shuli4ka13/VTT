@@ -453,7 +453,7 @@
             }
           }
         ],
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_standard",
@@ -511,7 +511,7 @@
             }
           }
         ],
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_standard",

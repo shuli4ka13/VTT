@@ -42,8 +42,8 @@ export function requireEffect(system: System, id: string, who: string): Effect {
 }
 
 export const chainsOfEffect = (effect: Effect): Step[][] => [
-  effect.steps ?? [], effect.self ?? [],
-  ...(effect.on ?? []).flatMap(handler => [handler.steps ?? [], handler.self ?? []]),
+  effect.steps ?? [], effect.cost ?? [],
+  ...(effect.on ?? []).flatMap(handler => [handler.steps ?? [], handler.cost ?? []]),
   effect.attach ?? [], effect.detach ?? [],
 ];
 

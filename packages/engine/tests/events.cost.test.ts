@@ -11,7 +11,7 @@ const system = {
   effects: {
     снаряд: {
       label: 'Снаряд', activation: 'manual',
-      self: [{ type: 'apply', target: { tag: 'ячейки' }, direction: 'subtract', value: { expr: '1' } }],
+      cost: [{ type: 'apply', target: { tag: 'ячейки' }, direction: 'subtract', value: { expr: '1' } }],
       steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '4' } }],
     },
     удар: {
@@ -33,7 +33,7 @@ const sheet = (id: string): Sheet => ({
 
 const world = { system, compendium, die: () => 1 };
 
-group('дорожка «со мной»', () => {
+group('цена действия', () => {
   test('ячейка тратится один раз за действие, у цели — свой урон', () => {
     const out = exchange({
       ...world, sheets: [sheet('маг'), sheet('цель')],
@@ -41,7 +41,7 @@ group('дорожка «со мной»', () => {
     });
     eq(out.sheets.find(s => s.id === 'маг')!.values.ячейки, 2);
     eq(out.sheets.find(s => s.id === 'цель')!.values.хиты, 16);
-    ok(out.reports.some(entry => entry.report.kind === 'self'), 'отчёт дорожки есть');
+    ok(out.reports.some(entry => entry.report.kind === 'cost'), 'отчёт цены есть');
   });
 
   test('на трёх целях ячейка всё равно одна: дорожка идёт до целей', () => {
@@ -73,7 +73,7 @@ group('дорожка «со мной»', () => {
 group('в шагах отправителя получателя нет', () => {
   const withSelf = (self: unknown[], params: unknown[] = [], args: Record<string, unknown> = {}) => ({
     ...system,
-    effects: { ...system.effects, снаряд: { ...(system.effects as any).снаряд, self, params } },
+    effects: { ...system.effects, снаряд: { ...(system.effects as any).снаряд, cost: self, params } },
     tables: { ...system.tables, заклинание: { ...(system.tables as any).заклинание, bindings: [{ label: 'Снаряд', effect: 'снаряд', args }] } },
   }) as unknown as System;
 
@@ -89,5 +89,13 @@ group('в шагах отправителя получателя нет', () => 
       { сколько: '@получатель.хиты' },
     );
     throws(() => exchange({ system: sys, compendium, die: () => 1, sheets: [sheet('маг'), sheet('цель')], actionId: 'снаряд:0', fromId: 'маг', toId: 'цель' }), 'получателя здесь не прочитать');
+  });
+});
+
+group('цена — только плата', () => {
+  test('наложение эффекта в цене — предупреждение линта', async () => {
+    const { lintSystem } = await import('../src/model/lint.ts');
+    const sys = { ...system, effects: { ...system.effects, снаряд: { ...(system.effects as any).снаряд, cost: [{ type: 'status', mode: 'apply', effect: { const: 'удар' } }] } } } as unknown as System;
+    ok(lintSystem(sys, compendium).some(p => p.level === 'warn' && p.text.includes('не плата')));
   });
 });

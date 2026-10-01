@@ -273,13 +273,13 @@ function effectRefs(system: System, id: string, effect: Effect, out: Reference[]
   for (const param of effect.params ?? []) typedRefs(param, { tab: 'effects', effect: id, part: 'params', key: param.key }, out);
   const called = calledOf(system).some(([key]) => key === id);
   out.push(...chainRefs(effect.steps ?? [], step => ({ tab: 'effects', effect: id, step }), params, called));
-  out.push(...chainRefs(effect.self ?? [], step => ({ tab: 'effects', effect: id, step, part: 'self' }), params, false));
+  out.push(...chainRefs(effect.cost ?? [], step => ({ tab: 'effects', effect: id, step, part: 'cost' }), params, false));
   (effect.on ?? []).forEach((handler, index) => {
     const head: Where = { tab: 'effects', effect: id, part: 'on', handler: index };
     const heard = listenerOf(handler);
     const seeds = handler.on === 'done' ? [TARGETS_SEED] : [];
     out.push(...chainRefs(handler.steps ?? [], step => ({ tab: 'effects', effect: id, handler: index, step }), params, heard.kind === 'event', seeds));
-    out.push(...chainRefs(handler.self ?? [], step => ({ tab: 'effects', effect: id, handler: index, step, part: 'self' }), params, false));
+    out.push(...chainRefs(handler.cost ?? [], step => ({ tab: 'effects', effect: id, handler: index, step, part: 'cost' }), params, false));
     if (heard.kind === 'event') out.push({ kind: 'event', key: heard.key!, from: head });
     if (heard.kind === 'effect') out.push({ kind: 'effect', key: heard.key!, from: head, scope: LISTEN });
     if (heard.kind === 'gained' || heard.kind === 'lost') out.push({ kind: 'effect', key: heard.key!, from: head });

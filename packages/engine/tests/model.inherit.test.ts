@@ -12,7 +12,7 @@ group('основа: эффект берёт у основы и дописыва
       заклинание: {
         label: 'Заклинание',
         params: [{ key: 'круг', label: 'Каким кругом', kind: 'number' }],
-        self: [{ type: 'emit', event: 'ячейка', args: { круг: { param: 'круг' } }, strict: true }],
+        cost: [{ type: 'emit', event: 'ячейка', args: { круг: { param: 'круг' } }, strict: true }],
       },
       огненный_шар: {
         extends: 'заклинание', label: 'Огненный шар', activation: 'manual',
@@ -22,7 +22,7 @@ group('основа: эффект берёт у основы и дописыва
 
     const шар = flat.effects.огненный_шар!;
     eq(шар.label, 'Огненный шар', 'своё имя побеждает');
-    eq(шар.self?.length, 1, 'дорожка досталась от основы');
+    eq(шар.cost?.length, 1, 'дорожка досталась от основы');
     eq(шар.params?.[0]?.key, 'круг', 'и вход тоже');
     eq(шар.steps?.length, 1, 'свои шаги на месте');
     eq((шар as Record<string, unknown>).extends, 'заклинание', 'откуда взялось — видно и после разворачивания');

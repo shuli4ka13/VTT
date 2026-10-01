@@ -3056,7 +3056,7 @@
             }
           }
         ],
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_attack",
@@ -3144,7 +3144,7 @@
             }
           }
         ],
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_once",
@@ -3195,7 +3195,7 @@
             }
           }
         ],
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "spell_slot",
@@ -3410,7 +3410,7 @@
             "max": 9
           }
         ],
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_action",
@@ -3506,7 +3506,7 @@
             }
           }
         ],
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_action",
@@ -3601,7 +3601,7 @@
             }
           }
         ],
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_action",
@@ -3616,7 +3616,7 @@
         "activation": "manual",
         "params": [],
         "steps": [],
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_action",
@@ -3716,7 +3716,7 @@
           }
         ],
         "extends": "spell",
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_action",
@@ -3816,7 +3816,7 @@
           }
         ],
         "extends": "spell",
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_action",
@@ -3922,7 +3922,7 @@
           }
         ],
         "extends": "spell",
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_action",
@@ -3989,7 +3989,7 @@
           }
         ],
         "extends": "spell",
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_action",
@@ -4052,7 +4052,7 @@
           }
         ],
         "extends": "spell",
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_action",
@@ -4117,7 +4117,7 @@
         ],
         "extends": "spell",
         "bond": "concentration",
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_action",
@@ -4148,7 +4148,7 @@
           }
         ],
         "extends": "spell",
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_action",
@@ -4180,7 +4180,7 @@
         ],
         "extends": "spell",
         "bond": "concentration",
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_action",
@@ -4246,7 +4246,7 @@
           }
         ],
         "extends": "spell",
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_action",
@@ -4277,7 +4277,7 @@
           }
         ],
         "extends": "spell",
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_action",
@@ -4293,7 +4293,7 @@
         "params": [],
         "steps": [],
         "extends": "spell",
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_action",
@@ -4339,7 +4339,7 @@
             "targetModifiers": false
           }
         ],
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_action",
@@ -4353,8 +4353,31 @@
         "description": "Бонусным действием восполняешь 1к10 + уровень хитов. Раз до короткого отдыха.",
         "activation": "manual",
         "params": [],
-        "steps": [],
-        "self": [
+        "steps": [
+          {
+            "id": "amt",
+            "type": "amount",
+            "source": "item",
+            "fixed": {
+              "expr": "кинуть('1d10') + @отправитель.level"
+            }
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "hp_current"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "@amt"
+            },
+            "targetModifiers": false
+          },
+          {
+            "type": "each"
+          }
+        ],
+        "cost": [
           {
             "type": "emit",
             "event": "cost_bonus",
@@ -4375,25 +4398,6 @@
                 "expr": "\"второе дыхание уже потрачено\""
               }
             }
-          },
-          {
-            "id": "amt",
-            "type": "amount",
-            "source": "item",
-            "fixed": {
-              "expr": "кинуть('1d10') + @отправитель.level"
-            }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "hp_current"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "@amt"
-            },
-            "targetModifiers": false
           }
         ]
       },
@@ -4403,8 +4407,26 @@
         "description": "Ещё одно действие в этом ходу.",
         "activation": "manual",
         "params": [],
-        "steps": [],
-        "self": [
+        "steps": [
+          {
+            "type": "apply",
+            "target": {
+              "tag": "turn.действие.left"
+            },
+            "direction": "add",
+            "value": {
+              "expr": "1"
+            },
+            "targetModifiers": false,
+            "when": {
+              "expr": "@стол.battle >= 1"
+            }
+          },
+          {
+            "type": "each"
+          }
+        ],
+        "cost": [
           {
             "type": "emit",
             "event": "spend",
@@ -4420,20 +4442,6 @@
                 "expr": "\"всплеск действий уже потрачен\""
               }
             }
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "turn.действие.left"
-            },
-            "direction": "add",
-            "value": {
-              "expr": "1"
-            },
-            "targetModifiers": false,
-            "when": {
-              "expr": "@стол.battle >= 1"
-            }
           }
         ]
       },
@@ -4443,8 +4451,19 @@
         "description": "Бонусным действием впадаешь в ярость на минуту: урон рукопашным оружием выше, сопротивление рубящему, колющему и дробящему, преимущество на проверки и спасброски Силы.",
         "activation": "manual",
         "params": [],
-        "steps": [],
-        "self": [
+        "steps": [
+          {
+            "type": "status",
+            "mode": "apply",
+            "effect": {
+              "const": "raging"
+            }
+          },
+          {
+            "type": "each"
+          }
+        ],
+        "cost": [
           {
             "type": "emit",
             "event": "cost_bonus",
@@ -4465,13 +4484,6 @@
                 "expr": "\"ярости на сегодня кончились\""
               }
             }
-          },
-          {
-            "type": "status",
-            "mode": "apply",
-            "effect": {
-              "const": "raging"
-            }
           }
         ]
       },
@@ -4481,14 +4493,16 @@
         "description": "До начала твоего следующего хода: твои атаки с преимуществом, но и по тебе бьют с преимуществом.",
         "activation": "manual",
         "params": [],
-        "steps": [],
-        "self": [
+        "steps": [
           {
             "type": "status",
             "mode": "apply",
             "effect": {
               "const": "reckless"
             }
+          },
+          {
+            "type": "each"
           }
         ]
       },
@@ -4507,7 +4521,7 @@
             }
           }
         ],
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_bonus",
@@ -4562,7 +4576,7 @@
             "targetModifiers": false
           }
         ],
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_action",
@@ -4623,7 +4637,7 @@
             }
           }
         ],
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_action",
@@ -4653,19 +4667,23 @@
         "description": "До начала твоего следующего хода по тебе бьют с помехой, а спасброски Ловкости идут с преимуществом.",
         "activation": "manual",
         "params": [],
-        "steps": [],
-        "self": [
-          {
-            "type": "emit",
-            "event": "cost_action",
-            "strict": true
-          },
+        "steps": [
           {
             "type": "status",
             "mode": "apply",
             "effect": {
               "const": "dodging"
             }
+          },
+          {
+            "type": "each"
+          }
+        ],
+        "cost": [
+          {
+            "type": "emit",
+            "event": "cost_action",
+            "strict": true
           }
         ]
       },
@@ -4684,7 +4702,7 @@
             }
           }
         ],
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_action",
@@ -4722,7 +4740,7 @@
         "activation": "manual",
         "params": [],
         "steps": [],
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_action",
@@ -4767,7 +4785,7 @@
             }
           }
         ],
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_action",
@@ -4813,7 +4831,7 @@
             }
           }
         ],
-        "self": [
+        "cost": [
           {
             "type": "emit",
             "event": "cost_action",
@@ -4860,24 +4878,7 @@
         "description": "На коротком отдыхе: бросаешь кость хитов, прибавляешь Телосложение, восполняешь столько хитов.",
         "activation": "manual",
         "params": [],
-        "steps": [],
-        "self": [
-          {
-            "type": "emit",
-            "event": "spend",
-            "strict": true,
-            "args": {
-              "what": {
-                "expr": "@hit_dice_left"
-              },
-              "amount": {
-                "expr": "1"
-              },
-              "note": {
-                "expr": "\"костей хитов не осталось\""
-              }
-            }
-          },
+        "steps": [
           {
             "id": "amt",
             "type": "amount",
@@ -4896,6 +4897,27 @@
               "expr": "@amt"
             },
             "targetModifiers": false
+          },
+          {
+            "type": "each"
+          }
+        ],
+        "cost": [
+          {
+            "type": "emit",
+            "event": "spend",
+            "strict": true,
+            "args": {
+              "what": {
+                "expr": "@hit_dice_left"
+              },
+              "amount": {
+                "expr": "1"
+              },
+              "note": {
+                "expr": "\"костей хитов не осталось\""
+              }
+            }
           }
         ]
       },
@@ -4914,7 +4936,17 @@
             "if": {
               "expr": "@hit.success"
             },
-            "self": [
+            "steps": [
+              {
+                "type": "status",
+                "mode": "apply",
+                "effect": {
+                  "const": "shield_up"
+                }
+              }
+            ],
+            "confirm": true,
+            "cost": [
               {
                 "type": "emit",
                 "event": "cost_reaction",
@@ -4930,17 +4962,7 @@
                 },
                 "strict": true
               }
-            ],
-            "steps": [
-              {
-                "type": "status",
-                "mode": "apply",
-                "effect": {
-                  "const": "shield_up"
-                }
-              }
-            ],
-            "confirm": true
+            ]
           }
         ]
       },
@@ -4958,23 +4980,6 @@
             "on": "affected",
             "of": "event:damage",
             "to": "other",
-            "self": [
-              {
-                "type": "emit",
-                "event": "cost_reaction",
-                "strict": true
-              },
-              {
-                "type": "emit",
-                "event": "spell_slot",
-                "args": {
-                  "circle": {
-                    "expr": "1"
-                  }
-                },
-                "strict": true
-              }
-            ],
             "steps": [
               {
                 "id": "save",
@@ -5030,7 +5035,24 @@
                 }
               }
             ],
-            "confirm": true
+            "confirm": true,
+            "cost": [
+              {
+                "type": "emit",
+                "event": "cost_reaction",
+                "strict": true
+              },
+              {
+                "type": "emit",
+                "event": "spell_slot",
+                "args": {
+                  "circle": {
+                    "expr": "1"
+                  }
+                },
+                "strict": true
+              }
+            ]
           }
         ]
       },
@@ -5049,13 +5071,6 @@
             "if": {
               "expr": "@hit.success"
             },
-            "self": [
-              {
-                "type": "emit",
-                "event": "cost_reaction",
-                "strict": true
-              }
-            ],
             "steps": [
               {
                 "type": "status",
@@ -5065,7 +5080,14 @@
                 }
               }
             ],
-            "confirm": true
+            "confirm": true,
+            "cost": [
+              {
+                "type": "emit",
+                "event": "cost_reaction",
+                "strict": true
+              }
+            ]
           }
         ]
       },
@@ -5084,7 +5106,9 @@
             "claims": [
               "advantage"
             ],
-            "self": [
+            "steps": [],
+            "confirm": true,
+            "cost": [
               {
                 "type": "emit",
                 "event": "spend",
@@ -5101,9 +5125,7 @@
                   }
                 }
               }
-            ],
-            "steps": [],
-            "confirm": true
+            ]
           }
         ]
       },
@@ -5122,7 +5144,9 @@
             "claims": [
               "advantage"
             ],
-            "self": [
+            "steps": [],
+            "confirm": true,
+            "cost": [
               {
                 "type": "emit",
                 "event": "spend",
@@ -5139,9 +5163,7 @@
                   }
                 }
               }
-            ],
-            "steps": [],
-            "confirm": true
+            ]
           }
         ]
       },

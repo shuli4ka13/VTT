@@ -1282,24 +1282,6 @@
             "from": "aim_places"
           }
         ],
-        "self": [
-          {
-            "type": "emit",
-            "event": "cost_action",
-            "strict": true
-          },
-          {
-            "type": "apply",
-            "target": {
-              "tag": "luck_left"
-            },
-            "direction": "subtract",
-            "value": {
-              "expr": "@spend_luck"
-            },
-            "targetModifiers": false
-          }
-        ],
         "steps": [
           {
             "id": "dv",
@@ -1393,7 +1375,25 @@
             }
           }
         ],
-        "group": "Атака"
+        "group": "Атака",
+        "cost": [
+          {
+            "type": "emit",
+            "event": "cost_action",
+            "strict": true
+          },
+          {
+            "type": "apply",
+            "target": {
+              "tag": "luck_left"
+            },
+            "direction": "subtract",
+            "value": {
+              "expr": "@spend_luck"
+            },
+            "targetModifiers": false
+          }
+        ]
       },
       "injury_roll": {
         "label": "Травма",

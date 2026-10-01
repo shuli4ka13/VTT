@@ -116,7 +116,7 @@ export function EffectsTab() {
 
 const metaOf = (effect: Effect, called: boolean, everyone: boolean) => {
   const kind = `${called ? 'вызывают другие' : LAUNCHES[launchOf(effect).kind].label}${everyone ? ' · у всех' : ''}`;
-  const idle = !effect.steps?.length && !effect.self?.length && !effect.modifiers?.length
-    && !(effect.on ?? []).some(handler => handler.steps?.length || handler.self?.length || handler.claims?.length);
+  const idle = !effect.steps?.length && !effect.cost?.length && !effect.modifiers?.length
+    && !(effect.on ?? []).some(handler => handler.steps?.length || handler.cost?.length || handler.claims?.length);
   return idle ? `${kind.toLowerCase()} · ничего не делает` : kind.toLowerCase();
 };

@@ -17,7 +17,7 @@ function stepsIn(node: unknown, out: Loose[] = []): Loose[] {
 }
 
 const checksOf = (system: System) => Object.entries(system.effects ?? {}).flatMap(([id, effect]) => {
-  const steps = stepsIn([effect.steps, effect.self]);
+  const steps = stepsIn([effect.steps, effect.cost]);
   const earlier = steps.map(s => ({ id: String(s.id), type: String(s.type) }));
   return steps.filter(s => s.type === 'threshold').map(step => ({ id, effect, earlier, step }));
 });
