@@ -4,7 +4,7 @@ import { useRoom } from '../../store/room.ts';
 import { tableSocket } from '../../api/socket.ts';
 import { ActionForm } from './action-form.tsx';
 import { Columns } from '../../ui/layout.tsx';
-import { Card, CardHead, Button, Empty, Verdict, Chip, Fold } from '../../ui/primitives.tsx';
+import { Card, CardHead, Button, Empty, Verdict, Chip, Fold, DangerButton } from '../../ui/primitives.tsx';
 import { Lobby } from './lobby.tsx';
 import { useSession } from '../../store/session.ts';
 import type { RoomState, Sheet, System } from '@vtt/schema';
@@ -219,6 +219,7 @@ function Prompt({ room, onError }: { room: RoomState; onError: (message: string 
   const pending = room.pending!;
   const userId = useSession(s => s.userId);
   const may = mayAnswer(room, userId, pending.sheetId);
+  const gm = room.members.some(m => m.userId === userId && m.role === 'gm');
   const why = may ? undefined : 'отвечает владелец листа или ведущий';
   const [chosen, setChosen] = useState<string[]>([]);
   const reply = (ids: string[]) => {
@@ -245,6 +246,11 @@ function Prompt({ room, onError }: { room: RoomState; onError: (message: string 
       <div className="inline inline--tight">
         <Button size="sm" variant="primary" disabled={!chosen.length || !may} title={why} onClick={() => reply(chosen)}>Применить</Button>
         <Button size="sm" disabled={!may} title={why} onClick={() => reply([])}>Пропустить</Button>
+        {gm ? (
+          <DangerButton size="sm" onConfirm={() => { onError(null); tableSocket.cancel({ roomId: room.id, pendingId: pending.id }); }}>
+            Отменить действие
+          </DangerButton>
+        ) : null}
         {may ? null : <span className="faint">{why}</span>}
       </div>
     </Card>

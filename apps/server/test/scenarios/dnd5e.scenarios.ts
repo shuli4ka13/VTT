@@ -79,7 +79,6 @@ export const scenarios: Scenario[] = [
       { turn: 'next' },
     ],
     expect: { values: { mirra: { hp_current: 33, 'slots.круг_1.left': 3 } }, effects: { mirra: { not: ['shield_up'] } }, notLog: ['попадание'] },
-    oldEngine: 'ответ «да» на реакцию падает: «стола нет — «battle» читать неоткуда» — расход реакции читает @стол из контекста обработчика, где стола нет; Щит и Адское возмездие недоступны',
   },
   {
     name: 'Адское возмездие: реакция после урона, спасбросок обидчика, половина урона',
@@ -102,7 +101,7 @@ export const scenarios: Scenario[] = [
     dice: [5, 14, 8, 4],
     steps: [
       { act: 'hold_person:0', from: 'mirra', to: 'ogre', inputs: { slot: 2 } },
-      { act: 'orc_greataxe:0', from: 'orc', to: 'mirra' },
+      { act: 'orc_greataxe:0', from: 'orc', to: 'mirra', answers: [[], []] },
     ],
     expect: { values: { mirra: { hp_current: 22, 'slots.круг_2.left': 2 } }, effects: { ogre: { not: ['paralyzed'] }, mirra: { not: ['concentration'] } } },
   },

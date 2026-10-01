@@ -1,5 +1,5 @@
 import { api } from '@vtt/schema';
-import type { ServerMessage, ActIntent, TurnIntent, AnswerIntent, StoredValue } from '@vtt/schema';
+import type { ServerMessage, ActIntent, TurnIntent, AnswerIntent, CancelIntent, StoredValue } from '@vtt/schema';
 
 type Listener = (message: ServerMessage) => void;
 
@@ -51,6 +51,10 @@ export class TableSocket {
 
   answer(intent: AnswerIntent): void {
     this.send('room:answer', { intent });
+  }
+
+  cancel(intent: CancelIntent): void {
+    this.send('room:cancel', { intent });
   }
 
   setValue(roomId: string, sheetId: string, tag: string, value: StoredValue): void {

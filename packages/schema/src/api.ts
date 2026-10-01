@@ -103,6 +103,11 @@ export const answerIntent = z.object({
   chosen: z.array(z.string().min(1)),
 });
 
+export const cancelIntent = z.object({
+  roomId: z.string(),
+  pendingId: z.string().min(1),
+});
+
 export const clockState = z.object({
   round: z.number().int().nonnegative(),
   order: z.array(z.string()),
@@ -181,6 +186,7 @@ export const clientMessage = z.discriminatedUnion('type', [
   z.object({ type: z.literal('room:act'), intent: actIntent }),
   z.object({ type: z.literal('room:turn'), intent: turnIntent }),
   z.object({ type: z.literal('room:answer'), intent: answerIntent }),
+  z.object({ type: z.literal('room:cancel'), intent: cancelIntent }),
   z.object({ type: z.literal('sheet:set'), roomId: z.string(), sheetId: z.string(), tag: z.string(), value: z.union([z.number(), z.string(), z.boolean(), z.null()]) }),
 
   z.object({ type: z.literal('sheet:create'), roomId: z.string(), name: z.string().min(1).max(64), of: z.string().min(1).optional() }),
@@ -234,6 +240,7 @@ export type ActIntent = z.infer<typeof actIntent>;
 export type ClockState = z.infer<typeof clockState>;
 export type PendingState = z.infer<typeof pendingState>;
 export type AnswerIntent = z.infer<typeof answerIntent>;
+export type CancelIntent = z.infer<typeof cancelIntent>;
 export type TurnIntent = z.infer<typeof turnIntent>;
 export type RoomDelta = z.infer<typeof roomDelta>;
 export type JournalEntry = z.infer<typeof journalEntry>;

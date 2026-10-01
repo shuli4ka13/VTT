@@ -1,5 +1,5 @@
 import { Injectable, Inject, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
-import { and, eq, asc, desc } from 'drizzle-orm';
+import { and, eq, ne, asc, desc } from 'drizzle-orm';
 import { DB, CLOCK, IDS, DIE } from '../common/tokens.ts';
 import type { Db } from '../db/db.ts';
 import { AsyncLocalStorage } from 'node:async_hooks';
@@ -7,7 +7,7 @@ import { rooms, roomSheets, roomClocks, roomPending, roomJournal, members, logEn
 import { WorldsService } from '../worlds/worlds.service.ts';
 import { world as W } from '@vtt/schema';
 import type {
-  RoomState, RoomSummary, RoomDelta, JournalEntry, ActIntent, TurnIntent, AnswerIntent, ClockState, PendingState,
+  RoomState, RoomSummary, RoomDelta, JournalEntry, ActIntent, TurnIntent, AnswerIntent, CancelIntent, ClockState, PendingState,
   Sheet, System, Compendium, StoredValue,
 } from '@vtt/schema';
 import { flattenSystem } from '@vtt/engine/model/inherit';
@@ -141,6 +141,10 @@ export class RoomsService {
 
   answer(userId: string, intent: AnswerIntent): Promise<RoomDelta> {
     return this.recorded(intent.roomId, userId, 'answer', intent, () => this.runAnswer(userId, intent));
+  }
+
+  cancel(userId: string, intent: CancelIntent): Promise<RoomDelta> {
+    return this.recorded(intent.roomId, userId, 'cancel', intent, () => this.runCancel(userId, intent));
   }
 
   setValue(userId: string, roomId: string, sheetId: string, tag: string, value: StoredValue): Promise<RoomDelta> {
@@ -335,16 +339,18 @@ export class RoomsService {
       if (err instanceof NotFoundException) throw err;
       throw new BadRequestException((err as Error).message);
     }
-    const touched = await this.persistSheets(record.roomId, current, outcome.sheets, []);
     const fresh = outcome.log.slice(record.logged);
-    await this.db.delete(roomPending).where(eq(roomPending.roomId, record.roomId));
     if (outcome.kind === 'done') {
+      const touched = await this.persistSheets(record.roomId, current, outcome.sheets, []);
+      await this.db.delete(roomPending).where(eq(roomPending.roomId, record.roomId));
       const log = await this.appendLog(record.roomId, fresh);
       return { roomId: record.roomId, sheets: touched, log, clock: record.clock, pending: null };
     }
     const id = this.newId();
     const pending: PendingRecord = { ...record, id, journal: outcome.journal, question: outcome.question, logged: outcome.log.length };
     await this.db.insert(roomPending).values({ id, roomId: record.roomId, data: JSON.stringify(pending) });
+    await this.db.delete(roomPending).where(and(eq(roomPending.roomId, record.roomId), ne(roomPending.id, id)));
+    const touched = await this.persistSheets(record.roomId, current, outcome.sheets, []);
     const asked = outcome.sheets.find(s => s.id === outcome.question.sheetId)!;
     const view = this.pendingView(pending, asked);
     const log = await this.appendLog(record.roomId, [
@@ -374,6 +380,21 @@ export class RoomsService {
     const journal: Journal = { ...record.journal, answers: { ...record.journal.answers, [record.question.key]: intent.chosen } };
     const { question: _question, id: _id, ...rest } = record;
     return this.play({ ...rest, journal }, current, system, compendium);
+  }
+
+  private async runCancel(userId: string, intent: CancelIntent): Promise<RoomDelta> {
+    await this.requireRoom(intent.roomId);
+    const me = await this.memberOf(intent.roomId, userId);
+    if (me?.role !== 'gm') throw new ForbiddenException('отменить действие может только ведущий');
+    const record = await this.pendingRecord(intent.roomId);
+    if (!record || record.id !== intent.pendingId) {
+      throw new BadRequestException('стол никого не ждёт — этот вопрос уже закрыт');
+    }
+    const current = await this.sheetsOf(intent.roomId);
+    const touched = await this.persistSheets(intent.roomId, current, record.snapshot, []);
+    await this.db.delete(roomPending).where(eq(roomPending.roomId, intent.roomId));
+    const log = await this.appendLog(intent.roomId, ['Ведущий отменил действие: всё вернулось как было до него']);
+    return { roomId: intent.roomId, sheets: touched, log, clock: record.clock, pending: null };
   }
 
   private async sheetsOf(roomId: string): Promise<Sheet[]> {
@@ -406,7 +427,8 @@ export class RoomsService {
   private async pendingRecord(roomId: string): Promise<PendingRecord | null> {
     const rows = await this.db.select().from(roomPending).where(eq(roomPending.roomId, roomId));
     const row = rows[0];
-    return row ? JSON.parse(row.data) as PendingRecord : null;
+    const record = row ? JSON.parse(row.data) as PendingRecord : null;
+    return record?.question ? record : null;
   }
 
   private async pendingOf(roomId: string): Promise<PendingState | null> {

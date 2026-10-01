@@ -5,7 +5,7 @@ import { AuthService } from '../auth/auth.service.ts';
 import { bearer } from '../auth/auth.controller.ts';
 import { ZodValidationPipe } from '../common/zod.pipe.ts';
 import { api } from '@vtt/schema';
-import type { CreateRoomRequest, PublishRequest, ActIntent, TurnIntent, AnswerIntent } from '@vtt/schema';
+import type { CreateRoomRequest, PublishRequest, ActIntent, TurnIntent, AnswerIntent, CancelIntent } from '@vtt/schema';
 
 @Controller()
 export class RoomsController {
@@ -79,5 +79,12 @@ export class RoomsController {
   async answer(@Body() intent: AnswerIntent, @Headers('authorization') header?: string) {
     const { userId } = await this.auth.whoIs(bearer(header));
     return this.roomsService.answer(userId, intent);
+  }
+
+  @Post('rooms/:id/cancel')
+  @UsePipes(new ZodValidationPipe(api.cancelIntent))
+  async cancel(@Body() intent: CancelIntent, @Headers('authorization') header?: string) {
+    const { userId } = await this.auth.whoIs(bearer(header));
+    return this.roomsService.cancel(userId, intent);
   }
 }

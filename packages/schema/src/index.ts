@@ -13,7 +13,7 @@ export type {
   LoginRequest, Session, PublishSystemRequest, SystemSummary, PublishedSystem,
   PublishCompendiumRequest, CompendiumSummary, PublishedCompendium,
   PublishRequest, WorldSummary, CreateRoomRequest,
-  RoomSummary, RoomState, ActIntent, TurnIntent, ClockState, PendingState, AnswerIntent,
+  RoomSummary, RoomState, ActIntent, TurnIntent, ClockState, PendingState, AnswerIntent, CancelIntent,
   RoomDelta, JournalEntry, ServerMessage, ClientMessage,
   PublishState, SavedRef,
 } from './api.ts';

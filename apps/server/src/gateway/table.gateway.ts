@@ -99,6 +99,22 @@ export class TableGateway {
     }
   }
 
+  @SubscribeMessage('room:cancel')
+  async cancel(@MessageBody() raw: unknown, @ConnectedSocket() socket: WebSocket) {
+    const guest = this.guestOf(socket);
+    if (!guest) return this.fail(socket, 'сначала войдите в комнату');
+
+    const parsed = api.cancelIntent.safeParse((raw as { intent?: unknown })?.intent ?? raw);
+    if (!parsed.success) return this.fail(socket, 'отмена не проходит схему');
+
+    try {
+      const delta = await this.roomsService.cancel(guest.userId, parsed.data);
+      this.broadcast(delta.roomId, { type: 'room:delta', delta });
+    } catch (err) {
+      this.fail(socket, (err as Error).message);
+    }
+  }
+
   @SubscribeMessage('sheet:set')
   async setValue(@MessageBody() raw: unknown, @ConnectedSocket() socket: WebSocket) {
     const guest = this.guestOf(socket);

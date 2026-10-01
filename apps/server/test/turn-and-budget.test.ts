@@ -595,6 +595,42 @@ describe('два сообщения стола сразу', () => {
   });
 });
 
+describe('отмена действия ведущим', () => {
+  it('ведущий снимает висящий вопрос, и всё возвращается как было до действия', async () => {
+    const token = (await http().post('/auth/login').send({ name: 'Ведущий отмены' })).body.token as string;
+    const as = (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
+    const system = {
+      id: 'отмена', name: 'С отменой',
+      tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] }, приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
+      effects: {
+        удар: { label: 'Удар', activation: 'manual', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '5' } }] },
+        ответ: { label: 'Ответ', activation: 'passive', on: [{ on: 'affected', of: 'удар', to: 'other', confirm: true, steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '1' } }] }] },
+      },
+    };
+    const book = { records: [{ id: 'приём', table: 'приём', label: 'Удар', cells: {} }] };
+    const sheet = (id: string, worn: string[]) => ({ id, systemId: 'отмена', name: id, values: { хиты: 20 }, has: [{ of: 'приём' }], effects: worn.map(effectId => ({ effectId })) });
+    const systemId = (await as(http().post('/systems')).send({ title: 'С отменой', system })).body.id;
+    const bookId = (await as(http().post('/compendiums')).send({ title: 'Книга отмены', systemId, compendium: book })).body.id;
+    await as(http().post(`/systems/${systemId}/publish`)).send({}).expect(201);
+    await as(http().post(`/compendiums/${bookId}/publish`)).send({}).expect(201);
+    const worldId = (await as(http().post('/worlds')).send({ title: 'Мир отмены', systemId, compendiumIds: [bookId], sheets: [sheet('а', []), sheet('б', ['ответ'])] })).body.id;
+    const roomId = (await as(http().post('/rooms')).send({ worldId, title: 'Стол отмены' })).body.id as string;
+
+    const hit = await as(http().post(`/rooms/${roomId}/act`)).send({ roomId, actionId: 'приём:0', fromId: 'а', toId: 'б' }).expect(201);
+    expect(hit.body.pending?.sheetId).toBe('б');
+    const between = (await as(http().get(`/rooms/${roomId}`))).body.sheets;
+    expect(between.find((s: { id: string }) => s.id === 'б').values.хиты, 'промежуточно удар виден').toBe(15);
+
+    const cancelled = await as(http().post(`/rooms/${roomId}/cancel`)).send({ roomId, pendingId: hit.body.pending.id }).expect(201);
+    expect(cancelled.body.pending).toBeNull();
+    expect(cancelled.body.log.map((e: { text: string }) => e.text).join(' ')).toContain('Ведущий отменил действие');
+    const after = (await as(http().get(`/rooms/${roomId}`))).body;
+    expect(after.pending ?? null).toBeNull();
+    expect(after.sheets.find((s: { id: string }) => s.id === 'б').values.хиты, 'удар отменён целиком').toBe(20);
+    await as(http().post(`/rooms/${roomId}/cancel`)).send({ roomId, pendingId: hit.body.pending.id }).expect(400);
+  });
+});
+
 describe('цепочка ответок', () => {
   it('шипы против шипов идут до предела, и журнал говорит, что цепочка оборвана', async () => {
     const token = (await http().post('/auth/login').send({ name: 'Ведущий шипов' })).body.token as string;

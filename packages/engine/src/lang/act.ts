@@ -1,4 +1,4 @@
-import { actionOf, send, receive, offers, react, senderResults, effectLabelOf } from '../events/envelope.ts';
+import { actionOf, send, receive, offers, react, senderResults, effectLabelOf, costRefusal } from '../events/envelope.ts';
 import { deliver, concludeAction, sharedHolderOf, MAX_REPLIES, CUT_WORDS } from '../events/exchange.ts';
 import { runSelfTrack, selfRefusal } from '../events/self.ts';
 import { releaseHolder } from '../events/bonds.ts';
@@ -64,16 +64,8 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
   let cut = false;
 
   const affordable = (envelope: Envelope, window: ReactionWindow, sheetId: string, results: Record<string, unknown>, emitted: EmittedEvent[], scope: string): Offer[] => {
-    const offered = offers(envelope, window, { ...base(`${scope}?`), sheet: state.get(sheetId) }, results, emitted);
-    return offered.filter(offer => {
-      try {
-        react([offer.id], envelope, window, { ...base(`${scope}?${offer.id}`), sheet: state.get(sheetId) }, results, emitted);
-        return true;
-      } catch (err) {
-        if (err instanceof EngineError) return false;
-        throw err;
-      }
-    });
+    const offered = offers(envelope, window, { ...base(`${scope}?`), sheet: state.get(sheetId), shared: shared() }, results, emitted);
+    return offered.filter(offer => !costRefusal(offer.id, { ...base(`${scope}?${offer.id}`), sheet: state.get(sheetId), shared: shared() }, results));
   };
 
   const apply = (sheets: readonly Sheet[] | undefined): void => {
@@ -90,7 +82,7 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
     };
     const chosen = ext.ask(question);
     const asked = state.get(sheetId);
-    const reacted = react(chosen, envelope, window, { ...base(`${key}!`), sheet: asked }, results, emitted);
+    const reacted = react(chosen, envelope, window, { ...base(`${key}!`), sheet: asked, shared: shared() }, results, emitted);
     state.put(reacted.sheet);
     for (const report of reacted.reports) {
       log.push(describeEntry({ fromId: sheetId, toId: sheetId, report }, system, state.sheets));
@@ -173,6 +165,7 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
     const senderOffers = affordable(envelope, 'sender', intent.fromId, seenBySender, [], 'sender');
     if (senderOffers.length) {
       const asked = ask('sender', 'sender', intent.fromId, envelope, senderOffers, seenBySender, [], previewLines(envelope, system, null));
+      answerAll(asked.replies, 'sender>');
       if (asked.claims.length) {
         claims = [...new Set([...claims, ...asked.claims])];
         envelope = pack(1, envelope.steps);
@@ -226,7 +219,6 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
     return { kind: 'done', sheets: final, log, journal: ext.settled(), fresh: ext.fresh };
   } catch (err) {
     if (!(err instanceof Pause)) throw err;
-    const shown = settleLines({ ...base('settle?') }, world.sheets, state.sheets, log);
-    return { kind: 'paused', sheets: shown, log, journal: { ...world.journal }, fresh: ext.fresh, question: err.question };
+    return { kind: 'paused', sheets: state.sheets, log, journal: { ...world.journal }, fresh: ext.fresh, question: err.question };
   }
 }

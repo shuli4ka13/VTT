@@ -497,6 +497,16 @@ export function offers(
   return out;
 }
 
+export function costRefusal(
+  offerId: string, ctx: WorldContext & { sheet: Sheet }, results: Record<string, unknown> = {},
+): string | null {
+  const found = subscriberByKey(ctx.system, offerId);
+  if (!found?.handler.self?.length) return null;
+  const label = found.effect.label || offerId;
+  const paid = runOnSelf(found.id, withSteps(found.effect, found.handler.self), ctx.sheet, results, `плата за «${label}»`, ctx, label);
+  return refusalWords(paid.report, ctx.system);
+}
+
 export interface Reacted {
   sheet: Sheet; reports: Report[]; claims: string[]; spent: string[];
 
