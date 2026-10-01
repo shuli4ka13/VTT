@@ -42,7 +42,7 @@ export interface RefContext {
 
   recordScope?: boolean;
 
-  direct?: { me: Pass; target: Pass | null };
+  direct?: { me: Pass; target: Pass | null; names?: Pass };
 }
 
 const FORMS = ['expr', 'const', 'param', 'prop', 'tag', 'constant'];
@@ -284,8 +284,8 @@ function waitingName(name: string, ctx: RefContext): boolean {
   const head = split?.head ?? name;
   if (!split) return Boolean(ctx.stepIds?.has(head)) && !(head in (ctx.results ?? {}));
   if (referencedTable(system, head, ctx.paramDefs)) return false;
-  const held = known[head];
-  if (held === undefined || held === null || typeof held !== 'object') return true;
+  const held = [known[head], ctx.sender?.[head]].find(one => one && typeof one === 'object');
+  if (!held) return true;
   return split.path.reduce<unknown>(stepInto, held) === undefined;
 }
 
@@ -330,8 +330,9 @@ export function toolsOf(system: System, pass: Pass, owner: string, die?: Die): T
 }
 
 function evaluate(
-  expr: unknown, ctx: RefContext, sent?: Record<string, unknown>, atReceiver = false, rows?: Record<string, string>,
+  expr: unknown, given: RefContext, sent?: Record<string, unknown>, atReceiver = false, rows?: Record<string, string>,
 ): unknown {
+  const ctx = given.direct?.names ? { ...given, pass: given.direct.names, direct: { ...given.direct, names: undefined } } : given;
   const results = ctx.results ?? {};
   const known = knownOf(ctx);
   const system = ctx.pass.system;
@@ -354,8 +355,9 @@ function evaluate(
     if (name in results && !isField(system, name)) return results[name];
     const dot = name.indexOf('.');
     if (dot > 0) {
-      const held = known[name.slice(0, dot)];
-      if (held && typeof held === 'object') {
+      const head = name.slice(0, dot);
+      for (const held of [known[head], ctx.sender?.[head]]) {
+        if (!held || typeof held !== 'object') continue;
         const value = name.slice(dot + 1).split('.')
           .reduce<unknown>(stepInto, held);
         if (value !== undefined) return value;
