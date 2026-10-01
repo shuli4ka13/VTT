@@ -72,7 +72,7 @@ export class RoomsController {
   @UsePipes(new ZodValidationPipe(api.turnIntent))
   async turn(@Body() intent: TurnIntent, @Headers('authorization') header?: string) {
     const { userId } = await this.auth.whoIs(bearer(header));
-    return this.roomsService.turn(userId, intent);
+    return seenBy(await this.roomsService.turn(userId, intent), await this.roomsService.isGm(intent.roomId, userId));
   }
 
   @Post('rooms/:id/answer')
@@ -86,6 +86,6 @@ export class RoomsController {
   @UsePipes(new ZodValidationPipe(api.cancelIntent))
   async cancel(@Body() intent: CancelIntent, @Headers('authorization') header?: string) {
     const { userId } = await this.auth.whoIs(bearer(header));
-    return this.roomsService.cancel(userId, intent);
+    return seenBy(await this.roomsService.cancel(userId, intent), await this.roomsService.isGm(intent.roomId, userId));
   }
 }

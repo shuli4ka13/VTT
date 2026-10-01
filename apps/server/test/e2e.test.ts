@@ -568,3 +568,41 @@ describe('скрытый бросок ведущего', () => {
     expect(journal.filter(entry => entry.op === 'act').every(entry => entry.dice.length === 0)).toBe(true);
   });
 });
+
+describe('скрытое действие с вопросом в журнале ходов', () => {
+  it('ход-ответ на скрытое действие игроку не раскрывается: ни текст, ни кости, ни намерение', async () => {
+    const gm = (await http().post('/auth/login').send({ name: 'Ведущий тайного ответа' })).body;
+    const player = (await http().post('/auth/login').send({ name: 'Игрок тайного ответа' })).body;
+    const as = (token: string) => (r: request.Test) => r.set('Authorization', `Bearer ${token}`);
+    const rooms = await import('../src/rooms/rooms.service.ts').then(m => app.get(m.RoomsService));
+
+    const systemId = (await as(gm.token)(http().post('/systems')).send({ title: 'Тайный ответ', system: dnd })).body.id;
+    const bookId = (await as(gm.token)(http().post('/compendiums')).send({ title: 'Книга тайного ответа', systemId, compendium })).body.id;
+    await as(gm.token)(http().post(`/systems/${systemId}/publish`)).send({});
+    await as(gm.token)(http().post(`/compendiums/${bookId}/publish`)).send({});
+    const worldId = (await as(gm.token)(http().post('/worlds')).send({
+      title: 'Мир тайного ответа', systemId, compendiumIds: [bookId],
+      sheets: sheets.filter((s: { systemId: string }) => s.systemId === dnd.id),
+    })).body.id;
+    const roomId = (await as(gm.token)(http().post('/rooms')).send({ worldId, title: 'Стол тайного ответа' })).body.id as string;
+    await as(player.token)(http().post(`/rooms/${roomId}/join`)).send({});
+    const gmId = (await as(gm.token)(http().get('/auth/me'))).body.userId as string;
+    const [arven, mirra] = (await as(gm.token)(http().get(`/rooms/${roomId}`))).body.sheets;
+    await rooms.setValue(gmId, roomId, arven.id, 'inspiration', 1);
+    await rooms.setBelonging(gmId, roomId, arven.id, 'effects', 'inspire', true);
+
+    const paused = await as(gm.token)(http().post(`/rooms/${roomId}/act`))
+      .send({ roomId, actionId: 'longsword-item:0', fromId: arven.id, toId: mirra.id, hidden: true }).expect(201);
+    expect(paused.body.pending).toBeTruthy();
+    await as(gm.token)(http().post(`/rooms/${roomId}/answer`))
+      .send({ roomId, pendingId: paused.body.pending.id, chosen: ['inspire'] }).expect(201);
+
+    const journal = (await as(player.token)(http().get(`/rooms/${roomId}/journal`))).body as { op: string; input: unknown; dice: number[]; result: { log: { text: string }[] } }[];
+    const answer = journal.find(entry => entry.op === 'answer')!;
+    expect(answer.dice).toEqual([]);
+    expect(answer.input).toEqual({ hidden: true });
+    expect(answer.result.log.map(line => line.text).join(' ')).not.toContain('Длинный меч');
+    const own = (await as(gm.token)(http().get(`/rooms/${roomId}/journal`))).body as { op: string; dice: number[] }[];
+    expect(own.find(entry => entry.op === 'answer')!.dice.length).toBeGreaterThan(0);
+  });
+});

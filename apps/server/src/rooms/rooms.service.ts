@@ -189,10 +189,11 @@ export class RoomsService {
     const gm = await this.isGm(roomId, userId);
     return rows.map(row => {
       const input = JSON.parse(row.input) as { hidden?: boolean };
-      const secret = Boolean(input?.hidden) && !gm;
+      const result = JSON.parse(row.result) as RoomDelta;
+      const secret = !gm && (Boolean(input?.hidden) || (result.log ?? []).some(entry => entry.hidden) || Boolean(result.pending?.hidden));
       return {
         seq: row.seq, at: row.at, userId: row.userId, op: row.op,
-        input, dice: secret ? [] : JSON.parse(row.dice), result: seenBy(JSON.parse(row.result), !secret),
+        input: secret ? { hidden: true } : input, dice: secret ? [] : JSON.parse(row.dice), result: seenBy(result, !secret),
       };
     });
   }
