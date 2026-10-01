@@ -49,7 +49,7 @@ group('вызов действия', () => {
       const blessedSys = { ...system, effects: { ...system.effects,
         blessed: {
           label: 'Благословение', activation: 'passive', duration: { kind: 'permanent' },
-          modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['атака'], op: 'add', value: { expr: '4' }, stacking: 'sum' }],
+          modifiers: [{ kind: 'edit', call: 'roll', param: 'bonus', tags: ['атака'], op: 'add', value: { expr: '4' }, stacking: 'sum' }],
         } } };
       const sheet = { ...arven, effects: [{ effectId: 'blessed' }] };
 
@@ -140,7 +140,7 @@ group('вызов действия', () => {
       const shakenSys = { ...system, effects: { ...system.effects,
         shaken: {
           label: 'Потрясён', activation: 'passive', duration: { kind: 'permanent' },
-          modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['спасбросок'], edit: 'disadvantage' }],
+          modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['спасбросок'], edit: 'disadvantage' }],
         } } };
       const sheet = { ...arven, effects: [{ effectId: 'shaken' }] };
       const { reportOf } = hit('poison-spray:0', mirra, sheet, queue(3, 4, 19, 5), shakenSys);

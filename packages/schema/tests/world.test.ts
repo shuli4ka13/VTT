@@ -76,14 +76,16 @@ describe('схема стережёт инварианты, а не только
     expect(die('4'), 'строка счётом не бывает — это дыра черновика').toBe(false);
   });
 
-  it('roll-модификатор называет ЗАПИСЬ словаря, а не механику', () => {
+  it('правка броска называет ЗАПИСЬ словаря; поле-модификатор не правит бросок и вызов', () => {
     const mod = (extra: object) =>
-      W.modifier.safeParse({ kind: 'roll', target: 'attack_roll', ...extra }).success;
+      W.modifier.safeParse({ kind: 'edit', call: 'roll', param: 'edits', ...extra }).success;
     expect(mod({ edit: 'преимущество' }), 'ссылка на запись словаря').toBe(true);
-    expect(mod({ op: 'add', value: { expr: '5' } }), 'числовая прибавка — другая порода, но тоже roll').toBe(true);
-    expect(mod({ op: 'add', value: 5 }), 'значение модификатора — формула, голое число не принимается').toBe(false);
-
-    expect(mod({ effect: 'advantage', method: 'rerollBest' }), 'старый мир не отвергается').toBe(true);
+    expect(mod({ param: 'bonus', op: 'add', value: { expr: '5' } }), 'числовая прибавка — тоже правка броска').toBe(true);
+    expect(mod({ param: 'bonus', op: 'add', value: 5 }), 'значение — формула, голое число не принимается').toBe(false);
+    for (const target of ['roll:any', 'incoming:roll:any', 'event:damage']) {
+      expect(W.modifier.safeParse({ kind: 'value', target, op: 'add', value: { expr: '1' } }).success, target).toBe(false);
+    }
+    expect(W.modifier.safeParse({ kind: 'roll', target: 'roll:any', edit: 'преимущество' }).success, 'старой породы больше нет').toBe(false);
   });
 
   it('запись словаря правок: имя автора, примитивы, «гасится»', () => {

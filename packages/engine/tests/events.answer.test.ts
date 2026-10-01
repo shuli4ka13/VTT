@@ -16,7 +16,7 @@ const system = {
     },
     сопротивление: {
       label: 'Сопротивление', activation: 'passive', duration: { kind: 'permanent' },
-      modifiers: [{ kind: 'value', target: 'event:урон', op: 'mul', value: { expr: '0.5' } }],
+      modifiers: [{ kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' } }],
     },
     касание: {
       label: 'Вампирское касание', activation: 'manual',

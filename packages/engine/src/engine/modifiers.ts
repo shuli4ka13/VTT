@@ -1,7 +1,6 @@
 import { compile } from '../formula/index.ts';
-import { assertTarget, incomingTagOf, ANY_ROLL, eventTagOf } from './targets.ts';
+import { assertTarget } from './targets.ts';
 import { ROLL_CALL } from '../words/calls.ts';
-import { amountParamOf } from '../model/lists.ts';
 import { wornEffects, activationOf } from './effects.ts';
 import { EngineError } from './errors.ts';
 import { anyRowSays } from './tables.ts';
@@ -30,26 +29,6 @@ type EditModifier = Extract<Modifier, { kind: 'edit' }>;
 
 export const editKey = (call: string, param: string, as?: string): string =>
   `${as ? `${as}:` : ''}${call}.${param}`;
-
-export function asEdits(system: System, mod: Modifier): EditModifier[] | null {
-  if (mod.kind === 'edit') return [mod];
-  const { target, kind: _kind, ...rest } = mod as Modifier & Record<string, unknown>;
-  if (mod.kind === 'value' && String(target).startsWith(eventTagOf(''))) {
-    const call = String(target).slice(eventTagOf('').length);
-    const { tags, ...others } = rest as { tags?: string[] };
-    return [{
-      ...others, kind: 'edit', call, param: amountParamOf(system.effects?.[call])?.key ?? '',
-      ...(tags?.length ? { anyTags: tags } : {}),
-    } as EditModifier];
-  }
-  if (mod.kind !== 'roll') return null;
-  const as = target === incomingTagOf(ANY_ROLL) ? { as: 'against' as const } : {};
-  const { edit, op, value, stacking, ...shared } = rest as Record<string, unknown>;
-  const out: EditModifier[] = [];
-  if (edit) out.push({ ...shared, kind: 'edit', call: ROLL_CALL, param: 'edits', edit, ...as } as EditModifier);
-  if (op) out.push({ ...shared, kind: 'edit', call: ROLL_CALL, param: 'bonus', op, value, ...(stacking ? { stacking } : {}), ...as } as EditModifier);
-  return out;
-}
 
 const assertCall = (system: System, mod: EditModifier, owner?: string): void => {
   if (mod.call === ROLL_CALL || system.effects?.[mod.call]) return;
@@ -83,17 +62,13 @@ export function collectModifiers(
 
   for (const source of sourcesOf(system, sheet, compendium)) {
     for (const mod of source.modifiers) {
-      const edits = asEdits(system, mod);
-      if (edits) {
-        for (const one of edits) {
-          assertCall(system, one, source.label);
-          put(buckets.edits, editKey(one.call, one.param, one.as), { ...one, source });
-        }
+      if (mod.kind === 'edit') {
+        assertCall(system, mod, source.label);
+        put(buckets.edits, editKey(mod.call, mod.param, mod.as), { ...mod, source });
         continue;
       }
-      const target = (mod as { target: string }).target;
-      assertTarget(system, target, source.label);
-      put(buckets.value, target, { ...mod, source });
+      assertTarget(system, mod.target, source.label);
+      put(buckets.value, mod.target, { ...mod, source });
     }
   }
   return buckets;
@@ -209,7 +184,7 @@ export function resolveRoll(
   });
 
   const adds = mods.filter(m => m.op === 'add');
-  const bonus = adds.length ? totalOf(adds, pass, tags.join(', ') || ANY_ROLL) : 0;
+  const bonus = adds.length ? totalOf(adds, pass, tags.join(', ') || ROLL_CALL) : 0;
 
   return {
     tags,

@@ -12,7 +12,7 @@ const queue = (...values: number[]) => {
 
 const passive = (label: string, edit: string) => ({
   label, activation: 'passive', duration: { kind: 'permanent' },
-  modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['проверка'], edit }],
+  modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['проверка'], edit }],
 });
 
 const world = (edits: Record<string, unknown>, effects: string[]) => ({
@@ -120,7 +120,7 @@ group('любой бросок ловит правку, ничего для эт
       ...dnd.effects,
       всякий: {
         label: 'Проклятие невезения', activation: 'passive', duration: { kind: 'permanent' },
-        modifiers: [{ kind: 'roll', target: 'roll:any', edit }],
+        modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', edit }],
       },
     },
   });
@@ -149,7 +149,7 @@ group('любой бросок ловит правку, ничего для эт
     const sys: any = withRule('disadvantage');
     sys.effects.фланг = {
       label: 'Во фланге', activation: 'passive', duration: { kind: 'permanent' },
-      modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'advantage' }],
+      modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['атака'], edit: 'advantage' }],
     };
     const t = attack(sys, cursed(sys, ['всякий', 'фланг']), 18, 4, 5);
     deepEq(t.rolls, [18], 'одна кость: гашение не смотрит, с какой мишени пришла правка');

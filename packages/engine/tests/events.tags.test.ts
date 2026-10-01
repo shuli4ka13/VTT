@@ -1,7 +1,6 @@
 import { group, test, eq, ok, deepEq, throws } from './harness.ts';
 import { exchange, deliverMany } from './play.ts';
 import { CUT_WORDS } from '../src/lang/limits.ts';
-import { targets } from '../src/engine/targets.ts';
 
 const queue = (...values: number[]) => {
   const rest = [...values];
@@ -91,10 +90,6 @@ group('вызываемый эффект как провод: отправите
     eq(t[2]!.within, 'урон');
   });
 
-  test('мишень «Входящий эффект» выводится из вызываемых', () => {
-    ok(targets(world() as any).some(t => t.tag === 'event:урон' && t.kind === 'event'));
-  });
-
   test('необъявленный вызов — ошибка перечисляет известные эффекты', () => {
     const sys: any = world({ чужое: { label: 'Чужое', activation: 'manual', steps: [{ type: 'emit', event: 'котик' }] } });
     const withAction = { ...book, records: [...book.records, { id: 'чужое', table: 'приём', label: 'Чужое', bindings: [{ label: 'Чужое', effect: 'чужое', args: {} }] }] };
@@ -115,9 +110,9 @@ group('вызываемый эффект как провод: отправите
 group('сопротивления по тегам', () => {
   const resist = world({
     огнеупор: passive('Сопротивление огню', [
-      { kind: 'value', target: 'event:урон', op: 'mul', value: { expr: '0.5' }, stacking: 'max', tags: ['огонь'] }]),
+      { kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, stacking: 'max', anyTags: ['огонь'] }]),
     броня: passive('Тяжёлая броня', [
-      { kind: 'value', target: 'event:урон', op: 'add', value: { expr: '-3' }, stacking: 'sum', notTags: ['магический'] }]),
+      { kind: 'edit', call: 'урон', param: 'сколько', op: 'add', value: { expr: '-3' }, stacking: 'sum', notTags: ['магический'] }]),
     камень: passive('Каменная кожа', [
       { kind: 'value', target: 'incoming:хп', op: 'mul', value: { expr: '0.5' }, stacking: 'max' }]),
   });

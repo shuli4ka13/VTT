@@ -130,7 +130,7 @@ export const rollEdit = z.object({
 
 export const valueModifier = z.object({
   kind: z.literal('value'),
-  target: z.string(),
+  target: z.string().refine(target => !/^(event:|roll:|incoming:roll:)/.test(target), 'вызов и бросок правит правка вызова (kind: edit), а не поле'),
   op: z.string(),
   value: formula,
   stacking: z.string().optional(),
@@ -146,16 +146,6 @@ export const valueModifier = z.object({
   }).optional(),
 }).passthrough();
 
-export const rollModifier = z.object({
-  kind: z.literal('roll'),
-  target: z.string(),
-  tags: z.array(z.string().min(1)).optional(),
-  edit: z.string().optional(),
-  op: z.string().optional(),
-  value: formula.optional(),
-  stacking: z.string().optional(),
-  condition: formula.optional(),
-}).passthrough();
 
 export const editModifier = z.object({
   kind: z.literal('edit'),
@@ -177,7 +167,7 @@ export const editModifier = z.object({
   }).optional(),
 }).passthrough();
 
-export const modifier = z.discriminatedUnion('kind', [valueModifier, rollModifier, editModifier]);
+export const modifier = z.discriminatedUnion('kind', [valueModifier, editModifier]);
 
 export const activation = z.enum(['manual', 'passive']);
 export const durationKind = z.enum(['permanent', 'uses', 'rounds', 'turns', 'combat', 'scene']);

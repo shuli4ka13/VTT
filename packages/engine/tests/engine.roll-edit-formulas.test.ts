@@ -18,7 +18,7 @@ const sheet = { id: 'а', systemId: 'с', name: 'А', values: { грань: 3 },
 group('правка броска с формулой и подрыв шестёрок', () => {
   test('число добавленных костей — из листа того, кто бросает', () => {
     const { edits } = resolveRoll(system, sheet, [], newPass(system, sheet), [
-      { kind: 'roll', target: 'roll:any', edit: 'выжать', source: { type: 'claim', id: 'выжать', modifiers: [] } } as never,
+      { kind: 'edit', call: 'roll', param: 'edits', edit: 'выжать', source: { type: 'claim', id: 'выжать', modifiers: [] } } as never,
     ]);
     deepEq(edits[0]!.ops[0], { op: 'addDie', count: 3 });
   });

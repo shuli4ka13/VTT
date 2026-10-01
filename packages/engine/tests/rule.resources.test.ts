@@ -130,7 +130,7 @@ group('бросок несёт несколько меток, одна прих�
      чары: { shape: 'book', use: 'action', label: 'Чары', columns: [], bindings: [{ label: 'Шар', effect: 'шар', args: { чем: 'лов' } }] } },
     roll_edits: { помеха: { label: 'Помеха', ops: [{ op: 'addDie' }, { op: 'keepWorst', n: 1 }] } },
     effects: {
-      опутан: { label: 'Опутан', activation: 'passive', modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['спас', 'лов'], edit: 'помеха' }] },
+      опутан: { label: 'Опутан', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['спас', 'лов'], edit: 'помеха' }] },
       шар: {
         label: 'Шар', activation: 'manual',
         params: [{ key: 'чем', label: 'Чем спасаются', kind: 'choice', from: 'черты' }],
@@ -233,7 +233,7 @@ group('наложенное помнит число, штрафная кость
         on: [{ on: 'moment:turn-start', steps: [{ type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@worn.carry' } }] }],
       },
       поджечь: { label: 'Поджечь', activation: 'manual', steps: [{ type: 'status', mode: 'apply', effect: { const: 'горит' }, carry: { expr: '4' } }] },
-      порченый: { label: 'Порченый', activation: 'passive', modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'порча' }] },
+      порченый: { label: 'Порченый', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['атака'], edit: 'порча' }] },
       удар: {
         label: 'Удар', activation: 'manual',
         steps: [

@@ -294,7 +294,7 @@ describe('Словари: кости, правки броска, таблицы'
         effects: {
           lucky: {
             label: 'Везучий', activation: 'passive',
-            modifiers: [{ kind: 'roll', target: 'attack_roll', edit: 'up' }],
+            modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', edit: 'up' }],
           },
         },
       },

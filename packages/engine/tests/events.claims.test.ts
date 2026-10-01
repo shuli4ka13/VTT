@@ -1,7 +1,6 @@
-import { group, test, eq, ok, deepEq, throws } from './harness.ts';
+import { group, test, eq, deepEq, throws } from './harness.ts';
 import { exchange } from './play.ts';
 import { withColumn } from '../src/model/sheet-columns.ts';
-import { targets } from '../src/engine/targets.ts';
 import { system, arven, mirra, compendium, sheets } from './fixtures.ts';
 
 const queue = (...values: number[]) => {
@@ -18,7 +17,7 @@ const passive = (label: string, target: string, edit: string, condition: string 
   return {
     label, activation: 'passive', duration: { kind: 'permanent' },
     modifiers: [{
-      kind: 'roll', target: incoming ? 'incoming:roll:any' : 'roll:any',
+      kind: 'edit', call: 'roll', param: 'edits', ...(incoming ? { as: 'against' } : {}),
       ...(tag === 'roll:any' ? {} : { tags: [tag] }), edit, ...(condition ? { condition: { expr: condition } } : {}),
     }],
   };
@@ -76,11 +75,6 @@ group('заявка правки за столом', () => {
 group('цель видна отправителю: состояния цели правят бросок по ней', () => {
   const prone = withEffects({ prone: passive('Лежит', 'incoming:атака', 'advantage') });
   const lying = { ...mirra, effects: [{ effectId: 'prone' }] };
-
-  test('мишень «бросок по мне» одна, вид броска уточняют метки', () => {
-    ok(targets(system).some(t => t.tag === 'incoming:roll:any' && t.kind === 'roll'));
-    ok(!targets(system).some(t => t.tag === 'incoming:атака'));
-  });
 
   test('по лежащей цели атакуют с преимуществом — правку даёт лист ЦЕЛИ', () => {
     const t = hitTrace(strike(prone, arven, lying, [4, 18, 5]));

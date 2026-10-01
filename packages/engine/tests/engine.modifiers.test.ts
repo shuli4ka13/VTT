@@ -2,7 +2,6 @@ import { group, test, eq, ok, deepEq, throws } from './harness.ts';
 import { calc, newPass } from '../src/engine/calc.ts';
 import { resolveRoll } from '../src/engine/modifiers.ts';
 import { targets, assertTarget } from '../src/engine/targets.ts';
-import { calledOf } from '../src/engine/effects.ts';
 import { UnknownTagError } from '../src/engine/errors.ts';
 import { system, arven, mirra, compendium } from './fixtures.ts';
 import { fieldsOf } from '../src/model/sheet-columns.ts';
@@ -170,7 +169,7 @@ group('модификаторы', () => {
     test('гашение объявлено в СЛОВАРЕ, а не зашито в движке', () => {
       const sys = withEffects({
         blessed: passive('Благословение',
-          [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'advantage' }]),
+          [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['атака'], edit: 'advantage' }]),
       });
       const sheet = { ...arven, effects: [{ effectId: 'poisoned' }, { effectId: 'blessed' }] };
       deepEq(names(resolveRoll(sys, sheet, ['атака'], newPass(sys, sheet, { compendium }))), [],
@@ -189,7 +188,7 @@ group('модификаторы', () => {
         effects: {
           ...system.effects,
           blessed: passive('Благословение',
-            [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'advantage' }]),
+            [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['атака'], edit: 'advantage' }]),
         },
       };
       const sheet = { ...arven, effects: [{ effectId: 'poisoned' }, { effectId: 'blessed' }] };
@@ -199,7 +198,7 @@ group('модификаторы', () => {
 
     test('две одинаковых правки не складываются — это по-прежнему одна правка', () => {
       const adv = n => passive('Пре' + n,
-        [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'advantage' }]);
+        [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['атака'], edit: 'advantage' }]);
       const sys = withEffects({ adv1: adv(1), adv2: adv(2) });
       const sheet = { ...arven, effects: [{ effectId: 'adv1' }, { effectId: 'adv2' }] };
       const roll = resolveRoll(sys, sheet, ['атака'], newPass(sys, sheet, { compendium }));
@@ -210,7 +209,7 @@ group('модификаторы', () => {
     test('ссылка на правку, которой нет в словаре — внятная ошибка', () => {
       const sys = withEffects({
         weird: passive('Странное',
-          [{ kind: 'roll', target: 'roll:any', tags: ['атака'], edit: 'котик' }]),
+          [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['атака'], edit: 'котик' }]),
       });
       const sheet = { ...arven, effects: [{ effectId: 'weird' }] };
       throws(() => resolveRoll(sys, sheet, ['атака'], newPass(sys, sheet, { compendium })), 'котик');
@@ -229,7 +228,7 @@ group('модификаторы', () => {
 
     test('правило системы применяется без предметов и эффектов', () => {
       const sys = withRule({
-        kind: 'roll', label: 'Тяжёлый доспех мешает', target: 'roll:any', tags: ['проверка'],
+        kind: 'edit', label: 'Тяжёлый доспех мешает', call: 'roll', param: 'edits', tags: ['проверка'],
         edit: 'disadvantage',
       });
       const p = newPass(sys, arven, { compendium });
@@ -238,7 +237,7 @@ group('модификаторы', () => {
 
     test('условие правила считается по каждому листу отдельно', () => {
       const sys = withRule({
-        kind: 'roll', label: 'Мастерство даёт фору', target: 'roll:any', tags: ['проверка'],
+        kind: 'edit', label: 'Мастерство даёт фору', call: 'roll', param: 'edits', tags: ['проверка'],
         edit: 'advantage', condition: { expr: '#prof_bonus >= 3' },
       });
       eq(resolveRoll(sys, arven, ['проверка'], newPass(sys, arven, { compendium })).edits.length,
@@ -249,7 +248,7 @@ group('модификаторы', () => {
 
     test('правило системы гасится помехой от эффекта наравне с прочими', () => {
       const sys = withRule({
-        kind: 'roll', label: 'Фора', target: 'roll:any', tags: ['атака'],
+        kind: 'edit', label: 'Фора', call: 'roll', param: 'edits', tags: ['атака'],
         edit: 'advantage',
       });
       const sheet = { ...arven, effects: [{ effectId: 'poisoned' }] };
@@ -266,7 +265,7 @@ group('модификаторы', () => {
 
     test('источник правила виден в разборе броска под своим ярлыком', () => {
       const sys = withRule({
-        kind: 'roll', label: 'Тяжёлый доспех мешает', target: 'roll:any', tags: ['проверка'],
+        kind: 'edit', label: 'Тяжёлый доспех мешает', call: 'roll', param: 'edits', tags: ['проверка'],
         edit: 'disadvantage',
       });
       const roll = resolveRoll(sys, arven, ['проверка'], newPass(sys, arven, { compendium }));
@@ -279,7 +278,7 @@ group('модификаторы', () => {
 
     const bonus = (value, condition = null) => withEffects({
       guidance: passive('Наставление',
-        [{ kind: 'roll', target: 'roll:any', tags: ['проверка'], op: 'add', value: typeof value === 'object' ? value : { expr: String(value) }, stacking: 'sum', ...(condition ? { condition: { expr: condition } } : {}) }]),
+        [{ kind: 'edit', call: 'roll', param: 'bonus', tags: ['проверка'], op: 'add', value: typeof value === 'object' ? value : { expr: String(value) }, stacking: 'sum', ...(condition ? { condition: { expr: condition } } : {}) }]),
     });
     const hung = { ...arven, effects: [{ effectId: 'guidance' }] };
     const roll = sys => resolveRoll(sys, hung, ['проверка'], newPass(sys, hung, { compendium }));
@@ -299,8 +298,8 @@ group('модификаторы', () => {
     test('прибавка не отменяет и не заменяет преимущество', () => {
       const both = withEffects({
         guidance: passive('Наставление', [
-          { kind: 'roll', target: 'roll:any', tags: ['проверка'], op: 'add', value: { expr: '2' }, stacking: 'sum' },
-          { kind: 'roll', target: 'roll:any', tags: ['проверка'], edit: 'advantage' },
+          { kind: 'edit', call: 'roll', param: 'bonus', tags: ['проверка'], op: 'add', value: { expr: '2' }, stacking: 'sum' },
+          { kind: 'edit', call: 'roll', param: 'edits', tags: ['проверка'], edit: 'advantage' },
         ]),
       });
 
@@ -313,8 +312,8 @@ group('модификаторы', () => {
     test('прибавка остаётся, даже когда преимущество погашено помехой', () => {
       const both = withEffects({
         guidance: passive('Наставление', [
-          { kind: 'roll', target: 'roll:any', tags: ['проверка'], op: 'add', value: { expr: '2' }, stacking: 'sum' },
-          { kind: 'roll', target: 'roll:any', tags: ['проверка'], edit: 'advantage' },
+          { kind: 'edit', call: 'roll', param: 'bonus', tags: ['проверка'], op: 'add', value: { expr: '2' }, stacking: 'sum' },
+          { kind: 'edit', call: 'roll', param: 'edits', tags: ['проверка'], edit: 'advantage' },
         ]),
       });
 
@@ -339,19 +338,17 @@ group('модификаторы', () => {
   });
 
   group('словарь мишеней выводится из системы', () => {
-    test('в него попадают все поля, два броска и входящее хранимых полей', () => {
+    test('в него попадают все поля и входящее хранимых полей — бросков и вызовов там нет', () => {
       const all = targets(system);
       const incoming = fieldsOf(system).filter(f => f.value.kind === 'stored').length;
-      const events = calledOf(system).length;
       const cells = Object.values(system.tables ?? {}).filter(table => table.shape !== 'single' && table.shape !== 'book').reduce((n, table) => {
         const columns = (table.columns ?? []).filter(c => c.kind === 'expr' || c.kind === 'number').length;
         const rows = table.key === 'range' ? 0 : (table.rows ?? []).filter(r => r.value !== undefined).length;
         return n + columns * (1 + rows);
       }, 0);
-      eq(all.length, 2 + fieldsOf(system).length + incoming + events + cells,
-        'мой бросок и бросок по мне, поля, входящее хранимых, входящие вызовы и ячейки таблиц');
-      ok(all.some(t => t.tag === 'roll:any' && t.kind === 'roll'), 'свой бросок');
-      ok(all.some(t => t.tag === 'incoming:roll:any' && t.kind === 'roll'), 'бросок по мне правит состояние цели');
+      eq(all.length, fieldsOf(system).length + incoming + cells,
+        'поля, входящее хранимых и ячейки таблиц; бросок и вызов правит правка вызова');
+      ok(!all.some(t => t.tag.startsWith('roll:') || t.tag.startsWith('event:')), 'бросков и вызовов среди мишеней поля нет');
       ok(all.some(t => t.tag === 'ac' && t.kind === 'value'));
       ok(all.some(t => t.tag === 'incoming:hp_current' && t.kind === 'incoming'),
         'на входящее вешаются сопротивления');
@@ -376,7 +373,7 @@ group('модификаторы', () => {
 group('бросок находят по меткам', () => {
   const owl = (tags) => ({ ...system, effects: { ...system.effects,
     owl: passive('Сова-помощница',
-      [{ kind: 'roll', target: 'roll:any', tags, op: 'add', value: { expr: '5' }, stacking: 'sum' }]) } });
+      [{ kind: 'edit', call: 'roll', param: 'bonus', tags, op: 'add', value: { expr: '5' }, stacking: 'sum' }]) } });
   const sheet = { ...arven, effects: [{ effectId: 'owl' }] };
   const bonus = (sys, tags) => resolveRoll(sys, sheet, tags, newPass(sys, sheet, { compendium })).bonus;
 

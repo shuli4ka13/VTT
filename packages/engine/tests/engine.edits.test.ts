@@ -1,7 +1,8 @@
 import { group, test, eq, deepEq, throws } from './harness.ts';
 import { newPass } from '../src/engine/calc.ts';
 import { editNumber, resolveRoll, incomingRollModifiers } from '../src/engine/modifiers.ts';
-import type { System, Sheet, Modifier } from '../src/model/types.ts';
+import { asEdits } from '../../../samples/convert/edits.ts';
+import type { System, Sheet } from '../src/model/types.ts';
 
 const world = (modifiers: unknown[]): System => ({
   id: 'п', name: 'п',
@@ -25,33 +26,46 @@ const pass = (modifiers: unknown[], values: Record<string, unknown> = {}) => {
   return newPass(system, sheet, { compendium: { records: [] } });
 };
 
-const both = (old: unknown, fresh: unknown, run: (p: ReturnType<typeof pass>) => unknown, values?: Record<string, unknown>) =>
-  deepEq(run(pass([fresh], values)), run(pass([old], values)));
+group('проход перевода: старая форма становится правкой вызова', () => {
+  const convert = (mod: unknown) => asEdits(world([]), mod as Record<string, unknown>);
 
-group('правка вызова: новая форма даёт то же, что старая', () => {
+  test('урон × 0.5 огнём: event: → вызов «урон», его величина, метки — «любая из»', () => {
+    deepEq(convert({ kind: 'value', target: 'event:урон', op: 'mul', value: { expr: '0.5' }, tags: ['огонь'] }),
+      [{ op: 'mul', value: { expr: '0.5' }, kind: 'edit', call: 'урон', param: 'сколько', anyTags: ['огонь'] }]);
+  });
+
+  test('бросок: правка и прибавка в одном — две правки; бросок по мне — as: against', () => {
+    deepEq(convert({ kind: 'roll', target: 'incoming:roll:any', edit: 'advantage', op: 'add', value: { expr: '1' }, tags: ['атака'] }), [
+      { tags: ['атака'], kind: 'edit', call: 'roll', param: 'edits', edit: 'advantage', as: 'against' },
+      { tags: ['атака'], kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '1' }, as: 'against' },
+    ]);
+  });
+});
+
+group('правка вызова работает', () => {
   test('урон × 0.5 только огнём', () => {
-    const old = { kind: 'value', target: 'event:урон', op: 'mul', value: { expr: '0.5' }, tags: ['огонь'] };
     const fresh = { kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, anyTags: ['огонь'] };
-    both(old, fresh, p => [editNumber(p, 'урон', 'сколько', 10, ['огонь']), editNumber(p, 'урон', 'сколько', 10, ['холод'])]);
     eq(editNumber(pass([fresh]), 'урон', 'сколько', 10, ['огонь']), 5);
+    eq(editNumber(pass([fresh]), 'урон', 'сколько', 10, ['холод']), 10);
   });
 
   test('правка броска по метке и прибавка при условии', () => {
-    const oldEdit = { kind: 'roll', target: 'roll:any', edit: 'advantage', tags: ['атака'] };
     const freshEdit = { kind: 'edit', call: 'roll', param: 'edits', edit: 'advantage', tags: ['атака'] };
-    both(oldEdit, freshEdit, p => resolveRoll(p.system, p.sheet, ['атака'], p).edits.map(e => e.label));
-    const oldAdd = { kind: 'roll', target: 'roll:any', op: 'add', value: { expr: '-2' }, condition: { expr: '@ранен' } };
+    const p = pass([freshEdit]);
+    deepEq(resolveRoll(p.system, p.sheet, ['атака'], p).edits.map(e => e.label), ['Преимущество']);
+    deepEq(resolveRoll(p.system, p.sheet, ['спасбросок'], p).edits, []);
     const freshAdd = { kind: 'edit', call: 'roll', param: 'bonus', op: 'add', value: { expr: '-2' }, condition: { expr: '@ранен' } };
-    both(oldAdd, freshAdd, p => resolveRoll(p.system, p.sheet, ['атака'], p).bonus, { ранен: true });
-    eq(resolveRoll(pass([freshAdd]).system, pass([freshAdd]).sheet, [], pass([freshAdd], { ранен: true })).bonus, -2);
+    const hurt = pass([freshAdd], { ранен: true });
+    eq(resolveRoll(hurt.system, hurt.sheet, [], hurt).bonus, -2);
+    const fine = pass([freshAdd], { ранен: false });
+    eq(resolveRoll(fine.system, fine.sheet, [], fine).bonus, 0);
   });
 
   test('бросок по мне — as: against', () => {
-    const old = { kind: 'roll', target: 'incoming:roll:any', edit: 'disadvantage', tags: ['атака'] };
     const fresh = { kind: 'edit', call: 'roll', param: 'edits', edit: 'disadvantage', tags: ['атака'], as: 'against' };
-    both(old, fresh, p => incomingRollModifiers(['атака'], p).map(m => (m as Modifier & { edit?: string }).edit));
-    eq(incomingRollModifiers(['атака'], pass([fresh])).length, 1);
-    eq(resolveRoll(pass([fresh]).system, pass([fresh]).sheet, ['атака'], pass([fresh])).edits.length, 0, 'свой бросок она не трогает');
+    const p = pass([fresh]);
+    eq(incomingRollModifiers(['атака'], p).length, 1);
+    eq(resolveRoll(p.system, p.sheet, ['атака'], p).edits.length, 0, 'свой бросок она не трогает');
   });
 
   test('метки: tags — все, anyTags — любая, notTags — ни одной', () => {

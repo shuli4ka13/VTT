@@ -1,11 +1,10 @@
 import { UnknownTagError } from './errors.ts';
-import { calledOf } from './effects.ts';
 import { cellTagOf, columnTagOf } from './cells.ts';
 import { isRange } from '../model/tables.ts';
 import type { System } from '../model/types.ts';
 import { fieldsOf } from '../model/sheet-columns.ts';
 
-export type TargetKind = 'value' | 'roll' | 'incoming' | 'event' | 'cell';
+export type TargetKind = 'value' | 'incoming' | 'cell';
 
 export interface Target {
   tag: string;
@@ -18,15 +17,8 @@ export interface Target {
 
 export const incomingTagOf = (tag: string) => `incoming:${tag}`;
 
-export const ANY_ROLL = 'roll:any';
-
-export const eventTagOf = (id: string) => `event:${id}`;
-
 export function targets(system: System): Target[] {
   return [
-    { tag: ANY_ROLL, label: 'Мой бросок', group: 'Броски', kind: 'roll' },
-    { tag: incomingTagOf(ANY_ROLL), label: 'Бросок по мне', group: 'Броски', kind: 'roll', from: ANY_ROLL },
-
     ...fieldsOf(system).map((f): Target => ({ tag: f.tag, label: f.label, group: f.group, kind: 'value' })),
 
     ...fieldsOf(system).filter(f => f.value.kind === 'stored').map((f): Target => ({
@@ -35,14 +27,6 @@ export function targets(system: System): Target[] {
       group: f.group,
       kind: 'incoming',
       from: f.tag,
-    })),
-
-    ...calledOf(system).map(([id, effect]): Target => ({
-      tag: eventTagOf(id),
-      label: `Входящий эффект: ${effect.label || id}`,
-      group: 'Вызываемые эффекты',
-      kind: 'event',
-      from: id,
     })),
 
     ...cellTargets(system),

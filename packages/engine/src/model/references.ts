@@ -1,5 +1,4 @@
 import { tagWords } from '../engine/roll-tags.ts';
-import { ANY_ROLL, incomingTagOf } from '../engine/targets.ts';
 import { ROLL_CALL } from '../words/calls.ts';
 import { ownerOf } from '../engine/owners.ts';
 import type { System, Compendium, Effect, Step, Modifier, Guard } from './types.ts';
@@ -232,12 +231,8 @@ function modifierRefs(list: Modifier[] | undefined, from: Where, out: Reference[
       } else {
         out.push({ kind: 'effect', key: mod.call, from });
       }
-    } else if (mod.kind === 'value') {
-      if (target && !target.includes(':') && target !== '*') out.push({ kind: 'field', key: target, from });
-    } else {
-      if (target && target !== ANY_ROLL && target !== incomingTagOf(ANY_ROLL)) out.push({ kind: 'roll', key: target, from });
-      for (const tag of (mod as { tags?: string[] }).tags ?? []) out.push({ kind: 'roll', key: tag, from });
-      if (mod.edit) out.push({ kind: 'rollEdit', key: String(mod.edit), from });
+    } else if (target && !target.includes(':') && target !== '*') {
+      out.push({ kind: 'field', key: target, from });
     }
     const noScope = { params: new Set<string>(), earlier: new Set<string>(), eventChain: false };
     if (mod.condition?.expr.trim()) exprRefs(rowFree(mod.condition.expr, from, own, out), from, noScope, out);

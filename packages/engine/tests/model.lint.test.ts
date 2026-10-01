@@ -63,7 +63,7 @@ group('линт: висячие ссылки называются словами
     system.initiative = { die: { constant: 'нет_кости' }, tags: ['нет_броска'] } as never;
     system.tables = withColumn(system, { key: 'lvl', label: 'Ур', expr: 'таблица("нет_таблицы", #hp)' }).tables;
     system.grants = ['нет_правила'];
-    system.effects.buff = { label: 'y', activation: 'passive', modifiers: [{ kind: 'roll', target: 'roll:any', edit: 'нет_правки' }] } as never;
+    system.effects.buff = { label: 'y', activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', edit: 'нет_правки' }] } as never;
     const found = errorTexts(system).join('\n');
     for (const key of ['кости «нет_кости»', 'метки броска «нет_броска»', 'таблицы «нет_таблицы»', 'эффекта «нет_правила»', 'правки броска «нет_правки»']) {
       ok(found.includes(key), `нет «${key}» в:\n${found}`);
@@ -102,7 +102,7 @@ group('линт: висячие ссылки называются словами
   });
 
   test('выведенные мишени правок броска (с двоеточием) — не ссылки на виды бросков', () => {
-    const system = withEffect('buff', { activation: 'passive', modifiers: [{ kind: 'roll', target: 'roll:any', edit: 'adv' }] });
+    const system = withEffect('buff', { activation: 'passive', modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', edit: 'adv' }] });
     system.roll_edits = { adv: { label: 'Преимущество', ops: [] } } as never;
     eq(errorTexts(system).join(''), '');
   });

@@ -28,10 +28,8 @@ const swap = (value: unknown, from: unknown, to: unknown): unknown =>
   (Array.isArray(value) ? value.map(item => (same(item, from) ? to : item)) : (same(value, from) ? to : value));
 
 const tagTablesOfTarget = (system: System, mod: Loose): string[] => {
-  if (mod.kind === 'edit' && typeof mod.call === 'string') return tagTablesOf(system.effects[mod.call]);
-  const target = mod.target;
-  if (typeof target !== 'string' || !target.startsWith('event:')) return [];
-  return tagTablesOf(system.effects[target.slice('event:'.length)]);
+  if (mod.kind !== 'edit' || typeof mod.call !== 'string') return [];
+  return tagTablesOf(system.effects[mod.call]);
 };
 
 export function modifierLists(system: System): { where: Where; modifiers: Loose[] }[] {

@@ -11,7 +11,7 @@ const sys: any = {
       shape: 'book', use: 'item', label: 'Тяжёлый доспех',
       columns: [], bindings: [],
 
-      modifiers: [{ kind: 'roll', target: 'roll:any', tags: ['скрытность'], edit: 'помеха' }],
+      modifiers: [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['скрытность'], edit: 'помеха' }],
     }, лёгкий: { shape: 'book', use: 'item', label: 'Лёгкий доспех', columns: [], bindings: [] }, кольцо: {
       shape: 'book', use: 'item', label: 'Кольцо', columns: [], bindings: [],
       modifiers: [{ kind: 'value', target: 'кд', op: 'add', value: { expr: '1' }, stacking: 'sum' }],
