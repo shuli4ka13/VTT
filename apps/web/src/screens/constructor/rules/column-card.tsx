@@ -88,7 +88,7 @@ export function ColumnCard({ column, kinds, tables, many, formulaHint, where, na
       </Field>
       {preview}
       {column.kind === 'number' || extra ? (
-        <Fold title="ещё">
+        <Fold title="ещё" summary="на листе, бросок, границы">
           {column.kind === 'number' ? (
             <div className="row">
               <Field label="Не ниже">

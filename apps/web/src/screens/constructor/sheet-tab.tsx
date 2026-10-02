@@ -5,7 +5,8 @@ import { Select, Button, Empty, DangerButton } from '../../ui/primitives.tsx';
 import { DonorPalette } from './donors.tsx';
 import { newColumn } from './factory.ts';
 import { addColumn } from './rules/character-section.tsx';
-import { ColumnOnSheet, placeOnSheet, sheetTables } from './table-field.tsx';
+import { placeOnSheet, sheetTables } from './table-field.tsx';
+import { TableColumnCard } from './rules/tables-section.tsx';
 import { SheetSample } from './sheet-sample.tsx';
 import { NO_BLOCK } from '@vtt/engine/model/blocks';
 import type { System } from '@vtt/schema';
@@ -64,7 +65,9 @@ function ViewPanel({ field, system }: { field: FieldModel; system: System }) {
 
   return (
     <>
-      <ColumnOnSheet tableId={field.home} column={column} system={system} />
+      <TableColumnCard id={field.home} table={table} column={column} system={system}
+        edit={change => editSystem(draft => { const target = draft.tables?.[field.home]; if (target) change(target); })}
+        onClose={() => pick({ activeFieldTag: null })} />
       <div className="inline inline--tight">
         {field.cell ? (
           <>

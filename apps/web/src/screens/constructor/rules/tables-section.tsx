@@ -1,3 +1,4 @@
+import { ColumnSheetFields } from '../table-field.tsx';
 import { kindsFor, kindWord } from '@vtt/engine/words/kinds';
 import { ROW, isFormulaCell, onSheet, isSingle, holderOf, fieldsOf, withColumn, forgetFields } from '@vtt/engine/model/sheet-columns';
 import { Card, CardHead, Input, NumInput, Button, DangerButton, Fold, Select, Verdict, Empty, Field, Chip } from '../../../ui/primitives.tsx';
@@ -268,21 +269,32 @@ export function TableColumnCard({ id, table, column, system, edit, onClose, extr
       onClose={onClose}
       preview={single && column.expr !== undefined
         ? <LiveValue system={system} compendium={compendium} tag={column.key} source={column.expr.expr} /> : null}
-      extra={single ? <>
-        <Field label="Чьё значение">
+      extra={<>
+        {single || onSheet(table) ? <ColumnSheetFields tableId={id} column={column} system={system} /> : null}
+        {book ? (
+          <Field label="Обязательна">
+            <Select
+              value={column.optional ? 'no' : 'yes'}
+              options={[['yes', 'да — запись без неё неполна'], ['no', 'нет — можно оставить пустой']] as const}
+              onChange={next => set(c => { if (next === 'no') c.optional = true; else delete c.optional; })}
+            />
+          </Field>
+        ) : null}
+        {single ? <Field label="Чьё значение">
           <Select
             value={holderOf(table) ?? 'sheet'}
             options={HOLDERS}
             onChange={next => editSystem(draft => moveColumn(draft, id, column.key, next))}
           />
-        </Field>
-        {users.length ? (
+        </Field> : null}
+        {single && users.length ? (
           <div className="inline inline--tight">
             <span className="faint">смотрят:</span>
             {users.map(user => <Chip key={user}>{user}</Chip>)}
           </div>
         ) : null}
-      </> : extra}
+        {extra}
+      </>}
     />
   );
 }

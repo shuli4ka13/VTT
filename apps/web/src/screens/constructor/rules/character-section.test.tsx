@@ -34,7 +34,7 @@ describe('листы: блоки и типы', () => {
     render(<RulesTab />);
     fireEvent.click(screen.getByText('+ блок'));
     expect(fieldsOf(useWorld.getState().system).some(f => f.group === 'Новый блок')).toBe(true);
-    const name = screen.getByDisplayValue('Новый блок');
+    const name = screen.getAllByDisplayValue('Новый блок').find(el => el.tagName === 'INPUT')!;
     fireEvent.change(name, { target: { value: 'Снаряжение' } });
     fireEvent.blur(name);
     expect(fieldsOf(useWorld.getState().system).some(f => f.group === 'Снаряжение')).toBe(true);

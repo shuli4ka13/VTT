@@ -3,7 +3,7 @@ import { BlockPick } from './block-pick.tsx';
 import { TagsField } from './tags-field.tsx';
 import { dieEntries } from './rules/dice-section.tsx';
 import { CONTROLS } from '../../sheet/controls/index.tsx';
-import { Card, CardHead, Field, Input, Select, Chip } from '../../ui/primitives.tsx';
+import { Field, Input, Select, Chip } from '../../ui/primitives.tsx';
 import { isRange } from '@vtt/engine/model/tables';
 import { ROW, cellSource, onSheet, isSingle, fieldsOf } from '@vtt/engine/model/sheet-columns';
 import type { System, Column } from '@vtt/schema';
@@ -28,7 +28,7 @@ export function placeOnSheet(draft: System, tableId: string): void {
 
 const parseStart = (text: string): number | string => (/^-?\d+(\.\d+)?$/.test(text) ? Number(text) : text);
 
-export function ColumnOnSheet({ tableId, column, system }: { tableId: string; column: Column; system: System }) {
+export function ColumnSheetFields({ tableId, column, system }: { tableId: string; column: Column; system: System }) {
   const editColumn = useWorld(s => s.editColumn);
   const table = system.tables![tableId]!;
   const single = isSingle(table);
@@ -38,8 +38,8 @@ export function ColumnOnSheet({ tableId, column, system }: { tableId: string; co
   const edit = (change: (draft: Column) => void) => editColumn(tableId, column.key, change);
 
   return (
-    <Card>
-      <CardHead title={column.label || column.key} sub={<Chip>{stored ? 'вводит игрок' : 'считается'}</Chip>} />
+    <>
+      <div className="inline inline--tight"><Chip>{stored ? 'вводит игрок' : 'считается'}</Chip></div>
       <div className="row">
         <Field label="Блок">
           <BlockPick of="fields" system={system} value={column.block ?? table.block}
@@ -104,10 +104,14 @@ export function ColumnOnSheet({ tableId, column, system }: { tableId: string; co
                   if (list.length) draft.roll.tags = list; else delete draft.roll.tags;
                 })}
               />
+              {single ? (
+                <Input value={column.roll.label ?? ''} placeholder="подпись броска"
+                  onChange={next => edit(draft => { if (!draft.roll) return; if (next.trim()) draft.roll.label = next; else delete draft.roll.label; })} />
+              ) : null}
             </>
           ) : null}
         </div>
       </Field>
-    </Card>
+    </>
   );
 }
