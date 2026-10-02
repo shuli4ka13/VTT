@@ -367,7 +367,23 @@ describe('Словари: кости, правки броска, таблицы'
     expect(guarded.disabled).toBe(true);
   });
 
-  it('таблица как лист: ключ без подписи, формула правится в строке формул, колонку можно растянуть', () => {
+  it('смена ключа на диапазоны не стирает строки молча — сначала вопрос', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: { ...emptySystem(), tables: { типы: { label: 'Типы', key: 'word', rows: [{ value: 'огонь' }, { value: 'холод' }] } } },
+      activeEffectId: null,
+    }));
+    renderOpen(<RulesTab />);
+    открыть('Таблицы');
+    fireEvent.click(screen.getAllByText('Типы').at(-1)!);
+    const key = [...document.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'range'))!;
+    fireEvent.change(key, { target: { value: 'range' } });
+    expect(useWorld.getState().system.tables!.типы!.rows).toHaveLength(2);
+    fireEvent.click(screen.getByText('сменить и стереть строки'));
+    expect(useWorld.getState().system.tables!.типы!.key).toBe('range');
+  });
+
+  it('таблица как лист: у строки есть подпись, формула правится в строке формул, колонку можно растянуть', () => {
     useWorld.setState(state => ({
       ...state,
       system: {
@@ -384,7 +400,7 @@ describe('Словари: кости, правки броска, таблицы'
     renderOpen(<><FormulaBar /><RulesTab /></>);
     открыть('Таблицы');
     fireEvent.click(screen.getAllByText('Способ атаки').at(-1)!);
-    expect(screen.queryByText(/подпись/i)).toBeNull();
+    expect(screen.getAllByPlaceholderText('как показать').length).toBe(1);
     expect(document.querySelector('.formula-bar')).toBeNull();
 
     fireEvent.click(screen.getByTitle('@сила + 2'));

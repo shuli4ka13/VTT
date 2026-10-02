@@ -98,7 +98,16 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
   }, [wanted]);
   const held = users.length > 0 || inUse(usage, 'table', id);
   const [picked, setPicked] = useState<string | null>(null);
+  const [rekey, setRekey] = useState<TableKey | null>(null);
   const broken = byRange && rangesBroken(rows);
+  const applyKey = (next: TableKey) => edit(draft => {
+    const was = keyOf(draft);
+    draft.key = next;
+    if ((was === 'range') !== (next === 'range')) draft.rows = [blankRow(next)];
+    if (next === 'number') {
+      for (const row of draft.rows ?? []) row.value = Number(row.value) || 0;
+    }
+  });
 
   const edit = (change: (draft: Table) => void) => editSystem(draft => {
     const target = draft.tables?.[id];
@@ -126,16 +135,31 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
               <Select
                 value={keyOf(table)}
                 options={ROW_KEYS}
-                onChange={next => edit(draft => {
-                  const was = keyOf(draft);
-                  draft.key = next;
-                  if ((was === 'range') !== (next === 'range')) draft.rows = [blankRow(next)];
-                  if (next === 'number') {
-                    for (const row of draft.rows ?? []) row.value = Number(row.value) || 0;
-                  }
-                })}
+                onChange={next => {
+                  const wipes = (keyOf(table) === 'range') !== (next === 'range') && rows.some(row => row.value !== undefined && row.value !== '' || Object.keys(row.cells ?? {}).length);
+                  if (wipes) setRekey(next); else applyKey(next);
+                }}
               />
             ),
+          },
+          {
+            key: 'owner', label: 'Чьи значения', width: 170,
+            hint: 'Справочник — значения одни на всех; у листа, группы или стола — у каждого свои.',
+            node: (
+              <Select<string>
+                value={table.owner ?? ''}
+                options={[['', 'справочник'], ...HOLDERS]}
+                onChange={next => edit(draft => { if (next) draft.owner = next as Table['owner']; else delete draft.owner; })}
+              />
+            ),
+          },
+          {
+            key: 'icon', label: 'Значок', width: 80,
+            node: <Input value={table.icon ?? ''} placeholder="⚔" onChange={next => edit(draft => { if (next.trim()) draft.icon = next.trim(); else delete draft.icon; })} />,
+          },
+          {
+            key: 'hint', label: 'Подсказка', width: 220,
+            node: <Input value={table.hint ?? ''} placeholder="что это за таблица" onChange={next => edit(draft => { if (next.trim()) draft.hint = next; else delete draft.hint; })} />,
           },
           ...(columns.length ? [{
             key: 'otherwise', label: 'Если ничего не совпало', width: 180,
@@ -160,6 +184,16 @@ function TableCard({ id, table, system, editSystem, usage }: Props & { id: strin
         )}
       />
 
+      {rekey ? (
+        <Verdict tone="warn" action={(
+          <>
+            <Button size="sm" variant="danger" onClick={() => { applyKey(rekey); setRekey(null); }}>сменить и стереть строки</Button>
+            <Button size="sm" variant="ghost" onClick={() => setRekey(null)}>отмена</Button>
+          </>
+        )}>
+          {rekey === 'range' ? 'Диапазоны' : 'Слова и числа'} — другой вид строк: старые строки сотрутся.
+        </Verdict>
+      ) : null}
       {broken ? <Verdict tone="warn">диапазоны перекрываются или дырявы</Verdict> : null}
 
       {picked && columns.some(c => c.key === picked) ? (
@@ -347,9 +381,9 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
   });
 
   const placed = onSheet(table);
-  const lead = byRange ? ['от', 'до'] : [key === 'number' ? 'число' : 'слово'];
+  const lead = byRange ? ['от', 'до'] : [key === 'number' ? 'число' : 'слово', 'подпись', ...(placed ? ['блок на листе'] : [])];
   const gridColumns: GridColumn[] = [
-    ...lead.map(name => ({ key: `:${name}`, label: name, width: byRange ? 90 : defaultWidth() })),
+    ...lead.map(name => ({ key: `:${name}`, label: name, width: byRange ? 90 : name === 'блок на листе' ? 150 : defaultWidth() })),
     ...columns.map(c => ({
       key: c.key, label: c.label || c.key, sub: kindLabel(c), width: defaultWidth(c),
       active: picked === c.key, onClick: () => onPick(picked === c.key ? null : c.key),
@@ -469,6 +503,8 @@ function RowCells({ row, at, rowKey, columns, system, edit, setCell, users, onRe
       ) : (
         <>
           <KeyInput value={row.value} numeric={rowKey === 'number'} taken={taken} onRename={onRename} />
+          <Input value={row.label ?? ''} placeholder="как показать" onChange={next => set(r => { if (next.trim()) r.label = next; else delete r.label; })} />
+          {placed ? <Input value={row.block ?? ''} placeholder="блок" onChange={next => set(r => { if (next.trim()) r.block = next; else delete r.block; })} /> : null}
         </>
       )}
       {columns.map(column => (
