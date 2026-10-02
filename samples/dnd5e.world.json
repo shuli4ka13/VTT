@@ -6752,7 +6752,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "modifiers": [],
         "reapply": "refresh"
       },
       "deafened": {
@@ -6763,7 +6762,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "modifiers": [],
         "reapply": "refresh"
       },
       "frightened": {
@@ -6883,7 +6881,6 @@
         "duration": {
           "kind": "permanent"
         },
-        "modifiers": [],
         "attach": [
           {
             "type": "status",
@@ -9716,8 +9713,7 @@
           "disengage",
           "hide",
           "help"
-        ],
-        "block": "Бестиарий"
+        ]
       },
       "противник": {
         "label": "Противник",
@@ -9730,7 +9726,6 @@
           "hide",
           "help"
         ],
-        "block": "Бестиарий",
         "blocks": [
           "Характеристики",
           "Модификаторы",

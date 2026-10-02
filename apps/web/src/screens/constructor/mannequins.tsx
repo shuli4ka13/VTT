@@ -8,7 +8,7 @@ import type { WorldState } from '../../store/world.ts';
 export function Mannequins({ system, editSystem }: { system: System; editSystem: WorldState['editSystem'] }) {
   const [who, setWho] = useState(MANNEQUINS[0]!.id);
   const sheet = mannequinsOf(system).find(one => one.id === who)!;
-  const stored = fieldsOf(system).filter(field => field.value.kind === 'stored' && !field.cell && (field.lives ?? 'sheet') === 'sheet');
+  const stored = fieldsOf(system).filter(field => field.value.kind === 'stored' && (field.lives ?? 'sheet') === 'sheet');
   const kept = (system.mannequins ?? []).some(one => one.id === who);
   const put = (tag: string, text: string) => editSystem(draft => {
     const value = text.trim() === '' ? undefined : /^-?\d+(\.\d+)?$/.test(text.trim()) ? Number(text.trim()) : text;

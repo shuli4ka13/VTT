@@ -241,7 +241,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
             title="Пока висит — правит"
             empty={{ title: 'Ничего не правит', hint: 'Правки действуют, пока эффект висит: бонус к полю, помеха на бросок.' }}
             modifiers={effect.modifiers ?? []}
-            onEdit={change => edit(draft => { change(draft.modifiers ??= []); })}
+            onEdit={change => edit(draft => { change(draft.modifiers ??= []); if (!draft.modifiers.length) delete draft.modifiers; })}
           />
           <Handlers id={id} effect={effect} system={system} edit={edit} />
           <Hooks id={id} effect={effect} system={system} edit={edit} />

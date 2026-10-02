@@ -49,7 +49,7 @@ function SheetKindCards({ kind, system, edit }: {
           editSystem={editSystem}
           title=""
           modifiers={kind.modifiers ?? []}
-          onEdit={change => edit(draft => { change(draft.modifiers ??= []); })}
+          onEdit={change => edit(draft => { change(draft.modifiers ??= []); if (!draft.modifiers.length) delete draft.modifiers; })}
         />
       </Card>
     </>
@@ -206,7 +206,6 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
   const editSystem = useWorld(s => s.editSystem);
   const pick = useWorld(s => s.pick);
   const [picked, setPicked] = useState<string | null>(null);
-  const isSheet = Boolean(system.sheets?.[id]);
 
   const edit = (change: (draft: RecordKind) => void) => {
     editSystem(draft => {
@@ -214,18 +213,10 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
       if (target) change(target);
     });
   };
-  const editSheet = (change: (draft: SheetKind) => void) => {
-    editSystem(draft => {
-      const target = draft.sheets?.[id];
-      if (target) change(target);
-    });
-  };
-  const editAny = (change: (draft: { label?: string; block?: string; extends?: string; hint?: string }) => void) =>
-    (isSheet ? editSheet(change) : edit(change));
 
   const props = kind.columns ?? [];
   const bindings = kind.bindings ?? [];
-  const peers = (isSheet ? sheetKinds(system) : recordKinds(system)) as [string, { label?: string }][];
+  const peers = recordKinds(system) as [string, { label?: string }][];
   const open = picked ? props.find(prop => prop.key === picked) : undefined;
 
   return (
@@ -233,26 +224,24 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
       <Card>
         <CardHead
 
-          title={<LabelInput value={kind.label ?? ''} placeholder="как зовётся тип" onCommit={label => editAny(draft => { draft.label = label; })} />}
+          title={<LabelInput value={kind.label ?? ''} placeholder="как зовётся тип" onCommit={label => edit(draft => { draft.label = label; })} />}
           actions={
             <DangerButton size="sm" onConfirm={() => {
-              editSystem(draft => { if (isSheet) delete draft.sheets?.[id]; else delete draft.tables?.[id]; });
+              editSystem(draft => { delete draft.tables?.[id]; });
               pick({ activeRecordKind: null });
             }}>Удалить</DangerButton>
           }
         />
         <div className="row">
-          {isSheet ? null : (
-            <Field label="Чем является">
-              <Select value={kind.use ?? 'item'} options={BASIS} onChange={next => edit(draft => { draft.use = next; })} />
-            </Field>
-          )}
+          <Field label="Чем является">
+            <Select value={kind.use ?? 'item'} options={BASIS} onChange={next => edit(draft => { draft.use = next; })} />
+          </Field>
           <Field label="Блок">
             <BlockPick
               of="records"
               system={system}
               value={kind.block}
-              onChange={next => editAny(draft => {
+              onChange={next => edit(draft => {
                 if (next) draft.block = next; else delete draft.block;
               })}
             />
@@ -267,28 +256,24 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
                 ...peers
                   .filter(([key]) => key !== id)
                   .map(([key, other]) => [key, other.label ?? key] as const)] as never}
-              onChange={next => editAny(draft => {
+              onChange={next => edit(draft => {
                 if (next) draft.extends = next; else delete draft.extends;
               })}
             />
           </Field>
         </div>
         <div className="row">
-          {isSheet ? null : (
-            <Field label="Значок" hint="Один символ на кнопках записей этой книги">
-              <Input value={kind.icon ?? ''} placeholder="🎲" onChange={next => edit(draft => { if (next.trim()) draft.icon = next.trim(); else delete draft.icon; })} />
-            </Field>
-          )}
+          <Field label="Значок" hint="Один символ на кнопках записей этой книги">
+            <Input value={kind.icon ?? ''} placeholder="🎲" onChange={next => edit(draft => { if (next.trim()) draft.icon = next.trim(); else delete draft.icon; })} />
+          </Field>
           <Field label="Подсказка заполняющему">
-            <Input value={kind.hint ?? ''} onChange={next => editAny(draft => { if (next.trim()) draft.hint = next; else delete draft.hint; })} />
+            <Input value={kind.hint ?? ''} onChange={next => edit(draft => { if (next.trim()) draft.hint = next; else delete draft.hint; })} />
           </Field>
         </div>
       </Card>
 
-      {isSheet ? null : <BuiltIn kindId={id} system={system} />}
+      <BuiltIn kindId={id} system={system} />
 
-      {isSheet ? <SheetKindCards kind={kind} system={system} edit={editSheet} /> : (
-        <>
       <Card>
         <CardHead
           title="Что запись даёт владельцу"
@@ -385,11 +370,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
         ) : null}
       </Card>
 
-        </>
-      )}
-
-      {}
-      {!isSheet && kind.use === 'item' ? (
+      {kind.use === 'item' ? (
         <Card>
           <CardHead
             title="Что правит каждая вещь этого типа"
@@ -404,7 +385,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
             editSystem={editSystem}
             title=""
             modifiers={kind.modifiers ?? []}
-            onEdit={change => edit(draft => { change(draft.modifiers ??= []); })}
+            onEdit={change => edit(draft => { change(draft.modifiers ??= []); if (!draft.modifiers.length) delete draft.modifiers; })}
           />
         </Card>
       ) : null}

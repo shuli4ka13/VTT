@@ -240,7 +240,7 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
             hint: 'Добавка поверх общей для типа: кольцо даёт +1 к защите, проклятый клинок — помеху. Общее для всех вещей типа живёт на самом типе записи и здесь не повторяется.',
           }}
           modifiers={record.modifiers ?? []}
-          onEdit={change => edit(draft => { change(draft.modifiers ??= []); })}
+          onEdit={change => edit(draft => { change(draft.modifiers ??= []); if (!draft.modifiers.length) delete draft.modifiers; })}
         />
       ) : null}
     </>

@@ -256,7 +256,6 @@ export const sheetKind = z.object({
   extends: z.string().min(1).optional(),
   label: z.string().optional(),
   icon: z.string().optional(),
-  block: z.string().optional(),
   hint: z.string().optional(),
   blocks: z.array(z.string().min(1)).optional(),
   grants: z.array(z.string().min(1)).optional(),
