@@ -94,6 +94,7 @@ describe('разбор записи и отбор', () => {
     expect(parse('2к6').terms).toEqual([{ count: 2, sides: 6 }]);
     expect(parse('к20').terms).toEqual([{ count: 1, sides: 20 }]);
     expect(parse(' 2d6 ').terms).toEqual([{ count: 2, sides: 6 }]);
+    expect(parse('2К6').terms).toEqual([{ count: 2, sides: 6 }]);
     expect(() => parse('два кубика')).toThrow(/не понимаю/);
   });
 

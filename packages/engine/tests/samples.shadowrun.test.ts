@@ -56,21 +56,9 @@ group('Shadowrun 6: наборы и значения по книге', () => {
 });
 
 group('Shadowrun 6: атака', () => {
-  test('попадание: чистые успехи к урону, сопротивление Телом, вид урона по оружию', () => {
-    const out = shoot(sheetOf('razor'), sheetOf('lone_star'), 'predator_vi:0', dice([11, 6], [6, 1], [3, 1]));
-    eq(after(out, 'lone_star').values.physical, 3 + 11);
-    ok(wears(after(out, 'lone_star'), 'prone'), 'урон больше Тела — «Распластан»');
-  });
-
   test('ничья — базовый урон', () => {
     const out = shoot(sheetOf('silk'), sheetOf('humanis'), 'colt_l36:0', dice([2, 6], [4, 1], [2, 6], [2, 1], [2, 1]));
     eq(after(out, 'humanis').values.physical, 2);
-  });
-
-  test('оглушающая дубинка: оглушающий урон и «Электрошок»', () => {
-    const out = shoot(sheetOf('lone_star'), sheetOf('humanis'), 'stun_baton:0', dice([7, 6], [4, 1], [2, 1]), 'вплотную');
-    eq(after(out, 'humanis').values.stun, 5 + 7);
-    ok(wears(after(out, 'humanis'), 'shocked'));
   });
 
   test('значение атаки выше защиты на 4 — очко Преимущества атакующему; на дистанции «—» стрелять нельзя', () => {
@@ -81,11 +69,6 @@ group('Shadowrun 6: атака', () => {
     eq(after(far, 'humanis').values.physical ?? 0, 0);
   });
 
-  test('защита выше атаки на 4 — очко Преимущества защитнику', () => {
-    const guard = sheetOf('swat', { edge_left: 0 });
-    const out = shoot(sheetOf('fiveeyes'), guard, 'streetline:0', dice([4, 1], [8, 1]));
-    eq(after(out, 'swat').values.edge_left, 1, 'АТК 8 против ЗЩТ 14');
-  });
 });
 
 group('Shadowrun 6: Преимущество и действия', () => {

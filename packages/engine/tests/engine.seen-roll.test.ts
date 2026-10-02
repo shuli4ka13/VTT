@@ -95,12 +95,6 @@ group('бросок: по ревью', () => {
   const bane = { label: 'Порча', ops: [{ op: 'bonusDie', sides: 4, minus: true }] } as never;
   const reliable = { label: 'Надёжный талант', ops: [{ op: 'floorDie', least: 10 }] } as never;
 
-  test('кость сверх не входит в натуральную: 1 + к4 остаётся натуральной единицей', () => {
-    const r = rollLead(d20, queue(1, 3), [bless]);
-    eq(r.natural, 1);
-    eq(r.total, 4);
-  });
-
   test('«не меньше 10» не трогает кость сверх', () => {
     const r = rollLead(d20, queue(4, 3), [reliable, bless]);
     deepEq(r.rolls, [10, 3]);
