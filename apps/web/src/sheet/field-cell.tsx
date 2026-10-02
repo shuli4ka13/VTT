@@ -26,7 +26,7 @@ export function FieldCell({ field: whole, system, sheet, reader, onChange, onRol
     : null;
 
   if (field.value.kind === 'stored') {
-    const stored = sheet.values[field.tag] ?? field.value.default;
+    const stored = (reader.storedOf ? reader.storedOf(field.tag) : sheet.values[field.tag] ?? field.value.default) as StoredValue;
 
     if (!onChange) return <Shown label={field.label} text={String(stored ?? '—')} roll={roll} />;
 
@@ -39,7 +39,7 @@ export function FieldCell({ field: whole, system, sheet, reader, onChange, onRol
             <View
               value={stored}
               label={field.label}
-              min={typeof bounds?.min === 'number' ? bounds.min : undefined}
+              min={typeof bounds?.min === 'number' ? bounds.min : boundOf(bounds?.min, reader)}
               max={typeof bounds?.max === 'number' ? bounds.max : boundOf(bounds?.max, reader)}
               options={optionsOf(system, field)}
               onChange={next => onChange(field.tag, field.value.kind === 'stored' && field.value.type === 'number' && typeof next === 'boolean' ? (next ? 1 : 0) : next)}

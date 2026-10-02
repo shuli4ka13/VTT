@@ -1,7 +1,7 @@
 import { deskOf, hasDesk, blankDesk } from './desk.ts';
-import { act } from '../lang/act.ts';
-import { emptyJournal } from '../lang/journal.ts';
-import type { Report } from '../lang/types.ts';
+import { act } from '../core/act.ts';
+import { emptyJournal } from '../core/external.ts';
+import type { Report } from '../core/log.ts';
 import { isPipeline } from '../engine/effects.ts';
 import { EngineError } from '../engine/errors.ts';
 import { registry } from '../engine/steps/index.ts';
@@ -102,7 +102,7 @@ export function trial({ system, compendium, effectId, from, to, args, dice = 'av
   const people = from.id === to.id ? [sender] : [sender, to];
   const sheets = hasDesk(system) && !deskOf(people) ? [...people, blankDesk(system)] : people;
   const result = act({
-    system: probe, compendium: book, clock: null, sheets, die: dieOf(dice, random), journal: emptyJournal(), declineAll: true,
+    system: probe, compendium: book, clock: null, sheets, die: dieOf(dice, random), journal: emptyJournal(), mode: 'trial',
   }, { actionId: `${TRIAL_RECORD}:0`, fromId: sender.id, toIds: [to.id] });
   const reports = result.entries.filter((entry): entry is TrialResult['reports'][number] => !('text' in entry));
   return { sheets: result.sheets, reports, lines: result.log };
@@ -116,7 +116,7 @@ export function expectAction(
   intent: { actionId: string; fromId: string; toIds: string[]; inputs?: Record<string, number | string>; edits?: string[]; targetEdits?: string[] },
 ): Expected {
   try {
-    const out = act({ ...world, sheets, die: dieOf('avg'), journal: emptyJournal(), declineAll: true }, intent);
+    const out = act({ ...world, sheets, die: dieOf('avg'), journal: emptyJournal(), mode: 'preview' }, intent);
     return { lines: out.log, trouble: null };
   } catch (err) {
     return { lines: [], trouble: (err as Error).message };

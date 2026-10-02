@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useRoom } from '../../store/room.ts';
 import { tableSocket } from '../../api/socket.ts';
 import { useReader } from '../../engine/use-calc.ts';
+import { maySheet } from '../../engine/rights.ts';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
 import { Card, Empty, Fold, Chip, Input, Button, Field, Select } from '../../ui/primitives.tsx';
 import { SheetView } from '../../sheet/sheet-view.tsx';
@@ -85,6 +86,7 @@ export function SheetScreen() {
 }
 
 function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
+  const me = useSession(s => s.userId);
   const isDesk = atDesk(sheet);
   const asGroup = !isDesk && isGroup(sheet, room.sheets);
   const shared = useMemo(() => sharedOf(room.system as System, room.sheets), [room.system, room.sheets]);
@@ -96,11 +98,12 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
   const kind = sheetKindOf(room.system as System, sheet);
   const hasGroups = fieldsOf(system).some(field => livesOn(field) === 'group');
   const only = kind?.blocks?.length ? fields.filter(shownOn(system, sheet)).map(f => f.tag) : undefined;
+  const editable = maySheet(room, me, sheet.id);
 
   return (
     <>
       {isDesk ? <span className="faint">общий стол комнаты — видят все, правит ведущий</span> : <ClaimRow room={room} sheet={sheet} />}
-      {!isDesk && !asGroup && hasGroups ? (
+      {!isDesk && !asGroup && hasGroups && editable ? (
         <Field label="Группа">
           <Select
             value={sheet.group ?? ''}
@@ -111,7 +114,7 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
           />
         </Field>
       ) : null}
-      {!isDesk && kinds.length ? (
+      {!isDesk && kinds.length && editable ? (
         <Field label="Тип листа">
           <Select
             value={sheet.of ?? ''}
@@ -127,7 +130,7 @@ function SheetBody({ room, sheet }: { room: RoomState; sheet: Sheet }) {
         reader={reader}
         only={only}
         badge={isDesk ? 'стол' : kind?.label ?? 'лист'}
-        onChange={(tag, value) => tableSocket.setValue(room.id, sheet.id, tag, value)}
+        onChange={editable ? (tag, value) => tableSocket.setValue(room.id, sheet.id, tag, value) : undefined}
         onRoll={tag => tableSocket.rollField(room.id, sheet.id, tag, useRoom.getState().secret && room.members.some(m => m.userId === useSession.getState().userId && m.role === 'gm'))}
       />
     </>

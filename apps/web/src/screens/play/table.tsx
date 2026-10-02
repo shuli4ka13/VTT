@@ -1,4 +1,5 @@
 import { expectAction } from '@vtt/engine/events/trial';
+import { mayAnswer } from '../../engine/rights.ts';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { useRoom } from '../../store/room.ts';
@@ -208,13 +209,7 @@ function Combat({ room, onError }: { room: RoomState; onError: (message: string 
   );
 }
 
-export function mayAnswer(room: RoomState, userId: string, sheetId: string): boolean {
-  const me = room.members.find(m => m.userId === userId);
-  if (!me) return false;
-  if (me.role === 'gm') return true;
-  if (me.sheetId) return me.sheetId === sheetId;
-  return !room.members.some(m => m.userId !== userId && m.sheetId === sheetId);
-}
+export { mayAnswer };
 
 function Prompt({ room, onError }: { room: RoomState; onError: (message: string | null) => void }) {
   const pending = room.pending!;

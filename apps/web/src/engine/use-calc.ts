@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { System, Sheet, Compendium } from '@vtt/schema';
-import { newPass, calc } from '@vtt/engine/engine/calc';
+import { newPass, calc, findField, livesOn } from '@vtt/engine/engine/calc';
 import { hasDesk, blankDesk } from '@vtt/engine/events/desk';
 import { resolveRoll } from '@vtt/engine/engine/modifiers';
 import type { Pass, Scope } from '@vtt/engine/engine/calc';
@@ -15,6 +15,8 @@ export interface Reader {
   valueOf: (tag: string) => Computed;
 
   rollOf: (tags: string[]) => RollResolution | null;
+
+  storedOf?: (tag: string) => unknown;
 }
 
 export function useReader(system: System, sheet: Sheet | null, compendium: Compendium, shared?: readonly Sheet[] | null, only?: Scope): Reader {
@@ -23,6 +25,7 @@ export function useReader(system: System, sheet: Sheet | null, compendium: Compe
       const idle: Reader = {
         valueOf: () => ({ ok: false, error: 'персонаж не выбран' }),
         rollOf: () => null,
+        storedOf: () => undefined,
       };
       return idle;
     }
@@ -37,6 +40,7 @@ export function useReader(system: System, sheet: Sheet | null, compendium: Compe
       const broken: Reader = {
         valueOf: () => ({ ok: false, error: message }),
         rollOf: () => null,
+        storedOf: tag => sheet.values[tag],
       };
       return broken;
     }
@@ -49,6 +53,12 @@ export function useReader(system: System, sheet: Sheet | null, compendium: Compe
       rollOf: tags => {
         try { return resolveRoll(system, sheet, tags, pass); }
         catch { return null; }
+      },
+      storedOf: tag => {
+        const field = findField(system, tag);
+        const holder = livesOn(field) === 'group' && pass.group ? pass.group.sheet : livesOn(field) === 'desk' && pass.desk ? pass.desk.sheet : sheet;
+        const value = holder.values[tag];
+        return value !== undefined ? value : field?.value.kind === 'stored' ? field.value.default : undefined;
       },
     };
     return reader;
