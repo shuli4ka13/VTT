@@ -32,7 +32,7 @@ export function SheetTab() {
   const add = () => {
     const made = newColumn(system, NO_BLOCK);
     editSystem(draft => addColumn(draft, made.value));
-    pick({ activeTab: 'dictionaries', activeFieldTag: made.key });
+    pick({ activeFieldTag: made.key });
   };
 
   return (
