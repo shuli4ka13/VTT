@@ -615,6 +615,10 @@ function shapeProblems(system: System, compendium?: Compendium): Problem[] {
   for (const [id, effect] of Object.entries(system.effects)) {
     const where: Where = { tab: 'effects', effect: id };
     const sheets = sheetsOf(effect);
+    const paid = emittedBy(effect.cost);
+    for (const twice of new Set(paid.filter((key, index) => paid.indexOf(key) !== index))) {
+      out.push({ where: { ...where, part: 'cost' }, level: 'warn', text: `стоимость зовёт «${system.effects[twice]?.label ?? twice}» дважды${effect.extends ? ' — возможно, она уже есть у основы' : ''}: спишется два раза` });
+    }
     (effect.steps ?? []).forEach((step, index) => {
       if (step.type !== 'each') return;
       const of = String((step as { of?: unknown }).of ?? '');

@@ -3752,21 +3752,6 @@
           }
         ],
         "extends": "spell",
-        "cost": [
-          {
-            "type": "emit",
-            "event": "cost_action",
-            "args": {
-              "лист": {
-                "expr": "@действующий"
-              },
-              "источник": {
-                "expr": "@действующий"
-              }
-            },
-            "strict": true
-          }
-        ],
         "tags": [
           "атака"
         ]
@@ -3887,22 +3872,7 @@
             }
           }
         ],
-        "extends": "spell",
-        "cost": [
-          {
-            "type": "emit",
-            "event": "cost_action",
-            "args": {
-              "лист": {
-                "expr": "@действующий"
-              },
-              "источник": {
-                "expr": "@действующий"
-              }
-            },
-            "strict": true
-          }
-        ]
+        "extends": "spell"
       },
       "spell_save_none": {
         "label": "Заклинание: спасбросок, при успехе ничего",
@@ -4035,22 +4005,7 @@
             }
           }
         ],
-        "extends": "spell",
-        "cost": [
-          {
-            "type": "emit",
-            "event": "cost_action",
-            "args": {
-              "лист": {
-                "expr": "@действующий"
-              },
-              "источник": {
-                "expr": "@действующий"
-              }
-            },
-            "strict": true
-          }
-        ]
+        "extends": "spell"
       },
       "spell_auto": {
         "label": "Заклинание: урон без броска",
@@ -4126,22 +4081,7 @@
             }
           }
         ],
-        "extends": "spell",
-        "cost": [
-          {
-            "type": "emit",
-            "event": "cost_action",
-            "args": {
-              "лист": {
-                "expr": "@действующий"
-              },
-              "источник": {
-                "expr": "@действующий"
-              }
-            },
-            "strict": true
-          }
-        ]
+        "extends": "spell"
       },
       "spell_condition": {
         "label": "Заклинание: спасбросок или состояние",
@@ -4226,22 +4166,7 @@
             }
           }
         ],
-        "extends": "spell",
-        "cost": [
-          {
-            "type": "emit",
-            "event": "cost_action",
-            "args": {
-              "лист": {
-                "expr": "@действующий"
-              },
-              "источник": {
-                "expr": "@действующий"
-              }
-            },
-            "strict": true
-          }
-        ]
+        "extends": "spell"
       },
       "spell_condition_held": {
         "label": "Заклинание: спасбросок или состояние, с концентрацией",
@@ -4331,22 +4256,7 @@
         "bond": {
           "effect": "concentration",
           "by": "действующий"
-        },
-        "cost": [
-          {
-            "type": "emit",
-            "event": "cost_action",
-            "args": {
-              "лист": {
-                "expr": "@действующий"
-              },
-              "источник": {
-                "expr": "@действующий"
-              }
-            },
-            "strict": true
-          }
-        ]
+        }
       },
       "spell_buff": {
         "label": "Заклинание: усиление",
@@ -4389,22 +4299,7 @@
             }
           }
         ],
-        "extends": "spell",
-        "cost": [
-          {
-            "type": "emit",
-            "event": "cost_action",
-            "args": {
-              "лист": {
-                "expr": "@действующий"
-              },
-              "источник": {
-                "expr": "@действующий"
-              }
-            },
-            "strict": true
-          }
-        ]
+        "extends": "spell"
       },
       "spell_buff_held": {
         "label": "Заклинание: усиление с концентрацией",
@@ -4451,22 +4346,7 @@
         "bond": {
           "effect": "concentration",
           "by": "действующий"
-        },
-        "cost": [
-          {
-            "type": "emit",
-            "event": "cost_action",
-            "args": {
-              "лист": {
-                "expr": "@действующий"
-              },
-              "источник": {
-                "expr": "@действующий"
-              }
-            },
-            "strict": true
-          }
-        ]
+        }
       },
       "spell_heal": {
         "label": "Заклинание: лечение",
@@ -4538,22 +4418,7 @@
             }
           }
         ],
-        "extends": "spell",
-        "cost": [
-          {
-            "type": "emit",
-            "event": "cost_action",
-            "args": {
-              "лист": {
-                "expr": "@действующий"
-              },
-              "источник": {
-                "expr": "@действующий"
-              }
-            },
-            "strict": true
-          }
-        ]
+        "extends": "spell"
       },
       "spell_cleanse": {
         "label": "Заклинание: снять состояние",
@@ -4591,22 +4456,7 @@
             }
           }
         ],
-        "extends": "spell",
-        "cost": [
-          {
-            "type": "emit",
-            "event": "cost_action",
-            "args": {
-              "лист": {
-                "expr": "@действующий"
-              },
-              "источник": {
-                "expr": "@действующий"
-              }
-            },
-            "strict": true
-          }
-        ]
+        "extends": "spell"
       },
       "spell_note": {
         "label": "Заклинание: без броска",
@@ -4615,22 +4465,7 @@
         "activation": "manual",
         "params": [],
         "steps": [],
-        "extends": "spell",
-        "cost": [
-          {
-            "type": "emit",
-            "event": "cost_action",
-            "args": {
-              "лист": {
-                "expr": "@действующий"
-              },
-              "источник": {
-                "expr": "@действующий"
-              }
-            },
-            "strict": true
-          }
-        ]
+        "extends": "spell"
       },
       "potion_heal": {
         "label": "Выпить зелье лечения",

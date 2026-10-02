@@ -1,5 +1,5 @@
 import { expectAction } from '@vtt/engine/events/trial';
-import { mayAnswer, mayPassTurn } from '../../engine/rights.ts';
+import { mayAnswer, mayTurn } from '../../engine/rights.ts';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { useRoom } from '../../store/room.ts';
@@ -172,6 +172,7 @@ function Combat({ room, onError }: { room: RoomState; onError: (message: string 
   const why = waiting ? 'стол ждёт ответа на вопрос ниже' : undefined;
   const heard = heardMoments(room.system);
   const rest = heard.has('long-rest') || heard.has('short-rest');
+  const may = (turn: 'start' | 'stop' | 'scene' | 'short-rest' | 'long-rest') => mayTurn(room, userId, turn);
 
   return (
     <Card>
@@ -181,21 +182,21 @@ function Combat({ room, onError }: { room: RoomState; onError: (message: string 
           <>
             {fighting
               ? <>
-                  {mayPassTurn(room, userId)
+                  {mayTurn(room, userId, 'next')
                     ? <Button size="sm" variant="primary" disabled={waiting} title={why} onClick={() => send('next')}>Следующий ход</Button>
                     : null}
-                  <Button size="sm" disabled={waiting} title={why} onClick={() => send('stop')}>Конец боя</Button>
+                  {may('stop') ? <Button size="sm" disabled={waiting} title={why} onClick={() => send('stop')}>Конец боя</Button> : null}
                 </>
-              : <Button size="sm" variant="primary" disabled={waiting} title={why} onClick={() => send('start')}>{room.system.initiative ? 'Инициатива' : 'Начать бой'}</Button>}
+              : may('start') ? <Button size="sm" variant="primary" disabled={waiting} title={why} onClick={() => send('start')}>{room.system.initiative ? 'Инициатива' : 'Начать бой'}</Button> : null}
             {fighting || !rest ? null : (
               <>
-                {heard.has('short-rest')
+                {heard.has('short-rest') && may('short-rest')
                   ? <Button size="sm" variant="ghost" disabled={waiting} title={why} onClick={() => send('short-rest')}>Короткий отдых</Button>
                   : null}
-                <Button size="sm" variant="ghost" disabled={waiting} title={why} onClick={() => send('long-rest')}>Долгий отдых</Button>
+                {may('long-rest') ? <Button size="sm" variant="ghost" disabled={waiting} title={why} onClick={() => send('long-rest')}>Долгий отдых</Button> : null}
               </>
             )}
-            <Button size="sm" variant="ghost" disabled={waiting} title={why} onClick={() => send('scene')}>Закрыть сцену</Button>
+            {may('scene') ? <Button size="sm" variant="ghost" disabled={waiting} title={why} onClick={() => send('scene')}>Закрыть сцену</Button> : null}
           </>
         }
       />

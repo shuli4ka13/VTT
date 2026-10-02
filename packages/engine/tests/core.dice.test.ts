@@ -149,3 +149,22 @@ describe('бросок — одна функция, стороны явные', 
     expect(diceTools(replay([5])).roll!('к6', 0)).toBe(0);
   });
 });
+
+describe('подписи правок в броске — только то, что подействовало', () => {
+  const up = { label: 'Критический успех', ops: [{ op: 'explode', at: 'max' }] } as never;
+  const down = { label: 'Критический провал', ops: [{ op: 'explode', at: 'min' }] } as never;
+  const advantage = { label: 'Преимущество', ops: [{ op: 'addDie' }, { op: 'keepBest', n: 1 }] } as never;
+  const faces = (...list: number[]) => () => list.shift() ?? 5;
+
+  it('середина — ни один взрыв не сработал', () => {
+    expect(start(parse('1к10'), [up, down], faces(8)).edits).toEqual([]);
+  });
+
+  it('максимум — только успех', () => {
+    expect(start(parse('1к10'), [up, down], faces(10, 4)).edits).toEqual(['Критический успех']);
+  });
+
+  it('правка заявки видна всегда', () => {
+    expect(start(parse('1к20'), [advantage], faces(7, 12)).edits).toEqual(['Преимущество']);
+  });
+});

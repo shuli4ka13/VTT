@@ -560,6 +560,20 @@ describe('права за столом', () => {
     const answered = await rooms.answer(gm, { roomId, pendingId: paused.pending!.id, chosen: [] });
     expect(answered.pending).toBeNull();
   });
+
+  it('бой, отдых и сцену ведёт только ведущий', async () => {
+    const { as, roomId, arven, rooms } = await table();
+    const player = (await http().post('/auth/login').send({ name: 'Игрок без боя' })).body;
+    await http().post(`/rooms/${roomId}/join`).set('Authorization', `Bearer ${player.token}`).expect(201);
+    await rooms.claimSheet(player.userId, roomId, arven.id);
+    for (const op of ['start', 'scene', 'short-rest', 'long-rest'] as const) {
+      await expect(rooms.turn(player.userId, { roomId, op })).rejects.toThrow('ведёт ведущий');
+    }
+    const gm = (await as(http().get('/auth/me'))).body.userId as string;
+    await rooms.turn(gm, { roomId, op: 'start', order: [arven.id] });
+    await expect(rooms.turn(player.userId, { roomId, op: 'stop' })).rejects.toThrow('ведёт ведущий');
+    await rooms.turn(player.userId, { roomId, op: 'next' });
+  });
 });
 
 describe('два сообщения стола сразу', () => {

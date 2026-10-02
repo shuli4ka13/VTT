@@ -4,6 +4,7 @@ import { referencesOf, listenerOf, heardNames } from '../src/model/references.ts
 import { PLAYABLE_SYSTEMS as SAMPLE_SYSTEMS, PLAYABLE_WORLDS as SAMPLE_WORLDS } from '../src/model/systems.ts';
 import type { System, Effect, Step } from '../src/model/types.ts';
 import { withColumn } from '../src/model/sheet-columns.ts';
+import { flattenSystem } from '../src/model/inherit.ts';
 
 const bare = (): System => ({
   id: 'x', name: 'x',
@@ -398,5 +399,29 @@ group('линт: вопрос «до» у вложенного вызова', ()
 
   test('вызов из подписки идёт доставкой с вопросами — спросить можно', () => {
     ok(!errorTexts(nested('handler')).some(t => t.includes('спросить игрока до него нельзя')), errorTexts(nested('handler')).join('\n'));
+  });
+});
+
+group('линт: стоимость не списывается дважды', () => {
+  test('потомок повторил трату основы — предупреждение', () => {
+    const system = withEffect('трата', { params: [WHO] as never, steps: [] });
+    system.effects.основа = { label: 'Основа', activation: 'manual', params: [WHO] as never, cost: [{ type: 'emit', event: 'трата', args: { действующий: { expr: '@действующий' } } }] } as never;
+    system.effects.потомок = { label: 'Потомок', extends: 'основа', cost: [{ type: 'emit', event: 'трата', args: { действующий: { expr: '@действующий' } } }] } as never;
+    ok(texts(flattenSystem(system)).some(t => t.includes('стоимость зовёт «трата» дважды')), texts(flattenSystem(system)).join('\n'));
+  });
+
+  test('в образцах трата в стоимости не повторяется', () => {
+    for (const system of SAMPLE_SYSTEMS) {
+      eq(lintSystem(flattenSystem(system as System)).filter(p => p.text.includes('дважды')).map(p => p.text).join('\n'), '', system.name);
+    }
+  });
+});
+
+group('развёртка наследования', () => {
+  test('повторная развёртка ничего не склеивает второй раз', () => {
+    for (const system of SAMPLE_SYSTEMS) {
+      const once = flattenSystem(system as System);
+      eq(flattenSystem(once), once, system.name);
+    }
   });
 });

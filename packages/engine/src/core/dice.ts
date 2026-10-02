@@ -262,9 +262,18 @@ export function start(spec: Spec, edits: (RollEdit & { label?: string })[], die:
     }
   }
   const results = edits.filter(edit => (edit.ops ?? []).some(op => stageOf(op) === 'result'));
+  const fresh = nextId(dice);
+  const fired = new Set<RollEdit>();
+  let rolled = dice;
+  for (const edit of results) {
+    const next = applyResults(rolled, [edit], die, fresh);
+    if (JSON.stringify(next) !== JSON.stringify(rolled)) fired.add(edit);
+    rolled = next;
+  }
+  const shown = edits.filter(edit => !results.includes(edit) || fired.has(edit) || (edit.ops ?? []).some(op => stageOf(op) === 'claim'));
   return {
-    claim, dice: applyResults(dice, results, die, nextId(dice)), results,
-    edits: edits.map(edit => edit.label || '').filter(Boolean), plus: 0, tags: [...tags],
+    claim, dice: rolled, results,
+    edits: shown.map(edit => edit.label || '').filter(Boolean), plus: 0, tags: [...tags],
     exploded: results.some(edit => (edit.ops ?? []).some(op => op.op === 'explode')),
   };
 }

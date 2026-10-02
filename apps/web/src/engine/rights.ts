@@ -1,5 +1,6 @@
 import { authorize } from '@vtt/engine/core/authorize';
 import type { Room } from '@vtt/engine/core/authorize';
+import type { TurnOp } from '@vtt/engine/events/moments';
 import type { RoomState, System } from '@vtt/schema';
 
 const roomOf = (room: RoomState): Room => ({
@@ -9,8 +10,8 @@ const roomOf = (room: RoomState): Room => ({
   clock: room.clock ?? null,
 });
 
-export const mayPassTurn = (room: RoomState, userId: string): boolean =>
-  authorize(roomOf(room), userId, { kind: 'world', op: { op: 'turn', turn: 'next' } }) === null;
+export const mayTurn = (room: RoomState, userId: string, turn: TurnOp): boolean =>
+  authorize(roomOf(room), userId, { kind: 'world', op: { op: 'turn', turn } }) === null;
 
 export const mayAnswer = (room: RoomState, userId: string, sheetId: string): boolean =>
   authorize(roomOf(room), userId, { kind: 'answer', sheetId }) === null;

@@ -72,7 +72,8 @@ export function authorize(room: Room, userId: string, want: Want): string | null
   }
   if (want.hidden && me.role !== 'gm') return 'втайне бросает только ведущий';
   if (want.op.op === 'set') return mayField(room, me, want.op.sheetId, want.op.tag);
-  if (want.op.op === 'turn' && want.op.turn === 'next' && me.role !== 'gm') {
+  if (want.op.op === 'turn' && me.role !== 'gm') {
+    if (want.op.turn !== 'next') return 'бой, отдых и сцену ведёт ведущий';
     return me.sheetId && room.clock?.active === me.sheetId ? null : 'следующий ход передаёт ведущий или тот, чей сейчас ход';
   }
   const subject = subjectOf(want.op);

@@ -1,3 +1,4 @@
+import { hasField } from '../../model/sheet-columns.ts';
 import { EngineError } from '../errors.ts';
 import { lookupDegree } from '../tables.ts';
 import type { StepData, StepContext } from './index.ts';
@@ -44,7 +45,8 @@ function fieldOfRef(ref: unknown, ctx: StepContext): string | null {
   if (!ref || typeof ref !== 'object' || !('expr' in ref)) return null;
   if (!/^\s*@[\p{L}\p{N}_.]+\s*$/u.test(String((ref as { expr: unknown }).expr))) return null;
   try {
-    return ctx.field(ref).tag;
+    const tag = ctx.field(ref).tag;
+    return hasField(ctx.system, tag) ? tag : null;
   } catch {
     return null;
   }

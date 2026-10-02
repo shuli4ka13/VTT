@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mayAnswer, maySheet, mayField, mayPassTurn } from './rights.ts';
+import { mayAnswer, maySheet, mayField, mayTurn } from './rights.ts';
 import type { RoomState } from '@vtt/schema';
 
 const sheet = (id: string, group?: string) => ({ id, systemId: 'с', name: id, values: {}, has: [], effects: [], ...(group ? { group } : {}) });
@@ -26,9 +26,16 @@ const room = {
 
 describe('права в вебе — та же функция, что на сервере', () => {
   it('«Следующий ход» — ведущему и тому, чей ход', () => {
-    expect(mayPassTurn(room, 'ведущий')).toBe(true);
-    expect(mayPassTurn(room, 'игрок-а')).toBe(true);
-    expect(mayPassTurn(room, 'игрок-м')).toBe(false);
+    expect(mayTurn(room, 'ведущий', 'next')).toBe(true);
+    expect(mayTurn(room, 'игрок-а', 'next')).toBe(true);
+    expect(mayTurn(room, 'игрок-м', 'next')).toBe(false);
+  });
+
+  it('бой, отдых и сцену ведёт только ведущий — даже тот, чей ход, их не жмёт', () => {
+    for (const turn of ['start', 'stop', 'scene', 'short-rest', 'long-rest'] as const) {
+      expect(mayTurn(room, 'ведущий', turn)).toBe(true);
+      expect(mayTurn(room, 'игрок-а', turn)).toBe(false);
+    }
   });
 
   it('стол правит только ведущий', () => {

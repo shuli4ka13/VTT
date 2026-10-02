@@ -100,8 +100,10 @@ export function hasBases(system: System): boolean {
   return false;
 }
 
+const flattened = new WeakSet<System>();
+
 export function flattenSystem(system: System): System {
-  if (!hasBases(system)) return system;
+  if (flattened.has(system) || !hasBases(system)) return system;
 
   const effects: Record<string, Effect> = {};
   for (const id of Object.keys(system.effects ?? {})) {
@@ -132,10 +134,12 @@ export function flattenSystem(system: System): System {
   };
   const books = new Set(recordKinds(system).map(([id]) => id));
 
-  return {
+  const out: System = {
     ...system,
     effects,
     ...(system.tables && [...books].some(id => basedOn(system.tables![id])) ? { tables: flat(system.tables, id => books.has(id)) } : {}),
     ...(system.sheets ? { sheets: flat(system.sheets, () => true) } : {}),
   };
+  flattened.add(out);
+  return out;
 }
