@@ -15,7 +15,7 @@ export const launchHint = (kind: LaunchKind): string => LAUNCHES[kind].hint;
 export type EditFn = (slotIndexInGroup: number, change: (draft: Step) => void) => void;
 export type WithNumber = (change: (amount: Step, apply: Step, id: string) => void) => void;
 
-export const CARD_TITLES: Record<string, string> = { check: 'Проверка', change: 'Изменение', number: 'Число' };
+export const CARD_TITLES: Record<string, string> = { check: 'Проверка', change: 'Изменение', number: 'Число', table: 'Взять из таблицы' };
 
 export function titleOf(kind: string, step: Step | undefined, system: System): string {
   const s = step as { type?: string; effect?: string } | undefined;

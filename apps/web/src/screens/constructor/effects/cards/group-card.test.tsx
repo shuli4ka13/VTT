@@ -435,3 +435,19 @@ describe('GroupCard: отдельный бросок с «Бросает»', () 
     expect(roll.against).toEqual({ expr: 'первый(@цели)' });
   });
 });
+
+describe('GroupCard: взять из таблицы', () => {
+  it('шаг «таблица» — своя карточка: правка числа не стирает таблицу', () => {
+    const step = { id: 'dv', type: 'table', table: 'броски', value: { expr: '@distance' } } as Record<string, any>;
+    const withTable = { ...system, tables: { ...(system.tables ?? {}), броски: { label: 'Броски', key: 'word', rows: [{ value: 'атака' }] } } } as typeof system;
+    const group = groupSteps([step as unknown as Step])[0]!;
+    expect(group.kind).toBe('table');
+    render(<GroupCard group={group} position={1} system={withTable} effect={effect} sheets={sheets}
+      earlier={[]} problem={null} edit={(_, change) => change(step as never)} onDelete={() => {}} />);
+    expect(screen.getByDisplayValue('Броски')).toBeTruthy();
+    fireEvent.change(screen.getByDisplayValue('по числу или формуле'), { target: { value: 'dice' } });
+    expect(step.table).toBe('броски');
+    expect(step.value).toBeUndefined();
+    expect(step.dice).toBeDefined();
+  });
+});

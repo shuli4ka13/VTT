@@ -2,7 +2,7 @@ import { compile } from '@vtt/engine/formula';
 import { STEP_WORDS } from '@vtt/engine/words/steps';
 import type { Step } from '@vtt/schema';
 
-export type CardKind = 'check' | 'change' | 'number' | 'split' | 'seen' | 'unknown';
+export type CardKind = 'check' | 'change' | 'number' | 'table' | 'split' | 'seen' | 'unknown';
 
 export interface CardGroup {
   kind: CardKind;
@@ -16,7 +16,7 @@ export interface CardGroup {
 
 const KIND_OF: Record<string, CardKind> = {
   check: 'check', apply: 'change', status: 'change', emit: 'change',
-  roll: 'number', table: 'number', each: 'split',
+  roll: 'number', table: 'table', each: 'split',
   'roll-add': 'seen', 'roll-reroll': 'seen', 'roll-plus': 'seen',
 };
 

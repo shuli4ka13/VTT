@@ -16,6 +16,7 @@ import { CheckBody } from './check-body.tsx';
 import { ChangeBody } from './change-body.tsx';
 import { NumberBody } from './number-body.tsx';
 import { SeenBody } from './seen-body.tsx';
+import { TableBody } from './table-body.tsx';
 import { ConditionFold, breakLine } from './condition-fold.tsx';
 import { titleOf } from '../words.ts';
 import { STEP_WORDS } from '@vtt/engine/words/steps';
@@ -142,6 +143,7 @@ export function GroupCard({
         {group.kind === 'number'
           ? <NumberBody step={step} context={context} edit={edit} onAddParam={onAddParam} />
           : null}
+        {group.kind === 'table' ? <TableBody step={step} context={context} edit={edit} system={system} /> : null}
         <ConditionFold group={group} earlier={earlier} edit={edit} context={context} />
         <StepName group={group} effect={effect} edit={edit} />
       </Card>
@@ -154,6 +156,7 @@ function summaryOf(group: CardGroup, system: System, effect: Effect, names: Map<
   const step = group.step;
   const segments = group.kind === 'check' ? checkReadback(step, group.amount, system, effect, names)
     : group.kind === 'number' ? numberReadback(step, system, effect, names)
+    : group.kind === 'table' ? tableReadback(step as Record<string, unknown>, system)
       : group.kind === 'change'
         ? (step.type === 'emit' ? sendReadback(step, system, effect, names) : changeReadback(step, group.amount, system, effect, names))
         : [];
@@ -185,3 +188,12 @@ function StepName({ group, effect, edit }: { group: CardGroup; effect: Effect; e
     </div>
   );
 }
+
+function tableReadback(step: Record<string, unknown>, system: System): Segment[] {
+  const table = typeof step.table === 'string' ? system.tables?.[step.table] : undefined;
+  const name = table ? `«${table.label || String(step.table)}»` : 'какая таблица?';
+  const by = typeof step.dice === 'string' ? `бросок «${system.constants?.[step.dice]?.label ?? step.dice}»`
+    : String((step.value as { expr?: unknown } | undefined)?.expr ?? '?');
+  return [{ text: `Строка таблицы ${name} по ${by}.` }];
+}
+
