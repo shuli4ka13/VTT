@@ -1,5 +1,5 @@
 import { SheetPick } from '../../sheet-pick.tsx';
-import { sheetChoices } from '../../slots.tsx';
+import { sheetChoices, callable } from '../../slots.tsx';
 import { useMemo, useState, type ReactNode } from 'react';
 import type { System, Step, SlotRef, ValueKind } from '@vtt/schema';
 import { Field, Segmented, Select } from '../../../../ui/primitives.tsx';
@@ -17,7 +17,6 @@ import { outputRefs, stepNames, inputBadges } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn, WithNumber } from '../words.ts';
 import { SendBody } from './send-body.tsx';
-import { calledOf } from '@vtt/engine/engine/effects';
 import { amountParamOf } from '@vtt/engine/model/lists';
 import { tight } from '@vtt/engine/model/amounts';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
@@ -307,7 +306,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
   const step = group.step as any;
   const mode = step.type === 'status' ? 'status' : step.type === 'emit' ? 'emit' : 'apply';
   const applyIndex = group.amount ? 1 : 0;
-  const firstEvent = calledOf(system)[0]?.[0];
+  const firstEvent = callable(system, context.effect)[0]?.[0];
 
   const fromRecord = (label: string, kind: ValueKind) =>
     onAddParam ? (): SlotRef => ({ expr: `@${onAddParam(label, kind)}` }) : undefined;

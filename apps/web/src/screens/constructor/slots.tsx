@@ -131,3 +131,7 @@ export function sheetChoices(ctx: SlotContext): { singles: Map<string, string>; 
   const singles = new Map([...(ctx.sheets ?? new Map<string, string>())].filter(([name]) => !listKeys.has(name)));
   return { singles, firsts: lists.map(param => [`первый(@${param.key})`, `первый из «${param.label ?? param.key}»`] as const) };
 }
+
+export const callable = (system: System, except: Effect): [string, Effect][] =>
+  Object.entries(system.effects ?? {}).filter(([, effect]) => effect !== except && (effect.activation ?? 'manual') === 'manual');
+

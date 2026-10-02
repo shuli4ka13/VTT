@@ -4,7 +4,7 @@ import { Button } from '../../../../ui/primitives.tsx';
 import { CallEditor } from '../../call-editor.tsx';
 import type { SlotContext } from '../../slots.tsx';
 import type { EditFn } from '../words.ts';
-import { calledOf } from '@vtt/engine/engine/effects';
+import { callable } from '../../slots.tsx';
 import { WhatNext, meddlersOf } from '../what-next.tsx';
 
 const loose = (draft: unknown): Record<string, unknown> => draft as Record<string, unknown>;
@@ -18,7 +18,7 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
   onOpenEffect?: (id: string) => void;
 }) {
   const [peek, setPeek] = useState(false);
-  const commons = calledOf(system);
+  const commons = callable(system, context.effect);
   const args = (step.args ?? {}) as Record<string, unknown>;
   return (
     <>
