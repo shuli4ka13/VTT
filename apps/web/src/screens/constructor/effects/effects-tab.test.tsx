@@ -474,3 +474,28 @@ describe('шаг цены — один раз, до остальных', () => {
     expect(back.steps).toHaveLength(1);
   });
 });
+
+describe('EffectsTab: унаследованное видно', () => {
+  beforeEach(() => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...state.system,
+        effects: {
+          spell: { label: 'Заклинание', activation: 'manual', params: [{ key: 'slot', label: 'Круг ячейки', kind: 'number' }], cost: [{ type: 'emit', effect: 'cost' }], steps: [] },
+          bless: { label: 'Благословение', activation: 'manual', extends: 'spell', steps: [] },
+        },
+      },
+      activeEffectId: 'bless',
+    }));
+  });
+  afterEach(() => { cleanup(); });
+
+  it('у потомка свёрнуто «От основы» с её входами и ценой, и ссылка в основу', () => {
+    renderOpen(<EffectsTab />);
+    expect(screen.getByText('От основы «Заклинание»')).toBeTruthy();
+    expect(screen.getAllByText('Круг ячейки').length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByText('править в основе →'));
+    expect(useWorld.getState().activeEffectId).toBe('spell');
+  });
+});

@@ -4,11 +4,11 @@ import { EffectPick } from '../effect-pick.tsx';
 import { TagsField } from '../tags-field.tsx';
 import { useWorld } from '../../../store/world.ts';
 import { newHandler, payStep } from '../factory.ts';
-import { Card, CardHead, Field, Input, Select, DangerButton, LabelInput, Button, Empty } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Field, Input, Select, DangerButton, LabelInput, Button, Empty, Chip, Fold } from '../../../ui/primitives.tsx';
 import { FieldRow } from '../../../ui/field-row.tsx';
 import { useOpened } from '../../../store/opened.ts';
 import { ModifiersEditor } from '../modifiers.tsx';
-import { LAUNCH_KINDS, launchHint } from './words.ts';
+import { LAUNCH_KINDS, launchHint, titleOf } from './words.ts';
 import { HandlerCard } from './handler-card.tsx';
 import type { Place } from '@vtt/engine/model/names-at';
 import { followKey, referenced } from '../keys.ts';
@@ -214,6 +214,10 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
           />
         )}
       </Card>
+
+      {effect.extends && system.effects[effect.extends] ? (
+        <Inherited base={effect.extends} system={system} onOpen={() => pick({ activeEffectId: effect.extends! })} />
+      ) : null}
 
       <ParamsEditor effect={effect} system={system} onEdit={edit} />
 
@@ -500,6 +504,39 @@ function Bond({ effect, system, id, edit }: {
         />
       </Field>
     </div>
+  );
+}
+
+function Inherited({ base, system, onOpen }: { base: string; system: System; onOpen: () => void }) {
+  const effect = system.effects[base]!;
+  const titles = (steps: Step[] | undefined) => groupSteps(steps ?? []).map(card => titleOf(card.kind, card.step, system));
+  const parts: [string, string[]][] = [
+    ['входы', (effect.params ?? []).map(p => p.label ?? p.key)],
+    ['цена', titles(effect.cost)],
+    ['шаги', titles(effect.steps)],
+    ['подписки', (effect.on ?? []).map(h => h.on)],
+    ['при наложении', titles(effect.attach)],
+    ['при спадании', titles(effect.detach)],
+    ['правки', (effect.modifiers ?? []).map(m => (m.kind === 'edit' ? `правка «${m.call}»` : `правка «${m.target}»`))],
+  ];
+  const shown = parts.filter(([, list]) => list.length);
+  return (
+    <Card>
+      <Fold title={`От основы «${effect.label ?? base}»`} summary={shown.map(([name, list]) => `${name}: ${list.length}`).join(' · ') || 'основа пустая'}>
+        <div className="stack stack--tight inherited">
+          {shown.map(([name, list]) => (
+            <div key={name} className="inline inline--tight">
+              <span className="faint">{name}:</span>
+              {list.map((item, at) => <Chip key={at}>{item}</Chip>)}
+            </div>
+          ))}
+          <div className="inline">
+            <span className="faint">Это идёт первым и правится в основе.</span>
+            <Button size="sm" variant="ghost" onClick={onOpen}>править в основе →</Button>
+          </div>
+        </div>
+      </Fold>
+    </Card>
   );
 }
 
