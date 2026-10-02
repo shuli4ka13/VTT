@@ -192,7 +192,7 @@ describe('склейка «число + изменение» смотрит на
     const list = steps([
       { id: 'n', type: 'roll', fixed: { expr: '1' } },
       { type: 'apply', target: { expr: '@цель.hp' }, direction: 'subtract', value: { expr: '@n' } },
-      { type: 'emit', event: 'damage', args: { amount: { expr: '1' } }, tags: ['#n', 'n'] },
+      { type: 'emit', effect: 'damage', args: { amount: { expr: '1' } }, tags: ['#n', 'n'] },
     ]);
     expect(groupSteps(list)[0]!.indices).toEqual([0, 1]);
   });

@@ -54,7 +54,7 @@ function choiceArgs(system: System, table: string): { where: Where; args: Loose;
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
     for (const [at, step] of [...(effect.steps ?? []), ...(effect.cost ?? [])].entries()) {
       const s = step as unknown as Loose;
-      if (s.type === 'emit') collect({ tab: 'effects', effect: id, step: at }, s.event, s.args);
+      if (s.type === 'emit') collect({ tab: 'effects', effect: id, step: at }, s.effect, s.args);
     }
   }
   for (const [rk, kind] of recordKinds(system)) {

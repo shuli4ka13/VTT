@@ -1743,7 +1743,7 @@
           },
           {
             "type": "emit",
-            "event": "spend",
+            "effect": "spend",
             "args": {
               "what": {
                 "expr": "@действующий.edge_left"
@@ -1815,7 +1815,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "spend",
+            "effect": "spend",
             "args": {
               "what": {
                 "expr": "@действующий.edge_left"
@@ -1874,7 +1874,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "spend",
+            "effect": "spend",
             "args": {
               "what": {
                 "expr": "@действующий.edge_left"
@@ -2351,7 +2351,7 @@
             "cost": [
               {
                 "type": "emit",
-                "event": "spend",
+                "effect": "spend",
                 "args": {
                   "what": {
                     "expr": "@носитель.edge_left"
@@ -2401,7 +2401,7 @@
             "cost": [
               {
                 "type": "emit",
-                "event": "spend",
+                "effect": "spend",
                 "args": {
                   "what": {
                     "expr": "@носитель.edge_left"

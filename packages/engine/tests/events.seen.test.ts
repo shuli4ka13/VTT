@@ -191,9 +191,9 @@ group('ожидание для кнопки', () => {
 group('ядро: по ревью', () => {
   test('подписка, будящая сама себя, обрывается пределом, а действие завершается', () => {
     const system = world({
-      удар: { label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS], steps: [EACH, { type: 'emit', event: 'эхо' }] },
+      удар: { label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS], steps: [EACH, { type: 'emit', effect: 'эхо' }] },
       эхо: { label: 'Эхо', activation: 'manual', params: [], steps: [] },
-      отзвук: { label: 'Отзвук', activation: 'passive', on: [{ on: 'after:эхо', steps: [{ type: 'emit', event: 'эхо' }] }] },
+      отзвук: { label: 'Отзвук', activation: 'passive', on: [{ on: 'after:эхо', steps: [{ type: 'emit', effect: 'эхо' }] }] },
     });
     const out = play(system, [sheet('а'), sheet('б', ['отзвук'])], []);
     eq(out.kind, 'done');
@@ -201,9 +201,9 @@ group('ядро: по ревью', () => {
 
   test('подписка, будящая сама себя, упирается в глубину обработчика: отказ обработчика и строка в журнале', () => {
     const system = world({
-      удар: { label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS], steps: [EACH, { type: 'emit', event: 'эхо' }] },
+      удар: { label: 'Удар', activation: 'manual', params: [ACTOR, TARGETS], steps: [EACH, { type: 'emit', effect: 'эхо' }] },
       эхо: { label: 'Эхо', activation: 'manual', params: [], steps: [] },
-      отзвук: { label: 'Отзвук', activation: 'passive', on: [{ on: 'after:эхо', steps: [{ type: 'emit', event: 'эхо' }] }] },
+      отзвук: { label: 'Отзвук', activation: 'passive', on: [{ on: 'after:эхо', steps: [{ type: 'emit', effect: 'эхо' }] }] },
     });
     const out = play(system, [sheet('а'), sheet('б', ['отзвук'])], []);
     ok(out.log.includes(CUT_WORDS), 'обработчик упёрся в глубину — отказ обработчика, строка в журнале');

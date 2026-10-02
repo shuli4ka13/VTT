@@ -1367,7 +1367,7 @@
           },
           {
             "type": "emit",
-            "event": "damage",
+            "effect": "damage",
             "args": {
               "amount": {
                 "expr": "@dmg"
@@ -1388,7 +1388,7 @@
           },
           {
             "type": "emit",
-            "event": "damage",
+            "effect": "damage",
             "args": {
               "amount": {
                 "expr": "@boom"
@@ -1415,7 +1415,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "cost_action",
+            "effect": "cost_action",
             "args": {
               "лист": {
                 "expr": "@действующий"
@@ -1727,7 +1727,7 @@
             "steps": [
               {
                 "type": "emit",
-                "event": "damage",
+                "effect": "damage",
                 "args": {
                   "amount": {
                     "expr": "2"

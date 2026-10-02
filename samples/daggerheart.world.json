@@ -1726,7 +1726,7 @@
           },
           {
             "type": "emit",
-            "event": "damage",
+            "effect": "damage",
             "args": {
               "amount": {
                 "expr": "@урон"
@@ -1817,7 +1817,7 @@
           },
           {
             "type": "emit",
-            "event": "damage",
+            "effect": "damage",
             "args": {
               "amount": {
                 "expr": "@урон"
@@ -2571,7 +2571,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "spend",
+            "effect": "spend",
             "args": {
               "what": {
                 "expr": "@действующий.hope"
@@ -2640,7 +2640,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "spend",
+            "effect": "spend",
             "args": {
               "what": {
                 "expr": "@действующий.hope"
@@ -2699,7 +2699,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "spend",
+            "effect": "spend",
             "args": {
               "what": {
                 "expr": "@действующий.hope"
@@ -2758,7 +2758,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "spend",
+            "effect": "spend",
             "args": {
               "what": {
                 "expr": "@действующий.hope"
@@ -2817,7 +2817,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "spend",
+            "effect": "spend",
             "args": {
               "what": {
                 "expr": "@действующий.hope"

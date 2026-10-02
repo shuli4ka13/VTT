@@ -157,14 +157,14 @@ describe('GroupCard: изменение как вызов', () => {
       onDelete={() => {}} />);
     fireEvent.click(screen.getByText('вызов'));
     expect(apply.type).toBe('emit');
-    expect(apply.event).toBe('damage');
+    expect(apply.effect).toBe('damage');
     expect(apply.args).toEqual({ amount: { expr: '@n' } });
   });
 
   it('счёт и вызов — два шага, у вызова видно, что уходит', () => {
     const steps = [
       { id: 'n', type: 'roll' },
-      { type: 'emit', event: 'damage', args: { amount: { expr: '@n' } } },
+      { type: 'emit', effect: 'damage', args: { amount: { expr: '@n' } } },
     ] as unknown as Step[];
     const cards = groupSteps(steps);
     expect(cards.map(c => c.kind), 'число больше не прячется внутри вызова').toEqual(['number', 'change']);

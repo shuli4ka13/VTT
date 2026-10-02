@@ -17,7 +17,7 @@ export function reasonWord(reason: string): string | null {
 export const icon = '➤';
 
 export function lint(step: StepData) {
-  if (!step.event) return 'вызову нужен общий эффект — они живут среди эффектов, в группе «Общие»';
+  if (!step.effect) return 'вызову нужен общий эффект — они живут среди эффектов, в группе «Общие»';
   return null;
 }
 
@@ -47,7 +47,7 @@ function chosenTags(params: { key: string; kind?: string; from?: string }[], arg
 const runner: Pick<StepModule, 'mayBreak' | 'finish' | 'splits'> = {
   mayBreak: true,
   finish(step, ctx) {
-    const id = String(step.event ?? '');
+    const id = String(step.effect ?? '');
     const spec = requireCalled(ctx.system, id, who(ctx));
     const params = spec.params ?? [];
     const args: Record<string, unknown> = {};

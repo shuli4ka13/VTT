@@ -47,7 +47,7 @@ const hp = (out: { sheets: Sheet[] }, id: string) => out.sheets.find(s => s.id =
 
 group('новое ядро: ключи костей у повторов', () => {
   test('один и тот же вызов дважды в теле — две независимые кости', () => {
-    const call = { type: 'emit', event: 'уколоть', args: { раненый: { expr: '@цель' } } };
+    const call = { type: 'emit', effect: 'уколоть', args: { раненый: { expr: '@цель' } } };
     const system = world({ удар: strike([call, call]) });
     const out = play(system, [sheet('а'), sheet('б')], 'а', 'б', [2, 5]);
     eq(out.kind, 'done');

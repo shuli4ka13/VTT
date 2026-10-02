@@ -17,12 +17,12 @@ group('один путь вызова', () => {
     looped.effects.damage = {
       label: 'Урон',
       params: [{ key: 'лист', label: 'Лист', kind: 'sheet' }, { key: 'amount', label: 'Сколько', kind: 'number', role: 'amount' }],
-      steps: [{ type: 'emit', event: 'damage', args: { лист: { expr: '@лист' }, amount: { expr: '@amount' } } }],
+      steps: [{ type: 'emit', effect: 'damage', args: { лист: { expr: '@лист' }, amount: { expr: '@amount' } } }],
     } as unknown as Effect;
     looped.effects.echo = {
       label: 'Эхо', activation: 'manual',
       params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
-      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'emit', event: 'damage', args: { лист: { expr: '@цель' }, amount: { expr: '3' } } }],
+      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'emit', effect: 'damage', args: { лист: { expr: '@цель' }, amount: { expr: '3' } } }],
     } as unknown as Effect;
     looped.tables = { ...(looped.tables ?? {}), shout: { shape: 'book', use: 'action', label: 'Крик', bindings: [{ label: 'Эхо', effect: 'echo', args: {} }] } } as never;
     const book = { ...compendium, records: [...(compendium.records ?? []), { id: 'shout', table: 'shout', label: 'Крик', cells: {} }] } as Compendium;

@@ -466,8 +466,8 @@ function paramProblems(system: System): Problem[] {
     for (const { steps, where: whereOf } of chainsOf(id, effect)) {
       steps.forEach((step, index) => {
         const raw = step as unknown as Record<string, unknown>;
-        if (step.type !== 'emit' || !raw.event) return;
-        const called = system.effects[String(raw.event)];
+        if (step.type !== 'emit' || !raw.effect) return;
+        const called = system.effects[String(raw.effect)];
         if (!called) return;
         const args = (raw.args ?? {}) as Record<string, unknown>;
         for (const param of called.params ?? []) {
@@ -475,7 +475,7 @@ function paramProblems(system: System): Problem[] {
           out.push({
             where: whereOf(index),
             level: 'error',
-            text: `вызов «${called.label ?? raw.event}» не заполняет его вход «${param.label ?? param.key}»`,
+            text: `вызов «${called.label ?? raw.effect}» не заполняет его вход «${param.label ?? param.key}»`,
           });
         }
       });

@@ -29,7 +29,7 @@ const strike = (id: string, label: string, amount: number, tags: string[]) => ({
   steps: [
     EACH,
     { id: 'n', type: 'roll', fixed: { expr: `${JSON.stringify(amount)}` } },
-    { type: 'emit', event: 'урон', args: damageArgs({ expr: '@n' }, tags) },
+    { type: 'emit', effect: 'урон', args: damageArgs({ expr: '@n' }, tags) },
   ],
 });
 
@@ -40,7 +40,7 @@ const world = (extraEffects: Record<string, unknown> = {}, receive: unknown[] | 
   effects: {
     удар: strike('удар', 'Удар', 8, ['рубящий']),
     огонь: strike('огонь', 'Огненный шар', 8, ['огонь', 'магический']),
-    сигнал: { label: 'Тревога', activation: 'manual', params: [ACTOR, TARGETS], steps: [EACH, { type: 'emit', event: 'тревога', args: { лист: { expr: '@цель' } } }] },
+    сигнал: { label: 'Тревога', activation: 'manual', params: [ACTOR, TARGETS], steps: [EACH, { type: 'emit', effect: 'тревога', args: { лист: { expr: '@цель' } } }] },
     урон: {
       label: 'Урон',
       params: [
@@ -99,7 +99,7 @@ group('вызываемый эффект как провод: отправите
   });
 
   test('необъявленный вызов — ошибка перечисляет известные эффекты', () => {
-    const sys: any = world({ чужое: { label: 'Чужое', activation: 'manual', params: [ACTOR, TARGETS], steps: [EACH, { type: 'emit', event: 'котик' }] } });
+    const sys: any = world({ чужое: { label: 'Чужое', activation: 'manual', params: [ACTOR, TARGETS], steps: [EACH, { type: 'emit', effect: 'котик' }] } });
     const withAction = { ...book, records: [...book.records, { id: 'чужое', table: 'приём', label: 'Чужое', bindings: [{ label: 'Чужое', effect: 'чужое', args: {} }] }] };
     throws(() => exchange({
       system: sys, compendium: withAction as any, die: queue(), sheets: [{ ...hero(), has: [...hero().has, { of: 'чужое' }] } as any, foe() as any],
@@ -144,7 +144,7 @@ group('реакции слушают слово, а не имя эффекта',
   const spiky = world({
     шипы: {
       label: 'Шипы', activation: 'passive', duration: { kind: 'permanent' },
-      on: [{ on: 'after:урон', if: { expr: 'все(@лист == @носитель, не(пусто(@обидчик)), @обидчик != @носитель)' }, steps: [{ type: 'emit', event: 'урон', args: damageArgs({ expr: '@сколько' }, ['колющий'], { expr: '@обидчик' }, { expr: '@носитель' }) }] }],
+      on: [{ on: 'after:урон', if: { expr: 'все(@лист == @носитель, не(пусто(@обидчик)), @обидчик != @носитель)' }, steps: [{ type: 'emit', effect: 'урон', args: damageArgs({ expr: '@сколько' }, ['колющий'], { expr: '@обидчик' }, { expr: '@носитель' }) }] }],
     },
     сторож: {
       label: 'Сторож', activation: 'passive', duration: { kind: 'permanent' },
@@ -194,7 +194,7 @@ group('реакции слушают слово, а не имя эффекта',
     ...spiky.effects,
     шипы: {
       label: 'Шипы', activation: 'passive', duration: { kind: 'permanent' },
-      on: [{ on: 'after:урон', if: { expr: 'все(@лист == @носитель, не(пусто(@обидчик)), @обидчик != @носитель)' }, steps: [{ type: 'emit', event: 'урон', args: damageArgs({ expr: '8' }, ['колющий'], { expr: '@обидчик' }, { expr: '@носитель' }) }] }],
+      on: [{ on: 'after:урон', if: { expr: 'все(@лист == @носитель, не(пусто(@обидчик)), @обидчик != @носитель)' }, steps: [{ type: 'emit', effect: 'урон', args: damageArgs({ expr: '8' }, ['колющий'], { expr: '@обидчик' }, { expr: '@носитель' }) }] }],
     },
   });
   const spikesAgainstSpikes = (sys: any) => exchange({
@@ -226,8 +226,8 @@ group('реакции слушают слово, а не имя эффекта',
       шипы: {
         label: 'Вампирские шипы', activation: 'passive', duration: { kind: 'permanent' },
         on: [{ on: 'after:урон', if: { expr: 'все(@лист == @носитель, не(пусто(@обидчик)), @обидчик != @носитель)' }, steps: [
-          { type: 'emit', event: 'урон', args: damageArgs({ expr: '4' }, ['колющий'], { expr: '@обидчик' }, { expr: '@носитель' }) },
-          { type: 'emit', event: 'лечение', args: { лист: { expr: '@носитель' }, сколько: { expr: '4' } } },
+          { type: 'emit', effect: 'урон', args: damageArgs({ expr: '4' }, ['колющий'], { expr: '@обидчик' }, { expr: '@носитель' }) },
+          { type: 'emit', effect: 'лечение', args: { лист: { expr: '@носитель' }, сколько: { expr: '4' } } },
         ] }],
       },
       лечение: {

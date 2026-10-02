@@ -24,9 +24,9 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
     <>
       <CallEditor
         system={system}
-        effect={String(step.event ?? '')}
+        effect={String(step.effect ?? '')}
         effects={commons}
-        onEffect={next => edit(at, draft => { loose(draft).event = next; })}
+        onEffect={next => edit(at, draft => { loose(draft).effect = next; })}
         args={args}
         context={context}
         where="вызов"
@@ -37,7 +37,7 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
         })}
         headAction={(
           <Button size="sm" variant="ghost" onClick={() => setPeek(true)}>
-            {`что будет дальше${meddlersOf(system, String(step.event)).length ? ' · правки могут урезать' : ''} →`}
+            {`что будет дальше${meddlersOf(system, String(step.effect)).length ? ' · правки могут урезать' : ''} →`}
           </Button>
         )}
       >
@@ -48,7 +48,7 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
         open={peek}
         onClose={() => setPeek(false)}
         system={system}
-        eventId={String(step.event ?? '')}
+        eventId={String(step.effect ?? '')}
         onEdit={id => onOpenEffect?.(id)}
       />
     </>

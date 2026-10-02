@@ -463,7 +463,7 @@
           },
           {
             "type": "emit",
-            "event": "damage",
+            "effect": "damage",
             "args": {
               "amount": {
                 "expr": "@dmg"
@@ -481,7 +481,7 @@
           },
           {
             "type": "emit",
-            "event": "damage",
+            "effect": "damage",
             "args": {
               "amount": {
                 "expr": "@действующий.level"
@@ -501,7 +501,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "cost_standard",
+            "effect": "cost_standard",
             "args": {
               "лист": {
                 "expr": "@действующий"
@@ -582,7 +582,7 @@
           },
           {
             "type": "emit",
-            "event": "damage",
+            "effect": "damage",
             "args": {
               "amount": {
                 "expr": "@hit_damage"
@@ -599,7 +599,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "cost_standard",
+            "effect": "cost_standard",
             "args": {
               "лист": {
                 "expr": "@действующий"

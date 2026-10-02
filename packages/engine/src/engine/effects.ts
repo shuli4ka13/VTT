@@ -51,7 +51,7 @@ export const calledOf = (system: System): [string, Effect][] => {
   const called = new Set<string>();
   for (const effect of Object.values(system.effects || {})) {
     for (const step of chainsOfEffect(effect).flat() as Record<string, unknown>[]) {
-      if (step.type === 'emit' && step.event) called.add(String(step.event));
+      if (step.type === 'emit' && step.effect) called.add(String(step.effect));
     }
   }
   const takesAmount = (effect: Effect) => (effect.params ?? []).some(p => (p as { role?: string }).role === 'amount');

@@ -654,10 +654,10 @@ describe('цепочка ответок', () => {
       tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] }, приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
       effects: {
         урон: { label: 'Урон', params: [{ key: 'раненый', kind: 'sheet' }, { key: 'обидчик', kind: 'sheet' }], steps: [sub('@раненый.хиты', '1')] },
-        удар: button('Удар', [{ type: 'emit', event: 'урон', args: { раненый: { expr: '@цель' }, обидчик: { expr: '@действующий' } } }]),
+        удар: button('Удар', [{ type: 'emit', effect: 'урон', args: { раненый: { expr: '@цель' }, обидчик: { expr: '@действующий' } } }]),
         шипы: {
           label: 'Шипы', activation: 'passive',
-          on: [{ on: 'after:урон', steps: [{ type: 'emit', event: 'урон', args: { раненый: { expr: '@обидчик' }, обидчик: { expr: '@раненый' } } }] }],
+          on: [{ on: 'after:урон', steps: [{ type: 'emit', effect: 'урон', args: { раненый: { expr: '@обидчик' }, обидчик: { expr: '@раненый' } } }] }],
         },
       },
     };
@@ -679,10 +679,10 @@ describe('вопросы на ответках', () => {
           label: 'Урон', params: [{ key: 'раненый', kind: 'sheet' }, { key: 'обидчик', kind: 'sheet' }, { key: 'сколько', label: 'Сколько', kind: 'number' }],
           steps: [{ ...sub('@раненый.хиты', '@сколько') }],
         },
-        удар: button('Удар', [{ type: 'emit', event: 'урон', args: { раненый: { expr: '@цель' }, обидчик: { expr: '@действующий' }, сколько: { expr: '5' } } }]),
+        удар: button('Удар', [{ type: 'emit', effect: 'урон', args: { раненый: { expr: '@цель' }, обидчик: { expr: '@действующий' }, сколько: { expr: '5' } } }]),
         возмездие: {
           label: 'Возмездие', activation: 'passive',
-          on: [{ on: 'after:урон', if: { expr: '@раненый == @носитель' }, confirm: true, steps: [{ type: 'emit', event: 'урон', args: { раненый: { expr: '@обидчик' }, обидчик: { expr: '@раненый' }, сколько: { expr: '2' } } }] }],
+          on: [{ on: 'after:урон', if: { expr: '@раненый == @носитель' }, confirm: true, steps: [{ type: 'emit', effect: 'урон', args: { раненый: { expr: '@обидчик' }, обидчик: { expr: '@раненый' }, сколько: { expr: '2' } } }] }],
         },
       },
     };
@@ -724,10 +724,10 @@ describe('вопросы на ответках', () => {
       tables: { лист: { shape: 'single', columns: [{ key: 'хиты', label: 'Хиты', kind: 'number', default: 20 }] }, приём: { shape: 'book', use: 'action', label: 'Приём', columns: [], bindings: [{ label: 'Удар', effect: 'удар', args: {} }] } },
       effects: {
         урон: { label: 'Урон', params: [{ key: 'раненый', kind: 'sheet' }, { key: 'обидчик', kind: 'sheet' }, { key: 'сколько', kind: 'number' }], steps: [sub('@раненый.хиты', '@сколько')] },
-        удар: button('Удар', [{ type: 'emit', event: 'урон', args: { раненый: { expr: '@цель' }, обидчик: { expr: '@действующий' }, сколько: { expr: '5' } } }]),
+        удар: button('Удар', [{ type: 'emit', effect: 'урон', args: { раненый: { expr: '@цель' }, обидчик: { expr: '@действующий' }, сколько: { expr: '5' } } }]),
         шипы: {
           label: 'Шипы', activation: 'passive',
-          on: [{ on: 'after:урон', if: { expr: '@раненый == @носитель' }, steps: [{ type: 'emit', event: 'шип', args: { жертва: { expr: '@обидчик' } } }] }],
+          on: [{ on: 'after:урон', if: { expr: '@раненый == @носитель' }, steps: [{ type: 'emit', effect: 'шип', args: { жертва: { expr: '@обидчик' } } }] }],
         },
         шип: { label: 'Шип', params: [{ key: 'жертва', kind: 'sheet' }], steps: [sub('@жертва.хиты', '2')] },
         заслон: {
@@ -855,7 +855,7 @@ describe('отдых и плата ячейкой', () => {
           ],
         },
         стрела: button('Стрела', [sub('@цель.хиты', '4')], {
-          cost: [{ type: 'emit', event: 'ячейка', args: { лист: { expr: '@действующий' } } }],
+          cost: [{ type: 'emit', effect: 'ячейка', args: { лист: { expr: '@действующий' } } }],
         }),
         сон: {
           label: 'Сон', activation: 'passive',

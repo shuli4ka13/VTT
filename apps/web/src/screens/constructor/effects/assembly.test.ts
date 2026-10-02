@@ -106,7 +106,7 @@ describe('собранное шагами конструктора работа�
     addStep(id, 'change');
     fill(id, 1, step => {
       retype(step, 'emit');
-      step.event = made.key;
+      step.effect = made.key;
       step.args = { лист: { expr: '@цель' }, amount: { expr: '7' } };
     });
 

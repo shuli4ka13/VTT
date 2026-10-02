@@ -13,7 +13,7 @@ const withProbe = (tags: string[]) => {
   system.effects.проба = {
     label: 'Проба', activation: 'manual',
     params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
-    steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'emit', event: 'damage', args: {
+    steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'emit', effect: 'damage', args: {
       amount: { expr: '10' },
       лист: { expr: '@цель' },
       источник: { expr: '@действующий' },

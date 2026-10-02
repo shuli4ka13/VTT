@@ -214,7 +214,7 @@ export function changeReadback(step: Step, amount: Step | null, system: System, 
 
 export function sendReadback(step: Step, system: System, effect: Effect, names?: Names): Segment[] {
   const s = step as Record<string, unknown>;
-  const id = String(s.event ?? '');
+  const id = String(s.effect ?? '');
   const event = system.effects?.[id];
   const args = (s.args ?? {}) as Record<string, unknown>;
   const main = amountParamOf(event);

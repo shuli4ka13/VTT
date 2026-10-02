@@ -22,7 +22,7 @@ describe('имя листа — хозяин поля', () => {
       },
       просто: {
         label: 'Просто', activation: 'manual', params: [ACTOR, TARGETS],
-        steps: [EACH, { type: 'emit', event: 'урон', args: { раненый: { expr: '@цель' }, сколько: { expr: '@действующий.сила' } } }],
+        steps: [EACH, { type: 'emit', effect: 'урон', args: { раненый: { expr: '@цель' }, сколько: { expr: '@действующий.сила' } } }],
       },
       урон: {
         label: 'Урон', params: [{ key: 'раненый', kind: 'sheet' }, { key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }],
@@ -34,7 +34,7 @@ describe('имя листа — хозяин поля', () => {
       },
       зовёт: {
         label: 'Зовёт', activation: 'manual', params: [ACTOR, TARGETS],
-        steps: [EACH, { type: 'emit', event: 'читает_чужого', args: { раненый: { expr: '@цель' }, кто: { expr: '@действующий' } } }],
+        steps: [EACH, { type: 'emit', effect: 'читает_чужого', args: { раненый: { expr: '@цель' }, кто: { expr: '@действующий' } } }],
       },
       наивный: {
         label: 'Наивный', activation: 'manual', params: [ACTOR, TARGETS],

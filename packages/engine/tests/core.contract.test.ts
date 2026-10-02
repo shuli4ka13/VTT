@@ -100,9 +100,9 @@ describe('проба внутри прогона', () => {
 describe('пределы', () => {
   it('вызовы по кругу в теле — ошибка словами, мир не меняется', () => {
     const system = world({
-      удар: button([{ type: 'emit', event: 'пинг', args: { лист: { expr: '@цель' } } }]),
-      пинг: { label: 'Пинг', params: [{ key: 'лист', kind: 'sheet' }], steps: [{ type: 'emit', event: 'понг', args: { лист: { expr: '@лист' } } }] },
-      понг: { label: 'Понг', params: [{ key: 'лист', kind: 'sheet' }], steps: [{ type: 'emit', event: 'пинг', args: { лист: { expr: '@лист' } } }] },
+      удар: button([{ type: 'emit', effect: 'пинг', args: { лист: { expr: '@цель' } } }]),
+      пинг: { label: 'Пинг', params: [{ key: 'лист', kind: 'sheet' }], steps: [{ type: 'emit', effect: 'понг', args: { лист: { expr: '@лист' } } }] },
+      понг: { label: 'Понг', params: [{ key: 'лист', kind: 'sheet' }], steps: [{ type: 'emit', effect: 'пинг', args: { лист: { expr: '@лист' } } }] },
     });
     expect(() => strike(system, [sheet('а'), sheet('б')], 'б', [])).toThrow(/вложены глубже/);
   });
@@ -127,7 +127,7 @@ describe('имена в формулах', () => {
 
   it('вызванный эффект читает свои входы-листы; подписка — носителя и входы того, на что подписана', () => {
     const system = world({
-      удар: button([{ type: 'emit', event: 'урон', args: { раненый: { expr: '@цель' }, обидчик: { expr: '@действующий' } } }]),
+      удар: button([{ type: 'emit', effect: 'урон', args: { раненый: { expr: '@цель' }, обидчик: { expr: '@действующий' } } }]),
       урон: { label: 'Урон', params: [{ key: 'раненый', kind: 'sheet' }, { key: 'обидчик', kind: 'sheet' }], steps: [sub('@раненый.ки', '@раненый.хп'), sub('@обидчик.ки', '@раненый.хп')] },
       память: { label: 'Память', activation: 'passive', on: [{ on: 'after:урон', if: { expr: '@раненый == @носитель' }, steps: [add('@носитель.ки', '@носитель.хп')] }] },
     });
@@ -270,9 +270,9 @@ describe('по ревью постройки', () => {
       удар: button([]),
       плюс: { label: 'Плюс', params: [{ key: 'лист', kind: 'sheet' }], steps: [add('1', '@лист.ки')] },
       реген: { label: 'Реген', activation: 'passive', on: [{ on: 'moment:round-start', steps: [
-        { type: 'emit', event: 'плюс', args: { лист: { expr: '@носитель' } } },
-        { type: 'emit', event: 'плюс', args: { лист: { expr: '@носитель' } } },
-        { type: 'emit', event: 'плюс', args: { лист: { expr: '@носитель' } } },
+        { type: 'emit', effect: 'плюс', args: { лист: { expr: '@носитель' } } },
+        { type: 'emit', effect: 'плюс', args: { лист: { expr: '@носитель' } } },
+        { type: 'emit', effect: 'плюс', args: { лист: { expr: '@носитель' } } },
       ] }] },
     });
     const many = Array.from({ length: 12 }, (_, i) => sheet(`л${i}`, {}, ['реген']));
@@ -282,7 +282,7 @@ describe('по ревью постройки', () => {
 
   it('держание не утекает во вложенный вызов: наложенное «Уроном» не держится', () => {
     const system = world({
-      удар: { ...button([{ type: 'emit', event: 'урон', args: { лист: { expr: '@цель' } } }]), bond: { effect: 'держу', by: 'действующий' } },
+      удар: { ...button([{ type: 'emit', effect: 'урон', args: { лист: { expr: '@цель' } } }]), bond: { effect: 'держу', by: 'действующий' } },
       урон: { label: 'Урон', params: [{ key: 'лист', kind: 'sheet' }], steps: [{ type: 'status', effect: { const: 'шрам' }, to: { expr: '@лист' } }] },
       держу: { label: 'Держу', activation: 'passive' },
       шрам: { label: 'Шрам', activation: 'passive' },
@@ -293,7 +293,7 @@ describe('по ревью постройки', () => {
 
   it('статические метки эффекта входят в метки вызова: правка по метке срабатывает', () => {
     const system = world({
-      удар: button([{ type: 'emit', event: 'урон', args: { лист: { expr: '@цель' }, сколько: { expr: '10' } } }]),
+      удар: button([{ type: 'emit', effect: 'урон', args: { лист: { expr: '@цель' }, сколько: { expr: '10' } } }]),
       урон: { label: 'Урон', tags: ['огонь'], params: [{ key: 'лист', kind: 'sheet' }, { key: 'сколько', kind: 'number', role: 'amount' }], steps: [sub('@сколько', '@лист.хп')] },
       стойкость: { label: 'Стойкость', activation: 'passive', modifiers: [{ kind: 'edit', call: 'урон', param: 'сколько', op: 'mul', value: { expr: '0.5' }, anyTags: ['огонь'], if: { expr: '@лист == @носитель' } }] },
     });
@@ -313,7 +313,7 @@ describe('по ревью постройки', () => {
 
 describe('правка висящего видит его входы', () => {
   const system = world({
-    удар: button([{ type: 'emit', event: 'урон', args: { лист: { expr: '@цель' }, источник: { expr: '@действующий' }, сколько: { expr: '2' } } }]),
+    удар: button([{ type: 'emit', effect: 'урон', args: { лист: { expr: '@цель' }, источник: { expr: '@действующий' }, сколько: { expr: '2' } } }]),
     урон: { label: 'Урон', params: [{ key: 'лист', kind: 'sheet' }, { key: 'источник', kind: 'sheet' }, { key: 'сколько', kind: 'number', role: 'amount' }], steps: [sub('@сколько', '@лист.хп')] },
     метка: {
       label: 'Метка охотника', activation: 'passive',

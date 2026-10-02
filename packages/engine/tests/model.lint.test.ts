@@ -224,7 +224,7 @@ group('линт: слушатели, круги, входы', () => {
   test('вызовы по кругу: эффект зовёт тот, на который сам и срабатывает', () => {
     const system = withEffect('loop', {
       activation: 'passive',
-      on: [{ on: 'after:damage', steps: [{ type: 'emit', event: 'damage', args: { раненый: { expr: '@раненый' }, сколько: { expr: '1' } } }] as Step[] }],
+      on: [{ on: 'after:damage', steps: [{ type: 'emit', effect: 'damage', args: { раненый: { expr: '@раненый' }, сколько: { expr: '1' } } }] as Step[] }],
     });
     system.effects.damage = { label: 'Урон', params: [{ key: 'раненый', kind: 'sheet' }, { key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }], steps: [] } as never;
     const found = errorTexts(system).find(t => t.includes('по кругу'));
@@ -233,13 +233,13 @@ group('линт: слушатели, круги, входы', () => {
   });
 
   test('без круга — тишина', () => {
-    const system = withEffect('a', { params: [WHO] as never, steps: [{ type: 'emit', event: 'damage', args: { раненый: { expr: '@действующий' }, сколько: { expr: '1' } } }] as Step[] });
+    const system = withEffect('a', { params: [WHO] as never, steps: [{ type: 'emit', effect: 'damage', args: { раненый: { expr: '@действующий' }, сколько: { expr: '1' } } }] as Step[] });
     system.effects.damage = { label: 'Урон', params: [{ key: 'раненый', kind: 'sheet' }, { key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' }], steps: [{ type: 'apply', target: { expr: '@раненый.hp' }, direction: 'subtract', value: { expr: '@сколько' } }] } as never;
     ok(!texts(system).some(t => t.includes('по кругу')));
   });
 
   test('вызов не заполняет вход вызываемого эффекта — ошибка', () => {
-    const system = withEffect('a', { params: [WHO] as never, steps: [{ type: 'emit', event: 'damage', args: { сколько: { expr: '1' } } }] as Step[] });
+    const system = withEffect('a', { params: [WHO] as never, steps: [{ type: 'emit', effect: 'damage', args: { сколько: { expr: '1' } } }] as Step[] });
     system.effects.damage = { label: 'Урон', params: [{ key: 'раненый', label: 'Раненый', kind: 'sheet' }, { key: 'сколько', kind: 'number' }], steps: [] } as never;
     ok(errorTexts(system).some(t => t.includes('не заполняет его вход «Раненый»')), errorTexts(system).join('|'));
   });
@@ -251,7 +251,7 @@ group('линт: слушатели, круги, входы', () => {
   });
 
   test('эффект зовут, а он ничего не делает — предупреждение', () => {
-    const system = withEffect('a', { steps: [{ type: 'emit', event: 'ping' }] as Step[] });
+    const system = withEffect('a', { steps: [{ type: 'emit', effect: 'ping' }] as Step[] });
     system.effects.ping = { label: 'Пинг', tags: ['сигнал'] } as never;
     ok(texts(system).some(t => t.startsWith('warn') && t.includes('«Пинг» вызывают, но он ничего не делает')), texts(system).join('|'));
     eq(errorTexts(system).length, 0);
@@ -386,7 +386,7 @@ group('линт: моменты хода', () => {
 group('линт: вопрос «до» у вложенного вызова', () => {
   const nested = (from: 'steps' | 'handler'): System => {
     const system = withEffect('шип', { params: [{ key: 'жертва', kind: 'sheet' }] as never, steps: [mend('@жертва.hp')] });
-    const emit = { type: 'emit', event: 'шип', args: { жертва: { expr: '@носитель' } } } as unknown as Step;
+    const emit = { type: 'emit', effect: 'шип', args: { жертва: { expr: '@носитель' } } } as unknown as Step;
     system.effects.удар = { label: 'Удар', activation: 'manual', params: [WHO] as never, steps: from === 'steps' ? [emit] : [] } as Effect;
     system.effects.шипы = { label: 'Шипы', activation: 'passive', on: from === 'handler' ? [{ on: 'after:удар', steps: [emit] }] : [] } as Effect;
     system.effects.заслон = { label: 'Заслон', activation: 'passive', on: [{ on: 'before:шип', confirm: true, steps: [] }] } as Effect;
@@ -405,8 +405,8 @@ group('линт: вопрос «до» у вложенного вызова', ()
 group('линт: стоимость не списывается дважды', () => {
   test('потомок повторил трату основы — предупреждение', () => {
     const system = withEffect('трата', { params: [WHO] as never, steps: [] });
-    system.effects.основа = { label: 'Основа', activation: 'manual', params: [WHO] as never, cost: [{ type: 'emit', event: 'трата', args: { действующий: { expr: '@действующий' } } }] } as never;
-    system.effects.потомок = { label: 'Потомок', extends: 'основа', cost: [{ type: 'emit', event: 'трата', args: { действующий: { expr: '@действующий' } } }] } as never;
+    system.effects.основа = { label: 'Основа', activation: 'manual', params: [WHO] as never, cost: [{ type: 'emit', effect: 'трата', args: { действующий: { expr: '@действующий' } } }] } as never;
+    system.effects.потомок = { label: 'Потомок', extends: 'основа', cost: [{ type: 'emit', effect: 'трата', args: { действующий: { expr: '@действующий' } } }] } as never;
     ok(texts(flattenSystem(system)).some(t => t.includes('стоимость зовёт «трата» дважды')), texts(flattenSystem(system)).join('\n'));
   });
 
@@ -428,7 +428,7 @@ group('развёртка наследования', () => {
 
 group('линт: у шага только поля его типа', () => {
   test('чужое поле — ошибка с именем поля', () => {
-    const system = withEffect('hit', { params: [WHO] as never, steps: [{ type: 'emit', event: 'x', лишнее: true } as unknown as Step] });
+    const system = withEffect('hit', { params: [WHO] as never, steps: [{ type: 'emit', effect: 'x', лишнее: true } as unknown as Step] });
     ok(errorTexts(system).some(t => t.includes('нет поля «лишнее»')), errorTexts(system).join('\n'));
   });
 

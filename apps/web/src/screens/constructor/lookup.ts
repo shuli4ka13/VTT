@@ -67,7 +67,7 @@ function callersOf(system: System, effectId: string, key: string): string[] {
   }
   for (const [id, effect] of Object.entries(system.effects ?? {})) {
     for (const step of [...(effect.cost ?? []), ...(effect.steps ?? [])] as Loose[]) {
-      if (step.type !== 'emit' || step.event !== effectId) continue;
+      if (step.type !== 'emit' || step.effect !== effectId) continue;
       const text = argText(step.args?.[key]);
       out.push(`эффект «${effect.label ?? id}» зовёт: ${text || 'не передаёт'}`);
     }

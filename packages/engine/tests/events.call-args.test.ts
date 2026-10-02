@@ -25,12 +25,12 @@ const system = {
     меч: {
       label: 'Удар мечом', activation: 'manual',
       params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }, { key: 'кость', label: 'Кость урона', kind: 'dice' }],
-      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'emit', event: 'урон_костями', args: { лист: { expr: '@цель' }, кость: { expr: '@кость' }, сколько: { const: 2 } } }],
+      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'emit', effect: 'урон_костями', args: { лист: { expr: '@цель' }, кость: { expr: '@кость' }, сколько: { const: 2 } } }],
     },
     шар: {
       label: 'Огненный шар', activation: 'manual',
       params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }],
-      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'emit', event: 'урон_костями', args: { лист: { expr: '@цель' }, кость: { const: '1d6' }, сколько: { const: 8 } } }],
+      steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'emit', effect: 'урон_костями', args: { лист: { expr: '@цель' }, кость: { const: '1d6' }, сколько: { const: 8 } } }],
     },
   },
   
@@ -76,7 +76,7 @@ group('вызов передаёт вызванному его входы', () =
       ...system,
       effects: {
         ...system.effects,
-        шар: { label: 'Огненный шар', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }], steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'emit', event: 'урон_костями', args: { лист: { expr: '@цель' } } }] },
+        шар: { label: 'Огненный шар', activation: 'manual', params: [{ key: 'действующий', kind: 'sheet' }, { key: 'цели', kind: 'sheet', many: true }], steps: [{ type: 'each', of: 'цели', as: 'цель' }, { type: 'emit', effect: 'урон_костями', args: { лист: { expr: '@цель' } } }] },
       },
     } as unknown as System;
     const беда = throws(() => hit('шар:0', 5, дырявый));

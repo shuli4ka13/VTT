@@ -172,7 +172,7 @@ describe('новое ядро: сознательные изменения', () 
       ответ: { label: 'Ответ', params: [{ key: 'раненый', kind: 'sheet' }], steps: [hit('2', '@раненый.хп')] },
       месть: {
         label: 'Месть', activation: 'passive', duration: { kind: 'uses', max: 3 },
-        on: [{ ...mine, cost: [hit('1', '@носитель.ки')], steps: [{ type: 'emit', event: 'ответ', args: { раненый: { expr: '@действующий' } } }] }],
+        on: [{ ...mine, cost: [hit('1', '@носитель.ки')], steps: [{ type: 'emit', effect: 'ответ', args: { раненый: { expr: '@действующий' } } }] }],
       },
     }, { limits: { budget: 0 } } as never);
     const out = play(system, [sheet('а'), sheet('б', { ки: 2 }, [{ effectId: 'месть', usesLeft: 3 }])], 'б', []);

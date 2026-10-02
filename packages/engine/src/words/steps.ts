@@ -171,7 +171,7 @@ export const STEP_WORDS = {
     label: 'Вызов',
     hint: 'Вызвать общий эффект из словаря: урон, лечение. Что с ним делать — знает правило приёма.',
     slots: [
-      { key: 'event', label: 'Кого зовём', kind: 'event', main: true, required: true, allow: [] },
+      { key: 'effect', label: 'Кого зовём', kind: 'event', main: true, required: true, allow: [] },
       { key: 'args', label: 'Что передаётся', kind: 'args', main: true, allow: [] },
     ],
     outputs: [

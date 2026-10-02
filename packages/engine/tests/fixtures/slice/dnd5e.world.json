@@ -1200,7 +1200,7 @@
           },
           {
             "type": "emit",
-            "event": "damage",
+            "effect": "damage",
             "args": {
               "amount": {
                 "expr": "@dmg"
@@ -1333,7 +1333,7 @@
           },
           {
             "type": "emit",
-            "event": "damage",
+            "effect": "damage",
             "args": {
               "amount": {
                 "expr": "@dmg"
@@ -1563,7 +1563,7 @@
           },
           {
             "type": "emit",
-            "event": "damage",
+            "effect": "damage",
             "args": {
               "amount": {
                 "expr": "@dmg"
@@ -1781,7 +1781,7 @@
           },
           {
             "type": "emit",
-            "event": "damage",
+            "effect": "damage",
             "args": {
               "amount": {
                 "expr": "@dmg"
@@ -2239,7 +2239,7 @@
               },
               {
                 "type": "emit",
-                "event": "damage",
+                "effect": "damage",
                 "args": {
                   "amount": {
                     "expr": "@back"
@@ -2553,7 +2553,7 @@
               },
               {
                 "type": "emit",
-                "event": "damage",
+                "effect": "damage",
                 "args": {
                   "amount": {
                     "expr": "@dmg"

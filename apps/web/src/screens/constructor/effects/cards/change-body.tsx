@@ -327,8 +327,8 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
             d.mode ??= 'apply';
           } else if (next === 'emit') {
             retype(draft, 'emit');
-            d.event ??= firstEvent ?? '';
-            const main = amountParamOf(system.effects[String(d.event)]);
+            d.effect ??= firstEvent ?? '';
+            const main = amountParamOf(system.effects[String(d.effect)]);
             if (group.amount?.id && main) d.args = { ...(d.args ?? {}), [main.key]: { expr: `@${group.amount.id}` } };
           } else {
             retype(draft, 'apply');

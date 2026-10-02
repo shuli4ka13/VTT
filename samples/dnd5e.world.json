@@ -3068,7 +3068,7 @@
           },
           {
             "type": "emit",
-            "event": "damage",
+            "effect": "damage",
             "args": {
               "amount": {
                 "expr": "@dmg"
@@ -3091,7 +3091,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "cost_attack",
+            "effect": "cost_attack",
             "args": {
               "лист": {
                 "expr": "@действующий"
@@ -3149,7 +3149,7 @@
           },
           {
             "type": "emit",
-            "event": "damage",
+            "effect": "damage",
             "args": {
               "amount": {
                 "expr": "@dmg"
@@ -3169,7 +3169,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "cost_once",
+            "effect": "cost_once",
             "args": {
               "лист": {
                 "expr": "@действующий"
@@ -3225,7 +3225,7 @@
           },
           {
             "type": "emit",
-            "event": "damage",
+            "effect": "damage",
             "args": {
               "amount": {
                 "expr": "@dmg"
@@ -3248,7 +3248,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "spell_slot",
+            "effect": "spell_slot",
             "args": {
               "circle": {
                 "expr": "@slot"
@@ -3293,7 +3293,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "cost_action",
+            "effect": "cost_action",
             "args": {
               "лист": {
                 "expr": "@действующий"
@@ -3315,7 +3315,7 @@
           },
           {
             "type": "emit",
-            "event": "spell_slot",
+            "effect": "spell_slot",
             "args": {
               "circle": {
                 "expr": "@slot"
@@ -3410,7 +3410,7 @@
           },
           {
             "type": "emit",
-            "event": "damage",
+            "effect": "damage",
             "args": {
               "amount": {
                 "expr": "@dmg"
@@ -3433,7 +3433,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "cost_action",
+            "effect": "cost_action",
             "args": {
               "лист": {
                 "expr": "@действующий"
@@ -3538,7 +3538,7 @@
           },
           {
             "type": "emit",
-            "event": "damage",
+            "effect": "damage",
             "args": {
               "amount": {
                 "expr": "@dmg"
@@ -3577,7 +3577,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "cost_action",
+            "effect": "cost_action",
             "args": {
               "лист": {
                 "expr": "@действующий"
@@ -3605,7 +3605,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "cost_action",
+            "effect": "cost_action",
             "args": {
               "лист": {
                 "expr": "@действующий"
@@ -3707,7 +3707,7 @@
           },
           {
             "type": "emit",
-            "event": "damage",
+            "effect": "damage",
             "args": {
               "amount": {
                 "expr": "@dmg"
@@ -3844,7 +3844,7 @@
           },
           {
             "type": "emit",
-            "event": "damage",
+            "effect": "damage",
             "args": {
               "amount": {
                 "expr": "@dmg"
@@ -3961,7 +3961,7 @@
           },
           {
             "type": "emit",
-            "event": "damage",
+            "effect": "damage",
             "args": {
               "amount": {
                 "expr": "@dmg"
@@ -4053,7 +4053,7 @@
           },
           {
             "type": "emit",
-            "event": "damage",
+            "effect": "damage",
             "args": {
               "amount": {
                 "expr": "@dmg"
@@ -4513,7 +4513,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "cost_action",
+            "effect": "cost_action",
             "args": {
               "лист": {
                 "expr": "@действующий"
@@ -4559,7 +4559,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "cost_bonus",
+            "effect": "cost_bonus",
             "args": {
               "лист": {
                 "expr": "@действующий"
@@ -4571,7 +4571,7 @@
           },
           {
             "type": "emit",
-            "event": "spend",
+            "effect": "spend",
             "args": {
               "what": {
                 "expr": "@действующий.resources.second_wind.left"
@@ -4622,7 +4622,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "spend",
+            "effect": "spend",
             "args": {
               "what": {
                 "expr": "@действующий.resources.action_surge.left"
@@ -4670,7 +4670,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "cost_bonus",
+            "effect": "cost_bonus",
             "args": {
               "лист": {
                 "expr": "@действующий"
@@ -4682,7 +4682,7 @@
           },
           {
             "type": "emit",
-            "event": "spend",
+            "effect": "spend",
             "args": {
               "what": {
                 "expr": "@действующий.resources.rages.left"
@@ -4766,7 +4766,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "cost_bonus",
+            "effect": "cost_bonus",
             "args": {
               "лист": {
                 "expr": "@действующий"
@@ -4778,7 +4778,7 @@
           },
           {
             "type": "emit",
-            "event": "spend",
+            "effect": "spend",
             "args": {
               "what": {
                 "expr": "@действующий.resources.bardic.left"
@@ -4848,7 +4848,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "cost_action",
+            "effect": "cost_action",
             "args": {
               "лист": {
                 "expr": "@действующий"
@@ -4860,7 +4860,7 @@
           },
           {
             "type": "emit",
-            "event": "spend",
+            "effect": "spend",
             "args": {
               "what": {
                 "expr": "@действующий.resources.lay_on_hands.left"
@@ -4951,7 +4951,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "cost_action",
+            "effect": "cost_action",
             "args": {
               "лист": {
                 "expr": "@действующий"
@@ -4963,7 +4963,7 @@
           },
           {
             "type": "emit",
-            "event": "spend",
+            "effect": "spend",
             "args": {
               "what": {
                 "expr": "@действующий.resources.channel.left"
@@ -5011,7 +5011,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "cost_action",
+            "effect": "cost_action",
             "args": {
               "лист": {
                 "expr": "@действующий"
@@ -5061,7 +5061,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "cost_action",
+            "effect": "cost_action",
             "args": {
               "лист": {
                 "expr": "@действующий"
@@ -5089,7 +5089,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "cost_action",
+            "effect": "cost_action",
             "args": {
               "лист": {
                 "expr": "@действующий"
@@ -5172,7 +5172,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "cost_action",
+            "effect": "cost_action",
             "args": {
               "лист": {
                 "expr": "@действующий"
@@ -5227,7 +5227,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "cost_action",
+            "effect": "cost_action",
             "args": {
               "лист": {
                 "expr": "@действующий"
@@ -5273,7 +5273,7 @@
         "cost": [
           {
             "type": "emit",
-            "event": "spend",
+            "effect": "spend",
             "args": {
               "what": {
                 "expr": "@действующий.hit_dice_left"
@@ -5992,7 +5992,7 @@
               },
               {
                 "type": "emit",
-                "event": "damage",
+                "effect": "damage",
                 "args": {
                   "amount": {
                     "expr": "@жар"
@@ -6349,7 +6349,7 @@
             "cost": [
               {
                 "type": "emit",
-                "event": "cost_reaction",
+                "effect": "cost_reaction",
                 "args": {
                   "лист": {
                     "expr": "@носитель"
@@ -6361,7 +6361,7 @@
               },
               {
                 "type": "emit",
-                "event": "spell_slot",
+                "effect": "spell_slot",
                 "args": {
                   "circle": {
                     "expr": "1"
@@ -6409,7 +6409,7 @@
             "cost": [
               {
                 "type": "emit",
-                "event": "cost_reaction",
+                "effect": "cost_reaction",
                 "args": {
                   "лист": {
                     "expr": "@носитель"
@@ -6421,7 +6421,7 @@
               },
               {
                 "type": "emit",
-                "event": "spell_slot",
+                "effect": "spell_slot",
                 "args": {
                   "circle": {
                     "expr": "1"
@@ -6484,7 +6484,7 @@
               },
               {
                 "type": "emit",
-                "event": "damage",
+                "effect": "damage",
                 "args": {
                   "amount": {
                     "expr": "@dmg"
@@ -6526,7 +6526,7 @@
             "cost": [
               {
                 "type": "emit",
-                "event": "cost_reaction",
+                "effect": "cost_reaction",
                 "args": {
                   "лист": {
                     "expr": "@носитель"
@@ -6571,7 +6571,7 @@
             "cost": [
               {
                 "type": "emit",
-                "event": "spend",
+                "effect": "spend",
                 "args": {
                   "what": {
                     "expr": "@носитель.inspiration"
@@ -6622,7 +6622,7 @@
             "cost": [
               {
                 "type": "emit",
-                "event": "spend",
+                "effect": "spend",
                 "args": {
                   "what": {
                     "expr": "@носитель.resources.luck.left"
