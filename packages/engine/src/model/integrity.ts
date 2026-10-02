@@ -252,6 +252,7 @@ export function danglingRows(system: System, compendium?: Compendium): Dangling[
 }
 
 export function renameRow(system: System, table: string, from: unknown, to: unknown): void {
+  if (from === undefined || from === null || from === '') return;
   const retag = (list: unknown): unknown[] | undefined =>
     (Array.isArray(list) ? list.map(t => (same(t, from) ? to : t)) : undefined);
 
@@ -298,6 +299,7 @@ export function renameRow(system: System, table: string, from: unknown, to: unkn
 }
 
 export function renameRowInBook(system: System, book: Compendium, table: string, from: unknown, to: unknown): void {
+  if (from === undefined || from === null || from === '') return;
   for (const [rk, kind] of recordKinds(system)) {
     const props = (kind.columns ?? []).filter(p => (p as Loose).kind === 'choice' && (p as Loose).from === table);
     if (!props.length) continue;

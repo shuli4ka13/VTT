@@ -34,7 +34,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
 }) {
   const pick = useWorld(s => s.pick);
   const onOpenEffect = (id: string) => pick({ activeEffectId: id });
-  const [removed, setRemoved] = useState<{ text: string; before: Step[] } | null>(null);
+  const [removed, setRemoved] = useState<{ text: string; before: Step[]; after: string } | null>(null);
 
   const addParam = (label: string, kind: ValueKind, want?: string): string => {
     let key = '';
@@ -102,7 +102,7 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
       </div>}
       {lead}
 
-      {removed ? (
+      {removed && removed.after === JSON.stringify(steps) ? (
         <Verdict
           tone="warn"
           action={(
@@ -173,11 +173,18 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
               const before = structuredClone(steps);
               const removal = removeSteps(steps, group.indices);
               edit(draft => { draft.steps = removal.steps; });
+              const where = (c: { step: number; slot: string }) => `${STEP.one} ${c.step + 1} · ${c.slot.replace(/ \(формула\)$/, '')}`;
+              const cleared = removal.cleared.filter(c => !c.slot.endsWith('(формула)'));
+              const left = removal.cleared.filter(c => c.slot.endsWith('(формула)'));
+              const title = cardTitle(cards, group.indices[0]!, system);
               setRemoved({
                 before,
-                text: removal.cleared.length
-                  ? `Убран ${STEP.one} ${at + 1}; ссылки на него очищены: ${removal.cleared.map(c => `${STEP.one} ${c.step + 1} · ${c.slot}`).join(', ')}`
-                  : `Убран ${STEP.one} ${at + 1}${cardTitle(cards, group.indices[0]!, system) ? ` · ${cardTitle(cards, group.indices[0]!, system)}` : ''}`,
+                after: JSON.stringify(removal.steps),
+                text: [
+                  `Убран ${STEP.one} ${at + 1}${title ? ` · ${title}` : ''}`,
+                  cleared.length ? `ссылки на него очищены: ${cleared.map(where).join(', ')}` : '',
+                  left.length ? `остались в формулах — поправьте: ${left.map(where).join(', ')}` : '',
+                ].filter(Boolean).join('; '),
               });
             }}
             onMoveUp={at === 0 ? undefined : () => edit(draft => {

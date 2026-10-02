@@ -114,9 +114,13 @@ export function hasBases(system: System): boolean {
 }
 
 const flattened = new WeakSet<System>();
+const made = { strict: new WeakMap<System, System>(), lenient: new WeakMap<System, System>() };
 
 export function flattenSystem(system: System, lenient = false): System {
   if (flattened.has(system) || !hasBases(system)) return system;
+  const memo = lenient ? made.lenient : made.strict;
+  const known = memo.get(system);
+  if (known) return known;
 
   const effects: Record<string, Effect> = {};
   for (const id of Object.keys(system.effects ?? {})) {
@@ -144,5 +148,6 @@ export function flattenSystem(system: System, lenient = false): System {
     ...(system.sheets ? { sheets: flat(system.sheets, () => true) } : {}),
   };
   flattened.add(out);
+  memo.set(system, out);
   return out;
 }

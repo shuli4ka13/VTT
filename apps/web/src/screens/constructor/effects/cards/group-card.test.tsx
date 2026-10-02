@@ -22,7 +22,7 @@ const attackSteps = () => [
 ] as unknown as Step[];
 
 describe('GroupCard', () => {
-  it('«Бросает» и «Против кого» пишутся в бросок, а не в проверку, и очищаются пустым выбором', () => {
+  it('«Бросает» и «Против кого» пишутся в бросок, а не в проверку; «Бросает» в паре не снимается — иначе пара распадётся', () => {
     const steps = attackSteps();
     const group = groupSteps(steps)[0]!;
     const edits: Array<[number, (draft: Step) => void]> = [];
@@ -42,8 +42,7 @@ describe('GroupCard', () => {
 
     edits.length = 0;
     fireEvent.change(by, { target: { value: '' } });
-    edits.forEach(([, change]) => change(draft));
-    expect(draft.by).toBeUndefined();
+    expect(edits).toEqual([]);
   });
 
   it('выражение ложится в «применить», а кость — в величину под своим именем', () => {

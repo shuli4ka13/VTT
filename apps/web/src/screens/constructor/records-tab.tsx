@@ -154,7 +154,7 @@ export function RecordsTab() {
       }}
       main={{
         body: active && activeKind
-          ? <KindEditor id={activeKind} kind={active} system={system} />
+          ? <KindEditor key={activeKind} id={activeKind} kind={active} system={system} />
           : <Empty
               title="Выберите тип слева"
               hint="У меча спрашивают только кость урона — а «Атака» появляется у владельца сама. Это и настраивается здесь."
@@ -273,9 +273,16 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
             />
           </Field>
         </div>
-        <Field label="Подсказка заполняющему">
-          <Input value={kind.hint ?? ''} onChange={next => editAny(draft => { draft.hint = next; })} />
-        </Field>
+        <div className="row">
+          {isSheet ? null : (
+            <Field label="Значок" hint="Один символ на кнопках записей этой книги">
+              <Input value={kind.icon ?? ''} placeholder="🎲" onChange={next => edit(draft => { if (next.trim()) draft.icon = next.trim(); else delete draft.icon; })} />
+            </Field>
+          )}
+          <Field label="Подсказка заполняющему">
+            <Input value={kind.hint ?? ''} onChange={next => editAny(draft => { if (next.trim()) draft.hint = next; else delete draft.hint; })} />
+          </Field>
+        </div>
       </Card>
 
       {isSheet ? null : <BuiltIn kindId={id} system={system} />}

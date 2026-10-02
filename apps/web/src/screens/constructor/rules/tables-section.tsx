@@ -405,7 +405,9 @@ function Rows({ id, table, system, edit, editSystem, picked, onPick }: {
             <RowCells
               key={i} row={row} at={i} rowKey={key} columns={columns} system={system} placed={placed}
               users={key === 'range' ? [] : rowUsers(system, id, row.value, compendium).map(u => u.text)}
-              onRename={to => rename(row.value, to)} taken={next => taken(next, i)}
+              onRename={to => (row.value === undefined || row.value === ''
+                ? edit(draft => { const target = draft.rows?.[i]; if (target) target.value = to as never; })
+                : rename(row.value, to))} taken={next => taken(next, i)}
               edit={edit} setCell={setCell} names={names}
               where={column => `${table.label || id} · «${String(row.value ?? `${row.from}–${row.to}`)}» · ${column.label || column.key}`}
             />

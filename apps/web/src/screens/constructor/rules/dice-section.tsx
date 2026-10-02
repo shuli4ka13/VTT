@@ -161,8 +161,9 @@ function DiceComposer({ dice, onEdit }: {
                 value={term.label ?? term.name ?? ''}
                 placeholder="как зовётся эта часть"
                 onChange={label => onEdit(list => {
-                  list[i]!.label = label;
-                  list[i]!.name = slugOf(label) || `часть_${i + 1}`;
+                  const name = slugOf(label) || `часть_${i + 1}`;
+                  list[i]!.name = name;
+                  if (label && label !== name) list[i]!.label = label; else delete list[i]!.label;
                 })}
               />
             ) : null}

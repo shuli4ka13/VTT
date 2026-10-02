@@ -110,7 +110,7 @@ function RoomTable({ room }: { room: RoomState }) {
                     title={sheet.id === from ? 'действует' : to.includes(sheet.id) ? 'цель — клик снимает' : 'клик: цель; если никто не действует — станет действующим'}
                     onClick={() => {
                       if (sheet.id === from) { setFrom(null); return; }
-                      if (!from) { setFrom(sheet.id); return; }
+                      if (!from) { setFrom(sheet.id); setTo(ids => ids.filter(id => id !== sheet.id)); return; }
                       setTo(ids => (ids.includes(sheet.id) ? ids.filter(id => id !== sheet.id) : [...ids, sheet.id]));
                     }}
                   >
@@ -126,12 +126,13 @@ function RoomTable({ room }: { room: RoomState }) {
             {people.length ? <Combat room={room} onError={setError} /> : null}
             {room.pending ? <Prompt room={room} onError={setError} /> : null}
             {people.length ? <Actions
+              key={`${sender?.id ?? ''}|${targets.map(sheet => sheet.id).join(',')}`}
               room={room}
               sender={sender}
               targets={targets}
               onError={setError}
               onClear={() => { setFrom(null); setTo([]); }}
-              onSelf={() => { if (sender) setTo([sender.id]); }}
+              onSelf={() => { if (sender) setTo(ids => (ids.includes(sender.id) ? ids : [...ids, sender.id])); }}
             /> : null}
           </>
         ),

@@ -68,12 +68,13 @@ describe('схема стережёт инварианты, а не только
     expect((parsed as Record<string, unknown>).futureSection).toEqual({ hello: 'world' });
   });
 
-  it('состав кости: счёт — число или ссылка на поле, но не свободный текст', () => {
+  it('состав кости: счёт — число или формула, но не свободный текст', () => {
     const die = (count: unknown) =>
       W.dieConstant.safeParse({ kind: 'die', dice: [{ count, sides: 6 }] }).success;
     expect(die(4), 'литеральный счёт').toBe(true);
-    expect(die({ tag: 'pool' }), 'пул из листа — Shadowrun, Blades').toBe(true);
+    expect(die({ expr: 'большее из(1, @rating)' }), 'пул из листа — Shadowrun, Blades').toBe(true);
     expect(die('4'), 'строка счётом не бывает — это дыра черновика').toBe(false);
+    expect(die({ tag: 'pool' }), 'старая ссылка на поле').toBe(false);
   });
 
   it('правка броска называет ЗАПИСЬ словаря; поле-модификатор не правит бросок и вызов', () => {
@@ -121,27 +122,26 @@ describe('round-trip: разбор и сборка не теряют и не д�
 describe('контракты клиент ↔ сервер', () => {
   it('намерение хода принимается, а «готовый результат» — нет', () => {
     expect(api.actIntent.safeParse({
-      roomId: 'r1', actionId: 'sword:0', fromId: 'arven', toId: 'mirra',
+      roomId: 'r1', actionId: 'sword:0', fromId: 'arven', toIds: ['mirra'],
     }).success).toBe(true);
 
     expect(api.actIntent.safeParse({
-      roomId: 'r1', actionId: 'sword:0', fromId: 'arven', toId: 'mirra', damage: 9,
+      roomId: 'r1', actionId: 'sword:0', fromId: 'arven', toIds: ['mirra'], damage: 9,
     }).success, 'лишние поля намерения игнорируются, а не принимаются как истина')
       .toBe(true);
     expect(api.actIntent.parse({
-      roomId: 'r1', actionId: 'sword:0', fromId: 'arven', toId: 'mirra', damage: 9,
-    })).toEqual({ roomId: 'r1', actionId: 'sword:0', fromId: 'arven', toId: 'mirra' });
+      roomId: 'r1', actionId: 'sword:0', fromId: 'arven', toIds: ['mirra'], damage: 9,
+    })).toEqual({ roomId: 'r1', actionId: 'sword:0', fromId: 'arven', toIds: ['mirra'] });
   });
 
-  it('намерение может нести заявки правок броска — за себя и за цель', () => {
+  it('намерение может нести заявки правок броска — по листам', () => {
     const parsed = api.actIntent.parse({
-      roomId: 'r1', actionId: 'sword:0', fromId: 'arven', toId: 'mirra',
-      edits: ['advantage'], targetEdits: ['disadvantage'],
+      roomId: 'r1', actionId: 'sword:0', fromId: 'arven', toIds: ['mirra'],
+      claims: { arven: ['advantage'], mirra: ['disadvantage'] },
     });
-    expect(parsed.edits).toEqual(['advantage']);
-    expect(parsed.targetEdits).toEqual(['disadvantage']);
+    expect(parsed.claims).toEqual({ arven: ['advantage'], mirra: ['disadvantage'] });
     expect(api.actIntent.safeParse({
-      roomId: 'r1', actionId: 'sword:0', fromId: 'arven', toId: 'mirra', edits: [''],
+      roomId: 'r1', actionId: 'sword:0', fromId: 'arven', toIds: ['mirra'], claims: { arven: [''] },
     }).success, 'пустой ключ правки — не заявка').toBe(false);
   });
 
@@ -180,16 +180,12 @@ describe('ссылки слотов не теряются при разборе'
   it('каждая форма ссылки переживает round-trip нетронутой', () => {
 
     const forms = [
-      { const: 0 },
-      { const: '1d6' },
-      { const: null },
-      { expr: '#str_mod' },
+      { expr: '0' },
+      { expr: '"1d6"' },
       { expr: '@цель.dex_save' },
-      { tag: 'hp_current' },
-      { param: 'save' },
-      { prop: 'damage_dice' },
-      { constant: 'lead_die' },
-      { prop: 'status', optional: true },
+      { expr: 'большее из(1, @rating)' },
+      'lead_die',
+      'damage',
     ];
 
     for (const form of forms) {
@@ -199,14 +195,15 @@ describe('ссылки слотов не теряются при разборе'
   });
 
   it('старые формы значения — ссылка на шаг, свойство под другим именем, таблица — схему не проходят', () => {
-    for (const form of [{ ref: 'hit.success' }, { item: 'damage_dice' }, { table: 't', by: { const: 1 } }, { expr: '1', optional: true }]) {
+    for (const form of [{ ref: 'hit.success' }, { item: 'damage_dice' }, { table: 't', by: { const: 1 } }, { expr: '1', optional: true },
+      { const: 0 }, { tag: 'hp_current' }, { param: 'save' }, { prop: 'damage_dice' }, { constant: 'lead_die' }]) {
       expect(W.slotRef.safeParse(form).success, JSON.stringify(form)).toBe(false);
     }
   });
 
   it('условие шага — только формула', () => {
-    expect(W.guard.safeParse({ expr: '@hit.success' }).success).toBe(true);
-    expect(W.guard.safeParse({ ref: 'hit.success', not: true }).success).toBe(false);
+    expect(W.formula.safeParse({ expr: '@hit.success' }).success).toBe(true);
+    expect(W.formula.safeParse({ ref: 'hit.success', not: true }).success).toBe(false);
   });
 
   it('образцовые эффекты переживают round-trip без потерь', () => {

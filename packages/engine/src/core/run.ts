@@ -342,8 +342,8 @@ export class Run {
           return resolveNumber(refValue, ref, what);
         } catch (err) {
           if (!(err instanceof EngineError) || !refValue || typeof refValue !== 'object') throw err;
-          const r = refValue as { param?: unknown; expr?: unknown };
-          const names = r.param !== undefined ? [String(r.param)] : r.expr !== undefined ? compile(String(r.expr)).deps : [];
+          const r = refValue as { expr?: unknown };
+          const names = r.expr !== undefined ? compile(String(r.expr)).deps : [];
           const formulas = names.flatMap(name => {
             const arg = frame.args[name];
             const text = typeof arg === 'string' ? arg : arg && typeof arg === 'object' && 'expr' in arg ? String((arg as { expr: unknown }).expr) : null;

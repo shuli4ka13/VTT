@@ -32,6 +32,15 @@ export function TableBody({ step, context, edit, system }: { step: Record<string
           })}
         />
       </Field>
+      <Field label="Какая колонка" hint="Что брать из найденной строки. Пусто — колонку «значение».">
+        <Select<string>
+          value={typeof step.column === 'string' ? step.column : ''}
+          options={[['', '— значение —'], ...(((typeof step.table === 'string' ? system.tables?.[step.table]?.columns : undefined) ?? [])
+            .filter(column => column.key !== 'value')
+            .map(column => [column.key, column.label || column.key] as const))]}
+          onChange={next => edit(0, draft => { if (next) loose(draft).column = next; else delete loose(draft).column; })}
+        />
+      </Field>
       {by === 'dice' ? (
         <Field label="Какой костью">
           <Select<string>

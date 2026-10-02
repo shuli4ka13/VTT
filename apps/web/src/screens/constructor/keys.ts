@@ -30,13 +30,28 @@ function loopsOver(node: unknown, key: string): boolean {
   return Object.values(o).some(value => loopsOver(value, key));
 }
 
-export function paramUsed(system: System, compendium: Compendium | undefined, effectId: string, key: string): boolean {
-  const own = system.effects[effectId];
-  if (own) {
-    if (new RegExp(`[@#]${escape(key)}(?![\\p{L}\\p{N}_])`, 'u').test(JSON.stringify(own))) return true;
-    if (loopsOver(own, key) || own.bond?.by === key || own.duration?.by === key) return true;
+function lineage(system: System, effectId: string): string[] {
+  const out = [effectId];
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const [id, effect] of Object.entries(system.effects)) {
+      if (!out.includes(id) && effect.extends && out.includes(effect.extends)) { out.push(id); grew = true; }
+    }
   }
-  return passesArg(system, effectId, key) || passesArg(compendium, effectId, key);
+  return out;
+}
+
+export function paramUsed(system: System, compendium: Compendium | undefined, effectId: string, key: string): boolean {
+  const named = new RegExp(`[@#]${escape(key)}(?![\\p{L}\\p{N}_])`, 'u');
+  for (const id of lineage(system, effectId)) {
+    const effect = system.effects[id];
+    if (!effect) continue;
+    if (named.test(JSON.stringify(effect))) return true;
+    if (loopsOver(effect, key) || effect.bond?.by === key || effect.duration?.by === key) return true;
+    if (passesArg(system, id, key) || passesArg(compendium, id, key)) return true;
+  }
+  return false;
 }
 
 export function looksAuto(key: string, base: string, label: string): boolean {

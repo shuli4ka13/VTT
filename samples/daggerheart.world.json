@@ -1469,9 +1469,7 @@
         "hint": "Бросок, отдых, смертельные ходы, способности.",
         "shape": "book",
         "use": "action",
-        "block": "Приёмы",
-        "columns": [],
-        "bindings": []
+        "block": "Приёмы"
       }
     },
     "roll_edits": {

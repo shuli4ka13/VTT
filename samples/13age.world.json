@@ -338,9 +338,7 @@
         "hint": "Ведущий двигает кость эскалации.",
         "shape": "book",
         "use": "action",
-        "block": "Приёмы",
-        "columns": [],
-        "bindings": []
+        "block": "Приёмы"
       }
     },
     "initiative": {

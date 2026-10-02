@@ -63,4 +63,15 @@ describe('эффект занят, только если на него ссыл�
     expect(paramUsed(world, undefined, 'урон', 'цель')).toBe(false);
     expect(paramUsed(world, undefined, 'удар', 'цель')).toBe(true);
   });
+
+  it('вход основы занят, если его читает потомок', () => {
+    const world = {
+      tables: {},
+      effects: {
+        заклинание: { params: [{ key: 'круг', kind: 'number' }], steps: [] },
+        огненный_шар: { extends: 'заклинание', steps: [{ type: 'roll', fixed: { expr: '@круг * 2' } }] },
+      },
+    } as unknown as System;
+    expect(paramUsed(world, undefined, 'заклинание', 'круг')).toBe(true);
+  });
 });

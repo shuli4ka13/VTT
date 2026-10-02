@@ -294,7 +294,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
 
   if (readOnly) {
     return (
-      <span className="chips chips--read">
+      <span className="chips chips--read" data-value={value}>
         {prefix}
         {empty ? <span className="chips__placeholder">{placeholder}</span> : parts.map((part, index) => ('tag' in part ? (
           names?.[part.tag] !== undefined ? (
@@ -317,7 +317,7 @@ export function FormulaChips({ value, onChange, system, placeholder, onKeyDown, 
   }
 
   return (
-    <div className="chips" ref={host} onKeyDown={onKeyDown}>
+    <div className="chips" ref={host} onKeyDown={onKeyDown} data-value={value}>
       <div className="chips__row" onMouseDown={e => {
         if (e.target === e.currentTarget) {
           e.preventDefault();

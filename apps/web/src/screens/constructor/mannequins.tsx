@@ -31,7 +31,7 @@ export function Mannequins({ system, editSystem }: { system: System; editSystem:
       <div className="row">
         {stored.map(field => (
           <Field key={field.tag} label={field.label}>
-            <Input mono value={sheet.values?.[field.tag] === undefined ? '' : String(sheet.values[field.tag])} placeholder={String((field.value as { default?: unknown }).default ?? '')} onChange={text => put(field.tag, text)} />
+            <DraftInput value={sheet.values?.[field.tag] === undefined ? '' : String(sheet.values[field.tag])} placeholder={String((field.value as { default?: unknown }).default ?? '')} onCommit={text => put(field.tag, text)} />
           </Field>
         ))}
       </div>
@@ -42,5 +42,14 @@ export function Mannequins({ system, editSystem }: { system: System; editSystem:
         })}>вернуть по умолчанию</Button>
       ) : null}
     </Card>
+  );
+}
+
+function DraftInput({ value, placeholder, onCommit }: { value: string; placeholder: string; onCommit: (text: string) => void }) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const commit = () => { if (draft !== null && draft !== value) onCommit(draft); setDraft(null); };
+  return (
+    <Input mono value={draft ?? value} placeholder={placeholder} onChange={setDraft} onBlur={commit}
+      onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} />
   );
 }

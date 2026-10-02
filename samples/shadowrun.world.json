@@ -1387,9 +1387,7 @@
         "hint": "Преимущество, лечение, простые действия.",
         "shape": "book",
         "use": "action",
-        "block": "Приёмы",
-        "columns": [],
-        "bindings": []
+        "block": "Приёмы"
       }
     },
     "roll_edits": {

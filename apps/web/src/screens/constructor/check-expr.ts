@@ -27,41 +27,47 @@ const TEXT_OF: Record<string, string> = { atLeast: '>=', notOver: '<=', over: '>
 
 const ROLL = 'кинуть(';
 
-function closing(text: string, open: number): number {
+function walk(text: string, from: number, visit: (i: number, ch: string, depth: number) => boolean): void {
   let depth = 0;
-  for (let i = open; i < text.length; i++) {
-    if (text[i] === '(') depth++;
-    if (text[i] === ')' && --depth === 0) return i;
+  let quote: string | null = null;
+  for (let i = from; i < text.length; i++) {
+    const ch = text[i]!;
+    if (quote) { if (ch === quote) quote = null; continue; }
+    if (ch === '"' || ch === "'") { quote = ch; continue; }
+    if (ch === '(') depth++;
+    if (ch === ')') depth--;
+    if (visit(i, ch, depth)) return;
   }
-  return -1;
+}
+
+function closing(text: string, open: number): number {
+  let at = -1;
+  walk(text, open, (i, ch, depth) => { if (ch === ')' && depth === 0) { at = i; return true; } return false; });
+  return at;
 }
 
 function splitTop(text: string, sep: string): string[] {
   const out: string[] = [];
-  let depth = 0;
   let start = 0;
-  for (let i = 0; i < text.length; i++) {
-    if (text[i] === '(') depth++;
-    if (text[i] === ')') depth--;
-    if (depth === 0 && text[i] === sep) { out.push(text.slice(start, i)); start = i + 1; }
-  }
+  walk(text, 0, (i, ch, depth) => {
+    if (depth === 0 && ch === sep) { out.push(text.slice(start, i)); start = i + 1; }
+    return false;
+  });
   out.push(text.slice(start));
   return out.map(part => part.trim());
 }
 
 export function comparison(text: string): { left: string; op: string; right: string } | null {
-  let depth = 0;
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i]!;
-    if (ch === '(') depth++;
-    if (ch === ')') depth--;
-    if (depth !== 0 || !'<>='.includes(ch)) continue;
-    if (ch === '=' && (text[i - 1] === '!' || text[i - 1] === '<' || text[i - 1] === '>')) continue;
-    const found = OPS.find(([sign]) => text.startsWith(sign, i));
-    if (!found) continue;
-    return { left: text.slice(0, i).trim(), op: found[1], right: text.slice(i + found[0].length).trim() };
-  }
-  return null;
+  let found: { left: string; op: string; right: string } | null = null;
+  walk(text, 0, (i, ch, depth) => {
+    if (depth !== 0 || !'<>='.includes(ch)) return false;
+    if (ch === '=' && (text[i - 1] === '!' || text[i - 1] === '<' || text[i - 1] === '>')) return false;
+    const sign = OPS.find(([one]) => text.startsWith(one, i));
+    if (!sign) return false;
+    found = { left: text.slice(0, i).trim(), op: sign[1], right: text.slice(i + sign[0].length).trim() };
+    return true;
+  });
+  return found;
 }
 
 const bareName = (text: string): string | null => /^@([\p{L}\p{N}_.]+)$/u.exec(text.trim())?.[1] ?? null;
@@ -118,13 +124,9 @@ function rollSide(text: string, system: System, asName?: NameRef): RollSide | nu
 }
 
 function topStar(text: string): number {
-  let depth = 0;
-  for (let i = 0; i < text.length; i++) {
-    if (text[i] === '(') depth++;
-    if (text[i] === ')') depth--;
-    if (depth === 0 && text[i] === '*') return i;
-  }
-  return -1;
+  let at = -1;
+  walk(text, 0, (i, ch, depth) => { if (depth === 0 && ch === '*') { at = i; return true; } return false; });
+  return at;
 }
 
 export function parseCheck(text: string, system: System, asName?: NameRef): ParsedCheck | { error: string } {

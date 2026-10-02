@@ -155,7 +155,7 @@ export const durationKind = z.enum(['permanent', 'uses', 'rounds', 'turns', 'com
 export const reapply = z.enum(['ignore', 'refresh', 'stack']);
 
 export const ask = z.object({
-  by: z.enum(['actor', 'gm']).optional(),
+  by: z.enum(['actor', 'gm']),
   hint: z.string().optional(),
 });
 

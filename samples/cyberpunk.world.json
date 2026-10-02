@@ -1220,8 +1220,7 @@
             "label": "Прочность",
             "kind": "number"
           }
-        ],
-        "bindings": []
+        ]
       },
       "action": {
         "label": "Приём",
@@ -1229,9 +1228,7 @@
         "hint": "То, что персонаж умеет и без снаряжения.",
         "shape": "book",
         "use": "action",
-        "block": "Приёмы",
-        "columns": [],
-        "bindings": []
+        "block": "Приёмы"
       }
     },
     "initiative": {

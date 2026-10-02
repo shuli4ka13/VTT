@@ -16,7 +16,8 @@ export function FieldCell({ field: whole, system, sheet, reader, onChange, onRol
   onChange?: (tag: string, value: StoredValue) => void;
   onRoll?: (tag: string) => void;
 }) {
-  const field = bare ? { ...whole, label: '' } : whole;
+  const field = whole;
+  const label: ReactNode = bare ? <span className="sr-only">{whole.label}</span> : whole.label;
   const roll = field.roll && onRoll
     ? (
       <Button size="sm" title={field.roll.label ?? `Проверка: ${whole.label}`} onClick={() => onRoll(field.tag)}>
@@ -28,13 +29,13 @@ export function FieldCell({ field: whole, system, sheet, reader, onChange, onRol
   if (field.value.kind === 'stored') {
     const stored = (reader.storedOf ? reader.storedOf(field.tag) : sheet.values[field.tag] ?? field.value.default) as StoredValue;
 
-    if (!onChange) return <Shown label={field.label} text={String(stored ?? '—')} roll={roll} />;
+    if (!onChange) return <Shown label={label} text={String(stored ?? '—')} roll={roll} />;
 
     const View = field.control ? CONTROL_VIEWS[field.control] : null;
     if (View) {
       const bounds = field.value.kind === 'stored' ? field.value : undefined;
       return (
-        <Field label={field.label}>
+        <Field label={label}>
           <div className="inline inline--tight">
             <View
               value={stored}
@@ -53,7 +54,7 @@ export function FieldCell({ field: whole, system, sheet, reader, onChange, onRol
     const options = optionsOf(system, field);
     if (options.length) {
       return (
-        <Field label={field.label}>
+        <Field label={label}>
           <div className="inline inline--tight">
             <Select
               value={String(stored ?? '')}
@@ -71,7 +72,7 @@ export function FieldCell({ field: whole, system, sheet, reader, onChange, onRol
 
     if (field.value.type === 'boolean') {
       return (
-        <Field label={field.label}>
+        <Field label={label}>
           <div className="inline inline--tight">
             <Button variant={stored ? 'primary' : undefined} onClick={() => onChange(field.tag, !stored)}>
               {stored ? 'да' : 'нет'}
@@ -83,7 +84,7 @@ export function FieldCell({ field: whole, system, sheet, reader, onChange, onRol
     }
 
     return (
-      <Field label={field.label}>
+      <Field label={label}>
         <div className="inline inline--tight">
           {field.value.type === 'number'
             ? <NumInput value={Number(stored ?? 0)} onCommit={n => onChange(field.tag, n)} />
@@ -95,11 +96,11 @@ export function FieldCell({ field: whole, system, sheet, reader, onChange, onRol
   }
 
   const computed = show(reader.valueOf(field.tag));
-  return <Shown label={field.label} text={computed.text} title={computed.title} bad={computed.bad} roll={roll} />;
+  return <Shown label={label} text={computed.text} title={computed.title} bad={computed.bad} roll={roll} />;
 }
 
 function Shown({ label, text, title, bad, roll }: {
-  label: string; text: string; title?: string; bad?: boolean; roll?: ReactNode;
+  label: ReactNode; text: string; title?: string; bad?: boolean; roll?: ReactNode;
 }) {
   return (
     <Field label={label}>

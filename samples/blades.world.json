@@ -323,9 +323,7 @@
         "hint": "Общие ходы банды.",
         "shape": "book",
         "use": "action",
-        "block": "Банда",
-        "columns": [],
-        "bindings": []
+        "block": "Банда"
       },
       "crit": {
         "label": "Критический успех",
@@ -405,8 +403,7 @@
             },
             "continueOn": "always",
             "degrees": {
-              "table": "outcome",
-              "of": "total"
+              "table": "outcome"
             }
           },
           {
@@ -558,8 +555,7 @@
             },
             "continueOn": "always",
             "degrees": {
-              "table": "outcome",
-              "of": "total"
+              "table": "outcome"
             }
           },
           {

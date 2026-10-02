@@ -35,7 +35,7 @@ export const newColumn = (system: System, block: string): Made<Column> => {
 
 export const newRecordKind = (system: System): Made<RecordKind> => ({
   key: freeId([...Object.keys(system.tables ?? {}), ...Object.keys(system.sheets ?? {})], 'kind'),
-  value: { shape: 'book', use: 'item', label: 'Новый тип', block: 'Снаряжение', columns: [], bindings: [] },
+  value: { shape: 'book', use: 'item', label: 'Новый тип', block: 'Снаряжение' },
 });
 
 export const newBinding = (system: System): Binding => ({

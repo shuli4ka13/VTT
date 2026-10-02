@@ -162,6 +162,7 @@ export const STEP_WORDS = {
       { key: 'table', label: 'Какая таблица', kind: 'ref', main: true, required: true, allow: ['name', 'expr'], refersTo: 'table' },
       { key: 'dice', label: 'Бросить', kind: 'ref', main: true, allow: ['name', 'expr', 'empty'], refersTo: 'constant' },
       { key: 'value', label: 'Или взять число', kind: 'ref', main: true, allow: ['expr', 'empty'] },
+      { key: 'column', label: 'Какая колонка', kind: 'ref', allow: ['name', 'empty'] },
     ],
     outputs: [{ path: '', label: 'строка таблицы', kind: 'text' }],
     reasons: {},

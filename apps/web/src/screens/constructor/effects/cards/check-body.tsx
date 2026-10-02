@@ -44,7 +44,7 @@ export function CheckBody({ step, roll, context, edit, system, onUnpair }: {
       node: (
         <SheetPick
           value={roll.by} sheets={singles} system={system} where="проверка · бросает"
-          onChange={next => edit(0, draft => { if (next) loose(draft).by = next; else delete loose(draft).by; })}
+          onChange={next => { if (next) edit(0, draft => { loose(draft).by = next; }); }}
         />
       ),
     }, {
@@ -77,7 +77,7 @@ export function CheckBody({ step, roll, context, edit, system, onUnpair }: {
           options={[['', '— нет, да/нет —'], ...tables.map(([key, t]) => [key, t.label || key] as const)] as never}
           onChange={next => edit(at, draft => {
             const d = loose(draft);
-            if (next) d.degrees = { table: next, of: d.degrees?.of ?? 'total' }; else delete d.degrees;
+            if (next) d.degrees = { table: next, ...(d.degrees?.of && d.degrees.of !== 'total' ? { of: d.degrees.of } : {}) }; else delete d.degrees;
           })}
         />
       ),
@@ -88,7 +88,7 @@ export function CheckBody({ step, roll, context, edit, system, onUnpair }: {
         <Select
           value={String(step.degrees.of ?? 'total')}
           options={[['total', 'итогу'], ['margin', 'запасу против порога']] as const}
-          onChange={next => edit(at, draft => { loose(draft).degrees.of = next; })}
+          onChange={next => edit(at, draft => { if (next === 'total') delete loose(draft).degrees.of; else loose(draft).degrees.of = next; })}
         />
       ),
     }] : []),
@@ -162,7 +162,16 @@ function CheckFormula({ step, roll, context, edit, onUnpair }: { step: any; roll
   const drop = () => { setDraft(null); setTrouble(null); };
   const commit = (text: string) => {
     const cmp = comparison(text.trim());
-    const plain = Boolean(cmp && !cmp.left.startsWith('кинуть('));
+    const own = Boolean(roll?.id && cmp && cmp.left === `@${roll.id}`);
+    const plain = Boolean(cmp && !cmp.left.startsWith('кинуть(') && !own);
+    if (roll && own && cmp) {
+      if (!cmp.right) { setTrouble('справа от сравнения пусто — с чем сравниваем?'); return; }
+      const bad = badFormula({ expr: cmp.right });
+      if (bad) { setTrouble(bad); return; }
+      edit(1, target => { const d = loose(target); d.versus = { expr: cmp.right }; setSuccessWhen(d, cmp.op); });
+      drop();
+      return;
+    }
     if (!roll || (plain && onUnpair)) {
       if (!cmp || !cmp.left || !cmp.right) { setTrouble('проверка — это сравнение: «@носитель.ки >= 1»'); return; }
       const bad = badFormula({ expr: cmp.left }) ?? badFormula({ expr: cmp.right });
@@ -172,6 +181,7 @@ function CheckFormula({ step, roll, context, edit, onUnpair }: { step: any; roll
         d.value = { expr: cmp.left };
         d.versus = { expr: cmp.right };
         setSuccessWhen(d, cmp.op);
+        if (roll && !readsRoll({ value: d.value }, context)) { delete d.succeedOn; delete d.failOn; }
       });
       if (roll) onUnpair?.();
       drop();

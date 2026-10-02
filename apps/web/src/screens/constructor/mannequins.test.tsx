@@ -18,6 +18,7 @@ describe('манекены пробы', () => {
     useWorld.setState(state => ({ ...state, system: { ...emptySystem(), tables: { лист: { shape: 'single', columns: [{ key: 'хп', label: 'Хиты', kind: 'number', default: 10 }] } } } as unknown as System }));
     render(<View />);
     fireEvent.change(screen.getByPlaceholderText('10'), { target: { value: '25' } });
+    fireEvent.blur(screen.getByPlaceholderText('10'));
     expect(useWorld.getState().system.mannequins?.[0]?.values.хп).toBe(25);
     fireEvent.click(screen.getByText('вернуть по умолчанию'));
     expect(useWorld.getState().system.mannequins).toBeUndefined();

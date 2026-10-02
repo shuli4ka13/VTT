@@ -57,3 +57,17 @@ group('целостность ссылок на строки таблиц', () =
     eq(danglingRows(system, мир.compendium as Compendium).length, 0);
   });
 });
+
+group('ключ строке без ключа — не переименование', () => {
+  test('у строки не было ключа: умолчание колонки, которая ссылается на таблицу, не трогается', () => {
+    const system = {
+      id: 'с', name: 'с', effects: {},
+      tables: {
+        хват: { rows: [{ cells: {} }] },
+        оружие: { shape: 'book', columns: [{ key: 'хват', kind: 'choice', from: 'хват' }] },
+      },
+    } as unknown as System;
+    renameRow(system, 'хват', undefined, 'двуручный');
+    eq(system.tables!.оружие!.columns![0]!.default, undefined);
+  });
+});

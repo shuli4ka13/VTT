@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { SAMPLE_SYSTEMS } from '@vtt/engine/model/systems';
-import { parseCheck, formatCheck } from './check-expr.ts';
+import { parseCheck, formatCheck, comparison } from './check-expr.ts';
 import { refForName } from './slots.tsx';
 import type { Effect, System } from '@vtt/schema';
 
@@ -93,5 +93,12 @@ describe('проверка одной формулой', () => {
     });
     expect(formatCheck({ die: 'lead', tags: ['атака', { expr: '@чем' }] }, { versus: { expr: '10' } }))
       .toBe('кинуть(@lead, @атака, @чем) >= 10');
+  });
+});
+
+describe('разбор проверки не смотрит внутрь кавычек', () => {
+  it('знак сравнения и скобка внутри строки — часть строки', () => {
+    expect(comparison('если(@x == "a > b", 1, 0) >= 1')).toEqual({ left: 'если(@x == "a > b", 1, 0)', op: 'atLeast', right: '1' });
+    expect(comparison("@метка == '(' ")).toEqual({ left: '@метка', op: 'equals', right: "'('" });
   });
 });
