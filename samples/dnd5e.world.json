@@ -577,7 +577,7 @@
             "expr": {
               "expr": "таблица(\"spell_slots\", @caster_level, @строка)"
             },
-            "title": "Всего ячеек {key}-го круга",
+            "title": "Всего ячеек: {label}",
             "block": "Ячейки заклинаний"
           },
           {
@@ -588,7 +588,7 @@
             "max": {
               "expr": "@строка.max"
             },
-            "title": "Ячейки {key}-го круга",
+            "title": "Ячейки: {label}",
             "block": "Ячейки заклинаний",
             "control": "pips",
             "default": 0

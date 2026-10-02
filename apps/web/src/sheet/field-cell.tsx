@@ -38,7 +38,7 @@ export function FieldCell({ field: whole, system, sheet, reader, onChange, onRol
           <div className="inline inline--tight">
             <View
               value={stored}
-              label={field.label}
+              label={whole.label}
               min={typeof bounds?.min === 'number' ? bounds.min : boundOf(bounds?.min, reader)}
               max={typeof bounds?.max === 'number' ? bounds.max : boundOf(bounds?.max, reader)}
               options={optionsOf(system, field)}
