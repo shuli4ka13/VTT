@@ -59,7 +59,7 @@ describe('GroupCard', () => {
       edit={(at, change) => change((at === 0 ? amount : apply) as never)}
       onDelete={() => {}} />);
 
-    const line = screen.getByText('Станет').closest('label')!;
+    const line = screen.getByText('Сколько').closest('label')!;
     const value = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;
     fireEvent.change(value, { target: { value: ' + 1d8' } });
     fireEvent.keyDown(value, { key: 'Enter' });
@@ -78,7 +78,7 @@ describe('GroupCard', () => {
     render(<GroupCard group={group} position={1} system={system} effect={effect} sheets={sheets}
       earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
 
-    const line = screen.getByText('Станет').closest('label')!;
+    const line = screen.getByText('Сколько').closest('label')!;
     const value = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;
     fireEvent.change(value, { target: { value: '1d8' } });
     fireEvent.keyDown(value, { key: 'Enter' });
@@ -103,7 +103,7 @@ describe('GroupCard', () => {
       earlier={[]} problem={null}
       edit={(_, change) => change(steps[0]!)} onDelete={() => {}} />);
 
-    const line = screen.getByText('Станет').closest('label')!;
+    const line = screen.getByText('Сколько').closest('label')!;
     const value = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;
     fireEvent.change(value, { target: { value: ' + ' } });
     fireEvent.keyDown(value, { key: 'Enter' });
@@ -192,14 +192,15 @@ describe('GroupCard: величина из записи', () => {
   ] as unknown as Step[];
   const withParam = { params: [{ key: 'кость_урона', label: 'Кость урона', kind: 'dice' }] } as unknown as Effect;
 
-  it('старое «направление + величина» показывается выражением', () => {
+  it('направление — отдельный выбор, в формуле только величина', () => {
     const group = groupSteps(steps())[0]!;
     render(<GroupCard group={group} position={1} system={system} effect={withParam} sheets={sheets}
       earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
 
-    const line = screen.getByText('Станет').closest('label')!;
-    expect(line.textContent).toContain('Класс брони');
+    expect((screen.getByDisplayValue('отнять') as HTMLSelectElement).value).toBe('subtract');
+    const line = screen.getByText('Сколько').closest('label')!;
     expect(line.textContent).toContain('Кость урона');
+    expect(line.textContent).not.toContain('Класс брони');
     expect(line.textContent).not.toContain('@n');
   });
 
@@ -212,13 +213,13 @@ describe('GroupCard: величина из записи', () => {
       earlier={[]} problem={null}
       edit={(at, change) => change((at === 0 ? amount : apply) as never)} onDelete={() => {}} />);
 
-    const line = screen.getByText('Станет').closest('label')!;
+    const line = screen.getByText('Сколько').closest('label')!;
     const tail = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;
     fireEvent.change(tail, { target: { value: ' - 2' } });
     fireEvent.keyDown(tail, { key: 'Enter' });
 
-    expect(apply.value).toEqual({ expr: '@цель.armor - @n - 2' });
-    expect(apply.direction).toBe('set');
+    expect(apply.value).toEqual({ expr: '@n - 2' });
+    expect(apply.direction).toBe('subtract');
     expect(amount.die).toEqual({ expr: '@кость_урона' }, 'величина осталась своей');
   });
 });
@@ -309,7 +310,7 @@ describe('GroupCard: присланное число по слагаемым', (
     render(<GroupCard group={group} position={1} system={system} effect={withParam} sheets={sheets}
       earlier={[]} problem={null} edit={() => {}} onDelete={() => {}} />);
 
-    const line = screen.getByText('Станет').closest('label')!;
+    const line = screen.getByText('Сколько').closest('label')!;
     const sent = [...line.querySelectorAll('.chips__chip--sent')];
     expect(sent).toHaveLength(2);
     expect(sent[0]!.textContent).toContain('Кость урона');
@@ -326,7 +327,7 @@ describe('GroupCard: присланное число по слагаемым', (
       earlier={[]} problem={null}
       edit={(at, change) => { if (at === 0) change(amount as never); }} onDelete={() => {}} />);
 
-    const line = screen.getByText('Станет').closest('label')!;
+    const line = screen.getByText('Сколько').closest('label')!;
     const [diceX] = [...line.querySelectorAll('.chips__chip--sent .chips__x')];
     fireEvent.mouseDown(diceX!);
 
@@ -355,7 +356,7 @@ describe('GroupCard: изменение само заводит число', () 
         change(steps[amountAt]!, steps[amountAt + 1]!, String(steps[amountAt]!.id));
       }}
       onDelete={() => {}} />);
-    const line = screen.getByText('Станет').closest('label')!;
+    const line = screen.getByText('Сколько').closest('label')!;
     return { line, value: [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement };
   };
 
@@ -404,16 +405,14 @@ describe('GroupCard: изменение само заводит число', () 
     expect((steps[0] as any).value).toEqual({ expr: '@цель.armor - @действующий.armor / 2' });
   });
 
-  it('новая формула изменения сразу пишет поле цели', () => {
+  it('смена направления пишет только направление, величина остаётся', () => {
     const steps = [
       { type: 'apply', target: { expr: '@цель.armor' }, direction: 'subtract', value: { expr: '1' } },
     ] as unknown as Step[];
-    const { line } = mount(steps);
-    const value = [...line.querySelectorAll('.chips__text')].at(-1) as HTMLInputElement;
-    fireEvent.change(value, { target: { value: ' - 2' } });
-    fireEvent.keyDown(value, { key: 'Enter' });
-
-    expect((steps[0] as any).value.expr).toMatch(/^@цель\.armor/);
+    mount(steps);
+    fireEvent.change(screen.getByDisplayValue('отнять'), { target: { value: 'add' } });
+    expect((steps[0] as any).direction).toBe('add');
+    expect((steps[0] as any).value).toEqual({ expr: '1' });
   });
 });
 

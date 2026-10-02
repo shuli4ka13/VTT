@@ -18,7 +18,6 @@ import type { SlotContext } from '../../slots.tsx';
 import type { EditFn, WithNumber } from '../words.ts';
 import { SendBody } from './send-body.tsx';
 import { amountParamOf } from '@vtt/engine/model/lists';
-import { tight } from '@vtt/engine/model/amounts';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 import { DESK_ID } from '@vtt/engine/engine/owners';
 
@@ -89,19 +88,11 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
 
   const amountId = String((amount as Record<string, any> | undefined)?.id ?? '');
 
+  const direction = String((apply as Record<string, any>).direction ?? 'subtract');
   const asExpr = (): string => {
-    const a = apply as Record<string, any>;
-    const value = a.value;
-    const written = value && typeof value === 'object'
-      ? 'expr' in value ? String(value.expr) : ''
-      : '';
-    const direction = String(a.direction ?? 'subtract');
-    if (direction === 'set') return written;
-    const amountName = written.trim() ? tight(written) : amountId ? `@${amountId}` : '';
-    const targetName = target && typeof target === 'object' && 'expr' in target ? String(target.expr) : '';
-    if (!targetName) return amountName;
-
-    return `${targetName} ${direction === 'add' ? '+' : '-'} ${amountName}`;
+    const value = (apply as Record<string, any>).value;
+    const written = value && typeof value === 'object' && 'expr' in value ? String(value.expr) : '';
+    return written.trim() ? written : amountId ? `@${amountId}` : '';
   };
 
   const shown = draft ?? asExpr();
@@ -160,8 +151,6 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
       const next = (place ? place(name) : (mentions(line, id) ? line : (line ? `${line} + ${name}` : name)))
         .replace(/\s+/g, ' ').trim();
       const target = apply as Record<string, any>;
-      target.direction = 'set';
-
       target.value = { expr: next };
     };
     if (!withNumber && !amountId) {
@@ -203,8 +192,6 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
     edit(applyIndex, step => {
       const a = step as Record<string, any>;
       if (!text) { delete a.value; return; }
-      a.direction = 'set';
-
       a.value = { expr: text };
     });
     setDraft(null);
@@ -237,7 +224,6 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
         bar.dismiss();
         edit(applyIndex, apply => {
           const target = apply as Record<string, unknown>;
-          target.direction = 'subtract';
           target.value = { expr: `@${output.ref}` };
         });
         setDraft(null);
@@ -267,9 +253,15 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
         })}
       />
 
-      {}
+      <Field label="Как">
+        <Select<string>
+          value={direction}
+          options={[['subtract', 'отнять'], ['add', 'прибавить'], ['set', 'поставить']]}
+          onChange={next => edit(applyIndex, step => { (step as Record<string, unknown>).direction = next; })}
+        />
+      </Field>
       <Field
-        label="Станет"
+        label="Сколько"
         error={trouble}
         hint="Обычная математика. Поля пишутся через лист: @цель.хиты, @носитель.ки."
       >
@@ -282,7 +274,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
           {...(context.sheets ? { sheets: context.sheets } : {})}
           badges={inputBadges(context)}
           invalid={Boolean(trouble)}
-          placeholder="например: @цель.хп − @урон"
+          placeholder={direction === 'set' ? 'например: @цель.хп_макс' : 'например: @урон'}
           options={needs}
           onChange={next => { setTrouble(null); setDraft(next); }}
           onCommit={commit}
