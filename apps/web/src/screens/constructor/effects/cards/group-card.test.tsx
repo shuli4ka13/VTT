@@ -248,6 +248,22 @@ describe('GroupCard: проверка одной формулой', () => {
     return { roll, check, line };
   };
 
+  it('подпись при остановке пишется текстом, а хранится формулой-литералом; с @ — формула', () => {
+    const steps = checkSteps();
+    const roll = steps[0] as Record<string, any>;
+    const check = steps[1] as Record<string, any>;
+    const group = groupSteps(steps)[0]!;
+    render(<GroupCard group={group} position={1} system={system} effect={effect} sheets={sheets}
+      earlier={[]} problem={null} edit={(at, change) => change((at === 0 ? roll : check) as never)} onDelete={() => {}} />);
+    const note = screen.getByPlaceholderText('например: не хватает ячейки') as HTMLInputElement;
+    fireEvent.change(note, { target: { value: 'не хватает ячейки' } });
+    fireEvent.blur(note);
+    expect(check.note).toEqual({ expr: '"не хватает ячейки"' });
+    fireEvent.change(note, { target: { value: '@note' } });
+    fireEvent.blur(note);
+    expect(check.note).toEqual({ expr: '@note' });
+  });
+
   it('кость — фишкой, сравнение — текстом в той же строке', () => {
     const group = groupSteps(checkSteps())[0]!;
     render(<GroupCard group={group} position={1} system={system} effect={effect} sheets={sheets}

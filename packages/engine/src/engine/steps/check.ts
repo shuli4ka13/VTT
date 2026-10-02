@@ -74,7 +74,7 @@ export function finish(step: StepData, ctx: StepContext) {
   const degree = scale
     ? lookupDegree(ctx.system, scale.table, scale.of === 'margin' ? judged.margin : total, Number(roll?.degreeShift ?? 0), ctx.owner)
     : null;
-  const noteRaw = step.note && typeof step.note === 'object' ? ctx.value(step.note) : step.note;
+  const noteRaw = step.note ? ctx.value(step.note) : null;
   const note = typeof noteRaw === 'string' && noteRaw.trim() ? noteRaw.trim() : null;
   const goOn = step.continueOn === 'always' ? true : step.continueOn === 'fail' ? !success : success;
   const of = fieldOfRef(step.value, ctx);

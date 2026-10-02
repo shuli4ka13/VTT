@@ -850,7 +850,7 @@ describe('отдых и плата ячейкой', () => {
         ячейка: {
           label: 'Ячейка', params: [{ key: 'лист', kind: 'sheet' }],
           steps: [
-            { id: 'есть', type: 'check', value: { expr: '@лист.ячейки' }, versus: { expr: '1' }, note: 'не хватает «Ячейки»' },
+            { id: 'есть', type: 'check', value: { expr: '@лист.ячейки' }, versus: { expr: '1' }, note: { expr: '"не хватает «Ячейки»"' } },
             sub('@лист.ячейки', '1'),
           ],
         },

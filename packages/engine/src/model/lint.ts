@@ -125,12 +125,15 @@ function stepProblems(steps: Step[], whereOf: (index: number) => Where): Problem
       out.push({ where, level: 'error', text: `движок не знает типа ${STEP.gen} «${step.type}»` });
       return;
     }
-    for (const slot of (mod.slots ?? []) as { key: string; label: string; kind?: string; required?: boolean }[]) {
+    for (const slot of (mod.slots ?? []) as { key: string; label: string; kind?: string; required?: boolean; refersTo?: string }[]) {
       const value = slot.key.split('.').reduce<unknown>((node, key) =>
         (node == null || typeof node !== 'object' ? undefined : (node as Record<string, unknown>)[key]), step);
       if (slot.required && (value === null || value === undefined)) {
         out.push({ where, level: 'error', text: `не заполнено: ${slot.label.toLowerCase()}` });
         break;
+      }
+      if (slot.kind === 'ref' && typeof value === 'string' && !(slot as { refersTo?: string }).refersTo) {
+        out.push({ where, level: 'error', text: `${slot.label.toLowerCase()}: голый текст «${value}» — нужна формула, текст в кавычках` });
       }
       if (slot.kind === 'ref' && value && typeof value === 'object' && !Array.isArray(value) && !('expr' in value)) {
         out.push({ where, level: 'error', text: `${slot.label.toLowerCase()}: ссылка старой формы ${JSON.stringify(value)} — нужно имя или формула` });

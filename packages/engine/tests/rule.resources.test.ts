@@ -23,9 +23,9 @@ const system = {
       label: 'Ячейка заклинания',
       params: [{ key: 'лист', label: 'Чья ячейка', kind: 'sheet' }, { key: 'круг', label: 'Круг', kind: 'number', role: 'amount' }],
       steps: [
-        { id: 'есть_1', type: 'check', value: { expr: '@лист.ячейки_1' }, versus: { expr: '1' }, note: 'не хватает ячейки 1-го круга', if: { expr: '@круг == 1' } },
+        { id: 'есть_1', type: 'check', value: { expr: '@лист.ячейки_1' }, versus: { expr: '1' }, note: { expr: '"не хватает ячейки 1-го круга"' }, if: { expr: '@круг == 1' } },
         { type: 'apply', target: { expr: '@лист.ячейки_1' }, direction: 'subtract', value: { expr: '1' }, if: { expr: '@круг == 1' } },
-        { id: 'есть_2', type: 'check', value: { expr: '@лист.ячейки_2' }, versus: { expr: '1' }, note: 'не хватает ячейки 2-го круга', if: { expr: '@круг == 2' } },
+        { id: 'есть_2', type: 'check', value: { expr: '@лист.ячейки_2' }, versus: { expr: '1' }, note: { expr: '"не хватает ячейки 2-го круга"' }, if: { expr: '@круг == 2' } },
         { type: 'apply', target: { expr: '@лист.ячейки_2' }, direction: 'subtract', value: { expr: '1' }, if: { expr: '@круг == 2' } },
       ],
     },

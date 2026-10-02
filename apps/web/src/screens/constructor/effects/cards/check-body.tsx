@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { System } from '@vtt/schema';
-import { Select } from '../../../../ui/primitives.tsx';
+import { Select, Input } from '../../../../ui/primitives.tsx';
 import { FieldRow } from '../../../../ui/field-row.tsx';
 import type { RowField } from '../../../../ui/field-row.tsx';
 import { FormulaField } from '../../../../ui/formula-field.tsx';
@@ -94,8 +94,32 @@ export function CheckBody({ step, roll, context, edit, system }: {
         />
       ),
     }] : []),
+    {
+      key: 'note', label: 'Что сказать при остановке', width: 220,
+      hint: 'Текст в журнал, когда проверка оборвала цепочку: «не хватает ячейки». Начните с @ — будет формула.',
+      node: <NoteField value={step.note} onChange={next => edit(at, draft => { if (next) loose(draft).note = next; else delete loose(draft).note; })} />,
+    },
   ];
   return <FieldRow id={roll ? 'check-roll' : 'check-plain'} fields={fields} />;
+}
+
+const quoted = (text: string): string => (text.includes('"') ? `'${text}'` : `"${text}"`);
+
+function NoteField({ value, onChange }: { value: unknown; onChange: (next: { expr: string } | null) => void }) {
+  const expr = value && typeof value === 'object' ? String((value as { expr?: unknown }).expr ?? '') : '';
+  const literal = /^(["'])(.*)\1$/su.exec(expr.trim());
+  const shown = literal ? literal[2]! : expr;
+  const [draft, setDraft] = useState<string | null>(null);
+  const commit = () => {
+    if (draft === null) return;
+    const text = draft.trim();
+    setDraft(null);
+    if (!text) { onChange(null); return; }
+    if (text.startsWith('@') || text.includes('(')) { onChange({ expr: text }); return; }
+    if (text.includes('"') && text.includes("'")) { onChange({ expr: quoted(text.replace(/"/g, '«').replace(/'/g, '»')) }); return; }
+    onChange({ expr: quoted(text) });
+  };
+  return <Input value={draft ?? shown} placeholder="например: не хватает ячейки" onChange={setDraft} onBlur={commit} />;
 }
 
 function CheckFormula({ step, roll, context, edit }: { step: any; roll: any | null; context: SlotContext; edit: EditFn }) {

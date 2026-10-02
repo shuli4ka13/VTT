@@ -52,7 +52,7 @@ export const STEP_WORDS = {
         choice: [['success', 'успехе'], ['fail', 'провале'], ['always', 'всегда — ветвят следующие шаги']],
       },
       { key: 'degrees', label: 'Степени успеха', kind: 'degrees' },
-      { key: 'note', label: 'Что сказать при остановке', kind: 'text', allow: [] },
+      { key: 'note', label: 'Что сказать при остановке', kind: 'ref', allow: ['expr', 'empty'] },
     ],
     outputs: [
       { path: '.success', label: 'да или нет: проверка пройдена', kind: 'boolean' },
