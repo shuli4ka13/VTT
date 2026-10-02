@@ -126,8 +126,9 @@ export function NumInput({ value, onCommit, int, least, mono, placeholder }: {
   );
 }
 
-export function Select<T extends string>({ value, options, onChange, disabled, title }: {
+export function Select<T extends string>({ value, options, onChange, disabled, title, label }: {
   value: T;
+  label?: string;
   options: readonly (readonly [T, string])[];
   onChange: (value: T) => void;
   disabled?: boolean;
@@ -138,7 +139,7 @@ export function Select<T extends string>({ value, options, onChange, disabled, t
     ? options
     : [[value, value ? `${value} — такого в списке нет` : '— не выбрано —'] as const, ...options];
   return (
-    <select className="select" value={value} disabled={disabled} title={title} onChange={e => { if (e.target.value !== value) onChange(e.target.value as T); }}>
+    <select className="select" value={value} disabled={disabled} title={title} aria-label={label} onChange={e => { if (e.target.value !== value) onChange(e.target.value as T); }}>
       {all.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
     </select>
   );

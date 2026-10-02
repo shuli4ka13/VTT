@@ -9,7 +9,7 @@ import { Card, CardHead, Input, Button, Fold, Select } from '../../../ui/primiti
 import { newRollEdit } from '../factory.ts';
 import { inUse as isUsed } from '../usage.ts';
 import type { UsageIndex } from '../usage.ts';
-import type { System } from '@vtt/schema';
+import type { System, RollEditOp } from '@vtt/schema';
 import type { WorldState } from '../../../store/world.ts';
 
 type EditSystem = WorldState['editSystem'];
@@ -76,8 +76,11 @@ export function AdvantagePalette({ system, editSystem, onAdded }: {
 
 const NUMBER_KEYS = ['n', 'by', 'sides', 'least'] as const;
 
+const templateOf = (op: Record<string, unknown>): Record<string, unknown> =>
+  (editPalette().find(entry => entry.key === paletteKeyOf(op as RollEditOp))?.op ?? {}) as Record<string, unknown>;
+
 export const numberKeyOf = (op: Record<string, unknown>): string | null =>
-  NUMBER_KEYS.find(key => key in op) ?? (op.op === 'bonusDie' ? 'sides' : op.op === 'floorDie' ? 'least' : null);
+  NUMBER_KEYS.find(key => key in op) ?? NUMBER_KEYS.find(key => key in templateOf(op)) ?? null;
 
 function OpChip({ op, parts, onNumber, onCount, onPart, onRemove }: {
   op: Record<string, unknown>;
@@ -94,7 +97,7 @@ function OpChip({ op, parts, onNumber, onCount, onPart, onRemove }: {
     <span className="chip">
       {opWord(op as { op: string })}
       {numeric ? (
-        <ChipNum value={Number(op[numeric] ?? 0)} onCommit={onNumber} />
+        <ChipNum value={Number(op[numeric] ?? templateOf(op)[numeric] ?? 0)} onCommit={onNumber} />
       ) : null}
       {op.op === 'addDie' ? (
         <span className="chip__count"><BoundField value={op.count ?? 1} placeholder="сколько" onChange={onCount} /></span>

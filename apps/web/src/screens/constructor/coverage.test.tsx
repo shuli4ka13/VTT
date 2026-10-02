@@ -202,6 +202,10 @@ function firstDiff(a: unknown, b: unknown, path = ''): string {
 const squash = (text: string | null | undefined): string => (text ?? '').replace(/\s+/g, ' ').trim().slice(0, 40);
 
 function labelOf(el: Element): string {
+  const pair = el.closest('.pair');
+  if (pair?.querySelector('.call-args__name')) return `арг ${squash(pair.querySelector('.call-args__name')?.textContent)}`;
+  const named = el.getAttribute('aria-label');
+  if (named && !el.closest('.field')) return squash(named);
   const field = el.closest('.field');
   if (field) return squash(field.querySelector('.field__label')?.textContent).replace(/.заполнить$/u, '');
   let cell: Element | null = el;
@@ -283,6 +287,7 @@ function restores(original: World, blanked: World, view: View, value: unknown): 
 }
 
 const CREATED: [RegExp, string][] = [
+  [/\.modifiers\[\]\.kind$/, '«+ правка поля» или «+ правка вызова»'],
   [/^system\.constants\.\*\.kind$/, '«+ кость» в «Правилах»'],
   [/^system\.tables\.\*\.(shape|key|owner)$/, 'вид таблицы выбирается при создании'],
   [/\.steps\[\]\.(of|as)$/, '«+ для каждой цели»'],

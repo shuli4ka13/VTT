@@ -135,6 +135,7 @@ export function CharacterSection({ system, editSystem }: {
           <span className="block-head__more">
             <Button size="sm" variant="ghost" title={`блок внутри «${node.name}»`} onClick={() => addBlock(node.name)}>+ блок внутрь</Button>
             <Select<string>
+              label={`где лежит блок «${node.name}»`}
               value={system.groups?.[node.name]?.parent ?? ''}
               options={[['', 'на верхнем уровне'], ...names.filter(other => other !== node.name && !inside(node).includes(other)).map(other => [other, `внутри «${other}»`] as const)]}
               onChange={next => editSystem(draft => {
