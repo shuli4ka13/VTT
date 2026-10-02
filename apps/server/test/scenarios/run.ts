@@ -36,7 +36,6 @@ export interface Scenario {
     log?: string[];
     notLog?: string[];
   };
-  oldEngine?: string;
 }
 
 const samples = fileURLToPath(new URL('../../../../samples/', import.meta.url));

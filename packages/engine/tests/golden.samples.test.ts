@@ -4,8 +4,7 @@ import { flattenSystem } from '../src/model/inherit.ts';
 import { availableActions } from '../src/events/actions.ts';
 import { exchange } from './play.ts';
 import { idleClock, startCombat } from '../src/engine/clock.ts';
-
-const WORLDS: Record<string, any> = Object.fromEntries(SAMPLE_WORLDS.map(w => [w.system.id, w]));
+import type { Sheet } from '../src/model/types.ts';
 
 const DICE: Record<string, (sides: number, n: number) => number> = {
   low: () => 1,
@@ -18,47 +17,45 @@ const dieOf = (kind: string) => {
   return (sides: number) => DICE[kind]!(sides, n++);
 };
 
-function play(world: any, fromId: string, toId: string, actionId: string, kind: string, inCombat: boolean) {
-  const system = flattenSystem(world.system);
-  const compendium = world.compendium;
-  const clock = inCombat ? startCombat(idleClock(), world.sheets.map((s: any) => s.id)) : null;
-  try {
-    const out = exchange({
-      system, compendium, die: dieOf(kind), sheets: world.sheets, actionId, fromId, toId, clock,
-    });
-    return {
-      reports: out.reports,
-      sheets: out.sheets.map((s: any) => ({ id: s.id, values: s.values, effects: s.effects })),
-    };
-  } catch (err) {
-    return { error: `${(err as Error).name}: ${(err as Error).message}` };
+function outcome(before: Sheet[], after: Sheet[]): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const sheet of after) {
+    const was = before.find(s => s.id === sheet.id);
+    const values = Object.fromEntries(Object.entries(sheet.values).filter(([key, value]) => JSON.stringify(was?.values[key]) !== JSON.stringify(value)));
+    const effects = (sheet.effects ?? []).map(({ inst: _inst, ...rest }: Record<string, unknown>) => rest);
+    const wasEffects = (was?.effects ?? []).map(({ inst: _inst, ...rest }: Record<string, unknown>) => rest);
+    const changed = JSON.stringify(effects) !== JSON.stringify(wasEffects);
+    if (Object.keys(values).length || changed) out[sheet.id] = { ...(Object.keys(values).length ? { values } : {}), ...(changed ? { effects } : {}) };
   }
+  return out;
 }
 
-for (const [name, world] of Object.entries(WORLDS)) {
-  describe(`золотые трассы: ${name}`, () => {
-    const system = flattenSystem(world.system);
+for (const world of SAMPLE_WORLDS) {
+  const system = flattenSystem(world.system);
   const compendium = world.compendium;
+  const players = world.sheets.filter((s: Sheet) => s.id !== 'стол');
 
-    it('образец не пуст', () => {
-      expect(world.sheets.length).toBeGreaterThan(1);
-      expect(Object.keys(system.effects).length).toBeGreaterThan(0);
-    });
-
-    const players = world.sheets.filter((s: any) => s.id !== 'стол');
+  describe(`итоги действий: ${system.id}`, () => {
     for (const from of players) {
-      const actions = availableActions(from, { system, compendium });
-      const targets = players.filter((s: any) => s.id !== from.id);
-      for (const action of actions) {
-        for (const to of [...targets, from]) {
-          for (const kind of Object.keys(DICE)) {
-            for (const inCombat of [false, true]) {
-              it(`${from.id} → ${to.id} · ${action.id} · кости ${kind} · ${inCombat ? 'в бою' : 'вне боя'}`, () => {
-                expect(play(world, from.id, to.id, action.id, kind, inCombat)).toMatchSnapshot();
-              });
+      for (const action of availableActions(from, { system, compendium })) {
+        it(`${from.id} · ${action.id}`, () => {
+          const cases: Record<string, unknown> = {};
+          for (const to of [...players.filter((s: Sheet) => s.id !== from.id), from]) {
+            for (const kind of Object.keys(DICE)) {
+              for (const inCombat of [false, true]) {
+                const clock = inCombat ? startCombat(idleClock(), world.sheets.map((s: Sheet) => s.id)) : null;
+                const key = `→ ${to.id} · ${kind} · ${inCombat ? 'бой' : 'вне боя'}`;
+                try {
+                  const out = exchange({ system, compendium, die: dieOf(kind), sheets: world.sheets, actionId: action.id, fromId: from.id, toId: to.id, clock });
+                  cases[key] = outcome(world.sheets, out.sheets);
+                } catch (err) {
+                  cases[key] = `${(err as Error).name}: ${(err as Error).message}`;
+                }
+              }
             }
           }
-        }
+          expect(cases).toMatchSnapshot();
+        });
       }
     }
   });

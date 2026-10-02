@@ -12,7 +12,7 @@ for (const file of files) {
   const { scenarios } = await import(`./scenarios/${file}`) as { scenarios: Scenario[] };
   describe(`сценарии по правилам: ${file.replace('.scenarios.ts', '')}`, () => {
     for (const scenario of scenarios) {
-      const run = scenario.oldEngine ? it.fails : it;
+      const run = it;
       run(scenario.name, async () => {
         const played = await playScenario(scenario);
         expect(check(scenario, played), played.log.join('\n')).toEqual([]);

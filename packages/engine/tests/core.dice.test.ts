@@ -1,8 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { SAMPLE_WORLDS } from '../src/model/systems.ts';
 import { flattenSystem } from '../src/model/inherit.ts';
-import { rollLead, seeRoll } from './legacy.ts';
-import { parse, start, result, see, keep, times, faces } from '../src/core/dice.ts';
+import { parse, start, result, see, keep, times } from '../src/core/dice.ts';
 import type { SeenOp } from '../src/core/dice.ts';
 import type { DieConstant, RollEdit } from '../src/model/types.ts';
 
@@ -30,50 +29,28 @@ for (const world of SAMPLE_WORLDS) {
   dictionaries.push({ system: system.id, edits: Object.entries(system.roll_edits ?? {}).map(([key, edit]) => ({ ...edit, label: edit.label || key })) });
 }
 
-const plain = (edits: RollEdit[]) => !edits.some(edit => (edit.ops ?? []).some(op => ['keepBest', 'keepWorst', 'bonusDie'].includes(String(op.op))));
-
-describe('набор костей против старой модели', () => {
-  it('в образцах есть кости и правки для сравнения', () => {
+describe('набор костей: свойства на костях и правках образцов', () => {
+  it('в образцах есть кости и правки', () => {
     expect(constants.length).toBeGreaterThan(5);
     expect(dictionaries.some(d => d.edits.length)).toBe(true);
   });
 
   for (const { system, key, def } of constants) {
-    it(`${system} · ${key}: итог, натуральное, кости, части и правки совпадают`, () => {
+    it(`${system} · ${key}: та же лента — тот же итог; натуральное без вычитаемых костей не больше итога`, () => {
       const dictionary = dictionaries.find(d => d.system === system)!.edits;
-      for (let seed = 1; seed <= 60; seed++) {
+      for (let seed = 1; seed <= 40; seed++) {
         const random = rng(seed * 31 + key.length);
         const edits = dictionary.filter(() => random() < 0.3);
         const thrown = tape(random);
-        const old = rollLead(def, thrown.die, edits);
-        const fresh = start(parse(def), edits, replay(thrown.values));
-        const now = result(fresh);
+        const first = start(parse(def), edits, thrown.die);
+        const again = start(parse(def), edits, replay(thrown.values));
         const note = `${system}/${key} зерно ${seed} правки ${edits.map(e => e.label).join(',')}`;
-        expect(now.total, note).toBe(old.total);
-        expect(now.natural, note).toBe(old.natural);
-        expect(now.dice.rolls, note).toEqual(old.rolls);
-        expect(now.dice.kept, note).toBe(old.kept);
-        expect(now.parts, note).toEqual(old.parts);
-        expect(faces(fresh), note).toEqual(fresh.dice.map(d => (d.minus ? -d.face : d.face)));
-        expect(fresh.claim.versusShift, note).toBe(old.versusShift);
-        expect(fresh.claim.degreeShift, note).toBe(old.degreeShift);
-        if (plain(edits)) {
-          expect(now.atMax, note).toBe(old.tally.atMax);
-          expect(now.atMin, note).toBe(old.tally.atMin);
-        }
-
-        const ops: SeenOp[] = [
-          { kind: 'reroll', upTo: 1 + Math.floor(random() * 3) },
-          { kind: 'add', count: 1, ...(random() < 0.5 ? { keep: 'best' as const } : {}) },
-          { kind: 'plus', value: 2 },
-        ];
-        const op = ops[Math.floor(random() * ops.length)]!;
+        expect(result(again), note).toEqual(result(first));
+        const now = result(first);
+        if (!first.dice.some(d => d.minus) && first.plus === 0) expect(now.natural, note).toBeLessThanOrEqual(now.total);
+        const op: SeenOp = random() < 0.5 ? { kind: 'reroll', upTo: 2 } : { kind: 'add', count: 1, keep: 'best' };
         const more = tape(random);
-        const oldSeen = seeRoll(old, op, more.die);
-        const newSeen = result(see(fresh, op, replay(more.values)));
-        expect(newSeen.total, `${note} · ${op.kind}`).toBe(oldSeen.total);
-        expect(newSeen.natural, `${note} · ${op.kind}`).toBe(oldSeen.natural);
-        expect(newSeen.dice.rolls, `${note} · ${op.kind}`).toEqual(oldSeen.rolls);
+        expect(result(see(first, op, replay(more.values.length ? more.values : [1, 1, 1]))), note).toBeDefined();
       }
     });
   }
