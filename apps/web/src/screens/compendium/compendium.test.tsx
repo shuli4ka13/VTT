@@ -38,6 +38,15 @@ describe('CompendiumScreen: запись говорит, что даст вла�
     expect(screen.getByText('владелец получит: Удар')).toBeTruthy();
   });
 
+  it('свою кнопку записи можно завести и назвать тем же редактором, что у типа', () => {
+    renderOpen(<CompendiumScreen />);
+    fireEvent.click(screen.getByText('+ кнопка'));
+    const record = useWorld.getState().compendium.records!.find(r => r.id === 'sword')!;
+    expect(record.bindings).toHaveLength(1);
+    expect(screen.getByText('Свои кнопки')).toBeTruthy();
+    expect(screen.getAllByPlaceholderText('как назвать кнопку').length).toBeGreaterThan(0);
+  });
+
   it('ничего не показывает у рода без привязок', () => {
     useWorld.setState({ activeRecordId: 'bauble' });
     renderOpen(<CompendiumScreen />);

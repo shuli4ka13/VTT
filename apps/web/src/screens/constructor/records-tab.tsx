@@ -1,5 +1,4 @@
-import { paramsOf } from '@vtt/engine/model/inherit';
-import { tableOf } from '@vtt/engine/model/buttons';
+import { ButtonEditor } from './button-editor.tsx';
 import { useWorld, freeId } from '../../store/world.ts';
 import { ModifiersEditor } from './modifiers.tsx';
 import { MultiChoice } from '../../ui/multi-choice.tsx';
@@ -9,11 +8,10 @@ import { useLookupPane } from './lookup-panel.tsx';
 import {
   Card, CardHead, Field, Input, Select, Button, Empty, Verdict, Chip, DangerButton, LabelInput, Fold,
 } from '../../ui/primitives.tsx';
-import type { System, SheetKind, Table, Binding, Param, Effect } from '@vtt/schema';
+import type { System, SheetKind, Table } from '@vtt/schema';
 import type { RecordKind } from '@vtt/engine/model/owned';
 import { TableColumnCard } from './rules/tables-section.tsx';
 import { useState } from 'react';
-import { CallEditor } from './call-editor.tsx';
 import { BlockPick, fieldBlocks } from './block-pick.tsx';
 import { GrantsEditor } from './grants-editor.tsx';
 import { argsWithProps, propKeysOf, recordKinds, sheetKinds, kindsOf } from '@vtt/engine/model/owned';
@@ -280,7 +278,7 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
         {bindings.length === 0
           ? <span className="faint">Ничего не подключено: тип ничего не автоматизирует.</span>
           : bindings.map((binding, index) => (
-            <BindingEditor
+            <ButtonEditor
               key={index}
               binding={binding}
               system={system}
@@ -380,83 +378,6 @@ function KindEditor({ id, kind, system }: { id: string; kind: AnyKind; system: S
 
     </>
   );
-}
-
-function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWithProp }: {
-  binding: Binding;
-  system: System;
-
-  recordKind: RecordKind;
-  onEdit: (change: (draft: Binding) => void) => void;
-  onDelete: () => void;
-
-  onFillWithProp: (param: Param) => void;
-}) {
-  const effect = system.effects[binding.effect];
-  const implicit = new Set((recordKind.columns ?? []).map(prop => prop.key));
-  const closed = (key: string) => binding.args?.[key] !== undefined || implicit.has(key);
-  const buttons = Object.entries(system.effects).filter(([, e]) => (e.activation ?? 'manual') !== 'passive');
-
-  return (
-    <Card tone="flat">
-      <CardHead
-        title={<LabelInput value={binding.label ?? ''} placeholder="как назвать кнопку" onCommit={label => onEdit(draft => { draft.label = label; })} />}
-        actions={<DangerButton size="sm" onConfirm={onDelete}>Удалить</DangerButton>}
-      />
-      <CallEditor
-        system={system}
-        effect={binding.effect}
-        effects={buttons}
-        onEffect={next => onEdit(draft => { draft.effect = next; })}
-        args={binding.args as Record<string, unknown> | undefined}
-        fromProps={implicit}
-        filled={effect ? tableOf(binding, { params: paramsOf(system, effect) }) : {}}
-        context={{ system, effect: effect ?? ({ label: '' } as Effect), earlier: [], recordKind }}
-        where={binding.label || effect?.label || binding.effect}
-        allow={['prop', 'table']}
-        onArg={(key, next) => onEdit(draft => {
-          draft.args ??= {};
-          if (next) draft.args[key] = next as never; else delete draft.args[key];
-          if (!Object.keys(draft.args).length) delete draft.args;
-        })}
-        extraFor={param => [
-          ...(closed(param.key) ? [] : [{
-            group: 'Завести', label: `новое свойство «${param.label ?? param.key}»`,
-            ref: { expr: '' } as never, synthetic: true, onPick: () => onFillWithProp(param),
-          }]),
-          ...sourcesFor(param, recordKind, system).map(source => ({ group: 'Свойства записи', label: source.label, ref: source.ref as never })),
-        ]}
-      />
-    </Card>
-  );
-}
-
-const FITS: Record<string, string[]> = {
-  number: ['number', 'expr'],
-  dice: ['dice'],
-  text: ['text'],
-  effect: ['effect'],
-  record: ['record'],
-};
-
-function sourcesFor(param: Param, kind: RecordKind, system: System): { label: string; ref: unknown }[] {
-  const props = kind.columns ?? [];
-  const want = String(param.kind ?? 'number');
-  const own = props
-    .filter(prop => (want === 'choice'
-      ? prop.kind === 'choice' && prop.from === param.from
-      : (FITS[want] ?? []).includes(String(prop.kind ?? 'number'))))
-    .map(prop => ({ label: `свойство «${prop.label ?? prop.key}»`, ref: { expr: `@${prop.key}` } }));
-  if (want !== 'number') return own;
-  const viaTable = props
-    .filter(prop => prop.kind === 'choice' && prop.from && system.tables?.[prop.from]?.columns?.length)
-    .flatMap(prop => (system.tables![prop.from!]!.columns ?? [])
-      .filter(column => ['number', 'expr'].includes(String(column.kind ?? 'number')))
-      .map(column => ({
-        label: `«${prop.label ?? prop.key}» → столбец «${column.label || column.key}»`,
-        ref: { expr: `@${prop.key}.${column.key}` },
-      })));
-  return [...own, ...viaTable];
 }
 
 function propDestiny(system: System, kind: RecordKind, propKey: string): string {

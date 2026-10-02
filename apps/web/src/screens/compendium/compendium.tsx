@@ -1,3 +1,5 @@
+import { ButtonEditor } from '../constructor/button-editor.tsx';
+import { newBinding } from '../constructor/factory.ts';
 import { bindingsOf } from '@vtt/engine/events/actions';
 import { GrantsEditor } from '../constructor/grants-editor.tsx';
 import { recordsOf, isItem, propsNeeded, recordKindOf, recordKinds } from '@vtt/engine/model/owned';
@@ -6,7 +8,7 @@ import { useWorld, freeId, randomTag } from '../../store/world.ts';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
 import { blockTree, BlockBranches } from '../constructor/block-tree.tsx';
 import {
-  Card, CardHead, Field, Empty, Verdict, DangerButton, LabelInput,
+  Card, CardHead, Field, Empty, Verdict, DangerButton, LabelInput, Button,
 } from '../../ui/primitives.tsx';
 import { ModifiersEditor } from '../constructor/modifiers.tsx';
 import { RecordView } from '../../sheet/record-view.tsx';
@@ -174,6 +176,29 @@ function RecordEditor({ record, system, compendium }: { record: CompendiumRecord
               </Field>
             ))}
           </div>
+        </Card>
+      ) : null}
+
+      {kind ? (
+        <Card>
+          <CardHead
+            title="Свои кнопки"
+            sub="Кнопки только этой записи — поверх общих кнопок типа. Например, у заклинания «Огненный шар» своя кнопка с кругом ячейки."
+            actions={<Button size="sm" onClick={() => edit(draft => { (draft.bindings ??= []).push(newBinding(system)); })}>+ кнопка</Button>}
+          />
+          {(record.bindings ?? []).length ? (record.bindings ?? []).map((binding, index) => (
+            <ButtonEditor
+              key={index}
+              binding={binding}
+              system={system}
+              recordKind={kind}
+              onEdit={change => edit(draft => { const own = draft.bindings?.[index]; if (own) change(own); })}
+              onDelete={() => edit(draft => {
+                draft.bindings = (draft.bindings ?? []).filter((_, at) => at !== index);
+                if (!draft.bindings.length) delete draft.bindings;
+              })}
+            />
+          )) : <span className="faint">Своих кнопок нет — у записи только кнопки её типа.</span>}
         </Card>
       ) : null}
 
