@@ -71,7 +71,7 @@ describe('Словари: кости, правки броска, таблицы'
       .toEqual({ count: 1, sides: 20, name: 'надежда', label: 'Надежда' });
   });
 
-  it('счёт костей берётся из поля листа кнопкой, а не решёткой в тексте', () => {
+  it('счёт костей — число или формула в одном поле: @пул берёт число из листа', () => {
     useWorld.setState(state => ({
       ...state,
       system: {
@@ -83,19 +83,11 @@ describe('Словари: кости, правки броска, таблицы'
     }));
     renderOpen(<RulesTab />);
     открыть('Кости');
-    fireEvent.click(screen.getByText('из поля'));
+    fireEvent.change(screen.getByPlaceholderText('сколько'), { target: { value: '@пул' } });
 
     expect(Object.values(useWorld.getState().system.constants ?? {})[0]?.dice?.[0])
       .toEqual({ count: { expr: '@пул' }, sides: 6 });
     expect(screen.getByText(/по числу «Пул»/)).toBeTruthy();
-  });
-
-  it('без числовых полей кнопка «из поля» заблокирована', () => {
-    renderOpen(<RulesTab />);
-    открыть('Кости');
-    fireEvent.click(screen.getByText('+ кость'));
-    const button = screen.getByText('из поля').closest('button') as HTMLButtonElement;
-    expect(button.disabled).toBe(true);
   });
 
   it('чтение кости выбирается селектом; сумма в данных не оседает', () => {
@@ -118,11 +110,11 @@ describe('Словари: кости, правки броска, таблицы'
     expect('read' in (useWorld.getState().system.constants?.[key!] ?? {})).toBe(false);
   });
 
-  it('у одной кости чтение не спрашивают — селектора нет', () => {
+  it('у одной кости чтение спрятано под свёрнутым «ещё», у составной — на виду', () => {
     renderOpen(<RulesTab />);
     открыть('Кости');
     fireEvent.click(screen.getByText('+ кость'));
-    expect(screen.queryByDisplayValue('сумма')).toBe(null);
+    expect((screen.getByDisplayValue('сумма').closest('details') as HTMLDetailsElement | null)?.open).toBe(false);
 
     fireEvent.click(screen.getByText('+ ещё часть'));
     expect(screen.getByDisplayValue('сумма')).toBeTruthy();

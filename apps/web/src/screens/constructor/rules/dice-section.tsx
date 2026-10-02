@@ -2,14 +2,14 @@ import { readingKinds } from '@vtt/engine/engine/readings';
 import { Readback } from '../effects/cards/group-card.tsx';
 import { dieReadback } from '../readback.ts';
 import { slugOf } from '../../../store/world.ts';
-import { Card, CardHead, Input, NumInput, Button, Select } from '../../../ui/primitives.tsx';
+import { Card, CardHead, Input, NumInput, Button, Select, Fold } from '../../../ui/primitives.tsx';
+import { BoundField } from '../bound-field.tsx';
 import { diceCount } from '../dice-expr.ts';
 import { newDie } from '../factory.ts';
 import { inUse as isUsed } from '../usage.ts';
 import type { UsageIndex } from '../usage.ts';
 import type { System, SystemConstant, DiceTerm } from '@vtt/schema';
 import type { WorldState } from '../../../store/world.ts';
-import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 
 type EditSystem = WorldState['editSystem'];
 interface Props { system: System; editSystem: EditSystem; usage: UsageIndex }
@@ -59,32 +59,7 @@ export function DiceSection({ system, editSystem, usage }: Props) {
               change(cur.dice);
             });
 
-            return (
-
-              <div key={key} className="dict-block">
-                <div className="dict-row">
-                  <Input
-                    value={constant.label ?? ''}
-                    placeholder="название кости"
-                    onChange={label => editSystem(draft => {
-                      const cur = draft.constants?.[key];
-                      if (cur) cur.label = label;
-                    })}
-                  />
-                  <Button
-                    size="sm" variant="danger" disabled={inUse}
-                    title={inUse ? 'кость используется' : undefined}
-                    onClick={() => editSystem(draft => { delete draft.constants?.[key]; })}
-                  >
-                    Убрать
-                  </Button>
-                </div>
-
-                <Readback segments={dieReadback(constant, system)} />
-
-                <DiceComposer dice={dice} system={system} onEdit={editDice} />
-
-                {asksReading ? (
+            const reading = (
                   <div className="dict-row">
                     <span className="dict-row__label">Из выпавшего берём</span>
                     <Select
@@ -117,9 +92,37 @@ export function DiceSection({ system, editSystem, usage }: Props) {
                       </>
                     ) : null}
                   </div>
-                ) : null}
+            );
+
+            return (
+
+              <div key={key} className="dict-block">
+                <div className="dict-row">
+                  <Input
+                    value={constant.label ?? ''}
+                    placeholder="название кости"
+                    onChange={label => editSystem(draft => {
+                      const cur = draft.constants?.[key];
+                      if (cur) cur.label = label;
+                    })}
+                  />
+                  <Button
+                    size="sm" variant="danger" disabled={inUse}
+                    title={inUse ? 'кость используется' : undefined}
+                    onClick={() => editSystem(draft => { delete draft.constants?.[key]; })}
+                  >
+                    Убрать
+                  </Button>
+                </div>
+
+                <Readback segments={dieReadback(constant, system)} />
+
+                <DiceComposer dice={dice} onEdit={editDice} />
+
+                {asksReading ? reading : <Fold title="ещё" summary={readKind === 'sum' ? 'берём сумму' : 'чтение выпавшего'}>{reading}</Fold>}
               </div>
             );
+
           })}
         </div>
       )}
@@ -127,37 +130,21 @@ export function DiceSection({ system, editSystem, usage }: Props) {
   );
 }
 
-function DiceComposer({ dice, system, onEdit }: {
+function DiceComposer({ dice, onEdit }: {
   dice: DiceTerm[];
-  system: System;
   onEdit: (change: (list: DiceTerm[]) => void) => void;
 }) {
   const many = dice.length > 1;
-  const numeric = fieldsOf(system).filter(f =>
-    f.value.kind === 'formula' || (f.value.kind === 'stored' && f.value.type === 'number'));
 
   return (
     <div className="dice-composer">
       {dice.map((term, i) => {
-        const fromField = typeof term.count === 'object' && term.count !== null;
         return (
           <div key={i} className="dice-term">
-            {fromField ? (
-              <Select
-                value={String((term.count as { expr?: string }).expr ?? '').replace(/^@/, '')}
-                options={[['', '— какое поле? —'],
-                  ...numeric.map(f => [f.tag, f.label] as const)] as never}
-                onChange={tag => onEdit(list => { list[i]!.count = { expr: `@${tag}` }; })}
-              />
-            ) : (
-              <span className="dice-term__num">
-                <DraftNum
-                  value={Number(term.count ?? 1)}
-                  least={1}
-                  onCommit={n => onEdit(list => { list[i]!.count = n; })}
-                />
-              </span>
-            )}
+            <span className="dice-term__num dice-term__num--wide">
+              <BoundField value={term.count ?? 1} placeholder="сколько"
+                onChange={next => onEdit(list => { if (next === null) delete list[i]!.count; else list[i]!.count = next; })} />
+            </span>
 
             <span className="dice-term__d">к</span>
 
@@ -180,16 +167,20 @@ function DiceComposer({ dice, system, onEdit }: {
               />
             ) : null}
 
-            <Button
-              size="sm" variant="ghost"
-              title={fromField ? 'задать числом' : 'взять число из поля листа'}
-              disabled={!fromField && numeric.length === 0}
-              onClick={() => onEdit(list => {
-                list[i]!.count = fromField ? 1 : { expr: `@${numeric[0]?.tag ?? ''}` };
-              })}
-            >
-              {fromField ? 'числом' : 'из поля'}
-            </Button>
+            <Fold title="ещё" summary={term.bonus ? 'сверх' : term.minus ? 'вычитается' : ''}>
+              <div className="inline inline--tight">
+                <Select
+                  value={term.bonus ? 'bonus' : term.minus ? 'minus' : ''}
+                  options={[['', 'обычная часть'], ['bonus', 'сверх — «оставить лучшую» её не трогает'], ['minus', 'вычитается из суммы']] as const}
+                  onChange={next => onEdit(list => {
+                    const t = list[i]!;
+                    delete t.bonus; delete t.minus;
+                    if (next === 'bonus') t.bonus = true;
+                    if (next === 'minus') t.minus = true;
+                  })}
+                />
+              </div>
+            </Fold>
 
             {many ? (
               <Button
