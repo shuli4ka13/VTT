@@ -7,7 +7,7 @@ import { FormulaBar } from '../../../ui/formula-bar.tsx';
 import { useFormulaBar } from '../../../store/formula-bar.ts';
 import { useWorld, emptySystem } from '../../../store/world.ts';
 
-const открыть = (раздел: string) => fireEvent.click(screen.getByText(раздел));
+const открыть = (раздел: string) => fireEvent.click(screen.getAllByText(раздел)[0]!);
 
 describe('Словари: кости, правки броска, таблицы', () => {
   beforeEach(() => {

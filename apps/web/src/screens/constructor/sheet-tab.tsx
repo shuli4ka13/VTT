@@ -4,7 +4,10 @@ import { useLookupPane } from './lookup-panel.tsx';
 import { Select, Button, Empty, DangerButton } from '../../ui/primitives.tsx';
 import { DonorPalette } from './donors.tsx';
 import { newColumn } from './factory.ts';
-import { addColumn } from './rules/character-section.tsx';
+import { addColumn, CharacterSection } from './rules/character-section.tsx';
+import { useState } from 'react';
+import { useUsage } from './usage.ts';
+import { Segmented } from '../../ui/primitives.tsx';
 import { placeOnSheet, sheetTables } from './table-field.tsx';
 import { TableColumnCard } from './rules/tables-section.tsx';
 import { SheetSample } from './sheet-sample.tsx';
@@ -21,6 +24,9 @@ export function SheetTab() {
   const active = activeTag ? fieldOf(system, activeTag) ?? null : null;
   const tables = sheetTables(system);
   const right = useLookupPane({ head: 'Готовое из образцов', body: <DonorPalette kind="blocks" /> });
+  const kindPicked = useWorld(s => s.activeSheetKind);
+  const [view, setView] = useState<'sample' | 'kinds'>(kindPicked ? 'kinds' : 'sample');
+  const usage = useUsage();
 
   const add = () => {
     const made = newColumn(system, NO_BLOCK);
@@ -49,7 +55,18 @@ export function SheetTab() {
           : <Empty title="Щёлкните поле на листе" />,
       }}
       main={{
-        body: <SheetSample system={system} picked={activeTag} onPick={tag => pick({ activeFieldTag: tag, activeGroupName: null })} />,
+        body: (
+          <>
+            <Segmented
+              value={view}
+              options={[{ key: 'sample', label: 'образец листа' }, { key: 'kinds', label: 'блоки и типы листов' }]}
+              onChange={next => setView(next as 'sample' | 'kinds')}
+            />
+            {view === 'sample'
+              ? <SheetSample system={system} picked={activeTag} onPick={tag => pick({ activeFieldTag: tag, activeGroupName: null })} />
+              : <CharacterSection system={system} editSystem={editSystem} usage={usage} onTable={id => pick({ activeTab: 'dictionaries', activeTableId: id })} />}
+          </>
+        ),
       }}
       right={right}
     />

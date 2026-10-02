@@ -25,11 +25,12 @@ export const whereLabel = (where: Where, system: System): string => describeWher
 
 type Pick = Parameters<WorldState['pick']>[0];
 
-export function pickFor(where: Where): Pick {
+export function pickFor(where: Where, system?: System): Pick {
   if (where.tab === 'sheet') return { activeTab: 'sheet', activeFieldTag: where.field ?? null, activeStepIndex: null };
   if (where.tab === 'effects') {
     return { activeTab: 'effects', activeEffectId: where.effect ?? null, activeStepIndex: where.step ?? null };
   }
+  if (where.tab === 'records' && where.kind && system?.sheets?.[where.kind]) return { activeTab: 'sheet', activeSheetKind: where.kind, activeFieldTag: null, activeStepIndex: null };
   if (where.tab === 'records') return { activeTab: 'records', activeRecordKind: where.kind ?? null, activeStepIndex: null };
   if (where.tab === 'rules') return { activeTab: 'dictionaries', activeStepIndex: where.step ?? null };
   return { activeRecordId: where.record ?? null, activeStepIndex: null };

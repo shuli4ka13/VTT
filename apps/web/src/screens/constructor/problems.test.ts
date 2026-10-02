@@ -37,6 +37,7 @@ describe('адрес проблемы открывает нужное место
 
   it('тип записи и правила', () => {
     expect(pickFor({ tab: 'records', kind: 'weapon' })).toMatchObject({ activeTab: 'records', activeRecordKind: 'weapon' });
+    expect(pickFor({ tab: 'records', kind: 'персонаж' }, { sheets: { персонаж: { label: 'Персонаж' } } } as never)).toMatchObject({ activeTab: 'sheet', activeSheetKind: 'персонаж' });
     expect(pickFor({ tab: 'rules', section: 'grants' })).toMatchObject({ activeTab: 'dictionaries' });
   });
 

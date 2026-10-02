@@ -29,7 +29,7 @@ export function ProblemsButton() {
                 key={index}
                 tone={problem.level === 'error' ? 'bad' : 'warn'}
                 action={
-                  <Button size="sm" onClick={() => { pick(pickFor(problem.where)); setOpen(false); }}>Открыть</Button>
+                  <Button size="sm" onClick={() => { pick(pickFor(problem.where, system)); setOpen(false); }}>Открыть</Button>
                 }
               >
                 <b>{whereLabel(problem.where, system)}</b> — {problem.text}

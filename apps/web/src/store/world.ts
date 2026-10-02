@@ -34,6 +34,7 @@ export interface WorldState {
   activeGroupName: string | null;
   activeEffectId: string | null;
   activeRecordKind: string | null;
+  activeSheetKind: string | null;
   activeRecordId: string | null;
   activeSheetId: string | null;
   activeTab: ConstructorTab;
@@ -41,7 +42,7 @@ export interface WorldState {
   activeTableId: string | null;
 
   pick: (what: Partial<Pick<WorldState,
-    'activeFieldTag' | 'activeGroupName' | 'activeEffectId' | 'activeRecordKind' | 'activeRecordId' | 'activeSheetId'
+    'activeFieldTag' | 'activeGroupName' | 'activeEffectId' | 'activeRecordKind' | 'activeSheetKind' | 'activeRecordId' | 'activeSheetId'
     | 'activeTab' | 'activeStepIndex' | 'activeTableId'>>) => void;
 
   editSystem: (edit: (draft: System) => void) => void;
@@ -81,6 +82,7 @@ export const useWorld = create<WorldState>()(persist(set => ({
   activeGroupName: null,
   activeEffectId: null,
   activeRecordKind: null,
+  activeSheetKind: null,
   activeRecordId: null,
   activeSheetId: null,
   activeTab: 'sheet',
@@ -144,6 +146,7 @@ export const useWorld = create<WorldState>()(persist(set => ({
     activeGroupName: null,
     activeEffectId: null,
     activeRecordKind: null,
+  activeSheetKind: null,
     activeRecordId: null,
     activeSheetId: world.sheets[0]?.id ?? null,
   }),

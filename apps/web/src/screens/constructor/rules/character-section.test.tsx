@@ -2,9 +2,16 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { useWorld, emptySystem } from '../../../store/world.ts';
-import { RulesTab } from './rules-tab.tsx';
+import { CharacterSection } from './character-section.tsx';
 import type { System } from '@vtt/schema';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+
+function Sheets() {
+  const system = useWorld(s => s.system);
+  const editSystem = useWorld(s => s.editSystem);
+  return <CharacterSection system={system} editSystem={editSystem} />;
+}
+
 
 const system = (): System => ({
   ...emptySystem(),
@@ -19,7 +26,7 @@ describe('листы: блоки и типы', () => {
   afterEach(() => { cleanup(); });
 
   it('«+ тип листа» заводит тип, снятая отметка убирает блок с этого типа', () => {
-    render(<RulesTab />);
+    render(<Sheets />);
     fireEvent.click(screen.getByText('+ тип листа'));
     const [key, kind] = Object.entries(useWorld.getState().system.sheets ?? {})[0]!;
     expect(kind.label).toBe('Новый тип листа');
@@ -31,7 +38,7 @@ describe('листы: блоки и типы', () => {
   });
 
   it('«+ блок» заводит блок с колонкой, название блока правится на месте', () => {
-    render(<RulesTab />);
+    render(<Sheets />);
     fireEvent.click(screen.getByText('+ блок'));
     expect(fieldsOf(useWorld.getState().system).some(f => f.group === 'Новый блок')).toBe(true);
     const name = screen.getAllByDisplayValue('Новый блок').find(el => el.tagName === 'INPUT')!;

@@ -590,7 +590,7 @@ export function describeWhere(where: Where, system: System, compendium?: Compend
     if (where.section) parts.push(SECTION_WORDS[where.section] ?? where.section);
     if (where.step !== undefined) parts.push(`${STEP.one} ${where.step + 1}`);
   } else if (where.tab === 'records') {
-    parts.push(TABS.records);
+    parts.push(where.kind && system.sheets?.[where.kind] ? `${TABS.sheet} · тип листа` : TABS.records);
     if (where.kind) parts.push(quoted(kindOf(system, where.kind)?.label, where.kind));
     if (where.binding !== undefined) parts.push(`кнопка ${where.binding + 1}`);
     else if (where.part === 'modifiers') parts.push('модификаторы');

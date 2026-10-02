@@ -1,7 +1,6 @@
 import { ButtonEditor } from './button-editor.tsx';
 import { useWorld, freeId } from '../../store/world.ts';
 import { ModifiersEditor } from './modifiers.tsx';
-import { MultiChoice } from '../../ui/multi-choice.tsx';
 import { newRecordKind, newBinding, newProp } from './factory.ts';
 import { Columns, List, ListItem } from '../../ui/layout.tsx';
 import { useLookupPane } from './lookup-panel.tsx';
@@ -12,9 +11,9 @@ import type { System, SheetKind, Table } from '@vtt/schema';
 import type { RecordKind } from '@vtt/engine/model/owned';
 import { TableColumnCard } from './rules/tables-section.tsx';
 import { useState } from 'react';
-import { BlockPick, fieldBlocks } from './block-pick.tsx';
+import { BlockPick } from './block-pick.tsx';
 import { GrantsEditor } from './grants-editor.tsx';
-import { argsWithProps, propKeysOf, recordKinds, sheetKinds, kindsOf, recordsOf } from '@vtt/engine/model/owned';
+import { argsWithProps, propKeysOf, recordKinds, sheetKinds, recordsOf } from '@vtt/engine/model/owned';
 import { DESK_ID } from '@vtt/engine/engine/owners';
 import type { AnyKind } from '@vtt/engine/model/owned';
 import { blockOf } from '@vtt/engine/model/blocks';
@@ -32,23 +31,8 @@ function SheetKindCards({ kind, system, edit }: {
   edit: (change: (draft: SheetKind) => void) => void;
 }) {
   const editSystem = useWorld(s => s.editSystem);
-  const blocks = fieldBlocks(system).map(name => ({ value: name, label: name }));
   return (
     <>
-      <Card>
-        <CardHead
-          title="Какие блоки на листе этого типа"
-          sub="Пусто — все блоки."
-        />
-        <MultiChoice
-          value={kind.blocks ?? []}
-          options={blocks}
-          onChange={next => edit(draft => {
-            const list = (Array.isArray(next) ? next : []).map(String);
-            if (list.length) draft.blocks = list; else delete draft.blocks;
-          })}
-        />
-      </Card>
       <Card>
         <CardHead
           title="Что даёт каждому листу этого типа"
@@ -78,13 +62,42 @@ const ON_SHEET = [
 ] as const;
 
 
+export function SheetKindEditor({ id, kind, system }: { id: string; kind: SheetKind; system: System }) {
+  const editSystem = useWorld(s => s.editSystem);
+  const edit = (change: (draft: SheetKind) => void) => editSystem(draft => {
+    const target = draft.sheets?.[id];
+    if (target) change(target);
+  });
+  const peers = sheetKinds(system).filter(([key]) => key !== id);
+  return (
+    <>
+      <div className="row">
+        <Field label="На основе" hint="Выдача и правки основы достанутся этому типу.">
+          <Select
+            value={kind.extends ?? ''}
+            options={[['', '— сам по себе —'], ...peers.map(([key, other]) => [key, other.label ?? key] as const)] as never}
+            onChange={next => edit(draft => { if (next) draft.extends = next; else delete draft.extends; })}
+          />
+        </Field>
+        <Field label="Значок">
+          <Input value={kind.icon ?? ''} placeholder="🛡" onChange={next => edit(draft => { if (next.trim()) draft.icon = next.trim(); else delete draft.icon; })} />
+        </Field>
+        <Field label="Подсказка заполняющему">
+          <Input value={kind.hint ?? ''} onChange={next => edit(draft => { if (next.trim()) draft.hint = next; else delete draft.hint; })} />
+        </Field>
+      </div>
+      <SheetKindCards kind={kind} system={system} edit={edit} />
+    </>
+  );
+}
+
 export function RecordsTab() {
   const system = useWorld(s => s.system);
   const activeKind = useWorld(s => s.activeRecordKind);
   const pick = useWorld(s => s.pick);
   const editSystem = useWorld(s => s.editSystem);
 
-  const kinds = kindsOf(system);
+  const kinds = recordKinds(system) as [string, AnyKind][];
   const active = kinds.find(([key]) => key === activeKind)?.[1];
 
   const add = () => {

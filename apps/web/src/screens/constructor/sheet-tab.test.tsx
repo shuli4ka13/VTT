@@ -1,9 +1,16 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { RulesTab } from './rules/rules-tab.tsx';
+import { CharacterSection } from './rules/character-section.tsx';
 import { useWorld } from '../../store/world.ts';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+
+function Sheets() {
+  const system = useWorld(s => s.system);
+  const editSystem = useWorld(s => s.editSystem);
+  return <CharacterSection system={system} editSystem={editSystem} />;
+}
+
 
 describe('колонка персонажа: человеческие теги', () => {
   beforeEach(() => {
@@ -21,7 +28,7 @@ describe('колонка персонажа: человеческие теги',
   });
 
   it('пока поле девственно, тег следует за названием', () => {
-    render(<RulesTab />);
+    render(<Sheets />);
     const name = screen.getByPlaceholderText('как зовётся колонка');
     fireEvent.change(name, { target: { value: 'Урон' } });
     fireEvent.blur(name);
@@ -42,7 +49,7 @@ describe('колонка персонажа: человеческие теги',
       },
       activeFieldTag: 'урон',
     }));
-    render(<RulesTab />);
+    render(<Sheets />);
     const name = screen.getByPlaceholderText('как зовётся колонка');
     fireEvent.change(name, { target: { value: 'Повреждения' } });
     fireEvent.blur(name);

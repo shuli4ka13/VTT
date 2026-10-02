@@ -8,7 +8,7 @@ export const TABS = {
   sheet: 'Лист',
   rules: 'Правила',
   effects: 'Эффекты',
-  records: 'Типы записей',
+  records: 'Вещи и умения',
 } as const;
 
 export const DIE_LETTER = 'к';

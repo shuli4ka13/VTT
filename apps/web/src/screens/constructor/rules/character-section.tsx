@@ -1,3 +1,4 @@
+import { SheetKindEditor } from '../records-tab.tsx';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { blockTree } from '../block-tree.tsx';
@@ -71,7 +72,8 @@ export function CharacterSection({ system, editSystem }: {
 }) {
   const picked = useWorld(s => s.activeFieldTag);
   const pick = useWorld(s => s.pick);
-  const [of, setOf] = useState('');
+  const of = useWorld(s => s.activeSheetKind) ?? '';
+  const setOf = (key: string) => pick({ activeSheetKind: key || null });
   const [cell, setCell] = useState<Picked>(null);
   const kinds = sheetKinds(system);
   const kind = of ? system.sheets?.[of] : undefined;
@@ -186,11 +188,14 @@ export function CharacterSection({ system, editSystem }: {
         ) : null}
       </div>
       {kind ? (
-        <div className="inline inline--tight">
-          <LabelInput value={kind.label ?? ''} placeholder="как зовётся тип листа"
-            onCommit={label => editSystem(draft => { const target = draft.sheets?.[of]; if (target) target.label = label; })} />
-          <DangerButton size="sm" onConfirm={() => { editSystem(draft => { delete draft.sheets?.[of]; }); setOf(''); }}>Удалить тип</DangerButton>
-        </div>
+        <>
+          <div className="inline inline--tight">
+            <LabelInput value={kind.label ?? ''} placeholder="как зовётся тип листа"
+              onCommit={label => editSystem(draft => { const target = draft.sheets?.[of]; if (target) target.label = label; })} />
+            <DangerButton size="sm" onConfirm={() => { editSystem(draft => { delete draft.sheets?.[of]; }); setOf(''); }}>Удалить тип</DangerButton>
+          </div>
+          <SheetKindEditor id={of} kind={kind} system={system} />
+        </>
       ) : null}
       {open && openTable && openColumn ? (
         <TableColumnCard id={open.table} table={openTable} column={openColumn} system={system}
