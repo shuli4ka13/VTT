@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { paramsOf } from '@vtt/engine/model/inherit';
 import { EffectPick } from '../effect-pick.tsx';
+import { TagsField } from '../tags-field.tsx';
 import { useWorld } from '../../../store/world.ts';
 import { newHandler, payStep } from '../factory.ts';
 import { Card, CardHead, Field, Input, Select, DangerButton, LabelInput, Button, Empty } from '../../../ui/primitives.tsx';
@@ -150,6 +151,21 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
                   onChange={next => edit(draft => { if (next) draft.extends = next; else delete draft.extends; })}
                 />
               ),
+            },
+            {
+              key: 'tags', label: 'Метки', width: 220, hint: 'Метки действия: подписки «всё с меткой», правки по метке и договор метки (какие входы обязаны быть)',
+              node: (
+                <TagsField
+                  system={system}
+                  value={effect.tags}
+                  empty="+ метка…"
+                  onChange={next => edit(draft => { const list = next.filter((t): t is string => typeof t === 'string'); if (list.length) draft.tags = list; else delete draft.tags; })}
+                />
+              ),
+            },
+            {
+              key: 'icon', label: 'Значок', width: 80, hint: 'Один символ на кнопке и в списке',
+              node: <Input value={effect.icon ?? ''} placeholder="⚔" onChange={next => edit(draft => { if (next.trim()) draft.icon = next.trim(); else delete draft.icon; })} />,
             },
             {
               key: 'description', label: 'Описание', width: 320, hint: 'Текст на листе. На расчёт не влияет',
