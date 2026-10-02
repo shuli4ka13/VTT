@@ -68,7 +68,7 @@ export function rollInitiative(system: System, sheets: Sheet[], compendium: Comp
 
 export function fireMoments(events: { moment: MomentKey; sheetId: string }[], sheets: Sheet[], world: World) {
   const run = runOf(world, sheets);
-  const expired = events.flatMap(event => run.moment(event.moment, event.sheetId, Path.op('moments')));
+  const expired = events.flatMap(event => run.moment(event.moment, [event.sheetId], Path.op('moments')));
   return { sheets: [...run.state.sheets], reports: fired(run.state.log), expired, log: render(run.state.log, world.system, run.state.sheets) };
 }
 
@@ -99,8 +99,8 @@ export function runSteps(system: System, sheets: Sheet[], sheetId: string, steps
   const run = runOf({ system, compendium, die }, sheets);
   const sink = newSink();
   const ran = run.exec({
-    path: Path.op('rule'), effectId: 'e', label: 'тест', owner: 'тест', here: sheetId, names: sheetId, sender: sheetId, receiver: sheetId,
-    opponent: null, args, paramDefs, props: null, claims: {}, actor: false, hop: 0, source: sheetId,
+    path: Path.op('rule'), effectId: 'e', label: 'тест', owner: 'тест', home: sheetId, bound: { носитель: sheetId },
+    args, paramDefs, props: null, claims: {}, hop: 0, inSub: false,
   }, steps, sink);
   return { ...ran, sink, sheets: [...run.state.sheets] };
 }

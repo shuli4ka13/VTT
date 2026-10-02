@@ -18,7 +18,10 @@ import type { Entry } from './log.ts';
 import type { RollResult } from './dice.ts';
 import type { StepData } from './steps.ts';
 import type { Clock } from '../engine/clock.ts';
-import type { System, Sheet, Compendium, Die, Effect, Binding, TableFill } from '../model/types.ts';
+import type { System, Sheet, Compendium, Die } from '../model/types.ts';
+import { tableOf } from '../model/buttons.ts';
+
+export { tableOf };
 
 export interface ActIntent {
   actionId: string;
@@ -65,14 +68,6 @@ export function act(world: ActWorld, intent: ActIntent): ActOutcome {
       journal: ext.snapshot(), fresh: ext.fresh, question: err.question,
     };
   }
-}
-
-export function tableOf(binding: Binding, effect: Effect): Record<string, TableFill> {
-  if (binding.table) return binding.table;
-  const sheets = (effect.params ?? []).filter(param => param.kind === 'sheet');
-  const actor = sheets.find(param => !param.many);
-  const targets = sheets.find(param => param.many);
-  return { ...(actor ? { [actor.key]: 'actor' as const } : {}), ...(targets ? { [targets.key]: 'targets' as const } : {}) };
 }
 
 export function runAct(run: Run, intent: ActIntent, root: Path): void {
@@ -157,7 +152,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
       const why = refusalWords(reportOf('effect', action.effect, actor, action.label, sink, ran.stopped, false), system);
       throw new EngineError(`«${action.label}» не состоялось: ${why ?? 'цепочка оборвана'}`);
     }
-    if (sink.changes.length || sink.effects.length || sink.removed.length) {
+    if (sink.trace.length || sink.changes.length || sink.effects.length || sink.removed.length) {
       state.write({ fromId: actor, toId: actor, report: reportOf('effect', action.effect, actor, action.label, sink, null, false) });
     }
     state.write(...sink.after);

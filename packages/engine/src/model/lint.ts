@@ -9,6 +9,7 @@ import { basedOn, paramsOf } from './inherit.ts';
 import { danglingRows } from './integrity.ts';
 import { recordsOf, argsWithProps, propKeysOf, recordKinds, kindsOf, kindOf, isBook } from './owned.ts';
 import { blockNames } from './blocks.ts';
+import { tableOf } from './buttons.ts';
 import { MOMENTS } from '../events/moments.ts';
 import { TABS, STEP } from '../words/glossary.ts';
 import {
@@ -100,6 +101,7 @@ function danglingText(ref: Reference, declared: Declared): string | null {
     && (ref.scope === 'plain' || ref.scope === 'bare' || ref.scope === 'sheet')) return null;
   if (ref.kind === 'field' && ref.scope === 'plain' && !declared.field.has(ref.key) && declared.prop.has(ref.key)) return null;
   if (ref.kind === 'field' && ref.path === ref.key && declared.table.has(ref.key.split('.')[0]!)) return null;
+  if (ref.kind === 'field' && ref.scope === 'bare' && !declared.field.has(ref.key) && declared.prop.has(ref.key)) return null;
   if (ref.kind === 'field' && ref.scope === 'bare' && !declared.field.has(ref.key)) {
     return `«${ref.key}» — нет ни входа, ни шага с таким именем`;
   }
@@ -481,9 +483,10 @@ function paramProblems(system: System): Problem[] {
       const effect = system.effects[binding.effect];
       if (!effect) return;
       const args = argsWithProps(system, binding, props) ?? {};
+      const table = tableOf(binding, effect);
       for (const param of effect.params ?? []) {
-        if (args[param.key] !== undefined) continue;
-        if (param.ask) continue;
+        if (args[param.key] !== undefined || table[param.key]) continue;
+        if (param.ask || (param.kind === 'sheet' && param.optional)) continue;
         out.push({
           where: { tab: 'records', kind, part: 'bindings', binding: index }, level: 'error',
           text: `кнопка «${binding.label ?? effect.label ?? binding.effect}» не заполняет вход «${param.label ?? param.key}» эффекта «${effect.label ?? binding.effect}»`,

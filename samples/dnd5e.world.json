@@ -9739,7 +9739,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "1 + меньшее из(1, @hasted)"
+                  "expr": "1 + меньшее из(1, @носитель.hasted)"
                 },
                 "targetModifiers": false
               },
@@ -9842,7 +9842,7 @@
                 },
                 "direction": "set",
                 "value": {
-                  "expr": "1 + меньшее из(1, @hasted)"
+                  "expr": "1 + меньшее из(1, @носитель.hasted)"
                 },
                 "targetModifiers": false
               },

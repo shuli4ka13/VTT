@@ -168,6 +168,7 @@ export function exprRefs(source: string, from: Where, scope: ChainScope, out: Re
     if (scope.sheets.has(top) || top === DESK_NAME) {
       if (!rest) continue;
       const parts = rest.split('.');
+      if (scope.params.has(parts[0]!)) continue;
       out.push({ kind: 'field', key: parts[0]!, from, scope: top === DESK_NAME ? 'desk' : 'sheet', ...(parts.length > 1 ? { path: rest } : {}) });
       continue;
     }
