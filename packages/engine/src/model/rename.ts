@@ -9,7 +9,7 @@ const escape = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\
 export function renameText(text: string, map: Map<string, string>): string {
   let out = text;
   for (const [from, to] of [...map].sort((a, b) => b[0].length - a[0].length)) {
-    const re = new RegExp(`@((?:отправитель|получатель|стол)\\.)?${escape(from)}(?!${NAME})`, 'gu');
+    const re = new RegExp(`@([\\p{L}\\p{N}_]+\\.)?${escape(from)}(?!${NAME})`, 'gu');
     out = out.replace(re, (_, owner: string | undefined) => `@${owner ?? ''}${to}`);
   }
   return out;

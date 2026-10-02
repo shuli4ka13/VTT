@@ -7,7 +7,6 @@ import type { BarOption } from '../../store/formula-bar.ts';
 import { outputRefs, declaredProps, inputBadges } from './slots.tsx';
 import type { SlotContext, SlotKind } from './slots.tsx';
 import { asDice } from '../../words.ts';
-import { SENDER, RECEIVER, owned } from '@vtt/engine/engine/owners';
 import { writeTableCall } from '@vtt/engine/model/amounts';
 import { fieldsOf, hasField } from '@vtt/engine/model/sheet-columns';
 import { rowTables } from '@vtt/engine/model/tables';
@@ -85,7 +84,7 @@ const tableOption = (ctx: SlotContext, table: string, column: string): Pick<Slot
   return { ref: { expr: writeTableCall({ table, arg: `@${by.key}`, column }) } };
 };
 
-export function optionsFor(ctx: SlotContext, allow: SlotKind[] | undefined, keep: readonly Keep[], side?: 'self' | 'target'): SlotOption[] {
+export function optionsFor(ctx: SlotContext, allow: SlotKind[] | undefined, keep: readonly Keep[]): SlotOption[] {
   const ok = (kind: SlotKind) => !allow || allow.includes(kind);
   const out: SlotOption[] = [];
   if (ok('prop')) {
@@ -111,10 +110,13 @@ export function optionsFor(ctx: SlotContext, allow: SlotKind[] | undefined, keep
     for (const o of outputRefs(ctx.earlier)) out.push({ group: 'Результаты шагов', label: o.label, name: o.ref });
   }
   if (ok('tag')) {
+    const sheets = [...(ctx.sheets ?? new Map<string, string>())];
     for (const f of fieldsOf(ctx.system)) {
-      out.push(keep.includes('tag')
-        ? { group: 'Поля листа', label: f.label ?? f.tag, name: f.tag, ref: { tag: f.tag } }
-        : { group: side === 'target' ? 'Поля цели' : 'Поля листа', label: f.label ?? f.tag, name: side === 'target' ? owned(RECEIVER, f.tag) : f.tag });
+      if (keep.includes('tag') || !sheets.length) {
+        out.push({ group: 'Поля листа', label: f.label ?? f.tag, name: f.tag, ...(keep.includes('tag') ? { ref: { tag: f.tag } } : {}) });
+        continue;
+      }
+      for (const [name, label] of sheets) out.push({ group: `Поля: ${label}`, label: f.label ?? f.tag, name: `${name}.${f.tag}` });
     }
   }
   if (ok('constant')) {
@@ -132,7 +134,7 @@ const structuredName = (ref: unknown): string | null => {
   return null;
 };
 
-export function SlotInput({ value, onChange, context, allow, keep = [], placeholder, extraOptions, dice, side, onCreateFromRecord, where = 'значение' }: {
+export function SlotInput({ value, onChange, context, allow, keep = [], placeholder, extraOptions, dice, onCreateFromRecord, where = 'значение' }: {
   value: unknown;
   onChange: (next: SlotRef | null) => void;
   context: SlotContext;
@@ -145,7 +147,6 @@ export function SlotInput({ value, onChange, context, allow, keep = [], placehol
 
   dice?: boolean;
 
-  side?: 'self' | 'target';
 
   onCreateFromRecord?: () => SlotRef;
 
@@ -154,11 +155,11 @@ export function SlotInput({ value, onChange, context, allow, keep = [], placehol
   const [draft, setDraft] = useState<string | null>(null);
   const [picked] = useState(() => new Map<string, SlotRef>());
   const options = useMemo(() => {
-    const base = [...(extraOptions ?? []), ...optionsFor(context, allow, keep, side)];
+    const base = [...(extraOptions ?? []), ...optionsFor(context, allow, keep)];
     if (!onCreateFromRecord) return base;
     const born: SlotOption = { group: 'Входы эффекта', label: 'новый вход…', synthetic: true };
     return [born, ...base];
-  }, [context, allow, keep, side, extraOptions, onCreateFromRecord]);
+  }, [context, allow, keep, extraOptions, onCreateFromRecord]);
 
   const names = useMemo(() => {
     const out = new Map<string, string>();
@@ -225,7 +226,7 @@ export function SlotInput({ value, onChange, context, allow, keep = [], placehol
         value={draft ?? initial}
         system={context.system}
         where={where}
-        owners
+        {...(context.sheets ? { sheets: context.sheets } : {})}
         extraNames={names}
         badges={inputBadges(context)}
         options={menu}
@@ -233,7 +234,6 @@ export function SlotInput({ value, onChange, context, allow, keep = [], placehol
         prefix={chip ? (
           <span className={`chips__chip${chip.record ? ' chips__chip--record' : ''}`}>
             {chip.label}
-            {side && 'tag' in (value as object) ? <span className={`chips__side chips__side--${side === 'self' ? 'sender' : 'receiver'}`}>{side === 'self' ? SENDER : RECEIVER}</span> : null}
             <button
               type="button" className="chips__x" aria-label="убрать"
               onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onChange(null); }}

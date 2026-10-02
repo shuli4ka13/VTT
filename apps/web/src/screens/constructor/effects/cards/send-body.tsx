@@ -10,8 +10,7 @@ import { WhatNext, meddlersOf } from '../what-next.tsx';
 
 const loose = (draft: unknown): Record<string, unknown> => draft as Record<string, unknown>;
 
-export function SendBody({ step, at, context, edit, system, onOpenEffect, canAnswer = false }: {
-  canAnswer?: boolean;
+export function SendBody({ step, at, context, edit, system, onOpenEffect }: {
   step: any;
   at: number;
   context: SlotContext;
@@ -39,24 +38,11 @@ export function SendBody({ step, at, context, edit, system, onOpenEffect, canAns
         })}
         headAction={(
           <Button size="sm" variant="ghost" onClick={() => setPeek(true)}>
-            {`что будет дальше${meddlersOf(system, String(step.event)).length ? ' · цель может урезать' : ''} →`}
+            {`что будет дальше${meddlersOf(system, String(step.event)).length ? ' · правки могут урезать' : ''} →`}
           </Button>
         )}
       >
-        {step.event && canAnswer ? (
-          <Field
-            label="Где выполнить"
-            hint={step.to === 'sender'
-              ? 'Получатель отвечает отправителю: вызванный эффект выполнится на листе отправителя. Так «Вампирское касание» лечит атакующего.'
-              : undefined}
-          >
-            <Select
-              value={step.to === 'sender' ? 'sender' : 'here'}
-              options={[['here', 'у получателя — здесь же'], ['sender', 'у отправителя — ответом']] as const}
-              onChange={next => edit(at, draft => { if (next === 'sender') loose(draft).to = 'sender'; else delete loose(draft).to; })}
-            />
-          </Field>
-        ) : null}
+        {null}
       </CallEditor>
 
       <WhatNext

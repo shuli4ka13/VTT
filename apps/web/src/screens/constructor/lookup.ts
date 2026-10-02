@@ -1,4 +1,3 @@
-import { ownerOf, OWNER_WORDS } from '@vtt/engine/engine/owners';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
 import { splitPath } from '@vtt/engine/engine/navigate';
 import { choiceTableOf } from '@vtt/engine/model/lists';
@@ -81,11 +80,12 @@ const usersBy = (usage: UsageIndex, kind: RefKind, key: string, system: System) 
 export function explainName(
   system: System, compendium: Compendium | undefined, effectId: string | null, name: string, usage: UsageIndex,
 ): Explained {
-  const owned = ownerOf(name);
-  const rest = owned?.rest ?? name;
-  const owner = owned ? `лист ${OWNER_WORDS[owned.owner]}` : null;
   const effect = effectId ? system.effects?.[effectId] : undefined;
   const params = effect?.params ?? [];
+  const dot = name.indexOf('.');
+  const sheet = dot > 0 ? params.find(p => p.kind === 'sheet' && p.key === name.slice(0, dot)) ?? (['носитель', 'стол', 'цель'].includes(name.slice(0, dot)) ? { key: name.slice(0, dot), label: name.slice(0, dot) } : undefined) : undefined;
+  const rest = sheet ? name.slice(dot + 1) : name;
+  const owner = sheet ? `лист «${sheet.label ?? sheet.key}»` : null;
   const head = splitPath(rest)?.head ?? rest;
   const earlier = stepsOf(effect);
   const ownerFact: [string, string][] = owner ? [['чьё', owner]] : [];

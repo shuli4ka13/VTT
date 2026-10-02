@@ -8,6 +8,8 @@ import { calledOf } from '@vtt/engine/engine/effects';
 import { ROLL_CALL, CALL_WORDS } from '@vtt/engine/words/calls';
 import { TagPick, type Tag } from './tag-pick.tsx';
 import { RollTagsPick } from './roll-tags-pick.tsx';
+import { callNamesOf } from '@vtt/engine/model/references';
+import { holderPhrase, splitIf, joinIf } from './effects/names.ts';
 
 const OPS = [
   ['add', 'прибавить'],
@@ -100,7 +102,7 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
                   value={modifier.target}
                   options={[['', '— выберите, что правим —'],
                     ...valueTargets.map(t => [t.tag, t.kind === 'incoming' ? `${t.label}` : t.label] as const)] as never}
-                  onChange={target => onEdit(draft => { (draft[index] as Modifier).target = target; })}
+                  onChange={target => onEdit(draft => { (draft[index] as { target: string }).target = target; })}
                 />
               </Field>
               <Field label="Как">
@@ -138,20 +140,24 @@ export function ModifiersEditor({ system, modifiers, onEdit, title, empty, editS
             />
           ) : null}
 
-          <Fold title="Только если" summary={modifier.condition?.expr ? `если ${formulaAsLabels(system, modifier.condition.expr)}` : 'всегда'}>
-          <Field label="Условие" hint="На листе владельца. Пусто — всегда.">
-            <FormulaInput
-              where="модификатор · только когда"
-              system={system}
-              value={modifier.condition?.expr ?? ''}
-              onChange={expr => onEdit(draft => {
-                const d = draft[index] as { condition?: { expr: string } };
-                if (expr.trim()) d.condition = { expr }; else delete d.condition;
-              })}
-              placeholder="например: @тяжёлая броня"
-            />
-          </Field>
-          </Fold>
+          {modifier.kind === 'value' ? (
+            <Fold title="Только если" summary={modifier.condition?.expr ? `если ${formulaAsLabels(system, modifier.condition.expr)}` : 'всегда'}>
+              <Field label="Условие" hint="На листе носителя. Пусто — всегда.">
+                <FormulaInput
+                  where="модификатор · только когда"
+                  system={system}
+                  value={modifier.condition?.expr ?? ''}
+                  onChange={expr => onEdit(draft => {
+                    const d = draft[index] as { condition?: { expr: string } };
+                    if (expr.trim()) d.condition = { expr }; else delete d.condition;
+                  })}
+                  placeholder="например: @тяжёлая броня"
+                />
+              </Field>
+            </Fold>
+          ) : (
+            <Concern system={system} modifier={modifier as Loose} onChange={change => onEdit(draft => { change(draft[index] as Loose); })} />
+          )}
         </Card>
       ))}
     </>
@@ -220,13 +226,6 @@ function EditBody({ system, modifier, calls, edits, recipes, onChange, onPickEdi
       </Field>
       {isRoll ? (
         <>
-          <Field label="Чей бросок">
-            <Select
-              value={m.as === 'against' ? 'against' : ''}
-              options={[['', 'мой'], ['against', CALL_WORDS.against]] as never}
-              onChange={as => onChange(d => { if (as) d.as = as; else delete d.as; })}
-            />
-          </Field>
           <Field label="Что правим">
             <Select
               value={String(m.param ?? 'edits')}
@@ -344,5 +343,44 @@ function EventCondition({ system, effect, modifier, onChange }: {
         </Field>
       ) : null}
     </>
+  );
+}
+
+function Concern({ system, modifier, onChange }: {
+  system: System;
+  modifier: Loose;
+  onChange: (change: (draft: Loose) => void) => void;
+}) {
+  const call = String(modifier.call ?? ROLL_CALL);
+  const names = callNamesOf(system, call).sheets;
+  const words: Record<string, string> = { бросающий: 'бросает носитель', против: 'бросают против носителя' };
+  const phrases = names.map(name => [holderPhrase(name), words[name] ?? `«${name}» — носитель`] as const);
+  const written = (modifier.if as { expr?: string } | undefined)?.expr;
+  const { holder, rest } = splitIf(written, phrases.map(([expr]) => expr));
+  const set = (nextHolder: string, nextRest: string) => onChange(d => {
+    const expr = joinIf(nextHolder, nextRest);
+    if (expr) d.if = { expr }; else delete d.if;
+  });
+  return (
+    <div className="row">
+      <Field label="Кого касается" hint="Носитель — лист, на котором висит эта правка.">
+        <Select<string>
+          value={holder}
+          options={[['', 'всех — без условия'], ...phrases]}
+          onChange={next => set(next, rest)}
+        />
+      </Field>
+      <Fold title="Только если" summary={rest ? `если ${formulaAsLabels(system, rest)}` : 'больше условий нет'}>
+        <Field label="Условие" hint="Поля пишутся через лист: @носитель.поле. Входы вызова — по имени.">
+          <FormulaInput
+            where="правка · только если"
+            system={system}
+            value={rest}
+            onChange={expr => set(holder, expr)}
+            placeholder="например: @носитель.ярость > 0"
+          />
+        </Field>
+      </Fold>
+    </div>
   );
 }

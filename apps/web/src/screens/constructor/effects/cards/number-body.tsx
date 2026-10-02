@@ -1,10 +1,8 @@
-import { ownerOf } from '@vtt/engine/engine/owners';
 import { useMemo, useState } from 'react';
 import type { Step, ValueKind } from '@vtt/schema';
 import { Field, Select, Button } from '../../../../ui/primitives.tsx';
 import { FormulaField } from '../../../../ui/formula-field.tsx';
 import { formulaAsLabels } from '../../../../ui/formula.tsx';
-import { SlotInput } from '../../slot-input.tsx';
 import { asOneFormula } from '@vtt/engine/model/amounts';
 import { namesOf } from '../../slots.tsx';
 import { inputBadges } from '../../slots.tsx';
@@ -15,8 +13,6 @@ import { hasField } from '@vtt/engine/model/sheet-columns';
 type Loose = Record<string, unknown>;
 
 const loose = (draft: unknown): Loose => draft as Loose;
-
-const slotOf = (step: Loose, key: string) => step[key] as never;
 
 const textOf = (step: Loose): string => {
   const fixed = step.fixed as { expr?: unknown } | undefined;
@@ -31,41 +27,28 @@ export function NumberBody({ step, context, edit, onAddParam }: {
 }) {
   const [draft, setDraft] = useState<string | null>(null);
   const read = loose(step);
-  const source = typeof read.source === 'object' ? 'roll' : (read.source ?? 'roll');
+  const by = /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((read.by as { expr?: unknown } | undefined)?.expr ?? ''))?.[1] ?? '';
+  const sheets = [...(context.sheets ?? new Map<string, string>())];
   const line = draft ?? textOf(read) ?? '';
   const shown = line || (draft === null ? asOneFormula(step) ?? '' : '');
   const names = useMemo(() => namesOf(context), [context]);
   const words = shown ? formulaAsLabels(context.system, shown, names) : '';
 
   const unknown = [...new Set([...shown.matchAll(/@([\p{L}\p{N}_.]+)/gu)].map(m => m[1]!))]
-    .filter(name => !ownerOf(name) && !name.includes('.'))
+    .filter(name => !name.includes('.'))
     .filter(name => !names.has(name) && !hasField(context.system, name));
 
   const commit = (typed: string) => {
     edit(0, target => {
       const it = loose(target);
-      delete it.dice;
+      delete it.die;
       delete it.bonus;
       delete it.count;
-      delete it.double;
-      it.source = 'item';
       if (typed.trim()) it.fixed = { expr: typed };
       else delete it.fixed;
     });
     setDraft(null);
   };
-
-  if (source === 'margin') {
-    return (
-      <Field label="Какое превышение">
-        <SlotInput
-          where="число · какое превышение"
-          value={slotOf(read, 'margin')} context={context} allow={['ref']}
-          onChange={next => edit(0, draft => { loose(draft).margin = next ?? undefined; })}
-        />
-      </Field>
-    );
-  }
 
   return (
     <>
@@ -79,7 +62,7 @@ export function NumberBody({ step, context, edit, onAddParam }: {
           system={context.system}
           where="число · сколько"
           extraNames={names}
-          owners
+          {...(context.sheets ? { sheets: context.sheets } : {})}
           badges={inputBadges(context)}
           placeholder="наберите @ и выберите название"
           onChange={setDraft}
@@ -97,15 +80,13 @@ export function NumberBody({ step, context, edit, onAddParam }: {
         >{`взять «${name}» из записи`}</Button>
       )) : null}
 
-      {source !== 'item' ? (
-        <Field label="Откуда">
-          <Select
-            value={String(source)}
-            options={[['item', 'формулой'], ['margin', 'превышение проверки']] as const}
-            onChange={next => edit(0, draft => { loose(draft).source = next; })}
-          />
-        </Field>
-      ) : null}
+      <Field label="Бросает" hint="Пусто — просто расчёт: кости без правок броска. С листом — это его бросок: правки и «кости выпали» действуют.">
+        <Select<string>
+          value={by}
+          options={[['', '— расчёт —'], ...sheets.map(([name, label]) => [name, `«${label}»`] as const)]}
+          onChange={next => edit(0, draft => { if (next) loose(draft).by = { expr: `@${next}` }; else delete loose(draft).by; })}
+        />
+      </Field>
     </>
   );
 }

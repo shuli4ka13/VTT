@@ -60,7 +60,7 @@ export const newTable = (system: System): Made<Table> => ({
 });
 
 export const simpleReceive = (tag: string, direction: 'subtract' | 'add', targetModifiers: boolean): Step => ({
-  type: 'apply', target: { tag }, direction, value: { expr: '@event.amount' }, targetModifiers,
+  type: 'apply', target: { expr: `@лист.${tag}` }, direction, value: { expr: '@amount' }, targetModifiers,
 } as unknown as Step);
 
 export const newCost = (system: System): Made<Effect> => ({
@@ -80,7 +80,7 @@ export const newCalled = (system: System): Made<Effect> => {
     key: freeId(Object.keys(system.effects ?? {}), 'вызываемый'),
     value: {
       label: '',
-      params: [{ key: 'amount', label: 'Сколько', kind: 'number', role: 'amount' }],
+      params: [{ key: 'лист', label: 'Лист', kind: 'sheet' }, { key: 'amount', label: 'Сколько', kind: 'number', role: 'amount' }],
       steps: field ? [simpleReceive(field.tag, 'subtract', true)] : [],
     } as Effect,
   };
@@ -95,12 +95,14 @@ export interface StepTemplate {
 
 const firstDie = (system: System): string | undefined => Object.keys(system.constants ?? {})[0];
 
-const blankCheck = (system: System): Step => {
+const blankCheck = (system: System, taken: string[]): Step[] => {
   const die = firstDie(system);
-  return {
-    type: 'threshold', successWhen: 'atLeast', continueOn: 'success',
-    roll: { die: die ? { constant: die } : undefined },
-  } as unknown as Step;
+  const id = freeId(taken, 'проверка');
+  const roll = `${id}_бросок`;
+  return [
+    { id: roll, type: 'roll', ...(die ? { die: { constant: die } } : {}), by: { expr: '@действующий' } } as unknown as Step,
+    { id, type: 'check', value: { expr: `@${roll}` }, versus: { expr: '10' }, successWhen: 'atLeast', continueOn: 'success' } as unknown as Step,
+  ];
 };
 
 export const SEEN_BRICKS: StepTemplate[] = (['roll-add', 'roll-reroll', 'roll-plus'] as const).map(type => ({
@@ -111,12 +113,12 @@ export const SEEN_BRICKS: StepTemplate[] = (['roll-add', 'roll-reroll', 'roll-pl
 export const BRICKS: StepTemplate[] = [
   {
     key: 'check', label: '+ проверка',
-    hint: 'Бросок или сравнение против поля цели. Может оборвать эффект.',
-    make: (system, taken) => [{ ...blankCheck(system), id: freeId(taken, 'проверка') } as unknown as Step],
+    hint: 'Бросок и сравнение с порогом. Может остановить эффект.',
+    make: (system, taken) => blankCheck(system, taken),
   },
   {
     key: 'change', label: '+ изменение',
-    hint: 'Изменить поле цели или повесить состояние. Единственное, что меняет мир.',
+    hint: 'Изменить поле листа или повесить состояние. Единственное, что меняет мир.',
     make: (_system, taken) => [{
       id: freeId(taken, 'изменение'), type: 'apply', direction: 'subtract', targetModifiers: true,
     } as unknown as Step],
@@ -132,12 +134,12 @@ export const BRICKS: StepTemplate[] = [
   },
   {
     key: 'each', label: '+ для каждой цели',
-    hint: 'Разделитель: шаги выше — один раз у действующего, ниже — у каждой цели своим броском.',
-    make: () => [{ type: 'each' } as unknown as Step],
+    hint: 'Разделитель: шаги выше — один раз, ниже — для каждого листа из списка целей.',
+    make: () => [{ type: 'each', of: 'цели', as: 'цель' } as unknown as Step],
   },
   {
     key: 'number', label: '+ число',
-    hint: 'Отдельное число: превышение проверки или одно число на несколько изменений.',
-    make: (_system, taken) => [{ id: freeId(taken, 'число'), type: 'amount', source: 'roll' } as unknown as Step],
+    hint: 'Отдельное число или бросок: урон, лечение, одно число на несколько изменений.',
+    make: (_system, taken) => [{ id: freeId(taken, 'число'), type: 'roll', fixed: { expr: '0' } } as unknown as Step],
   },
 ];

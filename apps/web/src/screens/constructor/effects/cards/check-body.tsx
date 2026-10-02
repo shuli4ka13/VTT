@@ -3,7 +3,6 @@ import type { System } from '@vtt/schema';
 import { Select } from '../../../../ui/primitives.tsx';
 import { FieldRow } from '../../../../ui/field-row.tsx';
 import type { RowField } from '../../../../ui/field-row.tsx';
-import { SlotInput } from '../../slot-input.tsx';
 import { FormulaField } from '../../../../ui/formula-field.tsx';
 import { namesOf, refForName, inputBadges } from '../../slots.tsx';
 import type { SlotContext } from '../../slots.tsx';
@@ -13,130 +12,93 @@ import { parseCheck, formatCheck } from '../../check-expr.ts';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
 import { rowTables } from '@vtt/engine/model/tables';
 
-const firstDie = (system: System): string | undefined => Object.keys(system.constants ?? {})[0];
-
 const loose = (draft: unknown): Record<string, any> => draft as Record<string, any>;
 
+const lone = (ref: unknown): string => /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((ref as { expr?: unknown } | undefined)?.expr ?? ''))?.[1] ?? '';
 
-export function CheckBody({ step, context, edit, system }: {
+const SUCCESS = [['atLeast', 'не меньше порога'], ['over', 'строго больше'], ['notOver', 'не больше порога'], ['under', 'строго меньше'], ['equals', 'ровно порог']] as const;
+
+export function CheckBody({ step, roll, context, edit, system }: {
   step: any;
+  roll: any | null;
   context: SlotContext;
   edit: EditFn;
   system: System;
 }) {
-  const mode = step.type === 'compare' ? 'plain' : 'roll';
+  const at = roll ? 1 : 0;
   const tables = rowTables(system);
+  const sheets = [...(context.sheets ?? new Map<string, string>())];
+  const sheetOptions = sheets.map(([name, label]) => [name, `«${label}»`] as const);
 
-  const setMode = (next: string) => edit(0, draft => {
-    const d = loose(draft);
-    if (next === 'roll') {
-      draft.type = 'threshold';
-      d.roll ??= { die: firstDie(system) ? { constant: firstDie(system) } : undefined };
-      d.successWhen ??= 'atLeast'; d.continueOn ??= 'success';
-    } else {
-      draft.type = 'compare';
-      d.breakIf ??= 'less';
-    }
-  });
-
-  const modeField: RowField = {
-    key: 'mode', label: 'Проверка', width: 130,
-    node: <Select value={mode} options={[['roll', 'броском'], ['plain', 'без броска']] as const} onChange={setMode} />,
-  };
-
-  if (mode === 'plain') {
-    return (
-      <FieldRow
-        id="check-plain"
-        fields={[
-          modeField,
-          {
-            key: 'value', label: 'Что сравниваем', width: 220,
-            node: (
-              <SlotInput
-                where="сравнение · что сравниваем"
-                value={step.value} context={context} allow={['ref']}
-                onChange={next => edit(0, draft => { loose(draft).value = next ?? undefined; })}
-              />
-            ),
-          },
-          {
-            key: 'breakIf', label: 'Обрыв, если', width: 200,
-            node: (
-              <Select
-                value={String(step.breakIf ?? 'less')}
-                options={[['less', '< меньше правого'], ['atMost', '≤ не больше правого'],
-                  ['never', 'обрыва нет — разница идёт дальше']] as const}
-                onChange={next => edit(0, draft => { loose(draft).breakIf = next; })}
-              />
-            ),
-          },
-          {
-            key: 'versus', label: 'Против', width: 220,
-            node: (
-              <SlotInput
-                where="проверка · против"
-                value={step.versus} context={context} allow={['tag', 'expr', 'const', 'param', 'ref']} side="target"
-                onChange={next => edit(0, draft => { loose(draft).versus = next ?? undefined; })}
-              />
-            ),
-          },
-        ]}
-      />
-    );
-  }
-
-  return (
-    <FieldRow
-      id="check-roll"
-      fields={[
-        modeField,
-        {
-          key: 'formula', label: 'Формула', width: 420,
-          hint: 'кинуть(кость, метки) + прибавка, знак и с чем сравнить. Метки — строки таблиц («атака», «ловкость») или вход; по ним правки находят бросок. Кость с @получатель — бросает получатель; справа можно встречное кинуть(…)',
-          node: <CheckFormula step={step} context={context} edit={edit} />,
-        },
-        {
-          key: 'continueOn', label: 'Дальше при', width: 140,
-          hint: '«всегда» — дальше решают условия на шагах',
-          node: (
-            <Select
-              value={String(step.continueOn ?? 'success')}
-              options={[['success', 'успехе'], ['fail', 'провале'], ['always', 'всегда']] as const}
-              onChange={next => edit(0, draft => { loose(draft).continueOn = next; })}
-            />
-          ),
-        },
-        ...(tables.length ? [{
-          key: 'degrees', label: 'Степени успеха', width: 170,
-          hint: 'Вместо «да/нет» исход читается ступенями по таблице: «провал / успех с ценой / полный успех»',
-          node: (
-            <Select
-              value={String(step.degrees?.table ?? '')}
-              options={[['', '— нет, да/нет —'], ...tables.map(([key, t]) => [key, t.label || key] as const)] as never}
-              onChange={next => edit(0, draft => {
-                const d = loose(draft);
-                if (next) d.degrees = { table: next, of: d.degrees?.of ?? 'total' }; else delete d.degrees;
-              })}
-            />
-          ),
-        }] : []),
-        ...(step.degrees?.table ? [{
-          key: 'degreesOf', label: 'Ступень по', width: 170,
-          node: (
-            <Select
-              value={String(step.degrees.of ?? 'total')}
-              options={[['total', 'итогу броска'], ['margin', 'запасу против порога']] as const}
-              onChange={next => edit(0, draft => { loose(draft).degrees.of = next; })}
-            />
-          ),
-        }] : []),
-      ]}
-    />
-  );
+  const fields: RowField[] = [
+    {
+      key: 'formula', label: 'Проверка', width: 420,
+      hint: roll
+        ? 'кинуть(кость, метки) + прибавка, знак и порог. Метки — строки таблиц («атака», «ловкость»); по ним правки находят бросок. Поля — через лист: @цель.кд'
+        : 'Число, знак и порог: @носитель.ки >= 1',
+      node: <CheckFormula step={step} roll={roll} context={context} edit={edit} />,
+    },
+    ...(roll ? [{
+      key: 'by', label: 'Бросает', width: 170,
+      hint: 'Чей это бросок: на него действуют правки броска и «кости выпали» этого листа.',
+      node: (
+        <Select<string>
+          value={lone(roll.by)}
+          options={[['', '— какой лист —'], ...sheetOptions]}
+          onChange={next => edit(0, draft => { if (next) loose(draft).by = { expr: `@${next}` }; else delete loose(draft).by; })}
+        />
+      ),
+    }, {
+      key: 'against', label: 'Против кого', width: 170,
+      hint: 'Для правок «по носителю»: «Ослеплён» даёт преимущество тем, кто бросает против него.',
+      node: (
+        <Select<string>
+          value={lone(roll.against)}
+          options={[['', 'ни против кого'], ...sheetOptions]}
+          onChange={next => edit(0, draft => { if (next) loose(draft).against = { expr: `@${next}` }; else delete loose(draft).against; })}
+        />
+      ),
+    }] : []),
+    {
+      key: 'continueOn', label: 'Дальше при', width: 140,
+      hint: '«всегда» — дальше решают условия на шагах',
+      node: (
+        <Select
+          value={String(step.continueOn ?? 'success')}
+          options={[['success', 'успехе'], ['fail', 'провале'], ['always', 'всегда']] as const}
+          onChange={next => edit(at, draft => { loose(draft).continueOn = next; })}
+        />
+      ),
+    },
+    ...(tables.length ? [{
+      key: 'degrees', label: 'Степени успеха', width: 170,
+      hint: 'Вместо «да/нет» исход читается ступенями по таблице: «провал / успех с ценой / полный успех»',
+      node: (
+        <Select
+          value={String(step.degrees?.table ?? '')}
+          options={[['', '— нет, да/нет —'], ...tables.map(([key, t]) => [key, t.label || key] as const)] as never}
+          onChange={next => edit(at, draft => {
+            const d = loose(draft);
+            if (next) d.degrees = { table: next, of: d.degrees?.of ?? 'total' }; else delete d.degrees;
+          })}
+        />
+      ),
+    }] : []),
+    ...(step.degrees?.table ? [{
+      key: 'degreesOf', label: 'Ступень по', width: 170,
+      node: (
+        <Select
+          value={String(step.degrees.of ?? 'total')}
+          options={[['total', 'итогу'], ['margin', 'запасу против порога']] as const}
+          onChange={next => edit(at, draft => { loose(draft).degrees.of = next; })}
+        />
+      ),
+    }] : []),
+  ];
+  return <FieldRow id={roll ? 'check-roll' : 'check-plain'} fields={fields} />;
 }
 
-function CheckFormula({ step, context, edit }: { step: any; context: SlotContext; edit: EditFn }) {
+function CheckFormula({ step, roll, context, edit }: { step: any; roll: any | null; context: SlotContext; edit: EditFn }) {
   const [draft, setDraft] = useState<string | null>(null);
   const [trouble, setTrouble] = useState<string | null>(null);
   const names = useMemo(() => {
@@ -147,20 +109,32 @@ function CheckFormula({ step, context, edit }: { step: any; context: SlotContext
 
   const drop = () => { setDraft(null); setTrouble(null); };
   const commit = (text: string) => {
+    if (!roll) {
+      const match = /^(.*?)(>=|<=|==|>|<)(.*)$/su.exec(text.trim());
+      if (!match) { setTrouble('проверка — это сравнение: «@носитель.ки >= 1»'); return; }
+      const ops: Record<string, string> = { '>=': 'atLeast', '<=': 'notOver', '==': 'equals', '>': 'over', '<': 'under' };
+      edit(0, target => {
+        const d = loose(target);
+        d.value = { expr: match[1]!.trim() };
+        d.versus = { expr: match[3]!.trim() };
+        d.successWhen = ops[match[2]!];
+      });
+      drop();
+      return;
+    }
     const parsed = parseCheck(text, context.system, name => refForName(context, name));
     if ('error' in parsed) { setTrouble(parsed.error); return; }
-    const opposed = (parsed.versus as { roll?: { bonus?: unknown } })?.roll;
-    const bad = badFormula(parsed.roll.bonus) ?? badFormula(opposed ? opposed.bonus : parsed.versus);
+    const bad = badFormula(parsed.roll.bonus) ?? badFormula(parsed.versus);
     if (bad) { setTrouble(bad); return; }
     edit(0, target => {
       const d = loose(target);
-      d.roll = {
-        die: parsed.roll.die,
-        ...(parsed.roll.count ? { count: parsed.roll.count } : {}),
-        ...(parsed.roll.bonus ? { bonus: parsed.roll.bonus } : {}),
-        ...(parsed.roll.tags.length ? { tags: parsed.roll.tags } : {}),
-      };
-      if (parsed.side) d.side = parsed.side; else delete d.side;
+      d.die = parsed.roll.die;
+      if (parsed.roll.count) d.count = parsed.roll.count; else delete d.count;
+      if (parsed.roll.bonus) d.bonus = parsed.roll.bonus; else delete d.bonus;
+      if (parsed.roll.tags.length) d.tags = parsed.roll.tags; else delete d.tags;
+    });
+    edit(1, target => {
+      const d = loose(target);
       d.successWhen = parsed.successWhen;
       d.versus = parsed.versus;
     });
@@ -170,14 +144,14 @@ function CheckFormula({ step, context, edit }: { step: any; context: SlotContext
   return (
     <>
       <FormulaField
-        value={draft ?? formatCheck(step)}
+        value={draft ?? formatCheck(roll, step)}
         system={context.system}
         where="проверка"
         extraNames={names}
-        owners
+        {...(context.sheets ? { sheets: context.sheets } : {})}
         badges={inputBadges(context)}
         invalid={Boolean(trouble)}
-        placeholder="кинуть(@кость, @метка) + прибавка >= против"
+        placeholder={roll ? 'кинуть(@кость, @метка) + прибавка >= @цель.кд' : '@носитель.ки >= 1'}
         onChange={next => { setTrouble(null); setDraft(next); }}
         onCommit={commit}
         onCancel={drop}
@@ -186,3 +160,5 @@ function CheckFormula({ step, context, edit }: { step: any; context: SlotContext
     </>
   );
 }
+
+export { SUCCESS };

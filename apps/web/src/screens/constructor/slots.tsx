@@ -1,3 +1,4 @@
+import type { SheetNames } from '../../ui/formula-chips.tsx';
 import type { System, Effect, SlotRef } from '@vtt/schema';
 import type { RecordKind } from '@vtt/engine/model/owned';
 import { columnPaths } from '../../ui/formula.tsx';
@@ -57,6 +58,8 @@ export interface SlotContext {
   earlier: EarlierStep[];
 
   recordKind?: RecordKind;
+
+  sheets?: SheetNames;
 }
 
 export function declaredProps(system: System): Map<string, string> {
@@ -69,20 +72,15 @@ export function declaredProps(system: System): Map<string, string> {
   return out;
 }
 
-export const EVENT_NAMES: [string, string][] = [
-  ['event.amount', 'пришедшее число'],
-  ['event.incoming', 'пришедшее число до правок цели'],
-];
+export const EVENT_NAMES: [string, string][] = [['метки', 'метки вызова: значения выборов']];
 
 export const isCalled = (ctx: SlotContext): boolean =>
   Boolean(amountParamOf(ctx.effect))
   || calledOf(ctx.system).some(([, effect]) => effect === ctx.effect);
 
 export function eventNames(effect: Effect): [string, string][] {
-  const main = amountParamOf(effect);
-  if (!main) return EVENT_NAMES;
-  const name = main.label || main.key;
-  return [['event.amount', `${name} — после правок цели`], ['event.incoming', `${name} — как отправили`]];
+  void effect;
+  return EVENT_NAMES;
 }
 
 export function stepNames(ctx: SlotContext): Map<string, string> {

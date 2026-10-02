@@ -14,8 +14,8 @@ export interface CardGroup {
 }
 
 const KIND_OF: Record<string, CardKind> = {
-  threshold: 'check', compare: 'check', apply: 'change', status: 'change', emit: 'change',
-  amount: 'number', table: 'number', each: 'split',
+  check: 'check', apply: 'change', status: 'change', emit: 'change',
+  roll: 'number', table: 'number', each: 'split',
   'roll-add': 'seen', 'roll-reroll': 'seen', 'roll-plus': 'seen',
 };
 
@@ -59,13 +59,20 @@ export function groupSteps(list: Step[]): CardGroup[] {
     const next = list[i + 1];
     const source = (step as any).source;
 
+    const owned = step.type === 'roll' && (step as { by?: unknown }).by !== undefined;
+    if (owned && step.id && next?.type === 'check' && takesWhole((next as { value?: unknown }).value, step.id)
+      && list.every((other, j) => j === i || j === i + 1 || !mentions(other, step.id!))) {
+      out.push({ kind: 'check', indices: [i, i + 1], step: next, amount: step });
+      i++;
+      continue;
+    }
     const call = next as { args?: Record<string, unknown>; value?: unknown } | undefined;
     const carried = next?.type === 'emit'
       ? Object.values(call?.args ?? {}).find(arg => takesWhole(arg, step.id ?? ''))
       : call?.value;
-    const glue = step.type === 'amount' && step.id
+    const glue = step.type === 'roll' && !owned && step.id
       && (next?.type === 'apply' || next?.type === 'status')
-      && (source === 'roll' || source === undefined)
+      && source === undefined
       && (takesWhole(carried, step.id) || names(next!, step.id))
       && list.every((other, j) => j === i || j === i + 1 || !mentions(other, step.id!));
     if (glue) {

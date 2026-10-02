@@ -125,7 +125,7 @@ export function ConditionFold({ group, earlier, edit, context }: {
               system={system}
               where="условие шага"
               extraNames={namesOf(context)}
-              owners
+              {...(context.sheets ? { sheets: context.sheets } : {})}
               placeholder="например: @попадание.natural >= 19"
               onCommit={next => setAll(draft => { if (next.trim()) draft.when = { expr: next }; else delete draft.when; })}
             />

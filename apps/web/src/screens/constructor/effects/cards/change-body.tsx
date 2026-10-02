@@ -15,11 +15,59 @@ import { Extras } from './extras.tsx';
 import { calledOf } from '@vtt/engine/engine/effects';
 import { amountParamOf } from '@vtt/engine/model/lists';
 import { tight } from '@vtt/engine/model/amounts';
-import { SENDER, RECEIVER } from '@vtt/engine/engine/owners';
+import { fieldsOf } from '@vtt/engine/model/sheet-columns';
+import { DESK_ID } from '@vtt/engine/engine/owners';
 
-function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onCreateFromRecord, targetOwner }: {
-  targetOwner: string;
+const fieldTarget = (target: unknown): { sheet: string; tag: string } | null => {
+  const expr = target && typeof target === 'object' && 'expr' in target ? String((target as { expr: unknown }).expr) : '';
+  const found = /^\s*@([\p{L}\p{N}_]+)\.([\p{L}\p{N}_.]+)\s*$/u.exec(expr);
+  return found ? { sheet: found[1]!, tag: found[2]! } : null;
+};
 
+function TargetPick({ target, context, onChange }: {
+  target: unknown;
+  context: SlotContext;
+  onChange: (next: { expr: string } | null) => void;
+}) {
+  const system = context.system;
+  const picked = fieldTarget(target);
+  const param = target && typeof target === 'object' && 'expr' in target && !picked ? String((target as { expr: unknown }).expr).replace(/^@/, '') : '';
+  const sheets = [...(context.sheets ?? new Map<string, string>())];
+  const desk = fieldsOf(system).some(f => f.lives === 'desk');
+  const fieldParams = (context.effect.params ?? []).filter(p => p.kind === 'field');
+  const owner = picked?.sheet ?? (param ? `:${param}` : sheets[0]?.[0] ?? '');
+  const options: (readonly [string, string])[] = [
+    ...sheets.map(([name, label]) => [name, `«${label}»`] as const),
+    ...(desk ? [[DESK_ID, 'стол'] as const] : []),
+    ...fieldParams.map(p => [`:${p.key}`, `поле из входа «${p.label ?? p.key}»`] as const),
+  ];
+  const fields = fieldsOf(system).filter(f => f.value.kind === 'stored' && (owner === DESK_ID ? f.lives === 'desk' : f.lives !== 'desk'));
+  return (
+    <div className="row">
+      <Field label="У кого" needed={!owner}>
+        <Select<string>
+          value={owner}
+          options={options.length ? options : [['', '— у эффекта нет входов-листов —']]}
+          onChange={next => {
+            if (next.startsWith(':')) onChange({ expr: `@${next.slice(1)}` });
+            else onChange(picked ? { expr: `@${next}.${picked.tag}` } : null);
+          }}
+        />
+      </Field>
+      {owner.startsWith(':') ? null : (
+        <Field label="Какое поле" needed={!picked}>
+          <Select<string>
+            value={picked?.tag ?? ''}
+            options={[['', '— какое поле —'], ...fields.map(f => [f.tag, f.label ?? f.tag] as const)]}
+            onChange={next => onChange(next ? { expr: `@${owner}.${next}` } : null)}
+          />
+        </Field>
+      )}
+    </div>
+  );
+}
+
+function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onCreateFromRecord }: {
   amount?: Step;
 
   apply: Step;
@@ -46,7 +94,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
     const direction = String(a.direction ?? 'subtract');
     if (direction === 'set') return written;
     const amountName = written.trim() ? tight(written) : amountId ? `@${amountId}` : '';
-    const targetName = target && typeof target === 'object' && 'tag' in target ? `@${targetOwner}.${target.tag}` : '';
+    const targetName = target && typeof target === 'object' && 'expr' in target ? String(target.expr) : '';
     if (!targetName) return amountName;
 
     return `${targetName} ${direction === 'add' ? '+' : '-'} ${amountName}`;
@@ -54,7 +102,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
 
   const shown = draft ?? asExpr();
 
-  const dice = (amount as Record<string, any> | undefined)?.dice;
+  const dice = (amount as Record<string, any> | undefined)?.die;
   const bonus = (amount as Record<string, any> | undefined)?.bonus;
   const diceChip = chipOf(dice, context);
   const bonusText = exprText(bonus);
@@ -63,7 +111,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   const sentChip = (label: ReactNode, onRemove: () => void, key: string) => (
     <span key={key} className="chips__chip chips__chip--sent">
       {label}
-      <span className="chips__side chips__side--sender" title="посчитано отправителем, приходит числом">{SENDER}</span>
+      <span className="chips__side chips__side--calc" title="считается шагом-расчётом раньше изменения">расчёт</span>
       <button
         type="button" className="chips__x" aria-label="убрать слагаемое"
         onMouseDown={e => { e.preventDefault(); onRemove(); }}
@@ -77,7 +125,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
         {both ? <span className="chips__paren" aria-hidden>(</span> : null}
         {diceChip ? sentChip(
           diceChip.label,
-          () => edit(0, step => { delete (step as Record<string, unknown>).dice; }),
+          () => edit(0, step => { delete (step as Record<string, unknown>).die; }),
           'dice',
         ) : null}
         {both ? <span className="chips__plus" aria-hidden>+</span> : null}
@@ -114,7 +162,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
     };
     if (!withNumber && !amountId) {
 
-      setTrouble('кость бросает отправитель — заведите шаг «число» и назовите его');
+      setTrouble('кость бросает отдельный шаг — заведите шаг «бросок» и назовите его');
       return;
     }
     if (withNumber) withNumber(put);
@@ -141,7 +189,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
 
       const bad = badFormula({ expr: next('@x') });
       if (bad) { setTrouble(bad); return; }
-      sendThrough(a => { a.dice = picked; }, next);
+      sendThrough(a => { a.die = picked; }, next);
       return;
     }
 
@@ -160,7 +208,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   };
 
   const putIntoAmount = (ref: SlotRef, place?: (name: string) => string) =>
-    sendThrough(a => { a.dice = ref; }, place);
+    sendThrough(a => { a.die = ref; }, place);
 
 
   const needs = (context.effect.params ?? []).map(p => ({
@@ -206,32 +254,20 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   return (
     <>
       {}
-      <Field
-        label="Что меняется"
-        needed={!target}
-        hint={target ? undefined : 'Поле листа, которое этот шаг поменяет.'}
-      >
-        <SlotInput
-          where="изменение · что меняется"
-          value={target}
-          context={context}
-          allow={['tag', 'param']}
-          keep={['tag', 'param']}
-          side={targetOwner === SENDER ? 'self' : 'target'}
-          placeholder={targetOwner === SENDER ? 'поле отправителя' : 'поле получателя'}
-          onChange={next => edit(applyIndex, target => {
-            const t = target as Record<string, unknown>;
-            if (next) t.target = next; else delete t.target;
-          })}
-          onCreateFromRecord={onCreateFromRecord}
-        />
-      </Field>
+      <TargetPick
+        target={target}
+        context={context}
+        onChange={next => edit(applyIndex, step => {
+          const t = step as Record<string, unknown>;
+          if (next) t.target = next; else delete t.target;
+        })}
+      />
 
       {}
       <Field
         label="Станет"
         error={trouble}
-        hint="Обычная математика. У каждого поля подписано, чьё оно: отправителя или получателя. Щелчок по подписи меняет хозяина."
+        hint="Обычная математика. Поля пишутся через лист: @цель.хиты, @носитель.ки."
       >
         <FormulaField
           value={shown}
@@ -239,10 +275,10 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
           where="изменение · станет"
           names={names}
           extraNames={рядом}
-          owners
+          {...(context.sheets ? { sheets: context.sheets } : {})}
           badges={inputBadges(context)}
           invalid={Boolean(trouble)}
-          placeholder="например: @хп − @урон"
+          placeholder="например: @цель.хп − @урон"
           options={needs}
           onChange={next => { setTrouble(null); setDraft(next); }}
           onCommit={commit}
@@ -253,7 +289,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
   );
 }
 
-export function ChangeBody({ group, context, edit, withNumber, system, onAddParam, onOpenEffect, lane = 'receiver' }: {
+export function ChangeBody({ group, context, edit, withNumber, system, onAddParam, onOpenEffect }: {
   group: CardGroup;
   context: SlotContext;
   edit: EditFn;
@@ -261,7 +297,7 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
   system: System;
   onAddParam?: (label: string, kind: ValueKind) => string;
   onOpenEffect?: (id: string) => void;
-  lane?: 'receiver' | 'sender';
+  lane?: 'steps' | 'cost';
 }) {
   const step = group.step as any;
   const mode = step.type === 'status' ? 'status' : step.type === 'emit' ? 'emit' : 'apply';
@@ -305,25 +341,25 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
 
       {mode === 'emit' ? (
         <SendBody step={step} at={applyIndex} context={context} edit={edit} system={system}
-          onOpenEffect={onOpenEffect} canAnswer={lane === 'receiver'} />
+          onOpenEffect={onOpenEffect} />
       ) : null}
 
       {mode === 'apply' ? (
         <>
           {}
           <ChangeValue
-            amount={group.amount ?? undefined} apply={step} applyIndex={applyIndex} targetOwner={lane === 'sender' ? SENDER : RECEIVER}
+            amount={group.amount ?? undefined} apply={step} applyIndex={applyIndex}
             context={context} edit={edit} withNumber={withNumber}
             onCreateFromRecord={fromRecord('сколько — кости', 'dice')} />
 
           <Extras
             items={[{
-              key: 'targetModifiers', label: 'не слушать правки цели',
+              key: 'targetModifiers', label: 'не слушать правки поля',
               on: step.targetModifiers === false,
               add: () => edit(applyIndex, draft => { (draft as any).targetModifiers = false; }),
               drop: () => edit(applyIndex, draft => { (draft as any).targetModifiers = true; }),
               node: (
-                <Field label="Правки цели" hint="Всё, что у цели правит приходящее число: её состояния, черты, поля.">
+                <Field label="Правки поля" hint="Всё, что на листе правит приходящее в это поле число: состояния, черты.">
                   <Select
                     value={String(step.targetModifiers ?? true)}
                     options={[['true', 'слушаются'], ['false', 'не слушаются']] as const}
@@ -359,8 +395,48 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
               onCreateFromRecord={fromRecord('какое', 'effect')}
             />
           </Field>
+          <Field label={String(step.mode ?? 'apply') === 'remove' ? 'С кого' : 'На кого'} needed={!step.to}>
+            <Select<string>
+              value={/^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String(step.to?.expr ?? ''))?.[1] ?? ''}
+              options={[['', '— какой лист —'], ...[...(context.sheets ?? new Map<string, string>())].map(([name, label]) => [name, `«${label}»`] as const)]}
+              onChange={next => edit(applyIndex, draft => { if (next) (draft as any).to = { expr: `@${next}` }; else delete (draft as any).to; })}
+            />
+          </Field>
+          <StatusArgs step={step} context={context} onChange={(key, expr) => edit(applyIndex, draft => {
+            const d = draft as any;
+            const args = { ...(d.args ?? {}) };
+            if (expr.trim()) args[key] = { expr }; else delete args[key];
+            if (Object.keys(args).length) d.args = args; else delete d.args;
+          })} />
         </>
       ) : null}
+    </>
+  );
+}
+
+function StatusArgs({ step, context, onChange }: {
+  step: any;
+  context: SlotContext;
+  onChange: (key: string, expr: string) => void;
+}) {
+  if (String(step.mode ?? 'apply') === 'remove') return null;
+  const id = step.effect && typeof step.effect === 'object' && 'const' in step.effect ? String(step.effect.const) : '';
+  const params = context.system.effects[id]?.params ?? [];
+  if (!params.length) return null;
+  return (
+    <>
+      {params.map(param => (
+        <Field key={param.key} label={`Запомнит: ${param.label ?? param.key}`} hint="Висящий эффект хранит это значение и читает его по имени.">
+          <FormulaField
+            value={String(step.args?.[param.key]?.expr ?? '')}
+            system={context.system}
+            where={`наложить · ${param.label ?? param.key}`}
+            {...(context.sheets ? { sheets: context.sheets } : {})}
+            placeholder={param.kind === 'sheet' ? 'например: @действующий' : 'например: @действующий.spell_dc'}
+            onCommit={next => onChange(param.key, next)}
+          />
+        </Field>
+      ))}
     </>
   );
 }

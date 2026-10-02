@@ -1,5 +1,4 @@
 import type { System, SlotRef } from '@vtt/schema';
-import { ownerOf, RECEIVER, SENDER } from '@vtt/engine/engine/owners';
 import { asDice } from '../../words.ts';
 import { tagWords } from '@vtt/engine/engine/roll-tags';
 import { dieRef } from './roll-expr.ts';
@@ -16,7 +15,6 @@ export interface CheckRoll {
 
 export interface ParsedCheck {
   roll: CheckRoll;
-  side?: 'target';
   successWhen: string;
   versus: unknown;
 }
@@ -70,34 +68,31 @@ const bareName = (text: string): string | null => /^@([\p{L}\p{N}_.]+)$/u.exec(t
 
 const tailRef = (rest: string): SlotRef => ({ expr: rest.trim() });
 
-interface RollSide { roll: CheckRoll; owner: string | null; error?: string }
+interface RollSide { roll: CheckRoll; error?: string }
 
 function rollSide(text: string, system: System, asName?: NameRef): RollSide | null {
   const t = text.trim();
   if (!t.startsWith(ROLL)) return null;
   const end = closing(t, ROLL.length - 1);
-  if (end < 0) return { roll: { tags: [] }, owner: null, error: 'у «кинуть(» нет закрывающей скобки' };
+  if (end < 0) return { roll: { tags: [] }, error: 'у «кинуть(» нет закрывающей скобки' };
   const [head = '', ...tagTexts] = splitTop(t.slice(ROLL.length, end), ',');
   const star = topStar(head);
   const dieText = star < 0 ? head : head.slice(0, star).trim();
   const count = star < 0 ? null : head.slice(star + 1).trim();
-  if (count === '') return { roll: { tags: [] }, owner: null, error: 'после «*» в «кинуть(…)» — сколько костей' };
+  if (count === '') return { roll: { tags: [] }, error: 'после «*» в «кинуть(…)» — сколько костей' };
   const rest = t.slice(end + 1).trim();
 
-  let owner: string | null = null;
   let die: SlotRef | undefined;
   const dieName = bareName(dieText);
   if (dieName) {
-    const owned = ownerOf(dieName);
-    owner = owned?.owner ?? null;
-    const key = owned?.rest ?? dieName;
-    if (!system.constants?.[key]) return { roll: { tags: [] }, owner, error: `«${key}» — не кость системы` };
+    const key = dieName;
+    if (!system.constants?.[key]) return { roll: { tags: [] }, error: `«${key}» — не кость системы` };
     die = { constant: key } as SlotRef;
   } else {
     const m = /^(\d+)?\s*[dдк]\s*(\d+)$/iu.exec(dieText);
-    if (!m) return { roll: { tags: [] }, owner, error: 'первое в «кинуть(…)» — кость: «1к20» или кость системы через @' };
+    if (!m) return { roll: { tags: [] }, error: 'первое в «кинуть(…)» — кость: «1к20» или кость системы через @' };
     const found = dieRef(Number(m[1] ?? 1), Number(m[2]), system) as Record<string, unknown>;
-    if (!('constant' in found)) return { roll: { tags: [] }, owner, error: `в системе нет кости ${asDice(`${m[1] ?? 1}d${m[2]}`)} — заведите её в «Правилах» или выберите через @` };
+    if (!('constant' in found)) return { roll: { tags: [] }, error: `в системе нет кости ${asDice(`${m[1] ?? 1}d${m[2]}`)} — заведите её в «Правилах» или выберите через @` };
     die = found as SlotRef;
   }
 
@@ -108,18 +103,18 @@ function rollSide(text: string, system: System, asName?: NameRef): RollSide | nu
     const input = name && asName ? asName(name) : null;
     const tag = name && words.has(name) ? name : input && 'param' in (input as object) ? { expr: `@${name}` } : !name && text.includes('"') ? tailRef(text) : null;
     if (!tag) {
-      return { roll: { tags: [] }, owner, error: `после кости в «кинуть(…)» — метки через @: строки таблиц или входы, а «${text}» не из них` };
+      return { roll: { tags: [] }, error: `после кости в «кинуть(…)» — метки через @: строки таблиц или входы, а «${text}» не из них` };
     }
     tags.push(tag);
   }
 
   let bonus: SlotRef | null = null;
   if (rest) {
-    if (!/^[+-]/.test(rest)) return { roll: { tags: [] }, owner, error: `после «кинуть(…)» ждётся «+» или «−», а стоит «${rest}»` };
+    if (!/^[+-]/.test(rest)) return { roll: { tags: [] }, error: `после «кинуть(…)» ждётся «+» или «−», а стоит «${rest}»` };
     const tail = rest.startsWith('+') ? rest.slice(1).trim() : rest;
     bonus = tailRef(tail);
   }
-  return { roll: { die, ...(count ? { count: tailRef(count) } : {}), bonus, tags }, owner };
+  return { roll: { die, ...(count ? { count: tailRef(count) } : {}), bonus, tags } };
 }
 
 function topStar(text: string): number {
@@ -140,18 +135,8 @@ export function parseCheck(text: string, system: System, asName?: NameRef): Pars
   if (mine.error) return { error: mine.error };
   if (!cmp.right) return { error: 'справа от сравнения пусто — с чем сравниваем?' };
 
-  const other = rollSide(cmp.right, system, asName);
-  if (other?.error) return { error: other.error };
-  const versus = other
-    ? { roll: { die: other.roll.die, ...(other.roll.count ? { count: other.roll.count } : {}), ...(other.roll.bonus ? { bonus: other.roll.bonus } : {}), ...(other.roll.tags.length ? { tags: other.roll.tags } : {}) } }
-    : tailRef(cmp.right);
-
-  return {
-    roll: mine.roll,
-    ...(mine.owner === RECEIVER ? { side: 'target' as const } : {}),
-    successWhen: cmp.op,
-    versus,
-  };
+  if (cmp.right.startsWith(ROLL)) return { error: 'встречный бросок — отдельный шаг «бросок» того, кто защищается; справа напишите его имя: @защита' };
+  return { roll: mine.roll, successWhen: cmp.op, versus: tailRef(cmp.right) };
 }
 
 function refText(ref: unknown): string {
@@ -165,10 +150,10 @@ function refText(ref: unknown): string {
   return '';
 }
 
-function rollText(roll: CheckRoll | undefined, owner: string | null): string {
+function rollText(roll: CheckRoll | undefined): string {
   const die = roll?.die as Record<string, unknown> | undefined;
   const head = !die ? '' : 'constant' in die
-    ? `@${owner ? `${owner}.` : ''}${String(die.constant)}`
+    ? `@${String(die.constant)}`
     : asDice(String(die.const ?? ''));
   const many = roll?.count ? ` * ${refText(roll.count)}` : '';
   const kind = (roll?.tags ?? []).map(tag => `, ${typeof tag === 'string' ? `@${tag}` : refText(tag)}`).join('');
@@ -176,12 +161,7 @@ function rollText(roll: CheckRoll | undefined, owner: string | null): string {
   return `${ROLL}${head}${many}${kind})${tail ? (tail.startsWith('-') ? ` ${tail}` : ` + ${tail}`) : ''}`;
 }
 
-export function formatCheck(step: Record<string, unknown>): string {
-  const target = step.side === 'target';
-  const left = rollText(step.roll as CheckRoll | undefined, target ? RECEIVER : null);
-  const versus = step.versus as Record<string, unknown> | undefined;
-  const right = versus && typeof versus === 'object' && 'roll' in versus
-    ? rollText(versus.roll as CheckRoll, target ? SENDER : RECEIVER)
-    : refText(versus);
-  return `${left} ${TEXT_OF[String(step.successWhen ?? 'atLeast')] ?? '>='} ${right}`.trim();
+export function formatCheck(roll: Record<string, unknown> | null, check: Record<string, unknown>): string {
+  const left = roll ? rollText({ tags: [], ...roll } as unknown as CheckRoll) : refText(check.value);
+  return `${left} ${TEXT_OF[String(check.successWhen ?? 'atLeast')] ?? '>='} ${refText(check.versus)}`.trim();
 }

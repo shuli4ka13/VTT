@@ -15,7 +15,7 @@ const loose = (thing: unknown): Loose => thing as Loose;
 function linesOf(
   kind: string, step: Step, amount: Step | null, system: System, effect: Effect, names: Map<string, string>,
 ): Segment[] {
-  if (kind === 'check') return checkReadback(step, system, effect, names);
+  if (kind === 'check') return checkReadback(step, amount, system, effect, names);
   if (kind === 'change') return changeReadback(step, amount, system, effect, names);
   if (kind === 'number') return numberReadback(step, system, effect, names);
   if (kind === 'send') return sendReadback(step, system, effect, names);

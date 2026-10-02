@@ -70,7 +70,7 @@ export function ValueEditor({ type, value, system, compendium, onlyWorn, except,
       />
     );
   }
-  if (kind === 'tag') {
+  if (kind === 'field') {
     return (
       <Select
         value={String(value ?? '')}

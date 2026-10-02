@@ -1,3 +1,4 @@
+import type { SheetNames } from '../../../../ui/formula-chips.tsx';
 import type { ReactNode } from 'react';
 import type { System, Effect, Step, ValueKind } from '@vtt/schema';
 import { Card, CardHead, Verdict, Button, Chip, DangerButton } from '../../../../ui/primitives.tsx';
@@ -35,7 +36,7 @@ export function Readback({ segments }: { segments: Segment[] }) {
 
 export function GroupCard({
   group, position, system, effect, earlier, problem, problemAction,
-  edit, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, onMoveLane, folded = false, onFold,
+  edit, withNumber, onDelete, onMoveUp, onMoveDown, onAddParam, onOpenEffect, lane, onMoveLane, folded = false, onFold, sheets,
 }: {
   group: CardGroup;
   position: number;
@@ -55,24 +56,25 @@ export function GroupCard({
 
   onAddParam?: (label: string, kind: ValueKind, want?: string) => string;
   onOpenEffect?: (id: string) => void;
-  lane?: 'receiver' | 'sender';
-  onMoveLane?: (to: 'receiver' | 'sender') => void;
+  lane?: 'steps' | 'cost';
+  onMoveLane?: (to: 'steps' | 'cost') => void;
   folded?: boolean;
   onFold?: () => void;
+  sheets?: SheetNames;
 }) {
-  const context: SlotContext = { system, effect, earlier };
+  const context: SlotContext = { system, effect, earlier, ...(sheets ? { sheets } : {}) };
   const step = group.step as any;
 
   const actions = (
     <>
       {onMoveLane ? (
         <Chip
-          active={lane === 'sender'}
-          title={lane === 'sender'
-            ? 'Выполняется один раз за действие, у действующего, раньше шагов по целям — так платят: ячейка, заряд, удача. Нажмите — будет у каждой цели.'
-            : 'Выполняется у каждой цели. Нажмите — будет один раз за действие, у действующего.'}
-          onClick={() => onMoveLane(lane === 'sender' ? 'receiver' : 'sender')}
-        >раз за действие</Chip>
+          active={lane === 'cost'}
+          title={lane === 'cost'
+            ? 'Шаг цены: идёт раньше всех шагов, один раз за действие; не хватило — действие не состоялось. Нажмите — вернуть в шаги.'
+            : 'Обычный шаг. Нажмите — сделать шагом цены: ячейка, заряд, удача.'}
+          onClick={() => onMoveLane(lane === 'cost' ? 'steps' : 'cost')}
+        >цена</Chip>
       ) : null}
       <Button size="sm" variant="ghost" title="выше" disabled={!onMoveUp} onClick={onMoveUp}>↑</Button>
       <Button size="sm" variant="ghost" title="ниже" disabled={!onMoveDown} onClick={onMoveDown}>↓</Button>
@@ -130,7 +132,7 @@ export function GroupCard({
           actions={actions}
         />
         {problem ? <Verdict tone="bad" action={problemAction}>{problem.text}</Verdict> : null}
-        {group.kind === 'check' ? <CheckBody step={step} context={context} edit={edit} system={system} /> : null}
+        {group.kind === 'check' ? <CheckBody step={step} roll={group.amount} context={context} edit={edit} system={system} /> : null}
         {group.kind === 'seen' ? <SeenBody step={step} context={context} edit={edit} /> : null}
         {group.kind === 'change' ? <ChangeBody group={group} context={context} edit={edit} withNumber={withNumber} system={system} onAddParam={onAddParam} onOpenEffect={onOpenEffect} lane={lane} /> : null}
         {group.kind === 'number'
@@ -145,7 +147,7 @@ export function GroupCard({
 
 function summaryOf(group: CardGroup, system: System, effect: Effect, names: Map<string, string>): string {
   const step = group.step;
-  const segments = group.kind === 'check' ? checkReadback(step, system, effect, names)
+  const segments = group.kind === 'check' ? checkReadback(step, group.amount, system, effect, names)
     : group.kind === 'number' ? numberReadback(step, system, effect, names)
       : group.kind === 'change'
         ? (step.type === 'emit' ? sendReadback(step, system, effect, names) : changeReadback(step, group.amount, system, effect, names))

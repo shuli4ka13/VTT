@@ -5,5 +5,4 @@ export const CALL_WORDS = {
     label: 'Бросок',
     params: { edits: 'правки', bonus: 'прибавка' },
   },
-  against: 'бросок по мне',
 } as const;

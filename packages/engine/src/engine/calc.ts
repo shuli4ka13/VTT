@@ -2,7 +2,7 @@ import { compile } from '../formula/index.ts';
 import { UnknownTagError, CycleError, EngineError } from './errors.ts';
 import { toolsOf } from './refs.ts';
 import { referencedTable, resolveAddress, splitPath, walk } from './navigate.ts';
-import { ownerOf, DESK, DESK_ID } from './owners.ts';
+import { deskField, DESK_ID } from './owners.ts';
 import { collectModifiers, applyValueModifiers } from './modifiers.ts';
 import { wornEffects } from './effects.ts';
 import type { CollectedModifiers } from './modifiers.ts';
@@ -71,11 +71,11 @@ export function newPass(system: System, sheet: Sheet, options: PassOptions = {})
   }
 
   pass.resolve = tag => {
-    const owned = ownerOf(tag);
-    if (owned?.owner === DESK) {
-      if (sheet.id === DESK_ID) return pass.resolve(owned.rest);
-      if (!pass.desk) throw new EngineError(`стола нет — «${owned.rest}» читать неоткуда`);
-      return pass.desk.resolve(owned.rest);
+    const onDesk = deskField(tag);
+    if (onDesk) {
+      if (sheet.id === DESK_ID) return pass.resolve(onDesk);
+      if (!pass.desk) throw new EngineError(`стола нет — «${onDesk}» читать неоткуда`);
+      return pass.desk.resolve(onDesk);
     }
     const field = findField(system, tag);
     if (!field && system.effects?.[tag]) return wornCount(system, sheet, tag, options.compendium);

@@ -8,13 +8,15 @@ import { problemOf } from '../step-card.tsx';
 import { groupSteps, moveGroup, removeSteps, BRICKS, SEEN_BRICKS } from '../cards.ts';
 import { costsOf, newCost } from '../factory.ts';
 import { GroupCard } from './cards/group-card.tsx';
+import { stepSheets } from './names.ts';
+import type { SheetNames } from '../../../ui/formula-chips.tsx';
 import { useOpened } from '../../../store/opened.ts';
 import { findDonorBlock, copyDonorBlock } from '../donors.tsx';
 import type { System, Effect, Step, ValueKind } from '@vtt/schema';
 
-export type Lane = 'receiver' | 'sender';
+export type Lane = 'steps' | 'cost';
 
-export function Chain({ effect, system, edit, title = 'Шаги', empty = 'шагов ещё нет — эффект ничего не делает', lane = 'receiver', onMoveLane, bare = false, startAt = 0, lead, onAddCost, onRoll = false }: {
+export function Chain({ effect, system, edit, title = 'Шаги', empty = 'шагов ещё нет — эффект ничего не делает', lane = 'steps', onMoveLane, bare = false, startAt = 0, lead, onAddCost, onRoll = false, sheetsAt }: {
   effect: Effect;
   system: System;
   edit: (change: (draft: Effect) => void) => void;
@@ -27,6 +29,7 @@ export function Chain({ effect, system, edit, title = 'Шаги', empty = 'ша�
   lead?: ReactNode;
   onAddCost?: (id: string) => void;
   onRoll?: boolean;
+  sheetsAt?: (index: number) => SheetNames;
 }) {
   const pick = useWorld(s => s.pick);
   const onOpenEffect = (id: string) => pick({ activeEffectId: id });
@@ -129,10 +132,11 @@ export function Chain({ effect, system, edit, title = 'Шаги', empty = 'ша�
             earlier={[
               ...earlierOf(group.indices[0]!),
               ...(group.amount?.id
-                ? [{ id: String(group.amount.id), type: 'amount', at: 0, title: 'здесь же' }]
+                ? [{ id: String(group.amount.id), type: 'roll', at: 0, title: 'здесь же' }]
                 : []),
             ]}
             problem={problem}
+            sheets={(sheetsAt ?? (index => stepSheets(effect, 'steps', index)))(group.indices[0]!)}
             lane={lane}
             folded={!opened[foldKey(group)]}
             onFold={() => toggleFold(foldKey(group))}
@@ -156,7 +160,7 @@ export function Chain({ effect, system, edit, title = 'Шаги', empty = 'ша�
               if (amountAt < 0) {
                 const taken = steps.map(step => step.id).filter(Boolean) as string[];
                 steps.splice(applyAt, 0, {
-                  id: freeId(taken, 'n'), type: 'amount', source: 'roll',
+                  id: freeId(taken, 'n'), type: 'roll',
                 } as never);
                 amountAt = applyAt;
               }

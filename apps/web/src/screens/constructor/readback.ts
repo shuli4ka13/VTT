@@ -1,8 +1,6 @@
-import { readGuard } from './guard-expr.ts';
 import { amountParamOf } from '@vtt/engine/model/lists';
 import type { System, Effect, Step, SystemConstant } from '@vtt/schema';
 import { labelOfTag, formulaAsLabels } from '../../ui/formula.tsx';
-import { ownerOf } from '@vtt/engine/engine/owners';
 import { dice as diceText, asDice, DIE_LETTER } from '../../words.ts';
 import { fieldOf, hasField } from '@vtt/engine/model/sheet-columns';
 
@@ -45,6 +43,28 @@ export function readingWord(system: System, name: string): string | null {
 
 export type Names = Map<string, string>;
 
+const SHEET_WORDS: Record<string, string> = { носитель: 'носитель', стол: 'стол' };
+
+const sheetLabel = (effect: Effect, name: string): string | null => {
+  const param = effect.params?.find(p => p.key === name && p.kind === 'sheet');
+  if (param) return param.label ?? param.key;
+  const loop = (effect.steps ?? []).find(step => step.type === 'each') as { as?: string } | undefined;
+  if (loop?.as === name) return name;
+  return SHEET_WORDS[name] ?? null;
+};
+
+const onSheet = (effect: Effect, name: string): { sheet: string; rest: string } | null => {
+  const dot = name.indexOf('.');
+  if (dot <= 0) return null;
+  const sheet = sheetLabel(effect, name.slice(0, dot));
+  return sheet ? { sheet, rest: name.slice(dot + 1) } : null;
+};
+
+const whoOf = (effect: Effect, ref: unknown): string => {
+  const name = /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((ref as { expr?: unknown } | undefined)?.expr ?? ''))?.[1];
+  return name ? `«${sheetLabel(effect, name) ?? name}»` : '⟨кто?⟩';
+};
+
 export function refSegment(ref: unknown, system: System, effect: Effect, emptyAs: string, names?: Names): Segment {
   if (ref === null || ref === undefined || ref === '') return hole(emptyAs);
   if (typeof ref !== 'object') return seg(String(ref));
@@ -56,13 +76,12 @@ export function refSegment(ref: unknown, system: System, effect: Effect, emptyAs
     const alone = /^@([\p{L}\p{N}_.]+)$/u.exec(text)?.[1];
     if (alone) {
       const head = alone.split('.')[0]!;
-      const field = ownerOf(alone)?.rest ?? alone;
+      const sheet = onSheet(effect, alone);
       const declared = effect.params?.find(p => p.key === alone);
       if (declared) return hole(`вход «${declared.label ?? alone}»`);
-      if (head === 'event') return seg(EVENT_WORDS[alone] ?? 'присланное');
-      if (alone === 'worn.carry') return seg('запомненного числа');
-      if (hasField(system, field)) return seg(`«${labelOfTag(system, field)}»`);
-      if (!ownerOf(alone)) {
+      if (sheet && hasField(system, sheet.rest)) return seg(`«${labelOfTag(system, sheet.rest)}» (${sheet.sheet})`);
+      if (hasField(system, alone)) return seg(`«${labelOfTag(system, alone)}»`);
+      if (!sheet) {
         const named = names?.get(alone) ?? names?.get(head);
         return seg(named ? `«${named}»` : `результат «${head}»`);
       }
@@ -83,13 +102,6 @@ export function refSegment(ref: unknown, system: System, effect: Effect, emptyAs
   return hole(emptyAs);
 }
 
-const EVENT_WORDS: Record<string, string> = {
-  'event.amount': 'присланное число',
-  'event.incoming': 'присланное число до правок',
-  'event.tags': 'присланные метки',
-  event: 'присланное',
-};
-
 const SUCCESS_WORDS: Record<string, [string, string]> = {
   atLeast: ['Не добросил', 'Добросил'],
   over: ['Не перебросил', 'Перебросил'],
@@ -98,48 +110,41 @@ const SUCCESS_WORDS: Record<string, [string, string]> = {
   equals: ['Не попал точно', 'Попал точно'],
 };
 
-export function checkReadback(step: Step, system: System, effect: Effect, names?: Names): Segment[] {
+export function checkReadback(step: Step, roll: Step | null, system: System, effect: Effect, names?: Names): Segment[] {
   const s = step as any;
-  if (step.type === 'compare') {
-    const breakIf = s.breakIf ?? 'less';
-    const tail = breakIf === 'never' ? 'обрыва нет, разница идёт дальше'
-      : breakIf === 'atMost' ? 'не превысило, эффект кончается'
-        : 'меньше — эффект кончается';
-    return [
-      refSegment(s.value, system, effect, 'что сравниваем?', names), seg('против'),
-      refSegment(s.versus, system, effect, 'с чем?', names), seg(`у цели — ${tail}.`),
-    ];
+  const words = SUCCESS_WORDS[s.successWhen ?? 'atLeast'] ?? SUCCESS_WORDS.atLeast!;
+  const go = s.continueOn ?? 'success';
+  const tail = go === 'always' ? '— дальше решают условия шагов.' : `. ${go === 'success' ? words[0] : words[1]} — эффект кончается.`;
+  if (!roll) {
+    return [refSegment(s.value, system, effect, 'что проверяем?', names), seg('с'), refSegment(s.versus, system, effect, 'с чем?', names), seg(tail)];
   }
-  const roll = s.roll ?? {};
-
-  const out: Segment[] = [seg(s.side === 'target' ? 'Цель бросает' : 'Ты бросаешь')];
-  out.push(roll.die ? refSegment(roll.die, system, effect, 'какой костью?', names) : hole('какой костью?'));
-  const tags = (roll.tags ?? []) as unknown[];
+  const r = roll as any;
+  const out: Segment[] = [seg(`${whoOf(effect, r.by)} бросает`)];
+  out.push(r.die ? refSegment(r.die, system, effect, 'какой костью?', names) : hole('какой костью?'));
+  const tags = (r.tags ?? []) as unknown[];
   if (tags.length) {
-    const words = tags.map(tag => (typeof tag === 'string' ? tag : null));
-    if (words.every(Boolean)) out.push(seg(`(${words.join(', ')})`));
+    const plain = tags.map(tag => (typeof tag === 'string' ? tag : null));
+    if (plain.every(Boolean)) out.push(seg(`(${plain.join(', ')})`));
     else tags.forEach(tag => out.push(typeof tag === 'string' ? seg(tag) : refSegment(tag, system, effect, 'метка?', names)));
   }
-  if (roll.bonus !== undefined && roll.bonus !== null) {
-    const bonus = refSegment(roll.bonus, system, effect, 'прибавка?', names);
+  if (r.bonus !== undefined && r.bonus !== null) {
+    const bonus = refSegment(r.bonus, system, effect, 'прибавка?', names);
     if (!('text' in bonus) || (bonus.text !== '0' && bonus.text !== '')) out.push(seg('+'), bonus);
   }
-  out.push(seg('против'), refSegment(s.versus, system, effect, 'какого поля цели?', names));
-  const words = SUCCESS_WORDS[s.successWhen ?? 'atLeast'] ?? SUCCESS_WORDS.atLeast!;
-  const broken = (s.continueOn ?? 'success') === 'success' ? words[0] : words[1];
-  out.push(seg(`. ${broken} — эффект кончается.`));
+  if (r.against) out.push(seg(`против ${whoOf(effect, r.against)}`));
+  out.push(seg('— с'), refSegment(s.versus, system, effect, 'с чем сравнить?', names), seg(tail));
   return out;
 }
 
 export function amountValueSegments(step: Step, system: System, effect: Effect, names?: Names): Segment[] {
   const s = step as any;
-  const source = typeof s.source === 'object' ? null : (s.source ?? 'roll');
   const out: Segment[] = [];
-  if (source === 'item') out.push(refSegment(s.fixed, system, effect, 'фикс записи?', names));
-  else if (source === 'margin') {
-    out.push(seg('превышение проверки'));
-    if (s.margin) out.push(refSegment(s.margin, system, effect, 'какой?', names));
-  } else out.push(refSegment(s.dice, system, effect, 'какие кости?', names));
+  if (s.die) out.push(refSegment(s.die, system, effect, 'какие кости?', names));
+  if (s.fixed) {
+    if (out.length) out.push(seg('+'));
+    out.push(refSegment(s.fixed, system, effect, 'сколько?', names));
+  }
+  if (!out.length) out.push(hole('сколько?'));
   if (s.bonus !== undefined && s.bonus !== null) {
     const bonus = refSegment(s.bonus, system, effect, '', names);
     if (!('text' in bonus) || (bonus.text !== '0' && bonus.text !== '')) out.push(seg('+'), bonus);
@@ -162,9 +167,10 @@ function exprSegments(expr: string, amount: Step | null, system: System, effect:
       out.push(seg('('), ...inner, seg(')'));
     } else {
       const name = m[1]!;
-      const field = ownerOf(name)?.rest ?? name;
+      const sheet = onSheet(effect, name);
+      const field = sheet?.rest ?? name;
       const label = names?.get(name)
-        ?? (hasField(system, field) ? labelOfTag(system, name) : null);
+        ?? (hasField(system, field) ? `${labelOfTag(system, field)}${sheet ? ` (${sheet.sheet})` : ''}` : null);
       out.push(label ? seg(`«${label}»`) : hole(`${name} — такого нет`));
     }
     rest = rest.slice(m.index + m[0].length);
@@ -186,8 +192,8 @@ export function changeReadback(step: Step, amount: Step | null, system: System, 
       what = known ? seg(`«${known.label ?? id}».`) : hole(`«${id || '?'}» — в системе нет`);
     } else what = refSegment(ref, system, effect, 'какое состояние?', names);
     return (s.mode ?? 'apply') === 'remove'
-      ? [seg('С цели снимается состояние'), what]
-      : [seg('На цель вешается состояние'), what];
+      ? [seg(`С ${whoOf(effect, s.to)} снимается состояние`), what]
+      : [seg(`На ${whoOf(effect, s.to)} вешается состояние`), what];
   }
   const field = refSegment(s.target, system, effect, 'какое поле?', names);
 
@@ -201,9 +207,9 @@ export function changeReadback(step: Step, amount: Step | null, system: System, 
       ? amountValueSegments(amount, system, effect, names)
       : [refSegment(s.value, system, effect, 'сколько?', names)];
   const direction = s.direction ?? 'subtract';
-  if (direction === 'set') return [seg('У цели'), field, seg('становится'), ...what, seg('.')];
-  if (direction === 'add') return [seg('Цель получает'), ...what, seg('в'), field, seg('.')];
-  return [seg('Цель теряет'), ...what, seg('из'), field, seg('.')];
+  if (direction === 'set') return [field, seg('становится'), ...what, seg('.')];
+  if (direction === 'add') return [field, seg('растёт на'), ...what, seg('.')];
+  return [field, seg('уменьшается на'), ...what, seg('.')];
 }
 
 export function sendReadback(step: Step, system: System, effect: Effect, names?: Names): Segment[] {
@@ -225,23 +231,15 @@ export function sendReadback(step: Step, system: System, effect: Effect, names?:
   const chosen = (event?.params ?? []).filter(p => p.kind === 'choice' && args[p.key] !== undefined).map(p => word(args[p.key]));
   const tags = chosen.filter(Boolean);
   return [
-    seg(s.to === 'sender' ? 'Ответом отправителю зовёт' : 'Зовёт'), name, ...amount,
+    seg('Зовёт'), name, ...amount,
     ...(tags.length ? [seg(`[${tags.join(', ')}]`)] : []),
     seg('.'),
   ];
 }
 
 export function numberReadback(step: Step, system: System, effect: Effect, names?: Names): Segment[] {
-  const out: Segment[] = [seg('Считается число:'), ...amountValueSegments(step, system, effect, names)];
-  const double = (step as { double?: { expr?: string } }).double;
-  if (double?.expr) {
-    const when = readGuard(double.expr);
-    out.push(seg(when?.atLeast !== undefined
-      ? `— и вдвое, если ${outputWords(when.ref)} не меньше ${when.atLeast}`
-      : `— и вдвое, если ${formulaAsLabels(system, double.expr, names)}`));
-  }
-  out.push(seg('.'));
-  return out;
+  const by = (step as { by?: unknown }).by;
+  return [seg(by ? `${whoOf(effect, by)} бросает:` : 'Считается число:'), ...amountValueSegments(step, system, effect, names), seg('.')];
 }
 
 const plural = (n: number, one: string, few: string, many: string) => {
@@ -355,17 +353,3 @@ export const joinReadback = (segments: Segment[]): string =>
     .join(' ')
     .replace(/\s+([.,])/g, '$1')
     .replace(/\.\s*\./g, '.');
-
-const outputWords = (ref: string): string => {
-  const [, path] = ref.split('.');
-  return path ? OUTPUT_WORDS[path] ?? path : 'результат шага';
-};
-
-const OUTPUT_WORDS: Record<string, string> = {
-  natural: 'выпавшее на костях',
-  total: 'итог броска',
-  margin: 'превышение',
-  rolled: 'сколько костей кинуто',
-  atMax: 'костей на максимуме',
-  atMin: 'костей на единице',
-};

@@ -22,16 +22,14 @@ const nameOf = (ref: unknown): string | null => {
 
 export function asOneFormula(step: Step): string | null {
   const s = step as Loose;
-  if (s.type !== 'amount') return null;
-  if (s.fixed !== undefined && s.dice === undefined) return null;
-
-  const dice = nameOf(s.dice);
-  if (!dice) return null;
-
+  if (s.type !== 'roll' || s.die === undefined) return null;
+  const die = s.die as Loose;
+  if (!die || typeof die !== 'object' || !('const' in die)) return null;
+  const dice = JSON.stringify(String(die.const));
   const times = nameOf(s.count);
-  const rolled = times ? `кинуть(${dice}, ${times})` : `кинуть(${dice})`;
-
-  const parts = [rolled];
+  const parts = [times ? `кинуть(${dice}, ${times})` : `кинуть(${dice})`];
+  const fixed = nameOf(s.fixed);
+  if (fixed) parts.push(fixed);
   const bonus = nameOf(s.bonus);
   if (bonus) parts.push(bonus);
   return parts.join(' + ');

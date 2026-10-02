@@ -24,11 +24,6 @@ const ENDS = [
   ['turn-start', 'в начале хода'],
 ] as const;
 
-const WHOSE = [
-  ['own', 'своего — того, на ком висит'],
-  ['source', 'того, кто наложил'],
-] as const;
-
 const REAPPLY_OPTIONS = (Object.keys(REAPPLY) as (keyof typeof REAPPLY)[]).map(key => [key, REAPPLY[key].label] as const);
 
 const fromBase = (base: Effect): string => {
@@ -53,9 +48,9 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
   const pipeline = launch.kind === 'manual';
 
   const moveLane = (indices: number[], to: Lane) => {
-    const fromList = (to === 'sender' ? effect.steps : effect.cost) ?? [];
+    const fromList = (to === 'cost' ? effect.steps : effect.cost) ?? [];
     const first = fromList[indices[0] ?? 0];
-    const at = to === 'sender' ? (effect.cost?.length ?? 0) : 0;
+    const at = to === 'cost' ? (effect.cost?.length ?? 0) : 0;
     useOpened.getState().setOpen([`step|${effect.label ?? ''}|${to}|${String(first?.id ?? at)}`], true);
     shiftLane(indices, to);
   };
@@ -249,10 +244,10 @@ function Hooks({ effect, system, edit }: {
 type Holder = { steps?: Step[]; cost?: Step[] };
 
 const shiftBetween = (holder: Holder, indices: number[], to: Lane): void => {
-  const fromList = (to === 'sender' ? holder.steps : holder.cost) ?? [];
+  const fromList = (to === 'cost' ? holder.steps : holder.cost) ?? [];
   const moved = indices.map(i => fromList[i]!).filter(Boolean);
   const rest = fromList.filter((_, i) => !indices.includes(i));
-  if (to === 'sender') {
+  if (to === 'cost') {
     holder.steps = rest;
     holder.cost = [...(holder.cost ?? []), ...moved];
   } else {
@@ -273,7 +268,7 @@ function Handlers({ id, effect, system, edit }: {
         <Button size="sm" onClick={() => edit(draft => { (draft.on ??= []).push(newHandler()); })}>+ когда</Button>
       </div>
       {list.length === 0 ? (
-        <Empty title="Ни на что не отзывается" hint="«Когда» — что случилось (начался ход, пришёл урон, по мне бросают) и что эффект делает в ответ." />
+        <Empty title="Ни на что не отзывается" hint="Подписка — что случилось (начался ход, пришёл урон, выпали кости) и что эффект делает в ответ." />
       ) : null}
       {list.map((handler, index) => {
         const carrier = { ...effect, label: `${effect.label ?? ''} · когда ${index + 1}`, steps: handler.steps ?? [], self: handler.cost } as Effect;
@@ -332,37 +327,48 @@ function Lifetime({ effect, system, id, edit }: {
   effect: Effect; system: System; id: string; edit: (change: (draft: Effect) => void) => void;
 }) {
   const kind = effect.duration?.kind ?? 'permanent';
-  const held = effect.bond !== undefined;
-  const shared = typeof effect.bond === 'string';
+  const sheets = (effect.params ?? []).filter(param => param.kind === 'sheet');
   const holders = Object.entries(system.effects)
     .filter(([key, other]) => key !== id && (other.activation ?? 'manual') !== 'manual');
+  const button = (effect.activation ?? 'manual') === 'manual';
 
   return (
     <div className="stack stack--tight">
-      <Field label="Сколько висит">
-        <Select
-          value={held ? 'held' : kind}
-          options={[...DURATION_OPTIONS, ['held', 'пока я держу']] as never}
-          onChange={next => edit(draft => {
-            if (next === 'held') { draft.bond = true; draft.duration = { kind: 'permanent' }; return; }
-            delete draft.bond;
-            draft.duration = COUNTED.has(next) ? { kind: next, max: draft.duration?.max ?? 1 } : { kind: next };
-          })}
-        />
-      </Field>
-
-      {held ? (
-        <Field label="Держится вместе с чем-то ещё?" hint="Концентрация: взялся за новое — старое спало.">
+      {button ? (
+        <Field label="Держание" hint="Концентрация: наложенное этим действием держится, пока у листа есть эффект-держатель; взялся за новое — старое спало.">
           <Select
-            value={shared ? String(effect.bond) : ''}
-            options={[['', 'нет — только этот эффект'],
-              ...holders.map(([key, other]) => [key, `вместе с «${other.label ?? key}»`] as const)] as never}
-            onChange={next => edit(draft => { draft.bond = next || true; })}
+            value={effect.bond?.effect ?? ''}
+            options={[['', 'не держится'], ...holders.map(([key, other]) => [key, `держит «${other.label ?? key}»`] as const)] as never}
+            onChange={next => edit(draft => {
+              if (!next) { delete draft.bond; return; }
+              draft.bond = { effect: next, by: draft.bond?.by ?? sheets[0]?.key ?? '' };
+            })}
+          />
+        </Field>
+      ) : null}
+      {button && effect.bond ? (
+        <Field label="Держатель у листа">
+          <Select
+            value={effect.bond.by}
+            options={sheets.map(param => [param.key, `«${param.label ?? param.key}»`] as const) as never}
+            onChange={next => edit(draft => { if (draft.bond) draft.bond.by = next; })}
           />
         </Field>
       ) : null}
 
-      {!held && COUNTED.has(kind) ? (
+      {button ? null : (
+        <Field label="Сколько висит">
+          <Select
+            value={kind}
+            options={DURATION_OPTIONS as never}
+            onChange={next => edit(draft => {
+              draft.duration = COUNTED.has(next) ? { kind: next, max: draft.duration?.max ?? 1 } : { kind: next };
+            })}
+          />
+        </Field>
+      )}
+
+      {!button && COUNTED.has(kind) ? (
         <Field label="Сколько">
           <Input
             type="number" value={effect.duration?.max ?? 1}
@@ -373,7 +379,7 @@ function Lifetime({ effect, system, id, edit }: {
         </Field>
       ) : null}
 
-      {!held && kind === 'turns' ? (
+      {!button && kind === 'turns' ? (
         <Field label="Спадает" hint="«В начале хода» — как «до начала следующего хода»: щит, уклонение.">
           <Select
             value={effect.duration?.ends ?? 'turn-end'}
@@ -386,14 +392,14 @@ function Lifetime({ effect, system, id, edit }: {
         </Field>
       ) : null}
 
-      {!held && kind === 'turns' ? (
-        <Field label="Чьи ходы считать" hint="«Того, кто наложил» — как «до начала вашего следующего хода» у помощи и щита веры.">
+      {!button && kind === 'turns' ? (
+        <Field label="Чьи ходы считать" hint="Лист из входа — как «до начала следующего хода того, кто наложил»: вход заполняет шаг «наложить».">
           <Select
-            value={effect.duration?.whose ?? 'own'}
-            options={WHOSE}
+            value={effect.duration?.by ?? ''}
+            options={[['', 'носителя — того, на ком висит'], ...sheets.map(param => [param.key, `листа из входа «${param.label ?? param.key}»`] as const)] as never}
             onChange={next => edit(draft => {
               if (!draft.duration) return;
-              if (next === 'source') draft.duration.whose = next; else delete draft.duration.whose;
+              if (next) draft.duration.by = next; else delete draft.duration.by;
             })}
           />
         </Field>
@@ -409,8 +415,6 @@ function Lifetime({ effect, system, id, edit }: {
     </div>
   );
 }
-
-
 
 function SelfTrack({ effect, system, edit, onMoveLane }: {
   effect: Effect;
@@ -429,5 +433,5 @@ function SelfTrack({ effect, system, edit, onMoveLane }: {
     if (steps.length) draft.cost = steps; else delete draft.cost;
   });
 
-  return <Chain effect={carrier} system={system} edit={editTrack} lane="sender" onMoveLane={onMoveLane} bare />;
+  return <Chain effect={carrier} system={system} edit={editTrack} lane="cost" onMoveLane={onMoveLane} bare />;
 }
