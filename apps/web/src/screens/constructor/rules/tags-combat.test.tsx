@@ -36,3 +36,22 @@ describe('правила: метки и бой', () => {
     expect((useWorld.getState().system as { limits?: unknown }).limits).toBeUndefined();
   });
 });
+
+describe('правки броска: числа операций — поля', () => {
+  afterEach(cleanup);
+
+  it('у «кости сверх» правятся грани, у «не меньше» — порог', async () => {
+    const { numberKeyOf } = await import('./roll-edits-section.tsx');
+    expect(numberKeyOf({ op: 'bonusDie', sides: 4 })).toBe('sides');
+    expect(numberKeyOf({ op: 'floorDie', least: 10 })).toBe('least');
+    expect(numberKeyOf({ op: 'keepBest', n: 1 })).toBe('n');
+  });
+
+  it('«добавить кость» берёт число костей формулой: рывок Shadowrun — @edge', async () => {
+    const { RollEditsSection } = await import('./roll-edits-section.tsx');
+    useWorld.setState(state => ({ ...state, system: { ...base(), roll_edits: { рывок: { label: 'Рывок', ops: [{ op: 'addDie' }] } } } as System }));
+    render(<RollEditsSection system={useWorld.getState().system} editSystem={change => useWorld.getState().editSystem(change)} usage={new Map()} />);
+    fireEvent.change(screen.getByPlaceholderText('сколько'), { target: { value: '@edge' } });
+    expect(useWorld.getState().system.roll_edits!.рывок!.ops[0]).toEqual({ op: 'addDie', count: { expr: '@edge' } });
+  });
+});

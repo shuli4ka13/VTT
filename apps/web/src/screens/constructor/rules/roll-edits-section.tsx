@@ -1,3 +1,5 @@
+import { BoundField } from '../bound-field.tsx';
+import type { Bound } from '../bound-field.tsx';
 import { useState } from 'react';
 import { editPalette, paletteKeyOf } from '@vtt/engine/engine/roll-edits';
 import { ADVANTAGE_METHODS, installMethod } from '@vtt/engine/model/advantage-methods';
@@ -72,14 +74,20 @@ export function AdvantagePalette({ system, editSystem, onAdded }: {
   );
 }
 
-function OpChip({ op, parts, onNumber, onPart, onRemove }: {
+const NUMBER_KEYS = ['n', 'by', 'sides', 'least'] as const;
+
+export const numberKeyOf = (op: Record<string, unknown>): string | null =>
+  NUMBER_KEYS.find(key => key in op) ?? (op.op === 'bonusDie' ? 'sides' : op.op === 'floorDie' ? 'least' : null);
+
+function OpChip({ op, parts, onNumber, onCount, onPart, onRemove }: {
   op: Record<string, unknown>;
   parts: { name: string; label: string }[];
   onNumber: (value: number) => void;
+  onCount: (value: Bound | null) => void;
   onPart: (part: string) => void;
   onRemove: () => void;
 }) {
-  const numeric = 'n' in op ? 'n' : 'by' in op ? 'by' : null;
+  const numeric = numberKeyOf(op);
 
   const askPart = parts.length > 0 && PART_ABLE.includes(String(op.op));
   return (
@@ -87,6 +95,9 @@ function OpChip({ op, parts, onNumber, onPart, onRemove }: {
       {opWord(op as { op: string })}
       {numeric ? (
         <ChipNum value={Number(op[numeric] ?? 0)} onCommit={onNumber} />
+      ) : null}
+      {op.op === 'addDie' ? (
+        <span className="chip__count"><BoundField value={op.count ?? 1} placeholder="сколько" onChange={onCount} /></span>
       ) : null}
       {askPart ? (
         <select
@@ -163,9 +174,14 @@ export function RollEditsSection({ system, editSystem, usage }: Props) {
                       op={op}
                       parts={parts}
                       onNumber={value => editSystem(draft => {
-                        const target = draft.roll_edits?.[key]?.ops?.[i];
+                        const target = draft.roll_edits?.[key]?.ops?.[i] as Record<string, unknown> | undefined;
+                        const field = target ? numberKeyOf(target) : null;
+                        if (target && field) target[field] = value;
+                      })}
+                      onCount={value => editSystem(draft => {
+                        const target = draft.roll_edits?.[key]?.ops?.[i] as Record<string, unknown> | undefined;
                         if (!target) return;
-                        if ('n' in target) target.n = value; else target.by = value;
+                        if (value === null || value === 1) delete target.count; else target.count = value;
                       })}
                       onPart={part => editSystem(draft => {
                         const target = draft.roll_edits?.[key]?.ops?.[i];
