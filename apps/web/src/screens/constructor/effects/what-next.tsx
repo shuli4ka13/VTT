@@ -96,17 +96,17 @@ export function WhatNext({ open, onClose, system, eventId, onEdit }: {
       open={open}
       onClose={onClose}
       title={called?.label ?? eventId}
-      sub="Это считается уже на листе цели — её полями и её правилами."
+      sub="Что делает вызванный эффект со входами, которые ему передали."
       footer={called ? (
         <Button onClick={() => { onEdit(eventId); onClose(); }}>править «{called.label}»</Button>
       ) : null}
     >
       {!called ? (
-        <Empty title="Такого эффекта в системе нет" hint="Выберите, кого звать, в поле «Зовём эффект»." />
+        <Empty title="Такого эффекта в системе нет" hint="Выберите, кого звать, в поле «Какой эффект»." />
       ) : (
         <>
           <section className="stack stack--tight">
-            <span className="field__label">Что цель может изменить по дороге</span>
+            <span className="field__label">Какие правки меняют величину по дороге</span>
             {meddlers.length ? meddlers.map((m, i) => (
               <div key={i} className="inline inline--tight">
                 <Chip>{m.by}</Chip>
@@ -122,14 +122,14 @@ export function WhatNext({ open, onClose, system, eventId, onEdit }: {
               </div>
             )) : (
               <span className="faint">
-                Ничего: сколько отправили, столько и дойдёт. Сопротивления и уязвимости — это правила,
+                Ничего: сколько передали, столько и применится. Сопротивления и уязвимости — это правила,
                 которые правят «{called.label}» по метке.
               </span>
             )}
           </section>
 
           <section className="stack stack--tight">
-            <span className="field__label">Затем цель делает по порядку</span>
+            <span className="field__label">Затем вызванный эффект делает по порядку</span>
             {cards.length ? cards.map((card, i) => (
               <div key={i} className="drawer__step">
                 <div className="drawer__step-head">

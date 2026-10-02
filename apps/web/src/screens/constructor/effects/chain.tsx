@@ -194,7 +194,8 @@ export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', e
           <Button key={b.key} size="sm" title={b.hint}
             onClick={() => edit(draft => {
               const taken = (draft.steps ?? []).map(s => s.id).filter(Boolean) as string[];
-              (draft.steps ??= []).push(...b.make(system, taken));
+              const held = HELD_PARTS.has(placeAt(0).part);
+              (draft.steps ??= []).push(...b.make(system, taken).map(step => (held ? byHolder(step) : step)));
             })}>
             {b.label}
           </Button>
@@ -233,3 +234,11 @@ const cardTitle = (cards: ReturnType<typeof groupSteps>, index: number, system: 
   const card = cards.find(c => c.indices.includes(index));
   return card ? titleOf(card.kind, card.step, system) : undefined;
 };
+
+const HELD_PARTS = new Set(['handler', 'handler-cost', 'attach', 'detach']);
+
+const byHolder = (step: Step): Step => {
+  const by = (step as { by?: { expr?: string } }).by;
+  return by?.expr === '@действующий' ? { ...step, by: { expr: '@носитель' } } as Step : step;
+};
+

@@ -175,8 +175,8 @@ export const STEP_WORDS = {
       { key: 'args', label: 'Что передаётся', kind: 'args', main: true, allow: [] },
     ],
     outputs: [
-      { path: '.incoming', label: 'отправлено', kind: 'number' },
-      { path: '.amount', label: 'дошло после правок', kind: 'number' },
+      { path: '.incoming', label: 'сколько передали', kind: 'number' },
+      { path: '.amount', label: 'сколько после правок вызова', kind: 'number' },
     ],
     reasons: { 'emit-stopped': 'общий эффект оборвался' },
     breakLines: {},
