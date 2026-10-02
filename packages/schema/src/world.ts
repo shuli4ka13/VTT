@@ -279,6 +279,13 @@ export const system = z.object({
   roll_edits: z.record(z.string(), rollEdit).optional(),
 
   initiative: z.lazy(() => rollSpec).optional(),
+  limits: z.object({
+    handlerDepth: z.number().int().positive().optional(),
+    budget: z.number().int().positive().optional(),
+    settleRounds: z.number().int().positive().optional(),
+    callDepth: z.number().int().positive().optional(),
+    probes: z.number().int().positive().optional(),
+  }).strict().optional(),
 
   mannequins: z.array(z.lazy(() => sheet)).optional(),
   library: z.array(z.lazy(() => compendiumRecord)).optional(),

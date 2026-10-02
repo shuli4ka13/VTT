@@ -8,6 +8,8 @@ import { DiceSection, dieEntries } from './dice-section.tsx';
 import { RollEditsSection, AdvantagePalette } from './roll-edits-section.tsx';
 import { TablesSection } from './tables-section.tsx';
 import { TogglesSection } from './toggles-section.tsx';
+import { TagsSection } from './tags-section.tsx';
+import { CombatSection } from './combat-section.tsx';
 import { CharacterSection, isCharacterColumn } from './character-section.tsx';
 import { critOf, armorOf } from '@vtt/engine/model/toggles';
 import type { System } from '@vtt/schema';
@@ -15,7 +17,7 @@ import { calledOf } from '@vtt/engine/engine/effects';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 import { rowTables } from '@vtt/engine/model/tables';
 
-type SectionKey = 'character' | 'dice' | 'edits' | 'tables' | 'toggles';
+type SectionKey = 'character' | 'dice' | 'edits' | 'tables' | 'tags' | 'combat' | 'toggles';
 
 interface Section {
   key: SectionKey;
@@ -29,6 +31,8 @@ const SECTIONS: Section[] = [
   { key: 'dice', label: 'Кости', count: system => dieEntries(system).length },
   { key: 'edits', label: 'Правки броска', count: system => Object.keys(system.roll_edits ?? {}).length },
   { key: 'tables', label: 'Таблицы', count: system => rowTables(system).length },
+  { key: 'tags', label: 'Метки', count: system => Object.keys(system.tags ?? {}).length },
+  { key: 'combat', label: 'Бой', count: system => (system.initiative ? 1 : 0) },
   {
     key: 'toggles', label: 'Быстрые настройки',
     count: system => [
@@ -85,6 +89,8 @@ export function RulesTab() {
             {section === 'dice' ? <DiceSection system={system} editSystem={editSystem} usage={usage} /> : null}
             {section === 'edits' ? <RollEditsSection system={system} editSystem={editSystem} usage={usage} /> : null}
             {section === 'tables' ? <TablesSection system={system} editSystem={editSystem} usage={usage} /> : null}
+            {section === 'tags' ? <TagsSection system={system} editSystem={editSystem} /> : null}
+            {section === 'combat' ? <CombatSection system={system} editSystem={editSystem} /> : null}
             {section === 'toggles' ? <TogglesSection system={system} editSystem={editSystem} /> : null}
           </>
         ),
