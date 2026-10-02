@@ -19,7 +19,7 @@ describe('стоимость эффекта — одним выбором', () =
 
   const lane = (steps: unknown[] = []) => {
     const effect = { label: 'Удар', steps } as unknown as Effect;
-    render(<Chain effect={effect} system={useWorld.getState().system} lane="steps"
+    render(<Chain id="удар" placeAt={index => ({ part: 'steps', index })} effect={effect} system={useWorld.getState().system} lane="steps"
       edit={change => change(effect)}
       onAddCost={id => { (effect.steps ??= []).unshift({ id: 'стоимость', type: 'emit', event: id, strict: true } as never); }} />);
     return effect;
@@ -43,7 +43,7 @@ describe('стоимость эффекта — одним выбором', () =
 
   it('без «onAddCost» (цепочка хука или подписки без решения) выбора стоимости нет', () => {
     const effect = { label: 'Удар', steps: [] } as unknown as Effect;
-    render(<Chain effect={effect} system={withCost()} edit={() => {}} />);
+    render(<Chain id="удар" placeAt={index => ({ part: 'steps', index })} effect={effect} system={withCost()} edit={() => {}} />);
     expect(screen.queryByDisplayValue('+ стоимость')).toBeNull();
   });
 
@@ -62,7 +62,7 @@ describe('стоимость эффекта — одним выбором', () =
 
   it('шаг, зовущий эффект из блока «Стоимость», так и подписан', () => {
     const effect = { label: 'Удар', steps: [{ id: 'стоимость', type: 'emit', event: 'cost_action', strict: true }] } as unknown as Effect;
-    render(<Chain effect={effect} system={withCost()} lane="steps" edit={() => {}} />);
+    render(<Chain id="удар" placeAt={index => ({ part: "steps", index })} effect={effect} system={withCost()} lane="steps" edit={() => {}} />);
     expect(screen.getByText(/1 · Стоимость/)).toBeTruthy();
   });
 });

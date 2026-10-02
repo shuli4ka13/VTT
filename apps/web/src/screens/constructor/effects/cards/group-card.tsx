@@ -1,7 +1,11 @@
 import type { SheetNames } from '../../../../ui/formula-chips.tsx';
 import type { ReactNode } from 'react';
+import { useState } from 'react';
 import type { System, Effect, Step, ValueKind } from '@vtt/schema';
 import { Card, CardHead, Verdict, Button, Chip, DangerButton } from '../../../../ui/primitives.tsx';
+import { KeyField } from '../../../../ui/key-field.tsx';
+import { referenced } from '../../keys.ts';
+import { useWorld } from '../../../../store/world.ts';
 import type { CardGroup } from '../../cards.ts';
 import type { Segment } from '../../readback.ts';
 import { checkReadback, changeReadback, sendReadback, numberReadback } from '../../readback.ts';
@@ -139,6 +143,7 @@ export function GroupCard({
           ? <NumberBody step={step} context={context} edit={edit} onAddParam={onAddParam} />
           : null}
         <ConditionFold group={group} earlier={earlier} edit={edit} context={context} />
+        <StepName group={group} effect={effect} edit={edit} />
       </Card>
       {breakLine(group)}
     </>
@@ -153,4 +158,30 @@ function summaryOf(group: CardGroup, system: System, effect: Effect, names: Map<
         ? (step.type === 'emit' ? sendReadback(step, system, effect, names) : changeReadback(step, group.amount, system, effect, names))
         : [];
   return segments.map(part => ('text' in part ? part.text : part.hole)).join(' ').replace(/\s+([.,])/g, '$1');
+}
+
+function StepName({ group, effect, edit }: { group: CardGroup; effect: Effect; edit: (k: number, change: (draft: Step) => void) => void }) {
+  const [open, setOpen] = useState(false);
+  const id = group.step.id ? String(group.step.id) : '';
+  if (!id) return null;
+  if (!open) {
+    return (
+      <div className="inline inline--tight step-name">
+        <Button size="sm" variant="ghost" title="как итог шага зовётся в формулах: @имя" onClick={() => setOpen(true)}>имя в формулах…</Button>
+      </div>
+    );
+  }
+  const st = useWorld.getState();
+  const taken = [...(effect.steps ?? []), ...(effect.cost ?? [])].map(s => String(s.id ?? '')).filter(Boolean);
+  const roll = group.amount?.id ? String(group.amount.id) : '';
+  const rename = (next: string) => {
+    edit(group.amount ? 1 : 0, draft => { draft.id = next; });
+    if (group.kind === 'check' && roll === `${id}_бросок` && !taken.includes(`${next}_бросок`)) edit(0, draft => { draft.id = `${next}_бросок`; });
+  };
+  return (
+    <div className="inline inline--tight step-name">
+      <span className="faint">имя в формулах</span>
+      <KeyField value={id} locked={referenced({ s: st.system, c: st.compendium }, id, effect)} taken={taken} onChange={rename} />
+    </div>
+  );
 }

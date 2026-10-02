@@ -7,7 +7,7 @@ import type { Phase } from '@vtt/engine/events/bus';
 import type { MomentKey } from '@vtt/engine/events/moments';
 import { fieldsOf } from '@vtt/engine/model/sheet-columns';
 import { TARGETS_SEED } from '@vtt/engine/model/references';
-import { handlerSheets, holderPhrase, splitIf, joinIf } from './names.ts';
+import { sheetsAt, holderPhrase, splitIf, joinIf } from './names.ts';
 import type { System, Handler } from '@vtt/schema';
 
 type Kind = 'call' | 'seen' | 'moment' | 'field' | 'gained' | 'lost';
@@ -70,11 +70,10 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
   edit: (change: (draft: Handler) => void) => void;
   onRemove: () => void;
 }) {
-  const effect = system.effects[id]!;
   const kind = kindOf(handler.on ?? '');
   const subject = subjectOf(handler.on ?? '');
   const phase = callHappening(handler.on)?.phase ?? 'before';
-  const sheets = handlerSheets(system, effect, handler);
+  const sheets = sheetsAt(system, id, { part: 'handler-if', handler: index });
   const names = [...sheets].filter(([name]) => name !== 'носитель');
   const holders = names.map(([name]) => holderPhrase(name));
   const { holder, rest } = splitIf(handler.if?.expr, holders);

@@ -132,7 +132,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
     expect(screen.queryByLabelText('«Новый вход» правят сопротивления'), 'редкое спрятано').toBeNull();
     fireEvent.click(screen.getByText('ещё'));
     const heads = [...document.querySelectorAll('.sheet-grid__title')].map(h => h.textContent);
-    expect(heads.slice(-2)).toEqual(['Правят сопротивления', 'Обязателен']);
+    expect(heads.slice(-4)).toEqual(['Правят сопротивления', 'Обязателен', 'Список', 'Имя в формулах']);
     expect(screen.getByLabelText('«Новый вход» правят сопротивления')).toBeTruthy();
 
     const params = screen.getByLabelText('«Новый вход» правят сопротивления').closest('.sheet-grid')!;
@@ -200,6 +200,20 @@ describe('ссылка на результат шага', () => {
     expect(shown).not.toContain(id);
   });
 
+  it('имя проверки задаётся под «ещё» и тянет за собой имя её броска', () => {
+    renderOpen(<EffectsTab />);
+    fireEvent.click(screen.getAllByText('+ проверка')[0]!);
+    const before = useWorld.getState().system.effects.strike!.steps!.map(step => step.id);
+    const check = String(before.at(-1));
+    fireEvent.click(screen.getAllByText('имя в формулах…').at(-1)!);
+    const input = [...document.querySelectorAll('input')].find(i => i.value === check)!;
+    fireEvent.change(input, { target: { value: 'hit' } });
+    fireEvent.blur(input);
+    const ids = useWorld.getState().system.effects.strike!.steps!.map(step => step.id);
+    expect(ids).toContain('hit');
+    expect(ids).toContain('hit_бросок');
+  });
+
   it('формула «Сколько» предлагает выходы проверки поимённо', () => {
     renderOpen(<EffectsTab />);
     const label = screen.getByText('Сколько');
@@ -223,6 +237,17 @@ describe('три вида создания, два вида запуска', () 
     }));
   });
   afterEach(() => { cleanup(); });
+
+  it('имя эффекта задаётся под «имя в формулах…», пока на эффект никто не ссылается', () => {
+    renderOpen(<EffectsTab />);
+    fireEvent.click(screen.getAllByText('имя в формулах…')[0]!);
+    const input = [...document.querySelectorAll('input')].find(i => i.value === 'strike')!;
+    fireEvent.change(input, { target: { value: 'удар_мечом' } });
+    fireEvent.blur(input);
+    const state = useWorld.getState();
+    expect(Object.keys(state.system.effects)).toEqual(['удар_мечом']);
+    expect(state.activeEffectId).toBe('удар_мечом');
+  });
 
   it('палитра создания предлагает ровно три вида и не знает слов «реакция» и «триггерный»', () => {
     renderOpen(<EffectsTab />);

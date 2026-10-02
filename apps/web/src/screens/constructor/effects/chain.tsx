@@ -8,15 +8,17 @@ import { problemOf } from '../step-card.tsx';
 import { groupSteps, moveGroup, removeSteps, BRICKS, SEEN_BRICKS } from '../cards.ts';
 import { costsOf, newCost } from '../factory.ts';
 import { GroupCard } from './cards/group-card.tsx';
-import { stepSheets } from './names.ts';
-import type { SheetNames } from '../../../ui/formula-chips.tsx';
+import { sheetsAt } from './names.ts';
+import type { Place } from '@vtt/engine/model/names-at';
 import { useOpened } from '../../../store/opened.ts';
 import { findDonorBlock, copyDonorBlock } from '../donors.tsx';
 import type { System, Effect, Step, ValueKind } from '@vtt/schema';
 
 export type Lane = 'steps' | 'cost';
 
-export function Chain({ effect, system, edit, title = 'Шаги', empty = 'шагов ещё нет — эффект ничего не делает', lane = 'steps', onMoveLane, bare = false, startAt = 0, lead, onAddCost, onRoll = false, sheetsAt }: {
+export function Chain({ id, placeAt, effect, system, edit, title = 'Шаги', empty = 'шагов ещё нет — эффект ничего не делает', lane = 'steps', onMoveLane, bare = false, startAt = 0, lead, onAddCost, onRoll = false }: {
+  id: string;
+  placeAt: (index: number) => Place;
   effect: Effect;
   system: System;
   edit: (change: (draft: Effect) => void) => void;
@@ -29,7 +31,6 @@ export function Chain({ effect, system, edit, title = 'Шаги', empty = 'ша�
   lead?: ReactNode;
   onAddCost?: (id: string) => void;
   onRoll?: boolean;
-  sheetsAt?: (index: number) => SheetNames;
 }) {
   const pick = useWorld(s => s.pick);
   const onOpenEffect = (id: string) => pick({ activeEffectId: id });
@@ -136,7 +137,7 @@ export function Chain({ effect, system, edit, title = 'Шаги', empty = 'ша�
                 : []),
             ]}
             problem={problem}
-            sheets={(sheetsAt ?? (index => stepSheets(effect, 'steps', index)))(group.indices[0]!)}
+            sheets={sheetsAt(system, id, placeAt(group.indices[0]!))}
             lane={lane}
             folded={!opened[foldKey(group)]}
             onFold={() => toggleFold(foldKey(group))}

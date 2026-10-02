@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { kindsFor } from '@vtt/engine/words/kinds';
 import { choiceTables } from '@vtt/engine/model/tables';
 import { ASKABLE } from '@vtt/engine/model/asks';
-import { freeId } from '../../../store/world.ts';
+import { freeId, useWorld } from '../../../store/world.ts';
+import { followKey, referenced } from '../keys.ts';
+import { KeyField } from '../../../ui/key-field.tsx';
 import { Card, CardHead, Input, Select, Button } from '../../../ui/primitives.tsx';
 import { SheetGrid } from '../../../ui/sheet-grid.tsx';
 import type { GridColumn } from '../../../ui/sheet-grid.tsx';
@@ -24,9 +26,11 @@ const COLUMNS: GridColumn[] = [
   { key: 'hint', label: 'Подсказка за столом', width: 170, hint: 'что увидит спрошенный' },
   { key: 'main', label: 'Правят сопротивления', width: 180, hint: 'это число меняют сопротивления и уязвимости цели: урон, лечение. Одно на эффект' },
   { key: 'required', label: 'Обязателен', width: 100 },
+  { key: 'many', label: 'Список', width: 80, hint: 'для входа-листа: несколько листов сразу (цели)' },
+  { key: 'key', label: 'Имя в формулах', width: 150, hint: 'как вход зовётся в формулах: @имя. Идёт за названием, пока на него никто не ссылается' },
 ];
 
-const RARE = ['hint', 'main', 'required'];
+const RARE = ['hint', 'main', 'required', 'many', 'key'];
 
 type Loose = Param & { role?: string; optional?: boolean };
 
@@ -50,9 +54,18 @@ export function ParamsEditor({ effect, system, onEdit }: {
       else if (p.key === key || on) delete p.role;
     }
   });
+  const world = () => { const st = useWorld.getState(); return { s: st.system, c: st.compendium, sh: st.sheets }; };
+  const keys = params.map(p => p.key);
+  const relabel = (param: Loose, next: string) => onEdit(draft => {
+    const target = draft.params?.find(p => p.key === param.key) as Loose | undefined;
+    if (!target) return;
+    target.key = followKey({ world: world(), key: target.key, base: 'вход', before: target.label ?? '', after: next, taken: keys });
+    target.label = next;
+  });
+  const rekey = (param: Loose, next: string) => change(param.key, t => { t.key = next; });
   const tables = choiceTables(system).map(([key, list]) => [key, list.label || key] as const);
   const [more, setMore] = useState(false);
-  const full = more || params.some(p => p.ask?.hint || p.role === 'amount' || p.optional);
+  const full = more || params.some(p => p.ask?.hint || p.role === 'amount' || p.optional || p.many);
   const columns = full ? COLUMNS : COLUMNS.filter(c => !RARE.includes(c.key));
 
   return (
@@ -69,7 +82,7 @@ export function ParamsEditor({ effect, system, onEdit }: {
             const kind = String(param.kind ?? 'number');
             const askable = (ASKABLE as readonly string[]).includes(kind);
             const cells = [
-              <Input key={`${param.key}:label`} value={param.label ?? ''} onChange={next => change(param.key, t => { t.label = next; })} />,
+              <Input key={`${param.key}:label`} value={param.label ?? ''} onChange={next => relabel(param, next)} />,
               <Select
                 key={`${param.key}:kind`}
                 value={kind}
@@ -125,6 +138,15 @@ export function ParamsEditor({ effect, system, onEdit }: {
                 checked={!param.optional}
                 onChange={e => change(param.key, t => { if (e.target.checked) delete t.optional; else t.optional = true; })}
               />,
+              kind === 'sheet' ? (
+                <input
+                  key={`${param.key}:many`} type="checkbox" className="sheet-grid__check"
+                  aria-label={`«${param.label ?? param.key}» — список листов`}
+                  checked={Boolean(param.many)}
+                  onChange={e => change(param.key, t => { if (e.target.checked) t.many = true; else delete t.many; })}
+                />
+              ) : <span key={`${param.key}:many`} className="faint">—</span>,
+              <KeyField key={`${param.key}:key`} value={param.key} locked={referenced(world(), param.key)} taken={keys} onChange={next => rekey(param, next)} />,
               <Button key={`${param.key}:drop`} size="sm" variant="ghost" title="убрать вход" onClick={() => onEdit(draft => {
                 draft.params = (draft.params ?? []).filter(p => p.key !== param.key);
               })}>×</Button>,

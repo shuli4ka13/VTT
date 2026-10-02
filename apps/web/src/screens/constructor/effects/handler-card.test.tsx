@@ -17,7 +17,8 @@ const system = {
 
 const card = (handler: Handler) => {
   let current = structuredClone(handler);
-  const view = render(<HandlerCard id="r" index={0} handler={current} system={system} onRemove={() => {}}
+  const withHandler = { ...system, effects: { ...system.effects, r: { ...system.effects.r, on: [current] } } } as System;
+  const view = render(<HandlerCard id="r" index={0} handler={current} system={withHandler} onRemove={() => {}}
     edit={change => { change(current); current = structuredClone(current); }} />);
   return { view, get: () => current };
 };
@@ -64,7 +65,7 @@ describe('«увидев кости»', () => {
     const { view, get } = card({ on: 'seen', steps: [] });
     const whose = view.getByDisplayValue('всех — без условия') as HTMLSelectElement;
     expect([...whose.options].map(o => o.value)).toEqual(['', '@бросающий == @носитель', '@против == @носитель']);
-    expect([...whose.options].map(o => o.textContent)).toEqual(['всех — без условия', '«бросающий» — носитель', '«против» — носитель']);
+    expect([...whose.options].map(o => o.textContent)).toEqual(['всех — без условия', '«кто бросает» — носитель', '«против кого бросок» — носитель']);
     fireEvent.change(whose, { target: { value: '@против == @носитель' } });
     expect(get().if?.expr).toBe('@против == @носитель');
   });

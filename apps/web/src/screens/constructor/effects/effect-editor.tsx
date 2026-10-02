@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useWorld } from '../../../store/world.ts';
 import { newHandler, payStep } from '../factory.ts';
 import { Card, CardHead, Field, Input, Select, DangerButton, LabelInput, Button, Empty } from '../../../ui/primitives.tsx';
@@ -6,6 +7,9 @@ import { useOpened } from '../../../store/opened.ts';
 import { ModifiersEditor } from '../modifiers.tsx';
 import { LAUNCH_KINDS, launchHint } from './words.ts';
 import { HandlerCard } from './handler-card.tsx';
+import type { Place } from '@vtt/engine/model/names-at';
+import { followKey, referenced } from '../keys.ts';
+import { KeyField } from '../../../ui/key-field.tsx';
 import { Chain, type Lane } from './chain.tsx';
 import { groupSteps } from '../cards.ts';
 import { BlockPick } from '../block-pick.tsx';
@@ -57,11 +61,25 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
 
   const shiftLane = (indices: number[], to: Lane) => edit(draft => { shiftBetween(draft, indices, to); });
 
+  const world = () => { const st = useWorld.getState(); return { s: st.system, c: st.compendium, sh: st.sheets }; };
+  const rekey = (next: string) => {
+    if (next === id || system.effects[next]) return;
+    editSystem(draft => {
+      draft.effects = Object.fromEntries(Object.entries(draft.effects).map(([key, value]) => [key === id ? next : key, value]));
+    });
+    pick({ activeEffectId: next });
+  };
+  const relabel = (label: string) => {
+    const next = followKey({ world: world(), key: id, base: 'effect', before: effect.label ?? '', after: label, taken: Object.keys(system.effects) });
+    edit(draft => { draft.label = label; });
+    if (next !== id) rekey(next);
+  };
+
   return (
     <>
       <Card>
         <CardHead
-          title={<LabelInput value={effect.label ?? ''} placeholder="как зовётся эффект" onCommit={label => edit(draft => { draft.label = label; })} />}
+          title={<LabelInput value={effect.label ?? ''} placeholder="как зовётся эффект" onCommit={label => relabel(label)} />}
           actions={
             <DangerButton size="sm" onConfirm={() => {
               editSystem(draft => {
@@ -75,6 +93,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
           }
         />
 
+        <EffectName id={id} locked={referenced(world(), id)} taken={Object.keys(system.effects)} onChange={rekey} />
         <FieldRow
           id="effect-head"
           fields={[
@@ -170,11 +189,12 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
       {pipeline ? (
         <>
           <Chain
+            id={id} placeAt={index => ({ part: 'steps', index })}
             effect={effect} system={system} edit={edit}
             empty={idleWords(effect)}
             onMoveLane={moveLane}
             startAt={groupSteps(effect.cost ?? []).length}
-            lead={<SelfTrack effect={effect} system={system} edit={edit} onMoveLane={moveLane} />}
+            lead={<SelfTrack id={id} at={index => ({ part: 'cost', index })} effect={effect} system={system} edit={edit} onMoveLane={moveLane} />}
             onAddCost={id => edit(draft => {
               const taken = (draft.cost ?? []).map(s => String(s.id ?? ''));
               (draft.cost ??= []).unshift(payStep(id, taken));
@@ -192,7 +212,7 @@ export function EffectEditor({ id, effect, system }: { id: string; effect: Effec
             onEdit={change => edit(draft => { change(draft.modifiers ??= []); })}
           />
           <Handlers id={id} effect={effect} system={system} edit={edit} />
-          <Hooks effect={effect} system={system} edit={edit} />
+          <Hooks id={id} effect={effect} system={system} edit={edit} />
         </>
       )}
     </>
@@ -204,8 +224,8 @@ const HOOKS = [
   ['detach', 'При спадании', 'шаги в тот миг, когда эффект ушёл: истёк срок, сняли, оборвалась связь'],
 ] as const;
 
-function Hooks({ effect, system, edit }: {
-  effect: Effect; system: System; edit: (change: (draft: Effect) => void) => void;
+function Hooks({ id, effect, system, edit }: {
+  id: string; effect: Effect; system: System; edit: (change: (draft: Effect) => void) => void;
 }) {
   const absent = HOOKS.filter(([turn]) => effect[turn] === undefined);
   return (
@@ -224,7 +244,7 @@ function Hooks({ effect, system, edit }: {
               <span className="spacer" />
               <Button size="sm" variant="ghost" title={`убрать «${title.toLowerCase()}»`} onClick={() => edit(draft => { delete draft[turn]; })}>×</Button>
             </div>
-            <Chain effect={carrier} system={system} edit={editCarrier} title={title} empty="шагов нет — ничего не делает" />
+            <Chain id={id} placeAt={index => ({ part: turn, index })} effect={carrier} system={system} edit={editCarrier} title={title} empty="шагов нет — ничего не делает" />
           </div>
         );
       })}
@@ -271,7 +291,7 @@ function Handlers({ id, effect, system, edit }: {
         <Empty title="Ни на что не отзывается" hint="Подписка — что случилось (начался ход, пришёл урон, выпали кости) и что эффект делает в ответ." />
       ) : null}
       {list.map((handler, index) => {
-        const carrier = { ...effect, label: `${effect.label ?? ''} · когда ${index + 1}`, steps: handler.steps ?? [], self: handler.cost } as Effect;
+        const carrier = { ...effect, label: `${effect.label ?? ''} · когда ${index + 1}`, steps: handler.steps ?? [], cost: handler.cost } as Effect;
         const editCarrier = (change: (draft: Effect) => void) => edit(draft => {
           const own = draft.on?.[index];
           if (!own) return;
@@ -295,13 +315,14 @@ function Handlers({ id, effect, system, edit }: {
               })}
             />
             <Chain
+              id={id} placeAt={step => ({ part: 'handler', handler: index, index: step })}
               effect={carrier} system={system} edit={editCarrier}
               title={`Что делает — когда №${index + 1}`}
               empty="шагов нет — отзывается, но ничего не делает"
               onMoveLane={moveLane}
               onRoll={handler.on === 'seen'}
               startAt={groupSteps(carrier.cost ?? []).length}
-              lead={<SelfTrack effect={carrier} system={system} edit={editCarrier} onMoveLane={moveLane} />}
+              lead={<SelfTrack id={id} at={step => ({ part: 'handler-cost', handler: index, index: step })} effect={carrier} system={system} edit={editCarrier} onMoveLane={moveLane} />}
               {...(handler.confirm ? { onAddCost: (cost: string) => editCarrier(draft => {
                 const taken = (draft.cost ?? []).map(s => String(s.id ?? ''));
                 (draft.cost ??= []).unshift(payStep(cost, taken));
@@ -416,7 +437,9 @@ function Lifetime({ effect, system, id, edit }: {
   );
 }
 
-function SelfTrack({ effect, system, edit, onMoveLane }: {
+function SelfTrack({ id, at, effect, system, edit, onMoveLane }: {
+  id: string;
+  at: (index: number) => Place;
   effect: Effect;
   system: System;
   edit: (change: (draft: Effect) => void) => void;
@@ -433,5 +456,20 @@ function SelfTrack({ effect, system, edit, onMoveLane }: {
     if (steps.length) draft.cost = steps; else delete draft.cost;
   });
 
-  return <Chain effect={carrier} system={system} edit={editTrack} lane="cost" onMoveLane={onMoveLane} bare />;
+  return <Chain id={id} placeAt={at} effect={carrier} system={system} edit={editTrack} lane="cost" onMoveLane={onMoveLane} bare />;
 }
+
+function EffectName({ id, locked, taken, onChange }: { id: string; locked: boolean; taken: string[]; onChange: (next: string) => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="inline inline--tight step-name">
+      {open ? (
+        <>
+          <span className="faint">имя в формулах и ссылках</span>
+          <KeyField value={id} locked={locked} taken={taken} onChange={onChange} />
+        </>
+      ) : <Button size="sm" variant="ghost" title="как эффект зовётся в кнопках, подписках и вызовах" onClick={() => setOpen(true)}>имя в формулах…</Button>}
+    </div>
+  );
+}
+
