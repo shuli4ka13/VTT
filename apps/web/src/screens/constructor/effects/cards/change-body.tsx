@@ -1,3 +1,5 @@
+import { SheetPick } from '../../sheet-pick.tsx';
+import { sheetChoices } from '../../slots.tsx';
 import { useMemo, useState, type ReactNode } from 'react';
 import type { System, Step, SlotRef, ValueKind } from '@vtt/schema';
 import { Field, Segmented, Select } from '../../../../ui/primitives.tsx';
@@ -379,10 +381,9 @@ export function ChangeBody({ group, context, edit, withNumber, system, onAddPara
             />
           </Field>
           <Field label={String(step.mode ?? 'apply') === 'remove' ? 'С кого' : 'На кого'} needed={!step.to}>
-            <Select<string>
-              value={/^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String(step.to?.expr ?? ''))?.[1] ?? ''}
-              options={[['', '— какой лист —'], ...[...(context.sheets ?? new Map<string, string>())].map(([name, label]) => [name, `«${label}»`] as const)]}
-              onChange={next => edit(applyIndex, draft => { if (next) (draft as any).to = { expr: `@${next}` }; else delete (draft as any).to; })}
+            <SheetPick
+              value={step.to} sheets={sheetChoices(context).singles} system={system} where="состояние · на кого"
+              onChange={next => edit(applyIndex, draft => { if (next) (draft as any).to = next; else delete (draft as any).to; })}
             />
           </Field>
           <StatusArgs step={step} context={context} onChange={(key, expr) => edit(applyIndex, draft => {

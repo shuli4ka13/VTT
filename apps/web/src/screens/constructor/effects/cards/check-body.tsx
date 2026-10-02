@@ -1,3 +1,5 @@
+import { SheetPick } from '../../sheet-pick.tsx';
+import { sheetChoices } from '../../slots.tsx';
 import { useMemo, useState } from 'react';
 import type { System } from '@vtt/schema';
 import { Select, Input } from '../../../../ui/primitives.tsx';
@@ -14,8 +16,6 @@ import { rowTables } from '@vtt/engine/model/tables';
 
 const loose = (draft: unknown): Record<string, any> => draft as Record<string, any>;
 
-const lone = (ref: unknown): string => /^\s*@([\p{L}\p{N}_]+)\s*$/u.exec(String((ref as { expr?: unknown } | undefined)?.expr ?? ''))?.[1] ?? '';
-
 const SUCCESS = [['atLeast', 'не меньше порога'], ['over', 'строго больше'], ['notOver', 'не больше порога'], ['under', 'строго меньше'], ['equals', 'ровно порог']] as const;
 
 export function CheckBody({ step, roll, context, edit, system }: {
@@ -27,8 +27,7 @@ export function CheckBody({ step, roll, context, edit, system }: {
 }) {
   const at = roll ? 1 : 0;
   const tables = rowTables(system);
-  const sheets = [...(context.sheets ?? new Map<string, string>())];
-  const sheetOptions = sheets.map(([name, label]) => [name, `«${label}»`] as const);
+  const { singles, firsts } = sheetChoices(context);
 
   const fields: RowField[] = [
     {
@@ -42,20 +41,18 @@ export function CheckBody({ step, roll, context, edit, system }: {
       key: 'by', label: 'Бросает', width: 170,
       hint: 'Чей это бросок: на него действуют правки броска и «кости выпали» этого листа.',
       node: (
-        <Select<string>
-          value={lone(roll.by)}
-          options={[['', '— какой лист —'], ...sheetOptions]}
-          onChange={next => edit(0, draft => { if (next) loose(draft).by = { expr: `@${next}` }; else delete loose(draft).by; })}
+        <SheetPick
+          value={roll.by} sheets={singles} system={system} where="проверка · бросает"
+          onChange={next => edit(0, draft => { if (next) loose(draft).by = next; else delete loose(draft).by; })}
         />
       ),
     }, {
       key: 'against', label: 'Против кого', width: 170,
       hint: 'Для правок «по носителю»: «Ослеплён» даёт преимущество тем, кто бросает против него.',
       node: (
-        <Select<string>
-          value={lone(roll.against)}
-          options={[['', 'ни против кого'], ...sheetOptions]}
-          onChange={next => edit(0, draft => { if (next) loose(draft).against = { expr: `@${next}` }; else delete loose(draft).against; })}
+        <SheetPick
+          value={roll.against} sheets={singles} system={system} where="проверка · против кого" empty="ни против кого" extra={firsts}
+          onChange={next => edit(0, draft => { if (next) loose(draft).against = next; else delete loose(draft).against; })}
         />
       ),
     }] : []),

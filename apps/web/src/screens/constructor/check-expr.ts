@@ -161,3 +161,13 @@ export function formatCheck(roll: Record<string, unknown> | null, check: Record<
   const left = roll ? rollText({ tags: [], ...roll } as unknown as CheckRoll) : refText(check.value);
   return `${left} ${TEXT_OF[String(check.successWhen ?? 'atLeast')] ?? '>='} ${refText(check.versus)}`.trim();
 }
+
+export function parseRoll(text: string, system: System, asName?: NameRef): { roll: CheckRoll } | { error: string } {
+  const side = rollSide(text, system, asName);
+  if (!side) return { error: 'бросок начинается с «кинуть(…)»: кинуть(@кость, @метка) + прибавка' };
+  if (side.error) return { error: side.error };
+  return { roll: side.roll };
+}
+
+export const formatRoll = (roll: Record<string, unknown>): string =>
+  rollText({ tags: [], ...roll } as unknown as CheckRoll);

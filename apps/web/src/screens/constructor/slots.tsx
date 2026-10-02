@@ -124,3 +124,10 @@ function propsFor(ctx: SlotContext): Map<string, string> {
   }
   return out;
 }
+
+export function sheetChoices(ctx: SlotContext): { singles: Map<string, string>; firsts: (readonly [string, string])[] } {
+  const lists = (ctx.effect.params ?? []).filter(param => param.kind === 'sheet' && param.many);
+  const listKeys = new Set(lists.map(param => param.key));
+  const singles = new Map([...(ctx.sheets ?? new Map<string, string>())].filter(([name]) => !listKeys.has(name)));
+  return { singles, firsts: lists.map(param => [`первый(@${param.key})`, `первый из «${param.label ?? param.key}»`] as const) };
+}

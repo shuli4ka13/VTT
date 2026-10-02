@@ -29,7 +29,7 @@ describe('GroupCard', () => {
     render(<GroupCard group={group} position={1} system={system} effect={effect} sheets={sheets}
       earlier={[]} problem={null} edit={(at, change) => edits.push([at, change])} onDelete={() => {}} />);
     const by = screen.getByDisplayValue('«Кто действует»') as HTMLSelectElement;
-    expect([...by.options].map(o => o.textContent)).toEqual(['— какой лист —', '«цель»', '«Кто действует»']);
+    expect([...by.options].map(o => o.textContent)).toEqual(['— какой лист —', '«цель»', '«Кто действует»', 'формулой…']);
     fireEvent.change(by, { target: { value: 'цель' } });
     const against = screen.getByDisplayValue('ни против кого') as HTMLSelectElement;
     fireEvent.change(against, { target: { value: 'цель' } });
@@ -414,5 +414,24 @@ describe('GroupCard: изменение само заводит число', () 
     fireEvent.keyDown(value, { key: 'Enter' });
 
     expect((steps[0] as any).value.expr).toMatch(/^@цель\.armor/);
+  });
+});
+
+describe('GroupCard: отдельный бросок с «Бросает»', () => {
+  it('формула броска раскладывается в кость, прибавку и метки, а не в расчёт; против — «первый из целей»', () => {
+    const roll = { id: 'hit_бросок', type: 'roll', die: 'lead', by: { expr: '@действующий' } } as Record<string, any>;
+    const many = { ...effect, params: [...(effect.params ?? []), { key: 'цели', label: 'Цели', kind: 'sheet', many: true }] } as typeof effect;
+    const group = groupSteps([roll as unknown as Step])[0]!;
+    render(<GroupCard group={group} position={1} system={system} effect={many} sheets={sheets}
+      earlier={[]} problem={null} edit={(_, change) => change(roll as never)} onDelete={() => {}} />);
+    const line = [...document.querySelectorAll('input.chips__text')].at(-1) as HTMLInputElement;
+    fireEvent.change(line, { target: { value: ') + 2' } });
+    fireEvent.keyDown(line, { key: 'Enter' });
+    expect(roll.die).toBe('lead');
+    expect(roll.bonus).toEqual({ expr: '2' });
+    expect(roll.fixed).toBeUndefined();
+    const against = screen.getByDisplayValue('ни против кого') as HTMLSelectElement;
+    fireEvent.change(against, { target: { value: 'первый(@цели)' } });
+    expect(roll.against).toEqual({ expr: 'первый(@цели)' });
   });
 });
