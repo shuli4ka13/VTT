@@ -11,38 +11,37 @@ const systemWithDie = (): System => ({
 
 const blankEffect: Effect = { label: 'Тест', activation: 'manual', params: [], steps: [] };
 
-describe('problemOf: тег внутри формулы слота', () => {
-  it('ловит несуществующее поле в формуле составного слота (roll.bonus)', () => {
-    const step = {
-      type: 'threshold',
-      roll: { die: { constant: 'd20' }, bonus: { expr: '#нет_такого' } },
-      versus: { expr: '10' },
-    } as unknown as Step;
+const withActor: Effect = {
+  label: 'Тест', activation: 'manual',
+  params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }],
+  steps: [],
+} as unknown as Effect;
 
-    const problem = problemOf(step, systemWithDie(), blankEffect, []);
+describe('problemOf: имя внутри формулы слота', () => {
+  const roll = (bonus: string) => ({
+    type: 'roll', die: { constant: 'd20' }, bonus: { expr: bonus }, by: { expr: '@действующий' },
+  }) as unknown as Step;
+
+  it('ловит несуществующее поле листа в формуле прибавки броска', () => {
+    const problem = problemOf(roll('@действующий.нет_такого'), systemWithDie(), withActor, []);
     expect(problem?.missingField).toBe('нет_такого');
     expect(problem?.text).toContain('нет_такого');
   });
 
-  it('поле, объявленное в системе, формулу не ломает', () => {
+  it('поле, объявленное в системе и названное через лист, формулу не ломает', () => {
     const system: System = { ...systemWithDie(), tables: { лист: { shape: 'single', columns: [{ key: 'attack_bonus', label: 'Бонус атаки', kind: 'number', block: 'Атака' }] } } };
-    const step = {
-      type: 'threshold',
-      roll: { die: { constant: 'd20' }, bonus: { expr: '#attack_bonus' } },
-      versus: { expr: '10' },
-    } as unknown as Step;
+    expect(problemOf(roll('@действующий.attack_bonus'), system, withActor, [])).toBeNull();
+  });
 
-    expect(problemOf(step, system, blankEffect, [])).toBeNull();
+  it('поле без листа — приговор: чьё это поле', () => {
+    const system: System = { ...systemWithDie(), tables: { лист: { shape: 'single', columns: [{ key: 'attack_bonus', label: 'Бонус атаки', kind: 'number', block: 'Атака' }] } } };
+    const problem = problemOf(roll('@attack_bonus'), system, withActor, []);
+    expect(problem?.missingField).toBe('attack_bonus');
+    expect(problem?.text).toContain('чьё поле');
   });
 
   it('недописанная формула — не приговор этого места, молчит', () => {
-    const step = {
-      type: 'threshold',
-      roll: { die: { constant: 'd20' }, bonus: { expr: '#нез +' } },
-      versus: { expr: '10' },
-    } as unknown as Step;
-
-    expect(problemOf(step, systemWithDie(), blankEffect, [])).toBeNull();
+    expect(problemOf(roll('@нез +'), systemWithDie(), withActor, [])).toBeNull();
   });
 });
 
@@ -51,14 +50,14 @@ describe('формула зовёт шаг выше', () => {
     tables: { лист: { shape: 'single', columns: [{ key: 'hp', label: 'Текущие ХП', kind: 'number', default: 20 }] } },
     effects: {},
   } as unknown as System;
-  const effect = { params: [] } as unknown as Effect;
+  const effect = { params: [{ key: 'цель', label: 'Цель', kind: 'sheet' }] } as unknown as Effect;
   const apply = {
-    type: 'apply', target: { tag: 'hp' }, direction: 'set',
-    value: { expr: '#hp - #n', of: 'target' },
+    type: 'apply', target: { expr: '@цель.hp' }, direction: 'set',
+    value: { expr: '@цель.hp - @n' },
   } as unknown as Step;
 
   it('имя шага выше — не «поля нет»', () => {
-    expect(problemOf(apply, system, effect, [{ id: 'n', type: 'amount' }])).toBeNull();
+    expect(problemOf(apply, system, effect, [{ id: 'n', type: 'roll' }])).toBeNull();
   });
 
   it('а вот незнакомое имя по-прежнему беда', () => {

@@ -11,10 +11,12 @@ const system = (): System => ({
   constants: { к6: { label: 'Кость урона', kind: 'die', dice: [{ count: 1, sides: 6 }] } },
   effects: {
     удар: {
-      label: 'Удар', activation: 'manual', params: [],
+      label: 'Удар', activation: 'manual',
+      params: [{ key: 'бьющий', label: 'Бьющий', kind: 'sheet' }, { key: 'цели', label: 'Цели', kind: 'sheet', many: true }],
       steps: [
-        { id: 'число', type: 'amount', source: 'roll', dice: { constant: 'к6' } },
-        { type: 'apply', target: { tag: 'хиты' }, direction: 'subtract', value: { expr: '@число' } },
+        { id: 'число', type: 'roll', die: { constant: 'к6' } },
+        { type: 'each', of: 'цели', as: 'цель' },
+        { type: 'apply', target: { expr: '@цель.хиты' }, direction: 'subtract', value: { expr: '@число' } },
       ],
     },
     щит: { label: 'Щит', activation: 'passive', modifiers: [] },

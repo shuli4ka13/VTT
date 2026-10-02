@@ -13,7 +13,7 @@ const ctx: SlotContext = {
   } as unknown as System,
   effect: { params: [{ key: 'p_1', label: 'кость урона', kind: 'dice' }] } as unknown as Effect,
 
-  earlier: [{ id: 'hit', type: 'threshold', at: 1, title: 'Проверка' }],
+  earlier: [{ id: 'hit', type: 'check', at: 1, title: 'Проверка' }],
 };
 
 describe('normalizeDice', () => {
@@ -32,23 +32,21 @@ describe('optionsFor', () => {
   it('собирает поля, запись, результаты и кости; prop не предлагает', () => {
     const groups = new Set(optionsFor(ctx, undefined, []).map(o => o.group));
     expect(groups).toEqual(new Set(['Поля листа', 'Входы эффекта', 'Результаты шагов', 'Кости']));
-    expect(new Set(optionsFor(ctx, undefined, [], 'target').map(o => o.group))).toContain('Поля цели');
-    expect(optionsFor(ctx, ['tag'], [], 'target')[0]!.name).toBe('получатель.armor');
+    const withSheets: SlotContext = { ...ctx, sheets: new Map([['цель', 'цель'], ['действующий', 'Кто действует']]) };
+    expect(new Set(optionsFor(withSheets, undefined, []).map(o => o.group))).toContain('Поля: цель');
+    expect(optionsFor(withSheets, ['tag'], []).map(o => o.name)).toEqual(['цель.armor', 'действующий.armor']);
   });
   it('allow сужает список', () => {
 
     expect(optionsFor(ctx, ['ref'], []).map(o => o.label)).toEqual([
-      'шаг 1 · Проверка — да или нет: взят ли порог',
+      'шаг 1 · Проверка — да или нет: проверка пройдена',
       'шаг 1 · Проверка — на сколько перебил порог',
-      'шаг 1 · Проверка — сколько вышло всего, с прибавками',
+      'шаг 1 · Проверка — сколько вышло всего',
       'шаг 1 · Проверка — что выпало на костях, без прибавок',
       'шаг 1 · Проверка — какая ступень успеха',
-      'шаг 1 · Проверка — сколько костей бросили',
+      'шаг 1 · Проверка — порог',
       'шаг 1 · Проверка — сколько костей легло максимумом',
       'шаг 1 · Проверка — сколько костей легло единицей',
-      'шаг 1 · Проверка — да или нет: бросок правили',
-      'шаг 1 · Проверка — сколько вышло у второй стороны: порог или встречный бросок',
-      'шаг 1 · Проверка — встречный бросок — что выпало на костях',
     ]);
   });
 });

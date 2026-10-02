@@ -155,28 +155,30 @@ describe('ссылка через две таблицы', () => {
   });
 });
 
-describe('хозяин поля — часть имени', () => {
-  it('у поля подписан хозяин, у пришедшего числа — нет', () => {
+describe('лист поля — часть имени', () => {
+  const sheets = new Map([['цель', 'цель'], ['действующий', 'Кто действует']]);
+
+  it('у поля подписан лист, у пришедшего числа — нет', () => {
     render(<FormulaChips
-      value="@отправитель.бонус_атаки - @event.amount" system={system} owners
+      value="@действующий.бонус_атаки - @event.amount" system={system} sheets={sheets}
       extraNames={new Map([['event.amount', 'пришедшее число']])} onChange={() => {}}
     />);
     expect(screen.getByText('Бонус атаки')).toBeTruthy();
-    expect(screen.getAllByText('отправитель').length).toBe(1);
+    expect(screen.getAllByText('Кто действует').length).toBe(1);
     expect(screen.getByText('пришедшее число')).toBeTruthy();
   });
 
-  it('подсказка предлагает поле отправителя и поле получателя', () => {
+  it('подсказка предлагает поле каждого листа по его названию', () => {
     let value = '@сил';
-    render(<FormulaChips value={value} system={system} owners onChange={next => { value = next; }} />);
+    render(<FormulaChips value={value} system={system} sheets={sheets} onChange={next => { value = next; }} />);
     const input = screen.getByDisplayValue('@сил') as HTMLInputElement;
     input.focus();
     input.setSelectionRange(value.length, value.length);
     fireEvent.click(input);
     const groups = [...document.querySelectorAll('.slot__option')].map(o => o.textContent?.trim());
-    expect(groups).toEqual(['поле отправителяСила', 'поле получателяСила']);
+    expect(groups).toEqual(['поле: цельСила', 'поле: Кто действуетСила']);
     fireEvent.mouseDown(screen.getAllByText('Сила')[1]!);
-    expect(value).toBe('@получатель.сила');
+    expect(value).toBe('@действующий.сила');
   });
 });
 
@@ -197,7 +199,7 @@ describe('набор формулы не рвётся посреди имени'
     expect(first!.selectionStart).toBe(first!.value.length);
   });
 
-  it('у входа эффекта — метка «вход», а не отправитель или получатель', () => {
+  it('у входа эффекта — метка «вход», а не лист', () => {
     render(<FormulaChips value="1к20 + @бонус" system={system} onChange={() => {}}
       extraNames={new Map([['бонус', 'Бонус атаки']])} badges={new Map([['бонус', 'вход']])} />);
     expect(screen.getByText('вход')).toBeTruthy();

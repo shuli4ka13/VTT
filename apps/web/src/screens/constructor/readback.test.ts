@@ -15,49 +15,63 @@ const system = {
 
 const effect = { params: [{ key: 'p_1', label: 'кость урона', kind: 'dice' }] } as unknown as Effect;
 
+const hero = { ...effect, params: [...(effect.params ?? []), { key: 'атакующий', label: 'Атакующий', kind: 'sheet' }], steps: [{ type: 'each', of: 'цели', as: 'цель' }] } as unknown as Effect;
+
 describe('checkReadback', () => {
-  it('порог броском читается фразой с лейблами системы', () => {
+  it('бросок с «Бросает» читается фразой с лейблами системы, без первого лица', () => {
+    const roll = { id: 'hit_бросок', type: 'roll', die: { constant: 'lead' }, bonus: { expr: '#power_mod' }, by: { expr: '@атакующий' }, against: { expr: '@цель' } } as unknown as Step;
     const step = {
-      type: 'threshold', successWhen: 'atLeast', continueOn: 'success',
-      roll: { die: { constant: 'lead' }, bonus: { expr: '#power_mod' }, check: null },
-      versus: { expr: '@получатель.armor' },
+      id: 'hit', type: 'check', successWhen: 'atLeast', continueOn: 'success',
+      value: { expr: '@hit_бросок' }, versus: { expr: '@цель.armor' },
     } as unknown as Step;
-    expect(joinReadback(checkReadback(step, system, effect)))
-      .toBe('Ты бросаешь 1к20 + Мод Силы против «Класс брони». Не добросил — эффект кончается.');
+    expect(joinReadback(checkReadback(step, roll, system, hero)))
+      .toBe('«Атакующий» бросает 1к20 + Мод Силы против «цель» — с «Класс брони» (цель). Не добросил — эффект кончается.');
   });
 
-  it('пустая мишень — оранжевый пропуск', () => {
-    const step = { type: 'threshold', roll: { die: { constant: 'lead' } } } as unknown as Step;
-    expect(joinReadback(checkReadback(step, system, effect)))
-      .toBe('Ты бросаешь 1к20 против ⟨какого поля цели?⟩. Не добросил — эффект кончается.');
+  it('пустой бросок — оранжевые пропуски: кто бросает и с чем сравнить', () => {
+    const roll = { type: 'roll', die: { constant: 'lead' } } as unknown as Step;
+    const step = { type: 'check', value: { expr: '@x' } } as unknown as Step;
+    expect(joinReadback(checkReadback(step, roll, system, effect)))
+      .toBe('⟨кто?⟩ бросает 1к20 — с ⟨с чем сравнить?⟩. Не добросил — эффект кончается.');
   });
 
   it('сравнение без броска', () => {
-    const step = { type: 'compare', value: { expr: '@dmg' }, versus: { expr: '@получатель.armor' }, breakIf: 'atMost' } as unknown as Step;
-    expect(joinReadback(checkReadback(step, system, effect)))
-      .toBe('результат «dmg» против «Класс брони» у цели — не превысило, эффект кончается.');
+    const step = { type: 'check', value: { expr: '@dmg' }, versus: { expr: '@цель.armor' }, continueOn: 'fail', successWhen: 'over' } as unknown as Step;
+    expect(joinReadback(checkReadback(step, null, system, hero)))
+      .toBe('результат «dmg» с «Класс брони» (цель). Перебросил — эффект кончается.');
   });
 });
 
 describe('changeReadback', () => {
   it('вычитание со склеенным числом: кости из записи + прибавка', () => {
-    const amount = { id: 'dmg', type: 'amount', source: 'roll', dice: { param: 'p_1' }, bonus: { expr: '#power_mod' } } as unknown as Step;
-    const apply = { type: 'apply', target: { tag: 'wounds' }, direction: 'subtract', value: { expr: '@dmg' } } as unknown as Step;
-    expect(joinReadback(changeReadback(apply, amount, system, effect)))
-      .toBe('Цель теряет ⟨вход «кость урона»⟩ + Мод Силы из «Текущие хиты».');
+    const amount = { id: 'dmg', type: 'roll', die: { param: 'p_1' }, bonus: { expr: '#power_mod' } } as unknown as Step;
+    const apply = { type: 'apply', target: { expr: '@цель.wounds' }, direction: 'subtract', value: { expr: '@dmg' } } as unknown as Step;
+    expect(joinReadback(changeReadback(apply, amount, system, hero)))
+      .toBe('«Текущие хиты» (цель) уменьшается на ⟨вход «кость урона»⟩ + Мод Силы.');
   });
 
-  it('состояние по id читается лейблом', () => {
+  it('состояние по id читается лейблом, на кого вешается — по листу', () => {
+    const step = { type: 'status', mode: 'apply', effect: { const: 'poison' }, to: { expr: '@цель' } } as unknown as Step;
+    expect(joinReadback(changeReadback(step, null, system, hero)))
+      .toBe('На «цель» вешается состояние «Отравлен».');
+  });
+
+  it('состояние без листа — пропуск «кто?»', () => {
     const step = { type: 'status', mode: 'apply', effect: { const: 'poison' } } as unknown as Step;
     expect(joinReadback(changeReadback(step, null, system, effect)))
-      .toBe('На цель вешается состояние «Отравлен».');
+      .toBe('На ⟨кто?⟩ вешается состояние «Отравлен».');
   });
 });
 
 describe('numberReadback', () => {
   it('одиночное число: машинное имя в пересказ не попадает', () => {
-    const step = { id: 'dmg', type: 'amount', source: 'roll', dice: { const: '2d6' } } as unknown as Step;
+    const step = { id: 'dmg', type: 'roll', die: { const: '2d6' } } as unknown as Step;
     expect(joinReadback(numberReadback(step, system, effect))).toBe('Считается число: 2к6.');
+  });
+
+  it('число с «Бросает» — чей-то бросок, назван листом', () => {
+    const step = { id: 'dmg', type: 'roll', die: { const: '2d6' }, by: { expr: '@атакующий' } } as unknown as Step;
+    expect(joinReadback(numberReadback(step, system, hero))).toBe('«Атакующий» бросает: 2к6.');
   });
 });
 
@@ -140,17 +154,8 @@ describe('dieReadback — кость словами', () => {
 });
 
 describe('крит в пересказе', () => {
-  it('удвоение костей названо словами и порогом', () => {
-    const step = {
-      id: 'dmg', type: 'amount', source: 'roll', dice: { const: '2d6' },
-      double: { expr: '@hit.natural >= 20' },
-    } as unknown as Step;
-    expect(joinReadback(numberReadback(step, system, effect)))
-      .toBe('Считается число: 2к6 — и вдвое, если выпавшее на костях не меньше 20.');
-  });
-
   it('без удвоения фраза прежняя', () => {
-    const step = { id: 'dmg', type: 'amount', source: 'roll', dice: { const: '2d6' } } as unknown as Step;
+    const step = { id: 'dmg', type: 'roll', die: { const: '2d6' } } as unknown as Step;
     expect(joinReadback(numberReadback(step, system, effect))).toBe('Считается число: 2к6.');
   });
 });

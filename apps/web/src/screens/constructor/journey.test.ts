@@ -7,8 +7,8 @@ import { newColumn, newDie, newEffect, newRecordKind, newBinding, BRICKS } from 
 import type { System, Compendium, Sheet, Step } from '@vtt/schema';
 import { withColumn } from '@vtt/engine/model/sheet-columns';
 
-const brick = (key: string, system: System, taken: string[] = []): Step =>
-  BRICKS.find(b => b.key === key)!.make(system, taken)[0]!;
+const bricks = (key: string, system: System, taken: string[] = []): Step[] =>
+  BRICKS.find(b => b.key === key)!.make(system, taken);
 
 function assemble(): { system: System; compendium: Compendium; sheets: Sheet[]; hits: string; action: string } {
   const system = emptySystem();
@@ -23,15 +23,20 @@ function assemble(): { system: System; compendium: Compendium; sheets: Sheet[]; 
 
   const effect = newEffect(system, 'manual');
   effect.value.label = 'Удар';
-  const check = brick('check', system) as Record<string, any>;
-  check.id = 'попадание';
-  check.versus = { const: 5 };
-  const amount = brick('number', system) as Record<string, any>;
-  amount.dice = { const: '1d4' };
-  const change = brick('change', system) as Record<string, any>;
-  change.target = { tag: hits.key };
+  effect.value.params = [
+    { key: 'действующий', label: 'Кто действует', kind: 'sheet' },
+    { key: 'цели', label: 'Цели', kind: 'sheet', many: true },
+  ];
+  const each = bricks('each', system)[0]!;
+  const [roll, check] = bricks('check', system) as [Record<string, any>, Record<string, any>];
+  check.versus = { expr: '5' };
+  const amount = bricks('number', system, ['проверка', 'проверка_бросок'])[0] as Record<string, any>;
+  amount.die = { const: '1d4' };
+  delete amount.fixed;
+  const change = bricks('change', system)[0] as Record<string, any>;
+  change.target = { expr: `@цель.${hits.key}` };
   change.value = { expr: `@${amount.id}` };
-  effect.value.steps = [check, amount, change] as Step[];
+  effect.value.steps = [each, roll, check, amount, change] as Step[];
   system.effects[effect.key] = effect.value;
 
   const kind = newRecordKind(system);

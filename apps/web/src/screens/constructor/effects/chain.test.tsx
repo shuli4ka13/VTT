@@ -19,7 +19,7 @@ describe('стоимость эффекта — одним выбором', () =
 
   const lane = (steps: unknown[] = []) => {
     const effect = { label: 'Удар', steps } as unknown as Effect;
-    render(<Chain effect={effect} system={useWorld.getState().system} lane="sender"
+    render(<Chain effect={effect} system={useWorld.getState().system} lane="steps"
       edit={change => change(effect)}
       onAddCost={id => { (effect.steps ??= []).unshift({ id: 'стоимость', type: 'emit', event: id, strict: true } as never); }} />);
     return effect;
@@ -41,13 +41,13 @@ describe('стоимость эффекта — одним выбором', () =
     expect(effect.steps![0]).toMatchObject({ type: 'emit', event: made[0], strict: true });
   });
 
-  it('в цепочке получателя стоимости нет', () => {
+  it('без «onAddCost» (цепочка хука или подписки без решения) выбора стоимости нет', () => {
     const effect = { label: 'Удар', steps: [] } as unknown as Effect;
     render(<Chain effect={effect} system={withCost()} edit={() => {}} />);
     expect(screen.queryByDisplayValue('+ стоимость')).toBeNull();
   });
 
-  it('«+ стоимость» стоит рядом с остальными шагами и ставит плату первым шагом «раз за действие»', () => {
+  it('«+ стоимость» стоит рядом с остальными шагами и ставит плату первым шагом с меткой «цена»', () => {
     const view = () => {
       const system = useWorld.getState().system;
       return <EffectEditor id="удар" effect={system.effects.удар!} system={system} />;
@@ -57,12 +57,12 @@ describe('стоимость эффекта — одним выбором', () =
     expect(useWorld.getState().system.effects.удар!.cost).toEqual([{ id: 'стоимость', type: 'emit', event: 'cost_action', strict: true }]);
     rerender(view());
     expect(screen.getByText(/1 · Стоимость/)).toBeTruthy();
-    expect(document.querySelector('.chip--on')?.textContent).toBe('раз за действие');
+    expect(document.querySelector('.chip--on')?.textContent).toBe('цена');
   });
 
   it('шаг, зовущий эффект из блока «Стоимость», так и подписан', () => {
     const effect = { label: 'Удар', steps: [{ id: 'стоимость', type: 'emit', event: 'cost_action', strict: true }] } as unknown as Effect;
-    render(<Chain effect={effect} system={withCost()} lane="sender" edit={() => {}} />);
+    render(<Chain effect={effect} system={withCost()} lane="steps" edit={() => {}} />);
     expect(screen.getByText(/1 · Стоимость/)).toBeTruthy();
   });
 });

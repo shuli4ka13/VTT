@@ -15,15 +15,36 @@ const rollMod = [{ kind: 'edit', call: 'roll', param: 'edits', tags: ['атак�
 const optionsOf = (select: HTMLSelectElement) => [...select.options].map(o => o.textContent);
 
 describe('редактор модификаторов', () => {
-  it('чей бросок — мой или по мне, а какой именно — метки из строк таблиц', () => {
+  it('кого касается — бросает носитель или бросают против него, а какой именно бросок — метки из строк таблиц', () => {
     render(<ModifiersEditor system={system} modifiers={rollMod} onEdit={vi.fn()} />);
     expect((screen.getByDisplayValue('Бросок') as HTMLSelectElement).value).toBe('roll');
-    const whose = screen.getByDisplayValue('мой') as HTMLSelectElement;
-    expect(optionsOf(whose)).toEqual(['мой', 'бросок по мне']);
+    const whose = screen.getByDisplayValue('всех — без условия') as HTMLSelectElement;
+    expect(optionsOf(whose)).toEqual(['всех — без условия', 'бросает носитель', 'бросают против носителя']);
     expect(screen.getByText('атака')).toBeTruthy();
     const more = screen.getByDisplayValue('+ ещё…') as HTMLSelectElement;
     expect(optionsOf(more)).toContain('спасбросок');
     expect(more.querySelector('optgroup')?.getAttribute('label')).toBe('Броски');
+  });
+
+  it('«Кого касается» пишет условие про носителя в if, а записанное условие показывает выбранным', () => {
+    const mods = structuredClone(rollMod) as Modifier[];
+    const onEdit = vi.fn((change: (d: Modifier[]) => void) => change(mods));
+    const { unmount } = render(<ModifiersEditor system={system} modifiers={mods} onEdit={onEdit} />);
+    fireEvent.change(screen.getByDisplayValue('всех — без условия'), { target: { value: '@против == @носитель' } });
+    expect((mods[0] as { if?: unknown }).if).toEqual({ expr: '@против == @носитель' });
+    unmount();
+
+    render(<ModifiersEditor system={system} modifiers={mods} onEdit={vi.fn()} />);
+    expect((screen.getByDisplayValue('бросают против носителя') as HTMLSelectElement).value).toBe('@против == @носитель');
+  });
+
+  it('условие поверх «Кого касается» хранится как все(…) и очищается вместе с выбором', () => {
+    const mods = [{ ...rollMod[0], if: { expr: 'все(@бросающий == @носитель, @носитель.ac > 1)' } }] as unknown as Modifier[];
+    const onEdit = vi.fn((change: (d: Modifier[]) => void) => change(mods));
+    render(<ModifiersEditor system={system} modifiers={mods} onEdit={onEdit} />);
+    const whose = screen.getByDisplayValue('бросает носитель') as HTMLSelectElement;
+    fireEvent.change(whose, { target: { value: '' } });
+    expect((mods[0] as { if?: { expr: string } }).if).toEqual({ expr: '@носитель.ac > 1' });
   });
 
   it('правки предлагаются из словаря автора, а не из зашитого списка', () => {

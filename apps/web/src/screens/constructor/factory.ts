@@ -12,12 +12,16 @@ import { rowTables } from '@vtt/engine/model/tables';
 export interface Made<T> { key: string; value: T }
 
 
-export const newHandler = (): Handler => ({ on: '', steps: [] });
+export const newHandler = (): Handler => ({ on: 'before:*', steps: [] });
 
 export const newEffect = (system: System, kind: LaunchKind): Made<Effect> => ({
   key: freeId(Object.keys(system.effects), 'effect'),
   value: kind === 'manual'
-    ? { label: 'Новый эффект', activation: 'manual', params: [], steps: [] }
+    ? {
+      label: 'Новый эффект', activation: 'manual',
+      params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }, { key: 'цели', label: 'Цели', kind: 'sheet', many: true }],
+      steps: [{ type: 'each', of: 'цели', as: 'цель' } as unknown as Step],
+    }
     : {
       label: 'Новый эффект', activation: 'passive', duration: { kind: 'permanent' },
       ...(kind === 'auto' ? { on: [newHandler()] } : { modifiers: [] }),
@@ -98,7 +102,7 @@ const firstDie = (system: System): string | undefined => Object.keys(system.cons
 const blankCheck = (system: System, taken: string[]): Step[] => {
   const die = firstDie(system);
   const id = freeId(taken, 'проверка');
-  const roll = `${id}_бросок`;
+  const roll = freeId([...taken, id], `${id}_бросок`);
   return [
     { id: roll, type: 'roll', ...(die ? { die: { constant: die } } : {}), by: { expr: '@действующий' } } as unknown as Step,
     { id, type: 'check', value: { expr: `@${roll}` }, versus: { expr: '10' }, successWhen: 'atLeast', continueOn: 'success' } as unknown as Step,

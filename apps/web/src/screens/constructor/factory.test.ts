@@ -38,11 +38,11 @@ for (const [name, base] of BASES) {
       it(`новый эффект «${kind}» проходит схему`, check);
     }
 
-    it('новый «срабатывает сам» — висит с одним пустым «когда»', () => {
+    it('новый «срабатывает сам» — висит с одной подпиской на любое действие', () => {
       const system = base();
       const made = newEffect(system, 'auto');
       expect(made.value.activation).toBe('passive');
-      expect(made.value.on).toEqual([{ on: '', steps: [] }]);
+      expect(made.value.on).toEqual([{ on: 'before:*', steps: [] }]);
     });
 
     it('новое поле проходит схему', () => {

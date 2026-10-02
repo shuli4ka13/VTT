@@ -60,7 +60,7 @@ export function CallEditor({ system, effect, effects, onEffect, args, fromProps,
       {effect ? (
         <div className="stack stack--tight call-args">
           <div className="call-args__head">
-            <span className="field__label">Что отправляем</span>
+            <span className="field__label">Что передаётся</span>
             {headAction}
           </div>
           {inputs.length ? null : <span className="faint">«{called?.label || effect}» ничего не принимает.</span>}

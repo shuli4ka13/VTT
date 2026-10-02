@@ -17,18 +17,19 @@ function stepsIn(node: unknown, out: Loose[] = []): Loose[] {
 }
 
 const checksOf = (system: System) => Object.entries(system.effects ?? {}).flatMap(([id, effect]) => {
-  const steps = stepsIn([effect.steps, effect.cost]);
+  const steps = stepsIn([effect.steps, effect.cost, effect.on, effect.attach, effect.detach]);
   const earlier = steps.map(s => ({ id: String(s.id), type: String(s.type) }));
-  return steps.filter(s => s.type === 'threshold').map(step => ({ id, effect, earlier, step }));
+  return steps.flatMap((step, i) => {
+    const next = steps[i + 1];
+    const glued = step.type === 'roll' && step.by && step.die && next?.type === 'check' && next.value?.expr === `@${step.id}`;
+    return glued ? [{ id, effect, earlier, roll: step, check: next! }] : [];
+  });
 });
 
-const lean = (step: Loose) => ({
-  roll: { die: step.roll?.die, ...(step.roll?.count ? { count: step.roll.count } : {}), ...(step.roll?.bonus ? { bonus: step.roll.bonus } : {}), tags: step.roll?.tags ?? [] },
-  ...(step.side === 'target' ? { side: 'target' } : {}),
-  successWhen: step.successWhen ?? 'atLeast',
-  versus: step.versus?.roll
-    ? { roll: { die: step.versus.roll.die, ...(step.versus.roll.count ? { count: step.versus.roll.count } : {}), ...(step.versus.roll.bonus ? { bonus: step.versus.roll.bonus } : {}), ...(step.versus.roll.tags?.length ? { tags: step.versus.roll.tags } : {}) } }
-    : step.versus,
+const lean = (roll: Loose, check: Loose) => ({
+  roll: { die: roll.die, ...(roll.count ? { count: roll.count } : {}), ...(roll.bonus ? { bonus: roll.bonus } : {}), tags: roll.tags ?? [] },
+  successWhen: check.successWhen ?? 'atLeast',
+  versus: check.versus,
 });
 
 const parsedLean = (parsed: Loose) => ({
@@ -40,11 +41,11 @@ describe('проверка одной формулой', () => {
   it('каждая проверка образцов переживает «в текст и обратно» без потерь', () => {
     let seen = 0;
     for (const system of SAMPLE_SYSTEMS) {
-      for (const { id, effect, earlier, step } of checksOf(system)) {
-        const text = formatCheck(step);
+      for (const { id, effect, earlier, roll, check } of checksOf(system)) {
+        const text = formatCheck(roll, check);
         const parsed = parseCheck(text, system, name => refForName({ system, effect: effect as Effect, earlier }, name));
         expect('error' in parsed ? parsed.error : null, `${id}: ${text}`).toBeNull();
-        expect(parsedLean(parsed as Loose), `${id}: ${text}`).toEqual(lean(step));
+        expect(parsedLean(parsed as Loose), `${id}: ${text}`).toEqual(lean(roll, check));
         seen++;
       }
     }
@@ -57,25 +58,25 @@ describe('проверка одной формулой', () => {
     effects: {},
   } as unknown as System;
 
-  it('атака: кость, метки, прибавка и поле получателя', () => {
-    expect(parseCheck('кинуть(@lead, @атака, @ловкость) + 2 >= @получатель.ac', system)).toEqual({
+  it('атака: кость, метки, прибавка и поле цели', () => {
+    expect(parseCheck('кинуть(@lead, @атака, @ловкость) + 2 >= @цель.ac', system)).toEqual({
       roll: { die: { constant: 'lead' }, bonus: { expr: '2' }, tags: ['атака', 'ловкость'] },
       successWhen: 'atLeast',
-      versus: { expr: '@получатель.ac' },
+      versus: { expr: '@цель.ac' },
     });
   });
 
-  it('кость числом находится среди костей системы, бросает получатель по его префиксу', () => {
+  it('кость числом находится среди костей системы, а кость чужого листа — не кость системы', () => {
     expect(parseCheck('кинуть(1к20) <= 10', system)).toMatchObject({ roll: { die: { constant: 'lead' } }, successWhen: 'notOver' });
-    expect(parseCheck('кинуть(@получатель.lead) >= 12', system)).toMatchObject({ side: 'target' });
+    expect(parseCheck('кинуть(@цель.lead) >= 12', system)).toHaveProperty('error');
     expect(parseCheck('кинуть(2к6) >= 7', system)).toHaveProperty('error');
   });
 
-  it('встречный бросок справа', () => {
-    expect(parseCheck('кинуть(@lead) > кинуть(@получатель.lead, @атака) + 1', system)).toMatchObject({
-      successWhen: 'over',
-      versus: { roll: { die: { constant: 'lead' }, bonus: { expr: '1' }, tags: ['атака'] } },
-    });
+  it('встречный бросок справа — ошибка: защита — отдельный шаг «бросок» того, кто защищается', () => {
+    const parsed = parseCheck('кинуть(@lead) > кинуть(@цель.lead, @атака) + 1', system);
+    expect(parsed).toHaveProperty('error');
+    expect((parsed as { error: string }).error).toMatch(/встречный бросок/);
+    expect(parseCheck('кинуть(@lead) > @защита + 1', system)).toMatchObject({ successWhen: 'over', versus: { expr: '@защита + 1' } });
   });
 
   it('без сравнения или без броска — понятная ошибка', () => {
@@ -90,7 +91,7 @@ describe('проверка одной формулой', () => {
     expect(parseCheck('кинуть(@lead, @атака, @чем) >= 10', system, asName)).toMatchObject({
       roll: { tags: ['атака', { expr: '@чем' }] },
     });
-    expect(formatCheck({ roll: { die: { constant: 'lead' }, tags: ['атака', { expr: '@чем' }] }, versus: { expr: '10' } }))
+    expect(formatCheck({ die: { constant: 'lead' }, tags: ['атака', { expr: '@чем' }] }, { versus: { expr: '10' } }))
       .toBe('кинуть(@lead, @атака, @чем) >= 10');
   });
 });

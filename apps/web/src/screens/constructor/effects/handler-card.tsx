@@ -43,15 +43,20 @@ const PREFIX: Record<Exclude<Kind, 'call' | 'seen'>, string> = {
   moment: MOMENT_PREFIX, field: FIELD_PREFIX, gained: GAINED_PREFIX, lost: LOST_PREFIX,
 };
 
-function outcomesOf(system: System, listened: string): (readonly [string, string])[] {
+function outcomesOf(system: System, listened: string, phase: Phase): (readonly [string, string])[] {
   const source = system.effects[listened];
   if (!source) return [];
+  const steps = source.steps ?? [];
+  const split = steps.findIndex(step => step.type === 'each');
   const out: (readonly [string, string])[] = [];
-  (source.steps ?? []).forEach((step, index) => {
+  steps.forEach((step, index) => {
     if (!step.id) return;
+    const perTarget = phase === 'done' && split >= 0 && index > split;
     for (const output of (registry.get(step.type)?.outputs ?? []) as { path: string; label: string; kind?: string }[]) {
       if (output.kind !== 'boolean') continue;
-      out.push([`@${step.id}${output.path}`, `шаг ${index + 1} · ${output.label}`] as const);
+      out.push(perTarget
+        ? [`сколько(@${TARGETS_SEED}.${step.id}${output.path}, да) >= 1`, `хоть по одной цели: шаг ${index + 1} · ${output.label}`] as const
+        : [`@${step.id}${output.path}`, `шаг ${index + 1} · ${output.label}`] as const);
     }
   });
   return out;
@@ -73,7 +78,7 @@ export function HandlerCard({ id, index, handler, system, edit, onRemove }: {
   const names = [...sheets].filter(([name]) => name !== 'носитель');
   const holders = names.map(([name]) => holderPhrase(name));
   const { holder, rest } = splitIf(handler.if?.expr, holders);
-  const outcomes = kind === 'call' && subject ? outcomesOf(system, subject) : [];
+  const outcomes = kind === 'call' && subject ? outcomesOf(system, subject, phase) : [];
   const pickedOutcome = outcomes.find(([expr]) => expr === rest.trim())?.[0] ?? null;
   const formula = rest && !pickedOutcome ? rest : null;
   const watchable = fieldsOf(system).filter(f => f.value.kind !== 'stored' || f.value.type === 'boolean');

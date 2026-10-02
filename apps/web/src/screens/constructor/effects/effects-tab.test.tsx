@@ -77,7 +77,10 @@ describe('EffectsTab: палитра трёх понятий', () => {
   it('изначально шаги свёрнуты, а только что добавленный — открыт', () => {
     useWorld.setState(state => ({
       ...state,
-      system: { ...state.system, effects: { fresh: { label: 'Свежий эффект', activation: 'manual', params: [], steps: [{ id: 'был', type: 'threshold', roll: { check: null }, versus: { expr: '10' } }] } } },
+      system: { ...state.system, effects: { fresh: { label: 'Свежий эффект', activation: 'manual', params: [], steps: [
+        { id: 'был_бросок', type: 'roll', by: { expr: '@действующий' } },
+        { id: 'был', type: 'check', value: { expr: '@был_бросок' }, versus: { expr: '10' } },
+      ] } } },
       activeEffectId: 'fresh',
     }));
     render(<EffectsTab />);
@@ -94,7 +97,7 @@ describe('EffectsTab: палитра трёх понятий', () => {
     fireEvent.click(screen.getByText('точно убрать'));
     expect(useWorld.getState().system.effects.strike!.steps).toHaveLength(0);
     fireEvent.click(screen.getByText('вернуть шаг'));
-    expect(useWorld.getState().system.effects.strike!.steps).toHaveLength(1);
+    expect(useWorld.getState().system.effects.strike!.steps!.map(step => step.type)).toEqual(['roll', 'check']);
   });
 
   it('кнопки палитры не знают доменных слов', () => {
@@ -172,14 +175,12 @@ describe('ссылка на результат шага', () => {
         constants: { lead: { label: 'к20', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
         effects: {
           strike: {
-            label: 'Атака', activation: 'manual', params: [],
+            label: 'Атака', activation: 'manual',
+            params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }],
             steps: [
-              {
-                id: 'бросок', type: 'threshold',
-                roll: { die: { constant: 'lead' }, check: null },
-                versus: { expr: '10' },
-              },
-              { id: 'сколько', type: 'amount', source: 'margin' },
+              { id: 'бросок_бросок', type: 'roll', die: { constant: 'lead' }, by: { expr: '@действующий' } },
+              { id: 'бросок', type: 'check', value: { expr: '@бросок_бросок' }, versus: { expr: '10' } },
+              { id: 'сколько', type: 'roll' },
             ],
           },
         },
@@ -199,17 +200,17 @@ describe('ссылка на результат шага', () => {
     expect(shown).not.toContain(id);
   });
 
-  it('слот «какое превышение» предлагает выходы проверки поимённо', () => {
+  it('формула «Сколько» предлагает выходы проверки поимённо', () => {
     renderOpen(<EffectsTab />);
-    const label = screen.getByText('Какое превышение');
+    const label = screen.getByText('Сколько');
     const input = label.parentElement!.querySelector('.chips__text') as HTMLInputElement;
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: '@', selectionStart: 1 } });
 
     const options = [...document.querySelectorAll('.slot__option')].map(o => o.textContent?.trim());
-    expect(options).toContain('Результаты шаговшаг 1 · Проверка — на сколько перебил порог');
-    expect(options).toContain('Результаты шаговшаг 1 · Проверка — сколько костей легло максимумом');
-    expect(options).toContain('Результаты шаговшаг 1 · Проверка — сколько костей легло единицей');
+    expect(options).toContain('здесь жешаг 1 · Проверка — на сколько перебил порог');
+    expect(options).toContain('здесь жешаг 1 · Проверка — сколько костей легло максимумом');
+    expect(options).toContain('здесь жешаг 1 · Проверка — сколько костей легло единицей');
   });
 });
 
@@ -236,29 +237,35 @@ describe('три вида создания, два вида запуска', () 
     expect(all.replace(/Реакции/g, '').match(/.{30}(реакци|триггерн).{30}/i)?.[0] ?? null).toBeNull();
   });
 
-  it('«когда» — один список моментов словами правил: момент сам задаёт сторону, до/после и вопрос', () => {
+  it('«что случилось» — список видов с «Решением» отдельно: до/после — отдельное поле, вопрос — отдельный выбор', () => {
     renderOpen(<EffectsTab />);
     fireEvent.click(screen.getByText('+ срабатывает сам'));
-    const moment = [...document.querySelectorAll('select')]
-      .find(el => [...el.options].some(o => o.value === 'ask:targeted'))!;
-    expect([...moment.options].map(o => o.value).slice(0, 9))
-      .toEqual(['', 'acted', 'done', 'targeted', 'ask:targeted', 'affected', 'ask:affected', 'seen', 'ask:seen']);
+    const kinds = [...document.querySelectorAll('select')]
+      .find(el => [...el.options].some(o => o.value === 'seen'))! as HTMLSelectElement;
+    expect([...kinds.options].map(o => o.value)).toEqual(['call', 'seen', 'moment', 'field', 'gained', 'lost']);
+    const last = () => Object.values(useWorld.getState().system.effects).at(-1)!;
 
-    fireEvent.change(moment, { target: { value: 'ask:seen' } });
-    const effect = Object.values(useWorld.getState().system.effects).at(-1)!;
-    expect(effect.activation).toBe('passive');
-    expect(effect.on?.[0]).toMatchObject({ on: 'seen', confirm: true });
+    fireEvent.change(kinds, { target: { value: 'seen' } });
+    expect(last().activation).toBe('passive');
+    expect(last().on?.[0]).toMatchObject({ on: 'seen' });
 
-    fireEvent.change(moment, { target: { value: 'acted' } });
-    const again = Object.values(useWorld.getState().system.effects).at(-1)!.on![0]!;
-    expect(again.on).toBe('acted');
-    expect(again.confirm).toBeUndefined();
+    const decision = screen.getByDisplayValue('срабатывает само') as HTMLSelectElement;
+    fireEvent.change(decision, { target: { value: 'ask' } });
+    expect(last().on?.[0]).toMatchObject({ on: 'seen', confirm: true });
 
-    fireEvent.change(moment, { target: { value: 'done' } });
-    expect(Object.values(useWorld.getState().system.effects).at(-1)!.on![0]!.on).toBe('done');
+    fireEvent.change(kinds, { target: { value: 'call' } });
+    expect(last().on![0]!.on).toBe('before:*');
+    expect(last().on![0]!.confirm).toBe(true);
 
-    fireEvent.change(moment, { target: { value: 'moment:turn-start' } });
-    expect(Object.values(useWorld.getState().system.effects).at(-1)!.on![0]!.on).toBe('moment:turn-start');
+    const phase = screen.getByDisplayValue(/^до — /) as HTMLSelectElement;
+    expect([...phase.options].map(o => o.value)).toEqual(['before', 'after', 'done']);
+    fireEvent.change(phase, { target: { value: 'done' } });
+    expect(last().on![0]!.on).toBe('done:*');
+
+    fireEvent.change(kinds, { target: { value: 'moment' } });
+    const subject = screen.getByDisplayValue('— выберите —') as HTMLSelectElement;
+    fireEvent.change(subject, { target: { value: 'turn-start' } });
+    expect(last().on![0]!.on).toBe('moment:turn-start');
   });
 });
 
@@ -280,8 +287,9 @@ describe('вызываемый эффект — обычный эффект', ()
     fireEvent.click(screen.getByText('+ вызываемый'));
     const key = useWorld.getState().activeEffectId!;
     const made = useWorld.getState().system.effects[key]!;
+    expect(made.params!.map(p => [p.key, p.kind])).toEqual([['лист', 'sheet'], ['amount', 'number']]);
     expect(made.steps).toEqual([
-      { type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '@event.amount' }, targetModifiers: true },
+      { type: 'apply', target: { expr: '@лист.hp' }, direction: 'subtract', value: { expr: '@amount' }, targetModifiers: true },
     ]);
     expect(key.startsWith('event:')).toBe(false);
   });
@@ -294,11 +302,11 @@ describe('вызываемый эффект — обычный эффект', ()
 
     fireEvent.click(screen.getAllByText('+ проверка')[0]!);
     const key = useWorld.getState().activeEffectId!;
-    expect(useWorld.getState().system.effects[key]!.steps).toHaveLength(2);
+    expect(useWorld.getState().system.effects[key]!.steps).toHaveLength(3);
 
     fireEvent.click(screen.getByText('+ вход'));
     const params = useWorld.getState().system.effects[key]!.params ?? [];
-    expect(params.map(p => [p.kind, (p as { role?: string }).role ?? null])).toEqual([['number', 'amount'], ['number', null]]);
+    expect(params.map(p => [p.kind, (p as { role?: string }).role ?? null])).toEqual([['sheet', null], ['number', 'amount'], ['number', null]]);
   });
 });
 
@@ -315,19 +323,26 @@ describe('эффект слушает время', () => {
   });
   afterEach(() => { cleanup(); });
 
-  it('в «что случилось» есть моменты хода, и выбор сохраняется', () => {
+  it('в «что случилось» есть «время», моменты хода в списке, и выбор сохраняется', () => {
     renderOpen(<EffectsTab />);
     fireEvent.click(screen.getByText('+ срабатывает сам'));
 
+    const kinds = [...document.querySelectorAll('select')]
+      .find(el => [...el.options].some(o => o.value === 'moment'))! as HTMLSelectElement;
+    fireEvent.change(kinds, { target: { value: 'moment' } });
+
     const listens = [...document.querySelectorAll('select')]
-      .find(el => [...el.options].some(o => o.value.startsWith('moment:')))!;
+      .find(el => [...el.options].some(o => o.value === 'turn-start'))! as HTMLSelectElement;
     const options = [...listens.options].map(o => o.textContent ?? '');
     expect(options.some(text => text.includes('в начале своего хода'))).toBe(true);
 
-    fireEvent.change(listens, { target: { value: 'moment:turn-start' } });
+    fireEvent.change(listens, { target: { value: 'turn-start' } });
     const effect = Object.values(useWorld.getState().system.effects).at(-1)!;
     expect(effect.on?.[0]?.on).toBe('moment:turn-start');
-    expect(screen.getByText(/У времени, поля и появления эффекта нет исходов/)).toBeTruthy();
+
+    const condition = [...document.querySelectorAll('select')]
+      .find(el => [...el.options].some(o => o.textContent === 'формулой…'))! as HTMLSelectElement;
+    expect([...condition.options].map(o => o.value), 'у времени нет исходов шага, только формула').toEqual(['', ':формула']);
   });
 });
 
@@ -341,10 +356,12 @@ describe('крит — обычная формула, а не особый сл�
         constants: { к20: { label: 'Кость', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
         effects: {
           удар: {
-            label: 'Удар', activation: 'manual', params: [],
+            label: 'Удар', activation: 'manual',
+            params: [{ key: 'действующий', label: 'Кто действует', kind: 'sheet' }],
             steps: [
-              { id: 'проверка', type: 'threshold', roll: { die: { constant: 'к20' } }, versus: { expr: '10' } },
-              { id: 'урон', type: 'amount', source: 'roll', dice: { const: '2d6' } },
+              { id: 'проверка_бросок', type: 'roll', die: { constant: 'к20' }, by: { expr: '@действующий' } },
+              { id: 'проверка', type: 'check', value: { expr: '@проверка_бросок' }, versus: { expr: '10' } },
+              { id: 'урон', type: 'roll', die: { const: '2d6' } },
             ],
           },
         },
@@ -354,7 +371,7 @@ describe('крит — обычная формула, а не особый сл�
   });
   afterEach(() => { cleanup(); });
 
-  const строка = () => screen.getByDisplayValue("кинуть('2d6')") as HTMLInputElement;
+  const строка = () => screen.getByDisplayValue('кинуть("2d6")') as HTMLInputElement;
 
   const набрать = (текст: string) => {
     const поле = строка();
@@ -377,9 +394,8 @@ describe('крит — обычная формула, а не особый сл�
     renderOpen(<EffectsTab />);
     набрать("кинуть('2d6') + @хиты");
 
-    const шаг = useWorld.getState().system.effects.удар!.steps![1]! as Record<string, unknown>;
-    expect(шаг.dice, 'старые поля ушли').toBeUndefined();
-    expect(шаг.source).toBe('item');
+    const шаг = useWorld.getState().system.effects.удар!.steps![2]! as Record<string, unknown>;
+    expect(шаг.die, 'старые поля ушли').toBeUndefined();
     expect((шаг.fixed as { expr: string }).expr).toBe("кинуть('2d6') + @хиты");
   });
 
@@ -387,9 +403,9 @@ describe('крит — обычная формула, а не особый сл�
     renderOpen(<EffectsTab />);
     fireEvent.change(строка(), { target: { value: 'кинуть(@кос' } });
 
-    const шаг = useWorld.getState().system.effects.удар!.steps![1]! as Record<string, unknown>;
+    const шаг = useWorld.getState().system.effects.удар!.steps![2]! as Record<string, unknown>;
     expect(шаг.fixed, 'недобранное имя в систему не попало').toBeUndefined();
-    expect(шаг.dice).toEqual({ const: '2d6' });
+    expect(шаг.die).toEqual({ const: '2d6' });
   });
 
   it('незнакомое имя в строке предлагается взять из записи под тем же ключом', () => {
@@ -402,7 +418,7 @@ describe('крит — обычная формула, а не особый сл�
   });
 });
 
-describe('шаг отправителя — один раз, до остальных', () => {
+describe('шаг цены — один раз, до остальных', () => {
   beforeEach(() => {
     useWorld.setState(state => ({
       ...state,
@@ -416,18 +432,18 @@ describe('шаг отправителя — один раз, до остальн
   });
   afterEach(() => { cleanup(); });
 
-  it('«раз за действие» в шапке шага переносит его в начало цепочки и обратно', () => {
+  it('«цена» в шапке шага переносит его в начало цепочки и обратно', () => {
     renderOpen(<EffectsTab />);
     fireEvent.click(screen.getAllByText('+ изменение')[0]!);
     expect(useWorld.getState().system.effects.снаряд!.steps).toHaveLength(1);
 
-    fireEvent.click(screen.getByText('раз за действие'));
+    fireEvent.click(screen.getByText('цена'));
     const moved = useWorld.getState().system.effects.снаряд!;
     expect(moved.cost).toHaveLength(1);
     expect(moved.steps ?? []).toHaveLength(0);
-    expect(document.querySelector('.chip--on')?.textContent).toBe('раз за действие');
+    expect(document.querySelector('.chip--on')?.textContent).toBe('цена');
 
-    fireEvent.click(screen.getByText('раз за действие'));
+    fireEvent.click(screen.getByText('цена'));
     const back = useWorld.getState().system.effects.снаряд!;
     expect(back.cost).toBeUndefined();
     expect(back.steps).toHaveLength(1);

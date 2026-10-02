@@ -16,16 +16,18 @@ const base = (): System => ({
   constants: { к20: { label: 'Кость проверки', kind: 'die', dice: [{ count: 1, sides: 20 }] } },
 } as System);
 
-const addStep = (effectId: string, brick: string): Step => {
+const addSteps = (effectId: string, brick: string): Step[] => {
   const template = BRICKS.find(b => b.key === brick)!;
-  let made: Step | undefined;
+  let made: Step[] = [];
   useWorld.getState().editEffect(effectId, draft => {
     const taken = (draft.steps ?? []).map(s => s.id).filter(Boolean) as string[];
-    made = template.make(useWorld.getState().system, taken)[0]!;
-    (draft.steps ??= []).push(made);
+    made = template.make(useWorld.getState().system, taken);
+    (draft.steps ??= []).push(...made);
   });
-  return made!;
+  return made;
 };
+
+const addStep = (effectId: string, brick: string): Step => addSteps(effectId, brick)[0]!;
 
 const fill = (effectId: string, at: number, change: (step: Record<string, unknown>) => void) =>
   useWorld.getState().editEffect(effectId, draft => { change(draft.steps![at] as unknown as Record<string, unknown>); });
@@ -49,14 +51,14 @@ describe('собранное шагами конструктора работа�
   it('хвост «временные хиты → хиты»: перебор первого изменения уходит во второе', () => {
     const id = newManual();
     const first = addStep(id, 'change');
-    fill(id, 0, step => {
-      step.target = { tag: 'временные' };
+    fill(id, 1, step => {
+      step.target = { expr: '@цель.временные' };
       step.direction = 'subtract';
       step.value = { const: 8 };
     });
     addStep(id, 'change');
-    fill(id, 1, step => {
-      step.target = { tag: 'хиты' };
+    fill(id, 2, step => {
+      step.target = { expr: '@цель.хиты' };
       step.direction = 'subtract';
       step.value = { expr: `@${first.id}.overkill` };
     });
@@ -72,22 +74,25 @@ describe('собранное шагами конструктора работа�
 
   it('крит по «выпало 20 на костях»: условие — сравнение числа формулой', () => {
     const id = newManual();
-    const check = addStep(id, 'check');
-    fill(id, 0, step => {
-      (step.roll as Record<string, unknown>).die = { constant: 'к20' };
-      step.versus = { tag: 'броня' };
+    const [roll, check] = addSteps(id, 'check') as [Step, Step];
+    fill(id, 1, step => {
+      step.die = { constant: 'к20' };
+    });
+    fill(id, 2, step => {
+      step.versus = { expr: '@цель.броня' };
     });
     addStep(id, 'change');
-    fill(id, 1, step => {
-      step.target = { tag: 'хиты' };
+    fill(id, 3, step => {
+      step.target = { expr: '@цель.хиты' };
       step.direction = 'subtract';
       step.value = { expr: '6' };
       step.when = { expr: `@${check.id}.natural >= 20` };
     });
 
     const system = useWorld.getState().system;
+    expect(roll.type).toBe('roll');
     expect(errorsOf(lintSystem(system))).toEqual([]);
-    expect(system.effects[id]!.steps![1]!.when).toEqual({ expr: `@${check.id}.natural >= 20` });
+    expect(system.effects[id]!.steps![3]!.when).toEqual({ expr: `@${check.id}.natural >= 20` });
 
     expect(played(system, id, { хиты: 20, броня: 10 }, 'max').sheets.find(s => s.id === 'б')!.values.хиты).toBe(14);
     expect(played(system, id, { хиты: 20, броня: 1 }, 'min').sheets.find(s => s.id === 'б')!.values.хиты).toBe(20);
@@ -99,10 +104,10 @@ describe('собранное шагами конструктора работа�
 
     const id = newManual();
     addStep(id, 'change');
-    fill(id, 0, step => {
+    fill(id, 1, step => {
       step.type = 'emit';
       step.event = made.key;
-      step.args = { amount: { expr: '7' } };
+      step.args = { лист: { expr: '@цель' }, amount: { expr: '7' } };
       delete step.target;
       delete step.direction;
     });

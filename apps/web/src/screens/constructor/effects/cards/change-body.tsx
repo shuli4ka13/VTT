@@ -130,7 +130,7 @@ function ChangeValue({ amount, apply, applyIndex, context, edit, withNumber, onC
         ) : null}
         {both ? <span className="chips__plus" aria-hidden>+</span> : null}
         {bonusText ? sentChip(
-          bonusText.replace(/[@#]([\p{L}\p{N}_]+)/gu, (_, tag: string) => labelOfTag(context.system, tag)),
+          bonusText.replace(/[@#]([\p{L}\p{N}_.]+)/gu, (_, tag: string) => labelOfTag(context.system, tag)),
           () => edit(0, step => { delete (step as Record<string, unknown>).bonus; }),
           'bonus',
         ) : null}

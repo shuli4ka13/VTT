@@ -347,7 +347,7 @@ describe('Словари: кости, правки броска, таблицы'
         effects: {
           hit: {
             label: 'Удар', activation: 'manual', params: [],
-            steps: [{ type: 'threshold', roll: { die: { constant: 'lead' }, check: null } }],
+            steps: [{ id: 'удар_бросок', type: 'roll', die: { constant: 'lead' }, by: { expr: '@действующий' } }],
           },
         },
       },
@@ -451,8 +451,8 @@ describe('Быстрые настройки: крит и броня пишутс
     fireEvent.click(screen.getByText('порог'));
     fireEvent.click(screen.getByText('Записать'));
     const tail = useWorld.getState().system.effects?.урон?.steps ?? [];
-    expect(tail.map(s => s.type)).toEqual(['compare', 'apply']);
-    expect((tail[0] as { breakIf?: string }).breakIf).toBe('atMost');
-    expect((tail[0] as { versus?: { expr?: string } }).versus?.expr).toBe('@получатель.броня');
+    expect(tail.map(s => s.type)).toEqual(['check', 'apply']);
+    expect((tail[0] as { successWhen?: string }).successWhen).toBe('over');
+    expect((tail[0] as { versus?: { expr?: string } }).versus?.expr).toBe('@лист.броня');
   });
 });

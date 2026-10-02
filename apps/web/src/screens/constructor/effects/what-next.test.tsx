@@ -15,12 +15,16 @@ const system = {
   effects: {
     damage: {
       label: 'Урон',
+      params: [
+        { key: 'раненый', label: 'Раненый', kind: 'sheet' },
+        { key: 'сколько', label: 'Сколько', kind: 'number', role: 'amount' },
+      ],
       steps: [
-        { id: 'по_хитам', type: 'apply', target: { tag: 'hp' }, direction: 'subtract', value: { expr: '@event.amount' } },
+        { id: 'по_хитам', type: 'apply', target: { expr: '@раненый.hp' }, direction: 'subtract', value: { expr: '@сколько' } },
       ],
     },
     taken_rule: {
-      label: 'Что доходит до меня', activation: 'passive',
+      label: 'Что доходит до листа', activation: 'passive',
       modifiers: [
         { kind: 'edit', call: 'damage', param: 'amount', op: 'mul', value: { expr: '@taken_0' }, anyTags: ['рубящий'] },
         { kind: 'edit', call: 'damage', param: 'amount', op: 'mul', value: { expr: '@taken_1' }, anyTags: ['огонь'] },
@@ -43,7 +47,7 @@ describe('кто вмешается по дороге', () => {
   it('одно правило с десятком меток — одна строка, а не десяток', () => {
     const found = meddlersOf(system, 'damage');
     expect(found).toHaveLength(2);
-    expect(found[0]!.by).toBe('Что доходит до меня');
+    expect(found[0]!.by).toBe('Что доходит до листа');
     expect(found[0]!.tags).toEqual(['рубящий', 'огонь']);
     expect(found[0]!.each, 'у каждой метки своё поле').toBe(true);
   });
@@ -59,8 +63,9 @@ describe('WhatNext', () => {
   it('показывает, что сделает цель, человеческими словами', () => {
     render(<WhatNext open system={system} eventId="damage" onClose={() => {}} onEdit={() => {}} />);
     expect(screen.getByText('Урон')).toBeTruthy();
-    expect(screen.getByText(/присланное число/), 'event.amount не машинным ключом').toBeTruthy();
-    expect(screen.getByText(/«Хиты»/)).toBeTruthy();
+    expect(screen.getByText(/«Хиты» \(Раненый\)/), 'поле названо лейблом и листом').toBeTruthy();
+    expect(screen.getByText(/вход «Сколько»/), 'число названо входом, а не машинным ключом').toBeTruthy();
+    expect(document.body.textContent).not.toContain('@сколько');
     expect(document.body.textContent).not.toContain('event.amount');
   });
 

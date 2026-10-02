@@ -9,9 +9,9 @@ const explain = (name: string, effect: string | null = null) => explainName(dnd,
 
 describe('откуда это: щелчок по фишке объясняет имя', () => {
   it('поле листа: как получается, где видно, кто пользуется, чей лист', () => {
-    const told = explain('получатель.ac');
+    const told = explain('носитель.ac');
     expect(told.kind).toBe('поле листа');
-    expect(told.facts).toContainEqual(['чьё', 'лист получателя']);
+    expect(told.facts).toContainEqual(['чьё', 'лист «носитель»']);
     expect(told.shown[0]).toMatch(/^на листе, блок/);
     expect(told.users.length).toBeGreaterThan(0);
     expect(told.go?.pick).toEqual({ activeTab: 'sheet', activeFieldTag: 'ac' });
@@ -24,8 +24,8 @@ describe('откуда это: щелчок по фишке объясняет �
     expect(told.from.some(line => line.includes('свойство записи «save_by»'))).toBe(true);
   });
 
-  it('колонка выбранной строки у получателя', () => {
-    const told = explain('получатель.save_by.save', 'cantrip_save');
+  it('колонка выбранной строки у листа цели', () => {
+    const told = explain('цель.save_by.save', 'cantrip_save');
     expect(told.kind).toBe('колонка по выбору');
     expect(told.title).toBe('Характеристики → Спасбросок');
     expect(told.go?.pick).toEqual({ activeTab: 'dictionaries', activeTableId: 'abilities' });
@@ -33,8 +33,8 @@ describe('откуда это: щелчок по фишке объясняет �
 
   it('метка броска и кость системы', () => {
     expect(explain('атака')).toMatchObject({ kind: 'метка броска', facts: expect.arrayContaining([['Успех', 'попадание']]) });
-    expect(explain('получатель.lead_die')).toMatchObject({
-      kind: 'кость системы', facts: expect.arrayContaining([['кто бросает', 'получателя']]),
+    expect(explain('цель.lead_die')).toMatchObject({
+      kind: 'кость системы', facts: expect.arrayContaining([['кто бросает', '«цель»']]),
     });
   });
 
@@ -43,9 +43,9 @@ describe('откуда это: щелчок по фишке объясняет �
   });
 
   it('висящий эффект — число «сколько раз висит»', () => {
-    const told = explain('получатель.paralyzed');
+    const told = explain('цель.paralyzed');
     expect(told.kind).toBe('висит на листе');
-    expect(told.facts).toContainEqual(['чьё', 'лист получателя']);
+    expect(told.facts).toContainEqual(['чьё', 'лист «цель»']);
     expect(told.go?.pick).toEqual({ activeTab: 'effects', activeEffectId: 'paralyzed' });
   });
 });

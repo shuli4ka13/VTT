@@ -7,7 +7,10 @@ import type { System, Handler } from '@vtt/schema';
 const system = {
   id: 'x', name: 'x', tables: {}, constants: { d20: { kind: 'die', dice: [{ count: 1, sides: 20 }] } },
   effects: {
-    удар: { label: 'Удар', activation: 'manual', steps: [{ id: 'hit', type: 'threshold', roll: { die: { constant: 'd20' } }, versus: { expr: '10' } }] },
+    удар: { label: 'Удар', activation: 'manual', steps: [
+      { id: 'hit_бросок', type: 'roll', die: { constant: 'd20' }, by: { expr: '@действующий' } },
+      { id: 'hit', type: 'check', value: { expr: '@hit_бросок' }, versus: { expr: '10' } },
+    ] },
     r: { label: 'r', activation: 'passive', on: [] },
   },
 } as unknown as System;
@@ -25,42 +28,52 @@ const conditionSelect = () => [...document.querySelectorAll('select')]
 describe('«когда»: исходы под момент', () => {
   afterEach(cleanup);
 
-  it('«на цель» предлагает итог шага цели как есть', () => {
-    card({ on: 'acted', of: 'удар', steps: [] });
+  it('«после» действия предлагает итог шага цели как есть', () => {
+    card({ on: 'after:удар', steps: [] });
     expect([...conditionSelect().options].map(o => o.value)).toContain('@hit.success');
   });
 
-  it('«я совершил действие» предлагает итог через таблицу целей', () => {
-    const { get } = card({ on: 'done', of: 'удар', steps: [] });
-    const select = conditionSelect();
-    expect([...select.options].map(o => o.value)).toContain('сколько(@цели.hit.success, да) >= 1');
-    expect([...select.options].map(o => o.value)).not.toContain('@hit.success');
-    fireEvent.change(select, { target: { value: 'сколько(@цели.hit.success, да) >= 1' } });
-    expect(get().if?.expr).toBe('сколько(@цели.hit.success, да) >= 1');
+  it('«завершено» не предлагает итог одной цели: условие — формулой, и она знает таблицу итогов по целям', () => {
+    const { get } = card({ on: 'done:удар', steps: [] });
+    fireEvent.change(conditionSelect(), { target: { value: ':формула' } });
+    expect(get().if?.expr).toBe('да');
+    cleanup();
+    const { view } = card({ on: 'done:удар', if: { expr: 'сколько(@итоги.hit.success, да) >= 1' }, steps: [] });
+    expect((conditionSelect() as HTMLSelectElement).value).toBe(':формула');
+    expect(view.container.textContent).toContain('если сколько(@итоги.hit.success, да) >= 1');
   });
 
-  it('у «я совершил действие» нет выбора «Кому»', () => {
-    const { view } = card({ on: 'done', steps: [] });
+  it('у «завершено» нет выбора «Кому», зато есть «Кого касается»', () => {
+    const { view } = card({ on: 'done:удар', steps: [] });
     expect(view.container.textContent).not.toContain('Кому');
+    expect(view.container.textContent).toContain('Кого касается');
+  });
+
+  it('«Когда именно» пишет фазу в «что случилось»', () => {
+    const { view, get } = card({ on: 'before:удар', steps: [] });
+    const phase = view.getByDisplayValue(/^до — /) as HTMLSelectElement;
+    fireEvent.change(phase, { target: { value: 'after' } });
+    expect(get().on).toBe('after:удар');
   });
 });
 
 describe('«увидев кости»', () => {
   afterEach(cleanup);
 
-  it('спрашивает, чей бросок, и переключение на «по мне» пишется в as', () => {
-    const { view, get } = card({ on: 'seen', steps: [] } as unknown as Handler);
-    const whose = view.getByDisplayValue('мой') as HTMLSelectElement;
-    fireEvent.change(whose, { target: { value: 'against' } });
-    expect((get() as unknown as { as?: string }).as).toBe('against');
+  it('«Кого касается» называет бросающего и того, против кого бросают; выбор пишется условием про носителя', () => {
+    const { view, get } = card({ on: 'seen', steps: [] });
+    const whose = view.getByDisplayValue('всех — без условия') as HTMLSelectElement;
+    expect([...whose.options].map(o => o.value)).toEqual(['', '@бросающий == @носитель', '@против == @носитель']);
+    expect([...whose.options].map(o => o.textContent)).toEqual(['всех — без условия', '«бросающий» — носитель', '«против» — носитель']);
+    fireEvent.change(whose, { target: { value: '@против == @носитель' } });
+    expect(get().if?.expr).toBe('@против == @носитель');
   });
 
-  it('уход с момента стирает «чей бросок» и метки', () => {
-    const { view, get } = card({ on: 'seen', as: 'against', tags: ['атака'], steps: [] } as unknown as Handler);
+  it('уход с момента стирает условие про носителя', () => {
+    const { view, get } = card({ on: 'seen', if: { expr: '@бросающий == @носитель' }, steps: [] });
     const moment = [...view.container.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'seen'))!;
-    fireEvent.change(moment, { target: { value: 'acted' } });
-    const now = get() as unknown as { as?: string; tags?: string[] };
-    expect(now.as).toBeUndefined();
-    expect(now.tags).toBeUndefined();
+    fireEvent.change(moment, { target: { value: 'call' } });
+    expect(get().if).toBeUndefined();
+    expect(get().on).toBe('before:*');
   });
 });
