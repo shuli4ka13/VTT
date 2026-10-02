@@ -152,7 +152,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
       seed, args, paramDefs, props, ...(inputs ? { inputs } : {}), claims, ...(memo ? { memo } : {}),
       ...(Object.keys(rolls).length ? { rolls } : {}),
     }));
-    state.write(...run.group(calls, (out, entries) => {
+    run.group(calls, (out, entries) => {
       if (holder) {
         const caster = run.sheet(actor)!;
         if (!(caster.effects ?? []).some(entry => entry.effectId === holder)) {
@@ -164,7 +164,7 @@ export function runAct(run: Run, intent: ActIntent, root: Path): void {
       for (const report of sink.reactions) entries.push({ fromId: actor, toId: actor, report });
       entries.push(...sink.after);
       delivered[out.call.to] = out;
-    }));
+    }, entries => state.write(...entries));
 
     const summaries: Record<string, RollResult> = { ...rolls };
     if (memo) {

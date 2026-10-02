@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import type { DynamicModule } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { DB, CLOCK, IDS, DIE } from './common/tokens.ts';
+import { DB, RAW, CLOCK, IDS, DIE } from './common/tokens.ts';
 import { openDatabase } from './db/db.ts';
 import type { Database } from './db/db.ts';
 import { AuthService } from './auth/auth.service.ts';
@@ -30,6 +30,7 @@ export class AppModule {
       controllers: [AuthController, CatalogController, RoomsController],
       providers: [
         { provide: DB, useValue: database.drizzle },
+        { provide: RAW, useValue: database.raw },
         { provide: CLOCK, useValue: options.now ?? (() => new Date().toISOString()) },
         { provide: IDS, useValue: options.newId ?? randomUUID },
 

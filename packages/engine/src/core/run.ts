@@ -15,7 +15,9 @@ import { requireEffect, requireCalled, reapplyOf, usesMax } from '../engine/effe
 import { expiryOf } from '../engine/clock.ts';
 import { whoseOf, burnsUse } from '../events/durations.ts';
 import { refusalWords } from '../events/refusal.ts';
-import { tagsHold, rollName } from '../engine/roll-tags.ts';
+import { tagsHold, rollName, outcomeWords } from '../engine/roll-tags.ts';
+import { forcedWords } from '../words/steps.ts';
+import { fieldOf } from '../model/sheet-columns.ts';
 import { answerSteps } from '../engine/steps/emit.ts';
 import { CALL_NAME } from '../engine/modifiers.ts';
 import { Views } from './view.ts';
@@ -32,6 +34,7 @@ import type { Clock } from '../engine/clock.ts';
 import type { Pass } from '../engine/calc.ts';
 import type { EmittedEvent, NestedRun } from '../engine/rule.ts';
 import type { System, Sheet, Compendium, Step, Param, StoredValue, WornEffect, Die } from '../model/types.ts';
+import { Pause } from './external.ts';
 import type { External, Question, Offer } from './external.ts';
 import type { Path, Window } from './path.ts';
 import type { Report, Entry, Stop, Change } from './log.ts';
@@ -425,7 +428,13 @@ export class Run {
     }]));
   }
 
-  group(calls: Delivery[], delivered?: (out: Delivered, entries: Entry[]) => void): Entry[] {
+  group(calls: Delivery[], delivered?: (out: Delivered, entries: Entry[]) => void, write?: (entries: Entry[]) => void): Entry[] {
+    const collected: Entry[] = [];
+    const flush = (entries: Entry[]): void => {
+      if (!entries.length) return;
+      if (write) write(entries.splice(0));
+      else collected.push(...entries.splice(0));
+    };
     const entries: Entry[] = [];
     const done: Delivered[] = [];
     for (const call of calls) {
@@ -449,6 +458,7 @@ export class Run {
         if (!(err instanceof Limit)) throw err;
         entries.push({ text: CUT_WORDS });
       }
+      flush(entries);
     }
     for (const out of done) {
       const { call } = out;
@@ -460,8 +470,9 @@ export class Run {
         key: path.key, sheetId: call.to, window: 'after', label: call.top ? '' : call.label,
         offers: offers.map(offer => offer.offer), results: out.results, preview: [],
       }, offers, call.effectId, out.emitted, call.from, call.hop, path));
+      flush(entries);
     }
-    return entries;
+    return collected;
   }
 
   body(call: Delivery, sink: Sink): Delivered {
@@ -615,11 +626,12 @@ export class Run {
       this.state.commit();
       return { lead, ...(report ? { report } : {}), entries, ...(spent ? { spent: sub.effectId } : {}) };
     } catch (err) {
-      if (!(err instanceof Limit)) {
-        this.state.rollback();
+      if (err instanceof Pause) {
+        this.state.commit();
         throw err;
       }
       this.state.rollback();
+      if (!(err instanceof Limit)) throw err;
       return { lead: [], entries: [{ text: CUT_WORDS }] };
     } finally {
       this.handlers.pop();
@@ -899,14 +911,30 @@ export class Run {
 }
 
 function previewOf(system: System, tried: Delivered): string[] {
+  const steps = (system.effects[tried.call.effectId]?.steps ?? []) as StepData[];
+  const traces = tried.report.trace.filter(trace => trace.type === 'threshold' && !trace.skipped && !trace.within);
+  const sideOf = (trace: Record<string, unknown>): string => {
+    const step = steps.find((one, index) => String(one.id ?? index) === String(trace.step));
+    return String(step?.side ?? 'sender');
+  };
+  const rollsOf = (trace: Record<string, unknown>): string => {
+    const rolls = (trace.rolls as number[]) ?? [];
+    return trace.kept != null && rolls.length > 1 ? `[${rolls.join(', ')}] → ${trace.kept}` : `[${rolls.join(', ')}]`;
+  };
   const lines: string[] = [];
-  for (const trace of tried.report.trace) {
-    if (trace.type !== 'threshold' || trace.skipped || trace.within) continue;
-    const rolls = trace.kept != null && Array.isArray(trace.rolls) && trace.rolls.length > 1
-      ? `[${(trace.rolls as number[]).join(', ')}] → ${trace.kept}` : `[${((trace.rolls as number[]) ?? []).join(', ')}]`;
+  for (const trace of traces) {
+    if (sideOf(trace) === 'target') continue;
+    const tags = (trace.tags as string[] | undefined) ?? [];
+    const title = tags.length ? `Бросок (${rollName(tags)})` : 'Бросок';
+    lines.push(`${title}: ${rollsOf(trace)}${trace.bonus ? ` + ${trace.bonus}` : ''} = ${trace.total}`);
+  }
+  for (const trace of traces) {
     const versus = trace.versus as { tag?: string; value?: number } | undefined;
-    const named = versus?.tag ? findField(system, versus.tag)?.label ?? versus.tag : 'порог';
-    lines.push(`Бросок: ${rolls} + ${trace.bonus ?? 0} = ${trace.total} против ${named} ${versus?.value}: ${trace.success ? 'попадание' : 'промах'}`);
+    const named = versus?.tag ? fieldOf(system, versus.tag)?.label ?? versus.tag : 'порог';
+    const own = sideOf(trace) === 'target' ? `бросок цели ${rollsOf(trace)} + ${trace.bonus ?? 0} = ${trace.total} ` : '';
+    const words = outcomeWords(system, (trace.tags as string[] | undefined) ?? []);
+    const forced = trace.forced != null ? ` (${forcedWords(Number(trace.forced), Boolean(trace.success))})` : '';
+    lines.push(`${own}против ${named} ${versus?.value}: ${trace.success ? words.success : words.fail}${forced}`);
   }
   return lines;
 }

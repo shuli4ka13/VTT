@@ -1,6 +1,6 @@
 import { compile } from '../formula/index.ts';
 import { EngineError } from '../engine/errors.ts';
-import { availableActions } from '../events/actions.ts';
+import { availableActions, actionOf } from '../events/actions.ts';
 import { asksOf, checkInputs, normalizeInputs } from '../model/asks.ts';
 import { findRecord, sheetKindOf } from '../model/owned.ts';
 import { findEffect, usesMax, reapplyOf } from '../engine/effects.ts';
@@ -97,8 +97,9 @@ const OPS: { [K in Op['op']]: Handler<K> } = {
     const actor = sheetOf(run, intent.fromId);
     for (const id of intent.toIds) sheetOf(run, id);
     const { system, compendium } = run.world;
+    const action = actionOf(intent.actionId, { system, compendium });
     if (!availableActions(actor, { system, compendium }).some(one => one.id === intent.actionId)) {
-      throw new EngineError(`у «${actor.name}» нет такого действия — запись не на листе или выключена`);
+      throw new EngineError(`у «${actor.name}» нет действия «${action.label}» — запись не на листе или выключена`);
     }
     const asked = asksOf(intent.actionId, { system, compendium });
     const trouble = checkInputs(asked, intent.inputs, system, run.view(actor.id));

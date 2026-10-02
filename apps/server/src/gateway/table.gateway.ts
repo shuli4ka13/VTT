@@ -19,7 +19,9 @@ export class TableGateway {
   constructor(
     @Inject(RoomsService) private readonly roomsService: RoomsService,
     @Inject(AuthService) private readonly auth: AuthService,
-  ) {}
+  ) {
+    this.roomsService.onDelta(delta => this.broadcast(delta.roomId, { type: 'room:delta', delta }));
+  }
 
   @SubscribeMessage('room:join')
   async join(@MessageBody() raw: unknown, @ConnectedSocket() socket: WebSocket) {
@@ -64,8 +66,7 @@ export class TableGateway {
     if (!parsed.success) return this.fail(socket, 'намерение не проходит схему');
 
     try {
-      const delta = await this.roomsService.act(guest.userId, parsed.data);
-      this.broadcast(delta.roomId, { type: 'room:delta', delta });
+      await this.roomsService.act(guest.userId, parsed.data);
     } catch (err) {
       this.fail(socket, (err as Error).message);
     }
@@ -80,8 +81,7 @@ export class TableGateway {
     if (!parsed.success) return this.fail(socket, 'команда хода не проходит схему');
 
     try {
-      const delta = await this.roomsService.turn(guest.userId, parsed.data);
-      this.broadcast(delta.roomId, { type: 'room:delta', delta });
+      await this.roomsService.turn(guest.userId, parsed.data);
     } catch (err) {
       this.fail(socket, (err as Error).message);
     }
@@ -96,8 +96,7 @@ export class TableGateway {
     if (!parsed.success) return this.fail(socket, 'ответ не проходит схему');
 
     try {
-      const delta = await this.roomsService.answer(guest.userId, parsed.data);
-      this.broadcast(delta.roomId, { type: 'room:delta', delta });
+      await this.roomsService.answer(guest.userId, parsed.data);
     } catch (err) {
       this.fail(socket, (err as Error).message);
     }
@@ -112,8 +111,7 @@ export class TableGateway {
     if (!parsed.success) return this.fail(socket, 'отмена не проходит схему');
 
     try {
-      const delta = await this.roomsService.cancel(guest.userId, parsed.data);
-      this.broadcast(delta.roomId, { type: 'room:delta', delta });
+      await this.roomsService.cancel(guest.userId, parsed.data);
     } catch (err) {
       this.fail(socket, (err as Error).message);
     }
@@ -131,8 +129,7 @@ export class TableGateway {
 
     const { roomId, sheetId, tag, value } = parsed.data;
     try {
-      const delta = await this.roomsService.setValue(guest.userId, roomId, sheetId, tag, value);
-      this.broadcast(roomId, { type: 'room:delta', delta });
+      await this.roomsService.setValue(guest.userId, roomId, sheetId, tag, value);
     } catch (err) {
       this.fail(socket, (err as Error).message);
     }
@@ -149,9 +146,8 @@ export class TableGateway {
     }
 
     try {
-      const delta = await this.roomsService.createSheet(
+      await this.roomsService.createSheet(
         guest.userId, parsed.data.roomId, parsed.data.name, parsed.data.of);
-      this.broadcast(parsed.data.roomId, { type: 'room:delta', delta });
     } catch (err) {
       this.fail(socket, (err as Error).message);
     }
@@ -186,8 +182,7 @@ export class TableGateway {
     }
     const { roomId, sheetId, tag, hidden } = parsed.data;
     try {
-      const delta = await this.roomsService.rollField(guest.userId, roomId, sheetId, tag, Boolean(hidden));
-      this.broadcast(roomId, { type: 'room:delta', delta });
+      await this.roomsService.rollField(guest.userId, roomId, sheetId, tag, Boolean(hidden));
     } catch (err) {
       this.fail(socket, (err as Error).message);
     }
@@ -205,8 +200,7 @@ export class TableGateway {
 
     const { roomId, sheetId, of } = parsed.data;
     try {
-      const delta = await this.roomsService.setSheetKind(guest.userId, roomId, sheetId, of);
-      this.broadcast(roomId, { type: 'room:delta', delta });
+      await this.roomsService.setSheetKind(guest.userId, roomId, sheetId, of);
     } catch (err) {
       this.fail(socket, (err as Error).message);
     }
@@ -224,8 +218,7 @@ export class TableGateway {
 
     const { roomId, sheetId, group } = parsed.data;
     try {
-      const delta = await this.roomsService.setSheetGroup(guest.userId, roomId, sheetId, group);
-      this.broadcast(roomId, { type: 'room:delta', delta });
+      await this.roomsService.setSheetGroup(guest.userId, roomId, sheetId, group);
     } catch (err) {
       this.fail(socket, (err as Error).message);
     }
@@ -243,8 +236,7 @@ export class TableGateway {
 
     const { roomId, sheetId, list, id, on, off } = parsed.data;
     try {
-      const delta = await this.roomsService.setBelonging(guest.userId, roomId, sheetId, list, id, on, off);
-      this.broadcast(roomId, { type: 'room:delta', delta });
+      await this.roomsService.setBelonging(guest.userId, roomId, sheetId, list, id, on, off);
     } catch (err) {
       this.fail(socket, (err as Error).message);
     }

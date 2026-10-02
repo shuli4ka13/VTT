@@ -245,6 +245,7 @@ export type AnswerIntent = z.infer<typeof answerIntent>;
 export type CancelIntent = z.infer<typeof cancelIntent>;
 export type TurnIntent = z.infer<typeof turnIntent>;
 export type RoomDelta = z.infer<typeof roomDelta>;
+export type LogEntry = z.infer<typeof logEntry>;
 export type JournalEntry = z.infer<typeof journalEntry>;
 export type ServerMessage = z.infer<typeof serverMessage>;
 export type ClientMessage = z.infer<typeof clientMessage>;

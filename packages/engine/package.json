@@ -33,6 +33,10 @@
     "./lang/*": {
       "types": "./dist/lang/*.d.ts",
       "default": "./dist/lang/*.js"
+    },
+    "./core/*": {
+      "types": "./dist/core/*.d.ts",
+      "default": "./dist/core/*.js"
     }
   },
   "scripts": {
