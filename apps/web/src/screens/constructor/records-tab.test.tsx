@@ -49,6 +49,25 @@ describe('RecordsTab: тип видит входы эффекта', () => {
     expect(строкаВхода('Кость урона').textContent).toContain('берётся из свойства');
   });
 
+  it('входы-листы, которые кнопка заполняет сама, подписаны, а не горят «не заполнено»', () => {
+    useWorld.setState(state => ({
+      ...state,
+      system: {
+        ...state.system,
+        effects: {
+          hit: { label: 'Удар', activation: 'manual', params: [
+            { key: 'действующий', label: 'Кто действует', kind: 'sheet' },
+            { key: 'цели', label: 'Цели', kind: 'sheet', many: true },
+          ], steps: [] },
+        },
+      },
+    }));
+    render(<RecordsTab />);
+    expect(строкаВхода('Кто действует').textContent).toContain('кто нажал кнопку');
+    expect(строкаВхода('Цели').textContent).toContain('цели, выбранные за столом');
+    expect(строкаВхода('Цели').textContent).not.toContain('не заполнено');
+  });
+
   it('на экране нет слов «дырка», «параметр», «привязка»', () => {
     render(<RecordsTab />);
     expect(screen.queryByText(/дырк/i)).toBeNull();

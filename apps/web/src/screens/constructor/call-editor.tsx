@@ -26,13 +26,14 @@ function status(input: CallInput): { text: string; bad: boolean } {
   return { text: 'не заполнено', bad: true };
 }
 
-export function CallEditor({ system, effect, effects, onEffect, args, fromProps, onArg, context, where, allow, extraFor, headAction, children }: {
+export function CallEditor({ system, effect, effects, onEffect, args, fromProps, filled, onArg, context, where, allow, extraFor, headAction, children }: {
   system: System;
   effect: string;
   effects: [string, { label?: string }][];
   onEffect: (id: string) => void;
   args: Record<string, unknown> | undefined;
   fromProps?: ReadonlySet<string>;
+  filled?: Readonly<Record<string, 'actor' | 'targets'>>;
   onArg: (key: string, next: SlotRef | null) => void;
   context: SlotContext;
   where: string;
@@ -65,6 +66,15 @@ export function CallEditor({ system, effect, effects, onEffect, args, fromProps,
           </div>
           {inputs.length ? null : <span className="faint">«{called?.label || effect}» ничего не принимает.</span>}
           {inputs.map(input => {
+            const fill = filled?.[input.param.key];
+            if (fill) {
+              return (
+                <div className="pair" key={input.param.key}>
+                  <span className="call-args__name">{input.param.label ?? input.param.key}</span>
+                  <span className="faint">{fill === 'actor' ? 'кто нажал кнопку' : 'цели, выбранные за столом'}</span>
+                </div>
+              );
+            }
             const shown = status(input);
             return (
               <div className="pair" key={input.param.key}>

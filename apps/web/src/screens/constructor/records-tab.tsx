@@ -1,3 +1,5 @@
+import { paramsOf } from '@vtt/engine/model/inherit';
+import { tableOf } from '@vtt/engine/model/buttons';
 import { useWorld, freeId } from '../../store/world.ts';
 import { ModifiersEditor } from './modifiers.tsx';
 import { MultiChoice } from '../../ui/multi-choice.tsx';
@@ -408,9 +410,10 @@ function BindingEditor({ binding, system, recordKind, onEdit, onDelete, onFillWi
         onEffect={next => onEdit(draft => { draft.effect = next; })}
         args={binding.args as Record<string, unknown> | undefined}
         fromProps={implicit}
+        filled={effect ? tableOf(binding, { params: paramsOf(system, effect) }) : {}}
         context={{ system, effect: effect ?? ({ label: '' } as Effect), earlier: [], recordKind }}
         where={binding.label || effect?.label || binding.effect}
-        allow={['prop', 'expr', 'const', 'table', 'empty']}
+        allow={['prop', 'table']}
         onArg={(key, next) => onEdit(draft => {
           draft.args ??= {};
           if (next) draft.args[key] = next as never; else delete draft.args[key];
